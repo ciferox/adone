@@ -23,14 +23,14 @@ describe("Secret (integration)", () => {
         beforeEach((done) => {
             test.hypervisor = new Hypervisor("qemu:///system");
             test.hypervisor.connect((err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 done();
             });
         });
 
         afterEach((done) => {
             test.hypervisor.disconnect((err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 done();
             });
         });
@@ -41,7 +41,7 @@ describe("Secret (integration)", () => {
             }).then((uuid) => {
                 return test.hypervisor.lookupSecretByUUIDAsync(uuid);
             }).then((secret) => {
-                expect(secret).to.exist;
+                expect(secret).to.exist();
                 return secret.undefineAsync();
             });
         });

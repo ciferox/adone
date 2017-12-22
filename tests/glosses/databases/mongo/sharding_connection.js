@@ -27,7 +27,7 @@ describe("sharding connection", function () {
         expect(db.serverConfig.haInterval).to.be.equal(500);
         const r = await db.collection("replicaset_mongo_client_collection").update({ a: 1 }, { b: 1 }, { upsert: true, w: 2 });
         expect(r.result.n).to.be.equal(1);
-        expect(await db.collection("replicaset_mongo_client_collection").findOne()).to.be.ok;
+        expect(await db.collection("replicaset_mongo_client_collection").findOne()).to.be.ok();
         await db.close();
     });
 
@@ -109,14 +109,14 @@ describe("sharding connection", function () {
                 haInterval: 500
             }
         });
-        expect(db).to.be.ok;
+        expect(db).to.be.ok();
         expect(db.serverConfig.haInterval).to.be.equal(500);
-        expect(db.serverConfig.capabilities()).to.be.ok;
-        expect(db.serverConfig.isConnected()).to.be.true;
-        expect(db.serverConfig.lastIsMaster()).to.be.ok;
-        expect(db.serverConfig.connections()).to.be.ok;
-        expect(db.serverConfig.isMasterDoc).to.be.ok;
-        expect(db.serverConfig.bson).to.be.ok;
+        expect(db.serverConfig.capabilities()).to.be.ok();
+        expect(db.serverConfig.isConnected()).to.be.true();
+        expect(db.serverConfig.lastIsMaster()).to.be.ok();
+        expect(db.serverConfig.connections()).to.be.ok();
+        expect(db.serverConfig.isMasterDoc).to.be.ok();
+        expect(db.serverConfig.bson).to.be.ok();
 
         await db.close();
     });

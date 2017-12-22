@@ -98,7 +98,7 @@ teine rida
 
         const output = dkim.sign(fs.createReadStream(path.resolve(__dirname, "fixtures", "large.eml")));
         output.on("error", (err) => {
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             done();
         });
 
@@ -126,7 +126,7 @@ teine rida
             const message = Buffer.concat(chunks).toString();
             expect(message.indexOf("bh=ST+2Z7mCDd8CPa6pWbCWnFBLKyl8/I5d0JCaEQub550=")).is.gte(0);
             expect(crypto.createHash("md5").update(Buffer.from(message.substr(message.indexOf("X-Zone-Loop")))).digest("hex")).to.equal("16078d67ecb4c9954f2568b3bd20e8b5");
-            expect(output.usingCache).to.be.true;
+            expect(output.usingCache).to.be.true();
             done();
         });
     });
@@ -140,7 +140,7 @@ teine rida
 
         const output = dkim.sign(fs.createReadStream(path.resolve(__dirname, "fixtures", "large.eml")));
         output.on("error", (err) => {
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             done();
         });
 
@@ -168,7 +168,7 @@ teine rida
             const message = Buffer.concat(chunks).toString();
             expect(message.indexOf("bh=ST+2Z7mCDd8CPa6pWbCWnFBLKyl8/I5d0JCaEQub550=")).is.gte(0);
             expect(crypto.createHash("md5").update(Buffer.from(message.substr(message.indexOf("X-Zone-Loop")))).digest("hex")).to.equal("16078d67ecb4c9954f2568b3bd20e8b5");
-            expect(output.usingCache).to.be.false;
+            expect(output.usingCache).to.be.false();
             done();
         });
     });
@@ -183,7 +183,7 @@ teine rida
 
         const output = dkim.sign(fs.createReadStream(path.resolve(__dirname, "fixtures", "large.eml")));
         output.on("error", (err) => {
-            expect(err).to.exist;
+            expect(err).to.exist();
             done();
         });
     });
@@ -198,7 +198,7 @@ teine rida
 
         const output = dkim.sign(fs.readFileSync(path.resolve(__dirname, "fixtures", "large.eml")));
         output.on("error", (err) => {
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             done();
         });
 
@@ -226,7 +226,7 @@ teine rida
             const message = Buffer.concat(chunks).toString();
             expect(message.indexOf("bh=ST+2Z7mCDd8CPa6pWbCWnFBLKyl8/I5d0JCaEQub550=")).is.gte(0);
             expect(crypto.createHash("md5").update(Buffer.from(message.substr(message.indexOf("X-Zone-Loop")))).digest("hex")).to.equal("16078d67ecb4c9954f2568b3bd20e8b5");
-            expect(output.usingCache).to.be.true;
+            expect(output.usingCache).to.be.true();
             done();
         });
     });
@@ -241,7 +241,7 @@ teine rida
 
         const output = dkim.sign(fs.readFileSync(path.resolve(__dirname, "fixtures", "large.eml"), "utf-8"));
         output.on("error", (err) => {
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             done();
         });
 
@@ -269,7 +269,7 @@ teine rida
             const message = Buffer.concat(chunks).toString();
             expect(message.indexOf("bh=ST+2Z7mCDd8CPa6pWbCWnFBLKyl8/I5d0JCaEQub550=")).is.gte(0);
             expect(crypto.createHash("md5").update(Buffer.from(message.substr(message.indexOf("X-Zone-Loop")))).digest("hex")).to.equal("16078d67ecb4c9954f2568b3bd20e8b5");
-            expect(output.usingCache).to.be.true;
+            expect(output.usingCache).to.be.true();
             done();
         });
     });

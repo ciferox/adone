@@ -93,7 +93,7 @@ describe("net", "mqtt", "packet", () => {
 
             const result = packet.writeToStream(fixture, stream);
 
-            assert.isFalse(result, "result should be false");
+            assert.false(result, "result should be false");
         });
     };
 
@@ -983,11 +983,11 @@ describe("net", "mqtt", "packet", () => {
         let expectedErrors = 1;
 
         parser.on("packet", (packet) => {
-            assert.isOk(++packetCount <= expectedPackets, `expected <= ${expectedPackets} packets`);
+            assert.ok(++packetCount <= expectedPackets, `expected <= ${expectedPackets} packets`);
         });
 
         parser.on("error", (erroneous) => {
-            assert.isOk(++errorCount <= expectedErrors, `expected <= ${expectedErrors} errors`);
+            assert.ok(++errorCount <= expectedErrors, `expected <= ${expectedErrors} errors`);
         });
 
         parser.parse(Buffer.from([

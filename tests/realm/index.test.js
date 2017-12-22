@@ -49,9 +49,9 @@ describe("realm", () => {
     it("lock/unlock", async () => {
         const lockPath = std.path.join(realm.config.runtimePath, "realm");
         await realmManager.lock();
-        assert.isTrue(await adone.application.locking.check(lockPath));
+        assert.true(await adone.application.locking.check(lockPath));
         await realmManager.unlock();
-        assert.isFalse(await adone.application.locking.check(lockPath));
+        assert.false(await adone.application.locking.check(lockPath));
     });
 
     describe("cli commands", () => {
@@ -79,9 +79,9 @@ describe("realm", () => {
                     const packagePath = std.path.join(realm.config.packagesPath, packageName);
 
                     const dir = new fs.Directory(packagePath);
-                    assert.isTrue(await dir.exists());
+                    assert.true(await dir.exists());
                     if (symlink) {
-                        assert.isTrue(await dir.isSymbolicLink());
+                        assert.true(await dir.isSymbolicLink());
                     }
 
                     if (name === "complex") {
@@ -100,7 +100,7 @@ describe("realm", () => {
                     });
                     await observer.result;
 
-                    assert.isFalse(await dir.exists());
+                    assert.false(await dir.exists());
 
                     if (name === "es6") {
                         await fs.rm(std.path.join(cliCommandPath, "lib"));
@@ -108,10 +108,10 @@ describe("realm", () => {
 
                     await cliConfig.load();
                     if (name === "complex") {
-                        assert.isFalse(cliConfig.hasCommand("sub1"));
-                        assert.isFalse(cliConfig.hasCommand("sub2"));
+                        assert.false(cliConfig.hasCommand("sub1"));
+                        assert.false(cliConfig.hasCommand("sub2"));
                     } else {
-                        assert.isFalse(cliConfig.hasCommand(config.raw.name));
+                        assert.false(cliConfig.hasCommand(config.raw.name));
                     }
                 });
             }
@@ -129,17 +129,17 @@ describe("realm", () => {
 
                     await cliConfig.load();
                     if (name === "invalid_complex") {
-                        assert.isFalse(cliConfig.hasCommand("sub1"));
-                        assert.isFalse(cliConfig.hasCommand("sub2"));
+                        assert.false(cliConfig.hasCommand("sub1"));
+                        assert.false(cliConfig.hasCommand("sub2"));
                     } else {
-                        assert.isFalse(cliConfig.hasCommand(config.raw.name));
+                        assert.false(cliConfig.hasCommand(config.raw.name));
                     }
 
                     const packageName = name === "invalid_complex" ? config.raw.name : `${config.raw.type}.${config.raw.name}`;
                     const packagePath = std.path.join(realm.config.packagesPath, packageName);
 
                     const dir = new fs.Directory(packagePath);
-                    assert.isFalse(await dir.exists());
+                    assert.false(await dir.exists());
 
                     const installOptions = {
                         name: cliCommandPath,
@@ -152,14 +152,14 @@ describe("realm", () => {
                     });
                     assert.instanceOf(err, Error);
 
-                    assert.isFalse(await dir.exists());
+                    assert.false(await dir.exists());
 
                     await cliConfig.load();
                     if (name === "invalid_complex") {
-                        assert.isFalse(cliConfig.hasCommand("sub1"));
-                        assert.isFalse(cliConfig.hasCommand("sub2"));
+                        assert.false(cliConfig.hasCommand("sub1"));
+                        assert.false(cliConfig.hasCommand("sub2"));
                     } else {
-                        assert.isFalse(cliConfig.hasCommand(config.raw.name));
+                        assert.false(cliConfig.hasCommand(config.raw.name));
                     }
                 });
             }
@@ -178,7 +178,7 @@ describe("realm", () => {
             const packagePath = std.path.join(realm.config.packagesPath, packageName);
 
             const dir = new fs.Directory(packagePath);
-            assert.isFalse(await dir.exists());
+            assert.false(await dir.exists());
 
             const installOptions = {
                 name: omnitronServicePath
@@ -187,14 +187,14 @@ describe("realm", () => {
             let observer = await realmManager.install(installOptions);
             await observer.result;
 
-            assert.isTrue(await dir.exists());
+            assert.true(await dir.exists());
 
             observer = await realmManager.uninstall({
                 name: packageName
             });
             await observer.result;
 
-            assert.isFalse(await dir.exists());
+            assert.false(await dir.exists());
         });
 
         it("install/uninstall with active omnitron", async () => {
@@ -202,7 +202,7 @@ describe("realm", () => {
             await adone.omnitron.dispatcher.connectLocal({
                 forceStart: false
             });
-            assert.isTrue(await adone.omnitron.dispatcher.ping());
+            assert.true(await adone.omnitron.dispatcher.ping());
 
             const omnitronServicePath = std.path.join(__dirname, "packages", "omnitron_service_good");
 
@@ -214,7 +214,7 @@ describe("realm", () => {
             const packagePath = std.path.join(realm.config.packagesPath, packageName);
 
             const dir = new fs.Directory(packagePath);
-            assert.isFalse(await dir.exists());
+            assert.false(await dir.exists());
 
             const installOptions = {
                 name: omnitronServicePath
@@ -223,14 +223,14 @@ describe("realm", () => {
             let observer = await realmManager.install(installOptions);
             await observer.result;
 
-            assert.isTrue(await dir.exists());
+            assert.true(await dir.exists());
 
             observer = await realmManager.uninstall({
                 name: packageName
             });
             await observer.result;
 
-            assert.isFalse(await dir.exists());
+            assert.false(await dir.exists());
 
             await adone.omnitron.dispatcher.stopOmnitron();
         });
@@ -238,7 +238,7 @@ describe("realm", () => {
         it("should not install service in case of omnitron's system db is busy", async () => {
             const systemDb = new adone.omnitron.DB();
             await systemDb.open();
-            
+
             const omnitronServicePath = std.path.join(__dirname, "packages", "omnitron_service_good");
 
             const config = await adone.configuration.Adone.load({
@@ -249,7 +249,7 @@ describe("realm", () => {
             const packagePath = std.path.join(realm.config.packagesPath, packageName);
 
             const dir = new fs.Directory(packagePath);
-            assert.isFalse(await dir.exists());
+            assert.false(await dir.exists());
 
             const installOptions = {
                 name: omnitronServicePath
@@ -261,7 +261,7 @@ describe("realm", () => {
             });
             assert.instanceOf(err, Error);
 
-            assert.isFalse(await dir.exists());
+            assert.false(await dir.exists());
 
             await systemDb.close();
         });
@@ -276,41 +276,41 @@ describe("realm", () => {
         it("cli.command", async () => {
             const name = randomName("project");
             const cwd = fixture(name);
-            
+
             await fs.mkdirp(cwd);
-    
+
             await fs.copyTo(std.path.join(PACKAGES_PATH, "cli_command_simple", "*"), cwd);
-    
+
             const installOptions = {
                 name: cwd,
                 symlink: true
             };
-    
+
             let observer = await realmManager.install(installOptions);
             await observer.result;
-            
+
             observer = await realmManager.list();
             const list = await observer.result;
             assert.lengthOf(list, 1);
             assert.equal(list[0].name, "cli.command.simple");
-    
+
             await cliConfig.load();
             assert.lengthOf(cliConfig.raw.commands, 1);
-    
+
             const packagePath = std.path.join(adone.realm.config.packagesPath, "cli.command.simple");
-            
-            assert.isTrue(await fs.exists(packagePath));
-    
+
+            assert.true(await fs.exists(packagePath));
+
             await fs.rm(cwd);
-    
+
             const lstat = await fs.lstat(packagePath);
-            assert.isTrue(lstat.isSymbolicLink());
-    
+            assert.true(lstat.isSymbolicLink());
+
             observer = await realmManager.uninstall({
                 name: list[0].name
             });
             await observer.result;
-    
+
             await assert.throws(async () => fs.lstat(packagePath));
         });
     });

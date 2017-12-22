@@ -49,9 +49,9 @@ describe("gridfs", function () {
         await gridStore.open();
         await gridStore.write("hello world!");
         await gridStore.close();
-        expect(await GridStore.exist(db, "foobar")).to.be.true;
-        expect(await GridStore.exist(db, "does_not_exist")).to.be.false;
-        expect(await GridStore.exist(db, "foobar", "another_root")).to.be.false;
+        expect(await GridStore.exist(db, "foobar")).to.be.true();
+        expect(await GridStore.exist(db, "does_not_exist")).to.be.false();
+        expect(await GridStore.exist(db, "foobar", "another_root")).to.be.false();
     });
 
     it("should correctly perform grid store read length", async () => {
@@ -146,7 +146,7 @@ describe("gridfs", function () {
         // Ensure we have a md5
         const gridStore2 = new GridStore(db, "test_gs_writing_file", "r");
         await gridStore2.open();
-        expect(gridStore2.md5).to.be.ok;
+        expect(gridStore2.md5).to.be.ok();
         expect(gridStore2.md5).to.be.equal(crypto.createHash("md5").update(expectedData).digest("hex"));
     });
 
@@ -162,7 +162,7 @@ describe("gridfs", function () {
         expect(data.length).to.be.equal(await file.size());
         const gridStore2 = new GridStore(db, doc.fileId, "r");
         await gridStore2.open();
-        expect(gridStore2.md5).to.be.ok;
+        expect(gridStore2.md5).to.be.ok();
         expect(gridStore2.md5).to.be.equal(crypto.createHash("md5").update(expectedData).digest("hex"));
     });
 
@@ -314,7 +314,7 @@ describe("gridfs", function () {
         await gridStore.open();
         await gridStore.write(data);
         const doc = await gridStore.close();
-        expect(await GridStore.exist(db, doc._id)).to.be.true;
+        expect(await GridStore.exist(db, doc._id)).to.be.true();
     });
 
     it("should correctly save data by object id", async () => {
@@ -324,7 +324,7 @@ describe("gridfs", function () {
         await gridStore.open();
         await gridStore.write("bar");
         await gridStore.close();
-        expect(await GridStore.exist(db, id)).to.be.true;
+        expect(await GridStore.exist(db, id)).to.be.true();
     });
 
     it("should check exists by using regexp", async () => {
@@ -333,7 +333,7 @@ describe("gridfs", function () {
         await gridStore.open();
         await gridStore.write("bar");
         await gridStore.close();
-        expect(await GridStore.exist(db, /shouldCheck/)).to.be.true;
+        expect(await GridStore.exist(db, /shouldCheck/)).to.be.true();
     });
 
     it("should correctly open grid store with different root", async () => {
@@ -908,7 +908,7 @@ describe("gridfs", function () {
 
         gridStore = new GridStore(db, "test_gs_upload_date", "r");
         await gridStore.open();
-        expect(gridStore.uploadDate).to.be.ok;
+        expect(gridStore.uploadDate).to.be.ok();
         const originalFileUploadDate = gridStore.uploadDate;
         await gridStore.close();
 
@@ -968,7 +968,7 @@ describe("gridfs", function () {
 
         gridStore = new GridStore(db, "test_gs_metadata", "r");
         await gridStore.open();
-        expect(gridStore.metadata).to.be.null;
+        expect(gridStore.metadata).to.be.null();
         await gridStore.close();
 
         gridStore = new GridStore(db, "test_gs_metadata", "w+");
@@ -1091,7 +1091,7 @@ describe("gridfs", function () {
         await gridStore.write("hello world!");
         await gridStore.close();
 
-        expect(await GridStore.exist(db, { filename: id })).to.be.true;
+        expect(await GridStore.exist(db, { filename: id })).to.be.true();
     });
 
     it("should correctly pipe through multiple pipelines", async () => {

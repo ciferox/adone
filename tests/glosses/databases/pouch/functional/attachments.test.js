@@ -161,7 +161,7 @@ describe("database", "pouch", "suite2 attachments", () => {
             };
             return db.put(doc);
         }).then((res) => {
-            assert.isUndefined(res, "should throw");
+            assert.undefined(res, "should throw");
         }).catch((err) => {
             assert.exists(err.status, `got improper error: ${err}`);
             assert.equal(err.status, 412);
@@ -181,7 +181,7 @@ describe("database", "pouch", "suite2 attachments", () => {
         };
         const db = new DB(dbName);
         return db.put(stubDoc).then((res) => {
-            assert.isUndefined(res, "should throw");
+            assert.undefined(res, "should throw");
         }).catch((err) => {
             assert.exists(err.status, `got improper error: ${err}`);
             assert.equal(err.status, 412, `got improper error: ${err}`);
@@ -203,7 +203,7 @@ describe("database", "pouch", "suite2 attachments", () => {
             };
             return db.put(doc);
         }).then((res) => {
-            assert.isUndefined(res, "should throw");
+            assert.undefined(res, "should throw");
         }).catch((err) => {
             assert.exists(err.status, `got improper error: ${err}`);
             assert.equal(err.status, 412);
@@ -229,7 +229,7 @@ describe("database", "pouch", "suite2 attachments", () => {
             };
             return db.put(doc);
         }).then((res) => {
-            assert.isUndefined(res, "should throw");
+            assert.undefined(res, "should throw");
         }).catch((err) => {
             assert.exists(err.status, `got improper error: ${err}`);
             assert.equal(err.status, 412);
@@ -248,10 +248,10 @@ describe("database", "pouch", "suite2 attachments", () => {
                     binary: true
                 }).then((savedDoc) => {
                     const att = savedDoc._attachments[attName];
-                    assert.isUndefined(att.stub);
+                    assert.undefined(att.stub);
                     assert.exists(att.digest);
                     assert.equal(att.content_type, expected.content_type);
-                    assert.isNotString(att.data);
+                    assert.notString(att.data);
                     assert.equal(att.data.type, expected.content_type);
                     return att.data.toString("binary");
                 }).then((bin) => {
@@ -278,14 +278,14 @@ describe("database", "pouch", "suite2 attachments", () => {
                     assert.lengthOf(res.rows, 1);
                     const savedDoc = res.rows[0].doc;
                     if (!atts) {
-                        assert.isUndefined(savedDoc._attachments);
+                        assert.undefined(savedDoc._attachments);
                         return;
                     }
                     const att = savedDoc._attachments[attName];
-                    assert.isUndefined(att.stub);
+                    assert.undefined(att.stub);
                     assert.exists(att.digest);
                     assert.equal(att.content_type, expected.content_type);
-                    assert.isNotString(att.data);
+                    assert.notString(att.data);
                     assert.equal(att.data.type, expected.content_type);
                     assert.equal(util.btoa(att.data.toString("binary")), expected.data);
                 });
@@ -313,14 +313,14 @@ describe("database", "pouch", "suite2 attachments", () => {
                         return x._id === doc._id;
                     })[0];
                     if (!atts) {
-                        assert.isUndefined(savedDoc._attachments);
+                        assert.undefined(savedDoc._attachments);
                         return;
                     }
                     const att = savedDoc._attachments[attName];
-                    assert.isUndefined(att.stub);
+                    assert.undefined(att.stub);
                     assert.exists(att.digest);
                     assert.equal(att.content_type, expected.content_type);
-                    assert.isNotString(att.data);
+                    assert.notString(att.data);
                     assert.equal(att.data.type, expected.content_type);
                     assert.equal(util.btoa(att.data.toString("binary")), expected.data);
                 }));
@@ -353,14 +353,14 @@ describe("database", "pouch", "suite2 attachments", () => {
                         return x._id === doc._id;
                     })[0];
                     if (!atts) {
-                        assert.isUndefined(savedDoc._attachments);
+                        assert.undefined(savedDoc._attachments);
                         return;
                     }
                     const att = savedDoc._attachments[attName];
-                    assert.isUndefined(att.stub);
+                    assert.undefined(att.stub);
                     assert.exists(att.digest);
                     assert.equal(att.content_type, expected.content_type);
-                    assert.isNotString(att.data);
+                    assert.notString(att.data);
                     assert.equal(att.data.type, expected.content_type);
                     assert.equal(util.btoa(att.data.toString("binary")), expected.data);
                 }));
@@ -380,7 +380,7 @@ describe("database", "pouch", "suite2 attachments", () => {
             }).then((res) => {
                 assert.lengthOf(res.rows, 4);
                 res.rows.forEach((row) => {
-                    assert.isUndefined(row.doc);
+                    assert.undefined(row.doc);
                 });
                 return db.allDocs({
                     binary: true
@@ -388,7 +388,7 @@ describe("database", "pouch", "suite2 attachments", () => {
             }).then((res) => {
                 assert.lengthOf(res.rows, 4);
                 res.rows.forEach((row) => {
-                    assert.isUndefined(row.doc);
+                    assert.undefined(row.doc);
                 });
             });
         });
@@ -412,7 +412,7 @@ describe("database", "pouch", "suite2 attachments", () => {
 
                 return Promise.all(res.rows.map((row, i) => {
                     if (docs[i]._deleted) {
-                        assert.isUndefined(row.doc);
+                        assert.undefined(row.doc);
                         return;
                     }
                     const atts = docs[i]._attachments;
@@ -420,14 +420,14 @@ describe("database", "pouch", "suite2 attachments", () => {
                     const expected = atts && atts[attName];
                     const savedDoc = row.doc;
                     if (!atts) {
-                        assert.isUndefined(savedDoc._attachments);
+                        assert.undefined(savedDoc._attachments);
                         return;
                     }
                     const att = savedDoc._attachments[attName];
-                    assert.isUndefined(att.stub);
+                    assert.undefined(att.stub);
                     assert.exists(att.digest);
                     assert.equal(att.content_type, expected.content_type);
-                    assert.isNotString(att.data);
+                    assert.notString(att.data);
                     assert.equal(att.data.type, expected.content_type);
                     assert.equal(util.btoa(att.data.toString("binary")), expected.data);
                 }));
@@ -509,10 +509,10 @@ describe("database", "pouch", "suite2 attachments", () => {
                         const expected = atts && atts[attName];
                         const savedDoc = row.doc;
                         const att = savedDoc._attachments[attName];
-                        assert.isUndefined(att.stub);
+                        assert.undefined(att.stub);
                         assert.exists(att.digest);
                         assert.equal(att.content_type, expected.content_type);
-                        assert.isNotString(att.data);
+                        assert.notString(att.data);
                         assert.equal(att.data.type, expected.content_type);
                         assert.equal(util.btoa(att.data.toString("binary")), expected.data);
                     }));
@@ -602,12 +602,12 @@ describe("database", "pouch", "suite2 attachments", () => {
                         return x._id === row.id;
                     })[0];
                     if (doc._deleted) {
-                        assert.isUndefined(row.doc);
+                        assert.undefined(row.doc);
                         return;
                     }
                     const atts = doc._attachments;
                     if (!atts) {
-                        assert.isUndefined(row.doc._attachments);
+                        assert.undefined(row.doc._attachments);
                         return;
                     }
                     const attNames = Object.keys(atts);
@@ -615,10 +615,10 @@ describe("database", "pouch", "suite2 attachments", () => {
                         const expected = atts && atts[attName];
                         const savedDoc = row.doc;
                         const att = savedDoc._attachments[attName];
-                        assert.isUndefined(att.stub);
+                        assert.undefined(att.stub);
                         assert.exists(att.digest);
                         assert.equal(att.content_type, expected.content_type);
-                        assert.isNotString(att.data);
+                        assert.notString(att.data);
                         assert.equal(att.data.type, expected.content_type);
                         assert.equal(util.btoa(att.data.toString("binary")), expected.data);
                     }));
@@ -645,7 +645,7 @@ describe("database", "pouch", "suite2 attachments", () => {
                         return x._id === row.id;
                     })[0];
                     if (doc._deleted) {
-                        assert.isUndefined(row.doc);
+                        assert.undefined(row.doc);
                         return;
                     }
                     const atts = doc._attachments;
@@ -653,14 +653,14 @@ describe("database", "pouch", "suite2 attachments", () => {
                     const expected = atts && atts[attName];
                     const savedDoc = row.doc;
                     if (!atts) {
-                        assert.isUndefined(savedDoc._attachments);
+                        assert.undefined(savedDoc._attachments);
                         return;
                     }
                     const att = savedDoc._attachments[attName];
-                    assert.isUndefined(att.stub);
+                    assert.undefined(att.stub);
                     assert.exists(att.digest);
                     assert.equal(att.content_type, expected.content_type);
-                    assert.isNotString(att.data);
+                    assert.notString(att.data);
                     assert.equal(att.data.type, expected.content_type);
                     assert.equal(util.btoa(att.data.toString("binary")), expected.data);
                 }));
@@ -742,10 +742,10 @@ describe("database", "pouch", "suite2 attachments", () => {
                         const expected = atts && atts[attName];
                         const savedDoc = row.doc;
                         const att = savedDoc._attachments[attName];
-                        assert.isUndefined(att.stub);
+                        assert.undefined(att.stub);
                         assert.exists(att.digest);
                         assert.equal(att.content_type, expected.content_type);
-                        assert.isNotString(att.data);
+                        assert.notString(att.data);
                         assert.equal(att.data.type, expected.content_type);
                         assert.equal(util.btoa(att.data.toString("binary")), expected.data);
                     }));
@@ -836,7 +836,7 @@ describe("database", "pouch", "suite2 attachments", () => {
                     })[0];
                     const atts = doc._attachments;
                     if (!atts) {
-                        assert.isUndefined(row.doc._attachments);
+                        assert.undefined(row.doc._attachments);
                         return;
                     }
                     const attNames = Object.keys(atts);
@@ -844,10 +844,10 @@ describe("database", "pouch", "suite2 attachments", () => {
                         const expected = atts && atts[attName];
                         const savedDoc = row.doc;
                         const att = savedDoc._attachments[attName];
-                        assert.isUndefined(att.stub);
+                        assert.undefined(att.stub);
                         assert.exists(att.digest);
                         assert.equal(att.content_type, expected.content_type);
-                        assert.isNotString(att.data);
+                        assert.notString(att.data);
                         assert.equal(att.data.type, expected.content_type);
                         assert.equal(util.btoa(att.data.toString("binary")), expected.data);
                     }));
@@ -937,23 +937,23 @@ describe("database", "pouch", "suite2 attachments", () => {
                         return x._id === row.id;
                     })[0];
                     if (row.deleted) {
-                        assert.isUndefined(row.doc._attachments);
+                        assert.undefined(row.doc._attachments);
                         return;
                     }
                     const atts = doc._attachments;
                     const savedDoc = row.doc;
                     if (!atts) {
-                        assert.isUndefined(savedDoc._attachments);
+                        assert.undefined(savedDoc._attachments);
                         return;
                     }
                     const attNames = Object.keys(atts);
                     return Promise.all(attNames.map((attName) => {
                         const expected = atts && atts[attName];
                         const att = savedDoc._attachments[attName];
-                        assert.isUndefined(att.stub);
+                        assert.undefined(att.stub);
                         assert.exists(att.digest);
                         assert.equal(att.content_type, expected.content_type);
-                        assert.isNotString(att.data);
+                        assert.notString(att.data);
                         assert.equal(att.data.type, expected.content_type);
                         assert.equal(util.btoa(att.data.toString("binary")), expected.data);
                     }));
@@ -977,7 +977,7 @@ describe("database", "pouch", "suite2 attachments", () => {
                             return x._id === change.id;
                         })[0];
                         if (change.deleted) {
-                            assert.isUndefined(change.doc);
+                            assert.undefined(change.doc);
                             return doneWithDoc();
                         }
                         const atts = doc._attachments;
@@ -985,14 +985,14 @@ describe("database", "pouch", "suite2 attachments", () => {
                         const expected = atts && atts[attName];
                         const savedDoc = change.doc;
                         if (!atts) {
-                            assert.isUndefined(savedDoc._attachments);
+                            assert.undefined(savedDoc._attachments);
                             return doneWithDoc();
                         }
                         const att = savedDoc._attachments[attName];
-                        assert.isUndefined(att.stub);
+                        assert.undefined(att.stub);
                         assert.exists(att.digest);
                         assert.equal(att.content_type, expected.content_type);
-                        assert.isNotString(att.data);
+                        assert.notString(att.data);
                         assert.equal(att.data.type, expected.content_type);
                         assert.equal(util.btoa(att.data.toString("binary")), expected.data);
                         doneWithDoc();
@@ -1097,23 +1097,23 @@ describe("database", "pouch", "suite2 attachments", () => {
                             return x._id === change.id;
                         })[0];
                         if (change.deleted) {
-                            assert.isUndefined(change.doc._attachments);
+                            assert.undefined(change.doc._attachments);
                             return doneWithDoc();
                         }
                         const atts = doc._attachments;
                         const savedDoc = change.doc;
                         if (!atts) {
-                            assert.isUndefined(savedDoc._attachments);
+                            assert.undefined(savedDoc._attachments);
                             return doneWithDoc();
                         }
                         const attNames = Object.keys(atts);
                         return Promise.all(attNames.map((attName) => {
                             const expected = atts && atts[attName];
                             const att = savedDoc._attachments[attName];
-                            assert.isUndefined(att.stub);
+                            assert.undefined(att.stub);
                             assert.exists(att.digest);
                             assert.equal(att.content_type, expected.content_type);
-                            assert.isNotString(att.data);
+                            assert.notString(att.data);
                             assert.equal(att.data.type, expected.content_type);
                             assert.equal(util.btoa(att.data.toString("binary")), expected.data);
                         })).then(doneWithDoc);
@@ -1155,7 +1155,7 @@ describe("database", "pouch", "suite2 attachments", () => {
                             return x._id === change.id;
                         })[0];
                         if (change.deleted) {
-                            assert.isUndefined(change.doc);
+                            assert.undefined(change.doc);
                             return doneWithDoc();
                         }
                         const atts = doc._attachments;
@@ -1163,14 +1163,14 @@ describe("database", "pouch", "suite2 attachments", () => {
                         const expected = atts && atts[attName];
                         const savedDoc = change.doc;
                         if (!atts) {
-                            assert.isUndefined(savedDoc._attachments);
+                            assert.undefined(savedDoc._attachments);
                             return doneWithDoc();
                         }
                         const att = savedDoc._attachments[attName];
-                        assert.isUndefined(att.stub);
+                        assert.undefined(att.stub);
                         assert.exists(att.digest);
                         assert.equal(att.content_type, expected.content_type);
-                        assert.isNotString(att.data);
+                        assert.notString(att.data);
                         assert.equal(att.data.type, expected.content_type);
                         assert.equal(util.btoa(att.data.toString("binary")), expected.data);
                         doneWithDoc();
@@ -1230,7 +1230,7 @@ describe("database", "pouch", "suite2 attachments", () => {
                             return x._id === change.id;
                         })[0];
                         if (change.deleted) {
-                            assert.isUndefined(change.doc);
+                            assert.undefined(change.doc);
                             return doneWithDoc();
                         }
                         const atts = doc._attachments;
@@ -1238,14 +1238,14 @@ describe("database", "pouch", "suite2 attachments", () => {
                         const expected = atts && atts[attName];
                         const savedDoc = change.doc;
                         if (!atts) {
-                            assert.isUndefined(savedDoc._attachments);
+                            assert.undefined(savedDoc._attachments);
                             return doneWithDoc();
                         }
                         const att = savedDoc._attachments[attName];
                         assert.equal(att.stub, true);
                         assert.exists(att.digest);
                         assert.equal(att.content_type, expected.content_type);
-                        assert.isUndefined(att.data);
+                        assert.undefined(att.data);
                         doneWithDoc();
                     }).catch(reject);
                 }
@@ -1281,7 +1281,7 @@ describe("database", "pouch", "suite2 attachments", () => {
                 function handleChange(change) {
                     changes++;
                     promise = promise.then(() => {
-                        assert.isUndefined(change.doc);
+                        assert.undefined(change.doc);
                         return doneWithDoc();
                     }).catch(reject);
                 }
@@ -1369,14 +1369,14 @@ describe("database", "pouch", "suite2 attachments", () => {
         }).then((res) => {
             assert.lengthOf(res.results, 5);
             res.results.forEach((row) => {
-                assert.isUndefined(row.doc,
+                assert.undefined(row.doc,
                     "no doc when attachments=true but include_docs=false");
             });
             return db.changes();
         }).then((res) => {
             assert.lengthOf(res.results, 5);
             res.results.forEach((row) => {
-                assert.isUndefined(row.doc,
+                assert.undefined(row.doc,
                     "no doc when attachments=false and include_docs=false");
             });
         });
@@ -1455,14 +1455,14 @@ describe("database", "pouch", "suite2 attachments", () => {
         }).then((res) => {
             assert.lengthOf(res.results, 5);
             res.results.forEach((row) => {
-                assert.isUndefined(row.doc,
+                assert.undefined(row.doc,
                     "no doc when attachments=true but include_docs=false");
             });
             return liveChangesPromise({});
         }).then((res) => {
             assert.lengthOf(res.results, 5);
             res.results.forEach((row) => {
-                assert.isUndefined(row.doc,
+                assert.undefined(row.doc,
                     "no doc when attachments=false and include_docs=false");
             });
         });
@@ -1503,14 +1503,14 @@ describe("database", "pouch", "suite2 attachments", () => {
         }).then((res) => {
             assert.lengthOf(res.results, 5);
             res.results.forEach((row) => {
-                assert.isUndefined(row.doc,
+                assert.undefined(row.doc,
                     "no doc when attachments=true but include_docs=false");
             });
             return db.changes();
         }).then((res) => {
             assert.lengthOf(res.results, 5);
             res.results.forEach((row) => {
-                assert.isUndefined(row.doc,
+                assert.undefined(row.doc,
                     "no doc when attachments=false and include_docs=false");
             });
         });
@@ -1571,14 +1571,14 @@ describe("database", "pouch", "suite2 attachments", () => {
         }).then((res) => {
             assert.lengthOf(res.results, 5);
             res.results.forEach((row) => {
-                assert.isUndefined(row.doc,
+                assert.undefined(row.doc,
                     "no doc when attachments=true but include_docs=false");
             });
             return liveChangesPromise({});
         }).then((res) => {
             assert.lengthOf(res.results, 5);
             res.results.forEach((row) => {
-                assert.isUndefined(row.doc,
+                assert.undefined(row.doc,
                     "no doc when attachments=false and include_docs=false");
             });
         });
@@ -1809,14 +1809,14 @@ describe("database", "pouch", "suite2 attachments", () => {
             assert.lengthOf(res.rows, 5);
             res.rows.forEach((row) => {
                 assert.exists(row.doc);
-                assert.isUndefined(row.doc._attachments);
+                assert.undefined(row.doc._attachments);
             });
             return db.allDocs({ include_docs: true });
         }).then((res) => {
             assert.lengthOf(res.rows, 5);
             res.rows.forEach((row) => {
                 assert.exists(row.doc);
-                assert.isUndefined(row.doc._attachments);
+                assert.undefined(row.doc._attachments);
             });
         });
     });
@@ -1878,7 +1878,7 @@ describe("database", "pouch", "suite2 attachments", () => {
             return db.allDocs({ keys: ["doc"], attachments: true, include_docs: true });
         }).then((res) => {
             // technically CouchDB sets this to null, but we won't adhere strictly to that
-            assert.isNull(res.rows[0].doc);
+            assert.null(res.rows[0].doc);
             delete res.rows[0].doc;
             assert.deepEqual(res.rows, [
                 {
@@ -1939,8 +1939,8 @@ describe("database", "pouch", "suite2 attachments", () => {
         return db.put(binAttDoc).then(() => {
             return db.get(binAttDoc._id, { attachments: true });
         }).then((doc) => {
-            assert.isUndefined(doc._attachments["foo.txt"].stub);
-            assert.isUndefined(doc._attachments["foo.txt"].length);
+            assert.undefined(doc._attachments["foo.txt"].stub);
+            assert.undefined(doc._attachments["foo.txt"].length);
         });
     });
 
@@ -2096,14 +2096,14 @@ describe("database", "pouch", "suite2 attachments", () => {
                 assert.equal(res.rows[i].doc._attachments[`att${j}`].stub, true, `(allDocs) doc${i} contains att${j} stub`);
             }
         }
-        assert.isUndefined(res.rows[0].doc._attachments, "(allDocs) doc0 contains no attachments");
+        assert.undefined(res.rows[0].doc._attachments, "(allDocs) doc0 contains no attachments");
         await new Promise((resolve) => {
             db.changes({
                 include_docs: true
             }).on("change", (change) => {
                 const i = Number(change.id.substr(3));
                 if (i === 0) {
-                    assert.isUndefined(res.rows[0].doc._attachments, "(onChange) doc0 contains no attachments");
+                    assert.undefined(res.rows[0].doc._attachments, "(onChange) doc0 contains no attachments");
                 } else {
                     const attachmentsNb =
                         !is.undefined(docs[i]._attachments) ?
@@ -2122,7 +2122,7 @@ describe("database", "pouch", "suite2 attachments", () => {
                         assert.equal(res.results[i].doc._attachments[`att${j}`].stub, true, `(complete) doc${i} contains att${j} stub`);
                     }
                 }
-                assert.isUndefined(res.results[0].doc._attachments, "(complete) doc0 contains no attachments");
+                assert.undefined(res.results[0].doc._attachments, "(complete) doc0 contains no attachments");
                 resolve();
             });
         });
@@ -2158,7 +2158,7 @@ describe("database", "pouch", "suite2 attachments", () => {
             "md5-cCkGbCesb17xjWYNV0GXmg==",
             "md5-3gIs+o2eJiHrXZqziQZqBA=="
         ];
-        assert.isAbove(validDigests.indexOf(att.digest), -1);
+        assert.above(validDigests.indexOf(att.digest), -1);
         assert.equal(att.content_type, "text/plain");
         assert.equal(att.length, 0);
     });
@@ -2216,7 +2216,7 @@ describe("database", "pouch", "suite2 attachments", () => {
         }).then((doc) => {
             Object.keys(doc._attachments).forEach((filename) => {
                 const att = doc._attachments[filename];
-                assert.isUndefined(att.data);
+                assert.undefined(att.data);
                 assert.equal(att.stub, true);
                 assert.exists(att.digest);
                 assert.exists(att.content_type);
@@ -2226,7 +2226,7 @@ describe("database", "pouch", "suite2 attachments", () => {
             Object.keys(doc._attachments).forEach((filename) => {
                 const att = doc._attachments[filename];
                 assert.exists(att.data);
-                assert.isUndefined(att.stub);
+                assert.undefined(att.stub);
                 assert.exists(att.digest);
                 assert.exists(att.content_type);
             });
@@ -2267,7 +2267,7 @@ describe("database", "pouch", "suite2 attachments", () => {
             if (change.id === "anotherdoc2") {
                 assert.equal(change.id, "anotherdoc2", "Doc has been created");
                 db.get(change.id, { attachments: true }, (err, doc) => {
-                    assert.isObject(doc._attachments, "doc has attachments object");
+                    assert.object(doc._attachments, "doc has attachments object");
                     assert.exists(doc._attachments.mytext, "doc has attachments attachment");
                     assert.equal(doc._attachments.mytext.data, "TXl0ZXh0", "doc has attachments attachment");
                     changes.cancel();
@@ -2292,7 +2292,7 @@ describe("database", "pouch", "suite2 attachments", () => {
                 }).on("change", (change) => {
                     if (change.id === "anotherdoc3") {
                         db.get(change.id, { attachments: true }).then((doc) => {
-                            assert.isObject(doc._attachments, "object", "doc has attachments object");
+                            assert.object(doc._attachments, "object", "doc has attachments object");
                             assert.exists(doc._attachments.mytext);
                             assert.equal(doc._attachments.mytext.data, "TXl0ZXh0");
                             changes.cancel();
@@ -2429,7 +2429,7 @@ describe("database", "pouch", "suite2 attachments", () => {
         assert.notInclude(Object.keys(res._attachments), "mytext1");
         assert.include(Object.keys(res._attachments), "mytext2");
         res = await db.removeAttachment("mydoc", "mytext2", res._rev);
-        assert.isUndefined(res._attachments);
+        assert.undefined(res._attachments);
     });
 
     it("Test a document with a json string attachment", async () => {
@@ -2692,7 +2692,7 @@ describe("database", "pouch", "suite2 attachments", () => {
         const db = new DB(dbName);
         await db.putAttachment("a", "foo2.txt", "", "", "text/plain");
         const docs = await db.allDocs({ include_docs: true });
-        assert.isUndefined(docs.rows[0].stub, "no stub");
+        assert.undefined(docs.rows[0].stub, "no stub");
     });
 
     it("Try to get unexistent attachment of some doc", async () => {
@@ -2789,7 +2789,7 @@ describe("database", "pouch", "suite2 attachments", () => {
             return db.get("foo", { attachments: true });
         }).then((doc) => {
             assert.match(doc._attachments.att.content_type, /^text\/plain/);
-            assert.isAbove(doc._attachments.att.data.length, 0, "attachment exists");
+            assert.above(doc._attachments.att.data.length, 0, "attachment exists");
         });
     });
 

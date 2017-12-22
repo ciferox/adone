@@ -451,8 +451,8 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                 expect(user.Products.length).to.equal(2);
                 expect(user.Products[0].Tags.length).to.equal(2);
                 expect(user.Products[1].Tags.length).to.equal(1);
-                expect(user.Products[0].Category).to.be.ok;
-                expect(user.Products[1].Category).not.to.be.ok;
+                expect(user.Products[0].Category).to.be.ok();
+                expect(user.Products[1].Category).not.to.be.ok();
 
                 expect(user.Products[0].Prices.length).to.equal(2);
                 expect(user.Products[1].Prices.length).to.equal(4);
@@ -548,9 +548,9 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                         }
                     ]
                 });
-                expect(as.length).to.be.ok;
+                expect(as.length).to.be.ok();
                 as.forEach((a) => {
-                    expect(a.b.c.d.e.f.g.h).to.be.ok;
+                    expect(a.b.c.d.e.f.g.h).to.be.ok();
                 });
             }
         });
@@ -658,10 +658,10 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                         }
                     ]
                 });
-                expect(as.length).to.be.ok;
+                expect(as.length).to.be.ok();
 
                 as.forEach((a) => {
-                    expect(a.b.c.d.e.f.g.h).to.be.ok;
+                    expect(a.b.c.d.e.f.g.h).to.be.ok();
                 });
             }
         });
@@ -819,7 +819,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                 ]
             });
             expect(users.length).to.equal(1);
-            expect(users[0].Group).to.be.ok;
+            expect(users[0].Group).to.be.ok();
         });
 
         it("should be possible to extend the on clause with a where option on a belongsTo include", async function () {
@@ -852,7 +852,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                 ]
             });
             expect(users.length).to.equal(1);
-            expect(users[0].Group).to.be.ok;
+            expect(users[0].Group).to.be.ok();
             expect(users[0].Group.name).to.equal("A");
         });
 
@@ -886,7 +886,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                 ]
             });
             users.forEach((user) => {
-                expect(user.Group).to.be.ok;
+                expect(user.Group).to.be.ok();
             });
         });
 
@@ -920,8 +920,8 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                                     }]
                                 }]
                             }).then((john) => {
-                                expect(john.Address).to.be.ok;
-                                expect(john.Address.Street).to.be.ok;
+                                expect(john.Address).to.be.ok();
+                                expect(john.Address.Street).to.be.ok();
                             });
                         });
                     });
@@ -975,8 +975,8 @@ describe(Support.getTestDialectTeaser("Include"), () => {
             });
             expect(users.length).to.equal(1);
             users.forEach((user) => {
-                expect(user.Group).to.be.ok;
-                expect(user.Group.Categories).to.be.ok;
+                expect(user.Group).to.be.ok();
+                expect(user.Group.Categories).to.be.ok();
             });
         });
 
@@ -1026,8 +1026,8 @@ describe(Support.getTestDialectTeaser("Include"), () => {
             });
             expect(users.length).to.equal(1);
             users.forEach((user) => {
-                expect(user.Team).to.be.ok;
-                expect(user.Team.Tags).to.be.ok;
+                expect(user.Team).to.be.ok();
+                expect(user.Team.Tags).to.be.ok();
             });
         });
 
@@ -1077,8 +1077,8 @@ describe(Support.getTestDialectTeaser("Include"), () => {
             });
             expect(users.length).to.equal(1);
             users.forEach((user) => {
-                expect(user.Group).to.be.ok;
-                expect(user.Group.Categories).to.be.ok;
+                expect(user.Group).to.be.ok();
+                expect(user.Group.Categories).to.be.ok();
             });
         });
 
@@ -1112,7 +1112,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                 ]
             });
             expect(users.length).to.equal(1);
-            expect(users[0].LeaderOf).to.be.ok;
+            expect(users[0].LeaderOf).to.be.ok();
             expect(users[0].LeaderOf.title).to.equal("Beta");
         });
 
@@ -1363,8 +1363,8 @@ describe(Support.getTestDialectTeaser("Include"), () => {
 
                     products.forEach((product) => {
                         expect(product.Company.name).to.equal("NYSE");
-                        expect(product.Tags.length).to.be.ok;
-                        expect(product.Prices.length).to.be.ok;
+                        expect(product.Tags.length).to.be.ok();
+                        expect(product.Prices.length).to.be.ok();
                     });
                 });
             });
@@ -1406,9 +1406,9 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                     ]
                 }).then((products) => {
                     products.forEach((product) => {
-                        expect(product.Tags.length).to.be.ok;
+                        expect(product.Tags.length).to.be.ok();
                         product.Tags.forEach((tag) => {
-                            expect(tag.get().productTags).not.to.be.ok;
+                            expect(tag.get().productTags).not.to.be.ok();
                         });
                     });
                 });
@@ -1524,7 +1524,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                         }).then((members) => {
                             expect(members.length).to.equal(20);
                             members.forEach((member) => {
-                                expect(member.get("id")).not.to.be.ok;
+                                expect(member.get("id")).not.to.be.ok();
                                 expect(member.Albums.length).to.equal(1);
                             });
                         });
@@ -1554,8 +1554,8 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                     expect(products.length).to.equal(6);
 
                     products.forEach((product) => {
-                        expect(product.Tags.length).to.be.ok;
-                        expect(product.Prices.length).to.be.ok;
+                        expect(product.Tags.length).to.be.ok();
+                        expect(product.Prices.length).to.be.ok();
 
                         product.Prices.forEach((price) => {
                             expect(price.value).to.be.above(5);
@@ -1582,8 +1582,8 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                     expect(products.length).to.equal(10);
 
                     products.forEach((product) => {
-                        expect(product.Tags.length).to.be.ok;
-                        expect(product.Prices.length).to.be.ok;
+                        expect(product.Tags.length).to.be.ok();
+                        expect(product.Prices.length).to.be.ok();
 
                         product.Tags.forEach((tag) => {
                             expect(["A", "B", "C"]).to.include(tag.name);
@@ -1872,7 +1872,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
 
             const post = posts[0];
 
-            expect(post.get("comments")).not.to.be.ok;
+            expect(post.get("comments")).not.to.be.ok();
             expect(parseInt(post.get("commentCount"), 10)).to.equal(3);
         });
 
@@ -1910,7 +1910,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
             expect(posts.length).to.equal(1);
 
             const post = posts[0];
-            expect(post.id).not.to.be.ok;
+            expect(post.id).not.to.be.ok();
             expect(parseInt(post["comments.commentCount"], 10)).to.equal(3);
         });
 

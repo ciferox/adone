@@ -30,7 +30,7 @@ describe("fast", "transform", "rename", () => {
                 const file = await fromdir.addFile("test.js");
                 await fast.src(file.path()).rename("test2.js").dest(todir.path());
                 const file2 = await todir.getFile("test2.js");
-                expect(await file2.exists()).to.be.true;
+                expect(await file2.exists()).to.be.true();
             });
         });
 
@@ -39,7 +39,7 @@ describe("fast", "transform", "rename", () => {
                 await fromdir.addFile("some", "directory", "a", "b", "c", "fff.js");
                 await fast.src(path.join(fromdir.path(), "**", "fff.js")).rename("mooove/fff.js").dest(todir.path());
                 const file2 = todir.getFile("mooove", "fff.js");
-                expect(await file2.exists()).to.be.true;
+                expect(await file2.exists()).to.be.true();
             });
         });
     });
@@ -55,7 +55,7 @@ describe("fast", "transform", "rename", () => {
             it("has no effect", async () => {
                 await fromdir.addFile("test.js");
                 await fast.src(srcPath).rename({}).dest(todir.path());
-                expect(await todir.getFile("test.js").exists()).to.be.true;
+                expect(await todir.getFile("test.js").exists()).to.be.true();
             });
         });
 
@@ -63,19 +63,19 @@ describe("fast", "transform", "rename", () => {
             it("replaces dirname with value", async () => {
                 await fromdir.addFile("test.js");
                 await fast.src(srcPath).rename({ dirname: "hello" }).dest(todir.path());
-                expect(await todir.getFile("hello", "test.js").exists()).to.be.true;
+                expect(await todir.getFile("hello", "test.js").exists()).to.be.true();
             });
 
             it("removes dirname with \'./\'", async () => {
                 await fromdir.addFile("test.js");
                 await fast.src(srcPath).rename({ dirname: "./" }).dest(todir.path());
-                expect(await todir.getFile("test.js").exists()).to.be.true;
+                expect(await todir.getFile("test.js").exists()).to.be.true();
             });
 
             it("removes dirname with empty string", async () => {
                 await fromdir.addFile("hello", "test.js");
                 await fast.src(srcPath).rename({ dirname: "" }).dest(todir.path());
-                expect(await todir.getFile("test.js").exists()).to.be.true;
+                expect(await todir.getFile("test.js").exists()).to.be.true();
             });
         });
 
@@ -83,7 +83,7 @@ describe("fast", "transform", "rename", () => {
             it("prepends value to basename", async () => {
                 await fromdir.addFile("test.js");
                 await fast.src(srcPath).rename({ prefix: "hey-" }).dest(todir.path());
-                expect(await todir.getFile("hey-test.js").exists()).to.be.true;
+                expect(await todir.getFile("hey-test.js").exists()).to.be.true();
             });
         });
 
@@ -91,13 +91,13 @@ describe("fast", "transform", "rename", () => {
             it("replaces basename with value", async () => {
                 await fromdir.addFile("test.js");
                 await fast.src(srcPath).rename({ basename: "hey-test" }).dest(todir.path());
-                expect(await todir.getFile("hey-test.js").exists()).to.be.true;
+                expect(await todir.getFile("hey-test.js").exists()).to.be.true();
             });
 
             it("removes basename with empty string (for consistency)", async () => {
                 await fromdir.addFile("test.js");
                 await fast.src(srcPath).rename({ basename: "", prefix: "hey-test" }).dest(todir.path());
-                expect(await todir.getFile("hey-test.js").exists()).to.be.true;
+                expect(await todir.getFile("hey-test.js").exists()).to.be.true();
             });
         });
 
@@ -105,7 +105,7 @@ describe("fast", "transform", "rename", () => {
             it("appends value to basename", async () => {
                 await fromdir.addFile("test.js");
                 await fast.src(srcPath).rename({ suffix: "-test" }).dest(todir.path());
-                expect(await todir.getFile("test-test.js").exists()).to.be.true;
+                expect(await todir.getFile("test-test.js").exists()).to.be.true();
             });
         });
 
@@ -113,13 +113,13 @@ describe("fast", "transform", "rename", () => {
             it("replaces extname with value", async () => {
                 await fromdir.addFile("test.js");
                 await fast.src(srcPath).rename({ extname: ".md" }).dest(todir.path());
-                expect(await todir.getFile("test.md").exists()).to.be.true;
+                expect(await todir.getFile("test.md").exists()).to.be.true();
             });
 
             it("removes extname with empty string", async () => {
                 await fromdir.addFile("test.js");
                 await fast.src(srcPath).rename({ extname: "" }).dest(todir.path());
-                expect(await todir.getFile("test").exists()).to.be.true;
+                expect(await todir.getFile("test").exists()).to.be.true();
             });
         });
     });
@@ -131,7 +131,7 @@ describe("fast", "transform", "rename", () => {
                 expect(p.dirname).to.be.equal("yeah");
                 p.dirname = "otherside";
             }).dest(todir.path());
-            expect(await todir.getFile("otherside", "test.js").exists()).to.be.true;
+            expect(await todir.getFile("otherside", "test.js").exists()).to.be.true();
         });
 
         it("receives object with basename", async () => {
@@ -140,7 +140,7 @@ describe("fast", "transform", "rename", () => {
                 expect(p.basename).to.be.equal("test");
                 p.basename = "test-test";
             }).dest(todir.path());
-            expect(await todir.getFile("yeah", "test-test.js").exists()).to.be.true;
+            expect(await todir.getFile("yeah", "test-test.js").exists()).to.be.true();
         });
 
         it("receives object with extname", async () => {
@@ -149,7 +149,7 @@ describe("fast", "transform", "rename", () => {
                 expect(p.extname).to.be.equal(".js");
                 p.extname = ".md";
             }).dest(todir.path());
-            expect(await todir.getFile("yeah", "test.md").exists()).to.be.true;
+            expect(await todir.getFile("yeah", "test.md").exists()).to.be.true();
         });
 
         it("ignores the return value", async () => {
@@ -157,7 +157,7 @@ describe("fast", "transform", "rename", () => {
             await fast.src(srcPath).rename(() => {
                 return { extname: ".rb", basename: "another", dirname: "." };
             }).dest(todir.path());
-            expect(await todir.getFile("yeah", "test.js").exists()).to.be.true;
+            expect(await todir.getFile("yeah", "test.js").exists()).to.be.true();
         });
 
         it("receives object with extname even if a different value is returned", async () => {

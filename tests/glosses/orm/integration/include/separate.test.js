@@ -45,13 +45,13 @@ describe(Support.getTestDialectTeaser("Include"), { skip: !current.dialect.suppo
                         logging: sqlSpy
                     });
                 }).then((users) => {
-                    expect(users[0].get("tasks")).to.be.ok;
+                    expect(users[0].get("tasks")).to.be.ok();
                     expect(users[0].get("tasks").length).to.equal(3);
-                    expect(users[1].get("tasks")).to.be.ok;
+                    expect(users[1].get("tasks")).to.be.ok();
                     expect(users[1].get("tasks").length).to.equal(1);
 
-                    expect(users[0].get("tasks")[0].createdAt).to.be.ok;
-                    expect(users[0].get("tasks")[0].updatedAt).to.be.ok;
+                    expect(users[0].get("tasks")[0].createdAt).to.be.ok();
+                    expect(users[0].get("tasks")[0].updatedAt).to.be.ok();
 
                     expect(sqlSpy).to.have.been.calledTwice;
                 });
@@ -89,7 +89,7 @@ describe(Support.getTestDialectTeaser("Include"), { skip: !current.dialect.suppo
                         logging: sqlSpy
                     });
                 }).then((users) => {
-                    expect(users[0].get("tasks")).to.be.ok;
+                    expect(users[0].get("tasks")).to.be.ok();
                     expect(users[0].get("tasks").length).to.equal(3);
                     expect(sqlSpy).to.have.been.calledTwice;
                 });
@@ -161,9 +161,9 @@ describe(Support.getTestDialectTeaser("Include"), { skip: !current.dialect.suppo
                         logging: sqlSpy
                     });
                 }).then((users) => {
-                    expect(users[0].get("tasks")).to.be.ok;
+                    expect(users[0].get("tasks")).to.be.ok();
                     expect(users[0].get("tasks").length).to.equal(2);
-                    expect(users[1].get("tasks")).to.be.ok;
+                    expect(users[1].get("tasks")).to.be.ok();
                     expect(users[1].get("tasks").length).to.equal(2);
                     expect(sqlSpy).to.have.been.calledTwice;
                 });
@@ -222,9 +222,9 @@ describe(Support.getTestDialectTeaser("Include"), { skip: !current.dialect.suppo
                         logging: sqlSpy
                     });
                 }).then((users) => {
-                    expect(users[0].get("company").get("tasks")).to.be.ok;
+                    expect(users[0].get("company").get("tasks")).to.be.ok();
                     expect(users[0].get("company").get("tasks").length).to.equal(3);
-                    expect(users[1].get("company").get("tasks")).to.be.ok;
+                    expect(users[1].get("company").get("tasks")).to.be.ok();
                     expect(users[1].get("company").get("tasks").length).to.equal(1);
                     expect(sqlSpy).to.have.been.calledTwice;
                 });
@@ -289,7 +289,7 @@ describe(Support.getTestDialectTeaser("Include"), { skip: !current.dialect.suppo
                 }).then((companies) => {
                     expect(sqlSpy).to.have.been.calledTwice;
 
-                    expect(companies[0].users[0].tasks[0].project).to.be.ok;
+                    expect(companies[0].users[0].tasks[0].project).to.be.ok();
                 });
             });
         });
@@ -361,9 +361,9 @@ describe(Support.getTestDialectTeaser("Include"), { skip: !current.dialect.suppo
                 }).then((users) => {
                     const u1projects = users[0].get("projects");
 
-                    expect(u1projects).to.be.ok;
-                    expect(u1projects[0].get("tasks")).to.be.ok;
-                    expect(u1projects[1].get("tasks")).to.be.ok;
+                    expect(u1projects).to.be.ok();
+                    expect(u1projects[0].get("tasks")).to.be.ok();
+                    expect(u1projects[1].get("tasks")).to.be.ok();
                     expect(u1projects.length).to.equal(2);
 
                     // WTB ES2015 syntax ...
@@ -374,8 +374,8 @@ describe(Support.getTestDialectTeaser("Include"), { skip: !current.dialect.suppo
                         return p.id === 2;
                     }).get("tasks").length).to.equal(1);
 
-                    expect(users[1].get("projects")).to.be.ok;
-                    expect(users[1].get("projects")[0].get("tasks")).to.be.ok;
+                    expect(users[1].get("projects")).to.be.ok();
+                    expect(users[1].get("projects")[0].get("tasks")).to.be.ok();
                     expect(users[1].get("projects").length).to.equal(1);
                     expect(users[1].get("projects")[0].get("tasks").length).to.equal(2);
 

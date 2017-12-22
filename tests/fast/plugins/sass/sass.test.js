@@ -57,10 +57,10 @@ describe("fast", "transform", "sass", () => {
     it("should compile an empty sass file", async () => {
         const sassFile = createVinyl("empty.scss");
         const [cssFile] = await new Stream([sassFile]).sass();
-        expect(cssFile).to.be.ok;
-        expect(cssFile.path).to.be.ok;
-        expect(cssFile.relative).to.be.ok;
-        expect(cssFile.contents).to.be.ok;
+        expect(cssFile).to.be.ok();
+        expect(cssFile.path).to.be.ok();
+        expect(cssFile.relative).to.be.ok();
+        expect(cssFile.contents).to.be.ok();
         expect(cssFile.basename).to.be.equal("empty.css");
         expect(cssFile.contents.toString()).to.be.equal(await expectdir.getFile("empty.css").contents());
     });
@@ -68,10 +68,10 @@ describe("fast", "transform", "sass", () => {
     it("should compile a single sass file", async () => {
         const sassFile = createVinyl("mixins.scss");
         const [cssFile] = await new Stream([sassFile]).sass();
-        expect(cssFile).to.be.ok;
-        expect(cssFile.path).to.be.ok;
-        expect(cssFile.relative).to.be.ok;
-        expect(cssFile.contents).to.be.ok;
+        expect(cssFile).to.be.ok();
+        expect(cssFile.path).to.be.ok();
+        expect(cssFile.relative).to.be.ok();
+        expect(cssFile.contents).to.be.ok();
         expect(cssFile.contents.toString()).to.be.equal(await expectdir.getFile("mixins.css").contents());
     });
 
@@ -84,10 +84,10 @@ describe("fast", "transform", "sass", () => {
         expect(cssFiles).to.have.length(2);
 
         for (const cssFile of cssFiles) {
-            expect(cssFile).to.be.ok;
-            expect(cssFile.path).to.be.ok;
-            expect(cssFile.relative).to.be.ok;
-            expect(cssFile.contents).to.be.ok;
+            expect(cssFile).to.be.ok();
+            expect(cssFile.path).to.be.ok();
+            expect(cssFile.relative).to.be.ok();
+            expect(cssFile.contents).to.be.ok();
             expect(cssFile.contents.toString()).to.be.equal(expectdir.getFile(cssFile.basename).contentsSync());
         }
     });
@@ -95,10 +95,10 @@ describe("fast", "transform", "sass", () => {
     it("should compile files with partials in another folder", async () => {
         const sassFile = createVinyl("inheritance.scss");
         const [cssFile] = await new Stream([sassFile]).sass();
-        expect(cssFile).to.be.ok;
-        expect(cssFile.path).to.be.ok;
-        expect(cssFile.relative).to.be.ok;
-        expect(cssFile.contents).to.be.ok;
+        expect(cssFile).to.be.ok();
+        expect(cssFile.path).to.be.ok();
+        expect(cssFile.relative).to.be.ok();
+        expect(cssFile.contents).to.be.ok();
         expect(cssFile.contents.toString()).to.be.equal(expectdir.getFile(cssFile.basename).contentsSync());
     });
 
@@ -131,11 +131,11 @@ describe("fast", "transform", "sass", () => {
         sassFile.path = scssdir.getFile("mixin--changed.scss").path();
 
         const [cssFile] = await new Stream([sassFile]).sass();
-        expect(cssFile).to.be.ok;
-        expect(cssFile.path).to.be.ok;
+        expect(cssFile).to.be.ok();
+        expect(cssFile.path).to.be.ok();
         expect(cssFile.path.split(path.sep).pop()).to.be.equal("mixin--changed.css");
-        expect(cssFile.relative).to.be.ok;
-        expect(cssFile.contents).to.be.ok;
+        expect(cssFile.relative).to.be.ok();
+        expect(cssFile.contents).to.be.ok();
         expect(cssFile.contents.toString()).to.be.equal(expectdir.getFile("mixins.css").contentsSync());
     });
 
@@ -146,10 +146,10 @@ describe("fast", "transform", "sass", () => {
         sassFile.contents = Buffer.from(`/* Added Dynamically */${sassFile.contents.toString()}`);
 
         const [cssFile] = await new Stream([sassFile]).sass();
-        expect(cssFile).to.be.ok;
-        expect(cssFile.path).to.be.ok;
-        expect(cssFile.relative).to.be.ok;
-        expect(cssFile.contents).to.be.ok;
+        expect(cssFile).to.be.ok();
+        expect(cssFile.path).to.be.ok();
+        expect(cssFile.relative).to.be.ok();
+        expect(cssFile.contents).to.be.ok();
         expect(cssFile.contents.toString()).to.be.equal(`/* Added Dynamically */\n${expectdir.getFile(cssFile.basename).contentsSync()}`);
     });
 
@@ -173,17 +173,17 @@ describe("fast", "transform", "sass", () => {
             "}";
 
         const [cssFile] = await new Stream([sassFile]).sass();
-        expect(cssFile.sourceMap).to.be.ok;
+        expect(cssFile.sourceMap).to.be.ok();
         expect(cssFile.sourceMap.sources).to.be.deep.equal(expectedSources);
     });
 
     it("should compile a single indented sass file", async () => {
         const sassFile = createVinyl("indent.sass");
         const [cssFile] = await new Stream([sassFile]).sass();
-        expect(cssFile).to.be.ok;
-        expect(cssFile.path).to.be.ok;
-        expect(cssFile.relative).to.be.ok;
-        expect(cssFile.contents).to.be.ok;
+        expect(cssFile).to.be.ok();
+        expect(cssFile.path).to.be.ok();
+        expect(cssFile.relative).to.be.ok();
+        expect(cssFile.contents).to.be.ok();
         expect(cssFile.contents.toString()).to.be.equal(expectdir.getFile(cssFile.basename).contentsSync());
     });
 
@@ -197,10 +197,10 @@ describe("fast", "transform", "sass", () => {
         expect(cssFiles).to.have.length(2);
 
         for (const cssFile of cssFiles) {
-            expect(cssFile).to.be.ok;
-            expect(cssFile.path).to.be.ok;
-            expect(cssFile.relative).to.be.ok;
-            expect(cssFile.contents).to.be.ok;
+            expect(cssFile).to.be.ok();
+            expect(cssFile.path).to.be.ok();
+            expect(cssFile.relative).to.be.ok();
+            expect(cssFile.contents).to.be.ok();
             expect(cssFile.contents.toString()).to.be.equal(
                 expectdir.getFile(cssFile.basename).contentsSync()
             );
@@ -220,7 +220,7 @@ describe("fast", "transform", "sass", () => {
             .sourcemapsInit()
             .sass();
         for (const file of sfiles) {
-            expect(file.sourceMap).to.be.ok;
+            expect(file.sourceMap).to.be.ok();
             const actualContent = file.sourceMap.sourcesContent[0];
             const expectedContent = filesContent[file.sourceMap.sources[0]];
             expect(actualContent).to.be.equal(expectedContent);
@@ -247,6 +247,6 @@ describe("fast", "transform", "sass", () => {
             .sass()
             .dest(root.getDirectory("results").path(), { produceFiles: true });
         const file = root.getFile("results", "empty.css");
-        expect(await file.exists()).to.be.true;
+        expect(await file.exists()).to.be.true();
     });
 });

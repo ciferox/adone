@@ -24,7 +24,7 @@ describe("cursor", function () {
         await collection.insert([{ a: 1 }, { a: 2 }, { a: 3 }]);
         const cursor = collection.find({});
         cursor.batchSize(2);
-        expect(await cursor.next()).to.be.ok;
+        expect(await cursor.next()).to.be.ok();
         // ?
     });
 
@@ -40,7 +40,7 @@ describe("cursor", function () {
         const collection = await this.db.createCollection("test_explain");
         await collection.insert({ a: 1 });
         const explaination = await collection.find({ a: 1 }).explain();
-        expect(explaination).to.be.ok;
+        expect(explaination).to.be.ok();
     });
 
     it("should correctly execute cursor count", async () => {
@@ -291,28 +291,28 @@ describe("cursor", function () {
 
         const cursor = collection.find({}, { batchSize: 2 });
 
-        expect(await cursor.nextObject()).to.be.ok;   // 1
+        expect(await cursor.nextObject()).to.be.ok();   // 1
         expect(cursor.bufferedCount()).to.be.equal(1);
 
-        expect(await cursor.nextObject()).to.be.ok;  // 2
+        expect(await cursor.nextObject()).to.be.ok();  // 2
         expect(cursor.bufferedCount()).to.be.equal(0);
 
         cursor.batchSize(3);
 
-        expect(await cursor.nextObject()).to.be.ok;  // 3
+        expect(await cursor.nextObject()).to.be.ok();  // 3
         expect(cursor.bufferedCount()).to.be.equal(2);
 
-        expect(await cursor.nextObject()).to.be.ok;  // 4
+        expect(await cursor.nextObject()).to.be.ok();  // 4
         expect(cursor.bufferedCount()).to.be.equal(1);
 
-        expect(await cursor.nextObject()).to.be.ok;  // 5
+        expect(await cursor.nextObject()).to.be.ok();  // 5
         expect(cursor.bufferedCount()).to.be.equal(0);
 
-        expect(await cursor.nextObject()).to.be.ok;  // 6
+        expect(await cursor.nextObject()).to.be.ok();  // 6
         expect(cursor.bufferedCount()).to.be.equal(0);
 
-        expect(await cursor.nextObject()).to.be.null;  // no more
-        expect(cursor.isClosed()).to.be.true;
+        expect(await cursor.nextObject()).to.be.null();  // no more
+        expect(cursor.isClosed()).to.be.true();
     });
 
     it("should correctly handle batch size", async () => {
@@ -323,20 +323,20 @@ describe("cursor", function () {
 
         const cursor = await collection.find({}, { batchSize: 2 });
 
-        expect(await cursor.nextObject()).to.be.ok;  // 1
+        expect(await cursor.nextObject()).to.be.ok();  // 1
         expect(cursor.bufferedCount()).to.be.equal(1);
 
-        expect(await cursor.nextObject()).to.be.ok;  // 2
+        expect(await cursor.nextObject()).to.be.ok();  // 2
         expect(cursor.bufferedCount()).to.be.equal(0);
 
-        expect(await cursor.nextObject()).to.be.ok;  // 3
+        expect(await cursor.nextObject()).to.be.ok();  // 3
         expect(cursor.bufferedCount()).to.be.equal(1);
 
-        expect(await cursor.nextObject()).to.be.ok;  // 4
+        expect(await cursor.nextObject()).to.be.ok();  // 4
         expect(cursor.bufferedCount()).to.be.equal(0);
 
-        expect(await cursor.nextObject()).to.be.null;  // no more
-        expect(cursor.isClosed()).to.be.true;
+        expect(await cursor.nextObject()).to.be.null();  // no more
+        expect(cursor.isClosed()).to.be.true();
     });
 
     it("should handle when limit bigger than batch size", async () => {
@@ -347,19 +347,19 @@ describe("cursor", function () {
 
         const cursor = collection.find({}, { batchSize: 3, limit: 4 });
 
-        expect(await cursor.nextObject()).to.be.ok;  // 1
+        expect(await cursor.nextObject()).to.be.ok();  // 1
         expect(cursor.bufferedCount()).to.be.equal(2);
 
-        expect(await cursor.nextObject()).to.be.ok;  // 2
+        expect(await cursor.nextObject()).to.be.ok();  // 2
         expect(cursor.bufferedCount()).to.be.equal(1);
 
-        expect(await cursor.nextObject()).to.be.ok;  // 3
+        expect(await cursor.nextObject()).to.be.ok();  // 3
         expect(cursor.bufferedCount()).to.be.equal(0);
 
-        expect(await cursor.nextObject()).to.be.ok;  // 4
+        expect(await cursor.nextObject()).to.be.ok();  // 4
         expect(cursor.bufferedCount()).to.be.equal(0);
 
-        expect(await cursor.nextObject()).to.be.null;  // no more
+        expect(await cursor.nextObject()).to.be.null();  // no more
         expect(cursor.bufferedCount()).to.be.equal(0);
     });
 
@@ -370,14 +370,14 @@ describe("cursor", function () {
 
         const cursor = collection.find({}, { batchSize: 4, limit: 2 });
 
-        expect(await cursor.nextObject()).to.be.ok;
+        expect(await cursor.nextObject()).to.be.ok();
         expect(cursor.bufferedCount()).to.be.equal(1);
 
-        expect(await cursor.nextObject()).to.be.ok;
+        expect(await cursor.nextObject()).to.be.ok();
         expect(cursor.bufferedCount()).to.be.equal(0);
 
-        expect(await cursor.nextObject()).to.be.null;  // no more
-        expect(cursor.isClosed()).to.be.true;
+        expect(await cursor.nextObject()).to.be.null();  // no more
+        expect(cursor.isClosed()).to.be.true();
     });
 
     it("should handle skip limit chaining", async () => {
@@ -404,7 +404,7 @@ describe("cursor", function () {
         const collection = await this.db.createCollection("test_close_no_query_sent");
         const cursor = collection.find();
         await cursor.close();
-        expect(cursor.isClosed()).to.be.true;
+        expect(cursor.isClosed()).to.be.true();
     });
 
     it("should correctly refill via getMore command", async () => {
@@ -448,7 +448,7 @@ describe("cursor", function () {
         const cursor = collection.find({ a: 1 });
         await cursor.nextObject();
         await cursor.close();
-        expect(cursor.isClosed()).to.be.true;
+        expect(cursor.isClosed()).to.be.true();
     });
 
     it("should correctly execute cursor count with fields", async () => {
@@ -458,7 +458,7 @@ describe("cursor", function () {
         expect(items).to.have.lengthOf(1);
         expect(items[0]).to.include({ a: 2 }).and.not.to.have.key("x");
         const item = await collection.findOne({}, { fields: ["a"] });
-        expect(item).to.be.ok;
+        expect(item).to.be.ok();
         expect(item).to.include({ a: 2 }).and.not.to.have.key("x");
     });
 
@@ -513,7 +513,7 @@ describe("cursor", function () {
             expect(docs.shift()).to.include({ a: i });
         }
 
-        expect(cursor.isClosed()).to.be.true;
+        expect(cursor.isClosed()).to.be.true();
     });
 
     it.skip("immediately destroying a stream prevents the query from executing", async () => {
@@ -560,7 +560,7 @@ describe("cursor", function () {
             });
         });
         cursor.rewind = rewind;
-        expect(called).to.be.true;
+        expect(called).to.be.true();
     });
 
     it("should await data using cursor flag", async () => {
@@ -621,8 +621,8 @@ describe("cursor", function () {
         const collection = this.db.collection("shouldCorrectExecuteExplainHonoringLimit");
         await collection.insert(docs);
         await collection.ensureIndex({ _keywords: 1 });
-        expect(await collection.find({ _keywords: "red" }, {}, { explain: true }).limit(10).toArray()).to.be.ok;
-        expect(await collection.find({ _keywords: "red" }, {}).limit(10).explain()).to.be.ok;
+        expect(await collection.find({ _keywords: "red" }, {}, { explain: true }).limit(10).toArray()).to.be.ok();
+        expect(await collection.find({ _keywords: "red" }, {}).limit(10).explain()).to.be.ok();
     });
 
     it("should not explain when false", async () => {
@@ -686,7 +686,7 @@ describe("cursor", function () {
                 resolve(err);
             });
         });
-        expect(err).to.be.ok;
+        expect(err).to.be.ok();
         expect(err.code).to.be.a("number");
     });
 

@@ -316,7 +316,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                             strField: "bar"
                         }
                     }).then((entity) => {
-                        expect(entity).to.be.ok;
+                        expect(entity).to.be.ok();
                         expect(entity.get("strField")).to.equal("bar");
                     });
                 });
@@ -356,7 +356,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 return this.User.create({
                     name: "Barfoo"
                 }).then((user) => {
-                    expect(user.get("id")).to.be.ok;
+                    expect(user.get("id")).to.be.ok();
                 });
             });
 
@@ -384,7 +384,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 }).then((task) => {
                     expect(task.get("title")).to.equal("DatDo");
                     expect(task.get("comments")[0].get("text")).to.equal("Comment");
-                    expect(task.get("user")).to.be.ok;
+                    expect(task.get("user")).to.be.ok();
                 });
             });
 
@@ -411,9 +411,9 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     });
                 }).then((users) => {
                     users.forEach((user) => {
-                        expect(user.get("name")).to.be.ok;
+                        expect(user.get("name")).to.be.ok();
                         expect(user.get("tasks")[0].get("title")).to.equal("DoDat");
-                        expect(user.get("tasks")[0].get("comments")).to.be.ok;
+                        expect(user.get("tasks")[0].get("comments")).to.be.ok();
                     });
                 });
             });
@@ -436,7 +436,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         }
                     });
                 }).then((user) => {
-                    expect(user).to.be.ok;
+                    expect(user).to.be.ok();
                 });
             });
 
@@ -454,7 +454,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         })
                     });
                 }).then((user) => {
-                    expect(user).to.be.ok;
+                    expect(user).to.be.ok();
                 });
             });
 
@@ -470,7 +470,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     return self.User.findAll();
                 }).then((users) => {
                     users.forEach((user) => {
-                        expect(["Abc", "Bcd", "Cde"].indexOf(user.get("name")) !== -1).to.be.true;
+                        expect(["Abc", "Bcd", "Cde"].indexOf(user.get("name")) !== -1).to.be.true();
                     });
                 });
             });
@@ -501,8 +501,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     });
 
                 }).then((tests) => {
-                    expect(tests[0].get("someProperty")).to.be.ok;
-                    expect(tests[0].get("someProperty2")).to.be.ok;
+                    expect(tests[0].get("someProperty")).to.be.ok();
+                    expect(tests[0].get("someProperty2")).to.be.ok();
                 });
             });
 

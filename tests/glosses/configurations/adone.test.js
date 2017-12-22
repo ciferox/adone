@@ -24,7 +24,7 @@ describe("configuration", "Adone", () => {
             assert.equal(rawConfig.version, "1.0.0");
             assert.equal(rawConfig.author, "unknown");
             assert.equal(rawConfig.type, "app");
-            assert.isTrue(is.plainObject(rawConfig.structure));
+            assert.true(is.plainObject(rawConfig.structure));
         });
 
         it("project entries", async () => {

@@ -42,8 +42,8 @@ describe("database", "pouch", "taskqueue", () => {
                 { test: "another" }
             ]
         }).then((infos) => {
-            assert.isUndefined(infos[0].error);
-            assert.isUndefined(infos[1].error);
+            assert.undefined(infos[0].error);
+            assert.undefined(infos[1].error);
             done();
         });
     });

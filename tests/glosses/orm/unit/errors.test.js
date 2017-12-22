@@ -17,7 +17,7 @@ describe("errors", () => {
             } catch (error) {
                 err = error;
             }
-            expect(err).to.exist;
+            expect(err).to.exist();
             const stackParts = err.stack.split("\n");
             expect(stackParts[0]).to.equal(`${errorName}: this is a message`);
             expect(stackParts[1]).to.match(/^ {4}at throwError \(.*errors.test.js:\d+:\d+\)$/);
@@ -40,7 +40,7 @@ describe("errors", () => {
             } catch (error) {
                 err = error;
             }
-            expect(err).to.exist;
+            expect(err).to.exist();
             const stackParts = err.stack.split("\n");
 
             expect(stackParts[0]).to.equal(errorName);

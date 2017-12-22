@@ -24,7 +24,7 @@ describe("database", "redis", "watch-exec", { skip: check }, () => {
         const redis2 = new Redis();
         await redis1.watch("watchkey");
         await redis2.set("watchkey", "2");
-        expect(await redis1.multi().set("watchkey", "1").exec()).to.be.null;
+        expect(await redis1.multi().set("watchkey", "1").exec()).to.be.null();
         redis1.disconnect();
         redis2.disconnect();
     });

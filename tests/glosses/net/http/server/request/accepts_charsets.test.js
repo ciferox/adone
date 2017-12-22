@@ -27,7 +27,7 @@ describe("net", "http", "server", "request", "accepts charsets", () => {
                 it("should return false", () => {
                     const ctx = context();
                     ctx.req.headers["accept-charset"] = "utf-8, iso-8859-1;q=0.2, utf-7;q=0.5";
-                    expect(ctx.acceptsCharsets("utf-16")).to.be.false;
+                    expect(ctx.acceptsCharsets("utf-16")).to.be.false();
                 });
             });
         });

@@ -48,7 +48,7 @@ describe("compressor", "brotli", "async", () => {
 
         it("should compress a string", async () => {
             const a = await brotli.compress("hello");
-            expect(is.buffer(a)).to.be.true;
+            expect(is.buffer(a)).to.be.true();
         });
     });
 

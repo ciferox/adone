@@ -46,7 +46,7 @@ describe.skip("database", "pouch", "retry", () => {
             // The first paused event is the replication up to date
             // and waiting on changes (no error)
             if (paused === 1) {
-                assert.isNull(e);
+                assert.null(e);
                 return remote.put({ _id: "foo" }).then(() => {
                     return remote.put({ _id: "bar" });
                 });
@@ -64,8 +64,8 @@ describe.skip("database", "pouch", "retry", () => {
         });
 
         rep.on("complete", () => {
-            assert.isAtLeast(active, 2);
-            assert.isAtLeast(paused, 2);
+            assert.atLeast(active, 2);
+            assert.atLeast(paused, 2);
             done();
         });
 
@@ -101,7 +101,7 @@ describe.skip("database", "pouch", "retry", () => {
             // The first paused event is the replication up to date
             // and waiting on changes (no error)
             try {
-                expect(e).to.not.exist;
+                expect(e).to.not.exist();
             } catch (err) {
                 error = err;
                 rep.cancel();
@@ -616,7 +616,7 @@ describe.skip("database", "pouch", "retry", () => {
         }, 2000);
 
         return replicatePromise(remote, db).then(() => {
-            expect(called).to.be.false;
+            expect(called).to.be.false();
         });
     });
 });

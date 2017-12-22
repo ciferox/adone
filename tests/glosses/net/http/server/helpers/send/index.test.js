@@ -765,7 +765,7 @@ describe("net", "http", "helpers", "send", () => {
         const instance = server.bind(0, "127.0.0.1");
         await new Promise((resolve) => instance.once("listening", resolve));
         const err = await request(server).get("/").expectStatus(500).then(() => null, (x) => x);
-        expect(err).to.be.ok;
-        expect(stream.destroyed).to.be.true;
+        expect(err).to.be.ok();
+        expect(stream.destroyed).to.be.true();
     });
 });

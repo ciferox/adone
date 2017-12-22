@@ -2,7 +2,7 @@ describe("net", "mail", "MimeNode Tests", () => {
     const { net: { mail: { __: { MimeNode } } }, std: { http, stream: { Transform, PassThrough }, path } } = adone;
 
     it("should create MimeNode object", () => {
-        expect(new MimeNode()).to.exist;
+        expect(new MimeNode()).to.exist();
     });
 
     describe("#createChild", () => {
@@ -56,7 +56,7 @@ describe("net", "mail", "MimeNode Tests", () => {
 
             child.remove();
             expect(mb.childNodes.length).to.equal(0);
-            expect(child.parenNode).to.not.exist;
+            expect(child.parenNode).to.not.exist();
         });
     });
 
@@ -209,7 +209,7 @@ describe("net", "mail", "MimeNode Tests", () => {
                 "Hello world!\r\n";
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
                 expect(msg).to.equal(expected);
                 done();
@@ -227,7 +227,7 @@ describe("net", "mail", "MimeNode Tests", () => {
                 "Hello world!\r\n";
 
             childNode.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
                 expect(msg).to.equal(expected);
                 done();
@@ -257,7 +257,7 @@ describe("net", "mail", "MimeNode Tests", () => {
             mb.createChild("text/plain").setContent("Hello world!");
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
                 expect(msg).to.equal(expected);
                 done();
@@ -269,11 +269,11 @@ describe("net", "mail", "MimeNode Tests", () => {
             mb.hostname = "abc";
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
-                expect(/^Date:\s/m.test(msg)).to.be.true;
-                expect(/^Message\-ID:\s/m.test(msg)).to.be.true;
-                expect(/^MIME-Version: 1\.0$/m.test(msg)).to.be.true;
+                expect(/^Date:\s/m.test(msg)).to.be.true();
+                expect(/^Message\-ID:\s/m.test(msg)).to.be.true();
+                expect(/^MIME-Version: 1\.0$/m.test(msg)).to.be.true();
                 done();
             });
         });
@@ -293,11 +293,11 @@ describe("net", "mail", "MimeNode Tests", () => {
             });
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
-                expect(/^From: sender@example.com$/m.test(msg)).to.be.true;
-                expect(/^To: receiver@example.com$/m.test(msg)).to.be.true;
-                expect(!/^Bcc:/m.test(msg)).to.be.true;
+                expect(/^From: sender@example.com$/m.test(msg)).to.be.true();
+                expect(/^To: receiver@example.com$/m.test(msg)).to.be.true();
+                expect(!/^Bcc:/m.test(msg)).to.be.true();
                 done();
             });
         });
@@ -320,11 +320,11 @@ describe("net", "mail", "MimeNode Tests", () => {
             });
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
-                expect(/^From: sender@example.com$/m.test(msg)).to.be.true;
-                expect(/^To: receiver@example.com$/m.test(msg)).to.be.true;
-                expect(/^Bcc: bcc@example.com$/m.test(msg)).to.be.true;
+                expect(/^From: sender@example.com$/m.test(msg)).to.be.true();
+                expect(/^To: receiver@example.com$/m.test(msg)).to.be.true();
+                expect(/^Bcc: bcc@example.com$/m.test(msg)).to.be.true();
                 done();
             });
         });
@@ -354,11 +354,11 @@ describe("net", "mail", "MimeNode Tests", () => {
             });
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
-                expect(/^From: sender@example.com$/m.test(msg)).to.be.true;
-                expect(/^To: receiver@example.com$/m.test(msg)).to.be.true;
-                expect(!/^Bcc:/m.test(msg)).to.be.true;
+                expect(/^From: sender@example.com$/m.test(msg)).to.be.true();
+                expect(/^To: receiver@example.com$/m.test(msg)).to.be.true();
+                expect(!/^Bcc:/m.test(msg)).to.be.true();
                 done();
             });
         });
@@ -370,9 +370,9 @@ describe("net", "mail", "MimeNode Tests", () => {
             });
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
-                expect(/^Subject: =\?UTF\-8\?Q\?j=C3=B5geval_istus_k=C3=A4gu\?= metsas$/m.test(msg)).to.be.true;
+                expect(/^Subject: =\?UTF\-8\?Q\?j=C3=B5geval_istus_k=C3=A4gu\?= metsas$/m.test(msg)).to.be.true();
                 done();
             });
         });
@@ -384,7 +384,7 @@ describe("net", "mail", "MimeNode Tests", () => {
             });
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
                 expect(msg.match(/\bSubject: [^\r]*\r\n( [^\r]*\r\n)*/)[0]).to.equal("Subject: =?UTF-8?B?y4bCuMOBw4zDk8Sxw4/Lh8OBw5tewrhcw4HEscuG?=\r\n =?UTF-8?B?w4zDgcObw5heXMucw5vLneKEosuHxLHDk8K4Xlw=?=\r\n =?UTF-8?B?y5zvrIFeXMK3XMucw5hewqPLnCPvrIFeXMKj76yB?=\r\n =?UTF-8?B?XlzCo++sgV5c?=\r\n");
                 done();
@@ -396,11 +396,11 @@ describe("net", "mail", "MimeNode Tests", () => {
             setContent("tere tere");
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
-                expect(/\r\n\r\ntere tere\r\n$/.test(msg)).to.be.true;
-                expect(/^Content-Type: text\/plain$/m.test(msg)).to.be.true;
-                expect(/^Content-Transfer-Encoding: 7bit$/m.test(msg)).to.be.true;
+                expect(/\r\n\r\ntere tere\r\n$/.test(msg)).to.be.true();
+                expect(/^Content-Type: text\/plain$/m.test(msg)).to.be.true();
+                expect(/^Content-Transfer-Encoding: 7bit$/m.test(msg)).to.be.true();
                 done();
             });
         });
@@ -413,12 +413,12 @@ describe("net", "mail", "MimeNode Tests", () => {
             setContent("õõõõõõõõ");
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
 
-                expect(/^Content-Type: text\/plain; charset=utf-8$/m.test(msg)).to.be.true;
-                expect(/^Content-Transfer-Encoding: base64$/m.test(msg)).to.be.true;
-                expect(/^Subject: =\?UTF-8\?B\?w7XDtcO1w7U=\?=$/m.test(msg)).to.be.true;
+                expect(/^Content-Type: text\/plain; charset=utf-8$/m.test(msg)).to.be.true();
+                expect(/^Content-Transfer-Encoding: base64$/m.test(msg)).to.be.true();
+                expect(/^Subject: =\?UTF-8\?B\?w7XDtcO1w7U=\?=$/m.test(msg)).to.be.true();
                 msg = msg.split("\r\n\r\n");
                 msg.shift();
                 msg = msg.join("\r\n\r\n");
@@ -437,12 +437,12 @@ describe("net", "mail", "MimeNode Tests", () => {
             setContent("õõõõõõõõ");
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
 
-                expect(/^Content-Type: text\/plain; charset=utf-8$/m.test(msg)).to.be.true;
-                expect(/^Content-Transfer-Encoding: quoted-printable$/m.test(msg)).to.be.true;
-                expect(/^Subject: =\?UTF-8\?Q\?=C3=B5=C3=B5=C3=B5=C3=B5\?=$/m.test(msg)).to.be.true;
+                expect(/^Content-Type: text\/plain; charset=utf-8$/m.test(msg)).to.be.true();
+                expect(/^Content-Transfer-Encoding: quoted-printable$/m.test(msg)).to.be.true();
+                expect(/^Subject: =\?UTF-8\?Q\?=C3=B5=C3=B5=C3=B5=C3=B5\?=$/m.test(msg)).to.be.true();
 
                 msg = msg.split("\r\n\r\n");
                 msg.shift();
@@ -458,11 +458,11 @@ describe("net", "mail", "MimeNode Tests", () => {
             setContent("ooooooooõ");
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
 
-                expect(/^Content-Type: text\/plain; charset=utf-8$/m.test(msg)).to.be.true;
-                expect(/^Content-Transfer-Encoding: quoted-printable$/m.test(msg)).to.be.true;
+                expect(/^Content-Type: text\/plain; charset=utf-8$/m.test(msg)).to.be.true();
+                expect(/^Content-Transfer-Encoding: quoted-printable$/m.test(msg)).to.be.true();
 
                 msg = msg.split("\r\n\r\n");
                 msg.shift();
@@ -478,11 +478,11 @@ describe("net", "mail", "MimeNode Tests", () => {
             setContent("a b c d e f g h i j k l m o p q r s t u w x y z 1 2 3 4 5 6 7 8 9 0 a b c d e f g h i j k l m o p q r s t u w x y z 1 2 3 4 5 6 7 8 9 0");
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
 
-                expect(/^Content-Type: text\/plain$/m.test(msg)).to.be.true;
-                expect(/^Content-Transfer-Encoding: quoted-printable$/m.test(msg)).to.be.true;
+                expect(/^Content-Type: text\/plain$/m.test(msg)).to.be.true();
+                expect(/^Content-Transfer-Encoding: quoted-printable$/m.test(msg)).to.be.true();
 
                 msg = msg.split("\r\n\r\n");
                 msg.shift();
@@ -498,10 +498,10 @@ describe("net", "mail", "MimeNode Tests", () => {
             setContent("a b c d e f g h i j k l m o p q r s t u w x y z 1 2 3 4 5 6 7 8 9 0 a b c d e f g h i j k l m o p q r s t u w x y z 1 2 3 4 5 6 7 8 9 0");
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
-                expect(/^Content-Type: text\/html$/m.test(msg)).to.be.true;
-                expect(/^Content-Transfer-Encoding: quoted-printable$/m.test(msg)).to.be.true;
+                expect(/^Content-Type: text\/html$/m.test(msg)).to.be.true();
+                expect(/^Content-Transfer-Encoding: quoted-printable$/m.test(msg)).to.be.true();
 
                 msg = msg.split("\r\n\r\n");
                 msg.shift();
@@ -517,10 +517,10 @@ describe("net", "mail", "MimeNode Tests", () => {
             setContent("a b c d e f g h i j k l m o p\r\nq r s t u w x y z 1 2 3 4 5 6\r\n7 8 9 0 a b c d e f g h i j k\r\nl m o p q r s t u w x y z\r\n1 2 3 4 5 6 7 8 9 0");
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
-                expect(/^Content-Type: text\/html$/m.test(msg)).to.be.true;
-                expect(/^Content-Transfer-Encoding: 7bit$/m.test(msg)).to.be.true;
+                expect(/^Content-Type: text\/html$/m.test(msg)).to.be.true();
+                expect(/^Content-Transfer-Encoding: 7bit$/m.test(msg)).to.be.true();
 
                 msg = msg.split("\r\n\r\n");
                 msg.shift();
@@ -538,12 +538,12 @@ describe("net", "mail", "MimeNode Tests", () => {
             setContent("jogeva");
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
-                expect(/\r\n\r\njogeva\r\n$/.test(msg)).to.be.true;
-                expect(/^Content-Type: text\/plain; name=jogeva.txt$/m.test(msg)).to.be.true;
-                expect(/^Content-Transfer-Encoding: 7bit$/m.test(msg)).to.be.true;
-                expect(/^Content-Disposition: attachment; filename=jogeva.txt$/m.test(msg)).to.be.true;
+                expect(/\r\n\r\njogeva\r\n$/.test(msg)).to.be.true();
+                expect(/^Content-Type: text\/plain; name=jogeva.txt$/m.test(msg)).to.be.true();
+                expect(/^Content-Transfer-Encoding: 7bit$/m.test(msg)).to.be.true();
+                expect(/^Content-Disposition: attachment; filename=jogeva.txt$/m.test(msg)).to.be.true();
                 done();
             });
         });
@@ -555,11 +555,11 @@ describe("net", "mail", "MimeNode Tests", () => {
             setContent("jõgeva");
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
-                expect(/^Content-Type: text\/plain; charset=utf-8;/m.test(msg)).to.be.true;
-                expect(/^Content-Transfer-Encoding: quoted-printable$/m.test(msg)).to.be.true;
-                expect(/^Content-Disposition: attachment; filename\*0\*=utf-8''j%C3%B5geva.txt$/m.test(msg)).to.be.true;
+                expect(/^Content-Type: text\/plain; charset=utf-8;/m.test(msg)).to.be.true();
+                expect(/^Content-Transfer-Encoding: quoted-printable$/m.test(msg)).to.be.true();
+                expect(/^Content-Disposition: attachment; filename\*0\*=utf-8''j%C3%B5geva.txt$/m.test(msg)).to.be.true();
                 done();
             });
         });
@@ -571,7 +571,7 @@ describe("net", "mail", "MimeNode Tests", () => {
             setContent("jõgeva");
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
                 expect(msg.indexOf("Content-Disposition: attachment;\r\n" +
                     " filename*0*=utf-8''%C6%94------%C6%94------%C6%94------%C6%94;\r\n" +
@@ -587,11 +587,11 @@ describe("net", "mail", "MimeNode Tests", () => {
             setContent("jõgeva");
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
-                expect(/^Content-Type: text\/plain; charset=utf-8;/m.test(msg)).to.be.true;
-                expect(/^Content-Transfer-Encoding: quoted-printable$/m.test(msg)).to.be.true;
-                expect(/^Content-Disposition: attachment; filename="document a.test.pdf"$/m.test(msg)).to.be.true;
+                expect(/^Content-Type: text\/plain; charset=utf-8;/m.test(msg)).to.be.true();
+                expect(/^Content-Transfer-Encoding: quoted-printable$/m.test(msg)).to.be.true();
+                expect(/^Content-Disposition: attachment; filename="document a.test.pdf"$/m.test(msg)).to.be.true();
                 done();
             });
         });
@@ -603,9 +603,9 @@ describe("net", "mail", "MimeNode Tests", () => {
             setContent("jogeva");
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
-                expect(/^Content-Type: application\/zip;/m.test(msg)).to.be.true;
+                expect(/^Content-Type: application\/zip;/m.test(msg)).to.be.true();
                 done();
             });
         });
@@ -631,11 +631,11 @@ describe("net", "mail", "MimeNode Tests", () => {
             });
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
-                expect(/^From: =\?UTF\-8\?Q\?the_safewithme_=C3=B5_testuser\?=$/m.test(msg)).to.be.true;
-                expect(/^\s+<safewithme.testuser@xn\-\-jgeva-dua.com>$/m.test(msg)).to.be.true;
-                expect(/^Cc: the safewithme testuser <safewithme.testuser@xn\-\-jgeva-dua.com>$/m.test(msg)).to.be.true;
+                expect(/^From: =\?UTF\-8\?Q\?the_safewithme_=C3=B5_testuser\?=$/m.test(msg)).to.be.true();
+                expect(/^\s+<safewithme.testuser@xn\-\-jgeva-dua.com>$/m.test(msg)).to.be.true();
+                expect(/^Cc: the safewithme testuser <safewithme.testuser@xn\-\-jgeva-dua.com>$/m.test(msg)).to.be.true();
                 done();
             });
         });
@@ -662,7 +662,7 @@ describe("net", "mail", "MimeNode Tests", () => {
                 "Hello world!\r\n";
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
                 expect(msg).to.equal(expected);
                 done();
@@ -711,7 +711,7 @@ describe("net", "mail", "MimeNode Tests", () => {
                 "Hello world!\r\n";
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
                 expect(msg).to.equal(expected);
                 done();
@@ -735,7 +735,7 @@ describe("net", "mail", "MimeNode Tests", () => {
                 "SGVsbG8gd29ybGQh\r\n";
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
                 expect(msg).to.equal(expected);
                 done();
@@ -762,7 +762,7 @@ describe("net", "mail", "MimeNode Tests", () => {
             mb.boundary = "abc";
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
                 expect(msg).to.equal(expected);
                 done();
@@ -785,7 +785,7 @@ describe("net", "mail", "MimeNode Tests", () => {
                 "Hello world!\r\n";
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
                 expect(msg).to.equal(expected);
                 done();
@@ -799,9 +799,9 @@ describe("net", "mail", "MimeNode Tests", () => {
             });
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
-                expect(/^Message-ID: <[0-9a-f\-]+@example\.com>$/m.test(msg)).to.be.true;
+                expect(/^Message-ID: <[0-9a-f\-]+@example\.com>$/m.test(msg)).to.be.true();
                 done();
             });
         });
@@ -810,9 +810,9 @@ describe("net", "mail", "MimeNode Tests", () => {
             const mb = new MimeNode("text/plain");
             mb.hostname = "abc";
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
-                expect(/^Message-ID: <[0-9a-f\-]+@abc>$/m.test(msg)).to.be.true;
+                expect(/^Message-ID: <[0-9a-f\-]+@abc>$/m.test(msg)).to.be.true();
                 done();
             });
         });
@@ -854,7 +854,7 @@ describe("net", "mail", "MimeNode Tests", () => {
             });
 
             const messageId = mail.messageId();
-            expect(/^<[\w\-]+@example\.com>$/.test(messageId)).to.be.true;
+            expect(/^<[\w\-]+@example\.com>$/.test(messageId)).to.be.true();
             expect(messageId).to.equal(mail.messageId());
         });
     });
@@ -984,17 +984,17 @@ describe("net", "mail", "MimeNode Tests", () => {
     describe("#_handleContentType", () => {
         it("should do nothing on non multipart", () => {
             const mb = new MimeNode();
-            expect(mb.boundary).to.not.exist;
+            expect(mb.boundary).to.not.exist();
             mb._handleContentType({
                 value: "text/plain"
             });
-            expect(mb.boundary).to.be.false;
-            expect(mb.multipart).to.be.false;
+            expect(mb.boundary).to.be.false();
+            expect(mb.multipart).to.be.false();
         });
 
         it("should use provided boundary", () => {
             const mb = new MimeNode();
-            expect(mb.boundary).to.not.exist;
+            expect(mb.boundary).to.not.exist();
             mb._handleContentType({
                 value: "multipart/mixed",
                 params: {
@@ -1009,7 +1009,7 @@ describe("net", "mail", "MimeNode Tests", () => {
             const mb = new MimeNode();
             stub(mb, "_generateBoundary").returns("def");
 
-            expect(mb.boundary).to.not.exist;
+            expect(mb.boundary).to.not.exist();
             mb._handleContentType({
                 value: "multipart/mixed",
                 params: {}
@@ -1116,7 +1116,7 @@ describe("net", "mail", "MimeNode Tests", () => {
         it("should generate uuid-looking message-id", () => {
             const mb = new MimeNode();
             const mid = mb._generateMessageId();
-            expect(/^<[0-9a-f]{8}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{12}@.*>/.test(mid)).to.be.true;
+            expect(/^<[0-9a-f]{8}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{12}@.*>/.test(mid)).to.be.true();
         });
     });
 
@@ -1156,9 +1156,9 @@ describe("net", "mail", "MimeNode Tests", () => {
             });
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
-                expect(/^=C3=A4/m.test(msg)).to.be.true;
+                expect(/^=C3=A4/m.test(msg)).to.be.true();
                 done();
             });
         });
@@ -1172,8 +1172,8 @@ describe("net", "mail", "MimeNode Tests", () => {
             });
 
             mb.build((err, msg) => {
-                expect(err).to.exist;
-                expect(msg).to.not.exist;
+                expect(err).to.exist();
+                expect(msg).to.not.exist();
                 done();
             });
         });
@@ -1185,7 +1185,7 @@ describe("net", "mail", "MimeNode Tests", () => {
             });
 
             mb.build((err) => {
-                expect(err).to.exist;
+                expect(err).to.exist();
                 done();
             });
         });
@@ -1197,9 +1197,9 @@ describe("net", "mail", "MimeNode Tests", () => {
             });
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
-                expect(/^w7VrdmE/m.test(msg)).to.be.true;
+                expect(/^w7VrdmE/m.test(msg)).to.be.true();
                 done();
             });
         });
@@ -1213,8 +1213,8 @@ describe("net", "mail", "MimeNode Tests", () => {
             });
 
             mb.build((err, msg) => {
-                expect(err).to.exist;
-                expect(msg).to.not.exist;
+                expect(err).to.exist();
+                expect(msg).to.not.exist();
                 done();
             });
         });
@@ -1226,7 +1226,7 @@ describe("net", "mail", "MimeNode Tests", () => {
             });
 
             mb.build((err) => {
-                expect(err).to.exist;
+                expect(err).to.exist();
                 done();
             });
         });
@@ -1241,7 +1241,7 @@ describe("net", "mail", "MimeNode Tests", () => {
 
             setTimeout(() => {
                 mb.build((err) => {
-                    expect(err).to.exist;
+                    expect(err).to.exist();
                     done();
                 });
             }, 100);
@@ -1253,7 +1253,7 @@ describe("net", "mail", "MimeNode Tests", () => {
             setContent(s);
 
             mb.build((err) => {
-                expect(err).to.exist;
+                expect(err).to.exist();
                 done();
             });
 
@@ -1299,7 +1299,7 @@ describe("net", "mail", "MimeNode Tests", () => {
             mb.transform(transform);
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
                 expect(msg).to.equal(expected);
                 done();
@@ -1345,7 +1345,7 @@ describe("net", "mail", "MimeNode Tests", () => {
             });
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
                 expect(msg).to.equal(expected);
                 done();
@@ -1360,7 +1360,7 @@ describe("net", "mail", "MimeNode Tests", () => {
             const mb = new MimeNode("text/plain").setRaw(expected);
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
                 expect(msg).to.equal(expected);
                 done();
@@ -1379,7 +1379,7 @@ describe("net", "mail", "MimeNode Tests", () => {
             child.setRaw(expected);
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
                 expect(msg).to.equal(`${'Content-Type: multipart/mixed; boundary="--_NmP-test-Part_1"\r\n' +
                     "Date: 12345\r\n" +
@@ -1404,7 +1404,7 @@ describe("net", "mail", "MimeNode Tests", () => {
             });
 
             mb.build((err, msg) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 msg = msg.toString();
                 expect(msg).to.equal(expected);
                 done();
@@ -1418,7 +1418,7 @@ describe("net", "mail", "MimeNode Tests", () => {
             raw.emit("error", new Error("Stream error"));
 
             mb.build((err) => {
-                expect(err).to.exist;
+                expect(err).to.exist();
                 done();
             });
         });
@@ -1428,7 +1428,7 @@ describe("net", "mail", "MimeNode Tests", () => {
             const mb = new MimeNode("text/plain").setRaw(raw);
 
             mb.build((err) => {
-                expect(err).to.exist;
+                expect(err).to.exist();
                 done();
             });
 

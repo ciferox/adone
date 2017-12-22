@@ -38,7 +38,7 @@ describe("sdam", function () {
             ]);
             topology.close(true);
             for (const name in operations) {
-                expect(operations[name]).not.to.be.empty;
+                expect(operations[name]).not.to.be.empty();
             }
         });
     }
@@ -81,7 +81,7 @@ describe("sdam", function () {
             await promise.delay(1000);
             topology.close(true);
             for (const name in operations) {
-                expect(operations[name]).not.to.be.empty;
+                expect(operations[name]).not.to.be.empty();
             }
         });
     }
@@ -114,7 +114,7 @@ describe("sdam", function () {
             const db = await client.connect(this.url());
             db.close(true);
             for (const name in operations) {
-                expect(operations[name]).not.to.be.empty;
+                expect(operations[name]).not.to.be.empty();
             }
         });
     }

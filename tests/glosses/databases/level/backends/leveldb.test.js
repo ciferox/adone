@@ -93,7 +93,7 @@ describe("database", "level", "backend", "default", () => {
         assert.equal(key.toString(), "two", "key matches");
         assert.equal(value.toString(), "2", "value matches");
         const pair = await ite.next();
-        assert.isUndefined(pair, "end of iterator");
+        assert.undefined(pair, "end of iterator");
         return ite.end(done);
     });
 
@@ -104,7 +104,7 @@ describe("database", "level", "backend", "default", () => {
         assert.equal(key.toString(), "two", "key matches");
         assert.equal(value.toString(), "2", "value matches");
         const pair = await ite.next();
-        assert.isUndefined(pair, "end of iterator");
+        assert.undefined(pair, "end of iterator");
         return ite.end(done);
     });
 
@@ -121,7 +121,7 @@ describe("database", "level", "backend", "default", () => {
         const ite = db.iterator();
         await ite.seek("zzz");
         const pair = await ite.next();
-        assert.isUndefined(pair, "end of iterator");
+        assert.undefined(pair, "end of iterator");
         return ite.end(done);
     });
 
@@ -150,15 +150,15 @@ describe("database", "level", "backend", "default", () => {
         assert.equal(ite.cache.length, 0, "no cache");
         const pair2 = await ite.next();
         assert.equal(pair2.key.toString(), "b", "key matches");
-        assert.isTrue(ite.cache.length > 0, "has cached items");
+        assert.true(ite.cache.length > 0, "has cached items");
         await ite.seek("d");
-        assert.isNotOk(ite.cache, "cache is removed");
+        assert.notOk(ite.cache, "cache is removed");
         const pair3 = await ite.next();
         assert.equal(pair3.key.toString(), "d", "key matches");
         assert.equal(ite.cache.length, 0, "no cache");
         const pair4 = await ite.next();
         assert.equal(pair4.key.toString(), "e", "key matches");
-        assert.isTrue(ite.cache.length > 0, "has cached items");
+        assert.true(ite.cache.length > 0, "has cached items");
         return ite.end(done);
     });
 

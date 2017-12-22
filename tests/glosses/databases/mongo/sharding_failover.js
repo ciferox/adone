@@ -22,11 +22,11 @@ describe("sharding failover", function () {
         expect(r.result.n).to.be.equal(1);
         await this.server.proxies[0].stop();
         for (let i = 0; i < 10; ++i) {
-            expect(await collection.findOne()).to.be.ok;
+            expect(await collection.findOne()).to.be.ok();
         }
         await this.server.proxies[0].start();
         for (let i = 0; i < 10; ++i) {
-            expect(await collection.findOne()).to.be.ok;
+            expect(await collection.findOne()).to.be.ok();
         }
         await db.close();
     });

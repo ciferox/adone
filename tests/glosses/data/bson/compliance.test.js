@@ -34,7 +34,7 @@ describe("data", "bson", "compliance", () => {
             } catch (_err) {
                 err = _err;
             }
-            expect(err).to.be.ok;
+            expect(err).to.be.ok();
         }
     });
 

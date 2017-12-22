@@ -24,15 +24,15 @@ describe("database", "local", "Datastore", () => {
         testDb = dbFile.path();
         d = new Datastore({ filename: testDb });
         expect(d.filename).to.be.equal(testDb);
-        expect(d.inMemoryOnly).to.be.false;
+        expect(d.inMemoryOnly).to.be.false();
         await d.load();
-        expect(d.getAllData()).to.be.empty;
+        expect(d.getAllData()).to.be.empty();
     });
 
     describe("Insert", () => {
         it("Able to insert a document in the database, setting an _id if none provided, and retrieve it even after a reload", async () => {
             let docs = await d.find({});
-            expect(docs).to.be.empty;
+            expect(docs).to.be.empty();
 
             await d.insert({ somedata: "ok" });
 
@@ -53,7 +53,7 @@ describe("database", "local", "Datastore", () => {
 
         it("Can insert multiple documents in the database", async () => {
             let docs = await d.find({});
-            expect(docs).to.be.empty;
+            expect(docs).to.be.empty();
 
             await d.insert({ somedata: "ok" });
             await d.insert({ somedata: "another" });
@@ -124,7 +124,7 @@ describe("database", "local", "Datastore", () => {
         it("If an _id is already given when we insert a document, use that instead of generating a random one", async () => {
             const newDoc = await d.insert({ _id: "test", stuff: true });
 
-            expect(newDoc.stuff).to.be.true;
+            expect(newDoc.stuff).to.be.true();
             expect(newDoc._id).to.be.equal("test");
 
             try {
@@ -181,7 +181,7 @@ describe("database", "local", "Datastore", () => {
 
             const datafileContents = model.deserialize(adone.std.fs.readFileSync(testDb, "utf-8"));
             expect(datafileContents).to.be.deep.equal({ $$indexCreated: { fieldName: "a", unique: true } });
-            expect(docs).to.be.empty;
+            expect(docs).to.be.empty();
         });
 
         it("If timestampData option is set, a createdAt field is added and persisted", async () => {
@@ -192,7 +192,7 @@ describe("database", "local", "Datastore", () => {
             await d.load();
             let docs = await d.find({});
 
-            expect(docs).to.be.empty;
+            expect(docs).to.be.empty();
             const insertedDoc = await d.insert(newDoc);
             expect(newDoc).to.be.deep.equal({ hello: "world" });
             expect(insertedDoc).to.have.property("createdAt");
@@ -230,8 +230,8 @@ describe("database", "local", "Datastore", () => {
 
             expect(Object.keys(insertedDoc)).to.have.lengthOf(2);
 
-            expect(insertedDoc.createdAt).to.be.undefined;
-            expect(insertedDoc.updatedAt).to.be.undefined;
+            expect(insertedDoc.createdAt).to.be.undefined();
+            expect(insertedDoc.updatedAt).to.be.undefined();
 
             const docs = await d.find({});
 
@@ -379,17 +379,17 @@ describe("database", "local", "Datastore", () => {
             expect(doc.hello).to.be.equal("world");
             await adone.promise.delay(101);
             doc = await d.findOne({});
-            expect(doc).to.be.null;
+            expect(doc).to.be.null();
             await d.persistence.compactDatafile();
 
 
             const datafileContents = adone.std.fs.readFileSync(testDb, "utf-8");
             expect(datafileContents.split("\n")).to.have.lengthOf(2);
-            expect(datafileContents.match(/world/)).to.be.null;
+            expect(datafileContents.match(/world/)).to.be.null();
             const d2 = new Datastore({ filename: testDb });
             await d2.load();
             doc = await d2.findOne({});
-            expect(doc).to.be.null;
+            expect(doc).to.be.null();
         });
 
         it("TTL indexes can expire multiple documents and only what needs to be expired", async () => {
@@ -406,7 +406,7 @@ describe("database", "local", "Datastore", () => {
             expect(docs[0].hello).to.be.equal("world3");
             await adone.promise.delay(101);
             docs = await d.find({});
-            expect(docs).to.be.empty;
+            expect(docs).to.be.empty();
         });
 
         it("Document where indexed field is absent or not a date are ignored", async () => {
@@ -460,7 +460,7 @@ describe("database", "local", "Datastore", () => {
             expect(docs.map((x) => x.somedata)).to.not.contain("ok");
 
             docs = await d.find({ somedata: "nope" });
-            expect(docs).to.be.empty;
+            expect(docs).to.be.empty();
         });
 
         it("Can find one document matching a basic query and return null if none is found", async () => {
@@ -475,7 +475,7 @@ describe("database", "local", "Datastore", () => {
             expect(doc).to.have.property("_id");
 
             doc = await d.findOne({ somedata: "nope" });
-            expect(doc).to.be.null;
+            expect(doc).to.be.null();
         });
 
         it("Can find dates and objects (non JS-native types)", async () => {
@@ -487,13 +487,13 @@ describe("database", "local", "Datastore", () => {
             expect(doc.sth.name).to.be.equal("nedb");
 
             doc = await d.findOne({ now: date2 });
-            expect(doc).to.be.null;
+            expect(doc).to.be.null();
 
             doc = await d.findOne({ sth: { name: "nedb" } });
             expect(doc.sth.name).to.be.equal("nedb");
 
             doc = await d.findOne({ sth: { name: "other" } });
-            expect(doc).to.be.null;
+            expect(doc).to.be.null();
         });
 
         it("Can use dot-notation to query subfields", async () => {
@@ -502,10 +502,10 @@ describe("database", "local", "Datastore", () => {
             expect(doc.greeting.english).to.be.equal("hello");
 
             doc = await d.findOne({ "greeting.english": "helloooo" });
-            expect(doc).to.be.null;
+            expect(doc).to.be.null();
 
             doc = await d.findOne({ "greeting.englis": "hello" });
-            expect(doc).to.be.null;
+            expect(doc).to.be.null();
         });
 
         it("Array fields match if any element matches", async () => {
@@ -525,7 +525,7 @@ describe("database", "local", "Datastore", () => {
             expect(ids).to.contain(doc3._id);
 
             docs = await d.find({ fruits: "dontexist" });
-            expect(docs).to.be.empty;
+            expect(docs).to.be.empty();
         });
 
         it("Returns an error if the query is not well formed", async () => {
@@ -585,7 +585,7 @@ describe("database", "local", "Datastore", () => {
             doc = await d.findOne({ a: { $gt: 14 } }, {}, { exec: false }).sort({ a: 1 }).skip(1).exec();
             expect(doc.hello).to.be.equal("earth");
             doc = await d.findOne({ a: { $gt: 14 } }, {}, { exec: false }).sort({ a: 1 }).skip(2).exec();
-            expect(doc).to.be.null;
+            expect(doc).to.be.null();
         });
 
         it("Can use projections in find, normal or cursor way", async () => {
@@ -690,7 +690,7 @@ describe("database", "local", "Datastore", () => {
             const doc3 = docs.find((x) => x.somedata === "another");
 
             expect(docs).to.have.lengthOf(3);
-            expect(docs.find(() => d.newDoc === "yes")).to.be.undefined;
+            expect(docs.find(() => d.newDoc === "yes")).to.be.undefined();
 
             expect(doc1).to.be.deep.equal({ _id: doc1._id, somedata: "ok" });
             expect(doc2).to.be.deep.equal({ _id: doc2._id, somedata: "again", plus: "additional data" });
@@ -800,7 +800,7 @@ describe("database", "local", "Datastore", () => {
                 expect(numReplaced).to.be.equal(0);
 
                 let docs = await d.find({});
-                expect(docs).to.be.empty;
+                expect(docs).to.be.empty();
 
                 const [_numReplaced, updatedDoc] = await d.update({ impossible: "db is empty anyway" }, { something: "created ok" }, { upsert: true });
                 expect(_numReplaced).to.be.equal(1);
@@ -922,11 +922,11 @@ describe("database", "local", "Datastore", () => {
             await d.update({}, { $set: { "bloup.blip": "hello" } }, {});
             let doc = await d.findOne({});
             expect(doc.bloup.blip).to.be.equal("hello");
-            expect(doc.bloup.other).to.be.true;
+            expect(doc.bloup.other).to.be.true();
             await d.update({}, { $set: { bloup: { blip: "ola" } } }, {});
             doc = await d.findOne({});
             expect(doc.bloup.blip).to.be.equal("ola");
-            expect(doc.bloup.other).to.be.undefined;
+            expect(doc.bloup.other).to.be.undefined();
         });
 
         it("Returns an error if the query is not well formed", async (done) => {
@@ -1109,7 +1109,7 @@ describe("database", "local", "Datastore", () => {
                 multi: true, returnUpdatedDocs: true
             });
             expect(num).to.be.equal(0);
-            expect(updatedDocs).to.be.empty;
+            expect(updatedDocs).to.be.empty();
 
             [num, updatedDocs] = await d.update({
                 a: 5
@@ -1170,8 +1170,8 @@ describe("database", "local", "Datastore", () => {
                 // returnUpdatedDocs set to false
                 let [numAffected, affectedDocuments, upsert] = await d.update({ a: 1 }, { $set: { b: 20 } }, {});
                 expect(numAffected).to.be.equal(1);
-                expect(affectedDocuments).to.be.undefined;
-                expect(upsert).to.be.undefined;
+                expect(affectedDocuments).to.be.undefined();
+                expect(upsert).to.be.undefined();
 
                 // returnUpdatedDocs set to true
                 [numAffected, affectedDocuments, upsert] = await d.update({
@@ -1184,7 +1184,7 @@ describe("database", "local", "Datastore", () => {
                 expect(numAffected).to.be.equal(1);
                 expect(affectedDocuments.a).to.be.equal(1);
                 expect(affectedDocuments.b).to.be.equal(21);
-                expect(upsert).to.be.undefined;
+                expect(upsert).to.be.undefined();
             });
 
             it("Regular update, multi true", async () => {
@@ -1198,8 +1198,8 @@ describe("database", "local", "Datastore", () => {
                     multi: true
                 });
                 expect(numAffected).to.be.equal(2);
-                expect(affectedDocuments).to.be.undefined;
-                expect(upsert).to.be.undefined;
+                expect(affectedDocuments).to.be.undefined();
+                expect(upsert).to.be.undefined();
 
                 // returnUpdatedDocs set to true
                 [numAffected, affectedDocuments, upsert] = await d.update({}, {
@@ -1210,7 +1210,7 @@ describe("database", "local", "Datastore", () => {
                 });
                 expect(numAffected).to.be.equal(2);
                 expect(affectedDocuments).to.have.lengthOf(2);
-                expect(upsert).to.be.undefined;
+                expect(upsert).to.be.undefined();
             });
 
             it("Upsert", async () => {
@@ -1220,8 +1220,8 @@ describe("database", "local", "Datastore", () => {
                 // Upsert flag not set
                 let [numAffected, affectedDocuments, upsert] = await d.update({ a: 3 }, { $set: { b: 20 } }, {});
                 expect(numAffected).to.be.equal(0);
-                expect(affectedDocuments).to.be.undefined;
-                expect(upsert).to.be.undefined;
+                expect(affectedDocuments).to.be.undefined();
+                expect(upsert).to.be.undefined();
 
                 // Upsert flag set
                 [numAffected, affectedDocuments, upsert] = await d.update({
@@ -1234,7 +1234,7 @@ describe("database", "local", "Datastore", () => {
                 expect(numAffected).to.be.equal(1);
                 expect(affectedDocuments.a).to.be.equal(3);
                 expect(affectedDocuments.b).to.be.equal(21);
-                expect(upsert).to.be.true;
+                expect(upsert).to.be.true();
 
                 const docs = await d.find({});
                 expect(docs).to.have.lengthOf(3);
@@ -1342,7 +1342,7 @@ describe("database", "local", "Datastore", () => {
             const d3 = docs.find((x) => x._id === doc3._id);
 
             expect(d1.a).to.be.equal(1);
-            expect(d2).to.be.undefined;
+            expect(d2).to.be.undefined();
             expect(d3.a).to.be.equal(5);
         });
     });
@@ -1354,7 +1354,7 @@ describe("database", "local", "Datastore", () => {
                 const now = new Date();
                 const rawData = `${model.serialize({ _id: "aaa", z: "1", a: 2, ages: [1, 5, 12] })}\n${model.serialize({ _id: "bbb", z: "2", hello: "world" })}\n${model.serialize({ _id: "ccc", z: "3", nested: { today: now } })}`;
 
-                expect(d.getAllData()).to.be.empty;
+                expect(d.getAllData()).to.be.empty();
 
                 await adone.fs.writeFile(testDb, rawData, "utf8");
                 await d.load();
@@ -1368,8 +1368,8 @@ describe("database", "local", "Datastore", () => {
                 const z = d.indexes.get("z");
 
                 expect(z.fieldName).to.be.equal("z");
-                expect(z.unique).to.be.false;
-                expect(z.sparse).to.be.false;
+                expect(z.unique).to.be.false();
+                expect(z.sparse).to.be.false();
                 expect(z.tree.getNumberOfKeys()).to.be.equal(3);
                 expect(z.tree.search("1")[0]).to.be.equal(d.getAllData()[0]);
                 expect(z.tree.search("2")[0]).to.be.equal(d.getAllData()[1]);
@@ -1397,8 +1397,8 @@ describe("database", "local", "Datastore", () => {
                 await d.ensureIndex({ fieldName: "planet" });
 
                 expect(d.indexes.size).to.be.equal(2);
-                expect(d.indexes.has("_id")).to.be.true;
-                expect(d.indexes.has("planet")).to.be.true;
+                expect(d.indexes.has("_id")).to.be.true();
+                expect(d.indexes.has("planet")).to.be.true();
 
                 expect(d.indexes.get("planet").getAll()).to.have.lengthOf(2);
             });
@@ -1406,7 +1406,7 @@ describe("database", "local", "Datastore", () => {
             it("ensureIndex can be called after the data set was modified and the index still be correct", async () => {
                 const rawData = `${model.serialize({ _id: "aaa", z: "1", a: 2, ages: [1, 5, 12] })}\n${model.serialize({ _id: "bbb", z: "2", hello: "world" })}`;
 
-                expect(d.getAllData()).to.be.empty;
+                expect(d.getAllData()).to.be.empty();
 
                 await adone.fs.writeFile(testDb, rawData, "utf-8");
                 await d.load();
@@ -1414,7 +1414,7 @@ describe("database", "local", "Datastore", () => {
                 expect(d.getAllData()).to.have.lengthOf(2);
 
                 expect(d.indexes.size).to.be.equal(1);
-                expect(d.indexes.has("_id")).to.be.true;
+                expect(d.indexes.has("_id")).to.be.true();
 
                 const newDoc1 = await d.insert({ z: "12", yes: "yes" });
                 const newDoc2 = await d.insert({ z: "14", nope: "nope" });
@@ -1422,14 +1422,14 @@ describe("database", "local", "Datastore", () => {
                 await d.update({ z: "1" }, { $set: { yes: "yep" } }, {});
 
                 expect(d.indexes.size).to.be.equal(1);
-                expect(d.indexes.has("_id")).to.be.true;
+                expect(d.indexes.has("_id")).to.be.true();
 
 
                 await d.ensureIndex({ fieldName: "z" });
                 const z = d.indexes.get("z");
                 expect(z.fieldName).to.be.equal("z");
-                expect(z.unique).to.be.false;
-                expect(z.sparse).to.be.false;
+                expect(z.unique).to.be.false();
+                expect(z.sparse).to.be.false();
                 expect(z.tree.getNumberOfKeys()).to.be.equal(3);
 
                 // The pointers in the _id and z indexes are the same
@@ -1455,14 +1455,14 @@ describe("database", "local", "Datastore", () => {
                 const now = new Date();
                 const rawData = `${model.serialize({ _id: "aaa", z: "1", a: 2, ages: [1, 5, 12] })}\n${model.serialize({ _id: "bbb", z: "2", hello: "world" })}\n${model.serialize({ _id: "ccc", z: "3", nested: { today: now } })}`;
 
-                expect(d.getAllData()).to.be.empty;
+                expect(d.getAllData()).to.be.empty();
 
                 await d.ensureIndex({ fieldName: "z" });
 
                 const z = d.indexes.get("z");
                 expect(z.fieldName).to.be.equal("z");
-                expect(z.unique).to.be.false;
-                expect(z.sparse).to.be.false;
+                expect(z.unique).to.be.false();
+                expect(z.sparse).to.be.false();
                 expect(z.tree.getNumberOfKeys()).to.be.equal(0);
 
                 await adone.fs.writeFile(testDb, rawData, "utf8");
@@ -1483,7 +1483,7 @@ describe("database", "local", "Datastore", () => {
                 const now = new Date();
                 const rawData = `${model.serialize({ _id: "aaa", z: "1", a: 2, ages: [1, 5, 12] })}\n${model.serialize({ _id: "bbb", z: "2", a: "world" })}\n${model.serialize({ _id: "ccc", z: "3", a: { today: now } })}`;
 
-                expect(d.getAllData()).to.be.empty;
+                expect(d.getAllData()).to.be.empty();
 
                 await d.ensureIndex({ fieldName: "z" });
                 await d.ensureIndex({ fieldName: "a" });
@@ -1516,7 +1516,7 @@ describe("database", "local", "Datastore", () => {
             it("If a unique constraint is not respected, database loading will not work and no data will be inserted", async () => {
                 const now = new Date();
                 const rawData = `${model.serialize({ _id: "aaa", z: "1", a: 2, ages: [1, 5, 12] })}\n${model.serialize({ _id: "bbb", z: "2", a: "world" })}\n${model.serialize({ _id: "ccc", z: "1", a: { today: now } })}`;
-                expect(d.getAllData()).to.be.empty;
+                expect(d.getAllData()).to.be.empty();
 
                 await d.ensureIndex({ fieldName: "z", unique: true });
                 const z = d.indexes.get("z");
@@ -1529,7 +1529,7 @@ describe("database", "local", "Datastore", () => {
                 } catch (err) {
                     expect(err.errorType).to.be.equal("uniqueViolated");
                     expect(err.key).to.be.equal("1");
-                    expect(d.getAllData()).to.be.empty;
+                    expect(d.getAllData()).to.be.empty();
                     expect(z.tree.getNumberOfKeys()).to.be.equal(0);
                     return;
                 }
@@ -1555,11 +1555,11 @@ describe("database", "local", "Datastore", () => {
                 await d.ensureIndex({ fieldName: "e" });
 
                 expect([...d.indexes.keys()]).to.have.lengthOf(2);
-                expect(d.indexes.get("e")).to.be.ok;
+                expect(d.indexes.get("e")).to.be.ok();
 
                 await d.removeIndex("e");
                 expect([...d.indexes.keys()]).to.have.lengthOf(1);
-                expect(d.indexes.e).to.be.undefined;
+                expect(d.indexes.e).to.be.undefined();
             });
         });
 
@@ -1689,11 +1689,11 @@ describe("database", "local", "Datastore", () => {
                     await d.insert({ a: 5, z: "other" });
                 } catch (err) {
                     expect(err.errorType).to.be.equal("uniqueViolated");
-                    expect(err.key).to.be.undefined;
+                    expect(err.key).to.be.undefined();
                     await d.ensureIndex({ fieldName: "yyy", unique: true, sparse: true });
                     const yyy = d.indexes.get("yyy");
                     await d.insert({ a: 5, z: "other", zzz: "set" });
-                    expect(yyy.getAll()).to.be.empty; // Nothing indexed
+                    expect(yyy.getAll()).to.be.empty(); // Nothing indexed
                     expect(zzz.getAll()).to.have.lengthOf(2);
                     return;
                 }
@@ -1743,7 +1743,7 @@ describe("database", "local", "Datastore", () => {
                 } catch (_err) {
                     err = _err;
                 }
-                expect(err).to.be.ok;
+                expect(err).to.be.ok();
 
                 const docs = await d.find({});
                 expect(docs).to.have.lengthOf(1);
@@ -1753,7 +1753,7 @@ describe("database", "local", "Datastore", () => {
                 expect(a.getMatching(1)).to.have.lengthOf(1);
                 expect(_id.getMatching(doc1._id)[0]).to.be.equal(a.getMatching(1)[0]);
 
-                expect(a.getMatching(2)).to.be.empty;
+                expect(a.getMatching(2)).to.be.empty();
             });
         });
 
@@ -1961,7 +1961,7 @@ describe("database", "local", "Datastore", () => {
                 data = d.getAllData();
 
                 expect(nr).to.be.equal(2);
-                expect(data).to.be.empty;
+                expect(data).to.be.empty();
             });
 
             it("Indexes get updated when a document (or multiple documents) is removed", async () => {
@@ -2015,7 +2015,7 @@ describe("database", "local", "Datastore", () => {
                 let db = new Datastore({ filename: persDb.path(), autoload: true });
                 await db.load();
                 expect(db.indexes.size).to.be.equal(1);
-                expect(db.indexes.has("_id")).to.be.true;
+                expect(db.indexes.has("_id")).to.be.true();
 
                 await db.insert({ planet: "Earth" });
                 await db.insert({ planet: "Mars" });
@@ -2024,8 +2024,8 @@ describe("database", "local", "Datastore", () => {
 
 
                 expect(db.indexes.size).to.be.equal(2);
-                expect(db.indexes.has("_id")).to.be.true;
-                expect(db.indexes.has("planet")).to.be.true;
+                expect(db.indexes.has("_id")).to.be.true();
+                expect(db.indexes.has("planet")).to.be.true();
                 let _id = db.indexes.get("_id");
                 let planet = db.indexes.get("planet");
                 expect(_id.getAll()).to.have.lengthOf(2);
@@ -2036,8 +2036,8 @@ describe("database", "local", "Datastore", () => {
                 db = new Datastore({ filename: persDb.path() });
                 await db.load();
                 expect(db.indexes.size).to.be.equal(2);
-                expect(db.indexes.has("_id")).to.be.true;
-                expect(db.indexes.has("planet")).to.be.true;
+                expect(db.indexes.has("_id")).to.be.true();
+                expect(db.indexes.has("planet")).to.be.true();
                 _id = db.indexes.get("_id");
                 planet = db.indexes.get("planet");
                 expect(_id.getAll()).to.have.lengthOf(2);
@@ -2048,8 +2048,8 @@ describe("database", "local", "Datastore", () => {
                 db = new Datastore({ filename: persDb.path() });
                 await db.load();
                 expect(db.indexes.size).to.be.equal(2);
-                expect(db.indexes.has("_id")).to.be.true;
-                expect(db.indexes.has("planet")).to.be.true;
+                expect(db.indexes.has("_id")).to.be.true();
+                expect(db.indexes.has("planet")).to.be.true();
                 _id = db.indexes.get("_id");
                 planet = db.indexes.get("planet");
                 expect(_id.getAll()).to.have.lengthOf(2);
@@ -2065,71 +2065,71 @@ describe("database", "local", "Datastore", () => {
                 let db = new Datastore({ filename: persDb.path(), autoload: true });
                 await db.load();
                 expect(db.indexes.size).to.be.equal(1);
-                expect(db.indexes.has("_id")).to.be.true;
+                expect(db.indexes.has("_id")).to.be.true();
 
                 await db.insert({ planet: "Earth" });
                 await db.insert({ planet: "Mars" });
                 await db.ensureIndex({ fieldName: "planet", unique: true, sparse: false });
 
                 expect(db.indexes.size).to.be.equal(2);
-                expect(db.indexes.has("_id")).to.be.true;
-                expect(db.indexes.has("planet")).to.be.true;
+                expect(db.indexes.has("_id")).to.be.true();
+                expect(db.indexes.has("planet")).to.be.true();
                 let _id = db.indexes.get("_id");
                 let planet = db.indexes.get("planet");
                 expect(_id.getAll()).to.have.lengthOf(2);
                 expect(planet.getAll()).to.have.lengthOf(2);
-                expect(planet.unique).to.be.true;
-                expect(planet.sparse).to.be.false;
+                expect(planet.unique).to.be.true();
+                expect(planet.sparse).to.be.false();
 
                 await db.insert({ planet: "Jupiter" });
                 // After a reload the indexes are recreated
                 db = new Datastore({ filename: persDb.path() });
                 await db.load();
                 expect(db.indexes.size).to.be.equal(2);
-                expect(db.indexes.has("_id")).to.be.true;
-                expect(db.indexes.has("planet")).to.be.true;
+                expect(db.indexes.has("_id")).to.be.true();
+                expect(db.indexes.has("planet")).to.be.true();
                 _id = db.indexes.get("_id");
                 planet = db.indexes.get("planet");
                 expect(_id.getAll()).to.have.lengthOf(3);
                 expect(planet.getAll()).to.have.lengthOf(3);
-                expect(planet.unique).to.be.true;
-                expect(planet.sparse).to.be.false;
+                expect(planet.unique).to.be.true();
+                expect(planet.sparse).to.be.false();
 
 
                 await db.ensureIndex({ fieldName: "bloup", unique: false, sparse: true });
 
                 expect(db.indexes.size).to.be.equal(3);
-                expect(db.indexes.has("_id")).to.be.true;
-                expect(db.indexes.has("planet")).to.be.true;
-                expect(db.indexes.has("bloup")).to.be.true;
+                expect(db.indexes.has("_id")).to.be.true();
+                expect(db.indexes.has("planet")).to.be.true();
+                expect(db.indexes.has("bloup")).to.be.true();
                 _id = db.indexes.get("_id");
                 planet = db.indexes.get("planet");
                 let bloup = db.indexes.get("bloup");
                 expect(_id.getAll()).to.have.lengthOf(3);
                 expect(planet.getAll()).to.have.lengthOf(3);
-                expect(bloup.getAll()).to.be.empty;
-                expect(planet.unique).to.be.true;
-                expect(planet.sparse).to.be.false;
-                expect(bloup.unique).to.be.false;
-                expect(bloup.sparse).to.be.true;
+                expect(bloup.getAll()).to.be.empty();
+                expect(planet.unique).to.be.true();
+                expect(planet.sparse).to.be.false();
+                expect(bloup.unique).to.be.false();
+                expect(bloup.sparse).to.be.true();
 
                 // After another reload the indexes are still there (i.e. they are preserved during autocompaction)
                 db = new Datastore({ filename: persDb.path() });
                 await db.load();
                 expect(db.indexes.size).to.be.equal(3);
-                expect(db.indexes.has("_id")).to.be.true;
-                expect(db.indexes.has("planet")).to.be.true;
-                expect(db.indexes.has("bloup")).to.be.true;
+                expect(db.indexes.has("_id")).to.be.true();
+                expect(db.indexes.has("planet")).to.be.true();
+                expect(db.indexes.has("bloup")).to.be.true();
                 _id = db.indexes.get("_id");
                 planet = db.indexes.get("planet");
                 bloup = db.indexes.get("bloup");
                 expect(_id.getAll()).to.have.lengthOf(3);
                 expect(planet.getAll()).to.have.lengthOf(3);
-                expect(bloup.getAll()).to.be.empty;
-                expect(planet.unique).to.be.true;
-                expect(planet.sparse).to.be.false;
-                expect(bloup.unique).to.be.false;
-                expect(bloup.sparse).to.be.true;
+                expect(bloup.getAll()).to.be.empty();
+                expect(planet.unique).to.be.true();
+                expect(planet.sparse).to.be.false();
+                expect(bloup.unique).to.be.false();
+                expect(bloup.sparse).to.be.true();
             });
 
             it("Indexes can also be removed and the remove persisted", async () => {
@@ -2140,7 +2140,7 @@ describe("database", "local", "Datastore", () => {
                 await db.load();
 
                 expect(db.indexes.size).be.equal(1);
-                expect(db.indexes.has("_id")).to.be.true;
+                expect(db.indexes.has("_id")).to.be.true();
 
                 await db.insert({ planet: "Earth" });
                 await db.insert({ planet: "Mars" });
@@ -2149,9 +2149,9 @@ describe("database", "local", "Datastore", () => {
                 await db.ensureIndex({ fieldName: "another" });
 
                 expect(db.indexes.size).to.be.equal(3);
-                expect(db.indexes.has("_id")).to.be.true;
-                expect(db.indexes.has("planet")).to.be.true;
-                expect(db.indexes.has("another")).to.be.true;
+                expect(db.indexes.has("_id")).to.be.true();
+                expect(db.indexes.has("planet")).to.be.true();
+                expect(db.indexes.has("another")).to.be.true();
 
                 let _id = db.indexes.get("_id");
                 let planet = db.indexes.get("planet");
@@ -2164,9 +2164,9 @@ describe("database", "local", "Datastore", () => {
                 db = new Datastore({ filename: persDb.path() });
                 await db.load();
                 expect(db.indexes.size).to.be.equal(3);
-                expect(db.indexes.has("_id")).to.be.true;
-                expect(db.indexes.has("planet")).to.be.true;
-                expect(db.indexes.has("another")).to.be.true;
+                expect(db.indexes.has("_id")).to.be.true();
+                expect(db.indexes.has("planet")).to.be.true();
+                expect(db.indexes.has("another")).to.be.true();
                 _id = db.indexes.get("_id");
                 planet = db.indexes.get("planet");
                 expect(_id.getAll()).to.have.lengthOf(2);
@@ -2176,16 +2176,16 @@ describe("database", "local", "Datastore", () => {
                 // Index is removed
                 await db.removeIndex("planet");
                 expect(db.indexes.size).to.be.equal(2);
-                expect(db.indexes.has("_id")).to.be.true;
-                expect(db.indexes.has("another")).to.be.true;
+                expect(db.indexes.has("_id")).to.be.true();
+                expect(db.indexes.has("another")).to.be.true();
                 _id = db.indexes.get("_id");
                 expect(_id.getAll()).to.have.lengthOf(2);
                 // After a reload indexes are preserved
                 db = new Datastore({ filename: persDb.path() });
                 await db.load();
                 expect(db.indexes.size).to.be.equal(2);
-                expect(db.indexes.has("_id")).to.be.true;
-                expect(db.indexes.has("another")).to.be.true;
+                expect(db.indexes.has("_id")).to.be.true();
+                expect(db.indexes.has("another")).to.be.true();
                 _id = db.indexes.get("_id");
                 expect(_id.getAll()).to.have.lengthOf(2);
 
@@ -2193,8 +2193,8 @@ describe("database", "local", "Datastore", () => {
                 db = new Datastore({ filename: persDb.path() });
                 await db.load();
                 expect(db.indexes.size).to.be.equal(2);
-                expect(db.indexes.has("_id")).to.be.true;
-                expect(db.indexes.has("another")).to.be.true;
+                expect(db.indexes.has("_id")).to.be.true();
+                expect(db.indexes.has("another")).to.be.true();
                 expect(_id.getAll()).to.have.lengthOf(2);
             });
         });

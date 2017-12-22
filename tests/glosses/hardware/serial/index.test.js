@@ -19,7 +19,7 @@ describe("hardware", "serial", "Port", () => {
                 new Port("/dev/exists", {
                     binding: adone.hardware.serial.MockBinding
                 }, (err) => {
-                    assert.isNull(err);
+                    assert.null(err);
                     done();
                 });
             });
@@ -157,10 +157,10 @@ describe("hardware", "serial", "Port", () => {
                 binding: adone.hardware.serial.MockBinding
             };
             const port = new Port("/dev/exists", options);
-            assert.isTrue(port.settings.xon);
-            assert.isTrue(port.settings.xoff);
-            assert.isTrue(port.settings.xany);
-            assert.isTrue(port.settings.rtscts);
+            assert.true(port.settings.xon);
+            assert.true(port.settings.xoff);
+            assert.true(port.settings.xany);
+            assert.true(port.settings.rtscts);
             done();
         });
 
@@ -175,7 +175,7 @@ describe("hardware", "serial", "Port", () => {
         it("calls to the bindings", async () => {
             const s = spy(adone.hardware.serial.MockBinding, "list");
             const ports = await adone.hardware.serial.MockBinding.list();
-            assert.isArray(ports);
+            assert.array(ports);
             assert(s.calledOnce);
         });
     });
@@ -234,7 +234,7 @@ describe("hardware", "serial", "Port", () => {
                     autoOpen: false,
                     binding: adone.hardware.serial.MockBinding
                 });
-                assert.isFalse(port.isOpen);
+                assert.false(port.isOpen);
                 done();
             });
 
@@ -244,8 +244,8 @@ describe("hardware", "serial", "Port", () => {
                     binding: adone.hardware.serial.MockBinding
                 });
                 stub(port.binding, "open").callsFake(() => {
-                    assert.isTrue(port.opening);
-                    assert.isFalse(port.isOpen);
+                    assert.true(port.opening);
+                    assert.false(port.isOpen);
                     done();
                 });
                 port.open();
@@ -255,7 +255,7 @@ describe("hardware", "serial", "Port", () => {
                 const port = new Port("/dev/exists", {
                     binding: adone.hardware.serial.MockBinding
                 }, () => {
-                    assert.isTrue(port.isOpen);
+                    assert.true(port.isOpen);
                     done();
                 });
             });
@@ -265,7 +265,7 @@ describe("hardware", "serial", "Port", () => {
                     binding: adone.hardware.serial.MockBinding
                 }, function () {
                     stub(this.binding, "close").callsFake(() => {
-                        assert.isFalse(port.isOpen);
+                        assert.false(port.isOpen);
                         done();
                         return Promise.resolve();
                     });
@@ -280,7 +280,7 @@ describe("hardware", "serial", "Port", () => {
                     port.close();
                 });
                 port.on("close", () => {
-                    assert.isFalse(port.isOpen);
+                    assert.false(port.isOpen);
                     done();
                 });
             });
@@ -295,11 +295,11 @@ describe("hardware", "serial", "Port", () => {
                     binding: adone.hardware.serial.MockBinding
                 });
                 const openSpy = spy(port.binding, "open");
-                assert.isFalse(port.isOpen);
+                assert.false(port.isOpen);
                 port.open((err) => {
-                    assert.isNull(err);
-                    assert.isTrue(port.isOpen);
-                    assert.isTrue(openSpy.calledWith("/dev/exists"));
+                    assert.null(err);
+                    assert.true(port.isOpen);
+                    assert.true(openSpy.calledWith("/dev/exists"));
                     done();
                 });
             });
@@ -374,7 +374,7 @@ describe("hardware", "serial", "Port", () => {
                     binding: adone.hardware.serial.MockBinding
                 });
                 port.open((err) => {
-                    assert.isNull(err);
+                    assert.null(err);
                 });
                 port.open((err) => {
                     assert.instanceOf(err, Error);
@@ -488,7 +488,7 @@ describe("hardware", "serial", "Port", () => {
                     binding: adone.hardware.serial.MockBinding
                 }, () => {
                     port.on("close", () => {
-                        assert.isFalse(port.isOpen);
+                        assert.false(port.isOpen);
                         done();
                     });
                     port.close();
@@ -500,7 +500,7 @@ describe("hardware", "serial", "Port", () => {
                     binding: adone.hardware.serial.MockBinding
                 }, () => {
                     port.close(() => {
-                        assert.isFalse(port.isOpen);
+                        assert.false(port.isOpen);
                         done();
                     });
                 });
@@ -549,7 +549,7 @@ describe("hardware", "serial", "Port", () => {
                     port.close(() => {
                         port.open(() => {
                             port.close(() => {
-                                assert.isTrue(closeSpy.calledTwice);
+                                assert.true(closeSpy.calledTwice);
                                 done();
                             });
                         });
@@ -643,7 +643,7 @@ describe("hardware", "serial", "Port", () => {
                     assert.equal(port.baudRate, 9600);
                     port.update({ baudRate: 14400 }, (err) => {
                         assert.equal(port.baudRate, 14400);
-                        assert.isNull(err);
+                        assert.null(err);
                         done();
                     });
                 });
@@ -720,7 +720,7 @@ describe("hardware", "serial", "Port", () => {
                 }, () => {
                     const s = spy(port.binding, "set");
                     port.set(settings, (err) => {
-                        assert.isNull(err);
+                        assert.null(err);
                         assert(s.calledWith(settings));
                         done();
                     });
@@ -747,7 +747,7 @@ describe("hardware", "serial", "Port", () => {
                 }, () => {
                     const s = spy(port.binding, "set");
                     port.set(settings, (err) => {
-                        assert.isNull(err);
+                        assert.null(err);
                         assert(s.calledWith(filledWithMissing));
                         done();
                     });
@@ -768,7 +768,7 @@ describe("hardware", "serial", "Port", () => {
                 }, () => {
                     const s = spy(port.binding, "set");
                     port.set({}, (err) => {
-                        assert.isNull(err);
+                        assert.null(err);
                         assert(s.calledWith(defaults));
                         done();
                     });
@@ -826,7 +826,7 @@ describe("hardware", "serial", "Port", () => {
                 const s = spy(port.binding, "flush");
                 port.on("open", () => {
                     port.flush((err) => {
-                        assert.isNull(err);
+                        assert.null(err);
                         assert(s.calledOnce);
                         done();
                     });
@@ -884,7 +884,7 @@ describe("hardware", "serial", "Port", () => {
                 const s = spy(port.binding, "drain");
                 port.on("open", () => {
                     port.drain((err) => {
-                        assert.isNull(err);
+                        assert.null(err);
                         assert(s.calledOnce);
                         done();
                     });
@@ -941,7 +941,7 @@ describe("hardware", "serial", "Port", () => {
                 }, () => {
                     const s = spy(port.binding, "get");
                     port.get((err, status) => {
-                        assert.isNull(err);
+                        assert.null(err);
                         assert(s.calledOnce);
                         assert.deepEqual(status, {
                             cts: true,
@@ -1006,14 +1006,14 @@ describe("hardware", "serial", "Port", () => {
             const port = new Port("/dev/exists", {
                 binding: adone.hardware.serial.MockBindin
             }, () => {
-                assert.isTrue(port.isOpen);
+                assert.true(port.isOpen);
                 port.binding.disconnect();
             });
             const s = spy();
             port.on("disconnect", s);
             port.on("close", () => {
-                assert.isFalse(port.isOpen);
-                assert.isTrue(s.calledOnce);
+                assert.false(port.isOpen);
+                assert.true(s.calledOnce);
                 done();
             });
         });

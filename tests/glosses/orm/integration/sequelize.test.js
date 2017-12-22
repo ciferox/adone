@@ -43,7 +43,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
             const sequelize = Support.createSequelizeInstance({ logging: false, define: { underscored: true } });
             const DAO = sequelize.define("dao", { name: type.STRING });
 
-            expect(DAO.options.underscored).to.be.ok;
+            expect(DAO.options.underscored).to.be.ok();
         });
 
         it("should correctly set the host and the port", () => {
@@ -56,11 +56,11 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
         it("should log deprecated warning if operators aliases were not set", () => {
             stub(orm.util, "deprecate");
             Support.createSequelizeInstance();
-            expect(orm.util.deprecate.calledOnce).to.be.true;
+            expect(orm.util.deprecate.calledOnce).to.be.true();
             expect(orm.util.deprecate.args[0][0]).to.be.equal("String based operators are now deprecated. Please use Symbol based operators for better security, read more at http://docs.sequelizejs.com/manual/tutorial/querying.html#operators");
             orm.util.deprecate.reset();
             Support.createSequelizeInstance({ operatorsAliases: {} });
-            expect(orm.util.deprecate.called).to.be.false;
+            expect(orm.util.deprecate.called).to.be.false();
         });
 
         it("should set operators aliases on dialect QueryGenerator", () => {
@@ -119,7 +119,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                         .sequelizeWithInvalidConnection
                         .authenticate()
                         .catch((err) => {
-                            expect(err).to.not.be.null;
+                            expect(err).to.not.be.null();
                         });
                 });
 
@@ -131,7 +131,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                             expect(
                                 err instanceof RangeError ||
                 err instanceof orm.x.ConnectionError
-                            ).to.be.ok;
+                            ).to.be.ok();
                         });
                 });
 
@@ -145,7 +145,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                                 err.message.match(/invalid port number/) ||
                                 err.message.match(/(?:should|must) be >=? 0 and < 65536/) ||
                                 err.message.match(/Login failed for user/)
-                            ).to.be.ok;
+                            ).to.be.ok();
                         });
                 });
             });
@@ -160,7 +160,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                         .sequelizeWithInvalidCredentials
                         .authenticate()
                         .catch((err) => {
-                            expect(err).to.not.be.null;
+                            expect(err).to.not.be.null();
                         });
                 });
 
@@ -185,7 +185,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                         }
                     }).authenticate()
                         .catch((err) => {
-                            expect(err).to.not.be.null;
+                            expect(err).to.not.be.null();
                         });
                 });
             });
@@ -206,14 +206,14 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
 
     describe("isDefined", () => {
         it("returns false if the dao wasn't defined before", function () {
-            expect(this.sequelize.isDefined("Project")).to.be.false;
+            expect(this.sequelize.isDefined("Project")).to.be.false();
         });
 
         it("returns true if the dao was defined before", function () {
             this.sequelize.define("Project", {
                 name: type.STRING
             });
-            expect(this.sequelize.isDefined("Project")).to.be.true;
+            expect(this.sequelize.isDefined("Project")).to.be.true();
         });
     });
 
@@ -275,7 +275,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                 });
 
                 return sequelize.query("select 1;").then(() => {
-                    expect(logger.calledOnce).to.be.true;
+                    expect(logger.calledOnce).to.be.true();
                     expect(logger.args[0][0]).to.be.match(/Executed \(default\): select 1; Elapsed time: \d+ms/);
                 });
             });
@@ -315,9 +315,9 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                 });
 
                 return sequelize.query("select 1;").then(() => {
-                    expect(logger.calledOnce).to.be.true;
+                    expect(logger.calledOnce).to.be.true();
                     expect(logger.args[0][0]).to.be.equal("Executed (default): select 1;");
-                    expect(is.number(logger.args[0][1])).to.be.true;
+                    expect(is.number(logger.args[0][1])).to.be.true();
                 });
             });
 
@@ -327,7 +327,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                     logging: logger,
                     benchmark: true
                 }).then(() => {
-                    expect(logger.calledOnce).to.be.true;
+                    expect(logger.calledOnce).to.be.true();
                     expect(logger.args[0][0]).to.be.match(/Executed \(default\): select 1; Elapsed time: \d+ms/);
                 });
             });
@@ -339,9 +339,9 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                     logging: logger,
                     benchmark: true
                 }).then(() => {
-                    expect(logger.calledOnce).to.be.true;
+                    expect(logger.calledOnce).to.be.true();
                     expect(logger.args[0][0]).to.be.equal("Executed (default): select 1;");
-                    expect(is.number(logger.args[0][1])).to.be.true;
+                    expect(is.number(logger.args[0][1])).to.be.true();
                 });
             });
         });
@@ -768,7 +768,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
             }
 
             const [result] = await this.sequelize.query(`SELECT ${datetime} AS t`);
-            expect(adone.datetime(result[0].t).isValid()).to.be.true;
+            expect(adone.datetime(result[0].t).isValid()).to.be.true();
         });
 
         if (Support.getTestDialect() === "postgres") {
@@ -878,7 +878,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                 const t = await this.sequelize.transaction();
                 await this.sequelize.set({ foo: "bar" }, { transaction: t });
                 const data = await this.sequelize.query("SELECT @foo as `foo`", { plain: true, transaction: t });
-                expect(data).to.be.ok;
+                expect(data).to.be.ok();
                 expect(data.foo).to.be.equal("bar");
                 await t.commit();
             });
@@ -890,7 +890,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                     foos: "bars"
                 }, { transaction: t });
                 const data = await this.sequelize.query("SELECT @foo as `foo`, @foos as `foos`", { plain: true, transaction: t });
-                expect(data).to.be.ok;
+                expect(data).to.be.ok();
                 expect(data.foo).to.be.equal("bar");
                 expect(data.foos).to.be.equal("bars");
                 await t.commit();
@@ -962,12 +962,12 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
 
             await this.sequelize.sync({ force: true });
             const project = await Project.create({ title: "bla" });
-            expect(project).to.exist;
+            expect(project).to.exist();
             expect(project.title).to.equal("bla");
             expect(project.id).to.equal(1);
             await this.sequelize.truncate();
             const projects = await Project.findAll({});
-            expect(projects).to.exist;
+            expect(projects).to.exist();
             expect(projects).to.have.length(0);
         });
     });
@@ -981,7 +981,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                 return Task.sync({ force: true }).then(() => {
                     return Project.create({ title: "bla" }).then(() => {
                         return Task.create({ title: "bla" }).then((task) => {
-                            expect(task).to.exist;
+                            expect(task).to.exist();
                             expect(task.title).to.equal("bla");
                         });
                     });
@@ -992,7 +992,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
         it("works with correct database credentials", function () {
             const User = this.sequelize.define("User", { username: type.STRING });
             return User.sync().then(() => {
-                expect(true).to.be.true;
+                expect(true).to.be.true();
             });
         });
 
@@ -1041,7 +1041,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                 sequelize.define("Task", { title: type.STRING });
 
                 return sequelize.sync({ force: true }).catch((err) => {
-                    expect(err).to.be.ok;
+                    expect(err).to.be.ok();
                 });
             });
 
@@ -1055,7 +1055,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                 sequelize.define("Task", { title: type.STRING });
 
                 return sequelize.sync({ force: true }).catch((err) => {
-                    expect(err).to.be.ok;
+                    expect(err).to.be.ok();
                 });
             });
 
@@ -1070,7 +1070,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                 sequelize.define("Task", { title: type.STRING });
 
                 return sequelize.sync({ force: true }).catch((err) => {
-                    expect(err).to.be.ok;
+                    expect(err).to.be.ok();
                 });
             });
 
@@ -1153,7 +1153,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                 const self = this;
                 self.spy.reset();
                 return this.sequelize.sync({ force: true, logging: false }).then(() => {
-                    expect(self.spy.notCalled).to.be.true;
+                    expect(self.spy.notCalled).to.be.true();
                 });
             });
 
@@ -1161,7 +1161,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                 const self = this;
                 self.spy.reset();
                 return this.User.sync({ force: true, logging: false }).then(() => {
-                    expect(self.spy.notCalled).to.be.true;
+                    expect(self.spy.notCalled).to.be.true();
                 });
             });
         });
@@ -1190,12 +1190,12 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
     describe("import", () => {
         it("imports a dao definition from a file absolute path", function () {
             const Project = this.sequelize.import(`${__dirname}/assets/project`);
-            expect(Project).to.exist;
+            expect(Project).to.exist();
         });
 
         it("imports a dao definition with a default export", function () {
             const Project = this.sequelize.import(`${__dirname}/assets/es6project`);
-            expect(Project).to.exist;
+            expect(Project).to.exist();
         });
 
         it("imports a dao definition from a function", function () {
@@ -1205,7 +1205,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                 });
             });
 
-            expect(Project).to.exist;
+            expect(Project).to.exist();
         });
     });
 
@@ -1271,7 +1271,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                             Object.keys(customAttributes[attribute]).forEach((option) => {
                                 const optionValue = customAttributes[attribute][option];
                                 if (is.function(optionValue) && new optionValue() instanceof type.ABSTRACT) {
-                                    expect(Picture.rawAttributes[attribute][option] instanceof optionValue).to.be.ok;
+                                    expect(Picture.rawAttributes[attribute][option] instanceof optionValue).to.be.ok();
                                 } else {
                                     expect(Picture.rawAttributes[attribute][option]).to.be.equal(optionValue);
                                 }
@@ -1470,7 +1470,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
         it("should database/dialect version", function () {
             return this.sequelize.databaseVersion().then((version) => {
                 expect(typeof version).to.equal("string");
-                expect(version).to.be.ok;
+                expect(version).to.be.ok();
             });
         });
     });
@@ -1499,15 +1499,15 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                     username: "user1"
                 }
             });
-            expect(user).to.exist;
+            expect(user).to.exist();
             expect(Number(user.deletedAt)).to.equal(epoch);
 
             const destroyedUser = await user.destroy();
-            expect(destroyedUser.deletedAt).to.exist;
+            expect(destroyedUser.deletedAt).to.exist();
             expect(Number(destroyedUser.deletedAt)).not.to.equal(epoch);
 
             const fetchedDestroyedUser = await User.findById(destroyedUser.id, { paranoid: false });
-            expect(fetchedDestroyedUser.deletedAt).to.exist;
+            expect(fetchedDestroyedUser.deletedAt).to.exist();
             expect(Number(fetchedDestroyedUser.deletedAt)).not.to.equal(epoch);
 
             const restoredUser = await fetchedDestroyedUser.restore();

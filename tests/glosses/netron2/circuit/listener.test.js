@@ -82,7 +82,7 @@ describe("listener", () => {
                 pull.values([protocol.CircuitRelay.encode(relayMsg)]),
                 lp.encode(),
                 pull.collect((err, encoded) => {
-                    assert.isNull(err);
+                    assert.null(err);
                     encoded.forEach((e) => shake.write(e));
                 })
             );
@@ -119,7 +119,7 @@ describe("listener", () => {
                 pull.values([protocol.CircuitRelay.encode(relayMsg)]),
                 lp.encode(),
                 pull.collect((err, encoded) => {
-                    assert.isNull(err);
+                    assert.null(err);
                     encoded.forEach((e) => shake.write(e));
                 })
             );
@@ -156,7 +156,7 @@ describe("listener", () => {
                 pull.values([protocol.CircuitRelay.encode(relayMsg)]),
                 lp.encode(),
                 pull.collect((err, encoded) => {
-                    assert.isNull(err);
+                    assert.null(err);
                     encoded.forEach((e) => shake.write(e));
                 })
             );
@@ -181,11 +181,11 @@ describe("listener", () => {
                 pull.values([Buffer.from([relayMsg])]),
                 lp.encode(),
                 pull.collect((err, encoded) => {
-                    assert.isNull(err);
+                    assert.null(err);
                     encoded.forEach((e) => shake.write(e));
                 }),
                 lp.decodeFromReader(shake, { maxLength: this.maxLength }, (err, msg) => {
-                    assert.isNull(err);
+                    assert.null(err);
                     expect(protocol.CircuitRelay.decode(msg).type).to.equal(protocol.CircuitRelay.Type.STATUS);
                     expect(protocol.CircuitRelay.decode(msg).code).to.equal(protocol.CircuitRelay.Status.MALFORMED_MESSAGE);
                     done();
@@ -224,7 +224,7 @@ describe("listener", () => {
             peerInfo.multiaddrs.add("/ip4/127.0.0.1/tcp/4003/ws");
 
             listener.getAddrs((err, addrs) => {
-                assert.isNull(err);
+                assert.null(err);
                 expect(addrs).to.deep.equal([
                     multi.address.create("/p2p-circuit/ip4/0.0.0.0/tcp/4002/ipfs/QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy"),
                     multi.address.create("/p2p-circuit/ip4/127.0.0.1/tcp/4003/ws/ipfs/QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy")]);
@@ -235,7 +235,7 @@ describe("listener", () => {
             peerInfo.multiaddrs.add("/ip4/127.0.0.1/tcp/4003/ws");
             peerInfo.multiaddrs.add("/p2p-circuit/ip4/0.0.0.0/tcp/4002");
             listener.getAddrs((err, addrs) => {
-                assert.isNull(err);
+                assert.null(err);
                 expect(addrs[0]
                     .toString())
                     .to.equal("/p2p-circuit/ip4/0.0.0.0/tcp/4002/ipfs/QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy");

@@ -521,8 +521,8 @@ describe("schema", "issues", () => {
                 minimum: 2
             });
 
-            expect(validate(2)).to.be.true;
-            expect(validate("foo")).to.be.true;
+            expect(validate(2)).to.be.true();
+            expect(validate("foo")).to.be.true();
 
             const checkErrors = (expectedErrs) => {
                 expect(validate.errors).to.have.lengthOf(expectedErrs.length);
@@ -531,10 +531,10 @@ describe("schema", "issues", () => {
                 });
             };
 
-            expect(validate(1.5)).to.be.false;
+            expect(validate(1.5)).to.be.false();
             checkErrors(["type", "minimum"]);
 
-            expect(validate({})).to.be.false;
+            expect(validate({})).to.be.false();
             checkErrors(["type", "required"]);
 
         });
@@ -575,8 +575,8 @@ describe("schema", "issues", () => {
         it("should pass validation without throwing exception", () => {
             const instance = new Validator({ missingRefs: "ignore" });
             const validate = instance.compile(schema);
-            expect(validate({ foo: "anything" })).to.be.true;
-            expect(validate({ foo: "anything", bar: "whatever" })).to.be.true;
+            expect(validate({ foo: "anything" })).to.be.true();
+            expect(validate({ foo: "anything", bar: "whatever" })).to.be.true();
         });
 
         it("should throw exception during schema compilation with option missingRefs: true", () => {

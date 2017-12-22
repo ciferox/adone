@@ -37,9 +37,9 @@ describe("database", "mysql", "functional", "connection", "protocol errors", () 
                 server.close();
             });
         });
-        expect(err).to.be.ok;
+        expect(err).to.be.ok();
         expect(err.message).to.be.equal("Unexpected packet while no commands in the queue");
-        expect(err.fatal).to.be.true;
+        expect(err.fatal).to.be.true();
         expect(err.code).to.be.equal("PROTOCOL_UNEXPECTED_PACKET");
         expect(rows).to.be.deep.equal([{ 1: 1 }]);
         expect(fields[0].name).to.be.equal("1");

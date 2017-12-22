@@ -11,10 +11,10 @@ describe(Support.getTestDialectTeaser("hasOne"), () => {
         const Task = current.define("Task", { title: type.STRING });
 
         User.hasOne(Task);
-        expect(Task.rawAttributes.UserId).not.to.be.empty;
+        expect(Task.rawAttributes.UserId).not.to.be.empty();
 
         User.hasOne(Task, { as: "Shabda" });
-        expect(Task.rawAttributes.ShabdaId).not.to.be.empty;
+        expect(Task.rawAttributes.ShabdaId).not.to.be.empty();
     });
 
     it("should not override custom methods with association mixin", () => {

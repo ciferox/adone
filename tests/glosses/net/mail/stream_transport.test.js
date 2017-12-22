@@ -32,8 +32,8 @@ describe("net", "mail", "Stream Transport Tests", function () {
 
     it("Should expose version number", () => {
         const client = new StreamTransport();
-        expect(client.name).to.exist;
-        expect(client.version).to.exist;
+        expect(client.name).to.exist();
+        expect(client.version).to.exist();
     });
 
     describe("Send as stream", () => {
@@ -50,7 +50,7 @@ describe("net", "mail", "Stream Transport Tests", function () {
                     to: "test@valid.recipient"
                 }, message)
             }, (err, info) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
 
                 expect(info.envelope).to.deep.equal({
                     from: "test@valid.sender",
@@ -85,7 +85,7 @@ describe("net", "mail", "Stream Transport Tests", function () {
                     to: "test@valid.recipient"
                 }, message)
             }, (err, info) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
 
                 info.message.on("data", (chunk) => {
                     chunks.push(chunk);
@@ -115,7 +115,7 @@ describe("net", "mail", "Stream Transport Tests", function () {
                     to: "test@valid.recipient"
                 }, message)
             }, (err, info) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
 
                 expect(info.message.toString()).to.equal(message.replace(/\r\n/g, "\n"));
                 done();
@@ -136,7 +136,7 @@ describe("net", "mail", "Stream Transport Tests", function () {
                     to: "test@valid.recipient"
                 }, message)
             }, (err, info) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
 
                 expect(info.message.toString()).to.equal(message.replace(/\n/g, "\r\n"));
                 done();

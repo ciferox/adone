@@ -133,7 +133,7 @@ describe("math", "Long", "special", () => {
 
     it("msb_unsigned", () => {
         const longVal = Long.UONE.shl(63);
-        assert.isNotOk(longVal.equals(Long.MIN_VALUE));
+        assert.notOk(longVal.equals(Long.MIN_VALUE));
         assert.equal(longVal.toString(), "9223372036854775808");
         assert.equal(Long.fromString("9223372036854775808", true).toString(), "9223372036854775808");
     });

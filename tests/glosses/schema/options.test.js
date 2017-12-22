@@ -300,7 +300,7 @@ describe("schema", "options", () => {
 
         it("should throw if meta: false and validateSchema: true", () => {
             const instance = new Validator({ meta: false });
-            expect(instance.getSchema("http://json-schema.org/draft-06/schema")).not.to.be.ok;
+            expect(instance.getSchema("http://json-schema.org/draft-06/schema")).not.to.be.ok();
             expect(() => {
                 instance.addSchema({ type: "wrong_type" }, "integer");
             }).not.to.throw();
@@ -957,7 +957,7 @@ describe("schema", "options", () => {
                 if (msgPattern) {
                     expect(consoleMsg).to.match(msgPattern);
                 } else {
-                    expect(consoleMsg).not.to.be.ok;
+                    expect(consoleMsg).not.to.be.ok();
                 }
             } finally {
                 adone.warn = oldConsole;
@@ -984,8 +984,8 @@ describe("schema", "options", () => {
 
                 function test(instance) {
                     const validate = instance.compile({ type: "number" });
-                    expect(validate.source).not.to.be.ok;
-                    expect(validate.sourceCode).not.to.be.ok;
+                    expect(validate.source).not.to.be.ok();
+                    expect(validate.sourceCode).not.to.be.ok();
                 }
             });
         });
@@ -1205,7 +1205,7 @@ describe("schema", "options", () => {
                 expect(validate(1)).to.be.equal(false);
 
                 validate = instance.compile({ $id: "mySchema2", type: "string" });
-                expect(instance.getSchema("mySchema2")).not.to.be.ok;
+                expect(instance.getSchema("mySchema2")).not.to.be.ok();
             });
         });
 
@@ -1219,7 +1219,7 @@ describe("schema", "options", () => {
                 expect(validate(1)).to.be.equal(false);
 
                 validate = instance.compile({ id: "mySchema2", type: "string" });
-                expect(instance.getSchema("mySchema2")).not.to.be.ok;
+                expect(instance.getSchema("mySchema2")).not.to.be.ok();
             });
         });
     });

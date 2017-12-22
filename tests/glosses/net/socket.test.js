@@ -63,8 +63,8 @@ describe("net", "Socket/Server", () => {
 
             assert.equal(s.options.protocol, "tcp:");
             assert.equal(c.options.protocol, "tcp:");
-            assert.isNotOk(s.options.does_not_exit);
-            assert.isNotOk(c.options.does_not_exit);
+            assert.notOk(s.options.does_not_exit);
+            assert.notOk(c.options.does_not_exit);
         });
 
         it("set", () => {
@@ -167,16 +167,16 @@ describe("net", "Socket/Server", () => {
                         await server.bind({ port: UNIX_SOCKET });
                         await client.connect({ port: UNIX_SOCKET });
 
-                        assert.isOk(is.object(client.getLocalAddress()));
-                        assert.isOk(is.string(client.getLocalAddress().port));
+                        assert.ok(is.object(client.getLocalAddress()));
+                        assert.ok(is.string(client.getLocalAddress().port));
                     });
 
                     it("remote address", async () => {
                         await server.bind({ port: UNIX_SOCKET });
                         await client.connect({ port: UNIX_SOCKET });
 
-                        assert.isOk(is.object(client.getRemoteAddress()));
-                        assert.isOk(is.string(client.getRemoteAddress().port));
+                        assert.ok(is.object(client.getRemoteAddress()));
+                        assert.ok(is.string(client.getRemoteAddress().port));
                     });
 
                     it("double bind", async () => {
@@ -267,20 +267,20 @@ describe("net", "Socket/Server", () => {
             it("local & remote addresses after connect", async () => {
                 await server.bind({ port: SERVER_PORT });
                 await client.connect({ port: SERVER_PORT });
-                assert.isOk(is.object(client.getRemoteAddress()));
-                assert.isOk(is.string(client.getRemoteAddress().full));
-                assert.isOk(is.object(client.getLocalAddress()));
-                assert.isOk(is.string(client.getLocalAddress().full));
+                assert.ok(is.object(client.getRemoteAddress()));
+                assert.ok(is.string(client.getRemoteAddress().full));
+                assert.ok(is.object(client.getLocalAddress()));
+                assert.ok(is.string(client.getLocalAddress().full));
             });
 
             it("local & remote addresses after disconnect", async () => {
                 await server.bind({ port: SERVER_PORT });
                 await client.connect({ port: SERVER_PORT });
                 client.disconnect();
-                assert.isOk(is.object(client.getRemoteAddress()));
-                assert.isOk(is.string(client.getRemoteAddress().full));
-                assert.isOk(is.object(client.getLocalAddress()));
-                assert.isOk(is.string(client.getLocalAddress().full));
+                assert.ok(is.object(client.getRemoteAddress()));
+                assert.ok(is.string(client.getRemoteAddress().full));
+                assert.ok(is.object(client.getLocalAddress()));
+                assert.ok(is.string(client.getLocalAddress().full));
             });
         });
 
@@ -615,16 +615,16 @@ describe("net", "Socket/Server", () => {
                         await client.connect(Object.assign({ port: UNIX_SOCKET }, clientOptions));
 
                         // console.log(adone.meta.inspect({}, client.getLocalAddress()));
-                        // assert.isOk(is.object(client.getLocalAddress()));
-                        // assert.isOk(is.string(client.getLocalAddress().port));
+                        // assert.ok(is.object(client.getLocalAddress()));
+                        // assert.ok(is.string(client.getLocalAddress().port));
                     });
 
                     it("remote address", async () => {
                         await server.bind(Object.assign({ port: UNIX_SOCKET }, serverOptions));
                         await client.connect(Object.assign({ port: UNIX_SOCKET }, clientOptions));
 
-                        assert.isOk(is.object(client.getRemoteAddress()));
-                        assert.isOk(is.string(client.getRemoteAddress().port));
+                        assert.ok(is.object(client.getRemoteAddress()));
+                        assert.ok(is.string(client.getRemoteAddress().port));
                     });
 
                     it("double bind", async () => {
@@ -715,20 +715,20 @@ describe("net", "Socket/Server", () => {
             it("local & remote addresses after connect", async () => {
                 await server.bind(Object.assign({ port: SERVER_PORT }, serverOptions));
                 await client.connect(Object.assign({ port: SERVER_PORT }, clientOptions));
-                assert.isOk(is.object(client.getRemoteAddress()));
-                assert.isOk(is.string(client.getRemoteAddress().full));
-                assert.isOk(is.object(client.getLocalAddress()));
-                assert.isOk(is.string(client.getLocalAddress().full));
+                assert.ok(is.object(client.getRemoteAddress()));
+                assert.ok(is.string(client.getRemoteAddress().full));
+                assert.ok(is.object(client.getLocalAddress()));
+                assert.ok(is.string(client.getLocalAddress().full));
             });
 
             it("local & remote addresses after disconnect", async () => {
                 await server.bind(Object.assign({ port: SERVER_PORT }, serverOptions));
                 await client.connect(Object.assign({ port: SERVER_PORT }, clientOptions));
                 client.disconnect();
-                assert.isOk(is.object(client.getRemoteAddress()));
-                assert.isOk(is.string(client.getRemoteAddress().full));
-                assert.isOk(is.object(client.getLocalAddress()));
-                assert.isOk(is.string(client.getLocalAddress().full));
+                assert.ok(is.object(client.getRemoteAddress()));
+                assert.ok(is.string(client.getRemoteAddress().full));
+                assert.ok(is.object(client.getLocalAddress()));
+                assert.ok(is.string(client.getLocalAddress().full));
             });
         });
 

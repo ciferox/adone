@@ -14,9 +14,9 @@ describe("js", "compiler", "esutils", "keyword", () => {
             let word;
             for (i = 0, len = KW.length; i < len; i++) {
                 word = KW[i];
-                expect(esutils.keyword.isKeywordES6(word, false)).to.be.true;
+                expect(esutils.keyword.isKeywordES6(word, false)).to.be.true();
             }
-            return expect(esutils.keyword.isKeywordES6("yield", false)).to.be.true;
+            return expect(esutils.keyword.isKeywordES6("yield", false)).to.be.true();
         });
         it("returns false if provided string is not keyword under non-strict mode", () => {
             let i;
@@ -27,7 +27,7 @@ describe("js", "compiler", "esutils", "keyword", () => {
             const words = ["hello", "20", "$", "ゆゆ式"];
             for (i = 0, len = words.length; i < len; i++) {
                 word = words[i];
-                expect(esutils.keyword.isKeywordES6(word, false)).to.be.false;
+                expect(esutils.keyword.isKeywordES6(word, false)).to.be.false();
             }
             const results = [];
             for (j = 0, len1 = SRW.length; j < len1; j++) {
@@ -44,9 +44,9 @@ describe("js", "compiler", "esutils", "keyword", () => {
             let word;
             for (i = 0, len = KW.length; i < len; i++) {
                 word = KW[i];
-                expect(esutils.keyword.isKeywordES6(word, true)).to.be.true;
+                expect(esutils.keyword.isKeywordES6(word, true)).to.be.true();
             }
-            expect(esutils.keyword.isKeywordES6("yield", true)).to.be.true;
+            expect(esutils.keyword.isKeywordES6("yield", true)).to.be.true();
             const results = [];
             for (j = 0, len1 = SRW.length; j < len1; j++) {
                 word = SRW[j];
@@ -88,13 +88,13 @@ describe("js", "compiler", "esutils", "keyword", () => {
             const words = ["hello", "20", "$", "ゆゆ式"];
             for (i = 0, len = words.length; i < len; i++) {
                 word = words[i];
-                expect(esutils.keyword.isKeywordES5(word, false)).to.be.false;
+                expect(esutils.keyword.isKeywordES5(word, false)).to.be.false();
             }
             for (j = 0, len1 = SRW.length; j < len1; j++) {
                 word = SRW[j];
-                expect(esutils.keyword.isKeywordES5(word, false)).to.be.false;
+                expect(esutils.keyword.isKeywordES5(word, false)).to.be.false();
             }
-            return expect(esutils.keyword.isKeywordES5("yield", false)).to.be.false;
+            return expect(esutils.keyword.isKeywordES5("yield", false)).to.be.false();
         });
         it("returns true if provided string is keyword under strict mode", () => {
             let i;
@@ -104,9 +104,9 @@ describe("js", "compiler", "esutils", "keyword", () => {
             let word;
             for (i = 0, len = KW.length; i < len; i++) {
                 word = KW[i];
-                expect(esutils.keyword.isKeywordES5(word, true)).to.be.true;
+                expect(esutils.keyword.isKeywordES5(word, true)).to.be.true();
             }
-            expect(esutils.keyword.isKeywordES5("yield", true)).to.be.true;
+            expect(esutils.keyword.isKeywordES5("yield", true)).to.be.true();
             const results = [];
             for (j = 0, len1 = SRW.length; j < len1; j++) {
                 word = SRW[j];
@@ -129,12 +129,12 @@ describe("js", "compiler", "esutils", "keyword", () => {
     });
     describe("isReservedWordES6", () => {
         it("returns true for null/boolean values", () => {
-            expect(esutils.keyword.isReservedWordES6("null", false)).to.be.true;
-            expect(esutils.keyword.isReservedWordES6("null", true)).to.be.true;
-            expect(esutils.keyword.isReservedWordES6("true", false)).to.be.true;
-            expect(esutils.keyword.isReservedWordES6("true", true)).to.be.true;
-            expect(esutils.keyword.isReservedWordES6("false", false)).to.be.true;
-            return expect(esutils.keyword.isReservedWordES6("false", true)).to.be.true;
+            expect(esutils.keyword.isReservedWordES6("null", false)).to.be.true();
+            expect(esutils.keyword.isReservedWordES6("null", true)).to.be.true();
+            expect(esutils.keyword.isReservedWordES6("true", false)).to.be.true();
+            expect(esutils.keyword.isReservedWordES6("true", true)).to.be.true();
+            expect(esutils.keyword.isReservedWordES6("false", false)).to.be.true();
+            return expect(esutils.keyword.isReservedWordES6("false", true)).to.be.true();
         });
         it("returns true if provided string is keyword under non-strict mode", () => {
             let i;
@@ -142,9 +142,9 @@ describe("js", "compiler", "esutils", "keyword", () => {
             let word;
             for (i = 0, len = KW.length; i < len; i++) {
                 word = KW[i];
-                expect(esutils.keyword.isReservedWordES6(word, false)).to.be.true;
+                expect(esutils.keyword.isReservedWordES6(word, false)).to.be.true();
             }
-            return expect(esutils.keyword.isReservedWordES6("yield", false)).to.be.true;
+            return expect(esutils.keyword.isReservedWordES6("yield", false)).to.be.true();
         });
         it("returns false if provided string is not keyword under non-strict mode", () => {
             let i;
@@ -155,7 +155,7 @@ describe("js", "compiler", "esutils", "keyword", () => {
             const words = ["hello", "20", "$", "ゆゆ式"];
             for (i = 0, len = words.length; i < len; i++) {
                 word = words[i];
-                expect(esutils.keyword.isReservedWordES6(word, false)).to.be.false;
+                expect(esutils.keyword.isReservedWordES6(word, false)).to.be.false();
             }
             const results = [];
             for (j = 0, len1 = SRW.length; j < len1; j++) {
@@ -172,9 +172,9 @@ describe("js", "compiler", "esutils", "keyword", () => {
             let word;
             for (i = 0, len = KW.length; i < len; i++) {
                 word = KW[i];
-                expect(esutils.keyword.isReservedWordES6(word, true)).to.be.true;
+                expect(esutils.keyword.isReservedWordES6(word, true)).to.be.true();
             }
-            expect(esutils.keyword.isReservedWordES6("yield", true)).to.be.true;
+            expect(esutils.keyword.isReservedWordES6("yield", true)).to.be.true();
             const results = [];
             for (j = 0, len1 = SRW.length; j < len1; j++) {
                 word = SRW[j];
@@ -197,12 +197,12 @@ describe("js", "compiler", "esutils", "keyword", () => {
     });
     describe("isReservedWordES5", () => {
         it("returns true for null/boolean values", () => {
-            expect(esutils.keyword.isReservedWordES5("null", false)).to.be.true;
-            expect(esutils.keyword.isReservedWordES5("null", true)).to.be.true;
-            expect(esutils.keyword.isReservedWordES5("true", false)).to.be.true;
-            expect(esutils.keyword.isReservedWordES5("true", true)).to.be.true;
-            expect(esutils.keyword.isReservedWordES5("false", false)).to.be.true;
-            return expect(esutils.keyword.isReservedWordES5("false", true)).to.be.true;
+            expect(esutils.keyword.isReservedWordES5("null", false)).to.be.true();
+            expect(esutils.keyword.isReservedWordES5("null", true)).to.be.true();
+            expect(esutils.keyword.isReservedWordES5("true", false)).to.be.true();
+            expect(esutils.keyword.isReservedWordES5("true", true)).to.be.true();
+            expect(esutils.keyword.isReservedWordES5("false", false)).to.be.true();
+            return expect(esutils.keyword.isReservedWordES5("false", true)).to.be.true();
         });
         it("returns true if provided string is keyword under non-strict mode", () => {
             let i;
@@ -224,13 +224,13 @@ describe("js", "compiler", "esutils", "keyword", () => {
             const words = ["hello", "20", "$", "ゆゆ式"];
             for (i = 0, len = words.length; i < len; i++) {
                 word = words[i];
-                expect(esutils.keyword.isReservedWordES5(word, false)).to.be.false;
+                expect(esutils.keyword.isReservedWordES5(word, false)).to.be.false();
             }
             for (j = 0, len1 = SRW.length; j < len1; j++) {
                 word = SRW[j];
-                expect(esutils.keyword.isReservedWordES5(word, false)).to.be.false;
+                expect(esutils.keyword.isReservedWordES5(word, false)).to.be.false();
             }
-            return expect(esutils.keyword.isReservedWordES5("yield", false)).to.be.false;
+            return expect(esutils.keyword.isReservedWordES5("yield", false)).to.be.false();
         });
         it("returns true if provided string is keyword under strict mode", () => {
             let i;
@@ -240,9 +240,9 @@ describe("js", "compiler", "esutils", "keyword", () => {
             let word;
             for (i = 0, len = KW.length; i < len; i++) {
                 word = KW[i];
-                expect(esutils.keyword.isReservedWordES5(word, true)).to.be.true;
+                expect(esutils.keyword.isReservedWordES5(word, true)).to.be.true();
             }
-            expect(esutils.keyword.isReservedWordES5("yield", true)).to.be.true;
+            expect(esutils.keyword.isReservedWordES5("yield", true)).to.be.true();
             const results = [];
             for (j = 0, len1 = SRW.length; j < len1; j++) {
                 word = SRW[j];
@@ -265,8 +265,8 @@ describe("js", "compiler", "esutils", "keyword", () => {
     });
     describe("isRestrictedWord", () => {
         it('returns true if provided string is "eval" or "arguments"', () => {
-            expect(esutils.keyword.isRestrictedWord("eval")).to.be.true;
-            return expect(esutils.keyword.isRestrictedWord("arguments")).to.be.true;
+            expect(esutils.keyword.isRestrictedWord("eval")).to.be.true();
+            return expect(esutils.keyword.isRestrictedWord("arguments")).to.be.true();
         });
         return it('returns false if provided string is not "eval" or "arguments"', () => {
             let i;
@@ -283,8 +283,8 @@ describe("js", "compiler", "esutils", "keyword", () => {
     });
     describe("isIdentifierName", () => {
         it("returns false if provided string is empty", () => {
-            expect(esutils.keyword.isIdentifierNameES5("")).to.be.false;
-            return expect(esutils.keyword.isIdentifierNameES6("")).to.be.false;
+            expect(esutils.keyword.isIdentifierNameES5("")).to.be.false();
+            return expect(esutils.keyword.isIdentifierNameES6("")).to.be.false();
         });
         it("returns true if provided string is IdentifierName", () => {
             let i;
@@ -294,7 +294,7 @@ describe("js", "compiler", "esutils", "keyword", () => {
             const results = [];
             for (i = 0, len = words.length; i < len; i++) {
                 word = words[i];
-                expect(esutils.keyword.isIdentifierNameES5(word)).to.be.true;
+                expect(esutils.keyword.isIdentifierNameES5(word)).to.be.true();
                 results.push(expect(esutils.keyword.isIdentifierNameES6(word)).to.be.true);
             }
             return results;
@@ -307,18 +307,18 @@ describe("js", "compiler", "esutils", "keyword", () => {
             const results = [];
             for (i = 0, len = words.length; i < len; i++) {
                 word = words[i];
-                expect(esutils.keyword.isIdentifierNameES5(word)).to.be.false;
+                expect(esutils.keyword.isIdentifierNameES5(word)).to.be.false();
                 results.push(expect(esutils.keyword.isIdentifierNameES6(word)).to.be.false);
             }
             return results;
         });
         return it("supports astral symbols", () => {
-            return expect(esutils.keyword.isIdentifierNameES6("x\uDB40\uDDD5")).to.be.true;
+            return expect(esutils.keyword.isIdentifierNameES6("x\uDB40\uDDD5")).to.be.true();
         });
     });
     describe("isIdentifierES5", () => {
         it("returns false if provided string is empty", () => {
-            return expect(esutils.keyword.isIdentifierES5("")).to.be.false;
+            return expect(esutils.keyword.isIdentifierES5("")).to.be.false();
         });
         it("returns true if provided string is Identifier", () => {
             let i;
@@ -327,10 +327,10 @@ describe("js", "compiler", "esutils", "keyword", () => {
             const words = ["hello", "$", "ゆゆ式", "$20", "hello20", "_"];
             for (i = 0, len = words.length; i < len; i++) {
                 word = words[i];
-                expect(esutils.keyword.isIdentifierES5(word)).to.be.true;
+                expect(esutils.keyword.isIdentifierES5(word)).to.be.true();
             }
-            expect(esutils.keyword.isIdentifierES5("yield", false)).to.be.true;
-            return expect(esutils.keyword.isIdentifierES5("let", false)).to.be.true;
+            expect(esutils.keyword.isIdentifierES5("yield", false)).to.be.true();
+            return expect(esutils.keyword.isIdentifierES5("let", false)).to.be.true();
         });
         return it("returns false if provided string is not Identifier", () => {
             let i;
@@ -339,15 +339,15 @@ describe("js", "compiler", "esutils", "keyword", () => {
             const words = ["+hello", "0$", "-ゆゆ式", "#_", "_#", "if", "null", "true", "false"];
             for (i = 0, len = words.length; i < len; i++) {
                 word = words[i];
-                expect(esutils.keyword.isIdentifierES5(word)).to.be.false;
+                expect(esutils.keyword.isIdentifierES5(word)).to.be.false();
             }
-            expect(esutils.keyword.isIdentifierES5("yield", true)).to.be.false;
-            return expect(esutils.keyword.isIdentifierES5("let", true)).to.be.false;
+            expect(esutils.keyword.isIdentifierES5("yield", true)).to.be.false();
+            return expect(esutils.keyword.isIdentifierES5("let", true)).to.be.false();
         });
     });
     return describe("isIdentifierES6", () => {
         it("returns false if provided string is empty", () => {
-            return expect(esutils.keyword.isIdentifierES6("")).to.be.false;
+            return expect(esutils.keyword.isIdentifierES6("")).to.be.false();
         });
         it("returns true if provided string is Identifier", () => {
             let i;
@@ -356,9 +356,9 @@ describe("js", "compiler", "esutils", "keyword", () => {
             const words = ["hello", "$", "ゆゆ式", "$20", "hello20", "_"];
             for (i = 0, len = words.length; i < len; i++) {
                 word = words[i];
-                expect(esutils.keyword.isIdentifierES6(word)).to.be.true;
+                expect(esutils.keyword.isIdentifierES6(word)).to.be.true();
             }
-            return expect(esutils.keyword.isIdentifierES6("let", false)).to.be.true;
+            return expect(esutils.keyword.isIdentifierES6("let", false)).to.be.true();
         });
         return it("returns false if provided string is not Identifier", () => {
             let i;
@@ -367,11 +367,11 @@ describe("js", "compiler", "esutils", "keyword", () => {
             const words = ["+hello", "0$", "-ゆゆ式", "#_", "_#", "if", "null", "true", "false"];
             for (i = 0, len = words.length; i < len; i++) {
                 word = words[i];
-                expect(esutils.keyword.isIdentifierES6(word)).to.be.false;
+                expect(esutils.keyword.isIdentifierES6(word)).to.be.false();
             }
-            expect(esutils.keyword.isIdentifierES6("yield", false)).to.be.false;
-            expect(esutils.keyword.isIdentifierES6("yield", true)).to.be.false;
-            return expect(esutils.keyword.isIdentifierES6("let", true)).to.be.false;
+            expect(esutils.keyword.isIdentifierES6("yield", false)).to.be.false();
+            expect(esutils.keyword.isIdentifierES6("yield", true)).to.be.false();
+            return expect(esutils.keyword.isIdentifierES6("let", true)).to.be.false();
         });
     });
 });

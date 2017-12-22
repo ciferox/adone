@@ -26,9 +26,9 @@ describe("net", "http", "server", "request", "is", () => {
             const ctx = context();
             ctx.header["transfer-encoding"] = "chunked";
 
-            expect(ctx.is()).to.be.false;
-            expect(ctx.is("image/*")).to.be.false;
-            expect(ctx.is("text/*", "image/*")).to.be.false;
+            expect(ctx.is()).to.be.false();
+            expect(ctx.is("image/*")).to.be.false();
+            expect(ctx.is("text/*", "image/*")).to.be.false();
         });
     });
 
@@ -53,11 +53,11 @@ describe("net", "http", "server", "request", "is", () => {
             expect(ctx.is("image/png")).to.be.equal("image/png");
             expect(ctx.is("image/*")).to.be.equal("image/png");
             expect(ctx.is("*/png")).to.be.equal("image/png");
-            expect(ctx.is("jpeg")).to.be.false;
-            expect(ctx.is(".jpeg")).to.be.false;
-            expect(ctx.is("image/jpeg")).to.be.false;
-            expect(ctx.is("text/*")).to.be.false;
-            expect(ctx.is("*/jpeg")).to.be.false;
+            expect(ctx.is("jpeg")).to.be.false();
+            expect(ctx.is(".jpeg")).to.be.false();
+            expect(ctx.is("image/jpeg")).to.be.false();
+            expect(ctx.is("text/*")).to.be.false();
+            expect(ctx.is("*/jpeg")).to.be.false();
         });
     });
 
@@ -77,10 +77,10 @@ describe("net", "http", "server", "request", "is", () => {
             expect(ctx.is(["image/*", "text/*"])).to.be.equal("image/png");
             expect(ctx.is(["image/*", "image/png"])).to.be.equal("image/png");
             expect(ctx.is(["image/png", "image/*"])).to.be.equal("image/png");
-            expect(ctx.is("jpeg")).to.be.false;
-            expect(ctx.is(".jpeg")).to.be.false;
-            expect(ctx.is("text/*", "application/*")).to.be.false;
-            expect(ctx.is("text/html", "text/plain", "application/json; charset=utf-8")).to.be.false;
+            expect(ctx.is("jpeg")).to.be.false();
+            expect(ctx.is(".jpeg")).to.be.false();
+            expect(ctx.is("text/*", "application/*")).to.be.false();
+            expect(ctx.is("text/html", "text/plain", "application/json; charset=utf-8")).to.be.false();
         });
     });
 

@@ -28,7 +28,7 @@ describe(Support.getTestDialectTeaser("Schema"), () => {
         }).then((result) => {
             return result.reload();
         }).then((user) => {
-            expect(user).to.be.ok;
+            expect(user).to.be.ok();
             expect(user.aNumber).to.be.equal(4);
         });
     });
@@ -39,7 +39,7 @@ describe(Support.getTestDialectTeaser("Schema"), () => {
         }).then((result) => {
             return result.reload();
         }).then((user) => {
-            expect(user).to.be.ok;
+            expect(user).to.be.ok();
             expect(user.aNumber).to.be.equal(7);
         });
     });

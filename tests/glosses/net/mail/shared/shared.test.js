@@ -86,7 +86,7 @@ describe("net", "mail", "Shared Funcs Tests", () => {
                 }
             };
             shared.resolveContent(mail.data, "html", (err, value) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(value).to.equal("<p>Tere, tere</p><p>vana kere!</p>\n");
                 done();
             });
@@ -99,7 +99,7 @@ describe("net", "mail", "Shared Funcs Tests", () => {
                 }
             };
             shared.resolveContent(mail.data, "html", (err, value) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(value).to.deep.equal(mail.data.html);
                 done();
             });
@@ -114,7 +114,7 @@ describe("net", "mail", "Shared Funcs Tests", () => {
                 }
             };
             shared.resolveContent(mail.data, "html", (err, value) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(value).to.be.instanceOf(Buffer);
                 value = value.toString().replace(/\r\n/g, "\n");
                 expect(value).to.equal("<p>Tere, tere</p><p>vana kere!</p>\n");
@@ -131,7 +131,7 @@ describe("net", "mail", "Shared Funcs Tests", () => {
                 }
             };
             shared.resolveContent(mail.data, "html", (err, value) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(value).to.deep.equal(new Buffer("<p>Tere, tere</p><p>vana kere!</p>\n"));
                 done();
             });
@@ -146,7 +146,7 @@ describe("net", "mail", "Shared Funcs Tests", () => {
                 }
             };
             shared.resolveContent(mail.data, "html", (err, value) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(value).to.deep.equal(new Buffer("<p>Tere, tere</p><p>vana kere!</p>\n"));
                 done();
             });
@@ -161,7 +161,7 @@ describe("net", "mail", "Shared Funcs Tests", () => {
                 }
             };
             shared.resolveContent(mail.data, "html", (err, value) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(value).to.deep.equal(new Buffer("<p>Tere, tere</p><p>vana kere!</p>\n"));
                 done();
             });
@@ -174,7 +174,7 @@ describe("net", "mail", "Shared Funcs Tests", () => {
                 }
             };
             shared.resolveContent(mail.data, "html", (err, value) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(mail).to.deep.equal({
                     data: {
                         html: new Buffer("<p>Tere, tere</p><p>vana kere!</p>\n")
@@ -194,7 +194,7 @@ describe("net", "mail", "Shared Funcs Tests", () => {
                 }
             };
             shared.resolveContent(mail.data, "html", (err) => {
-                expect(err).to.exist;
+                expect(err).to.exist();
                 done();
             });
         });
@@ -210,7 +210,7 @@ describe("net", "mail", "Shared Funcs Tests", () => {
                 }
             };
             shared.resolveContent(mail.data, "html", (err, value) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(value).to.deep.equal(new Buffer(str));
                 done();
             });
@@ -227,7 +227,7 @@ describe("net", "mail", "Shared Funcs Tests", () => {
                     }
                 };
                 shared.resolveContent(mail.data, "attachment", (err, value) => {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                     expect(value).to.deep.equal(new Buffer("iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==", "base64"));
                     done();
                 });
@@ -242,7 +242,7 @@ describe("net", "mail", "Shared Funcs Tests", () => {
                     }
                 };
                 shared.resolveContent(mail.data, "attachment", (err, value) => {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                     expect(value).to.deep.equal(new Buffer("tere tere"));
                     done();
                 });
@@ -257,7 +257,7 @@ describe("net", "mail", "Shared Funcs Tests", () => {
                     }
                 };
                 shared.resolveContent(mail.data, "attachment", (err, value) => {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                     expect(value).to.deep.equal(new Buffer("tere tere"));
                     done();
                 });
@@ -272,7 +272,7 @@ describe("net", "mail", "Shared Funcs Tests", () => {
                     }
                 };
                 shared.resolveContent(mail.data, "attachment", (err, value) => {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                     expect(value).to.deep.equal(new Buffer("iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==", "base64"));
                     done();
                 });

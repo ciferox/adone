@@ -42,14 +42,14 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                             myOption: "option"
                         }]
                     }).then((savedProduct) => {
-                        expect(savedProduct.isIncludeCreatedOnAfterCreate).to.be.true;
+                        expect(savedProduct.isIncludeCreatedOnAfterCreate).to.be.true();
                         expect(savedProduct.User.createOptions.myOption).to.be.equal("option");
                         expect(savedProduct.User.createOptions.parentRecord).to.be.equal(savedProduct);
                         return Product.findOne({
                             where: { id: savedProduct.id },
                             include: [User]
                         }).then((persistedProduct) => {
-                            expect(persistedProduct.User).to.be.ok;
+                            expect(persistedProduct.User).to.be.ok();
                             expect(persistedProduct.User.first_name).to.be.equal("Mick");
                             expect(persistedProduct.User.last_name).to.be.equal("Broadstone");
                         });
@@ -82,7 +82,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                             where: { id: savedProduct.id },
                             include: [Creator]
                         }).then((persistedProduct) => {
-                            expect(persistedProduct.creator).to.be.ok;
+                            expect(persistedProduct.creator).to.be.ok();
                             expect(persistedProduct.creator.first_name).to.be.equal("Matt");
                             expect(persistedProduct.creator.last_name).to.be.equal("Hansen");
                         });
@@ -129,7 +129,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                             myOption: "option"
                         }]
                     }).then((savedProduct) => {
-                        expect(savedProduct.areIncludesCreatedOnAfterCreate).to.be.true;
+                        expect(savedProduct.areIncludesCreatedOnAfterCreate).to.be.true();
                         expect(savedProduct.Tags[0].createOptions.myOption).to.be.equal("option");
                         expect(savedProduct.Tags[0].createOptions.parentRecord).to.be.equal(savedProduct);
                         expect(savedProduct.Tags[1].createOptions.myOption).to.be.equal("option");
@@ -138,7 +138,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                             where: { id: savedProduct.id },
                             include: [Tag]
                         }).then((persistedProduct) => {
-                            expect(persistedProduct.Tags).to.be.ok;
+                            expect(persistedProduct.Tags).to.be.ok();
                             expect(persistedProduct.Tags.length).to.equal(2);
                         });
                     });
@@ -170,7 +170,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                             where: { id: savedProduct.id },
                             include: [Categories]
                         }).then((persistedProduct) => {
-                            expect(persistedProduct.categories).to.be.ok;
+                            expect(persistedProduct.categories).to.be.ok();
                             expect(persistedProduct.categories.length).to.equal(2);
                         });
                     });
@@ -201,7 +201,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                             where: { id: savedUser.id },
                             include: [Task]
                         }).then((persistedUser) => {
-                            expect(persistedUser.Task).to.be.ok;
+                            expect(persistedUser.Task).to.be.ok();
                         });
                     });
                 });
@@ -232,7 +232,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                             where: { id: savedUser.id },
                             include: [Job]
                         }).then((persistedUser) => {
-                            expect(persistedUser.job).to.be.ok;
+                            expect(persistedUser.job).to.be.ok();
                         });
                     });
                 });
@@ -279,7 +279,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                             myOption: "option"
                         }]
                     }).then((savedUser) => {
-                        expect(savedUser.areIncludesCreatedOnAfterCreate).to.be.true;
+                        expect(savedUser.areIncludesCreatedOnAfterCreate).to.be.true();
                         expect(savedUser.Tasks[0].createOptions.myOption).to.be.equal("option");
                         expect(savedUser.Tasks[0].createOptions.parentRecord).to.be.equal(savedUser);
                         expect(savedUser.Tasks[1].createOptions.myOption).to.be.equal("option");
@@ -288,7 +288,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                             where: { id: savedUser.id },
                             include: [Task]
                         }).then((persistedUser) => {
-                            expect(persistedUser.Tasks).to.be.ok;
+                            expect(persistedUser.Tasks).to.be.ok();
                             expect(persistedUser.Tasks.length).to.equal(2);
                         });
                     });
@@ -422,7 +422,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                             where: { id: savedUser.id },
                             include: [Jobs]
                         }).then((persistedUser) => {
-                            expect(persistedUser.jobs).to.be.ok;
+                            expect(persistedUser.jobs).to.be.ok();
                             expect(persistedUser.jobs.length).to.equal(2);
                         });
                     });

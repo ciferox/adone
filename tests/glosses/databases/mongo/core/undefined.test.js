@@ -69,7 +69,7 @@ describe("database", "mongo", "core", function () {
                             batchSize: 2
                         });
                         const d = await promisify(cursor.next).call(cursor);
-                        expect(d.b).to.be.undefined;
+                        expect(d.b).to.be.undefined();
                     } finally {
                         _server.destroy();
                     }
@@ -111,7 +111,7 @@ describe("database", "mongo", "core", function () {
                             batchSize: 2
                         });
                         const d = await promisify(cursor.next).call(cursor);
-                        expect(d.b).to.be.undefined;
+                        expect(d.b).to.be.undefined();
                     } finally {
                         _server.destroy();
                     }

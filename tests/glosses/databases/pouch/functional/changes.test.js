@@ -40,7 +40,7 @@ describe("database", "pouch", "changes", () => {
                 done();
             });
             assert.exists(promise);
-            assert.isFunction(promise.cancel);
+            assert.function(promise.cancel);
         });
     });
 
@@ -70,7 +70,7 @@ describe("database", "pouch", "changes", () => {
             });
             assert.exists(promise);
             assert.exists(promise.then);
-            assert.isFunction(promise.then);
+            assert.function(promise.then);
             promise.then(
                 (result) => {
                     assert.equal(changeCount, 5, "changeCount");
@@ -168,11 +168,11 @@ describe("database", "pouch", "changes", () => {
                     const promise = db.changes({
                         since: update_seq
                     }).on("complete", (results) => {
-                        assert.isAtLeast(results.results.length, 2);
+                        assert.atLeast(results.results.length, 2);
                         done();
                     });
                     assert.exists(promise);
-                    assert.isFunction(promise.cancel);
+                    assert.function(promise.cancel);
                 });
             });
         });
@@ -383,7 +383,7 @@ describe("database", "pouch", "changes", () => {
             }).on("error", reject);
 
             assert.exists(promise);
-            assert.isFunction(promise.cancel);
+            assert.function(promise.cancel);
         });
     });
 
@@ -413,7 +413,7 @@ describe("database", "pouch", "changes", () => {
                 done();
             }).on("error", done);
             assert.exists(promise);
-            assert.isFunction(promise.cancel);
+            assert.function(promise.cancel);
         });
     });
 
@@ -831,7 +831,7 @@ describe("database", "pouch", "changes", () => {
                 db.changes({
                     style: "all_docs"
                 }, (err, res) => {
-                    assert.isNull(err);
+                    assert.null(err);
                     assert.equal(res.results[0].changes.length, 3);
                     const changes = res.results[0].changes;
                     changes.sort((a, b) => {
@@ -2277,8 +2277,8 @@ describe("database", "pouch", "changes", () => {
                 }).on("complete", (res) => {
                     done();
                 }).on("error", done);
-                assert.isObject(api);
-                assert.isFunction(api.cancel);
+                assert.object(api);
+                assert.function(api.cancel);
             });
         });
     });
@@ -2293,8 +2293,8 @@ describe("database", "pouch", "changes", () => {
                 }).on("complete", (res) => {
                     done();
                 }).on("error", done);
-                assert.isObject(api);
-                assert.isFunction(api.cancel);
+                assert.object(api);
+                assert.function(api.cancel);
             });
         });
     });
@@ -2316,7 +2316,7 @@ describe("database", "pouch", "changes", () => {
                 checkDone();
             });
             assert.exists(changes);
-            assert.isFunction(changes.cancel);
+            assert.function(changes.cancel);
             changes.cancel();
             db.close().then(() => {
                 checkDone();
@@ -2338,7 +2338,7 @@ describe("database", "pouch", "changes", () => {
             done();
         }).on("error", done);
         assert.exists(changes);
-        assert.isFunction(changes.cancel);
+        assert.function(changes.cancel);
         setTimeout(() => {
             cancelled = true;
             changes.cancel();
@@ -2475,7 +2475,7 @@ describe("database", "pouch", "changes", () => {
 
         const after = () => {
             changesWritten++;
-            assert.isBelow(db.listeners("destroyed").length, 5);
+            assert.below(db.listeners("destroyed").length, 5);
             maybeDone();
         };
 

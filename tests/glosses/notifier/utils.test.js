@@ -54,7 +54,7 @@ describe("notifier", "utils", () => {
             let obj = util.mapToGrowl({ title: "Foo", message: "Bar", icon });
             expect(obj).to.be.deep.equal(expected);
 
-            expect(obj.icon).to.be.ok;
+            expect(obj.icon).to.be.ok();
             expect(obj.icon).to.be.instanceOf(Buffer);
 
             obj = util.mapToGrowl({ title: "Foo", message: "Bar", appIcon: icon });

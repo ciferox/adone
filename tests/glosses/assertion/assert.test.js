@@ -26,87 +26,83 @@ describe("assertion", "assert", () => {
         }).to.throw(AssertionError, /this has failed/);
     });
 
-    assert.isTrue(true);
-    it("isTrue", () => {
+    it("true", () => {
+        assert.true(true);
 
         err(() => {
-            assert.isTrue(false, "blah");
+            assert.true(false, "blah");
         }, "blah: expected false to be true");
 
         err(() => {
-            assert.isTrue(1);
+            assert.true(1);
         }, "expected 1 to be true");
 
         err(() => {
-            assert.isTrue("test");
+            assert.true("test");
         }, "expected 'test' to be true");
     });
 
-    it("isNotTrue", () => {
-        assert.isNotTrue(false);
+    it("notTrue", () => {
+        assert.notTrue(false);
 
         err(() => {
-            assert.isNotTrue(true, "blah");
+            assert.notTrue(true, "blah");
         }, "blah: expected true to not equal true");
     });
 
-    it("isOk / ok", () => {
-        ["isOk", "ok"].forEach((isOk) => {
-            assert[isOk](true);
-            assert[isOk](1);
-            assert[isOk]("test");
-
-            err(() => {
-                assert[isOk](false, "blah");
-            }, "blah: expected false to be truthy");
-
-            err(() => {
-                assert[isOk](0);
-            }, "expected 0 to be truthy");
-
-            err(() => {
-                assert[isOk]("");
-            }, "expected '' to be truthy");
-        });
-    });
-
-    it("isNotOk, notOk", () => {
-        ["isNotOk", "notOk"].forEach((isNotOk) => {
-            assert[isNotOk](false);
-            assert[isNotOk](0);
-            assert[isNotOk]("");
-
-            err(() => {
-                assert[isNotOk](true, "blah");
-            }, "blah: expected true to be falsy");
-
-            err(() => {
-                assert[isNotOk](1);
-            }, "expected 1 to be falsy");
-
-            err(() => {
-                assert[isNotOk]("test");
-            }, "expected 'test' to be falsy");
-        });
-    });
-
-    it("isFalse", () => {
-        assert.isFalse(false);
+    it("ok", () => {
+        assert.ok(true);
+        assert.ok(1);
+        assert.ok("test");
 
         err(() => {
-            assert.isFalse(true, "blah");
+            assert.ok(false, "blah");
+        }, "blah: expected false to be truthy");
+
+        err(() => {
+            assert.ok(0);
+        }, "expected 0 to be truthy");
+
+        err(() => {
+            assert.ok("");
+        }, "expected '' to be truthy");
+    });
+
+    it("notOk", () => {
+        assert.notOk(false);
+        assert.notOk(0);
+        assert.notOk("");
+
+        err(() => {
+            assert.notOk(true, "blah");
+        }, "blah: expected true to be falsy");
+
+        err(() => {
+            assert.notOk(1);
+        }, "expected 1 to be falsy");
+
+        err(() => {
+            assert.notOk("test");
+        }, "expected 'test' to be falsy");
+    });
+
+    it("false", () => {
+        assert.false(false);
+
+        err(() => {
+            assert.false(true, "blah");
         }, "blah: expected true to be false");
 
         err(() => {
-            assert.isFalse(0);
+            assert.false(0);
         }, "expected 0 to be false");
     });
 
-    it("isNotFalse", () => {
-        assert.isNotFalse(true);
+    it("notFalse", () => {
+        assert.notFalse(true);
 
         err(() => {
-            assert.isNotFalse(false, "blah");
+            assert.notFalse(false, "blah");
         }, "blah: expected false to not equal false");
     });
 
@@ -257,30 +253,30 @@ describe("assertion", "assert", () => {
         }, "blah: expected {} to not be an instance of Foo");
     });
 
-    it("isObject", () => {
+    it("object", () => {
         function Foo() { }
-        assert.isObject({});
-        assert.isObject(new Foo());
+        assert.object({});
+        assert.object(new Foo());
 
         err(() => {
-            assert.isObject(true, "blah");
+            assert.object(true, "blah");
         }, "blah: expected true to be an object");
 
         err(() => {
-            assert.isObject(Foo);
+            assert.object(Foo);
         }, "expected [Function: Foo] to be an object");
 
         err(() => {
-            assert.isObject("foo");
+            assert.object("foo");
         }, "expected 'foo' to be an object");
     });
 
-    it("isNotObject", () => {
+    it("notObject", () => {
         function Foo() { }
-        assert.isNotObject(5);
+        assert.notObject(5);
 
         err(() => {
-            assert.isNotObject({}, "blah");
+            assert.notObject({}, "blah");
         }, "blah: expected {} not to be an object");
     });
 
@@ -411,50 +407,50 @@ describe("assertion", "assert", () => {
         }, "expected { field: [Circular] } to not deeply equal { field: [Circular] }");
     });
 
-    it("isNull", () => {
-        assert.isNull(null);
+    it("null", () => {
+        assert.null(null);
 
         err(() => {
-            assert.isNull(undefined, "blah");
+            assert.null(undefined, "blah");
         }, "blah: expected undefined to equal null");
     });
 
-    it("isNotNull", () => {
-        assert.isNotNull(undefined);
+    it("notNull", () => {
+        assert.notNull(undefined);
 
         err(() => {
-            assert.isNotNull(null, "blah");
+            assert.notNull(null, "blah");
         }, "blah: expected null to not equal null");
     });
 
-    it("isNaN", () => {
-        assert.isNaN(NaN);
+    it("NaN", () => {
+        assert.NaN(NaN);
 
         err(() => {
-            assert.isNaN(Infinity, "blah");
+            assert.NaN(Infinity, "blah");
         }, "blah: expected Infinity to be NaN");
 
         err(() => {
-            assert.isNaN(undefined);
+            assert.NaN(undefined);
         }, "expected undefined to be NaN");
 
         err(() => {
-            assert.isNaN({});
+            assert.NaN({});
         }, "expected {} to be NaN");
 
         err(() => {
-            assert.isNaN(4);
+            assert.NaN(4);
         }, "expected 4 to be NaN");
     });
 
-    it("isNotNaN", () => {
-        assert.isNotNaN(4);
-        assert.isNotNaN(Infinity);
-        assert.isNotNaN(undefined);
-        assert.isNotNaN({});
+    it("notNaN", () => {
+        assert.notNaN(4);
+        assert.notNaN(Infinity);
+        assert.notNaN(undefined);
+        assert.notNaN({});
 
         err(() => {
-            assert.isNotNaN(NaN, "blah");
+            assert.notNaN(NaN, "blah");
         }, "blah: expected NaN not to be NaN");
     });
 
@@ -483,139 +479,139 @@ describe("assertion", "assert", () => {
         }, "blah: expected 'awesome' to not exist");
     });
 
-    it("isUndefined", () => {
-        assert.isUndefined(undefined);
+    it("undefined", () => {
+        assert.undefined(undefined);
 
         err(() => {
-            assert.isUndefined(null, "blah");
+            assert.undefined(null, "blah");
         }, "blah: expected null to equal undefined");
     });
 
-    it("isDefined", () => {
-        assert.isDefined(null);
+    it("defined", () => {
+        assert.defined(null);
 
         err(() => {
-            assert.isDefined(undefined, "blah");
+            assert.defined(undefined, "blah");
         }, "blah: expected undefined to not equal undefined");
     });
 
-    it("isFunction", () => {
+    it("function", () => {
         const func = function () { };
-        assert.isFunction(func);
+        assert.function(func);
 
         err(() => {
-            assert.isFunction({}, "blah");
+            assert.function({}, "blah");
         }, "blah: expected {} to be a function");
     });
 
-    it("isNotFunction", () => {
-        assert.isNotFunction(5);
+    it("notFunction", () => {
+        assert.notFunction(5);
 
         err(() => {
-            assert.isNotFunction(() => { }, "blah");
+            assert.notFunction(() => { }, "blah");
         }, "blah: expected [Function] not to be a function");
     });
 
-    it("isArray", () => {
-        assert.isArray([]);
-        assert.isArray(new Array());
+    it("array", () => {
+        assert.array([]);
+        assert.array(new Array());
 
         err(() => {
-            assert.isArray({}, "blah");
+            assert.array({}, "blah");
         }, "blah: expected {} to be an array");
     });
 
-    it("isNotArray", () => {
-        assert.isNotArray(3);
+    it("notArray", () => {
+        assert.notArray(3);
 
         err(() => {
-            assert.isNotArray([], "blah");
+            assert.notArray([], "blah");
         }, "blah: expected [] not to be an array");
 
         err(() => {
-            assert.isNotArray(new Array());
+            assert.notArray(new Array());
         }, "expected [] not to be an array");
     });
 
-    it("isString", () => {
-        assert.isString("Foo");
-        assert.isString(new String("foo"));
+    it("string", () => {
+        assert.string("Foo");
+        assert.string(new String("foo"));
 
         err(() => {
-            assert.isString(1, "blah");
+            assert.string(1, "blah");
         }, "blah: expected 1 to be a string");
     });
 
-    it("isNotString", () => {
-        assert.isNotString(3);
-        assert.isNotString(["hello"]);
+    it("notString", () => {
+        assert.notString(3);
+        assert.notString(["hello"]);
 
         err(() => {
-            assert.isNotString("hello", "blah");
+            assert.notString("hello", "blah");
         }, "blah: expected 'hello' not to be a string");
     });
 
-    it("isNumber", () => {
-        assert.isNumber(1);
-        assert.isNumber(Number("3"));
+    it("number", () => {
+        assert.number(1);
+        assert.number(Number("3"));
 
         err(() => {
-            assert.isNumber("1", "blah");
+            assert.number("1", "blah");
         }, "blah: expected \'1\' to be a number");
     });
 
-    it("isNotNumber", () => {
-        assert.isNotNumber("hello");
-        assert.isNotNumber([5]);
+    it("number", () => {
+        assert.notNumber("hello");
+        assert.notNumber([5]);
 
         err(() => {
-            assert.isNotNumber(4, "blah");
+            assert.notNumber(4, "blah");
         }, "blah: expected 4 not to be a number");
     });
 
-    it("isFinite", () => {
-        assert.isFinite(4);
-        assert.isFinite(-10);
+    it("finite", () => {
+        assert.finite(4);
+        assert.finite(-10);
 
         err(() => {
-            assert.isFinite(NaN, "blah");
+            assert.finite(NaN, "blah");
         }, "blah: expected NaN to be a finite number");
 
         err(() => {
-            assert.isFinite(Infinity);
+            assert.finite(Infinity);
         }, "expected Infinity to be a finite number");
 
         err(() => {
-            assert.isFinite("foo");
+            assert.finite("foo");
         }, "expected \'foo\' to be a finite number");
 
         err(() => {
-            assert.isFinite([]);
+            assert.finite([]);
         }, "expected [] to be a finite number");
 
         err(() => {
-            assert.isFinite({});
+            assert.finite({});
         }, "expected {} to be a finite number");
     });
 
-    it("isBoolean", () => {
-        assert.isBoolean(true);
-        assert.isBoolean(false);
+    it("boolean", () => {
+        assert.boolean(true);
+        assert.boolean(false);
 
         err(() => {
-            assert.isBoolean("1", "blah");
+            assert.boolean("1", "blah");
         }, "blah: expected \'1\' to be a boolean");
     });
 
-    it("isNotBoolean", () => {
-        assert.isNotBoolean("true");
+    it("notBoolean", () => {
+        assert.notBoolean("true");
 
         err(() => {
-            assert.isNotBoolean(true, "blah");
+            assert.notBoolean(true, "blah");
         }, "blah: expected true not to be a boolean");
 
         err(() => {
-            assert.isNotBoolean(false);
+            assert.notBoolean(false);
         }, "expected false not to be a boolean");
     });
 
@@ -1622,7 +1618,7 @@ describe("assertion", "assert", () => {
         const e = await assert.throws(async () => {
             throw new Error("123");
         });
-        expect(e).to.exist;
+        expect(e).to.exist();
         expect(e.message).to.be.equal("123");
 
         await assert.throws(async () => {
@@ -1744,7 +1740,7 @@ describe("assertion", "assert", () => {
             await adone.promise.delay(100);
             check = true;
         });
-        expect(check).to.be.true;
+        expect(check).to.be.true();
         let err = null;
         try {
             await assert.doesNotThrow(async () => {
@@ -2100,69 +2096,69 @@ describe("assertion", "assert", () => {
     });
 
     it("above", () => {
-        assert.isAbove(5, 2, "5 should be above 2");
+        assert.above(5, 2, "5 should be above 2");
 
         err(() => {
-            assert.isAbove(1, 3, "blah");
+            assert.above(1, 3, "blah");
         }, "blah: expected 1 to be above 3");
 
         err(() => {
-            assert.isAbove(1, 1);
+            assert.above(1, 1);
         }, "expected 1 to be above 1");
 
         err(() => {
-            assert.isAbove(null, 1, "blah");
+            assert.above(null, 1, "blah");
         }, "blah: expected null to be a number or a date");
 
         err(() => {
-            assert.isAbove(1, null, "blah");
+            assert.above(1, null, "blah");
         }, "blah: the argument to above must be a number");
     });
 
     it("above (dates)", () => {
         const now = new Date();
         const oneSecondAgo = new Date(now.getTime() - 1000);
-        assert.isAbove(now, oneSecondAgo, "Now should be above 1 second ago");
+        assert.above(now, oneSecondAgo, "Now should be above 1 second ago");
 
         err(() => {
-            assert.isAbove(oneSecondAgo, now, "blah");
+            assert.above(oneSecondAgo, now, "blah");
         }, `blah: expected ${oneSecondAgo.toUTCString()} to be above ${now.toUTCString()}`);
 
         err(() => {
-            assert.isAbove(now, now, "blah");
+            assert.above(now, now, "blah");
         }, `blah: expected ${now.toUTCString()} to be above ${now.toUTCString()}`);
 
         err(() => {
-            assert.isAbove(null, now);
+            assert.above(null, now);
         }, "expected null to be a number or a date");
 
         err(() => {
-            assert.isAbove(now, null, "blah");
+            assert.above(now, null, "blah");
         }, "blah: the argument to above must be a date");
 
         err(() => {
-            assert.isAbove(now, 1, "blah");
+            assert.above(now, 1, "blah");
         }, "blah: the argument to above must be a date");
 
         err(() => {
-            assert.isAbove(1, now, "blah");
+            assert.above(1, now, "blah");
         }, "blah: the argument to above must be a number");
     });
 
     it("atLeast", () => {
-        assert.isAtLeast(5, 2, "5 should be above 2");
-        assert.isAtLeast(1, 1, "1 should be equal to 1");
+        assert.atLeast(5, 2, "5 should be above 2");
+        assert.atLeast(1, 1, "1 should be equal to 1");
 
         err(() => {
-            assert.isAtLeast(1, 3, "blah");
+            assert.atLeast(1, 3, "blah");
         }, "blah: expected 1 to be at least 3");
 
         err(() => {
-            assert.isAtLeast(null, 1, "blah");
+            assert.atLeast(null, 1, "blah");
         }, "blah: expected null to be a number or a date");
 
         err(() => {
-            assert.isAtLeast(1, null, "blah");
+            assert.atLeast(1, null, "blah");
         }, "blah: the argument to least must be a number");
     });
 
@@ -2171,94 +2167,94 @@ describe("assertion", "assert", () => {
         const oneSecondAgo = new Date(now.getTime() - 1000);
         const oneSecondAfter = new Date(now.getTime() + 1000);
 
-        assert.isAtLeast(now, oneSecondAgo, "Now should be above one second ago");
-        assert.isAtLeast(now, now, "Now should be equal to now");
+        assert.atLeast(now, oneSecondAgo, "Now should be above one second ago");
+        assert.atLeast(now, now, "Now should be equal to now");
 
         err(() => {
-            assert.isAtLeast(now, oneSecondAfter, "blah");
+            assert.atLeast(now, oneSecondAfter, "blah");
         }, `blah: expected ${now.toUTCString()} to be at least ${oneSecondAfter.toUTCString()}`);
 
         err(() => {
-            assert.isAtLeast(null, now, "blah");
+            assert.atLeast(null, now, "blah");
         }, "blah: expected null to be a number or a date");
 
         err(() => {
-            assert.isAtLeast(now, null, "blah");
+            assert.atLeast(now, null, "blah");
         }, "blah: the argument to least must be a date");
 
         err(() => {
-            assert.isAtLeast(1, now, "blah");
+            assert.atLeast(1, now, "blah");
         }, "blah: the argument to least must be a number");
 
         err(() => {
-            assert.isAtLeast(now, 1, "blah");
+            assert.atLeast(now, 1, "blah");
         }, "blah: the argument to least must be a date");
     });
 
     it("below", () => {
-        assert.isBelow(2, 5, "2 should be below 5");
+        assert.below(2, 5, "2 should be below 5");
 
         err(() => {
-            assert.isBelow(3, 1, "blah");
+            assert.below(3, 1, "blah");
         }, "blah: expected 3 to be below 1");
 
         err(() => {
-            assert.isBelow(1, 1);
+            assert.below(1, 1);
         }, "expected 1 to be below 1");
 
         err(() => {
-            assert.isBelow(null, 1, "blah");
+            assert.below(null, 1, "blah");
         }, "blah: expected null to be a number or a date");
 
         err(() => {
-            assert.isBelow(1, null, "blah");
+            assert.below(1, null, "blah");
         }, "blah: the argument to below must be a number");
     });
 
     it("below (dates)", () => {
         const now = new Date();
         const oneSecondAgo = new Date(now.getTime() - 1000);
-        assert.isBelow(oneSecondAgo, now, "One second ago should be below now");
+        assert.below(oneSecondAgo, now, "One second ago should be below now");
 
         err(() => {
-            assert.isBelow(now, oneSecondAgo, "blah");
+            assert.below(now, oneSecondAgo, "blah");
         }, `blah: expected ${now.toUTCString()} to be below ${oneSecondAgo.toUTCString()}`);
 
         err(() => {
-            assert.isBelow(now, now);
+            assert.below(now, now);
         }, `expected ${now.toUTCString()} to be below ${now.toUTCString()}`);
 
         err(() => {
-            assert.isBelow(null, now, "blah");
+            assert.below(null, now, "blah");
         }, "blah: expected null to be a number or a date");
 
         err(() => {
-            assert.isBelow(now, null, "blah");
+            assert.below(now, null, "blah");
         }, "blah: the argument to below must be a date");
 
         err(() => {
-            assert.isBelow(now, 1, "blah");
+            assert.below(now, 1, "blah");
         }, "blah: the argument to below must be a date");
 
         err(() => {
-            assert.isBelow(1, now, "blah");
+            assert.below(1, now, "blah");
         }, "blah: the argument to below must be a number");
     });
 
     it("atMost", () => {
-        assert.isAtMost(2, 5, "2 should be below 5");
-        assert.isAtMost(1, 1, "1 should be equal to 1");
+        assert.atMost(2, 5, "2 should be below 5");
+        assert.atMost(1, 1, "1 should be equal to 1");
 
         err(() => {
-            assert.isAtMost(3, 1, "blah");
+            assert.atMost(3, 1, "blah");
         }, "blah: expected 3 to be at most 1");
 
         err(() => {
-            assert.isAtMost(null, 1, "blah");
+            assert.atMost(null, 1, "blah");
         }, "blah: expected null to be a number or a date");
 
         err(() => {
-            assert.isAtMost(1, null, "blah");
+            assert.atMost(1, null, "blah");
         }, "blah: the argument to most must be a number");
     });
 
@@ -2267,27 +2263,27 @@ describe("assertion", "assert", () => {
         const oneSecondAgo = new Date(now.getTime() - 1000);
         const oneSecondAfter = new Date(now.getTime() + 1000);
 
-        assert.isAtMost(oneSecondAgo, now, "Now should be below one second ago");
-        assert.isAtMost(now, now, "Now should be equal to now");
+        assert.atMost(oneSecondAgo, now, "Now should be below one second ago");
+        assert.atMost(now, now, "Now should be equal to now");
 
         err(() => {
-            assert.isAtMost(oneSecondAfter, now, "blah");
+            assert.atMost(oneSecondAfter, now, "blah");
         }, `blah: expected ${oneSecondAfter.toUTCString()} to be at most ${now.toUTCString()}`);
 
         err(() => {
-            assert.isAtMost(null, now, "blah");
+            assert.atMost(null, now, "blah");
         }, "blah: expected null to be a number or a date");
 
         err(() => {
-            assert.isAtMost(now, null, "blah");
+            assert.atMost(now, null, "blah");
         }, "blah: the argument to most must be a date");
 
         err(() => {
-            assert.isAtMost(now, 1, "blah");
+            assert.atMost(now, 1, "blah");
         }, "blah: the argument to most must be a date");
 
         err(() => {
-            assert.isAtMost(1, now, "blah");
+            assert.atMost(1, now, "blah");
         }, "blah: the argument to most must be a number");
     });
 
@@ -2449,482 +2445,458 @@ describe("assertion", "assert", () => {
         }, "blah: expected .value to not decrease by 3");
     });
 
-    it("isExtensible / extensible", () => {
-        ["isExtensible", "extensible"].forEach((isExtensible) => {
-            const nonExtensibleObject = Object.preventExtensions({});
+    it("extensible", () => {
+        const nonExtensibleObject = Object.preventExtensions({});
 
-            assert[isExtensible]({});
+        assert.extensible({});
 
-            err(() => {
-                assert[isExtensible](nonExtensibleObject, "blah");
-            }, "blah: expected {} to be extensible");
+        err(() => {
+            assert.extensible(nonExtensibleObject, "blah");
+        }, "blah: expected {} to be extensible");
 
-            // Making sure ES6-like Object.isExtensible response is respected for all primitive types
+        // Making sure ES6-like Object.isExtensible response is respected for all primitive types
 
-            err(() => {
-                assert[isExtensible](42);
-            }, "expected 42 to be extensible");
+        err(() => {
+            assert.extensible(42);
+        }, "expected 42 to be extensible");
 
-            err(() => {
-                assert[isExtensible](null);
-            }, "expected null to be extensible");
+        err(() => {
+            assert.extensible(null);
+        }, "expected null to be extensible");
 
-            err(() => {
-                assert[isExtensible]("foo");
-            }, "expected 'foo' to be extensible");
+        err(() => {
+            assert.extensible("foo");
+        }, "expected 'foo' to be extensible");
 
-            err(() => {
-                assert[isExtensible](false);
-            }, "expected false to be extensible");
+        err(() => {
+            assert.extensible(false);
+        }, "expected false to be extensible");
 
-            err(() => {
-                assert[isExtensible](undefined);
-            }, "expected undefined to be extensible");
+        err(() => {
+            assert.extensible(undefined);
+        }, "expected undefined to be extensible");
 
-            if (is.function(Proxy)) {
-                const proxy = new Proxy({}, {
-                    isExtensible() {
-                        throw new TypeError();
-                    }
-                });
-
-                err(() => {
-                    // isExtensible should not suppress errors, thrown in proxy traps
-                    assert[isExtensible](proxy);
-                }, { name: "TypeError" }, true);
+        const proxy = new Proxy({}, {
+            isExtensible() {
+                throw new TypeError();
             }
         });
+
+        err(() => {
+            // isExtensible should not suppress errors, thrown in proxy traps
+            assert.extensible(proxy);
+        }, { name: "TypeError" }, true);
     });
 
-    it("isNotExtensible / notExtensible", () => {
-        ["isNotExtensible", "notExtensible"].forEach((isNotExtensible) => {
-            const nonExtensibleObject = Object.preventExtensions({});
+    it("notExtensible", () => {
+        const nonExtensibleObject = Object.preventExtensions({});
 
-            assert[isNotExtensible](nonExtensibleObject);
+        assert.notExtensible(nonExtensibleObject);
+
+        err(() => {
+            assert.notExtensible({}, "blah");
+        }, "blah: expected {} to not be extensible");
+
+        // Making sure ES6-like Object.isExtensible response is respected for all primitive types
+
+        assert.notExtensible(42);
+        assert.notExtensible(null);
+        assert.notExtensible("foo");
+        assert.notExtensible(false);
+        assert.notExtensible(undefined);
+
+        if (is.function(Symbol)) {
+            assert.notExtensible(Symbol());
+        }
+
+        if (is.function(Proxy)) {
+            const proxy = new Proxy({}, {
+                isExtensible() {
+                    throw new TypeError();
+                }
+            });
 
             err(() => {
-                assert[isNotExtensible]({}, "blah");
-            }, "blah: expected {} to not be extensible");
+                // isNotExtensible should not suppress errors, thrown in proxy traps
+                assert.notExtensible(proxy);
+            }, { name: "TypeError" }, true);
+        }
+    });
 
-            // Making sure ES6-like Object.isExtensible response is respected for all primitive types
+    it("sealed", () => {
+        const sealedObject = Object.seal({});
 
-            assert[isNotExtensible](42);
-            assert[isNotExtensible](null);
-            assert[isNotExtensible]("foo");
-            assert[isNotExtensible](false);
-            assert[isNotExtensible](undefined);
+        assert.sealed(sealedObject);
 
-            if (is.function(Symbol)) {
-                assert[isNotExtensible](Symbol());
-            }
+        err(() => {
+            assert.sealed({}, "blah");
+        }, "blah: expected {} to be sealed");
 
-            if (is.function(Proxy)) {
-                const proxy = new Proxy({}, {
-                    isExtensible() {
-                        throw new TypeError();
-                    }
-                });
+        // Making sure ES6-like Object.isSealed response is respected for all primitive types
 
-                err(() => {
-                    // isNotExtensible should not suppress errors, thrown in proxy traps
-                    assert[isNotExtensible](proxy);
-                }, { name: "TypeError" }, true);
+        assert.sealed(42);
+        assert.sealed(null);
+        assert.sealed("foo");
+        assert.sealed(false);
+        assert.sealed(undefined);
+
+        if (is.function(Symbol)) {
+            assert.sealed(Symbol());
+        }
+
+        const proxy = new Proxy({}, {
+            ownKeys() {
+                throw new TypeError();
             }
         });
+
+        // Object.isSealed will call ownKeys trap only if object is not extensible
+        Object.preventExtensions(proxy);
+
+        err(() => {
+            // isSealed should not suppress errors, thrown in proxy traps
+            assert.sealed(proxy);
+        }, { name: "TypeError" }, true);
     });
 
-    it("isSealed / sealed", () => {
-        ["isSealed", "sealed"].forEach((isSealed) => {
-            const sealedObject = Object.seal({});
+    it("notSealed", () => {
+        const sealedObject = Object.seal({});
 
-            assert[isSealed](sealedObject);
+        assert.notSealed({});
 
-            err(() => {
-                assert[isSealed]({}, "blah");
-            }, "blah: expected {} to be sealed");
+        err(() => {
+            assert.notSealed(sealedObject, "blah");
+        }, "blah: expected {} to not be sealed");
 
-            // Making sure ES6-like Object.isSealed response is respected for all primitive types
+        // Making sure ES6-like Object.isSealed response is respected for all primitive types
 
-            assert[isSealed](42);
-            assert[isSealed](null);
-            assert[isSealed]("foo");
-            assert[isSealed](false);
-            assert[isSealed](undefined);
+        err(() => {
+            assert.notSealed(42);
+        }, "expected 42 to not be sealed");
 
-            if (is.function(Symbol)) {
-                assert[isSealed](Symbol());
-            }
+        err(() => {
+            assert.notSealed(null);
+        }, "expected null to not be sealed");
 
-            if (is.function(Proxy)) {
-                const proxy = new Proxy({}, {
-                    ownKeys() {
-                        throw new TypeError();
-                    }
-                });
+        err(() => {
+            assert.notSealed("foo");
+        }, "expected 'foo' to not be sealed");
 
-                // Object.isSealed will call ownKeys trap only if object is not extensible
-                Object.preventExtensions(proxy);
+        err(() => {
+            assert.notSealed(false);
+        }, "expected false to not be sealed");
 
-                err(() => {
-                    // isSealed should not suppress errors, thrown in proxy traps
-                    assert[isSealed](proxy);
-                }, { name: "TypeError" }, true);
+        err(() => {
+            assert.notSealed(undefined);
+        }, "expected undefined to not be sealed");
+
+        const proxy = new Proxy({}, {
+            ownKeys() {
+                throw new TypeError();
             }
         });
+
+        // Object.isSealed will call ownKeys trap only if object is not extensible
+        Object.preventExtensions(proxy);
+
+        err(() => {
+            // isNotSealed should not suppress errors, thrown in proxy traps
+            assert.notSealed(proxy);
+        }, { name: "TypeError" }, true);
     });
 
-    it("isNotSealed / notSealed", () => {
-        ["isNotSealed", "notSealed"].forEach((isNotSealed) => {
-            const sealedObject = Object.seal({});
+    it("frozen", () => {
+        const frozenObject = Object.freeze({});
 
-            assert[isNotSealed]({});
+        assert.frozen(frozenObject);
 
-            err(() => {
-                assert[isNotSealed](sealedObject, "blah");
-            }, "blah: expected {} to not be sealed");
+        err(() => {
+            assert.frozen({}, "blah");
+        }, "blah: expected {} to be frozen");
 
-            // Making sure ES6-like Object.isSealed response is respected for all primitive types
+        // Making sure ES6-like Object.isFrozen response is respected for all primitive types
 
-            err(() => {
-                assert[isNotSealed](42);
-            }, "expected 42 to not be sealed");
+        assert.frozen(42);
+        assert.frozen(null);
+        assert.frozen("foo");
+        assert.frozen(false);
+        assert.frozen(undefined);
 
-            err(() => {
-                assert[isNotSealed](null);
-            }, "expected null to not be sealed");
+        if (is.function(Symbol)) {
+            assert.frozen(Symbol());
+        }
 
-            err(() => {
-                assert[isNotSealed]("foo");
-            }, "expected 'foo' to not be sealed");
-
-            err(() => {
-                assert[isNotSealed](false);
-            }, "expected false to not be sealed");
-
-            err(() => {
-                assert[isNotSealed](undefined);
-            }, "expected undefined to not be sealed");
-
-            if (is.function(Proxy)) {
-                const proxy = new Proxy({}, {
-                    ownKeys() {
-                        throw new TypeError();
-                    }
-                });
-
-                // Object.isSealed will call ownKeys trap only if object is not extensible
-                Object.preventExtensions(proxy);
-
-                err(() => {
-                    // isNotSealed should not suppress errors, thrown in proxy traps
-                    assert[isNotSealed](proxy);
-                }, { name: "TypeError" }, true);
-            }
-        });
-    });
-
-    it("isFrozen / frozen", () => {
-        ["isFrozen", "frozen"].forEach((isFrozen) => {
-            const frozenObject = Object.freeze({});
-
-            assert[isFrozen](frozenObject);
-
-            err(() => {
-                assert[isFrozen]({}, "blah");
-            }, "blah: expected {} to be frozen");
-
-            // Making sure ES6-like Object.isFrozen response is respected for all primitive types
-
-            assert[isFrozen](42);
-            assert[isFrozen](null);
-            assert[isFrozen]("foo");
-            assert[isFrozen](false);
-            assert[isFrozen](undefined);
-
-            if (is.function(Symbol)) {
-                assert[isFrozen](Symbol());
-            }
-
-            if (is.function(Proxy)) {
-                const proxy = new Proxy({}, {
-                    ownKeys() {
-                        throw new TypeError();
-                    }
-                });
+        if (is.function(Proxy)) {
+            const proxy = new Proxy({}, {
+                ownKeys() {
+                    throw new TypeError();
+                }
+            });
 
                 // Object.isFrozen will call ownKeys trap only if object is not extensible
-                Object.preventExtensions(proxy);
+            Object.preventExtensions(proxy);
 
-                err(() => {
-                    // isFrozen should not suppress errors, thrown in proxy traps
-                    assert[isFrozen](proxy);
-                }, { name: "TypeError" }, true);
-            }
-        });
+            err(() => {
+                // isFrozen should not suppress errors, thrown in proxy traps
+                assert.frozen(proxy);
+            }, { name: "TypeError" }, true);
+        }
     });
 
-    it("isNotFrozen / notFrozen", () => {
-        ["isNotFrozen", "notFrozen"].forEach((isNotFrozen) => {
-            const frozenObject = Object.freeze({});
+    it("notFrozen", () => {
+        const frozenObject = Object.freeze({});
 
-            assert[isNotFrozen]({});
+        assert.notFrozen({});
 
-            err(() => {
-                assert[isNotFrozen](frozenObject, "blah");
-            }, "blah: expected {} to not be frozen", true);
+        err(() => {
+            assert.notFrozen(frozenObject, "blah");
+        }, "blah: expected {} to not be frozen", true);
 
-            // Making sure ES6-like Object.isFrozen response is respected for all primitive types
+        // Making sure ES6-like Object.isFrozen response is respected for all primitive types
 
-            err(() => {
-                assert[isNotFrozen](42);
-            }, "expected 42 to not be frozen");
+        err(() => {
+            assert.notFrozen(42);
+        }, "expected 42 to not be frozen");
 
-            err(() => {
-                assert[isNotFrozen](null);
-            }, "expected null to not be frozen");
+        err(() => {
+            assert.notFrozen(null);
+        }, "expected null to not be frozen");
 
-            err(() => {
-                assert[isNotFrozen]("foo");
-            }, "expected 'foo' to not be frozen");
+        err(() => {
+            assert.notFrozen("foo");
+        }, "expected 'foo' to not be frozen");
 
-            err(() => {
-                assert[isNotFrozen](false);
-            }, "expected false to not be frozen");
+        err(() => {
+            assert.notFrozen(false);
+        }, "expected false to not be frozen");
 
-            err(() => {
-                assert[isNotFrozen](undefined);
-            }, "expected undefined to not be frozen");
+        err(() => {
+            assert.notFrozen(undefined);
+        }, "expected undefined to not be frozen");
 
-            if (is.function(Proxy)) {
-                const proxy = new Proxy({}, {
-                    ownKeys() {
-                        throw new TypeError();
-                    }
-                });
-
-                // Object.isFrozen will call ownKeys trap only if object is not extensible
-                Object.preventExtensions(proxy);
-
-                err(() => {
-                    // isNotFrozen should not suppress errors, thrown in proxy traps
-                    assert[isNotFrozen](proxy);
-                }, { name: "TypeError" }, true);
+        const proxy = new Proxy({}, {
+            ownKeys() {
+                throw new TypeError();
             }
         });
+
+        // Object.isFrozen will call ownKeys trap only if object is not extensible
+        Object.preventExtensions(proxy);
+
+        err(() => {
+            // isNotFrozen should not suppress errors, thrown in proxy traps
+            assert.notFrozen(proxy);
+        }, { name: "TypeError" }, true);
     });
 
-    it("isEmpty / empty", () => {
-        ["isEmpty", "empty"].forEach((isEmpty) => {
-            function FakeArgs() { }
-            FakeArgs.prototype.length = 0;
+    it("empty", () => {
+        function FakeArgs() { }
+        FakeArgs.prototype.length = 0;
 
-            assert[isEmpty]("");
-            assert[isEmpty]([]);
-            assert[isEmpty](new FakeArgs());
-            assert[isEmpty]({});
+        assert.empty("");
+        assert.empty([]);
+        assert.empty(new FakeArgs());
+        assert.empty({});
 
-            if (is.function(WeakMap)) {
-                err(() => {
-                    assert[isEmpty](new WeakMap(), "blah");
-                }, "blah: .empty was passed a weak collection");
-            }
+        if (is.function(WeakMap)) {
+            err(() => {
+                assert.empty(new WeakMap(), "blah");
+            }, "blah: .empty was passed a weak collection");
+        }
 
-            if (is.function(WeakSet)) {
-                err(() => {
-                    assert[isEmpty](new WeakSet(), "blah");
-                }, "blah: .empty was passed a weak collection");
-            }
+        if (is.function(WeakSet)) {
+            err(() => {
+                assert.empty(new WeakSet(), "blah");
+            }, "blah: .empty was passed a weak collection");
+        }
 
-            if (is.function(Map)) {
-                assert[isEmpty](new Map());
+        if (is.function(Map)) {
+            assert.empty(new Map());
 
-                const map = new Map();
-                map.key = "val";
-                assert[isEmpty](map);
-            }
+            const map = new Map();
+            map.key = "val";
+            assert.empty(map);
+        }
 
-            if (is.function(Set)) {
-                assert[isEmpty](new Set());
+        if (is.function(Set)) {
+            assert.empty(new Set());
 
-                const set = new Set();
-                set.key = "val";
-                assert[isEmpty](set);
-            }
+            const set = new Set();
+            set.key = "val";
+            assert.empty(set);
+        }
+
+        err(() => {
+            assert.empty("foo", "blah");
+        }, "blah: expected \'foo\' to be empty");
+
+        err(() => {
+            assert.empty(["foo"]);
+        }, "expected [ \'foo\' ] to be empty");
+
+        err(() => {
+            assert.empty({ arguments: 0 });
+        }, "expected { arguments: 0 } to be empty");
+
+        err(() => {
+            assert.empty({ foo: "bar" });
+        }, "expected { foo: \'bar\' } to be empty");
+
+        err(() => {
+            assert.empty(null, "blah");
+        }, "blah: .empty was passed non-string primitive null");
+
+        err(() => {
+            assert.empty(undefined);
+        }, ".empty was passed non-string primitive undefined");
+
+        err(() => {
+            assert.empty();
+        }, ".empty was passed non-string primitive undefined");
+
+        err(() => {
+            assert.empty(0);
+        }, ".empty was passed non-string primitive 0");
+
+        err(() => {
+            assert.empty(1);
+        }, ".empty was passed non-string primitive 1");
+
+        err(() => {
+            assert.empty(true);
+        }, ".empty was passed non-string primitive true");
+
+        err(() => {
+            assert.empty(false);
+        }, ".empty was passed non-string primitive false");
+
+        if (!is.undefined(Symbol)) {
+            err(() => {
+                assert.empty(Symbol());
+            }, ".empty was passed non-string primitive Symbol()");
 
             err(() => {
-                assert[isEmpty]("foo", "blah");
-            }, "blah: expected \'foo\' to be empty");
+                assert.empty(Symbol.iterator);
+            }, ".empty was passed non-string primitive Symbol(Symbol.iterator)");
+        }
 
+        err(() => {
+            assert.empty(() => { }, "blah");
+        }, "blah: .empty was passed a function");
+
+        if (FakeArgs.name === "FakeArgs") {
             err(() => {
-                assert[isEmpty](["foo"]);
-            }, "expected [ \'foo\' ] to be empty");
-
-            err(() => {
-                assert[isEmpty]({ arguments: 0 });
-            }, "expected { arguments: 0 } to be empty");
-
-            err(() => {
-                assert[isEmpty]({ foo: "bar" });
-            }, "expected { foo: \'bar\' } to be empty");
-
-            err(() => {
-                assert[isEmpty](null, "blah");
-            }, "blah: .empty was passed non-string primitive null");
-
-            err(() => {
-                assert[isEmpty](undefined);
-            }, ".empty was passed non-string primitive undefined");
-
-            err(() => {
-                assert[isEmpty]();
-            }, ".empty was passed non-string primitive undefined");
-
-            err(() => {
-                assert[isEmpty](0);
-            }, ".empty was passed non-string primitive 0");
-
-            err(() => {
-                assert[isEmpty](1);
-            }, ".empty was passed non-string primitive 1");
-
-            err(() => {
-                assert[isEmpty](true);
-            }, ".empty was passed non-string primitive true");
-
-            err(() => {
-                assert[isEmpty](false);
-            }, ".empty was passed non-string primitive false");
-
-            if (!is.undefined(Symbol)) {
-                err(() => {
-                    assert[isEmpty](Symbol());
-                }, ".empty was passed non-string primitive Symbol()");
-
-                err(() => {
-                    assert[isEmpty](Symbol.iterator);
-                }, ".empty was passed non-string primitive Symbol(Symbol.iterator)");
-            }
-
-            err(() => {
-                assert[isEmpty](() => { }, "blah");
-            }, "blah: .empty was passed a function");
-
-            if (FakeArgs.name === "FakeArgs") {
-                err(() => {
-                    assert[isEmpty](FakeArgs);
-                }, ".empty was passed a function FakeArgs");
-            }
-        });
+                assert.empty(FakeArgs);
+            }, ".empty was passed a function FakeArgs");
+        }
     });
 
-    it("isNotEmpty / notEmpty", () => {
-        ["isNotEmpty", "notEmpty"].forEach((isNotEmpty) => {
-            function FakeArgs() { }
-            FakeArgs.prototype.length = 0;
+    it("notEmpty", () => {
+        function FakeArgs() { }
+        FakeArgs.prototype.length = 0;
 
-            assert[isNotEmpty]("foo");
-            assert[isNotEmpty](["foo"]);
-            assert[isNotEmpty]({ arguments: 0 });
-            assert[isNotEmpty]({ foo: "bar" });
+        assert.notEmpty("foo");
+        assert.notEmpty(["foo"]);
+        assert.notEmpty({ arguments: 0 });
+        assert.notEmpty({ foo: "bar" });
 
-            if (is.function(WeakMap)) {
-                err(() => {
-                    assert[isNotEmpty](new WeakMap(), "blah");
-                }, "blah: .empty was passed a weak collection");
-            }
+        if (is.function(WeakMap)) {
+            err(() => {
+                assert.notEmpty(new WeakMap(), "blah");
+            }, "blah: .empty was passed a weak collection");
+        }
 
-            if (is.function(WeakSet)) {
-                err(() => {
-                    assert[isNotEmpty](new WeakSet(), "blah");
-                }, "blah: .empty was passed a weak collection");
-            }
+        if (is.function(WeakSet)) {
+            err(() => {
+                assert.notEmpty(new WeakSet(), "blah");
+            }, "blah: .empty was passed a weak collection");
+        }
 
-            if (is.function(Map)) {
-                // Not using Map constructor args because not supported in IE 11.
-                const map = new Map();
-                map.set("a", 1);
-                assert[isNotEmpty](map);
-
-                err(() => {
-                    assert[isNotEmpty](new Map());
-                }, "expected {} not to be empty");
-            }
-
-            if (is.function(Set)) {
-                // Not using Set constructor args because not supported in IE 11.
-                const set = new Set();
-                set.add(1);
-                assert[isNotEmpty](set);
-
-                err(() => {
-                    assert[isNotEmpty](new Set());
-                }, "expected {} not to be empty");
-            }
+        if (is.function(Map)) {
+            // Not using Map constructor args because not supported in IE 11.
+            const map = new Map();
+            map.set("a", 1);
+            assert.notEmpty(map);
 
             err(() => {
-                assert[isNotEmpty]("", "blah");
-            }, "blah: expected \'\' not to be empty");
-
-            err(() => {
-                assert[isNotEmpty]([]);
-            }, "expected [] not to be empty");
-
-            err(() => {
-                assert[isNotEmpty](new FakeArgs());
-            }, "expected { length: 0 } not to be empty");
-
-            err(() => {
-                assert[isNotEmpty]({});
+                assert.notEmpty(new Map());
             }, "expected {} not to be empty");
+        }
+
+        if (is.function(Set)) {
+            // Not using Set constructor args because not supported in IE 11.
+            const set = new Set();
+            set.add(1);
+            assert.notEmpty(set);
 
             err(() => {
-                assert[isNotEmpty](null, "blah");
-            }, "blah: .empty was passed non-string primitive null");
+                assert.notEmpty(new Set());
+            }, "expected {} not to be empty");
+        }
+
+        err(() => {
+            assert.notEmpty("", "blah");
+        }, "blah: expected \'\' not to be empty");
+
+        err(() => {
+            assert.notEmpty([]);
+        }, "expected [] not to be empty");
+
+        err(() => {
+            assert.notEmpty(new FakeArgs());
+        }, "expected { length: 0 } not to be empty");
+
+        err(() => {
+            assert.notEmpty({});
+        }, "expected {} not to be empty");
+
+        err(() => {
+            assert.notEmpty(null, "blah");
+        }, "blah: .empty was passed non-string primitive null");
+
+        err(() => {
+            assert.notEmpty(undefined);
+        }, ".empty was passed non-string primitive undefined");
+
+        err(() => {
+            assert.notEmpty();
+        }, ".empty was passed non-string primitive undefined");
+
+        err(() => {
+            assert.notEmpty(0);
+        }, ".empty was passed non-string primitive 0");
+
+        err(() => {
+            assert.notEmpty(1);
+        }, ".empty was passed non-string primitive 1");
+
+        err(() => {
+            assert.notEmpty(true);
+        }, ".empty was passed non-string primitive true");
+
+        err(() => {
+            assert.notEmpty(false);
+        }, ".empty was passed non-string primitive false");
+
+        if (!is.undefined(Symbol)) {
+            err(() => {
+                assert.notEmpty(Symbol());
+            }, ".empty was passed non-string primitive Symbol()");
 
             err(() => {
-                assert[isNotEmpty](undefined);
-            }, ".empty was passed non-string primitive undefined");
+                assert.notEmpty(Symbol.iterator);
+            }, ".empty was passed non-string primitive Symbol(Symbol.iterator)");
+        }
 
+        err(() => {
+            assert.notEmpty(() => { }, "blah");
+        }, "blah: .empty was passed a function");
+
+        if (FakeArgs.name === "FakeArgs") {
             err(() => {
-                assert[isNotEmpty]();
-            }, ".empty was passed non-string primitive undefined");
-
-            err(() => {
-                assert[isNotEmpty](0);
-            }, ".empty was passed non-string primitive 0");
-
-            err(() => {
-                assert[isNotEmpty](1);
-            }, ".empty was passed non-string primitive 1");
-
-            err(() => {
-                assert[isNotEmpty](true);
-            }, ".empty was passed non-string primitive true");
-
-            err(() => {
-                assert[isNotEmpty](false);
-            }, ".empty was passed non-string primitive false");
-
-            if (!is.undefined(Symbol)) {
-                err(() => {
-                    assert[isNotEmpty](Symbol());
-                }, ".empty was passed non-string primitive Symbol()");
-
-                err(() => {
-                    assert[isNotEmpty](Symbol.iterator);
-                }, ".empty was passed non-string primitive Symbol(Symbol.iterator)");
-            }
-
-            err(() => {
-                assert[isNotEmpty](() => { }, "blah");
-            }, "blah: .empty was passed a function");
-
-            if (FakeArgs.name === "FakeArgs") {
-                err(() => {
-                    assert[isNotEmpty](FakeArgs);
-                }, ".empty was passed a function FakeArgs");
-            }
-        });
+                assert.notEmpty(FakeArgs);
+            }, ".empty was passed a function FakeArgs");
+        }
     });
 
     it("showDiff true with actual and expected args", () => {
@@ -2937,7 +2909,7 @@ describe("assertion", "assert", () => {
                 , "two"
             );
         } catch (e) {
-            assert.isTrue(e.showDiff);
+            assert.true(e.showDiff);
         }
     });
 
@@ -2952,7 +2924,7 @@ describe("assertion", "assert", () => {
                 , false
             );
         } catch (e) {
-            assert.isFalse(e.showDiff);
+            assert.false(e.showDiff);
         }
     });
 });

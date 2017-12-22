@@ -8,7 +8,7 @@ describe("index", function () {
         const indexName = await db.createIndex(collection.collectionName, "a");
         expect(indexName).to.be.equal("a_1");
         const info = await db.indexInformation(collection.collectionName);
-        expect(info._id_).to.be.ok;
+        expect(info._id_).to.be.ok();
         expect(info._id_[0][0]).to.be.equal("_id");
         expect(info.a_1).to.be.deep.equal([["a", 1]]);
 
@@ -24,7 +24,7 @@ describe("index", function () {
         }
 
         expect(count2).to.be.at.least(count1);
-        expect(info2._id_).to.be.ok;
+        expect(info2._id_).to.be.ok();
         expect(info2._id_[0][0]).to.be.equal("_id");
         expect(info2.a_1).to.be.deep.equal([["a", 1]]);
     });
@@ -78,7 +78,7 @@ describe("index", function () {
         await collection.insert({ a: 1 });
         const indexName = await db.createIndex(collection.collectionName, "a");
         expect(indexName).to.be.equal("a_1");
-        expect(await collection.dropAllIndexes()).to.be.true;
+        expect(await collection.dropAllIndexes()).to.be.true();
         const info = await collection.indexInformation();
         expect(info).not.to.have.property(indexName);
     });
@@ -125,12 +125,12 @@ describe("index", function () {
         const indexName = await db.ensureIndex(collection.collectionName, "a");
         expect(indexName).to.be.equal("a_1");
         const info = await db.indexInformation(collection.collectionName);
-        expect(info._id_).to.be.ok;
+        expect(info._id_).to.be.ok();
         expect(info._id_[0][0]).to.be.equal("_id");
         expect(info[indexName]).to.be.deep.equal([["a", 1]]);
         expect(await db.ensureIndex(collection.collectionName, "a")).to.be.equal(indexName);
         const info2 = await db.indexInformation(collection.collectionName);
-        expect(info2._id_).to.be.ok;
+        expect(info2._id_).to.be.ok();
         expect(info2._id_[0][0]).to.be.equal("_id");
         expect(info2[indexName]).to.be.deep.equal([["a", 1]]);
     });
@@ -193,7 +193,7 @@ describe("index", function () {
         const collection = await db.createCollection("shouldCorrectlyCreateAnIndexWithOverridenName");
         await collection.ensureIndex("name", { name: "myfunky_name" });
         const info = await collection.indexInformation({ full: false });
-        expect(info.myfunky_name).to.be.ok;
+        expect(info.myfunky_name).to.be.ok();
     });
 
     it.skip("should handle index declarations using objects from other contexts", async () => {
@@ -233,7 +233,7 @@ describe("index", function () {
         await collection.insert([{ text: "Lorem ipsum dolor sit amet.", langua: "italian" }]);
         await collection.ensureIndex({ text: "text" }, { language_override: "langua", name: "language_override_index" });
         const info = await collection.indexInformation({ full: true });
-        expect(info).not.to.be.empty;
+        expect(info).not.to.be.empty();
         for (let i = 0; i < info.length; i++) {
             if (info[i].name === "language_override_index") {
                 expect(info[i].language_override).to.be.equal("langua");
@@ -251,7 +251,7 @@ describe("index", function () {
         it("should correctly use listIndexes to retrieve index list using hasNext", async () => {
             const { db } = this;
             await db.collection("testListIndexes_2").ensureIndex({ a: 1 });
-            expect(await db.collection("testListIndexes_2").listIndexes().hasNext()).to.be.true;
+            expect(await db.collection("testListIndexes_2").listIndexes().hasNext()).to.be.true();
         });
 
         it("should correctly ensureIndex for nested style index name c.d", async () => {

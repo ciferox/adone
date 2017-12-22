@@ -35,8 +35,8 @@ describe("net", "mail", "JSON Transport Tests", () => {
         };
 
         transport.sendMail(messageObject, (err, info) => {
-            expect(err).to.not.exist;
-            expect(info).to.exist;
+            expect(err).to.not.exist();
+            expect(info).to.exist();
             expect(JSON.parse(info.message)).to.deep.equal({
                 from: {
                     address: "andris.reinman@gmail.com",
@@ -100,8 +100,8 @@ describe("net", "mail", "JSON Transport Tests", () => {
         };
 
         transport.sendMail(messageObject, (err, info) => {
-            expect(err).to.not.exist;
-            expect(info).to.exist;
+            expect(err).to.not.exist();
+            expect(info).to.exist();
             expect(JSON.parse(info.message)).to.deep.equal({
                 from: {
                     address: "andris.reinman@gmail.com",

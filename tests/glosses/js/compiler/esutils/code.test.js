@@ -23,7 +23,7 @@ describe("js", "compiler", "esutils", "code", () => {
             let ref3;
 
             for (code = i = ref = "a".charCodeAt(0), ref1 = "z".charCodeAt(0); ref <= ref1 ? i <= ref1 : i >= ref1; code = ref <= ref1 ? ++i : --i) {
-                expect(esutils.code.isDecimalDigit(code)).to.be.false;
+                expect(esutils.code.isDecimalDigit(code)).to.be.false();
             }
             const results = [];
             for (code = j = ref2 = "A".charCodeAt(0), ref3 = "Z".charCodeAt(0); ref2 <= ref3 ? j <= ref3 : j >= ref3; code = ref2 <= ref3 ? ++j : --j) {
@@ -45,10 +45,10 @@ describe("js", "compiler", "esutils", "code", () => {
             let ref3;
 
             for (ch = i = 0; i <= 9; ch = ++i) {
-                expect(esutils.code.isHexDigit((`${ch}`).charCodeAt(0))).to.be.true;
+                expect(esutils.code.isHexDigit((`${ch}`).charCodeAt(0))).to.be.true();
             }
             for (code = j = ref = "a".charCodeAt(0), ref1 = "f".charCodeAt(0); ref <= ref1 ? j <= ref1 : j >= ref1; code = ref <= ref1 ? ++j : --j) {
-                expect(esutils.code.isHexDigit(code)).to.be.true;
+                expect(esutils.code.isHexDigit(code)).to.be.true();
             }
             const results = [];
             for (code = k = ref2 = "A".charCodeAt(0), ref3 = "F".charCodeAt(0); ref2 <= ref3 ? k <= ref3 : k >= ref3; code = ref2 <= ref3 ? ++k : --k) {
@@ -66,7 +66,7 @@ describe("js", "compiler", "esutils", "code", () => {
             let ref3;
 
             for (code = i = ref = "g".charCodeAt(0), ref1 = "z".charCodeAt(0); ref <= ref1 ? i <= ref1 : i >= ref1; code = ref <= ref1 ? ++i : --i) {
-                expect(esutils.code.isHexDigit(code)).to.be.false;
+                expect(esutils.code.isHexDigit(code)).to.be.false();
             }
             const results = [];
             for (code = j = ref2 = "G".charCodeAt(0), ref3 = "Z".charCodeAt(0); ref2 <= ref3 ? j <= ref3 : j >= ref3; code = ref2 <= ref3 ? ++j : --j) {
@@ -98,10 +98,10 @@ describe("js", "compiler", "esutils", "code", () => {
             let ref3;
 
             for (ch = i = 8; i <= 9; ch = ++i) {
-                expect(esutils.code.isOctalDigit((`${ch}`).charCodeAt(0))).to.be.false;
+                expect(esutils.code.isOctalDigit((`${ch}`).charCodeAt(0))).to.be.false();
             }
             for (code = j = ref = "a".charCodeAt(0), ref1 = "z".charCodeAt(0); ref <= ref1 ? j <= ref1 : j >= ref1; code = ref <= ref1 ? ++j : --j) {
-                expect(esutils.code.isOctalDigit(code)).to.be.false;
+                expect(esutils.code.isOctalDigit(code)).to.be.false();
             }
             const results = [];
             for (code = k = ref2 = "A".charCodeAt(0), ref3 = "Z".charCodeAt(0); ref2 <= ref3 ? k <= ref3 : k >= ref3; code = ref2 <= ref3 ? ++k : --k) {
@@ -118,9 +118,9 @@ describe("js", "compiler", "esutils", "code", () => {
             const codes = [0x0009, 0x000B, 0x000C, 0x0020, 0x00A0, 0xFEFF, 0x1680, 0x2000, 0x2001, 0x2002, 0x2003, 0x2004, 0x2005, 0x2006, 0x2007, 0x2008, 0x2009, 0x200A, 0x202F, 0x205F, 0x3000];
             for (i = 0, len = codes.length; i < len; i++) {
                 code = codes[i];
-                expect(esutils.code.isWhiteSpace(code)).to.be.true;
+                expect(esutils.code.isWhiteSpace(code)).to.be.true();
             }
-            return expect(esutils.code.isWhiteSpace(0x180E)).to.be.false;
+            return expect(esutils.code.isWhiteSpace(0x180E)).to.be.false();
         });
         return it("returns false if provided code is not white space", () => {
             let ch;
@@ -134,10 +134,10 @@ describe("js", "compiler", "esutils", "code", () => {
             let ref3;
 
             for (ch = i = 0; i <= 9; ch = ++i) {
-                expect(esutils.code.isWhiteSpace((String(ch)).charCodeAt(0))).to.be.false;
+                expect(esutils.code.isWhiteSpace((String(ch)).charCodeAt(0))).to.be.false();
             }
             for (code = j = ref = "a".charCodeAt(0), ref1 = "z".charCodeAt(0); ref <= ref1 ? j <= ref1 : j >= ref1; code = ref <= ref1 ? ++j : --j) {
-                expect(esutils.code.isWhiteSpace(code)).to.be.false;
+                expect(esutils.code.isWhiteSpace(code)).to.be.false();
             }
             const results = [];
             for (code = k = ref2 = "A".charCodeAt(0), ref3 = "Z".charCodeAt(0); ref2 <= ref3 ? k <= ref3 : k >= ref3; code = ref2 <= ref3 ? ++k : --k) {
@@ -169,12 +169,12 @@ describe("js", "compiler", "esutils", "code", () => {
             let ref1;
             let ref2;
             let ref3;
-            
+
             for (ch = i = 0; i <= 9; ch = ++i) {
-                expect(esutils.code.isLineTerminator((String(ch)).charCodeAt(0))).to.be.false;
+                expect(esutils.code.isLineTerminator((String(ch)).charCodeAt(0))).to.be.false();
             }
             for (code = j = ref = "a".charCodeAt(0), ref1 = "z".charCodeAt(0); ref <= ref1 ? j <= ref1 : j >= ref1; code = ref <= ref1 ? ++j : --j) {
-                expect(esutils.code.isLineTerminator(code)).to.be.false;
+                expect(esutils.code.isLineTerminator(code)).to.be.false();
             }
             const results = [];
             for (code = k = ref2 = "A".charCodeAt(0), ref3 = "Z".charCodeAt(0); ref2 <= ref3 ? k <= ref3 : k >= ref3; code = ref2 <= ref3 ? ++k : --k) {
@@ -222,7 +222,7 @@ describe("js", "compiler", "esutils", "code", () => {
             });
             for (i = 0, len = ref.length; i < len; i++) {
                 code = ref[i];
-                expect(esutils.code.isIdentifierPartES5(code)).to.be.true;
+                expect(esutils.code.isIdentifierPartES5(code)).to.be.true();
             }
             const results = [];
             for (ch = j = 0; j <= 9; ch = ++j) {
@@ -231,8 +231,8 @@ describe("js", "compiler", "esutils", "code", () => {
             return results;
         });
         return it("returns false if provided code cannot be a part of Identifier in ES5", () => {
-            expect(esutils.code.isIdentifierPartES5("+".charCodeAt(0))).to.be.false;
-            return expect(esutils.code.isIdentifierPartES5("-".charCodeAt(0))).to.be.false;
+            expect(esutils.code.isIdentifierPartES5("+".charCodeAt(0))).to.be.false();
+            return expect(esutils.code.isIdentifierPartES5("-".charCodeAt(0))).to.be.false();
         });
     });
     describe("isIdentifierStartES6", () => {
@@ -274,7 +274,7 @@ describe("js", "compiler", "esutils", "code", () => {
             });
             for (i = 0, len = ref.length; i < len; i++) {
                 code = ref[i];
-                expect(esutils.code.isIdentifierPartES6(code)).to.be.true;
+                expect(esutils.code.isIdentifierPartES6(code)).to.be.true();
             }
             const results = [];
             for (ch = j = 0; j <= 9; ch = ++j) {
@@ -283,11 +283,11 @@ describe("js", "compiler", "esutils", "code", () => {
             return results;
         });
         it("supports astral symbols", () => {
-            return expect(esutils.code.isIdentifierPartES6(0xE01D5)).to.be.true;
+            return expect(esutils.code.isIdentifierPartES6(0xE01D5)).to.be.true();
         });
         return it("returns false if provided code cannot be a part of Identifier in ES6", () => {
-            expect(esutils.code.isIdentifierPartES6("+".charCodeAt(0))).to.be.false;
-            return expect(esutils.code.isIdentifierPartES6("-".charCodeAt(0))).to.be.false;
+            expect(esutils.code.isIdentifierPartES6("+".charCodeAt(0))).to.be.false();
+            return expect(esutils.code.isIdentifierPartES6("-".charCodeAt(0))).to.be.false();
         });
     });
 });

@@ -221,21 +221,21 @@ describe("util", "jsesc", () => {
             allSymbols += `${symbol} `;
         }
         it("works correctly for advanced operations", () => {
-            expect(eval(`'${util.jsesc(allSymbols)}'`) === allSymbols).to.be.ok;
+            expect(eval(`'${util.jsesc(allSymbols)}'`) === allSymbols).to.be.ok();
             expect(eval(`'${util.jsesc(allSymbols, {
                 quotes: "single"
-            })}'`) === allSymbols).to.be.ok;
+            })}'`) === allSymbols).to.be.ok();
             expect(eval(util.jsesc(allSymbols, {
                 quotes: "single",
                 wrap: true
-            })) == allSymbols).to.be.ok;
+            })) == allSymbols).to.be.ok();
             expect(eval(`"${util.jsesc(allSymbols, {
                 quotes: "double"
-            })}"`) === allSymbols).to.be.ok;
+            })}"`) === allSymbols).to.be.ok();
             expect(eval(util.jsesc(allSymbols, {
                 quotes: "double",
                 wrap: true
-            })) === allSymbols).to.be.ok;
+            })) === allSymbols).to.be.ok();
 
             // Some of these depend on `JSON.parse()`, so only test them in Node
             // Some of these depend on `JSON.parse()`, so only test them in Node

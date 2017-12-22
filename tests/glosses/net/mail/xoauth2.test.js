@@ -36,7 +36,7 @@ describe("net", "mail", "XOAuth2 tests", function () {
         });
 
         xoauth2.getToken(false, (err, accessToken) => {
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             expect(accessToken).to.equal("abc");
             done();
         });
@@ -63,7 +63,7 @@ describe("net", "mail", "XOAuth2 tests", function () {
         });
 
         xoauth2.getToken(false, (err, accessToken) => {
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             expect(accessToken).to.equal("abc");
             done();
         });
@@ -80,7 +80,7 @@ describe("net", "mail", "XOAuth2 tests", function () {
         });
 
         xoauth2.getToken(false, (err, accessToken) => {
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             expect(accessToken).to.equal(users["test@example.com"]);
             done();
         });
@@ -100,7 +100,7 @@ describe("net", "mail", "XOAuth2 tests", function () {
         });
 
         xoauth2.getToken(false, (err, accessToken) => {
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             expect(accessToken).to.equal("zzz");
             done();
         });
@@ -120,8 +120,8 @@ describe("net", "mail", "XOAuth2 tests", function () {
         });
 
         xoauth2.getToken(false, (err, accessToken) => {
-            expect(err).to.exist;
-            expect(accessToken).to.not.exist;
+            expect(err).to.exist();
+            expect(accessToken).to.not.exist();
             done();
         });
     });
@@ -139,7 +139,7 @@ describe("net", "mail", "XOAuth2 tests", function () {
 
         setTimeout(() => {
             xoauth2.getToken(false, (err, accessToken) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(accessToken).to.equal(users["test@example.com"]);
                 done();
             });

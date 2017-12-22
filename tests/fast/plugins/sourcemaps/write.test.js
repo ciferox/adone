@@ -91,8 +91,8 @@ describe("fast", "transform", "sourcemaps", "write", () => {
     it("should pass through when file is null", async () => {
         const file = new File();
         const [data] = await new Stream([file]).sourcemapsWrite();
-        expect(data).to.be.ok;
-        expect(data instanceof File).to.be.ok;
+        expect(data).to.be.ok();
+        expect(data instanceof File).to.be.ok();
         expect(data).to.be.deep.equal(file);
         expect(data.contents).to.be.equal(null);
     });
@@ -101,8 +101,8 @@ describe("fast", "transform", "sourcemaps", "write", () => {
         const file = makeFile();
         delete file.sourceMap;
         const [data] = await new Stream([file]).sourcemapsWrite();
-        expect(data).to.be.ok;
-        expect(data instanceof File).to.be.ok;
+        expect(data).to.be.ok();
+        expect(data instanceof File).to.be.ok();
         expect(data).to.be.deep.equal(file);
         expect(String(data.contents)).to.be.equal(sourceContent);
     });
@@ -116,8 +116,8 @@ describe("fast", "transform", "sourcemaps", "write", () => {
     it("should write an inline source map", async () => {
         const file = makeFile();
         const [data] = await new Stream([file]).sourcemapsWrite();
-        expect(data).to.be.ok;
-        expect(data instanceof File).to.be.ok;
+        expect(data).to.be.ok();
+        expect(data instanceof File).to.be.ok();
         expect(data).to.be.deep.equal(file);
         expect(String(data.contents)).to.be.equal(`${sourceContent}\n//# ${"sourceMappingURL"}=${base64JSON(data.sourceMap)}\n`);
     });
@@ -146,7 +146,7 @@ describe("fast", "transform", "sourcemaps", "write", () => {
         const file = makeFile();
         file.contents = Buffer.from(file.contents.toString().replace(/\n/g, "\r\n"));
         const [data] = await new Stream([file]).sourcemapsWrite();
-        expect(data).to.be.ok;
+        expect(data).to.be.ok();
         expect(String(data.contents)).to.be.equal(`${sourceContent.replace(/\n/g, "\r\n")}\r\n//# ${"sourceMappingURL"}=${base64JSON(data.sourceMap)}\r\n`, "should add source map as comment");
     });
 
@@ -154,8 +154,8 @@ describe("fast", "transform", "sourcemaps", "write", () => {
         const file = makeMappedFile();
         file.contents = Buffer.from(adone.sourcemap.convert.removeComments(file.contents.toString()).trim());
         const [data] = await new Stream([file]).sourcemapsWrite({ preExisting: true });
-        expect(data).to.be.ok;
-        expect(Boolean(data.sourceMap.preExisting)).to.be.ok;
+        expect(data).to.be.ok();
+        expect(Boolean(data.sourceMap.preExisting)).to.be.ok();
         expect(String(data.contents)).to.be.equal(`${sourceContent}\n//# ${"sourceMappingURL"}=${base64JSON(data.sourceMap)}\n`);
     });
 
@@ -166,12 +166,12 @@ describe("fast", "transform", "sourcemaps", "write", () => {
         outFiles.reverse().map((data) => {
             if (data.path === fromdir.getFile("helloworld.js").path()) {
                 sourceMap = data.sourceMap;
-                expect(data instanceof File).to.be.ok;
+                expect(data instanceof File).to.be.ok();
                 expect(data).to.be.deep.equal(file);
                 expect(String(data.contents)).to.be.equal(`${sourceContent}\n//# ${"sourceMappingURL"}=../maps/helloworld.js.map\n`);
                 expect(sourceMap.file).to.be.equal("../dist/helloworld.js");
             } else {
-                expect(data instanceof File).to.be.ok;
+                expect(data instanceof File).to.be.ok();
                 expect(data.path).to.be.equal(root.getFile("maps", "helloworld.js.map").path());
                 expect(JSON.parse(data.contents)).to.be.deep.equal(sourceMap);
                 expect(data.stat.isFile()).to.be.equal(true);
@@ -268,8 +268,8 @@ describe("fast", "transform", "sourcemaps", "write", () => {
         file.sourceMap.sources[0] += ".invalid";
         delete file.sourceMap.sourcesContent;
         const [data] = await new Stream([file]).sourcemapsWrite();
-        expect(data.sourceMap.sourcesContent).not.to.be.undefined;
-        expect(data.sourceMap.sourcesContent).to.be.empty;
+        expect(data.sourceMap.sourcesContent).not.to.be.undefined();
+        expect(data.sourceMap.sourcesContent).to.be.empty();
     });
 
     it("should set the sourceRoot by option sourceRoot", async () => {

@@ -289,7 +289,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             });
             expect(_user.id).to.equal(user.id);
             expect(_user.username).to.equal("Username");
-            expect(created).to.be.false;
+            expect(created).to.be.false();
         });
 
         it("Returns instance if already existent. Multiple find fields.", async function () {
@@ -304,7 +304,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             expect(_user.id).to.equal(user.id);
             expect(_user.username).to.equal("Username");
             expect(_user.data).to.equal("ThisIsData");
-            expect(created).to.be.false;
+            expect(created).to.be.false();
         });
 
         it("does not include exception catcher in response", async function () {
@@ -318,14 +318,14 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     where: data,
                     defaults: {}
                 });
-                expect(user.dataValues.sequelize_caught_exception).to.be.undefined;
+                expect(user.dataValues.sequelize_caught_exception).to.be.undefined();
             }
             {
                 const [user] = await self.User.findOrCreate({
                     where: data,
                     defaults: {}
                 });
-                expect(user.dataValues.sequelize_caught_exception).to.be.undefined;
+                expect(user.dataValues.sequelize_caught_exception).to.be.undefined();
             }
         });
 
@@ -340,7 +340,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             const [user, created] = await this.User.findOrCreate({ where: data, defaults: defaultValues });
             expect(user.username).to.equal("Username");
             expect(user.data).to.equal("ThisIsData");
-            expect(created).to.be.true;
+            expect(created).to.be.true();
         });
 
         it("supports .or() (only using default values)", async function () {
@@ -350,7 +350,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             });
             expect(user.username).to.equal("Fooobzz");
             expect(user.secretValue).to.equal("Yolo");
-            expect(created).to.be.true;
+            expect(created).to.be.true();
         });
 
         if (current.dialect.supports.transactions) {
@@ -392,10 +392,10 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     const secondCreated = second[1];
 
                     // Depending on execution order and MAGIC either the first OR the second call should return true
-                    expect(firstCreated ? !secondCreated : secondCreated).to.be.ok; // XOR
+                    expect(firstCreated ? !secondCreated : secondCreated).to.be.ok(); // XOR
 
-                    expect(firstInstance).to.be.ok;
-                    expect(secondInstance).to.be.ok;
+                    expect(firstInstance).to.be.ok();
+                    expect(secondInstance).to.be.ok();
 
                     expect(firstInstance.id).to.equal(secondInstance.id);
 
@@ -470,8 +470,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         }).then(() => {
                             throw new Error("I should have ben rejected");
                         }).catch((err) => {
-                            expect(err instanceof orm.x.UniqueConstraintError).to.be.ok;
-                            expect(err.fields).to.be.ok;
+                            expect(err instanceof orm.x.UniqueConstraintError).to.be.ok();
+                            expect(err.fields).to.be.ok();
                         }),
                         User.findOrCreate({
                             where: {
@@ -483,8 +483,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         }).then(() => {
                             throw new Error("I should have ben rejected");
                         }).catch((err) => {
-                            expect(err instanceof orm.x.UniqueConstraintError).to.be.ok;
-                            expect(err.fields).to.be.ok;
+                            expect(err instanceof orm.x.UniqueConstraintError).to.be.ok();
+                            expect(err.fields).to.be.ok();
                         })
                     ]);
                 });
@@ -502,10 +502,10 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                             secondCreated = second[1];
 
                         // Depending on execution order and MAGIC either the first OR the second call should return true
-                        expect(firstCreated ? !secondCreated : secondCreated).to.be.ok; // XOR
+                        expect(firstCreated ? !secondCreated : secondCreated).to.be.ok(); // XOR
 
-                        expect(firstInstance).to.be.ok;
-                        expect(secondInstance).to.be.ok;
+                        expect(firstInstance).to.be.ok();
+                        expect(secondInstance).to.be.ok();
 
                         expect(firstInstance.id).to.equal(secondInstance.id);
                     }
@@ -532,9 +532,9 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 return value;
             }).length).to.equal(1);
 
-            expect(firstInstance).to.be.ok;
-            expect(secondInstance).to.be.ok;
-            expect(thirdInstance).to.be.ok;
+            expect(firstInstance).to.be.ok();
+            expect(secondInstance).to.be.ok();
+            expect(thirdInstance).to.be.ok();
 
             expect(firstInstance.id).to.equal(secondInstance.id);
             expect(secondInstance.id).to.equal(thirdInstance.id);
@@ -557,8 +557,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
             return this.sequelize.sync({ force: true }).then(() => {
                 return User.create({}).then((user) => {
-                    expect(user).to.be.ok;
-                    expect(user.id).to.be.ok;
+                    expect(user).to.be.ok();
+                    expect(user.id).to.be.ok();
                 });
             });
         });
@@ -580,7 +580,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     return User.create({ email: "hello@sequelize.com" }).then(() => {
                         assert(false);
                     }).catch((err) => {
-                        expect(err).to.be.ok;
+                        expect(err).to.be.ok();
                         expect(err).to.be.an.instanceof(Error);
                     });
                 });
@@ -606,7 +606,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 return Log.findAll();
             }).then((logs) => {
                 logs.forEach((log) => {
-                    expect(log.get("id")).not.to.be.ok;
+                    expect(log.get("id")).not.to.be.ok();
                 });
             });
         });
@@ -672,9 +672,9 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
             return this.sequelize.sync({ force: true }).then(() => {
                 return User.create({}).then((user) => {
-                    expect(user).to.be.ok;
-                    expect(user.created_time).to.be.ok;
-                    expect(user.updated_time).to.be.ok;
+                    expect(user).to.be.ok();
+                    expect(user.created_time).to.be.ok();
+                    expect(user.updated_time).to.be.ok();
                 });
             });
         });
@@ -690,12 +690,12 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
             return this.sequelize.sync({ force: true }).then(() => {
                 return User.create({}).then((user) => {
-                    expect(user).to.be.ok;
-                    expect(user.createdAt).to.be.ok;
-                    expect(user.updatedAt).to.be.ok;
+                    expect(user).to.be.ok();
+                    expect(user.createdAt).to.be.ok();
+                    expect(user.updatedAt).to.be.ok();
 
-                    expect(user.created_at).not.to.be.ok;
-                    expect(user.updated_at).not.to.be.ok;
+                    expect(user.created_at).not.to.be.ok();
+                    expect(user.updated_at).not.to.be.ok();
                 });
             });
         });
@@ -725,7 +725,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
                     return User.sync({ force: true }).then(() => {
                         return User.create({}, { returning: true }).then((user) => {
-                            expect(user.get("id")).to.be.ok;
+                            expect(user.get("id")).to.be.ok();
                             expect(user.get("id")).to.equal(1);
                         });
                     });
@@ -743,7 +743,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
                     return User.sync({ force: true }).then(() => {
                         return User.create({}, { returning: true }).then((user) => {
-                            expect(user.get("maId")).to.be.ok;
+                            expect(user.get("maId")).to.be.ok();
                             expect(user.get("maId")).to.equal(1);
                         });
                     });
@@ -830,7 +830,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             return this.sequelize.sync({ force: true }).then(() => {
                 return Monkey.create();
             }).then((monkey) => {
-                expect(monkey.get("monkeyId")).to.be.ok;
+                expect(monkey.get("monkeyId")).to.be.ok();
             });
         });
 
@@ -906,7 +906,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     }
                 });
             }).then(() => {
-                expect(test).to.be.true;
+                expect(test).to.be.true();
             });
         });
 
@@ -935,7 +935,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     });
                 });
             }).then(() => {
-                expect(test).to.be.true;
+                expect(test).to.be.true();
             });
         });
 
@@ -962,7 +962,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
             return UserNull.sync({ force: true }).then(() => {
                 return UserNull.create({ username: "foo2", smth: null }).catch((err) => {
-                    expect(err).to.exist;
+                    expect(err).to.exist();
 
                     const smth1 = err.get("smth")[0] || {};
 
@@ -996,11 +996,11 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
             return StringIsNullOrUrl.sync({ force: true }).then(() => {
                 return StringIsNullOrUrl.create({ str: null }).then((str1) => {
-                    expect(str1.str).to.be.null;
+                    expect(str1.str).to.be.null();
                     return StringIsNullOrUrl.create({ str: "http://sequelizejs.org" }).then((str2) => {
                         expect(str2.str).to.equal("http://sequelizejs.org");
                         return StringIsNullOrUrl.create({ str: "" }).catch((err) => {
-                            expect(err).to.exist;
+                            expect(err).to.exist();
                             expect(err.get("str")[0].message).to.match(/Validation isURL on str failed/);
                         });
                     });
@@ -1078,13 +1078,13 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 return User
                     .create({ name: "Fluffy Bunny", smth: "else" }, {
                         logging(sql) {
-                            expect(sql).to.exist;
+                            expect(sql).to.exist();
                             test = true;
                             expect(sql.toUpperCase().indexOf("INSERT")).to.be.above(-1);
                         }
                     });
             }).then(() => {
-                expect(test).to.be.true;
+                expect(test).to.be.true();
             });
         });
 
@@ -1137,7 +1137,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     promises.push(b.create(data).then((book) => {
                         expect(book.title).to.equal(data.title);
                         expect(book.author).to.equal(data.author);
-                        expect(books[index].rawAttributes.id.type instanceof dataTypes[index]).to.be.ok;
+                        expect(books[index].rawAttributes.id.type instanceof dataTypes[index]).to.be.ok();
                     }));
                 });
                 return Promise.all(promises);
@@ -1191,7 +1191,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             return this.User.create({ id: 42 }).then((user) => {
                 expect(user.id).to.equal(42);
                 return self.User.findById(42).then((user) => {
-                    expect(user).to.exist;
+                    expect(user).to.exist();
                 });
             });
         });
@@ -1200,7 +1200,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             const Worker = this.sequelize.define("Worker", {}, { timestamps: false });
             return Worker.sync().then(() => {
                 return Worker.create({}, { fields: [] }).then((worker) => {
-                    expect(worker).to.be.ok;
+                    expect(worker).to.be.ok();
                 });
             });
         });
@@ -1209,7 +1209,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             const Worker = this.sequelize.define("Worker", {}, { timestamps: false });
             return Worker.sync().then(() => {
                 return Worker.create({}, { fields: [] }).then((worker) => {
-                    expect(worker).to.be.ok;
+                    expect(worker).to.be.ok();
                 });
             });
         });
@@ -1231,11 +1231,11 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 }, {
                     fields: ["name"]
                 }).then((user) => {
-                    expect(user.name).to.be.ok;
-                    expect(user.email).not.to.be.ok;
+                    expect(user.name).to.be.ok();
+                    expect(user.email).not.to.be.ok();
                     return User.findById(user.id).then((user) => {
-                        expect(user.name).to.be.ok;
-                        expect(user.email).not.to.be.ok;
+                        expect(user.name).to.be.ok();
+                        expect(user.email).not.to.be.ok();
                     });
                 });
             });
@@ -1290,7 +1290,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
                 return Enum.sync({ force: true }).then(() => {
                     return Enum.create({ state: null }).then((_enum) => {
-                        expect(_enum.state).to.be.null;
+                        expect(_enum.state).to.be.null();
                     });
                 });
             });
@@ -1397,7 +1397,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
         return this.User.create({}, {
             logging: s
         }).then(() => {
-            expect(s.called).to.be.ok;
+            expect(s.called).to.be.ok();
         });
     });
 });

@@ -87,7 +87,7 @@ describe("schema", "compileAsync method", () => {
             }
         };
         instance.compileAsync(schema, (err, validate) => {
-            expect(err).not.to.be.ok;
+            expect(err).not.to.be.ok();
             expect(loadCallCount).to.be.equal(2);
             expect(validate).to.be.a("function");
             expect(validate({ a: { b: 2 } })).to.be.equal(true);
@@ -314,8 +314,8 @@ describe("schema", "compileAsync method", () => {
 
         function shouldFail(done) {
             return function (err, validate) {
-                expect(err).to.be.ok;
-                expect(validate).not.to.be.ok;
+                expect(err).to.be.ok();
+                expect(validate).not.to.be.ok();
                 done();
             };
         }
@@ -378,10 +378,10 @@ describe("schema", "compileAsync method", () => {
 
         function shouldReject(p) {
             return p.then((validate) => {
-                expect(validate).not.to.be.ok;
+                expect(validate).not.to.be.ok();
                 throw new Error("Promise has resolved; it should have rejected");
             }, (err) => {
-                expect(err).to.be.ok;
+                expect(err).to.be.ok();
             });
         }
     });

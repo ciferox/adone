@@ -27,7 +27,7 @@ describe("connection", function () {
 
         it("should correctly disable monitoring for single server connection", async () => {
             const db = await openSocketDb({ monitoring: false });
-            expect(db.serverConfig.s.server.s.monitoring).to.be.false;
+            expect(db.serverConfig.s.server.s.monitoring).to.be.false();
             await db.close();
         });
 
@@ -81,7 +81,7 @@ describe("connection", function () {
             await connectionTester(db, "testConnectServerOptions");
             expect(db.serverConfig.poolSize).to.be.equal(1);
             expect(db.serverConfig.s.server.s.pool.size).to.be.equal(4);
-            expect(db.serverConfig.autoReconnect).to.be.true;
+            expect(db.serverConfig.autoReconnect).to.be.true();
             await db.close();
         });
 
@@ -93,7 +93,7 @@ describe("connection", function () {
             await connectionTester(db, "testConnectAllOptions");
             expect(db.serverConfig.poolSize).to.be.at.least(1);
             expect(db.serverConfig.s.server.s.pool.size).to.be.equal(4);
-            expect(db.serverConfig.autoReconnect).to.be.true;
+            expect(db.serverConfig.autoReconnect).to.be.true();
             await db.close();
         });
 
@@ -151,7 +151,7 @@ describe("connection", function () {
 
         it("should correctly return false on is connect before connection happened", async () => {
             const db = getDb();
-            expect(db.serverConfig.isConnected()).to.be.false;
+            expect(db.serverConfig.isConnected()).to.be.false();
         });
 
         it("should correctly reconnect and finish query operation", async () => {

@@ -61,7 +61,7 @@ describe("database", "mysql", "functional", "connection", "binary not null nulls
             "asid=75efb145482ce22f4544390cad233c749c1b43e4"
         ]);
 
-        expect(fields[0].flags & mysql.c.fieldFlag.NOT_NULL).to.be.ok;
-        expect(rows[0][fields[0].name]).to.be.null;
+        expect(fields[0].flags & mysql.c.fieldFlag.NOT_NULL).to.be.ok();
+        expect(rows[0][fields[0].name]).to.be.null();
     });
 });

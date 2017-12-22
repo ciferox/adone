@@ -66,7 +66,7 @@ describe("database", "mongo", "core", function () {
                 pool.on("connect", (_pool) => {
                     _pool.destroy();
                     Connection.disableConnectionAccounting();
-                    expect(Connection.connections()).to.be.empty;
+                    expect(Connection.connections()).to.be.empty();
                     done();
                 });
 
@@ -124,7 +124,7 @@ describe("database", "mongo", "core", function () {
                     _pool.write(query, (err, result) => {
                         assert(err);
                         assert.ok(err.message.match(/Pool was force destroyed/));
-                        assert.isUndefined(result);
+                        assert.undefined(result);
 
                         assert.equal(0, Object.keys(Connection.connections()).length);
                         Connection.disableConnectionAccounting();
@@ -159,12 +159,12 @@ describe("database", "mongo", "core", function () {
                         numberToReturn: 1
                     });
                     const result = await promisify(_pool.write).call(_pool, query);
-                    expect(result.result.ismaster).to.be.true;
+                    expect(result.result.ismaster).to.be.true();
 
                 } finally {
                     _pool.destroy();
                     Connection.disableConnectionAccounting();
-                    expect(Connection.connections()).to.be.empty;
+                    expect(Connection.connections()).to.be.empty();
                 }
             });
 
@@ -204,7 +204,7 @@ describe("database", "mongo", "core", function () {
                 } finally {
                     _pool.destroy();
                     Connection.disableConnectionAccounting();
-                    expect(Connection.connections()).to.be.empty;
+                    expect(Connection.connections()).to.be.empty();
                 }
             });
 
@@ -277,7 +277,7 @@ describe("database", "mongo", "core", function () {
                 } finally {
                     pool.destroy();
                     Connection.disableConnectionAccounting();
-                    expect(Connection.connections()).to.be.empty;
+                    expect(Connection.connections()).to.be.empty();
                 }
             });
 
@@ -324,7 +324,7 @@ describe("database", "mongo", "core", function () {
                 } finally {
                     pool.destroy();
                     Connection.disableConnectionAccounting();
-                    expect(Connection.connections()).to.be.empty;
+                    expect(Connection.connections()).to.be.empty();
                 }
             });
 
@@ -359,7 +359,7 @@ describe("database", "mongo", "core", function () {
                 });
                 expect(index).to.be.equal(0);
                 pool.destroy();
-                expect(Connection.connections()).to.be.empty;
+                expect(Connection.connections()).to.be.empty();
                 Connection.disableConnectionAccounting();
             });
 
@@ -507,7 +507,7 @@ describe("database", "mongo", "core", function () {
                     });
                 } finally {
                     _pool.destroy(true);
-                    expect(Connection.connections()).to.be.empty;
+                    expect(Connection.connections()).to.be.empty();
                     Connection.disableConnectionAccounting();
                 }
 
@@ -569,7 +569,7 @@ describe("database", "mongo", "core", function () {
                     // expect(pool.socketCount()).to.be.at.least(1);
                 } finally {
                     pool.destroy(true);
-                    expect(Connection.connections()).to.be.empty;
+                    expect(Connection.connections()).to.be.empty();
                     Connection.disableConnectionAccounting();
                 }
             });
@@ -645,10 +645,10 @@ describe("database", "mongo", "core", function () {
                     }
                     await Promise.all(promises);
                     // expect(pool.socketCount()).to.be.at.least(1);
-                    expect(error).to.be.false;
+                    expect(error).to.be.false();
                 } finally {
                     pool.destroy(true);
-                    expect(Connection.connections()).to.be.empty;
+                    expect(Connection.connections()).to.be.empty();
                     Connection.disableConnectionAccounting();
                 }
             });
@@ -702,7 +702,7 @@ describe("database", "mongo", "core", function () {
                 } finally {
                     _pool.destroy(true);
                     Connection.disableConnectionAccounting();
-                    expect(Connection.connections()).to.be.empty;
+                    expect(Connection.connections()).to.be.empty();
                 }
             });
 
@@ -751,7 +751,7 @@ describe("database", "mongo", "core", function () {
                 } finally {
                     _pool.destroy(true);
                     Connection.disableConnectionAccounting();
-                    expect(Connection.connections()).to.be.empty;
+                    expect(Connection.connections()).to.be.empty();
                 }
             });
         });

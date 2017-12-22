@@ -93,8 +93,8 @@ describe("terminal", "prompt", () => {
 
             const answers = await promise;
 
-            expect(answers.q1).to.be.true;
-            expect(answers.q2).to.be.false;
+            expect(answers.q1).to.be.true();
+            expect(answers.q2).to.be.false();
         });
 
         it("should take a prompts array with nested names", async () => {
@@ -1008,7 +1008,7 @@ describe("terminal", "prompt", () => {
                 emitKeypress("a", { name: "a" });
                 emitLines(1);
                 const answer = await promise;
-                expect(answer).to.be.empty;
+                expect(answer).to.be.empty();
             });
 
             it("should select the inverse of the current selection when <i> is pressed", async function () {
@@ -1061,7 +1061,7 @@ describe("terminal", "prompt", () => {
                     const promise = this.checkbox.run();
                     emitLines(1);
                     const answer = await promise;
-                    expect(answer).to.be.empty;
+                    expect(answer).to.be.empty();
                 });
 
                 it("disabled can be a function", async function () {
@@ -1099,7 +1099,7 @@ describe("terminal", "prompt", () => {
                 emitLines(1);
                 const answer = await promise;
                 collector.stop();
-                expect(answer).to.be.true;
+                expect(answer).to.be.true();
                 expect(collector.data()).to.include("Y/n");
             });
 
@@ -1122,7 +1122,7 @@ describe("terminal", "prompt", () => {
                 emitLines(1);
                 const answer = await promise;
                 collector.stop();
-                expect(answer).to.be.true;
+                expect(answer).to.be.true();
                 expect(collector.data()).to.include("Y/n");
             });
 
@@ -1130,28 +1130,28 @@ describe("terminal", "prompt", () => {
                 const promise = this.confirm.run();
                 await emitLines(["Y"]);
                 const answer = await promise;
-                expect(answer).to.be.true;
+                expect(answer).to.be.true();
             });
 
             it("should parse 'Yes' value to boolean true", async function () {
                 const promise = this.confirm.run();
                 emitLines(["Yes"]);
                 const answer = await promise;
-                expect(answer).to.be.true;
+                expect(answer).to.be.true();
             });
 
             it("should parse 'No' value to boolean false", async function () {
                 const promise = this.confirm.run();
                 emitLines(["No"]);
                 const answer = await promise;
-                expect(answer).to.be.false;
+                expect(answer).to.be.false();
             });
 
             it("should parse every other string value to boolean false", async function () {
                 const promise = this.confirm.run();
                 emitLines(["bla bla foo"]);
                 const answer = await promise;
-                expect(answer).to.be.false;
+                expect(answer).to.be.false();
             });
         });
 
@@ -1219,7 +1219,7 @@ describe("terminal", "prompt", () => {
                 const promise = this.expand.run();
                 emitLines(["d"]);
                 const answer = await promise;
-                expect(answer).to.be.false;
+                expect(answer).to.be.false();
             });
 
             it("pass the value as answer, and display short on the prompt", async function () {
@@ -1984,7 +1984,7 @@ describe("terminal", "prompt", () => {
 
                 choices.length = 1;
                 expect(choices.length).to.equal(1);
-                expect(choices.get(1)).to.not.exist;
+                expect(choices.get(1)).to.not.exist();
                 expect(() => {
                     choices.realLength = 0;
                 }).to.throw;
@@ -2054,8 +2054,8 @@ describe("terminal", "prompt", () => {
             });
 
             it("should expose a helper function to check for separator", () => {
-                expect(Separator.exclude({})).to.be.true;
-                expect(Separator.exclude(new Separator(term))).to.be.false;
+                expect(Separator.exclude({})).to.be.true();
+                expect(Separator.exclude(new Separator(term))).to.be.false();
             });
 
             it("give the type 'separator' to its object", () => {

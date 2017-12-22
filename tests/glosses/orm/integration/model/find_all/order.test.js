@@ -27,7 +27,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         }).then((users) => {
                             expect(users.length).to.equal(1);
                             users.forEach((user) => {
-                                expect(user.get("email")).to.be.ok;
+                                expect(user.get("email")).to.be.ok();
                             });
                         });
                     });
@@ -38,7 +38,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         }).then((users) => {
                             expect(users.length).to.equal(1);
                             users.forEach((user) => {
-                                expect(user.get("email")).to.be.ok;
+                                expect(user.get("email")).to.be.ok();
                             });
                         });
                     });
@@ -51,7 +51,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         }).then((users) => {
                             expect(users.length).to.equal(1);
                             users.forEach((user) => {
-                                expect(user.get("email")).to.be.ok;
+                                expect(user.get("email")).to.be.ok();
                             });
                         });
                     });

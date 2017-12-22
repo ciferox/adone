@@ -101,7 +101,7 @@ describe("notifier", () => {
                 };
 
                 const response = await notifier.notify({ list: "ALL" });
-                expect(response).to.be.ok;
+                expect(response).to.be.ok();
             });
 
             it("should be able to remove all messages", async () => {
@@ -109,11 +109,11 @@ describe("notifier", () => {
                     return (await adone.fs.readFile(path.resolve(__dirname, "fixtures", "removeAll.txt"))).toString();
                 };
 
-                expect(await notifier.notify({ remove: "ALL" })).to.be.ok;
+                expect(await notifier.notify({ remove: "ALL" })).to.be.ok();
 
                 util.fileCommandJson = async () => "";
 
-                expect(await notifier.notify({ list: "ALL" })).not.to.be.ok;
+                expect(await notifier.notify({ list: "ALL" })).not.to.be.ok();
             });
         });
 

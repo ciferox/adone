@@ -79,8 +79,8 @@ describe("fast", "transform", "notify", () => {
             });
         });
 
-        expect(error).to.be.ok;
-        expect(error.message).to.be.ok;
+        expect(error).to.be.ok();
+        expect(error.message).to.be.ok();
         expect(String(error.message)).to.be.equal(testString);
     });
 
@@ -102,8 +102,8 @@ describe("fast", "transform", "notify", () => {
             });
         });
 
-        expect(error).to.be.ok;
-        expect(error.message).to.be.ok;
+        expect(error).to.be.ok();
+        expect(error.message).to.be.ok();
         expect(String(error.message)).to.be.equal(testString);
     });
 
@@ -126,15 +126,15 @@ describe("fast", "transform", "notify", () => {
         const [file] = await fast.src(srcFile).notify({
             notifier: mockGenerator(onNotify)
         });
-        expect(file).to.be.ok;
-        expect(file.path).to.be.ok;
-        expect(file.contents).to.be.ok;
+        expect(file).to.be.ok();
+        expect(file.path).to.be.ok();
+        expect(file.contents).to.be.ok();
 
         expect(onNotify).to.have.been.calledOnce;
         const [opts] = onNotify.args[0];
-        expect(opts).to.be.ok;
-        expect(opts.title).to.be.ok;
-        expect(opts.message).to.be.ok;
+        expect(opts).to.be.ok();
+        expect(opts.title).to.be.ok();
+        expect(opts.message).to.be.ok();
         expect(String(opts.message)).to.be.equal(srcFile);
         expect(String(opts.title)).to.be.equal("Notification");
     });
@@ -155,9 +155,9 @@ describe("fast", "transform", "notify", () => {
             title: onTitle
         });
 
-        expect(file).to.be.ok;
-        expect(file.path).to.be.ok;
-        expect(file.contents).to.be.ok;
+        expect(file).to.be.ok();
+        expect(file.path).to.be.ok();
+        expect(file.contents).to.be.ok();
 
         expect(onTitle).to.have.been.calledOnce;
         expect(onTitle).to.have.been.calledWithMatch((x) => x.path === srcFile);
@@ -165,27 +165,27 @@ describe("fast", "transform", "notify", () => {
         expect(onMessage).to.have.been.calledWithMatch((x) => x.path === srcFile);
         expect(onNotify).to.have.been.calledOnce;
         const [opts] = onNotify.args[0];
-        expect(opts).to.be.ok;
-        expect(opts.title).to.be.ok;
-        expect(opts.message).to.be.ok;
+        expect(opts).to.be.ok();
+        expect(opts.title).to.be.ok();
+        expect(opts.message).to.be.ok();
         expect(String(opts.message)).to.be.equal(srcFile + testSuffix);
         expect(String(opts.title)).to.be.equal(srcFile + testSuffix);
     });
 
     it("should notify on all files per default", async () => {
         const onNotify = stub().callsFake((opts) => {
-            expect(opts).to.be.ok;
-            expect(opts.title).to.be.ok;
-            expect(opts.message).to.be.ok;
+            expect(opts).to.be.ok();
+            expect(opts.title).to.be.ok();
+            expect(opts.message).to.be.ok();
         });
         const files = await fast.src(srcPath).notify({
             notifier: mockGenerator(onNotify)
         });
         expect(files).to.have.lengthOf(3);
         for (const file of files) {
-            expect(file).to.be.ok;
-            expect(file.path).to.be.ok;
-            expect(file.contents).to.be.ok;
+            expect(file).to.be.ok();
+            expect(file.path).to.be.ok();
+            expect(file.contents).to.be.ok();
         }
         expect(onNotify).to.have.been.calledThrice;
     });
@@ -196,9 +196,9 @@ describe("fast", "transform", "notify", () => {
         const testString = "testString";
 
         const onNotify = stub().callsFake((opts) => {
-            expect(opts).to.be.ok;
-            expect(opts.title).to.be.ok;
-            expect(opts.message).to.be.ok;
+            expect(opts).to.be.ok();
+            expect(opts.title).to.be.ok();
+            expect(opts.message).to.be.ok();
             expect(String(opts.message)).to.be.equal(testString);
         });
 
@@ -207,10 +207,10 @@ describe("fast", "transform", "notify", () => {
             notifier: mockGenerator(onNotify)
         });
 
-        expect(file).to.be.ok;
-        expect(file.isStream()).to.be.ok;
-        expect(file.path).to.be.ok;
-        expect(file.contents).to.be.ok;
+        expect(file).to.be.ok();
+        expect(file.isStream()).to.be.ok();
+        expect(file.path).to.be.ok();
+        expect(file.contents).to.be.ok();
 
         expect(onNotify).to.have.been.calledOnce;
     });
@@ -222,9 +222,9 @@ describe("fast", "transform", "notify", () => {
         const expectedString = "Template: 1.txt";
 
         const onNotify = stub().callsFake((opts) => {
-            expect(opts).to.be.ok;
-            expect(opts.title).to.be.ok;
-            expect(opts.message).to.be.ok;
+            expect(opts).to.be.ok();
+            expect(opts.title).to.be.ok();
+            expect(opts.message).to.be.ok();
             expect(String(opts.message)).to.be.equal(expectedString);
             expect(String(opts.title)).to.be.equal(expectedString);
         });
@@ -235,18 +235,18 @@ describe("fast", "transform", "notify", () => {
             notifier: mockGenerator(onNotify)
         });
 
-        expect(file).to.be.ok;
-        expect(file.path).to.be.ok;
-        expect(file.contents).to.be.ok;
+        expect(file).to.be.ok();
+        expect(file.path).to.be.ok();
+        expect(file.contents).to.be.ok();
         expect(onNotify).to.have.been.calledOnce;
     });
 
     context("onLast", () => {
         it("should only notify on the last file, if onLast flag is activated", async () => {
             const onNotify = stub().callsFake((opts) => {
-                expect(opts).to.be.ok;
-                expect(opts.title).to.be.ok;
-                expect(opts.message).to.be.ok;
+                expect(opts).to.be.ok();
+                expect(opts.title).to.be.ok();
+                expect(opts.message).to.be.ok();
             });
             const files = await fast.src(srcPath).notify({
                 onLast: true,
@@ -254,20 +254,20 @@ describe("fast", "transform", "notify", () => {
             });
             expect(files).to.have.length(3);
             for (const file of files) {
-                expect(file).to.be.ok;
-                expect(file.path).to.be.ok;
-                expect(file.contents).to.be.ok;
+                expect(file).to.be.ok();
+                expect(file.path).to.be.ok();
+                expect(file.contents).to.be.ok();
             }
             expect(onNotify).to.have.been.calledOnce;
         });
 
         it("should support dot templates for titles and messages when onLast", async () => {
             const onNotify = stub().callsFake((opts) => {
-                expect(opts).to.be.ok;
-                expect(opts.title).to.be.ok;
-                expect(opts.message).to.be.ok;
-                expect(opts.message.startsWith("Template:")).to.be.true;
-                expect(opts.message.endsWith(".txt")).to.be.true;
+                expect(opts).to.be.ok();
+                expect(opts.title).to.be.ok();
+                expect(opts.message).to.be.ok();
+                expect(opts.message.startsWith("Template:")).to.be.true();
+                expect(opts.message.endsWith(".txt")).to.be.true();
             });
             const files = await fast.src(srcPath).notify({
                 onLast: true,
@@ -276,9 +276,9 @@ describe("fast", "transform", "notify", () => {
             });
             expect(files).to.have.length(3);
             for (const file of files) {
-                expect(file).to.be.ok;
-                expect(file.path).to.be.ok;
-                expect(file.contents).to.be.ok;
+                expect(file).to.be.ok();
+                expect(file.path).to.be.ok();
+                expect(file.contents).to.be.ok();
             }
             expect(onNotify).to.have.been.calledOnce;
         });
@@ -287,7 +287,7 @@ describe("fast", "transform", "notify", () => {
     describe("notify.onError()", () => {
 
         it("should have defined onError function on object", (done) => {
-            expect(plugin.onError).to.be.ok;
+            expect(plugin.onError).to.be.ok();
             done();
         });
 
@@ -312,9 +312,9 @@ describe("fast", "transform", "notify", () => {
             const testMessage = "tester";
             const onError = plugin.onError({
                 notifier: mockGenerator((opts) => {
-                    expect(opts).to.be.ok;
-                    expect(opts.title).to.be.ok;
-                    expect(opts.message).to.be.ok;
+                    expect(opts).to.be.ok();
+                    expect(opts.title).to.be.ok();
+                    expect(opts.message).to.be.ok();
                     expect(String(opts.message)).to.be.equal(testMessage);
                     expect(String(opts.title)).to.be.equal("Error");
 
@@ -334,9 +334,9 @@ describe("fast", "transform", "notify", () => {
                 message: testString,
                 title: testString,
                 notifier: mockGenerator((opts) => {
-                    expect(opts).to.be.ok;
-                    expect(opts.title).to.be.ok;
-                    expect(opts.message).to.be.ok;
+                    expect(opts).to.be.ok();
+                    expect(opts.title).to.be.ok();
+                    expect(opts.message).to.be.ok();
                     expect(String(opts.message)).to.be.equal(expectedString);
                     expect(String(opts.title)).to.be.equal(expectedString);
 

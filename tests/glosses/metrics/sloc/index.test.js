@@ -90,7 +90,7 @@ describe("metrics", "sloc", () => {
         expect(sloc.extensions).to.be.be.an("array");
         langs.map((l) => {
             l.names.map((n) => {
-                expect(sloc.extensions.includes(n)).to.be.true;
+                expect(sloc.extensions.includes(n)).to.be.true();
             });
         });
     });
@@ -120,7 +120,7 @@ describe("metrics", "sloc", () => {
 
     it("evaluates the testfiles correctly", (done) =>
         fs.readFile(path.resolve(__dirname, "./testfiles/test.js"), "utf-8", (err, code) => {
-            expect(err).to.be.null;
+            expect(err).to.be.null();
             let res = sloc(code, "js");
             expect(res.total).to.be.equal(175);
             expect(res.single).to.be.equal(0);

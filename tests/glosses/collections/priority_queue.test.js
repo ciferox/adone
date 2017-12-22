@@ -8,7 +8,7 @@ describe("collection", "PriorityQueue", () => {
         it("should clone a queue", () => {
             const h1 = PriorityQueue.from([1, 2, 3, 4, 5]);
             const h2 = h1.clone();
-            expect(h1.empty).to.be.false;
+            expect(h1.empty).to.be.false();
             const expected = [5, 4, 3, 2, 1];
             for (let i = 0; !h1.empty; ++i) {
                 expect(h1.pop()).to.be.deep.equal(expected[i]);
@@ -43,11 +43,11 @@ describe("collection", "PriorityQueue", () => {
 
         it("should return true if empty", () => {
             const q = new PriorityQueue();
-            expect(q.empty).to.be.true;
+            expect(q.empty).to.be.true();
             q.push(1);
-            expect(q.empty).to.be.false;
+            expect(q.empty).to.be.false();
             q.pop();
-            expect(q.empty).to.be.true;
+            expect(q.empty).to.be.true();
         });
     });
 

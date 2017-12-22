@@ -236,20 +236,20 @@ describe("assertion", "mock interface", "messages", () => {
 
             expect(() => {
                 expect(s).to.have.been.calledWith("a", "b", "c");
-            }).to.throw("expected spy to have been called with arguments a, b, c");
+            }).to.throw("expected spy to have been called with arguments 'a', 'b', 'c'");
             expect(() => {
                 expect(s).to.have.been.calledWithExactly("a", "b", "c");
-            }).to.throw("expected spy to have been called with exact arguments a, b, c");
+            }).to.throw("expected spy to have been called with exact arguments 'a', 'b', 'c'");
             expect(() => {
                 expect(s).to.have.been.calledWithMatch(match("foo"));
             }).to.throw("expected spy to have been called with arguments matching match(\"foo\")");
 
             expect(() => {
                 expect(s.getCall(0)).to.have.been.calledWith("a", "b", "c");
-            }).to.throw("expected spy to have been called with arguments a, b, c");
+            }).to.throw("expected spy to have been called with arguments 'a', 'b', 'c'");
             expect(() => {
                 expect(s.getCall(0)).to.have.been.calledWithExactly("a", "b", "c");
-            }).to.throw("expected spy to have been called with exact arguments a, b, c");
+            }).to.throw("expected spy to have been called with exact arguments 'a', 'b', 'c'");
             expect(() => {
                 expect(s.getCall(0)).to.have.been.calledWithMatch(match("foo"));
             }).to.throw("expected spy to have been called with arguments matching match(\"foo\")");
@@ -367,10 +367,10 @@ describe("assertion", "mock interface", "messages", () => {
 
             expect(() => {
                 expect(throwingSpy).to.have.thrown("TypeError");
-            }).to.throw("expected spy to have thrown TypeError");
+            }).to.throw("expected spy to have thrown 'TypeError'");
             expect(() => {
                 expect(throwingSpy.getCall(0)).to.have.thrown("TypeError");
-            }).to.throw("expected spy to have thrown TypeError");
+            }).to.throw("expected spy to have thrown 'TypeError'");
 
             expect(() => {
                 expect(throwingSpy).to.have.thrown({ message: "x" });
@@ -397,10 +397,10 @@ describe("assertion", "mock interface", "messages", () => {
 
             expect(() => {
                 expect(s).not.to.have.thrown("Error");
-            }).to.throw("expected spy to not have thrown Error");
+            }).to.throw("expected spy to not have thrown 'Error'");
             expect(() => {
                 expect(s.getCall(0)).not.to.have.thrown("Error");
-            }).to.throw("expected spy to not have thrown Error");
+            }).to.throw("expected spy to not have thrown 'Error'");
 
             expect(() => {
                 expect(s).not.to.have.thrown(error);
@@ -425,7 +425,7 @@ describe("assertion", "mock interface", "messages", () => {
 
             expect(() => {
                 expect(throwingSpy).to.have.always.thrown("TypeError");
-            }).to.throw("expected spy to always have thrown TypeError");
+            }).to.throw("expected spy to always have thrown 'TypeError'");
 
             expect(() => {
                 expect(throwingSpy).to.have.always.thrown({ message: "x" });
@@ -467,6 +467,6 @@ describe("assertion", "mock interface", "messages", () => {
 
         expect(s).to.have.been.calledWith(obj);
 
-        expect(getterCalled).to.be.false;
+        expect(getterCalled).to.be.false();
     });
 });

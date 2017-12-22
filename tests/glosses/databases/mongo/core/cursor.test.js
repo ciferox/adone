@@ -125,7 +125,7 @@ describe("database", "mongo", "core", function () {
                         cursor.readBufferedDocuments(cursor.bufferedCount());
 
                         d = await next();
-                        expect(d).to.be.null;
+                        expect(d).to.be.null();
                     } finally {
                         _server.destroy();
                     }
@@ -163,11 +163,11 @@ describe("database", "mongo", "core", function () {
                         let d = await next();
                         expect(d.a).to.be.equal(1);
                         d = await next();
-                        expect(d).to.be.null;
+                        expect(d).to.be.null();
                         const e = await next().then(() => {
                             throw new Error("should throw");
                         }, (e) => e);
-                        expect(e).to.be.ok;
+                        expect(e).to.be.ok();
                     } finally {
                         _server.destroy();
                     }
@@ -254,7 +254,7 @@ describe("database", "mongo", "core", function () {
                         expect(d.a).to.be.equal(2);
                         await promisify(cursor.kill).call(cursor);
                         d = await next();
-                        expect(d).to.be.null;
+                        expect(d).to.be.null();
                     } finally {
                         _server.destroy();
                     }
@@ -301,7 +301,7 @@ describe("database", "mongo", "core", function () {
                             const e = await next().then(() => {
                                 throw new Error("should throw");
                             }, (e) => e);
-                            expect(e).to.be.ok;
+                            expect(e).to.be.ok();
                         } finally {
                             _server.destroy();
                         }
@@ -446,7 +446,7 @@ describe("database", "mongo", "core", function () {
                         await adone.promise.delay(1000);
 
                         for (const conn of _server.s.pool.allConnections()) {
-                            expect(conn.workItems).to.be.empty;
+                            expect(conn.workItems).to.be.empty();
                         }
                     } finally {
                         _server.destroy();

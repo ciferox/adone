@@ -68,7 +68,7 @@ describe("[MYSQL Specific] Connection Manager", { skip: dialect !== "mysql" }, (
             .then((connection) => {
                 // Old threadId should be same as current connection
                 expect(conn.threadId).to.be.equal(connection.threadId);
-                expect(cm.validate(conn)).to.be.ok;
+                expect(cm.validate(conn)).to.be.ok();
 
                 return cm.releaseConnection(connection);
             });
@@ -142,7 +142,7 @@ describe("[MYSQL Specific] Connection Manager", { skip: dialect !== "mysql" }, (
             .then((connection) => {
                 // Old threadId should be different from current new one
                 expect(conn.threadId).to.not.be.equal(connection.threadId);
-                expect(cm.validate(conn)).to.not.be.ok;
+                expect(cm.validate(conn)).to.not.be.ok();
                 return cm.releaseConnection(connection);
             });
     });

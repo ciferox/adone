@@ -109,7 +109,7 @@ describe("database", "mongo", "core", function () {
                     const _server = await waitFor(replset, "connect");
                     const insert = promisify(_server.insert).bind(_server);
                     const e = await insert("test.test", [{ created: new Date() }]).then(() => null, (e) => e);
-                    expect(e).to.be.ok;
+                    expect(e).to.be.ok();
                     try {
                         for (; ;) {
                             await adone.promise.delay(500);
@@ -237,7 +237,7 @@ describe("database", "mongo", "core", function () {
                     server.once("connect", (_server) => {
                         _server.insert("test.test", docs, (err) => {
                             // console.log("!!!! insert")
-                            expect(err).to.exist;
+                            expect(err).to.exist();
                             brokenPipe = true;
                         });
                     });
@@ -250,7 +250,7 @@ describe("database", "mongo", "core", function () {
                     });
 
                     await promisify(_server.insert).call(_server, "test.test", [{ created: new Date() }]);
-                    expect(brokenPipe).to.be.true;
+                    expect(brokenPipe).to.be.true();
                     await _server.destroy();
                     running = false;
                 });

@@ -44,8 +44,8 @@ describe("netron", "native", "functional tests", () => {
             }
 
             const superNetronPeers = superNetron.getPeers();
-            assert.isOk(superNetronPeers.has(n1.uid));
-            assert.isOk(superNetronPeers.has(n2.uid));
+            assert.ok(superNetronPeers.has(n1.uid));
+            assert.ok(superNetronPeers.has(n2.uid));
             superNetron.disconnect();
         });
     });
@@ -66,8 +66,8 @@ describe("netron", "native", "functional tests", () => {
             assert.ifError(e);
         }
 
-        assert.isOk(peerFirstToSecond);
-        assert.isOk(peerSecondToThird);
+        assert.ok(peerFirstToSecond);
+        assert.ok(peerSecondToThird);
         assert.equal(peerFirstToSecond.uid, second.uid);
         assert.equal(peerSecondToThird.uid, third.uid);
         first.disconnect();
@@ -265,7 +265,7 @@ describe("netron", "native", "functional tests", () => {
             } catch (err) {
                 isOK = err instanceof adone.x.NotExists;
             }
-            expect(isOK).to.be.true;
+            expect(isOK).to.be.true();
             propVal = await superNetron.get(null, defID, "prop2");
             expect(propVal).to.be.equal("prop2");
             isOK = false;
@@ -274,7 +274,7 @@ describe("netron", "native", "functional tests", () => {
             } catch (err) {
                 isOK = err instanceof adone.x.InvalidAccess;
             }
-            expect(isOK).to.be.true;
+            expect(isOK).to.be.true();
             await superNetron.set(null, defID, "prop3", "newProp3");
             propVal = await superNetron.call(null, defID, "prop3");
             expect(propVal).to.be.equal("newProp3");
@@ -293,7 +293,7 @@ describe("netron", "native", "functional tests", () => {
             } catch (err) {
                 isOK = err instanceof adone.x.NotExists;
             }
-            expect(isOK).to.be.true;
+            expect(isOK).to.be.true();
             propVal = await exNetron.get(peer.uid, defID, "prop2");
             expect(propVal).to.be.equal("prop2");
             isOK = false;
@@ -302,7 +302,7 @@ describe("netron", "native", "functional tests", () => {
             } catch (err) {
                 isOK = err instanceof adone.x.InvalidAccess;
             }
-            expect(isOK).to.be.true;
+            expect(isOK).to.be.true();
             await exNetron.set(peer.uid, defID, "prop3", "newProp3");
             propVal = await exNetron.get(peer.uid, defID, "prop3");
             expect(propVal).to.be.equal("newProp3");
@@ -421,8 +421,8 @@ describe("netron", "native", "functional tests", () => {
                 const storage = new ObjectStorage("unknown", 1024);
                 const defID = superNetron.attachContext(storage, "storage");
                 const iStorage = superNetron.getInterfaceById(defID);
-                expect(is.nil(iStorage)).to.be.false;
-                expect(is.netronInterface(iStorage)).to.be.true;
+                expect(is.nil(iStorage)).to.be.false();
+                expect(is.netronInterface(iStorage)).to.be.true();
                 let name = await iStorage.name.get();
                 expect(name).to.be.equal("unknown");
                 await iStorage.name.set("simplestore");
@@ -441,8 +441,8 @@ describe("netron", "native", "functional tests", () => {
                 await superNetron.bind();
                 const peer = await exNetron.connect();
                 const iStorage = peer.getInterfaceById(peer.getDefinitionByName("storage").id);
-                expect(is.nil(iStorage)).to.be.false;
-                expect(is.netronInterface(iStorage)).to.be.true;
+                expect(is.nil(iStorage)).to.be.false();
+                expect(is.netronInterface(iStorage)).to.be.true();
                 let name = await iStorage.name.get();
                 expect(name).to.be.equal("unknown");
                 await iStorage.name.set("simplestore");
@@ -495,7 +495,7 @@ describe("netron", "native", "functional tests", () => {
                 const iDocSame = await iStorage.getDocument("idea");
                 const data = await iDocSame.data.get();
                 expect(data).to.be.equal(idea);
-                expect(is.deepEqual(iDoc.$def, iDocSame.$def)).to.be.true;
+                expect(is.deepEqual(iDoc.$def, iDocSame.$def)).to.be.true();
             });
 
             it("remote - create remote object, pass it to other remote object and get it from there", async () => {
@@ -510,7 +510,7 @@ describe("netron", "native", "functional tests", () => {
                 const iDocSame = await iStorage.getDocument("idea");
                 const data = await iDocSame.data.get();
                 expect(data).to.be.equal(idea);
-                expect(is.deepEqual(iDoc.$def, iDocSame.$def)).to.be.true;
+                expect(is.deepEqual(iDoc.$def, iDocSame.$def)).to.be.true();
             });
         });
 
@@ -818,7 +818,7 @@ describe("netron", "native", "functional tests", () => {
                 assert.equal(await iWeak.doSomething(), 888);
                 await iStrong.releaseWeak();
                 const err = await assert.throws(async () => iWeak.doSomething());
-                assert.isOk(err instanceof adone.x.NotExists);
+                assert.ok(err instanceof adone.x.NotExists);
                 assert.equal(err.message, "Context not exists");
             });
 
@@ -983,7 +983,7 @@ describe("netron", "native", "functional tests", () => {
 
                     // n1 get n2's ball from basket on Server
                     let ball = basket.getBall();
-                    assert.isOk(ball);
+                    assert.ok(ball);
                     assert.equal(await ball.hit(), "bounce");
                     // and put it on another basket
                     let anotherBasket = new Basket();
@@ -1062,7 +1062,7 @@ describe("netron", "native", "functional tests", () => {
                             okCount += (err instanceof StdError ? 1 : 0);
                         }
                     }
-                    assert.isOk(okCount === stdErrors.length);
+                    assert.ok(okCount === stdErrors.length);
                 });
             }
 
@@ -1101,7 +1101,7 @@ describe("netron", "native", "functional tests", () => {
                             okCount += (err instanceof AdoneError ? 1 : 0);
                         }
                     }
-                    assert.isOk(okCount === adoneErrors.length);
+                    assert.ok(okCount === adoneErrors.length);
                 });
             }
 

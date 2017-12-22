@@ -28,7 +28,7 @@ describe("net", "mail", "Well-Known Services Tests", () => {
         });
 
         it("Should find no match", () => {
-            expect(wellKnown("zzzzzz")).to.be.false;
+            expect(wellKnown("zzzzzz")).to.be.false();
         });
 
     });

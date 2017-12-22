@@ -28,7 +28,7 @@ describe(Support.getTestDialectTeaser("Sequelize#transaction"), { skip: !current
                     });
                 })
                 .then(() => {
-                    expect(called).to.be.ok;
+                    expect(called).to.be.ok();
                 });
         });
 
@@ -42,7 +42,7 @@ describe(Support.getTestDialectTeaser("Sequelize#transaction"), { skip: !current
                     });
                 })
                 .then(() => {
-                    expect(called).to.be.ok;
+                    expect(called).to.be.ok();
                 });
         });
 
@@ -141,7 +141,7 @@ describe(Support.getTestDialectTeaser("Sequelize#transaction"), { skip: !current
                         return self.Model.create({ name: "omnom" }, { transaction: t1 }).then(() => {
                             return Promise.all([
                                 self.Model.create({ name: "omnom" }, { transaction: t2 }).catch((err) => {
-                                    expect(err).to.be.ok;
+                                    expect(err).to.be.ok();
                                     return t2.rollback();
                                 }),
                                 promise.delay(100).then(() => {

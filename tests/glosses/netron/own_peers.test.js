@@ -14,11 +14,11 @@ describe("netron", "own peers", () => {
     it("GenesisNetron#connect(null) should return own peer", async () => {
         const ownPeer = await netron.connect(null);
 
-        assert.isTrue(is.netronOwnPeer(ownPeer));
-        assert.isTrue(ownPeer.isConnected());
+        assert.true(is.netronOwnPeer(ownPeer));
+        assert.true(ownPeer.isConnected());
         assert.equal(ownPeer.uid, netron.uid);
         assert.equal(ownPeer.getStatus(), PEER_STATUS.ONLINE);
-        assert.isNull(await ownPeer.ping());
+        assert.null(await ownPeer.ping());
     });
 
     it("obtain interface of netron context", async () => {

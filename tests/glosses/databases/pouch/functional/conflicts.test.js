@@ -576,7 +576,7 @@ describe("database", "pouch", "conflicts", () => {
         }).then(() => {
             return db.put({ foo: "bar" }, "_local/baz");
         }, (e) => {
-            assert.isNull(e, "shouldn't error yet");
+            assert.null(e, "shouldn't error yet");
             throw e;
         }).then(undefined, (e) => {
             assert.exists(e, "error when you have a conflict");

@@ -1488,7 +1488,7 @@ describe("math", "Long", "math", () => {
 
                     const modResult = vi.mod(vj);
                     const combinedResult = divResult.mul(vj).add(modResult);
-                    assert.isOk(vi.equals(combinedResult));
+                    assert.ok(vi.equals(combinedResult));
                 }
             }
 

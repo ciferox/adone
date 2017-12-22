@@ -27,19 +27,19 @@ describe("net", "mail", "Cookie Tests", () => {
                 name: "a",
                 value: "b",
                 expires: new Date(Date.now() + 10000)
-            })).to.be.false;
+            })).to.be.false();
 
             expect(biskviit.isExpired({
                 name: "a",
                 value: "",
                 expires: new Date(Date.now() + 10000)
-            })).to.be.true;
+            })).to.be.true();
 
             expect(biskviit.isExpired({
                 name: "a",
                 value: "b",
                 expires: new Date(Date.now() - 10000)
-            })).to.be.true;
+            })).to.be.true();
         });
     });
 
@@ -57,7 +57,7 @@ describe("net", "mail", "Cookie Tests", () => {
                 domain: "example.com",
                 secure: false,
                 httponly: false
-            })).to.be.true;
+            })).to.be.true();
 
             expect(biskviit.compare({
                 name: "zzz",
@@ -71,7 +71,7 @@ describe("net", "mail", "Cookie Tests", () => {
                 domain: "example.com",
                 secure: false,
                 httponly: false
-            })).to.be.false;
+            })).to.be.false();
 
             expect(biskviit.compare({
                 name: "zzz",
@@ -85,7 +85,7 @@ describe("net", "mail", "Cookie Tests", () => {
                 domain: "example.com",
                 secure: false,
                 httponly: false
-            })).to.be.false;
+            })).to.be.false();
 
             expect(biskviit.compare({
                 name: "zzz",
@@ -99,7 +99,7 @@ describe("net", "mail", "Cookie Tests", () => {
                 domain: "examples.com",
                 secure: false,
                 httponly: false
-            })).to.be.false;
+            })).to.be.false();
 
             expect(biskviit.compare({
                 name: "zzz",
@@ -113,7 +113,7 @@ describe("net", "mail", "Cookie Tests", () => {
                 domain: "example.com",
                 secure: true,
                 httponly: false
-            })).to.be.false;
+            })).to.be.false();
         });
     });
 
@@ -171,8 +171,8 @@ describe("net", "mail", "Cookie Tests", () => {
                 secure: false,
                 httponly: false
             };
-            expect(biskviit.match(cookie, "http://example.com/def/")).to.be.true;
-            expect(biskviit.match(cookie, "http://example.com/bef/")).to.be.false;
+            expect(biskviit.match(cookie, "http://example.com/def/")).to.be.true();
+            expect(biskviit.match(cookie, "http://example.com/bef/")).to.be.false();
         });
 
         it("should check if a cookie matches particular domain and path", () => {
@@ -185,8 +185,8 @@ describe("net", "mail", "Cookie Tests", () => {
                 secure: false,
                 httponly: false
             };
-            expect(biskviit.match(cookie, "http://example.com/def/")).to.be.true;
-            expect(biskviit.match(cookie, "http://example.com/bef/")).to.be.false;
+            expect(biskviit.match(cookie, "http://example.com/def/")).to.be.true();
+            expect(biskviit.match(cookie, "http://example.com/bef/")).to.be.false();
         });
 
         it("should check if a cookie is secure", () => {
@@ -199,8 +199,8 @@ describe("net", "mail", "Cookie Tests", () => {
                 secure: true,
                 httponly: false
             };
-            expect(biskviit.match(cookie, "https://example.com/def/")).to.be.true;
-            expect(biskviit.match(cookie, "http://example.com/def/")).to.be.false;
+            expect(biskviit.match(cookie, "https://example.com/def/")).to.be.true();
+            expect(biskviit.match(cookie, "http://example.com/def/")).to.be.false();
         });
     });
 

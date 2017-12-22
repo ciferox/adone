@@ -26,32 +26,32 @@ describe("database", "redis", "unit", "redis-commands", () => {
 
     describe(".exists()", () => {
         it("should return true for existing commands", () => {
-            expect(commands.exists("set")).to.be.true;
-            expect(commands.exists("get")).to.be.true;
-            expect(commands.exists("cluster")).to.be.true;
-            expect(commands.exists("quit")).to.be.true;
-            expect(commands.exists("config")).to.be.true;
+            expect(commands.exists("set")).to.be.true();
+            expect(commands.exists("get")).to.be.true();
+            expect(commands.exists("cluster")).to.be.true();
+            expect(commands.exists("quit")).to.be.true();
+            expect(commands.exists("config")).to.be.true();
         });
 
         it("should return false for non-existing commands", () => {
-            expect(commands.exists("SET")).to.be.false;
-            expect(commands.exists("set get")).to.be.false;
-            expect(commands.exists("other-command")).to.be.false;
+            expect(commands.exists("SET")).to.be.false();
+            expect(commands.exists("set get")).to.be.false();
+            expect(commands.exists("other-command")).to.be.false();
         });
     });
 
     describe(".hasFlag()", () => {
         it("should return true if the command has the flag", () => {
-            expect(commands.hasFlag("set", "write")).to.be.true;
-            expect(commands.hasFlag("set", "denyoom")).to.be.true;
-            expect(commands.hasFlag("select", "fast")).to.be.true;
+            expect(commands.hasFlag("set", "write")).to.be.true();
+            expect(commands.hasFlag("set", "denyoom")).to.be.true();
+            expect(commands.hasFlag("select", "fast")).to.be.true();
         });
 
         it("should return false otherwise", () => {
-            expect(commands.hasFlag("set", "fast")).to.be.false;
-            expect(commands.hasFlag("set", "readonly")).to.be.false;
-            expect(commands.hasFlag("select", "denyoom")).to.be.false;
-            expect(commands.hasFlag("quit", "denyoom")).to.be.false;
+            expect(commands.hasFlag("set", "fast")).to.be.false();
+            expect(commands.hasFlag("set", "readonly")).to.be.false();
+            expect(commands.hasFlag("select", "denyoom")).to.be.false();
+            expect(commands.hasFlag("quit", "denyoom")).to.be.false();
         });
 
         it("should throw on unknown commands", () => {

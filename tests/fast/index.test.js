@@ -34,7 +34,7 @@ describe("fast", () => {
         const files = await fast
             .src(file0.path(), { base: tmpdir.getDirectory("in").path() })
             .dest(out.path(), { produceFiles: true });
-        expect(await out.exists()).to.be.true;
+        expect(await out.exists()).to.be.true();
         expect(files).to.have.lengthOf(1);
         const file = out.getFile("transpile.js");
         expect(files[0].path).to.be.equal(file.path());
@@ -63,15 +63,15 @@ describe("fast", () => {
     });
 
     it("should be a core stream", () => {
-        expect(is.coreStream(fast.src())).to.be.true;
+        expect(is.coreStream(fast.src())).to.be.true();
     });
 
     it("should be a fast stream", () => {
-        expect(is.fastStream(fast.src())).to.be.true;
+        expect(is.fastStream(fast.src())).to.be.true();
     });
 
     it("should be a fast local stream", () => {
-        expect(is.fastLocalStream(fast.src())).to.be.true;
+        expect(is.fastLocalStream(fast.src())).to.be.true();
     });
 
     describe("directories", () => {
@@ -79,7 +79,7 @@ describe("fast", () => {
             await tmpdir.addDirectory("hello");
             const files = await fast.src(tmpdir.getFile("**", "*"));
             expect(files).to.have.length(1);
-            expect(files[0].isDirectory()).to.be.true;
+            expect(files[0].isDirectory()).to.be.true();
         });
 
         it("should create an empty directory", async () => {
@@ -89,7 +89,7 @@ describe("fast", () => {
                 .dest(tmpdir.getDirectory("out"));
             const out = tmpdir.getDirectory("out");
             const hello = out.getDirectory("hello");
-            expect(await hello.exists()).to.be.true;
+            expect(await hello.exists()).to.be.true();
         });
 
         it("should create a directory with the origin mode", {
@@ -166,8 +166,8 @@ describe("fast", () => {
                 .src(tmpdir.getFile("in", "**", "*"), { links: true })
                 .dest(out);
             const hello = out.getDirectory("hello");
-            expect(await hello.exists()).to.be.true;
-            expect(await hello.getFile("symlink").exists()).to.be.true;
+            expect(await hello.exists()).to.be.true();
+            expect(await hello.getFile("symlink").exists()).to.be.true();
             expect(await hello.getFile("symlink").readlink()).to.be.equal("hello");
             expect(await hello.getFile("symlink").contents()).to.be.equal("world");
         });
@@ -196,19 +196,19 @@ describe("fast", () => {
         });
 
         it("should be a core stream", () => {
-            expect(is.coreStream(fast.map())).to.be.true;
+            expect(is.coreStream(fast.map())).to.be.true();
         });
 
         it("should be a fast stream", () => {
-            expect(is.fastStream(fast.map())).to.be.true;
+            expect(is.fastStream(fast.map())).to.be.true();
         });
 
         it("should be a fast fs stream", () => {
-            expect(is.fastLocalStream(fast.map())).to.be.true;
+            expect(is.fastLocalStream(fast.map())).to.be.true();
         });
 
         it("should be a fast fs map stream", () => {
-            expect(is.fastLocalMapStream(fast.map())).to.be.true;
+            expect(is.fastLocalMapStream(fast.map())).to.be.true();
         });
     });
 
@@ -279,11 +279,11 @@ describe("fast", () => {
 
                 await src1.addFile("hello", "world");
                 await adone.promise.delay(100);
-                expect(await dest1.getFile("hello", "world").exists()).to.be.true;
+                expect(await dest1.getFile("hello", "world").exists()).to.be.true();
 
                 await src1.getDirectory("hello").unlink();
                 await adone.promise.delay(100);
-                expect(await dest1.getDirectory("hello").exists()).to.be.false;
+                expect(await dest1.getDirectory("hello").exists()).to.be.false();
             } finally {
                 stream.end();
             }
@@ -307,8 +307,8 @@ describe("fast", () => {
                 await tmpdir.getFile("src1", "test1").unlink();
                 await tmpdir.getFile("src2", "test4").unlink();
                 await adone.promise.delay(100);
-                expect(await tmpdir.getFile("dest1", "test1").exists()).to.be.true;
-                expect(await tmpdir.getFile("dest2", "test4").exists()).to.be.true;
+                expect(await tmpdir.getFile("dest1", "test1").exists()).to.be.true();
+                expect(await tmpdir.getFile("dest2", "test4").exists()).to.be.true();
             } finally {
                 stream.end();
             }
@@ -332,8 +332,8 @@ describe("fast", () => {
                 await tmpdir.getFile("src1", "test1").unlink();
                 await tmpdir.getFile("src2", "test4").unlink();
                 await adone.promise.delay(100);
-                expect(await tmpdir.getFile("dest1", "test1").exists()).to.be.false;
-                expect(await tmpdir.getFile("dest2", "test4").exists()).to.be.false;
+                expect(await tmpdir.getFile("dest1", "test1").exists()).to.be.false();
+                expect(await tmpdir.getFile("dest2", "test4").exists()).to.be.false();
             } finally {
                 stream.end();
             }
@@ -357,8 +357,8 @@ describe("fast", () => {
                 await tmpdir.getFile("src1", "test1").unlink();
                 await tmpdir.getFile("src2", "test4").unlink();
                 await adone.promise.delay(100);
-                expect(await tmpdir.getFile("dest1", "test1").exists()).to.be.true;
-                expect(await tmpdir.getFile("dest2", "test4").exists()).to.be.true;
+                expect(await tmpdir.getFile("dest1", "test1").exists()).to.be.true();
+                expect(await tmpdir.getFile("dest2", "test4").exists()).to.be.true();
             } finally {
                 stream.end();
             }
@@ -382,8 +382,8 @@ describe("fast", () => {
                 await tmpdir.getFile("src1", "test1").unlink();
                 await tmpdir.getFile("src2", "test4").unlink();
                 await adone.promise.delay(100);
-                expect(await tmpdir.getFile("dest1", "test1").exists()).to.be.false;
-                expect(await tmpdir.getFile("dest2", "test4").exists()).to.be.false;
+                expect(await tmpdir.getFile("dest1", "test1").exists()).to.be.false();
+                expect(await tmpdir.getFile("dest2", "test4").exists()).to.be.false();
             } finally {
                 stream.end();
             }
@@ -407,8 +407,8 @@ describe("fast", () => {
                 await tmpdir.getFile("src1", "test1").unlink();
                 await tmpdir.getFile("src2", "test4").unlink();
                 await adone.promise.delay(100);
-                expect(await tmpdir.getFile("dest1", "test1").exists()).to.be.true;
-                expect(await tmpdir.getFile("dest2", "test4").exists()).to.be.true;
+                expect(await tmpdir.getFile("dest1", "test1").exists()).to.be.true();
+                expect(await tmpdir.getFile("dest2", "test4").exists()).to.be.true();
             } finally {
                 stream.end();
             }
@@ -512,15 +512,15 @@ describe("fast", () => {
         });
 
         it("should be a core stream", () => {
-            expect(is.coreStream(fast.watch())).to.be.true;
+            expect(is.coreStream(fast.watch())).to.be.true();
         });
 
         it("should be a fast stream", () => {
-            expect(is.fastStream(fast.watch())).to.be.true;
+            expect(is.fastStream(fast.watch())).to.be.true();
         });
 
         it("should be a fast local stream", () => {
-            expect(is.fastLocalStream(fast.watch())).to.be.true;
+            expect(is.fastLocalStream(fast.watch())).to.be.true();
         });
     });
 
@@ -577,19 +577,19 @@ describe("fast", () => {
         });
 
         it("should be a core stream", () => {
-            expect(is.coreStream(fast.watchMap())).to.be.true;
+            expect(is.coreStream(fast.watchMap())).to.be.true();
         });
 
         it("should be a fast stream", () => {
-            expect(is.fastStream(fast.watchMap())).to.be.true;
+            expect(is.fastStream(fast.watchMap())).to.be.true();
         });
 
         it("should be a fast fs stream", () => {
-            expect(is.fastStream(fast.watchMap())).to.be.true;
+            expect(is.fastStream(fast.watchMap())).to.be.true();
         });
 
         it("should be a fast fs map stream", () => {
-            expect(is.fastLocalMapStream(fast.watchMap())).to.be.true;
+            expect(is.fastLocalMapStream(fast.watchMap())).to.be.true();
         });
     });
 });

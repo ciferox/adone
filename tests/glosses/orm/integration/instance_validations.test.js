@@ -86,10 +86,10 @@ describe(Support.getTestDialectTeaser("InstanceValidator"), () => {
             ];
             await Model.sync({ force: true });
             let instance = await Model.create(records[0]);
-            expect(instance).to.be.ok;
+            expect(instance).to.be.ok();
 
             instance = await Model.create(records[1]);
-            expect(instance).to.be.ok;
+            expect(instance).to.be.ok();
 
             const err = await assert.throws(async () => {
                 await Model.update(records[0], { where: { id: instance.id } });
@@ -113,10 +113,10 @@ describe(Support.getTestDialectTeaser("InstanceValidator"), () => {
             ];
             await Model.sync({ force: true });
             let instance = await Model.create(records[0]);
-            expect(instance).to.be.ok;
+            expect(instance).to.be.ok();
 
             instance = await Model.create(records[1]);
-            expect(instance).to.be.ok;
+            expect(instance).to.be.ok();
 
             const err = await assert.throws(async () => {
                 await Model.update(records[0], { where: { id: instance.id } });
@@ -146,7 +146,7 @@ describe(Support.getTestDialectTeaser("InstanceValidator"), () => {
             ];
             await Model.sync({ force: true });
             const instance = await Model.create(records[0]);
-            expect(instance).to.be.ok;
+            expect(instance).to.be.ok();
 
             let err = await assert.throws(async () => {
                 await Model.create(records[1]);
@@ -206,9 +206,9 @@ describe(Support.getTestDialectTeaser("InstanceValidator"), () => {
                 return this.Project.create({}).then((project) => {
                     return self.Task.create({ something: 1 }).then((task) => {
                         return project.setTask(task).then((task) => {
-                            expect(task.ProjectId).to.not.be.null;
+                            expect(task.ProjectId).to.not.be.null();
                             return task.setProject(project).then((project) => {
-                                expect(project.ProjectId).to.not.be.null;
+                                expect(project.ProjectId).to.not.be.null();
                             });
                         });
                     });

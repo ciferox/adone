@@ -226,7 +226,7 @@ export default function (lib, util) {
     /**
      * Asserts that the target is non-strictly equal to true
      */
-    Assertion.addProperty("ok", function ok() {
+    Assertion.addMethod("ok", function ok() {
         this.assert(
             flag(this, "object"),
             "expected #{this} to be truthy",
@@ -237,7 +237,7 @@ export default function (lib, util) {
     /**
      * Asserts that the target is true
      */
-    Assertion.addProperty("true", function _true() {
+    Assertion.addMethod("true", function _true() {
         this.assert(
             flag(this, "object") === true,
             "expected #{this} to be true",
@@ -249,7 +249,7 @@ export default function (lib, util) {
     /**
      * Asserts that the target is false
      */
-    Assertion.addProperty("false", function _false() {
+    Assertion.addMethod("false", function _false() {
         this.assert(
             flag(this, "object") === false,
             "expected #{this} to be false",
@@ -261,7 +261,7 @@ export default function (lib, util) {
     /**
      * Asserts that the target is null
      */
-    Assertion.addProperty("null", function _null() {
+    Assertion.addMethod("null", function _null() {
         this.assert(
             is.null(flag(this, "object")),
             "expected #{this} to be null",
@@ -272,7 +272,7 @@ export default function (lib, util) {
     /**
      * Asserts that the target is undefined
      */
-    Assertion.addProperty("undefined", function _undefined() {
+    Assertion.addMethod("undefined", function _undefined() {
         this.assert(
             is.undefined(flag(this, "object")),
             "expected #{this} to be undefined",
@@ -283,7 +283,7 @@ export default function (lib, util) {
     /**
      * Asserts that the target is NaN
      */
-    Assertion.addProperty("NaN", function NaN() {
+    Assertion.addMethod("NaN", function NaN() {
         this.assert(
             is.nan(flag(this, "object")),
             "expected #{this} to be NaN",
@@ -294,7 +294,7 @@ export default function (lib, util) {
     /**
      * Asserts that the target is neither null nor undefined
      */
-    Assertion.addProperty("exist", function exist() {
+    Assertion.addMethod("exist", function exist() {
         const val = flag(this, "object");
         this.assert(
             !is.nil(val),
@@ -307,7 +307,7 @@ export default function (lib, util) {
     /**
      * Asserts that the target is empty
      */
-    Assertion.addProperty("empty", function empty() {
+    Assertion.addMethod("empty", function empty() {
         const value = flag(this, "object");
         const ssfi = flag(this, "ssfi");
         let flagMsg = flag(this, "message");
@@ -361,8 +361,8 @@ export default function (lib, util) {
         );
     };
 
-    Assertion.addProperty("arguments", checkArguments);
-    Assertion.addProperty("Arguments", checkArguments);
+    Assertion.addMethod("arguments", checkArguments);
+    Assertion.addMethod("Arguments", checkArguments);
 
     /**
      * Asserts that the target is strictly equal to value
@@ -1596,7 +1596,7 @@ export default function (lib, util) {
     /**
      * Asserts that the target is extensible
      */
-    Assertion.addProperty("extensible", function extensible() {
+    Assertion.addMethod("extensible", function extensible() {
         const obj = flag(this, "object");
 
         this.assert(
@@ -1609,7 +1609,7 @@ export default function (lib, util) {
     /**
      * Asserts that the target is sealed
      */
-    Assertion.addProperty("sealed", function sealed() {
+    Assertion.addMethod("sealed", function sealed() {
         const obj = flag(this, "object");
 
         this.assert(
@@ -1622,7 +1622,7 @@ export default function (lib, util) {
     /**
      * Asserts that the target is frozen
      */
-    Assertion.addProperty("frozen", function frozen() {
+    Assertion.addMethod("frozen", function frozen() {
         const obj = flag(this, "object");
 
         this.assert(
@@ -1635,7 +1635,7 @@ export default function (lib, util) {
     /**
      * Asserts that the target is a finite number
      */
-    Assertion.addProperty("finite", function finite() {
+    Assertion.addMethod("finite", function finite() {
         const obj = flag(this, "object");
 
         this.assert(

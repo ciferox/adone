@@ -73,7 +73,7 @@ describe("netron", "websocket", "unit tests", () => {
 
         describe("ping", () => {
             it("ping() local netron should always return true", async () => {
-                assert.isNull(await superNetron.ping());
+                assert.null(await superNetron.ping());
             });
 
             it("ping() unknown netron", async () => {
@@ -88,10 +88,10 @@ describe("netron", "websocket", "unit tests", () => {
                 await exNetron.connect({ port: NETRON_PORT });
 
                 let result = await superNetron.ping(exNetron.uid);
-                assert.isNull(result);
+                assert.null(result);
 
                 result = await exNetron.ping(superNetron.uid);
-                assert.isNull(result);
+                assert.null(result);
             });
         });
 
@@ -107,11 +107,11 @@ describe("netron", "websocket", "unit tests", () => {
                 });
 
                 let peer = await exNetron.connect({ port: NETRON_PORT });
-                assert.isOk(peer);
+                assert.ok(peer);
                 assert.equal(peer, exNetron.getPeer(superNetron.uid));
 
                 peer = superNetron.getPeer(exNetron.uid);
-                assert.isOk(peer);
+                assert.ok(peer);
                 assert.equal(peer.uid, exNetron.uid);
             });
         });
@@ -124,13 +124,13 @@ describe("netron", "websocket", "unit tests", () => {
                 });
 
                 const peer = await exNetron.connect({ port: NETRON_PORT });
-                assert.isOk(peer);
+                assert.ok(peer);
                 const exNetronPeers = exNetron.getPeers();
-                assert.isOk(exNetronPeers.has(superNetron.uid));
+                assert.ok(exNetronPeers.has(superNetron.uid));
                 assert.equal(exNetronPeers.get(superNetron.uid), peer);
 
                 const superNetronPeers = superNetron.getPeers();
-                assert.isOk(superNetronPeers.has(exNetron.uid));
+                assert.ok(superNetronPeers.has(exNetron.uid));
                 assert.equal(superNetronPeers.get(exNetron.uid).uid, exNetron.uid);
             });
         });
@@ -142,8 +142,8 @@ describe("netron", "websocket", "unit tests", () => {
                     port: NETRON_PORT
                 });
                 const peer = await exNetron.connect({ port: NETRON_PORT });
-                assert.isOk(superNetron.getPeer(exNetron.uid));
-                assert.isOk(exNetron.getPeer(superNetron.uid));
+                assert.ok(superNetron.getPeer(exNetron.uid));
+                assert.ok(exNetron.getPeer(superNetron.uid));
 
                 exNetron.on("peer offline", (peer) => {
                     assert.equal(peer.uid, superNetron.uid);
@@ -354,7 +354,7 @@ describe("netron", "websocket", "unit tests", () => {
                 const peer = await exNetron.connect({ port: NETRON_PORT });
                 const contexts = peer.getContextNames();
 
-                assert.isOk(is.array(contexts));
+                assert.ok(is.array(contexts));
                 assert.equal(contexts.length, 0);
             });
 
@@ -593,7 +593,7 @@ describe("netron", "websocket", "unit tests", () => {
 
             it("local", () => {
                 const def = superNetron.getDefinitionByName("a");
-                assert.isOk(def);
+                assert.ok(def);
                 assert.instanceOf(def, adone.netron.Definition);
                 assert.equal(def.name, "A");
 
@@ -602,20 +602,20 @@ describe("netron", "websocket", "unit tests", () => {
 
             it("remote", () => {
                 const def = exNetron.getDefinitionByName("a", superNetron.uid);
-                assert.isOk(def);
+                assert.ok(def);
                 assert.instanceOf(def, adone.netron.Definition);
                 assert.equal(def.name, "A");
 
-                assert.isNotOk(exNetron.getDefinitionByName("not_exists", superNetron.uid));
+                assert.notOk(exNetron.getDefinitionByName("not_exists", superNetron.uid));
             });
 
             it("peer", () => {
                 const def = peer.getDefinitionByName("a", superNetron.uid);
-                assert.isOk(def);
+                assert.ok(def);
                 assert.instanceOf(def, adone.netron.Definition);
                 assert.equal(def.name, "A");
 
-                assert.isNotOk(peer.getDefinitionByName("not_exists", superNetron.uid));
+                assert.notOk(peer.getDefinitionByName("not_exists", superNetron.uid));
             });
         });
 
@@ -801,7 +801,7 @@ describe("netron", "websocket", "unit tests", () => {
             it("local", () => {
                 const def = superNetron.getDefinitionByName("a");
                 const iface = superNetron.getInterfaceById(def.id);
-                assert.isOk(iface);
+                assert.ok(iface);
                 assert.instanceOf(iface, adone.netron.Interface);
 
                 assert.throws(() => superNetron.getInterfaceById(100500), adone.x.Unknown);
@@ -810,7 +810,7 @@ describe("netron", "websocket", "unit tests", () => {
             it("remote", () => {
                 const def = exNetron.getDefinitionByName("a", superNetron.uid);
                 const iface = exNetron.getInterfaceById(def.id, superNetron.uid);
-                assert.isOk(iface);
+                assert.ok(iface);
                 assert.instanceOf(iface, adone.netron.Interface);
 
                 assert.throws(() => exNetron.getInterfaceById(100500, superNetron.uid), adone.x.Unknown);
@@ -841,7 +841,7 @@ describe("netron", "websocket", "unit tests", () => {
 
             it("local", () => {
                 const iface = superNetron.getInterfaceByName("a");
-                assert.isOk(iface);
+                assert.ok(iface);
                 assert.instanceOf(iface, adone.netron.Interface);
 
                 assert.throws(() => superNetron.getInterfaceByName("not_exists"), adone.x.Unknown);
@@ -849,7 +849,7 @@ describe("netron", "websocket", "unit tests", () => {
 
             it("remote", () => {
                 const iface = exNetron.getInterfaceByName("a", superNetron.uid);
-                assert.isOk(iface);
+                assert.ok(iface);
                 assert.instanceOf(iface, adone.netron.Interface);
 
                 assert.throws(() => {
@@ -870,10 +870,10 @@ describe("netron", "websocket", "unit tests", () => {
 
             const def = superNetron.getDefinitionByName("a");
             const stub = superNetron.getStubById(def.id);
-            assert.isOk(stub);
+            assert.ok(stub);
             assert.instanceOf(stub, adone.netron.Stub);
 
-            assert.isNotOk(superNetron.getStubById(100500));
+            assert.notOk(superNetron.getStubById(100500));
         });
 
         describe("getPeerForInterface", () => {
@@ -908,7 +908,7 @@ describe("netron", "websocket", "unit tests", () => {
             it("remote", () => {
                 const iface = exNetron.getInterfaceByName("a", superNetron.uid);
                 const peerIface = exNetron.getPeerForInterface(iface);
-                assert.isOk(peerIface);
+                assert.ok(peerIface);
                 assert.instanceOf(peerIface, adone.netron.GenesisPeer);
                 assert.equal(peerIface.uid, superNetron.uid);
                 assert.equal(peerIface.uid, superNetron.uid);
@@ -1163,7 +1163,7 @@ describe("netron", "websocket", "unit tests", () => {
                         port: NETRON_PORT
                     });
                     await exNetron.connect({ port: NETRON_PORT });
-                    assert.isOk(isOK);
+                    assert.ok(isOK);
                     exNetron.disconnect();
                     await server.unbind();
                 });
@@ -1245,7 +1245,7 @@ describe("netron", "websocket", "unit tests", () => {
                         port: NETRON_PORT
                     });
                     await exNetron.connect({ port: NETRON_PORT });
-                    assert.isOk(isOK);
+                    assert.ok(isOK);
                     exNetron.disconnect();
                     await server.unbind();
                 });
@@ -1323,7 +1323,7 @@ describe("netron", "websocket", "unit tests", () => {
                         port: NETRON_PORT
                     });
                     await client.connect({ port: NETRON_PORT });
-                    assert.isOk(isOK);
+                    assert.ok(isOK);
                 });
 
                 it("simple authorization", async () => {

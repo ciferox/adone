@@ -24,14 +24,14 @@ describe("database", "local", "Executor", () => {
             testDb = dbFile.path();
             d = new Datastore({ filename: testDb, timestampData: true });
             expect(d.filename).to.be.equal(testDb);
-            expect(d.inMemoryOnly).to.be.false;
+            expect(d.inMemoryOnly).to.be.false();
             await d.load();
-            expect(d.getAllData()).to.be.empty;
+            expect(d.getAllData()).to.be.empty();
         });
 
         it("Operations are executed in the right order", async () => {
             let docs = await d.find({});
-            expect(docs).to.be.empty;
+            expect(docs).to.be.empty();
 
             await d.insert({ a: 1 });
             await d.update({ a: 1 }, { a: 2 }, {});
@@ -59,15 +59,15 @@ describe("database", "local", "Executor", () => {
 
         beforeEach(async () => {
             d = new Datastore({ inMemoryOnly: true, timestampData: true });
-            expect(d.inMemoryOnly).to.be.true;
+            expect(d.inMemoryOnly).to.be.true(););
 
             await d.load();
-            expect(d.getAllData()).to.be.empty;
+            expect(d.getAllData()).to.be.empty();
         });
 
         it("Operations are executed in the right order", async () => {
             let docs = await d.find({});
-            expect(docs).to.be.empty;
+            expect(docs).to.be.empty();
 
             await d.insert({ a: 1 });
             await d.update({ a: 1 }, { a: 2 }, {});

@@ -13,7 +13,7 @@ describe("core", () => {
     describe("SyncTransform", () => {
         it("should be paused by default", () => {
             const stream = new SyncTransform(() => { });
-            expect(stream.isPaused()).to.be.true;
+            expect(stream.isPaused()).to.be.true();
         });
 
         it("should not emit elements when paused", async () => {
@@ -613,7 +613,7 @@ describe("core", () => {
 
         it("should be paused by default", () => {
             const stream = new AsyncTransform(() => { });
-            expect(stream.isPaused()).to.be.true;
+            expect(stream.isPaused()).to.be.true();
         });
 
         it("should not emit elements when paused", async () => {
@@ -2025,7 +2025,7 @@ describe("core", () => {
                         const then = spy(c, "then");
                         const cb = noop;
                         c.catch(cb);
-                        expect(then.calledOnce).to.be.true;
+                        expect(then.calledOnce).to.be.true();
                         expect(then.args[0]).to.be.deep.equal([undefined, cb]);
                     });
                 });
@@ -2358,7 +2358,7 @@ describe("core", () => {
                         .unstash("strings")
                         .unstash("arrays");
 
-                    expect(hadNumbers).to.be.true;
+                    expect(hadNumbers).to.be.true();
                     expect(values).to.be.deep.equal([1, 2, 3, 4, 5, "a", "b", "c", ["key"], ["value"]]);
                 });
 
@@ -2423,10 +2423,10 @@ describe("core", () => {
                         const c = core.merge([a, b]);
                         c.on("error", error);
                         a.emit("error", "hello a");
-                        expect(error.calledOnce).to.be.true;
+                        expect(error.calledOnce).to.be.true();
                         expect(error.args[0]).to.be.deep.equal(["hello a"]);
                         b.emit("error", "hello b");
-                        expect(error.calledTwice).to.be.true;
+                        expect(error.calledTwice).to.be.true();
                         expect(error.args[1]).to.be.deep.equal(["hello b"]);
                     });
 

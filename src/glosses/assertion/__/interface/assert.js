@@ -18,15 +18,15 @@ export default function (lib, util) {
     /**
      * Asserts that value is truthy
      */
-    assert.isOk = (value, message) => {
-        getAssertion(value, message, assert.isOk, true).is.ok;
+    assert.ok = (value, message) => {
+        getAssertion(value, message, assert.ok, true).is.ok();
     };
 
     /**
      * Asserts that value is not truthy
      */
-    assert.isNotOk = (value, message) => {
-        getAssertion(value, message, assert.isNotOk, true).is.not.ok;
+    assert.notOk = (value, message) => {
+        getAssertion(value, message, assert.notOk, true).is.not.ok();
     };
 
     /**
@@ -97,204 +97,204 @@ export default function (lib, util) {
     /**
      * Asserts that value > above
      */
-    assert.isAbove = (value, above, message) => {
-        getAssertion(value, message, assert.isAbove, true).to.be.above(above);
+    assert.above = (value, above, message) => {
+        getAssertion(value, message, assert.above, true).to.be.above(above);
     };
 
     /**
      * Asserts that value >= atLeast
      */
-    assert.isAtLeast = (value, atLeast, message) => {
-        getAssertion(value, message, assert.isAtLeast, true).to.be.least(atLeast);
+    assert.atLeast = (value, atLeast, message) => {
+        getAssertion(value, message, assert.atLeast, true).to.be.least(atLeast);
     };
 
     /**
      * Asserts that value < below
      */
-    assert.isBelow = (value, below, message) => {
-        getAssertion(value, message, assert.isBelow, true).to.be.below(below);
+    assert.below = (value, below, message) => {
+        getAssertion(value, message, assert.below, true).to.be.below(below);
     };
 
     /**
      * Asserts that value <= atMost
      */
-    assert.isAtMost = (value, atMost, message) => {
-        getAssertion(value, message, assert.isAtMost, true).to.be.most(atMost);
+    assert.atMost = (value, atMost, message) => {
+        getAssertion(value, message, assert.atMost, true).to.be.most(atMost);
     };
 
     /**
      * Asserts that value is true
      */
-    assert.isTrue = (value, message) => {
-        getAssertion(value, message, assert.isTrue, true).is.true;
+    assert.true = (value, message) => {
+        getAssertion(value, message, assert.true, true).is.true();
     };
 
     /**
      * Asserts that value is not true
      */
-    assert.isNotTrue = (value, message) => {
-        getAssertion(value, message, assert.isNotTrue, true).to.not.equal(true);
+    assert.notTrue = (value, message) => {
+        getAssertion(value, message, assert.notTrue, true).to.not.equal(true);
     };
 
     /**
      * Asserts that value is false
      */
-    assert.isFalse = (value, message) => {
-        getAssertion(value, message, assert.isFalse, true).is.false;
+    assert.false = (value, message) => {
+        getAssertion(value, message, assert.false, true).is.false();
     };
 
     /**
      * Asserts that value is not false
      */
-    assert.isNotFalse = (value, message) => {
-        getAssertion(value, message, assert.isNotFalse, true).to.not.equal(false);
+    assert.notFalse = (value, message) => {
+        getAssertion(value, message, assert.notFalse, true).to.not.equal(false);
     };
 
     /**
      * Asserts that value is null
      */
-    assert.isNull = (value, message) => {
-        getAssertion(value, message, assert.isNull, true).to.equal(null);
+    assert.null = (value, message) => {
+        getAssertion(value, message, assert.null, true).to.equal(null);
     };
 
     /**
      * Asserts that value is not null
      */
-    assert.isNotNull = (value, message) => {
-        getAssertion(value, message, assert.isNotNull, true).to.not.equal(null);
+    assert.notNull = (value, message) => {
+        getAssertion(value, message, assert.notNull, true).to.not.equal(null);
     };
 
     /**
      * Asserts that value is NaN
      */
-    assert.isNaN = (value, message) => {
-        getAssertion(value, message, assert.isNaN, true).to.be.NaN;
+    assert.NaN = (value, message) => {
+        getAssertion(value, message, assert.NaN, true).to.be.NaN();
     };
 
     /**
      * Asserts that value is not NaN
      */
-    assert.isNotNaN = (value, message) => {
-        getAssertion(value, message, assert.isNotNaN, true).not.to.be.NaN;
+    assert.notNaN = (value, message) => {
+        getAssertion(value, message, assert.notNaN, true).not.to.be.NaN();
     };
 
     /**
      * Asserts that value neither null nor undefined
      */
     assert.exists = (value, message) => {
-        getAssertion(value, message, assert.exists, true).to.exist;
+        getAssertion(value, message, assert.exists, true).to.exist();
     };
 
     /**
      * Asserts that value either null or undefined
      */
     assert.notExists = (value, message) => {
-        getAssertion(value, message, assert.notExists, true).to.not.exist;
+        getAssertion(value, message, assert.notExists, true).to.not.exist();
     };
 
     /**
      * Asserts that value is undefined
      */
-    assert.isUndefined = (value, message) => {
-        getAssertion(value, message, assert.isUndefined, true).to.equal(undefined);
+    assert.undefined = (value, message) => {
+        getAssertion(value, message, assert.undefined, true).to.equal(undefined);
     };
 
     /**
      * Asserts that value is not undefined
      */
-    assert.isDefined = (value, message) => {
-        getAssertion(value, message, assert.isDefined, true).to.not.equal(undefined);
+    assert.defined = (value, message) => {
+        getAssertion(value, message, assert.defined, true).to.not.equal(undefined);
     };
 
     /**
      * Asserts that value is a function
      */
-    assert.isFunction = (value, message) => {
-        getAssertion(value, message, assert.isFunction, true).to.be.a("function");
+    assert.function = (value, message) => {
+        getAssertion(value, message, assert.function, true).to.be.a("function");
     };
 
     /**
      * Asserts that value is not a function
      */
-    assert.isNotFunction = (value, message) => {
-        getAssertion(value, message, assert.isNotFunction, true).to.not.be.a("function");
+    assert.notFunction = (value, message) => {
+        getAssertion(value, message, assert.notFunction, true).to.not.be.a("function");
     };
 
     /**
      * Asserts that value is an object of type Object
      */
-    assert.isObject = (value, message) => {
-        getAssertion(value, message, assert.isObject, true).to.be.a("object");
+    assert.object = (value, message) => {
+        getAssertion(value, message, assert.object, true).to.be.a("object");
     };
 
     /**
      * Asserts that value is not an object of type Object
      */
-    assert.isNotObject = (value, message) => {
-        getAssertion(value, message, assert.isNotObject, true).to.not.be.a("object");
+    assert.notObject = (value, message) => {
+        getAssertion(value, message, assert.notObject, true).to.not.be.a("object");
     };
 
     /**
      * Asserts that value is an array
      */
-    assert.isArray = (value, message) => {
-        getAssertion(value, message, assert.isArray, true).to.be.an("array");
+    assert.array = (value, message) => {
+        getAssertion(value, message, assert.array, true).to.be.an("array");
     };
 
     /**
      * Asserts that value is not an array
      */
-    assert.isNotArray = (value, message) => {
-        getAssertion(value, message, assert.isNotArray, true).to.not.be.an("array");
+    assert.notArray = (value, message) => {
+        getAssertion(value, message, assert.notArray, true).to.not.be.an("array");
     };
 
     /**
      * Asserts that value is a string
      */
-    assert.isString = (value, message) => {
-        getAssertion(value, message, assert.isString, true).to.be.a("string");
+    assert.string = (value, message) => {
+        getAssertion(value, message, assert.string, true).to.be.a("string");
     };
 
     /**
      * Asserts that value is not a string
      */
-    assert.isNotString = (value, message) => {
-        getAssertion(value, message, assert.isNotString, true).to.not.be.a("string");
+    assert.notString = (value, message) => {
+        getAssertion(value, message, assert.notString, true).to.not.be.a("string");
     };
 
     /**
      * Asserts that value is a number
      */
-    assert.isNumber = (value, message) => {
-        getAssertion(value, message, assert.isNumber, true).to.be.a("number");
+    assert.number = (value, message) => {
+        getAssertion(value, message, assert.number, true).to.be.a("number");
     };
 
     /**
      * Asserts that value is not a number
      */
-    assert.isNotNumber = (value, message) => {
-        getAssertion(value, message, assert.isNotNumber, true).to.not.be.a("number");
+    assert.notNumber = (value, message) => {
+        getAssertion(value, message, assert.notNumber, true).to.not.be.a("number");
     };
 
     /**
      * Asserts that value is a finite number
      */
-    assert.isFinite = (value, message) => {
-        getAssertion(value, message, assert.isFinite, true).to.be.finite;
+    assert.finite = (value, message) => {
+        getAssertion(value, message, assert.finite, true).to.be.finite();
     };
 
     /**
      * Asserts that value is a boolean
      */
-    assert.isBoolean = (value, message) => {
-        getAssertion(value, message, assert.isBoolean, true).to.be.a("boolean");
+    assert.boolean = (value, message) => {
+        getAssertion(value, message, assert.boolean, true).to.be.a("boolean");
     };
 
     /**
      * Asserts that value is not a boolean
      */
-    assert.isNotBoolean = (value, message) => {
-        getAssertion(value, message, assert.isNotBoolean, true).to.not.be.a("boolean");
+    assert.notBoolean = (value, message) => {
+        getAssertion(value, message, assert.notBoolean, true).to.not.be.a("boolean");
     };
 
     /**
@@ -1007,72 +1007,62 @@ export default function (lib, util) {
     /**
      * Asserts that object is extensible
      */
-    assert.isExtensible = (object, message) => {
-        getAssertion(object, message, assert.isExtensible, true).to.be.extensible;
+    assert.extensible = (object, message) => {
+        getAssertion(object, message, assert.extensible, true).to.be.extensible();
     };
 
     /**
      * Asserts that object is not extensible
      */
-    assert.isNotExtensible = (object, message) => {
-        getAssertion(object, message, assert.isNotExtensible, true).to.not.be.extensible;
+    assert.notExtensible = (object, message) => {
+        getAssertion(object, message, assert.notExtensible, true).to.not.be.extensible();
     };
 
     /**
      * Asserts that object is sealed
      */
-    assert.isSealed = (object, message) => {
-        getAssertion(object, message, assert.isSealed, true).to.be.sealed;
+    assert.sealed = (object, message) => {
+        getAssertion(object, message, assert.sealed, true).to.be.sealed();
     };
 
     /**
      * Asserts that object is not sealed
      */
-    assert.isNotSealed = (object, message) => {
-        getAssertion(object, message, assert.isNotSealed, true).to.not.be.sealed;
+    assert.notSealed = (object, message) => {
+        getAssertion(object, message, assert.notSealed, true).to.not.be.sealed();
     };
 
     /**
      * Asserts that object is frozen
      */
-    assert.isFrozen = (object, message) => {
-        getAssertion(object, message, assert.isFrozen, true).to.be.frozen;
+    assert.frozen = (object, message) => {
+        getAssertion(object, message, assert.frozen, true).to.be.frozen();
     };
 
     /**
      * Asserts that object is not frozen
      */
-    assert.isNotFrozen = (object, message) => {
-        getAssertion(object, message, assert.isNotFrozen, true).to.not.be.frozen;
+    assert.notFrozen = (object, message) => {
+        getAssertion(object, message, assert.notFrozen, true).to.not.be.frozen();
     };
 
     /**
      * Asserts that value is empty
      */
-    assert.isEmpty = (value, message) => {
-        getAssertion(value, message, assert.isEmpty, true).to.be.empty;
+    assert.empty = (value, message) => {
+        getAssertion(value, message, assert.empty, true).to.be.empty();
     };
 
     /**
      * Asserts that value is not empty
      */
-    assert.isNotEmpty = (value, message) => {
-        getAssertion(value, message, assert.isNotEmpty, true).to.not.be.empty;
+    assert.notEmpty = (value, message) => {
+        getAssertion(value, message, assert.notEmpty, true).to.not.be.empty();
     };
 
     for (const [name, alias] of [
-        ["isOk", "ok"],
-        ["isNotOk", "notOk"],
         ["throws", "throw"],
         ["throws", "Throw"],
-        ["isExtensible", "extensible"],
-        ["isNotExtensible", "notExtensible"],
-        ["isSealed", "sealed"],
-        ["isNotSealed", "notSealed"],
-        ["isFrozen", "frozen"],
-        ["isNotFrozen", "notFrozen"],
-        ["isEmpty", "empty"],
-        ["isNotEmpty", "notEmpty"]
     ]) {
         assert[alias] = assert[name];
     }

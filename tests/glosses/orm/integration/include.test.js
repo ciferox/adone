@@ -23,7 +23,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                 return User.find({
                     include: [{ model: Company, as: "Employer" }]
                 }).then((user) => {
-                    expect(user).to.be.ok;
+                    expect(user).to.be.ok();
                 });
             });
         });
@@ -39,7 +39,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                 return User.findOne({
                     include: [Employer]
                 }).then((user) => {
-                    expect(user).to.be.ok;
+                    expect(user).to.be.ok();
                 });
             });
         });
@@ -63,7 +63,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                         { association: Employer, where: { name: "CyberCorp" } }
                     ]
                 }).then((user) => {
-                    expect(user).to.be.ok;
+                    expect(user).to.be.ok();
                 });
             });
         });
@@ -79,7 +79,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                     return Company.find({
                         include: [{ model: Person, as: "CEO" }]
                     }).then((company) => {
-                        expect(company).to.be.ok;
+                        expect(company).to.be.ok();
                     });
                 });
             });
@@ -97,7 +97,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                     include: [CEO]
                 });
             }).then((user) => {
-                expect(user).to.be.ok;
+                expect(user).to.be.ok();
             });
         });
 
@@ -120,8 +120,8 @@ describe(Support.getTestDialectTeaser("Include"), () => {
             const person = await Person.find({
                 include: [Person.relation.Employer]
             });
-            expect(person).to.be.ok;
-            expect(person.employer).to.be.ok;
+            expect(person).to.be.ok();
+            expect(person.employer).to.be.ok();
         });
 
         it("should support a hasMany association reference", function () {
@@ -139,8 +139,8 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                         include: [Tasks]
                     });
                 }).then((user) => {
-                    expect(user).to.be.ok;
-                    expect(user.tasks).to.be.ok;
+                    expect(user).to.be.ok();
+                    expect(user.tasks).to.be.ok();
                 });
             });
         });
@@ -169,8 +169,8 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                     { association: Tasks, where: { title: "trivial" } }
                 ]
             });
-            expect(user).to.be.ok;
-            expect(user.tasks).to.be.ok;
+            expect(user).to.be.ok();
+            expect(user.tasks).to.be.ok();
             expect(user.tasks.length).to.equal(1);
         });
 
@@ -189,8 +189,8 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                 return User.find({
                     include: [Groups]
                 }).then((user) => {
-                    expect(user).to.be.ok;
-                    expect(user.groups).to.be.ok;
+                    expect(user).to.be.ok();
+                    expect(user.groups).to.be.ok();
                 });
             });
         });
@@ -227,8 +227,8 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                     }
                 ]
             });
-            expect(task.User).to.be.ok;
-            expect(task.User.Group).to.be.ok;
+            expect(task.User).to.be.ok();
+            expect(task.User.Group).to.be.ok();
         });
 
         it("should support a simple sibling set of belongsTo include", function () {
@@ -257,8 +257,8 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                     ]
                 });
             }).then((task) => {
-                expect(task.User).to.be.ok;
-                expect(task.Group).to.be.ok;
+                expect(task.User).to.be.ok();
+                expect(task.Group).to.be.ok();
             });
         });
 
@@ -292,8 +292,8 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                     ]
                 });
             }).then((group) => {
-                expect(group.User).to.be.ok;
-                expect(group.User.Task).to.be.ok;
+                expect(group.User).to.be.ok();
+                expect(group.User.Task).to.be.ok();
             });
         });
 
@@ -332,11 +332,11 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                     ]
                 });
             }).then((user) => {
-                expect(user.Tasks).to.be.ok;
+                expect(user.Tasks).to.be.ok();
                 expect(user.Tasks.length).to.equal(4);
 
                 user.Tasks.forEach((task) => {
-                    expect(task.Project).to.be.ok;
+                    expect(task.Project).to.be.ok();
                 });
             });
         });
@@ -371,8 +371,8 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                     ]
                 });
             }).then((worker) => {
-                expect(worker.Project).to.be.ok;
-                expect(worker.Project.Tasks).to.be.ok;
+                expect(worker.Project).to.be.ok();
+                expect(worker.Project.Tasks).to.be.ok();
                 expect(worker.Project.Tasks.length).to.equal(4);
             });
         });
@@ -551,8 +551,8 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                 expect(user.Products.length).to.equal(2);
                 expect(user.Products[0].Tags.length).to.equal(2);
                 expect(user.Products[1].Tags.length).to.equal(1);
-                expect(user.Products[0].Category).to.be.ok;
-                expect(user.Products[1].Category).not.to.be.ok;
+                expect(user.Products[0].Category).to.be.ok();
+                expect(user.Products[1].Category).not.to.be.ok();
 
                 expect(user.Products[0].Prices.length).to.equal(2);
                 expect(user.Products[1].Prices.length).to.equal(4);
@@ -634,8 +634,8 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                     ]
                 });
             }).then((posts) => {
-                expect(posts[0].PostComments[0].get("someProperty")).to.be.ok;
-                expect(posts[0].PostComments[0].get("someProperty2")).to.be.ok;
+                expect(posts[0].PostComments[0].get("someProperty")).to.be.ok();
+                expect(posts[0].PostComments[0].get("someProperty2")).to.be.ok();
                 expect(posts[0].PostComments[0].get("commentTitle")).to.equal("WAT");
             });
         });

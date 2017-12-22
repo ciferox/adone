@@ -61,7 +61,7 @@ describe("shani", "util", "__", "util", "EventTarget", () => {
 
         this.target.dispatchEvent(new sevent.Event("dummy"));
 
-        assert.isFalse(listeners[1].called);
+        assert.false(listeners[1].called);
     });
 
     it("does not notify unregistered listeners", function () {
@@ -71,7 +71,7 @@ describe("shani", "util", "__", "util", "EventTarget", () => {
 
         this.target.dispatchEvent(new sevent.Event("dummy"));
 
-        assert.isFalse(listener.called);
+        assert.false(listener.called);
     });
 
     it("notifies existing listeners after removing one", function () {
@@ -93,7 +93,7 @@ describe("shani", "util", "__", "util", "EventTarget", () => {
         const event = new sevent.Event("dummy");
         const result = this.target.dispatchEvent(event);
 
-        assert.isFalse(result);
+        assert.false(result);
     });
 
     it("returns true when event.preventDefault is called", function () {
@@ -103,7 +103,7 @@ describe("shani", "util", "__", "util", "EventTarget", () => {
 
         const result = this.target.dispatchEvent(new sevent.Event("dummy"));
 
-        assert.isTrue(result);
+        assert.true(result);
     });
 
     it("notifies ProgressEvent listener with progress data ", function () {
@@ -113,7 +113,7 @@ describe("shani", "util", "__", "util", "EventTarget", () => {
         const progressEvent = new sevent.ProgressEvent("dummyProgress", { loaded: 50, total: 120 });
         this.target.dispatchEvent(progressEvent);
 
-        assert.isTrue(progressEvent.lengthComputable);
+        assert.true(progressEvent.lengthComputable);
         assert(listener.calledOnce);
         assert(listener.calledWith(progressEvent));
     });

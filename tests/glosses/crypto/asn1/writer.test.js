@@ -2,8 +2,8 @@ describe("crypto", "asn1", "ber", "writer", () => {
     const { crypto: { asn1: { ber: { Writer: BerWriter } } } } = adone;
 
     it("load library", () => {
-        assert.isOk(BerWriter);
-        assert.isOk(new BerWriter());
+        assert.ok(BerWriter);
+        assert.ok(new BerWriter());
     });
 
     it("write byte", () => {
@@ -12,7 +12,7 @@ describe("crypto", "asn1", "ber", "writer", () => {
         writer.writeByte(0xC2);
         const ber = writer.buffer;
 
-        assert.isOk(ber);
+        assert.ok(ber);
         assert.equal(ber.length, 1, "Wrong length");
         assert.equal(ber[0], 0xC2, "value wrong");
     });
@@ -23,7 +23,7 @@ describe("crypto", "asn1", "ber", "writer", () => {
         writer.writeInt(0x7f);
         const ber = writer.buffer;
 
-        assert.isOk(ber);
+        assert.ok(ber);
         assert.equal(ber.length, 3, `Wrong length for an int: ${ber.length}`);
         assert.equal(ber[0], 0x02, `ASN.1 tag wrong (2) -> ${ber[0]}`);
         assert.equal(ber[1], 0x01, `length wrong(1) -> ${ber[1]}`);
@@ -36,7 +36,7 @@ describe("crypto", "asn1", "ber", "writer", () => {
         writer.writeInt(0x7ffe);
         const ber = writer.buffer;
 
-        assert.isOk(ber);
+        assert.ok(ber);
         assert.equal(ber.length, 4, "Wrong length for an int");
         assert.equal(ber[0], 0x02, "ASN.1 tag wrong");
         assert.equal(ber[1], 0x02, "length wrong");
@@ -50,7 +50,7 @@ describe("crypto", "asn1", "ber", "writer", () => {
         writer.writeInt(0x7ffffe);
         const ber = writer.buffer;
 
-        assert.isOk(ber);
+        assert.ok(ber);
         assert.equal(ber.length, 5, "Wrong length for an int");
         assert.equal(ber[0], 0x02, "ASN.1 tag wrong");
         assert.equal(ber[1], 0x03, "length wrong");
@@ -65,7 +65,7 @@ describe("crypto", "asn1", "ber", "writer", () => {
         writer.writeInt(0x7ffffffe);
         const ber = writer.buffer;
 
-        assert.isOk(ber);
+        assert.ok(ber);
 
         assert.equal(ber.length, 6, "Wrong length for an int");
         assert.equal(ber[0], 0x02, "ASN.1 tag wrong");
@@ -82,7 +82,7 @@ describe("crypto", "asn1", "ber", "writer", () => {
         writer.writeInt(-128);
         const ber = writer.buffer;
 
-        assert.isOk(ber);
+        assert.ok(ber);
 
         assert.equal(ber.length, 3, "Wrong length for an int");
         assert.equal(ber[0], 0x02, "ASN.1 tag wrong");
@@ -96,7 +96,7 @@ describe("crypto", "asn1", "ber", "writer", () => {
         writer.writeInt(-22400);
         const ber = writer.buffer;
 
-        assert.isOk(ber);
+        assert.ok(ber);
 
         assert.equal(ber.length, 4, "Wrong length for an int");
         assert.equal(ber[0], 0x02, "ASN.1 tag wrong");
@@ -111,7 +111,7 @@ describe("crypto", "asn1", "ber", "writer", () => {
         writer.writeInt(-481653);
         const ber = writer.buffer;
 
-        assert.isOk(ber);
+        assert.ok(ber);
 
         assert.equal(ber.length, 5, "Wrong length for an int");
         assert.equal(ber[0], 0x02, "ASN.1 tag wrong");
@@ -127,7 +127,7 @@ describe("crypto", "asn1", "ber", "writer", () => {
         writer.writeInt(-1522904131);
         const ber = writer.buffer;
 
-        assert.isOk(ber);
+        assert.ok(ber);
 
         assert.equal(ber.length, 6, "Wrong length for an int");
         assert.equal(ber[0], 0x02, "ASN.1 tag wrong");
@@ -145,7 +145,7 @@ describe("crypto", "asn1", "ber", "writer", () => {
         writer.writeBoolean(false);
         const ber = writer.buffer;
 
-        assert.isOk(ber);
+        assert.ok(ber);
         assert.equal(ber.length, 6, "Wrong length");
         assert.equal(ber[0], 0x01, "tag wrong");
         assert.equal(ber[1], 0x01, "length wrong");
@@ -160,7 +160,7 @@ describe("crypto", "asn1", "ber", "writer", () => {
         writer.writeString("hello world");
         const ber = writer.buffer;
 
-        assert.isOk(ber);
+        assert.ok(ber);
         assert.equal(ber.length, 13, "wrong length");
         assert.equal(ber[0], 0x04, "wrong tag");
         assert.equal(ber[1], 11, "wrong length");
@@ -178,7 +178,7 @@ describe("crypto", "asn1", "ber", "writer", () => {
         writer.writeBuffer(buf.slice(2, buf.length), 0x04);
         ber = writer.buffer;
 
-        assert.isOk(ber);
+        assert.ok(ber);
         assert.equal(ber.length, 26, "wrong length");
         assert.equal(ber[0], 0x04, "wrong tag");
         assert.equal(ber[1], 11, "wrong length");
@@ -195,7 +195,7 @@ describe("crypto", "asn1", "ber", "writer", () => {
         writer.writeStringArray(["hello world", "fubar!"]);
         const ber = writer.buffer;
 
-        assert.isOk(ber);
+        assert.ok(ber);
 
         assert.equal(ber.length, 21, "wrong length");
         assert.equal(ber[0], 0x04, "wrong tag");
@@ -214,7 +214,7 @@ describe("crypto", "asn1", "ber", "writer", () => {
         writer.writeString("hello world");
         const ber = writer.buffer;
 
-        assert.isOk(ber);
+        assert.ok(ber);
         assert.equal(ber.length, 13, "wrong length");
         assert.equal(ber[0], 0x04, "wrong tag");
         assert.equal(ber[1], 11, "wrong length");
@@ -230,7 +230,7 @@ describe("crypto", "asn1", "ber", "writer", () => {
         writer.endSequence();
         const ber = writer.buffer;
 
-        assert.isOk(ber);
+        assert.ok(ber);
         assert.equal(ber.length, 15, "wrong length");
         assert.equal(ber[0], 0x30, "wrong tag");
         assert.equal(ber[1], 13, "wrong length");
@@ -251,7 +251,7 @@ describe("crypto", "asn1", "ber", "writer", () => {
         writer.endSequence();
         const ber = writer.buffer;
 
-        assert.isOk(ber);
+        assert.ok(ber);
         assert.equal(ber.length, 30, "wrong length");
         assert.equal(ber[0], 0x30, "wrong tag");
         assert.equal(ber[1], 28, "wrong length");
@@ -279,7 +279,7 @@ describe("crypto", "asn1", "ber", "writer", () => {
         writer.endSequence();
         const ber = writer.buffer;
 
-        assert.isOk(ber);
+        assert.ok(ber);
         assert.equal(ber.length, 35, "wrong length (buffer)");
         assert.equal(ber[0], 0x30, "wrong tag");
         assert.equal(ber[1], 33, "wrong length");
@@ -304,6 +304,6 @@ describe("crypto", "asn1", "ber", "writer", () => {
         writer.writeOID(oid);
 
         const ber = writer.buffer;
-        assert.isOk(ber);
+        assert.ok(ber);
     });
 });

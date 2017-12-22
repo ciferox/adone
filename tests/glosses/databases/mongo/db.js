@@ -68,7 +68,7 @@ describe("db", function () {
         const collection = await db.createCollection("test_resave_dbref");
         const r = await collection.insert({ name: "parent" }, { safe: true });
         expect(r.ops).to.have.lengthOf(1);
-        expect(r.ops[0]._id).to.be.ok;
+        expect(r.ops[0]._id).to.be.ok();
         const parent = r.ops[0];
         let child = {
             name: "child",
@@ -78,7 +78,7 @@ describe("db", function () {
         await collection.insert(child, { safe: true });
         child = await collection.findOne({ name: "child" });
         await collection.save(child, { save: true });
-        expect(await collection.findOne({ parent: new mongo.DBRef("test_resave_dbref", parent._id) })).to.be.ok;
+        expect(await collection.findOne({ parent: new mongo.DBRef("test_resave_dbref", parent._id) })).to.be.ok();
     });
 
     if (this.topology === "single" || this.topology === "replicaset") {
@@ -92,7 +92,7 @@ describe("db", function () {
                 { a: 4, b: 4, c: 4 }
             ]);
             await collection.ensureIndex({ a: 1, b: 1 }, { unique: true, background: true, w: 1 });
-            expect(await collection.reIndex()).to.be.true;
+            expect(await collection.reIndex()).to.be.true(););
             const indexInformation = await collection.indexInformation();
             expect(indexInformation._id_).to.be.deep.equal([["_id", 1]]);
             expect(indexInformation.a_1_b_1).to.be.deep.equal([["a", 1], ["b", 1]]);
@@ -100,7 +100,7 @@ describe("db", function () {
     }
 
     it("should correctly get error dropping non existing db", async () => {
-        expect(await this.db.db("nonexistingdb").dropDatabase()).to.be.true;
+        expect(await this.db.db("nonexistingdb").dropDatabase()).to.be.true(););
     });
 
     it("should correctly throw when trying ro reppen connection", async () => {

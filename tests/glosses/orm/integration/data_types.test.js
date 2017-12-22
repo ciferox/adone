@@ -66,7 +66,7 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
             expect(parse).to.have.been.called;
             expect(stringify).to.have.been.called;
 
-            expect(adone.is.datetime(user.dateField)).to.be.ok;
+            expect(adone.is.datetime(user.dateField)).to.be.ok();
 
             delete type.DATE.parse;
         });
@@ -365,7 +365,7 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
             }).then(() => {
                 return Model.find({ where: { id: 1 } });
             }).then((user) => {
-                expect(user.get("float")).to.be.NaN;
+                expect(user.get("float")).to.be.NaN();
                 expect(user.get("double")).to.eq(Infinity);
                 expect(user.get("real")).to.eq(-Infinity);
             });
@@ -541,9 +541,9 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
             byteToBool: Buffer.from([true])
         });
 
-        expect(byte.byteToBool).to.be.ok;
+        expect(byte.byteToBool).to.be.ok();
 
         const bool = await BoolModel.findById(byte.id);
-        expect(bool.byteToBool).to.be.true;
+        expect(bool.byteToBool).to.be.true();
     });
 });

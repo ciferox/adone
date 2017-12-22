@@ -51,7 +51,7 @@ describe(Support.getTestDialectTeaser("QueryInterface"), () => {
                 return self.queryInterface.showAllTables().then((tableNames) => {
                     // MSSQL include spt_values table which is system defined, hence cant be dropped
                     tableNames = filterMSSQLDefault(tableNames);
-                    expect(tableNames).to.be.empty;
+                    expect(tableNames).to.be.empty();
                     return self.queryInterface.createTable("table", { name: type.STRING }).then(() => {
                         return self.queryInterface.showAllTables().then((tableNames) => {
                             tableNames = filterMSSQLDefault(tableNames);
@@ -60,7 +60,7 @@ describe(Support.getTestDialectTeaser("QueryInterface"), () => {
                                 return self.queryInterface.showAllTables().then((tableNames) => {
                                     // MSSQL include spt_values table which is system defined, hence cant be dropped
                                     tableNames = filterMSSQLDefault(tableNames);
-                                    expect(tableNames).to.be.empty;
+                                    expect(tableNames).to.be.empty();
                                 });
                             });
                         });
@@ -111,7 +111,7 @@ describe(Support.getTestDialectTeaser("QueryInterface"), () => {
                             indexColumns = _.uniq(indexes.map((index) => {
                                 return index.name;
                             }));
-                            expect(indexColumns).to.be.empty;
+                            expect(indexColumns).to.be.empty();
                         });
                     });
                 });
@@ -174,7 +174,7 @@ describe(Support.getTestDialectTeaser("QueryInterface"), () => {
                     const isAdmin = metadata.isAdmin;
                     const enumVals = metadata.enumVals;
 
-                    expect(id.primaryKey).to.be.ok;
+                    expect(id.primaryKey).to.be.ok();
 
                     let assertVal = "VARCHAR(255)";
                     switch (dialect) {
@@ -186,19 +186,19 @@ describe(Support.getTestDialectTeaser("QueryInterface"), () => {
                             break;
                     }
                     expect(username.type).to.equal(assertVal);
-                    expect(username.allowNull).to.be.true;
+                    expect(username.allowNull).to.be.true();
 
                     switch (dialect) {
                         case "sqlite":
-                            expect(username.defaultValue).to.be.undefined;
+                            expect(username.defaultValue).to.be.undefined();
                             break;
                         default:
-                            expect(username.defaultValue).to.be.null;
+                            expect(username.defaultValue).to.be.null();
                     }
 
                     switch (dialect) {
                         case "sqlite":
-                            expect(city.defaultValue).to.be.null;
+                            expect(city.defaultValue).to.be.null();
                             break;
                     }
 
@@ -212,13 +212,13 @@ describe(Support.getTestDialectTeaser("QueryInterface"), () => {
                             break;
                     }
                     expect(isAdmin.type).to.equal(assertVal);
-                    expect(isAdmin.allowNull).to.be.true;
+                    expect(isAdmin.allowNull).to.be.true();
                     switch (dialect) {
                         case "sqlite":
-                            expect(isAdmin.defaultValue).to.be.undefined;
+                            expect(isAdmin.defaultValue).to.be.undefined();
                             break;
                         default:
-                            expect(isAdmin.defaultValue).to.be.null;
+                            expect(isAdmin.defaultValue).to.be.null();
                     }
 
                     if (dialect === "postgres" || dialect === "postgres-native") {
@@ -281,7 +281,7 @@ describe(Support.getTestDialectTeaser("QueryInterface"), () => {
             });
             const results = await this.queryInterface.insert(null, "TableWithPK", {}, { raw: true, returning: true, plain: true });
             const response = _.head(results);
-            expect(response.table_id || typeof response !== "object" && response).to.be.ok;
+            expect(response.table_id || typeof response !== "object" && response).to.be.ok();
         });
 
         it("should work with enums (1)", function () {

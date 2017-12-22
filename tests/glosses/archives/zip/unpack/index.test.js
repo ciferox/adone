@@ -270,7 +270,7 @@ describe("archive", "zip", "unpack", () => {
 
             const reader = new TestRandomAccessReader();
             const err = await zip.unpack.fromRandomAccessReader(reader, 0x1000).then(() => null, (e) => e);
-            expect(err).not.to.be.null;
+            expect(err).not.to.be.null();
             expect(err.message).to.be.equal("all reads fail");
         });
     });

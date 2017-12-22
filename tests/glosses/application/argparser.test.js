@@ -91,7 +91,7 @@ describe("application", () => {
                         ]
                     });
                     const { args } = await parse("1", '{"a":[1,2,3]}');
-                    expect(args.get("x")).to.be.null;
+                    expect(args.get("x")).to.be.null();
                     expect(args.get("y")).to.be.deep.equal({ a: [1, 2, 3] });
                 });
 
@@ -121,7 +121,7 @@ describe("application", () => {
                         ]
                     });
                     const { args } = await parse("1", "hello");
-                    expect(args.get("x")).to.be.null;
+                    expect(args.get("x")).to.be.null();
                     const w = args.get("y");
                     expect(w).to.be.instanceOf(Wrapper);
                     expect(w.value).to.be.equal("hello");
@@ -149,7 +149,7 @@ describe("application", () => {
                             ]
                         });
                         const { args, errors } = await parse("1", "abcdef", "123 45");
-                        expect(errors).to.be.empty;
+                        expect(errors).to.be.empty();
                         expect(args.get("x")).to.be.deep.equal("1".match(/^\d+$/));
                         expect(args.get("y")).to.be.deep.equal("abcdef".match(/^[a-z]+$/));
                         expect(args.get("z")).to.be.deep.equal("123 45".match(/^(\d+) (\d+)$/));
@@ -164,7 +164,7 @@ describe("application", () => {
                         const { errors } = await parse("hey");
                         expect(errors).to.have.lengthOf(1);
                         expect(errors[0].message).to.be.equal(`x: Incorrect value, must match ${/^\d+$/}`);
-                        expect(errors[0].fatal).to.be.true;
+                        expect(errors[0].fatal).to.be.true();
                     });
                 });
             });
@@ -595,7 +595,7 @@ describe("application", () => {
                             ]
                         });
                         const { opts } = await parse("--x");
-                        expect(opts.get("x")).to.be.true;
+                        expect(opts.get("x")).to.be.true();
                     });
 
                     it("should store true if is not passed", async () => {
@@ -605,7 +605,7 @@ describe("application", () => {
                             ]
                         });
                         const { opts } = await parse();
-                        expect(opts.get("x")).to.be.false;
+                        expect(opts.get("x")).to.be.false();
                     });
                 });
 
@@ -617,7 +617,7 @@ describe("application", () => {
                             ]
                         });
                         const { opts } = await parse("--x");
-                        expect(opts.get("x")).to.be.false;
+                        expect(opts.get("x")).to.be.false();
                     });
 
                     it("should store true if is not passed", async () => {
@@ -627,7 +627,7 @@ describe("application", () => {
                             ]
                         });
                         const { opts } = await parse();
-                        expect(opts.get("x")).to.be.true;
+                        expect(opts.get("x")).to.be.true();
                     });
                 });
 
@@ -740,7 +740,7 @@ describe("application", () => {
                         ]
                     });
                     const { opts } = await parse("--x", "1", "--y", '{"a":[1,2,3]}');
-                    expect(opts.get("x")).to.be.null;
+                    expect(opts.get("x")).to.be.null();
                     expect(opts.get("y")).to.be.deep.equal({ a: [1, 2, 3] });
                 });
 
@@ -770,7 +770,7 @@ describe("application", () => {
                         ]
                     });
                     const { opts } = await parse("--x", "1", "--y", "hello");
-                    expect(opts.get("x")).to.be.null;
+                    expect(opts.get("x")).to.be.null();
                     const w = opts.get("y");
                     expect(w).to.be.instanceOf(Wrapper);
                     expect(w.value).to.be.equal("hello");
@@ -785,7 +785,7 @@ describe("application", () => {
                     });
                     const { opts } = await parse("--x", "1", "2", "--y");
                     expect(opts.get("x")).to.be.deep.equal([1, "2"]);
-                    expect(opts.get("y")).to.be.true;
+                    expect(opts.get("y")).to.be.true();
                 });
 
                 context("regexp", () => {
@@ -798,7 +798,7 @@ describe("application", () => {
                             ]
                         });
                         const { opts, errors } = await parse("--x", "1", "--y", "abcdef", "--z", "123 45");
-                        expect(errors).to.be.empty;
+                        expect(errors).to.be.empty();
                         expect(opts.get("x")).to.be.deep.equal("1".match(/^\d+$/));
                         expect(opts.get("y")).to.be.deep.equal("abcdef".match(/^[a-z]+$/));
                         expect(opts.get("z")).to.be.deep.equal("123 45".match(/^(\d+) (\d+)$/));
@@ -813,7 +813,7 @@ describe("application", () => {
                         const { errors } = await parse("--x", "hey");
                         expect(errors).to.have.lengthOf(1);
                         expect(errors[0].message).to.be.equal(`--x: Incorrect value, must match ${/^\d+$/}`);
-                        expect(errors[0].fatal).to.be.true;
+                        expect(errors[0].fatal).to.be.true();
                     });
                 });
             });
@@ -930,12 +930,12 @@ describe("application", () => {
                         {
                             const { args, opts } = await parse("--y", "1");
                             expect(args.get("x")).to.be.equal("1");
-                            expect(opts.get("y")).to.be.true;
+                            expect(opts.get("y")).to.be.true();
                         }
                         {
                             const { args, opts } = await parse("1", "--y");
                             expect(args.get("x")).to.be.equal("1");
-                            expect(opts.get("y")).to.be.true;
+                            expect(opts.get("y")).to.be.true();
                         }
                     });
 
@@ -1062,9 +1062,9 @@ describe("application", () => {
                         options: ["-a", "-b", "-c"]
                     });
                     const { opts } = await parse("-abc");
-                    expect(opts.get("a")).to.be.true;
-                    expect(opts.get("b")).to.be.true;
-                    expect(opts.get("c")).to.be.true;
+                    expect(opts.get("a")).to.be.true();
+                    expect(opts.get("b")).to.be.true();
+                    expect(opts.get("c")).to.be.true();
                 });
 
                 it("should not split if there is an exact match", async () => {
@@ -1072,10 +1072,10 @@ describe("application", () => {
                         options: ["-a", "-b", "-c", "-abc"]
                     });
                     const { opts } = await parse("-abc");
-                    expect(opts.get("a")).to.be.false;
-                    expect(opts.get("b")).to.be.false;
-                    expect(opts.get("c")).to.be.false;
-                    expect(opts.get("abc")).to.be.true;
+                    expect(opts.get("a")).to.be.false();
+                    expect(opts.get("b")).to.be.false();
+                    expect(opts.get("c")).to.be.false();
+                    expect(opts.get("abc")).to.be.true();
                 });
 
                 it("should throw on an attempt to group an opt with args", async () => {
@@ -1093,10 +1093,10 @@ describe("application", () => {
                         options: ["-a", "-b", "-c", "-d", { name: "-v", action: "count" }]
                     });
                     const { opts } = await parse("-a", "-cvv", "-vvvbvvv", "-v");
-                    expect(opts.get("a")).to.be.true;
-                    expect(opts.get("b")).to.be.true;
-                    expect(opts.get("c")).to.be.true;
-                    expect(opts.get("d")).to.be.false;
+                    expect(opts.get("a")).to.be.true();
+                    expect(opts.get("b")).to.be.true();
+                    expect(opts.get("c")).to.be.true();
+                    expect(opts.get("d")).to.be.false();
                     expect(opts.get("v")).to.be.equal(9);
                 });
             });
@@ -1117,8 +1117,8 @@ describe("application", () => {
                     });
 
                     const { opts, errors } = await parse("--hello", "-a", "--world", "2");
-                    expect(opts.get("hello")).to.be.true;
-                    expect(opts.get("a")).to.be.true;
+                    expect(opts.get("hello")).to.be.true();
+                    expect(opts.get("a")).to.be.true();
                     assert.throws(() => {
                         opts.get("world");
                     }, "No such argument: world");
@@ -1152,8 +1152,8 @@ describe("application", () => {
                     });
 
                     const { opts, errors } = await parse("--hello", "--world", "--d", "1", "--c", "2");
-                    expect(opts.get("hello")).to.be.true;
-                    expect(opts.get("world")).to.be.true;
+                    expect(opts.get("hello")).to.be.true();
+                    expect(opts.get("world")).to.be.true();
                     expect(opts.get("d")).to.be.equal("1");
                     assert.throws(() => {
                         opts.get("c");

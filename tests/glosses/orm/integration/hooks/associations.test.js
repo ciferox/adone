@@ -72,8 +72,8 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                         return self.Tasks.create({ title: "New Task" }).then((task) => {
                             return project.setTask(task).then(() => {
                                 return project.updateAttributes({ id: 2 }).then(() => {
-                                    expect(beforeHook).to.be.true;
-                                    expect(afterHook).to.be.true;
+                                    expect(beforeHook).to.be.true();
+                                    expect(afterHook).to.be.true();
                                 });
                             });
                         });
@@ -176,10 +176,10 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                             await project.destroy();
                         }, CustomErrorText);
 
-                        expect(beforeProject).to.be.true;
-                        expect(afterProject).to.be.true;
-                        expect(beforeTask).to.be.true;
-                        expect(afterTask).to.be.false;
+                        expect(beforeProject).to.be.true();
+                        expect(afterProject).to.be.true();
+                        expect(beforeTask).to.be.true();
+                        expect(afterTask).to.be.false();
                     });
                 });
             });
@@ -396,10 +396,10 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                                 return project.addTask(task).then(() => {
                                     return project.destroy().catch((err) => {
                                         expect(err).to.be.instanceOf(Error);
-                                        expect(beforeProject).to.be.true;
-                                        expect(afterProject).to.be.true;
-                                        expect(beforeTask).to.be.true;
-                                        expect(afterTask).to.be.false;
+                                        expect(beforeProject).to.be.true();
+                                        expect(afterProject).to.be.true();
+                                        expect(beforeTask).to.be.true();
+                                        expect(afterTask).to.be.false();
                                     });
                                 });
                             });
@@ -482,10 +482,10 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                             return self.Tasks.create({ title: "New Task" }).then((task) => {
                                 return project.addTask(task).catch((err) => {
                                     expect(err).to.be.instanceOf(Error);
-                                    expect(beforeProject).to.be.true;
-                                    expect(afterProject).to.be.true;
-                                    expect(beforeTask).to.be.true;
-                                    expect(afterTask).to.be.false;
+                                    expect(beforeProject).to.be.true();
+                                    expect(afterProject).to.be.true();
+                                    expect(beforeTask).to.be.true();
+                                    expect(afterTask).to.be.false();
                                 });
                             });
                         });
@@ -570,10 +570,10 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                             return self.Tasks.create({ title: "New Task" }).then((task) => {
                                 return project.addTask(task).then(() => {
                                     return project.destroy().then(() => {
-                                        expect(beforeProject).to.be.true;
-                                        expect(afterProject).to.be.true;
-                                        expect(beforeTask).to.be.false;
-                                        expect(afterTask).to.be.false;
+                                        expect(beforeProject).to.be.true();
+                                        expect(afterProject).to.be.true();
+                                        expect(beforeTask).to.be.false();
+                                        expect(afterTask).to.be.false();
                                     });
                                 });
                             });
@@ -655,10 +655,10 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                         return this.Projects.create({ title: "New Project" }).then((project) => {
                             return self.Tasks.create({ title: "New Task" }).then((task) => {
                                 return project.addTask(task).then(() => {
-                                    expect(beforeProject).to.be.true;
-                                    expect(afterProject).to.be.true;
-                                    expect(beforeTask).to.be.false;
-                                    expect(afterTask).to.be.false;
+                                    expect(beforeProject).to.be.true();
+                                    expect(afterProject).to.be.true();
+                                    expect(beforeTask).to.be.false();
+                                    expect(afterTask).to.be.false();
                                 });
                             });
                         });
@@ -742,12 +742,12 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                             ]);
                             await project.addMiniTask(minitask);
                             await project.destroy();
-                            expect(beforeProject).to.be.true;
-                            expect(afterProject).to.be.true;
-                            expect(beforeTask).to.be.false;
-                            expect(afterTask).to.be.false;
-                            expect(beforeMiniTask).to.be.true;
-                            expect(afterMiniTask).to.be.true;
+                            expect(beforeProject).to.be.true();
+                            expect(afterProject).to.be.true();
+                            expect(beforeTask).to.be.false();
+                            expect(afterTask).to.be.false();
+                            expect(beforeMiniTask).to.be.true();
+                            expect(afterMiniTask).to.be.true();
                         });
 
                         it("with errors", async function () {
@@ -796,12 +796,12 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                             await assert.throws(async () => {
                                 await project.destroy();
                             }, "Whoops!");
-                            expect(beforeProject).to.be.true;
-                            expect(afterProject).to.be.true;
-                            expect(beforeTask).to.be.false;
-                            expect(afterTask).to.be.false;
-                            expect(beforeMiniTask).to.be.true;
-                            expect(afterMiniTask).to.be.false;
+                            expect(beforeProject).to.be.true();
+                            expect(afterProject).to.be.true();
+                            expect(beforeTask).to.be.false();
+                            expect(afterTask).to.be.false();
+                            expect(beforeMiniTask).to.be.true();
+                            expect(afterMiniTask).to.be.false();
                         });
                     });
                 });
@@ -883,12 +883,12 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                                 project.addTask(task)
                             ]);
                             await project.destroy();
-                            expect(beforeProject).to.be.true;
-                            expect(afterProject).to.be.true;
-                            expect(beforeTask).to.be.true;
-                            expect(afterTask).to.be.true;
-                            expect(beforeMiniTask).to.be.true;
-                            expect(afterMiniTask).to.be.true;
+                            expect(beforeProject).to.be.true();
+                            expect(afterProject).to.be.true();
+                            expect(beforeTask).to.be.true();
+                            expect(afterTask).to.be.true();
+                            expect(beforeMiniTask).to.be.true();
+                            expect(afterMiniTask).to.be.true();
                         });
 
                         it("with errors", async function () {
@@ -940,12 +940,12 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                                 await project.destroy();
                             }, CustomErrorText);
 
-                            expect(beforeProject).to.be.true;
-                            expect(afterProject).to.be.true;
-                            expect(beforeTask).to.be.true;
-                            expect(afterTask).to.be.false;
-                            expect(beforeMiniTask).to.be.false;
-                            expect(afterMiniTask).to.be.false;
+                            expect(beforeProject).to.be.true();
+                            expect(afterProject).to.be.true();
+                            expect(beforeTask).to.be.true();
+                            expect(afterTask).to.be.false();
+                            expect(beforeMiniTask).to.be.false();
+                            expect(afterMiniTask).to.be.false();
                         });
                     });
                 });

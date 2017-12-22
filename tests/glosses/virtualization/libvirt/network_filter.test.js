@@ -14,14 +14,14 @@ describe("Network Filter", () => {
     beforeEach((done) => {
         test.hypervisor = new Hypervisor("test:///default");
         test.hypervisor.connect((err) => {
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             done();
         });
     });
 
     afterEach((done) => {
         test.hypervisor.disconnect((err) => {
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             done();
         });
     });
@@ -31,8 +31,8 @@ describe("Network Filter", () => {
         const xml = fixture("network_filter.xml");
         test.hypervisor.defineNetworkFilter(xml, (err, filter) => {
             expect(err.code).to.equal(libvirt.VIR_ERR_NO_SUPPORT);
-            // expect(err).to.not.exist;
-            // expect(filter).to.exist;
+            // expect(err).to.not.exist();
+            // expect(filter).to.exist();
             done();
         });
     });
@@ -58,10 +58,10 @@ describe("Network Filter", () => {
             expect(err.code).to.equal(libvirt.VIR_ERR_NO_SUPPORT);
             done();
 
-            // expect(err).to.not.exist;
+            // expect(err).to.not.exist();
 
             // filter.getName(function(err, name) {
-            //   expect(err).to.not.exist;
+            //   expect(err).to.not.exist();
             //   expect(name).to.equal('default');
             //   done();
             // });
@@ -74,13 +74,13 @@ describe("Network Filter", () => {
             expect(err.code).to.equal(libvirt.VIR_ERR_NO_SUPPORT);
             done();
 
-            // expect(err).to.not.exist;
+            // expect(err).to.not.exist();
 
             // filter.getUUID(function(err, uuid) {
-            //   expect(err).to.not.exist;
+            //   expect(err).to.not.exist();
 
             //   test.hypervisor.lookupNetworkFilterByUUID(function(err, filter2) {
-            //     expect(err).to.not.exist;
+            //     expect(err).to.not.exist();
 
             //     filter2.getName(function(err, name) {
             //       expect(err).to.not.exist();

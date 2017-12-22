@@ -498,8 +498,8 @@ describe("math", "matrix", "quat", () => {
                 quatB = quat.setAxisAngle(quatB, vec, deg90);
             });
             it("should return an angle between 0 and 2*PI", () => {
-                assert.isAbove(deg90, 0.0);
-                assert.isBelow(deg90, Math.PI * 2.0);
+                assert.above(deg90, 0.0);
+                assert.below(deg90, Math.PI * 2.0);
             });
             it("should create the same quaternion from axis and angle extracted", () => {
                 assertEquality(quatA, quatB);
@@ -876,10 +876,10 @@ describe("math", "matrix", "quat", () => {
         });
 
         it("should return true for identical quaternions", () => {
-            assert.isTrue(r0);
+            assert.true(r0);
         });
         it("should return false for different quaternions", () => {
-            assert.isFalse(r1);
+            assert.false(r1);
         });
         it("should not modify quatA", () => {
             assertEquality(quatA, [0, 1, 2, 3]);
@@ -901,13 +901,13 @@ describe("math", "matrix", "quat", () => {
             r2 = quat.equals(quatA, quatD);
         });
         it("should return true for identical quaternions", () => {
-            assert.isTrue(r0);
+            assert.true(r0);
         });
         it("should return false for different quaternions", () => {
-            assert.isFalse(r1);
+            assert.false(r1);
         });
         it("should return true for close but not identical quaternions", () => {
-            assert.isTrue(r2);
+            assert.true(r2);
         });
         it("should not modify quatA", () => {
             assertEquality(quatA, [0, 1, 2, 3]);

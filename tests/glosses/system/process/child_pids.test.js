@@ -20,7 +20,7 @@ describe("system", "process", () => {
 
         let children = await getChildPids(parent.pid);
 
-        assert.isTrue(children.length > 0);
+        assert.true(children.length > 0);
         kill(parent.pid, {
             force: is.windows
         });

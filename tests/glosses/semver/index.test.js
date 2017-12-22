@@ -55,17 +55,17 @@ describe("semver", () => {
             const v0 = v[0];
             const v1 = v[1];
             const loose = v[2];
-            assert.isOk(gt(v0, v1, loose), `gt('${v0}', '${v1}')`);
-            assert.isOk(lt(v1, v0, loose), `lt('${v1}', '${v0}')`);
-            assert.isOk(!gt(v1, v0, loose), `!gt('${v1}', '${v0}')`);
-            assert.isOk(!lt(v0, v1, loose), `!lt('${v0}', '${v1}')`);
-            assert.isOk(eq(v0, v0, loose), `eq('${v0}', '${v0}')`);
-            assert.isOk(eq(v1, v1, loose), `eq('${v1}', '${v1}')`);
-            assert.isOk(neq(v0, v1, loose), `neq('${v0}', '${v1}')`);
-            assert.isOk(cmp(v1, "==", v1, loose), `cmp('${v1}' == '${v1}')`);
-            assert.isOk(cmp(v0, ">=", v1, loose), `cmp('${v0}' >= '${v1}')`);
-            assert.isOk(cmp(v1, "<=", v0, loose), `cmp('${v1}' <= '${v0}')`);
-            assert.isOk(cmp(v0, "!=", v1, loose), `cmp('${v0}' != '${v1}')`);
+            assert.ok(gt(v0, v1, loose), `gt('${v0}', '${v1}')`);
+            assert.ok(lt(v1, v0, loose), `lt('${v1}', '${v0}')`);
+            assert.ok(!gt(v1, v0, loose), `!gt('${v1}', '${v0}')`);
+            assert.ok(!lt(v0, v1, loose), `!lt('${v0}', '${v1}')`);
+            assert.ok(eq(v0, v0, loose), `eq('${v0}', '${v0}')`);
+            assert.ok(eq(v1, v1, loose), `eq('${v1}', '${v1}')`);
+            assert.ok(neq(v0, v1, loose), `neq('${v0}', '${v1}')`);
+            assert.ok(cmp(v1, "==", v1, loose), `cmp('${v1}' == '${v1}')`);
+            assert.ok(cmp(v0, ">=", v1, loose), `cmp('${v0}' >= '${v1}')`);
+            assert.ok(cmp(v1, "<=", v0, loose), `cmp('${v1}' <= '${v0}')`);
+            assert.ok(cmp(v0, "!=", v1, loose), `cmp('${v0}' != '${v1}')`);
         });
     });
 
@@ -114,16 +114,16 @@ describe("semver", () => {
             const v0 = v[0];
             const v1 = v[1];
             const loose = v[2];
-            assert.isOk(eq(v0, v1, loose), `eq('${v0}', '${v1}')`);
-            assert.isOk(!neq(v0, v1, loose), `!neq('${v0}', '${v1}')`);
-            assert.isOk(cmp(v0, "==", v1, loose), `cmp(${v0}==${v1})`);
-            assert.isOk(!cmp(v0, "!=", v1, loose), `!cmp(${v0}!=${v1})`);
-            assert.isOk(!cmp(v0, "===", v1, loose), `!cmp(${v0}===${v1})`);
-            assert.isOk(cmp(v0, "!==", v1, loose), `cmp(${v0}!==${v1})`);
-            assert.isOk(!gt(v0, v1, loose), `!gt('${v0}', '${v1}')`);
-            assert.isOk(gte(v0, v1, loose), `gte('${v0}', '${v1}')`);
-            assert.isOk(!lt(v0, v1, loose), `!lt('${v0}', '${v1}')`);
-            assert.isOk(lte(v0, v1, loose), `lte('${v0}', '${v1}')`);
+            assert.ok(eq(v0, v1, loose), `eq('${v0}', '${v1}')`);
+            assert.ok(!neq(v0, v1, loose), `!neq('${v0}', '${v1}')`);
+            assert.ok(cmp(v0, "==", v1, loose), `cmp(${v0}==${v1})`);
+            assert.ok(!cmp(v0, "!=", v1, loose), `!cmp(${v0}!=${v1})`);
+            assert.ok(!cmp(v0, "===", v1, loose), `!cmp(${v0}===${v1})`);
+            assert.ok(cmp(v0, "!==", v1, loose), `cmp(${v0}!==${v1})`);
+            assert.ok(!gt(v0, v1, loose), `!gt('${v0}', '${v1}')`);
+            assert.ok(gte(v0, v1, loose), `gte('${v0}', '${v1}')`);
+            assert.ok(!lt(v0, v1, loose), `!lt('${v0}', '${v1}')`);
+            assert.ok(lte(v0, v1, loose), `lte('${v0}', '${v1}')`);
         });
     });
 
@@ -237,7 +237,7 @@ describe("semver", () => {
             const range = v[0];
             const ver = v[1];
             const loose = v[2];
-            assert.isOk(satisfies(ver, range, loose), `${range} satisfied by ${ver}`);
+            assert.ok(satisfies(ver, range, loose), `${range} satisfied by ${ver}`);
         });
     });
 
@@ -320,7 +320,7 @@ describe("semver", () => {
             const ver = v[1];
             const loose = v[2];
             const found = satisfies(ver, range, loose);
-            assert.isOk(!found, `${ver} not satisfied by ${range}`);
+            assert.ok(!found, `${ver} not satisfied by ${range}`);
         });
     });
 
@@ -655,7 +655,7 @@ describe("semver", () => {
             assert.throws(() => new SemVer(loose));
             const lv = new SemVer(loose, true);
             assert.equal(lv.version, strict);
-            assert.isOk(eq(loose, strict, true));
+            assert.ok(eq(loose, strict, true));
             assert.throws(() => eq(loose, strict));
             assert.throws(() => new SemVer(strict).compare(loose));
             assert.equal(semver.compareLoose(v[0], v[1]), 0);
@@ -821,11 +821,11 @@ describe("semver", () => {
 
     it("comparator testing", () => {
         const c = new Comparator(">=1.2.3");
-        assert.isOk(c.test("1.2.4"));
+        assert.ok(c.test("1.2.4"));
         const c2 = new Comparator(c);
-        assert.isOk(c2.test("1.2.4"));
+        assert.ok(c2.test("1.2.4"));
         const c3 = new Comparator(c, true);
-        assert.isOk(c3.test("1.2.4"));
+        assert.ok(c3.test("1.2.4"));
     });
 
     it("tostrings", () => {

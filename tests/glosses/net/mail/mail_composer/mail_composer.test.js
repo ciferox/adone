@@ -2,7 +2,7 @@ describe("net", "mail", "MailComposer unit tests", () => {
     const { net: { mail: { __: { MailComposer } } }, std: { path } } = adone;
 
     it("should create new MailComposer", () => {
-        expect(new MailComposer({})).to.exist;
+        expect(new MailComposer({})).to.exist();
     });
 
     describe("#compile", () => {
@@ -105,7 +105,7 @@ describe("net", "mail", "MailComposer unit tests", () => {
             const compiler = new MailComposer(data);
             spy(compiler, "_createAlternative");
             compiler.compile().build((err, message) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 const msg = message.toString();
                 expect(msg.indexOf("\r\ntere tere tere tere tere tere tere tere tere tere tere tere tere tere tere =\r\ntere tere tere tere tere tere tere\r\n")).to.be.gte(0);
                 expect(msg.indexOf("\r\ndGVyZSB0ZXJlIHRlcmUgdGVyZSB0ZXJlIHRlcmUgdGVyZSB0ZXJlIHRlcmUgdGVyZSB0ZXJlIHRl\r\ncmUgdGVyZSB0ZXJlIHRlcmUgdGVyZSB0ZXJlIHRlcmUgdGVyZSB0ZXJlIHRlcmUgdGVyZQ==\r\n")).to.be.gte(0);
@@ -203,7 +203,7 @@ describe("net", "mail", "MailComposer unit tests", () => {
 
             const compiler = new MailComposer(data);
             const mail = compiler.compile();
-            expect(mail.messageId()).to.exist;
+            expect(mail.messageId()).to.exist();
             expect(compiler.mail.attachments[0].content).to.deep.equal(Buffer.from(str));
             expect(compiler.mail.attachments[0].contentType).to.equal("image/png");
         });
@@ -248,7 +248,7 @@ describe("net", "mail", "MailComposer unit tests", () => {
             const mail = new MailComposer(data).compile();
             expect(mail.messageId()).to.equal("<zzzzzz>");
             mail.build((err, message) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(message.toString()).to.equal(expected);
                 done();
             });
@@ -267,7 +267,7 @@ describe("net", "mail", "MailComposer unit tests", () => {
 
             const mail = new MailComposer(data).compile();
             mail.build((err, message) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(mail.getEnvelope()).to.deep.equal({
                     from: "deamon@kreata.ee",
                     to: ["mailer@kreata.ee", "mailer2@kreata.ee"]
@@ -333,7 +333,7 @@ describe("net", "mail", "MailComposer unit tests", () => {
 
             const mail = new MailComposer(data).compile();
             mail.build((err, message) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(message.toString()).to.equal(expected);
                 done();
             });
@@ -362,7 +362,7 @@ describe("net", "mail", "MailComposer unit tests", () => {
 
             const mail = new MailComposer(data).compile();
             mail.build((err, message) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(message.toString()).to.equal(expected);
                 done();
             });
@@ -392,7 +392,7 @@ describe("net", "mail", "MailComposer unit tests", () => {
 
             const mail = new MailComposer(data).compile();
             mail.build((err, message) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(message.toString()).to.equal(expected);
                 done();
             });
@@ -423,7 +423,7 @@ describe("net", "mail", "MailComposer unit tests", () => {
 
             const mail = new MailComposer(data).compile();
             mail.build((err, message) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(message.toString()).to.equal(expected);
                 done();
             });
@@ -454,7 +454,7 @@ describe("net", "mail", "MailComposer unit tests", () => {
 
             const mail = new MailComposer(data).compile();
             mail.build((err, message) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(message.toString()).to.equal(expected);
                 done();
             });
@@ -485,7 +485,7 @@ describe("net", "mail", "MailComposer unit tests", () => {
             const mail = new MailComposer(data).compile();
             mail.keepBcc = true;
             mail.build((err, message) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(message.toString()).to.equal(expected);
                 done();
             });
@@ -534,7 +534,7 @@ describe("net", "mail", "MailComposer unit tests", () => {
 
             const mail = new MailComposer(data).compile();
             mail.build((err, message) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(message.toString()).to.equal(expected);
                 done();
             });
@@ -586,7 +586,7 @@ describe("net", "mail", "MailComposer unit tests", () => {
 
             const mail = new MailComposer(data).compile();
             mail.build((err, message) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(message.toString()).to.equal(expected);
                 done();
             });
@@ -635,7 +635,7 @@ describe("net", "mail", "MailComposer unit tests", () => {
 
             const mail = new MailComposer(data).compile();
             mail.build((err, message) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(message.toString()).to.equal(expected);
                 done();
             });
@@ -690,7 +690,7 @@ describe("net", "mail", "MailComposer unit tests", () => {
 
             const mail = new MailComposer(data).compile();
             mail.build((err, message) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(message.toString()).to.equal(expected);
                 done();
             });
@@ -706,7 +706,7 @@ describe("net", "mail", "MailComposer unit tests", () => {
 
             const mail = new MailComposer(data).compile();
             mail.build((err, message) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(message.toString()).to.include("w7VrdmE");
                 done();
             });
@@ -723,8 +723,8 @@ describe("net", "mail", "MailComposer unit tests", () => {
 
             const mail = new MailComposer(data).compile();
             mail.build((err, message) => {
-                expect(err).to.exist;
-                expect(message).to.not.exist;
+                expect(err).to.exist();
+                expect(message).to.not.exist();
                 done();
             });
         });

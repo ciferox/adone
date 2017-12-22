@@ -104,8 +104,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
                         return Post.find({ attributes: ["id", "text", orm.util.literal(boolQuery)] });
                     }).then((post) => {
-                        expect(post.get("someBoolean")).to.be.ok;
-                        expect(post.get().someBoolean).to.be.ok;
+                        expect(post.get("someBoolean")).to.be.ok();
+                        expect(post.get().someBoolean).to.be.ok();
                     });
                 });
 

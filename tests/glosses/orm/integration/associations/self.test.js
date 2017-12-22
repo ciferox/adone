@@ -29,7 +29,7 @@ describe(Support.getTestDialectTeaser("Self"), () => {
 
         Person.hasMany(Person, { as: "Children", foreignKey: "parent_id" });
 
-        expect(Person.rawAttributes.parent_id).to.be.ok;
+        expect(Person.rawAttributes.parent_id).to.be.ok();
 
         await this.sequelize.sync({ force: true });
         const [mary, john, chris] = await Promise.all([

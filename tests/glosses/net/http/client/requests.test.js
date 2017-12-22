@@ -70,7 +70,7 @@ describe("net", "http", "client", "requests", () => {
         expect(resolveSpy).not.to.have.been.called;
         expect(rejectSpy).to.have.been.calledOnce;
         const reason = rejectSpy.getCall(0).args[0];
-        expect(reason instanceof Error).to.be.true;
+        expect(reason instanceof Error).to.be.true();
         expect(reason.message).to.be.equal("Request failed with status code 500");
         expect(reason.config.method).to.be.equal("get");
         expect(reason.config.url).to.be.equal("http://example.org/foo");

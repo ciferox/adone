@@ -62,7 +62,7 @@ export class SourceMapConsumer {
                 generatedColumn: mapping.generatedColumn,
                 originalLine: mapping.originalLine,
                 originalColumn: mapping.originalColumn,
-                name: mapping.name === null ? null : this._names.at(mapping.name)
+                name: is.null(mapping.name) ? null : this._names.at(mapping.name)
             };
             callback.call(context, t);
         }

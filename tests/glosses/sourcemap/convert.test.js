@@ -24,16 +24,16 @@ describe("sourcemap", "convert", () => {
                 "\t/*@ ", // multi line style with leading tab
                 "/*@ " // multi line style with leading text
             ].forEach((x) => {
-                expect(comment(x, "")).to.be.ok;
-                expect(commentWithCharSet(x, "")).to.be.ok;
-                expect(commentWithCharSet(x, "", "=")).to.be.ok;
+                expect(comment(x, "")).to.be.ok();
+                expect(commentWithCharSet(x, "")).to.be.ok();
+                expect(commentWithCharSet(x, "", "=")).to.be.ok();
             });
 
             [
                 " @// @",
                 " @/* @"
             ].forEach((x) => {
-                expect(comment(x, "")).not.to.be.ok;
+                expect(comment(x, "")).not.to.be.ok();
             });
         });
 
@@ -47,16 +47,16 @@ describe("sourcemap", "convert", () => {
                 "\t/*# ", // multi line style with leading tab
                 "/*# " // multi line style with leading text
             ].forEach((x) => {
-                expect(comment(x, "")).to.be.ok;
-                expect(commentWithCharSet(x, "")).to.be.ok;
-                expect(commentWithCharSet(x, "", "=")).to.be.ok;
+                expect(comment(x, "")).to.be.ok();
+                expect(commentWithCharSet(x, "")).to.be.ok();
+                expect(commentWithCharSet(x, "", "=")).to.be.ok();
             });
 
             [
                 " #// #",
                 " #/* #"
             ].forEach((x) => {
-                expect(comment(x, "")).not.to.be.ok;
+                expect(comment(x, "")).not.to.be.ok();
             });
         });
 
@@ -211,7 +211,7 @@ describe("sourcemap", "convert", () => {
                 return map ? map.toComment() : null;
             };
 
-            expect(getComment(foo)).to.be.null;
+            expect(getComment(foo)).to.be.null();
             expect(getComment(foo + map)).to.be.equal(map);
             expect(getComment(`${foo}    ${map}`)).to.be.equal(map);
             expect(getComment(`${foo}   ${map}\n\n`)).to.be.equal(map);
@@ -236,7 +236,7 @@ describe("sourcemap", "convert", () => {
                 return map ? map.toComment() : null;
             };
 
-            expect(getComment(foo)).to.be.null;
+            expect(getComment(foo)).to.be.null();
             expect(getComment(foo + map)).to.be.equal(map);
             expect(getComment(`${foo}    ${map}`)).to.be.equal(map);
             expect(getComment(`${foo}   ${map}\n\n`)).to.be.equal(map);
@@ -321,7 +321,7 @@ describe("sourcemap", "convert", () => {
 
         specify("return null fromSource when largeSource is true", () => {
             const mod = convert.fromSource("", true);
-            expect(mod).to.be.null;
+            expect(mod).to.be.null();
         });
     });
 });

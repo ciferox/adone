@@ -261,11 +261,11 @@ describe("js", "compiler", "types", "converters", () => {
         it("bails on let and const declarations", () => {
             let node = parseCode("let a, b = 1;");
             let sequence = t.toSequenceExpression([undefinedNode, node], scope);
-            assert.isUndefined(sequence);
+            assert.undefined(sequence);
 
             node = parseCode("const b = 1;");
             sequence = t.toSequenceExpression([undefinedNode, node], scope);
-            assert.isUndefined(sequence);
+            assert.undefined(sequence);
         });
         it("gathers if statements", () => {
             let node = parseCode("if (true) { true }");
@@ -282,11 +282,11 @@ describe("js", "compiler", "types", "converters", () => {
         it("bails in if statements if recurse bails", () => {
             let node = parseCode("if (true) { return }");
             let sequence = t.toSequenceExpression([undefinedNode, node], scope);
-            assert.isUndefined(sequence);
+            assert.undefined(sequence);
 
             node = parseCode("if (true) { true } else { return }");
             sequence = t.toSequenceExpression([undefinedNode, node], scope);
-            assert.isUndefined(sequence);
+            assert.undefined(sequence);
         });
         it("gathers block statements", () => {
             let node = parseCode("{ a }");
@@ -300,7 +300,7 @@ describe("js", "compiler", "types", "converters", () => {
         it("bails in block statements if recurse bails", () => {
             const node = parseCode("{ return }");
             const sequence = t.toSequenceExpression([undefinedNode, node], scope);
-            assert.isUndefined(sequence);
+            assert.undefined(sequence);
         });
         it("gathers empty statements", () => {
             const node = parseCode(";");

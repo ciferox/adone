@@ -19,7 +19,7 @@ describe("net", "http", "server", "request", "accepts", () => {
                 it("should return false", () => {
                     const ctx = context();
                     ctx.req.headers.accept = "application/*;q=0.2, image/jpeg;q=0.8, text/html, text/plain";
-                    expect(ctx.accepts("image/png", "image/tiff")).to.be.false;
+                    expect(ctx.accepts("image/png", "image/tiff")).to.be.false();
                 });
             });
 
@@ -39,7 +39,7 @@ describe("net", "http", "server", "request", "accepts", () => {
                 expect(ctx.accepts(".html")).to.be.equal(".html");
                 expect(ctx.accepts("txt")).to.be.equal("txt");
                 expect(ctx.accepts(".txt")).to.be.equal(".txt");
-                expect(ctx.accepts("png")).to.be.false;
+                expect(ctx.accepts("png")).to.be.false();
             });
         });
 
@@ -86,8 +86,8 @@ describe("net", "http", "server", "request", "accepts", () => {
                 ctx.req.headers.accept = "application/json, text/*";
                 expect(ctx.accepts("text/html")).to.be.equal("text/html");
                 expect(ctx.accepts("text/plain")).to.be.equal("text/plain");
-                expect(ctx.accepts("image/png")).to.be.false;
-                expect(ctx.accepts("png")).to.be.false;
+                expect(ctx.accepts("image/png")).to.be.false();
+                expect(ctx.accepts("png")).to.be.false();
             });
         });
     });

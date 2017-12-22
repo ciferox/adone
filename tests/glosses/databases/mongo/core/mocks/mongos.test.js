@@ -528,9 +528,9 @@ describe("database", "mongo", "core", function () {
                         });
 
                         const d = await promisify(cursor.next).call(cursor);
-                        expect(d).to.be.null;
-                        expect(command.$query).to.be.ok;
-                        expect(command.$readPreference).to.be.ok;
+                        expect(d).to.be.null();
+                        expect(command.$query).to.be.ok();
+                        expect(command.$readPreference).to.be.ok();
                         expect(command.$readPreference.mode).to.be.equal("secondary");
                     } finally {
                         await server.destroy();
@@ -606,9 +606,9 @@ describe("database", "mongo", "core", function () {
                         });
 
                         const d = await promisify(cursor.next).call(cursor);
-                        expect(d).to.be.null;
-                        expect(command.$query).to.be.ok;
-                        expect(command.$readPreference).to.be.ok;
+                        expect(d).to.be.null();
+                        expect(command.$query).to.be.ok();
+                        expect(command.$readPreference).to.be.ok();
                         expect(command.$readPreference.mode).to.be.equal("nearest");
                         expect(command.$readPreference.tags).to.be.deep.equal([{
                             db: "sf"
@@ -680,9 +680,9 @@ describe("database", "mongo", "core", function () {
                     try {
                         // Execute next
                         const d = await promisify(cursor.next).call(cursor);
-                        expect(d).to.be.null;
-                        expect(command.$query).to.be.ok;
-                        expect(command.$readPreference).to.be.ok;
+                        expect(d).to.be.null();
+                        expect(command.$query).to.be.ok();
+                        expect(command.$readPreference).to.be.ok();
                         expect(command.$readPreference.mode).to.be.equal("secondary");
                     } finally {
                         await server.destroy();
@@ -747,9 +747,9 @@ describe("database", "mongo", "core", function () {
 
                         // Execute next
                         const d = await promisify(cursor.next).call(cursor);
-                        expect(d).to.be.null;
-                        expect(command.$query).to.be.ok;
-                        expect(command.$readPreference).to.be.ok;
+                        expect(d).to.be.null();
+                        expect(command.$query).to.be.ok();
+                        expect(command.$readPreference).to.be.ok();
                         expect(command.$readPreference.mode).to.be.equal("secondary");
 
                     } finally {

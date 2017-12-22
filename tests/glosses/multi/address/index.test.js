@@ -9,26 +9,26 @@ describe("multi", "address", () => {
 
         it("create multiaddr", () => {
             udpAddr = address.create("/ip4/127.0.0.1/udp/1234");
-            assert.isTrue(udpAddr instanceof address.Multiaddr);
+            assert.true(udpAddr instanceof address.Multiaddr);
         });
 
         it("clone multiaddr", () => {
             const udpAddrClone = address.create(udpAddr);
-            assert.isTrue(udpAddrClone !== udpAddr);
+            assert.true(udpAddrClone !== udpAddr);
         });
 
         it("reconstruct with buffer", () => {
-            assert.isFalse(address.create(udpAddr.buffer).buffer === udpAddr.buffer);
+            assert.false(address.create(udpAddr.buffer).buffer === udpAddr.buffer);
             assert.deepEqual(address.create(udpAddr.buffer).buffer, udpAddr.buffer);
         });
 
         it("reconstruct with string", () => {
-            assert.isFalse(address.create(udpAddr.toString()).buffer === udpAddr.buffer);
+            assert.false(address.create(udpAddr.toString()).buffer === udpAddr.buffer);
             assert.deepEqual(address.create(udpAddr.toString()).buffer, udpAddr.buffer);
         });
 
         it("reconstruct with object", () => {
-            assert.isFalse(address.create(udpAddr).buffer === udpAddr.buffer);
+            assert.false(address.create(udpAddr).buffer === udpAddr.buffer);
             assert.deepEqual(address.create(udpAddr).buffer, udpAddr.buffer);
         });
 
@@ -46,26 +46,26 @@ describe("multi", "address", () => {
 
         it("create multiaddr", () => {
             uTPAddr = address.create("/ip4/127.0.0.1/udp/1234/utp");
-            assert.isTrue(uTPAddr instanceof address.Multiaddr);
+            assert.true(uTPAddr instanceof address.Multiaddr);
         });
 
         it("clone multiaddr", () => {
             const uTPAddrClone = address.create(uTPAddr);
-            assert.isTrue(uTPAddrClone !== uTPAddr);
+            assert.true(uTPAddrClone !== uTPAddr);
         });
 
         it("reconstruct with buffer", () => {
-            assert.isFalse(address.create(uTPAddr.buffer).buffer === uTPAddr.buffer);
+            assert.false(address.create(uTPAddr.buffer).buffer === uTPAddr.buffer);
             assert.deepEqual(address.create(uTPAddr.buffer).buffer, uTPAddr.buffer);
         });
 
         it("reconstruct with string", () => {
-            assert.isFalse(address.create(uTPAddr.toString()).buffer === uTPAddr.buffer);
+            assert.false(address.create(uTPAddr.toString()).buffer === uTPAddr.buffer);
             assert.deepEqual(address.create(uTPAddr.toString()).buffer, uTPAddr.buffer);
         });
 
         it("reconstruct with object", () => {
-            assert.isFalse(address.create(uTPAddr).buffer === uTPAddr.buffer);
+            assert.false(address.create(uTPAddr).buffer === uTPAddr.buffer);
             assert.deepEqual(address.create(uTPAddr).buffer, uTPAddr.buffer);
         });
 
@@ -86,7 +86,7 @@ describe("multi", "address", () => {
             assert.deepEqual(udpAddr.protoCodes(), [4, 17]);
             assert.deepEqual(udpAddr.protoNames(), ["ip4", "udp"]);
             assert.deepEqual(udpAddr.protos(), [address.protocols.codes[4], address.protocols.codes[17]]);
-            assert.isFalse(udpAddr.protos()[0] === address.protocols.codes[4]);
+            assert.false(udpAddr.protos()[0] === address.protocols.codes[4]);
 
             const udpAddrBuf2 = udpAddr.encapsulate("/udp/5678");
             assert.equal(udpAddrBuf2.toString(), "/ip4/127.0.0.1/udp/1234/udp/5678");
@@ -502,7 +502,7 @@ describe("multi", "address", () => {
 
         describe(".getPeerId should return null on missing peer id in multiaddr", () => {
             it("parses extracts the peer Id from a multiaddr", () => {
-                assert.isNull(address.create("/ip4/0.0.0.0/tcp/1234/utp").getPeerId());
+                assert.null(address.create("/ip4/0.0.0.0/tcp/1234/utp").getPeerId());
             });
         });
 

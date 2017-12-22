@@ -38,11 +38,11 @@ describe("net", "http", "server", "response", "is", () => {
             expect(res.is("image/png")).to.be.equal("image/png");
             expect(res.is("image/*")).to.be.equal("image/png");
             expect(res.is("*/png")).to.be.equal("image/png");
-            expect(res.is("jpeg")).to.be.false;
-            expect(res.is(".jpeg")).to.be.false;
-            expect(res.is("image/jpeg")).to.be.false;
-            expect(res.is("text/*")).to.be.false;
-            expect(res.is("*/jpeg")).to.be.false;
+            expect(res.is("jpeg")).to.be.false();
+            expect(res.is(".jpeg")).to.be.false();
+            expect(res.is("image/jpeg")).to.be.false();
+            expect(res.is("text/*")).to.be.false();
+            expect(res.is("*/jpeg")).to.be.false();
         });
     });
 
@@ -61,10 +61,10 @@ describe("net", "http", "server", "response", "is", () => {
             expect(res.is(["image/*", "text/*"])).to.be.equal("image/png");
             expect(res.is(["image/*", "image/png"])).to.be.equal("image/png");
             expect(res.is(["image/png", "image/*"])).to.be.equal("image/png");
-            expect(res.is("jpeg")).to.be.false;
-            expect(res.is(".jpeg")).to.be.false;
-            expect(res.is("text/*", "application/*")).to.be.false;
-            expect(res.is("text/html", "text/plain", "application/json; charset=utf-8")).to.be.false;
+            expect(res.is("jpeg")).to.be.false();
+            expect(res.is(".jpeg")).to.be.false();
+            expect(res.is("text/*", "application/*")).to.be.false();
+            expect(res.is("text/html", "text/plain", "application/json; charset=utf-8")).to.be.false();
         });
     });
 

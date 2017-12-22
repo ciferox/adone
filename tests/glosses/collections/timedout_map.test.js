@@ -14,7 +14,7 @@ describe("collection", "TimedoutMap", () => {
 
     it("get nonexistent item", async () => {
         const m = new TimedoutMap(1000);
-        expect(m.get("a")).to.be.undefined;
+        expect(m.get("a")).to.be.undefined();
     });
 
     it("get nonexpired item", async () => {
@@ -28,7 +28,7 @@ describe("collection", "TimedoutMap", () => {
         const m = new TimedoutMap(10);
         m.set("a", 1);
         await adone.promise.delay(200);
-        expect(m.get("a")).to.be.undefined;
+        expect(m.get("a")).to.be.undefined();
     });
 
     it("set nonexpired item", async () => {
@@ -53,7 +53,7 @@ describe("collection", "TimedoutMap", () => {
         m.set("a", 1);
         await adone.promise.delay(200);
         const ret = m.delete("a");
-        expect(ret).to.be.false;
+        expect(ret).to.be.false();
     });
 
     it("delete nonexpired item", async () => {
@@ -61,7 +61,7 @@ describe("collection", "TimedoutMap", () => {
         m.set("a", 1);
         const ret = m.delete("a");
         await adone.promise.delay(200);
-        expect(ret).to.be.true;
+        expect(ret).to.be.true();
     });
 
     it("clear", async () => {
@@ -73,7 +73,7 @@ describe("collection", "TimedoutMap", () => {
         m.set("b", 2);
         m.clear();
         await adone.promise.delay(200);
-        expect(isOK).to.be.true;
+        expect(isOK).to.be.true();
     });
 
     it("forEach() before expire", async () => {
@@ -214,6 +214,6 @@ describe("collection", "TimedoutMap", () => {
         });
         m.set("a", 1);
         await adone.promise.delay(200);
-        expect(isOK).to.be.true;
+        expect(isOK).to.be.true();
     });
 });

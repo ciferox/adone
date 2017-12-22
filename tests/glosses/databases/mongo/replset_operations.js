@@ -22,9 +22,9 @@ describe("replset operations", function () {
         });
         expect(result.nModified).to.be.oneOf([0, null, undefined]);
         const writeConcernError = result.getWriteConcernError();
-        expect(writeConcernError).to.be.ok;
-        expect(writeConcernError.code).to.be.ok;
-        expect(writeConcernError.errmsg).to.be.ok;
+        expect(writeConcernError).to.be.ok();
+        expect(writeConcernError.code).to.be.ok();
+        expect(writeConcernError.errmsg).to.be.ok();
         expect(result.getWriteErrorCount()).to.be.equal(0);
         await db.close();
     });
@@ -53,14 +53,14 @@ describe("replset operations", function () {
         });
         expect(result.nModified).to.be.oneOf([0, null, undefined]);
         const writeConcernError = result.getWriteConcernError();
-        expect(writeConcernError).to.be.ok;
-        expect(writeConcernError.code).to.be.ok;
-        expect(writeConcernError.errmsg).to.be.ok;
+        expect(writeConcernError).to.be.ok();
+        expect(writeConcernError.code).to.be.ok();
+        expect(writeConcernError.errmsg).to.be.ok();
         expect(result.getWriteErrorCount()).to.be.equal(1);
         const error = result.getWriteErrorAt(0);
         expect(error.index).to.be.equal(2);
         expect(error.code).to.be.equal(11000);
-        expect(error.errmsg).to.be.ok;
+        expect(error.errmsg).to.be.ok();
         expect(error.getOperation().a).to.be.equal(1);
         await db.close();
     });
@@ -83,9 +83,9 @@ describe("replset operations", function () {
         });
         expect(result.nModified).to.be.oneOf([0, null, undefined]);
         const writeConcernError = result.getWriteConcernError();
-        expect(writeConcernError).to.be.ok;
-        expect(writeConcernError.code).to.be.ok;
-        expect(writeConcernError.errmsg).to.be.ok;
+        expect(writeConcernError).to.be.ok();
+        expect(writeConcernError.code).to.be.ok();
+        expect(writeConcernError.errmsg).to.be.ok();
         expect(result.getWriteErrorCount()).to.be.equal(0);
         await db.close();
     });
@@ -114,9 +114,9 @@ describe("replset operations", function () {
         });
         expect(result.nModified).to.be.oneOf([0, null, undefined]);
         const writeConcernError = result.getWriteConcernError();
-        expect(writeConcernError).to.be.ok;
-        expect(writeConcernError.code).to.be.ok;
-        expect(writeConcernError.errmsg).to.be.ok;
+        expect(writeConcernError).to.be.ok();
+        expect(writeConcernError.code).to.be.ok();
+        expect(writeConcernError.errmsg).to.be.ok();
         // Might or might not have a write error depending on
         // Unordered execution order
         expect(result.getWriteErrorCount()).to.be.oneOf([0, 1]);
@@ -124,7 +124,7 @@ describe("replset operations", function () {
             const error = result.getWriteErrorAt(0);
             expect(error.index).to.be.equal(1);
             expect(error.code).to.be.equal(11000);
-            expect(error.errmsg).to.be.ok;
+            expect(error.errmsg).to.be.ok();
             expect(error.getOperation().a).to.be.equal(1);
         }
         await db.close();

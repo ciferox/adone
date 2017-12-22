@@ -64,18 +64,18 @@ describe(Support.getTestDialectTeaser("Model"), () => {
         it("should be able to combine scope and findAll where clauses", function () {
             return this.ScopeMe.scope({ where: { parent_id: 1 } }).findAll({ where: { access_level: 3 } }).then((users) => {
                 expect(users).to.have.length(2);
-                expect(["tony", "fred"].indexOf(users[0].username) !== -1).to.be.true;
-                expect(["tony", "fred"].indexOf(users[1].username) !== -1).to.be.true;
+                expect(["tony", "fred"].indexOf(users[0].username) !== -1).to.be.true();
+                expect(["tony", "fred"].indexOf(users[1].username) !== -1).to.be.true();
             });
         });
 
         it("should be able to use a defaultScope if declared", function () {
             return this.ScopeMe.all().then((users) => {
                 expect(users).to.have.length(2);
-                expect([10, 5].indexOf(users[0].access_level) !== -1).to.be.true;
-                expect([10, 5].indexOf(users[1].access_level) !== -1).to.be.true;
-                expect(["dan", "tobi"].indexOf(users[0].username) !== -1).to.be.true;
-                expect(["dan", "tobi"].indexOf(users[1].username) !== -1).to.be.true;
+                expect([10, 5].indexOf(users[0].access_level) !== -1).to.be.true();
+                expect([10, 5].indexOf(users[1].access_level) !== -1).to.be.true();
+                expect(["dan", "tobi"].indexOf(users[0].username) !== -1).to.be.true();
+                expect(["dan", "tobi"].indexOf(users[1].username) !== -1).to.be.true();
             });
         });
 

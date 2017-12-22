@@ -220,16 +220,16 @@ describe("collection", "LRU", () => {
             setTimeout(() => {
                 cache.set("c", "C");
                 // timed out
-                assert.isNotOk(cache.get("a"));
+                assert.notOk(cache.get("a"));
             }, 60 + 25);
 
             setTimeout(() => {
-                assert.isNotOk(cache.get("b"));
+                assert.notOk(cache.get("b"));
                 assert.equal(cache.get("c"), "C");
             }, 90);
 
             setTimeout(() => {
-                assert.isNotOk(cache.get("c"));
+                assert.notOk(cache.get("c"));
                 done();
             }, 155);
         });
@@ -247,9 +247,9 @@ describe("collection", "LRU", () => {
             setTimeout(() => {
                 cache.prune();
 
-                assert.isNotOk(cache.get("a"));
-                assert.isNotOk(cache.get("b"));
-                assert.isNotOk(cache.get("c"));
+                assert.notOk(cache.get("a"));
+                assert.notOk(cache.get("b"));
+                assert.notOk(cache.get("c"));
 
                 done();
             }, 100);
@@ -263,7 +263,7 @@ describe("collection", "LRU", () => {
 
             cache.set("a", "A", 20);
             setTimeout(() => {
-                assert.isNotOk(cache.get("a"));
+                assert.notOk(cache.get("a"));
                 done();
             }, 25);
         });
@@ -503,7 +503,7 @@ describe("collection", "LRU", () => {
                 saw = true;
                 assert.equal(key, "foo");
             });
-            assert.isOk(saw);
+            assert.ok(saw);
             assert.equal(l.length, 0);
         });
     });

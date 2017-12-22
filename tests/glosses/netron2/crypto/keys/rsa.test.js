@@ -142,7 +142,7 @@ describe("RSA", function () {
         it("password protected PKCS #8", (done) => {
             key.export("pkcs-8", "my secret", (err, pem) => {
                 assert.notExists(err);
-                assert.isTrue(pem.startsWith("-----BEGIN ENCRYPTED PRIVATE KEY-----"));
+                assert.true(pem.startsWith("-----BEGIN ENCRYPTED PRIVATE KEY-----"));
                 crypto.keys.import(pem, "my secret", (err, clone) => {
                     assert.notExists(err);
                     assert.exists(clone);
@@ -155,7 +155,7 @@ describe("RSA", function () {
         it("defaults to PKCS #8", (done) => {
             key.export("another secret", (err, pem) => {
                 assert.notExists(err);
-                assert.isTrue(pem.startsWith("-----BEGIN ENCRYPTED PRIVATE KEY-----"));
+                assert.true(pem.startsWith("-----BEGIN ENCRYPTED PRIVATE KEY-----"));
                 crypto.keys.import(pem, "another secret", (err, clone) => {
                     assert.notExists(err);
                     assert.exists(clone);

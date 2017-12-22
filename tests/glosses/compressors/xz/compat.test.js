@@ -22,7 +22,7 @@ describe("compressor", "xz", () => {
             const outstream = helpers.fsCreateWriteStream(outfile);
 
             outstream.on("finish", () => {
-                assert.isOk(helpers.bufferEqual(fs.readFileSync(commonFixturePath("small")), fs.readFileSync(outfile)));
+                assert.ok(helpers.bufferEqual(fs.readFileSync(commonFixturePath("small")), fs.readFileSync(outfile)));
                 fs.unlink(outfile);
                 done();
             });
@@ -39,7 +39,7 @@ describe("compressor", "xz", () => {
             assert.equal(a.toString("base64"), BananasCompressed);
 
             const b = await xz.decompress(a);
-            assert.isOk(is.buffer(b));
+            assert.ok(is.buffer(b));
             assert.equal(b.toString(), "Bananas");
         });
     });

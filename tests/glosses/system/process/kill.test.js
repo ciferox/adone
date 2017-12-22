@@ -64,7 +64,7 @@ describe("system", "process", () => {
         const pid = await noopProcess();
         await kill(pid, { force: true });
         await promise.delay(noopProcessExitDelay);
-        assert.isFalse(await exists(pid));
+        assert.false(await exists(pid));
     });
 
     if (is.windows) {
@@ -74,7 +74,7 @@ describe("system", "process", () => {
 
             await kill(title, { force: true });
 
-            assert.isFalse(await exists(pid));
+            assert.false(await exists(pid));
         });
     } else {
         it("title", async () => {
@@ -84,7 +84,7 @@ describe("system", "process", () => {
             await kill(title);
 
             await promise.delay(noopProcessExitDelay);
-            assert.isFalse(await exists(pid));
+            assert.false(await exists(pid));
         });
     }
 
@@ -106,7 +106,7 @@ describe("system", "process", () => {
         await kill(process.pid);
 
         await promise.delay(noopProcessExitDelay);
-        assert.isTrue(await exists(pid));
+        assert.true(await exists(pid));
         Object.defineProperty(process, "pid", { value: originalFkillPid });
     });
 
@@ -127,7 +127,7 @@ describe("system", "process", () => {
                     exit.waitForCall()
                 ]);
                 for (const child of children) {
-                    expect(await exists(child)).to.be.false; // eslint-disable-line
+                    expect(await exists(child)).to.be.false(); // eslint-disable-line
                 }
             } finally {
                 child.kill();

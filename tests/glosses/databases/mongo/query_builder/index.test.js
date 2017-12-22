@@ -1955,7 +1955,7 @@ describe("database", "mongo", "QueryBuilder", () => {
                     const m = buildQuery(col).where({ _id: id });
                     m.setOptions({ safe: true });
 
-                    expect(await m.update({})).to.be.null; // TODO: ok?
+                    expect(await m.update({})).to.be.null(); // TODO: ok?
 
                     await promise.delay(300);
 

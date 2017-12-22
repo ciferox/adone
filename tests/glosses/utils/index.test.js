@@ -28,7 +28,7 @@ describe("util", () => {
 
         describe("noop", () => {
             it("should return nothing", () => {
-                expect(adone.noop(1, 2, 3)).to.be.undefined;
+                expect(adone.noop(1, 2, 3)).to.be.undefined();
             });
         });
     });
@@ -38,7 +38,7 @@ describe("util", () => {
 
         it("should be empty for an empty object", () => {
             const props = keys({});
-            expect(props).to.be.empty;
+            expect(props).to.be.empty();
         });
 
         it("should return all the properies of an object", () => {
@@ -475,7 +475,7 @@ describe("util", () => {
                 value: 42
             });
             const t = clone(s);
-            expect(t).to.be.empty;
+            expect(t).to.be.empty();
         });
 
         it("should clone non-enumerable properies when onlyEnumerable = true", () => {
@@ -509,7 +509,7 @@ describe("util", () => {
             const thing = new Thing();
             const s = { a: { b: [thing] } };
             const t = clone(s, { onlyEnumerable: false, nonPlainObjects: true });
-            expect(t.a.b[0]).to.exist;
+            expect(t.a.b[0]).to.exist();
             expect(t.a.b[0]).not.to.be.equal(thing);
             expect(t.a.b[0]).to.be.deep.equal({ property: 42 });
         });
@@ -520,7 +520,7 @@ describe("util", () => {
         const { collection } = adone;
 
         it("should be a generator", () => {
-            expect(is.generator(zip)).to.be.true;
+            expect(is.generator(zip)).to.be.true();
         });
 
         it("should zip 2 arrays", () => {
@@ -618,7 +618,7 @@ describe("util", () => {
             const res = [...zip([1, 2, 3], smth, smth)];
             expect(res).to.be.deep.equal([[1, 1, 1], [2, 2, 2], [3, 3, 3]]);
             for (const it of smth.iterators) {
-                expect(it.ret).to.be.true;
+                expect(it.ret).to.be.true();
             }
         });
     });
@@ -663,7 +663,7 @@ describe("util", () => {
             });
 
             it("should be empty", () => {
-                expect([...range(-5, -10)]).to.be.empty;
+                expect([...range(-5, -10)]).to.be.empty();
             });
         });
     }
@@ -688,7 +688,7 @@ describe("util", () => {
             const s = "012345677";
             const matches = util.reFindAll(re, s);
             expect(matches).to.be.an("array");
-            expect(matches).to.be.empty;
+            expect(matches).to.be.empty();
         });
     });
 
@@ -913,12 +913,12 @@ describe("util", () => {
         });
 
         it("should null if not a string given", () => {
-            expect(parseTime({})).to.be.null;
+            expect(parseTime({})).to.be.null();
         });
 
         it("should return null if format is invalid", () => {
-            expect(parseTime("hehe")).to.be.null;
-            expect(parseTime("10 hehe")).to.be.null;
+            expect(parseTime("hehe")).to.be.null();
+            expect(parseTime("10 hehe")).to.be.null();
         });
 
         it("should work with no spaces", () => {

@@ -23,12 +23,12 @@ describe(Support.getTestDialectTeaser("Transaction"), { skip: !current.dialect.s
 
         it("generates an identifier", function () {
             const transaction = new Transaction(this.sequelize);
-            expect(transaction.id).to.exist;
+            expect(transaction.id).to.exist();
         });
 
         it("should call dialect specific generateTransactionId method", function () {
             const transaction = new Transaction(this.sequelize);
-            expect(transaction.id).to.exist;
+            expect(transaction.id).to.exist();
             if (dialect === "mssql") {
                 expect(transaction.id).to.have.lengthOf(20);
             }

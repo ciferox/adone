@@ -258,7 +258,7 @@ const testResolveSourceMap = (method, sync) => {
         }
         {
             const result = await method(code.noMap, codeUrl, wrap(Throws));
-            expect(result).to.be.null;
+            expect(result).to.be.null();
         }
         {
             const result = await method(code.absolute, codeUrl, wrap(read([map.simpleString])));
@@ -690,7 +690,7 @@ const testResolve = (method, sync) => {
         }
         {
             const result = await method(code.noMap, codeUrl, wrap(Throws));
-            expect(result).to.be.null;
+            expect(result).to.be.null();
         }
         {
             const result = await method(code.absolute, codeUrl, wrap(read([map.simpleString])));

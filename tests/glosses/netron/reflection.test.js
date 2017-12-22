@@ -117,36 +117,36 @@ describe("netron", "Reflection", () => {
     });
 
     it("public methods should be processed", () => {
-        expect(aReflect.hasMethod("publicMethod")).to.be.true;
-        expect(aReflect.hasMethod("publicMethodWithArgs")).to.be.true;
-        expect(aReflect.hasMethod("publicMethodReturnsString")).to.be.true;
-        expect(aReflect.hasMethod("publicMethodWithArgsReturnsNumber")).to.be.true;
-        expect(aReflect.hasMethod("method1")).to.be.true;
-        expect(aReflect.hasMethod("methodWithRedefinedArgs")).to.be.true;
-        expect(aReflect.hasMethod("methodWithRedefinedArgs1")).to.be.true;
+        expect(aReflect.hasMethod("publicMethod")).to.be.true();
+        expect(aReflect.hasMethod("publicMethodWithArgs")).to.be.true();
+        expect(aReflect.hasMethod("publicMethodReturnsString")).to.be.true();
+        expect(aReflect.hasMethod("publicMethodWithArgsReturnsNumber")).to.be.true();
+        expect(aReflect.hasMethod("method1")).to.be.true();
+        expect(aReflect.hasMethod("methodWithRedefinedArgs")).to.be.true();
+        expect(aReflect.hasMethod("methodWithRedefinedArgs1")).to.be.true();
     });
 
     it("private methods should not be processed", () => {
-        expect(aReflect.hasMethod("privateMethodWithArgsReturnsPromise")).to.be.false;
+        expect(aReflect.hasMethod("privateMethodWithArgsReturnsPromise")).to.be.false();
     });
 
     it("public properties should be processed", () => {
-        expect(aReflect.hasProperty("prop1")).to.be.true;
-        expect(aReflect.hasProperty("prop2")).to.be.true;
-        expect(aReflect.hasProperty("prop4")).to.be.true;
-        expect(aReflect.hasProperty("prop5")).to.be.true;
+        expect(aReflect.hasProperty("prop1")).to.be.true();
+        expect(aReflect.hasProperty("prop2")).to.be.true();
+        expect(aReflect.hasProperty("prop4")).to.be.true();
+        expect(aReflect.hasProperty("prop5")).to.be.true();
     });
 
     it("private properties should not be processed", () => {
-        expect(aReflect.hasProperty("prop3")).to.be.false;
-        expect(aReflect.hasProperty("prop6")).to.be.false;
+        expect(aReflect.hasProperty("prop3")).to.be.false();
+        expect(aReflect.hasProperty("prop6")).to.be.false();
     });
 
     it("readonly property", () => {
-        expect(aReflect.getPropertyMeta("prop1").readonly).to.be.true;
-        expect(aReflect.getPropertyMeta("prop2").readonly).to.be.false;
-        expect(aReflect.getPropertyMeta("prop4").readonly).to.be.false;
-        expect(aReflect.getPropertyMeta("prop5").readonly).to.be.true;
+        expect(aReflect.getPropertyMeta("prop1").readonly).to.be.true();
+        expect(aReflect.getPropertyMeta("prop2").readonly).to.be.false();
+        expect(aReflect.getPropertyMeta("prop4").readonly).to.be.false();
+        expect(aReflect.getPropertyMeta("prop5").readonly).to.be.true();
     });
 
     it("method without args", () => {
@@ -195,10 +195,10 @@ describe("netron", "Reflection", () => {
         class NonContextableClass {
         }
 
-        assert.isTrue(is.netronContext(ContextableClass));
-        assert.isFalse(is.netronContext(NonContextableClass));
-        assert.isTrue(is.netronContext(new ContextableClass()));
-        assert.isFalse(is.netronContext(new NonContextableClass()));
+        assert.true(is.netronContext(ContextableClass));
+        assert.false(is.netronContext(NonContextableClass));
+        assert.true(is.netronContext(new ContextableClass()));
+        assert.false(is.netronContext(new NonContextableClass()));
     });
 
     it("Reflectio#getName()", () => {

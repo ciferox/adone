@@ -252,7 +252,7 @@ describe("net", "http", "server", "request", "parsers", () => {
                 const { fields, files } = await ctx.request.multipart();
                 _files.push(...files);
                 expect(fields).to.have.all.keys(["foo", "bar"]);
-                expect(files).to.be.empty;
+                expect(files).to.be.empty();
                 expect(fields.foo).to.be.an("array");
                 expect(fields.foo).to.be.deep.equal(["1", "2", "3"]);
                 expect(fields.bar).to.be.an("array");

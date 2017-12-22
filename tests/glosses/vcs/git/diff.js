@@ -369,7 +369,7 @@ describe("Diff", () => {
                     linesOfCommitDiff
                 ]);
                 _.forEach(allDiffLines, (diffLine) => {
-                    assert.isTrue(_.includes(linesOfMergedDiff, diffLine));
+                    assert.true(_.includes(linesOfMergedDiff, diffLine));
                 });
             });
         });
@@ -393,7 +393,7 @@ describe("Diff", () => {
                     linesOfCommitDiff
                 ]);
                 _.forEach(allDiffLines, (diffLine) => {
-                    assert.isTrue(_.includes(linesOfMergedDiff, diffLine));
+                    assert.true(_.includes(linesOfMergedDiff, diffLine));
                 });
             });
         });

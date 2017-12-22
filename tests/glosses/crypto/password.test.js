@@ -22,7 +22,7 @@ describe("crypto", "password", () => {
             } catch (err) {
                 isOK = true;
             }
-            expect(isOK).to.be.ok;
+            expect(isOK).to.be.ok();
         });
 
         it("should return a key formatted as: alg$iterations$hash$salt", async () => {
@@ -37,8 +37,8 @@ describe("crypto", "password", () => {
         it("should create unique hashes", async () => {
             const key1 = await password.hash("password 1");
             const key2 = await password.hash("password 2");
-            expect(key1).not.to.be.null;
-            expect(key2).not.to.be.null;
+            expect(key1).not.to.be.null();
+            expect(key2).not.to.be.null();
             expect(key1).to.not.equal(key2);
             expect(splitHash(key1).hash).to.not.equal(splitHash(key2).hash);
         });
@@ -46,8 +46,8 @@ describe("crypto", "password", () => {
         it("should create unique salts", async () => {
             const key1 = await password.hash("password 1");
             const key2 = await password.hash("password 1");
-            expect(key1).not.to.be.null;
-            expect(key2).not.to.be.null;
+            expect(key1).not.to.be.null();
+            expect(key2).not.to.be.null();
             expect(splitHash(key1).salt).to.not.equal(splitHash(key2).salt);
         });
 
@@ -55,9 +55,9 @@ describe("crypto", "password", () => {
             const key1 = await password.hash("password 1");
             const salt1 = splitHash(key1).salt;
             const key2 = await password.hash("password 1", salt1);
-            expect(key1).to.exist;
-            expect(salt1).to.exist;
-            expect(key2).to.exist;
+            expect(key1).to.exist();
+            expect(salt1).to.exist();
+            expect(key2).to.exist();
             expect(key1).to.equal(key2);
         });
     });
@@ -65,14 +65,14 @@ describe("crypto", "password", () => {
     describe("Hash verification", () => {
         it("should not verify empty passwords - 1", async () => {
             const key1 = await password.hash("password 1");
-            expect(key1).to.exist;
+            expect(key1).to.exist();
             const validated = await password.verify("password 1", "");
             expect(validated).to.equal(false);
         });
 
         it("should not verify empty passwords - 2", async () => {
             const key1 = await password.hash("password 1");
-            expect(key1).to.exist;
+            expect(key1).to.exist();
             const validated = await password.verify("", "password 1");
             expect(validated).to.equal(false);
         });
@@ -86,7 +86,7 @@ describe("crypto", "password", () => {
                 isOK = true;
             }
 
-            expect(isOK).to.be.ok;
+            expect(isOK).to.be.ok();
             expect(validated).to.not.equal(true);
         });
 
@@ -98,7 +98,7 @@ describe("crypto", "password", () => {
             } catch (err) {
                 isOK = true;
             }
-            expect(isOK).to.be.ok;
+            expect(isOK).to.be.ok();
             expect(validated).to.not.equal(true);
         });
 
@@ -111,7 +111,7 @@ describe("crypto", "password", () => {
                 isOK = true;
             }
 
-            expect(isOK).to.be.ok;
+            expect(isOK).to.be.ok();
             expect(validated).to.not.equal(true);
             isOK = false;
             try {
@@ -119,7 +119,7 @@ describe("crypto", "password", () => {
             } catch (err) {
                 isOK = true;
             }
-            expect(isOK).to.be.ok;
+            expect(isOK).to.be.ok();
             expect(validated).to.not.equal(true);
         });
 
@@ -132,7 +132,7 @@ describe("crypto", "password", () => {
                 isOK = true;
             }
 
-            expect(isOK).to.be.ok;
+            expect(isOK).to.be.ok();
             expect(validated).to.not.equal(true);
             isOK = false;
             try {
@@ -141,7 +141,7 @@ describe("crypto", "password", () => {
                 isOK = true;
             }
 
-            expect(isOK).to.be.ok;
+            expect(isOK).to.be.ok();
             expect(validated).to.not.equal(true);
         });
 
@@ -154,7 +154,7 @@ describe("crypto", "password", () => {
                 isOK = true;
             }
 
-            expect(isOK).to.be.ok;
+            expect(isOK).to.be.ok();
             expect(validated).to.not.equal(true);
         });
 
@@ -166,20 +166,20 @@ describe("crypto", "password", () => {
             } catch (err) {
                 isOK = true;
             }
-            expect(isOK).to.be.ok;
+            expect(isOK).to.be.ok();
             expect(validated).to.not.equal(true);
         });
 
         it("should not verify wrong passwords", async () => {
             const key1 = await password.hash("secret");
-            expect(key1).to.exist;
+            expect(key1).to.exist();
             const validated = await password.verify("secret", "pbkdf2$10000$5e45$5e45");
             expect(validated).to.equal(false);
         });
 
         it("should verify correct passwords", async () => {
             const key1 = await password.hash("secret");
-            expect(key1).to.exist;
+            expect(key1).to.exist();
             const validated = await password.verify("secret", key1);
             expect(validated).to.equal(true);
         });

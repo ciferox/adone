@@ -46,7 +46,7 @@ describe("database", "mysql", "functional", "connection", "load infile", () => {
             "LOAD DATA LOCAL INFILE ? INTO TABLE test CHARACTER SET UTF8 FIELDS TERMINATED BY ? (id, title)",
             [path.resolve(__dirname, "fixtures", "does_not_exist.csv"), ","]
         ).then(() => null, (e) => e);
-        expect(e).not.to.be.null;
+        expect(e).not.to.be.null();
         expect(e.code).to.be.equal("ENOENT");
     });
 

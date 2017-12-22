@@ -57,19 +57,19 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         it("should return false if the soft-delete property is the same as " +
       "the default value", function () {
             this.paranoidUser.setDataValue("deletedAt", null);
-            expect(this.paranoidUser.isSoftDeleted()).to.be.false;
+            expect(this.paranoidUser.isSoftDeleted()).to.be.false();
         });
 
         it("should return false if the soft-delete property is set to a date in " +
       "the future", function () {
             this.paranoidUser.setDataValue("deletedAt", adone.datetime().add(5, "days").format());
-            expect(this.paranoidUser.isSoftDeleted()).to.be.false;
+            expect(this.paranoidUser.isSoftDeleted()).to.be.false();
         });
 
         it("should return true if the soft-delete property is set to a date " +
       "before now", function () {
             this.paranoidUser.setDataValue("deletedAt", adone.datetime().subtract(5, "days").format());
-            expect(this.paranoidUser.isSoftDeleted()).to.be.true;
+            expect(this.paranoidUser.isSoftDeleted()).to.be.true();
         });
     });
 });

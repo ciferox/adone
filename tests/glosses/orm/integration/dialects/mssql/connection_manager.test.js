@@ -22,7 +22,7 @@ describe("[MSSQL Specific] Query Queue", { skip: !/^mssql/.test(dialect) }, () =
             .then(() => cm.getConnection())
             .then((connection) => {
                 expect(conn).to.not.be.equal(connection);
-                expect(cm.validate(conn)).to.not.be.ok;
+                expect(cm.validate(conn)).to.not.be.ok();
 
                 return cm.releaseConnection(connection);
             });

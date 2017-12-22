@@ -6,6 +6,6 @@ describe("net", "http", "server", "request", "secure", () => {
     it("should return true when encrypted", () => {
         const req = request();
         req.req.socket = { encrypted: true };
-        expect(req.secure).to.be.true;
+        expect(req.secure).to.be.true();
     });
 });

@@ -77,9 +77,9 @@ describe("crypto", "jwa", () => {
         BIT_DEPTHS.forEach((bits) => {
             const algo = jwa(`hs${bits}`);
             const sig = algo.sign(input, secret);
-            assert.isOk(algo.verify(input, sig, secret));
-            assert.isNotOk(algo.verify(input, "other sig", secret));
-            assert.isNotOk(algo.verify(input, sig, "incrorect"));
+            assert.oklgo.verify(input, sig, secret));
+            assert.notOk(algo.verify(input, "other sig", secret));
+            assert.notOk(algo.verify(input, sig, "incrorect"));
         });
     });
 
@@ -88,8 +88,8 @@ describe("crypto", "jwa", () => {
         BIT_DEPTHS.forEach((bits) => {
             const algo = jwa(`rs${bits}`);
             const sig = algo.sign(input, rsaPrivateKey);
-            assert.isOk(algo.verify(input, sig, rsaPublicKey));
-            assert.isNotOk(algo.verify(input, sig, rsaWrongPublicKey));
+            assert.oklgo.verify(input, sig, rsaPublicKey));
+            assert.notOk(algo.verify(input, sig, rsaWrongPublicKey));
         });
     });
 
@@ -99,7 +99,7 @@ describe("crypto", "jwa", () => {
             const algo = jwa(`rs${bits}`);
             const secret = "test_pass";
             const sig = algo.sign(input, { key: rsaPrivateKeyWithPassphrase, passphrase: secret });
-            assert.isOk(algo.verify(input, sig, rsaPublicKeyWithPassphrase));
+            assert.oklgo.verify(input, sig, rsaPublicKeyWithPassphrase));
         });
     });
 
@@ -126,8 +126,8 @@ describe("crypto", "jwa", () => {
                 }
                 const sig = adone.data.base64url.encode(buffer);
 
-                assert.isOk(algo.verify(input, sig, rsaPublicKey));
-                assert.isNotOk(algo.verify(input, sig, rsaWrongPublicKey));
+                assert.oklgo.verify(input, sig, rsaPublicKey));
+                assert.notOk(algo.verify(input, sig, rsaWrongPublicKey));
                 done();
             });
         });
@@ -138,8 +138,8 @@ describe("crypto", "jwa", () => {
             const input = "kristen schaal";
             const algo = jwa(`es${bits}`);
             const sig = algo.sign(input, ecdsaPrivateKey[bits]);
-            assert.isOk(algo.verify(input, sig, ecdsaPublicKey[bits]));
-            assert.isNotOk(algo.verify(input, sig, ecdsaWrongPublicKey[bits]));
+            assert.oklgo.verify(input, sig, ecdsaPublicKey[bits]));
+            assert.notOk(algo.verify(input, sig, ecdsaWrongPublicKey[bits]));
         });
     });
 
@@ -158,8 +158,8 @@ describe("crypto", "jwa", () => {
                     return assert.fail("could not test interop: openssl failure");
                 }
                 const sig = formatEcdsa.derToJose(buffer, `ES${bits}`);
-                assert.isOk(algo.verify(input, sig, ecdsaPublicKey[bits]), "should verify");
-                assert.isNotOk(algo.verify(input, sig, ecdsaWrongPublicKey[bits]));
+                assert.oklgo.verify(input, sig, ecdsaPublicKey[bits]), "should verify");
+                assert.notOk(algo.verify(input, sig, ecdsaWrongPublicKey[bits]));
                 done();
             });
         });
@@ -221,8 +221,8 @@ describe("crypto", "jwa", () => {
         const input = "whatever";
         const algo = jwa("none");
         const sig = algo.sign(input);
-        assert.isOk(algo.verify(input, sig), "should verify");
-        assert.isNotOk(algo.verify(input, "something"), "shoud not verify");
+        assert.oklgo.verify(input, sig), "should verify");
+        assert.notOk(algo.verify(input, "something"), "shoud not verify");
     });
 
     it("some garbage algorithm", () => {
@@ -231,7 +231,7 @@ describe("crypto", "jwa", () => {
             assert.fail("should throw");
         } catch (ex) {
             assert.equal(ex.name, "TypeError");
-            assert.isOk(ex.message.match(/valid algorithm/), "should say something about algorithms");
+            assert.okx.message.match(/valid algorithm/), "should say something about algorithms");
         }
     });
 
@@ -242,7 +242,7 @@ describe("crypto", "jwa", () => {
                 assert.fail("should throw");
             } catch (ex) {
                 assert.equal(ex.name, "TypeError");
-                assert.isOk(ex.message.match(/valid algorithm/), "should say something about algorithms");
+                assert.okx.message.match(/valid algorithm/), "should say something about algorithms");
             }
         });
     });
@@ -254,7 +254,7 @@ describe("crypto", "jwa", () => {
                 assert.fail("should throw");
             } catch (ex) {
                 assert.equal(ex.name, "TypeError");
-                assert.isOk(ex.message.match(/valid algorithm/), "should say something about algorithms");
+                assert.okx.message.match(/valid algorithm/), "should say something about algorithms");
             }
         });
     });
@@ -266,7 +266,7 @@ describe("crypto", "jwa", () => {
             assert.fail("should throw");
         } catch (ex) {
             assert.equal(ex.name, "TypeError");
-            assert.isOk(ex.message.match(/secret/), "should say something about secrets");
+            assert.okx.message.match(/secret/), "should say something about secrets");
         }
     });
 
@@ -275,16 +275,16 @@ describe("crypto", "jwa", () => {
         const input = { a: ["whatever", "this", "is"] };
         const secret = "bones";
         const sig = algo.sign(input, secret);
-        assert.isOk(algo.verify(input, sig, secret), "should verify");
-        assert.isNotOk(algo.verify(input, sig, "other thing"));
+        assert.oklgo.verify(input, sig, secret), "should verify");
+        assert.notOk(algo.verify(input, sig, "other thing"));
     });
 
     it("rs512, weird input type", () => {
         const algo = jwa("rs512");
         const input = { a: ["whatever", "this", "is"] };
         const sig = algo.sign(input, rsaPrivateKey);
-        assert.isOk(algo.verify(input, sig, rsaPublicKey), "should verify");
-        assert.isNotOk(algo.verify(input, sig, rsaWrongPublicKey));
+        assert.oklgo.verify(input, sig, rsaPublicKey), "should verify");
+        assert.notOk(algo.verify(input, sig, rsaWrongPublicKey));
     });
 
     it("rs512, missing signing key", () => {
@@ -294,7 +294,7 @@ describe("crypto", "jwa", () => {
             assert.fail("should throw");
         } catch (ex) {
             assert.equal(ex.name, "TypeError");
-            assert.isOk(ex.message.match(/key/), "should say something about keys");
+            assert.okx.message.match(/key/), "should say something about keys");
         }
     });
 
@@ -307,7 +307,7 @@ describe("crypto", "jwa", () => {
             assert.fail("should throw");
         } catch (ex) {
             assert.equal(ex.name, "TypeError");
-            assert.isOk(ex.message.match(/key/), "should say something about keys");
+            assert.okx.message.match(/key/), "should say something about keys");
         }
     });
 });

@@ -90,7 +90,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                     ]
                 });
             }).then((user) => {
-                expect(user).to.be.ok;
+                expect(user).to.be.ok();
                 expect(user.Tasks.length).to.equal(0);
             });
         });
@@ -127,7 +127,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                     ]
                 });
             }).then((user) => {
-                expect(user).to.be.ok;
+                expect(user).to.be.ok();
                 expect(user.Tasks.length).to.equal(1);
             });
         });
@@ -233,7 +233,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                     });
                 })
                 .then((a) => {
-                    expect(a).to.not.exist;
+                    expect(a).to.not.exist();
                 });
         });
 
@@ -252,7 +252,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                                 include: [{ model: User }]
                             })
                                 .then((foundTask) => {
-                                    expect(foundTask).to.be.ok;
+                                    expect(foundTask).to.be.ok();
                                     expect(foundTask.User.username).to.equal("bob");
                                 });
                         });
@@ -351,7 +351,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
                         }
                     ]
                 });
-                expect(a.b.c.d.e.f.g.h).to.be.ok;
+                expect(a.b.c.d.e.f.g.h).to.be.ok();
             }
         });
 

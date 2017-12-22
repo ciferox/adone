@@ -21,23 +21,23 @@ describe("bulk", function () {
         expect(err).to.be.an("error");
         // Basic properties check
         expect(result.nInserted).to.be.equal(1);
-        expect(result.hasWriteErrors()).to.be.true;
+        expect(result.hasWriteErrors()).to.be.true();
         expect(result.getWriteErrorCount()).to.be.equal(1);
 
         // Get the write error
         const error = result.getWriteErrorAt(0);
         expect(error.code).to.be.equal(11000);
-        expect(error.errmsg).to.be.ok;
+        expect(error.errmsg).to.be.ok();
 
         // Get the operation that caused the error
         const op = error.getOperation();
         expect(op.q.b).to.be.equal(2);
         expect(op.u.$set.a).to.be.equal(1);
-        expect(op.multi).to.be.false;
-        expect(op.upsert).to.be.true;
+        expect(op.multi).to.be.false();
+        expect(op.upsert).to.be.true();
 
         // Get the first error
-        expect(result.getWriteErrorAt(1)).to.be.null;
+        expect(result.getWriteErrorAt(1)).to.be.null();
     });
 
     it("should correctly handle ordered multiple batch api write command error", async () => {
@@ -59,16 +59,16 @@ describe("bulk", function () {
         const [err, result] = await new Promise((resolve) => batch.execute((err, res) => resolve([err, res])));
         expect(err).to.be.an("error");
         expect(result.nInserted).to.be.equal(1);
-        expect(result.hasWriteErrors()).to.be.true;
+        expect(result.hasWriteErrors()).to.be.true();
         expect(result.getWriteErrorCount()).to.be.equal(1);
 
         const error = result.getWriteErrorAt(0);
         expect(error.index).to.be.equal(1);
         expect(error.code).to.be.equal(11000);
-        expect(error.errmsg).to.be.ok;
+        expect(error.errmsg).to.be.ok();
         expect(error.getOperation().q.b).to.be.equal(2);
-        expect(error.getOperation().multi).to.be.false;
-        expect(error.getOperation().upsert).to.be.true;
+        expect(error.getOperation().multi).to.be.false();
+        expect(error.getOperation().upsert).to.be.true();
     });
 
     it("should fail due to ordered document being to big", async () => {
@@ -103,7 +103,7 @@ describe("bulk", function () {
         const result = await batch.execute();
 
         expect(result.nInserted).to.be.equal(6);
-        expect(result.hasWriteErrors()).to.be.false;
+        expect(result.hasWriteErrors()).to.be.false();
     });
 
     it("should correctly fail ordered batch operation due to illegal operations using write commands", async () => {
@@ -154,15 +154,15 @@ describe("bulk", function () {
         expect(err).to.be.an("error");
         expect(result.nInserted).to.be.equal(1);
         expect(result.nMatched).to.be.equal(1);
-        expect(result.nModified === 1 || is.nil(result.nModified)).to.be.true;
-        expect(result.hasWriteErrors()).to.be.true;
+        expect(result.nModified === 1 || is.nil(result.nModified)).to.be.true();
+        expect(result.hasWriteErrors()).to.be.true();
         expect(result.getWriteErrorCount()).to.be.equal(1);
 
         // Individual error checking
         const error = result.getWriteErrorAt(0);
         expect(error.index).to.be.equal(2);
         expect(error.code).to.be.equal(11000);
-        expect(error.errmsg).to.be.ok;
+        expect(error.errmsg).to.be.ok();
         expect(error.getOperation().b).to.be.equal(1);
     });
 
@@ -187,24 +187,24 @@ describe("bulk", function () {
         expect(result.nInserted).to.be.equal(1);
         expect(result.nUpserted).to.be.equal(2);
         expect(result.nMatched).to.be.equal(1);
-        expect(result.nModified === 1 || is.nil(result.nModified)).to.be.true;
-        expect(result.hasWriteErrors()).to.be.true;
+        expect(result.nModified === 1 || is.nil(result.nModified)).to.be.true();
+        expect(result.hasWriteErrors()).to.be.true();
         expect(result.getWriteErrorCount()).to.be.equal(1);
 
         // Individual error checking
         const error = result.getWriteErrorAt(0);
         expect(error.index).to.be.equal(4);
         expect(error.code).to.be.equal(11000);
-        expect(error.errmsg).to.be.ok;
+        expect(error.errmsg).to.be.ok();
         expect(error.getOperation().b).to.be.equal(1);
 
         // Check for upserted values
         const ids = result.getUpsertedIds();
         expect(ids).to.have.lengthOf(2);
         expect(ids[0].index).to.be.equal(2);
-        expect(ids[0]._id).to.be.ok;
+        expect(ids[0]._id).to.be.ok();
         expect(ids[1].index).to.be.equal(3);
-        expect(ids[1]._id).to.be.ok;
+        expect(ids[1]._id).to.be.ok();
     });
 
     it("should correctly perform ordered upsert with custom _id", async () => {
@@ -221,7 +221,7 @@ describe("bulk", function () {
             nMatched: 0,
             nRemoved: 0
         });
-        expect(result.nModified === 0 || is.nil(result.nModified)).to.be.true;
+        expect(result.nModified === 0 || is.nil(result.nModified)).to.be.true();
         const upserts = result.getUpsertedIds();
         expect(upserts).to.have.lengthOf(1);
         expect(upserts[0]).to.include({
@@ -238,7 +238,7 @@ describe("bulk", function () {
         const err = await new Promise((resolve) => {
             collection.initializeOrderedBulkOp().execute(resolve);
         });
-        expect(err).to.exist;
+        expect(err).to.exist();
         expect(err.message).to.be.equal("Invalid Operation, No operations in bulk");
     });
 
@@ -260,7 +260,7 @@ describe("bulk", function () {
             nMatched: 0,
             nRemoved: 0
         });
-        expect(result.nModified === 0 || is.nil(result.nModified)).to.be.true;
+        expect(result.nModified === 0 || is.nil(result.nModified)).to.be.true();
     });
 
     if (this.topology === "single" || this.topology === "replicaset") {
@@ -284,21 +284,21 @@ describe("bulk", function () {
                 nUpserted: 0,
                 nMatched: 0
             });
-            expect(result.nModified === 0 || is.nil(result.nModified)).to.be.true;
-            expect(result.hasWriteErrors()).to.be.true;
+            expect(result.nModified === 0 || is.nil(result.nModified)).to.be.true();
+            expect(result.hasWriteErrors()).to.be.true();
             expect(result.getWriteErrorCount()).to.be.equal(1);
 
             const error = result.getWriteErrorAt(0);
             expect(error.code).to.be.equal(11000);
-            expect(error.errmsg).to.be.ok;
+            expect(error.errmsg).to.be.ok();
 
             const op = error.getOperation();
             expect(op.q.b).to.be.equal(2);
             expect(op.u.$set.a).to.be.equal(1);
-            expect(op.multi).to.be.false;
-            expect(op.upsert).to.be.true;
+            expect(op.multi).to.be.false();
+            expect(op.upsert).to.be.true();
 
-            expect(result.getWriteErrorAt(1)).to.be.null;
+            expect(result.getWriteErrorAt(1)).to.be.null();
         });
 
         it("should correctly handle multiple unordered batch API", async () => {
@@ -321,13 +321,13 @@ describe("bulk", function () {
             });
             expect(err).to.be.an("error");
             expect(result.nInserted).to.be.equal(2);
-            expect(result.hasWriteErrors()).to.be.true;
+            expect(result.hasWriteErrors()).to.be.true();
             expect(result.getWriteErrorCount()).to.be.equal(3);
 
             for (let i = 0; i < result.getWriteErrorCount(); ++i) {
                 const error = result.getWriteErrorAt(i);
                 expect(error.code).to.be.equal(11000);
-                expect(error.errmsg).to.be.ok;
+                expect(error.errmsg).to.be.ok();
                 switch (error.index) {
                     case 3:
                     case 1: {
@@ -378,7 +378,7 @@ describe("bulk", function () {
 
             const result = await batch.execute();
             expect(result.nInserted).to.be.equal(6);
-            expect(result.hasWriteErrors()).to.be.false;
+            expect(result.hasWriteErrors()).to.be.false();
         });
 
         it("should correctly fail unordered batch operation due to illegal operations", async () => {
@@ -434,12 +434,12 @@ describe("bulk", function () {
             const [err, result] = await new Promise((resolve) => batch.execute((err, result) => resolve([err, result])));
             expect(err).to.be.an("error");
             expect(result.nInserted).to.be.equal(2);
-            expect(result.hasWriteErrors()).to.be.true;
+            expect(result.hasWriteErrors()).to.be.true();
             expect(result.getWriteErrorCount()).to.be.oneOf([3, 4]);
 
             const error = result.getWriteErrorAt(0);
             expect(error.code).to.be.oneOf([11000, 11001]);
-            expect(error.errmsg).to.be.ok;
+            expect(error.errmsg).to.be.ok();
         });
 
         it("should correctly execute unordered batch of with upserts causing duplicate key errors on updates", async () => {
@@ -465,21 +465,21 @@ describe("bulk", function () {
                 nUpserted: 2,
                 nRemoved: 0
             });
-            expect(result.nModified === 0 || is.nil(result.nModified)).to.be.true;
-            expect(result.hasWriteErrors()).to.be.true;
+            expect(result.nModified === 0 || is.nil(result.nModified)).to.be.true();
+            expect(result.hasWriteErrors()).to.be.true();
             expect(result.getWriteErrorCount()).to.be.equal(2);
 
             const error = result.getWriteErrorAt(0);
             expect(error.code).to.be.oneOf([11000, 11001]);
-            expect(error.errmsg).to.be.ok;
+            expect(error.errmsg).to.be.ok();
             expect(error.getOperation().u.$set.b).to.be.equal(1);
 
             const ids = result.getUpsertedIds();
             expect(ids).to.have.lengthOf(2);
             expect(ids[0].index).to.be.equal(2);
-            expect(ids[0]._id).to.be.ok;
+            expect(ids[0]._id).to.be.ok();
             expect(ids[1].index).to.be.equal(3);
-            expect(ids[1]._id).to.be.ok;
+            expect(ids[1]._id).to.be.ok();
         });
 
         it("should correctly perform unordered upsert with custom _id", async () => {
@@ -493,7 +493,7 @@ describe("bulk", function () {
                 nMatched: 0,
                 nRemoved: 0
             });
-            expect(result.nModified === 0 || is.nul(result.nModified)).to.be.ok;
+            expect(result.nModified === 0 || is.nul(result.nModified)).to.be.ok();
 
             const upserts = result.getUpsertedIds();
             expect(upserts).to.have.lengthOf(1);
@@ -526,7 +526,7 @@ describe("bulk", function () {
             const err = await new Promise((resolve) => {
                 collection.initializeUnorderedBulkOp().execute(resolve);
             });
-            expect(err).to.exist;
+            expect(err).to.exist();
             expect(err.message).to.be.equal("Invalid Operation, No operations in bulk");
         });
 
@@ -548,8 +548,8 @@ describe("bulk", function () {
                 nMatched: 0,
                 nRemoved: 0
             });
-            expect(result.nModified === 0 || is.nil(result.nModified)).to.be.true;
-            expect(result.hasWriteErrors()).to.be.false;
+            expect(result.nModified === 0 || is.nil(result.nModified)).to.be.true();
+            expect(result.hasWriteErrors()).to.be.false();
         });
     }
 
@@ -564,8 +564,8 @@ describe("bulk", function () {
             const err = await assert.throws(async () => {
                 await batch.execute({ w: 2, wtimeout: 1000 });
             });
-            expect(err.code).to.be.ok;
-            expect(err.errmsg).to.be.ok;
+            expect(err.code).to.be.ok();
+            expect(err.errmsg).to.be.ok();
         });
 
         it("should correctly handle bulk operation split for ordered bulk operation", async () => {
@@ -591,8 +591,8 @@ describe("bulk", function () {
             const err = await assert.throws(async () => {
                 await batch.execute({ w: 2, wtimeout: 1000 });
             });
-            expect(err.code).to.be.ok;
-            expect(err.errmsg).to.be.ok;
+            expect(err.code).to.be.ok();
+            expect(err.errmsg).to.be.ok();
         });
 
         it("should correctly return the number of operations in the bulk", async () => {

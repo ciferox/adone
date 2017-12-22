@@ -2169,8 +2169,8 @@ const addressIs = (addressString, descriptors) => {
                     expect(address4.subnetMask).to.be.at.least(0);
                     expect(address4.subnetMask).to.be.at.most(128);
 
-                    expect(address4.error).to.not.exist;
-                    expect(address4.parseError).to.not.exist;
+                    expect(address4.error).to.not.exist();
+                    expect(address4.parseError).to.not.exist();
 
                     expect(address4.isValid()).to.equal(true);
                 });
@@ -2192,8 +2192,8 @@ const addressIs = (addressString, descriptors) => {
                     expect(address6.parsedAddress).to.be.an.instanceOf(Array);
                     expect(address6.parsedAddress.length).to.equal(8);
 
-                    expect(address6.error).to.not.exist;
-                    expect(address6.parseError).to.not.exist;
+                    expect(address6.error).to.not.exist();
+                    expect(address6.parseError).to.not.exist();
 
                     expect(address6.isValid()).to.equal(true);
                 });
@@ -2224,7 +2224,7 @@ const addressIs = (addressString, descriptors) => {
                 it("converts to a byte array and back", () => {
                     const byteArray = address6.toByteArray();
 
-                    assert.isAtMost(byteArray.length, 16);
+                    assert.atMost(byteArray.length, 16);
 
                     const converted = IP6.fromByteArray(byteArray);
 
@@ -2234,7 +2234,7 @@ const addressIs = (addressString, descriptors) => {
                 it("converts to an unsigned byte array and back", () => {
                     const byteArray = address6.toUnsignedByteArray();
 
-                    assert.isAtMost(byteArray.length, 16);
+                    assert.atMost(byteArray.length, 16);
 
                     const converted = IP6.fromUnsignedByteArray(byteArray);
 
@@ -2255,7 +2255,7 @@ const addressIs = (addressString, descriptors) => {
                     expect(address6.error).to.be.a("string");
 
                     expect(address6.isValid()).to.equal(false);
-                    expect(address6.correctForm()).to.not.exist;
+                    expect(address6.correctForm()).to.not.exist();
                 });
             }
 
@@ -2553,25 +2553,25 @@ describe("net", "ip", () => {
                 it("should be true for equal addresses", () => {
                     const a = new IP4("192.168.1.1");
                     const b = new IP4("192.168.1.1");
-                    expect(a.equal(b)).to.be.true;
+                    expect(a.equal(b)).to.be.true();
                 });
 
                 it("should be false for non ip4 things", () => {
                     const a = new IP4("192.168.1.0");
                     const b = new IP6("::192.168.1.0");
-                    expect(a.equal(b)).to.be.false;
+                    expect(a.equal(b)).to.be.false();
                 });
 
                 it("should be false for different subnets", () => {
                     const a = new IP4("192.168.1.0/24");
                     const b = new IP4("192.168.1.0/25");
-                    expect(a.equal(b)).to.be.false;
+                    expect(a.equal(b)).to.be.false();
                 });
 
                 it("should be false for different addresses", () => {
                     const a = new IP4("192.168.1.1");
                     const b = new IP4("192.168.1.2");
-                    expect(a.equal(b)).to.be.false;
+                    expect(a.equal(b)).to.be.false();
                 });
             });
         });
@@ -3148,25 +3148,25 @@ describe("net", "ip", () => {
                 it("should be true for equal addresses", () => {
                     const a = new IP6("::192.168.1.1");
                     const b = new IP6("::192.168.1.1");
-                    expect(a.equal(b)).to.be.true;
+                    expect(a.equal(b)).to.be.true();
                 });
 
                 it("should be false for non ip6 things", () => {
                     const a = new IP6("::192.168.1.0");
                     const b = new IP4("192.168.1.0");
-                    expect(a.equal(b)).to.be.false;
+                    expect(a.equal(b)).to.be.false();
                 });
 
                 it("should be false for different subnets", () => {
                     const a = new IP6("::192.168.1.0/120");
                     const b = new IP6("::192.168.1.0/121");
-                    expect(a.equal(b)).to.be.false;
+                    expect(a.equal(b)).to.be.false();
                 });
 
                 it("should be false for different addresses", () => {
                     const a = new IP6("::192.168.1.1");
                     const b = new IP6("::192.168.1.2");
-                    expect(a.equal(b)).to.be.false;
+                    expect(a.equal(b)).to.be.false();
                 });
             });
         });

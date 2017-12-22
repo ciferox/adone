@@ -13,7 +13,7 @@ describe("collection", "FastLRU", () => {
         cache.set(2, "two");
         cache.set(3, "three");
         for (const [k, v] of [[1, "one"], [2, "two"], [3, "three"]]) {
-            expect(cache.has(k)).to.be.true;
+            expect(cache.has(k)).to.be.true();
             expect(cache.get(k)).to.be.equal(v);
         }
         checkQueue(cache, [3, 2, 1]);
@@ -49,7 +49,7 @@ describe("collection", "FastLRU", () => {
         cache.set(4, "4");
         cache.set(5, "5");
         cache.set(6, "6");
-        expect(cache.has(1)).to.be.false;
+        expect(cache.has(1)).to.be.false();
         checkQueue(cache, [6, 5, 4, 3, 2]);
         cache.get(3);
         cache.set(7, "7");
@@ -82,8 +82,8 @@ describe("collection", "FastLRU", () => {
             const cache = new FastLRU(5);
             cache.set(1, "1");
             cache.delete(1);
-            expect(cache.has(1)).to.be.false;
-            expect(cache.cache.has(1)).to.be.false;
+            expect(cache.has(1)).to.be.false();
+            expect(cache.cache.has(1)).to.be.false();
             expect(cache.queue.length).to.be.equal(0);
             cache.set(1, "1");
             cache.set(2, "2");
@@ -95,12 +95,12 @@ describe("collection", "FastLRU", () => {
         it("should return true if it was really deleted", () => {
             const cache = new FastLRU(5);
             cache.set(1, "1");
-            expect(cache.delete(1)).to.be.true;
+            expect(cache.delete(1)).to.be.true();
         });
 
         it("should return false if there was no such key", () => {
             const cache = new FastLRU(5);
-            expect(cache.delete(2)).to.be.false;
+            expect(cache.delete(2)).to.be.false();
         });
 
         it("should call the dispose callback", () => {
@@ -156,16 +156,16 @@ describe("collection", "FastLRU", () => {
             cache.set(4, "4");
             cache.set(5, "5");
             cache.set(6, "6");
-            expect(cache.has(1)).to.be.false;
+            expect(cache.has(1)).to.be.false();
             cache.resize(10);
             cache.set(7, "7");
             cache.set(8, "8");
             cache.set(9, "9");
             cache.set(10, "10");
             cache.set(11, "11");
-            expect(cache.has(2)).to.be.true;
+            expect(cache.has(2)).to.be.true();
             cache.set(12, "12");
-            expect(cache.has(2)).to.be.false;
+            expect(cache.has(2)).to.be.false();
         });
     });
 });

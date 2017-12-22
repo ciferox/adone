@@ -27,7 +27,7 @@ describe("net", "http", "server", "request", "accepts languages", () => {
                 it("should return false", () => {
                     const ctx = context();
                     ctx.req.headers["accept-language"] = "en;q=0.8, es, pt";
-                    expect(ctx.acceptsLanguages("fr", "au")).to.be.false;
+                    expect(ctx.acceptsLanguages("fr", "au")).to.be.false();
                 });
             });
         });

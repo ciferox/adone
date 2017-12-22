@@ -48,7 +48,7 @@ describe(Support.getTestDialectTeaser("BelongsTo"), () => {
                     return Task.User.get(tasks).then((result) => {
                         expect(result[tasks[0].id].id).to.equal(tasks[0].user.id);
                         expect(result[tasks[1].id].id).to.equal(tasks[1].user.id);
-                        expect(result[tasks[2].id]).to.be.undefined;
+                        expect(result[tasks[2].id]).to.be.undefined();
                     });
                 });
             });
@@ -72,7 +72,7 @@ describe(Support.getTestDialectTeaser("BelongsTo"), () => {
                                     return group.setUser(user, { transaction: t }).then(() => {
                                         return Group.all().then((groups) => {
                                             return groups[0].getUser().then((associatedUser) => {
-                                                expect(associatedUser).to.be.null;
+                                                expect(associatedUser).to.be.null();
                                                 return Group.all({ transaction: t }).then((groups) => {
                                                     return groups[0].getUser({ transaction: t }).then((associatedUser) => {
                                                         expect(associatedUser).to.be.not.null;
@@ -105,7 +105,7 @@ describe(Support.getTestDialectTeaser("BelongsTo"), () => {
                 Task.create({ title: "task", status: "inactive" })
             ]);
             await task.setUserXYZ(userA);
-            expect(await task.getUserXYZ({ where: { gender: "female" } })).to.be.null;
+            expect(await task.getUserXYZ({ where: { gender: "female" } })).to.be.null();
         });
 
         it("supports schemas", async function () {
@@ -124,7 +124,7 @@ describe(Support.getTestDialectTeaser("BelongsTo"), () => {
                 Task.create({ title: "task", status: "inactive" })
             ]);
             await task.setUserXYZ(user);
-            expect(await task.getUserXYZ()).to.be.ok;
+            expect(await task.getUserXYZ()).to.be.ok();
         });
     });
 
@@ -145,7 +145,7 @@ describe(Support.getTestDialectTeaser("BelongsTo"), () => {
                                     return group.setUser(user, { transaction: t }).then(() => {
                                         return Group.all().then((groups) => {
                                             return groups[0].getUser().then((associatedUser) => {
-                                                expect(associatedUser).to.be.null;
+                                                expect(associatedUser).to.be.null();
                                                 return t.rollback();
                                             });
                                         });
@@ -169,11 +169,11 @@ describe(Support.getTestDialectTeaser("BelongsTo"), () => {
                     return Task.create({ task_id: 1, title: "task" }).then((task) => {
                         return task.setUserXYZ(user).then(() => {
                             return task.getUserXYZ().then((user) => {
-                                expect(user).not.to.be.null;
+                                expect(user).not.to.be.null();
 
                                 return task.setUserXYZ(null).then(() => {
                                     return task.getUserXYZ().then((user) => {
-                                        expect(user).to.be.null;
+                                        expect(user).to.be.null();
                                     });
                                 });
                             });
@@ -194,11 +194,11 @@ describe(Support.getTestDialectTeaser("BelongsTo"), () => {
                     return Task.create({ title: "task" }).then((task) => {
                         return task.setUserXYZ(user).then(() => {
                             return task.getUserXYZ().then((user) => {
-                                expect(user).not.to.be.null;
+                                expect(user).not.to.be.null();
 
                                 return task.setUserXYZ(null).then(() => {
                                     return task.getUserXYZ().then((user) => {
-                                        expect(user).to.be.null;
+                                        expect(user).to.be.null();
                                     });
                                 });
                             });
@@ -254,7 +254,7 @@ describe(Support.getTestDialectTeaser("BelongsTo"), () => {
                 return User.create().then((user) => {
                     return Task.create({}).then((task) => {
                         return task.setUserXYZ(user, { logging: s }).then(() => {
-                            expect(s.called).to.be.ok;
+                            expect(s.called).to.be.ok();
                         });
                     });
                 });
@@ -306,13 +306,13 @@ describe(Support.getTestDialectTeaser("BelongsTo"), () => {
                 Post.create(),
                 Comment.create()
             ]);
-            expect(comment.get("post_id")).not.to.be.ok;
+            expect(comment.get("post_id")).not.to.be.ok();
 
             const setter = comment.setPost(post, { save: false });
 
-            expect(setter).to.be.undefined;
+            expect(setter).to.be.undefined();
             expect(comment.get("post_id")).to.equal(post.get("id"));
-            expect(comment.changed("post_id")).to.be.true;
+            expect(comment.changed("post_id")).to.be.true();
         });
 
         it("supports setting same association twice", async function () {
@@ -344,7 +344,7 @@ describe(Support.getTestDialectTeaser("BelongsTo"), () => {
                 return Task.create({ title: "task" }).then((task) => {
                     return task.createUser({ username: "bob" }).then(() => {
                         return task.getUser().then((user) => {
-                            expect(user).not.to.be.null;
+                            expect(user).not.to.be.null();
                             expect(user.username).to.equal("bob");
                         });
                     });
@@ -365,10 +365,10 @@ describe(Support.getTestDialectTeaser("BelongsTo"), () => {
                             return sequelize.transaction().then((t) => {
                                 return group.createUser({ username: "foo" }, { transaction: t }).then(() => {
                                     return group.getUser().then((user) => {
-                                        expect(user).to.be.null;
+                                        expect(user).to.be.null();
 
                                         return group.getUser({ transaction: t }).then((user) => {
-                                            expect(user).not.to.be.null;
+                                            expect(user).not.to.be.null();
 
                                             return t.rollback();
                                         });
@@ -389,7 +389,7 @@ describe(Support.getTestDialectTeaser("BelongsTo"), () => {
 
             User.belongsTo(Account);
 
-            expect(User.rawAttributes.account_id).to.exist;
+            expect(User.rawAttributes.account_id).to.exist();
         });
 
         it("should use model name when using camelcase", function () {
@@ -398,7 +398,7 @@ describe(Support.getTestDialectTeaser("BelongsTo"), () => {
 
             User.belongsTo(Account);
 
-            expect(User.rawAttributes.AccountId).to.exist;
+            expect(User.rawAttributes.AccountId).to.exist();
         });
 
         it("should support specifying the field of a foreign key", async function () {
@@ -412,7 +412,7 @@ describe(Support.getTestDialectTeaser("BelongsTo"), () => {
                 }
             });
 
-            expect(User.rawAttributes.AccountId).to.exist;
+            expect(User.rawAttributes.AccountId).to.exist();
             expect(User.rawAttributes.AccountId.field).to.equal("account_id");
 
             await Account.sync({ force: true });
@@ -426,12 +426,12 @@ describe(Support.getTestDialectTeaser("BelongsTo"), () => {
             await user.setAccount(account);
             const _user = await user.getAccount();
             // the sql query should correctly look at task_id instead of taskId
-            expect(_user).to.not.be.null;
+            expect(_user).to.not.be.null();
             const task = await User.findOne({
                 where: { username: "foo" },
                 include: [Account]
             });
-            expect(task.Account).to.exist;
+            expect(task.Account).to.exist();
         });
     });
 
@@ -727,8 +727,8 @@ describe(Support.getTestDialectTeaser("BelongsTo"), () => {
                     }
                 });
 
-                expect(Task.rawAttributes.uid).to.be.ok;
-                expect(Task.rawAttributes.uid.allowNull).to.be.false;
+                expect(Task.rawAttributes.uid).to.be.ok();
+                expect(Task.rawAttributes.uid.allowNull).to.be.false();
                 expect(Task.rawAttributes.uid.references.model).to.equal(User.getTableName());
                 expect(Task.rawAttributes.uid.references.key).to.equal("id");
             });
@@ -749,10 +749,10 @@ describe(Support.getTestDialectTeaser("BelongsTo"), () => {
 
                 Profile.belongsTo(User, { foreignKey: Profile.rawAttributes.user_id });
 
-                expect(Profile.rawAttributes.user_id).to.be.ok;
+                expect(Profile.rawAttributes.user_id).to.be.ok();
                 expect(Profile.rawAttributes.user_id.references.model).to.equal(User.getTableName());
                 expect(Profile.rawAttributes.user_id.references.key).to.equal("uid");
-                expect(Profile.rawAttributes.user_id.allowNull).to.be.false;
+                expect(Profile.rawAttributes.user_id.allowNull).to.be.false();
             });
 
             it("works when merging with an existing definition", function () {
@@ -766,9 +766,9 @@ describe(Support.getTestDialectTeaser("BelongsTo"), () => {
 
                 Task.belongsTo(Project, { foreignKey: { allowNull: true } });
 
-                expect(Task.rawAttributes.projectId).to.be.ok;
+                expect(Task.rawAttributes.projectId).to.be.ok();
                 expect(Task.rawAttributes.projectId.defaultValue).to.equal(42);
-                expect(Task.rawAttributes.projectId.allowNull).to.be.ok;
+                expect(Task.rawAttributes.projectId.allowNull).to.be.ok();
             });
         });
 

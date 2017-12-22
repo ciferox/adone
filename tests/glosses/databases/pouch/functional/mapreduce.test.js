@@ -48,12 +48,12 @@ describe("database", "pouch", "mapreduce", () => {
         expect(res.rows).to.have.length(1, "Dont include deleted documents");
         expect(res.total_rows).to.be.equal(1, "Include total_rows property.");
         res.rows.forEach((x) => {
-            expect(x.id).to.exist;
-            expect(x.key).to.exist;
-            expect(x.value).to.exist;
-            expect(x.value._rev).to.exist;
-            expect(x.doc).to.exist;
-            expect(x.doc._rev).to.exist;
+            expect(x.id).to.exist();
+            expect(x.key).to.exist();
+            expect(x.value).to.exist();
+            expect(x.value._rev).to.exist();
+            expect(x.doc).to.exist();
+            expect(x.doc._rev).to.exist();
         });
     });
 
@@ -75,11 +75,11 @@ describe("database", "pouch", "mapreduce", () => {
         expect(res.rows).to.have.length(1, "Dont include deleted documents");
         expect(res.total_rows).to.be.equal(1, "Include total_rows property.");
         res.rows.forEach((x) => {
-            expect(x.id).to.exist;
-            expect(x.key).to.exist;
+            expect(x.id).to.exist();
+            expect(x.key).to.exist();
             expect(x.value, null).to.equal;
-            expect(x.doc).to.exist;
-            expect(x.doc._rev).to.exist;
+            expect(x.doc).to.exist();
+            expect(x.doc._rev).to.exist();
         });
     });
 
@@ -330,14 +330,14 @@ describe("database", "pouch", "mapreduce", () => {
         await db.bulkDocs({ docs });
         {
             const res = await db.query(queryFun, { reduce: false });
-            expect(res.rows).not.to.be.empty;
+            expect(res.rows).not.to.be.empty();
             res.rows.forEach((x, i) => {
                 expect(JSON.stringify(x.key)).to.be.equal(JSON.stringify(values[i]));
             });
         }
         {
             const res = await db.query(queryFun, { descending: true, reduce: false });
-            expect(res.rows).not.to.be.empty;
+            expect(res.rows).not.to.be.empty();
             res.rows.forEach((x, i) => {
                 expect(JSON.stringify(x.key)).to.be.equal(JSON.stringify(values[values.length - 1 - i]));
             });
@@ -818,7 +818,7 @@ describe("database", "pouch", "mapreduce", () => {
             ]
         });
         const res = await db.query(queryFun, { include_docs: true, reduce: false });
-        expect(res.rows[0].doc).to.exist;
+        expect(res.rows[0].doc).to.exist();
         expect(res.rows[0].doc._id).to.be.equal("mydoc");
     });
 
@@ -1058,9 +1058,9 @@ describe("database", "pouch", "mapreduce", () => {
                     emit(doc._conflicts, null);
                 }
             }, { include_docs: true, conflicts: true });
-            expect(res.rows[0].doc._conflicts).to.exist;
+            expect(res.rows[0].doc._conflicts).to.exist();
             res = await db.get(res.rows[0].doc._id, { conflicts: true });
-            expect(res._conflicts).to.exist;
+            expect(res._conflicts).to.exist();
         } finally {
             await cleanup();
         }
@@ -1146,7 +1146,7 @@ describe("database", "pouch", "mapreduce", () => {
             }).then((res) => {
                 expect(res.rows).to.have.length(5);
                 res.rows.forEach((row) => {
-                    expect(row.doc).to.not.exist;
+                    expect(row.doc).to.not.exist();
                 });
             });
         });
@@ -1184,7 +1184,7 @@ describe("database", "pouch", "mapreduce", () => {
                     const doc = row.doc;
                     Object.keys(doc._attachments).forEach((attName) => {
                         const att = doc._attachments[attName];
-                        expect(att.strub).to.not.exist;
+                        expect(att.strub).to.not.exist();
                         expect(att.data).to.be.not.a("string");
                     });
                 });
@@ -1216,7 +1216,7 @@ describe("database", "pouch", "mapreduce", () => {
             }).then((res) => {
                 res.rows.forEach((row) => {
                     const doc = row.doc;
-                    expect(doc._attachments).to.not.exist;
+                    expect(doc._attachments).to.not.exist();
                 });
             });
         });
@@ -1295,7 +1295,7 @@ describe("database", "pouch", "mapreduce", () => {
                 }
             }).then((queryFun) => {
                 return db.query(queryFun).then((res) => {
-                    expect(res.rows).to.be.empty;
+                    expect(res.rows).to.be.empty();
                     return db.bulkDocs([
                         {
                             foo: "1",
@@ -1348,11 +1348,11 @@ describe("database", "pouch", "mapreduce", () => {
             await replicate(remote);
             {
                 const res = await db.get(doc1._id, { conflicts: true });
-                expect(res._conflicts).to.exist;
+                expect(res._conflicts).to.exist();
             }
             {
                 const res = await db.query(queryFun);
-                expect(res.rows[0].value).to.be.true;
+                expect(res.rows[0].value).to.be.true(););
             }
         } finally {
             await cleanup();
@@ -1413,7 +1413,7 @@ describe("database", "pouch", "mapreduce", () => {
                 // sandbox using node's `vm` module.
                 // c.f. https://stackoverflow.com/a/16273649/680742
                 assert.lengthOf(res.rows, 1, "Correctly reduced returned rows");
-                assert.isNull(res.rows[0].key, "Correct, non-existing key");
+                assert.null(res.rows[0].key, "Correct, non-existing key");
                 assert.lengthOf(res.rows[0].value, 5);
                 assert.include(res.rows[0].value, "foobarbaz");
                 assert.include(res.rows[0].value, "foobar"); // twice
@@ -1490,13 +1490,13 @@ describe("database", "pouch", "mapreduce", () => {
         }).then((queryFun) => {
             return db.query(queryFun, { group_level: -1, reduce: true })
                 .then((res) => {
-                    expect(res).to.not.exist;
+                    expect(res).to.not.exist();
                 }).catch((err) => {
                     expect(err.status).to.be.equal(400);
                     expect(err.message).to.be.a("string");
                     return db.query(queryFun, { group_level: "exact", reduce: true });
                 }).then((res) => {
-                    expect(res).to.not.exist;
+                    expect(res).to.not.exist();
                 }).catch((err) => {
                     expect(err.status).to.be.equal(400);
                     expect(err.message).to.be.a("string");
@@ -1551,13 +1551,13 @@ describe("database", "pouch", "mapreduce", () => {
             }).then(() => {
                 return db.query(queryFun, { limit: -1, group: true, reduce: true });
             }).then((res) => {
-                expect(res).to.not.exist;
+                expect(res).to.not.exist();
             }).catch((err) => {
                 expect(err.status).to.be.equal(400);
                 expect(err.message).to.be.a("string");
                 return db.query(queryFun, { limit: "1a", group: true, reduce: true });
             }).then((res) => {
-                expect(res).to.not.exist;
+                expect(res).to.not.exist();
             }).catch((err) => {
                 expect(err.status).to.be.equal(400);
                 expect(err.message).to.be.a("string");
@@ -1668,13 +1668,13 @@ describe("database", "pouch", "mapreduce", () => {
             }).then(() => {
                 return db.query(queryFun, { skip: -1, group: true, reduce: true });
             }).then((res) => {
-                expect(res).to.not.exist;
+                expect(res).to.not.exist();
             }).catch((err) => {
                 expect(err.status).to.be.equal(400);
                 expect(err.message).to.be.a("string");
                 return db.query(queryFun, { skip: "1a", group: true, reduce: true });
             }).then((res) => {
-                expect(res).to.not.exist;
+                expect(res).to.not.exist();
             }).catch((err) => {
                 expect(err.status).to.be.equal(400);
                 expect(err.message).to.be.a("string");
@@ -1698,7 +1698,7 @@ describe("database", "pouch", "mapreduce", () => {
             }).then(() => {
                 return db.query(queryFun, { include_docs: true });
             }).then((res) => {
-                expect(res.rows[0].doc._doc_id_rev).to.not.exist;
+                expect(res.rows[0].doc._doc_id_rev).to.not.exist();
             });
         });
     });
@@ -1751,7 +1751,7 @@ describe("database", "pouch", "mapreduce", () => {
             }).then(() => {
                 return db.viewCleanup();
             }).then((res) => {
-                expect(res.ok).to.be.true;
+                expect(res.ok).to.be.true(););
             });
         });
     });
@@ -1772,7 +1772,7 @@ describe("database", "pouch", "mapreduce", () => {
                 ]
             }).then(() => {
                 return db.query(queryFun).then((data) => {
-                    expect(data.rows[0].value).to.exist;
+                    expect(data.rows[0].value).to.exist();
                 });
             });
         });
@@ -1935,7 +1935,7 @@ describe("database", "pouch", "mapreduce", () => {
             }).then((data) => {
                 expect(data.rows).to.have.length(1, "returns 1 doc due to unknown key");
                 expect(data.rows[0].id).to.be.equal("doc_2");
-                expect(data.rows[0].doc).to.not.exist;
+                expect(data.rows[0].doc).to.not.exist();
             });
         });
     });
@@ -2015,7 +2015,7 @@ describe("database", "pouch", "mapreduce", () => {
 
             expect(data.rows[4].key).to.be.equal("bar");
             expect(data.rows[4].id).to.be.equal("doc1");
-            expect(data.rows[4].value).to.not.exist;
+            expect(data.rows[4].value).to.not.exist();
             expect(data.rows[5].key).to.be.equal("bar");
             expect(data.rows[5].id).to.be.equal("doc1");
             expect(data.rows[5].value).to.be.equal("crayon!");
@@ -2025,7 +2025,7 @@ describe("database", "pouch", "mapreduce", () => {
 
             expect(data.rows[7].key).to.be.equal("bar");
             expect(data.rows[7].id).to.be.equal("doc2");
-            expect(data.rows[7].value).to.not.exist;
+            expect(data.rows[7].value).to.not.exist();
             expect(data.rows[8].key).to.be.equal("bar");
             expect(data.rows[8].id).to.be.equal("doc2");
             expect(data.rows[8].value).to.be.equal("crayon!");
@@ -2492,7 +2492,7 @@ describe("database", "pouch", "mapreduce", () => {
                 expect(res.total_rows).to.be.equal(8, "correctly return total_rows");
 
                 return db.query(mapFun, { startkey: "5", endkey: "4" }).then((res) => {
-                    expect(res).to.not.exist;
+                    expect(res).to.not.exist();
                 }).catch((err) => {
                     expect(err.status).to.be.equal(400);
                     expect(err.message).to.be.a("string");
@@ -2692,8 +2692,8 @@ describe("database", "pouch", "mapreduce", () => {
                 return db.query(queryFun);
             }).then((res) => {
                 expect(res.rows[0]).to.have.all.keys(["key", "value"]);
-                expect(res.total_rows).to.not.exist;
-                expect(res.offset).to.not.exist;
+                expect(res.total_rows).to.not.exist();
+                expect(res.offset).to.not.exist();
                 expect(res.rows.map(keyValues)).to.be.deep.equal([
                     {
                         key: null,
@@ -2703,8 +2703,8 @@ describe("database", "pouch", "mapreduce", () => {
                 return db.query(queryFun, { group: true });
             }).then((res) => {
                 expect(res.rows[0]).to.have.all.keys(["key", "value"]);
-                expect(res.total_rows).to.not.exist;
-                expect(res.offset).to.not.exist;
+                expect(res.total_rows).to.not.exist();
+                expect(res.offset).to.not.exist();
                 expect(res.rows.map(keyValues)).to.be.deep.equal([
                     {
                         key: "bar",
@@ -2753,7 +2753,7 @@ describe("database", "pouch", "mapreduce", () => {
                     "2", "1", "3", "5", "6", "7", "4"
                 ]);
                 return db.query(queryFun, { include_docs: true }).then((res) => {
-                    expect(res).to.not.exist;
+                    expect(res).to.not.exist();
                 }).catch((err) => {
                     expect(err.status).to.be.equal(400);
                     expect(err.message).to.be.a("string");
@@ -3005,12 +3005,12 @@ describe("database", "pouch", "mapreduce", () => {
                 group: false
             };
             return db.query(queryFun, opts).then((res) => {
-                expect(res).to.not.exist;
+                expect(res).to.not.exist();
             }).catch((err) => {
                 expect(err.status).to.be.equal(400);
                 opts = { keys };
                 return db.query(queryFun, opts).then((res) => {
-                    expect(res).to.not.exist;
+                    expect(res).to.not.exist();
                 }).catch((err) => {
                     expect(err.status).to.be.equal(400);
                     opts = { keys, reduce: false };
@@ -3038,7 +3038,7 @@ describe("database", "pouch", "mapreduce", () => {
                 return db.query(queryFun);
             }).then((res) => {
                 expect(res.rows).to.have.length(0);
-                expect(err).to.exist;
+                expect(err).to.exist();
             });
         });
     });
@@ -3068,7 +3068,7 @@ describe("database", "pouch", "mapreduce", () => {
                 expect(res.rows.map((row) => {
                     return row.key;
                 })).to.deep.equal(["bar"]);
-                expect(err).to.exist;
+                expect(err).to.exist();
             });
         });
     });
@@ -3097,7 +3097,7 @@ describe("database", "pouch", "mapreduce", () => {
                 expect(res.rows.map((row) => {
                     return row.key;
                 })).to.be.deep.equal(["bar"]);
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
             });
         });
     });
@@ -3402,7 +3402,7 @@ describe("database", "pouch", "mapreduce", () => {
                 });
             });
         }).then((res) => {
-            expect(res).to.be.true;
+            expect(res).to.be.true(););
         });
     });
 
@@ -3460,7 +3460,7 @@ describe("database", "pouch", "mapreduce", () => {
             }).then(() => {
                 return db.query(view);
             }).then((res) => {
-                expect(err).to.exist;
+                expect(err).to.exist();
                 expect(res.rows).to.have.length(2, "Ignore the wrongly formatted doc");
                 return db.query(view);
             }).then((res) => {

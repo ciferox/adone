@@ -40,7 +40,7 @@ describe("net", "http", "helpers", "compose", () => {
             err = _err;
         }
         expect(i).to.be.equal(3);
-        expect(err).to.be.ok;
+        expect(err).to.be.ok();
     });
 
     it("should not call a middleware without the next callback being invoked", async () => {
@@ -71,7 +71,7 @@ describe("net", "http", "helpers", "compose", () => {
             err = _err;
         }
         expect(i).to.be.equal(3);
-        expect(err).to.be.ok;
+        expect(err).to.be.ok();
     });
 
     it("should pass extra arguments to the first middleware", async () => {

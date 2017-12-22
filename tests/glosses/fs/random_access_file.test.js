@@ -37,7 +37,7 @@ describe("fs", "RandomAccessFile", () => {
         } catch (err) {
             isOk = false;
         }
-        assert.isOk(isOk);
+        assert.ok(isOk);
     });
 
     it("read empty", async () => {
@@ -51,7 +51,7 @@ describe("fs", "RandomAccessFile", () => {
         } catch (err) {
             isOk = false;
         }
-        assert.isOk(isOk);
+        assert.ok(isOk);
     });
 
     it("read range > file", async () => {
@@ -64,7 +64,7 @@ describe("fs", "RandomAccessFile", () => {
         }
         await file.close();
         await file.unlink();
-        assert.isOk(isOk);
+        assert.ok(isOk);
     });
 
     it("random access write and read", async () => {
@@ -86,7 +86,7 @@ describe("fs", "RandomAccessFile", () => {
             console.log(err);
             isOk = false;
         }
-        assert.isOk(isOk);
+        assert.ok(isOk);
     });
 
     it("re-open", async () => {
@@ -105,7 +105,7 @@ describe("fs", "RandomAccessFile", () => {
         } catch (err) {
             isOk = false;
         }
-        assert.isOk(isOk);
+        assert.ok(isOk);
     });
 
     it("re-open and truncate", async () => {
@@ -124,7 +124,7 @@ describe("fs", "RandomAccessFile", () => {
         await file.close();
         await file2.close();
         await file.unlink();
-        assert.isOk(isOk);
+        assert.ok(isOk);
     });
 
     it.only("append mode", {
@@ -154,7 +154,7 @@ describe("fs", "RandomAccessFile", () => {
             console.log(err);
             isOk = false;
         }
-        assert.isOk(isOk);
+        assert.ok(isOk);
     });
 
     it("mkdir path", async () => {
@@ -171,7 +171,7 @@ describe("fs", "RandomAccessFile", () => {
         } catch (err) {
             isOk = false;
         }
-        assert.isOk(isOk);
+        assert.ok(isOk);
     });
 
     it("end", async () => {
@@ -194,7 +194,7 @@ describe("fs", "RandomAccessFile", () => {
         } catch (err) {
             isOk = false;
         }
-        assert.isOk(isOk);
+        assert.ok(isOk);
     });
 
     it("should resolve the filename's path", () => {

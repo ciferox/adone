@@ -234,7 +234,7 @@ describe("net", "mail", "Fetch Tests", () => {
             buf.push(chunk);
         });
         req.on("error", (err) => {
-            expect(err).to.exist;
+            expect(err).to.exist();
             done();
         });
         req.on("end", () => {});
@@ -263,7 +263,7 @@ describe("net", "mail", "Fetch Tests", () => {
             buf.push(chunk);
         });
         req.on("error", (err) => {
-            expect(err).to.exist;
+            expect(err).to.exist();
             done();
         });
         req.on("end", () => {});
@@ -278,7 +278,7 @@ describe("net", "mail", "Fetch Tests", () => {
             buf.push(chunk);
         });
         req.on("error", (err) => {
-            expect(err).to.exist;
+            expect(err).to.exist();
             done();
         });
         req.on("end", () => {});
@@ -303,7 +303,7 @@ describe("net", "mail", "Fetch Tests", () => {
             buf.push(chunk);
         });
         req.on("error", (err) => {
-            expect(err).to.exist;
+            expect(err).to.exist();
             done();
         });
         req.on("end", () => {});
@@ -316,7 +316,7 @@ describe("net", "mail", "Fetch Tests", () => {
             buf.push(chunk);
         });
         req.on("error", (err) => {
-            expect(err).to.exist;
+            expect(err).to.exist();
             done();
         });
         req.on("end", () => {});
@@ -331,7 +331,7 @@ describe("net", "mail", "Fetch Tests", () => {
             buf.push(chunk);
         });
         req.on("error", (err) => {
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
         });
         req.on("end", () => {
             expect(req.statusCode).to.equal(500);
@@ -347,7 +347,7 @@ describe("net", "mail", "Fetch Tests", () => {
             buf.push(chunk);
         });
         req.on("error", (err) => {
-            expect(err).to.exist;
+            expect(err).to.exist();
             done();
         });
         req.on("end", () => {});
@@ -362,7 +362,7 @@ describe("net", "mail", "Fetch Tests", () => {
             buf.push(chunk);
         });
         req.on("error", (err) => {
-            expect(err).to.exist;
+            expect(err).to.exist();
             done();
         });
         req.on("end", () => {});
@@ -389,7 +389,7 @@ describe("net", "mail", "Fetch Tests", () => {
                 buf.push(chunk);
             });
             req.on("error", (err) => {
-                expect(err).to.exist;
+                expect(err).to.exist();
                 done();
             });
             req.on("end", () => {});
@@ -483,7 +483,7 @@ describe("net", "mail", "Fetch Tests", () => {
             buf.push(chunk);
         });
         req.on("error", (err) => {
-            expect(err).to.exist;
+            expect(err).to.exist();
             done();
         });
         req.on("end", () => {});

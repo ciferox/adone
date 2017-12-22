@@ -54,7 +54,7 @@ describe("schema", "resolve", () => {
             instances.forEach((instance) => {
                 const validate = instance.compile(schema);
                 const data = { foo: 1, bar: "abc", baz: true, bax: null };
-                expect(validate(data)).to.be.true;
+                expect(validate(data)).to.be.true();
             });
         });
 
@@ -103,8 +103,8 @@ describe("schema", "resolve", () => {
 
                 instance.addSchema(schema);
                 const validate = instance.compile({ $ref: "//e.com/types#/definitions/int" });
-                expect(validate(1)).to.be.true;
-                expect(validate("foo")).to.be.false;
+                expect(validate(1)).to.be.true();
+                expect(validate("foo")).to.be.false();
             });
         });
     });
@@ -196,15 +196,15 @@ describe("schema", "resolve", () => {
         ];
 
         const testObjSchema = (validate) => {
-            expect(validate({ a: 3 })).to.be.true;
-            expect(validate({ a: 1 })).to.be.false;
-            expect(validate({ a: 5 })).to.be.false;
+            expect(validate({ a: 3 })).to.be.true();
+            expect(validate({ a: 1 })).to.be.false();
+            expect(validate({ a: 5 })).to.be.false();
         };
 
         const testListSchema = (validate) => {
-            expect(validate([{ a: 3 }])).to.be.true;
-            expect(validate([{ a: 1 }])).to.be.false;
-            expect(validate([{ a: 5 }])).to.be.false;
+            expect(validate([{ a: 3 }])).to.be.true();
+            expect(validate([{ a: 1 }])).to.be.false();
+            expect(validate([{ a: 5 }])).to.be.false();
         };
 
         const testInlined = (validate, expectedInlined) => {
@@ -302,14 +302,14 @@ describe("schema", "resolve", () => {
             instance.addSchema(schemaMessage);
             const v = instance.getSchema("http://e.com/message.json#");
 
-            expect(v(validMessage)).to.be.true;
+            expect(v(validMessage)).to.be.true();
             expect(v.schema.id).to.be.equal("http://e.com/message.json#");
 
-            expect(v(invalidMessage)).to.be.false;
+            expect(v(invalidMessage)).to.be.false();
             expect(v.errors).to.have.lengthOf(1);
             expect(v.schema.id).to.be.equal("http://e.com/message.json#");
 
-            expect(v(validMessage)).to.be.true;
+            expect(v(validMessage)).to.be.true();
             expect(v.schema.id).to.be.equal("http://e.com/message.json#");
         });
     });

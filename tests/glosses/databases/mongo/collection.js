@@ -10,7 +10,7 @@ describe("collection", function () {
             const documents = await db.listCollections().toArray();
             expect(documents.map((x) => x.name)).to.contain("test_collection_methods");
             await db.renameCollection("test_collection_methods", "test_collection_methods2");
-            expect(await db.dropCollection("test_collection_methods2")).to.be.true;
+            expect(await db.dropCollection("test_collection_methods2")).to.be.true();
         }
         {
             const collection = await db.createCollection("test_collection_methods3");
@@ -21,7 +21,7 @@ describe("collection", function () {
             expect(collection.collectionName).to.be.equal("test_collection_methods4");
         }
         await db.renameCollection("test_collection_methods4", "test_collection_methods3", { dropTarget: true });
-        expect(await db.dropCollection("test_collection_methods3")).to.be.true;
+        expect(await db.dropCollection("test_collection_methods3")).to.be.true();
     });
 
     it("should correctly list back collection names containing .", async () => {
@@ -149,7 +149,7 @@ describe("collection", function () {
         const collection = await this.db.createCollection("test_save");
         const doc = { hello: "world" };
         const r = await collection.save(doc);
-        expect(r.ops[0]._id).to.be.ok;
+        expect(r.ops[0]._id).to.be.ok();
         expect(await collection.count()).to.be.equal(1);
         await collection.save(r.ops[0]);
         expect(await collection.count()).to.be.equal(1);
@@ -283,7 +283,7 @@ describe("collection", function () {
                 break;
             }
         }
-        expect(found).to.be.true;
+        expect(found).to.be.true();
     });
 
     it("should correctly create TTL collection with index using createIndex", async () => {
@@ -299,14 +299,14 @@ describe("collection", function () {
                 break;
             }
         }
-        expect(found).to.be.true;
+        expect(found).to.be.true();
     });
 
     it("should correctly read back document with null", async () => {
         const collection = await this.db.createCollection("shouldCorrectlyReadBackDocumentWithNull", {});
         await collection.insert({ test: null });
         const item = await collection.findOne();
-        expect(item.test).to.be.null;
+        expect(item.test).to.be.null();
     });
 
     it.skip("should throw error due to illegal update", async () => {

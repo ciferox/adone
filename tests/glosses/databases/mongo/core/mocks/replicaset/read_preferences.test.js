@@ -175,7 +175,7 @@ describe("database", "mongo", "core", function () {
                         }, {
                             readPreference: new ReadPreference("secondary", { loc: "dc" })
                         });
-                        expect(r.connection.port === 32002).to.be.ok;
+                        expect(r.connection.port === 32002).to.be.ok();
                     } finally {
                         await primaryServer.destroy();
                         await firstSecondaryServer.destroy();
@@ -184,7 +184,7 @@ describe("database", "mongo", "core", function () {
                         running = false;
                         await adone.promise.delay(1000);
                         Connection.disableConnectionAccounting();
-                        expect(Connection.connections()).to.be.empty;
+                        expect(Connection.connections()).to.be.empty();
                     }
                 });
 
@@ -337,7 +337,7 @@ describe("database", "mongo", "core", function () {
                         running = false;
                         await adone.promise.delay(1000);
                         Connection.disableConnectionAccounting();
-                        expect(Connection.connections()).to.be.empty;
+                        expect(Connection.connections()).to.be.empty();
                     }
                 });
 
@@ -493,7 +493,7 @@ describe("database", "mongo", "core", function () {
                         }, {
                             readPreference: new ReadPreference("secondary")
                         });
-                        expect(r.connection.port !== port).to.be.ok;
+                        expect(r.connection.port !== port).to.be.ok();
                         port = r.connection.port;
 
                         // Perform a find
@@ -503,7 +503,7 @@ describe("database", "mongo", "core", function () {
                         }, {
                             readPreference: new ReadPreference("secondary")
                         });
-                        expect(r.connection.port !== port).to.be.ok;
+                        expect(r.connection.port !== port).to.be.ok();
                     } finally {
                         await primaryServer.destroy();
                         await firstSecondaryServer.destroy();
@@ -512,7 +512,7 @@ describe("database", "mongo", "core", function () {
                         running = false;
                         await adone.promise.delay(1000);
                         Connection.disableConnectionAccounting();
-                        expect(Connection.connections()).to.be.empty;
+                        expect(Connection.connections()).to.be.empty();
                     }
                 });
 
@@ -659,7 +659,7 @@ describe("database", "mongo", "core", function () {
                         running = false;
                         await adone.promise.delay(1000);
                         Connection.disableConnectionAccounting();
-                        expect(Connection.connections()).to.be.empty;
+                        expect(Connection.connections()).to.be.empty();
                     }
                 });
 
@@ -812,7 +812,7 @@ describe("database", "mongo", "core", function () {
                         }, {
                             readPreference: new ReadPreference("primaryPreferred")
                         });
-                        expect(r.connection.port !== 32000).to.be.ok;
+                        expect(r.connection.port !== 32000).to.be.ok();
 
                         // Test secondaryPreferred
                         r = await command("test.test", {
@@ -821,7 +821,7 @@ describe("database", "mongo", "core", function () {
                         }, {
                             readPreference: new ReadPreference("secondaryPreferred")
                         });
-                        expect(r.connection.port !== 32000).to.be.ok;
+                        expect(r.connection.port !== 32000).to.be.ok();
                     } finally {
                         await primaryServer.destroy();
                         await firstSecondaryServer.destroy();
@@ -830,7 +830,7 @@ describe("database", "mongo", "core", function () {
                         running = false;
                         await adone.promise.delay(1000);
                         Connection.disableConnectionAccounting();
-                        expect(Connection.connections()).to.be.empty;
+                        expect(Connection.connections()).to.be.empty();
                     }
                 });
 
@@ -989,7 +989,7 @@ describe("database", "mongo", "core", function () {
                         running = false;
                         await adone.promise.delay(1000);
                         Connection.disableConnectionAccounting();
-                        expect(Connection.connections()).to.be.empty;
+                        expect(Connection.connections()).to.be.empty();
                     }
                 });
 
@@ -1148,7 +1148,7 @@ describe("database", "mongo", "core", function () {
                         running = false;
                         await adone.promise.delay(1000);
                         Connection.disableConnectionAccounting();
-                        expect(Connection.connections()).to.be.empty;
+                        expect(Connection.connections()).to.be.empty();
                     }
                 });
 
@@ -1236,7 +1236,7 @@ describe("database", "mongo", "core", function () {
                         await server.destroy();
                         running = false;
                         await adone.promise.delay(1000);
-                        expect(Connection.connections()).to.be.empty;
+                        expect(Connection.connections()).to.be.empty();
                         Connection.disableConnectionAccounting();
                     }
                 });

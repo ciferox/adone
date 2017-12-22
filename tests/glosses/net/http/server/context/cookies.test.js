@@ -14,7 +14,7 @@ describe("net", "http", "server", "context", "cookies", () => {
                 .get("/")
                 .expectStatus(204)
                 .expect((res) => {
-                    expect(res.headers["set-cookie"].some((cookie) => /^name=/.test(cookie))).to.be.true;
+                    expect(res.headers["set-cookie"].some((cookie) => /^name=/.test(cookie))).to.be.true();
                 });
         });
 
@@ -53,8 +53,8 @@ describe("net", "http", "server", "context", "cookies", () => {
                     .expect((res) => {
                         const cookies = res.headers["set-cookie"];
 
-                        expect(cookies.some((cookie) => /^name=/.test(cookie))).to.be.true;
-                        expect(cookies.some((cookie) => /^name\.sig=/.test(cookie))).to.be.true;
+                        expect(cookies.some((cookie) => /^name=/.test(cookie))).to.be.true();
+                        expect(cookies.some((cookie) => /^name\.sig=/.test(cookie))).to.be.true();
                     });
             });
         });
@@ -77,11 +77,11 @@ describe("net", "http", "server", "context", "cookies", () => {
                     .expectStatus(204)
                     .expect((res) => {
                         const cookies = res.headers["set-cookie"];
-                        expect(cookies.some((cookie) => /^name=/.test(cookie))).to.be.true;
+                        expect(cookies.some((cookie) => /^name=/.test(cookie))).to.be.true();
 
-                        expect(cookies.some((cookie) => /^name\.sig=/.test(cookie))).to.be.true;
+                        expect(cookies.some((cookie) => /^name\.sig=/.test(cookie))).to.be.true();
 
-                        expect(cookies.every((cookie) => /secure/.test(cookie))).to.be.true;
+                        expect(cookies.every((cookie) => /secure/.test(cookie))).to.be.true();
                     });
             });
         });

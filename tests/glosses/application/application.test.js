@@ -25,7 +25,7 @@ describe("application", "Application", () => {
         class TestApp extends Application {
         }
         const testApp = new TestApp();
-        assert.isUndefined(testApp.parent);
+        assert.undefined(testApp.parent);
     });
 
     it("Compact application with properties", async () => {
@@ -364,27 +364,27 @@ describe("application", "Application", () => {
 
             it("by default subsystem should not be owned", () => {
                 const sys = new Sys();
-                assert.isFalse(sys.isOwned);
+                assert.false(sys.isOwned);
             });
 
             it("subsystem should be owned after addSubsystem() and should be freed after deleteSubsystem() ", () => {
                 const sys = new Sys();
 
                 const subSys = new SubSys();
-                assert.isFalse(sys.isOwned);
+                assert.false(sys.isOwned);
 
                 sys.addSubsystem({
                     name: "s",
                     subsystem: subSys
                 });
 
-                assert.isFalse(sys.isOwned);
-                assert.isTrue(subSys.isOwned);
+                assert.false(sys.isOwned);
+                assert.true(subSys.isOwned);
 
                 sys.deleteSubsystem("s");
 
-                assert.isFalse(sys.isOwned);
-                assert.isFalse(subSys.isOwned);
+                assert.false(sys.isOwned);
+                assert.false(subSys.isOwned);
             });
 
             it("subsystem can be owned once", () => {

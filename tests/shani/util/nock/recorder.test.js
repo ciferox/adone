@@ -54,15 +54,15 @@ describe("shani", "util", "nock", "recorder", () => {
 
         //  We ensure that there are no overrides.
         nock.restore();
-        assert.isFalse(nock.isActive());
+        assert.false(nock.isActive());
         //  We active the nock overriding - as it's done by merely loading nock.
         nock.activate();
-        assert.isTrue(nock.isActive());
+        assert.true(nock.isActive());
         //  We start recording.
         nock.recorder.rec();
         //  Nothing happens (nothing has been thrown) - which was the original behavior -
         //  and mocking has been deactivated.
-        assert.isFalse(nock.isActive());
+        assert.false(nock.isActive());
     });
 
     it("records", async () => {

@@ -46,6 +46,6 @@ describe("reconnect", function () {
             await promise.delay(300);
         }
         await collection.insertOne({ a: 1 });
-        expect(await collection.find().toArray()).not.to.be.empty;
+        expect(await collection.find().toArray()).not.to.be.empty();
     });
 });

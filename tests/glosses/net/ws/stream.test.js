@@ -44,7 +44,7 @@ describe("net", "ws", "stream", () => {
             client.on("error", console.error);
 
             client.on("data", (data) => {
-                assert.isOk(is.buffer(data), "is a buffer");
+                assert.ok(is.buffer(data), "is a buffer");
                 assert.equal(data.toString(), "hello world");
                 client.end();
                 echo.stop(() => {
@@ -60,7 +60,7 @@ describe("net", "ws", "stream", () => {
             const client = adone.net.ws.stream.createClient(echo.url);
             client.on("error", () => {
                 echo.stop(() => {
-                    assert.isTrue(true, "should emit error");
+                    assert.true(true, "should emit error");
                     done();
                 });
             });
@@ -88,7 +88,7 @@ describe("net", "ws", "stream", () => {
             client.on("error", console.error);
 
             client.on("data", (data) => {
-                assert.isOk(is.buffer(data), "is a buffer");
+                assert.ok(is.buffer(data), "is a buffer");
                 assert.equal(data.toString(), "hello world");
                 client.end();
                 echo.stop(() => {
@@ -149,7 +149,7 @@ describe("net", "ws", "stream", () => {
                 }, 50);
 
                 stream.on("error", (err) => {
-                    assert.isOk(err, "client errors");
+                    assert.ok(err, "client errors");
                     server.close(done);
                 });
             });
@@ -228,7 +228,7 @@ describe("net", "ws", "stream", () => {
         });
 
         wss.on("stream", (stream, request) => {
-            assert.isOk(request instanceof adone.std.http.IncomingMessage);
+            assert.ok(request instanceof adone.std.http.IncomingMessage);
             m++;
         });
         server.listen(0, () => {
@@ -245,11 +245,11 @@ describe("net", "ws", "stream", () => {
             server
         }, (stream) => {
             stream.once("data", (data) => {
-                assert.isOk(is.buffer(data), "is a buffer");
+                assert.ok(is.buffer(data), "is a buffer");
                 assert.equal(data.toString(), "hello world");
 
                 stream.once("data", (data) => {
-                    assert.isOk(is.buffer(data), "is a buffer");
+                    assert.ok(is.buffer(data), "is a buffer");
                     assert.equal(data.toString(), str);
                     stream.end();
                     server.close();
@@ -298,7 +298,7 @@ describe("net", "ws", "stream", () => {
             client.on("error", console.error);
 
             client.once("data", (data) => {
-                assert.isOk(is.buffer(data), "is a buffer");
+                assert.ok(is.buffer(data), "is a buffer");
                 assert.equal(data.toString(), str);
                 client.end();
                 server.close();

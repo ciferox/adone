@@ -50,8 +50,8 @@ describe("net", "mail", "SES Transport Tests", function () {
         };
 
         transport.sendMail(messageObject, (err, info) => {
-            expect(err).to.not.exist;
-            expect(info).to.exist;
+            expect(err).to.not.exist();
+            expect(info).to.exist();
             expect(info).to.deep.equal({
                 envelope: {
                     from: "andris.reinman@gmail.com",
@@ -103,8 +103,8 @@ describe("net", "mail", "SES Transport Tests", function () {
         };
 
         transport.sendMail(messageObject, (err, info) => {
-            expect(err).to.not.exist;
-            expect(info).to.exist;
+            expect(err).to.not.exist();
+            expect(info).to.exist();
             expect(info).to.deep.equal({
                 envelope: {
                     from: "andris.reinman@gmail.com",
@@ -158,8 +158,8 @@ describe("net", "mail", "SES Transport Tests", function () {
 
             transport.sendMail(messageObject, (err, info) => {
                 finished++;
-                expect(err).to.not.exist;
-                expect(info).to.exist;
+                expect(err).to.not.exist();
+                expect(info).to.exist();
                 expect(info).to.deep.equal({
                     envelope: {
                         from: "andris.reinman@gmail.com",
@@ -219,8 +219,8 @@ describe("net", "mail", "SES Transport Tests", function () {
 
             transport.sendMail(messageObject, (err, info) => {
                 finished++;
-                expect(err).to.not.exist;
-                expect(info).to.exist;
+                expect(err).to.not.exist();
+                expect(info).to.exist();
                 expect(info).to.deep.equal({
                     envelope: {
                         from: "andris.reinman@gmail.com",
@@ -280,8 +280,8 @@ describe("net", "mail", "SES Transport Tests", function () {
 
             transport.sendMail(messageObject, (err, info) => {
                 finished++;
-                expect(err).to.not.exist;
-                expect(info).to.exist;
+                expect(err).to.not.exist();
+                expect(info).to.exist();
                 expect(info).to.deep.equal({
                     envelope: {
                         from: "andris.reinman@gmail.com",
@@ -342,8 +342,8 @@ describe("net", "mail", "SES Transport Tests", function () {
 
             transport.sendMail(messageObject, (err, info) => {
                 finished++;
-                expect(err).to.not.exist;
-                expect(info).to.exist;
+                expect(err).to.not.exist();
+                expect(info).to.exist();
                 expect(info).to.deep.equal({
                     envelope: {
                         from: "andris.reinman@gmail.com",
@@ -404,8 +404,8 @@ describe("net", "mail", "SES Transport Tests", function () {
 
             transport.sendMail(messageObject, (err, info) => {
                 finished++;
-                expect(err).to.not.exist;
-                expect(info).to.exist;
+                expect(err).to.not.exist();
+                expect(info).to.exist();
                 expect(info).to.deep.equal({
                     envelope: {
                         from: "andris.reinman@gmail.com",

@@ -111,7 +111,7 @@ describe("data", "yaml", "issues", () => {
         ];
         for (const string of DEPRECATED_BOOLEANS_SYNTAX) {
             const dump = yaml.dump(string).trim();
-            expect(((dump === `'${string}'`) || (dump === `"${string}"`))).to.be.true;
+            expect(((dump === `'${string}'`) || (dump === `"${string}"`))).to.be.true();
         }
     });
 

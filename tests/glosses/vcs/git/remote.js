@@ -472,10 +472,10 @@ describe("Remote", () => {
                     name: remoteHead.name(),
                     symrefTarget: remoteHead.symrefTarget()
                 };
-            }), "name");            
+            }), "name");
 
             _.forEach(_.keys(expectedRemoteHeads), (remoteHeadName) => {
-                assert.isTrue(_.isEqual(expectedRemoteHeads[remoteHeadName], remoteHeadsBySha[remoteHeadName]), `Expectations for head ${remoteHeadName} were not met.`);
+                assert.true(_.isEqual(expectedRemoteHeads[remoteHeadName], remoteHeadsBySha[remoteHeadName]), `Expectations for head ${remoteHeadName} were not met.`);
             });
 
             return remote.disconnect();

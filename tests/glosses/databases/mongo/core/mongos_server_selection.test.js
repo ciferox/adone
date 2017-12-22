@@ -81,7 +81,7 @@ describe("database", "mongo", "core", function () {
                 }
             }
 
-            expect(found_window).not.to.be.null;
+            expect(found_window).not.to.be.null();
         }
         const path = adone.std.path.join(__dirname, "tests", "server-selection", "tests", "server_selection", "Sharded", "read");
 

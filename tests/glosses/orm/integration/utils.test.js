@@ -47,26 +47,26 @@ describe(Support.getTestDialectTeaser("Utils"), () => {
 
     describe("argsArePrimaryKeys", () => {
         it("doesn't detect primary keys if primareyKeys and values have different lengths", () => {
-            expect(orm.util.argsArePrimaryKeys([1, 2, 3], [1])).to.be.false;
+            expect(orm.util.argsArePrimaryKeys([1, 2, 3], [1])).to.be.false();
         });
 
         it("doesn't detect primary keys if primary keys are hashes or arrays", () => {
-            expect(orm.util.argsArePrimaryKeys([[]], [1])).to.be.false;
+            expect(orm.util.argsArePrimaryKeys([[]], [1])).to.be.false();
         });
 
         it("detects primary keys if length is correct and data types are matching", () => {
-            expect(orm.util.argsArePrimaryKeys([1, 2, 3], ["INTEGER", "INTEGER", "INTEGER"])).to.be.true;
+            expect(orm.util.argsArePrimaryKeys([1, 2, 3], ["INTEGER", "INTEGER", "INTEGER"])).to.be.true();
         });
 
         it("detects primary keys if primary keys are dates and lengths are matching", () => {
-            expect(orm.util.argsArePrimaryKeys([new Date()], ["foo"])).to.be.true;
+            expect(orm.util.argsArePrimaryKeys([new Date()], ["foo"])).to.be.true();
         });
     });
 
     describe("underscore", () => {
         describe("underscoredIf", () => {
             it("is defined", () => {
-                expect(orm.util.underscoredIf).to.be.ok;
+                expect(orm.util.underscoredIf).to.be.ok();
             });
 
             it("underscores if second param is true", () => {
@@ -80,7 +80,7 @@ describe(Support.getTestDialectTeaser("Utils"), () => {
 
         describe("camelizeIf", () => {
             it("is defined", () => {
-                expect(orm.util.camelizeIf).to.be.ok;
+                expect(orm.util.camelizeIf).to.be.ok();
             });
 
             it("camelizes if second param is true", () => {
@@ -165,7 +165,7 @@ describe(Support.getTestDialectTeaser("Utils"), () => {
 
         describe("expectation", () => {
             it("uses the instanceof method if the expectation is a class", () => {
-                expect(orm.util.validateParameter(new Number(1), Number)).to.be.true;
+                expect(orm.util.validateParameter(new Number(1), Number)).to.be.true();
             });
         });
 

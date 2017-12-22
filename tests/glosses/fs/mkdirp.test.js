@@ -25,7 +25,7 @@ describe("fs", "mkdirp", () => {
         const p = tmp.getDirectory("a", "b", "c", "d");
         await fs.mkdirp(p.path());
         const stat = await p.stat();
-        expect(stat.isDirectory()).to.be.true;
+        expect(stat.isDirectory()).to.be.true();
     });
 
     it("should return the first created directory", async () => {
@@ -36,8 +36,8 @@ describe("fs", "mkdirp", () => {
 
     it("should return null if nothing was created", async () => {
         const p = tmp.getDirectory("a", "b", "c", "d").path();
-        expect(await fs.mkdirp(p)).not.to.be.null;
-        expect(await fs.mkdirp(p)).to.be.null;
+        expect(await fs.mkdirp(p)).not.to.be.null();
+        expect(await fs.mkdirp(p)).to.be.null();
     });
 
     it("should throw if the file already exists and it is not a directory", async () => {
@@ -49,7 +49,7 @@ describe("fs", "mkdirp", () => {
             await fs.mkdirp(file.path());
         }, "EEXIST: file already exists");
         const stat = await file.stat();
-        expect(stat.isFile()).to.be.true;
+        expect(stat.isFile()).to.be.true();
     });
 
     it("should support array argument", async () => {
@@ -63,12 +63,12 @@ describe("fs", "mkdirp", () => {
         const ret = await fs.mkdirp(paths.map((x) => x.path()));
         await Promise.all(paths.map(async (p) => {
             const stat = await p.stat();
-            expect(stat.isDirectory()).to.be.true;
+            expect(stat.isDirectory()).to.be.true();
         }));
         expect(ret).to.be.an("array");
         expect(ret).to.have.lengthOf(4);
         for (const r of ret) {
-            expect(r).to.be.ok; // race condition, but they must be truthy
+            expect(r).to.be.ok(); // race condition, but they must be truthy
         }
     });
 
@@ -107,7 +107,7 @@ describe("fs", "mkdirp", () => {
             const p = tmp.getDirectory("a", "b", "c", "d");
             fs.mkdirpSync(p.path());
             const stat = p.statSync();
-            expect(stat.isDirectory()).to.be.true;
+            expect(stat.isDirectory()).to.be.true();
         });
 
         it("should return the first created directory", () => {
@@ -118,8 +118,8 @@ describe("fs", "mkdirp", () => {
 
         it("should return null if nothing was created", () => {
             const p = tmp.getDirectory("a", "b", "c", "d").path();
-            expect(fs.mkdirpSync(p)).not.to.be.null;
-            expect(fs.mkdirpSync(p)).to.be.null;
+            expect(fs.mkdirpSync(p)).not.to.be.null();
+            expect(fs.mkdirpSync(p)).to.be.null();
         });
 
         it("should throw if the file already exists and it is not a directory", () => {
@@ -131,7 +131,7 @@ describe("fs", "mkdirp", () => {
                 fs.mkdirpSync(file.path());
             }, "EEXIST: file already exists");
             const stat = file.statSync();
-            expect(stat.isFile()).to.be.true;
+            expect(stat.isFile()).to.be.true();
         });
 
         it("should support array argument", () => {

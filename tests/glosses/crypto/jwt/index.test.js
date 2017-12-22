@@ -26,7 +26,7 @@ describe("crypto", "jwt", () => {
             });
 
             jwt.verify(signed, pub, { typ: "JWT" }, (err, p) => {
-                assert.isNull(err);
+                assert.null(err);
                 assert.deepEqual(p, payload);
                 done();
             });
@@ -44,7 +44,7 @@ describe("crypto", "jwt", () => {
             });
 
             jwt.verify(signed, null, { typ: "JWT" }, (err, p) => {
-                assert.isNull(err);
+                assert.null(err);
                 assert.deepEqual(p, payload);
                 done();
             });
@@ -65,7 +65,7 @@ describe("crypto", "jwt", () => {
             });
 
             jwt.verify(signed, null, options, (err) => {
-                assert.isNull(err);
+                assert.null(err);
                 assert.deepEqual(Object.keys(options).length, 1);
                 done();
             });
@@ -94,7 +94,7 @@ describe("crypto", "jwt", () => {
                     assert.equal(err.message, "jwt expired");
                     assert.equal(err.expiredAt.constructor.name, "Date");
                     assert.equal(Number(err.expiredAt), 1437018592000);
-                    assert.isUndefined(p);
+                    assert.undefined(p);
                     done();
                 });
             });
@@ -104,7 +104,7 @@ describe("crypto", "jwt", () => {
                 const options = { algorithms: ["HS256"], clockTolerance: 5 };
 
                 jwt.verify(token, key, options, (err, p) => {
-                    assert.isNull(err);
+                    assert.null(err);
                     assert.equal(p.foo, "bar");
                     done();
                 });
@@ -115,7 +115,7 @@ describe("crypto", "jwt", () => {
                 const options = { algorithms: ["HS256"], maxAge: "6s" };
 
                 jwt.verify(token, key, options, (err, p) => {
-                    assert.isNull(err);
+                    assert.null(err);
                     assert.equal(p.foo, "bar");
                     done();
                 });
@@ -133,7 +133,7 @@ describe("crypto", "jwt", () => {
                             assert.equal(err.message, "maxAge exceeded");
                             assert.equal(err.expiredAt.constructor.name, "Date");
                             assert.equal(Number(err.expiredAt), 1437018585000);
-                            assert.isUndefined(p);
+                            assert.undefined(p);
                             done();
                         });
                     });
@@ -145,7 +145,7 @@ describe("crypto", "jwt", () => {
                         const options = { algorithms: ["HS256"], maxAge, clockTolerance: 1 };
 
                         jwt.verify(token, key, options, (err, p) => {
-                            assert.isNull(err);
+                            assert.null(err);
                             assert.equal(p.foo, "bar");
                             done();
                         });
@@ -158,7 +158,7 @@ describe("crypto", "jwt", () => {
                         const options = { algorithms: ["HS256"], maxAge };
 
                         jwt.verify(token, key, options, (err, p) => {
-                            assert.isNull(err);
+                            assert.null(err);
                             assert.equal(p.foo, "bar");
                             done();
                         });
@@ -175,7 +175,7 @@ describe("crypto", "jwt", () => {
                             assert.equal(err.message, "maxAge exceeded");
                             assert.equal(err.expiredAt.constructor.name, "Date");
                             assert.equal(Number(err.expiredAt), 1437018590000);
-                            assert.isUndefined(p);
+                            assert.undefined(p);
                             done();
                         });
                     });
@@ -192,7 +192,7 @@ describe("crypto", "jwt", () => {
                             assert.equal(err.message, "jwt expired");
                             assert.equal(err.expiredAt.constructor.name, "Date");
                             assert.equal(Number(err.expiredAt), 1437018592000);
-                            assert.isUndefined(p);
+                            assert.undefined(p);
                             done();
                         });
                     });
@@ -206,7 +206,7 @@ describe("crypto", "jwt", () => {
                         jwt.verify(token, key, options, (err, p) => {
                             assert.equal(err.name, "JsonWebTokenError");
                             assert.equal(err.message, '"maxAge" should be a number of seconds or string representing a timespan eg: "1d", "20h", 60');
-                            assert.isUndefined(p);
+                            assert.undefined(p);
                             done();
                         });
                     });
@@ -219,7 +219,7 @@ describe("crypto", "jwt", () => {
                     jwt.verify(token, key, options, (err, p) => {
                         assert.equal(err.name, "JsonWebTokenError");
                         assert.equal(err.message, "iat required when maxAge is specified");
-                        assert.isUndefined(p);
+                        assert.undefined(p);
                         done();
                     });
                 });
@@ -231,7 +231,7 @@ describe("crypto", "jwt", () => {
                 it("should verify unexpired token relative to user-provided clockTimestamp", (done) => {
                     const token = jwt.sign({ foo: "bar", iat: clockTimestamp, exp: clockTimestamp + 1 }, key);
                     jwt.verify(token, key, { clockTimestamp }, (err, p) => {
-                        assert.isNull(err);
+                        assert.null(err);
                         done();
                     });
                 });
@@ -242,7 +242,7 @@ describe("crypto", "jwt", () => {
                         assert.equal(err.message, "jwt expired");
                         assert.equal(err.expiredAt.constructor.name, "Date");
                         assert.equal(Number(err.expiredAt), (clockTimestamp + 1) * 1000);
-                        assert.isUndefined(p);
+                        assert.undefined(p);
                         done();
                     });
                 });
@@ -251,7 +251,7 @@ describe("crypto", "jwt", () => {
                     jwt.verify(token, key, { clockTimestamp: "notANumber" }, (err, p) => {
                         assert.equal(err.name, "JsonWebTokenError");
                         assert.equal(err.message, "clockTimestamp must be a number");
-                        assert.isUndefined(p);
+                        assert.undefined(p);
                         done();
                     });
                 });
@@ -263,7 +263,7 @@ describe("crypto", "jwt", () => {
                         exp: clockTimestamp + 2
                     }, key);
                     jwt.verify(token, key, { clockTimestamp: clockTimestamp + 1 }, (err, p) => {
-                        assert.isNull(err);
+                        assert.null(err);
                         done();
                     });
                 });
@@ -278,7 +278,7 @@ describe("crypto", "jwt", () => {
                         assert.equal(err.name, "NotBeforeError");
                         assert.equal(err.date.constructor.name, "Date");
                         assert.equal(Number(err.date), (clockTimestamp + 1) * 1000);
-                        assert.isUndefined(p);
+                        assert.undefined(p);
                         done();
                     });
                 });
@@ -296,7 +296,7 @@ describe("crypto", "jwt", () => {
                         assert.equal(err.message, "maxAge exceeded");
                         assert.equal(err.expiredAt.constructor.name, "Date");
                         assert.equal(Number(err.expiredAt), 1437018642000);
-                        assert.isUndefined(p);
+                        assert.undefined(p);
                         done();
                     });
                 });
@@ -310,7 +310,7 @@ describe("crypto", "jwt", () => {
                     };
 
                     jwt.verify(token, key, options, (err, p) => {
-                        assert.isNull(err);
+                        assert.null(err);
                         assert.equal(p.foo, "bar");
                         done();
                     });
@@ -320,7 +320,7 @@ describe("crypto", "jwt", () => {
                     const options = { algorithms: ["HS256"], clockTimestamp, maxAge: "6s" };
 
                     jwt.verify(token, key, options, (err, p) => {
-                        assert.isNull(err);
+                        assert.null(err);
                         assert.equal(p.foo, "bar");
                         done();
                     });
@@ -334,7 +334,7 @@ describe("crypto", "jwt", () => {
                         assert.equal(err.message, "maxAge exceeded");
                         assert.equal(err.expiredAt.constructor.name, "Date");
                         assert.equal(Number(err.expiredAt), 1437018587000);
-                        assert.isUndefined(p);
+                        assert.undefined(p);
                         done();
                     });
                 });
@@ -348,7 +348,7 @@ describe("crypto", "jwt", () => {
                         assert.equal(err.message, "jwt expired");
                         assert.equal(err.expiredAt.constructor.name, "Date");
                         assert.equal(Number(err.expiredAt), 1437018800000);
-                        assert.isUndefined(p);
+                        assert.undefined(p);
                         done();
                     });
                 });
@@ -360,7 +360,7 @@ describe("crypto", "jwt", () => {
                     jwt.verify(token, key, options, (err, p) => {
                         assert.equal(err.name, "JsonWebTokenError");
                         assert.equal(err.message, "iat required when maxAge is specified");
-                        assert.isUndefined(p);
+                        assert.undefined(p);
                         done();
                     });
                 });
@@ -441,8 +441,8 @@ describe("crypto", "jwt", () => {
 
                         it("should throw with invalid public key", (done) => {
                             jwt.verify(token, invalid_pub, (err, decoded) => {
-                                assert.isUndefined(decoded);
-                                assert.isNotNull(err);
+                                assert.undefined(decoded);
+                                assert.notNull(err);
                                 done();
                             });
                         });
@@ -468,8 +468,8 @@ describe("crypto", "jwt", () => {
 
                     it("should be valid expiration", (done) => {
                         jwt.verify(token, pub, (err, decoded) => {
-                            assert.isNotNull(decoded);
-                            assert.isNull(err);
+                            assert.notNull(decoded);
+                            assert.null(err);
                             done();
                         });
                     });
@@ -479,8 +479,8 @@ describe("crypto", "jwt", () => {
                         token = jwt.sign({ foo: "bar" }, priv, { algorithm, expiresIn: -1 * ms("10m") });
 
                         jwt.verify(token, pub, (err, decoded) => {
-                            assert.isUndefined(decoded);
-                            assert.isNotNull(err);
+                            assert.undefined(decoded);
+                            assert.notNull(err);
                             assert.equal(err.name, "TokenExpiredError");
                             assert.instanceOf(err.expiredAt, Date);
                             assert.instanceOf(err, jwt.TokenExpiredError);
@@ -505,8 +505,8 @@ describe("crypto", "jwt", () => {
 
                     it("should be valid expiration", (done) => {
                         jwt.verify(token, pub, (err, decoded) => {
-                            assert.isNotNull(decoded);
-                            assert.isNull(err);
+                            assert.notNull(decoded);
+                            assert.null(err);
                             done();
                         });
                     });
@@ -516,8 +516,8 @@ describe("crypto", "jwt", () => {
                         token = jwt.sign({ foo: "bar" }, priv, { algorithm, notBefore: "10m" });
 
                         jwt.verify(token, pub, (err, decoded) => {
-                            assert.isUndefined(decoded);
-                            assert.isNotNull(err);
+                            assert.undefined(decoded);
+                            assert.notNull(err);
                             assert.equal(err.name, "NotBeforeError");
                             assert.instanceOf(err.date, Date);
                             assert.instanceOf(err, jwt.NotBeforeError);
@@ -531,8 +531,8 @@ describe("crypto", "jwt", () => {
                         token = jwt.sign({ foo: "bar" }, priv, { algorithm, notBefore: 0 });
 
                         jwt.verify(token, pub, (err, decoded) => {
-                            assert.isNull(err);
-                            assert.isNotNull(decoded);
+                            assert.null(err);
+                            assert.notNull(decoded);
                             Date.unfix();
                             done();
                         });
@@ -555,40 +555,40 @@ describe("crypto", "jwt", () => {
 
                     it("should check audience", (done) => {
                         jwt.verify(token, pub, { audience: "urn:foo" }, (err, decoded) => {
-                            assert.isNotNull(decoded);
-                            assert.isNull(err);
+                            assert.notNull(decoded);
+                            assert.null(err);
                             done();
                         });
                     });
 
                     it("should check audience using RegExp", (done) => {
                         jwt.verify(token, pub, { audience: /urn:f[o]{2}/ }, (err, decoded) => {
-                            assert.isNotNull(decoded);
-                            assert.isNull(err);
+                            assert.notNull(decoded);
+                            assert.null(err);
                             done();
                         });
                     });
 
                     it("should check audience in array", (done) => {
                         jwt.verify(token, pub, { audience: ["urn:foo", "urn:other"] }, (err, decoded) => {
-                            assert.isNotNull(decoded);
-                            assert.isNull(err);
+                            assert.notNull(decoded);
+                            assert.null(err);
                             done();
                         });
                     });
 
                     it("should check audience in array using RegExp", (done) => {
                         jwt.verify(token, pub, { audience: ["urn:bar", /urn:f[o]{2}/, "urn:other"] }, (err, decoded) => {
-                            assert.isNotNull(decoded);
-                            assert.isNull(err);
+                            assert.notNull(decoded);
+                            assert.null(err);
                             done();
                         });
                     });
 
                     it("should throw when invalid audience", (done) => {
                         jwt.verify(token, pub, { audience: "urn:wrong" }, (err, decoded) => {
-                            assert.isUndefined(decoded);
-                            assert.isNotNull(err);
+                            assert.undefined(decoded);
+                            assert.notNull(err);
                             assert.equal(err.name, "JsonWebTokenError");
                             assert.instanceOf(err, jwt.JsonWebTokenError);
                             done();
@@ -597,8 +597,8 @@ describe("crypto", "jwt", () => {
 
                     it("should throw when invalid audience using RegExp", (done) => {
                         jwt.verify(token, pub, { audience: /urn:bar/ }, (err, decoded) => {
-                            assert.isUndefined(decoded);
-                            assert.isNotNull(err);
+                            assert.undefined(decoded);
+                            assert.notNull(err);
                             assert.equal(err.name, "JsonWebTokenError");
                             assert.instanceOf(err, jwt.JsonWebTokenError);
                             done();
@@ -607,8 +607,8 @@ describe("crypto", "jwt", () => {
 
                     it("should throw when invalid audience in array", (done) => {
                         jwt.verify(token, pub, { audience: ["urn:wrong", "urn:morewrong", /urn:bar/] }, (err, decoded) => {
-                            assert.isUndefined(decoded);
-                            assert.isNotNull(err);
+                            assert.undefined(decoded);
+                            assert.notNull(err);
                             assert.equal(err.name, "JsonWebTokenError");
                             assert.instanceOf(err, jwt.JsonWebTokenError);
                             done();
@@ -622,48 +622,48 @@ describe("crypto", "jwt", () => {
 
                     it("should check audience", (done) => {
                         jwt.verify(token, pub, { audience: "urn:foo" }, (err, decoded) => {
-                            assert.isNotNull(decoded);
-                            assert.isNull(err);
+                            assert.notNull(decoded);
+                            assert.null(err);
                             done();
                         });
                     });
 
                     it("should check other audience", (done) => {
                         jwt.verify(token, pub, { audience: "urn:bar" }, (err, decoded) => {
-                            assert.isNotNull(decoded);
-                            assert.isNull(err);
+                            assert.notNull(decoded);
+                            assert.null(err);
                             done();
                         });
                     });
 
                     it("should check audience using RegExp", (done) => {
                         jwt.verify(token, pub, { audience: /urn:f[o]{2}/ }, (err, decoded) => {
-                            assert.isNotNull(decoded);
-                            assert.isNull(err);
+                            assert.notNull(decoded);
+                            assert.null(err);
                             done();
                         });
                     });
 
                     it("should check audience in array", (done) => {
                         jwt.verify(token, pub, { audience: ["urn:foo", "urn:other"] }, (err, decoded) => {
-                            assert.isNotNull(decoded);
-                            assert.isNull(err);
+                            assert.notNull(decoded);
+                            assert.null(err);
                             done();
                         });
                     });
 
                     it("should check audience in array using RegExp", (done) => {
                         jwt.verify(token, pub, { audience: ["urn:one", "urn:other", /urn:f[o]{2}/] }, (err, decoded) => {
-                            assert.isNotNull(decoded);
-                            assert.isNull(err);
+                            assert.notNull(decoded);
+                            assert.null(err);
                             done();
                         });
                     });
 
                     it("should throw when invalid audience", (done) => {
                         jwt.verify(token, pub, { audience: "urn:wrong" }, (err, decoded) => {
-                            assert.isUndefined(decoded);
-                            assert.isNotNull(err);
+                            assert.undefined(decoded);
+                            assert.notNull(err);
                             assert.equal(err.name, "JsonWebTokenError");
                             assert.instanceOf(err, jwt.JsonWebTokenError);
                             done();
@@ -672,8 +672,8 @@ describe("crypto", "jwt", () => {
 
                     it("should throw when invalid audience using RegExp", (done) => {
                         jwt.verify(token, pub, { audience: /urn:wrong/ }, (err, decoded) => {
-                            assert.isUndefined(decoded);
-                            assert.isNotNull(err);
+                            assert.undefined(decoded);
+                            assert.notNull(err);
                             assert.equal(err.name, "JsonWebTokenError");
                             assert.instanceOf(err, jwt.JsonWebTokenError);
                             done();
@@ -682,8 +682,8 @@ describe("crypto", "jwt", () => {
 
                     it("should throw when invalid audience in array", (done) => {
                         jwt.verify(token, pub, { audience: ["urn:wrong", "urn:morewrong"] }, (err, decoded) => {
-                            assert.isUndefined(decoded);
-                            assert.isNotNull(err);
+                            assert.undefined(decoded);
+                            assert.notNull(err);
                             assert.equal(err.name, "JsonWebTokenError");
                             assert.instanceOf(err, jwt.JsonWebTokenError);
                             done();
@@ -692,8 +692,8 @@ describe("crypto", "jwt", () => {
 
                     it("should throw when invalid audience in array", (done) => {
                         jwt.verify(token, pub, { audience: ["urn:wrong", "urn:morewrong", /urn:alsowrong/] }, (err, decoded) => {
-                            assert.isUndefined(decoded);
-                            assert.isNotNull(err);
+                            assert.undefined(decoded);
+                            assert.notNull(err);
                             assert.equal(err.name, "JsonWebTokenError");
                             assert.instanceOf(err, jwt.JsonWebTokenError);
                             done();
@@ -707,8 +707,8 @@ describe("crypto", "jwt", () => {
 
                     it("should check audience", (done) => {
                         jwt.verify(token, pub, { audience: "urn:wrong" }, (err, decoded) => {
-                            assert.isUndefined(decoded);
-                            assert.isNotNull(err);
+                            assert.undefined(decoded);
+                            assert.notNull(err);
                             assert.equal(err.name, "JsonWebTokenError");
                             assert.instanceOf(err, jwt.JsonWebTokenError);
                             done();
@@ -717,8 +717,8 @@ describe("crypto", "jwt", () => {
 
                     it("should check audience using RegExp", (done) => {
                         jwt.verify(token, pub, { audience: /urn:wrong/ }, (err, decoded) => {
-                            assert.isUndefined(decoded);
-                            assert.isNotNull(err);
+                            assert.undefined(decoded);
+                            assert.notNull(err);
                             assert.equal(err.name, "JsonWebTokenError");
                             assert.instanceOf(err, jwt.JsonWebTokenError);
                             done();
@@ -727,8 +727,8 @@ describe("crypto", "jwt", () => {
 
                     it("should check audience in array", (done) => {
                         jwt.verify(token, pub, { audience: ["urn:wrong", "urn:morewrong", /urn:alsowrong/] }, (err, decoded) => {
-                            assert.isUndefined(decoded);
-                            assert.isNotNull(err);
+                            assert.undefined(decoded);
+                            assert.notNull(err);
                             assert.equal(err.name, "JsonWebTokenError");
                             assert.instanceOf(err, jwt.JsonWebTokenError);
                             done();
@@ -742,24 +742,24 @@ describe("crypto", "jwt", () => {
 
                     it("should check issuer", (done) => {
                         jwt.verify(token, pub, { issuer: "urn:foo" }, (err, decoded) => {
-                            assert.isNotNull(decoded);
-                            assert.isNull(err);
+                            assert.notNull(decoded);
+                            assert.null(err);
                             done();
                         });
                     });
 
                     it("should check the issuer when providing a list of valid issuers", (done) => {
                         jwt.verify(token, pub, { issuer: ["urn:foo", "urn:bar"] }, (err, decoded) => {
-                            assert.isNotNull(decoded);
-                            assert.isNull(err);
+                            assert.notNull(decoded);
+                            assert.null(err);
                             done();
                         });
                     });
 
                     it("should throw when invalid issuer", (done) => {
                         jwt.verify(token, pub, { issuer: "urn:wrong" }, (err, decoded) => {
-                            assert.isUndefined(decoded);
-                            assert.isNotNull(err);
+                            assert.undefined(decoded);
+                            assert.notNull(err);
                             assert.equal(err.name, "JsonWebTokenError");
                             assert.instanceOf(err, jwt.JsonWebTokenError);
                             done();
@@ -772,8 +772,8 @@ describe("crypto", "jwt", () => {
 
                     it("should check issuer", (done) => {
                         jwt.verify(token, pub, { issuer: "urn:foo" }, (err, decoded) => {
-                            assert.isUndefined(decoded);
-                            assert.isNotNull(err);
+                            assert.undefined(decoded);
+                            assert.notNull(err);
                             assert.equal(err.name, "JsonWebTokenError");
                             assert.instanceOf(err, jwt.JsonWebTokenError);
                             done();
@@ -786,16 +786,16 @@ describe("crypto", "jwt", () => {
 
                     it("should check subject", (done) => {
                         jwt.verify(token, pub, { subject: "subject" }, (err, decoded) => {
-                            assert.isNotNull(decoded);
-                            assert.isNull(err);
+                            assert.notNull(decoded);
+                            assert.null(err);
                             done();
                         });
                     });
 
                     it("should throw when invalid subject", (done) => {
                         jwt.verify(token, pub, { subject: "wrongSubject" }, (err, decoded) => {
-                            assert.isUndefined(decoded);
-                            assert.isNotNull(err);
+                            assert.undefined(decoded);
+                            assert.notNull(err);
                             assert.equal(err.name, "JsonWebTokenError");
                             assert.instanceOf(err, jwt.JsonWebTokenError);
                             done();
@@ -808,8 +808,8 @@ describe("crypto", "jwt", () => {
 
                     it("should check subject", (done) => {
                         jwt.verify(token, pub, { subject: "subject" }, (err, decoded) => {
-                            assert.isUndefined(decoded);
-                            assert.isNotNull(err);
+                            assert.undefined(decoded);
+                            assert.notNull(err);
                             assert.equal(err.name, "JsonWebTokenError");
                             assert.instanceOf(err, jwt.JsonWebTokenError);
                             done();
@@ -822,16 +822,16 @@ describe("crypto", "jwt", () => {
 
                     it("should check jwt id", (done) => {
                         jwt.verify(token, pub, { jwtid: "jwtid" }, (err, decoded) => {
-                            assert.isNotNull(decoded);
-                            assert.isNull(err);
+                            assert.notNull(decoded);
+                            assert.null(err);
                             done();
                         });
                     });
 
                     it("should throw when invalid jwt id", (done) => {
                         jwt.verify(token, pub, { jwtid: "wrongJwtid" }, (err, decoded) => {
-                            assert.isUndefined(decoded);
-                            assert.isNotNull(err);
+                            assert.undefined(decoded);
+                            assert.notNull(err);
                             assert.equal(err.name, "JsonWebTokenError");
                             assert.instanceOf(err, jwt.JsonWebTokenError);
                             done();
@@ -844,8 +844,8 @@ describe("crypto", "jwt", () => {
 
                     it("should check jwt id", (done) => {
                         jwt.verify(token, pub, { jwtid: "jwtid" }, (err, decoded) => {
-                            assert.isUndefined(decoded);
-                            assert.isNotNull(err);
+                            assert.undefined(decoded);
+                            assert.notNull(err);
                             assert.equal(err.name, "JsonWebTokenError");
                             assert.instanceOf(err, jwt.JsonWebTokenError);
                             done();
@@ -856,8 +856,8 @@ describe("crypto", "jwt", () => {
                 describe("when verifying a malformed token", () => {
                     it("should throw", (done) => {
                         jwt.verify("fruit.fruit.fruit", pub, (err, decoded) => {
-                            assert.isUndefined(decoded);
-                            assert.isNotNull(err);
+                            assert.undefined(decoded);
+                            assert.notNull(err);
                             assert.equal(err.name, "JsonWebTokenError");
                             done();
                         });
@@ -869,8 +869,8 @@ describe("crypto", "jwt", () => {
 
                     it("should throw", (done) => {
                         jwt.verify(`${token}.foo`, pub, (err, decoded) => {
-                            assert.isUndefined(decoded);
-                            assert.isNotNull(err);
+                            assert.undefined(decoded);
+                            assert.notNull(err);
                             done();
                         });
                     });
@@ -879,7 +879,7 @@ describe("crypto", "jwt", () => {
                 describe("when decoding a invalid jwt token", () => {
                     it("should return null", (done) => {
                         const payload = jwt.decode("whatever.token");
-                        assert.isNull(payload);
+                        assert.null(payload);
                         done();
                     });
                 });
@@ -925,14 +925,14 @@ describe("crypto", "jwt", () => {
 
             it("should work with empty options", (done) => {
                 jwt.sign({ abc: 1 }, "secret", {}, (err, res) => {
-                    assert.isNull(err);
+                    assert.null(err);
                     done();
                 });
             });
 
             it("should work without options object at all", (done) => {
                 jwt.sign({ abc: 1 }, "secret", (err, res) => {
-                    assert.isNull(err);
+                    assert.null(err);
                     done();
                 });
             });
@@ -958,7 +958,7 @@ describe("crypto", "jwt", () => {
             it("should return error when secret is not a cert for RS256", (done) => {
                 //this throw an error because the secret is not a cert and RS256 requires a cert.
                 jwt.sign({ foo: "bar" }, secret, { algorithm: "RS256" }, (err) => {
-                    assert.isOk(err);
+                    assert.okrr);
                     done();
                 });
             });
@@ -966,7 +966,7 @@ describe("crypto", "jwt", () => {
             it("should return error on wrong arguments", (done) => {
                 //this throw an error because the secret is not a cert and RS256 requires a cert.
                 jwt.sign({ foo: "bar" }, secret, { notBefore: {} }, (err) => {
-                    assert.isOk(err);
+                    assert.okrr);
                     done();
                 });
             });
@@ -1119,8 +1119,8 @@ describe("crypto", "jwt", () => {
 
             it("should throw with invalid secret", (done) => {
                 jwt.verify(token, "invalid secret", (err, decoded) => {
-                    assert.isUndefined(decoded);
-                    assert.isNotNull(err);
+                    assert.undefined(decoded);
+                    assert.notNull(err);
                     done();
                 });
             });
@@ -1129,8 +1129,8 @@ describe("crypto", "jwt", () => {
                 const signed = jwt.sign({ foo: "bar" }, secret, { algorithm: "none" });
                 const unsigned = `${signed.split(".")[0]}.${signed.split(".")[1]}.`;
                 jwt.verify(unsigned, "secret", (err, decoded) => {
-                    assert.isUndefined(decoded);
-                    assert.isNotNull(err);
+                    assert.undefined(decoded);
+                    assert.notNull(err);
                     done();
                 });
             });
@@ -1139,16 +1139,16 @@ describe("crypto", "jwt", () => {
                 const signed = jwt.sign({ foo: "bar" }, null, { algorithm: "none" });
                 const unsigned = `${signed.split(".")[0]}.${signed.split(".")[1]}.`;
                 jwt.verify(unsigned, "secret", (err, decoded) => {
-                    assert.isUndefined(decoded);
-                    assert.isNotNull(err);
+                    assert.undefined(decoded);
+                    assert.notNull(err);
                     done();
                 });
             });
 
             it("should throw when verifying null", (done) => {
                 jwt.verify(null, "secret", (err, decoded) => {
-                    assert.isUndefined(decoded);
-                    assert.isNotNull(err);
+                    assert.undefined(decoded);
+                    assert.notNull(err);
                     done();
                 });
             });
@@ -1156,8 +1156,8 @@ describe("crypto", "jwt", () => {
             it("should return an error when the token is expired", (done) => {
                 const token = jwt.sign({ exp: 1 }, secret, { algorithm: "HS256" });
                 jwt.verify(token, secret, { algorithm: "HS256" }, (err, decoded) => {
-                    assert.isUndefined(decoded);
-                    assert.isNotNull(err);
+                    assert.undefined(decoded);
+                    assert.notNull(err);
                     done();
                 });
             });
@@ -1167,7 +1167,7 @@ describe("crypto", "jwt", () => {
                 jwt.verify(token, secret, { algorithm: "HS256", ignoreExpiration: true }, (err, decoded) => {
                     assert.ok(decoded.foo);
                     assert.equal("bar", decoded.foo);
-                    assert.isNull(err);
+                    assert.null(err);
                     done();
                 });
             });
@@ -1187,7 +1187,7 @@ describe("crypto", "jwt", () => {
             it('should return the "invalid token" error', (done) => {
                 const malformedToken = `${token} `; // corrupt the token by adding a space
                 jwt.verify(malformedToken, secret, { algorithm: "HS256", ignoreExpiration: true }, (err, decoded) => {
-                    assert.isNotNull(err);
+                    assert.notNull(err);
                     assert.equal("JsonWebTokenError", err.name);
                     assert.equal("invalid token", err.message);
                     done();

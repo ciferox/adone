@@ -331,7 +331,7 @@ describe("examples", function () {
             const docs = await db.collection("inventory").find({
                 status: "A"
             }).project({ item: 1, status: 1 }).toArray();
-            expect(docs).not.to.be.empty;
+            expect(docs).not.to.be.empty();
             for (const doc of docs) {
                 expect(doc).to.have.keys("_id", "item", "status");
                 expect(doc).not.to.have.any.keys("size", "instock");
@@ -341,7 +341,7 @@ describe("examples", function () {
             const docs = await db.collection("inventory").find({
                 status: "A"
             }).project({ item: 1, status: 1, _id: 0 }).toArray();
-            expect(docs).not.to.be.empty;
+            expect(docs).not.to.be.empty();
             for (const doc of docs) {
                 expect(doc).to.have.keys("item", "status");
                 expect(doc).not.to.have.any.keys("_id", "size", "instock");
@@ -351,7 +351,7 @@ describe("examples", function () {
             const docs = await db.collection("inventory").find({
                 status: "A"
             }).project({ status: 0, instock: 0 }).toArray();
-            expect(docs).not.to.be.empty;
+            expect(docs).not.to.be.empty();
             for (const doc of docs) {
                 expect(doc).to.have.keys("_id", "item", "size");
                 expect(doc).not.to.have.any.keys("status", "instock");
@@ -361,7 +361,7 @@ describe("examples", function () {
             const docs = await db.collection("inventory").find({
                 status: "A"
             }).project({ status: 0, instock: 0 }).toArray();
-            expect(docs).not.to.be.empty;
+            expect(docs).not.to.be.empty();
             for (const doc of docs) {
                 expect(doc).to.have.keys("_id", "item", "size");
                 expect(doc).not.to.have.any.keys("status", "instock");
@@ -371,7 +371,7 @@ describe("examples", function () {
             const docs = await db.collection("inventory").find({
                 status: "A"
             }).project({ item: 1, status: 1, "size.uom": 1 }).toArray();
-            expect(docs).not.to.be.empty;
+            expect(docs).not.to.be.empty();
             for (const doc of docs) {
                 expect(doc).to.have.keys("_id", "item", "status", "size");
                 expect(doc).not.to.have.property("instock");
@@ -383,7 +383,7 @@ describe("examples", function () {
             const docs = await db.collection("inventory").find({
                 status: "A"
             }).project({ "size.uom": 0 }).toArray();
-            expect(docs).not.to.be.empty;
+            expect(docs).not.to.be.empty();
             for (const doc of docs) {
                 expect(doc).to.have.keys("_id", "item", "status", "size", "instock");
                 expect(doc.size).not.to.have.property("uom");
@@ -394,7 +394,7 @@ describe("examples", function () {
             const docs = await db.collection("inventory").find({
                 status: "A"
             }).project({ item: 1, status: 1, "instock.qty": 1 }).toArray();
-            expect(docs).not.to.be.empty;
+            expect(docs).not.to.be.empty();
             for (const doc of docs) {
                 expect(doc).to.have.keys("_id", "item", "status", "instock");
                 expect(doc).not.to.have.property("size");
@@ -409,7 +409,7 @@ describe("examples", function () {
             const docs = await db.collection("inventory").find({
                 status: "A"
             }).project({ item: 1, status: 1, instock: { $slice: -1 } }).toArray();
-            expect(docs).not.to.be.empty;
+            expect(docs).not.to.be.empty();
             for (const doc of docs) {
                 expect(doc).to.have.keys("_id", "item", "status", "instock");
                 expect(doc).not.to.have.property("size");
@@ -495,11 +495,11 @@ describe("examples", function () {
             const docs = await db.collection("inventory").find({
                 item: "paper"
             }).toArray();
-            expect(docs).not.to.be.empty;
+            expect(docs).not.to.be.empty();
             for (const doc of docs) {
                 expect(doc).to.have.nested.property("size.uom", "cm");
                 expect(doc).to.have.property("status", "P");
-                expect(doc.lastModified).to.be.ok;
+                expect(doc.lastModified).to.be.ok();
             }
         }
 
@@ -514,11 +514,11 @@ describe("examples", function () {
             const docs = await db.collection("inventory").find({
                 qty: { $lt: 50 }
             }).toArray();
-            expect(docs).not.to.be.empty;
+            expect(docs).not.to.be.empty();
             for (const doc of docs) {
                 expect(doc).to.have.nested.property("size.uom", "in");
                 expect(doc).to.have.property("status", "P");
-                expect(doc.lastModified).to.be.ok;
+                expect(doc.lastModified).to.be.ok();
             }
         }
         await db.collection("inventory").updateOne(
@@ -535,7 +535,7 @@ describe("examples", function () {
             const docs = await db.collection("inventory").find({
                 item: "paper"
             }).project({ _id: 0 }).toArray();
-            expect(docs).not.to.be.empty;
+            expect(docs).not.to.be.empty();
             for (const doc of docs) {
                 expect(doc).to.have.keys("item", "instock");
                 expect(doc.instock).to.be.an("array");
@@ -625,7 +625,7 @@ describe("examples", function () {
         const items = await collection.find({}).toArray();
         expect(items).to.have.lengthOf(4);
         const explanation = await collection.find({ a: 2 }).explain();
-        expect(explanation).to.be.ok;
+        expect(explanation).to.be.ok();
         await db.close();
     });
 
@@ -714,7 +714,7 @@ describe("examples", function () {
         const docs = await collection.find({}).toArray();
         expect(docs).to.have.lengthOf(4);
         const explanation = await collection.find({ a: 2 }).explain();
-        expect(explanation).to.be.ok;
+        expect(explanation).to.be.ok();
         await db.close();
     });
 
@@ -731,7 +731,7 @@ describe("examples", function () {
         const items = await collection.find({}).toArray();
         expect(items).to.have.lengthOf(4);
         const explanation = await collection.find({ a: 2 }).explain();
-        expect(explanation).to.be.ok;
+        expect(explanation).to.be.ok();
         await db.close();
     });
 
@@ -740,7 +740,7 @@ describe("examples", function () {
         const collection = db.collection("simple_explain_query_with_promise");
         await collection.insertMany([{ a: 1 }, { a: 2 }, { a: 3 }]);
         const docs = await collection.find({}).explain();
-        expect(docs).to.be.ok;
+        expect(docs).to.be.ok();
         await db.close();
     });
 
@@ -769,7 +769,7 @@ describe("examples", function () {
         }
         {
             await collection.findAndModify({ b: 1 }, [["b", 1]], { $set: { b: 2 } }, { remove: true });
-            expect(await collection.findOne({ b: 1 })).to.be.null;
+            expect(await collection.findOne({ b: 1 })).to.be.null();
         }
         {
             const doc = await collection.findAndModify({ d: 1 }, [["b", 1]], { d: 1, f: 1 }, { new: true, upsert: true, w: 1 });
@@ -788,7 +788,7 @@ describe("examples", function () {
         ]);
         const doc = await collection.findAndRemove({ b: 1 }, [["b", 1]]);
         expect(doc.value).to.include({ b: 1, d: 1 });
-        expect(await collection.findOne({ b: 1 })).to.be.null;
+        expect(await collection.findOne({ b: 1 })).to.be.null();
         await db.close();
     });
 
@@ -831,7 +831,7 @@ describe("examples", function () {
         const collection = db.collection("test_group_with_promise");
         {
             const results = await collection.group([], {}, { count: 0 }, "function (obj, prev) { prev.count++; }");
-            expect(results).to.be.empty;
+            expect(results).to.be.empty();
         }
         await collection.insertMany([{ a: 2 }, { b: 5 }, { a: 1 }], { w: 1 });
         {
@@ -856,7 +856,7 @@ describe("examples", function () {
             expect(results).to.have.lengthOf(3);
             expect(results[0].a).to.be.equal(2);
             expect(results[0].count).to.be.equal(2);
-            expect(results[1].a).to.be.null;
+            expect(results[1].a).to.be.null();
             expect(results[1].count).to.be.equal(2);
             expect(results[2].a).to.be.equal(1);
             expect(results[2].count).to.be.equal(1);
@@ -868,7 +868,7 @@ describe("examples", function () {
             expect(results).to.have.lengthOf(3);
             expect(results[0].a).to.be.equal(2);
             expect(results[0].count).to.be.equal(2);
-            expect(results[1].a).to.be.null;
+            expect(results[1].a).to.be.null();
             expect(results[1].count).to.be.equal(2);
             expect(results[2].a).to.be.equal(1);
             expect(results[2].count).to.be.equal(1);
@@ -956,11 +956,11 @@ describe("examples", function () {
         {
             const result = await collection.mapReduce(map, reduce, { out: { inline: 1 }, verbose: true });
             expect(result.results).to.have.lengthOf(2);
-            expect(result.stats).to.be.ok;
+            expect(result.stats).to.be.ok();
         }
         {
             const result = await collection.mapReduce(map, reduce, { out: { replace: "mapreduce_integration_test" }, verbose: true });
-            expect(result.stats).to.be.ok;
+            expect(result.stats).to.be.ok();
         }
         await db.close();
     });
@@ -1064,9 +1064,9 @@ describe("examples", function () {
         const db = await mongo.connect(this.url());
         const collection = db.collection("test_collection_index_exists_with_promise");
         await collection.createIndex("a");
-        expect(await collection.indexExists("a_1")).to.be.true;
-        expect(await collection.indexExists(["a_1", "_id_"])).to.be.true;
-        expect(await collection.indexExists("c_1")).to.be.false;
+        expect(await collection.indexExists("a_1")).to.be.true();
+        expect(await collection.indexExists(["a_1", "_id_"])).to.be.true();
+        expect(await collection.indexExists("c_1")).to.be.false();
         await db.close();
     });
 
@@ -1161,7 +1161,7 @@ describe("examples", function () {
         const db = await mongo.connect(this.url());
         const collection = await db.createCollection("test_collection_is_capped_with_promise", { capped: true, size: 1024 });
         expect(collection.collectionName).to.be.equal("test_collection_is_capped_with_promise");
-        expect(await collection.isCapped()).to.be.true;
+        expect(await collection.isCapped()).to.be.true();
         await db.close();
     });
 
@@ -1170,7 +1170,7 @@ describe("examples", function () {
         const collection = await db.createCollection("test_collection_options_with_promise", { capped: true, size: 1024 });
         expect(collection.collectionName).to.be.equal("test_collection_options_with_promise");
         const options = await collection.options();
-        expect(options.capped).to.be.true;
+        expect(options.capped).to.be.true();
         expect(options.size).to.be.at.least(1024);
         await db.close();
     });
@@ -1189,7 +1189,7 @@ describe("examples", function () {
             await collection.insertMany(range(1000).map((i) => ({ a: i })));
             const numCursors = 3;
             const cursors = await collection.parallelCollectionScan({ numCursors });
-            expect(cursors).not.to.be.empty;
+            expect(cursors).not.to.be.empty();
             const results = [];
             for (const cursor of cursors) {
                 results.push(...(await cursor.toArray()));
@@ -1209,7 +1209,7 @@ describe("examples", function () {
             { a: 4, b: 4, c: 4 }
         ], { w: 1 });
         await collection.ensureIndex({ a: 1, b: 1 }, { unique: true, background: true, w: 1 });
-        expect(await collection.reIndex()).to.be.true;
+        expect(await collection.reIndex()).to.be.true();
         const info = await collection.indexInformation();
         expect(info._id_).to.be.deep.equal([["_id", 1]]);
         expect(info.a_1_b_1).to.be.deep.equal([["a", 1], ["b", 1]]);
@@ -1221,7 +1221,7 @@ describe("examples", function () {
         const collection = db.collection("remove_all_documents_no_safe_with_promise");
         await collection.insertMany([{ a: 1 }, { b: 2 }], { w: 1 });
         await collection.removeMany();
-        expect(await collection.find().toArray()).to.be.empty;
+        expect(await collection.find().toArray()).to.be.empty();
         await db.close();
     });
 
@@ -1426,16 +1426,16 @@ describe("examples", function () {
     it("should correctly logout from the database", async () => {
         const db = await mongo.connect(this.url());
         await db.addUser("user3", "name");
-        expect(await db.authenticate("user3", "name")).to.be.true;
-        expect(await db.logout()).to.be.true;
-        expect(await db.removeUser("user3")).to.be.true;
+        expect(await db.authenticate("user3", "name")).to.be.true();
+        expect(await db.logout()).to.be.true();
+        expect(await db.removeUser("user3")).to.be.true();
         await db.close();
     });
 
     it("should correctly authenticate against the database", async () => {
         const db = await mongo.connect(this.url());
         await db.addUser("user2", "name");
-        expect(await db.authenticate("user2", "name")).to.be.true;
+        expect(await db.authenticate("user2", "name")).to.be.true();
         await db.removeUser("user2");
         await db.close();
     });
@@ -1450,8 +1450,8 @@ describe("examples", function () {
     it("should correctly add and remove user", async () => {
         const db = await mongo.connect(this.url());
         await db.addUser("user", "name");
-        expect(await db.authenticate("user", "name")).to.be.true;
-        expect(await db.logout()).to.be.true;
+        expect(await db.authenticate("user", "name")).to.be.true();
+        expect(await db.logout()).to.be.true();
         await db.removeUser("user");
         await assert.throws(async () => {
             await db.authenticate("user", "name");
@@ -1479,7 +1479,7 @@ describe("examples", function () {
         await collection.insertOne({ a: 1 });
         await db.dropCollection("a_simple_create_drop_collection_with_promise");
         const collections = await db.listCollections({ name: "a_simple_create_drop_collection_with_promise" }).toArray();
-        expect(collections).to.be.empty;
+        expect(collections).to.be.empty();
         await db.close();
     });
 
@@ -1490,7 +1490,7 @@ describe("examples", function () {
         expect(await collection.count()).to.be.equal(1);
         const collection2 = await db.renameCollection("simple_rename_collection_with_promise", "simple_rename_collection_2_with_promise");
         expect(await collection2.count()).to.be.equal(1);
-        expect(await db.listCollections({ name: "simple_rename_collection_with_promise" }).toArray()).to.be.empty;
+        expect(await db.listCollections({ name: "simple_rename_collection_with_promise" }).toArray()).to.be.empty();
         expect(await db.listCollections({ name: "simple_rename_collection_2_with_promise" }).toArray()).to.have.lengthOf(1);
         await db.close();
     });
@@ -1506,7 +1506,7 @@ describe("examples", function () {
         ]);
         await db.createIndex("more_complex_index_test_with_promise", { a: 1, b: 1 }, { unique: true, background: true, w: 1 });
         expect(await collection.find({}).toArray()).to.have.lengthOf(4);
-        expect(await collection.find({ a: 2 }).explain()).to.be.ok;
+        expect(await collection.find({ a: 2 }).explain()).to.be.ok();
         await db.close();
     });
 
@@ -1521,7 +1521,7 @@ describe("examples", function () {
         ]);
         await db.ensureIndex("more_complex_ensure_index_db_test_with_promise", { a: 1, b: 1 }, { unique: true, background: true, w: 1 });
         expect(await collection.find({}).toArray()).to.have.lengthOf(4);
-        expect(await collection.find({ a: 2 }).explain()).to.be.ok;
+        expect(await collection.find({ a: 2 }).explain()).to.be.ok();
         await db.close();
     });
 
@@ -1544,7 +1544,7 @@ describe("examples", function () {
 
     it("should correctly retrieve db stats", async () => {
         const db = await mongo.connect(this.url());
-        expect(await db.stats()).to.be.ok;
+        expect(await db.stats()).to.be.ok();
         await db.close();
     });
 
@@ -1567,8 +1567,8 @@ describe("examples", function () {
             await collection.insertOne({ a: 1 }, { w: 1 });
             const adminDb = db.admin();
             await adminDb.addUser("admin2", "admin2");
-            expect(await adminDb.authenticate("admin2", "admin2")).to.be.true;
-            expect(await adminDb.removeUser("admin2")).to.be.true;
+            expect(await adminDb.authenticate("admin2", "admin2")).to.be.true();
+            expect(await adminDb.removeUser("admin2")).to.be.true();
             await db.close();
         });
 
@@ -1576,9 +1576,9 @@ describe("examples", function () {
             const db = await mongo.connect(this.url());
             const adminDb = db.admin();
             await adminDb.addUser("admin3", "admin3");
-            expect(await adminDb.authenticate("admin3", "admin3")).to.be.true;
-            expect(await adminDb.buildInfo()).to.be.ok;
-            expect(await adminDb.removeUser("admin3")).to.be.true;
+            expect(await adminDb.authenticate("admin3", "admin3")).to.be.true();
+            expect(await adminDb.buildInfo()).to.be.ok();
+            expect(await adminDb.removeUser("admin3")).to.be.true();
             await db.close();
         });
 
@@ -1586,9 +1586,9 @@ describe("examples", function () {
             const db = await mongo.connect(this.url());
             const adminDb = db.admin();
             await adminDb.addUser("admin4", "admin4");
-            expect(await adminDb.authenticate("admin4", "admin4")).to.be.true;
-            expect(await adminDb.command({ buildInfo: 1 })).to.be.ok;
-            expect(await adminDb.removeUser("admin4")).to.be.true;
+            expect(await adminDb.authenticate("admin4", "admin4")).to.be.true();
+            expect(await adminDb.command({ buildInfo: 1 })).to.be.ok();
+            expect(await adminDb.removeUser("admin4")).to.be.true();
             await db.close();
         });
 
@@ -1602,7 +1602,7 @@ describe("examples", function () {
                 await adminDb.addUser("admin5", "admin5");
                 await adminDb.authenticate("admin5", "admin5");
                 expect(await adminDb.profilingLevel()).to.be.equal("off");
-                expect(await adminDb.removeUser("admin5")).to.be.true;
+                expect(await adminDb.removeUser("admin5")).to.be.true();
                 await db.close();
             });
 
@@ -1623,7 +1623,7 @@ describe("examples", function () {
                     await adminDb.setProfilingLevel("medium");
                 }, "illegal profiling level value medium");
                 await adminDb.setProfilingLevel("off");
-                expect(await adminDb.removeUser("admin6")).to.be.true;
+                expect(await adminDb.removeUser("admin6")).to.be.true();
                 await db.close();
             });
 
@@ -1643,7 +1643,7 @@ describe("examples", function () {
                 expect(info).to.have.length.at.least(1);
                 expect(info[0].ts).to.be.a("date");
                 expect(info[0].millis).to.be.a("number");
-                expect(await adminDb.removeUser("admin7")).to.be.true;
+                expect(await adminDb.removeUser("admin7")).to.be.true();
                 await db.close();
             });
         }
@@ -1656,7 +1656,7 @@ describe("examples", function () {
             await adminDb.addUser("admin8", "admin8");
             await adminDb.authenticate("admin8", "admin8");
             await adminDb.validateCollection("test_with_promise5");
-            expect(await adminDb.removeUser("admin8")).to.be.true;
+            expect(await adminDb.removeUser("admin8")).to.be.true();
             await db.close();
         });
 
@@ -1664,9 +1664,9 @@ describe("examples", function () {
             const db = await mongo.connect(this.url());
             const adminDb = db.admin();
             await adminDb.addUser("admin9", "admin9");
-            expect(await adminDb.authenticate("admin9", "admin9")).to.be.true;
+            expect(await adminDb.authenticate("admin9", "admin9")).to.be.true();
             expect(await adminDb.ping()).to.be.deep.equal({ ok: 1 });
-            expect(await adminDb.removeUser("admin9")).to.be.true;
+            expect(await adminDb.removeUser("admin9")).to.be.true();
             await db.close();
         });
 
@@ -1674,9 +1674,9 @@ describe("examples", function () {
             const db = await mongo.connect(this.url());
             const adminDb = db.admin();
             await adminDb.addUser("admin10", "admin10");
-            expect(await adminDb.authenticate("admin10", "admin10")).to.be.true;
-            expect(await adminDb.logout()).to.be.true;
-            expect(await adminDb.removeUser("admin10")).to.be.true;
+            expect(await adminDb.authenticate("admin10", "admin10")).to.be.true();
+            expect(await adminDb.logout()).to.be.true();
+            expect(await adminDb.removeUser("admin10")).to.be.true();
             await db.close();
         });
 
@@ -1684,8 +1684,8 @@ describe("examples", function () {
             const db = await mongo.connect(this.url());
             const adminDb = db.admin();
             await adminDb.addUser("admin11", "admin11");
-            expect(await adminDb.authenticate("admin11", "admin11")).to.be.true;
-            expect(await adminDb.removeUser("admin11")).to.be.true;
+            expect(await adminDb.authenticate("admin11", "admin11")).to.be.true();
+            expect(await adminDb.removeUser("admin11")).to.be.true();
             await db.close();
         });
 
@@ -1693,8 +1693,8 @@ describe("examples", function () {
             const db = await mongo.connect(this.url());
             const adminDb = db.admin();
             await adminDb.addUser("admin12", "admin12");
-            expect(await adminDb.authenticate("admin12", "admin12")).to.be.true;
-            expect(await adminDb.removeUser("admin12")).to.be.true;
+            expect(await adminDb.authenticate("admin12", "admin12")).to.be.true();
+            expect(await adminDb.removeUser("admin12")).to.be.true();
             await assert.throws(async () => {
                 await adminDb.authenticate("admin12", "admin12");
             });
@@ -1705,7 +1705,7 @@ describe("examples", function () {
             const db = await mongo.connect(this.url());
             const adminDb = db.admin();
             const { databases } = await adminDb.listDatabases();
-            expect(databases).not.to.be.empty;
+            expect(databases).not.to.be.empty();
             await db.close();
         });
 
@@ -1716,8 +1716,8 @@ describe("examples", function () {
             const adminDb = db.admin();
             await adminDb.addUser("admin13", "admin13");
             await adminDb.authenticate("admin13", "admin13");
-            expect(await adminDb.serverStatus()).to.be.ok;
-            expect(await adminDb.removeUser("admin13")).to.be.true;
+            expect(await adminDb.serverStatus()).to.be.ok();
+            expect(await adminDb.removeUser("admin13")).to.be.true();
             await db.close();
         });
     });
@@ -1754,7 +1754,7 @@ describe("examples", function () {
             const db = await mongo.connect(this.url());
             const collection = db.collection("simple_explain_collection_with_promise");
             await collection.insertMany([{ a: 1 }, { a: 2 }, { a: 3 }]);
-            expect(await collection.find().explain()).to.be.ok;
+            expect(await collection.find().explain()).to.be.ok();
             await db.close();
         });
 
@@ -1780,9 +1780,9 @@ describe("examples", function () {
             await gridStore.open();
             await gridStore.write("hello world!");
             const result = await gridStore.close();
-            expect(await GridStore.exist(db, result._id)).to.be.true;
-            expect(await GridStore.exist(db, new ObjectId())).to.be.false;
-            expect(await GridStore.exist(db, result._id, "another_root")).to.be.false;
+            expect(await GridStore.exist(db, result._id)).to.be.true();
+            expect(await GridStore.exist(db, new ObjectId())).to.be.false();
+            expect(await GridStore.exist(db, result._id, "another_root")).to.be.false();
             await db.close();
         });
 
@@ -1797,7 +1797,7 @@ describe("examples", function () {
             {
                 const items = await GridStore.list(db, { id: true });
                 expect(items).to.be.an("array");
-                expect(items).not.to.be.empty;
+                expect(items).not.to.be.empty();
                 for (const id of items) {
                     expect(id).to.be.instanceOf(ObjectId);
                 }
@@ -1871,7 +1871,7 @@ describe("examples", function () {
             await gridStore.open();
             await gridStore.write("bar");
             await gridStore.close();
-            expect(await GridStore.exist(db, "ourexamplefiletowrite.txt")).to.be.true;
+            expect(await GridStore.exist(db, "ourexamplefiletowrite.txt")).to.be.true();
             await db.close();
         });
 
@@ -1882,7 +1882,7 @@ describe("examples", function () {
             await gridStore.open();
             await gridStore.write("bar");
             await gridStore.close();
-            expect(await GridStore.exist(db, fileId)).to.be.true;
+            expect(await GridStore.exist(db, fileId)).to.be.true();
             await db.close();
         });
 
@@ -1950,7 +1950,7 @@ describe("examples", function () {
             gridStore = new GridStore(db, fileId, "r");
             await gridStore.unlink();
             await gridStore.close();
-            expect(await GridStore.exist(db, fileId)).to.be.false;
+            expect(await GridStore.exist(db, fileId)).to.be.false();
             await db.close();
         });
 
@@ -2124,11 +2124,11 @@ describe("examples", function () {
             const upserts = result.getUpsertedIds();
             expect(upserts).to.have.lengthOf(1);
             expect(upserts[0].index).to.be.equal(2);
-            expect(upserts[0]._id).to.be.ok;
+            expect(upserts[0]._id).to.be.ok();
 
             const upsert = result.getUpsertedIdAt(0);
             expect(upsert.index).to.be.equal(2);
-            expect(upsert._id).to.be.ok;
+            expect(upsert._id).to.be.ok();
             await db.close();
         });
 
@@ -2154,11 +2154,11 @@ describe("examples", function () {
             const upserts = result.getUpsertedIds();
             expect(upserts).to.have.lengthOf(1);
             expect(upserts[0].index).to.be.equal(2);
-            expect(upserts[0]._id).to.be.ok;
+            expect(upserts[0]._id).to.be.ok();
 
             const upsert = result.getUpsertedIdAt(0);
             expect(upsert.index).to.be.equal(2);
-            expect(upsert._id).to.be.ok;
+            expect(upsert._id).to.be.ok();
             await db.close();
         });
     });
@@ -2253,7 +2253,7 @@ describe("examples", function () {
                 { insertOne: { document: { _id: 1 } } },
                 { insertOne: { document: { _id: 1 } } }
             ], { ordered: true, w: 1 });
-            expect(r.hasWriteErrors()).to.be.true;
+            expect(r.hasWriteErrors()).to.be.true();
             await db.close();
         });
 

@@ -70,8 +70,8 @@ describe("database", "mongo", "core", function () {
                     ismaster: true
                 });
 
-                expect(r.result.ismaster).to.be.true;
-                expect(r.connection).to.be.ok;
+                expect(r.result.ismaster).to.be.true();
+                expect(r.connection).to.be.ok();
             } finally {
                 _server.destroy();
             }
@@ -96,7 +96,7 @@ describe("database", "mongo", "core", function () {
                 });
 
                 expect(r.result).to.be.instanceof(Buffer);
-                expect(r.connection).to.be.ok;
+                expect(r.connection).to.be.ok();
             } finally {
                 _server.destroy();
             }
@@ -251,7 +251,7 @@ describe("database", "mongo", "core", function () {
                 let r = await insert(`${configuration.db}.remove_example`, {
                     a: 1
                 });
-                expect(r.result.ok).to.be.ok;
+                expect(r.result.ok).to.be.ok();
 
                 r = await remove(`${configuration.db}.remove_example`, [{
                     q: {
@@ -362,8 +362,8 @@ describe("database", "mongo", "core", function () {
                     throw new Error("should die");
                 }, (e) => e);
                 await reconnect;
-                expect(closeEmitted).to.be.true;
-                expect(server.isConnected()).to.be.true;
+                expect(closeEmitted).to.be.true();
+                expect(server.isConnected()).to.be.true();
                 expect(server.s.pool.retriesLeft).to.be.equal(30);
             } finally {
                 server.destroy();
@@ -407,9 +407,9 @@ describe("database", "mongo", "core", function () {
                     throw new Error("should die");
                 }, (e) => e);
                 await adone.promise.delay(500);
-                expect(closeEmitted).to.be.true;
-                expect(errorEmitted).to.be.false;
-                expect(server.isConnected()).to.be.false;
+                expect(closeEmitted).to.be.true();
+                expect(errorEmitted).to.be.false();
+                expect(server.isConnected()).to.be.false();
             } finally {
                 server.destroy();
             }
@@ -427,7 +427,7 @@ describe("database", "mongo", "core", function () {
                 emitError: true
             });
             server.on("error", (err) => {
-                expect(err).to.be.ok;
+                expect(err).to.be.ok();
                 expect(err.message).to.match(/failed to/);
                 configuration.manager.start();
             });
@@ -479,8 +479,8 @@ describe("database", "mongo", "core", function () {
                 }
                 await Promise.all(promises);
                 expect(server.s.pool.availableConnections.length).to.be.above(0);
-                expect(server.s.pool.inUseConnections).to.be.empty;
-                expect(server.s.pool.connectingConnections).to.be.empty;
+                expect(server.s.pool.inUseConnections).to.be.empty();
+                expect(server.s.pool.connectingConnections).to.be.empty();
             } finally {
                 server.destroy();
             }

@@ -36,7 +36,7 @@ describe("notifier", "notify-send", () => {
 
     it("should throw error if no message is passed", async () => {
         util.command = function (notifier, argsList) {
-            expect(argsList).to.be.undefined;
+            expect(argsList).to.be.undefined();
         };
 
         const notifier = new Notify({ suppressOsdCheck: true });

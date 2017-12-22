@@ -29,14 +29,14 @@ describe("authentication", function () {
             const adminDb = this.db.admin();
 
             // Add the new user to the admin database
-            expect(await adminDb.addUser("admin14", "admin14")).to.be.ok;
+            expect(await adminDb.addUser("admin14", "admin14")).to.be.ok();
             // Authenticate using the newly added user
-            expect(await adminDb.authenticate("admin14", "admin14")).to.be.true;
+            expect(await adminDb.authenticate("admin14", "admin14")).to.be.true(););
             // Retrive the server Info, returns error if we are not
             // running a replicaset
-            expect(await adminDb.replSetGetStatus()).to.be.ok;
+            expect(await adminDb.replSetGetStatus()).to.be.ok();
 
-            expect(await adminDb.removeUser("admin14")).to.be.ok;
+            expect(await adminDb.removeUser("admin14")).to.be.ok();
         });
     }
 
@@ -47,9 +47,9 @@ describe("authentication", function () {
             const adminDb = this.db.admin();
             await adminDb.addUser("admin", "admin");
 
-            expect(await adminDb.authenticate("admin", "admin")).to.be.true;
+            expect(await adminDb.authenticate("admin", "admin")).to.be.true(););
             const doc = await adminDb.validateCollection("shouldCorrectlyCallValidateCollectionUsingAuthenticatedMode");
-            expect(doc).to.be.ok;
+            expect(doc).to.be.ok();
             await adminDb.removeUser("admin");
         });
 
@@ -66,9 +66,9 @@ describe("authentication", function () {
             const adminDb = this.db.admin();
 
             // Add the new user to the admin database
-            expect(await adminDb.addUser("admin15", "admin15")).to.be.ok;
+            expect(await adminDb.addUser("admin15", "admin15")).to.be.ok();
             // Authenticate using the newly added user
-            expect(await adminDb.authenticate("admin15", "admin15")).to.be.true;
+            expect(await adminDb.authenticate("admin15", "admin15")).to.be.true(););
             await authenticated;
             await adminDb.removeUser("admin15");
         });
@@ -82,7 +82,7 @@ describe("authentication", function () {
                 await this.db.collection("test").insert({ a: 1 });
             });
 
-            expect(await this.db.admin().authenticate("admin", "admin")).to.be.true;
+            expect(await this.db.admin().authenticate("admin", "admin")).to.be.true(););
             await this.db.collection("test").insert({ a: 1 });
             await this.db.admin().logout();
             await assert.throws(async () => {
@@ -186,8 +186,8 @@ describe("authentication", function () {
                 await batch.execute();
             });
 
-            expect(err.code).to.be.ok;
-            expect(err.errmsg).to.be.ok;
+            expect(err.code).to.be.ok();
+            expect(err.errmsg).to.be.ok();
 
             await this.restart(true);
         });
@@ -213,8 +213,8 @@ describe("authentication", function () {
                 await batch.execute();
             });
 
-            expect(err.code).to.be.ok;
-            expect(err.errmsg).to.be.ok;
+            expect(err.code).to.be.ok();
+            expect(err.errmsg).to.be.ok();
 
             await this.restart(true);
         });
@@ -249,7 +249,7 @@ describe("authentication", function () {
             it("should correctly handle replicaset master stepdown and stepup without loosing auth", async () => {
                 const db = await new Db("replicaset_test_auth", replset, { w: 1 }).open();
                 await db.admin().addUser("root", "root", { w: 3, wtimeout: 25000 });
-                expect(await db.admin().authenticate("root", "root")).to.be.ok;
+                expect(await db.admin().authenticate("root", "root")).to.be.ok();
                 await manager.stepDownPrimary(false, { stepDownSecs: 1, force: true }, {
                     provider: "default",
                     db: "admin",
@@ -304,7 +304,7 @@ describe("authentication", function () {
                 await db.close();
                 const client = await mongo.connect("mongodb://me:secret@localhost:38010/node-native-test?replicaSet=rs");
                 const names = await client.collections();
-                expect(names).to.be.empty;
+                expect(names).to.be.empty();
                 await client.close();
             });
 
@@ -316,7 +316,7 @@ describe("authentication", function () {
                 await db.close();
                 const client = await mongo.connect("mongodb://me:secret@localhost:38010,localhost:38011/node-native-test?replicaSet=rs");
                 const names = await client.collections();
-                expect(names).to.be.empty;
+                expect(names).to.be.empty();
                 client.close();
             });
 
@@ -333,7 +333,7 @@ describe("authentication", function () {
                 await assert.throws(async () => {
                     await client.collection("test").findOne();
                 });
-                expect(await client.admin().authenticate("me", "secret")).to.be.ok;
+                expect(await client.admin().authenticate("me", "secret")).to.be.ok();
                 const managers = await manager.secondaries();
                 await managers[0].stop();
                 await managers[1].stop();
@@ -350,7 +350,7 @@ describe("authentication", function () {
                 await assert.throws(async () => {
                     await db.collection("stuff").insert({ a: 2 }, { w: 3 });
                 });
-                expect(await db.admin().authenticate("me", "secret")).to.be.ok;
+                expect(await db.admin().authenticate("me", "secret")).to.be.ok();
                 await db.admin().addUser("me2", "secret2", { w: 3, wtimeout: 25000 });
                 await db.admin().authenticate("me2", "secret2");
                 await assert.doesNotThrow(async () => {
@@ -450,7 +450,7 @@ describe("authentication", function () {
                 await db.admin().authenticate("admin", "admin");
                 await db.collection("test").insert({ a: 1 }, { w: 1 });
                 await db.addUser("test", "test", { w: 3, wtimeout: 25000 });
-                expect(await await db.authenticate("test", "test")).to.be.true;
+                expect(await await db.authenticate("test", "test")).to.be.true(););
                 const primary = await manager.primary();
                 await primary.stop();
                 await new Promise((resolve) => {
@@ -498,12 +498,12 @@ describe("authentication", function () {
             it("should correctly reauthenticating against multiple databases", async () => {
                 let db = await new Db("replicaset_test_reauth", replset, { w: 1 }).open();
                 await db.admin().addUser("root", "root", { w: 3, wtimeout: 25000 });
-                expect(await db.admin().authenticate("root", "root")).to.be.ok;
+                expect(await db.admin().authenticate("root", "root")).to.be.ok();
                 await db.db("test").addUser("test", "test", { w: 3, wtimeout: 25000 });
                 await db.db("test2").addUser("test2", "test2", { w: 3, wtimeout: 25000 });
                 await db.close();
                 db = await mongo.connect("mongodb://test:test@localhost:38010,localhost:38011/test?replicaSet=rs");
-                expect(await db.db("test2").authenticate("test2", "test2")).to.be.ok;
+                expect(await db.db("test2").authenticate("test2", "test2")).to.be.ok();
                 await db.collection("test").findOne({});
                 await db.db("test2").collection("test").findOne({});
                 const joined = new Promise((resolve) => {
@@ -560,7 +560,7 @@ describe("authentication", function () {
                 await db.close();
                 await promise.delay(5000);
                 const client = await mongo.connect("mongodb://me:secret@localhost:51010/node-native-test");
-                expect(await client.collections()).to.be.empty;
+                expect(await client.collections()).to.be.empty();
                 await client.close();
             });
 
@@ -571,12 +571,12 @@ describe("authentication", function () {
                 await db.addUser("me", "secret", { w: "majority" });
                 await db.close();
                 const client = await mongo.connect("mongodb://me:secret@localhost:51010/node-native-test");
-                expect(await client.collections()).to.be.empty;
+                expect(await client.collections()).to.be.empty();
                 await manager.proxies[0].stop();
                 await manager.proxies[1].stop();
                 await manager.proxies[0].start();
                 await manager.proxies[1].start();
-                expect(await client.collections()).to.be.empty;
+                expect(await client.collections()).to.be.empty();
                 await client.close();
             });
         });

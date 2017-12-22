@@ -97,9 +97,9 @@ describe("util", "debounce", () => {
             return f.ignored;
         });
         let f = debounce(s, 100);
-        expect(f()).to.be.undefined;
-        expect(f()).to.be.undefined;
-        expect(f()).to.be.undefined;
+        expect(f()).to.be.undefined();
+        expect(f()).to.be.undefined();
+        expect(f()).to.be.undefined();
         await delay(120);
         expect(f()).to.be.equal(2);
         f = debounce(s, 100, { leading: true });

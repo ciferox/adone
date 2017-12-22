@@ -13,7 +13,7 @@ describe("util", "toposort", () => {
             const arr = t.sort();
             const fails = [];
 
-            assert.isArray(arr);
+            assert.array(arr);
 
             const possibilities = [
                 ["3", "6", "5", "4", "2", "1"],

@@ -143,16 +143,16 @@ describe("data", "bson", () => {
         expect([1, 2, 3]).to.be.deep.equal(object.array);
         expect(1).to.be.equal(object.hash.a);
         expect(2).to.be.equal(object.hash.b);
-        expect(object.date).to.be.ok;
-        expect(object.oid).to.be.ok;
-        expect(object.binary).to.be.ok;
+        expect(object.date).to.be.ok();
+        expect(object.oid).to.be.ok();
+        expect(object.binary).to.be.ok();
         expect(42).to.be.equal(object.int);
         expect(33.3333).to.be.equal(object.float);
-        expect(object.regexp).to.be.ok;
+        expect(object.regexp).to.be.ok();
         expect(true).to.be.equal(object.boolean);
-        expect(object.where).to.be.ok;
-        expect(object.dbref).to.be.ok;
-        expect(object.null === null).to.be.ok;
+        expect(object.where).to.be.ok();
+        expect(object.dbref).to.be.ok();
+        expect(object.null === null).to.be.ok();
     });
 
     it("should serialize and deserialize String", () => {
@@ -340,7 +340,7 @@ describe("data", "bson", () => {
         expect(serializedData).to.be.deep.equal(serializedData2);
 
         const deserialized = new BSON().deserialize(serializedData);
-        expect(deserialized.doc instanceof Binary).to.be.ok;
+        expect(deserialized.doc instanceof Binary).to.be.ok();
         expect("hello world").to.be.equal(deserialized.doc.toString());
     });
 
@@ -355,7 +355,7 @@ describe("data", "bson", () => {
         const deserialized = new BSON().deserialize(serializedData, {
             promoteBuffers: true
         });
-        expect(deserialized.doc instanceof Buffer).to.be.ok;
+        expect(deserialized.doc instanceof Buffer).to.be.ok();
         expect("hello world").to.be.equal(deserialized.doc.toString());
     });
 
@@ -676,10 +676,10 @@ describe("data", "bson", () => {
     it("should correctly serialize and deserialize Long Integer and Timestamp as different types", () => {
         const long = Long.fromNumber(9223372036854775807);
         const timestamp = Timestamp.fromNumber(9223372036854775807);
-        expect(long instanceof Long).to.be.ok;
-        expect(!(long instanceof Timestamp)).to.be.ok;
-        expect(timestamp instanceof Timestamp).to.be.ok;
-        expect(!(timestamp instanceof Long)).to.be.ok;
+        expect(long instanceof Long).to.be.ok();
+        expect(!(long instanceof Timestamp)).to.be.ok();
+        expect(timestamp instanceof Timestamp).to.be.ok();
+        expect(!(timestamp instanceof Long)).to.be.ok();
 
         const testInt = { doc: long, doc2: timestamp };
         const serializedData = new BSON().serialize(testInt);
@@ -838,7 +838,7 @@ describe("data", "bson", () => {
         const deserializedData = new BSON().deserialize(serializedData);
         expect(doc.b).to.be.deep.equal(deserializedData.b);
         expect(doc).to.be.deep.equal(deserializedData);
-        expect(deserializedData.b[0] instanceof Symbol).to.be.ok;
+        expect(deserializedData.b[0] instanceof Symbol).to.be.ok();
     });
 
     it("should handle Deeply nested document", () => {
@@ -1098,9 +1098,9 @@ describe("data", "bson", () => {
         const doc2 = new BSON().deserialize(serializedData);
 
         expect(JSON.stringify(doc)).to.be.equal(JSON.stringify(doc2));
-        expect(doc._id.equals(doc2._id)).to.be.ok;
-        expect(doc2.minKey instanceof MinKey).to.be.ok;
-        expect(doc2.maxKey instanceof MaxKey).to.be.ok;
+        expect(doc._id.equals(doc2._id)).to.be.ok();
+        expect(doc2.minKey instanceof MinKey).to.be.ok();
+        expect(doc2.maxKey instanceof MaxKey).to.be.ok();
     });
 
     it("should correctly serialize Double value", () => {
@@ -1113,17 +1113,17 @@ describe("data", "bson", () => {
         new BSON().serializeWithBufferAndIndex(doc, serializedData2);
         expect(serializedData).to.be.deep.equal(serializedData2);
         new BSON().deserialize(serializedData);
-        expect(doc.value.valueOf()).to.be.ok;
-        expect(doc.value.value).to.be.ok;
+        expect(doc.value.valueOf()).to.be.ok();
+        expect(doc.value.value).to.be.ok();
     });
 
     it("ObjectId should correctly create objects", () => {
         try {
             ObjectId.createFromHexString("000000000000000000000001");
             ObjectId.createFromHexString("00000000000000000000001");
-            expect(false).to.be.ok;
+            expect(false).to.be.ok();
         } catch (err) {
-            expect(err).to.be.ok;
+            expect(err).to.be.ok();
         }
     });
 
@@ -1141,7 +1141,7 @@ describe("data", "bson", () => {
 
         try {
             parser.deserialize(data);
-            expect(false).to.be.ok;
+            expect(false).to.be.ok();
         } catch (err) {
             //
         }
@@ -1152,7 +1152,7 @@ describe("data", "bson", () => {
         // Catch illegal size
         try {
             parser.deserialize(data);
-            expect(false).to.be.ok;
+            expect(false).to.be.ok();
         } catch (err) {
             //
         }
@@ -1350,7 +1350,7 @@ describe("data", "bson", () => {
     it("should fail to create ObjectId due to illegal hex code", () => {
         try {
             new ObjectId("zzzzzzzzzzzzzzzzzzzzzzzz");
-            expect(false).to.be.ok;
+            expect(false).to.be.ok();
         } catch (err) {
             //
         }
@@ -1404,7 +1404,7 @@ describe("data", "bson", () => {
         expect(serializedData).to.be.deep.equal(serializedData2);
 
         const doc1 = new BSON().deserialize(serializedData, { bsonRegExp: true });
-        expect(doc1.regexp instanceof BSONRegExp).to.be.ok;
+        expect(doc1.regexp instanceof BSONRegExp).to.be.ok();
         expect("test").to.be.equal(doc1.regexp.pattern);
         expect("i").to.be.equal(doc1.regexp.options);
     });

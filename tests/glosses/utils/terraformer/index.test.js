@@ -112,26 +112,26 @@ describe("Primitives", () => {
         it("should convert a Primitive to JSON", () => {
             const geometryCollection = new Terraformer.Primitive(GeoJSON.geometryCollections[0]);
             const json = geometryCollection.toJSON();
-            expect(json.bbox).to.be.ok;
-            expect(json.type).to.be.ok;
-            expect(json.geometries).to.be.ok;
-            expect(json.length).not.to.be.ok;
+            expect(json.bbox).to.be.ok();
+            expect(json.type).to.be.ok();
+            expect(json.geometries).to.be.ok();
+            expect(json.length).not.to.be.ok();
         });
 
         it("should convert a Circle Primitive to JSON", () => {
             const circle = new Terraformer.Circle([-122.6764, 45.5165], 100);
             const json = circle.toJSON();
-            expect(json.bbox).to.be.ok;
+            expect(json.bbox).to.be.ok();
             expect(json.type).to.be.equal("Feature");
-            expect(json.geometry).to.be.ok;
-            expect(json.geometry.coordinates).to.be.ok;
-            expect(json.geometry.bbox).not.to.be.ok;
-            expect(json.center).not.to.be.ok;
-            expect(json.steps).not.to.be.ok;
-            expect(json.radius).not.to.be.ok;
-            expect(json.properties.center).to.be.ok;
-            expect(json.properties.steps).to.be.ok;
-            expect(json.properties.radius).to.be.ok;
+            expect(json.geometry).to.be.ok();
+            expect(json.geometry.coordinates).to.be.ok();
+            expect(json.geometry.bbox).not.to.be.ok();
+            expect(json.center).not.to.be.ok();
+            expect(json.steps).not.to.be.ok();
+            expect(json.radius).not.to.be.ok();
+            expect(json.properties.center).to.be.ok();
+            expect(json.properties.steps).to.be.ok();
+            expect(json.properties.radius).to.be.ok();
         });
     });
 

@@ -70,7 +70,7 @@ describe("collection", "LinkedList", () => {
 
         it("should return undefined if the the list is empty", () => {
             const list = new LinkedList(10);
-            expect(list.pop()).to.be.undefined;
+            expect(list.pop()).to.be.undefined();
         });
     });
 
@@ -89,22 +89,22 @@ describe("collection", "LinkedList", () => {
 
     it("should indicate the emptiness of a list", () => {
         const list = new LinkedList(10);
-        expect(list.empty).to.be.true;
+        expect(list.empty).to.be.true();
         list.push(1);
-        expect(list.empty).to.be.false;
+        expect(list.empty).to.be.false();
         list.pop(1);
-        expect(list.empty).to.be.true;
+        expect(list.empty).to.be.true();
     });
 
     it("should indicate the fullness of a list", () => {
         const list = new LinkedList(10);
-        expect(list.full).to.be.false;
+        expect(list.full).to.be.false();
         for (let i = 0; i < 10; ++i) {
             list.push(1);
         }
-        expect(list.full).to.be.true;
+        expect(list.full).to.be.true();
         list.pop();
-        expect(list.full).to.be.false;
+        expect(list.full).to.be.false();
     });
 
     describe("shift", () => {
@@ -121,7 +121,7 @@ describe("collection", "LinkedList", () => {
 
         it("should return undefined if the list is empty", () => {
             const list = new LinkedList(10);
-            expect(list.shift()).to.be.undefined;
+            expect(list.shift()).to.be.undefined();
         });
     });
 
@@ -278,11 +278,11 @@ describe("collection", "LinkedList", () => {
         const list = new LinkedList(5);
         let a = list.toArray();
         expect(a).to.be.an("Array");
-        expect(a).to.be.empty;
+        expect(a).to.be.empty();
         list.push(1);
         list.push(2);
         list.push(3);
-        expect(a).to.be.empty;
+        expect(a).to.be.empty();
         a = list.toArray();
         expect(a).to.be.an("Array");
         expect(a).to.be.deep.equal([1, 2, 3]);
@@ -377,7 +377,7 @@ describe("collection", "LinkedList", () => {
                 for (let i = 0; i < 16; ++i) {
                     list.push(i);
                 }
-                expect(list.full).to.be.true;
+                expect(list.full).to.be.true();
                 list.push(16);
                 expect(list.length).to.be.equal(17);
                 expect(list.maxLength).to.be.equal(32); // x2
@@ -385,7 +385,7 @@ describe("collection", "LinkedList", () => {
                 for (let i = 0; i < 15; ++i) {
                     list.push(17 + i);
                 }
-                expect(list.full).to.be.true;
+                expect(list.full).to.be.true();
                 list.push(32);
                 expect(list.length).to.be.equal(33);
                 expect(list.maxLength).to.be.equal(64); // x2
@@ -602,12 +602,12 @@ describe("collection", "LinkedList", () => {
             const list = new LinkedList();
             list.push(1);
             const b = list.push(2);
-            expect(list.nextNode(b)).to.be.null;
+            expect(list.nextNode(b)).to.be.null();
         });
 
         it("should return null there are no elements", () => {
             const list = new LinkedList();
-            expect(list.nextNode()).to.be.null;
+            expect(list.nextNode()).to.be.null();
         });
     });
 

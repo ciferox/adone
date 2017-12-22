@@ -22,7 +22,7 @@ describe("notifier", "WindowsBalloon", () => {
         };
         const expected = "notifu64.exe";
         util.immediateFileCommand = function (notifier) {
-            expect(notifier.endsWith(expected)).to.be.true;
+            expect(notifier.endsWith(expected)).to.be.true();
         };
 
         await new Notify().notify({ title: "title", message: "body" });
@@ -34,7 +34,7 @@ describe("notifier", "WindowsBalloon", () => {
         };
         const expected = "notifu.exe";
         util.immediateFileCommand = function (notifier) {
-            expect(notifier.endsWith(expected)).to.be.true;
+            expect(notifier.endsWith(expected)).to.be.true();
         };
         await new Notify().notify({ title: "title", message: "body" });
     });
@@ -57,7 +57,7 @@ describe("notifier", "WindowsBalloon", () => {
 
     it("should throw error if no message is passed", async () => {
         util.immediateFileCommand = function (notifier, argsList) {
-            expect(argsList).to.be.undefined;
+            expect(argsList).to.be.undefined();
         };
         await assert.throws(async () => {
             await new Notify().notify({});

@@ -10,7 +10,7 @@ describe("math", "BitSet", () => {
     it("should set an individual bit", () => {
         const bs = new BitSet(100);
         bs.set(31);
-        expect(bs.get(31)).to.be.true;
+        expect(bs.get(31)).to.be.true();
     });
 
     it("should find first set", () => {
@@ -90,24 +90,24 @@ describe("math", "BitSet", () => {
 
     it("should detect empty arrays", () => {
         const bs = new BitSet(100);
-        expect(bs.isEmpty()).to.be.true;
+        expect(bs.isEmpty()).to.be.true();
         bs.set(31);
-        expect(bs.isEmpty()).to.be.false;
+        expect(bs.isEmpty()).to.be.false();
     });
 
     it("should unset a bit", () => {
         const bs = new BitSet(100);
         bs.set(31);
         bs.unset(31);
-        expect(bs.get(31)).to.be.false;
+        expect(bs.get(31)).to.be.false();
     });
 
     it("should toggle a bit", () => {
         const bs = new BitSet(100);
         bs.toggle(31);
-        expect(bs.get(31)).to.be.true;
+        expect(bs.get(31)).to.be.true();
         bs.toggle(31);
-        expect(bs.get(31)).to.be.false;
+        expect(bs.get(31)).to.be.false();
     });
 
     it("should toggle a range", () => {
@@ -129,25 +129,25 @@ describe("math", "BitSet", () => {
         const bs = new BitSet(100);
         bs.setRange(29, 59);
         bs.clear();
-        expect(bs.isEmpty()).to.be.true;
+        expect(bs.isEmpty()).to.be.true();
     });
 
     it("should check if one bitset is subset of another", () => {
         const bs = new BitSet(100);
         const bs2 = new BitSet(100);
 
-        expect(bs.isSubsetOf(bs2)).to.be.true;
+        expect(bs.isSubsetOf(bs2)).to.be.true();
 
         bs.setRange(30, 60);
         bs2.setRange(30, 60);
 
-        expect(bs2.isSubsetOf(bs)).to.be.true;
+        expect(bs2.isSubsetOf(bs)).to.be.true();
 
         bs2.clear();
         bs2.setRange(31, 59);
 
-        expect(bs2.isSubsetOf(bs)).to.be.true;
-        expect(bs.isSubsetOf(bs2)).to.be.false;
+        expect(bs2.isSubsetOf(bs)).to.be.true();
+        expect(bs.isSubsetOf(bs2)).to.be.false();
     });
 
     it("should check for equality", () => {
@@ -155,7 +155,7 @@ describe("math", "BitSet", () => {
         bs.setRange(29, 59);
         const bs2 = new BitSet(100);
         bs2.setRange(29, 59);
-        expect(bs.isEqual(bs2)).to.be.true;
+        expect(bs.isEqual(bs2)).to.be.true();
     });
 
     it("should find next set bit in the same word", () => {
@@ -236,9 +236,9 @@ describe("math", "BitSet", () => {
 
     it("should set bit success which read from dehydrate string", () => {
         const bs = new BitSet("2147483646,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,2147483647,0,9999999");
-        expect(bs.get(899)).to.be.false;
-        expect(bs.set(899, true)).to.be.true;
-        expect(bs.get(899)).to.be.true;
+        expect(bs.get(899)).to.be.false();
+        expect(bs.set(899, true)).to.be.true();
+        expect(bs.get(899)).to.be.true();
     });
 
     it("should rotate a bitset", () => {
@@ -263,15 +263,15 @@ describe("math", "BitSet", () => {
             }
 
             expect(evenBitset.getCardinality()).to.be.equal(evenBitset.circularShift(5).getCardinality());
-            expect(evenBitset.circularShift(0).isEqual(evenBitset)).to.be.true;
-            expect(evenBitset.circularShift(size).isEqual(evenBitset)).to.be.true;
-            expect(evenBitset.circularShift(1).isEqual(oddBitset)).to.be.true;
-            expect(evenBitset.circularShift(size + 1).isEqual(oddBitset)).to.be.true;
-            expect(evenBitset.circularShift(2).isEqual(evenBitset)).to.be.true;
-            expect(evenBitset.circularShift(size + 2).isEqual(evenBitset)).to.be.true;
-            expect(evenBitset.circularShift(-size - 3).isEqual(oddBitset)).to.be.true;
-            expect(evenBitset.circularShift(200).isEqual(evenBitset)).to.be.true;
-            expect(evenBitset.circularShift(-301).isEqual(oddBitset)).to.be.true;
+            expect(evenBitset.circularShift(0).isEqual(evenBitset)).to.be.true();
+            expect(evenBitset.circularShift(size).isEqual(evenBitset)).to.be.true();
+            expect(evenBitset.circularShift(1).isEqual(oddBitset)).to.be.true();
+            expect(evenBitset.circularShift(size + 1).isEqual(oddBitset)).to.be.true();
+            expect(evenBitset.circularShift(2).isEqual(evenBitset)).to.be.true();
+            expect(evenBitset.circularShift(size + 2).isEqual(evenBitset)).to.be.true();
+            expect(evenBitset.circularShift(-size - 3).isEqual(oddBitset)).to.be.true();
+            expect(evenBitset.circularShift(200).isEqual(evenBitset)).to.be.true();
+            expect(evenBitset.circularShift(-301).isEqual(oddBitset)).to.be.true();
         }
     });
 

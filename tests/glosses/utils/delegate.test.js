@@ -16,7 +16,7 @@ describe("util", "delegate", () => {
 
         delegate(B.prototype, "a")
             .method("hello");
-        
+
         expect(new B().hello()).to.be.equal("world");
     });
 
@@ -62,7 +62,7 @@ describe("util", "delegate", () => {
         b.hello = 2;
 
         expect(b.a.hello).to.be.equal(2);
-        expect(b.hello).to.be.undefined;
+        expect(b.hello).to.be.undefined();
     });
 
     it("should delegate get and set", () => {

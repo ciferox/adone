@@ -101,7 +101,7 @@ describe("netron", "circuit", "dialer", () => {
 
             dialer.canHop(peer, (err) => {
                 assert.notExists(err);
-                assert.isOk(dialer.relayPeers.has(peer.id.toB58String()));
+                assert.ok(dialer.relayPeers.has(peer.id.toB58String()));
             });
         });
 
@@ -123,7 +123,7 @@ describe("netron", "circuit", "dialer", () => {
 
             dialer.canHop(peer, (err) => {
                 assert.notExists(err);
-                assert.isNotOk(dialer.relayPeers.has(peer.id.toB58String()));
+                assert.notOk(dialer.relayPeers.has(peer.id.toB58String()));
             });
         });
     });
@@ -168,8 +168,8 @@ describe("netron", "circuit", "dialer", () => {
             });
 
             dialer._dialPeer(dstMa, (err, conn) => {
-                assert.isUndefined(conn);
-                assert.isNotNull(err);
+                assert.undefined(conn);
+                assert.notNull(err);
                 expect(err).to.equal("no relay peers were found or all relays failed to dial");
                 done();
             });
@@ -228,10 +228,10 @@ describe("netron", "circuit", "dialer", () => {
 
         it("should handle failed relay negotiation", (done) => {
             callback.callsFake((err, msg) => {
-                assert.isNotNull(err);
+                assert.notNull(err);
                 expect(err).to.be.an.instanceOf(Error);
                 expect(err.message).to.be.equal("Got 400 error code trying to dial over relay");
-                assert.isOk(callback.calledOnce);
+                assert.ok(callback.calledOnce);
                 done();
             });
 

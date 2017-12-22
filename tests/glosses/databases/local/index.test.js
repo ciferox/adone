@@ -101,9 +101,9 @@ describe("database", "local", "Indexes", () => {
                 expect(e.errorType).to.be.equal("uniqueViolated");
             }
             expect(idx.tree.getNumberOfKeys()).to.be.equal(0);
-            expect(idx.tree.search("hello")).to.be.empty;
-            expect(idx.tree.search("world")).to.be.empty;
-            expect(idx.tree.search("bloup")).to.be.empty;
+            expect(idx.tree.search("hello")).to.be.empty();
+            expect(idx.tree.search("world")).to.be.empty();
+            expect(idx.tree.search("bloup")).to.be.empty();
         });
 
         describe("Array fields", () => {
@@ -177,7 +177,7 @@ describe("database", "local", "Indexes", () => {
                 expect(idx.getMatching("aa")).to.have.lengthOf(1);
                 expect(idx.getMatching("aa").indexOf(obj)).to.be.not.equal(-1);
                 expect(idx.getMatching("aa").indexOf(obj2)).to.be.equal(-1);
-                expect(idx.getMatching("cc")).to.be.empty;
+                expect(idx.getMatching("cc")).to.be.empty();
             });
 
             it("If a unique constraint is violated when inserting an array key, roll back all inserts before the key", () => {
@@ -190,17 +190,17 @@ describe("database", "local", "Indexes", () => {
                 expect(idx.getAll()).to.have.lengthOf(2);
                 expect(idx.getMatching("aa")).to.have.lengthOf(1);
                 expect(idx.getMatching("bb")).to.have.lengthOf(1);
-                expect(idx.getMatching("cc")).to.be.empty;
-                expect(idx.getMatching("dd")).to.be.empty;
-                expect(idx.getMatching("ee")).to.be.empty;
+                expect(idx.getMatching("cc")).to.be.empty();
+                expect(idx.getMatching("dd")).to.be.empty();
+                expect(idx.getMatching("ee")).to.be.empty();
 
                 expect(() => idx.insert(obj2)).to.throw();
                 expect(idx.getAll()).to.have.lengthOf(2);
                 expect(idx.getMatching("aa")).to.have.lengthOf(1);
                 expect(idx.getMatching("bb")).to.have.lengthOf(1);
-                expect(idx.getMatching("cc")).to.be.empty;
-                expect(idx.getMatching("dd")).to.be.empty;
-                expect(idx.getMatching("ee")).to.be.empty;
+                expect(idx.getMatching("cc")).to.be.empty();
+                expect(idx.getMatching("dd")).to.be.empty();
+                expect(idx.getMatching("ee")).to.be.empty();
             });
         });
     });
@@ -221,7 +221,7 @@ describe("database", "local", "Indexes", () => {
 
             idx.remove(doc1);
             expect(idx.tree.getNumberOfKeys()).to.be.equal(2);
-            expect(idx.tree.search("hello")).to.be.empty;
+            expect(idx.tree.search("hello")).to.be.empty();
 
             idx.remove(doc2);
             expect(idx.tree.getNumberOfKeys()).to.be.equal(2);
@@ -257,7 +257,7 @@ describe("database", "local", "Indexes", () => {
 
             idx.remove(doc1);
             expect(idx.tree.getNumberOfKeys()).to.be.equal(2);
-            expect(idx.tree.search("hello")).to.be.empty;
+            expect(idx.tree.search("hello")).to.be.empty();
 
             idx.remove(doc2);
             expect(idx.tree.getNumberOfKeys()).to.be.equal(2);
@@ -275,9 +275,9 @@ describe("database", "local", "Indexes", () => {
             expect(idx.tree.getNumberOfKeys()).to.be.equal(3);
             idx.remove([doc1, doc3]);
             expect(idx.tree.getNumberOfKeys()).to.be.equal(1);
-            expect(idx.tree.search("hello")).to.be.empty;
+            expect(idx.tree.search("hello")).to.be.empty();
             expect(idx.tree.search("world")).to.be.deep.equal([doc2]);
-            expect(idx.tree.search("bloup")).to.be.empty;
+            expect(idx.tree.search("bloup")).to.be.empty();
         });
     });
 
@@ -302,7 +302,7 @@ describe("database", "local", "Indexes", () => {
 
             idx.update(doc1, doc5);
             expect(idx.tree.getNumberOfKeys()).to.be.equal(3);
-            expect(idx.tree.search("hello")).to.be.empty;
+            expect(idx.tree.search("hello")).to.be.empty();
             expect(idx.tree.search("changed")).to.be.deep.equal([doc5]);
         });
 
@@ -530,7 +530,7 @@ describe("database", "local", "Indexes", () => {
 
             expect(idx.getMatching("bloup")).to.be.deep.equal([doc3]);
             expect(idx.getMatching("world")).to.be.deep.equal([doc2, doc4]);
-            expect(idx.getMatching("nope")).to.be.empty;
+            expect(idx.getMatching("nope")).to.be.empty();
         });
 
         it("Can get all documents for a given key in a unique index", () => {
@@ -545,7 +545,7 @@ describe("database", "local", "Indexes", () => {
 
             expect(idx.getMatching("bloup")).to.be.deep.equal([doc3]);
             expect(idx.getMatching("world")).to.be.deep.equal([doc2]);
-            expect(idx.getMatching("nope")).to.be.empty;
+            expect(idx.getMatching("nope")).to.be.empty();
         });
 
         it("Can get all documents for which a field is undefined", () => {
@@ -559,18 +559,18 @@ describe("database", "local", "Indexes", () => {
             idx.insert(doc2);
             idx.insert(doc3);
 
-            expect(idx.getMatching("bloup")).to.be.empty;
+            expect(idx.getMatching("bloup")).to.be.empty();
             expect(idx.getMatching("hello")).to.be.deep.equal([doc1]);
             expect(idx.getMatching("world")).to.be.deep.equal([doc3]);
-            expect(idx.getMatching("yes")).to.be.empty;
+            expect(idx.getMatching("yes")).to.be.empty();
             expect(idx.getMatching(undefined)).to.be.deep.equal([doc2]);
 
             idx.insert(doc4);
 
-            expect(idx.getMatching("bloup")).to.be.empty;
+            expect(idx.getMatching("bloup")).to.be.empty();
             expect(idx.getMatching("hello")).to.be.deep.equal([doc1]);
             expect(idx.getMatching("world")).to.be.deep.equal([doc3]);
-            expect(idx.getMatching("yes")).to.be.empty;
+            expect(idx.getMatching("yes")).to.be.empty();
             expect(idx.getMatching(undefined)).to.be.deep.equal([doc2, doc4]);
         });
 
@@ -585,18 +585,18 @@ describe("database", "local", "Indexes", () => {
             idx.insert(doc2);
             idx.insert(doc3);
 
-            expect(idx.getMatching("bloup")).to.be.empty;
+            expect(idx.getMatching("bloup")).to.be.empty();
             expect(idx.getMatching("hello")).to.be.deep.equal([doc1]);
             expect(idx.getMatching("world")).to.be.deep.equal([doc3]);
-            expect(idx.getMatching("yes")).to.be.empty;
+            expect(idx.getMatching("yes")).to.be.empty();
             expect(idx.getMatching(null)).to.be.deep.equal([doc2]);
 
             idx.insert(doc4);
 
-            expect(idx.getMatching("bloup")).to.be.empty;
+            expect(idx.getMatching("bloup")).to.be.empty();
             expect(idx.getMatching("hello")).to.be.deep.equal([doc1]);
             expect(idx.getMatching("world")).to.be.deep.equal([doc3]);
-            expect(idx.getMatching("yes")).to.be.empty;
+            expect(idx.getMatching("yes")).to.be.empty();
             expect(idx.getMatching(null)).to.be.deep.equal([doc2, doc4]);
         });
 
@@ -612,11 +612,11 @@ describe("database", "local", "Indexes", () => {
             idx.insert(doc3);
             idx.insert(doc4);
 
-            expect(idx.getMatching("bloup")).to.be.empty;
+            expect(idx.getMatching("bloup")).to.be.empty();
             expect(idx.getMatching("hello")).to.be.deep.equal([doc1]);
             expect(idx.getMatching("world")).to.be.deep.equal([doc3]);
-            expect(idx.getMatching("yes")).to.be.empty;
-            expect(idx.getMatching(undefined)).to.be.empty;
+            expect(idx.getMatching("yes")).to.be.empty();
+            expect(idx.getMatching(undefined)).to.be.empty();
         });
 
         it("Can get all documents whose key is in an array of keys", () => {
@@ -637,11 +637,11 @@ describe("database", "local", "Indexes", () => {
             idx.insert(doc4);
             idx.insert(doc5);
 
-            expect(idx.getMatching([])).to.be.empty;
+            expect(idx.getMatching([])).to.be.empty();
             expect(idx.getMatching(["bloup"])).to.be.deep.equal([doc2]);
             expect(idx.getMatching(["bloup", "yes"])).to.be.deep.equal([doc2, doc4, doc5]);
             expect(idx.getMatching(["hello", "no"])).to.be.deep.equal([doc1]);
-            expect(idx.getMatching(["nope", "no"])).to.be.empty;
+            expect(idx.getMatching(["nope", "no"])).to.be.empty();
         });
 
         it("Can get all documents whose key is between certain bounds", () => {
@@ -682,9 +682,9 @@ describe("database", "local", "Indexes", () => {
 
             idx.reset();
             expect(idx.tree.getNumberOfKeys()).to.be.equal(0);
-            expect(idx.getMatching("hello")).to.be.empty;
-            expect(idx.getMatching("world")).to.be.empty;
-            expect(idx.getMatching("bloup")).to.be.empty;
+            expect(idx.getMatching("hello")).to.be.empty();
+            expect(idx.getMatching("world")).to.be.empty();
+            expect(idx.getMatching("bloup")).to.be.empty();
         });
 
         it("Can reset an index and initialize it with one document", () => {
@@ -705,9 +705,9 @@ describe("database", "local", "Indexes", () => {
 
             idx.reset(newDoc);
             expect(idx.tree.getNumberOfKeys()).to.be.equal(1);
-            expect(idx.getMatching("hello")).to.be.empty;
-            expect(idx.getMatching("world")).to.be.empty;
-            expect(idx.getMatching("bloup")).to.be.empty;
+            expect(idx.getMatching("hello")).to.be.empty();
+            expect(idx.getMatching("world")).to.be.empty();
+            expect(idx.getMatching("bloup")).to.be.empty();
             expect(idx.getMatching("new")[0].a).to.be.equal(555);
         });
 
@@ -729,9 +729,9 @@ describe("database", "local", "Indexes", () => {
 
             idx.reset(newDocs);
             expect(idx.tree.getNumberOfKeys()).to.be.equal(2);
-            expect(idx.getMatching("hello")).to.be.empty;
-            expect(idx.getMatching("world")).to.be.empty;
-            expect(idx.getMatching("bloup")).to.be.empty;
+            expect(idx.getMatching("hello")).to.be.empty();
+            expect(idx.getMatching("world")).to.be.empty();
+            expect(idx.getMatching("bloup")).to.be.empty();
             expect(idx.getMatching("new")[0].a).to.be.equal(555);
             expect(idx.getMatching("again")[0].a).to.be.equal(666);
         });

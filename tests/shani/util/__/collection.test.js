@@ -4,11 +4,11 @@ describe("shani", "util", "__", "collection", () => {
     it("creates fake collection", () => {
         const collection = new Collection();
 
-        assert.isFunction(collection.verify);
-        assert.isFunction(collection.restore);
-        assert.isFunction(collection.verifyAndRestore);
-        assert.isFunction(collection.stub);
-        assert.isFunction(collection.mock);
+        assert.function(collection.verify);
+        assert.function(collection.restore);
+        assert.function(collection.verifyAndRestore);
+        assert.function(collection.stub);
+        assert.function(collection.mock);
     });
 
     describe(".createStubInstance", () => {
@@ -448,9 +448,9 @@ describe("shani", "util", "__", "collection", () => {
             const obj = {};
             this.collection.inject(obj);
 
-            assert.isFunction(obj.spy);
-            assert.isFunction(obj.stub);
-            assert.isFunction(obj.mock);
+            assert.function(obj.spy);
+            assert.function(obj.stub);
+            assert.function(obj.mock);
         });
 
         it("returns argument", function () {

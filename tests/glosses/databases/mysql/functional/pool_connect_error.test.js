@@ -35,7 +35,7 @@ describe("database", "mysql", "functional", "pool connect error", () => {
             password: "test",
             database: "test_database"
         }).then(() => null, (e) => e);
-        expect(err).not.to.be.null;
+        expect(err).not.to.be.null();
         expect(err.errno).to.be.equal(1040);
     });
 
@@ -49,7 +49,7 @@ describe("database", "mysql", "functional", "pool connect error", () => {
             database: "test_database"
         });
         const err = await pool.query("select 1").then(() => null, (e) => e);
-        expect(err).not.to.be.null;
+        expect(err).not.to.be.null();
         expect(err.errno).to.be.equal(1040);
     });
 });

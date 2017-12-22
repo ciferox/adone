@@ -71,7 +71,7 @@ describe(Support.getTestDialectTeaser("Model"), { skip: !current.dialect.support
                 username: "triggertest"
             });
             await user.destroy();
-            expect(await User.find({ username: "triggertest" })).to.be.null;
+            expect(await User.find({ username: "triggertest" })).to.be.null();
         });
     });
 });

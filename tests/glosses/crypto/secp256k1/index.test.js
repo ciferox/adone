@@ -20,22 +20,22 @@ describe("crypto", "secp256k1", () => {
 
             it("invalid length", () => {
                 const privateKey = util.getPrivateKey().slice(1);
-                assert.isFalse(secp256k1.privateKeyVerify(privateKey));
+                assert.false(secp256k1.privateKeyVerify(privateKey));
             });
 
             it("zero key", () => {
                 const privateKey = util.BN_ZERO.toArrayLike(Buffer, "be", 32);
-                assert.isFalse(secp256k1.privateKeyVerify(privateKey));
+                assert.false(secp256k1.privateKeyVerify(privateKey));
             });
 
             it("equal to N", () => {
                 const privateKey = util.ec.curve.n.toArrayLike(Buffer, "be", 32);
-                assert.isFalse(secp256k1.privateKeyVerify(privateKey));
+                assert.false(secp256k1.privateKeyVerify(privateKey));
             });
 
             util.repeat("random tests", util.env.repeat, (done) => {
                 const privateKey = util.getPrivateKey();
-                assert.isTrue(secp256k1.privateKeyVerify(privateKey));
+                assert.true(secp256k1.privateKeyVerify(privateKey));
                 done();
             });
         });
@@ -328,14 +328,14 @@ describe("crypto", "secp256k1", () => {
             it("invalid length", () => {
                 const privateKey = util.getPrivateKey();
                 const publicKey = util.getPublicKey(privateKey).compressed.slice(1);
-                assert.isFalse(secp256k1.publicKeyVerify(publicKey));
+                assert.false(secp256k1.publicKeyVerify(publicKey));
             });
 
             it("invalid first byte", () => {
                 const privateKey = util.getPrivateKey();
                 const publicKey = util.getPublicKey(privateKey).compressed;
                 publicKey[0] = 0x01;
-                assert.isFalse(secp256k1.publicKeyVerify(publicKey));
+                assert.false(secp256k1.publicKeyVerify(publicKey));
             });
 
             it("x overflow (first byte is 0x03)", () => {
@@ -343,7 +343,7 @@ describe("crypto", "secp256k1", () => {
                     Buffer.from([0x03]),
                     util.ec.curve.p.toArrayLike(Buffer, "be", 32)
                 ]);
-                assert.isFalse(secp256k1.publicKeyVerify(publicKey));
+                assert.false(secp256k1.publicKeyVerify(publicKey));
             });
 
             it("x overflow", () => {
@@ -351,7 +351,7 @@ describe("crypto", "secp256k1", () => {
                     Buffer.from([0x04]),
                     util.ec.curve.p.toArrayLike(Buffer, "be", 32)
                 ]);
-                assert.isFalse(secp256k1.publicKeyVerify(publicKey));
+                assert.false(secp256k1.publicKeyVerify(publicKey));
             });
 
             it("y overflow", () => {
@@ -360,7 +360,7 @@ describe("crypto", "secp256k1", () => {
                     Buffer.alloc(32),
                     util.ec.curve.p.toArrayLike(Buffer, "be", 32)
                 ]);
-                assert.isFalse(secp256k1.publicKeyVerify(publicKey));
+                assert.false(secp256k1.publicKeyVerify(publicKey));
             });
 
             it("y is even, first byte is 0x07", () => {
@@ -369,19 +369,19 @@ describe("crypto", "secp256k1", () => {
                     Buffer.alloc(32),
                     util.ec.curve.p.subn(1).toArrayLike(Buffer, "be", 32)
                 ]);
-                assert.isFalse(secp256k1.publicKeyVerify(publicKey));
+                assert.false(secp256k1.publicKeyVerify(publicKey));
             });
 
             it("y**2 !== x*x*x + 7", () => {
                 const publicKey = Buffer.concat([Buffer.from([0x04]), util.getTweak(), util.getTweak()]);
-                assert.isFalse(secp256k1.publicKeyVerify(publicKey));
+                assert.false(secp256k1.publicKeyVerify(publicKey));
             });
 
             util.repeat("random tests", util.env.repeat, (done) => {
                 const privateKey = util.getPrivateKey();
                 const publicKey = util.getPublicKey(privateKey);
-                assert.isTrue(secp256k1.publicKeyVerify(publicKey.compressed));
-                assert.isTrue(secp256k1.publicKeyVerify(publicKey.uncompressed));
+                assert.true(secp256k1.publicKeyVerify(publicKey.compressed));
+                assert.true(secp256k1.publicKeyVerify(publicKey.uncompressed));
                 done();
             });
         });
@@ -1052,7 +1052,7 @@ describe("crypto", "secp256k1", () => {
                 assert.deepEqual(sigObj.recovery, expected.recovery);
 
                 const isValid = secp256k1.verify(message, sigObj.signature, publicKey.compressed);
-                assert.isTrue(isValid);
+                assert.true(isValid);
 
                 const compressed = secp256k1.recover(message, sigObj.signature, sigObj.recovery, true);
                 assert.deepEqual(compressed, publicKey.compressed);

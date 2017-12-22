@@ -40,7 +40,7 @@ describe("database", "level", "backend", "memory", () => {
             await db3.get("key");
         } catch (err) {
         }
-        assert.isUndefined(value);
+        assert.undefined(value);
         value = await db4.get("key2", { asBuffer: false });
         assert.equal(value, "value2", "should have value2");
     });

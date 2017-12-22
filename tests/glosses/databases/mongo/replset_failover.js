@@ -176,7 +176,7 @@ describe("replset failover", function () {
         const primaryLeft = left.waitFor(({ args }) => args[0] === "primary");
         await primary.stop();
         await primaryLeft;
-        expect(await collection.findOne()).to.be.ok;
+        expect(await collection.findOne()).to.be.ok();
         await db.close();
         await this.server.restart();
     });
@@ -215,12 +215,12 @@ describe("replset failover", function () {
         const secondaryLeft = left.waitForArgs("secondary");
         await secondaries[0].stop();
         await secondaryLeft;
-        expect(await collection.findOne({}, { readPreference: mongo.ReadPreference.SECONDARY_PREFERRED })).to.be.ok;
+        expect(await collection.findOne({}, { readPreference: mongo.ReadPreference.SECONDARY_PREFERRED })).to.be.ok();
         const primary = await this.server.primary();
         const primaryLeft = left.waitForArgs("primary");
         await primary.stop();
         await primaryLeft;
-        expect(await collection.findOne({}, { readPreference: mongo.ReadPreference.SECONDARY_PREFERRED })).to.be.ok;
+        expect(await collection.findOne({}, { readPreference: mongo.ReadPreference.SECONDARY_PREFERRED })).to.be.ok();
         await db.close();
         await this.server.restart();
     });

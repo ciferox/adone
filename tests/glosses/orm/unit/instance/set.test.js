@@ -23,7 +23,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
             const meta = user.get("meta");
 
             user.set("meta.location", "Copenhagen");
-            expect(user.dataValues["meta.location"]).not.to.be.ok;
+            expect(user.dataValues["meta.location"]).not.to.be.ok();
             expect(user.get("meta").location).to.equal("Copenhagen");
             expect(user.get("meta") === meta).to.equal(true);
             expect(user.get("meta") === meta).to.equal(true);
@@ -54,7 +54,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                 date: null
             });
             user1.set("date", "1970-01-01");
-            expect(user1.get("date")).to.be.ok;
+            expect(user1.get("date")).to.be.ok();
             expect(user1.get("date").getTime()).to.equal(new Date("1970-01-01").getTime());
         });
 
@@ -71,7 +71,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
             user.set("date", new Date());
             expect(user.get("date")).to.be.an.instanceof(Date);
-            expect(user.get("date")).not.to.be.NaN;
+            expect(user.get("date")).not.to.be.NaN();
         });
 
         describe("custom setter", () => {
@@ -106,10 +106,10 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                     phoneNumber: "+1 234 567"
                 });
                 return user.save().then(() => {
-                    expect(user.changed("phoneNumber")).to.be.false;
+                    expect(user.changed("phoneNumber")).to.be.false();
 
                     user.set("phoneNumber", "+1 (0) 234567"); // Canonical equivalent of existing phone number
-                    expect(user.changed("phoneNumber")).to.be.false;
+                    expect(user.changed("phoneNumber")).to.be.false();
                 });
             });
 
@@ -118,10 +118,10 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                     phoneNumber: "+1 234 567"
                 });
                 return user.save().then(() => {
-                    expect(user.changed("phoneNumber")).to.be.false;
+                    expect(user.changed("phoneNumber")).to.be.false();
 
                     user.set("phoneNumber", "+1 (0) 765432"); // Canonical non-equivalent of existing phone number
-                    expect(user.changed("phoneNumber")).to.be.true;
+                    expect(user.changed("phoneNumber")).to.be.true();
                 });
             });
 
@@ -130,10 +130,10 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                     phoneNumber: "+1 234 567"
                 });
                 return user.save().then(() => {
-                    expect(user.changed("phoneNumber")).to.be.false;
+                    expect(user.changed("phoneNumber")).to.be.false();
 
                     user.set("phoneNumber", { country: "1", area: "234", local: "567" }); // Canonical equivalent of existing phone number
-                    expect(user.changed("phoneNumber")).to.be.false;
+                    expect(user.changed("phoneNumber")).to.be.false();
                 });
             });
 
@@ -142,10 +142,10 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                     phoneNumber: "+1 234 567"
                 });
                 return user.save().then(() => {
-                    expect(user.changed("phoneNumber")).to.be.false;
+                    expect(user.changed("phoneNumber")).to.be.false();
 
                     user.set("phoneNumber", { country: "1", area: "765", local: "432" }); // Canonical non-equivalent of existing phone number
-                    expect(user.changed("phoneNumber")).to.be.true;
+                    expect(user.changed("phoneNumber")).to.be.true();
                 });
             });
         });

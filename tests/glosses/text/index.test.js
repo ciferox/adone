@@ -9,34 +9,34 @@ describe("text", () => {
             describe("Regexp", () => {
                 // testing against codes found at: http://ascii-table.com/ansi-escape-sequences-vt-100.php
                 it("match ansi code in a string", () => {
-                    assert.isTrue(escapeCodesRegexp().test("foo\u001b[4mcake\u001b[0m"));
-                    assert.isTrue(escapeCodesRegexp().test("\u001b[4mcake\u001b[0m"));
-                    assert.isTrue(escapeCodesRegexp().test("foo\u001b[4mcake\u001b[0m"));
-                    assert.isTrue(escapeCodesRegexp().test("\u001b[0m\u001b[4m\u001b[42m\u001b[31mfoo\u001b[39m\u001b[49m\u001b[24mfoo\u001b[0m"));
-                    assert.isTrue(escapeCodesRegexp().test("foo\u001b[mfoo"));
+                    assert.true(escapeCodesRegexp().test("foo\u001b[4mcake\u001b[0m"));
+                    assert.true(escapeCodesRegexp().test("\u001b[4mcake\u001b[0m"));
+                    assert.true(escapeCodesRegexp().test("foo\u001b[4mcake\u001b[0m"));
+                    assert.true(escapeCodesRegexp().test("\u001b[0m\u001b[4m\u001b[42m\u001b[31mfoo\u001b[39m\u001b[49m\u001b[24mfoo\u001b[0m"));
+                    assert.true(escapeCodesRegexp().test("foo\u001b[mfoo"));
                 });
 
                 it("match ansi code from ls command", () => {
-                    assert.isTrue(escapeCodesRegexp().test("\u001b[00;38;5;244m\u001b[m\u001b[00;38;5;33mfoo\u001b[0m"));
+                    assert.true(escapeCodesRegexp().test("\u001b[00;38;5;244m\u001b[m\u001b[00;38;5;33mfoo\u001b[0m"));
                 });
 
                 it("match reset;setfg;setbg;italics;strike;underline sequence in a string", () => {
-                    assert.isTrue(escapeCodesRegexp().test("\u001b[0;33;49;3;9;4mbar\u001b[0m"));
+                    assert.true(escapeCodesRegexp().test("\u001b[0;33;49;3;9;4mbar\u001b[0m"));
                     assert.equal("foo\u001b[0;33;49;3;9;4mbar".match(escapeCodesRegexp())[0], "\u001b[0;33;49;3;9;4m");
                 });
 
                 it("match clear tabs sequence in a string", () => {
-                    assert.isTrue(escapeCodesRegexp().test("foo\u001b[0gbar"));
+                    assert.true(escapeCodesRegexp().test("foo\u001b[0gbar"));
                     assert.equal("foo\u001b[0gbar".match(escapeCodesRegexp())[0], "\u001b[0g");
                 });
 
                 it("match clear line from cursor right in a string", () => {
-                    assert.isTrue(escapeCodesRegexp().test("foo\u001b[Kbar"));
+                    assert.true(escapeCodesRegexp().test("foo\u001b[Kbar"));
                     assert.equal("foo\u001b[Kbar".match(escapeCodesRegexp())[0], "\u001b[K");
                 });
 
                 it("match clear screen in a string", () => {
-                    assert.isTrue(escapeCodesRegexp().test("foo\u001b[2Jbar"));
+                    assert.true(escapeCodesRegexp().test("foo\u001b[2Jbar"));
                     assert.equal("foo\u001b[2Jbar".match(escapeCodesRegexp())[0], "\u001b[2J");
                 });
 
@@ -55,7 +55,7 @@ describe("text", () => {
 
                             const string = `hel${ecode}lo`;
 
-                            assert.isTrue(escapeCodesRegexp().test(string));
+                            assert.true(escapeCodesRegexp().test(string));
                             assert.equal(string.match(escapeCodesRegexp())[0], ecode);
                             assert.equal(string.replace(escapeCodesRegexp(), ""), "hello");
                         });
@@ -69,7 +69,7 @@ describe("text", () => {
                                 const c = consumptionChars[i];
                                 const string = ecode + c;
 
-                                assert.isTrue(escapeCodesRegexp().test(string));
+                                assert.true(escapeCodesRegexp().test(string));
                                 assert.equal(string.match(escapeCodesRegexp())[0], ecode);
                                 assert.equal(string.replace(escapeCodesRegexp(), ""), c);
                             }
@@ -95,11 +95,11 @@ describe("text", () => {
     describe("Unicode", () => {
         describe("Full width", () => {
             it("check", () => {
-                assert.isTrue(isFullWidthCodePoint("あ".codePointAt(0)));
-                assert.isTrue(isFullWidthCodePoint("谢".codePointAt(0)));
-                assert.isTrue(isFullWidthCodePoint("고".codePointAt(0)));
-                assert.isFalse(isFullWidthCodePoint("a".codePointAt(0)));
-                assert.isTrue(isFullWidthCodePoint(0x1f251));
+                assert.true(isFullWidthCodePoint("あ".codePointAt(0)));
+                assert.true(isFullWidthCodePoint("谢".codePointAt(0)));
+                assert.true(isFullWidthCodePoint("고".codePointAt(0)));
+                assert.false(isFullWidthCodePoint("a".codePointAt(0)));
+                assert.true(isFullWidthCodePoint(0x1f251));
             });
         });
     });

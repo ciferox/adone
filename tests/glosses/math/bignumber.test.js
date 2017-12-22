@@ -250,13 +250,13 @@ describe("math", "bignumber", () => {
         it("rand", () => {
             for (let i = 1; i < 1000; i++) {
                 const x = new BigNumber(i).rand().toNumber();
-                expect(x >= 0 && x < i).to.be.true;
+                expect(x >= 0 && x < i).to.be.true();
 
                 const y = new BigNumber(i).rand(i + 10).toNumber();
-                expect(i <= y && y < i + 10).to.be.true;
+                expect(i <= y && y < i + 10).to.be.true();
 
                 const z = BigNumber.rand(i, i + 10).toNumber();
-                expect(i <= z && z < i + 10).to.be.true;
+                expect(i <= z && z < i + 10).to.be.true();
             }
         });
 
@@ -289,7 +289,7 @@ describe("math", "bignumber", () => {
             [uniques, wagstaff, big].forEach((xs) => {
                 xs.forEach((x) => {
                     const p = new BigNumber(x).probPrime();
-                    expect(p === true || p === "maybe").to.be.ok;
+                    expect(p === true || p === "maybe").to.be.ok();
                 });
             });
         });
@@ -440,7 +440,7 @@ describe("math", "bignumber", () => {
                 const b = new BigNumber(num);
                 const u = b.toBuffer();
 
-                expect(u).to.be.ok;
+                expect(u).to.be.ok();
                 expect(BigNumber.fromBuffer(u).toString()).to.be.deep.equal(b.toString());
             });
 
@@ -511,9 +511,9 @@ describe("math", "bignumber", () => {
             num = new BigNumber(2);
             expect(num.powm(0x100000001, 4).toString()).to.be.equal("0");
             num = new BigNumber(-0x100000000);
-            expect(num.cmp(-0x100000000) === 0).to.be.true;
+            expect(num.cmp(-0x100000000) === 0).to.be.true();
             num = new BigNumber(0x100000000);
-            expect(num.cmp(0x100000000) === 0).to.be.true;
+            expect(num.cmp(0x100000000) === 0).to.be.true();
         });
     });
 
@@ -523,10 +523,10 @@ describe("math", "bignumber", () => {
             let testObj;
 
             testObj = new BigNumber("123");
-            expect(adone.is.bigNumber(testObj)).to.be.true;
+            expect(adone.is.bigNumber(testObj)).to.be.true();
 
             testObj = {};
-            expect(adone.is.bigNumber(testObj)).to.be.false;
+            expect(adone.is.bigNumber(testObj)).to.be.false();
 
             testObj = {};
             expect(() => {

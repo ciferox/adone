@@ -153,7 +153,7 @@ describe("net", "http", "server", "middlewares", "session", function session() {
                 .setHeader("cookie", cookie)
                 .expectStatus(200);
             const sid = cookie[0].split(";")[0].split("=")[1];
-            expect(store.store[sid]).to.be.undefined;
+            expect(store.store[sid]).to.be.undefined();
         });
 
         it("should work when update old session", async () => {

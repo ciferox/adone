@@ -61,10 +61,10 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
 
                 return this.User.find({ where: { username: "adam" } }).then((user) => {
                     expect(user.mood).to.equal("happy");
-                    expect(beforeHook).to.be.true;
-                    expect(beforeHook2).to.be.true;
-                    expect(beforeHook3).to.be.true;
-                    expect(afterHook).to.be.true;
+                    expect(beforeHook).to.be.true();
+                    expect(beforeHook2).to.be.true();
+                    expect(beforeHook3).to.be.true();
+                    expect(afterHook).to.be.true();
                 });
             });
 

@@ -51,7 +51,7 @@ const getCallback = (expectError, done) => {
     const timeOutCallback = () => {
         assert.equal(hasBeenCalled, true, "callback has been called");
         if (!expectError) {
-            assert.isNull(err, "error expectation fulfilled");
+            assert.null(err, "error expectation fulfilled");
         }
         done();
     };

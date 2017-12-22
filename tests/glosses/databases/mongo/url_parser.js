@@ -106,7 +106,7 @@ describe("url parser", function () {
         expect(object.dbName).to.be.equal("somedb");
         expect(object.auth.user).to.be.equal("fred");
         expect(object.auth.password).to.be.equal("foo");
-        expect(object.db_options.safe).to.be.true;
+        expect(object.db_options.safe).to.be.true();
     });
 
     it("should correctly parse mongodb://example1.com:27017,example2.com:27018", () => {
@@ -144,7 +144,7 @@ describe("url parser", function () {
         expect(object.servers[2].host).to.be.equal("host3");
         expect(object.servers[2].port).to.be.equal(27017);
         expect(object.dbName).to.be.equal("admin");
-        expect(object.server_options.slave_ok).to.be.true;
+        expect(object.server_options.slave_ok).to.be.true();
     });
 
     it("should correctly parse mongodb://host1,host2,host3,host1/?slaveOk=true and de-duplicate names", () => {
@@ -158,7 +158,7 @@ describe("url parser", function () {
         expect(object.servers[2].host).to.be.equal("host3");
         expect(object.servers[2].port).to.be.equal(27017);
         expect(object.dbName).to.be.equal("admin");
-        expect(object.server_options.slave_ok).to.be.true;
+        expect(object.server_options.slave_ok).to.be.true();
     });
 
     it("should correctly parse mongodb://localhost/?safe=true", () => {
@@ -168,7 +168,7 @@ describe("url parser", function () {
         expect(object.servers[0].host).to.be.equal("localhost");
         expect(object.servers[0].port).to.be.equal(27017);
         expect(object.dbName).to.be.equal("admin");
-        expect(object.db_options.safe).to.be.true;
+        expect(object.db_options.safe).to.be.true();
     });
 
     it("should correctly parse mongodb://host1,host2,host3/?safe=true;w=2;wtimeoutMS=2000", () => {
@@ -182,7 +182,7 @@ describe("url parser", function () {
         expect(object.servers[2].host).to.be.equal("host3");
         expect(object.servers[2].port).to.be.equal(27017);
         expect(object.dbName).to.be.equal("admin");
-        expect(object.db_options.safe).to.be.true;
+        expect(object.db_options.safe).to.be.true();
         expect(object.db_options.w).to.be.equal(2);
         expect(object.db_options.wtimeout).to.be.equal(2000);
     });
@@ -210,8 +210,8 @@ describe("url parser", function () {
         expect(object.servers[0].host).to.be.equal("localhost");
         expect(object.servers[0].port).to.be.equal(27017);
         expect(object.dbName).to.be.equal("db");
-        expect(object.rs_options.ssl).to.be.true;
-        expect(object.server_options.ssl).to.be.true;
+        expect(object.rs_options.ssl).to.be.true();
+        expect(object.server_options.ssl).to.be.true();
     });
 
     it("parse mongodb://localhost/db?maxPoolSize=100", () => {
@@ -254,10 +254,10 @@ describe("url parser", function () {
 
     it("write concerns parsing", () => {
         let object = parse("mongodb://localhost/db?safe=true&w=1");
-        expect(object.db_options.safe).to.be.true;
+        expect(object.db_options.safe).to.be.true();
 
         object = parse("mongodb://localhost/db?safe=false&w=1");
-        expect(object.db_options.safe).to.be.false;
+        expect(object.db_options.safe).to.be.false();
 
         expect(() => {
             parse("mongodb://localhost/db?safe=true&w=0");
@@ -287,7 +287,7 @@ describe("url parser", function () {
 
     it("read preferences parsing", () => {
         let object = parse("mongodb://localhost/db?slaveOk=true");
-        expect(object.server_options.slave_ok).to.be.true;
+        expect(object.server_options.slave_ok).to.be.true();
 
         object = parse("mongodb://localhost/db?readPreference=primary");
         expect(object.db_options.readPreference).to.be.equal("primary");

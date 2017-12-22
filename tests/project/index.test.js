@@ -82,7 +82,7 @@ describe("project", function () {
                 check: (moduleExport) => {
                     const Class = moduleExport.default;
                     const instance = new Class();
-                    assert.isTrue(is.subsystem(instance));
+                    assert.true(is.subsystem(instance));
                 }
             },
             {
@@ -94,8 +94,8 @@ describe("project", function () {
                             name: "test"
                         }
                     });
-                    assert.isTrue(is.subsystem(instance));
-                    assert.isTrue(is.omnitronService(instance));
+                    assert.true(is.subsystem(instance));
+                    assert.true(is.omnitronService(instance));
                 }
             }
         ];
@@ -115,10 +115,10 @@ describe("project", function () {
                         cwd: FIXTURES_PATH
                     });
 
-                    assert.isTrue(await fs.exists(filePath));
+                    assert.true(await fs.exists(filePath));
                     if (!["application", "cli.application"].includes(type.name)) {
                         const moduleExport = adone.require(filePath);
-                        assert.isTrue(is.class(moduleExport.default));
+                        assert.true(is.class(moduleExport.default));
                         assert.equal(moduleExport.default.name, text.capitalize(text.toCamelCase(name)));
                         await type.check(moduleExport);
                     }
@@ -144,9 +144,9 @@ describe("project", function () {
                             cwd: projectPath
                         });
 
-                        assert.isTrue(await fs.exists(filePath));
+                        assert.true(await fs.exists(filePath));
                         const moduleExport = adone.require(filePath);
-                        assert.isTrue(is.class(moduleExport.default));
+                        assert.true(is.class(moduleExport.default));
                         assert.equal(moduleExport.default.name, "_default");
                         await type.check(moduleExport);
                     }
@@ -185,10 +185,10 @@ describe("project", function () {
                         rewriteFile: true
                     });
 
-                    assert.isTrue(await fs.exists(filePath));
+                    assert.true(await fs.exists(filePath));
                     if (!["application", "cli.application"].includes(type.name)) {
                         const moduleExport = adone.require(filePath);
-                        assert.isTrue(is.class(moduleExport.default));
+                        assert.true(is.class(moduleExport.default));
                         assert.equal(moduleExport.default.name, text.capitalize(text.toCamelCase(name)));
                         await type.check(moduleExport);
                     }
@@ -260,7 +260,7 @@ describe("project", function () {
                     assert.deepEqual(util.pick(adoneConfig.raw, ["name", "description", "version", "author"]), util.pick(projectConfig, ["name", "description", "version", "author"]));
                     assert.sameMembers(await fs.readdir(cwd), files);
                     if (!skipGit) {
-                        assert.isTrue(await fs.is.directory(std.path.join(cwd, ".git")));
+                        assert.true(await fs.is.directory(std.path.join(cwd, ".git")));
                     }
 
                     if (await fs.exists(std.path.join(cwd, adone.configuration.Npm.name))) {
@@ -271,14 +271,14 @@ describe("project", function () {
                     }
 
                     // if (!skipEslint) {
-                    //     assert.isTrue(is.configuration(context.config.eslint));
+                    //     assert.true(is.configuration(context.config.eslint));
                     // }
 
                     if (!skipJsconfig) {
                         const jsconfig = await adone.configuration.Jsconfig.load({
                             cwd
                         });
-                        assert.isFalse(is.propertyOwned(jsconfig.raw, "include"));
+                        assert.false(is.propertyOwned(jsconfig.raw, "include"));
                     }
                 });
             }
@@ -316,13 +316,13 @@ describe("project", function () {
                     }
 
                     assert.sameMembers(await fs.readdir(cwd), ["adone.json", ".git", ".gitignore", ".eslintrc.js", "package.json", "package-lock.json", "node_modules", "jsconfig.json", "src"]);
-                    assert.isTrue(await fs.is.directory(std.path.join(cwd, ".git")));
-                    assert.isTrue(await fs.is.directory(std.path.join(cwd, "node_modules")));
-                    assert.isTrue(await fs.is.directory(std.path.join(cwd, "src")));
+                    assert.true(await fs.is.directory(std.path.join(cwd, ".git")));
+                    assert.true(await fs.is.directory(std.path.join(cwd, "node_modules")));
+                    assert.true(await fs.is.directory(std.path.join(cwd, "src")));
                     if (["cli.command", "omnitron.service"].includes(type)) {
-                        assert.isTrue(await fs.exists(std.path.join(cwd, "src", "index.js")));
+                        assert.true(await fs.exists(std.path.join(cwd, "src", "index.js")));
                     } else {
-                        assert.isTrue(await fs.exists(std.path.join(cwd, "src", "app.js")));
+                        assert.true(await fs.exists(std.path.join(cwd, "src", "app.js")));
                     }
 
                     const npmConfig = await adone.configuration.Npm.load({
@@ -330,12 +330,12 @@ describe("project", function () {
                     });
                     assert.deepEqual(util.pick(npmConfig.raw, ["name", "description", "version", "author"]), util.pick(projectConfig, ["name", "description", "version", "author"]));
 
-                    // assert.isTrue(is.configuration(context.config.eslint));
+                    // assert.true(is.configuration(context.config.eslint));
 
                     const jsconfig = await adone.configuration.Jsconfig.load({
                         cwd
                     });
-                    assert.isTrue(is.array(jsconfig.raw.include));
+                    assert.true(is.array(jsconfig.raw.include));
                 });
             }
 
@@ -344,13 +344,13 @@ describe("project", function () {
                     const name = `project_${text.random(8)}`;
                     const cwd = getPathFor(name);
                     await fs.mkdir(cwd);
-    
+
                     const manager = new Manager({ cwd });
                     const projectConfig = {
                         name,
                         description: "project description",
                         version: "3.0.0",
-                        author: "Adone Core Team" 
+                        author: "Adone Core Team"
                     };
                     const context = await manager.createProject(projectConfig);
 
@@ -368,22 +368,22 @@ describe("project", function () {
 
                     await adoneConfig.load();
                     assert.lengthOf(adoneConfig.getSubConfigs(), 1);
-    
+
                     const subCwd = std.path.join(cwd, "service");
                     assert.sameMembers(await fs.readdir(subCwd), ["adone.json", "src"]);
-                    assert.isTrue(await fs.is.directory(std.path.join(subCwd, "src")));
-                    assert.isTrue(await fs.exists(std.path.join(subCwd, "src", "index.js")));
-    
+                    assert.true(await fs.is.directory(std.path.join(subCwd, "src")));
+                    assert.true(await fs.exists(std.path.join(subCwd, "src", "index.js")));
+
                     assert.equal(manager.config.raw.structure.service, "service");
-                    
-                    const relativeDir = std.path.relative(context.project.cwd, std.path.join(subContext.project.cwd, "src"));                
+
+                    const relativeDir = std.path.relative(context.project.cwd, std.path.join(subContext.project.cwd, "src"));
                     const jsconfig = await adone.configuration.Jsconfig.load({
                         cwd
                     });
-                    assert.isTrue(jsconfig.raw.include.includes(relativeDir));
+                    assert.true(jsconfig.raw.include.includes(relativeDir));
                 });
             });
-            
+
         });
     });
 });

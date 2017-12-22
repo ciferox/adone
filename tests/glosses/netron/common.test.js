@@ -32,8 +32,8 @@ describe("netron", "common", function () {
 
     it("constructor", () => {
         const n = new Netron();
-        assert.isTrue(/[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}/.test(n.uid));
-        assert.isTrue(is.plainObject(n.options));
+        assert.true(/[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}/.test(n.uid));
+        assert.true(is.plainObject(n.options));
     });
 
     describe("connection", () => {
@@ -95,8 +95,8 @@ describe("netron", "common", function () {
         it("Peer#disconnect() from client", async (done) => {
             await superNetron.bind();
             const peer = await exNetron.connect();
-            assert.isOk(superNetron.getPeer(exNetron.uid));
-            assert.isOk(exNetron.getPeer(superNetron.uid));
+            assert.ok(superNetron.getPeer(exNetron.uid));
+            assert.ok(exNetron.getPeer(superNetron.uid));
 
             exNetron.on("peer offline", (peer) => {
                 assert.equal(peer.uid, superNetron.uid);
@@ -156,28 +156,28 @@ describe("netron", "common", function () {
 
             }
         }
-        assert.isOk(is.netron(exNetron));
-        assert.isOk(is.genesisNetron(exNetron));
-        assert.isOk(is.genesisNetron(superNetron));
+        assert.ok(is.netron(exNetron));
+        assert.ok(is.genesisNetron(exNetron));
+        assert.ok(is.genesisNetron(superNetron));
         const theA = new A();
         const defId = superNetron.attachContext(theA, "a");
         const stubA = superNetron.getStubById(defId);
-        assert.isOk(is.netronStub(stubA));
-        assert.isOk(is.netronDefinition(stubA.definition));
+        assert.ok(is.netronStub(stubA));
+        assert.ok(is.netronDefinition(stubA.definition));
         await superNetron.bind();
         const peer = await exNetron.connect();
-        assert.isOk(is.netronPeer(peer));
-        assert.isOk(is.genesisPeer(peer));
+        assert.ok(is.netronPeer(peer));
+        assert.ok(is.genesisPeer(peer));
 
         const iA = peer.getInterfaceByName("a");
-        assert.isOk(is.netronInterface(iA));
-        assert.isOk(is.netronIMethod(iA, "method"));
-        assert.isOk(is.netronIProperty(iA, "prop"));
+        assert.ok(is.netronInterface(iA));
+        assert.ok(is.netronIMethod(iA, "method"));
+        assert.ok(is.netronIProperty(iA, "prop"));
     });
 
     describe("ping", () => {
         it("ping() local netron should always return true", async () => {
-            assert.isNull(await superNetron.ping());
+            assert.null(await superNetron.ping());
         });
 
         it("ping() unknown netron should have thrown", async () => {
@@ -189,10 +189,10 @@ describe("netron", "common", function () {
             await exNetron.connect();
 
             let result = await superNetron.ping(exNetron.uid);
-            assert.isNull(result);
+            assert.null(result);
 
             result = await exNetron.ping(superNetron.uid);
-            assert.isNull(result);
+            assert.null(result);
         });
     });
 
@@ -204,11 +204,11 @@ describe("netron", "common", function () {
         await superNetron.bind();
 
         let peer = await exNetron.connect();
-        assert.isOk(peer);
+        assert.ok(peer);
         assert.equal(peer, exNetron.getPeer(superNetron.uid));
 
         peer = superNetron.getPeer(exNetron.uid);
-        assert.isOk(peer);
+        assert.ok(peer);
         assert.equal(peer.uid, exNetron.uid);
     });
 
@@ -216,13 +216,13 @@ describe("netron", "common", function () {
         await superNetron.bind();
 
         const peer = await exNetron.connect();
-        assert.isOk(peer);
+        assert.ok(peer);
         const exNetronPeers = exNetron.getPeers();
-        assert.isOk(exNetronPeers.has(superNetron.uid));
+        assert.ok(exNetronPeers.has(superNetron.uid));
         assert.equal(exNetronPeers.get(superNetron.uid), peer);
 
         const superNetronPeers = superNetron.getPeers();
-        assert.isOk(superNetronPeers.has(exNetron.uid));
+        assert.ok(superNetronPeers.has(exNetron.uid));
         assert.equal(superNetronPeers.get(exNetron.uid).uid, exNetron.uid);
     });
 
@@ -372,7 +372,7 @@ describe("netron", "common", function () {
             const peer = await exNetron.connect();
             const contexts = peer.getContextNames();
 
-            assert.isOk(is.array(contexts));
+            assert.ok(is.array(contexts));
             assert.equal(contexts.length, 0);
         });
 
@@ -635,7 +635,7 @@ describe("netron", "common", function () {
 
         it("local", () => {
             const def = superNetron.getDefinitionByName("a");
-            assert.isOk(def);
+            assert.ok(def);
             assert.instanceOf(def, adone.netron.Definition);
             assert.equal(def.name, "A");
 
@@ -644,20 +644,20 @@ describe("netron", "common", function () {
 
         it("remote", () => {
             const def = exNetron.getDefinitionByName("a", superNetron.uid);
-            assert.isOk(def);
+            assert.ok(def);
             assert.instanceOf(def, adone.netron.Definition);
             assert.equal(def.name, "A");
 
-            assert.isNotOk(exNetron.getDefinitionByName("not_exists", superNetron.uid));
+            assert.notOk(exNetron.getDefinitionByName("not_exists", superNetron.uid));
         });
 
         it("peer", () => {
             const def = peer.getDefinitionByName("a", superNetron.uid);
-            assert.isOk(def);
+            assert.ok(def);
             assert.instanceOf(def, adone.netron.Definition);
             assert.equal(def.name, "A");
 
-            assert.isNotOk(peer.getDefinitionByName("not_exists", superNetron.uid));
+            assert.notOk(peer.getDefinitionByName("not_exists", superNetron.uid));
         });
     });
 
@@ -985,7 +985,7 @@ describe("netron", "common", function () {
         it("local", () => {
             const def = superNetron.getDefinitionByName("a");
             const iface = superNetron.getInterfaceById(def.id);
-            assert.isOk(iface);
+            assert.ok(iface);
             assert.instanceOf(iface, adone.netron.Interface);
 
             assert.throws(() => superNetron.getInterfaceById(100500), adone.x.Unknown);
@@ -994,7 +994,7 @@ describe("netron", "common", function () {
         it("remote", () => {
             const def = exNetron.getDefinitionByName("a", superNetron.uid);
             const iface = exNetron.getInterfaceById(def.id, superNetron.uid);
-            assert.isOk(iface);
+            assert.ok(iface);
             assert.instanceOf(iface, adone.netron.Interface);
 
             assert.throws(() => exNetron.getInterfaceById(100500, superNetron.uid), adone.x.Unknown);
@@ -1021,7 +1021,7 @@ describe("netron", "common", function () {
 
         it("local", () => {
             const iface = superNetron.getInterfaceByName("a");
-            assert.isOk(iface);
+            assert.ok(iface);
             assert.instanceOf(iface, adone.netron.Interface);
 
             assert.throws(() => superNetron.getInterfaceByName("not_exists"), adone.x.Unknown);
@@ -1029,7 +1029,7 @@ describe("netron", "common", function () {
 
         it("remote", () => {
             const iface = exNetron.getInterfaceByName("a", superNetron.uid);
-            assert.isOk(iface);
+            assert.ok(iface);
             assert.instanceOf(iface, adone.netron.Interface);
 
             assert.throws(() => {
@@ -1049,10 +1049,10 @@ describe("netron", "common", function () {
 
         const def = superNetron.getDefinitionByName("a");
         const stub = superNetron.getStubById(def.id);
-        assert.isOk(stub);
+        assert.ok(stub);
         assert.instanceOf(stub, adone.netron.Stub);
 
-        assert.isNotOk(superNetron.getStubById(100500));
+        assert.notOk(superNetron.getStubById(100500));
     });
 
     describe("getPeerForInterface", () => {
@@ -1083,7 +1083,7 @@ describe("netron", "common", function () {
         it("remote", () => {
             const iface = exNetron.getInterfaceByName("a", superNetron.uid);
             const peerIface = exNetron.getPeerForInterface(iface);
-            assert.isOk(peerIface);
+            assert.ok(peerIface);
             assert.instanceOf(peerIface, adone.netron.Peer);
             assert.equal(peerIface.uid, superNetron.uid);
             assert.equal(peerIface.uid, superNetron.uid);
@@ -1327,7 +1327,7 @@ describe("netron", "common", function () {
                 server = new NewNetron(undefined, { restrictAccess: true });
                 await server.bind();
                 await exNetron.connect();
-                assert.isOk(isOK);
+                assert.ok(isOK);
                 exNetron.disconnect();
                 await server.unbind();
             });
@@ -1397,7 +1397,7 @@ describe("netron", "common", function () {
                 server = new NewNetron();
                 await server.bind();
                 await exNetron.connect();
-                assert.isOk(isOK);
+                assert.ok(isOK);
                 exNetron.disconnect();
                 await server.unbind();
             });
@@ -1464,7 +1464,7 @@ describe("netron", "common", function () {
                 const client = new Client();
                 await superNetron.bind();
                 await client.connect();
-                assert.isOk(isOK);
+                assert.ok(isOK);
             });
 
             it("simple authorization", async () => {

@@ -20,18 +20,18 @@ describe("Hypervisor", () => {
         it("should create a hypervisor object", () => {
             const test = new Hypervisor("test:///default");
             expect(test.uri).to.equal("test:///default");
-            expect(test.username).to.exist;
-            expect(test.password).to.exist;
-            expect(test.readOnly).to.exist;
+            expect(test.username).to.exist();
+            expect(test.password).to.exist();
+            expect(test.readOnly).to.exist();
         });
 
         it("should open a connection", (done) => {
             const connection = new Hypervisor("test:///default");
             connection.connect((err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
 
                 connection.disconnect((err) => {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                     done();
                 });
             });
@@ -40,10 +40,10 @@ describe("Hypervisor", () => {
         it("should open a read-only connection", (done) => {
             const connection = new Hypervisor("test:///default", true);
             connection.connect((err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
 
                 connection.disconnect((err) => {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                     done();
                 });
             });
@@ -54,7 +54,7 @@ describe("Hypervisor", () => {
         //   //this is not a big deal so we'll let it pass
         //   var readonlyConn = new Hypervisor('test:///default', true);
         //   var version = readonlyConn.getVersion();
-        //   expect(version).to.not.be.null;
+        //   expect(version).to.not.be.null();
         // });
 
         // it('should open an authenticated connection': function(beforeExit, assert) {
@@ -64,9 +64,9 @@ describe("Hypervisor", () => {
         //   //     readOnly: false
         //   // });
 
-        //   // assert.isDefined(hypervisor2);
-        //   // assert.isNotNull(hypervisor2);
-        //   // assert.isNotNull(hypervisor2.getVersion());
+        //   // assert.defined(hypervisor2);
+        //   // assert.notNull(hypervisor2);
+        //   // assert.notNull(hypervisor2.getVersion());
         // });
     });
 
@@ -74,14 +74,14 @@ describe("Hypervisor", () => {
         beforeEach((done) => {
             test.hypervisor = new Hypervisor("test:///default");
             test.hypervisor.connect((err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 done();
             });
         });
 
         afterEach((done) => {
             test.hypervisor.disconnect((err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 done();
             });
         });
@@ -104,11 +104,11 @@ describe("Hypervisor", () => {
             it(`should return hypervisor ${testCase.name}`, (done) => {
                 test.hypervisor[testCase.method]((err, result) => {
                     if (!!testCase.disabled) {
-                        expect(err).to.exist;
-                        expect(result).to.not.exist;
+                        expect(err).to.exist();
+                        expect(result).to.not.exist();
                     } else {
-                        expect(err).to.not.exist;
-                        expect(result).to.exist;
+                        expect(err).to.not.exist();
+                        expect(result).to.exist();
                     }
 
                     done();
@@ -124,8 +124,8 @@ describe("Hypervisor", () => {
         });
         it("should return the vcpu maximum number supported for a guest VM", (done) => {
             test.hypervisor.getMaxVcpus("kvm", (err, result) => {
-                expect(err).to.be.null;
-                expect(result).to.not.be.null;
+                expect(err).to.be.null();
+                expect(result).to.not.be.null();
                 done();
             });
         });
@@ -133,8 +133,8 @@ describe("Hypervisor", () => {
         it("should allow setting the keep alive interval and count", (done) => {
             // @todo not supported with test driver
             test.hypervisor.setKeepAlive(10, 10, (err, result) => {
-                expect(err).to.exist;
-                expect(result).to.not.be.ok;
+                expect(err).to.exist();
+                expect(result).to.not.be.ok();
                 done();
             });
         });
@@ -183,10 +183,10 @@ describe("Hypervisor", () => {
             it(`should list names of ${testCase.name}`, (done) => {
                 test.hypervisor[testCase.method]((err, result) => {
                     if (!!testCase.disabled) {
-                        expect(err).to.exist;
-                        expect(result).to.not.exist;
+                        expect(err).to.exist();
+                        expect(result).to.not.exist();
                     } else {
-                        expect(err).to.not.exist;
+                        expect(err).to.not.exist();
                         expect(result).to.be.instanceOf(Array);
                         expect(result).to.eql(testCase.expected);
                     }
@@ -207,8 +207,8 @@ describe("Hypervisor", () => {
             const xmlCPUs = [cpu1, cpu2];
 
             test.hypervisor.getBaselineCPU(xmlCPUs, (err, cpu) => {
-                expect(err).to.not.exist;
-                expect(cpu).to.exist;
+                expect(err).to.not.exist();
+                expect(cpu).to.exist();
                 done();
             });
         });
@@ -218,8 +218,8 @@ describe("Hypervisor", () => {
 
             // NOTE: not supported by test driver
             test.hypervisor.compareCPU(cpu, (err, result) => {
-                expect(err).to.exist;
-                expect(result).to.not.exist;
+                expect(err).to.exist();
+                expect(result).to.not.exist();
                 done();
             });
         });
@@ -227,7 +227,7 @@ describe("Hypervisor", () => {
         it("should list active domains ids", (done) => {
             // NOTE: 1 is the default active domain the test driver
             test.hypervisor.listActiveDomains((err, domains) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(domains).to.eql([1]);
                 done();
             });
@@ -278,10 +278,10 @@ describe("Hypervisor", () => {
             it(`should return the number of ${testCase.name}`, (done) => {
                 test.hypervisor[testCase.method]((err, count) => {
                     if (!!testCase.disabled) {
-                        expect(err).to.exist;
-                        expect(count).to.not.exist;
+                        expect(err).to.exist();
+                        expect(count).to.not.exist();
                     } else {
-                        expect(err).to.not.exist;
+                        expect(err).to.not.exist();
                         expect(count).to.equal(testCase.expected);
                     }
 
@@ -296,22 +296,22 @@ describe("Hypervisor", () => {
         beforeEach((done) => {
             test.hypervisor = new Hypervisor("test:///default");
             test.hypervisor.connect((err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 done();
             });
         });
 
         afterEach((done) => {
             test.hypervisor.disconnect((err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 done();
             });
         });
 
         it("should list node devices names", (done) => {
             test.hypervisor.listNodeDevices((err, devices) => {
-                expect(err).to.not.exist;
-                expect(devices).to.exist;
+                expect(err).to.not.exist();
+                expect(devices).to.exist();
                 expect(devices).to.be.instanceOf(Array);
                 done();
             });
@@ -319,14 +319,14 @@ describe("Hypervisor", () => {
 
         it("should return the node security model", (done) => {
             test.hypervisor.getNodeSecurityModel((err, security) => {
-                expect(err).to.exist;
-                expect(security).to.not.exist;
+                expect(err).to.exist();
+                expect(security).to.not.exist();
 
                 // NOTE: not supported by current driver
-                // expect(err).to.not.exist;
-                // espect(security).to.exist;
-                // expect(security.model).to.exist;
-                // expect(security.doi).to.exist;
+                // expect(err).to.not.exist();
+                // espect(security).to.exist();
+                // expect(security.model).to.exist();
+                // expect(security.doi).to.exist();
                 done();
             });
         });
@@ -334,8 +334,8 @@ describe("Hypervisor", () => {
 
         it("should return the node information where hypervisor is running", (done) => {
             test.hypervisor.getNodeInfo((err, info) => {
-                expect(err).to.not.exist;
-                expect(info).to.exist;
+                expect(err).to.not.exist();
+                expect(info).to.exist();
                 expect(info).to.eql({
                     model: "i686",
                     memory: 3145728,
@@ -354,11 +354,11 @@ describe("Hypervisor", () => {
         it.skip("should return free memory of the physical node", (done) => {
             test.hypervisor.getNodeFreeMemory((err, result) => {
                 // NOTE: unsupported by test driver
-                expect(err).to.exist;
-                expect(result).to.not.exist;
+                expect(err).to.exist();
+                expect(result).to.not.exist();
 
-                // expect(err).to.not.exist;
-                // expect(result).to.exist;
+                // expect(err).to.not.exist();
+                // expect(result).to.exist();
                 done();
             });
         });
@@ -367,8 +367,8 @@ describe("Hypervisor", () => {
             const startCell = 0;
             const maxCells = 2;
             test.hypervisor.getNodeCellsFreeMemory(startCell, maxCells, (err, result) => {
-                expect(err).to.not.exist;
-                expect(result).to.exist;
+                expect(err).to.not.exist();
+                expect(result).to.exist();
                 expect(result).to.eql([2097152, 4194304]);
                 done();
             });
@@ -378,8 +378,8 @@ describe("Hypervisor", () => {
 
     // it('should register function callbacks for domain events', function(done) {
     //   test.hypervisor.lookupDomainByName('test', function(err, hypervisor) {
-    //     expect(err).to.not.exist;
-    //     expect(hypervisor).to.be.ok;
+    //     expect(err).to.not.exist();
+    //     expect(hypervisor).to.be.ok();
 
     //     var args = {
     //       evtype: test.hypervisor.VIR_DOMAIN_EVENT_ID_LIFECYCLE,

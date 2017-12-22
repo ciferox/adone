@@ -23,7 +23,7 @@ describe("schema", "extras", () => {
         afterEach: (res) => {
             expect(res.valid).to.be.a("boolean");
             if (res.valid === true) {
-                expect(res.errors).to.be.null;
+                expect(res.errors).to.be.null();
             } else {
                 expect(res.errors).to.be.an("array");
                 for (const err of res.errors) {

@@ -34,7 +34,7 @@ const proxyConnect = (port, host, destinationPort, destinationHost, callback) =>
     });
 
     socket.on("error", (err) => {
-        expect(err).to.not.exist;
+        expect(err).to.not.exist();
     });
 };
 
@@ -157,12 +157,12 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
             });
 
             client.connect(() => {
-                expect(client.secure).to.be.false;
+                expect(client.secure).to.be.false();
                 client.close();
             });
 
             client.on("error", (err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
             });
 
             client.on("end", done);
@@ -175,12 +175,12 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
             });
 
             client.connect(() => {
-                expect(client.secure).to.be.true;
+                expect(client.secure).to.be.true();
                 client.close();
             });
 
             client.on("error", (err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
             });
 
             client.on("end", done);
@@ -196,12 +196,12 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
             });
 
             client.connect(() => {
-                expect(client.secure).to.be.true;
+                expect(client.secure).to.be.true();
                 client.close();
             });
 
             client.on("error", (err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
             });
 
             client.on("end", done);
@@ -216,12 +216,12 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
             });
 
             client.connect(() => {
-                expect(client.secure).to.be.false;
+                expect(client.secure).to.be.false();
                 client.close();
             });
 
             client.on("error", (err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
             });
 
             client.on("end", done);
@@ -236,12 +236,12 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
 
             client.connect(() => {
                 // should not run
-                expect(false).to.be.true;
+                expect(false).to.be.true();
                 client.close();
             });
 
             client.once("error", (err) => {
-                expect(err).to.exist;
+                expect(err).to.exist();
             });
 
             client.on("end", done);
@@ -254,14 +254,14 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
             });
 
             client.connect(() => {
-                expect(client.secure).to.be.true;
+                expect(client.secure).to.be.true();
                 server.connections.forEach((conn) => {
                     conn.close();
                 });
             });
 
             client.on("error", (err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
             });
 
             client.on("end", done);
@@ -275,12 +275,12 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
             });
 
             client.connect(() => {
-                expect(client.secure).to.be.true;
+                expect(client.secure).to.be.true();
                 client.close();
             });
 
             client.on("error", (err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
             });
 
             client.on("end", done);
@@ -294,12 +294,12 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
 
             client.connect(() => {
                 // should not run
-                expect(false).to.be.true;
+                expect(false).to.be.true();
                 client.close();
             });
 
             client.once("error", (err) => {
-                expect(err).to.exist;
+                expect(err).to.exist();
             });
 
             client.on("end", done);
@@ -313,12 +313,12 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
 
             client.connect(() => {
                 // should not run
-                expect(false).to.be.true;
+                expect(false).to.be.true();
                 client.close();
             });
 
             client.once("error", (err) => {
-                expect(err).to.exist;
+                expect(err).to.exist();
             });
 
             client.on("end", done);
@@ -336,7 +336,7 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
             });
 
             client.once("error", (err) => {
-                expect(err).to.exist;
+                expect(err).to.exist();
                 expect(err.code).to.equal("ETIMEDOUT");
             });
 
@@ -352,7 +352,7 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                 });
 
                 client.connect(() => {
-                    expect(client.secure).to.be.true;
+                    expect(client.secure).to.be.true();
                     client.login({
                         user: "testuser",
                         credentials: {
@@ -360,21 +360,21 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                             pass: "testpass"
                         }
                     }, (err) => {
-                        expect(err).to.not.exist;
-                        expect(client.authenticated).to.be.true;
+                        expect(err).to.not.exist();
+                        expect(client.authenticated).to.be.true();
                         client.close();
                     });
                 });
 
                 client.on("error", (err) => {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                 });
 
                 client.on("end", done);
             };
 
             proxyConnect(PROXY_PORT_NUMBER, "127.0.0.1", PORT_NUMBER, "127.0.0.1", (err, socket) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 runTest(socket);
             });
         });
@@ -389,7 +389,7 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                 });
 
                 client.connect(() => {
-                    expect(client.secure).to.be.true;
+                    expect(client.secure).to.be.true();
                     client.login({
                         user: "testuser",
                         credentials: {
@@ -397,21 +397,21 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                             pass: "testpass"
                         }
                     }, (err) => {
-                        expect(err).to.not.exist;
-                        expect(client.authenticated).to.be.true;
+                        expect(err).to.not.exist();
+                        expect(client.authenticated).to.be.true();
                         client.close();
                     });
                 });
 
                 client.on("error", (err) => {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                 });
 
                 client.on("end", done);
             };
 
             proxyConnect(PROXY_PORT_NUMBER, "127.0.0.1", PORT_NUMBER + 2, "127.0.0.1", (err, socket) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 runTest(socket);
             });
         });
@@ -424,11 +424,11 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
             });
 
             client.on("error", (err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
             });
 
             client.connect(() => {
-                expect(client.secure).to.be.false;
+                expect(client.secure).to.be.false();
 
                 let chunks = [],
                     fname = path.join(__dirname, "some_data"),
@@ -449,7 +449,7 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                     from: "test@valid.sender",
                     to: "test@valid.recipient"
                 }, fs.createReadStream(fname), (err) => {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                     client.close();
                 });
 
@@ -604,7 +604,7 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
         });
 
         it("should login", (done) => {
-            expect(client.authenticated).to.be.false;
+            expect(client.authenticated).to.be.false();
             client.login({
                 user: "testuser",
                 credentials: {
@@ -612,14 +612,14 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                     pass: "testpass"
                 }
             }, (err) => {
-                expect(err).to.not.exist;
-                expect(client.authenticated).to.be.true;
+                expect(err).to.not.exist();
+                expect(client.authenticated).to.be.true();
                 done();
             });
         });
 
         it("should return error for invalid login", (done) => {
-            expect(client.authenticated).to.be.false;
+            expect(client.authenticated).to.be.false();
             client.login({
                 user: "testuser",
                 credentials: {
@@ -627,8 +627,8 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                     pass: "invalid"
                 }
             }, (err) => {
-                expect(err).to.exist;
-                expect(client.authenticated).to.be.false;
+                expect(err).to.exist();
+                expect(client.authenticated).to.be.false();
                 expect(err.code).to.equal("EAUTH");
                 expect(err.responseCode).to.equal(535);
                 done();
@@ -636,24 +636,24 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
         });
 
         it("should return error for missing credentials", (done) => {
-            expect(client.authenticated).to.be.false;
+            expect(client.authenticated).to.be.false();
             client.login(
                 {
                     user: "testuser"
                 },
                 (err) => {
-                    expect(err).to.exist;
-                    expect(client.authenticated).to.be.false;
+                    expect(err).to.exist();
+                    expect(client.authenticated).to.be.false();
                     expect(err.message).to.match(/^Missing credentials/);
                     expect(err.code).to.equal("EAUTH");
-                    expect(err.response).to.be.undefined;
+                    expect(err.response).to.be.undefined();
                     done();
                 }
             );
         });
 
         it("should return error for incomplete credentials", (done) => {
-            expect(client.authenticated).to.be.false;
+            expect(client.authenticated).to.be.false();
             client.login(
                 {
                     user: "testuser",
@@ -662,11 +662,11 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                     }
                 },
                 (err) => {
-                    expect(err).to.exist;
-                    expect(client.authenticated).to.be.false;
+                    expect(err).to.exist();
+                    expect(client.authenticated).to.be.false();
                     expect(err.message).to.match(/^Missing credentials/);
                     expect(err.code).to.equal("EAUTH");
-                    expect(err.response).to.be.undefined;
+                    expect(err.response).to.be.undefined();
                     done();
                 }
             );
@@ -694,7 +694,7 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
             });
 
             it("should login with xoauth2 string", (done) => {
-                expect(client.authenticated).to.be.false;
+                expect(client.authenticated).to.be.false();
                 client.login({
                     type: "oauth2",
                     user: "testuser",
@@ -703,14 +703,14 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                         accessToken: testtoken
                     })
                 }, (err) => {
-                    expect(err).to.not.exist;
-                    expect(client.authenticated).to.be.true;
+                    expect(err).to.not.exist();
+                    expect(client.authenticated).to.be.true();
                     done();
                 });
             });
 
             it("should return error for invalid xoauth2 string token", (done) => {
-                expect(client.authenticated).to.be.false;
+                expect(client.authenticated).to.be.false();
                 client.login({
                     type: "oauth2",
                     user: "testuser",
@@ -719,15 +719,15 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                         accessToken: "invalid"
                     })
                 }, (err) => {
-                    expect(err).to.exist;
-                    expect(client.authenticated).to.be.false;
+                    expect(err).to.exist();
+                    expect(client.authenticated).to.be.false();
                     expect(err.code).to.equal("EAUTH");
                     done();
                 });
             });
 
             it("should login with xoauth2 object", (done) => {
-                expect(client.authenticated).to.be.false;
+                expect(client.authenticated).to.be.false();
                 client.login({
                     type: "oauth2",
                     user: "testuser",
@@ -740,14 +740,14 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                         accessUrl: `http://localhost:${XOAUTH_PORT}`
                     })
                 }, (err) => {
-                    expect(err).to.not.exist;
-                    expect(client.authenticated).to.be.true;
+                    expect(err).to.not.exist();
+                    expect(client.authenticated).to.be.true();
                     done();
                 });
             });
 
             it("should fail with xoauth2 object", (done) => {
-                expect(client.authenticated).to.be.false;
+                expect(client.authenticated).to.be.false();
                 client.login({
                     type: "oauth2",
                     user: "testuser",
@@ -760,14 +760,14 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                         accessUrl: `http://localhost:${XOAUTH_PORT}`
                     })
                 }, (err) => {
-                    expect(err).to.exist;
-                    expect(client.authenticated).to.be.false;
+                    expect(err).to.exist();
+                    expect(client.authenticated).to.be.false();
                     done();
                 });
             });
 
             it("should fail with invalid xoauth2 response", (done) => {
-                expect(client.authenticated).to.be.false;
+                expect(client.authenticated).to.be.false();
 
                 const oauth2 = new XOAuth2({
                     user: "testuser",
@@ -785,8 +785,8 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                     user: "testuser",
                     oauth2
                 }, (err) => {
-                    expect(err).to.exist;
-                    expect(client.authenticated).to.be.false;
+                    expect(err).to.exist();
+                    expect(client.authenticated).to.be.false();
 
                     oauth2.generateToken.restore();
                     done();
@@ -813,7 +813,7 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                                 pass: "testpass"
                             }
                         }, (err) => {
-                            expect(err).to.not.exist;
+                            expect(err).to.not.exist();
                             // enable PIPELINING
                             server.options.hidePIPELINING = false;
                             done();
@@ -828,7 +828,7 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                     from: "test@valid.sender",
                     to: ["test1@valid.recipient", "test2@invalid.recipient", "test3@valid.recipient"]
                 }, "test", (err, info) => {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                     expect(info).to.deep.equal({
                         accepted: ["test1@valid.recipient", "test3@valid.recipient"],
                         rejected: ["test2@invalid.recipient"],
@@ -853,7 +853,7 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                         pass: "testpass"
                     }
                 }, (err) => {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                     done();
                 });
             });
@@ -863,7 +863,7 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                     from: "test@valid.sender",
                     to: "test@valid.recipient"
                 }, "test", (err, info) => {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                     expect(info).to.deep.equal({
                         accepted: ["test@valid.recipient"],
                         rejected: [],
@@ -881,7 +881,7 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                     from: "test@valid.sender",
                     to: "test@valid.recipient"
                 }, "test", (err, info) => {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                     expect(info).to.deep.equal({
                         accepted: ["test@valid.recipient"],
                         rejected: [],
@@ -891,13 +891,13 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                         response: "250 OK: message queued"
                     });
                     client.reset((err) => {
-                        expect(err).to.not.exist;
+                        expect(err).to.not.exist();
 
                         client.send({
                             from: "test2@valid.sender",
                             to: "test2@valid.recipient"
                         }, "test2", (err, info) => {
-                            expect(err).to.not.exist;
+                            expect(err).to.not.exist();
                             expect(info).to.deep.equal({
                                 accepted: ["test2@valid.recipient"],
                                 rejected: [],
@@ -917,7 +917,7 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                     from: "test@valid.sender",
                     to: ["test1@valid.recipient", "test2@invalid.recipient", "test3@valid.recipient"]
                 }, "test", (err, info) => {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                     expect(info).to.deep.equal({
                         accepted: ["test1@valid.recipient", "test3@valid.recipient"],
                         rejected: ["test2@invalid.recipient"],
@@ -937,8 +937,8 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                     from: "test@valid.sender",
                     to: ["test1@invalid.recipient", "test2@invalid.recipient", "test3@invalid.recipient"]
                 }, "test", (err, info) => {
-                    expect(err).to.exist;
-                    expect(info).to.not.exist;
+                    expect(err).to.exist();
+                    expect(info).to.not.exist();
                     expect(err.rejected).to.deep.equal(["test1@invalid.recipient", "test2@invalid.recipient", "test3@invalid.recipient"]);
                     expect(err.rejectedErrors.length).to.equal(3);
                     done();
@@ -951,8 +951,8 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                     to: "test2@valid.recipient",
                     size: 1024 * 1024
                 }, "test", (err, info) => {
-                    expect(err).to.exist;
-                    expect(info).to.not.exist;
+                    expect(err).to.exist();
+                    expect(info).to.not.exist();
                     done();
                 });
             });
@@ -963,8 +963,8 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                     to: "test2@valid.recipient",
                     size: 70 * 1024
                 }, "test", (err, info) => {
-                    expect(err).to.exist;
-                    expect(info).to.not.exist;
+                    expect(err).to.exist();
+                    expect(info).to.not.exist();
                     done();
                 });
             });
@@ -975,7 +975,7 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                     to: "test2@valid.recipient",
                     size: 10 * 1024
                 }, "test", (err, info) => {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                     expect(info).to.deep.equal({
                         accepted: ["test2@valid.recipient"],
                         rejected: [],
@@ -993,7 +993,7 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                     from: "test@valid.sender",
                     to: ["test1@valid.recipient", "test2@invalid.recipient", "test3@valid.recipient", "test4@valid.recipient", "test5@valid.recipient", "test6@valid.recipient"]
                 }, "test", (err, info) => {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                     expect(info.accepted).to.deep.equal([
                         "test3@valid.recipient",
                         "test5@valid.recipient"
@@ -1014,7 +1014,7 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                     from: "test@valid.sender",
                     to: ["test1@valid.recipient", "test2@invalid.recipient", "test3õ@valid.recipient"]
                 }, "test", (err, info) => {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                     expect(info).to.deep.equal({
                         accepted: ["test1@valid.recipient", "test3õ@valid.recipient"],
                         rejected: ["test2@invalid.recipient"],
@@ -1034,7 +1034,7 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                     from: "test@valid.sender",
                     to: ["test1@valid.recipient", "test2@invalid.recipient", "test3õ@valid.recipient"]
                 }, "õõõõ", (err, info) => {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                     expect(info).to.deep.equal({
                         accepted: ["test1@valid.recipient", "test3õ@valid.recipient"],
                         rejected: ["test2@invalid.recipient"],
@@ -1054,7 +1054,7 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                     from: "test@valid.sender",
                     to: ["test1@valid.recipient", "test2@invalid.recipient", "test3õ@valid.recipient"]
                 }, "õõõõ", (err) => {
-                    expect(/8 bit content not allowed/.test(err.message)).to.be.true;
+                    expect(/8 bit content not allowed/.test(err.message)).to.be.true();
                     done();
                 });
             });
@@ -1064,7 +1064,7 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                     from: "test@valid.sender",
                     to: ["test@valid.recipient", '"address\r\n with folding"@valid.recipient']
                 }, "test", (err) => {
-                    expect(/^Invalid recipient/.test(err.message)).to.be.true;
+                    expect(/^Invalid recipient/.test(err.message)).to.be.true();
                     done();
                 });
             });
@@ -1074,7 +1074,7 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                     from: "test@valid.sender",
                     to: ["test1@invalid.recipient", "test2@invalid.recipient", "test3@invalid.recipient"]
                 }, "test", (err) => {
-                    expect(err).to.exist;
+                    expect(err).to.exist();
                     done();
                 });
             });
@@ -1084,7 +1084,7 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                     from: "test@invalid.sender",
                     to: "test@valid.recipient"
                 }, "test", (err) => {
-                    expect(err).to.exist;
+                    expect(err).to.exist();
                     done();
                 });
             });
@@ -1108,7 +1108,7 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                     from: "test@valid.sender",
                     to: "test@valid.recipient"
                 }, message, (err) => {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                     done();
                 });
             });
@@ -1132,7 +1132,7 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                     from: "test@valid.sender",
                     to: "test@valid.recipient"
                 }, message, (err) => {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                     done();
                 });
             });
@@ -1157,7 +1157,7 @@ describe("net", "mail", "SMTP-Connection Tests", () => {
                     from: "test@valid.sender",
                     to: "test@valid.recipient"
                 }, fs.createReadStream(fname), (err) => {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                     done();
                 });
             });

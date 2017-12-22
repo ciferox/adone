@@ -87,7 +87,7 @@ describe("relay", () => {
             };
 
             relay.on("circuit:success", () => {
-                assert.isOk(relay._circuit.calledWith(match.any, relayMsg));
+                assert.ok(relay._circuit.calledWith(match.any, relayMsg));
                 done();
             });
 
@@ -109,7 +109,7 @@ describe("relay", () => {
 
             relay.active = false;
             lp.decodeFromReader(shake, (err, msg) => {
-                assert.isNull(err);
+                assert.null(err);
 
                 const response = protocol.CircuitRelay.decode(msg);
                 expect(response.code).to.equal(protocol.CircuitRelay.Status.HOP_NO_CONN_TO_DST);
@@ -135,7 +135,7 @@ describe("relay", () => {
 
             relay.active = true;
             relay.on("circuit:success", () => {
-                assert.isOk(relay._circuit.calledWith(match.any, relayMsg));
+                assert.ok(relay._circuit.calledWith(match.any, relayMsg));
                 done();
             });
 
@@ -160,7 +160,7 @@ describe("relay", () => {
             };
 
             lp.decodeFromReader(shake, (err, msg) => {
-                assert.isNull(err);
+                assert.null(err);
 
                 const response = protocol.CircuitRelay.decode(msg);
                 expect(response.code).to.equal(protocol.CircuitRelay.Status.HOP_CANT_RELAY_TO_SELF);
@@ -185,7 +185,7 @@ describe("relay", () => {
             };
 
             lp.decodeFromReader(shake, (err, msg) => {
-                assert.isNull(err);
+                assert.null(err);
 
                 const response = protocol.CircuitRelay.decode(msg);
                 expect(response.code).to.equal(protocol.CircuitRelay.Status.HOP_SRC_MULTIADDR_INVALID);
@@ -210,7 +210,7 @@ describe("relay", () => {
             };
 
             lp.decodeFromReader(shake, (err, msg) => {
-                assert.isNull(err);
+                assert.null(err);
 
                 const response = protocol.CircuitRelay.decode(msg);
                 expect(response.code).to.equal(protocol.CircuitRelay.Status.HOP_DST_MULTIADDR_INVALID);

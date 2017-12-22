@@ -100,7 +100,7 @@ describe("shani", "util", "issues", () => {
 
                 stubbedObject.watch();
 
-                assert.isArray(stubbedObject.watch.args);
+                assert.array(stubbedObject.watch.args);
             } catch (error) {
                 restore(oldWatch);
                 throw error;
@@ -176,8 +176,8 @@ describe("shani", "util", "issues", () => {
         let s;
 
         const makeAssertions = (fake, expected) => {
-            assert.isFunction(fake.then);
-            assert.isFunction(fake.tap);
+            assert.function(fake.then);
+            assert.function(fake.tap);
 
             assert.equal(fake.tap(), expected);
         };

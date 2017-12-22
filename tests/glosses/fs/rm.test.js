@@ -23,7 +23,7 @@ describe("fs", "rm", () => {
         const file = await tmp.addFile("test.js");
         try {
             await fs.rm(file.path());
-            expect(await file.exists()).to.be.false;
+            expect(await file.exists()).to.be.false();
         } finally {
             await tmp.unlink();
         }
@@ -34,7 +34,7 @@ describe("fs", "rm", () => {
         const dir = await tmp.addDirectory("test");
         try {
             await fs.rm(dir.path());
-            expect(await dir.exists()).to.be.false;
+            expect(await dir.exists()).to.be.false();
         } finally {
             await tmp.unlink();
         }
@@ -80,8 +80,8 @@ describe("fs", "rm", () => {
         expect(await dir.find({ files: true, dirs: true })).to.be.not.empty;
         try {
             await fs.rm(dir.path());
-            expect(await dir.exists()).to.be.false;
-            expect(await tmp.find({ files: true, dirs: true })).to.be.empty;
+            expect(await dir.exists()).to.be.false();
+            expect(await tmp.find({ files: true, dirs: true })).to.be.empty();
         } finally {
             await tmp.unlink();
         }
@@ -92,7 +92,7 @@ describe("fs", "rm", () => {
         const file = await tmp.addFile("hello");
         try {
             await fs.rm(file.relativePath(tmp), { cwd: tmp.path() });
-            expect(await file.exists()).to.be.false;
+            expect(await file.exists()).to.be.false();
         } finally {
             await tmp.unlink();
         }
@@ -112,8 +112,8 @@ describe("fs", "rm", () => {
         const file1 = await tmp.addFile("hello1");
         const file2 = await tmp.addFile("hello2");
         const err = await fs.rm(`${tmp.getFile("hello").path()}*`).catch((err) => err);
-        expect(await file1.exists()).to.be.false;
-        expect(await file2.exists()).to.be.false;
+        expect(await file1.exists()).to.be.false();
+        expect(await file2.exists()).to.be.false();
         await tmp.unlink();
         expect(err).to.be.not.ok;
     });

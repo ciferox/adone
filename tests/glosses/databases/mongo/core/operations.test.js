@@ -66,7 +66,7 @@ describe("database", "mongo", "core", function () {
                         }, {
                             readPreference: new ReadPreference("primary")
                         });
-                        expect(result.result.ismaster).to.be.true;
+                        expect(result.result.ismaster).to.be.true();
                     } finally {
                         _server.destroy();
                     }
@@ -115,7 +115,7 @@ describe("database", "mongo", "core", function () {
                         expect(d.a).to.be.equal(1);
 
                         d = await next();
-                        expect(d).to.be.null;
+                        expect(d).to.be.null();
                     } finally {
                         _server.destroy();
                     }
@@ -151,7 +151,7 @@ describe("database", "mongo", "core", function () {
                         expect(d.a).to.be.equal(2);
 
                         d = await next();
-                        expect(d).to.be.null;
+                        expect(d).to.be.null();
                     } finally {
                         _server.destroy();
                     }
@@ -188,7 +188,7 @@ describe("database", "mongo", "core", function () {
                         expect(d.result[1].c).to.be.equal(2);
 
                         d = await next();
-                        expect(d).to.be.null;
+                        expect(d).to.be.null();
                     } finally {
                         _server.destroy();
                     }
@@ -311,7 +311,7 @@ describe("database", "mongo", "core", function () {
                         await promisify(cursor.kill).call(cursor);
 
                         d = await next();
-                        expect(d).to.be.null;
+                        expect(d).to.be.null();
                     } finally {
                         _server.destroy();
                     }
@@ -346,7 +346,7 @@ describe("database", "mongo", "core", function () {
                         await promisify(cursor.kill).call(cursor);
 
                         d = await next();
-                        expect(d).to.be.null;
+                        expect(d).to.be.null();
                     } finally {
                         _server.destroy();
                     }

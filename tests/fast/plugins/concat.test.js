@@ -37,7 +37,7 @@ describe("fast", "transform", "concat", () => {
 
     it("should ignore null files", async () => {
         const values = await new Stream([new File()]).concat("test");
-        expect(values).to.be.empty;
+        expect(values).to.be.empty();
     });
 
     it("should emit error on streamed file", async () => {
@@ -62,7 +62,7 @@ describe("fast", "transform", "concat", () => {
         });
         await fast.src(srcPath).concat("test.js").dest(todir.path());
         const file = todir.getFile("test.js");
-        expect(await file.exists()).to.be.true;
+        expect(await file.exists()).to.be.true();
         expect(await file.contents()).to.be.equal("console.log(123);");
     });
 
@@ -75,7 +75,7 @@ describe("fast", "transform", "concat", () => {
         });
         const files = await fast.src(srcPath).concat("test.js").dest(todir.path(), { produceFiles: true });
         const file = todir.getFile("test.js");
-        expect(await file.exists()).to.be.true;
+        expect(await file.exists()).to.be.true();
         expect(await file.contents()).to.be.equal(files.map((x) => x.contents.toString()).join("\n"));
     });
 
@@ -137,12 +137,12 @@ describe("fast", "transform", "concat", () => {
     describe("should not fail if there is no files", () => {
         it("when argument is a string", async () => {
             await fast.src(srcPath).concat("test.js").dest(todir.path());
-            expect(await todir.find({ files: true, dirs: true })).to.be.empty;
+            expect(await todir.find({ files: true, dirs: true })).to.be.empty();
         });
 
         it("when argument is an object", async () => {
             await fast.src(srcPath).concat({ path: "test" }).dest(todir.path());
-            expect(await todir.find({ files: true, dirs: true })).to.be.empty;
+            expect(await todir.find({ files: true, dirs: true })).to.be.empty();
         });
     });
 
@@ -163,7 +163,7 @@ describe("fast", "transform", "concat", () => {
             });
             await fast.src(srcPath).concat({ path: "new.txt" }).dest(todir.path());
             const file = todir.getFile("new.txt");
-            expect(await file.exists()).to.be.true;
+            expect(await file.exists()).to.be.true();
             expect(await file.contents()).to.be.equal("console.log(123);");
         });
 
@@ -176,7 +176,7 @@ describe("fast", "transform", "concat", () => {
                 .concat({ cwd: path.normalize("/a/b/c"), path: path.normalize("/a/b/c/d/new.txt") })
                 .dest(todir.path());
             const file = todir.getFile("d", "new.txt");
-            expect(await file.exists()).to.be.true;
+            expect(await file.exists()).to.be.true();
             expect(await file.contents()).to.be.equal("console.log(123);");
         });
     });

@@ -58,7 +58,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                                 }
                             });
                         }).then((user) => {
-                            expect(user).to.be.ok;
+                            expect(user).to.be.ok();
                         });
                     });
 
@@ -76,7 +76,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                                 }
                             });
                         }).then((user) => {
-                            expect(user).to.not.be.ok;
+                            expect(user).to.not.be.ok();
                         });
                     });
 
@@ -95,7 +95,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                                     }
                                 });
                             }).then((user) => {
-                                expect(user).to.be.ok;
+                                expect(user).to.be.ok();
                             });
                         });
 
@@ -113,7 +113,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                                     }
                                 });
                             }).then((user) => {
-                                expect(user).to.not.be.ok;
+                                expect(user).to.not.be.ok();
                             });
                         });
                     }

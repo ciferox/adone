@@ -7,7 +7,7 @@ describe("shani", "util", "spy", () => {
         });
 
         it("returns false if spy was not called", function () {
-            assert.isFalse(this.spy[method](1, 2, 3));
+            assert.false(this.spy[method](1, 2, 3));
         });
 
         it("returns true if spy was called with args", function () {
@@ -29,13 +29,13 @@ describe("shani", "util", "spy", () => {
             this.spy(2);
             this.spy();
 
-            assert.isFalse(this.spy[method](1, 2, 3));
+            assert.false(this.spy[method](1, 2, 3));
         });
 
         it("returns false if not called with undefined", function () {
             this.spy();
 
-            assert.isFalse(this.spy[method](undefined));
+            assert.false(this.spy[method](undefined));
         });
 
         it("returns true for partial match", function () {
@@ -49,7 +49,7 @@ describe("shani", "util", "spy", () => {
         it("matchs all arguments individually, not as array", function () {
             this.spy([1, 2, 3]);
 
-            assert.isFalse(this.spy[method](1, 2, 3));
+            assert.false(this.spy[method](1, 2, 3));
         });
 
         it("uses matcher", function () {
@@ -93,7 +93,7 @@ describe("shani", "util", "spy", () => {
         });
 
         it("returns false if spy was not called", function () {
-            assert.isFalse(this.spy[method](1, 2, 3));
+            assert.false(this.spy[method](1, 2, 3));
         });
 
         it("returns true if spy was called with args", function () {
@@ -107,7 +107,7 @@ describe("shani", "util", "spy", () => {
             this.spy(1, 2, 3);
             this.spy(3, 2, 3);
 
-            assert.isFalse(this.spy[method](1, 2, 3));
+            assert.false(this.spy[method](1, 2, 3));
         });
 
         it("returns false if not called with args", function () {
@@ -115,7 +115,7 @@ describe("shani", "util", "spy", () => {
             this.spy(2);
             this.spy();
 
-            assert.isFalse(this.spy[method](1, 2, 3));
+            assert.false(this.spy[method](1, 2, 3));
         });
 
         it("returns true for partial match", function () {
@@ -136,7 +136,7 @@ describe("shani", "util", "spy", () => {
         it("matchs all arguments individually, not as array", function () {
             this.spy([1, 2, 3]);
 
-            assert.isFalse(this.spy[method](1, 2, 3));
+            assert.false(this.spy[method](1, 2, 3));
         });
     };
 
@@ -152,7 +152,7 @@ describe("shani", "util", "spy", () => {
         it("returns false if spy was called with args", function () {
             this.spy(1, 2, 3);
 
-            assert.isFalse(this.spy[method](1, 2, 3));
+            assert.false(this.spy[method](1, 2, 3));
         });
 
         it("returns false if called with args at least once", function () {
@@ -160,7 +160,7 @@ describe("shani", "util", "spy", () => {
             this.spy(1, 2, 3);
             this.spy(3, 2, 3);
 
-            assert.isFalse(this.spy[method](1, 2, 3));
+            assert.false(this.spy[method](1, 2, 3));
         });
 
         it("returns true if not called with args", function () {
@@ -176,7 +176,7 @@ describe("shani", "util", "spy", () => {
             this.spy(2);
             this.spy();
 
-            assert.isFalse(this.spy[method](1, 3));
+            assert.false(this.spy[method](1, 3));
         });
 
         it("matchs all arguments individually, not as array", function () {
@@ -204,7 +204,7 @@ describe("shani", "util", "spy", () => {
         const func = function () { };
         const spy = createSpy.create(func);
 
-        assert.isFunction(spy);
+        assert.function(spy);
         assert.notEqual(func, spy);
     });
 
@@ -219,7 +219,7 @@ describe("shani", "util", "spy", () => {
     it("does not define create method", () => {
         const spy = createSpy.create();
 
-        assert.isUndefined(spy.create);
+        assert.undefined(spy.create);
     });
 
     it("does not overwrite original create property", () => {
@@ -233,10 +233,10 @@ describe("shani", "util", "spy", () => {
     it("sets up logging arrays", () => {
         const spy = createSpy.create();
 
-        assert.isArray(spy.args);
-        assert.isArray(spy.returnValues);
-        assert.isArray(spy.thisValues);
-        assert.isArray(spy.exceptions);
+        assert.array(spy.args);
+        assert.array(spy.returnValues);
+        assert.array(spy.thisValues);
+        assert.array(spy.exceptions);
     });
 
     it("works with getters", () => {
@@ -313,24 +313,24 @@ describe("shani", "util", "spy", () => {
             assert.equal(spy.withArgs(1, 2).callCount, 1);
 
             // assert call
-            assert.isUndefined(spy.getCall(0).args[0]);
+            assert.undefined(spy.getCall(0).args[0]);
             assert.equal(spy.getCall(1).args[0], 1);
-            assert.isUndefined(spy.getCall(1).args[1]);
+            assert.undefined(spy.getCall(1).args[1]);
             assert.equal(spy.getCall(2).args[0], 1);
             assert.equal(spy.getCall(2).args[1], 1);
-            assert.isUndefined(spy.getCall(2).args[2]);
+            assert.undefined(spy.getCall(2).args[2]);
             assert.equal(spy.getCall(3).args[0], 1);
             assert.equal(spy.getCall(3).args[1], 2);
-            assert.isUndefined(spy.getCall(3).args[2]);
+            assert.undefined(spy.getCall(3).args[2]);
             ["args", "callCount", "callId"].forEach((propName) => {
                 assert.equal(spy.withArgs(1).getCall(0)[propName], spy.getCall(1)[propName]);
                 assert.equal(spy.withArgs(1).getCall(1)[propName], spy.getCall(2)[propName]);
                 assert.equal(spy.withArgs(1).getCall(2)[propName], spy.getCall(3)[propName]);
-                assert.isNull(spy.withArgs(1).getCall(3));
+                assert.null(spy.withArgs(1).getCall(3));
                 assert.equal(spy.withArgs(1, 1).getCall(0)[propName], spy.getCall(2)[propName]);
-                assert.isNull(spy.withArgs(1, 1).getCall(1));
+                assert.null(spy.withArgs(1, 1).getCall(1));
                 assert.equal(spy.withArgs(1, 2).getCall(0)[propName], spy.getCall(3)[propName]);
-                assert.isNull(spy.withArgs(1, 2).getCall(1));
+                assert.null(spy.withArgs(1, 2).getCall(1));
             });
 
             // assert firstCall, secondCall, thirdCall, and lastCall
@@ -343,12 +343,12 @@ describe("shani", "util", "spy", () => {
             assert.equal(spy.withArgs(1).thirdCall.callId, spy.withArgs(1).getCall(2).callId);
             assert.equal(spy.withArgs(1).lastCall.callId, spy.withArgs(1).getCall(2).callId);
             assert.equal(spy.withArgs(1, 1).firstCall.callId, spy.withArgs(1, 1).getCall(0).callId);
-            assert.isNull(spy.withArgs(1, 1).secondCall);
-            assert.isNull(spy.withArgs(1, 1).thirdCall);
+            assert.null(spy.withArgs(1, 1).secondCall);
+            assert.null(spy.withArgs(1, 1).thirdCall);
             assert.equal(spy.withArgs(1, 1).lastCall.callId, spy.withArgs(1, 1).getCall(0).callId);
             assert.equal(spy.withArgs(1, 2).firstCall.callId, spy.withArgs(1, 2).getCall(0).callId);
-            assert.isNull(spy.withArgs(1, 2).secondCall);
-            assert.isNull(spy.withArgs(1, 2).thirdCall);
+            assert.null(spy.withArgs(1, 2).secondCall);
+            assert.null(spy.withArgs(1, 2).thirdCall);
             assert.equal(spy.withArgs(1, 2).lastCall.callId, spy.withArgs(1, 2).getCall(0).callId);
         };
 
@@ -362,10 +362,10 @@ describe("shani", "util", "spy", () => {
         assert.equal(spy1.callCount, 0);
         assert.equal(spy1.withArgs(1).callCount, 0);
         assert.equal(spy1.withArgs(1, 1).callCount, 0);
-        assert.isNull(spy1.getCall(0));
-        assert.isNull(spy1.getCall(1));
-        assert.isNull(spy1.getCall(2));
-        assert.isNull(spy1.getCall(3));
+        assert.null(spy1.getCall(0));
+        assert.null(spy1.getCall(1));
+        assert.null(spy1.getCall(2));
+        assert.null(spy1.getCall(3));
 
         object.f1();
         object.f1(1);
@@ -378,10 +378,10 @@ describe("shani", "util", "spy", () => {
         assert.equal(spy2.callCount, 0);
         assert.equal(spy2.withArgs(1, 1).callCount, 0);
         assert.equal(spy2.withArgs(1).callCount, 0);
-        assert.isNull(spy2.getCall(0));
-        assert.isNull(spy2.getCall(1));
-        assert.isNull(spy2.getCall(2));
-        assert.isNull(spy2.getCall(3));
+        assert.null(spy2.getCall(0));
+        assert.null(spy2.getCall(1));
+        assert.null(spy2.getCall(2));
+        assert.null(spy2.getCall(3));
 
         object.f2();
         object.f2(1);
@@ -506,7 +506,7 @@ describe("shani", "util", "spy", () => {
         });
 
         it("is false prior to calling the spy", function () {
-            assert.isFalse(this.spy.called);
+            assert.false(this.spy.called);
         });
 
         it("is true after calling the spy once", function () {
@@ -529,13 +529,13 @@ describe("shani", "util", "spy", () => {
         });
 
         it("is true prior to calling the spy", function () {
-            assert.isTrue(this.spy.notCalled);
+            assert.true(this.spy.notCalled);
         });
 
         it("is false after calling the spy once", function () {
             this.spy();
 
-            assert.isFalse(this.spy.notCalled);
+            assert.false(this.spy.notCalled);
         });
     });
 
@@ -545,7 +545,7 @@ describe("shani", "util", "spy", () => {
         });
 
         it("is false prior to calling the spy", function () {
-            assert.isFalse(this.spy.calledOnce);
+            assert.false(this.spy.calledOnce);
         });
 
         it("is true after calling the spy once", function () {
@@ -558,7 +558,7 @@ describe("shani", "util", "spy", () => {
             this.spy();
             this.spy();
 
-            assert.isFalse(this.spy.calledOnce);
+            assert.false(this.spy.calledOnce);
         });
     });
 
@@ -568,13 +568,13 @@ describe("shani", "util", "spy", () => {
         });
 
         it("is false prior to calling the spy", function () {
-            assert.isFalse(this.spy.calledTwice);
+            assert.false(this.spy.calledTwice);
         });
 
         it("is false after calling the spy once", function () {
             this.spy();
 
-            assert.isFalse(this.spy.calledTwice);
+            assert.false(this.spy.calledTwice);
         });
 
         it("is true after calling the spy twice", function () {
@@ -589,7 +589,7 @@ describe("shani", "util", "spy", () => {
             this.spy();
             this.spy();
 
-            assert.isFalse(this.spy.calledTwice);
+            assert.false(this.spy.calledTwice);
         });
     });
 
@@ -599,14 +599,14 @@ describe("shani", "util", "spy", () => {
         });
 
         it("is false prior to calling the spy", function () {
-            assert.isFalse(this.spy.calledThrice);
+            assert.false(this.spy.calledThrice);
         });
 
         it("is false after calling the spy twice", function () {
             this.spy();
             this.spy();
 
-            assert.isFalse(this.spy.calledThrice);
+            assert.false(this.spy.calledThrice);
         });
 
         it("is true after calling the spy thrice", function () {
@@ -623,7 +623,7 @@ describe("shani", "util", "spy", () => {
             this.spy();
             this.spy();
 
-            assert.isFalse(this.spy.calledThrice);
+            assert.false(this.spy.calledThrice);
         });
     });
 
@@ -665,7 +665,7 @@ describe("shani", "util", "spy", () => {
         });
 
         it("is false if spy wasn't called", function () {
-            assert.isFalse(this.spy.calledOn({}));
+            assert.false(this.spy.calledOn({}));
         });
 
         it("is true if called with thisValue", function () {
@@ -680,7 +680,7 @@ describe("shani", "util", "spy", () => {
             this.spy.call(object);
             this.spy();
 
-            assert.isFalse(this.spy.calledOn({}));
+            assert.false(this.spy.calledOn({}));
         });
 
         it("is true if called with matcher that returns true", function () {
@@ -698,7 +698,7 @@ describe("shani", "util", "spy", () => {
             });
             this.spy();
 
-            assert.isFalse(this.spy.calledOn(matcher));
+            assert.false(this.spy.calledOn(matcher));
         });
 
         it("invokes matcher.test with given object", function () {
@@ -720,7 +720,7 @@ describe("shani", "util", "spy", () => {
         });
 
         it("is false prior to calling the spy", function () {
-            assert.isFalse(this.spy.alwaysCalledOn({}));
+            assert.false(this.spy.alwaysCalledOn({}));
         });
 
         it("is true if called with thisValue once", function () {
@@ -748,7 +748,7 @@ describe("shani", "util", "spy", () => {
             this.spy();
             this.spy.call(object);
 
-            assert.isFalse(this.spy.alwaysCalledOn(object));
+            assert.false(this.spy.alwaysCalledOn(object));
         });
 
         it("is false if never called with expected object", function () {
@@ -757,7 +757,7 @@ describe("shani", "util", "spy", () => {
             this.spy();
             this.spy();
 
-            assert.isFalse(this.spy.alwaysCalledOn(object));
+            assert.false(this.spy.alwaysCalledOn(object));
         });
     });
 
@@ -767,7 +767,7 @@ describe("shani", "util", "spy", () => {
         });
 
         it("is false if spy wasn't called", function () {
-            assert.isFalse(this.spy.calledWithNew());
+            assert.false(this.spy.calledWithNew());
         });
 
         it("is true if called with new", function () {
@@ -796,7 +796,7 @@ describe("shani", "util", "spy", () => {
         it("is false if called as function", function () {
             this.spy();
 
-            assert.isFalse(this.spy.calledWithNew());
+            assert.false(this.spy.calledWithNew());
         });
 
         it("is true newed constructor returns object", () => {
@@ -828,7 +828,7 @@ describe("shani", "util", "spy", () => {
                     // by logging an empty string, we're not polluting the test console output
                     log.info("");
 
-                    assert.isFalse(log.info.calledWithNew());
+                    assert.false(log.info.calledWithNew());
                 });
             });
         }
@@ -840,7 +840,7 @@ describe("shani", "util", "spy", () => {
         });
 
         it("is false if spy wasn't called", function () {
-            assert.isFalse(this.spy.alwaysCalledWithNew());
+            assert.false(this.spy.alwaysCalledWithNew());
         });
 
         it("is true if always called with new", function () {
@@ -860,7 +860,7 @@ describe("shani", "util", "spy", () => {
             /*eslint-enable no-unused-vars, new-cap*/
             this.spy();
 
-            assert.isFalse(this.spy.alwaysCalledWithNew());
+            assert.false(this.spy.alwaysCalledWithNew());
         });
     });
 
@@ -901,21 +901,21 @@ describe("shani", "util", "spy", () => {
             this.spy("I like it");
 
             assert(this.spy.calledWithMatch("like"));
-            assert.isFalse(this.spy.calledWithMatch("nope"));
+            assert.false(this.spy.calledWithMatch("nope"));
         });
 
         it("checks for regexp match", function () {
             this.spy("I like it");
 
             assert(this.spy.calledWithMatch(/[a-z ]+/i));
-            assert.isFalse(this.spy.calledWithMatch(/[0-9]+/));
+            assert.false(this.spy.calledWithMatch(/[0-9]+/));
         });
 
         it("checks for partial object match", function () {
             this.spy({ foo: "foo", bar: "bar" });
 
             assert(this.spy.calledWithMatch({ bar: "bar" }));
-            assert.isFalse(this.spy.calledWithMatch({ same: "same" }));
+            assert.false(this.spy.calledWithMatch({ same: "same" }));
         });
     });
 
@@ -931,14 +931,14 @@ describe("shani", "util", "spy", () => {
             this.spy(true);
 
             assert(this.spy.alwaysCalledWithMatch(true));
-            assert.isFalse(this.spy.alwaysCalledWithMatch(false));
+            assert.false(this.spy.alwaysCalledWithMatch(false));
         });
 
         it("checks false", function () {
             this.spy(false);
 
             assert(this.spy.alwaysCalledWithMatch(false));
-            assert.isFalse(this.spy.alwaysCalledWithMatch(true));
+            assert.false(this.spy.alwaysCalledWithMatch(true));
         });
 
         it("checks substring match", function () {
@@ -947,7 +947,7 @@ describe("shani", "util", "spy", () => {
             this.spy("all tests");
 
             assert(this.spy.alwaysCalledWithMatch("test"));
-            assert.isFalse(this.spy.alwaysCalledWithMatch("case"));
+            assert.false(this.spy.alwaysCalledWithMatch("case"));
         });
 
         it("checks regexp match", function () {
@@ -956,7 +956,7 @@ describe("shani", "util", "spy", () => {
             this.spy("3");
 
             assert(this.spy.alwaysCalledWithMatch(/[123]/));
-            assert.isFalse(this.spy.alwaysCalledWithMatch(/[12]/));
+            assert.false(this.spy.alwaysCalledWithMatch(/[12]/));
         });
 
         it("checks partial object match", function () {
@@ -965,7 +965,7 @@ describe("shani", "util", "spy", () => {
             this.spy({ b: "b", d: "d" });
 
             assert(this.spy.alwaysCalledWithMatch({ b: "b" }));
-            assert.isFalse(this.spy.alwaysCalledWithMatch({ a: "a" }));
+            assert.false(this.spy.alwaysCalledWithMatch({ a: "a" }));
         });
     });
 
@@ -983,7 +983,7 @@ describe("shani", "util", "spy", () => {
             assert(this.spy.neverCalledWithMatch("a", "a"));
             assert(this.spy.neverCalledWithMatch("b", "b"));
             assert(this.spy.neverCalledWithMatch("b", "a"));
-            assert.isFalse(this.spy.neverCalledWithMatch("a", "b"));
+            assert.false(this.spy.neverCalledWithMatch("a", "b"));
         });
 
         it("checks regexp match", function () {
@@ -992,7 +992,7 @@ describe("shani", "util", "spy", () => {
             assert(this.spy.neverCalledWithMatch(/a/, /a/));
             assert(this.spy.neverCalledWithMatch(/b/, /b/));
             assert(this.spy.neverCalledWithMatch(/b/, /a/));
-            assert.isFalse(this.spy.neverCalledWithMatch(/a/, /b/));
+            assert.false(this.spy.neverCalledWithMatch(/a/, /b/));
         });
 
         it("checks partial object match", function () {
@@ -1000,7 +1000,7 @@ describe("shani", "util", "spy", () => {
 
             assert(this.spy.neverCalledWithMatch({ a: "nope" }));
             assert(this.spy.neverCalledWithMatch({ c: "test" }));
-            assert.isFalse(this.spy.neverCalledWithMatch({ b: "test" }));
+            assert.false(this.spy.neverCalledWithMatch({ b: "test" }));
         });
     });
 
@@ -1012,7 +1012,7 @@ describe("shani", "util", "spy", () => {
         it("contains real arrays", function () {
             this.spy();
 
-            assert.isArray(this.spy.args[0]);
+            assert.array(this.spy.args[0]);
         });
 
         it("contains empty array when no arguments", function () {
@@ -1049,13 +1049,13 @@ describe("shani", "util", "spy", () => {
         it("returns false for partial match", function () {
             this.spy(1, 2, 3);
 
-            assert.isFalse(this.spy.calledWithExactly(1, 2));
+            assert.false(this.spy.calledWithExactly(1, 2));
         });
 
         it("returns false for missing arguments", function () {
             this.spy(1, 2, 3);
 
-            assert.isFalse(this.spy.calledWithExactly(1, 2, 3, 4));
+            assert.false(this.spy.calledWithExactly(1, 2, 3, 4));
         });
 
         it("returns true for exact match", function () {
@@ -1067,7 +1067,7 @@ describe("shani", "util", "spy", () => {
         it("matchs by strict comparison", function () {
             this.spy({}, []);
 
-            assert.isFalse(this.spy.calledWithExactly({}, [], null));
+            assert.false(this.spy.calledWithExactly({}, [], null));
         });
 
         it("returns true for one exact match", function () {
@@ -1089,37 +1089,37 @@ describe("shani", "util", "spy", () => {
         it("returns false when a property of an object argument is set to undefined", function () {
             this.spy({ a: 1, b: 2, c: 3 });
 
-            assert.isFalse(this.spy.calledWithExactly({ a: 1, b: 2, c: undefined }));
+            assert.false(this.spy.calledWithExactly({ a: 1, b: 2, c: undefined }));
         });
 
         it("returns false when a property of an object argument is set to a different value", function () {
             this.spy({ a: 1, b: 2, c: 3 });
 
-            assert.isFalse(this.spy.calledWithExactly({ a: 1, b: 2, c: "blah" }));
+            assert.false(this.spy.calledWithExactly({ a: 1, b: 2, c: "blah" }));
         });
 
         it("returns false when an object argument has a different property/value pair", function () {
             this.spy({ a: 1, b: 2, c: 3 });
 
-            assert.isFalse(this.spy.calledWithExactly({ a: 1, b: 2, foo: "blah" }));
+            assert.false(this.spy.calledWithExactly({ a: 1, b: 2, foo: "blah" }));
         });
 
         it("returns false when property of Object argument is set to undefined and has a different name", function () {
             this.spy({ a: 1, b: 2, c: 3 });
 
-            assert.isFalse(this.spy.calledWithExactly({ a: 1, b: 2, foo: undefined }));
+            assert.false(this.spy.calledWithExactly({ a: 1, b: 2, foo: undefined }));
         });
 
         it("returns false when any properties of an object argument aren't present", function () {
             this.spy({ a: 1, b: 2, c: 3 });
 
-            assert.isFalse(this.spy.calledWithExactly({ a: 1, b: 2 }));
+            assert.false(this.spy.calledWithExactly({ a: 1, b: 2 }));
         });
 
         it("returns false when an object argument has extra properties", function () {
             this.spy({ a: 1, b: 2, c: 3 });
 
-            assert.isFalse(this.spy.calledWithExactly({ a: 1, b: 2, c: 3, d: 4 }));
+            assert.false(this.spy.calledWithExactly({ a: 1, b: 2, c: 3, d: 4 }));
         });
     });
 
@@ -1131,13 +1131,13 @@ describe("shani", "util", "spy", () => {
         it("returns false for partial match", function () {
             this.spy(1, 2, 3);
 
-            assert.isFalse(this.spy.alwaysCalledWithExactly(1, 2));
+            assert.false(this.spy.alwaysCalledWithExactly(1, 2));
         });
 
         it("returns false for missing arguments", function () {
             this.spy(1, 2, 3);
 
-            assert.isFalse(this.spy.alwaysCalledWithExactly(1, 2, 3, 4));
+            assert.false(this.spy.alwaysCalledWithExactly(1, 2, 3, 4));
         });
 
         it("returns true for exact match", function () {
@@ -1149,7 +1149,7 @@ describe("shani", "util", "spy", () => {
         it("returns false for excess arguments", function () {
             this.spy({}, []);
 
-            assert.isFalse(this.spy.alwaysCalledWithExactly({}, [], null));
+            assert.false(this.spy.alwaysCalledWithExactly({}, [], null));
         });
 
         it("returns false for one exact match", function () {
@@ -1181,7 +1181,7 @@ describe("shani", "util", "spy", () => {
             this.spy(object, array, undefined);
             this.spy(object, array, "");
 
-            assert.isFalse(this.spy.alwaysCalledWithExactly(object, array));
+            assert.false(this.spy.alwaysCalledWithExactly(object, array));
         });
     });
 
@@ -1213,7 +1213,7 @@ describe("shani", "util", "spy", () => {
         it("returns false if spy did not throw", function () {
             this.spy();
 
-            assert.isFalse(this.spy.threw());
+            assert.false(this.spy.threw());
         });
 
         it("returns true if spy threw", function () {
@@ -1231,13 +1231,13 @@ describe("shani", "util", "spy", () => {
         it("returns false if string did not match", function () {
             assert.throws(this.spyWithTypeError);
 
-            assert.isFalse(this.spyWithTypeError.threw("Error"));
+            assert.false(this.spyWithTypeError.threw("Error"));
         });
 
         it("returns false if spy did not throw specified error", function () {
             this.spy();
 
-            assert.isFalse(this.spy.threw("Error"));
+            assert.false(this.spy.threw("Error"));
         });
 
         it("returns true if string matches", function () {
@@ -1249,7 +1249,7 @@ describe("shani", "util", "spy", () => {
         it("returns false if strings do not match", function () {
             assert.throws(this.spyWithStringError);
 
-            assert.isFalse(this.spyWithStringError.threw("not the error"));
+            assert.false(this.spyWithStringError.threw("not the error"));
         });
     });
 
@@ -1277,7 +1277,7 @@ describe("shani", "util", "spy", () => {
         it("returns false if spy did not throw", function () {
             this.spy();
 
-            assert.isFalse(this.spy.alwaysThrew());
+            assert.false(this.spy.alwaysThrew());
         });
 
         it("returns true if spy threw", function () {
@@ -1295,13 +1295,13 @@ describe("shani", "util", "spy", () => {
         it("returns false if string did not match", function () {
             assert.throws(this.spyWithTypeError);
 
-            assert.isFalse(this.spyWithTypeError.alwaysThrew("Error"));
+            assert.false(this.spyWithTypeError.alwaysThrew("Error"));
         });
 
         it("returns false if spy did not throw specified error", function () {
             this.spy();
 
-            assert.isFalse(this.spy.alwaysThrew("Error"));
+            assert.false(this.spy.alwaysThrew("Error"));
         });
 
         it("returns false if some calls did not throw", function () {
@@ -1318,7 +1318,7 @@ describe("shani", "util", "spy", () => {
 
             this.spy();
 
-            assert.isFalse(this.spy.alwaysThrew());
+            assert.false(this.spy.alwaysThrew());
         });
 
         it("returns true if all calls threw", function () {
@@ -1358,7 +1358,7 @@ describe("shani", "util", "spy", () => {
             this.spy();
 
             assert.equal(this.spy.exceptions.length, 1);
-            assert.isUndefined(this.spy.exceptions[0]);
+            assert.undefined(this.spy.exceptions[0]);
         });
 
         it("stacks up exceptions and undefined", function () {
@@ -1384,11 +1384,11 @@ describe("shani", "util", "spy", () => {
             spy();
 
             assert.equal(spy.exceptions.length, 5);
-            assert.isUndefined(spy.exceptions[0]);
+            assert.undefined(spy.exceptions[0]);
             assert.equal(spy.exceptions[1], err);
-            assert.isUndefined(spy.exceptions[2]);
+            assert.undefined(spy.exceptions[2]);
             assert.equal(spy.exceptions[3], err);
-            assert.isUndefined(spy.exceptions[4]);
+            assert.undefined(spy.exceptions[4]);
         });
     });
 
@@ -1432,7 +1432,7 @@ describe("shani", "util", "spy", () => {
             spy();
             spy();
 
-            assert.isFalse(spy.returned({ id: 42 }));
+            assert.false(spy.returned({ id: 42 }));
         });
 
         it("returns true when value is returned several times", () => {
@@ -1467,7 +1467,7 @@ describe("shani", "util", "spy", () => {
 
             spy();
 
-            assert.isFalse(spy.returned(match.same({ id: 42 })));
+            assert.false(spy.returned(match.same({ id: 42 })));
             assert(spy.returned(match.same(object)));
         });
     });
@@ -1478,7 +1478,7 @@ describe("shani", "util", "spy", () => {
             spy();
 
             assert.equal(spy.returnValues.length, 1);
-            assert.isUndefined(spy.returnValues[0]);
+            assert.undefined(spy.returnValues[0]);
         });
 
         it("contains return value", () => {
@@ -1501,7 +1501,7 @@ describe("shani", "util", "spy", () => {
             assert.throws(spy);
 
             assert.equal(spy.returnValues.length, 1);
-            assert.isUndefined(spy.returnValues[0]);
+            assert.undefined(spy.returnValues[0]);
         });
 
         it("contains the created object for spied constructors", () => {
@@ -1521,7 +1521,7 @@ describe("shani", "util", "spy", () => {
 
             const result = new Spy();
 
-            assert.isTrue(result.isExplicitlyCreatedValue);
+            assert.true(result.isExplicitlyCreatedValue);
             assert.equal(Spy.returnValues[0], result);
         });
 
@@ -1556,11 +1556,11 @@ describe("shani", "util", "spy", () => {
             spy();
 
             assert.equal(spy.returnValues.length, 5);
-            assert.isUndefined(spy.returnValues[0]);
+            assert.undefined(spy.returnValues[0]);
             assert.equal(spy.returnValues[1], 2);
-            assert.isUndefined(spy.returnValues[2]);
+            assert.undefined(spy.returnValues[2]);
             assert.equal(spy.returnValues[3], 4);
-            assert.isUndefined(spy.returnValues[4]);
+            assert.undefined(spy.returnValues[4]);
         });
     });
 
@@ -1571,7 +1571,7 @@ describe("shani", "util", "spy", () => {
         });
 
         it("is function", function () {
-            assert.isFunction(this.spyA.calledBefore);
+            assert.function(this.spyA.calledBefore);
         });
 
         it("returns true if first call to A was before first to B", function () {
@@ -1591,7 +1591,7 @@ describe("shani", "util", "spy", () => {
         it("returns false if not called", function () {
             this.spyB();
 
-            assert.isFalse(this.spyA.calledBefore(this.spyB));
+            assert.false(this.spyA.calledBefore(this.spyB));
         });
 
         it("returns true if other not called", function () {
@@ -1616,7 +1616,7 @@ describe("shani", "util", "spy", () => {
         });
 
         it("is function", function () {
-            assert.isFunction(this.spyA.calledAfter);
+            assert.function(this.spyA.calledAfter);
         });
 
         it("returns true if first call to A was after first to B", function () {
@@ -1636,13 +1636,13 @@ describe("shani", "util", "spy", () => {
         it("returns false if not called", function () {
             this.spyB();
 
-            assert.isFalse(this.spyA.calledAfter(this.spyB));
+            assert.false(this.spyA.calledAfter(this.spyB));
         });
 
         it("returns false if other not called", function () {
             this.spyA();
 
-            assert.isFalse(this.spyA.calledAfter(this.spyB));
+            assert.false(this.spyA.calledAfter(this.spyB));
         });
 
         it("returns true if called anytime after other", function () {
@@ -1650,7 +1650,7 @@ describe("shani", "util", "spy", () => {
             this.spyA();
             this.spyB();
 
-            assert.isTrue(this.spyA.calledAfter(this.spyB));
+            assert.true(this.spyA.calledAfter(this.spyB));
         });
     });
 
@@ -1662,7 +1662,7 @@ describe("shani", "util", "spy", () => {
         });
 
         it("is function", function () {
-            assert.isFunction(this.spyA.calledImmediatelyAfter);
+            assert.function(this.spyA.calledImmediatelyAfter);
         });
 
         it("returns true if first call to A was immediately after first to B", function () {
@@ -1682,13 +1682,13 @@ describe("shani", "util", "spy", () => {
         it("returns false if not called", function () {
             this.spyB();
 
-            assert.isFalse(this.spyA.calledImmediatelyAfter(this.spyB));
+            assert.false(this.spyA.calledImmediatelyAfter(this.spyB));
         });
 
         it("returns false if other not called", function () {
             this.spyA();
 
-            assert.isFalse(this.spyA.calledImmediatelyAfter(this.spyB));
+            assert.false(this.spyA.calledImmediatelyAfter(this.spyB));
         });
 
         it("returns false if other called last", function () {
@@ -1696,7 +1696,7 @@ describe("shani", "util", "spy", () => {
             this.spyA();
             this.spyB();
 
-            assert.isFalse(this.spyA.calledImmediatelyAfter(this.spyB));
+            assert.false(this.spyA.calledImmediatelyAfter(this.spyB));
         });
 
         it("returns false if another spy called between", function () {
@@ -1704,7 +1704,7 @@ describe("shani", "util", "spy", () => {
             this.spyC();
             this.spyB();
 
-            assert.isFalse(this.spyB.calledImmediatelyAfter(this.spyA));
+            assert.false(this.spyB.calledImmediatelyAfter(this.spyA));
         });
     });
 
@@ -1716,7 +1716,7 @@ describe("shani", "util", "spy", () => {
         });
 
         it("is function", function () {
-            assert.isFunction(this.spyA.calledImmediatelyBefore);
+            assert.function(this.spyA.calledImmediatelyBefore);
         });
 
         it("returns true if first call to A was immediately after first to B", function () {
@@ -1736,13 +1736,13 @@ describe("shani", "util", "spy", () => {
         it("returns false if not called", function () {
             this.spyB();
 
-            assert.isFalse(this.spyA.calledImmediatelyBefore(this.spyB));
+            assert.false(this.spyA.calledImmediatelyBefore(this.spyB));
         });
 
         it("returns false if other not called", function () {
             this.spyA();
 
-            assert.isFalse(this.spyA.calledImmediatelyBefore(this.spyB));
+            assert.false(this.spyA.calledImmediatelyBefore(this.spyB));
         });
 
         it("returns false if other called last", function () {
@@ -1750,7 +1750,7 @@ describe("shani", "util", "spy", () => {
             this.spyA();
             this.spyB();
 
-            assert.isFalse(this.spyB.calledImmediatelyBefore(this.spyA));
+            assert.false(this.spyB.calledImmediatelyBefore(this.spyA));
         });
 
         it("returns false if another spy called between", function () {
@@ -1758,7 +1758,7 @@ describe("shani", "util", "spy", () => {
             this.spyC();
             this.spyB();
 
-            assert.isFalse(this.spyA.calledImmediatelyBefore(this.spyB));
+            assert.false(this.spyA.calledImmediatelyBefore(this.spyB));
         });
     });
 
@@ -1766,7 +1766,7 @@ describe("shani", "util", "spy", () => {
         it("is undefined by default", () => {
             const spy = createSpy();
 
-            assert.isNull(spy.firstCall);
+            assert.null(spy.firstCall);
         });
 
         it("is equal to getCall(0) result after first call", () => {
@@ -1800,7 +1800,7 @@ describe("shani", "util", "spy", () => {
 
             assert.throws(spy);
 
-            assert.isNotNull(spy.firstCall);
+            assert.notNull(spy.firstCall);
         });
 
         it("has correct returnValue", () => {
@@ -1832,14 +1832,14 @@ describe("shani", "util", "spy", () => {
         it("is null by default", () => {
             const spy = createSpy();
 
-            assert.isNull(spy.secondCall);
+            assert.null(spy.secondCall);
         });
 
         it("stills be null after first call", () => {
             const spy = createSpy();
             spy();
 
-            assert.isNull(spy.secondCall);
+            assert.null(spy.secondCall);
         });
 
         it("is equal to getCall(1) result after second call", () => {
@@ -1858,7 +1858,7 @@ describe("shani", "util", "spy", () => {
         it("is undefined by default", () => {
             const spy = createSpy();
 
-            assert.isNull(spy.thirdCall);
+            assert.null(spy.thirdCall);
         });
 
         it("stills be undefined after second call", () => {
@@ -1866,7 +1866,7 @@ describe("shani", "util", "spy", () => {
             spy();
             spy();
 
-            assert.isNull(spy.thirdCall);
+            assert.null(spy.thirdCall);
         });
 
         it("is equal to getCall(1) result after second call", () => {
@@ -1886,7 +1886,7 @@ describe("shani", "util", "spy", () => {
         it("is undefined by default", () => {
             const spy = createSpy();
 
-            assert.isNull(spy.lastCall);
+            assert.null(spy.lastCall);
         });
 
         it("is same as firstCall after first call", () => {
@@ -1951,7 +1951,7 @@ describe("shani", "util", "spy", () => {
         it("returns an empty Array by default", () => {
             const spy = createSpy();
 
-            assert.isArray(spy.getCalls());
+            assert.array(spy.getCalls());
             assert.equal(spy.getCalls().length, 0);
         });
 
@@ -1969,7 +1969,7 @@ describe("shani", "util", "spy", () => {
         it("is function", () => {
             const spy = createSpy();
 
-            assert.isFunction(spy.callArg);
+            assert.function(spy.callArg);
         });
 
         it("invokes argument at index for all calls", () => {
@@ -2042,7 +2042,7 @@ describe("shani", "util", "spy", () => {
         it("is function", () => {
             const spy = createSpy();
 
-            assert.isFunction(spy.callArgOn);
+            assert.function(spy.callArgOn);
         });
 
         it("invokes argument at index for all calls", () => {
@@ -2139,7 +2139,7 @@ describe("shani", "util", "spy", () => {
         it("is function", () => {
             const spy = createSpy();
 
-            assert.isFunction(spy.yield);
+            assert.function(spy.yield);
         });
 
         it("invokes first function arg for all calls", () => {
@@ -2202,7 +2202,7 @@ describe("shani", "util", "spy", () => {
         it("is function", () => {
             const spy = createSpy();
 
-            assert.isFunction(spy.yieldOn);
+            assert.function(spy.yieldOn);
         });
 
         it("invokes first function arg for all calls", () => {
@@ -2263,7 +2263,7 @@ describe("shani", "util", "spy", () => {
         it("is function", () => {
             const spy = createSpy();
 
-            assert.isFunction(spy.yieldTo);
+            assert.function(spy.yieldTo);
         });
 
         it("invokes first function arg for all calls", () => {
@@ -2329,7 +2329,7 @@ describe("shani", "util", "spy", () => {
         it("is function", () => {
             const spy = createSpy();
 
-            assert.isFunction(spy.yieldToOn);
+            assert.function(spy.yieldToOn);
         });
 
         it("invokes first function arg for all calls", () => {
@@ -2402,7 +2402,7 @@ describe("shani", "util", "spy", () => {
         it("should be a function", () => {
             const spy = createSpy();
 
-            assert.isFunction(spy.throwArg);
+            assert.function(spy.throwArg);
         });
 
         it("should throw if spy hasn't been called", () => {
@@ -2483,7 +2483,7 @@ describe("shani", "util", "spy", () => {
         });
 
         it("is function", function () {
-            assert.isFunction(this.spy.matchingFakes);
+            assert.function(this.spy.matchingFakes);
         });
 
         it("returns an empty array by default", function () {
@@ -2534,7 +2534,7 @@ describe("shani", "util", "spy", () => {
             s();
             s();
             p = await p;
-            assert.isArray(p);
+            assert.array(p);
             assert.equal(p.length, 3);
             assert.deepEqual(p, [s.getCall(0), s.getCall(1), s.getCall(2)]);
         });

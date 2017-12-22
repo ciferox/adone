@@ -44,13 +44,13 @@ describe("uri", function () {
 
     it("should correctly connect via normal url journal option", async () => {
         const db = await mongo.connect(this.url({ search: { journal: true } }));
-        expect(db.writeConcern.j).to.be.true;
+        expect(db.writeConcern.j).to.be.true();
         await db.close();
     });
 
     it("should correctly connect via normal url using ip", async () => {
         const db = await mongo.connect("mongodb://127.0.0.1:27017/?fsync=true");
-        expect(db.writeConcern.fsync).to.be.true;
+        expect(db.writeConcern.fsync).to.be.true();
         await db.close();
     });
 

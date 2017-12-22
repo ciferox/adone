@@ -15,9 +15,9 @@ describe("shani", "util", "stub", () => {
     it("is spy", () => {
         const stub = createStub.create();
 
-        assert.isFalse(stub.called);
-        assert.isFunction(stub.calledWith);
-        assert.isFunction(stub.calledOn);
+        assert.false(stub.called);
+        assert.function(stub.calledWith);
+        assert.function(stub.calledOn);
     });
 
     it("fails if stubbing property on null", () => {
@@ -89,7 +89,7 @@ describe("shani", "util", "stub", () => {
         stub.withArgs(1).returns(42);
         stub(1);
 
-        assert.isNotNull(stub.withArgs(1).firstCall);
+        assert.notNull(stub.withArgs(1).firstCall);
     });
 
     describe(".returns", () => {
@@ -110,7 +110,7 @@ describe("shani", "util", "stub", () => {
         it("returns undefined", () => {
             const stub = createStub.create();
 
-            assert.isUndefined(stub());
+            assert.undefined(stub());
         });
 
         it("supersedes previous throws", () => {
@@ -465,7 +465,7 @@ describe("shani", "util", "stub", () => {
             const stub = createStub.create();
 
             assert(stub.usingPromise);
-            assert.isFunction(stub.usingPromise);
+            assert.function(stub.usingPromise);
         });
 
         it("should return the current stub", () => {
@@ -487,8 +487,8 @@ describe("shani", "util", "stub", () => {
 
             return stub().then((actual) => {
                 assert.equal(actual, object, "Same object resolved");
-                assert.isTrue(promise.resolve.calledOnce, "Custom promise resolve called once");
-                assert.isTrue(promise.resolve.calledWith(object), "Custom promise resolve called once with expected");
+                assert.true(promise.resolve.calledOnce, "Custom promise resolve called once");
+                assert.true(promise.resolve.calledWith(object), "Custom promise resolve called once with expected");
             });
         });
 
@@ -507,8 +507,8 @@ describe("shani", "util", "stub", () => {
                 assert.fail("this should not resolve");
             }).catch((actual) => {
                 assert.equal(actual, reason, "Same object resolved");
-                assert.isTrue(promise.reject.calledOnce, "Custom promise reject called once");
-                assert.isTrue(promise.reject.calledWith(reason), "Custom promise reject called once with expected");
+                assert.true(promise.reject.calledOnce, "Custom promise reject called once");
+                assert.true(promise.reject.calledWith(reason), "Custom promise reject called once with expected");
             });
         });
     });
@@ -565,7 +565,7 @@ describe("shani", "util", "stub", () => {
 
             assert.throws(stub);
 
-            assert.isUndefined(stub.invoking);
+            assert.undefined(stub.invoking);
         });
 
         it("throws an exception created using a function", () => {
@@ -598,18 +598,18 @@ describe("shani", "util", "stub", () => {
                 const stub = createStub.create();
                 stub.throws();
 
-                assert.isFalse(errorSpy.called);
+                assert.false(errorSpy.called);
                 assert.throws(stub, "Error");
-                assert.isTrue(errorSpy.called);
+                assert.true(errorSpy.called);
             });
 
             it("uses a lazily created exception for the named error", () => {
                 const stub = createStub.create();
                 stub.throws("TypeError", "typeerror message");
 
-                assert.isFalse(errorSpy.called);
+                assert.false(errorSpy.called);
                 assert.throws(stub, "typeerror message");
-                assert.isTrue(errorSpy.called);
+                assert.true(errorSpy.called);
             });
 
             it("uses a lazily created exception provided by a function", () => {
@@ -619,9 +619,9 @@ describe("shani", "util", "stub", () => {
                     return new Error("not implemented");
                 });
 
-                assert.isFalse(errorSpy.called);
+                assert.false(errorSpy.called);
                 assert.throws(stub, "not implemented");
-                assert.isTrue(errorSpy.called);
+                assert.true(errorSpy.called);
             });
 
             it("does not use a lazily created exception if the error object is provided", () => {
@@ -651,7 +651,7 @@ describe("shani", "util", "stub", () => {
         });
 
         it("returns stub", function () {
-            assert.isFunction(this.stub.callsArg(2));
+            assert.function(this.stub.callsArg(2));
         });
 
         it("throws if argument at specified index is not callable", function () {
@@ -697,7 +697,7 @@ describe("shani", "util", "stub", () => {
         it("returns function", function () {
             const stub = this.stub.callsArgWith(2, 3);
 
-            assert.isFunction(stub);
+            assert.function(stub);
         });
 
         it("calls callback without args", function () {
@@ -778,7 +778,7 @@ describe("shani", "util", "stub", () => {
         it("returns stub", function () {
             const stub = this.stub.callsArgOn(2, this.fakeContext);
 
-            assert.isFunction(stub);
+            assert.function(stub);
         });
 
         it("throws if argument at specified index is not callable", function () {
@@ -870,7 +870,7 @@ describe("shani", "util", "stub", () => {
         it("returns function", function () {
             const stub = this.stub.callsArgOnWith(2, this.fakeContext, 3);
 
-            assert.isFunction(stub);
+            assert.function(stub);
         });
 
         it("calls callback without args", function () {
@@ -966,8 +966,8 @@ describe("shani", "util", "stub", () => {
         it("stubbed method should be proper stub", function () {
             const stub = createStub(this.object, "method");
 
-            assert.isFunction(stub.returns);
-            assert.isFunction(stub.throws);
+            assert.function(stub.returns);
+            assert.function(stub.throws);
         });
 
         it("stub should be spy", function () {
@@ -1001,8 +1001,8 @@ describe("shani", "util", "stub", () => {
         it("returns standalone stub without arguments", () => {
             const stub = createStub();
 
-            assert.isFunction(stub);
-            assert.isFalse(stub.called);
+            assert.function(stub);
+            assert.false(stub.called);
         });
 
         it("successfully stubs falsey properties", () => {
@@ -1032,9 +1032,9 @@ describe("shani", "util", "stub", () => {
 
             createStub(obj);
 
-            assert.isFunction(obj.func1.restore);
-            assert.isFunction(obj.func2.restore);
-            assert.isFunction(obj.func3.restore);
+            assert.function(obj.func1.restore);
+            assert.function(obj.func2.restore);
+            assert.function(obj.func3.restore);
         });
 
         it("stubs prototype methods", () => {
@@ -1044,7 +1044,7 @@ describe("shani", "util", "stub", () => {
 
             createStub(obj);
 
-            assert.isFunction(obj.func1.restore);
+            assert.function(obj.func1.restore);
         });
 
         it("returns object", () => {
@@ -1074,9 +1074,9 @@ describe("shani", "util", "stub", () => {
 
             createStub(obj);
 
-            assert.isFunction(obj.func1.restore);
-            assert.isFunction(obj.func2.restore);
-            assert.isFunction(obj.func3.restore);
+            assert.function(obj.func1.restore);
+            assert.function(obj.func2.restore);
+            assert.function(obj.func3.restore);
         });
 
         it("handles non-enumerable properties on prototypes", () => {
@@ -1091,7 +1091,7 @@ describe("shani", "util", "stub", () => {
 
             createStub(obj);
 
-            assert.isFunction(obj.func1.restore);
+            assert.function(obj.func1.restore);
         });
 
         it("does not stub non-enumerable properties from Object.prototype", () => {
@@ -1099,9 +1099,9 @@ describe("shani", "util", "stub", () => {
 
             createStub(obj);
 
-            assert.isNotFunction(obj.toString.restore);
-            assert.isNotFunction(obj.toLocaleString.restore);
-            assert.isNotFunction(obj.propertyIsEnumerable.restore);
+            assert.notFunction(obj.toString.restore);
+            assert.notFunction(obj.toLocaleString.restore);
+            assert.notFunction(obj.propertyIsEnumerable.restore);
         });
 
         it("does not fail on overrides", () => {
@@ -1139,7 +1139,7 @@ describe("shani", "util", "stub", () => {
                 createStub(myObj, "ouch");
             });
 
-            assert.isUndefined(myObj.ouch);
+            assert.undefined(myObj.ouch);
         });
     });
 
@@ -1636,7 +1636,7 @@ describe("shani", "util", "stub", () => {
         it("defines withArgs method", () => {
             const stub = createStub();
 
-            assert.isFunction(stub.withArgs);
+            assert.function(stub.withArgs);
         });
 
         it("creates filtered stub", () => {
@@ -1644,8 +1644,8 @@ describe("shani", "util", "stub", () => {
             const other = stub.withArgs(23);
 
             assert.notEqual(other, stub);
-            assert.isFunction(stub.returns);
-            assert.isFunction(other.returns);
+            assert.function(stub.returns);
+            assert.function(other.returns);
         });
 
         it("filters return values based on arguments", () => {
@@ -1952,7 +1952,7 @@ describe("shani", "util", "stub", () => {
 
                 assert.equal(stub(5), 1);
                 assert.equal(stub(5), 2);
-                assert.isUndefined(stub(5));
+                assert.undefined(stub(5));
             });
 
             it("does not create undefined behaviour just by calling onCall", () => {
@@ -1969,13 +1969,13 @@ describe("shani", "util", "stub", () => {
 
                 assert.equal(stub(5), 1);
                 assert.equal(stub(5), 2);
-                assert.isUndefined(stub(5));
+                assert.undefined(stub(5));
 
                 stub.reset();
 
                 assert.equal(stub(5), undefined);
                 assert.equal(stub(5), undefined);
-                assert.isUndefined(stub(5));
+                assert.undefined(stub(5));
             });
 
             it("throws an understandable error when trying to use withArgs on behavior", () => {
@@ -2202,7 +2202,7 @@ describe("shani", "util", "stub", () => {
 
             stub.resetBehavior();
 
-            assert.isUndefined(stub());
+            assert.undefined(stub());
         });
 
         it("cleans behavior of fakes returned by withArgs", () => {
@@ -2211,7 +2211,7 @@ describe("shani", "util", "stub", () => {
 
             stub.resetBehavior();
 
-            assert.isUndefined(stub("lolz"));
+            assert.undefined(stub("lolz"));
         });
 
         it("does not clean parents' behavior when called on a fake returned by withArgs", () => {
@@ -2229,7 +2229,7 @@ describe("shani", "util", "stub", () => {
 
             stub.resetBehavior();
 
-            assert.isUndefined(stub("defined"));
+            assert.undefined(stub("defined"));
         });
 
         it("cleans 'returnsThis' behavior", () => {
@@ -2239,7 +2239,7 @@ describe("shani", "util", "stub", () => {
 
             instance.stub.resetBehavior();
 
-            assert.isUndefined(instance.stub());
+            assert.undefined(instance.stub());
         });
 
         it("cleans 'resolvesThis' behavior, so the stub does not resolve nor returns anything", () => {
@@ -2249,7 +2249,7 @@ describe("shani", "util", "stub", () => {
 
             instance.stub.resetBehavior();
 
-            expect(instance.stub()).to.be.undefined;
+            expect(instance.stub()).to.be.undefined();
         });
 
         describe("does not touch properties that are reset by 'reset'", () => {

@@ -6,7 +6,7 @@ describe("mapReduce", function () {
         const collection = await db.createCollection("test_group2", );
         {
             const results = await collection.group([], {}, { count: 0 }, "function (obj, prev) { prev.count++; }", true);
-            expect(results).to.be.empty;
+            expect(results).to.be.empty();
         }
         await collection.insert([{ a: 2 }, { b: 5, a: 0 }, { a: 1 }, { c: 2, a: 0 }]);
         {

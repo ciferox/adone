@@ -28,10 +28,10 @@ describe("Cherrypick", () => {
         const info = await RepoUtils.setupBranches(repo, true);
         const repoInfo = info;
 
-        assert.isTrue(!(await fs.exists(path.join(workDirPath, repoInfo.theirFileName))), `${repoInfo.theirFileName} shouldn't exist`);
+        assert.true(!(await fs.exists(path.join(workDirPath, repoInfo.theirFileName))), `${repoInfo.theirFileName} shouldn't exist`);
 
         await Cherrypick.cherrypick(repo, repoInfo.theirCommit, {});
-        assert.isTrue(await fs.exists(path.join(workDirPath, repoInfo.theirFileName)), `${repoInfo.theirFileName} should exist`);
+        assert.true(await fs.exists(path.join(workDirPath, repoInfo.theirFileName)), `${repoInfo.theirFileName} should exist`);
 
         // Cherrypick.cherrypick leaves the repo in a cherrypick state
         assert.equal(repo.state(), Repository.STATE.CHERRYPICK);
@@ -50,8 +50,8 @@ describe("Cherrypick", () => {
         const info = await RepoUtils.setupBranches(repo);
         const repoInfo = info;
 
-        assert.isTrue(!(await fs.exists(path.join(workDirPath, repoInfo.ourFileName))), `${repoInfo.ourFileName} shouldn't exist`);
-        assert.isTrue(!(await fs.exists(path.join(workDirPath, repoInfo.theirFileName))), `${repoInfo.theirFileName} shouldn't exist`);
+        assert.true(!(await fs.exists(path.join(workDirPath, repoInfo.ourFileName))), `${repoInfo.ourFileName} shouldn't exist`);
+        assert.true(!(await fs.exists(path.join(workDirPath, repoInfo.theirFileName))), `${repoInfo.theirFileName} shouldn't exist`);
 
         const index = await Cherrypick.commit(repo, repoInfo.theirCommit, repoInfo.ourCommit, 0, {});
         assert(index);

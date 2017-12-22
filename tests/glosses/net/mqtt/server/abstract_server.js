@@ -288,7 +288,7 @@ module.exports = function (moscaSettings, createConnection) {
 
     it("should pass itself in the callback", (done) => {
         secondInstance = new adone.net.mqtt.server.Server(moscaSettings(), (err, server) => {
-            expect(server === secondInstance).to.be.true;
+            expect(server === secondInstance).to.be.true();
             done();
         });
     });
@@ -296,7 +296,7 @@ module.exports = function (moscaSettings, createConnection) {
     // it("should allow to be called like a function", (done) => {
     //     const func = adone.net.mqtt.server.Server;
     //     secondInstance = func(moscaSettings(), (err, server) => {
-    //         expect(server === secondInstance).to.be.true;
+    //         expect(server === secondInstance).to.be.true();
     //         done();
     //     });
     // });
@@ -318,7 +318,7 @@ module.exports = function (moscaSettings, createConnection) {
 
         client.once("error", done);
         client.stream.once("close", () => {
-            expect(disconnect).to.be.true;
+            expect(disconnect).to.be.true();
             done();
         });
 
@@ -419,7 +419,7 @@ module.exports = function (moscaSettings, createConnection) {
 
         function verify() {
             if (connectedClient && publishedClientId) {
-                expect(publishedClientId).to.be.ok;
+                expect(publishedClientId).to.be.ok();
                 connectedClient.disconnect();
             }
         }
@@ -494,7 +494,7 @@ module.exports = function (moscaSettings, createConnection) {
 
         instance.on("subscribed", (topic, client) => {
             expect(topic).to.eql("hello");
-            expect(client).to.exist;
+            expect(client).to.exist();
             d();
         });
     });
@@ -731,7 +731,7 @@ module.exports = function (moscaSettings, createConnection) {
 
         instance.on("unsubscribed", (topic, client) => {
             expect(topic).to.eql("hello");
-            expect(client).to.exist;
+            expect(client).to.exist();
             d();
         });
     });
@@ -760,7 +760,7 @@ module.exports = function (moscaSettings, createConnection) {
 
         instance.on("unsubscribed", (topic, client) => {
             expect(topic).to.eql("hello");
-            expect(client).to.exist;
+            expect(client).to.exist();
             d();
         });
 
@@ -2280,7 +2280,7 @@ module.exports = function (moscaSettings, createConnection) {
             // two times!
             step1, step2, step3
         ], (err) => {
-            assert.isUndefined(err);
+            assert.undefined(err);
 
             buildClient(done, (client) => {
                 client.connect(opts);
@@ -2543,7 +2543,7 @@ module.exports = function (moscaSettings, createConnection) {
     });
 
     it("should have an id", () => {
-        assert.isOk(instance.id);
+        assert.ok(instance.id);
     });
 
     it("should have a configurable id", (done) => {

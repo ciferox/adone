@@ -164,11 +164,11 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
             return UserTable.sync({ force: true }).then(() => {
                 return UserTable.create({ aNumber: 4 }).then((user) => {
-                    expect(user.updatedOn).to.exist;
-                    expect(user.dateCreated).to.exist;
+                    expect(user.updatedOn).to.exist();
+                    expect(user.dateCreated).to.exist();
                     return user.destroy().then(() => {
                         return user.reload({ paranoid: false }).then(() => {
-                            expect(user.deletedAtThisTime).to.exist;
+                            expect(user.deletedAtThisTime).to.exist();
                         });
                     });
                 });
@@ -190,15 +190,15 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 return UpdatingUser.create({
                     name: "heyo"
                 }).then((user) => {
-                    expect(user.createdAt).not.to.exist;
-                    expect(user.false).not.to.exist; //  because, you know we might accidentally add a field named 'false'
+                    expect(user.createdAt).not.to.exist();
+                    expect(user.false).not.to.exist(); //  because, you know we might accidentally add a field named 'false'
 
                     user.name = "heho";
                     return user.save().then((user) => {
-                        expect(user.updatedAt).not.to.exist;
+                        expect(user.updatedAt).not.to.exist();
                         return user.destroy().then(() => {
                             return user.reload({ paranoid: false }).then(() => {
-                                expect(user.deletedAtThisTime).to.exist;
+                                expect(user.deletedAtThisTime).to.exist();
                             });
                         });
                     });
@@ -224,7 +224,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 return Task.build().save().then((record) => {
                     expect(record.title).to.be.a("string");
                     expect(record.title).to.equal("");
-                    expect(titleSetter.notCalled).to.be.ok; // The setter method should not be invoked for default values
+                    expect(titleSetter.notCalled).to.be.ok(); // The setter method should not be invoked for default values
                 });
             });
         });
@@ -439,7 +439,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 idx1 = result[1];
                 idx2 = result[2];
 
-                expect(primary.primary).to.be.ok;
+                expect(primary.primary).to.be.ok();
 
                 expect(idx1.type).to.equal("BTREE");
                 expect(idx2.type).to.equal("FULLTEXT");
@@ -455,11 +455,11 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             }
 
             expect(idx1.name).to.equal("a_b_uniq");
-            expect(idx1.unique).to.be.ok;
+            expect(idx1.unique).to.be.ok();
 
             if (dialect !== "mssql") {
                 expect(idx2.name).to.equal("models_field_c");
-                expect(idx2.unique).not.to.be.ok;
+                expect(idx2.unique).not.to.be.ok();
             }
         });
     });
@@ -483,9 +483,9 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
             expect(Task.build().title).to.equal("a task!");
             expect(Task.build().foo).to.equal(2);
-            expect(Task.build().bar).to.not.be.ok;
+            expect(Task.build().bar).to.not.be.ok();
             expect(Task.build().foobar).to.equal("asd");
-            expect(Task.build().flag).to.be.false;
+            expect(Task.build().flag).to.be.false();
         });
 
         it("fills the objects with default values", function () {
@@ -498,9 +498,9 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             }, { timestamps: false });
             expect(Task.build().title).to.equal("a task!");
             expect(Task.build().foo).to.equal(2);
-            expect(Task.build().bar).to.not.be.ok;
+            expect(Task.build().bar).to.not.be.ok();
             expect(Task.build().foobar).to.equal("asd");
-            expect(Task.build().flag).to.be.false;
+            expect(Task.build().flag).to.be.false();
         });
 
         it("attaches getter and setter methods from attribute definition", function () {
@@ -617,10 +617,10 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     ]
                 });
 
-                expect(product.Tags).to.be.ok;
+                expect(product.Tags).to.be.ok();
                 expect(product.Tags.length).to.equal(2);
                 expect(product.Tags[0]).to.be.instanceof(Tag);
-                expect(product.User).to.be.ok;
+                expect(product.User).to.be.ok();
                 expect(product.User).to.be.instanceof(User);
             });
 
@@ -668,10 +668,10 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     ]
                 });
 
-                expect(product.categories).to.be.ok;
+                expect(product.categories).to.be.ok();
                 expect(product.categories.length).to.equal(4);
                 expect(product.categories[0]).to.be.instanceof(Tag);
-                expect(product.followers).to.be.ok;
+                expect(product.followers).to.be.ok();
                 expect(product.followers.length).to.equal(2);
                 expect(product.followers[0]).to.be.instanceof(User);
             });
@@ -687,7 +687,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 const t = await sequelize.transaction();
                 await User.create({ username: "foo" }, { transaction: t });
                 const user = await User.findOne({ where: { username: "foo" }, transaction: t });
-                expect(user).to.not.be.null;
+                expect(user).to.not.be.null();
                 await t.rollback();
             });
         }
@@ -726,7 +726,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     });
                 })
                 .then((user) => {
-                    expect(user).to.not.be.ok;
+                    expect(user).to.not.be.ok();
                 });
         });
     });
@@ -752,9 +752,9 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     defaults: { foo: "asd" },
                     transaction: t
                 });
-                expect(user1.isNewRecord).to.be.true;
-                expect(user2.isNewRecord).to.be.false;
-                expect(user3.isNewRecord).to.be.false;
+                expect(user1.isNewRecord).to.be.true();
+                expect(user2.isNewRecord).to.be.false();
+                expect(user3.isNewRecord).to.be.false();
                 await t.commit();
             });
         }
@@ -769,7 +769,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 });
                 expect(_user.id).to.equal(user.id);
                 expect(_user.username).to.equal("Username");
-                expect(initialized).to.be.false;
+                expect(initialized).to.be.false();
             });
 
             it("with multiple find fields", async function () {
@@ -785,7 +785,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 expect(_user.id).to.equal(user.id);
                 expect(_user.username).to.equal("Username");
                 expect(_user.data).to.equal("data");
-                expect(initialized).to.be.false;
+                expect(initialized).to.be.false();
             });
 
             it("builds a new instance with default value.", async function () {
@@ -800,11 +800,11 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     where: data,
                     defaults: defaultValues
                 });
-                expect(user.id).to.be.null;
+                expect(user.id).to.be.null();
                 expect(user.username).to.equal("Username");
                 expect(user.data).to.equal("ThisIsData");
-                expect(initialized).to.be.true;
-                expect(user.isNewRecord).to.be.true;
+                expect(initialized).to.be.true();
+                expect(user.isNewRecord).to.be.true();
             });
         });
     });
@@ -863,7 +863,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     });
                 });
             }).then(() => {
-                expect(test).to.be.true;
+                expect(test).to.be.true();
             });
         });
 
@@ -877,17 +877,17 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             let test = false;
             return User.sync({ force: true }).then(() => {
                 return User.create({ name: "meg", bio: "none" }).then((u) => {
-                    expect(u).to.exist;
+                    expect(u).to.exist();
                     return u.updateAttributes({ name: "brian" }, {
                         logging(sql) {
                             test = true;
-                            expect(sql).to.exist;
+                            expect(sql).to.exist();
                             expect(sql.toUpperCase().indexOf("UPDATE")).to.be.above(-1);
                         }
                     });
                 });
             }).then(() => {
-                expect(test).to.be.true;
+                expect(test).to.be.true();
             });
         });
 
@@ -1069,7 +1069,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             await this.User.bulkCreate(data);
             const users = await this.User.findAll({ order: ["id"] });
             const updatedAt = users[0].updatedAt;
-            expect(updatedAt).to.be.ok;
+            expect(updatedAt).to.be.ok();
             expect(updatedAt.getTime()).to.be.equal(users[2].updatedAt.getTime()); // All users should have the same updatedAt
 
             // Pass the time so we can actually see a change
@@ -1206,7 +1206,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             await this.sequelize.sync({ force: true });
             await User.bulkCreate(data);
             await User.truncate();
-            expect(await User.findAll()).to.be.empty;
+            expect(await User.findAll()).to.be.empty();
         });
 
         it("truncate should clear the table", async function () {
@@ -1219,7 +1219,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             await this.sequelize.sync({ force: true });
             await User.bulkCreate(data);
             await User.destroy({ truncate: true });
-            expect(await User.findAll()).to.be.empty;
+            expect(await User.findAll()).to.be.empty();
         });
 
         it("throws an error if no where clause is given", function () {
@@ -1423,7 +1423,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         return User.findById(1).then((user) => {
                             return user.destroy().then(() => {
                                 return User.findById(1).then((user) => {
-                                    expect(user).to.be.null;
+                                    expect(user).to.be.null();
                                     return User.count().then((cnt) => {
                                         expect(cnt).to.equal(2);
                                         return User.findAll().then((users) => {
@@ -1456,11 +1456,11 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 }
                 {
                     const user = await User.find({ where: 1, paranoid: false });
-                    expect(user).to.exist;
+                    expect(user).to.exist();
                 }
                 {
                     const user = await User.findById(1);
-                    expect(user).to.be.null;
+                    expect(user).to.be.null();
                 }
                 const [cnt, cntWithDeleted] = await Promise.all([User.count(), User.count({ paranoid: false })]);
                 expect(cnt).to.equal(2);
@@ -1496,9 +1496,9 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     include: [{ model: Pet, paranoid: false }]
                 })
             ]);
-            expect(_user).to.exist;
+            expect(_user).to.exist();
             expect(_user.Pets).to.have.length(1);
-            expect(userWithDeletedPets).to.exist;
+            expect(userWithDeletedPets).to.exist();
             expect(userWithDeletedPets.Pets).to.have.length(2);
         });
 
@@ -1517,7 +1517,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             ]);
             const user = await User.find({ where: { username: "Bob" } });
             await user.destroy({ force: true });
-            expect(await User.find({ where: { username: "Bob" } })).to.be.null;
+            expect(await User.find({ where: { username: "Bob" } })).to.be.null();
             const tobi = await User.find({ where: { username: "Tobi" } });
             await tobi.destroy();
             let result = await self.sequelize.query("SELECT * FROM paranoidusers WHERE username='Tobi'", { plain: true });
@@ -1611,7 +1611,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             await ParanoidUser.destroy({ where: { secretValue: "42" } });
             await ParanoidUser.restore({ where: { secretValue: "42" } });
             const user = await ParanoidUser.find({ where: { secretValue: "42" } });
-            expect(user).to.be.ok;
+            expect(user).to.be.ok();
             expect(user.username).to.equal("Peter");
         });
     });
@@ -1619,7 +1619,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
     describe("equals", () => {
         it("correctly determines equality of objects", async function () {
             const u = await this.User.create({ username: "hallo", data: "welt" });
-            expect(u.equals(u)).to.be.ok;
+            expect(u.equals(u)).to.be.ok();
         });
 
         // sqlite can't handle multiple primary keys
@@ -1634,7 +1634,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
                 await userKeys.sync({ force: true });
                 const u = await userKeys.create({ foo: "1", bar: "2", name: "hallo", bio: "welt" });
-                expect(u.equals(u)).to.be.ok;
+                expect(u.equals(u)).to.be.ok();
             });
         }
     });
@@ -1655,12 +1655,12 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
             it("determines equality if one is matching", async function () {
                 const u = await this.userKey.create({ foo: "1", bar: "2", name: "hallo", bio: "welt" });
-                expect(u.equalsOneOf([u, { a: 1 }])).to.be.ok;
+                expect(u.equalsOneOf([u, { a: 1 }])).to.be.ok();
             });
 
             it("doesn't determine equality if none is matching", function () {
                 return this.userKey.create({ foo: "1", bar: "2", name: "hallo", bio: "welt" }).then((u) => {
-                    expect(u.equalsOneOf([{ b: 2 }, { a: 1 }])).to.not.be.ok;
+                    expect(u.equalsOneOf([{ b: 2 }, { a: 1 }])).to.not.be.ok();
                 });
             });
         }
@@ -1770,11 +1770,11 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             return this.User.count({
                 logging(sql) {
                     test = true;
-                    expect(sql).to.exist;
+                    expect(sql).to.exist();
                     expect(sql.toUpperCase().indexOf("SELECT")).to.be.above(-1);
                 }
             }).then(() => {
-                expect(test).to.be.true;
+                expect(test).to.be.true();
             });
         });
 
@@ -1853,11 +1853,11 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             return this.UserWithAge.min("age", {
                 logging(sql) {
                     test = true;
-                    expect(sql).to.exist;
+                    expect(sql).to.exist();
                     expect(sql.toUpperCase().indexOf("SELECT")).to.be.above(-1);
                 }
             }).then(() => {
-                expect(test).to.be.true;
+                expect(test).to.be.true();
             });
         });
 
@@ -1976,7 +1976,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             let logged = false;
             return this.UserWithAge.max("age", {
                 logging(sql) {
-                    expect(sql).to.exist;
+                    expect(sql).to.exist();
                     logged = true;
                     expect(sql.toUpperCase().indexOf("SELECT")).to.be.above(-1);
                 }
@@ -2070,7 +2070,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             let logged = false;
             return this.UserWithAge.sum("age", {
                 logging(sql) {
-                    expect(sql).to.exist;
+                    expect(sql).to.exist();
                     logged = true;
                     expect(sql.toUpperCase().indexOf("SELECT")).to.be.above(-1);
                 }
@@ -2134,14 +2134,14 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     return UserSpecialDblUnderscore.schema("hello", "__").sync({ force: true }).then((DblUser) => {
                         return DblUser.create({ age: 3 }, {
                             logging(sql) {
-                                expect(sql).to.exist;
+                                expect(sql).to.exist();
                                 test++;
                                 expect(sql.indexOf("INSERT INTO `hello__UserSpecialDblUnderscores`")).to.be.above(-1);
                             }
                         }).then(() => {
                             return User.create({ age: 3 }, {
                                 logging(sql) {
-                                    expect(sql).to.exist;
+                                    expect(sql).to.exist();
                                     test++;
                                     expect(sql.indexOf("INSERT INTO `hello_UserSpecialUnderscores`")).to.be.above(-1);
                                 }
@@ -2436,7 +2436,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 return this.BlobUser.create({
                     data: new Buffer("Sequelize")
                 }).then((user) => {
-                    expect(user).to.be.ok;
+                    expect(user).to.be.ok();
                 });
             });
 
@@ -2458,7 +2458,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     // create a null column
                 }).then((user) => {
                     return self.BlobUser.findById(user.id).then((user) => {
-                        expect(user.data).to.be.null;
+                        expect(user.data).to.be.null();
                     });
                 });
             });
@@ -2475,7 +2475,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     return this.BlobUser.create({
                         data: "Sequelize"
                     }).then((user) => {
-                        expect(user).to.be.ok;
+                        expect(user).to.be.ok();
                     });
                 });
 

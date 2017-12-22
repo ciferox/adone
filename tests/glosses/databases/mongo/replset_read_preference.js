@@ -337,7 +337,7 @@ describe("replset read preference", function () {
         await collection.insert([{ a: 1 }, { b: 1 }, { c: 1 }], { w: 4 });
 
         const cursor = collection.find().setReadPreference(ReadPreference.SECONDARY);
-        expect(await cursor.nextObject()).to.be.ok;
+        expect(await cursor.nextObject()).to.be.ok();
         expect(() => {
             cursor.setReadPreference(ReadPreference.PRIMARY);
         }).to.throw(/cannot change.+after cursor has been accessed/);

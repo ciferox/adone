@@ -24,8 +24,8 @@ describe(Support.getTestDialectTeaser("Replication"), { skip: dialect === "sqlit
             }
         });
 
-        expect(this.sequelize.connectionManager.pool.write).to.be.ok;
-        expect(this.sequelize.connectionManager.pool.read).to.be.ok;
+        expect(this.sequelize.connectionManager.pool.write).to.be.ok();
+        expect(this.sequelize.connectionManager.pool.read).to.be.ok();
 
         this.User = this.sequelize.define("User", {
             firstName: {

@@ -230,14 +230,14 @@ describe("stream", "pull", () => {
                     throw new Error("expected read to end")
                     ;
                 }
-                assert.isOk(end, "read's callback");
+                assert.ok(end, "read's callback");
             });
 
             read(err, (end) => {
                 if (!end) {
                     throw new Error("expected abort to end");
                 }
-                assert.isOk(end, "Abort's callback");
+                assert.ok(end, "Abort's callback");
                 done();
             });
 
@@ -267,14 +267,14 @@ describe("stream", "pull", () => {
                     throw new Error("expected read to end")
                     ;
                 }
-                assert.isOk(end, "read's callback");
+                assert.ok(end, "read's callback");
             });
 
             read(err, (end) => {
                 if (!end) {
                     throw new Error("expected abort to end");
                 }
-                assert.isOk(end, "Abort's callback");
+                assert.ok(end, "Abort's callback");
                 done();
             });
         });
@@ -301,7 +301,7 @@ describe("stream", "pull", () => {
             pull(
                 pull.empty(),
                 pull.collect((err, ary) => {
-                    assert.isNotOk(err);
+                    assert.notOk(err);
                     assert.deepEqual(ary, []);
                     done();
                 })
@@ -484,7 +484,7 @@ describe("stream", "pull", () => {
             const drain = pull.drain(() => {
                 --c;
             }, (err) => {
-                assert.isOk(c < 0);
+                assert.ok(c < 0);
                 assert.equal(err, ERR);
                 done();
             });
@@ -552,8 +552,8 @@ describe("stream", "pull", () => {
                 pull.collect((err, array) => {
                     assert.equal(array.length, 100);
                     array.forEach((d) => {
-                        assert.isOk(d > 0.5);
-                        assert.isOk(d <= 1);
+                        assert.ok(d > 0.5);
+                        assert.ok(d <= 1);
                     });
                     done();
                 })
@@ -605,7 +605,7 @@ describe("stream", "pull", () => {
                     return d === 7;
                 }, (err, seven) => {
                     assert.equal(seven, 7);
-                    assert.isNotOk(err);
+                    assert.notOk(err);
                     done();
                 })
             );
@@ -622,7 +622,7 @@ describe("stream", "pull", () => {
                     return d === target;
                 }, (err, found) => {
                     assert.equal(found, target);
-                    assert.isNotOk(err);
+                    assert.notOk(err);
                     done();
                 })
             );
@@ -637,7 +637,7 @@ describe("stream", "pull", () => {
                     return d === target;
                 }, (err, found) => {
                     assert.equal(found, null);
-                    assert.isNotOk(err);
+                    assert.notOk(err);
                     done();
                 })
             );
@@ -655,7 +655,7 @@ describe("stream", "pull", () => {
                     return d >= 7;
                 }, (err, seven) => {
                     assert.equal(seven, 7);
-                    assert.isNotOk(err);
+                    assert.notOk(err);
                     done();
                 })
             );
@@ -667,7 +667,7 @@ describe("stream", "pull", () => {
                 pull.values([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
                 pull.find(null, (err, first) => {
                     assert.equal(first, 1);
-                    assert.isNotOk(err);
+                    assert.notOk(err);
                     done();
                 })
             );
@@ -764,7 +764,7 @@ describe("stream", "pull", () => {
             );
 
             read(null, (err, data) => {
-                assert.isNotOk(err);
+                assert.notOk(err);
                 assert.equal(data, 1);
                 read(true, (err, data) => {
                     assert.equal(err, true);
@@ -794,7 +794,7 @@ describe("stream", "pull", () => {
 
             read(true, (err, data) => {
                 assert.equal(err, true);
-                assert.isNotOk(data);
+                assert.notOk(data);
                 process.nextTick(() => {
                     assert.equal(sosEnded, null, "should abort stream of streams");
                     assert.equal(s1Ended, undefined, "should abort current nested stream");
@@ -824,7 +824,7 @@ describe("stream", "pull", () => {
                 pull.values([1, 2, 3, 3.4, 4]),
                 pull.map((e) => {
                     if (e !== ~~e) {
-                        throw err; 
+                        throw err;
                     }
                 }),
                 pull.drain(null, (_err) => {
@@ -859,13 +859,13 @@ describe("stream", "pull", () => {
                 pull.values(values),
                 pull.take(10),
                 pull.through(null, (err) => {
-                    assert.isOk(true);
+                    assert.ok(true);
                     process.nextTick(() => {
                         done();
                     });
                 }),
                 pull.collect((err, ary) => {
-                    assert.isOk(true);
+                    assert.ok(true);
                 })
             );
         });
@@ -902,7 +902,7 @@ describe("stream", "pull", () => {
                 (read) => {
                     return function (end, cb) {
                         if (end !== true) {
-                            reads++; 
+                            reads++;
                         }
                         read(end, cb);
                     };
@@ -927,11 +927,11 @@ describe("stream", "pull", () => {
             const read = pull(
                 (abort, cb) => {
                     if (abort) {
-                        cb(aborted = true); 
+                        cb(aborted = true);
                     } else if (i > ary.length) {
-                        cb(true); 
+                        cb(true);
                     } else {
-                        cb(null, ary[i++]); 
+                        cb(null, ary[i++]);
                     }
                 },
                 pull.take((d) => {
@@ -940,15 +940,15 @@ describe("stream", "pull", () => {
             );
 
             read(null, (_, d) => {
-                assert.isNotOk(aborted, "hasn't aborted yet");
+                assert.notOk(aborted, "hasn't aborted yet");
                 read(null, (_, d) => {
-                    assert.isNotOk(aborted, "hasn't aborted yet");
+                    assert.notOk(aborted, "hasn't aborted yet");
                     read(null, (_, d) => {
-                        assert.isNotOk(aborted, "hasn't aborted yet");
+                        assert.notOk(aborted, "hasn't aborted yet");
                         read(null, (end, d) => {
-                            assert.isOk(end, "stream ended");
+                            assert.ok(end, "stream ended");
                             assert.equal(d, undefined, "data undefined");
-                            assert.isOk(aborted, "has aborted by now");
+                            assert.ok(aborted, "has aborted by now");
                             done();
                         });
                     });
@@ -962,14 +962,14 @@ describe("stream", "pull", () => {
             pull(
                 pull.infinite(),
                 pull.through(null, (err) => {
-                    assert.isOk(true);
+                    assert.ok(true);
                     process.nextTick(() => {
                         done();
                     });
                 }),
                 pull.take(10),
                 pull.collect((err, ary) => {
-                    assert.isOk(true);
+                    assert.ok(true);
                 })
             );
         });
@@ -1008,7 +1008,7 @@ describe("stream", "pull", () => {
             pull(
                 pull.values([1, 2, 3]),
                 pull.collect((err, ary) => {
-                    assert.isNotOk(err);
+                    assert.notOk(err);
                     assert.deepEqual(ary, [1, 2, 3]);
                     done();
                 })
@@ -1019,7 +1019,7 @@ describe("stream", "pull", () => {
             pull(
                 pull.values({ a: 1, b: 2, c: 3 }),
                 pull.collect((err, ary) => {
-                    assert.isNotOk(err);
+                    assert.notOk(err);
                     assert.deepEqual(ary, [1, 2, 3]);
                     done();
                 })
@@ -1034,7 +1034,7 @@ describe("stream", "pull", () => {
             });
 
             read(null, (_, one) => {
-                assert.isNotOk(_);
+                assert.notOk(_);
                 assert.equal(one, 1);
                 read(err, (_err) => {
                     assert.equal(_err, err);

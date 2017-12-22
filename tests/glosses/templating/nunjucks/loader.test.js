@@ -38,7 +38,7 @@ describe("templating", "nunjucks", "loader", () => {
         const env = new Environment(new MyLoader(templatesPath));
         env.getTemplate("fake.njk", (err, parent) => {
             expect(err).to.be.a("Error");
-            expect(parent).to.be.undefined;
+            expect(parent).to.be.undefined();
 
             done();
         });

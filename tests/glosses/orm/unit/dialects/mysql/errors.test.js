@@ -16,7 +16,7 @@ describe("[MYSQL Specific] ForeignKeyConstraintError - error message parsing", {
         expect(parsedErr.reltype).to.equal("parent");
         expect(parsedErr.table).to.equal("people");
         expect(parsedErr.fields).to.be.an("array").to.deep.equal(["personId"]);
-        expect(parsedErr.value).to.be.undefined;
+        expect(parsedErr.value).to.be.undefined();
         expect(parsedErr.index).to.equal("brothers_ibfk_1");
     });
 
@@ -32,7 +32,7 @@ describe("[MYSQL Specific] ForeignKeyConstraintError - error message parsing", {
         expect(parsedErr.reltype).to.equal("parent");
         expect(parsedErr.table).to.equal("people");
         expect(parsedErr.fields).to.be.an("array").to.deep.equal(["personId"]);
-        expect(parsedErr.value).to.be.undefined;
+        expect(parsedErr.value).to.be.undefined();
         expect(parsedErr.index).to.equal("brothers_ibfk_1");
     });
 });

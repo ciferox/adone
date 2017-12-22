@@ -59,7 +59,7 @@ describe("archive", "tar", () => {
 
         expect(adStat.mode).to.be.equal(bdStat.mode);
         expect(mtime(adStat)).to.be.equal(mtime(bdStat));
-        expect(bdStat.isDirectory()).to.be.true;
+        expect(bdStat.isDirectory()).to.be.true();
 
         const fileA = dirA.getFile("test.txt");
         const fileB = dirB.getFile("test.txt");
@@ -133,7 +133,7 @@ describe("archive", "tar", () => {
 
         const stat1 = await file1.lstat();
         const stat2 = await file2.lstat();
-        expect(stat2.isSymbolicLink()).to.be.false;
+        expect(stat2.isSymbolicLink()).to.be.false();
         expect(mtime(stat1)).to.be.equal(mtime(stat2));
         expect(await file1.contents()).to.be.equal(await file2.contents());
     });

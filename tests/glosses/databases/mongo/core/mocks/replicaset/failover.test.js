@@ -250,7 +250,7 @@ describe("database", "mongo", "core", function () {
                         expect(server.s.replicaSetState.secondaries).to.have.lengthOf(2);
                         expect(server.s.replicaSetState.secondaries[0].name).to.be.oneOf(["localhost:32002", "localhost:32000"]);
                         expect(server.s.replicaSetState.secondaries[1].name).to.be.oneOf(["localhost:32002", "localhost:32000"]);
-                        expect(server.s.replicaSetState.primary).not.to.be.null;
+                        expect(server.s.replicaSetState.primary).not.to.be.null();
                         expect(server.s.replicaSetState.primary.name).to.be.equal("localhost:32001");
                     } finally {
                         await primaryServer.destroy();
@@ -261,7 +261,7 @@ describe("database", "mongo", "core", function () {
                         Server.disableServerAccounting();
                         await adone.promise.delay(1000);
                         Connection.disableConnectionAccounting();
-                        expect(Connection.connections()).to.be.empty;
+                        expect(Connection.connections()).to.be.empty();
                     }
                 });
 
@@ -463,7 +463,7 @@ describe("database", "mongo", "core", function () {
 
                     Server.disableServerAccounting();
                     await adone.promise.delay(1000);
-                    expect(Connection.connections()).to.be.empty;
+                    expect(Connection.connections()).to.be.empty();
                     Connection.disableConnectionAccounting();
                 });
             });

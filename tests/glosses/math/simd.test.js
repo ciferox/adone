@@ -1,15 +1,15 @@
 const { math: { simd } } = adone;
 
 const almostEqual = (a, b) => {
-    assert.isOk(Math.abs(a - b) < 0.00001);
+    assert.ok(Math.abs(a - b) < 0.00001);
 };
 
 const isPositiveZero = (x) => {
-    assert.isOk(x === 0 && 1 / x === Infinity);
+    assert.ok(x === 0 && 1 / x === Infinity);
 };
 
 const isNegativeZero = (x) => {
-    assert.isOk(x === 0 && 1 / x === -Infinity);
+    assert.ok(x === 0 && 1 / x === -Infinity);
 };
 
 describe("math", "simd", () => {

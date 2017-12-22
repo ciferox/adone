@@ -40,13 +40,13 @@ describe("dns", "multicast", () => {
             dns.once("query", (packet) => {
                 assert.equal(packet.type, "query");
                 dns.destroy(() => {
-                    assert.isOk(true, "destroys");
+                    assert.ok(true, "destroys");
                     done();
                 });
             });
 
             dns.query("hello-world", () => {
-                assert.isOk(true, "flushed");
+                assert.ok(true, "flushed");
             });
         });
 

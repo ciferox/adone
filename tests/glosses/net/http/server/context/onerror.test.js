@@ -93,7 +93,7 @@ describe("net", "http", "server", "context", "onerror(err)", () => {
 
         err = await err;
         expect(err.message).to.be.equal("mock error");
-        expect(err.headerSent).to.be.true;
+        expect(err.headerSent).to.be.true();
     });
 
     describe("when invalid err.status", () => {

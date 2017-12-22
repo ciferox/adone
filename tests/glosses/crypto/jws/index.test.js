@@ -104,8 +104,8 @@ describe("crypto", "jws", () => {
                 encoding: "utf8"
             });
             const parts = jws.decode(jwsObj);
-            assert.isOk(jws.verify(jwsObj, alg, secret));
-            assert.isNotOk(jws.verify(jwsObj, alg, "something else"));
+            assert.ok(jws.verify(jwsObj, alg, secret));
+            assert.notOk(jws.verify(jwsObj, alg, "something else"));
             assert.deepEqual(parts.payload, payload);
             assert.deepEqual(parts.header, header);
         });
@@ -124,9 +124,9 @@ describe("crypto", "jws", () => {
                 privateKey
             });
             const parts = jws.decode(jwsObj, { json: true });
-            assert.isOk(jws.verify(jwsObj, alg, publicKey));
-            assert.isNotOk(jws.verify(jwsObj, alg, wrongPublicKey));
-            assert.isNotOk(jws.verify(jwsObj, `HS${bits}`, publicKey));
+            assert.ok(jws.verify(jwsObj, alg, publicKey));
+            assert.notOk(jws.verify(jwsObj, alg, wrongPublicKey));
+            assert.notOk(jws.verify(jwsObj, `HS${bits}`, publicKey));
             assert.deepEqual(parts.payload, payload);
             assert.deepEqual(parts.header, header);
         });
@@ -146,9 +146,9 @@ describe("crypto", "jws", () => {
                 privateKey
             });
             const parts = jws.decode(jwsObj);
-            assert.isOk(jws.verify(jwsObj, alg, publicKey));
-            assert.isNotOk(jws.verify(jwsObj, alg, wrongPublicKey));
-            assert.isNotOk(jws.verify(jwsObj, `HS${bits}`, publicKey));
+            assert.ok(jws.verify(jwsObj, alg, publicKey));
+            assert.notOk(jws.verify(jwsObj, alg, wrongPublicKey));
+            assert.notOk(jws.verify(jwsObj, `HS${bits}`, publicKey));
             assert.deepEqual(parts.payload, payloadString);
             assert.deepEqual(parts.header, header);
         });
@@ -163,9 +163,9 @@ describe("crypto", "jws", () => {
             payload
         });
         const parts = jws.decode(jwsObj);
-        assert.isOk(jws.verify(jwsObj, alg));
-        assert.isOk(jws.verify(jwsObj, alg, "anything"), "should still verify");
-        assert.isNotOk(jws.verify(jwsObj, "HS256", "anything"));
+        assert.ok(jws.verify(jwsObj, alg));
+        assert.ok(jws.verify(jwsObj, alg, "anything"), "should still verify");
+        assert.notOk(jws.verify(jwsObj, "HS256", "anything"));
         assert.deepEqual(parts.payload, payload);
         assert.deepEqual(parts.header, header);
     });
@@ -179,7 +179,7 @@ describe("crypto", "jws", () => {
         });
         dataStream.pipe(sig.payload);
         sig.on("done", (signature) => {
-            assert.isOk(jws.verify(signature, "HS256", secret));
+            assert.ok(jws.verify(signature, "HS256", secret));
             done();
         });
     });
@@ -199,8 +199,8 @@ describe("crypto", "jws", () => {
         });
 
         sig.on("done", (signature) => {
-            assert.isOk(jws.verify(signature, "RS256", publicKey));
-            assert.isNotOk(jws.verify(signature, "RS256", wrongPublicKey), "should not verify");
+            assert.ok(jws.verify(signature, "RS256", publicKey));
+            assert.notOk(jws.verify(signature, "RS256", wrongPublicKey), "should not verify");
             assert.equal(jws.decode(signature).payload, readfile("data.txt"), "got all the data");
             done();
         });
@@ -217,8 +217,8 @@ describe("crypto", "jws", () => {
             privateKey: privateKeyStream
         });
         sig.on("done", (signature) => {
-            assert.isOk(jws.verify(signature, "RS256", publicKey));
-            assert.isNotOk(jws.verify(signature, "RS256", wrongPublicKey), "should not verify");
+            assert.ok(jws.verify(signature, "RS256", publicKey));
+            assert.notOk(jws.verify(signature, "RS256", wrongPublicKey), "should not verify");
             assert.equal(jws.decode(signature).payload, readfile("data.txt"), "got all the data");
             done();
         });
@@ -237,7 +237,7 @@ describe("crypto", "jws", () => {
         sigStream.pipe(verifier.signature);
         publicKeyStream.pipe(verifier.key);
         verifier.on("done", (valid) => {
-            assert.isOk(valid);
+            assert.ok(valid);
             done();
         });
     });
@@ -257,7 +257,7 @@ describe("crypto", "jws", () => {
             publicKey: publicKeyStream
         });
         verifier.on("done", (valid) => {
-            assert.isNotOk(valid, "should not verify");
+            assert.notOk(valid, "should not verify");
             done();
         });
     });
@@ -287,7 +287,7 @@ describe("crypto", "jws", () => {
                 passphrase: encryptedPassphrase
             }
         });
-        assert.isOk(jws.verify(signature, "RS256", rsaPublicKey));
+        assert.ok(jws.verify(signature, "RS256", rsaPublicKey));
     });
 
     it("Streaming sign: should accept an encrypted key", (done) => {
@@ -306,7 +306,7 @@ describe("crypto", "jws", () => {
             publicKey: rsaPublicKey
         });
         verifier.on("done", (verified) => {
-            assert.isOk(verified);
+            assert.ok(verified);
             done();
         });
     });
@@ -346,7 +346,7 @@ describe("crypto", "jws", () => {
         try {
             jws.verify(sig, "whatever");
         } catch (e) {
-            assert.isOk(e.message.match('"whatever" is not a valid algorithm.'));
+            assert.ok(e.message.match('"whatever" is not a valid algorithm.'));
         }
     });
 

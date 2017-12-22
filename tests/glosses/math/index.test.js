@@ -25,7 +25,7 @@ describe("math", () => {
         });
 
         it("should return undefined for empty array", () => {
-            expect(max([])).to.be.undefined;
+            expect(max([])).to.be.undefined();
         });
 
         it("should support score evaluator", () => {
@@ -43,7 +43,7 @@ describe("math", () => {
         });
 
         it("should return undefined for empty array", () => {
-            expect(min([])).to.be.undefined;
+            expect(min([])).to.be.undefined();
         });
 
         it("should support score evaluator", () => {

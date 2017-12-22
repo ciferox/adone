@@ -295,7 +295,7 @@ describe("data", "bson", "full", () => {
             serializer.serialize(doc, {
                 checkKeys: true
             });
-            expect(false).to.be.ok;
+            expect(false).to.be.ok();
         } catch (err) {
             //
         }
@@ -304,7 +304,7 @@ describe("data", "bson", "full", () => {
             serializer.serialize(doc, {
                 checkKeys: true
             });
-            expect(false).to.be.ok;
+            expect(false).to.be.ok();
         } catch (err) {
             //
         }
@@ -318,7 +318,7 @@ describe("data", "bson", "full", () => {
             serializer.serialize(doc, {
                 checkKeys: true
             });
-            expect(false).to.be.ok;
+            expect(false).to.be.ok();
         } catch (err) {
             //
         }
@@ -332,7 +332,7 @@ describe("data", "bson", "full", () => {
             serializer.serialize(doc, {
                 checkKeys: true
             });
-            expect(false).to.be.ok;
+            expect(false).to.be.ok();
         } catch (err) {
             //
         }

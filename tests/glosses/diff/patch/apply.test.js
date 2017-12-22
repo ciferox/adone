@@ -157,7 +157,7 @@ describe("diff", "patch", "apply", () => {
                     callback(expected);
                 },
                 complete(err) {
-                    expect(err).to.equal(expected).to.not.be.undefined;
+                    expect(err).to.equal(expected).to.not.be.undefined();
 
                     done();
                 }
@@ -170,7 +170,7 @@ describe("diff", "patch", "apply", () => {
                     callback(undefined, contents[index.index]);
                 },
                 patched(index, content, callback) {
-                    expect(content).to.equal(expected[index.index]).to.not.be.undefined;
+                    expect(content).to.equal(expected[index.index]).to.not.be.undefined();
 
                     callback();
                 },
@@ -183,7 +183,7 @@ describe("diff", "patch", "apply", () => {
                     callback(undefined, contents[index.index]);
                 },
                 patched(index, content, callback) {
-                    expect(content).to.equal(expected[index.index]).to.not.be.undefined;
+                    expect(content).to.equal(expected[index.index]).to.not.be.undefined();
 
                     callback();
                 },
@@ -209,7 +209,7 @@ describe("diff", "patch", "apply", () => {
                     callback(undefined, contents[index.oldFileName]);
                 },
                 patched(index, content, callback) {
-                    expect(content).to.equal(expected[index.newFileName]).to.not.be.undefined;
+                    expect(content).to.equal(expected[index.newFileName]).to.not.be.undefined();
 
                     callback();
                 },
@@ -250,7 +250,7 @@ describe("diff", "patch", "apply", () => {
                     callback(null, contents[index.oldFileName]);
                 },
                 patched(index, content, callback) {
-                    expect(content).to.equal(expected[index.newFileName]).to.be.ok;
+                    expect(content).to.equal(expected[index.newFileName]).to.be.ok();
 
                     callback();
                 },

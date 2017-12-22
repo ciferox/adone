@@ -159,7 +159,7 @@ describe("database", "mongo", "core", function () {
                     await adone.promise.delay(12000);
                     try {
                         await promisify(_server.command).call(_server, "admin.$cmd", { ismaster: true });
-                        expect(_server.s.replicaSetState.primary).not.to.be.null;
+                        expect(_server.s.replicaSetState.primary).not.to.be.null();
                         expect(_server.s.replicaSetState.secondaries).to.have.lengthOf(1);
                         expect(_server.s.replicaSetState.arbiters).to.have.lengthOf(1);
                     } finally {
@@ -170,7 +170,7 @@ describe("database", "mongo", "core", function () {
                         running = false;
                         await adone.promise.delay(1000);
                         Connection.disableConnectionAccounting();
-                        expect(Connection.connections()).to.be.empty;
+                        expect(Connection.connections()).to.be.empty();
                     }
                 });
 
@@ -301,7 +301,7 @@ describe("database", "mongo", "core", function () {
                             await adone.promise.delay(2000);
                         }
                         await promisify(server.command).call(server, "admin.$cmd", { ismaster: true });
-                        expect(server.s.replicaSetState.primary).not.to.be.null;
+                        expect(server.s.replicaSetState.primary).not.to.be.null();
                         expect(server.s.replicaSetState.secondaries).to.have.lengthOf(1);
                         expect(server.s.replicaSetState.arbiters).to.have.lengthOf(1);
                         running = false;
@@ -312,7 +312,7 @@ describe("database", "mongo", "core", function () {
                         await server.destroy();
                         await adone.promise.delay(1000);
                         Connection.disableConnectionAccounting();
-                        expect(Connection.connections()).to.be.empty;
+                        expect(Connection.connections()).to.be.empty();
                     }
                 });
             });

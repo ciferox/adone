@@ -67,7 +67,7 @@ describe("ssl x509", function () {
             ]
         });
         expect(result[0].user).to.be.equal(username);
-        expect(result[0].pwd).to.be.empty;
+        expect(result[0].pwd).to.be.empty();
         await db.close();
         db = await mongo.connect(`mongodb://${username}@localhost:27019/test?authMechanism=MONGODB-X509&ssl=true&maxPoolSize=1`, {
             server: {
@@ -125,7 +125,7 @@ describe("ssl x509", function () {
             ]
         });
         expect(result[0].user).to.be.equal(username);
-        expect(result[0].pwd).to.be.empty;
+        expect(result[0].pwd).to.be.empty();
         await db.close();
         await assert.throws(async () => {
             await mongo.connect(`mongodb://${username}@localhost:27019/test?authMechanism=MONGODB-X509&ssl=true&maxPoolSize=1`, {
@@ -184,7 +184,7 @@ describe("ssl x509", function () {
             ]
         });
         expect(result[0].user).to.be.equal(username);
-        expect(result[0].pwd).to.be.empty;
+        expect(result[0].pwd).to.be.empty();
         await db.close();
         await assert.throws(async () => {
             await mongo.connect("mongodb://wrong_username@localhost:27019/test?authMechanism=MONGODB-X509&ssl=true&maxPoolSize=1", {
@@ -232,7 +232,7 @@ describe("ssl x509", function () {
             ]
         });
         expect(result[0].user).to.be.equal(username);
-        expect(result[0].pwd).to.be.empty;
+        expect(result[0].pwd).to.be.empty();
         await db.close();
         await assert.throws(async () => {
             await mongo.connect(`mongodb://${username}@localhost:27019/test?authMechanism=MONGODB-X509&ssl=false&maxPoolSize=1`, {
@@ -291,7 +291,7 @@ describe("ssl x509", function () {
             ]
         });
         expect(result[0].user).to.be.equal(username);
-        expect(result[0].pwd).to.be.empty;
+        expect(result[0].pwd).to.be.empty();
         await db.close();
         db = await mongo.connect(`mongodb://${username}@localhost:27019/test?authMechanism=MONGODB-X509&ssl=true&maxPoolSize=1`, {
             server: {

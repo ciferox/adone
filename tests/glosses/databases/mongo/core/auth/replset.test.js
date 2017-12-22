@@ -151,7 +151,7 @@ describe("mongodb", function () {
                         auth: [method, "admin", "root2", "root"]
                     });
                 });
-                expect(Object.keys(Connection.connections())).to.be.empty;
+                expect(Object.keys(Connection.connections())).to.be.empty();
                 Connection.disableConnectionAccounting();
             } finally {
                 await executeCommand(configuration, "admin", {
@@ -274,7 +274,7 @@ describe("mongodb", function () {
                         port: 31000
                     });
                     _server.destroy();
-                    expect(Connection.connections()).to.be.empty;
+                    expect(Connection.connections()).to.be.empty();
                 }
             } finally {
                 Connection.disableConnectionAccounting();
@@ -338,7 +338,7 @@ describe("mongodb", function () {
                 });
             } finally {
                 _server.destroy();
-                expect(Connection.connections()).to.be.empty;
+                expect(Connection.connections()).to.be.empty();
                 Connection.disableConnectionAccounting();
                 await replicasetManager.stop();
             }

@@ -101,13 +101,13 @@ describe("fs", () => {
     describe("Stat", () => {
         it("should return a `fs.Mode` instance with `new`", () => {
             const m = new fs.Mode({});
-            expect(m instanceof fs.Mode).to.be.true;
+            expect(m instanceof fs.Mode).to.be.true();
         });
 
         it("should throw an Error if no `stat` object is passed in", () => {
             try {
                 new fs.Mode();
-                expect(false).to.be.true;
+                expect(false).to.be.true();
             } catch (e) {
                 expect("You must pass in a \"stat\" object").to.be.equal(e.message);
             }
@@ -167,7 +167,7 @@ describe("fs", () => {
                 });
                 describe(`#${isFn}()`, () => {
                     it(`should return \`true\` for #${isFn}()`, () => {
-                        expect(m[isFn]()).to.be.ok;
+                        expect(m[isFn]()).to.be.ok();
                     });
                     it(`should remain "${strMode}" after #${isFn}(true) (gh-2)`, () => {
                         expect(true).to.be.equal(m[isFn](true));

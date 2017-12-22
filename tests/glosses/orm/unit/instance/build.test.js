@@ -37,10 +37,10 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
             });
             const instance = Model.build({ ip: "127.0.0.1", ip2: "0.0.0.0" });
 
-            expect(instance.get("created_time")).to.be.ok;
+            expect(instance.get("created_time")).to.be.ok();
             expect(instance.get("created_time")).to.be.an.instanceof(Date);
 
-            expect(instance.get("updated_time")).to.be.ok;
+            expect(instance.get("updated_time")).to.be.ok();
             expect(instance.get("updated_time")).to.be.an.instanceof(Date);
 
             return instance.validate();
@@ -59,8 +59,8 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                 id: undefined
             });
 
-            expect(instance.get("id")).not.to.be.undefined;
-            expect(instance.get("id")).to.be.ok;
+            expect(instance.get("id")).not.to.be.undefined();
+            expect(instance.get("id")).to.be.ok();
         });
 
         it("should populate undefined columns with default value", () => {
@@ -78,9 +78,9 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                 number1: undefined
             });
 
-            expect(instance.get("number1")).not.to.be.undefined;
+            expect(instance.get("number1")).not.to.be.undefined();
             expect(instance.get("number1")).to.equal(1);
-            expect(instance.get("number2")).not.to.be.undefined;
+            expect(instance.get("number2")).not.to.be.undefined();
             expect(instance.get("number2")).to.equal(2);
         });
 

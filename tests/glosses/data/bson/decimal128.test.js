@@ -498,7 +498,7 @@ describe("data", "bson", "decimal 128", () => {
             const doc = { value: new MyCustomDecimal("1") };
             const buffer = bson.serialize(doc);
             const back = bson.deserialize(buffer);
-            expect(back.value instanceof MyCustomDecimal).to.be.ok;
+            expect(back.value instanceof MyCustomDecimal).to.be.ok();
             expect("1").to.be.equal(back.value.value);
         });
     });

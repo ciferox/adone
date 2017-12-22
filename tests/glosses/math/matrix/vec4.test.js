@@ -955,10 +955,10 @@ describe("math", "matrix", "vec4", () => {
         });
 
         it("should return true for identical vectors", () => {
-            assert.isTrue(r0);
+            assert.true(r0);
         });
         it("should return false for different vectors", () => {
-            assert.isFalse(r1);
+            assert.false(r1);
         });
         it("should not modify vecA", () => {
             assertEquality(vecA, [0, 1, 2, 3]);
@@ -980,13 +980,13 @@ describe("math", "matrix", "vec4", () => {
             r2 = vec4.equals(vecA, vecD);
         });
         it("should return true for identical vectors", () => {
-            assert.isTrue(r0);
+            assert.true(r0);
         });
         it("should return false for different vectors", () => {
-            assert.isFalse(r1);
+            assert.false(r1);
         });
         it("should return true for close but not identical vectors", () => {
-            assert.isTrue(r2);
+            assert.true(r2);
         });
         it("should not modify vecA", () => {
             assertEquality(vecA, [0, 1, 2, 3]);

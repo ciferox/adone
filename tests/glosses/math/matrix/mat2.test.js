@@ -565,10 +565,10 @@ describe("math", "matrix", "mat2", () => {
             r1 = mat2.exactEquals(matA, matC);
         });
         it("should return true for identical matrices", () => {
-            assert.isTrue(r0);
+            assert.true(r0);
         });
         it("should return false for different matrices", () => {
-            assert.isFalse(r1);
+            assert.false(r1);
         });
         it("should not modify matA", () => {
             assertEquality(matA, [0, 1, 2, 3]);
@@ -595,13 +595,13 @@ describe("math", "matrix", "mat2", () => {
             r2 = mat2.equals(matA, matD);
         });
         it("should return true for identical matrices", () => {
-            assert.isTrue(r0);
+            assert.true(r0);
         });
         it("should return false for different matrices", () => {
-            assert.isFalse(r1);
+            assert.false(r1);
         });
         it("should return true for close but not identical matrices", () => {
-            assert.isTrue(r2);
+            assert.true(r2);
         });
         it("should not modify matA", () => {
             assertEquality(matA, [0, 1, 2, 3]);

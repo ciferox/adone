@@ -3,7 +3,7 @@ describe("net", "mail", "DKIM RelaxedBody Tests", () => {
 
     it("Should calculate body hash byte by byte", (done) => {
         fs.readFile(path.resolve(__dirname, "fixtures", "message1.eml"), "utf-8", (err, message) => {
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
 
             message = message.replace(/\r?\n/g, "\r\n");
             message = message.split("\r\n\r\n");
@@ -38,7 +38,7 @@ describe("net", "mail", "DKIM RelaxedBody Tests", () => {
 
     it("Should calculate body hash all at once", (done) => {
         fs.readFile(path.resolve(__dirname, "fixtures", "message1.eml"), "utf-8", (err, message) => {
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
 
             message = message.replace(/\r?\n/g, "\r\n");
             message = message.split("\r\n\r\n");

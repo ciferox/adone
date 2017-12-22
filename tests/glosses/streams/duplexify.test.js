@@ -10,7 +10,7 @@ describe("stream", "Duplexify", () => {
 
         dup.end("hello world");
         dup.on("finish", () => {
-            assert.isOk(true, "should finish");
+            assert.ok(true, "should finish");
         });
         dup.pipe(concat.create((data) => {
             assert.deepEqual(data.toString(), "hello world", "same in as out");
@@ -25,7 +25,7 @@ describe("stream", "Duplexify", () => {
         dup.end();
 
         dup.on("finish", () => {
-            assert.isOk(true, "should finish");
+            assert.ok(true, "should finish");
         });
         dup.pipe(concat.create((data) => {
             assert.deepEqual(data.toString(), "hello world", "same in as out");
@@ -46,7 +46,7 @@ describe("stream", "Duplexify", () => {
         dup.end();
 
         dup.on("finish", () => {
-            assert.isOk(true, "should finish");
+            assert.ok(true, "should finish");
         });
         dup.pipe(concat.create((data) => {
             assert.deepEqual(data.toString(), "hello world", "same in as out");
@@ -79,10 +79,10 @@ describe("stream", "Duplexify", () => {
             assert.deepEqual(data, readExpected.shift(), "ondata should match");
         });
         dup.on("end", () => {
-            assert.isOk(true, "should end");
+            assert.ok(true, "should end");
         });
         dup.on("finish", () => {
-            assert.isOk(true, "should finish");
+            assert.ok(true, "should finish");
         });
     });
 
@@ -113,11 +113,11 @@ describe("stream", "Duplexify", () => {
         const dup = new Duplexify(write, read);
 
         write.destroy = function () {
-            assert.isOk(true, "write destroyed");
+            assert.ok(true, "write destroyed");
         };
 
         dup.on("close", () => {
-            assert.isOk(true, "close emitted");
+            assert.ok(true, "close emitted");
         });
 
         dup.destroy();
@@ -130,15 +130,15 @@ describe("stream", "Duplexify", () => {
         const dup = new Duplexify(write, read);
 
         write.destroy = function () {
-            assert.isOk(true, "write destroyed");
+            assert.ok(true, "write destroyed");
         };
 
         read.destroy = function () {
-            assert.isOk(true, "read destroyed");
+            assert.ok(true, "read destroyed");
         };
 
         dup.on("close", () => {
-            assert.isOk(true, "close emitted");
+            assert.ok(true, "close emitted");
         });
 
         dup.destroy();
@@ -154,7 +154,7 @@ describe("stream", "Duplexify", () => {
             assert.deepEqual(err.message, "read-error", "received read error");
         });
         dup.on("close", () => {
-            assert.isOk(true, "close emitted");
+            assert.ok(true, "close emitted");
         });
 
         read.emit("error", new Error("read-error"));
@@ -170,7 +170,7 @@ describe("stream", "Duplexify", () => {
             assert.deepEqual(err.message, "write-error", "received write error");
         });
         dup.on("close", () => {
-            assert.isOk(true, "close emitted");
+            assert.ok(true, "close emitted");
         });
 
         write.emit("error", new Error("write-error"));
@@ -216,7 +216,7 @@ describe("stream", "Duplexify", () => {
             }, 100);
         });
         dup.on("finish", () => {
-            assert.isOk(ok);
+            assert.ok(ok);
             done();
         });
         dup.end();
@@ -228,7 +228,7 @@ describe("stream", "Duplexify", () => {
         let prefinished = false;
 
         dup.on("prefinish", () => {
-            assert.isOk(!prefinished, "only prefinish once");
+            assert.ok(!prefinished, "only prefinish once");
             prefinished = true;
         });
 
@@ -242,10 +242,10 @@ describe("stream", "Duplexify", () => {
     it("close", (done) => {
         const passthrough = through.base();
         const dup = new Duplexify(passthrough, passthrough);
-        
+
         passthrough.emit("close");
         dup.on("close", () => {
-            assert.isOk(true, "should forward close");
+            assert.ok(true, "should forward close");
             done();
         });
     });

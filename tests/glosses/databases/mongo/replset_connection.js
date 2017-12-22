@@ -141,7 +141,7 @@ describe("replset connection", function () {
         const db = new Db("tests_", replSet, { w: 0 });
         await db.open();
         const connection = db.serverConfig.connections()[0];
-        expect(connection.isConnected()).to.be.true;
+        expect(connection.isConnected()).to.be.true();
         await db.close();
         // await promise.delay(1000);
         await this.server.restart();
@@ -159,7 +159,7 @@ describe("replset connection", function () {
         const db = new Db("integration_test_", replSet, { w: 0 });
         await db.open();
         const connection = db.serverConfig.connections()[0];
-        expect(connection.isConnected()).to.be.true;
+        expect(connection.isConnected()).to.be.true();
         await db.close();
         await this.server.restart();
     });
@@ -176,7 +176,7 @@ describe("replset connection", function () {
         const db = new Db("integration_test_", replSet, { w: 0 });
         await db.open();
         const connection = db.serverConfig.connections()[0];
-        expect(connection.isConnected()).to.be.true;
+        expect(connection.isConnected()).to.be.true();
         await db.close();
         await this.server.restart();
     });
@@ -219,7 +219,7 @@ describe("replset connection", function () {
         const connection = db.serverConfig.connections()[0];
         expect(connection.connectionTimeout).to.be.equal(1000);
         expect(connection.socketTimeout).to.be.equal(3000);
-        expect(connection.noDelay).to.be.false;
+        expect(connection.noDelay).to.be.false();
         await db.close();
         await promise.delay(1000);
     });

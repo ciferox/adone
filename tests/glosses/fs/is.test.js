@@ -27,12 +27,12 @@ describe("fs", "is", () => {
 
         if (!is.windows) {
             it("meow async", async () => {
-                assert.isTrue(await adone.fs.is.executable(meow));
+                assert.true(await adone.fs.is.executable(meow));
             });
         }
-        
+
         it("fail async", async () => {
-            assert.isFalse(await adone.fs.is.executable(fail));
+            assert.false(await adone.fs.is.executable(fail));
         });
 
         it("noent async", async () => {
@@ -50,38 +50,38 @@ describe("fs", "is", () => {
             optionsIgnore.ignoreErrors = true;
 
             if (!options || !options.skipFail) {
-                assert.isNotOk(adone.fs.is.executableSync(fail, options));
+                assert.notOk(adone.fs.is.executableSync(fail, options));
             }
-            assert.isNotOk(adone.fs.is.executableSync(noent, optionsIgnore));
+            assert.notOk(adone.fs.is.executableSync(noent, optionsIgnore));
             if (!options) {
-                assert.isOk(adone.fs.is.executableSync(meow));
+                assert.ok(adone.fs.is.executableSync(meow));
             } else {
-                assert.isOk(adone.fs.is.executableSync(meow, options));
+                assert.ok(adone.fs.is.executableSync(meow, options));
             }
 
-            assert.isOk(adone.fs.is.executableSync(mine, options));
-            assert.isOk(adone.fs.is.executableSync(ours, options));
+            assert.ok(adone.fs.is.executableSync(mine, options));
+            assert.ok(adone.fs.is.executableSync(ours, options));
             assert.throws(() => adone.fs.is.executableSync(noent, options));
 
             if (!options) {
-                assert.isTrue(await adone.fs.is.executable(meow));
+                assert.true(await adone.fs.is.executable(meow));
             } else {
-                assert.isTrue(await adone.fs.is.executable(meow, options));
+                assert.true(await adone.fs.is.executable(meow, options));
             }
 
-            assert.isTrue(await adone.fs.is.executable(mine, options));
+            assert.true(await adone.fs.is.executable(mine, options));
 
-            assert.isTrue(await adone.fs.is.executable(ours, options));
+            assert.true(await adone.fs.is.executable(ours, options));
 
             if (!options || !options.skipFail) {
-                assert.isFalse(await adone.fs.is.executable(fail, options));
+                assert.false(await adone.fs.is.executable(fail, options));
             }
 
             await assert.throws(async () => adone.fs.is.executable(noent, options));
 
-            assert.isFalse(await adone.fs.is.executable(noent, optionsIgnore));
+            assert.false(await adone.fs.is.executable(noent, optionsIgnore));
 
-            assert.isFalse(await adone.fs.is.executable(__dirname, options));
+            assert.false(await adone.fs.is.executable(__dirname, options));
         };
 
         if (!is.windows) {
@@ -92,8 +92,8 @@ describe("fs", "is", () => {
             it("mode", async () => {
                 // delete fs.access;
                 // delete fs.accessSync;
-                assert.isTrue(adone.fs.is.executableSync(ours, { uid: 0, gid: 0 }));
-                assert.isTrue(adone.fs.is.executableSync(mine, { uid: 0, gid: 0 }));
+                assert.true(adone.fs.is.executableSync(ours, { uid: 0, gid: 0 }));
+                assert.true(adone.fs.is.executableSync(mine, { uid: 0, gid: 0 }));
                 await runTest();
             });
         } else {
@@ -102,12 +102,12 @@ describe("fs", "is", () => {
                 it("pathExt option", async () => {
                     await runTest({ pathExt: ".EXE;.CAT;.CMD;.COM" });
                 });
-                
+
                 it("pathExt env", async () => {
                     process.env.PATHEXT = pathExt;
                     await runTest();
                 });
-                
+
                 it("no pathExt", async () => {
                     // with a pathExt of '', any filename is fine.
                     // so the "fail" one would still pass.

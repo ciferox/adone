@@ -166,9 +166,9 @@ export const args = function () {
                 .put({ foo: "bar" }, { beep: "boop" })
                 .del({ bar: "baz" });
             ops.forEach((op) => {
-                assert.isOk(op.key, ".key is set for .put and .del operations");
+                assert.ok(op.key, ".key is set for .put and .del operations");
                 if (op.type === "put") {
-                    assert.isOk(op.value, ".value is set for .put operation");
+                    assert.ok(op.value, ".value is set for .put operation");
                 }
             });
         });

@@ -723,7 +723,7 @@ describe("database", "redis", "cluster", { skip: check }, () => {
                     asked = true;
                 }
                 if (argv[0] === "get" && argv[1] === "foo") {
-                    expect(asked).to.be.true;
+                    expect(asked).to.be.true();
                     return "bar";
                 }
                 if (argv[0] !== "asking") {
@@ -872,7 +872,7 @@ describe("database", "redis", "cluster", { skip: check }, () => {
                     return "QUEUED";
                 }
                 if (argv[0] === "exec") {
-                    expect(moved).to.be.true;
+                    expect(moved).to.be.true();
                     return ["bar", "OK"];
                 }
             });
@@ -916,14 +916,14 @@ describe("database", "redis", "cluster", { skip: check }, () => {
                     asked = true;
                 }
                 if (argv[0] === "multi") {
-                    expect(asked).to.be.true;
+                    expect(asked).to.be.true();
                 }
                 if (argv[0] === "get" && argv[1] === "foo") {
-                    expect(asked).to.be.false;
+                    expect(asked).to.be.false();
                     return "bar";
                 }
                 if (argv[0] === "exec") {
-                    expect(asked).to.be.false;
+                    expect(asked).to.be.false();
                     return ["bar", "OK"];
                 }
                 if (argv[0] !== "asking") {
@@ -1203,7 +1203,7 @@ describe("database", "redis", "cluster", { skip: check }, () => {
                 await waitFor(cluster, "ready");
                 stub(util, "randomChoice").callsFake((array, from) => {
                     expect(array).to.be.deep.equal(["127.0.0.1:30001", "127.0.0.1:30003", "127.0.0.1:30004"]);
-                    expect(from).to.be.undefined;
+                    expect(from).to.be.undefined();
                     return "127.0.0.1:30003";
                 });
                 expect(await cluster.get("foo")).to.be.equal(30003);

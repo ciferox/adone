@@ -46,7 +46,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 }]
             });
 
-            expect(User.rawAttributes.username.unique).to.be.undefined;
+            expect(User.rawAttributes.username.unique).to.be.undefined();
         });
 
         it("should not set rawAttributes when composite unique indexes are defined via options", () => {
@@ -60,8 +60,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 }]
             });
 
-            expect(User.rawAttributes.name.unique).to.be.undefined;
-            expect(User.rawAttributes.address.unique).to.be.undefined;
+            expect(User.rawAttributes.name.unique).to.be.undefined();
+            expect(User.rawAttributes.address.unique).to.be.undefined();
         });
     });
 });

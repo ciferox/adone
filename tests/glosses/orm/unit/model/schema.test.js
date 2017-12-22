@@ -11,7 +11,7 @@ describe(`${Support.getTestDialectTeaser("Model")}Schemas`, { skip: !current.dia
 
     describe("schema", () => {
         it("should work with no default schema", () => {
-            expect(Project._schema).to.be.null;
+            expect(Project._schema).to.be.null();
         });
 
         it("should apply default schema from define", () => {
@@ -23,7 +23,7 @@ describe(`${Support.getTestDialectTeaser("Model")}Schemas`, { skip: !current.dia
         });
 
         it("should be able nullify schema", () => {
-            expect(Company.schema(null)._schema).to.be.null;
+            expect(Company.schema(null)._schema).to.be.null();
         });
 
         it("should support multiple, coexistent schema models", () => {

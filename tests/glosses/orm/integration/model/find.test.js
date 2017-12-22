@@ -37,8 +37,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     where: { username: "foo" },
                     transaction: t
                 });
-                expect(user1).to.be.null;
-                expect(user2).to.not.be.null;
+                expect(user1).to.be.null();
+                expect(user2).to.not.be.null();
                 await t.rollback();
             });
         }
@@ -90,8 +90,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     }).then(() => {
                         return bitUser.findAll();
                     }).then((bitUsers) => {
-                        expect(bitUsers[0].bool).not.to.be.ok;
-                        expect(bitUsers[1].bool).to.be.ok;
+                        expect(bitUsers[0].bool).not.to.be.ok();
+                        expect(bitUsers[1].bool).to.be.ok();
                     });
                 });
             }
@@ -105,7 +105,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         expect(sql).to.match(/WHERE ["|`|\[]UserPrimary["|`|\]]\.["|`|\[]specialkey["|`|\]] = N?'awesome'/);
                     }
                 }).then(() => {
-                    expect(test).to.be.true;
+                    expect(test).to.be.true();
                 });
             });
 
@@ -118,7 +118,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             it("returns a single dao", function () {
                 const self = this;
                 return this.User.findById(this.user.id).then((user) => {
-                    expect(is.array(user)).to.not.be.ok;
+                    expect(is.array(user)).to.not.be.ok();
                     expect(user.id).to.equal(self.user.id);
                     expect(user.id).to.equal(1);
                 });
@@ -127,7 +127,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             it("returns a single dao given a string id", function () {
                 const self = this;
                 return this.User.findById(String(this.user.id)).then((user) => {
-                    expect(is.array(user)).to.not.be.ok;
+                    expect(is.array(user)).to.not.be.ok();
                     expect(user.id).to.equal(self.user.id);
                     expect(user.id).to.equal(1);
                 });
@@ -159,7 +159,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 return UserWithBoolean.sync({ force: true }).then(() => {
                     return UserWithBoolean.create({ active: true }).then((user) => {
                         return UserWithBoolean.findOne({ where: { id: user.id }, attributes: ["id"] }).then((user) => {
-                            expect(user.active).not.to.exist;
+                            expect(user.active).not.to.exist();
                         });
                     });
                 });
@@ -173,7 +173,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
             it("doesn't find a user if conditions are not matching", function () {
                 return this.User.findOne({ where: { username: "foo" } }).then((user) => {
-                    expect(user).to.be.null;
+                    expect(user).to.be.null();
                 });
             });
 
@@ -183,19 +183,19 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     where: { username: "foo" },
                     logging(sql) {
                         test = true;
-                        expect(sql).to.exist;
+                        expect(sql).to.exist();
                         expect(sql.toUpperCase().indexOf("SELECT")).to.be.above(-1);
                     }
                 }).then(() => {
-                    expect(test).to.be.true;
+                    expect(test).to.be.true();
                 });
             });
 
             it("ignores passed limit option", function () {
                 return this.User.findOne({ limit: 10 }).then((user) => {
                     // it returns an object instead of an array
-                    expect(is.array(user)).to.not.be.ok;
-                    expect(user.dataValues.hasOwnProperty("username")).to.be.ok;
+                    expect(is.array(user)).to.not.be.ok();
+                    expect(user.dataValues.hasOwnProperty("username")).to.be.ok();
                 });
             });
 
@@ -211,7 +211,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         identifier: "an identifier",
                         name: "John"
                     }).then((u) => {
-                        expect(u.id).not.to.exist;
+                        expect(u.id).not.to.exist();
                         return UserPrimary.findById("an identifier").then((u2) => {
                             expect(u2.identifier).to.equal("an identifier");
                             expect(u2.name).to.equal("John");
@@ -256,7 +256,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                                 count++;
                             }
                         }).then((user) => {
-                            expect(user).to.be.null;
+                            expect(user).to.be.null();
                         });
                     }));
                 }).then(() => {
@@ -273,7 +273,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 return User.sync({ force: true }).then(() => {
                     return User.create({ Login: "foo" }).then(() => {
                         return User.findById(1).then((user) => {
-                            expect(user).to.exist;
+                            expect(user).to.exist();
                             expect(user.ID).to.equal(1);
                         });
                     });
@@ -325,8 +325,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                                     where: { title: "homework" },
                                     include: [self.Worker]
                                 }).then((task) => {
-                                    expect(task).to.exist;
-                                    expect(task.Worker).to.exist;
+                                    expect(task).to.exist();
+                                    expect(task.Worker).to.exist();
                                     expect(task.Worker.name).to.equal("worker");
                                 });
                             });
@@ -355,10 +355,10 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                                                         { model: self.Domain, as: "PublicDomain" }
                                                     ]
                                                 }).then((environment) => {
-                                                    expect(environment).to.exist;
-                                                    expect(environment.PrivateDomain).to.exist;
+                                                    expect(environment).to.exist();
+                                                    expect(environment.PrivateDomain).to.exist();
                                                     expect(environment.PrivateDomain.ip).to.equal("192.168.0.1");
-                                                    expect(environment.PublicDomain).to.exist;
+                                                    expect(environment.PublicDomain).to.exist();
                                                     expect(environment.PublicDomain.ip).to.equal("91.65.189.19");
                                                 });
                                             });
@@ -395,7 +395,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                                     },
                                     include: [self.Group]
                                 }).then((someUser) => {
-                                    expect(someUser).to.exist;
+                                    expect(someUser).to.exist();
                                     expect(someUser.username).to.equal("someone");
                                     expect(someUser.GroupPKeagerbelong.name).to.equal("people");
                                 });
@@ -482,8 +482,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         where: { name: "worker" },
                         include: [this.Task]
                     }).then((worker) => {
-                        expect(worker).to.exist;
-                        expect(worker.Task).to.exist;
+                        expect(worker).to.exist();
+                        expect(worker.Task).to.exist();
                         expect(worker.Task.title).to.equal("homework");
                     });
                 });
@@ -513,7 +513,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                                     },
                                     include: [self.User]
                                 }).then((someGroup) => {
-                                    expect(someGroup).to.exist;
+                                    expect(someGroup).to.exist();
                                     expect(someGroup.name).to.equal("people");
                                     expect(someGroup.UserPKeagerone.username).to.equal("someone");
                                 });
@@ -552,8 +552,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                             where: { name: "worker" },
                             include: [{ model: this.Task, as: "ToDo" }]
                         }).then((worker) => {
-                            expect(worker).to.exist;
-                            expect(worker.ToDo).to.exist;
+                            expect(worker).to.exist();
+                            expect(worker.ToDo).to.exist();
                             expect(worker.ToDo.title).to.equal("homework");
                         });
                     });
@@ -604,8 +604,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         where: { name: "worker" },
                         include: [this.Task]
                     }).then((worker) => {
-                        expect(worker).to.exist;
-                        expect(worker.Tasks).to.exist;
+                        expect(worker).to.exist();
+                        expect(worker.Tasks).to.exist();
                         expect(worker.Tasks[0].title).to.equal("homework");
                     });
                 });
@@ -633,7 +633,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                                                     },
                                                     include: [self.PhoneNumber, { model: self.Photo, as: "Photos" }]
                                                 }).then((fetchedContact) => {
-                                                    expect(fetchedContact).to.exist;
+                                                    expect(fetchedContact).to.exist();
                                                     expect(fetchedContact.Photos.length).to.equal(1);
                                                     expect(fetchedContact.PhoneNumbers.length).to.equal(2);
                                                 });
@@ -673,7 +673,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                                         },
                                         include: [self.Group]
                                     }).then((someUser) => {
-                                        expect(someUser).to.exist;
+                                        expect(someUser).to.exist();
                                         expect(someUser.username).to.equal("someone");
                                         expect(someUser.GroupPKeagerones[0].name).to.equal("people");
                                     });
@@ -713,8 +713,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                             where: { name: "worker" },
                             include: [{ model: this.Task, as: "ToDos" }]
                         }).then((worker) => {
-                            expect(worker).to.exist;
-                            expect(worker.ToDos).to.exist;
+                            expect(worker).to.exist();
+                            expect(worker.ToDos).to.exist();
                             expect(worker.ToDos[0].title).to.equal("homework");
                         });
                     });
@@ -791,7 +791,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                                 { model: self.Product, as: "products" }
                             ]
                         }).then((tag) => {
-                            expect(tag).to.exist;
+                            expect(tag).to.exist();
                             expect(tag.products.length).to.equal(2);
                         }),
                         tags[1].getProducts().then((products) => {
@@ -805,7 +805,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                                 { model: self.Tag, as: "tags" }
                             ]
                         }).then((product) => {
-                            expect(product).to.exist;
+                            expect(product).to.exist();
                             expect(product.tags.length).to.equal(2);
                         }),
                         products[1].getTags().then((tags) => {
@@ -910,7 +910,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 where: {},
                 logging: s
             }).then(() => {
-                expect(s.called).to.be.ok;
+                expect(s.called).to.be.ok();
             });
         });
 
@@ -972,7 +972,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     where: {
                         username: "some-username-that-is-not-used-anywhere-for-sure-this-time"
                     }
-                })).to.be.null;
+                })).to.be.null();
             });
 
         });
@@ -992,7 +992,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             }).then(() => {
                 return User.find({ where: { username: "Tobi" } });
             }).then((tobi) => {
-                expect(tobi).not.to.be.null;
+                expect(tobi).not.to.be.null();
             }).then(() => {
                 return User.findAll();
             }).then((users) => {

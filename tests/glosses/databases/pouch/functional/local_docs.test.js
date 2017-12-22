@@ -17,7 +17,7 @@ describe("database", "pouch", "local_docs", () => {
         const db = new DB(dbName);
         return db.put({ _id: "_local/foo" }).then((res) => {
             assert.equal(res.id, "_local/foo");
-            assert.isString(res.rev);
+            assert.string(res.rev);
             assert.equal(res.ok, true);
             return db.get("_local/foo");
         });
@@ -30,17 +30,17 @@ describe("database", "pouch", "local_docs", () => {
         };
         return db.put(doc).then((res) => {
             assert.equal(res.id, "_local/foo");
-            assert.isString(res.rev);
+            assert.string(res.rev);
             assert.equal(res.ok, true);
             return db.get("_local/foo");
         }).then((doc) => {
-            assert.isUndefined(doc._revisions);
+            assert.undefined(doc._revisions);
             doc._revisions = { start: 0, ids: ["1"] };
             return db.put(doc);
         }).then(() => {
             return db.get("_local/foo");
         }).then((doc) => {
-            assert.isUndefined(doc._revisions);
+            assert.undefined(doc._revisions);
         });
     });
 
@@ -55,7 +55,7 @@ describe("database", "pouch", "local_docs", () => {
             assert.equal(res.rev, "0-0");
             assert.equal(res.ok, true);
             return db.get("_local/foo").then((doc) => {
-                assert.isUndefined(doc);
+                assert.undefined(doc);
             }).catch((err) => {
                 assert.equal(err.name, "not_found");
             });
@@ -103,7 +103,7 @@ describe("database", "pouch", "local_docs", () => {
         }).then(() => {
             throw new Error("should not be here");
         }, (err) => {
-            assert.isString(err.name);
+            assert.string(err.name);
         });
     });
 
@@ -163,7 +163,7 @@ describe("database", "pouch", "local_docs", () => {
     it("local docs - get unknown", () => {
         const db = new DB(dbName);
         return db.get("_local/foo").then((doc) => {
-            assert.isUndefined(doc);
+            assert.undefined(doc);
         }).catch((err) => {
             assert.equal(err.name, "not_found");
         });
@@ -173,9 +173,9 @@ describe("database", "pouch", "local_docs", () => {
         const db = new DB(dbName);
         const doc = { _id: "_local/foo", _rev: "1-fake" };
         return db.put(doc).then((res) => {
-            assert.isUndefined(res);
+            assert.undefined(res);
         }).catch((err) => {
-            assert.isString(err.name);
+            assert.string(err.name);
         });
     });
 
@@ -185,9 +185,9 @@ describe("database", "pouch", "local_docs", () => {
         return db.put(doc).then(() => {
             return db.put(doc);
         }).then((res) => {
-            assert.isUndefined(res);
+            assert.undefined(res);
         }).catch((err) => {
-            assert.isString(err.name);
+            assert.string(err.name);
         });
     });
 
@@ -200,9 +200,9 @@ describe("database", "pouch", "local_docs", () => {
         }).then(() => {
             return db.put(doc);
         }).then((res) => {
-            assert.isUndefined(res);
+            assert.undefined(res);
         }).catch((err) => {
-            assert.isString(err.name);
+            assert.string(err.name);
         });
     });
 });

@@ -43,8 +43,8 @@ describe("net", "mail", "Sendmail Transport Tests", () => {
 
     it("Should expose version number", () => {
         const client = new SendmailTransport();
-        expect(client.name).to.exist;
-        expect(client.version).to.exist;
+        expect(client.name).to.exist();
+        expect(client.version).to.exist();
     });
 
     it("Should send message", (done) => {
@@ -73,7 +73,7 @@ describe("net", "mail", "Sendmail Transport Tests", () => {
                 to: "test@valid.recipient"
             }, "message\r\nline 2")
         }, (err, data) => {
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             expect(data.messageId).to.equal("<test>");
             expect(output).to.equal("message\nline 2");
             client._spawn.restore();
@@ -104,8 +104,8 @@ describe("net", "mail", "Sendmail Transport Tests", () => {
                 to: "test@valid.recipient"
             }, "message\r\nline 2")
         }, (err, data) => {
-            expect(err).to.exist;
-            expect(data).to.not.exist;
+            expect(err).to.exist();
+            expect(data).to.not.exist();
             client._spawn.restore();
             done();
         });

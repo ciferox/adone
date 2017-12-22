@@ -37,6 +37,6 @@ describe("database", "mysql", "functional", "connection", "type cast geometry", 
                 return next();
             }
         });
-        expect(is.buffer(rows[0].foo)).to.be.true;
+        expect(is.buffer(rows[0].foo)).to.be.true();
     });
 });

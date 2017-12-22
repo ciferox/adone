@@ -211,7 +211,7 @@ describe("database", "mongo", "core", function () {
                         expect(server.s.replicaSetState.secondaries[1].name).to.be.equal("localhost:32003");
                         expect(server.s.replicaSetState.arbiters).to.have.lengthOf(1);
                         expect(server.s.replicaSetState.arbiters[0].name).to.be.equal("localhost:32002");
-                        expect(server.s.replicaSetState.primary).not.to.be.null;
+                        expect(server.s.replicaSetState.primary).not.to.be.null();
                         expect(server.s.replicaSetState.primary.name).to.be.equal("localhost:32000");
                     } finally {
                         currentIsMasterIndex = currentIsMasterIndex + 1;
@@ -230,7 +230,7 @@ describe("database", "mongo", "core", function () {
                         running = false;
                         await adone.promise.delay(2000);
                         Connection.disableConnectionAccounting();
-                        expect(Connection.connections()).to.be.empty;
+                        expect(Connection.connections()).to.be.empty();
                     }
                 });
             });

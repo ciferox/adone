@@ -98,9 +98,9 @@ describe("database", "redis", "unit", "Command", () => {
 
     describe(".checkFlag()", () => {
         it("should return correct result", () => {
-            expect(Command.checkFlag("VALID_IN_SUBSCRIBER_MODE", "ping")).to.be.true;
-            expect(Command.checkFlag("VALID_IN_SUBSCRIBER_MODE", "get")).to.be.false;
-            expect(Command.checkFlag("WILL_DISCONNECT", "quit")).to.be.true;
+            expect(Command.checkFlag("VALID_IN_SUBSCRIBER_MODE", "ping")).to.be.true();
+            expect(Command.checkFlag("VALID_IN_SUBSCRIBER_MODE", "get")).to.be.false();
+            expect(Command.checkFlag("WILL_DISCONNECT", "quit")).to.be.true();
         });
     });
 });

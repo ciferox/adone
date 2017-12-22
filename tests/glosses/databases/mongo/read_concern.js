@@ -168,12 +168,12 @@ describe("read concern", function () {
         expect(started).to.have.lengthOf(1);
         expect(started[0].commandName).to.be.equal("aggregate");
         expect(succeeded[0].commandName).to.be.equal("aggregate");
-        expect(started[0].command.readConcern).to.be.undefined;
+        expect(started[0].command.readConcern).to.be.undefined();
         await collection.aggregate([{ $match: {} }], { out: "readConcernCollectionAggregate2Output" });
         expect(started).to.have.lengthOf(2);
         expect(started[1].commandName).to.be.equal("aggregate");
         expect(succeeded[1].commandName).to.be.equal("aggregate");
-        expect(started[1].command.readConcern).to.be.undefined;
+        expect(started[1].command.readConcern).to.be.undefined();
         listener.uninstrument();
         await db.close();
     });
@@ -203,7 +203,7 @@ describe("read concern", function () {
         expect(succeeded).to.have.lengthOf(1);
         expect(started[0].commandName).to.be.equal("mapreduce");
         expect(succeeded[0].commandName).to.be.equal("mapreduce");
-        expect(started[0].command.readConcern).to.be.undefined;
+        expect(started[0].command.readConcern).to.be.undefined();
         listener.uninstrument();
         await db.close();
     });

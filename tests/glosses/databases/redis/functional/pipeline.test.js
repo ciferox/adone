@@ -236,9 +236,9 @@ describe("database", "redis", "pipeline", { skip: check }, () => {
                 .config("get", "maxmemory")
                 .exec();
             expect(res).to.have.lengthOf(2);
-            expect(res[0][0]).to.be.null;
+            expect(res[0][0]).to.be.null();
             expect(res[0][1]).to.be.a("string");
-            expect(res[1][0]).to.be.null;
+            expect(res[1][0]).to.be.null();
             expect(res[1][1]).to.be.an("array");
             redis.disconnect();
         });

@@ -6,12 +6,12 @@ const inputBuffer = Buffer.from(inputString);
 describe("compressor", "snappy", () => {
     it("compress() string", async () => {
         const buffer = await compress(inputString);
-        assert.isTrue(is.buffer(buffer));
+        assert.true(is.buffer(buffer));
     });
 
     it("compress() buffer", async () => {
         const buffer = await compress(inputBuffer);
-        assert.isTrue(is.buffer(buffer));
+        assert.true(is.buffer(buffer));
     });
 
     it("compress() bad input", () => {
@@ -20,34 +20,34 @@ describe("compressor", "snappy", () => {
 
     it("compressSync() string", () => {
         const buffer = compressSync(inputString);
-        assert.isTrue(is.buffer(buffer));
+        assert.true(is.buffer(buffer));
     });
 
     it("compressSync() buffer", () => {
         const buffer = compressSync(inputBuffer);
-        assert.isTrue(is.buffer(buffer));
+        assert.true(is.buffer(buffer));
     });
 
     it("isValidCompressed() on valid data", async () => {
         const compressed = await compress(inputBuffer);
         const isCompressed = await isValidCompressed(compressed);
-        assert.isTrue(isCompressed);
+        assert.true(isCompressed);
     });
 
     it("isValidCompressed() on invalid data", async () => {
         const isCompressed = await isValidCompressed(Buffer.from("beep boop"));
-        assert.isFalse(isCompressed);
+        assert.false(isCompressed);
     });
 
     it("isValidCompressedSync() on valid data", async () => {
         const compressed = await compress(inputBuffer);
         const isCompressed = isValidCompressedSync(compressed);
-        assert.isTrue(isCompressed);
+        assert.true(isCompressed);
     });
 
     it("isValidCompressedSync() on invalid data", () => {
         const isCompressed = isValidCompressedSync(Buffer.from("beep boop"));
-        assert.isFalse(isCompressed);
+        assert.false(isCompressed);
     });
 
     it("decompress() defaults to Buffer", async () => {

@@ -150,7 +150,7 @@ describe("assertion", "utilities", () => {
             const anAssertion = expect([1, 2, 3]).to.be.an.instanceof(Array);
             expect(anAssertion.length.constructor).to.equal(assertionConstructor);
 
-            const anotherAssertion = expect([1, 2, 3]).to.have.a.lengthOf(3).and.to.be.ok;
+            const anotherAssertion = expect([1, 2, 3]).to.have.a.lengthOf(3).and.to.be.ok();
             expect(anotherAssertion.length.constructor).to.equal(assertionConstructor);
         });
 
@@ -296,7 +296,7 @@ describe("assertion", "utilities", () => {
         it("calling _super has correct stack trace", () => {
             try {
                 expect(5).to.be.four();
-                expect(false, "should not get here because error thrown").to.be.ok;
+                expect(false, "should not get here because error thrown").to.be.ok();
             } catch (err) {
                 // not all browsers support err.stack
                 // Phantom does not include function names for getter exec
@@ -310,7 +310,7 @@ describe("assertion", "utilities", () => {
         it("overwritten behavior has correct stack trace", () => {
             try {
                 expect("five").to.be.four();
-                expect(false, "should not get here because error thrown").to.be.ok;
+                expect(false, "should not get here because error thrown").to.be.ok();
             } catch (err) {
                 // not all browsers support err.stack
                 // Phantom does not include function names for getter exec
@@ -547,7 +547,7 @@ describe("assertion", "utilities", () => {
         it("calling _super has correct stack trace", () => {
             try {
                 expect(5).to.be.four;
-                expect(false, "should not get here because error thrown").to.be.ok;
+                expect(false, "should not get here because error thrown").to.be.ok();
             } catch (err) {
                 // not all browsers support err.stack
                 // Phantom does not include function names for getter exec
@@ -561,7 +561,7 @@ describe("assertion", "utilities", () => {
         it("overwritten behavior has correct stack trace", () => {
             try {
                 expect("five").to.be.four;
-                expect(false, "should not get here because error thrown").to.be.ok;
+                expect(false, "should not get here because error thrown").to.be.ok();
             } catch (err) {
                 // not all browsers support err.stack
                 // Phantom does not include function names for getter exec
@@ -822,7 +822,7 @@ describe("assertion", "utilities", () => {
             expect(propertyDescriptor.get()).to.have.property("apply", Function.prototype.apply);
 
             const obj = {};
-            expect(obj).x.to.be.ok;
+            expect(obj).x.to.be.ok();
             expect(obj).to.have.property("__x", "X!");
         });
 
@@ -937,11 +937,11 @@ describe("assertion", "utilities", () => {
                 expect({ a: "foo" }).x();
             }).to.throw(assertion.AssertionError);
             const obj = {};
-            expect(obj).x.to.be.ok;
+            expect(obj).x.to.be.ok();
             expect(obj).to.have.property("__x", "X!");
 
             // Test the new behavior of 'x'
-            const _assertion = expect({ a: "foo" }).x.to.be.ok;
+            const _assertion = expect({ a: "foo" }).x.to.be.ok();
             expect(utils.flag(_assertion, "message")).to.equal("x marks the spot");
             expect(() => {
                 const assertion = expect({ a: "x" });
@@ -1483,46 +1483,46 @@ describe("assertion", "utilities", () => {
         });
 
         it("returns true if Proxy is defined, Reflect is defined, and useProxy is true", () => {
-            expect(isProxyEnabled()).to.be.true;
+            expect(isProxyEnabled()).to.be.true();
         });
 
         it("returns false if Proxy is defined, Reflect is defined, and useProxy is false", () => {
             assertion.config.useProxy = false;
 
-            expect(isProxyEnabled()).to.be.false;
+            expect(isProxyEnabled()).to.be.false();
         });
 
         it("returns false if Proxy is defined, Reflect is undefined, and useProxy is true", () => {
             Reflect = undefined;
 
-            expect(isProxyEnabled()).to.be.false;
+            expect(isProxyEnabled()).to.be.false();
         });
 
         it("returns false if Proxy is defined, Reflect is undefined, and useProxy is false", () => {
             Reflect = undefined;
             assertion.config.useProxy = false;
 
-            expect(isProxyEnabled()).to.be.false;
+            expect(isProxyEnabled()).to.be.false();
         });
 
         it("returns false if Proxy is undefined, Reflect is defined, and useProxy is true", () => {
             Proxy = undefined;
 
-            expect(isProxyEnabled()).to.be.false;
+            expect(isProxyEnabled()).to.be.false();
         });
 
         it("returns false if Proxy is undefined, Reflect is defined, and useProxy is false", () => {
             Proxy = undefined;
             assertion.config.useProxy = false;
 
-            expect(isProxyEnabled()).to.be.false;
+            expect(isProxyEnabled()).to.be.false();
         });
 
         it("returns false if Proxy is undefined, Reflect is undefined, and useProxy is true", () => {
             Proxy = undefined;
             Reflect = undefined;
 
-            expect(isProxyEnabled()).to.be.false;
+            expect(isProxyEnabled()).to.be.false();
         });
 
         it("returns false if Proxy is undefined, Reflect is undefined, and useProxy is false", () => {
@@ -1530,7 +1530,7 @@ describe("assertion", "utilities", () => {
             Reflect = undefined;
             assertion.config.useProxy = false;
 
-            expect(isProxyEnabled()).to.be.false;
+            expect(isProxyEnabled()).to.be.false();
         });
     });
 });

@@ -32,18 +32,18 @@ describe("database", "mysql", "functional", "connection", "stream errors", () =>
         let e = clientConnection.query("SELECT 1").then(() => null, (e) => e);
         let e2 = clientConnection.query("second query, should not be executed").then(() => null, (e) => e);
         e = await e;
-        expect(e).not.to.be.null;
-        expect(e.fatal).to.be.true;
+        expect(e).not.to.be.null();
+        expect(e.fatal).to.be.true();
         expect(e.code).to.be.equal(err.code);
 
         e2 = await e2;
-        expect(e2).not.to.be.null;
-        expect(e2.fatal).to.be.true;
+        expect(e2).not.to.be.null();
+        expect(e2.fatal).to.be.true();
         expect(e2.code).to.be.equal(err.code);
 
         const e3 = await clientConnection.query("trying to enqueue command to a connection which is already in error state").then(() => null, (e) => e);
-        expect(e3).not.to.be.null;
-        expect(e3.fatal).to.be.true;
+        expect(e3).not.to.be.null();
+        expect(e3.fatal).to.be.true();
         expect(e3.message).to.be.equal("Can't add new command when connection is in closed state");
     });
 });

@@ -91,7 +91,7 @@ describe("task", () => {
         class MyTask extends task.Task {
         }
 
-        assert.isTrue(adone.is.task(new MyTask()));
+        assert.true(adone.is.task(new MyTask()));
     });
 
     it("should add only valid task", async () => {
@@ -133,9 +133,9 @@ describe("task", () => {
 
         await manager.addTask("a", TaskA);
         const observer = await manager.run("a", adone.package.version);
-        assert.isTrue(observer.isCompleted());
+        assert.true(observer.isCompleted());
         assert.equal(await observer.result, `adone ${adone.package.version}`);
-        assert.isTrue(observer.isCompleted());
+        assert.true(observer.isCompleted());
     });
 
     it("observer should contain correct error info for sync task", async () => {
@@ -148,7 +148,7 @@ describe("task", () => {
         await manager.addTask("a", TaskA);
         const observer = await manager.run("a", adone.package.version);
         const err = await assert.throws(async () => observer.result);
-        assert.isTrue(observer.isFailed());
+        assert.true(observer.isFailed());
         assert.instanceOf(observer.error, adone.x.Runtime);
         assert.instanceOf(err, adone.x.Runtime);
     });
@@ -164,7 +164,7 @@ describe("task", () => {
         await manager.addTask("a", TaskA);
         const observer = await manager.run("a", adone.package.version);
         const err = await assert.throws(async () => observer.result);
-        assert.isTrue(observer.isFailed());
+        assert.true(observer.isFailed());
         assert.instanceOf(observer.error, adone.x.Runtime);
         assert.instanceOf(err, adone.x.Runtime);
     });
@@ -179,9 +179,9 @@ describe("task", () => {
 
         await manager.addTask("a", TaskA);
         const observer = await manager.run("a", adone.package.version);
-        assert.isTrue(observer.isRunning());
+        assert.true(observer.isRunning());
         assert.equal(await observer.result, `adone ${adone.package.version}`);
-        assert.isTrue(observer.isCompleted());
+        assert.true(observer.isCompleted());
     });
 
     it("delete nonexisting task", async () => {
@@ -211,9 +211,9 @@ describe("task", () => {
 
         const observer = await manager.runOnce(TaskA, adone.package.version);
         assert.lengthOf(manager.getTaskNames(), 0);
-        assert.isTrue(observer.isCompleted());
+        assert.true(observer.isCompleted());
         assert.equal(await observer.result, `adone ${adone.package.version}`);
-        assert.isTrue(observer.isCompleted());
+        assert.true(observer.isCompleted());
     });
 
     it("run async task once", async () => {
@@ -226,9 +226,9 @@ describe("task", () => {
 
         const observer = await manager.runOnce(TaskA, adone.package.version);
         assert.lengthOf(manager.getTaskNames(), 1);
-        assert.isTrue(observer.isRunning());
+        assert.true(observer.isRunning());
         assert.equal(await observer.result, `adone ${adone.package.version}`);
-        assert.isTrue(observer.isCompleted());
+        assert.true(observer.isCompleted());
         assert.lengthOf(manager.getTaskNames(), 0);
     });
 
@@ -238,7 +238,7 @@ describe("task", () => {
             const observer = await manager.run("a", false);
             await promise.delay(200);
             await observer.suspend();
-            assert.isFalse(observer.isSuspended());
+            assert.false(observer.isSuspended());
             assert.equal(await observer.result, 100);
         });
 
@@ -249,8 +249,8 @@ describe("task", () => {
             const err = await assert.throws(async () => observer.cancel());
             assert.instanceOf(err, adone.x.NotAllowed);
             assert.equal(await observer.result, 100);
-            assert.isTrue(observer.isCompleted());
-            assert.isFalse(observer.isCancelled());
+            assert.true(observer.isCompleted());
+            assert.false(observer.isCancelled());
         });
 
         it("suspend/resume suspendable task", async () => {
@@ -258,12 +258,12 @@ describe("task", () => {
             const observer = await manager.run("a", true);
             await promise.delay(200);
             await observer.suspend();
-            assert.isTrue(observer.task.reallySuspended);
-            assert.isTrue(observer.isSuspended());
+            assert.true(observer.task.reallySuspended);
+            assert.true(observer.isSuspended());
             await promise.delay(100);
             await observer.resume();
-            assert.isTrue(observer.task.reallyResumed);
-            assert.isTrue(observer.isRunning());
+            assert.true(observer.task.reallyResumed);
+            assert.true(observer.isRunning());
             assert.equal(await observer.result, 100);
         });
 
@@ -272,9 +272,9 @@ describe("task", () => {
             const observer = await manager.run("a", false, true);
             await promise.delay(200);
             await observer.cancel();
-            assert.isTrue(observer.isCancelled());
+            assert.true(observer.isCancelled());
             assert.notEqual(await observer.result, 100);
-            assert.isFalse(observer.isCompleted());
+            assert.false(observer.isCompleted());
         });
     });
 
@@ -386,13 +386,13 @@ describe("task", () => {
 
                 const observer = await manager.run("series", ["a", "b"], null, false, true);
                 await adone.promise.delay(100);
-                assert.isTrue(observer.isCancelable());
+                assert.true(observer.isCancelable());
 
                 await observer.cancel();
 
                 const result = await observer.result;
                 assert.lengthOf(result, 1);
-                assert.isNumber(result[0]);
+                assert.number(result[0]);
 
                 await observer.result;
             });
@@ -414,21 +414,21 @@ describe("task", () => {
 
                 const observer = await manager.run("series", ["a", "b"], null, false, true);
                 await adone.promise.delay(300);
-                assert.isFalse(observer.isCancelable());
+                assert.false(observer.isCancelable());
 
                 const err = await assert.throws(async () => observer.cancel());
                 assert.instanceOf(err, adone.x.NotAllowed);
 
                 await adone.promise.delay(800);
 
-                assert.isTrue(observer.isCancelable());
+                assert.true(observer.isCancelable());
 
                 await observer.cancel();
 
                 const result = await observer.result;
                 assert.lengthOf(result, 2);
                 assert.equal(result[0], 888);
-                assert.isNumber(result[1]);
+                assert.number(result[1]);
 
                 await observer.result;
             });
@@ -525,13 +525,13 @@ describe("task", () => {
 
                 const observer = await manager.run("parallel", ["a", "b"], null, false, true);
                 await adone.promise.delay(100);
-                assert.isTrue(observer.isCancelable());
+                assert.true(observer.isCancelable());
 
                 await observer.cancel();
 
                 const result = await observer.result;
-                assert.isNumber(result.a);
-                assert.isNumber(result.b);
+                assert.number(result.a);
+                assert.number(result.b);
 
                 await observer.result;
             });
@@ -553,14 +553,14 @@ describe("task", () => {
 
                 const observer = await manager.run("parallel", ["a", "b"], null, false, true);
                 await adone.promise.delay(300);
-                assert.isFalse(observer.isCancelable());
+                assert.false(observer.isCancelable());
 
                 let err = await assert.throws(async () => observer.cancel());
                 assert.instanceOf(err, adone.x.NotAllowed);
 
                 await adone.promise.delay(1000);
 
-                assert.isFalse(observer.isCancelable());
+                assert.false(observer.isCancelable());
                 err = await assert.throws(async () => observer.cancel());
                 assert.instanceOf(err, adone.x.NotAllowed);
 
@@ -638,7 +638,7 @@ describe("task", () => {
 
                 const observer = await manager.run("waterfall", ["d", "e", TaskF], null, 3);
                 const result = await observer.result;
-                assert.isTrue(is.string(result));
+                assert.true(is.string(result));
                 assert.equal(result, "sum = 21");
             });
         });
@@ -731,10 +731,10 @@ describe("task", () => {
                     val = 1;
                 }
             }
-            
+
             await manager.addTask("a", TaskA);
             const observer = await manager.run("a");
-            
+
             observer.finally(async () => {
                 await adone.promise.delay(100);
                 val = 2;
@@ -750,9 +750,9 @@ describe("task", () => {
                     val = 1;
                 }
             }
-            
+
             await manager.addTask("a", TaskA);
-            const observer = await manager.run("a");            
+            const observer = await manager.run("a");
             observer.finally(() => {
                 val = 2;
             });
@@ -764,7 +764,7 @@ describe("task", () => {
     describe("undo", () => {
         it("task's undo method should be executed atomically (async)", async () => {
             const data = [];
-            
+
             class TaskA extends task.Task {
                 async run() {
                     data.push(1);
@@ -778,7 +778,7 @@ describe("task", () => {
                     data.length = 0;
                 }
             }
-            
+
             await manager.addTask("a", TaskA);
             try {
                 const observer = await manager.run("a");
@@ -790,7 +790,7 @@ describe("task", () => {
 
         it("task's undo method should be executed atomically (sync)", async () => {
             const data = [];
-            
+
             class TaskA extends task.Task {
                 run() {
                     data.push(1);
@@ -803,7 +803,7 @@ describe("task", () => {
                     data.length = 0;
                 }
             }
-            
+
             await manager.addTask("a", TaskA);
             try {
                 const observer = await manager.run("a");

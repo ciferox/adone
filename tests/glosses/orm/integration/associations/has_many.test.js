@@ -308,15 +308,15 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
                         }).then((result) => {
                             expect(result[users[0].id].length).to.equal(2);
                             expect(result[users[0].id][0].title).to.equal("a");
-                            expect(result[users[0].id][0].category).to.be.ok;
+                            expect(result[users[0].id][0].category).to.be.ok();
                             expect(result[users[0].id][1].title).to.equal("b");
-                            expect(result[users[0].id][1].category).to.be.ok;
+                            expect(result[users[0].id][1].category).to.be.ok();
 
                             expect(result[users[1].id].length).to.equal(2);
                             expect(result[users[1].id][0].title).to.equal("a");
-                            expect(result[users[1].id][0].category).to.be.ok;
+                            expect(result[users[1].id][0].category).to.be.ok();
                             expect(result[users[1].id][1].title).to.equal("b");
-                            expect(result[users[1].id][1].category).to.be.ok;
+                            expect(result[users[1].id][1].category).to.be.ok();
                         });
                     });
                 });
@@ -364,11 +364,11 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
                     await article.setLabels([label], { transaction: t });
                     {
                         const articles = await Article.all({ transaction: t });
-                        expect(await articles[0].hasLabel(label)).that.be.false;
+                        expect(await articles[0].hasLabel(label)).that.be.false();
                     }
                     {
                         const articles = await Article.all({ transaction: t });
-                        expect(await articles[0].hasLabel(label, { transaction: t })).to.be.true;
+                        expect(await articles[0].hasLabel(label, { transaction: t })).to.be.true();
                     }
                     await t.rollback();
                 });
@@ -384,8 +384,8 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
                     article.hasLabel(label1),
                     article.hasLabel(label2)
                 ]);
-                expect(hasLabel1).to.be.false;
-                expect(hasLabel2).to.be.false;
+                expect(hasLabel1).to.be.false();
+                expect(hasLabel2).to.be.false();
             });
 
             it("answers true if the label has been assigned", async function () {
@@ -399,8 +399,8 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
                     article.hasLabel(label1),
                     article.hasLabel(label2)
                 ]);
-                expect(hasLabel1).to.be.true;
-                expect(hasLabel2).to.be.false;
+                expect(hasLabel1).to.be.true();
+                expect(hasLabel2).to.be.false();
             });
 
             it("answers correctly if the label has been assigned when passing a primary key instead of an object", async function () {
@@ -414,8 +414,8 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
                     article.hasLabel(label1.id),
                     article.hasLabel(label2.id)
                 ]);
-                expect(hasLabel1).to.be.true;
-                expect(hasLabel2).to.be.false;
+                expect(hasLabel1).to.be.true();
+                expect(hasLabel2).to.be.false();
             });
         });
 
@@ -454,8 +454,8 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
                         articles[0].hasLabels([label]),
                         articles[0].hasLabels([label], { transaction: t })
                     ]);
-                    expect(hasLabel1).to.be.false;
-                    expect(hasLabel2).to.be.true;
+                    expect(hasLabel1).to.be.false();
+                    expect(hasLabel2).to.be.true();
                     await t.rollback();
                 });
             }
@@ -467,7 +467,7 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
                     this.Label.create({ text: "Epicness" })
                 ]);
                 await article.addLabel(label1);
-                expect(await article.hasLabels([label1, label2])).to.be.false;
+                expect(await article.hasLabels([label1, label2])).to.be.false();
             });
 
             it("answers false if only some labels have been assigned when passing a primary key instead of an object", async function () {
@@ -477,7 +477,7 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
                     this.Label.create({ text: "Epicness" })
                 ]);
                 await article.addLabel(label1);
-                expect(await article.hasLabels([label1.id, label2.id])).to.be.false;
+                expect(await article.hasLabels([label1.id, label2.id])).to.be.false();
             });
 
             it("answers true if all label have been assigned", async function () {
@@ -487,7 +487,7 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
                     this.Label.create({ text: "Epicness" })
                 ]);
                 await article.setLabels([label1, label2]);
-                expect(await article.hasLabels([label1, label2])).to.be.true;
+                expect(await article.hasLabels([label1, label2])).to.be.true();
             });
 
             it("answers true if all label have been assigned when passing a primary key instead of an object", async function () {
@@ -497,7 +497,7 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
                     this.Label.create({ text: "Epicness" })
                 ]);
                 await article.setLabels([label1, label2]);
-                expect(await article.hasLabels([label1.id, label2.id])).to.be.true;
+                expect(await article.hasLabels([label1.id, label2.id])).to.be.true();
             });
         });
 
@@ -545,7 +545,7 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
                 const users = await task.getUsers();
                 expect(users).to.have.length(1);
                 await task.setUsers(null);
-                expect(await task.getUsers()).to.be.empty;
+                expect(await task.getUsers()).to.be.empty();
             });
 
             it("supports passing the primary key instead of an object", async function () {
@@ -706,7 +706,7 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
                 await this.sequelize.sync({ force: true });
                 const article = await Article.create({ title: "foo" });
                 const label = await article.createLabel({ text: "bar" }, { logging: s });
-                expect(s.calledOnce).to.be.true;
+                expect(s.calledOnce).to.be.true();
                 expect(label.ArticleId).to.equal(article.id);
             });
 
@@ -757,7 +757,7 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
                     fields: ["text"]
                 });
                 const labels = await article.getLabels();
-                expect(labels.length).to.be.ok;
+                expect(labels.length).to.be.ok();
             });
         });
 
@@ -911,7 +911,7 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
                             });
                         });
                     }).then((tasks) => {
-                        expect(tasks).to.be.empty;
+                        expect(tasks).to.be.empty();
                     });
                 });
             });
@@ -1056,7 +1056,7 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
             User.hasMany(Task);
 
             return this.sequelize.sync({ force: true }).then(() => {
-                expect(Task.rawAttributes.UserId.type instanceof type.STRING).to.be.ok;
+                expect(Task.rawAttributes.UserId.type instanceof type.STRING).to.be.ok();
             });
         });
 
@@ -1072,8 +1072,8 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
                     }
                 });
 
-                expect(Task.rawAttributes.uid).to.be.ok;
-                expect(Task.rawAttributes.uid.allowNull).to.be.false;
+                expect(Task.rawAttributes.uid).to.be.ok();
+                expect(Task.rawAttributes.uid.allowNull).to.be.false();
                 expect(Task.rawAttributes.uid.references.model).to.equal(User.getTableName());
                 expect(Task.rawAttributes.uid.references.key).to.equal("id");
             });
@@ -1094,7 +1094,7 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
 
                 User.hasMany(Project, { foreignKey: Project.rawAttributes.user_id });
 
-                expect(Project.rawAttributes.user_id).to.be.ok;
+                expect(Project.rawAttributes.user_id).to.be.ok();
                 expect(Project.rawAttributes.user_id.references.model).to.equal(User.getTableName());
                 expect(Project.rawAttributes.user_id.references.key).to.equal("uid");
                 expect(Project.rawAttributes.user_id.defaultValue).to.equal(42);
@@ -1111,9 +1111,9 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
 
                 User.hasMany(Task, { foreignKey: { allowNull: true } });
 
-                expect(Task.rawAttributes.userId).to.be.ok;
+                expect(Task.rawAttributes.userId).to.be.ok();
                 expect(Task.rawAttributes.userId.defaultValue).to.equal(42);
-                expect(Task.rawAttributes.userId.allowNull).to.be.ok;
+                expect(Task.rawAttributes.userId.allowNull).to.be.ok();
             });
         });
 
@@ -1179,7 +1179,7 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
                 return Task.create({ title: "Fix PR" }).then((task) => {
                     return user.addTask(task).then(() => {
                         return user.hasTask(task.id).then((hasTask) => {
-                            expect(hasTask).to.be.true;
+                            expect(hasTask).to.be.true();
                         });
                     });
                 });
@@ -1246,7 +1246,7 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
                     where: { username: "John" }
                 })
             ).then((user) => {
-                expect(user).to.be.ok;
+                expect(user).to.be.ok();
                 expect(user.Tasks.length).to.equal(1);
                 expect(user.Tasks[0].title).to.equal("Active Task");
             });

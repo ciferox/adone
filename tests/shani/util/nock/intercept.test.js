@@ -81,13 +81,13 @@ describe("shani", "util", "nock", "intercept", () => {
 
     it("double activation throws exception", () => {
         nock.restore();
-        expect(nock.isActive()).to.be.false;
+        expect(nock.isActive()).to.be.false();
         nock.activate();
-        expect(nock.isActive()).to.be.true;
+        expect(nock.isActive()).to.be.true();
         expect(() => {
             nock.activate();
         }).to.throw("already active");
-        expect(nock.isActive()).to.be.true;
+        expect(nock.isActive()).to.be.true();
     });
 
     it("allow unmocked works (2)", async () => {
@@ -223,7 +223,7 @@ describe("shani", "util", "nock", "intercept", () => {
             });
             res.on("end", () => {
                 scope.done();
-                assert.isTrue(hasData);
+                assert.true(hasData);
                 done();
             });
 
@@ -1555,7 +1555,7 @@ describe("shani", "util", "nock", "intercept", () => {
             });
 
             res.on("end", () => {
-                assert.isTrue(false, "this should never execute");
+                assert.true(false, "this should never execute");
             });
 
             req.once("error", (err) => {
@@ -1589,7 +1589,7 @@ describe("shani", "util", "nock", "intercept", () => {
             }, 500);
 
             res.on("data", (data) => {
-                assert.isTrue(waited);
+                assert.true(waited);
             });
 
             res.on("end", () => {
@@ -1624,7 +1624,7 @@ describe("shani", "util", "nock", "intercept", () => {
             });
 
             res.on("end", () => {
-                assert.isTrue(waited);
+                assert.true(waited);
                 scope.done();
                 done();
             });
@@ -2577,7 +2577,7 @@ describe("shani", "util", "nock", "intercept", () => {
             .reply(200, "Hello, World!");
 
         nock.restore();
-        assert.isFalse(nock.isActive());
+        assert.false(nock.isActive());
 
         http.get("http://google.com/", (res) => {
             res.resume();
@@ -2585,7 +2585,7 @@ describe("shani", "util", "nock", "intercept", () => {
                 assert.ok(!scope.isDone());
 
                 nock.activate();
-                assert.isTrue(nock.isActive());
+                assert.true(nock.isActive());
                 http.get("http://google.com", (res) => {
                     res.resume();
                     res.on("end", () => {
@@ -3603,7 +3603,7 @@ describe("shani", "util", "nock", "intercept", () => {
                 assert.equal(data.toString(), responseText);
             });
             res.on("end", () => {
-                assert.isTrue(dataCalled);
+                assert.true(dataCalled);
                 scope.done();
                 done();
             });
@@ -3762,8 +3762,8 @@ describe("shani", "util", "nock", "intercept", () => {
         const req = http.get("http://gotzsocketz.com");
         req.once("socket", function (socket) {
             assert.equal(this, req);
-            assert.isObject(socket);
-            assert.isString(socket.getPeerCertificate());
+            assert.object(socket);
+            assert.string(socket.getPeerCertificate());
             done();
         });
     });

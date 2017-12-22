@@ -1168,9 +1168,9 @@ describe("database", "mongo", "core", function () {
                         expect(responses.serverClosed.length).to.be.at.least(3);
                         expect(responses.topologyOpening.length).to.be.be.equal(1);
                         expect(responses.topologyClosed.length).to.be.equal(1);
-                        expect(responses.serverHeartbeatStarted).not.to.be.empty;
-                        expect(responses.serverHeartbeatSucceeded).not.to.be.empty;
-                        expect(responses.serverDescriptionChanged).not.to.be.empty;
+                        expect(responses.serverHeartbeatStarted).not.to.be.empty();
+                        expect(responses.serverHeartbeatSucceeded).not.to.be.empty();
+                        expect(responses.serverDescriptionChanged).not.to.be.empty();
 
                         for (let i = 0; i < expectedResults.length; i++) {
                             expect(expectedResults[i]).to.be.deep.equal(responses.topologyDescriptionChanged[i]);

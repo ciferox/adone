@@ -204,14 +204,14 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                         return self.User.findAll({ include: [{ model: self.Project, as: "Projects" }] }).then((users) => {
                             const _user = users[0];
 
-                            expect(_user.Projects).to.exist;
-                            expect(JSON.parse(JSON.stringify(_user)).Projects).to.exist;
+                            expect(_user.Projects).to.exist();
+                            expect(JSON.parse(JSON.stringify(_user)).Projects).to.exist();
 
                             return self.Project.findAll({ include: [{ model: self.User, as: "LovelyUser" }] }).then((projects) => {
                                 const _project = projects[0];
 
-                                expect(_project.LovelyUser).to.exist;
-                                expect(JSON.parse(JSON.stringify(_project)).LovelyUser).to.exist;
+                                expect(_project.LovelyUser).to.exist();
+                                expect(JSON.parse(JSON.stringify(_project)).LovelyUser).to.exist();
                             });
                         });
                     });

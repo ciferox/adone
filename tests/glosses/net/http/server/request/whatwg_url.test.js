@@ -19,6 +19,6 @@ describe("net", "http", "server", "request", "whatwg url", () => {
     it("should return empty object when invalid", () => {
         const req = request();
         req.header.host = "invalid host";
-        expect(req.URL).to.be.empty;
+        expect(req.URL).to.be.empty();
     });
 });

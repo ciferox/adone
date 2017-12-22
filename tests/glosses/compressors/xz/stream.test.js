@@ -16,7 +16,7 @@ describe("compressor", "xz", "stream", () => {
         data = data || randomData;
 
         data.duplicate().pipe(enc).pipe(dec).pipe(new BufferList((err, buf) => {
-            assert.isOk(helpers.bufferEqual(data, buf));
+            assert.ok(helpers.bufferEqual(data, buf));
             done(err);
         }));
     };
@@ -55,7 +55,7 @@ describe("compressor", "xz", "stream", () => {
             stream.on("data", adone.noop);
 
             if (lzma.asyncCodeAvailable) {
-                assert.isOk(!stream.sync);
+                assert.ok(!stream.sync);
             }
 
             fs.createReadStream(fixturePath("hamlet.txt.lzma")).pipe(stream);
@@ -67,7 +67,7 @@ describe("compressor", "xz", "stream", () => {
             stream.on("data", adone.noop);
 
             if (xz.asyncCodeAvailable) {
-                assert.isOk(!stream.sync);
+                assert.ok(!stream.sync);
             }
 
             fs.createReadStream(fixturePath("hamlet.txt.xz")).pipe(stream);
@@ -78,7 +78,7 @@ describe("compressor", "xz", "stream", () => {
             stream.on("end", done);
             stream.on("data", adone.noop);
 
-            assert.isOk(stream.sync);
+            assert.ok(stream.sync);
 
             fs.createReadStream(fixturePath("hamlet.txt.xz")).pipe(stream);
         });
@@ -91,7 +91,7 @@ describe("compressor", "xz", "stream", () => {
                 sawError = true;
             });
             stream.on("end", () => {
-                assert.isOk(sawError);
+                assert.ok(sawError);
                 done();
             });
             stream.on("data", adone.noop);
@@ -107,7 +107,7 @@ describe("compressor", "xz", "stream", () => {
                 sawError = true;
             });
             stream.on("end", () => {
-                assert.isOk(sawError);
+                assert.ok(sawError);
                 done();
             });
             stream.on("data", adone.noop);
@@ -388,7 +388,7 @@ describe("compressor", "xz", "stream", () => {
             stream.on("data", adone.noop);
 
             fs.createReadStream(fixturePath("hamlet.txt.lzma")).pipe(stream);
-            assert.isOk(stream.memusage() > 0);
+            assert.ok(stream.memusage() > 0);
         });
 
         it("should return null when encoding", () => {
@@ -410,7 +410,7 @@ describe("compressor", "xz", "stream", () => {
             stream.on("end", done);
             stream.on("data", adone.noop);
 
-            assert.isOk(stream.memlimitGet() > 0);
+            assert.ok(stream.memlimitGet() > 0);
             stream.memlimitSet(1 << 30);
             assert.equal(stream.memlimitGet(), 1 << 30);
             fs.createReadStream(fixturePath("hamlet.txt.lzma")).pipe(stream);

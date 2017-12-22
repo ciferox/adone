@@ -45,7 +45,7 @@ describe("compressor", "brotli", "sync", () => {
 
         it("should compress a string", () => {
             const a = brotli.compressSync("hello");
-            expect(is.buffer(a)).to.be.true;
+            expect(is.buffer(a)).to.be.true();
         });
     });
 

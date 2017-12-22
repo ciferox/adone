@@ -116,7 +116,7 @@ module.exports = function (server, config) {
 
             server.once("client", (serverClient) => {
                 serverClient.once("connect", (packet) => {
-                    assert.isTrue(packet.clean);
+                    assert.true(packet.clean);
                     serverClient.disconnect();
                     done();
                 });
@@ -147,7 +147,7 @@ module.exports = function (server, config) {
             server.once("client", (serverClient) => {
                 serverClient.once("connect", (packet) => {
                     assert.match(packet.clientId, /testclient/);
-                    assert.isFalse(packet.clean);
+                    assert.false(packet.clean);
                     serverClient.disconnect();
                     done();
                 });
@@ -308,7 +308,7 @@ module.exports = function (server, config) {
                     if (err) {
                         return done();
                     }
-                    assert.isEmpty(granted2);
+                    assert.empty(granted2);
                     done();
                 });
             });

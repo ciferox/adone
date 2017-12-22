@@ -70,19 +70,19 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
     describe("isNewRecord", () => {
         it("returns true for non-saved objects", function () {
             const user = this.User.build({ username: "user" });
-            expect(user.id).to.be.null;
-            expect(user.isNewRecord).to.be.ok;
+            expect(user.id).to.be.null();
+            expect(user.isNewRecord).to.be.ok();
         });
 
         it("returns false for saved objects", function () {
             return this.User.build({ username: "user" }).save().then((user) => {
-                expect(user.isNewRecord).to.not.be.ok;
+                expect(user.isNewRecord).to.not.be.ok();
             });
         });
 
         it("returns false for created objects", function () {
             return this.User.create({ username: "user" }).then((user) => {
-                expect(user.isNewRecord).to.not.be.ok;
+                expect(user.isNewRecord).to.not.be.ok();
             });
         });
 
@@ -91,7 +91,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
             return this.User.create({ username: "user" }).then(() => {
                 return self.User.create({ username: "user" }).then((user) => {
                     return self.User.findById(user.id).then((user) => {
-                        expect(user.isNewRecord).to.not.be.ok;
+                        expect(user.isNewRecord).to.not.be.ok();
                     });
                 });
             });
@@ -108,7 +108,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
             return this.User.bulkCreate(users).then(() => {
                 return self.User.findAll().then((users) => {
                     users.forEach((u) => {
-                        expect(u.isNewRecord).to.not.be.ok;
+                        expect(u.isNewRecord).to.not.be.ok();
                     });
                 });
             });
@@ -455,7 +455,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
             return this.User.create({ username: "John Doe" }).then((originalUser) => {
                 return originalUser.updateAttributes({ username: "Doe John" }).then(() => {
                     return originalUser.reload().then((updatedUser) => {
-                        expect(originalUser === updatedUser).to.be.true;
+                        expect(originalUser === updatedUser).to.be.true();
                     });
                 });
             });
@@ -600,10 +600,10 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                 where: { id: shoe.Player.id },
                 include: [Shoe]
             });
-            expect(lePlayer.Shoe).not.to.be.null;
+            expect(lePlayer.Shoe).not.to.be.null();
             await lePlayer.Shoe.destroy();
             await lePlayer.reload();
-            expect(lePlayer.Shoe).to.be.null;
+            expect(lePlayer.Shoe).to.be.null();
         });
 
         it("should set an association to empty after all deletion, 1-N", async function () {
@@ -626,11 +626,11 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                 where: { id: team.id },
                 include: [Player]
             });
-            expect(leTeam.Players).not.to.be.empty;
+            expect(leTeam.Players).not.to.be.empty();
             await leTeam.Players[1].destroy();
             await leTeam.Players[0].destroy();
             await leTeam.reload();
-            expect(leTeam.Players).to.be.empty;
+            expect(leTeam.Players).to.be.empty();
         });
 
         it("should update the associations after one element deleted", async function () {
@@ -677,8 +677,8 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
             it("should store a valid uuid in uuidv1 and uuidv4 that conforms to the UUID v1 and v4 specifications", function () {
                 const user = this.User.build({ username: "a user" });
-                expect(is.uuid(user.uuidv1, 1)).to.be.true;
-                expect(is.uuid(user.uuidv4, 4)).to.be.true;
+                expect(is.uuid(user.uuidv1, 1)).to.be.true();
+                expect(is.uuid(user.uuidv4, 4)).to.be.true();
             });
 
             it("should store a valid uuid if the field is a primary key named id", function () {
@@ -691,7 +691,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                 });
 
                 const person = Person.build({});
-                expect(person.id).to.be.ok;
+                expect(person.id).to.be.ok();
                 expect(person.id).to.have.length(36);
             });
         });
@@ -713,7 +713,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                 const self = this;
                 return this.User.build({ username: "a user" }).save().then(() => {
                     return self.User.findOne({ where: { username: "a user" } }).then((user) => {
-                        expect(user.dateAllowNullTrue).to.be.null;
+                        expect(user.dateAllowNullTrue).to.be.null();
                     });
                 });
             });
@@ -739,7 +739,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                         username: "a user"
                     }
                 });
-                expect(user.isSuperUser).to.be.false;
+                expect(user.isSuperUser).to.be.false();
             });
 
             it("should override default when given truthy boolean", async function () {
@@ -752,7 +752,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                         username: "a user"
                     }
                 });
-                expect(user.isSuperUser).to.be.true;
+                expect(user.isSuperUser).to.be.true();
             });
 
             it('should override default when given truthy boolean-string ("true")', async function () {
@@ -765,7 +765,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                         username: "a user"
                     }
                 });
-                expect(user.isSuperUser).to.be.true;
+                expect(user.isSuperUser).to.be.true();
             });
 
             it("should override default when given truthy boolean-int (1)", async function () {
@@ -778,7 +778,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                         username: "a user"
                     }
                 });
-                expect(user.isSuperUser).to.be.true;
+                expect(user.isSuperUser).to.be.true();
             });
 
             it("should throw error when given value of incorrect type", function () {
@@ -794,8 +794,8 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                     })
                     .catch((err) => {
                         expect(callCount).to.equal(0);
-                        expect(err).to.exist;
-                        expect(err.message).to.exist;
+                        expect(err).to.exist();
+                        expect(err.message).to.exist();
                     });
             });
         });
@@ -804,14 +804,14 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
     describe("complete", () => {
         it("gets triggered if an error occurs", function () {
             return this.User.findOne({ where: ["asdasdasd"] }).catch((err) => {
-                expect(err).to.exist;
-                expect(err.message).to.exist;
+                expect(err).to.exist();
+                expect(err.message).to.exist();
             });
         });
 
         it("gets triggered if everything was ok", function () {
             return this.User.count().then((result) => {
-                expect(result).to.exist;
+                expect(result).to.exist();
             });
         });
     });
@@ -1058,15 +1058,15 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
             return User2.sync().then(() => {
                 return User2.create({ id: 0, username }).then((user) => {
-                    expect(user).to.be.ok;
+                    expect(user).to.be.ok();
                     expect(user.id).to.equal(0);
                     expect(user.username).to.equal(username);
                     return User2.findById(0).then((user) => {
-                        expect(user).to.be.ok;
+                        expect(user).to.be.ok();
                         expect(user.id).to.equal(0);
                         expect(user.username).to.equal(username);
                         return user.updateAttributes({ username: newUsername }).then((user) => {
-                            expect(user).to.be.ok;
+                            expect(user).to.be.ok();
                             expect(user.id).to.equal(0);
                             expect(user.username).to.equal(newUsername);
                         });
@@ -1212,7 +1212,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
                 await User2.sync();
                 const johnDoe = await User2.create({ username: "john doe" });
-                expect(johnDoe.updatedAt).to.be.undefined;
+                expect(johnDoe.updatedAt).to.be.undefined();
                 expect(now.getTime()).to.be.lessThan(johnDoe.createdAt.getTime());
             });
 
@@ -1226,7 +1226,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
                 await User2.sync();
                 const johnDoe = await User2.create({ username: "john doe" });
-                expect(johnDoe.createdAt).to.be.undefined;
+                expect(johnDoe.createdAt).to.be.undefined();
                 expect(now.getTime()).to.be.lessThan(johnDoe.updatedAt.getTime());
             });
 
@@ -1246,7 +1246,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                 return User2.sync().then(() => {
                     return User2.create({ username: "john doe" }).then((johnDoe) => {
                         expect(johnDoe.createdAt).to.be.an.instanceof(Date);
-                        expect(!isNaN(johnDoe.createdAt.valueOf())).to.be.ok;
+                        expect(!isNaN(johnDoe.createdAt.valueOf())).to.be.ok();
                         expect(johnDoe.createdAt).to.be.deep.equal(johnDoe.updatedAt);
                     });
                 });
@@ -1255,20 +1255,20 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
         it("should fail a validation upon creating", function () {
             return this.User.create({ aNumber: 0, validateTest: "hello" }).catch((err) => {
-                expect(err).to.exist;
+                expect(err).to.exist();
                 expect(err).to.be.instanceof(Object);
                 expect(err.get("validateTest")).to.be.instanceof(Array);
-                expect(err.get("validateTest")[0]).to.exist;
+                expect(err.get("validateTest")[0]).to.exist();
                 expect(err.get("validateTest")[0].message).to.equal("Validation isInt on validateTest failed");
             });
         });
 
         it("should fail a validation upon creating with hooks false", function () {
             return this.User.create({ aNumber: 0, validateTest: "hello" }, { hooks: false }).catch((err) => {
-                expect(err).to.exist;
+                expect(err).to.exist();
                 expect(err).to.be.instanceof(Object);
                 expect(err.get("validateTest")).to.be.instanceof(Array);
-                expect(err.get("validateTest")[0]).to.exist;
+                expect(err.get("validateTest")[0]).to.exist();
                 expect(err.get("validateTest")[0].message).to.equal("Validation isInt on validateTest failed");
             });
         });
@@ -1276,11 +1276,11 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         it("should fail a validation upon building", function () {
             return this.User.build({ aNumber: 0, validateCustom: "aaaaaaaaaaaaaaaaaaaaaaaaaa" }).save()
                 .catch((err) => {
-                    expect(err).to.exist;
+                    expect(err).to.exist();
                     expect(err).to.be.instanceof(Object);
-                    expect(err.get("validateCustom")).to.exist;
+                    expect(err.get("validateCustom")).to.exist();
                     expect(err.get("validateCustom")).to.be.instanceof(Array);
-                    expect(err.get("validateCustom")[0]).to.exist;
+                    expect(err.get("validateCustom")[0]).to.exist();
                     expect(err.get("validateCustom")[0].message).to.equal("Length failed.");
                 });
         });
@@ -1288,11 +1288,11 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         it("should fail a validation when updating", function () {
             return this.User.create({ aNumber: 0 }).then((user) => {
                 return user.updateAttributes({ validateTest: "hello" }).catch((err) => {
-                    expect(err).to.exist;
+                    expect(err).to.exist();
                     expect(err).to.be.instanceof(Object);
-                    expect(err.get("validateTest")).to.exist;
+                    expect(err.get("validateTest")).to.exist();
                     expect(err.get("validateTest")).to.be.instanceof(Array);
-                    expect(err.get("validateTest")[0]).to.exist;
+                    expect(err.get("validateTest")[0]).to.exist();
                     expect(err.get("validateTest")[0].message).to.equal("Validation isInt on validateTest failed");
                 });
             });
@@ -1351,14 +1351,14 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                                 return self.UserEager.findOne({ where: { age: 1 }, include: [{ model: self.ProjectEager, as: "Projects" }] }).then((user) => {
                                     expect(user.username).to.equal("joe");
                                     expect(user.age).to.equal(1);
-                                    expect(user.Projects).to.exist;
+                                    expect(user.Projects).to.exist();
                                     expect(user.Projects.length).to.equal(2);
 
                                     user.age = user.age + 1; // happy birthday joe
                                     return user.save().then((user) => {
                                         expect(user.username).to.equal("joe");
                                         expect(user.age).to.equal(2);
-                                        expect(user.Projects).to.exist;
+                                        expect(user.Projects).to.exist();
                                         expect(user.Projects.length).to.equal(2);
                                     });
                                 });
@@ -1384,8 +1384,8 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                                                     const _bart = simpsons[0];
                                                     const _lisa = simpsons[1];
 
-                                                    expect(_bart.Projects).to.exist;
-                                                    expect(_lisa.Projects).to.exist;
+                                                    expect(_bart.Projects).to.exist();
+                                                    expect(_lisa.Projects).to.exist();
                                                     expect(_bart.Projects.length).to.equal(2);
                                                     expect(_lisa.Projects.length).to.equal(2);
 
@@ -1421,8 +1421,8 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                             return user.setProjects([homework, party]).then(() => {
                                 return self.ProjectEager.findAll({ include: [{ model: self.UserEager, as: "Poobah" }] }).then((projects) => {
                                     expect(projects.length).to.equal(2);
-                                    expect(projects[0].Poobah).to.exist;
-                                    expect(projects[1].Poobah).to.exist;
+                                    expect(projects[0].Poobah).to.exist();
+                                    expect(projects[1].Poobah).to.exist();
                                     expect(projects[0].Poobah.username).to.equal("poobah");
                                     expect(projects[1].Poobah.username).to.equal("poobah");
 
@@ -1435,8 +1435,8 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                                         return projects[1].save().then(() => {
                                             return self.ProjectEager.findAll({ where: { title: "partymore", overdue_days: 0 }, include: [{ model: self.UserEager, as: "Poobah" }] }).then((savedprojects) => {
                                                 expect(savedprojects.length).to.equal(2);
-                                                expect(savedprojects[0].Poobah).to.exist;
-                                                expect(savedprojects[1].Poobah).to.exist;
+                                                expect(savedprojects[0].Poobah).to.exist();
+                                                expect(savedprojects[1].Poobah).to.exist();
                                                 expect(savedprojects[0].Poobah.username).to.equal("poobah");
                                                 expect(savedprojects[1].Poobah.username).to.equal("poobah");
                                             });
@@ -1563,7 +1563,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
             const self = this;
             return this.User.create({ username: "fnord" }).then(() => {
                 return self.User.findAll().then((users) => {
-                    expect(users[0].createdAt).to.exist;
+                    expect(users[0].createdAt).to.exist();
                 });
             });
         });
@@ -1572,8 +1572,8 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
             const self = this;
             return this.User.create({ username: "fnord" }).then(() => {
                 return self.User.findAll({ attributes: ["username"] }).then((users) => {
-                    expect(users[0].createdAt).not.to.exist;
-                    expect(users[0].username).to.exist;
+                    expect(users[0].createdAt).not.to.exist();
+                    expect(users[0].username).to.exist();
                 });
             });
         });
@@ -1582,7 +1582,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
             const self = this;
             return this.ParanoidUser.create({ username: "fnord" }).then(() => {
                 return self.ParanoidUser.findAll().then((users) => {
-                    expect(users[0].deletedAt).to.be.null;
+                    expect(users[0].deletedAt).to.be.null();
                 });
             });
         });
@@ -1610,10 +1610,10 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
             return this.ParanoidUser.create({ username: "fnord" }).then(() => {
                 return self.ParanoidUser.findAll().then((users) => {
                     return users[0].destroy().then(() => {
-                        expect(users[0].deletedAt.getMonth).to.exist;
+                        expect(users[0].deletedAt.getMonth).to.exist();
 
                         return users[0].reload({ paranoid: false }).then((user) => {
-                            expect(user.deletedAt.getMonth).to.exist;
+                            expect(user.deletedAt.getMonth).to.exist();
                         });
                     });
                 });
@@ -1625,7 +1625,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
             return this.ParanoidUser.create({ username: "fnord" }).then(() => {
                 return self.ParanoidUser.findAll().then((users) => {
                     return users[0].updateAttributes({ username: "newFnord" }).then((user) => {
-                        expect(user.deletedAt).not.to.exist;
+                        expect(user.deletedAt).not.to.exist();
                     });
                 });
             });
@@ -1637,7 +1637,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                 return self.ParanoidUser.findAll().then((users) => {
                     return self.ParanoidUser.create({ username: "linkedFnord" }).then((linkedUser) => {
                         return users[0].setParanoidUser(linkedUser).then((user) => {
-                            expect(user.deletedAt).not.to.exist;
+                            expect(user.deletedAt).not.to.exist();
                         });
                     });
                 });
@@ -1696,7 +1696,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
             const self = this;
             return this.User.create({ username: "fnord" }).then((user1) => {
                 return self.User.findOne({ where: { username: "fnord" } }).then((user2) => {
-                    expect(user1.equals(user2)).to.be.true;
+                    expect(user1.equals(user2)).to.be.true();
                 });
             });
         });
@@ -1724,12 +1724,12 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                             return user1.setProjects([project1]).then(() => {
                                 return self.UserAssociationEqual.findOne({ where: { username: "jimhalpert" }, include: [{ model: self.ProjectAssociationEqual, as: "Projects" }] }).then((user2) => {
                                     return self.UserAssociationEqual.create({ username: "pambeesly" }).then((user3) => {
-                                        expect(user1.get("Projects")).to.not.exist;
-                                        expect(user2.get("Projects")).to.exist;
-                                        expect(user1.equals(user2)).to.be.true;
-                                        expect(user2.equals(user1)).to.be.true;
-                                        expect(user1.equals(user3)).to.not.be.true;
-                                        expect(user3.equals(user1)).to.not.be.true;
+                                        expect(user1.get("Projects")).to.not.exist();
+                                        expect(user2.get("Projects")).to.exist();
+                                        expect(user1.equals(user2)).to.be.true();
+                                        expect(user2.equals(user1)).to.be.true();
+                                        expect(user1.equals(user3)).to.not.be.true();
+                                        expect(user3.equals(user1)).to.not.be.true();
                                     });
                                 });
                             });
@@ -1825,7 +1825,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                         expect(users.length).to.equal(1);
                         return u.destroy({
                             logging(sql) {
-                                expect(sql).to.exist;
+                                expect(sql).to.exist();
                                 expect(sql.toUpperCase().indexOf("DELETE")).to.be.above(-1);
                             }
                         });
@@ -1854,7 +1854,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                             expect(ms.length).to.equal(2);
                             return m2.destroy({
                                 logging(sql) {
-                                    expect(sql).to.exist;
+                                    expect(sql).to.exist();
                                     expect(sql.toUpperCase().indexOf("DELETE")).to.be.above(-1);
                                     expect(sql.indexOf("ru")).to.be.above(-1);
                                     expect(sql.indexOf("bl")).to.be.above(-1);
@@ -1911,7 +1911,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
         it("returns false if user is not soft deleted", function () {
             return this.ParanoidUser.create({ username: "fnord" }).then(() => {
                 return this.ParanoidUser.findAll().then((users) => {
-                    expect(users[0].isSoftDeleted()).to.be.false;
+                    expect(users[0].isSoftDeleted()).to.be.false();
                 });
             });
         });
@@ -1920,10 +1920,10 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
             return this.ParanoidUser.create({ username: "fnord" }).then(() => {
                 return this.ParanoidUser.findAll().then((users) => {
                     return users[0].destroy().then(() => {
-                        expect(users[0].isSoftDeleted()).to.be.true;
+                        expect(users[0].isSoftDeleted()).to.be.true();
 
                         return users[0].reload({ paranoid: false }).then((user) => {
-                            expect(user.isSoftDeleted()).to.be.true;
+                            expect(user.isSoftDeleted()).to.be.true();
                         });
                     });
                 });
@@ -1944,13 +1944,13 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
             return this.ParanoidUserWithCustomDeletedAt.sync({ force: true }).then(() => {
                 return this.ParanoidUserWithCustomDeletedAt.create({ username: "fnord" }).then(() => {
                     return self.ParanoidUserWithCustomDeletedAt.findAll().then((users) => {
-                        expect(users[0].isSoftDeleted()).to.be.false;
+                        expect(users[0].isSoftDeleted()).to.be.false();
 
                         return users[0].destroy().then(() => {
-                            expect(users[0].isSoftDeleted()).to.be.true;
+                            expect(users[0].isSoftDeleted()).to.be.true();
 
                             return users[0].reload({ paranoid: false }).then((user) => {
-                                expect(user.isSoftDeleted()).to.be.true;
+                                expect(user.isSoftDeleted()).to.be.true();
                             });
                         });
                     });
@@ -1992,7 +1992,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
             }).then(() => {
                 return ParanoidUser.findOne({ where: { secretValue: "42" } });
             }).then((user) => {
-                expect(user).to.be.ok;
+                expect(user).to.be.ok();
                 expect(user.username).to.equal("Peter");
             });
         });

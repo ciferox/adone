@@ -28,7 +28,7 @@ describe("net", "http", "server", "response", "last modified", () => {
     describe("when lastModified not set", () => {
         it("should get undefined", () => {
             const res = response();
-            expect(res.lastModified).to.be.undefined;
+            expect(res.lastModified).to.be.undefined();
         });
     });
 });

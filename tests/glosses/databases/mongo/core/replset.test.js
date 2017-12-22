@@ -99,11 +99,11 @@ describe("database", "mongo", "core", function () {
                 if (server instanceof MongoError) {
                     expect(server.message).to.be.equal("no primary server available");
                 } else {
-                    expect(server).to.be.null;
+                    expect(server).to.be.null();
                 }
                 //
             } else {
-                expect(found_window).not.to.be.null;
+                expect(found_window).not.to.be.null();
             }
         }
 
@@ -228,7 +228,7 @@ describe("database", "mongo", "core", function () {
                 if (outcome.servers[name].electionId) {
                     outcome.servers[name].electionId = new adone.data.bson.ObjectId(outcome.servers[name].electionId.$oid);
                 }
-                expect(state.set[name]).to.be.ok;
+                expect(state.set[name]).to.be.ok();
                 for (const n in outcome.servers[name]) {
                     if (outcome.servers[name][n]) {
                         expect(outcome.servers[name][n]).to.be.deep.equal(state.set[name][n]);
@@ -289,7 +289,7 @@ describe("database", "mongo", "core", function () {
             });
             server.destroy();
             await adone.promise.delay(1000);
-            expect(Connection.connections()).to.be.empty;
+            expect(Connection.connections()).to.be.empty();
             Connection.disableConnectionAccounting();
         });
 
@@ -315,7 +315,7 @@ describe("database", "mongo", "core", function () {
             });
             server.destroy();
             await adone.promise.delay(1000);
-            expect(Connection.connections()).to.be.empty;
+            expect(Connection.connections()).to.be.empty();
             Connection.disableConnectionAccounting();
         });
 
@@ -341,7 +341,7 @@ describe("database", "mongo", "core", function () {
             });
             server.destroy();
             await adone.promise.delay(1000);
-            expect(Connection.connections()).to.be.empty;
+            expect(Connection.connections()).to.be.empty();
             Connection.disableConnectionAccounting();
         });
 
@@ -371,7 +371,7 @@ describe("database", "mongo", "core", function () {
             });
             server.destroy();
             await adone.promise.delay(1000);
-            expect(Connection.connections()).to.be.empty;
+            expect(Connection.connections()).to.be.empty();
             Connection.disableConnectionAccounting();
         });
 
@@ -408,7 +408,7 @@ describe("database", "mongo", "core", function () {
             });
             server.destroy();
             await adone.promise.delay(1000);
-            expect(Connection.connections()).to.be.empty;
+            expect(Connection.connections()).to.be.empty();
             Connection.disableConnectionAccounting();
         });
 
@@ -446,7 +446,7 @@ describe("database", "mongo", "core", function () {
             });
             server.destroy();
             await adone.promise.delay(1000);
-            expect(Connection.connections()).to.be.empty;
+            expect(Connection.connections()).to.be.empty();
             Connection.disableConnectionAccounting();
         });
 
@@ -497,7 +497,7 @@ describe("database", "mongo", "core", function () {
             });
             replset.destroy();
             await adone.promise.delay(1000);
-            expect(Connection.connections()).to.be.empty;
+            expect(Connection.connections()).to.be.empty();
             Connection.disableConnectionAccounting();
             await nonReplSetMember.stop();
             await serverManager.start();
@@ -541,13 +541,13 @@ describe("database", "mongo", "core", function () {
                         skipWait: true
                     });
                 });
-                expect(server.s.replicaSetState.primary).to.be.ok;
+                expect(server.s.replicaSetState.primary).to.be.ok();
                 expect(server.s.replicaSetState.secondaries.length).to.be.below(numberOfSecondaries);
                 expect(server.s.replicaSetState.arbiters).to.have.lengthOf(1);
             } finally {
                 server.destroy();
                 await adone.promise.delay(5000);
-                expect(Connection.connections()).to.be.empty;
+                expect(Connection.connections()).to.be.empty();
                 Connection.disableConnectionAccounting();
                 await configuration.manager.restart(9, {
                     waitMS: 2000
@@ -601,8 +601,8 @@ describe("database", "mongo", "core", function () {
             Connection.disableConnectionAccounting();
             Server.disableServerAccounting();
             await adone.promise.delay(5000);
-            expect(Connection.connections()).to.be.empty;
-            expect(Server.servers()).to.be.empty;
+            expect(Connection.connections()).to.be.empty();
+            expect(Server.servers()).to.be.empty();
         });
     });
 });

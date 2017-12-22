@@ -73,10 +73,10 @@ describe(Support.getTestDialectTeaser("HasOne"), () => {
                                         return group.setUser(user, { transaction: t }).then(() => {
                                             return Group.all().then((groups) => {
                                                 return groups[0].getUser().then((associatedUser) => {
-                                                    expect(associatedUser).to.be.null;
+                                                    expect(associatedUser).to.be.null();
                                                     return Group.all({ transaction: t }).then((groups) => {
                                                         return groups[0].getUser({ transaction: t }).then((associatedUser) => {
-                                                            expect(associatedUser).not.to.be.null;
+                                                            expect(associatedUser).not.to.be.null();
                                                             expect(associatedUser.id).to.equal(user.id);
                                                             expect(associatedUser.id).not.to.equal(fakeUser.id);
                                                             return t.rollback();
@@ -106,7 +106,7 @@ describe(Support.getTestDialectTeaser("HasOne"), () => {
                         return Task.create({ title: "task", status: "inactive" }).then((task) => {
                             return user.setTaskXYZ(task).then(() => {
                                 return user.getTaskXYZ({ where: { status: "active" } }).then((task) => {
-                                    expect(task).to.be.null;
+                                    expect(task).to.be.null();
                                 });
                             });
                         });
@@ -132,7 +132,7 @@ describe(Support.getTestDialectTeaser("HasOne"), () => {
                                     return group.setUser(user, { transaction: t }).then(() => {
                                         return Group.all().then((groups) => {
                                             return groups[0].getUser().then((associatedUser) => {
-                                                expect(associatedUser).to.be.null;
+                                                expect(associatedUser).to.be.null();
                                                 return t.rollback();
                                             });
                                         });
@@ -157,11 +157,11 @@ describe(Support.getTestDialectTeaser("HasOne"), () => {
                         return Task.create({ taskOrSomething: 1, title: "bar" }).then((task) => {
                             return user.setTaskXYZZ(task).then(() => {
                                 return user.getTaskXYZZ().then((task) => {
-                                    expect(task).not.to.be.null;
+                                    expect(task).not.to.be.null();
 
                                     return user.setTaskXYZZ(null).then(() => {
                                         return user.getTaskXYZZ().then((_task) => {
-                                            expect(_task).to.be.null;
+                                            expect(_task).to.be.null();
                                         });
                                     });
                                 });
@@ -252,14 +252,14 @@ describe(Support.getTestDialectTeaser("HasOne"), () => {
             await user.setTaskXYZ(task.id);
             {
                 const task = await user.getTaskXYZ();
-                expect(task).not.to.be.null;
+                expect(task).not.to.be.null();
                 expect(task.id).to.be.equal(20);
             }
             const task2 = await Task.create({ id: 2, title: "bar2" });
             await user.setTaskXYZ(task2.id);
             {
                 const task = await user.getTaskXYZ();
-                expect(task).not.to.be.null;
+                expect(task).not.to.be.null();
                 expect(task.id).to.be.equal(2);
             }
         });
@@ -292,7 +292,7 @@ describe(Support.getTestDialectTeaser("HasOne"), () => {
                 return User.create({ username: "bob" }).then((user) => {
                     return user.createTask({ title: "task" }).then(() => {
                         return user.getTask().then((task) => {
-                            expect(task).not.to.be.null;
+                            expect(task).not.to.be.null();
                             expect(task.title).to.equal("task");
                         });
                     });
@@ -314,7 +314,7 @@ describe(Support.getTestDialectTeaser("HasOne"), () => {
                                 return user.createGroup({ name: "testgroup" }, { transaction: t }).then(() => {
                                     return User.all().then((users) => {
                                         return users[0].getGroup().then((group) => {
-                                            expect(group).to.be.null;
+                                            expect(group).to.be.null();
                                             return User.all({ transaction: t }).then((users) => {
                                                 return users[0].getGroup({ transaction: t }).then((group) => {
                                                     expect(group).to.be.not.null;
@@ -340,7 +340,7 @@ describe(Support.getTestDialectTeaser("HasOne"), () => {
 
             Account.hasOne(User);
 
-            expect(User.rawAttributes.account_id).to.exist;
+            expect(User.rawAttributes.account_id).to.exist();
         });
 
         it("should use model name when using camelcase", function () {
@@ -349,7 +349,7 @@ describe(Support.getTestDialectTeaser("HasOne"), () => {
 
             Account.hasOne(User);
 
-            expect(User.rawAttributes.AccountId).to.exist;
+            expect(User.rawAttributes.AccountId).to.exist();
         });
 
         it("should support specifying the field of a foreign key", async function () {
@@ -363,7 +363,7 @@ describe(Support.getTestDialectTeaser("HasOne"), () => {
                 }
             });
 
-            expect(User.rawAttributes.taskId).to.exist;
+            expect(User.rawAttributes.taskId).to.exist();
             expect(User.rawAttributes.taskId.field).to.equal("task_id");
             await Task.sync({ force: true });
             // Can't use Promise.all cause of foreign key references
@@ -376,14 +376,14 @@ describe(Support.getTestDialectTeaser("HasOne"), () => {
             {
                 const user = await task.getUserXYZ();
                 // the sql query should correctly look at task_id instead of taskId
-                expect(user).to.not.be.null;
+                expect(user).to.not.be.null();
             }
             {
                 const task = await Task.findOne({
                     where: { title: "task" },
                     include: [User]
                 });
-                expect(task.UserXYZ).to.exist;
+                expect(task.UserXYZ).to.exist();
             }
         });
     });
@@ -426,7 +426,7 @@ describe(Support.getTestDialectTeaser("HasOne"), () => {
                         });
                     });
                 }).then((tasks) => {
-                    expect(tasks).to.be.empty;
+                    expect(tasks).to.be.empty();
                 });
             });
         });
@@ -623,10 +623,10 @@ describe(Support.getTestDialectTeaser("HasOne"), () => {
                     }
                 });
 
-                expect(Profile.rawAttributes.uid).to.be.ok;
+                expect(Profile.rawAttributes.uid).to.be.ok();
                 expect(Profile.rawAttributes.uid.references.model).to.equal(User.getTableName());
                 expect(Profile.rawAttributes.uid.references.key).to.equal("id");
-                expect(Profile.rawAttributes.uid.allowNull).to.be.false;
+                expect(Profile.rawAttributes.uid.allowNull).to.be.false();
 
                 // Let's clear it
                 Profile = this.sequelize.define("project", {});
@@ -637,10 +637,10 @@ describe(Support.getTestDialectTeaser("HasOne"), () => {
                     }
                 });
 
-                expect(Profile.rawAttributes.uid).to.be.ok;
+                expect(Profile.rawAttributes.uid).to.be.ok();
                 expect(Profile.rawAttributes.uid.references.model).to.equal(User.getTableName());
                 expect(Profile.rawAttributes.uid.references.key).to.equal("id");
-                expect(Profile.rawAttributes.uid.allowNull).to.be.false;
+                expect(Profile.rawAttributes.uid.allowNull).to.be.false();
             });
 
             it("works when taking a column directly from the object", function () {
@@ -659,10 +659,10 @@ describe(Support.getTestDialectTeaser("HasOne"), () => {
 
                 User.hasOne(Profile, { foreignKey: Profile.rawAttributes.user_id });
 
-                expect(Profile.rawAttributes.user_id).to.be.ok;
+                expect(Profile.rawAttributes.user_id).to.be.ok();
                 expect(Profile.rawAttributes.user_id.references.model).to.equal(User.getTableName());
                 expect(Profile.rawAttributes.user_id.references.key).to.equal("uid");
-                expect(Profile.rawAttributes.user_id.allowNull).to.be.false;
+                expect(Profile.rawAttributes.user_id.allowNull).to.be.false();
             });
 
             it("works when merging with an existing definition", function () {
@@ -681,8 +681,8 @@ describe(Support.getTestDialectTeaser("HasOne"), () => {
 
                 User.hasOne(Project, { foreignKey: { allowNull: false } });
 
-                expect(Project.rawAttributes.userUid).to.be.ok;
-                expect(Project.rawAttributes.userUid.allowNull).to.be.false;
+                expect(Project.rawAttributes.userUid).to.be.ok();
+                expect(Project.rawAttributes.userUid.allowNull).to.be.false();
                 expect(Project.rawAttributes.userUid.references.model).to.equal(User.getTableName());
                 expect(Project.rawAttributes.userUid.references.key).to.equal("uid");
                 expect(Project.rawAttributes.userUid.defaultValue).to.equal(42);
@@ -714,8 +714,8 @@ describe(Support.getTestDialectTeaser("HasOne"), () => {
                 });
 
                 expect(Object.keys(InternetOrders.rawAttributes).length).to.equal(2);
-                expect(InternetOrders.rawAttributes.OrderId).to.be.ok;
-                expect(InternetOrders.rawAttributes.OrdersId).not.to.be.ok;
+                expect(InternetOrders.rawAttributes.OrderId).to.be.ok();
+                expect(InternetOrders.rawAttributes.OrdersId).not.to.be.ok();
             });
         });
     });

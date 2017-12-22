@@ -71,7 +71,7 @@ describe("semver", "gtr", () => {
             const version = tuple[1];
             const loose = tuple[2] || false;
             const msg = `gtr(${version}, ${range}, ${loose})`;
-            assert.isOk(gtr(version, range, loose), msg);
+            assert.ok(gtr(version, range, loose), msg);
         });
     });
 
@@ -165,7 +165,7 @@ describe("semver", "gtr", () => {
             const version = tuple[1];
             const loose = tuple[2] || false;
             const msg = `!gtr(${version}, ${range}, ${loose})`;
-            assert.isNotOk(gtr(version, range, loose), msg);
+            assert.notOk(gtr(version, range, loose), msg);
         });
     });
 });

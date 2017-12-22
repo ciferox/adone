@@ -28,8 +28,8 @@ describe("database", "pouch", "db.allDocs()", () => {
         const rows = result.rows;
         assert.equal(result.total_rows, 4, "correct number of results");
         for (let i = 0; i < rows.length; i++) {
-            assert.isAtLeast(Number.parseInt(rows[i].id), 0);
-            assert.isAtMost(Number.parseInt(rows[i].id), 4);
+            assert.atLeast(Number.parseInt(rows[i].id), 0);
+            assert.atMost(Number.parseInt(rows[i].id), 4);
         }
 
         const all = await db.allDocs({
@@ -119,8 +119,8 @@ describe("database", "pouch", "db.allDocs()", () => {
             });
         }).then((result) => {
             assert.deepEqual(result.rows.map(keyFunc), keys);
-            expect(result.rows[keys.indexOf("2")].value.deleted).to.be.true;
-            expect(result.rows[keys.indexOf("2")].doc).to.be.null;
+            expect(result.rows[keys.indexOf("2")].value.deleted).to.be.true();
+            expect(result.rows[keys.indexOf("2")].doc).to.be.null();
         });
     });
 
@@ -640,7 +640,7 @@ describe("database", "pouch", "db.allDocs()", () => {
                     return;
                 }
                 if (lastkey) {
-                    // assert.isAbove(res.rows[0].key, lastkey);
+                    // assert.above(res.rows[0].key, lastkey);
                 }
                 assert.lengthOf(res.rows, 100);
                 lastkey = res.rows.pop().key;
@@ -662,7 +662,7 @@ describe("database", "pouch", "db.allDocs()", () => {
                         if (!res.rows.length) {
                             return;
                         }
-                        // assert.isAbove(res.rows[0].key, key);
+                        // assert.above(res.rows[0].key, key);
                         assert.lengthOf(res.rows, 100);
                     });
                 }));
@@ -715,7 +715,7 @@ describe("database", "pouch", "db.allDocs()", () => {
                 conflicts: true
             });
         }).then((result) => {
-            assert.isUndefined(result.rows[0].doc._conflicts);
+            assert.undefined(result.rows[0].doc._conflicts);
         });
     });
 

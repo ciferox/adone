@@ -270,12 +270,12 @@ describe("fs", "glob", () => {
             }));
 
             const result = await glob("/virtual/a/");
-            expect(result).to.be.empty;
+            expect(result).to.be.empty();
         });
 
         it("should return nothing if there is no match", async () => {
             const result = await glob("/virtual/a");
-            expect(result).to.be.empty;
+            expect(result).to.be.empty();
         });
     });
 
@@ -477,7 +477,7 @@ describe("fs", "glob", () => {
             }
             {
                 const result = await glob("a/symlink/a/b/**/b/c/**", { cwd: "/virtual" });
-                expect(result).to.be.empty;
+                expect(result).to.be.empty();
             }
         });
 
@@ -1887,7 +1887,7 @@ describe("fs", "glob", () => {
                 const s = spy();
                 const glob = new Glob("/virtual/**/*");
                 glob.on("match", s);
-                expect(glob.isPaused()).to.be.true;
+                expect(glob.isPaused()).to.be.true();
                 await delay(10);
                 expect(s).to.have.not.been.called;
             });
@@ -1896,9 +1896,9 @@ describe("fs", "glob", () => {
                 const s = spy();
                 const glob = new Glob("/virtual/**/*");
                 glob.on("match", s);
-                expect(glob.isPaused()).to.be.true;
+                expect(glob.isPaused()).to.be.true();
                 glob.resume();
-                expect(glob.isPaused()).to.be.true;
+                expect(glob.isPaused()).to.be.true();
                 expect(s).to.have.not.been.called;
                 await delay(10);
                 expect(s).to.have.been.calledOnce;
@@ -1908,7 +1908,7 @@ describe("fs", "glob", () => {
                 const s = spy();
                 const glob = new Glob("/virtual/**/*");
                 glob.on("match", s);
-                expect(glob.isPaused()).to.be.true;
+                expect(glob.isPaused()).to.be.true();
                 glob.resume();
                 glob.pause();
                 await delay(10);

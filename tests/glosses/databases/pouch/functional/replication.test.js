@@ -41,7 +41,7 @@ describe("database", "pouch", "suite2 replication", () => {
         if (is.undefined(info.doc_count)) {
             // info is from Sync Gateway, which allocates an extra seqnum
             // for user access control purposes.
-            assert.isTrue(info.update_seq >= expected.update_seq && info.update_seq <= expected.update_seq + 1, "update_seq");
+            assert.true(info.update_seq >= expected.update_seq && info.update_seq <= expected.update_seq + 1, "update_seq");
         } else {
             assert.equal(info.update_seq, expected.update_seq, "update_seq");
         }
@@ -332,10 +332,10 @@ describe("database", "pouch", "suite2 replication", () => {
                     db.allDocs().then((result) => {
                         assert.equal(result.rows.length, docs.length);
                         db.info().then((info) => {
-                            assert.isAbove(info.update_seq, 2, "update_seq local");
+                            assert.above(info.update_seq, 2, "update_seq local");
                             assert.equal(info.doc_count, 3, "doc_count local");
                             remote.info().then((info) => {
-                                assert.isAbove(info.update_seq, 2, "update_seq remote");
+                                assert.above(info.update_seq, 2, "update_seq remote");
                                 assert.equal(info.doc_count, 3, "doc_count remote");
                                 done();
                             });
@@ -1294,17 +1294,17 @@ describe("database", "pouch", "suite2 replication", () => {
         doc = await db2.get("foo");
         assert.equal(doc.value, "db1");
         let res = await db1.allDocs({ include_docs: true });
-        assert.isAbove(res.rows.length, 0, "first");
+        assert.above(res.rows.length, 0, "first");
         // redundant but we want to test it
         assert.equal(res.rows[0].doc.value, "db1");
         res = await db2.allDocs({ include_docs: true });
-        assert.isAbove(res.rows.length, 0, "second");
+        assert.above(res.rows.length, 0, "second");
         assert.equal(res.rows[0].doc.value, "db1");
         const info = await db1.info();
         // if auto_compaction is enabled, will
         // be 5 because 2-c goes "missing" and
         // the other db tries to re-put it
-        assert.isTrue(info.update_seq >= 4 && info.update_seq <= 5);
+        assert.true(info.update_seq >= 4 && info.update_seq <= 5);
         assert.equal(info.doc_count, 1);
         const info2 = await db2.info();
         verifyInfo(info2, {
@@ -1841,7 +1841,7 @@ describe("database", "pouch", "suite2 replication", () => {
             return remote.allDocs({ keys: ["0"] });
         }).then((res) => {
             const row = res.rows[0];
-            assert.isUndefined(row.error);
+            assert.undefinedow.error);
             // set rev to latest so we go at the end (otherwise new
             // rev is 1 and the subsequent remove below won't win)
             const doc = {
@@ -1968,12 +1968,12 @@ describe("database", "pouch", "suite2 replication", () => {
             return db.get("foo", { conflicts: true });
         }).then((doc) => {
             assert.equal(doc.generation, 3);
-            assert.isUndefined(doc._conflicts);
+            assert.undefinedoc._conflicts);
         }).then(() => {
             return remote.get("foo", { conflicts: true });
         }).then((doc) => {
             assert.equal(doc.generation, 3);
-            assert.isUndefined(doc._conflicts);
+            assert.undefinedoc._conflicts);
         });
     });
 
@@ -2174,7 +2174,7 @@ describe("database", "pouch", "suite2 replication", () => {
         assert.equal(result.docs_written, 3);
         assert.equal(result.docs_read, 3);
         const info = await db.info();
-        assert.isAbove(info.update_seq, 0);
+        assert.above(info.update_seq, 0);
         assert.equal(info.doc_count, 1);
     });
 
@@ -2696,8 +2696,8 @@ describe("database", "pouch", "suite2 replication", () => {
             ]);
         }).then((res) => {
             // [0] = target checkpoint, [1] = source checkpoint
-            assert.isUndefined(res[0].session_id);
-            assert.isUndefined(res[1].session_id);
+            assert.undefinedes[0].session_id);
+            assert.undefinedes[1].session_id);
 
             return source.put(doc, {});
         }).then(() => {
@@ -2712,7 +2712,7 @@ describe("database", "pouch", "suite2 replication", () => {
             assert.exists(res.replicator);
             assert.exists(res.session_id);
             assert.equal(res.version, 1);
-            assert.isString(res.session_id);
+            assert.string(res.session_id);
         });
     });
 
@@ -2751,7 +2751,7 @@ describe("database", "pouch", "suite2 replication", () => {
             remote.put(doc2).then(() => {
                 setTimeout(() => {
                     db.allDocs().then((res) => {
-                        assert.isBelow(res.total_rows, 2);
+                        assert.below(res.total_rows, 2);
                         done();
                     });
                 }, 100);
@@ -3288,7 +3288,7 @@ describe("database", "pouch", "suite2 replication", () => {
                 assert.equal(revs[0].ok._id, docid, "rev 1, correct document id");
                 assert.equal(revs[1].ok._id, docid, "rev 2, correct document id");
                 // order of revisions is not specified
-                assert.isTrue(((
+                assert.true(((
                     revs[0].ok._rev === a_doc._rev &&
                     revs[1].ok._rev === b_doc._rev) ||
                     (

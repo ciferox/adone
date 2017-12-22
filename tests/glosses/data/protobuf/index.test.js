@@ -349,7 +349,7 @@ describe("data", "protobuf", () => {
 
             assert.deepEqual(o1.num, 1);
             assert.deepEqual(o1.payload, Buffer.from("lol"));
-            assert.isOk(o1.meh, "has nested property");
+            assert.ok(o1.meh, "has nested property");
             assert.deepEqual(o1.meh.num, 2);
             assert.deepEqual(o1.meh.payload, Buffer.from("bar"));
 
@@ -464,7 +464,7 @@ describe("data", "protobuf", () => {
         };
 
         it("oneof encode", () => {
-            assert.isOk(Property.encode(data), "oneof encode");
+            assert.ok(Property.encode(data), "oneof encode");
         });
 
         it("oneof encode + decode", () => {
@@ -484,7 +484,7 @@ describe("data", "protobuf", () => {
             try {
                 Property.encode(invalidData);
             } catch (err) {
-                assert.isOk(true, "should throw");
+                assert.ok(true, "should throw");
             }
         });
 

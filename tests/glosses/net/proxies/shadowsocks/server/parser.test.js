@@ -50,7 +50,7 @@ describe("net", "proxy", "shadowsocks", "server", "parser", () => {
                 await adone.promise.delay(10);
                 expect(parser._state).to.be.equal(Parser.STATE_HEADER_ADDRESS);
                 expect(parser._type).to.be.equal(0x01);
-                expect(parser._address).not.to.be.null;
+                expect(parser._address).not.to.be.null();
                 expect(parser._address).to.have.lengthOf(4);
             });
 
@@ -65,7 +65,7 @@ describe("net", "proxy", "shadowsocks", "server", "parser", () => {
                 await adone.promise.delay(10);
                 expect(parser._state).to.be.equal(Parser.STATE_HEADER_ADDRESS);
                 expect(parser._type).to.be.equal(0x04);
-                expect(parser._address).not.to.be.null;
+                expect(parser._address).not.to.be.null();
                 expect(parser._address).to.have.lengthOf(16);
             });
 
@@ -80,7 +80,7 @@ describe("net", "proxy", "shadowsocks", "server", "parser", () => {
                 await adone.promise.delay(10);
                 expect(parser._state).to.be.equal(Parser.STATE_HEADER_ADDRESS);
                 expect(parser._type).to.be.equal(0x03);
-                expect(parser._address).to.be.null;
+                expect(parser._address).to.be.null();
             });
 
             it("should stop parsing if the type is unknown", async () => {
@@ -95,7 +95,7 @@ describe("net", "proxy", "shadowsocks", "server", "parser", () => {
                 stream.write("\x55");
                 await adone.promise.delay(10);
                 expect(parser._state).to.be.equal(Parser.STATE_ERROR);
-                expect(parser._address).to.be.null;
+                expect(parser._address).to.be.null();
                 expect(onError).to.have.been.calledOnce;
                 const { args } = onError.getCall(0);
                 expect(args).to.have.lengthOf(1);

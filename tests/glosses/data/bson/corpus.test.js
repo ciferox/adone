@@ -106,7 +106,7 @@ describe("data", "bson", "corpus", () => {
                 failed = true;
             }
 
-            expect(failed).to.be.ok;
+            expect(failed).to.be.ok();
         }
     };
 
@@ -124,7 +124,7 @@ describe("data", "bson", "corpus", () => {
                 threw = true;
             }
 
-            expect(threw).to.be.true;
+            expect(threw).to.be.true();
         }
     };
 

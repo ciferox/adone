@@ -77,7 +77,7 @@ describe("multi", "hash", () => {
                 assert.equal(r.code, code);
                 assert.equal(r.name, name);
                 assert.equal(r.length, length);
-                assert.isTrue(d1.equals(d2));
+                assert.true(d1.equals(d2));
             });
         });
 
@@ -129,28 +129,28 @@ describe("multi", "hash", () => {
 
     describe("isValidCode", () => {
         it("valid", () => {
-            assert.isTrue(multi.hash.isValidCode(2));
-            assert.isTrue(multi.hash.isValidCode(0x13));
+            assert.true(multi.hash.isValidCode(2));
+            assert.true(multi.hash.isValidCode(0x13));
         });
 
         it("invalid", () => {
-            assert.isFalse(multi.hash.isValidCode(0x10));
-            assert.isFalse(multi.hash.isValidCode(0x90));
+            assert.false(multi.hash.isValidCode(0x10));
+            assert.false(multi.hash.isValidCode(0x90));
         });
     });
 
     describe("isAppCode", () => {
         it("valid", () => {
             for (let n = 1; n < 0x10; n++) {
-                assert.isTrue(multi.hash.isAppCode(n));
+                assert.true(multi.hash.isAppCode(n));
             }
         });
 
         it("invalid", () => {
-            assert.isFalse(multi.hash.isAppCode(0));
+            assert.false(multi.hash.isAppCode(0));
 
             for (let m = 0x10; m <= 0xff; m++) {
-                assert.isFalse(multi.hash.isAppCode(m));
+                assert.false(multi.hash.isAppCode(m));
             }
         });
     });
@@ -201,9 +201,9 @@ describe("multi", "hash", () => {
 
     describe("constants", () => {
         it("frozen", () => {
-            assert.isTrue(Object.isFrozen(multi.hash.names));
-            assert.isTrue(Object.isFrozen(multi.hash.codes));
-            assert.isTrue(Object.isFrozen(multi.hash.defaultLengths));
+            assert.true(Object.isFrozen(multi.hash.names));
+            assert.true(Object.isFrozen(multi.hash.codes));
+            assert.true(Object.isFrozen(multi.hash.defaultLengths));
         });
     });
 });

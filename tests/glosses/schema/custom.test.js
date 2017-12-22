@@ -910,7 +910,7 @@ describe("schema", "custom keywords", () => {
     function shouldBeValid(validate, data) {
         expect(validate(data)).to.be.equal(true);
 
-        expect(validate.errors).not.to.be.ok;
+        expect(validate.errors).not.to.be.ok();
     }
 
     function shouldBeInvalid(validate, data, numErrors) {

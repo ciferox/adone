@@ -145,11 +145,11 @@ describe("stream", "buffer", () => {
         });
 
         it("returns false on call to getContents() when empty", () => {
-            expect(bs.getContents()).to.be.false;
+            expect(bs.getContents()).to.be.false();
         });
 
         it("returns false on call to getContentsAsString() when empty", () => {
-            expect(bs.getContentsAsString()).to.be.false;
+            expect(bs.getContentsAsString()).to.be.false();
         });
 
         it("backing buffer should be default size", () => {

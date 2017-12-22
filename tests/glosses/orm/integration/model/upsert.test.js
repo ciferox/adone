@@ -55,9 +55,9 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 {
                     const created = await this.User.upsert({ id: 42, username: "john" });
                     if (dialect === "sqlite") {
-                        expect(created).to.be.undefined;
+                        expect(created).to.be.undefined();
                     } else {
-                        expect(created).to.be.ok;
+                        expect(created).to.be.ok();
                     }
 
                     this.clock.tick(1000);
@@ -65,14 +65,14 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 {
                     const created = await this.User.upsert({ id: 42, username: "doe" });
                     if (dialect === "sqlite") {
-                        expect(created).to.be.undefined;
+                        expect(created).to.be.undefined();
                     } else {
-                        expect(created).not.to.be.ok;
+                        expect(created).not.to.be.ok();
                     }
                 }
                 {
                     const user = await this.User.findById(42);
-                    expect(user.createdAt).to.be.ok;
+                    expect(user.createdAt).to.be.ok();
                     expect(user.username).to.equal("doe");
                     expect(user.updatedAt.getTime()).to.be.greaterThan(user.createdAt.getTime());
                 }
@@ -82,9 +82,9 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 {
                     const created = await this.User.upsert({ foo: "baz", bar: 19, username: "john" });
                     if (dialect === "sqlite") {
-                        expect(created).to.be.undefined;
+                        expect(created).to.be.undefined();
                     } else {
-                        expect(created).to.be.ok;
+                        expect(created).to.be.ok();
                     }
 
                     this.clock.tick(1000);
@@ -92,14 +92,14 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 {
                     const created = await this.User.upsert({ foo: "baz", bar: 19, username: "doe" });
                     if (dialect === "sqlite") {
-                        expect(created).to.be.undefined;
+                        expect(created).to.be.undefined();
                     } else {
-                        expect(created).not.to.be.ok;
+                        expect(created).not.to.be.ok();
                     }
                 }
                 {
                     const user = await this.User.find({ where: { foo: "baz", bar: 19 } });
-                    expect(user.createdAt).to.be.ok;
+                    expect(user.createdAt).to.be.ok();
                     expect(user.username).to.equal("doe");
                     expect(user.updatedAt.getTime()).to.be.greaterThan(user.createdAt.getTime());
                 }
@@ -145,11 +145,11 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     User.upsert({ a: "a", b: "a", username: "curt" })
                 ]);
                 if (dialect === "sqlite") {
-                    expect(created1).to.be.undefined;
-                    expect(created2).to.be.undefined;
+                    expect(created1).to.be.undefined();
+                    expect(created2).to.be.undefined();
                 } else {
-                    expect(created1).to.be.ok;
-                    expect(created2).to.be.ok;
+                    expect(created1).to.be.ok();
+                    expect(created2).to.be.ok();
                 }
 
 
@@ -157,19 +157,19 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 // Update the first one
                 const created = await User.upsert({ a: "a", b: "b", username: "doe" });
                 if (dialect === "sqlite") {
-                    expect(created).to.be.undefined;
+                    expect(created).to.be.undefined();
                 } else {
-                    expect(created).not.to.be.ok;
+                    expect(created).not.to.be.ok();
                 }
 
                 const user1 = await User.find({ where: { a: "a", b: "b" } });
-                expect(user1.createdAt).to.be.ok;
+                expect(user1.createdAt).to.be.ok();
                 expect(user1.username).to.equal("doe");
                 expect(user1.updatedAt.getTime()).to.be.greaterThan(user1.createdAt.getTime());
 
                 const user2 = await User.find({ where: { a: "a", b: "a" } });
                 // The second one should not be updated
-                expect(user2.createdAt).to.be.ok;
+                expect(user2.createdAt).to.be.ok();
                 expect(user2.username).to.equal("curt");
                 expect(user2.updatedAt).to.be.deep.equal(user2.createdAt);
             });
@@ -193,9 +193,9 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 {
                     const created = await this.User.upsert({ id: 42, username: "john", blob: Buffer.from("kaj") })
                     if (dialect === "sqlite") {
-                        expect(created).to.be.undefined;
+                        expect(created).to.be.undefined();
                     } else {
-                        expect(created).to.be.ok;
+                        expect(created).to.be.ok();
                     }
 
                     this.clock.tick(1000);
@@ -203,14 +203,14 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 {
                     const created = await this.User.upsert({ id: 42, username: "doe", blob: Buffer.from("andrea") });
                     if (dialect === "sqlite") {
-                        expect(created).to.be.undefined;
+                        expect(created).to.be.undefined();
                     } else {
-                        expect(created).not.to.be.ok;
+                        expect(created).not.to.be.ok();
                     }
                 }
                 {
                     const user = await this.User.findById(42);
-                    expect(user.createdAt).to.be.ok;
+                    expect(user.createdAt).to.be.ok();
                     expect(user.username).to.equal("doe");
                     expect(user.blob.toString()).to.equal("andrea");
                     expect(user.updatedAt.getTime()).to.be.greaterThan(user.createdAt.getTime());
@@ -221,17 +221,17 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 {
                     const created = await this.User.upsert({ id: 42, baz: "foo" });
                     if (dialect === "sqlite") {
-                        expect(created).to.be.undefined;
+                        expect(created).to.be.undefined();
                     } else {
-                        expect(created).to.be.ok;
+                        expect(created).to.be.ok();
                     }
                 }
                 {
                     const created = await this.User.upsert({ id: 42, baz: "oof" });
                     if (dialect === "sqlite") {
-                        expect(created).to.be.undefined;
+                        expect(created).to.be.undefined();
                     } else {
-                        expect(created).not.to.be.ok;
+                        expect(created).not.to.be.ok();
                     }
                 }
                 {
@@ -245,9 +245,9 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
                     const created = await this.ModelWithFieldPK.upsert({ userId: 42, foo: "first" });
                     if (dialect === "sqlite") {
-                        expect(created).to.be.undefined;
+                        expect(created).to.be.undefined();
                     } else {
-                        expect(created).to.be.ok;
+                        expect(created).to.be.ok();
                     }
 
 
@@ -256,9 +256,9 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 {
                     const created = await this.ModelWithFieldPK.upsert({ userId: 42, foo: "second" });
                     if (dialect === "sqlite") {
-                        expect(created).to.be.undefined;
+                        expect(created).to.be.undefined();
                     } else {
-                        expect(created).not.to.be.ok;
+                        expect(created).not.to.be.ok();
                     }
                 }
                 {
@@ -271,9 +271,9 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 {
                     const created = await this.User.upsert({ id: 42, username: "john", foo: this.sequelize.fn("upper", "mixedCase1") });
                     if (dialect === "sqlite") {
-                        expect(created).to.be.undefined;
+                        expect(created).to.be.undefined();
                     } else {
-                        expect(created).to.be.ok;
+                        expect(created).to.be.ok();
                     }
 
 
@@ -282,14 +282,14 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 {
                     const created = await this.User.upsert({ id: 42, username: "doe", foo: this.sequelize.fn("upper", "mixedCase2") });
                     if (dialect === "sqlite") {
-                        expect(created).to.be.undefined;
+                        expect(created).to.be.undefined();
                     } else {
-                        expect(created).not.to.be.ok;
+                        expect(created).not.to.be.ok();
                     }
                 }
                 {
                     const user = await this.User.findById(42);
-                    expect(user.createdAt).to.be.ok;
+                    expect(user.createdAt).to.be.ok();
                     expect(user.username).to.equal("doe");
                     expect(user.foo).to.equal("MIXEDCASE2");
                 }
@@ -337,7 +337,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 const user = await this.User.findById(42);
                 const created = await this.User.upsert({ id: user.id, username: user.username });
                 if (dialect === "sqlite") {
-                    expect(created).to.be.undefined;
+                    expect(created).to.be.undefined();
                 } else {
                     // After set node-mysql flags = '-FOUND_ROWS' in connection of mysql,
                     // result from upsert should be false when upsert a row to its current value
@@ -364,24 +364,24 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 {
                     const created = await User.upsert({ username: "user1", email: "user1@domain.ext", city: "City" });
                     if (dialect === "sqlite") {
-                        expect(created).to.be.undefined;
+                        expect(created).to.be.undefined();
                     } else {
-                        expect(created).to.be.ok;
+                        expect(created).to.be.ok();
                     }
                     this.clock.tick(1000);
                 }
                 {
                     const created = await User.upsert({ username: "user1", email: "user1@domain.ext", city: "New City" });
                     if (dialect === "sqlite") {
-                        expect(created).to.be.undefined;
+                        expect(created).to.be.undefined();
                     } else {
-                        expect(created).not.to.be.ok;
+                        expect(created).not.to.be.ok();
                     }
                     this.clock.tick(1000);
                 }
                 {
                     const user = await User.findOne({ where: { username: "user1", email: "user1@domain.ext" } });
-                    expect(user.createdAt).to.be.ok;
+                    expect(user.createdAt).to.be.ok();
                     expect(user.city).to.equal("New City");
                     expect(user.updatedAt.getTime()).to.be.greaterThan(user.createdAt.getTime());
                 }
@@ -406,21 +406,21 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     return User.upsert({ username: "user1", email: "user1@domain.ext", city: "City" })
                         .then((created) => {
                             if (dialect === "sqlite") {
-                                expect(created).to.be.undefined;
+                                expect(created).to.be.undefined();
                             } else {
-                                expect(created).to.be.ok;
+                                expect(created).to.be.ok();
                             }
                             return User.upsert({ username: "user1", email: "user1@domain.ext", city: "New City" });
                         }).then((created) => {
                             if (dialect === "sqlite") {
-                                expect(created).to.be.undefined;
+                                expect(created).to.be.undefined();
                             } else {
-                                expect(created).not.to.be.ok;
+                                expect(created).not.to.be.ok();
                             }
                             return User.findOne({ where: { username: "user1", email: "user1@domain.ext" } });
                         })
                         .then((user) => {
-                            expect(user.createdAt).to.be.ok;
+                            expect(user.createdAt).to.be.ok();
                             expect(user.city).to.equal("New City");
                         });
                 });
@@ -442,21 +442,21 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     return User.upsert({ name: "user1", address: "address", city: "City" })
                         .then((created) => {
                             if (dialect === "sqlite") {
-                                expect(created).to.be.undefined;
+                                expect(created).to.be.undefined();
                             } else {
-                                expect(created).to.be.ok;
+                                expect(created).to.be.ok();
                             }
                             return User.upsert({ name: "user1", address: "address", city: "New City" });
                         }).then((created) => {
                             if (dialect === "sqlite") {
-                                expect(created).to.be.undefined;
+                                expect(created).to.be.undefined();
                             } else {
-                                expect(created).not.to.be.ok;
+                                expect(created).not.to.be.ok();
                             }
                             return User.findOne({ where: { name: "user1", address: "address" } });
                         })
                         .then((user) => {
-                            expect(user.createdAt).to.be.ok;
+                            expect(user.createdAt).to.be.ok();
                             expect(user.city).to.equal("New City");
                         });
                 });

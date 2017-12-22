@@ -28,12 +28,12 @@ describe("data", "protobuf", "schema", () => {
         try {
             schema.parse("hello world");
         } catch (err) {
-            assert.isOk(true, "should fail");
+            assert.ok(true, "should fail");
         }
         try {
             schema.parse("message Foo { lol }");
         } catch (err) {
-            assert.isOk(true, "should fail");
+            assert.ok(true, "should fail");
         }
     });
 
@@ -74,7 +74,7 @@ describe("data", "protobuf", "schema", () => {
         try {
             schema.parse('message Foo { required int32 a = 1; }\n syntax = "proto3"');
         } catch (err) {
-            assert.isOk(true, "should fail");
+            assert.ok(true, "should fail");
         }
     });
 

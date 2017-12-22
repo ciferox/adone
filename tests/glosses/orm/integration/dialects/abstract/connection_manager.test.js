@@ -31,7 +31,7 @@ describe("Connection Manager", () => {
 
         const poolSpy = sandbox.spy(adone.util.pool, "create");
         connectionManager.initPools();
-        expect(poolSpy.calledOnce).to.be.true;
+        expect(poolSpy.calledOnce).to.be.true();
     });
 
     it("should initialize a multiple pools with replication", () => {
@@ -46,7 +46,7 @@ describe("Connection Manager", () => {
 
         const poolSpy = sandbox.spy(adone.util.pool, "create");
         connectionManager.initPools();
-        expect(poolSpy.calledTwice).to.be.true;
+        expect(poolSpy.calledTwice).to.be.true();
     });
 
     it("should round robin calls to the read pool", () => {
@@ -152,8 +152,8 @@ describe("Connection Manager", () => {
         const poolClearSpy = sandbox.spy(connectionManager.pool, "clear");
 
         return connectionManager.close().then(() => {
-            expect(poolDrainSpy.calledOnce).to.be.true;
-            expect(poolClearSpy.calledOnce).to.be.true;
+            expect(poolDrainSpy.calledOnce).to.be.true();
+            expect(poolClearSpy.calledOnce).to.be.true();
         });
     });
 

@@ -76,7 +76,7 @@ describe("semver", "ltr", () => {
             const version = tuple[1];
             const loose = tuple[2] || false;
             const msg = `ltr(${version}, ${range}, ${loose})`;
-            assert.isOk(ltr(version, range, loose), msg);
+            assert.ok(ltr(version, range, loose), msg);
         });
     });
 
@@ -173,7 +173,7 @@ describe("semver", "ltr", () => {
             const version = tuple[1];
             const loose = tuple[2] || false;
             const msg = `!ltr(${version}, ${range}, ${loose})`;
-            assert.isNotOk(ltr(version, range, loose), msg);
+            assert.notOk(ltr(version, range, loose), msg);
         });
     });
 });

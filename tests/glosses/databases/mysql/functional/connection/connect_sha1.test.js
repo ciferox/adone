@@ -22,7 +22,7 @@ describe("database", "mysql", "functional", "connection", "connect sha1", () => 
                         params.authToken,
                         doubleSha
                     );
-                    expect(isValid).to.be.true;
+                    expect(isValid).to.be.true();
                     cb(null);
                 }
             });

@@ -37,7 +37,7 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
 
                 return this.User.count().then((count) => {
                     expect(count).to.equal(3);
-                    expect(beforeHook).to.be.true;
+                    expect(beforeHook).to.be.true();
                 });
             });
 

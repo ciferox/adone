@@ -16,7 +16,7 @@ describe("fast", "transform", "inject", () => {
         let received = 0;
 
         stream.on("error", (err) => {
-            assert.isOk(err);
+            assert.ok(err);
             done(err);
         });
 
@@ -25,8 +25,8 @@ describe("fast", "transform", "inject", () => {
         });
 
         stream.on("data", (newFile) => {
-            assert.isOk(newFile);
-            assert.isOk(newFile.contents);
+            assert.ok(newFile);
+            assert.ok(newFile.contents);
 
             if (contents.length === 1) {
                 assert.equal(String(newFile.contents), contents[0]);

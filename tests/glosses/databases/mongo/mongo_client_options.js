@@ -13,11 +13,11 @@ describe("mongo client options", function () {
         const collection = db.collection("testConnectServerOptions");
         await collection.insert({ foo: 123 }, { w: 1 });
         expect(await collection.count()).to.be.equal(1);
-        expect(await collection.find({ foo: 123 })).to.be.ok;
-        expect(await db.dropDatabase()).to.be.true;
+        expect(await collection.find({ foo: 123 })).to.be.ok();
+        expect(await db.dropDatabase()).to.be.true(););
         expect(db.serverConfig.poolSize).to.be.equal(1);
         expect(db.serverConfig.s.server.s.pool.size).to.be.equal(4);
-        expect(db.serverConfig.autoReconnect).to.be.true;
+        expect(db.serverConfig.autoReconnect).to.be.true(););
         await db.close();
     });
 

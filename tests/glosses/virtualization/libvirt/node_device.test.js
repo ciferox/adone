@@ -16,14 +16,14 @@ describe("Node Device", () => {
         beforeEach((done) => {
             test.hypervisor = new Hypervisor("test:///default");
             test.hypervisor.connect((err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 done();
             });
         });
 
         afterEach((done) => {
             test.hypervisor.disconnect((err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 done();
             });
         });
@@ -31,27 +31,27 @@ describe("Node Device", () => {
         it("should create a node device using its xml description", (done) => {
             const xml = fixture("node_device.xml");
             test.hypervisor.createNodeDevice(xml, (err, device) => {
-                expect(err).to.exist;
+                expect(err).to.exist();
 
                 // @todo figure out why the test driver expects a fiber channel
-                // expect(err).to.not.exist;
-                // expect(device).to.exist;
+                // expect(err).to.not.exist();
+                // expect(device).to.exist();
                 done();
             });
         });
 
         it("should lookup a node device by name", (done) => {
             test.hypervisor.listNodeDevices((err, devices) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(devices).to.be.instanceOf(Array);
                 done();
 
                 // @todo figure out why the test driver expects a fiber channel
-                // expect(devices).to.not.be.empty;
+                // expect(devices).to.not.be.empty();
 
                 // test.hypervisor.lookupNodeDeviceByName(devices[0], function(err, device) {
-                //   expect(err).to.not.exist;
-                //   expect(device).to.exist;
+                //   expect(err).to.not.exist();
+                //   expect(device).to.exist();
                 //   done();
                 // });
             });
@@ -62,14 +62,14 @@ describe("Node Device", () => {
         beforeEach((done) => {
             test.hypervisor = new Hypervisor("test:///default");
             test.hypervisor.connect((err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 done();
             });
         });
 
         afterEach((done) => {
             test.hypervisor.disconnect((err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 done();
             });
         });
@@ -81,7 +81,7 @@ describe("Node Device", () => {
             try {
                 const xml = fixture("node_device.xml");
                 test.device = test.hypervisor.createNodeDevice(xml);
-                expect(test.device).to.exist;
+                expect(test.device).to.exist();
             } catch (error) {
                 expect(error.code).to.equal(error.VIR_ERR_INTERNAL_ERROR);
             }
@@ -94,7 +94,7 @@ describe("Node Device", () => {
         it("should detach the device from the node itself in order to be assigned to a guest domain", () => {
             //test driver does not provide mechanisms to test this function
             try {
-                expect(test.device.detach()).to.be.ok;
+                expect(test.device.detach()).to.be.ok();
             } catch (error) {
                 expect(error.code).to.equal(error.VIR_ERR_NO_SUPPORT);
             }
@@ -103,7 +103,7 @@ describe("Node Device", () => {
         it("should reattach a previously detached node device", () => {
             //test driver does not provide mechanisms to test this function
             try {
-                expect(test.device.reattach()).to.be.ok;
+                expect(test.device.reattach()).to.be.ok();
             } catch (error) {
                 expect(error.code).to.equal(error.VIR_ERR_NO_SUPPORT);
             }
@@ -112,7 +112,7 @@ describe("Node Device", () => {
         it("should reset the node device a previously detached node device", () => {
             //test driver does not provide mechanisms to test this function
             try {
-                expect(test.device.reset()).to.be.ok;
+                expect(test.device.reset()).to.be.ok();
             } catch (error) {
                 expect(error.code).to.equal(error.VIR_ERR_NO_SUPPORT);
             }
@@ -122,7 +122,7 @@ describe("Node Device", () => {
             //test driver does not provide mechanisms to test this function
             try {
                 const name = test.device.name;
-                expect(name).to.exist;
+                expect(name).to.exist();
             } catch (error) {
                 expect(error.code).to.equal(error.VIR_ERR_NO_SUPPORT);
             }
@@ -132,7 +132,7 @@ describe("Node Device", () => {
             //test driver does not provide mechanisms to test this function
             try {
                 const parent = test.device.getParentName();
-                expect(parent).to.exist;
+                expect(parent).to.exist();
             } catch (error) {
                 expect(error.code).to.equal(error.VIR_ERR_NO_SUPPORT);
             }
@@ -142,7 +142,7 @@ describe("Node Device", () => {
             //test driver does not provide mechanisms to test this function
             try {
                 const xml = test.device.toXml();
-                expect(xml).to.exist;
+                expect(xml).to.exist();
             } catch (error) {
                 expect(error.code).to.equal(error.VIR_ERR_NO_SUPPORT);
             }
@@ -152,7 +152,7 @@ describe("Node Device", () => {
             //test driver does not provide mechanisms to test this function
             try {
                 const capabilities = test.device.getCapabilities();
-                expect(capabilities).to.exist;
+                expect(capabilities).to.exist();
             } catch (error) {
                 expect(error.code).to.equal(error.VIR_ERR_NO_SUPPORT);
             }
@@ -161,7 +161,7 @@ describe("Node Device", () => {
         it("should remove the node device from the host operating system", () => {
             //test driver does not provide mechanisms to test this function
             try {
-                expect(test.device.destroy()).to.be.ok;
+                expect(test.device.destroy()).to.be.ok();
             } catch (error) {
                 expect(error.code).to.equal(error.VIR_ERR_NO_SUPPORT);
             }

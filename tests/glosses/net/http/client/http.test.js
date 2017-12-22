@@ -43,8 +43,8 @@ describe("net", "http", "client", "unit", () => {
                     error = err;
                     failure = true;
                 }).then(() => {
-                    expect(success).to.be.false;
-                    expect(failure).to.be.true;
+                    expect(success).to.be.false();
+                    expect(failure).to.be.true();
                     expect(error.code).to.be.equal("ECONNABORTED");
                     expect(error.message).to.be.equal("timeout of 250ms exceeded");
                     done();
@@ -218,8 +218,8 @@ describe("net", "http", "client", "unit", () => {
                     error = err;
                     failure = true;
                 }).then(() => {
-                    expect(success).to.be.false;
-                    expect(failure).to.be.true;
+                    expect(success).to.be.false();
+                    expect(failure).to.be.true();
                     expect(error.message).to.be.equal("maxContentLength size of 2000 exceeded");
                     done();
                 });

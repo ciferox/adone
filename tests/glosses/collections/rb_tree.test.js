@@ -21,16 +21,16 @@ describe("collection", "RedBlackTree", () => {
                 return [1, 0];
             }
             if (node._color === 0) {
-                assert.isOk(!node.left || node.left._color === 1, "children of red node must be black");
-                assert.isOk(!node.right || node.right._color === 1, "children of red node must be black");
+                assert.ok(!node.left || node.left._color === 1, "children of red node must be black");
+                assert.ok(!node.right || node.right._color === 1, "children of red node must be black");
             } else {
                 assert.equal(node._color, 1, "node color must be red or black");
             }
             if (node.left) {
-                assert.isOk(tree._compare(node.left.key, node.key) <= 0, "left tree order invariant");
+                assert.ok(tree._compare(node.left.key, node.key) <= 0, "left tree order invariant");
             }
             if (node.right) {
-                assert.isOk(tree._compare(node.right.key, node.key) >= 0, "right tree order invariant");
+                assert.ok(tree._compare(node.right.key, node.key) >= 0, "right tree order invariant");
             }
             const cl = checkNode(node.left);
             const cr = checkNode(node.right);
@@ -90,16 +90,16 @@ describe("collection", "RedBlackTree", () => {
             assert.equal(u.at(j).key, i, "checking at()");
             assert.equal(start.key, i, "checking iter");
             assert.equal(start.index, j, "checking index");
-            assert.isOk(start.valid, "checking valid");
+            assert.ok(start.valid, "checking valid");
             if (j < 40) {
-                assert.isOk(start.hasNext, "hasNext()");
+                assert.ok(start.hasNext, "hasNext()");
             } else {
-                assert.isOk(!start.hasNext, "eof hasNext()");
+                assert.ok(!start.hasNext, "eof hasNext()");
             }
             start.next();
         }
-        assert.isOk(!start.valid, "invalid eof iterator");
-        assert.isOk(!start.hasNext, "hasNext() at eof fail");
+        assert.ok(!start.valid, "invalid eof iterator");
+        assert.ok(!start.hasNext, "hasNext() at eof fail");
         assert.equal(start.index, 41, "eof index");
     });
 

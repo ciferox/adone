@@ -7,7 +7,7 @@ describe("net", "http", "server", "request", "fresh", () => {
         it("should return false", () => {
             const ctx = context();
             ctx.req.method = "POST";
-            expect(ctx.fresh).to.be.false;
+            expect(ctx.fresh).to.be.false();
         });
     });
 
@@ -18,7 +18,7 @@ describe("net", "http", "server", "request", "fresh", () => {
             ctx.req.method = "GET";
             ctx.req.headers["if-none-match"] = "123";
             ctx.set("ETag", "123");
-            expect(ctx.fresh).to.be.false;
+            expect(ctx.fresh).to.be.false();
         });
     });
 
@@ -30,7 +30,7 @@ describe("net", "http", "server", "request", "fresh", () => {
                 ctx.req.method = "GET";
                 ctx.req.headers["if-none-match"] = "123";
                 ctx.set("ETag", "123");
-                expect(ctx.fresh).to.be.true;
+                expect(ctx.fresh).to.be.true();
             });
         });
 
@@ -41,7 +41,7 @@ describe("net", "http", "server", "request", "fresh", () => {
                 ctx.req.method = "GET";
                 ctx.req.headers["if-none-match"] = "123";
                 ctx.set("ETag", "hey");
-                expect(ctx.fresh).to.be.false;
+                expect(ctx.fresh).to.be.false();
             });
         });
     });

@@ -7,7 +7,7 @@ describe("database", "mysql", "functional", "config", "connect timeout", functio
         const err = await createConnection({
             host: "www.google.com"
         }).then(() => null, (e) => e);
-        expect(err).not.to.be.null;
+        expect(err).not.to.be.null();
         expect(err.code).to.be.equal("ETIMEDOUT");
     });
 });

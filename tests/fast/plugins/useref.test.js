@@ -34,7 +34,7 @@ describe("fast", "transform", "useref", () => {
         const files = await new Stream([fakeFile]).useref();
         expect(files).to.have.length(1);
         const [file] = files;
-        expect(file.contents).to.be.ok;
+        expect(file.contents).to.be.ok();
         expect(file.path).to.be.equal(P("test/fixture/file.js"));
         expect(file.relative).to.be.equal("file.js");
     });

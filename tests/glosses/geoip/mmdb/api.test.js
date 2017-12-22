@@ -13,7 +13,7 @@ describe("geoip", "mmdb", "api", () => {
 
         it("should successfully handle errors while opening a db", async () => {
             const err = await mmdb.open("/foo/bar").then(() => null, (e) => e);
-            expect(err).not.to.be.null;
+            expect(err).not.to.be.null();
             expect(err.message).to.be.match(/no such file or directory/);
         });
 

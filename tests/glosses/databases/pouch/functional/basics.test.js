@@ -168,7 +168,7 @@ describe("database", "pouch", "basics", () => {
     it("Read db", (done) => {
         const db = new DB(dbName);
         db.id().then((id) => {
-            assert.isString(id);
+            assert.string(id);
             done();
         });
     });
@@ -190,7 +190,7 @@ describe("database", "pouch", "basics", () => {
         await db.close();
         db = new DB(dbName);
         const id = await db.id();
-        assert.isString(id);
+        assert.string(id);
     });
 
     it("Modify a doc with incorrect rev", async () => {
@@ -702,18 +702,18 @@ describe("database", "pouch", "basics", () => {
         // but the http adapter smooths this out
         const db = new DB(dbName);
         return db.put({ _id: "_local/foo" }).then((info) => {
-            assert.isTrue(info.ok, "putting local returns ok=true");
+            assert.true(info.ok, "putting local returns ok=true");
             return db.put({ _id: "quux" });
         }).then((info) => {
-            assert.isTrue(info.ok, "putting returns ok=true");
+            assert.true(info.ok, "putting returns ok=true");
             return db.bulkDocs([{ _id: "_local/bar" }, { _id: "baz" }]);
         }).then((info) => {
             assert.lengthOf(info, 2, "correct num bulk docs");
-            assert.isTrue(info[0].ok, "bulk docs says ok=true #1");
-            assert.isTrue(info[1].ok, "bulk docs says ok=true #2");
+            assert.true(info[0].ok, "bulk docs says ok=true #1");
+            assert.true(info[1].ok, "bulk docs says ok=true #2");
             return db.post({});
         }).then((info) => {
-            assert.isTrue(info.ok, "posting returns ok=true");
+            assert.true(info.ok, "posting returns ok=true");
         });
     });
 
@@ -737,7 +737,7 @@ describe("database", "pouch", "basics", () => {
         DB.plugin(plugin);
         db.initPull();
         return db.put({ _id: "anid", foo: "bar" }).then(() => {
-            assert.isAbove(called, 0, "put was called");
+            assert.above(called, 0, "put was called");
             return db.get("anid");
         }).then((doc) => {
             assert.equal(doc.foo, "bar", "correct doc");
@@ -840,7 +840,7 @@ describe("database", "pouch", "basics", () => {
             return db.get("doc");
         }).then((doc) => {
             assert.equal((typeof doc.foo), "object");
-            assert.isNull(doc.foo);
+            assert.null(doc.foo);
             assert.deepEqual(Object.keys(doc).sort(), ["_id", "_rev", "foo"]);
         });
     });
@@ -879,8 +879,8 @@ describe("database", "pouch", "basics", () => {
             return db.get(doc._id);
         }).then((savedDoc) => {
             // We shouldnt need to delete from doc here (#4273)
-            assert.isUndefined(doc._rev);
-            assert.isUndefined(doc._rev_tree);
+            assert.undefined(doc._rev);
+            assert.undefined(doc._rev_tree);
 
             delete savedDoc._rev;
             assert.deepEqual(savedDoc, doc);
@@ -967,7 +967,7 @@ describe("database", "pouch", "basics", () => {
                 if (!is.undefined(db1._blobSupport)) {
                     assert.equal(db1._blobSupport, db2._blobSupport, "same blob support");
                 } else {
-                    assert.isTrue(true);
+                    assert.true(true);
                 }
             });
         });

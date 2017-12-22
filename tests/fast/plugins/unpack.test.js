@@ -120,7 +120,7 @@ describe("fast", "transform", "unpack", () => {
             expect(files).to.have.length(3);
             {
                 const entry = files.find((x) => x.basename === "a");
-                expect(entry.isDirectory()).to.be.true;
+                expect(entry.isDirectory()).to.be.true();
             }
             {
                 const entry = files.find((x) => x.basename === "b");
@@ -128,7 +128,7 @@ describe("fast", "transform", "unpack", () => {
             }
             {
                 const entry = files.find((x) => x.basename === "c");
-                expect(entry.isDirectory()).to.be.true;
+                expect(entry.isDirectory()).to.be.true();
             }
         });
 
@@ -194,7 +194,7 @@ describe("fast", "transform", "unpack", () => {
             expect(files).to.have.length(2);
             {
                 const entry = files.find((x) => x.basename === "symlink");
-                expect(entry.isSymbolic()).to.be.true;
+                expect(entry.isSymbolic()).to.be.true();
                 expect(entry.symlink).to.be.equal("hello");
             }
             {
@@ -338,7 +338,7 @@ describe("fast", "transform", "unpack", () => {
             expect(files).to.have.length(3);
             {
                 const entry = files.find((x) => x.basename === "a");
-                expect(entry.isDirectory()).to.be.true;
+                expect(entry.isDirectory()).to.be.true();
             }
             {
                 const entry = files.find((x) => x.basename === "b");
@@ -346,7 +346,7 @@ describe("fast", "transform", "unpack", () => {
             }
             {
                 const entry = files.find((x) => x.basename === "c");
-                expect(entry.isDirectory()).to.be.true;
+                expect(entry.isDirectory()).to.be.true();
             }
         });
 

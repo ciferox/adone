@@ -124,10 +124,10 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                 return this.User.bulkCreate([{ aNumber: 5 }, { aNumber: 7 }, { aNumber: 3 }], { fields: ["aNumber"], individualHooks: true }).then((records) => {
                     records.forEach((record) => {
                         expect(record.username).to.equal(`User${record.id}`);
-                        expect(record.beforeHookTest).to.be.true;
+                        expect(record.beforeHookTest).to.be.true();
                     });
-                    expect(beforeBulkCreate).to.be.true;
-                    expect(afterBulkCreate).to.be.true;
+                    expect(beforeBulkCreate).to.be.true();
+                    expect(afterBulkCreate).to.be.true();
                 });
             });
 
@@ -156,8 +156,8 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
 
                 return this.User.bulkCreate([{ aNumber: 5 }, { aNumber: 7 }, { aNumber: 3 }], { fields: ["aNumber"], individualHooks: true }).catch((err) => {
                     expect(err).to.be.instanceOf(Error);
-                    expect(beforeBulkCreate).to.be.true;
-                    expect(afterBulkCreate).to.be.false;
+                    expect(beforeBulkCreate).to.be.true();
+                    expect(afterBulkCreate).to.be.false();
                 });
             });
         });
@@ -251,7 +251,7 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                 this.User.afterBulkUpdate(afterBulk);
 
                 this.User.beforeUpdate((user) => {
-                    expect(user.changed()).to.not.be.empty;
+                    expect(user.changed()).to.not.be.empty();
                     user.beforeHookTest = true;
                 });
 
@@ -265,7 +265,7 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                 const [, records] = await self.User.update({ aNumber: 10 }, { where: { aNumber: 1 }, individualHooks: true });
                 records.forEach((record) => {
                     expect(record.username).to.equal(`User${record.id}`);
-                    expect(record.beforeHookTest).to.be.true;
+                    expect(record.beforeHookTest).to.be.true();
                 });
                 expect(beforeBulk).to.have.been.calledOnce;
                 expect(afterBulk).to.have.been.calledOnce;
@@ -275,7 +275,7 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                 const self = this;
 
                 this.User.beforeUpdate((user) => {
-                    expect(user.changed()).to.not.be.empty;
+                    expect(user.changed()).to.not.be.empty();
                     if (user.get("id") === 1) {
                         user.set("aNumber", user.get("aNumber") + 3);
                     }
@@ -408,10 +408,10 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                     { aNumber: 1 }, { aNumber: 1 }, { aNumber: 1 }
                 ]).then(() => {
                     return self.User.destroy({ where: { aNumber: 1 }, individualHooks: true }).then(() => {
-                        expect(beforeBulk).to.be.true;
-                        expect(afterBulk).to.be.true;
-                        expect(beforeHook).to.be.true;
-                        expect(afterHook).to.be.true;
+                        expect(beforeBulk).to.be.true();
+                        expect(afterBulk).to.be.true();
+                        expect(beforeHook).to.be.true();
+                        expect(afterHook).to.be.true();
                     });
                 });
             });
@@ -446,10 +446,10 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                 return this.User.bulkCreate([{ aNumber: 1 }, { aNumber: 1 }, { aNumber: 1 }], { fields: ["aNumber"] }).then(() => {
                     return self.User.destroy({ where: { aNumber: 1 }, individualHooks: true }).catch((err) => {
                         expect(err).to.be.instanceOf(Error);
-                        expect(beforeBulk).to.be.true;
-                        expect(beforeHook).to.be.true;
-                        expect(afterBulk).to.be.false;
-                        expect(afterHook).to.be.false;
+                        expect(beforeBulk).to.be.true();
+                        expect(beforeHook).to.be.true();
+                        expect(afterBulk).to.be.false();
+                        expect(afterHook).to.be.false();
                     });
                 });
             });

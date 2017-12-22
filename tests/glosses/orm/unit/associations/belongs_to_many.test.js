@@ -377,11 +377,11 @@ describe(Support.getTestDialectTeaser("belongsToMany"), () => {
             Product.Tags = Product.belongsToMany(Tag, { through: ProductTag, foreignKey: "product_ID" });
             Tag.Products = Tag.belongsToMany(Product, { through: ProductTag, foreignKey: "tag_ID" });
 
-            expect(Product.Tags.toSource).to.be.ok;
-            expect(Product.Tags.toTarget).to.be.ok;
+            expect(Product.Tags.toSource).to.be.ok();
+            expect(Product.Tags.toTarget).to.be.ok();
 
-            expect(Tag.Products.toSource).to.be.ok;
-            expect(Tag.Products.toTarget).to.be.ok;
+            expect(Tag.Products.toSource).to.be.ok();
+            expect(Tag.Products.toTarget).to.be.ok();
 
             expect(Product.Tags.toSource.foreignKey).to.equal(Product.Tags.foreignKey);
             expect(Product.Tags.toTarget.foreignKey).to.equal(Product.Tags.otherKey);
@@ -451,11 +451,11 @@ describe(Support.getTestDialectTeaser("belongsToMany"), () => {
             Product.Tags = Product.belongsToMany(Tag, { through: ProductTag });
             Tag.Products = Tag.belongsToMany(Product, { through: ProductTag });
 
-            expect(Product.Tags.toSource).to.be.ok;
-            expect(Product.Tags.toTarget).to.be.ok;
+            expect(Product.Tags.toSource).to.be.ok();
+            expect(Product.Tags.toTarget).to.be.ok();
 
-            expect(Tag.Products.toSource).to.be.ok;
-            expect(Tag.Products.toTarget).to.be.ok;
+            expect(Tag.Products.toSource).to.be.ok();
+            expect(Tag.Products.toTarget).to.be.ok();
 
             expect(Product.Tags.toSource.foreignKey).to.equal(Product.Tags.foreignKey);
             expect(Product.Tags.toTarget.foreignKey).to.equal(Product.Tags.otherKey);
@@ -483,10 +483,10 @@ describe(Support.getTestDialectTeaser("belongsToMany"), () => {
         });
 
         it("should work for belongsTo associations defined before belongsToMany", function () {
-            expect(this.UserProjects.prototype.getUser).to.be.ok;
+            expect(this.UserProjects.prototype.getUser).to.be.ok();
         });
         it("should work for belongsTo associations defined after belongsToMany", function () {
-            expect(this.UserProjects.prototype.getProject).to.be.ok;
+            expect(this.UserProjects.prototype.getProject).to.be.ok();
         });
     });
 
@@ -507,8 +507,8 @@ describe(Support.getTestDialectTeaser("belongsToMany"), () => {
                 through: Invite
             });
 
-            expect(User.Followers.paired).not.to.be.ok;
-            expect(User.Invites.paired).not.to.be.ok;
+            expect(User.Followers.paired).not.to.be.ok();
+            expect(User.Invites.paired).not.to.be.ok();
 
             expect(User.Followers.otherKey).not.to.equal(User.Invites.foreignKey);
         });
@@ -530,8 +530,8 @@ describe(Support.getTestDialectTeaser("belongsToMany"), () => {
                 through: UserFollowers
             });
 
-            expect(User.Followers.foreignKey).to.be.ok;
-            expect(User.Followers.otherKey).to.be.ok;
+            expect(User.Followers.foreignKey).to.be.ok();
+            expect(User.Followers.otherKey).to.be.ok();
 
             expect(Object.keys(UserFollowers.rawAttributes).length).to.equal(3);
         });

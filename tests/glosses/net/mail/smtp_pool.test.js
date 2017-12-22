@@ -100,8 +100,8 @@ describe("net", "mail", "SMTP Pool Tests", function () {
 
     it("Should expose version number", () => {
         const pool = new SMTPPool();
-        expect(pool.name).to.exist;
-        expect(pool.version).to.exist;
+        expect(pool.name).to.exist();
+        expect(pool.version).to.exist();
     });
 
     it("Should detect wellknown data", () => {
@@ -110,7 +110,7 @@ describe("net", "mail", "SMTP Pool Tests", function () {
         });
         expect(pool.options.host).to.equal("smtp.gmail.com");
         expect(pool.options.port).to.equal(465);
-        expect(pool.options.secure).to.be.true;
+        expect(pool.options.secure).to.be.true();
     });
 
     it("should send mail", (done) => {
@@ -145,7 +145,7 @@ describe("net", "mail", "SMTP Pool Tests", function () {
                 to: "test@valid.recipient"
             }, message)
         }, (err) => {
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             pool.close();
             done();
         });
@@ -175,7 +175,7 @@ describe("net", "mail", "SMTP Pool Tests", function () {
                     to: "test@valid.recipient"
                 }, message)
             }, (err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 callback();
             });
         }
@@ -238,9 +238,9 @@ describe("net", "mail", "SMTP Pool Tests", function () {
                 }, message)
             }, (err) => {
                 if (isErr) {
-                    expect(err).to.exist;
+                    expect(err).to.exist();
                 } else {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                 }
 
                 callback();
@@ -306,7 +306,7 @@ describe("net", "mail", "SMTP Pool Tests", function () {
                     to: "test@valid.recipient"
                 }, message)
             }, (err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 callback();
             });
         }
@@ -355,7 +355,7 @@ describe("net", "mail", "SMTP Pool Tests", function () {
                 to: "test@valid.recipient"
             }, message)
         }, (err) => {
-            expect(err).not.to.exist;
+            expect(err).not.to.exist();
         });
 
         pool.send({
@@ -365,7 +365,7 @@ describe("net", "mail", "SMTP Pool Tests", function () {
                 to: "test+timeout@valid.recipient"
             }, message)
         }, (err) => {
-            expect(err).to.exist;
+            expect(err).to.exist();
             pool.close();
             done();
         });
@@ -395,7 +395,7 @@ describe("net", "mail", "SMTP Pool Tests", function () {
                     to: "test@valid.recipient"
                 }, message)
             }, (err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 callback();
             });
         }
@@ -449,7 +449,7 @@ describe("net", "mail", "SMTP Pool Tests", function () {
                     to: "test@valid.recipient"
                 }, message)
             }, (err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 callback();
             });
         }
@@ -502,7 +502,7 @@ describe("net", "mail", "SMTP Pool Tests", function () {
                     to: "test@valid.recipient"
                 }, message)
             }, (err) => {
-                expect(err).to.exist;
+                expect(err).to.exist();
                 callback();
             });
         }
@@ -614,7 +614,7 @@ describe("net", "mail", "SMTP Pool Tests", function () {
                 to: "test@valid.recipient"
             }, message)
         }, (err) => {
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             pool.close();
             return done();
         });
@@ -627,8 +627,8 @@ describe("net", "mail", "SMTP Pool Tests", function () {
         });
 
         client.verify((err, success) => {
-            expect(err).to.not.exist;
-            expect(success).to.be.true;
+            expect(err).to.not.exist();
+            expect(success).to.be.true();
             client.close();
             done();
         });
@@ -641,7 +641,7 @@ describe("net", "mail", "SMTP Pool Tests", function () {
         });
 
         client.verify((err) => {
-            expect(err).to.exist;
+            expect(err).to.exist();
             client.close();
             done();
         });

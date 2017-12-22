@@ -50,8 +50,8 @@ describe(Support.getTestDialectTeaser("DAO"), () => {
                     updatedAt: new Date(2000, 1, 1)
                 });
 
-                expect(user.get("createdAt")).not.to.be.ok;
-                expect(user.get("updatedAt")).not.to.be.ok;
+                expect(user.get("createdAt")).not.to.be.ok();
+                expect(user.get("updatedAt")).not.to.be.ok();
             });
 
             it("doesn't set underscored timestamps", function () {
@@ -70,8 +70,8 @@ describe(Support.getTestDialectTeaser("DAO"), () => {
                     updated_at: new Date(2000, 1, 1)
                 });
 
-                expect(user.get("created_at")).not.to.be.ok;
-                expect(user.get("updated_at")).not.to.be.ok;
+                expect(user.get("created_at")).not.to.be.ok();
+                expect(user.get("updated_at")).not.to.be.ok();
             });
 
             it("doesn't set value if not a dynamic setter or a model attribute", function () {
@@ -98,8 +98,8 @@ describe(Support.getTestDialectTeaser("DAO"), () => {
 
                 expect(user.get("name")).to.equal("antonio banderaz");
                 expect(user.get("email_hidden")).to.equal("foo@bar.com");
-                expect(user.get("email")).not.to.be.ok;
-                expect(user.dataValues.email).not.to.be.ok;
+                expect(user.get("email")).not.to.be.ok();
+                expect(user.dataValues.email).not.to.be.ok();
             });
 
             it("allows use of sequelize.fn and sequelize.col in date and bool fields", function () {
@@ -179,10 +179,10 @@ describe(Support.getTestDialectTeaser("DAO"), () => {
                         }
                     });
 
-                    expect(product.tags).to.be.ok;
+                    expect(product.tags).to.be.ok();
                     expect(product.tags.length).to.equal(2);
                     expect(product.tags[0]).to.be.instanceof(Tag);
-                    expect(product.user).to.be.ok;
+                    expect(product.user).to.be.ok();
                     expect(product.user).to.be.instanceof(User);
                 });
 
@@ -222,10 +222,10 @@ describe(Support.getTestDialectTeaser("DAO"), () => {
                         }
                     }, { raw: true });
 
-                    expect(product.tags).to.be.ok;
+                    expect(product.tags).to.be.ok();
                     expect(product.tags.length).to.equal(2);
                     expect(product.tags[0]).to.be.instanceof(Tag);
-                    expect(product.user).to.be.ok;
+                    expect(product.user).to.be.ok();
                     expect(product.user).to.be.instanceof(User);
                 });
             });
@@ -366,7 +366,7 @@ describe(Support.getTestDialectTeaser("DAO"), () => {
                     const values = product.get({ clone: true });
                     delete values.title;
 
-                    expect(product.get({ clone: true }).title).to.be.ok;
+                    expect(product.get({ clone: true }).title).to.be.ok();
                 });
             });
 
@@ -440,13 +440,13 @@ describe(Support.getTestDialectTeaser("DAO"), () => {
 
                 return User.sync().then(() => {
                     return User.create({ name: "Jan Meier" }).then((user) => {
-                        expect(user.changed("name")).to.be.false;
-                        expect(user.changed()).not.to.be.ok;
+                        expect(user.changed("name")).to.be.false();
+                        expect(user.changed()).not.to.be.ok();
                     });
                 }).then(() => {
                     return User.bulkCreate([{ name: "Jan Meier" }]).then(([user]) => {
-                        expect(user.changed("name")).to.be.false;
-                        expect(user.changed()).not.to.be.ok;
+                        expect(user.changed("name")).to.be.false();
+                        expect(user.changed()).not.to.be.ok();
                     });
                 });
             });
@@ -460,8 +460,8 @@ describe(Support.getTestDialectTeaser("DAO"), () => {
                     name: "Jan Meier"
                 });
                 user.set("name", "Mick Hansen");
-                expect(user.changed("name")).to.be.true;
-                expect(user.changed()).to.be.ok;
+                expect(user.changed("name")).to.be.true();
+                expect(user.changed()).to.be.ok();
             });
 
             it("should return false immediately after saving", function () {
@@ -474,12 +474,12 @@ describe(Support.getTestDialectTeaser("DAO"), () => {
                         name: "Jan Meier"
                     });
                     user.set("name", "Mick Hansen");
-                    expect(user.changed("name")).to.be.true;
-                    expect(user.changed()).to.be.ok;
+                    expect(user.changed("name")).to.be.true();
+                    expect(user.changed()).to.be.ok();
 
                     return user.save().then(() => {
-                        expect(user.changed("name")).to.be.false;
-                        expect(user.changed()).not.to.be.ok;
+                        expect(user.changed("name")).to.be.false();
+                        expect(user.changed()).not.to.be.ok();
                     });
                 });
             });
@@ -504,10 +504,10 @@ describe(Support.getTestDialectTeaser("DAO"), () => {
                         name: "Arthur Dent"
                     });
                 }).then((user) => {
-                    expect(changed).to.be.ok;
-                    expect(changed.length).to.be.ok;
-                    expect(changed.indexOf("name") > -1).to.be.ok;
-                    expect(user.changed()).not.to.be.ok;
+                    expect(changed).to.be.ok();
+                    expect(changed.length).to.be.ok();
+                    expect(changed.indexOf("name") > -1).to.be.ok();
+                    expect(user.changed()).not.to.be.ok();
                 });
             });
         });

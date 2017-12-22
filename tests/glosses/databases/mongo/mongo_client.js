@@ -53,14 +53,14 @@ describe("mongo client", function () {
             });
             expect(db.writeConcern.w).to.be.equal(1);
             expect(db.writeConcern.wtimeout).to.be.equal(1000);
-            expect(db.writeConcern.fsync).to.be.true;
-            expect(db.writeConcern.j).to.be.true;
+            expect(db.writeConcern.fsync).to.be.true();
+            expect(db.writeConcern.j).to.be.true();
             expect(db.s.readPreference.mode).to.be.equal("nearest");
             expect(db.s.readPreference.tags).to.be.deep.equal({ loc: "ny" });
-            expect(db.s.options.forceServerObjectId).to.be.true;
+            expect(db.s.options.forceServerObjectId).to.be.true();
             expect(db.s.pkFactory()).to.be.equal(1);
-            expect(db.s.options.serializeFunctions).to.be.true;
-            expect(db.s.options.raw).to.be.true;
+            expect(db.s.options.serializeFunctions).to.be.true();
+            expect(db.s.options.raw).to.be.true();
             expect(db.s.options.retryMiliSeconds).to.be.equal(1000);
             expect(db.s.options.numberOfRetries).to.be.equal(10);
             expect(db.s.options.bufferMaxEntries).to.be.equal(0);
@@ -81,10 +81,10 @@ describe("mongo client", function () {
                 }
             });
             expect(db.s.topology.s.poolSize).to.be.equal(10);
-            expect(db.s.topology.autoReconnect).to.be.false;
+            expect(db.s.topology.autoReconnect).to.be.false();
             expect(db.s.topology.s.clonedOptions.connectionTimeout).to.be.equal(444444);
             expect(db.s.topology.s.clonedOptions.socketTimeout).to.be.equal(555555);
-            expect(db.s.topology.s.clonedOptions.keepAlive).to.be.true;
+            expect(db.s.topology.s.clonedOptions.keepAlive).to.be.true();
             expect(db.s.topology.s.clonedOptions.keepAliveInitialDelay).to.be.equal(100);
             db.close();
         });
@@ -108,15 +108,15 @@ describe("mongo client", function () {
                     }
                 }
             });
-            expect(db.s.topology.s.clonedOptions.ha).to.be.false;
+            expect(db.s.topology.s.clonedOptions.ha).to.be.false();
             expect(db.s.topology.s.clonedOptions.haInterval).to.be.equal(10000);
             expect(db.s.topology.s.clonedOptions.setName).to.be.equal("rs");
             expect(db.s.topology.s.clonedOptions.acceptableLatency).to.be.equal(100);
-            expect(db.s.topology.s.clonedOptions.secondaryOnlyConnectionAllowed).to.be.true;
+            expect(db.s.topology.s.clonedOptions.secondaryOnlyConnectionAllowed).to.be.true();
             expect(db.s.topology.s.clonedOptions.size).to.be.equal(1);
             expect(db.s.topology.s.clonedOptions.connectionTimeout).to.be.equal(444444);
             expect(db.s.topology.s.clonedOptions.socketTimeout).to.be.equal(555555);
-            expect(db.s.topology.s.clonedOptions.keepAlive).to.be.true;
+            expect(db.s.topology.s.clonedOptions.keepAlive).to.be.true();
             expect(db.s.topology.s.clonedOptions.keepAliveInitialDelay).to.be.equal(100);
             db.close();
         });
@@ -138,13 +138,13 @@ describe("mongo client", function () {
                     }
                 }
             });
-            expect(db.s.topology.s.clonedOptions.ha).to.be.false;
+            expect(db.s.topology.s.clonedOptions.ha).to.be.false();
             expect(db.s.topology.s.clonedOptions.haInterval).to.be.equal(10000);
             expect(db.s.topology.s.clonedOptions.localThresholdMS).to.be.equal(100);
             expect(db.s.topology.s.clonedOptions.poolSize).to.be.equal(1);
             expect(db.s.topology.s.clonedOptions.connectionTimeout).to.be.equal(444444);
             expect(db.s.topology.s.clonedOptions.socketTimeout).to.be.equal(555555);
-            expect(db.s.topology.s.clonedOptions.keepAlive).to.be.true;
+            expect(db.s.topology.s.clonedOptions.keepAlive).to.be.true();
             expect(db.s.topology.s.clonedOptions.keepAliveInitialDelay).to.be.equal(100);
         });
     }
@@ -225,7 +225,7 @@ describe("mongo client", function () {
                 keepAlive: 100
             });
             const connection = db.serverConfig.connections()[0];
-            expect(connection.keepAlive).to.be.true;
+            expect(connection.keepAlive).to.be.true();
             expect(connection.keepAliveInitialDelay).to.be.equal(100);
             db.close();
         }
@@ -234,9 +234,9 @@ describe("mongo client", function () {
                 keepAlive: 0
             });
             const connections = db.serverConfig.connections();
-            expect(connections).not.to.be.empty;
+            expect(connections).not.to.be.empty();
             for (const conn of db.serverConfig.connections()) {
-                expect(conn.keepAlive).to.be.false;
+                expect(conn.keepAlive).to.be.false();
             }
             db.close();
         }
@@ -245,9 +245,9 @@ describe("mongo client", function () {
     it("default keepAlive behavior", async () => {
         const db = await mongo.connect(this.url());
         const connections = db.serverConfig.connections();
-        expect(connections).not.to.be.empty;
+        expect(connections).not.to.be.empty();
         for (const conn of connections) {
-            expect(conn.keepAlive).to.be.true;
+            expect(conn.keepAlive).to.be.true();
         }
         db.close();
     });

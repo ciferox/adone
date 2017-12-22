@@ -421,7 +421,7 @@ describe("fast", "transform", "wiredep", () => {
                     src: filePath
                 });
             } catch (e) {
-                assert.isOk(e);
+                assert.ok(e);
                 assert.instanceOf(e, adone.x.NotFound);
                 assert.equal(e.message, `${missingComponent} is not installed. Try running \`bower install\` or remove the component from your bower.json file.`);
                 return;

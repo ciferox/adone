@@ -33,13 +33,13 @@ describe("document validation", function () {
             const r = await collection.bulkWrite([
                 { insertOne: { b: 1 } }
             ]);
-            expect(r.hasWriteErrors()).to.be.true;
+            expect(r.hasWriteErrors()).to.be.true();
         }
         {
             const r = await collection.bulkWrite([
                 { insertOne: { b: 1 } }
             ], { bypassDocumentValidation: true });
-            expect(r.hasWriteErrors()).to.be.false;
+            expect(r.hasWriteErrors()).to.be.false();
         }
     });
 

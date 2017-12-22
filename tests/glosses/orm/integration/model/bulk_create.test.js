@@ -142,7 +142,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 return self.User.findAll({ where: { username: "Paul" } }).then((users) => {
                     expect(users.length).to.equal(1);
                     expect(users[0].username).to.equal("Paul");
-                    expect(users[0].secretValue).to.be.null;
+                    expect(users[0].secretValue).to.be.null();
                 });
             });
         });
@@ -158,9 +158,9 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 return self.User.findAll({ order: ["id"] }).then((users) => {
                     expect(users.length).to.equal(2);
                     expect(users[0].username).to.equal("Peter");
-                    expect(users[0].secretValue).to.be.null;
+                    expect(users[0].secretValue).to.be.null();
                     expect(users[1].username).to.equal("Paul");
-                    expect(users[1].secretValue).to.be.null;
+                    expect(users[1].secretValue).to.be.null();
                 });
             });
         });
@@ -345,7 +345,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             const Worker = this.sequelize.define("Worker", {});
             return Worker.sync().then(() => {
                 return Worker.bulkCreate([]).then((workers) => {
-                    expect(workers).to.be.ok;
+                    expect(workers).to.be.ok();
                     expect(workers.length).to.equal(0);
                 });
             });
@@ -355,7 +355,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             const Worker = this.sequelize.define("Worker", {}, { timestamps: false });
             return Worker.sync().then(() => {
                 return Worker.bulkCreate([{}, {}]).then((workers) => {
-                    expect(workers).to.be.ok;
+                    expect(workers).to.be.ok();
                 });
             });
         });
@@ -492,7 +492,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         .then(([users, actualUsers]) => {
                             expect(users.length).to.eql(actualUsers.length);
                             users.forEach((user, i) => {
-                                expect(user.get("id")).to.be.ok;
+                                expect(user.get("id")).to.be.ok();
                                 expect(user.get("id")).to.equal(actualUsers[i].get("id"))
                                     .and.to.equal(i + 1);
                             });
@@ -525,7 +525,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         .then(([users, actualUsers]) => {
                             expect(users.length).to.eql(actualUsers.length);
                             users.forEach((user, i) => {
-                                expect(user.get("maId")).to.be.ok;
+                                expect(user.get("maId")).to.be.ok();
                                 expect(user.get("maId")).to.equal(actualUsers[i].get("maId"))
                                     .and.to.equal(i + 1);
                             });
@@ -574,7 +574,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
             return Maya.sync({ force: true }).then(() => Maya.create(M1))
                 .then((m) => {
-                    expect(m.createdAt).to.be.ok;
+                    expect(m.createdAt).to.be.ok();
                     expect(m.id).to.be.eql(M1.id);
                     expect(m.name).to.be.eql(M1.name);
                     expect(m.secret).to.be.eql(M1.secret);
@@ -583,11 +583,11 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 }).then(([m]) => {
 
                     // only attributes are returned, no fields are mixed
-                    expect(m.createdAt).to.be.ok;
-                    expect(m.created_at).to.not.exist;
-                    expect(m.secret_given).to.not.exist;
-                    expect(m.get("secret_given")).to.be.undefined;
-                    expect(m.get("created_at")).to.be.undefined;
+                    expect(m.createdAt).to.be.ok();
+                    expect(m.created_at).to.not.exist();
+                    expect(m.secret_given).to.not.exist();
+                    expect(m.get("secret_given")).to.be.undefined();
+                    expect(m.get("created_at")).to.be.undefined();
 
                     // values look fine
                     expect(m.id).to.be.eql(M2.id);

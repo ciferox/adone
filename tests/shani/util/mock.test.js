@@ -22,7 +22,7 @@ describe("shani", "util", "mock", () => {
         it("returns function with expects method", () => {
             const m = mock.create({});
 
-            assert.isFunction(m.expects);
+            assert.function(m.expects);
         });
 
         it("throws without object", () => {
@@ -48,7 +48,7 @@ describe("shani", "util", "mock", () => {
         it("returns expectation", function () {
             const result = this.mock.expects("someMethod");
 
-            assert.isFunction(result);
+            assert.function(result);
             assert.equal(result.method, "someMethod");
         });
 
@@ -89,7 +89,7 @@ describe("shani", "util", "mock", () => {
         it("call expectation", function () {
             this.expectation();
 
-            assert.isFunction(this.expectation.invoke);
+            assert.function(this.expectation.invoke);
             assert(this.expectation.called);
         });
 
@@ -294,7 +294,7 @@ describe("shani", "util", "mock", () => {
                 this.expectation.atLeast(2);
                 this.expectation();
 
-                assert.isFalse(this.expectation.met());
+                assert.false(this.expectation.met());
             });
 
             it("is met with exact calls", function () {
@@ -407,7 +407,7 @@ describe("shani", "util", "mock", () => {
                     expectation();
                 });
 
-                assert.isFalse(this.expectation.met());
+                assert.false(this.expectation.met());
             });
         });
 
@@ -420,7 +420,7 @@ describe("shani", "util", "mock", () => {
             it("should not be met with too few calls", function () {
                 this.expectation();
 
-                assert.isFalse(this.expectation.met());
+                assert.false(this.expectation.met());
             });
 
             it("is met with minimum calls", function () {
@@ -452,7 +452,7 @@ describe("shani", "util", "mock", () => {
 
         describe(".met", () => {
             it("should not be met when not called enough times", function () {
-                assert.isFalse(this.expectation.met());
+                assert.false(this.expectation.met());
             });
 
             it("is met when called enough times", function () {
@@ -466,7 +466,7 @@ describe("shani", "util", "mock", () => {
 
                 assert.throws(this.expectation);
 
-                assert.isFalse(this.expectation.met());
+                assert.false(this.expectation.met());
             });
         });
 
@@ -912,7 +912,7 @@ describe("shani", "util", "mock", () => {
         it("mocks object method", function () {
             this.mock.expects("method");
 
-            assert.isFunction(this.object.method);
+            assert.function(this.object.method);
             assert.notEqual(this.object.method, this.method);
         });
 
@@ -1026,17 +1026,17 @@ describe("shani", "util", "mock", () => {
         it("returns mock method", () => {
             const m = mock();
 
-            assert.isFunction(m);
-            assert.isFunction(m.atLeast);
-            assert.isFunction(m.verify);
+            assert.function(m);
+            assert.function(m.atLeast);
+            assert.function(m.verify);
         });
 
         it("returns mock object", () => {
             const m = mock({});
 
-            assert.isObject(m);
-            assert.isFunction(m.expects);
-            assert.isFunction(m.verify);
+            assert.object(m);
+            assert.function(m.expects);
+            assert.function(m.verify);
         });
     });
 

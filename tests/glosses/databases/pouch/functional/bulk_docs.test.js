@@ -65,7 +65,7 @@ describe("database", "pouch", "bulk_docs", () => {
         }).then(() => {
             return db.bulkDocs({ docs }).then((results) => {
                 assert.equal(results[0].name, "conflict", "First doc should be in conflict");
-                assert.isUndefined(results[0].rev, "no rev in conflict");
+                assert.undefined(results[0].rev, "no rev in conflict");
                 assert.exists(results[0].id);
                 assert.equal(results[0].id, "0");
                 for (let i = 1; i < 5; i++) {
@@ -218,7 +218,7 @@ describe("database", "pouch", "bulk_docs", () => {
         ];
         db.bulkDocs({ docs }).then((results) => {
             assert.equal(results[1].id, "1", "check ordering");
-            assert.isUndefined(results[1].name, "first id succeded");
+            assert.undefined(results[1].name, "first id succeded");
             assert.equal(results[2].name, "conflict", "second conflicted");
             assert.lengthOf(results, 4, "got right amount of results");
             done();
@@ -297,16 +297,16 @@ describe("database", "pouch", "bulk_docs", () => {
         const db = new DB(dbName);
         const docs = [{ _id: "1" }];
         return db.bulkDocs(docs).then((res) => {
-            assert.isUndefined(res[0].error, "no error");
+            assert.undefined(res[0].error, "no error");
             docs[0]._rev = res[0].rev;
             return db.bulkDocs(docs);
         }).then((res) => {
-            assert.isUndefined(res[0].error, "no error");
+            assert.undefined(res[0].error, "no error");
             docs[0]._rev = res[0].rev;
             docs[0]._deleted = true;
             return db.bulkDocs(docs);
         }).then((res) => {
-            assert.isUndefined(res[0].error, "no error");
+            assert.undefined(res[0].error, "no error");
             return db.bulkDocs(docs);
         }).then((res) => {
             assert.exists(res[0].error, "has an error");
@@ -318,20 +318,20 @@ describe("database", "pouch", "bulk_docs", () => {
         const db = new DB(dbName);
         const docs = [{ _id: "1" }];
         return db.bulkDocs(docs).then((res) => {
-            assert.isUndefined(res[0].error, "no error");
+            assert.undefined(res[0].error, "no error");
             docs[0]._rev = res[0].rev;
             return db.bulkDocs(docs);
         }).then((res) => {
-            assert.isUndefined(res[0].error, "no error");
+            assert.undefined(res[0].error, "no error");
             docs[0]._rev = res[0].rev;
             docs[0]._deleted = true;
             return db.bulkDocs(docs);
         }).then((res) => {
-            assert.isUndefined(res[0].error, "no error");
+            assert.undefined(res[0].error, "no error");
             docs[0]._rev = res[0].rev;
             return db.bulkDocs(docs);
         }).then((res) => {
-            assert.isUndefined(res[0].error, "no error");
+            assert.undefined(res[0].error, "no error");
         });
     });
 
@@ -339,12 +339,12 @@ describe("database", "pouch", "bulk_docs", () => {
         const db = new DB(dbName);
         const doc = { _id: "1" };
         return db.bulkDocs([doc]).then((res) => {
-            assert.isUndefined(res[0].error, "should not be an error 1");
+            assert.undefined(res[0].error, "should not be an error 1");
             doc._rev = res[0].rev;
             doc._deleted = true;
             return db.bulkDocs([doc]);
         }).then((res) => {
-            assert.isUndefined(res[0].error, "should not be an error 2");
+            assert.undefined(res[0].error, "should not be an error 2");
             // Not supported in CouchDB 2.x, see COUCHDB-2386
             doc._rev = res[0].rev;
             doc._deleted = false;
@@ -356,16 +356,16 @@ describe("database", "pouch", "bulk_docs", () => {
         const db = new DB(dbName);
         const doc = { _id: "1" };
         return db.bulkDocs([doc]).then((res) => {
-            assert.isUndefined(res[0].error, "should not be an error 1");
+            assert.undefined(res[0].error, "should not be an error 1");
             doc._rev = res[0].rev;
             doc._deleted = true;
             return db.bulkDocs([doc]);
         }).then((res) => {
-            assert.isUndefined(res[0].error, "should not be an error 2");
+            assert.undefined(res[0].error, "should not be an error 2");
             doc._rev = res[0].rev;
             return db.bulkDocs([doc]);
         }).then((res) => {
-            assert.isUndefined(res[0].error, "should not be an error 3");
+            assert.undefined(res[0].error, "should not be an error 3");
             doc._rev = res[0].rev;
             doc._deleted = false;
             return db.bulkDocs([doc]);
@@ -422,9 +422,9 @@ describe("database", "pouch", "bulk_docs", () => {
                 { _id: "rodan", _rev: rev3, _deleted: true }
             ]);
         }).then((res) => {
-            assert.isUndefined(res[0].error);
+            assert.undefined(res[0].error);
             assert.exists(res[1].error);
-            assert.isUndefined(res[2].error);
+            assert.undefined(res[2].error);
         });
     });
 
@@ -446,9 +446,9 @@ describe("database", "pouch", "bulk_docs", () => {
                 { _id: "rodan", _rev: rev3, _deleted: true }
             ]);
         }).then((res) => {
-            assert.isUndefined(res[0].error);
+            assert.undefined(res[0].error);
             assert.exists(res[1].error);
-            assert.isUndefined(res[2].error);
+            assert.undefined(res[2].error);
         });
     });
 
@@ -848,7 +848,7 @@ describe("database", "pouch", "bulk_docs", () => {
                 db.put(docs[0]).then(() => {
                     db.bulkDocs(docs).then((results) => {
                         assert.equal(results[0].name, "conflict", "First doc should be in conflict");
-                        assert.isUndefined(results[0].rev, "no rev in conflict");
+                        assert.undefined(results[0].rev, "no rev in conflict");
                         for (let i = 1; i < 5; i++) {
                             assert.equal(results[i].id, i.toString());
                             assert.exists(results[i].rev);
@@ -935,7 +935,7 @@ describe("database", "pouch", "bulk_docs", () => {
             assert.equal(resp[1].ok._id, docid, "rev 2, correct document id");
 
             // order of revisions is not specified
-            assert.isTrue((resp[0].ok._rev === a_doc._rev &&
+            assert.true((resp[0].ok._rev === a_doc._rev &&
                 resp[1].ok._rev === b_doc._rev) ||
                 (resp[0].ok._rev === b_doc._rev &&
                     resp[1].ok._rev === a_doc._rev));

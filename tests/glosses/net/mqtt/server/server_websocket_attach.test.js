@@ -121,7 +121,7 @@ describe("mosca.Server - Websocket and Mqtt-over-WS attached to the same http se
             });
 
             ws.on("error", (e) => {
-                expect(e).to.not.be.undefined;
+                expect(e).to.not.be.undefined();
                 done();
             });
         });

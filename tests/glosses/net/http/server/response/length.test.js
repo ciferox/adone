@@ -55,13 +55,13 @@ describe("net", "http", "server", "response", "length", () => {
                 const stream = fs.createReadStream("package.json");
                 try {
                     res.body = stream;
-                    expect(res.length).not.to.be.ok;
+                    expect(res.length).not.to.be.ok();
                 } finally {
                     stream.destroy();
                 }
 
                 res.body = null;
-                expect(res.length).not.to.be.ok;
+                expect(res.length).not.to.be.ok();
             });
         });
 

@@ -7,7 +7,7 @@ describe("net", "http", "server", "request", "query", () => {
         describe("when missing", () => {
             it("should return an empty object", () => {
                 const ctx = context({ url: "/" });
-                expect(ctx.query).to.be.empty;
+                expect(ctx.query).to.be.empty();
             });
 
             it("should return the same object each time it's accessed", (done) => {

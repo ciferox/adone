@@ -75,7 +75,7 @@ describe("[SQLITE Specific] DAOFactory", { skip: dialect !== "sqlite" }, () => {
                             name: "John Doe",
                             has_swag: true
                         }).then((people) => {
-                            expect(people.has_swag).to.be.ok;
+                            expect(people.has_swag).to.be.ok();
                         });
                     });
                 });
@@ -91,7 +91,7 @@ describe("[SQLITE Specific] DAOFactory", { skip: dialect !== "sqlite" }, () => {
                             name: "John Doe",
                             has_swag: false
                         }).then((people) => {
-                            expect(people.has_swag).to.not.be.ok;
+                            expect(people.has_swag).to.not.be.ok();
                         });
                     });
                 });

@@ -39,7 +39,7 @@ describe("database", "mysql", "functional", "regressions", "koi8r decoding", () 
         // tableName does not have closing "`", we do this to have tableName in error string
         // it is sent back in original encoding (koi8r), we are testing that it's decoded correctly
         const err = await connection.query(`SELECT * FROM \`${tableName}`).then(() => null, (e) => e);
-        expect(err).not.to.be.null;
+        expect(err).not.to.be.null();
         expect(err.message).to.be.equal("You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '`МояТаблица' at line 1");
         testRows.map((tRow, index) => {
             const cols = testFields;

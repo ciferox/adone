@@ -15,7 +15,7 @@ describe("shani", "util", "__", "util", "wrapMethod", () => {
     });
 
     it("is function", () => {
-        assert.isFunction(wrapMethod);
+        assert.function(wrapMethod);
     });
 
     it("throws if first argument is not object", () => {
@@ -80,14 +80,14 @@ describe("shani", "util", "__", "util", "wrapMethod", () => {
         wrapMethod(this.object, "method", () => { });
 
         assert.notEqual(this.method, this.object.method);
-        assert.isFunction(this.object.method);
+        assert.function(this.object.method);
     });
 
     it("replaces getter", function () {
         wrapMethod(this.object, "property", { get() { } });
 
         assert.notEqual(this.getter, Object.getOwnPropertyDescriptor(this.object, "property").get);
-        assert.isFunction(Object.getOwnPropertyDescriptor(this.object, "property").get);
+        assert.function(Object.getOwnPropertyDescriptor(this.object, "property").get);
     });
 
     it("replaces setter", function () {
@@ -96,7 +96,7 @@ describe("shani", "util", "__", "util", "wrapMethod", () => {
         });
 
         assert.notEqual(this.setter, Object.getOwnPropertyDescriptor(this.object, "property").set);
-        assert.isFunction(Object.getOwnPropertyDescriptor(this.object, "property").set);
+        assert.function(Object.getOwnPropertyDescriptor(this.object, "property").set);
     });
 
     it("throws if method is already wrapped", function () {
@@ -191,7 +191,7 @@ describe("shani", "util", "__", "util", "wrapMethod", () => {
 
         createStub(object, "method");
 
-        assert.isFalse(object.method.called);
+        assert.false(object.method.called);
     });
 
     describe("wrapped method", () => {
@@ -203,7 +203,7 @@ describe("shani", "util", "__", "util", "wrapMethod", () => {
         it("defines restore method", function () {
             wrapMethod(this.object, "method", () => { });
 
-            assert.isFunction(this.object.method.restore);
+            assert.function(this.object.method.restore);
         });
 
         it("returns wrapper", function () {
@@ -240,7 +240,7 @@ describe("shani", "util", "__", "util", "wrapMethod", () => {
             this.object.method.restore();
 
             assert.equal(this.object.method, this.type.prototype.method);
-            assert.isFalse(this.object.hasOwnProperty("method"));
+            assert.false(this.object.hasOwnProperty("method"));
         });
     });
 });

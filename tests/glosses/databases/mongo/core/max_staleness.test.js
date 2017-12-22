@@ -147,7 +147,7 @@ describe("database", "mongo", "core", function () {
                     // console.dir(server)
                     expect(server.message).to.be.equal("maxStalenessSeconds must be set to at least 90 seconds");
                 } else {
-                    expect(server).to.be.null;
+                    expect(server).to.be.null();
                 }
                 //
             } else {
@@ -155,7 +155,7 @@ describe("database", "mongo", "core", function () {
                 // console.dir(server)
                 // console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 1")
                 // console.dir(found_window)
-                expect(found_window).not.to.be.null;
+                expect(found_window).not.to.be.null();
             }
         } {
             const path = adone.std.path.join(__dirname, "tests", "max-staleness", "ReplicaSetNoPrimary");

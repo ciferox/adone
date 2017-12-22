@@ -36,7 +36,7 @@ describe("database", "mysql", "functional", "connection", "disconnects", () => {
         connections.forEach((x) => x.stream.end());
 
         await new Promise((resolve) => server.close(resolve));
-        expect(err).not.to.be.null;
+        expect(err).not.to.be.null();
         expect(err.code).to.be.equal("PROTOCOL_CONNECTION_LOST");
     });
 });

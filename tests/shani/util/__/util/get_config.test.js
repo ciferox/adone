@@ -29,7 +29,7 @@ describe("shani", "util", "__", "util", "getConfig", () => {
             assert.equal(config.injectInto, defaultConfig.injectInto);
             assert.deepEqual(config.properties, ["stub", "mock"]);
             assert.equal(config.useFakeTimers, defaultConfig.useFakeTimers);
-            assert.isFalse(config.useFakeServer);
+            assert.false(config.useFakeServer);
         });
     });
 });

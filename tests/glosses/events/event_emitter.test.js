@@ -25,7 +25,7 @@ describe("event", "EventEmitter", () => {
             ee.once("newListener", function (name, listener) {
                 expect(name).to.be.equal("hello");
                 expect(listener).to.be.equal(hello);
-                expect(this.listeners("hello")).to.be.empty;
+                expect(this.listeners("hello")).to.be.empty();
             });
 
             const hello = spy();
@@ -36,9 +36,9 @@ describe("event", "EventEmitter", () => {
 
             ee.emit("hello", "a", "b");
 
-            expect(hello.calledOnce).to.be.true;
-            expect(hello.calledWith("a", "b")).to.be.true;
-            expect(foo.called).to.be.false;
+            expect(hello.calledOnce).to.be.true();
+            expect(hello.calledWith("a", "b")).to.be.true();
+            expect(foo.called).to.be.false();
             expect(events).to.be.deep.equal(["hello", "foo"]);
             expect(listeners).to.be.deep.equal([hello, foo]);
         });
@@ -54,9 +54,9 @@ describe("event", "EventEmitter", () => {
             const ee = new EventEmitter();
 
             ee.once("newListener", () => {
-                expect(ee.listeners("hello")).to.be.empty;
+                expect(ee.listeners("hello")).to.be.empty();
                 ee.once("newListener", () => {
-                    expect(ee.listeners("hello")).to.be.empty;
+                    expect(ee.listeners("hello")).to.be.empty();
                 });
                 ee.on("hello", listen2);
             });
@@ -173,7 +173,7 @@ describe("event", "EventEmitter", () => {
             ee.on("foo", listener);
             const fooListeners = ee.listeners("foo");
             ee.removeAllListeners("foo");
-            expect(ee.listeners("foo")).to.be.empty;
+            expect(ee.listeners("foo")).to.be.empty();
             expect(fooListeners).to.be.deep.equal([listener]);
         });
 
@@ -254,7 +254,7 @@ describe("event", "EventEmitter", () => {
                 //
             }
             ee.emit("maxListeners");
-            expect(maxListeners.calledOnce).to.be.true;
+            expect(maxListeners.calledOnce).to.be.true();
         });
 
         it("should emit a warning message", async () => {
@@ -286,7 +286,7 @@ describe("event", "EventEmitter", () => {
                 expect(warning.name).to.be.equal("MaxListenersExceededWarning");
                 expect(warning.emitter).to.be.equal(e);
                 expect(warning.count).to.be.equal(2);
-                expect(warning.type).to.be.null;
+                expect(warning.type).to.be.null();
                 expect(warning.message).to.include("2 null listeners added");
                 done();
             });
@@ -346,18 +346,18 @@ describe("event", "EventEmitter", () => {
         expect(called).to.be.deep.equal(["callback1"]);
 
         e.emit("foo");
-        expect(e.listeners("foo")).to.be.empty;
+        expect(e.listeners("foo")).to.be.empty();
         expect(called).to.be.deep.equal(["callback1", "callback2", "callback3"]);
 
         e.emit("foo");
-        expect(e.listeners("foo")).to.be.empty;
+        expect(e.listeners("foo")).to.be.empty();
         expect(called).to.be.deep.equal(["callback1", "callback2", "callback3"]);
 
         e.on("foo", callback1);
         e.on("foo", callback2);
         expect(e.listeners("foo")).to.have.lengthOf(2);
         e.removeAllListeners("foo");
-        expect(e.listeners("foo")).to.be.empty;
+        expect(e.listeners("foo")).to.be.empty();
 
         // Verify that removing callbacks while in emit allows emits to propagate to
         // all listeners
@@ -368,7 +368,7 @@ describe("event", "EventEmitter", () => {
         expect(e.listeners("foo")).to.have.lengthOf(2);
         e.emit("foo");
         expect(called).to.be.deep.equal(["callback2", "callback3"]);
-        expect(e.listeners("foo")).to.be.empty;
+        expect(e.listeners("foo")).to.be.empty();
     });
 
     it("should handle multiple args", () => {
@@ -401,8 +401,8 @@ describe("event", "EventEmitter", () => {
             e.emit("hello", "a", "b");
             e.emit("hello", "a", "b");
 
-            expect(hello.calledOnce).to.be.true;
-            expect(hello.calledWith("a", "b")).to.be.true;
+            expect(hello.calledOnce).to.be.true();
+            expect(hello.calledWith("a", "b")).to.be.true();
         });
 
         it("should not emit after removing", () => {
@@ -411,7 +411,7 @@ describe("event", "EventEmitter", () => {
             e.once("foo", remove);
             e.removeListener("foo", remove);
             e.emit("foo");
-            expect(remove.notCalled).to.be.true;
+            expect(remove.notCalled).to.be.true();
         });
 
         it("should correctly handle emitting while handling", () => {
@@ -423,7 +423,7 @@ describe("event", "EventEmitter", () => {
             });
             e.once("hello", hello);
             e.emit("hello", "first");
-            expect(hello.calledTwice).to.be.true;
+            expect(hello.calledTwice).to.be.true();
             expect(hello.args[0]).to.be.deep.equal(["first"]);
             expect(hello.args[1]).to.be.deep.equal(["second"]);
         });
@@ -494,8 +494,8 @@ describe("event", "EventEmitter", () => {
             ee.removeAllListeners("bar");
             ee.removeAllListeners("baz");
             expect(ee.listeners("foo")).to.be.deep.equal([listener]);
-            expect(ee.listeners("bar")).to.be.empty;
-            expect(ee.listeners("baz")).to.be.empty;
+            expect(ee.listeners("bar")).to.be.empty();
+            expect(ee.listeners("baz")).to.be.empty();
         });
 
         it("should emit appropriate events", () => {
@@ -508,7 +508,7 @@ describe("event", "EventEmitter", () => {
             ee.on("removeListener", remove);
             ee.removeAllListeners("bar");
             ee.removeAllListeners("baz");
-            expect(remove.calledThrice).to.be.true;
+            expect(remove.calledThrice).to.be.true();
             expect(remove.args[0]).to.be.deep.equal(["bar", listener]);
             expect(remove.args[1]).to.be.deep.equal(["baz", listener]);
             expect(remove.args[2]).to.be.deep.equal(["baz", listener]);
@@ -540,12 +540,12 @@ describe("event", "EventEmitter", () => {
             ee.on("removeListener", remove2);
             ee.removeAllListeners();
 
-            expect(remove1.calledThrice).to.be.true;
+            expect(remove1.calledThrice).to.be.true();
             expect(remove1.args[0]).to.be.deep.equal(["foo", listener]);
             expect(remove1.args[1]).to.be.deep.equal(["bar", listener]);
             expect(remove1.args[2]).to.be.deep.equal(["removeListener", remove2]);
 
-            expect(remove2.calledTwice).to.be.true;
+            expect(remove2.calledTwice).to.be.true();
             expect(remove2.args[0]).to.be.deep.equal(["foo", listener]);
             expect(remove2.args[1]).to.be.deep.equal(["bar", listener]);
         });
@@ -567,9 +567,9 @@ describe("event", "EventEmitter", () => {
             const remove = spy();
             ee.on("removeListener", remove);
             ee.removeListener("hello", listener1);
-            expect(remove.calledOnce).to.be.true;
+            expect(remove.calledOnce).to.be.true();
             expect(remove.args[0]).to.be.deep.equal(["hello", listener1]);
-            expect(ee.listeners("hello")).to.be.empty;
+            expect(ee.listeners("hello")).to.be.empty();
         });
 
         it("should not remove any listener if provided one is actually not a listener", () => {
@@ -578,7 +578,7 @@ describe("event", "EventEmitter", () => {
             const remove = spy();
             ee.on("removeListener", remove);
             ee.removeListener("hello", listener2);
-            expect(remove.notCalled).to.be.true;
+            expect(remove.notCalled).to.be.true();
             expect(ee.listeners("hello")).to.be.deep.equal([listener1]);
         });
 
@@ -590,16 +590,16 @@ describe("event", "EventEmitter", () => {
             const remove1 = spy();
             ee.once("removeListener", remove1);
             ee.removeListener("hello", listener1);
-            expect(remove1.calledOnce).to.be.true;
-            expect(remove1.calledWith("hello", listener1)).to.be.true;
+            expect(remove1.calledOnce).to.be.true();
+            expect(remove1.calledWith("hello", listener1)).to.be.true();
             expect(ee.listeners("hello")).to.be.deep.equal([listener2]);
 
             const remove2 = spy();
             ee.once("removeListener", remove2);
             ee.removeListener("hello", listener2);
-            expect(remove2.calledOnce).to.be.true;
-            expect(remove2.calledWith("hello", listener2)).to.be.true;
-            expect(ee.listeners("hello")).to.be.empty;
+            expect(remove2.calledOnce).to.be.true();
+            expect(remove2.calledWith("hello", listener2)).to.be.true();
+            expect(ee.listeners("hello")).to.be.empty();
         });
 
         it("shouldn't emit after removing", () => {
@@ -640,13 +640,13 @@ describe("event", "EventEmitter", () => {
                     ++c;
                     expect(name).to.be.equal("hello");
                     expect(cb).to.be.equal(listener2);
-                    expect(ee.listeners("hello")).to.be.empty;
+                    expect(ee.listeners("hello")).to.be.empty();
                 });
                 ee.removeListener("hello", listener2);
-                expect(ee.listeners("hello")).to.be.empty;
+                expect(ee.listeners("hello")).to.be.empty();
             });
             ee.removeListener("hello", listener1);
-            expect(ee.listeners("hello")).to.be.empty;
+            expect(ee.listeners("hello")).to.be.empty();
             expect(c).to.be.equal(2);
         });
 
@@ -681,7 +681,7 @@ describe("event", "EventEmitter", () => {
             const remove = spy();
             ee.on("removeListener", remove);
             ee.emit("hello");
-            expect(remove.calledOnce).to.be.true;
+            expect(remove.calledOnce).to.be.true();
             expect(remove.args[0]).to.be.deep.equal(["hello", listener1]);
         });
 
@@ -733,14 +733,14 @@ describe("event", "EventEmitter", () => {
         const e = spy();
         ee.on("__proto__", e);
         ee.emit("__proto__", 1);
-        expect(e.calledWith(1)).to.be.true;
+        expect(e.calledWith(1)).to.be.true();
     });
 
     describe("events list", () => {
         it("should return event names", () => {
             const EE = new EventEmitter();
 
-            expect(EE.eventNames()).to.be.empty;
+            expect(EE.eventNames()).to.be.empty();
 
             const m = adone.noop;
             EE.on("foo", adone.noop);

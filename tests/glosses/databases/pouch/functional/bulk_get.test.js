@@ -82,7 +82,7 @@ describe("database", "pouch", "bulk_get", () => {
                 ]
             }).then((response) => {
                 const result = response.results[0];
-                assert.isUndefined(result.docs[0].ok._revisions);
+                assert.undefined(result.docs[0].ok._revisions);
                 done();
             });
         });
@@ -99,7 +99,7 @@ describe("database", "pouch", "bulk_get", () => {
             }).then((response) => {
                 const result = response.results[0];
                 assert.equal(result.docs[0].ok._id, "constructor");
-                assert.isUndefined(result.docs[0].ok._revisions);
+                assert.undefined(result.docs[0].ok._revisions);
                 done();
             });
         });

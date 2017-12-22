@@ -312,7 +312,7 @@ describe(Support.getTestDialectTeaser("Includes with schemas"), () => {
                 ]
             });
             users.forEach((user) => {
-                expect(user.Memberships).to.be.ok;
+                expect(user.Memberships).to.be.ok();
                 user.Memberships.sort(sortById);
 
                 expect(user.Memberships.length).to.equal(2);
@@ -325,8 +325,8 @@ describe(Support.getTestDialectTeaser("Includes with schemas"), () => {
                 expect(user.Products.length).to.equal(2);
                 expect(user.Products[0].Tags.length).to.equal(2);
                 expect(user.Products[1].Tags.length).to.equal(1);
-                expect(user.Products[0].Category).to.be.ok;
-                expect(user.Products[1].Category).not.to.be.ok;
+                expect(user.Products[0].Category).to.be.ok();
+                expect(user.Products[1].Category).not.to.be.ok();
 
                 expect(user.Products[0].Prices.length).to.equal(2);
                 expect(user.Products[1].Prices.length).to.equal(4);
@@ -400,9 +400,9 @@ describe(Support.getTestDialectTeaser("Includes with schemas"), () => {
                         ] }
                     ]
                 });
-                expect(as.length).to.be.ok;
+                expect(as.length).to.be.ok();
                 as.forEach((a) => {
-                    expect(a.b.c.d.e.f.g.h).to.be.ok;
+                    expect(a.b.c.d.e.f.g.h).to.be.ok();
                 });
             }
         });
@@ -545,7 +545,7 @@ describe(Support.getTestDialectTeaser("Includes with schemas"), () => {
                     ]
                 });
                 expect(users.length).to.equal(1);
-                expect(users[0].Group).to.be.ok;
+                expect(users[0].Group).to.be.ok();
             }
         });
 
@@ -580,7 +580,7 @@ describe(Support.getTestDialectTeaser("Includes with schemas"), () => {
                     ]
                 });
                 expect(users.length).to.equal(1);
-                expect(users[0].Group).to.be.ok;
+                expect(users[0].Group).to.be.ok();
                 expect(users[0].Group.name).to.equal("A");
             }
         });
@@ -616,7 +616,7 @@ describe(Support.getTestDialectTeaser("Includes with schemas"), () => {
                     ]
                 });
                 users.forEach((user) => {
-                    expect(user.Group).to.be.ok;
+                    expect(user.Group).to.be.ok();
                 });
             }
         });
@@ -666,8 +666,8 @@ describe(Support.getTestDialectTeaser("Includes with schemas"), () => {
                 });
                 expect(users.length).to.equal(1);
                 users.forEach((user) => {
-                    expect(user.Group).to.be.ok;
-                    expect(user.Group.Categories).to.be.ok;
+                    expect(user.Group).to.be.ok();
+                    expect(user.Group.Categories).to.be.ok();
                 });
             }
         });
@@ -717,8 +717,8 @@ describe(Support.getTestDialectTeaser("Includes with schemas"), () => {
                 });
                 expect(users.length).to.equal(1);
                 users.forEach((user) => {
-                    expect(user.Team).to.be.ok;
-                    expect(user.Team.Tags).to.be.ok;
+                    expect(user.Team).to.be.ok();
+                    expect(user.Team.Tags).to.be.ok();
                 });
             }
         });
@@ -768,8 +768,8 @@ describe(Support.getTestDialectTeaser("Includes with schemas"), () => {
                 });
                 expect(users.length).to.equal(1);
                 users.forEach((user) => {
-                    expect(user.Group).to.be.ok;
-                    expect(user.Group.Categories).to.be.ok;
+                    expect(user.Group).to.be.ok();
+                    expect(user.Group.Categories).to.be.ok();
                 });
             }
         });
@@ -805,7 +805,7 @@ describe(Support.getTestDialectTeaser("Includes with schemas"), () => {
                     ]
                 });
                 expect(users.length).to.equal(1);
-                expect(users[0].LeaderOf).to.be.ok;
+                expect(users[0].LeaderOf).to.be.ok();
                 expect(users[0].LeaderOf.title).to.equal("Beta");
             }
         });
@@ -1053,8 +1053,8 @@ describe(Support.getTestDialectTeaser("Includes with schemas"), () => {
 
                     products.forEach((product) => {
                         expect(product.Company.name).to.equal("NYSE");
-                        expect(product.Tags.length).to.be.ok;
-                        expect(product.Prices.length).to.be.ok;
+                        expect(product.Tags.length).to.be.ok();
+                        expect(product.Prices.length).to.be.ok();
                     });
                 });
             });
@@ -1079,8 +1079,8 @@ describe(Support.getTestDialectTeaser("Includes with schemas"), () => {
                     expect(products.length).to.equal(6);
 
                     products.forEach((product) => {
-                        expect(product.Tags.length).to.be.ok;
-                        expect(product.Prices.length).to.be.ok;
+                        expect(product.Tags.length).to.be.ok();
+                        expect(product.Prices.length).to.be.ok();
 
                         product.Prices.forEach((price) => {
                             expect(price.value).to.be.above(5);
@@ -1107,8 +1107,8 @@ describe(Support.getTestDialectTeaser("Includes with schemas"), () => {
                     expect(products.length).to.equal(10);
 
                     products.forEach((product) => {
-                        expect(product.Tags.length).to.be.ok;
-                        expect(product.Prices.length).to.be.ok;
+                        expect(product.Tags.length).to.be.ok();
+                        expect(product.Prices.length).to.be.ok();
 
                         product.Tags.forEach((tag) => {
                             expect(["A", "B", "C"]).to.include(tag.name);

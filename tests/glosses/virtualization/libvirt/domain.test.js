@@ -20,23 +20,23 @@ describe("Domain", () => {
         beforeEach((done) => {
             test.hypervisor = new Hypervisor("test:///default");
             test.hypervisor.connect((err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 done();
             });
         });
 
         afterEach((done) => {
             test.hypervisor.disconnect((err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 done();
             });
         });
 
         it("should lookup a domain by id", (done) => {
             test.hypervisor.lookupDomainById(1, (err, domain) => {
-                expect(err).to.not.exist;
-                expect(domain).to.exist;
-                expect(domain._parent).to.exist;
+                expect(err).to.not.exist();
+                expect(domain).to.exist();
+                expect(domain._parent).to.exist();
                 done();
             });
         });
@@ -44,22 +44,22 @@ describe("Domain", () => {
         it("should create a persistent Domain from its XML Description", (done) => {
             const xml = h.fixture("domain.xml");
             test.hypervisor.createDomain(xml, (err, domain) => {
-                expect(err).to.not.exist;
-                expect(domain).to.exist;
-                expect(domain._parent).to.exist;
+                expect(err).to.not.exist();
+                expect(domain).to.exist();
+                expect(domain._parent).to.exist();
 
                 test.hypervisor.lookupDomainByName("nodejs-test", (err, lookupDomain) => {
-                    expect(err).to.not.exist;
-                    expect(lookupDomain).to.exist;
-                    expect(lookupDomain._parent).to.exist;
+                    expect(err).to.not.exist();
+                    expect(lookupDomain).to.exist();
+                    expect(lookupDomain._parent).to.exist();
 
                     lookupDomain.getName((err, name) => {
-                        expect(err).to.not.exist;
+                        expect(err).to.not.exist();
                         expect(name).to.equal("nodejs-test");
 
                         lookupDomain.destroy((err, result) => {
-                            expect(err).to.not.exist;
-                            expect(result).to.be.true;
+                            expect(err).to.not.exist();
+                            expect(result).to.be.true();
                             done();
                         });
                     });
@@ -70,21 +70,21 @@ describe("Domain", () => {
         it("should {,un}define a persistent Domain", (done) => {
             const xml = h.fixture("domain.xml");
             test.hypervisor.defineDomain(xml, (err, domain) => {
-                expect(err).to.not.exist;
-                expect(domain).to.exist;
-                expect(domain._parent).to.exist;
+                expect(err).to.not.exist();
+                expect(domain).to.exist();
+                expect(domain._parent).to.exist();
 
                 test.hypervisor.lookupDomainByName("nodejs-test", (err, lookupDomain) => {
-                    expect(err).to.not.exist;
-                    expect(lookupDomain).to.exist;
-                    expect(lookupDomain._parent).to.exist;
+                    expect(err).to.not.exist();
+                    expect(lookupDomain).to.exist();
+                    expect(lookupDomain._parent).to.exist();
 
                     lookupDomain.undefine((err, result) => {
-                        expect(err).to.not.exist;
-                        expect(result).to.be.true;
+                        expect(err).to.not.exist();
+                        expect(result).to.be.true();
 
                         test.hypervisor.lookupDomainByName("nodejs-test", (err, lookupDomain) => {
-                            expect(err).to.exist;
+                            expect(err).to.exist();
                             done();
                         });
                     });
@@ -97,12 +97,12 @@ describe("Domain", () => {
         beforeEach((done) => {
             test.hypervisor = new Hypervisor("test:///default");
             test.hypervisor.connect((err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
 
                 test.hypervisor.lookupDomainById(1, (err, domain) => {
-                    expect(err).to.not.exist;
-                    expect(domain).to.exist;
-                    expect(domain._parent).to.exist;
+                    expect(err).to.not.exist();
+                    expect(domain).to.exist();
+                    expect(domain._parent).to.exist();
                     test.domain = domain;
                     done();
                 });
@@ -111,42 +111,42 @@ describe("Domain", () => {
 
         afterEach((done) => {
             test.hypervisor.disconnect((err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 done();
             });
         });
 
         it("should reset the domain", (done) => {
             test.domain.reset((err, result) => {
-                expect(err).to.exist;
+                expect(err).to.exist();
 
                 // NOTE: not supported by test driver
-                // expect(err).to.not.exist;
-                // expect(result).to.be.true;
+                // expect(err).to.not.exist();
+                // expect(result).to.be.true();
                 done();
             });
         });
 
         it("should reboot the domain", (done) => {
             test.domain.reboot((err, result) => {
-                expect(err).to.not.exist;
-                expect(result).to.be.true;
+                expect(err).to.not.exist();
+                expect(result).to.be.true();
                 done();
             });
         });
 
         it("should save and restore the domain", (done) => {
             test.domain.getName((err, name) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
 
                 const path = `/tmp/${name}-saved.img`;
                 test.domain.save(path, (err, saved) => {
-                    expect(err).to.not.exist;
-                    expect(saved).to.be.true;
+                    expect(err).to.not.exist();
+                    expect(saved).to.be.true();
 
                     test.hypervisor.restoreDomain(path, (err, restored) => {
-                        expect(err).to.not.exist;
-                        expect(saved).to.be.true;
+                        expect(err).to.not.exist();
+                        expect(saved).to.be.true();
                         done();
                     });
                 });
@@ -155,12 +155,12 @@ describe("Domain", () => {
 
         it("should suspend and resume the domain", (done) => {
             test.domain.suspend((err, suspended) => {
-                expect(err).to.not.exist;
-                expect(suspended).to.be.true;
+                expect(err).to.not.exist();
+                expect(suspended).to.be.true();
 
                 test.domain.resume((err, resumed) => {
-                    expect(err).to.not.exist;
-                    expect(resumed).to.be.true;
+                    expect(err).to.not.exist();
+                    expect(resumed).to.be.true();
                     done();
                 });
             });
@@ -168,13 +168,13 @@ describe("Domain", () => {
 
         it("should shutdown the domain", (done) => {
             test.domain.shutdown((err, shutdown) => {
-                expect(err).to.not.exist;
-                expect(shutdown).to.be.true;
+                expect(err).to.not.exist();
+                expect(shutdown).to.be.true();
 
                 // reset state
                 test.domain.start((err, result) => {
-                    expect(err).to.not.exist;
-                    expect(result).to.be.true;
+                    expect(err).to.not.exist();
+                    expect(result).to.be.true();
                     done();
                 });
             });
@@ -183,8 +183,8 @@ describe("Domain", () => {
         it("should dump the core of a domain on a given file for analysis", (done) => {
             const path = "/tmp/dumpcore-test.txt";
             test.domain.coreDump(path, (err, result) => {
-                expect(err).to.not.exist;
-                expect(result).to.be.true;
+                expect(err).to.not.exist();
+                expect(result).to.be.true();
                 done();
             });
         });
@@ -196,12 +196,12 @@ describe("Domain", () => {
 
             // NOTE: test driver doesn't support these functions in 0.9.x
             test.domain.managedSave((err, saved) => {
-                expect(err).to.not.exist;
-                expect(saved).to.be.true;
+                expect(err).to.not.exist();
+                expect(saved).to.be.true();
 
                 test.domain.hasManagedSaveImage((err, result) => {
-                    expect(err).to.not.exist;
-                    expect(result).to.be.true;
+                    expect(err).to.not.exist();
+                    expect(result).to.be.true();
                     done();
                 });
             });
@@ -213,16 +213,16 @@ describe("Domain", () => {
             }
 
             test.domain.managedSave((err, saved) => {
-                expect(err).to.not.exist;
-                expect(saved).to.be.true;
+                expect(err).to.not.exist();
+                expect(saved).to.be.true();
 
                 test.domain.managedSaveRemove((err, removed) => {
-                    expect(err).to.not.exist;
-                    expect(removed).to.be.true;
+                    expect(err).to.not.exist();
+                    expect(removed).to.be.true();
 
                     test.domain.hasManagedSaveImage((err, result) => {
-                        expect(err).to.not.exist;
-                        expect(result).to.be.false;
+                        expect(err).to.not.exist();
+                        expect(result).to.be.false();
                         done();
                     });
                 });
@@ -231,11 +231,11 @@ describe("Domain", () => {
 
         it("should request that the current background job be aborted at the soonest opportunity", (done) => {
             test.domain.abortCurrentJob((err, result) => {
-                expect(err).to.exist;
+                expect(err).to.exist();
 
                 // NOTE: not supported by test driver
-                // expect(err).to.not.exist;
-                // expect(result).to.be.true;
+                // expect(err).to.not.exist();
+                // expect(result).to.be.true();
                 done();
             });
         });
@@ -243,11 +243,11 @@ describe("Domain", () => {
         it("should attach a device", (done) => {
             const xml = h.fixture("device.xml");
             test.domain.attachDevice(xml, (err, result) => {
-                expect(err).to.exist;
+                expect(err).to.exist();
 
                 // NOTE: not supported by current driver
-                // expect(err).to.not.exist;
-                // expect(result).to.be.true;
+                // expect(err).to.not.exist();
+                // expect(result).to.be.true();
 
                 done();
             });
@@ -256,11 +256,11 @@ describe("Domain", () => {
         it("should detach a device", (done) => {
             const xml = h.fixture("device.xml");
             test.domain.detachDevice(xml, (err, result) => {
-                expect(err).to.exist;
+                expect(err).to.exist();
 
                 // NOTE: not supported by test driver
-                // expect(err).to.not.exist;
-                // expect(result).to.be.true;
+                // expect(err).to.not.exist();
+                // expect(result).to.be.true();
 
                 done();
             });
@@ -270,11 +270,11 @@ describe("Domain", () => {
             const xml = h.fixture("device_update.xml");
             const flags = [libvirt.VIR_DOMAIN_DEVICE_MODIFY_CONFIG];
             test.domain.updateDevice(xml, flags, (err, result) => {
-                expect(err).to.exist;
+                expect(err).to.exist();
 
                 // NOTE: not supported by test driver
-                // expect(err).to.not.exist;
-                // expect(result).to.be.true;
+                // expect(err).to.not.exist();
+                // expect(result).to.be.true();
 
                 done();
             });
@@ -290,14 +290,14 @@ describe("Domain", () => {
         //   ];
 
         //   hypervisor2.connect(function(err) {
-        //     expect(err).to.not.exist;
+        //     expect(err).to.not.exist();
         //     test.domain.migrate({ dest_hypervisor: hypervisor2, dest_name: 'test2', dest_uri: '', bandwidth: 100, flags: flags }, function(err, domain) {
-        //       expect(err).to.exist;
+        //       expect(err).to.exist();
         //       expect(err.code).to.be.equal(err.VIR_ERR_NO_SUPPORT);
 
         //       // NOTE: not supported by test driver
-        //       // expect(err).to.not.exist;
-        //       // expect(domain).to.exist;
+        //       // expect(err).to.not.exist();
+        //       // expect(domain).to.exist();
 
         //       done();
         //     });
@@ -318,7 +318,7 @@ describe("Domain", () => {
             };
 
             test.domain.migrate(options, (err) => {
-                expect(err).to.exist;
+                expect(err).to.exist();
                 // some libvirt versions report different error codes.
                 const possibleErrors = [
                     libvirt.VIR_ERR_OPERATION_INVALID,
@@ -328,7 +328,7 @@ describe("Domain", () => {
 
                 expect(possibleErrors).to.include(err.code);
                 // NOTE: not supported by test driver
-                // expect(err).to.not.exist;
+                // expect(err).to.not.exist();
 
                 done();
             });
@@ -346,7 +346,7 @@ describe("Domain", () => {
             };
 
             test.domain.migrate(options, (err) => {
-                expect(err).to.exist;
+                expect(err).to.exist();
                 // some libvirt versions report different error codes.
                 const possibleErrors = [
                     libvirt.VIR_ERR_OPERATION_INVALID,
@@ -356,7 +356,7 @@ describe("Domain", () => {
 
                 expect(possibleErrors).to.include(err.code);
                 // NOTE: not supported by test driver
-                // expect(err).to.not.exist;
+                // expect(err).to.not.exist();
 
                 done();
             });
@@ -364,15 +364,15 @@ describe("Domain", () => {
 
         it("should allow to change real CPUs, which can be allocated to a virtual CPU", (done) => {
             test.domain.getVcpus((err, res) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
 
                 const affinity = res[0].affinity;
                 affinity[0].usable = false;
                 affinity[1].usable = false;
 
                 test.domain.pinVcpu(res[0].number, affinity, (err, result) => {
-                    expect(err).to.not.exist;
-                    expect(result).to.be.true;
+                    expect(err).to.not.exist();
+                    expect(result).to.be.true();
                     done();
                 });
             });
@@ -386,19 +386,19 @@ describe("Domain", () => {
             const possibleErrors = [libvirt.VIR_ERR_INVALID_ARG, libvirt.VIR_ERR_NO_SUPPORT];
 
             test.domain.memoryPeek(0, 1024, physical, (err, res) => {
-                expect(err).to.exist;
+                expect(err).to.exist();
                 expect(possibleErrors).to.include(err.code);
 
                 // NOTE: not supported by test driver
-                // expect(err).to.not.exist;
+                // expect(err).to.not.exist();
                 // expect(res).to.be.instanceof(Buffer);
 
                 test.domain.memoryPeek(0, 1024, virtual, (err, res) => {
-                    expect(err).to.exist;
+                    expect(err).to.exist();
                     expect(possibleErrors).to.include(err.code);
 
                     // NOTE: not supported by test driver
-                    //expect(err).to.not.exist;
+                    //expect(err).to.not.exist();
                     //expect(res).to.be.instanceof(Buffer);
 
                     done();
@@ -408,11 +408,11 @@ describe("Domain", () => {
 
         it("should allow to read the content of a domain's disk device and return it in a Buffer object", (done) => {
             test.domain.blockPeek("/dev/sda", 0, 1024, [], (err, res) => {
-                expect(err).to.exist;
+                expect(err).to.exist();
                 expect(err.code).to.be.equal(libvirt.VIR_ERR_NO_SUPPORT);
 
                 // NOTE: not supported by test driver
-                //expect(err).to.not.exist;
+                //expect(err).to.not.exist();
                 //expect(res).to.be.instanceof(Buffer);
 
                 done();
@@ -426,17 +426,17 @@ describe("Domain", () => {
 
             const xml = h.fixture("snapshot.xml");
             test.domain.takeSnapshot(xml, [], (err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
 
                 test.domain.lookupSnapshotByName("test-snapshot", (err, res) => {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                     expect(xml).to.match(/<name>test-snapshot<\/name>/);
 
                     test.domain.revertToSnapshot("test-snapshot", (err) => {
-                        expect(err).to.not.exist;
+                        expect(err).to.not.exist();
 
                         test.domain.deleteSnapshot("test-snapshot", (err) => {
-                            expect(err).to.not.exist;
+                            expect(err).to.not.exist();
                             done();
                         });
                     });
@@ -458,20 +458,20 @@ describe("Domain", () => {
         //       if (events.length === 2) {
         //         expect(events).to.eql([5, 2]);
         //         test.hypervisor.unregisterDomainEvent(callbackid, function(err, result) {
-        //           expect(err).to.not.exist;
-        //           expect(result).to.be.true;
+        //           expect(err).to.not.exist();
+        //           expect(result).to.be.true();
         //           done();
         //         });
         //       }
         //     }
         //   }, function(err, result) {
-        //     expect(err).to.not.exist;
+        //     expect(err).to.not.exist();
         //     callbackid = result;
 
         //     test.domain.shutdown(function(err, result) {
-        //       expect(err).to.not.exist;
+        //       expect(err).to.not.exist();
         //       test.domain.start(function(err, result) {
-        //         expect(err).to.not.exist;
+        //         expect(err).to.not.exist();
         //       });
         //     });
         //   });
@@ -484,12 +484,12 @@ describe("Domain", () => {
         beforeEach((done) => {
             test.hypervisor = new Hypervisor("test:///default");
             test.hypervisor.connect((err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
 
                 test.hypervisor.lookupDomainById(1, (err, domain) => {
-                    expect(err).to.not.exist;
-                    expect(domain).to.exist;
-                    expect(domain._parent).to.exist;
+                    expect(err).to.not.exist();
+                    expect(domain).to.exist();
+                    expect(domain._parent).to.exist();
                     test.domain = domain;
                     done();
                 });
@@ -498,14 +498,14 @@ describe("Domain", () => {
 
         afterEach((done) => {
             test.hypervisor.disconnect((err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 done();
             });
         });
 
         it("should return the id", (done) => {
             test.domain.getId((err, id) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(id).to.equal(1);
                 done();
             });
@@ -513,7 +513,7 @@ describe("Domain", () => {
 
         it("should return the operating system type", (done) => {
             test.domain.getOSType((err, osType) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(osType).to.equal("linux");
                 done();
             });
@@ -521,7 +521,7 @@ describe("Domain", () => {
 
         it("should return the name", (done) => {
             test.domain.getName((err, name) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(name).to.equal("test");
                 done();
             });
@@ -529,22 +529,22 @@ describe("Domain", () => {
 
         it("should return the uuid", (done) => {
             test.domain.getUUID((err, uuid) => {
-                expect(err).to.not.exist;
-                expect(uuid).to.exist;
+                expect(err).to.not.exist();
+                expect(uuid).to.exist();
                 done();
             });
         });
 
         it("should return the domain information", (done) => {
             test.domain.getInfo((err, info) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(info).to.include({
                     state: "running",
                     maxMemory: 8388608,
                     memory: 2097152,
                     vcpus: 2
                 });
-                expect(info.cpuTime).to.exist;
+                expect(info.cpuTime).to.exist();
 
                 done();
             });
@@ -552,7 +552,7 @@ describe("Domain", () => {
 
         it("should indicate if autostart is enabled", (done) => {
             test.domain.getAutostart((err, autoStart) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(autoStart).to.equal(false);
                 done();
             });
@@ -560,20 +560,20 @@ describe("Domain", () => {
 
         it("should enable or disable autostart", (done) => {
             test.domain.setAutostart(false, (err, result1) => {
-                expect(err).to.not.exist;
-                expect(result1).to.be.true;
+                expect(err).to.not.exist();
+                expect(result1).to.be.true();
 
                 test.domain.getAutostart((err, result2) => {
-                    expect(err).to.not.exist;
-                    expect(result2).to.be.false;
+                    expect(err).to.not.exist();
+                    expect(result2).to.be.false();
 
                     test.domain.setAutostart(true, (err, result3) => {
-                        expect(err).to.not.exist;
-                        expect(result3).to.be.true;
+                        expect(err).to.not.exist();
+                        expect(result3).to.be.true();
 
                         test.domain.getAutostart((err, result4) => {
-                            expect(err).to.not.exist;
-                            expect(result4).to.be.true;
+                            expect(err).to.not.exist();
+                            expect(result4).to.be.true();
 
                             done();
                         });
@@ -591,11 +591,11 @@ describe("Domain", () => {
 
         it("should change the maximum amount of physical memory allocated to a domain", (done) => {
             test.domain.setMaxMemory(512000, (err, result) => {
-                expect(err).to.not.exist;
-                expect(result).to.be.true;
+                expect(err).to.not.exist();
+                expect(result).to.be.true();
 
                 test.domain.getMaxMemory((err, memory) => {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                     expect(memory).to.equal(512000);
                     done();
                 });
@@ -604,11 +604,11 @@ describe("Domain", () => {
 
         it("should dynamically change the runtime amount of memory allocated to a domain", (done) => {
             test.domain.setMemory(256000, (err, result) => {
-                expect(err).to.not.exist;
-                expect(result).to.be.true;
+                expect(err).to.not.exist();
+                expect(result).to.be.true();
 
                 test.domain.getInfo((err, info) => {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                     expect(info.memory).to.equal(256000);
                     done();
                 });
@@ -617,7 +617,7 @@ describe("Domain", () => {
 
         it("should return the maximum number of virtual CPUs supported for the guest VM", (done) => {
             test.domain.getMaxVcpus((err, maxVcpus) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(maxVcpus).to.equal(2);
                 done();
             });
@@ -625,7 +625,7 @@ describe("Domain", () => {
 
         it("should indicate whether the domain is active", (done) => {
             test.domain.isActive((err, active) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(active).to.equal(true);
                 done();
             });
@@ -633,7 +633,7 @@ describe("Domain", () => {
 
         it("should indicate whether the domain is persistent", (done) => {
             test.domain.isPersistent((err, persistent) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(persistent).to.equal(true);
                 done();
             });
@@ -641,7 +641,7 @@ describe("Domain", () => {
 
         it("should indicate whether the domain has been updated", (done) => {
             test.domain.isUpdated((err, updated) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(updated).to.equal(false);
                 done();
             });
@@ -649,7 +649,7 @@ describe("Domain", () => {
 
         it("should return domain xml representation", (done) => {
             test.domain.toXml((err, xml) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(xml).to.match(/<name>test<\/name>/);
                 done();
             });
@@ -658,33 +658,33 @@ describe("Domain", () => {
         it("should return basic information about a domain's block device", (done) => {
             test.domain.getBlockInfo("/path", (err, info) => {
                 // NOTE: not supported on test-driver
-                expect(err).to.exist;
+                expect(err).to.exist();
 
-                // expect(err).to.not.exist;
-                // expect(info.capacity).to.exist;
-                // expect(info.allocation).to.exist;
-                // expect(info.physical).to.exist;
+                // expect(err).to.not.exist();
+                // expect(info.capacity).to.exist();
+                // expect(info.allocation).to.exist();
+                // expect(info.physical).to.exist();
                 done();
             });
         });
 
         it("should return block device stats for block devices attached to the domain", (done) => {
             test.domain.getBlockStats("/dev/sda", (err, stats) => {
-                expect(err).to.exist;
+                expect(err).to.exist();
 
                 // @todo find a valid path to test...
-                // expect(err).to.not.exist;
-                // expect(stats.read_requests).to.exist;
-                // expect(stats.read_bytes).to.exist;
-                // expect(stats.write_requests).to.exist;
-                // expect(stats.write_bytes).to.exist;
+                // expect(err).to.not.exist();
+                // expect(stats.read_requests).to.exist();
+                // expect(stats.read_bytes).to.exist();
+                // expect(stats.write_requests).to.exist();
+                // expect(stats.write_bytes).to.exist();
                 done();
             });
         });
 
         it("should get the domain scheduler type", (done) => {
             test.domain.getSchedulerType((err, type) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(type).to.equal("fair");
                 done();
             });
@@ -694,7 +694,7 @@ describe("Domain", () => {
             // test driver always return 50 as weight
             // and it doesn't set new values for weight
             test.domain.getSchedulerParameters((err, params) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(params.weight).to.equal(50);
                 done();
             });
@@ -702,10 +702,10 @@ describe("Domain", () => {
 
         it("should return the domain security labels", (done) => {
             test.domain.getSecurityLabel((err, label) => {
-                expect(err).to.exist;
+                expect(err).to.exist();
 
                 // NOTE: not supported by test driver
-                // expect(err).to.not.exist;
+                // expect(err).to.not.exist();
                 // console.log(label);
                 done();
             });
@@ -717,26 +717,26 @@ describe("Domain", () => {
             }
 
             test.domain.hasManagedSaveImage((err, result) => {
-                expect(err).to.not.exist;
-                expect(result).to.be.false;
+                expect(err).to.not.exist();
+                expect(result).to.be.false();
                 done();
             });
         });
 
         it("should return network interface statistics of the domain", (done) => {
             test.domain.getInterfaceStats("eth0", (err, stats) => {
-                expect(err).to.exist;
+                expect(err).to.exist();
 
                 // @todo attach network device to domain, then check
-                // expect(err).to.not.exist;
-                // expect(stats.rx.bytes).to.exist;
-                // expect(stats.rx.packets).to.exist;
-                // expect(stats.rx.errors).to.exist;
-                // expect(stats.rx.drop).to.exist;
-                // expect(stats.tx.bytes).to.exist;
-                // expect(stats.tx.packets).to.exist;
-                // expect(stats.tx.errors).to.exist;
-                // expect(stats.tx.drop).to.exist;
+                // expect(err).to.not.exist();
+                // expect(stats.rx.bytes).to.exist();
+                // expect(stats.rx.packets).to.exist();
+                // expect(stats.rx.errors).to.exist();
+                // expect(stats.rx.drop).to.exist();
+                // expect(stats.tx.bytes).to.exist();
+                // expect(stats.tx.packets).to.exist();
+                // expect(stats.tx.errors).to.exist();
+                // expect(stats.tx.drop).to.exist();
 
                 done();
             });
@@ -744,22 +744,22 @@ describe("Domain", () => {
 
         it("should return information about progress of a background job on a domain", (done) => {
             test.domain.getJobInfo((err, info) => {
-                expect(err).to.exist;
+                expect(err).to.exist();
 
                 // NOTE: not supported on test driver
-                // expect(err).to.not.exist;
-                // expect(info.type).to.exist;
-                // expect(info.time.elapsed).to.exist;
-                // expect(info.time.remaining).to.exist;
-                // expect(info.data.total).to.exist;
-                // expect(info.data.processed).to.exist;
-                // expect(info.data.remaining).to.exist;
-                // expect(info.memory.total).to.exist;
-                // expect(info.memory.processed).to.exist;
-                // expect(info.memory.remaining).to.exist;
-                // expect(info.file.total).to.exist;
-                // expect(info.file.processed).to.exist;
-                // expect(info.file.remaining).to.exist;
+                // expect(err).to.not.exist();
+                // expect(info.type).to.exist();
+                // expect(info.time.elapsed).to.exist();
+                // expect(info.time.remaining).to.exist();
+                // expect(info.data.total).to.exist();
+                // expect(info.data.processed).to.exist();
+                // expect(info.data.remaining).to.exist();
+                // expect(info.memory.total).to.exist();
+                // expect(info.memory.processed).to.exist();
+                // expect(info.memory.remaining).to.exist();
+                // expect(info.file.total).to.exist();
+                // expect(info.file.processed).to.exist();
+                // expect(info.file.remaining).to.exist();
 
                 done();
             });
@@ -767,16 +767,16 @@ describe("Domain", () => {
 
         it("should return domain's memory statistics", (done) => {
             test.domain.getMemoryStats((err, stats) => {
-                expect(err).to.exist;
+                expect(err).to.exist();
 
                 // NOTE: not supported by test driver
-                // expect(err).to.not.exist;
-                // expect(stats.swapIn).to.exist;
-                // expect(stats.swapOut).to.exist;
-                // expect(stats.majorFault).to.exist;
-                // expect(stats.minorFault).to.exist;
-                // expect(stats.unused).to.exist;
-                // expect(stats.available).to.exist;
+                // expect(err).to.not.exist();
+                // expect(stats.swapIn).to.exist();
+                // expect(stats.swapOut).to.exist();
+                // expect(stats.majorFault).to.exist();
+                // expect(stats.minorFault).to.exist();
+                // expect(stats.unused).to.exist();
+                // expect(stats.available).to.exist();
 
                 done();
             });
@@ -784,28 +784,28 @@ describe("Domain", () => {
 
         it("should get information about vcpus", (done) => {
             test.domain.getVcpus((err, vcpus) => {
-                expect(err).to.not.exist;
-                expect(vcpus).to.exist;
+                expect(err).to.not.exist();
+                expect(vcpus).to.exist();
 
                 expect(vcpus).to.be.instanceOf(Array);
-                expect(vcpus[0].number).to.exist;
-                expect(vcpus[0].state).to.exist;
+                expect(vcpus[0].number).to.exist();
+                expect(vcpus[0].state).to.exist();
                 expect(vcpus[0].state).to.equal("running");
-                expect(vcpus[0].cpuTime).to.exist;
-                expect(vcpus[0].cpu).to.exist;
-                expect(vcpus[0].affinity).to.exist;
+                expect(vcpus[0].cpuTime).to.exist();
+                expect(vcpus[0].cpu).to.exist();
+                expect(vcpus[0].affinity).to.exist();
 
                 const affinity = vcpus[0].affinity;
                 const real_cpu = 0; //pedagogical purpose
-                expect(affinity[real_cpu].usable).to.exist;
+                expect(affinity[real_cpu].usable).to.exist();
                 done();
             });
         });
 
         it("should dynamically change the number of virtual CPUs used by the domain", (done) => {
             test.domain.setVcpus(1, (err, result) => {
-                expect(err).to.not.exist;
-                expect(result).to.be.true;
+                expect(err).to.not.exist();
+                expect(result).to.be.true();
                 done();
             });
         });
@@ -816,8 +816,8 @@ describe("Domain", () => {
             }
 
             test.domain.hasCurrentSnapshot((err, res) => {
-                expect(err).to.not.exist;
-                expect(res).to.be.false;
+                expect(err).to.not.exist();
+                expect(res).to.be.false();
                 done();
             });
         });
@@ -829,18 +829,18 @@ describe("Domain", () => {
 
             const xml = h.fixture("snapshot.xml");
             test.domain.takeSnapshot(xml, [], (err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
 
                 test.domain.hasCurrentSnapshot((err, res) => {
-                    expect(err).to.not.exist;
-                    expect(res).to.be.true;
+                    expect(err).to.not.exist();
+                    expect(res).to.be.true();
 
                     test.domain.getCurrentSnapshot((err, snapshot) => {
-                        expect(err).to.not.exist;
+                        expect(err).to.not.exist();
                         expect(snapshot).to.match(/<name>test-snapshot<\/name>/);
 
                         test.domain.deleteSnapshot("test-snapshot", (err) => {
-                            expect(err).to.not.exist;
+                            expect(err).to.not.exist();
                             done();
                         });
                     });
@@ -855,8 +855,8 @@ describe("Domain", () => {
                 expect(err.code).to.equal(libvirt.VIR_ERR_NO_SUPPORT);
 
                 // NOTE: not supported by test driver
-                // expect(err).to.not.exist;
-                // expect(result).to.be.true;
+                // expect(err).to.not.exist();
+                // expect(result).to.be.true();
 
                 done();
             });
@@ -869,16 +869,16 @@ describe("Domain", () => {
 
             const xml = h.fixture("snapshot.xml");
             test.domain.takeSnapshot(xml, [], (err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
 
                 test.domain.getSnapshots((err, snapshots) => {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                     expect(snapshots).to.be.instanceOf(Array);
-                    expect(snapshots[0]).to.exist;
+                    expect(snapshots[0]).to.exist();
                     expect(snapshots[0]).to.match(/<name>test-snapshot<\/name>/);
 
                     test.domain.deleteSnapshot("test-snapshot", (err) => {
-                        expect(err).to.not.exist;
+                        expect(err).to.not.exist();
                         done();
                     });
                 });

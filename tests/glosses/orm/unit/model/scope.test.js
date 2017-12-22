@@ -127,10 +127,10 @@ describe(Support.getTestDialectTeaser("Model"), () => {
         });
 
         it("should be able to unscope", () => {
-            expect(Company.scope(null)._scope).to.be.empty;
-            expect(Company.unscoped()._scope).to.be.empty;
+            expect(Company.scope(null)._scope).to.be.empty();
+            expect(Company.unscoped()._scope).to.be.empty();
             // Yes, being unscoped is also a scope - this prevents inject defaultScope, when including a scoped model, see #4663
-            expect(Company.unscoped().scoped).to.be.ok;
+            expect(Company.unscoped().scoped).to.be.ok();
         });
 
         it("should be able to merge scopes", () => {

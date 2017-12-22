@@ -100,7 +100,7 @@ describe("diff", () => {
     describe("words - async", () => {
         it("should diff whitespace", (done) => {
             words("New Value", "New  ValueMoreData", (err, diffResult) => {
-                expect(err).to.be.null;
+                expect(err).to.be.null();
                 expect(convertChangesToXML(diffResult)).to.equal("New  <del>Value</del><ins>ValueMoreData</ins>");
                 done();
             });
@@ -108,7 +108,7 @@ describe("diff", () => {
 
         it("should diff multiple whitespace values", (done) => {
             words("New Value  ", "New  ValueMoreData ", (err, diffResult) => {
-                expect(err).to.be.null;
+                expect(err).to.be.null();
                 expect(convertChangesToXML(diffResult)).to.equal("New  <del>Value</del><ins>ValueMoreData</ins> ");
                 done();
             });
@@ -117,7 +117,7 @@ describe("diff", () => {
         // Diff on word boundary
         it("should diff on word boundaries", (done) => {
             words("New :Value:Test", "New  ValueMoreData ", (err, diffResult) => {
-                expect(err).to.be.null;
+                expect(err).to.be.null();
                 expect(convertChangesToXML(diffResult)).to.equal("New  <del>:Value:Test</del><ins>ValueMoreData </ins>");
                 done();
             });
@@ -126,21 +126,21 @@ describe("diff", () => {
         // Diff without changes
         it("should handle identity", (done) => {
             words("New Value", "New Value", (err, diffResult) => {
-                expect(err).to.be.null;
+                expect(err).to.be.null();
                 expect(convertChangesToXML(diffResult)).to.equal("New Value");
                 done();
             });
         });
         it("should handle empty", (done) => {
             words("", "", (err, diffResult) => {
-                expect(err).to.be.null;
+                expect(err).to.be.null();
                 expect(convertChangesToXML(diffResult)).to.equal("");
                 done();
             });
         });
         it("should diff has identical content", (done) => {
             words("New Value", "New  Value", (err, diffResult) => {
-                expect(err).to.be.null;
+                expect(err).to.be.null();
                 expect(convertChangesToXML(diffResult)).to.equal("New  Value");
                 done();
             });

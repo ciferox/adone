@@ -167,7 +167,7 @@ describe("fast", "transform", "chmod", () => {
                 checkedFile = true;
             }
         });
-        expect(checkedDir && checkedFile).to.be.true;
+        expect(checkedDir && checkedFile).to.be.true();
     });
 
     describe("integration", {
@@ -204,7 +204,7 @@ describe("fast", "transform", "chmod", () => {
                 others: { read: false, write: false, execute: false }
             }).dest(todir.path());
             const file = todir.getFile("hello.js");
-            expect(await file.exists()).to.be.true;
+            expect(await file.exists()).to.be.true();
             const mode = await file.mode();
             expect(mode.toOctal()).to.be.equal("0700");
         });
@@ -213,7 +213,7 @@ describe("fast", "transform", "chmod", () => {
             await fromdir.addFile("hello.js");
             await fast.src(srcPath).chmod(0o700).dest(todir.path());
             const file = todir.getFile("hello.js");
-            expect(await file.exists()).to.be.true;
+            expect(await file.exists()).to.be.true();
             const mode = await file.mode();
             expect(mode.toOctal()).to.be.equal("0700");
         });

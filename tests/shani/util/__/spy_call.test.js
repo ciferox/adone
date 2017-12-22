@@ -43,13 +43,13 @@ describe("shani", "util", "__", "SpyCall", () => {
         it("returns false for too many args", function () {
             const args = this.args;
 
-            assert.isFalse(this.call[method](args[0], args[1], args[2], args[3], {}));
+            assert.false(this.call[method](args[0], args[1], args[2], args[3], {}));
         });
 
         it("returns false for wrong arg", function () {
             const args = this.args;
 
-            assert.isFalse(this.call[method](args[0], args[2]));
+            assert.false(this.call[method](args[0], args[2]));
         });
     };
 
@@ -59,23 +59,23 @@ describe("shani", "util", "__", "SpyCall", () => {
         it("returns false if all args match", function () {
             const args = this.args;
 
-            assert.isFalse(this.call[method](args[0], args[1], args[2]));
+            assert.false(this.call[method](args[0], args[1], args[2]));
         });
 
         it("returns false if first args match", function () {
             const args = this.args;
 
-            assert.isFalse(this.call[method](args[0], args[1]));
+            assert.false(this.call[method](args[0], args[1]));
         });
 
         it("returns false if first arg match", function () {
             const args = this.args;
 
-            assert.isFalse(this.call[method](args[0]));
+            assert.false(this.call[method](args[0]));
         });
 
         it("returns false for no args", function () {
-            assert.isFalse(this.call[method]());
+            assert.false(this.call[method]());
         });
 
         it("returns true for too many args", function () {
@@ -99,9 +99,9 @@ describe("shani", "util", "__", "SpyCall", () => {
             spy();
             const firstCall = spy.getCall(0);
 
-            assert.isFunction(firstCall.calledOn);
-            assert.isFunction(firstCall.calledWith);
-            assert.isFunction(firstCall.returned);
+            assert.function(firstCall.calledOn);
+            assert.function(firstCall.calledWith);
+            assert.function(firstCall.returned);
         });
 
         it("stores given call id", () => {
@@ -141,7 +141,7 @@ describe("shani", "util", "__", "SpyCall", () => {
         });
 
         it("calledOn should return false", function () {
-            assert.isFalse(this.call.calledOn({}));
+            assert.false(this.call.calledOn({}));
         });
     });
 
@@ -162,19 +162,19 @@ describe("shani", "util", "__", "SpyCall", () => {
         it("returns false for too many args", function () {
             const args = this.args;
 
-            assert.isFalse(this.call.calledWithExactly(args[0], args[1], args[2], args[3], {}));
+            assert.false(this.call.calledWithExactly(args[0], args[1], args[2], args[3], {}));
         });
 
         it("returns false for too few args", function () {
             const args = this.args;
 
-            assert.isFalse(this.call.calledWithExactly(args[0], args[1]));
+            assert.false(this.call.calledWithExactly(args[0], args[1]));
         });
 
         it("returns false for unmatching args", function () {
             const args = this.args;
 
-            assert.isFalse(this.call.calledWithExactly(args[0], args[1], args[1]));
+            assert.false(this.call.calledWithExactly(args[0], args[1], args[1]));
         });
 
         it("returns true for no arguments", () => {
@@ -186,7 +186,7 @@ describe("shani", "util", "__", "SpyCall", () => {
         it("returns false when called with no args but matching one", () => {
             const call = new SpyCall(() => { }, {}, [], null, null, 0);
 
-            assert.isFalse(call.calledWithExactly({}));
+            assert.false(call.calledWithExactly({}));
         });
     });
 
@@ -416,7 +416,7 @@ describe("shani", "util", "__", "SpyCall", () => {
             this.call.yield();
 
             assert(spy.calledOnce);
-            assert.isFalse(spy2.called);
+            assert.false(spy2.called);
         });
 
         it("invokes callback with arguments", function () {
@@ -514,7 +514,7 @@ describe("shani", "util", "__", "SpyCall", () => {
 
             assert(spy.calledOnce);
             assert(spy.calledOn(thisObj));
-            assert.isFalse(spy2.called);
+            assert.false(spy2.called);
         });
 
         it("invokes callback with arguments", function () {
@@ -599,7 +599,7 @@ describe("shani", "util", "__", "SpyCall", () => {
             this.call.yieldTo("error");
 
             assert(spy.calledOnce);
-            assert.isFalse(spy2.called);
+            assert.false(spy2.called);
         });
 
         it("invokes callback with arguments", function () {
@@ -703,7 +703,7 @@ describe("shani", "util", "__", "SpyCall", () => {
 
             assert(spy.calledOnce);
             assert(spy.calledOn(thisObj));
-            assert.isFalse(spy2.called);
+            assert.false(spy2.called);
         });
 
         it("invokes callback with arguments", function () {
@@ -863,7 +863,7 @@ describe("shani", "util", "__", "SpyCall", () => {
                 sspy(myObj, "ouch");
             });
 
-            assert.isUndefined(myObj.ouch);
+            assert.undefined(myObj.ouch);
         });
 
         it("throws if spying on non-existent object", () => {
@@ -917,10 +917,10 @@ describe("shani", "util", "__", "SpyCall", () => {
             assert.equal(spy.returnValues.length, 0);
             assert.equal(spy.exceptions.length, 0);
             assert.equal(spy.thisValues.length, 0);
-            assert.isNull(spy.firstCall);
-            assert.isNull(spy.secondCall);
-            assert.isNull(spy.thirdCall);
-            assert.isNull(spy.lastCall);
+            assert.null(spy.firstCall);
+            assert.null(spy.secondCall);
+            assert.null(spy.thirdCall);
+            assert.null(spy.lastCall);
         }
 
         it("resets spy state", () => {
@@ -963,7 +963,7 @@ describe("shani", "util", "__", "SpyCall", () => {
         it("defines withArgs method", () => {
             const spy = sspy();
 
-            assert.isFunction(spy.withArgs);
+            assert.function(spy.withArgs);
         });
 
         it("records single call", () => {
@@ -1287,6 +1287,6 @@ describe("shani", "util", "__", "SpyCall", () => {
     it("captures a stack trace", () => {
         const spy = sspy();
         spy();
-        assert.isString(spy.getCall(0).stack);
+        assert.string(spy.getCall(0).stack);
     });
 });

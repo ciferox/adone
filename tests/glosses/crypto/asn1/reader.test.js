@@ -2,26 +2,26 @@ describe("crypto", "asn1", "ber", "reader", () => {
     const { crypto: { asn1: { ber: { Reader: BerReader } } } } = adone;
 
     it("load library", () => {
-        assert.isOk(BerReader);
+        assert.ok(BerReader);
         try {
             new BerReader();
             assert.fail("Should have thrown");
         } catch (e) {
-            assert.isOk(e instanceof TypeError, "Should have been a type error");
+            assert.ok(e instanceof TypeError, "Should have been a type error");
         }
     });
 
 
     it("read byte", () => {
         const reader = new BerReader(Buffer.from([0xde]));
-        assert.isOk(reader);
+        assert.ok(reader);
         assert.equal(reader.readByte(), 0xde, "wrong value");
     });
 
 
     it("read 1 byte int", () => {
         const reader = new BerReader(Buffer.from([0x02, 0x01, 0x03]));
-        assert.isOk(reader);
+        assert.ok(reader);
         assert.equal(reader.readInt(), 0x03, "wrong value");
         assert.equal(reader.length, 0x01, "wrong length");
     });
@@ -29,7 +29,7 @@ describe("crypto", "asn1", "ber", "reader", () => {
 
     it("read 2 byte int", () => {
         const reader = new BerReader(Buffer.from([0x02, 0x02, 0x7e, 0xde]));
-        assert.isOk(reader);
+        assert.ok(reader);
         assert.equal(reader.readInt(), 0x7ede, "wrong value");
         assert.equal(reader.length, 0x02, "wrong length");
     });
@@ -37,7 +37,7 @@ describe("crypto", "asn1", "ber", "reader", () => {
 
     it("read 3 byte int", () => {
         const reader = new BerReader(Buffer.from([0x02, 0x03, 0x7e, 0xde, 0x03]));
-        assert.isOk(reader);
+        assert.ok(reader);
         assert.equal(reader.readInt(), 0x7ede03, "wrong value");
         assert.equal(reader.length, 0x03, "wrong length");
     });
@@ -45,7 +45,7 @@ describe("crypto", "asn1", "ber", "reader", () => {
 
     it("read 4 byte int", () => {
         const reader = new BerReader(Buffer.from([0x02, 0x04, 0x7e, 0xde, 0x03, 0x01]));
-        assert.isOk(reader);
+        assert.ok(reader);
         assert.equal(reader.readInt(), 0x7ede0301, "wrong value");
         assert.equal(reader.length, 0x04, "wrong length");
     });
@@ -53,7 +53,7 @@ describe("crypto", "asn1", "ber", "reader", () => {
 
     it("read 1 byte negative int", () => {
         const reader = new BerReader(Buffer.from([0x02, 0x01, 0xdc]));
-        assert.isOk(reader);
+        assert.ok(reader);
         assert.equal(reader.readInt(), -36, "wrong value");
         assert.equal(reader.length, 0x01, "wrong length");
     });
@@ -61,7 +61,7 @@ describe("crypto", "asn1", "ber", "reader", () => {
 
     it("read 2 byte negative int", () => {
         const reader = new BerReader(Buffer.from([0x02, 0x02, 0xc0, 0x4e]));
-        assert.isOk(reader);
+        assert.ok(reader);
         assert.equal(reader.readInt(), -16306, "wrong value");
         assert.equal(reader.length, 0x02, "wrong length");
     });
@@ -69,7 +69,7 @@ describe("crypto", "asn1", "ber", "reader", () => {
 
     it("read 3 byte negative int", () => {
         const reader = new BerReader(Buffer.from([0x02, 0x03, 0xff, 0x00, 0x19]));
-        assert.isOk(reader);
+        assert.ok(reader);
         assert.equal(reader.readInt(), -65511, "wrong value");
         assert.equal(reader.length, 0x03, "wrong length");
     });
@@ -77,7 +77,7 @@ describe("crypto", "asn1", "ber", "reader", () => {
 
     it("read 4 byte negative int", () => {
         const reader = new BerReader(Buffer.from([0x02, 0x04, 0x91, 0x7c, 0x22, 0x1f]));
-        assert.isOk(reader);
+        assert.ok(reader);
         assert.equal(reader.readInt(), -1854135777, "wrong value");
         assert.equal(reader.length, 0x04, "wrong length");
     });
@@ -85,7 +85,7 @@ describe("crypto", "asn1", "ber", "reader", () => {
 
     it("read boolean true", () => {
         const reader = new BerReader(Buffer.from([0x01, 0x01, 0xff]));
-        assert.isOk(reader);
+        assert.ok(reader);
         assert.equal(reader.readBoolean(), true, "wrong value");
         assert.equal(reader.length, 0x01, "wrong length");
     });
@@ -93,7 +93,7 @@ describe("crypto", "asn1", "ber", "reader", () => {
 
     it("read boolean false", () => {
         const reader = new BerReader(Buffer.from([0x01, 0x01, 0x00]));
-        assert.isOk(reader);
+        assert.ok(reader);
         assert.equal(reader.readBoolean(), false, "wrong value");
         assert.equal(reader.length, 0x01, "wrong length");
     });
@@ -101,7 +101,7 @@ describe("crypto", "asn1", "ber", "reader", () => {
 
     it("read enumeration", () => {
         const reader = new BerReader(Buffer.from([0x0a, 0x01, 0x20]));
-        assert.isOk(reader);
+        assert.ok(reader);
         assert.equal(reader.readEnumeration(), 0x20, "wrong value");
         assert.equal(reader.length, 0x01, "wrong length");
     });
@@ -114,7 +114,7 @@ describe("crypto", "asn1", "ber", "reader", () => {
         buf[1] = Buffer.byteLength(dn);
         buf.write(dn, 2);
         const reader = new BerReader(buf);
-        assert.isOk(reader);
+        assert.ok(reader);
         assert.equal(reader.readString(), dn, "wrong value");
         assert.equal(reader.length, dn.length, "wrong length");
     });
@@ -122,7 +122,7 @@ describe("crypto", "asn1", "ber", "reader", () => {
 
     it("read sequence", () => {
         const reader = new BerReader(Buffer.from([0x30, 0x03, 0x01, 0x01, 0xff]));
-        assert.isOk(reader);
+        assert.ok(reader);
         assert.equal(reader.readSequence(), 0x30, "wrong value");
         assert.equal(reader.length, 0x03, "wrong length");
         assert.equal(reader.readBoolean(), true, "wrong value");

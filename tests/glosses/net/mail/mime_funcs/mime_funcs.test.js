@@ -5,27 +5,27 @@ describe("net", "mail", "Mime-Funcs Tests", () => {
 
     describe("#isPlainText", () => {
         it("should detect plain text", () => {
-            expect(mimeFuncs.isPlainText("abc")).to.be.true;
-            expect(mimeFuncs.isPlainText("abc\x02")).to.be.false;
-            expect(mimeFuncs.isPlainText("abcõ")).to.be.false;
+            expect(mimeFuncs.isPlainText("abc")).to.be.true();
+            expect(mimeFuncs.isPlainText("abc\x02")).to.be.false();
+            expect(mimeFuncs.isPlainText("abcõ")).to.be.false();
         });
         it("should return true", () => {
-            expect(mimeFuncs.isPlainText("az09\t\r\n~!?")).to.be.true;
+            expect(mimeFuncs.isPlainText("az09\t\r\n~!?")).to.be.true();
         });
 
         it("should return false on low bits", () => {
-            expect(mimeFuncs.isPlainText("az09\n\x08!?")).to.be.false;
+            expect(mimeFuncs.isPlainText("az09\n\x08!?")).to.be.false();
         });
 
         it("should return false on high bits", () => {
-            expect(mimeFuncs.isPlainText("az09\nõ!?")).to.be.false;
+            expect(mimeFuncs.isPlainText("az09\nõ!?")).to.be.false();
         });
     });
 
     describe("#hasLongerLines", () => {
         it("should detect longer lines", () => {
-            expect(mimeFuncs.hasLongerLines("abc\ndef", 5)).to.be.false;
-            expect(mimeFuncs.hasLongerLines("juf\nabcdef\nghi", 5)).to.be.true;
+            expect(mimeFuncs.hasLongerLines("abc\ndef", 5)).to.be.false();
+            expect(mimeFuncs.hasLongerLines("juf\nabcdef\nghi", 5)).to.be.true();
         });
     });
 

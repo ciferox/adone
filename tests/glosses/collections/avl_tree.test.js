@@ -267,8 +267,8 @@ describe("collection", "AVLTree", () => {
             expect(avlt.tree.key).to.be.equal(10);
 
             expect(avlt.tree.data).to.be.deep.equal(["some data"]);
-            assert.isNull(avlt.tree.left);
-            assert.isNull(avlt.tree.right);
+            assert.null(avlt.tree.left);
+            assert.null(avlt.tree.right);
         });
 
         it("If uniqueness constraint not enforced, we can insert different data for same key", () => {

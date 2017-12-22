@@ -64,8 +64,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     expect(users.length).to.be.eql(2);
 
                     // have attributes
-                    expect(users[0].createdAt).to.exist;
-                    expect(users[1].createdAt).to.exist;
+                    expect(users[0].createdAt).to.exist();
+                    expect(users[1].createdAt).to.exist();
                 });
         });
 

@@ -29,9 +29,9 @@ describe("net", "mqtt", "connection", () => {
     });
 
     it("should start piping in the next tick", function (done) {
-        expect(this.stream._readableState.flowing).to.be.null;
+        expect(this.stream._readableState.flowing).to.be.null();
         process.nextTick(() => {
-            expect(this.stream._readableState.flowing).to.be.true;
+            expect(this.stream._readableState.flowing).to.be.true();
             done();
         });
     });

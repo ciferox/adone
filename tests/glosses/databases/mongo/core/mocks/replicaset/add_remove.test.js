@@ -269,7 +269,7 @@ describe("database", "mongo", "core", function () {
                         await server.destroy();
 
                         await adone.promise.delay(3000);
-                        expect(Connection.connections()).to.be.empty;
+                        expect(Connection.connections()).to.be.empty();
                         Connection.disableConnectionAccounting();
                     }
                 });
@@ -481,7 +481,7 @@ describe("database", "mongo", "core", function () {
                         expect(server.s.replicaSetState.secondaries[1].name).to.be.equal("localhost:32003");
                         expect(server.s.replicaSetState.arbiters).to.have.lengthOf(1);
                         expect(server.s.replicaSetState.arbiters[0].name).to.be.equal("localhost:32002");
-                        expect(server.s.replicaSetState.primary).not.to.be.null;
+                        expect(server.s.replicaSetState.primary).not.to.be.null();
                         expect(server.s.replicaSetState.primary.name).to.be.equal("localhost:32000");
                         currentIsMasterIndex = currentIsMasterIndex + 1;
 
@@ -490,7 +490,7 @@ describe("database", "mongo", "core", function () {
                         expect(server.s.replicaSetState.secondaries[0].name).to.be.equal("localhost:32001");
                         expect(server.s.replicaSetState.arbiters).to.have.lengthOf(1);
                         expect(server.s.replicaSetState.arbiters[0].name).to.be.equal("localhost:32002");
-                        expect(server.s.replicaSetState.primary).not.to.be.null;
+                        expect(server.s.replicaSetState.primary).not.to.be.null();
                         expect(server.s.replicaSetState.primary.name).to.be.equal("localhost:32000");
                     } finally {
                         await primaryServer.destroy();
@@ -501,7 +501,7 @@ describe("database", "mongo", "core", function () {
                         running = false;
                         await adone.promise.delay(1000);
                         Connection.disableConnectionAccounting();
-                        expect(Connection.connections()).to.be.empty;
+                        expect(Connection.connections()).to.be.empty();
                     }
                 });
 
@@ -713,7 +713,7 @@ describe("database", "mongo", "core", function () {
                                     expect(server.s.replicaSetState.arbiters).to.have.lengthOf(1);
                                     expect(server.s.replicaSetState.arbiters[0].name).to.be.equal("localhost:32002");
 
-                                    expect(server.s.replicaSetState.primary).to.be.ok;
+                                    expect(server.s.replicaSetState.primary).to.be.ok();
                                     expect(server.s.replicaSetState.primary.name).to.be.equal("localhost:32000");
                                     currentIsMasterIndex = currentIsMasterIndex + 1;
                                     resolve();
@@ -734,7 +734,7 @@ describe("database", "mongo", "core", function () {
                         expect(server.s.replicaSetState.set["localhost:32003"].type).to.be.equal("RSSecondary");
                         expect(server.s.replicaSetState.secondaries).to.have.lengthOf(2);
                         expect(server.s.replicaSetState.arbiters).to.have.lengthOf(1);
-                        expect(server.s.replicaSetState.primary).to.be.ok;
+                        expect(server.s.replicaSetState.primary).to.be.ok();
                         // Ensure we have 4 interval ids and
                         const intervalIds = server.intervalIds.filter((x) => !is.undefined(x.__host));
 
@@ -754,7 +754,7 @@ describe("database", "mongo", "core", function () {
                         running = false;
                         await adone.promise.delay(3000);
                         Connection.disableConnectionAccounting();
-                        expect(Connection.connections()).to.be.empty;
+                        expect(Connection.connections()).to.be.empty();
                     }
                 });
 
@@ -1007,7 +1007,7 @@ describe("database", "mongo", "core", function () {
                     await arbiterServer.destroy();
                     await server.destroy();
                     await adone.promise.delay(3000);
-                    expect(Connection.connections()).to.be.empty;
+                    expect(Connection.connections()).to.be.empty();
                 });
             });
         });

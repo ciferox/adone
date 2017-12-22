@@ -977,18 +977,24 @@ export default class SchemaType {
         let ref = init && self.options && self.options.ref;
 
         if (!ref && doc && doc.$__fullPath) {
+            console.log(5);
             // checks for
             // - this populated with adhoc model and no ref was set in schema OR
             // - setting / pushing values after population
             const path = doc.$__fullPath(self.path);
             const owner = doc.ownerDocument ? doc.ownerDocument() : doc;
+            console.log("owner", doc);
+            console.log("path", path);
             ref = owner.populated(path);
         }
+
+        console.log(ref);
 
         if (ref) {
             if (is.nil(value)) {
                 return true;
             }
+            console.log(6);
             if (!is.buffer(value) && // buffers are objects too
                 value._bsontype !== "Binary" // raw binary value from the db
                 && utils.isObject(value) // might have deselected _id in population query
@@ -996,6 +1002,8 @@ export default class SchemaType {
                 return true;
             }
         }
+
+        console.log(4);
 
         return false;
     }

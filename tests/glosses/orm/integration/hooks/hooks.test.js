@@ -54,7 +54,7 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
         });
 
         it("beforeDefine hook can alter attributes", function () {
-            expect(this.model.rawAttributes.type).to.be.ok;
+            expect(this.model.rawAttributes.type).to.be.ok();
         });
 
         it("afterDefine hook can alter options", function () {
@@ -122,8 +122,8 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
 
                 return User.sync({ force: true }).then(() => {
                     return User.create({ username: "bob" }).then(() => {
-                        expect(beforeHooked).to.be.true;
-                        expect(afterHooked).to.be.true;
+                        expect(beforeHooked).to.be.true();
+                        expect(afterHooked).to.be.true();
                     });
                 });
             });
@@ -152,8 +152,8 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
 
                 return User.sync({ force: true }).then(() => {
                     return User.create({ username: "bob" }).then(() => {
-                        expect(beforeHooked).to.be.true;
-                        expect(afterHooked).to.be.true;
+                        expect(beforeHooked).to.be.true();
+                        expect(afterHooked).to.be.true();
                     });
                 });
             });
@@ -183,8 +183,8 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                 return User.sync({ force: true }).then(() => {
                     return User.create({ username: "bob" }).then((user) => {
                         return user.destroy().then(() => {
-                            expect(beforeHooked).to.be.true;
-                            expect(afterHooked).to.be.true;
+                            expect(beforeHooked).to.be.true();
+                            expect(afterHooked).to.be.true();
                         });
                     });
                 });
@@ -215,8 +215,8 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                 return User.sync({ force: true }).then(() => {
                     return User.create({ username: "bob" }).then((user) => {
                         return user.destroy().then(() => {
-                            expect(beforeHooked).to.be.true;
-                            expect(afterHooked).to.be.true;
+                            expect(beforeHooked).to.be.true();
+                            expect(afterHooked).to.be.true();
                         });
                     });
                 });
@@ -248,8 +248,8 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                     return User.create({ username: "bob" }).then((user) => {
                         user.username = "bawb";
                         return user.save({ fields: ["username"] }).then(() => {
-                            expect(beforeHooked).to.be.true;
-                            expect(afterHooked).to.be.true;
+                            expect(beforeHooked).to.be.true();
+                            expect(afterHooked).to.be.true();
                         });
                     });
                 });

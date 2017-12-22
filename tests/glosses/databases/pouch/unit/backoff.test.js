@@ -11,7 +11,7 @@ describe("database", "pouch", "backoff", () => {
             values.push(delay);
         }
         const max = Math.max.apply(null, values);
-        assert.isAtMost(values[0], 2000);
-        assert.isAtMost(max, limit);
+        assert.atMost(values[0], 2000);
+        assert.atMost(max, limit);
     });
 });

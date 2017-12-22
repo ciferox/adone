@@ -23,9 +23,9 @@ describe("database", "local", "Cursor", () => {
         testDb = dbFile.path();
         d = new Datastore({ filename: testDb });
         expect(d.filename).to.be.equal(testDb);
-        expect(d.inMemoryOnly).to.be.false;
+        expect(d.inMemoryOnly).to.be.false();
         await d.load();
-        expect(d.getAllData()).to.be.empty;
+        expect(d.getAllData()).to.be.empty();
     });
 
     describe("Without sorting", () => {
@@ -72,7 +72,7 @@ describe("database", "local", "Cursor", () => {
             await d.remove({}, { multi: true });
             const cursor = new Cursor(d);
             const docs = await cursor.exec();
-            expect(docs).to.be.empty;
+            expect(docs).to.be.empty();
         });
 
         it("With a limit", async () => {
@@ -155,7 +155,7 @@ describe("database", "local", "Cursor", () => {
             const cursor = new Cursor(d);
             cursor.sort({ age: 1 });
             const docs = await cursor.exec();
-            expect(docs).to.be.empty;
+            expect(docs).to.be.empty();
         });
 
         it("Ability to chain sorting and exec", async () => {
@@ -229,22 +229,22 @@ describe("database", "local", "Cursor", () => {
             {
                 const cursor = new Cursor(d);
                 const docs = await cursor.sort({ age: 1 }).skip(5).exec();
-                expect(docs).to.be.empty;
+                expect(docs).to.be.empty();
             }
             {
                 const cursor = new Cursor(d);
                 const docs = await cursor.sort({ age: 1 }).skip(7).exec();
-                expect(docs).to.be.empty;
+                expect(docs).to.be.empty();
             }
             {
                 const cursor = new Cursor(d);
                 const docs = await cursor.sort({ age: 1 }).limit(3).skip(7).exec();
-                expect(docs).to.be.empty;
+                expect(docs).to.be.empty();
             }
             {
                 const cursor = new Cursor(d);
                 const docs = await cursor.sort({ age: 1 }).limit(6).skip(7).exec();
-                expect(docs).to.be.empty;
+                expect(docs).to.be.empty();
             }
         });
 

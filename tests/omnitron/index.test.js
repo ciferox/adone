@@ -47,9 +47,9 @@ describe("omnitron", () => {
         });
 
         it("pidfile and log files should exist", async () => {
-            assert.isTrue(await fs.exists(adone.realm.config.omnitron.pidFilePath));
-            assert.isTrue(await fs.exists(adone.realm.config.omnitron.logFilePath));
-            assert.isTrue(await fs.exists(adone.realm.config.omnitron.errorLogFilePath));
+            assert.true(await fs.exists(adone.realm.config.omnitron.pidFilePath));
+            assert.true(await fs.exists(adone.realm.config.omnitron.logFilePath));
+            assert.true(await fs.exists(adone.realm.config.omnitron.errorLogFilePath));
         });
 
         it("correct omnitron information", async () => {
@@ -61,7 +61,7 @@ describe("omnitron", () => {
             assert.equal(info.realm.uid, (await realm.getManager()).id);
 
             assert.equal(info.env.ADONE_REALM, info.realm.name);
-            assert.isOk(info.env.ADONE_HOME.endsWith(".adone_test"));
+            assert.ok(info.env.ADONE_HOME.endsWith(".adone_test"));
         });
 
         it("should not be any services initially", async () => {
@@ -70,11 +70,11 @@ describe("omnitron", () => {
         });
 
         it("start/stop omnitron", async () => {
-            assert.isTrue(await dispatcher.isOmnitronActive());
+            assert.true(await dispatcher.isOmnitronActive());
             await dispatcher.stopOmnitron();
-            assert.isFalse(await dispatcher.isOmnitronActive());
+            assert.false(await dispatcher.isOmnitronActive());
             await dispatcher.startOmnitron();
-            assert.isTrue(await dispatcher.isOmnitronActive());
+            assert.true(await dispatcher.isOmnitronActive());
         });
     });
 
@@ -271,7 +271,7 @@ describe("omnitron", () => {
                 mainPath: std.path.join(adone.realm.config.omnitron.servicesPath, "test1", service1Config.getMainPath())
             });
 
-            assert.isTrue(result[0].group.startsWith("group-"));
+            assert.true(result[0].group.startsWith("group-"));
 
             await installService(service2Path);
 
@@ -302,8 +302,8 @@ describe("omnitron", () => {
                 }
             ]);
 
-            assert.isTrue(result[0].group.startsWith("group-"));
-            assert.isTrue(result[1].group.startsWith("group-"));
+            assert.true(result[0].group.startsWith("group-"));
+            assert.true(result[1].group.startsWith("group-"));
 
             const groups = await iOmnitron.enumerateGroups();
             assert.sameMembers(groups, [result[0].group, result[1].group]);
@@ -386,8 +386,8 @@ describe("omnitron", () => {
 
             await enableServices(["test2"]);
             await startServices(["test2"]);
-            assert.isTrue(await fs.exists(stdoutPath));
-            assert.isTrue(await fs.exists(stderrPath));
+            assert.true(await fs.exists(stdoutPath));
+            assert.true(await fs.exists(stderrPath));
             await stopServices(["test2"]);
         });
 
@@ -420,13 +420,13 @@ describe("omnitron", () => {
             const list = await iOmnitron.enumerate("test1");
             const iMaintainer = await iOmnitron.getMaintainer(list[0].group);
             const pid = await iMaintainer.getPid();
-            assert.isTrue(adone.system.process.exists(pid));
+            assert.true(adone.system.process.exists(pid));
 
             await stopServices(["test1"]);
 
             await adone.promise.delay(1000);
 
-            assert.isFalse(adone.system.process.exists(pid));
+            assert.false(adone.system.process.exists(pid));
         });
 
         describe("subsystems", () => {
@@ -476,7 +476,7 @@ describe("omnitron", () => {
 
                 let list = await iOmnitron.enumerate();
 
-                assert.isTrue(list[0].group.startsWith("group-"));
+                assert.true(list[0].group.startsWith("group-"));
 
                 await iOmnitron.configureService("test1", {
                     group: "some-group"
@@ -492,7 +492,7 @@ describe("omnitron", () => {
 
                 let list = await iOmnitron.enumerate();
 
-                assert.isTrue(list[0].group.startsWith("group-"));
+                assert.true(list[0].group.startsWith("group-"));
 
                 await enableService("test1");
 
@@ -510,7 +510,7 @@ describe("omnitron", () => {
 
                 const list = await iOmnitron.enumerate();
 
-                assert.isTrue(list[0].group.startsWith("group-"));
+                assert.true(list[0].group.startsWith("group-"));
 
                 await enableService("test1");
                 await startServices(["test1"]);
@@ -529,7 +529,7 @@ describe("omnitron", () => {
 
                 const list = await iOmnitron.enumerate();
 
-                assert.isTrue(list[0].group.startsWith("group-"));
+                assert.true(list[0].group.startsWith("group-"));
 
                 await iOmnitron.getMaintainer(list[0].group);
 
@@ -550,8 +550,8 @@ describe("omnitron", () => {
 
                 const list = await iOmnitron.enumerate();
 
-                assert.isTrue(list[0].group.startsWith("group-"));
-                assert.isTrue(list[1].group.startsWith("group-"));
+                assert.true(list[0].group.startsWith("group-"));
+                assert.true(list[1].group.startsWith("group-"));
 
                 let iM1 = await iOmnitron.getMaintainer(list[0].group);
                 let iM2 = await iOmnitron.getMaintainer(list[1].group);
@@ -590,8 +590,8 @@ describe("omnitron", () => {
 
                 await enableServices(["test2"]);
                 await startServices(["test2"]);
-                assert.isTrue(await fs.exists(stdoutPath));
-                assert.isTrue(await fs.exists(stderrPath));
+                assert.true(await fs.exists(stdoutPath));
+                assert.true(await fs.exists(stderrPath));
                 await stopServices(["test2"]);
 
                 await iOmnitron.configureService("test2", {
@@ -600,14 +600,14 @@ describe("omnitron", () => {
 
                 await startServices(["test2"]);
 
-                assert.isTrue(await fs.exists(stdoutPath));
-                assert.isTrue(await fs.exists(stderrPath));
+                assert.true(await fs.exists(stdoutPath));
+                assert.true(await fs.exists(stderrPath));
 
                 stdoutPath = std.path.join(adone.realm.config.omnitron.logsPath, "test2.log");
                 stderrPath = std.path.join(adone.realm.config.omnitron.logsPath, "test2-err.log");
 
-                assert.isTrue(await fs.exists(stdoutPath));
-                assert.isTrue(await fs.exists(stderrPath));
+                assert.true(await fs.exists(stdoutPath));
+                assert.true(await fs.exists(stderrPath));
 
                 await stopServices(["test2"]);
             });
@@ -651,7 +651,7 @@ describe("omnitron", () => {
             // const list = await iOmnitron.enumerate();
             const iMaintainer = await iOmnitron.getMaintainer("group1");
             const pid = await iMaintainer.getPid();
-            assert.isTrue(adone.system.process.exists(pid));
+            assert.true(adone.system.process.exists(pid));
 
             await dispatcher.peer.waitForContext("test1");
             await dispatcher.peer.waitForContext("test2");
@@ -668,7 +668,7 @@ describe("omnitron", () => {
 
             await adone.promise.delay(1000);
 
-            assert.isFalse(adone.system.process.exists(pid));
+            assert.false(adone.system.process.exists(pid));
         });
 
         it("use service configuration", async () => {
@@ -682,7 +682,7 @@ describe("omnitron", () => {
             const iConfig = await iOmnitron.getServiceConfiguration("test3");
             assert.equal(await iConfig.get("key1"), "adone");
             assert.equal(await iConfig.get("key2"), 888);
-            assert.isTrue(is.date(await iConfig.get("key3")));
+            assert.true(is.date(await iConfig.get("key3")));
         });
 
         for (const stage of ["configure", "initialize"]) {
@@ -786,7 +786,7 @@ describe("omnitron", () => {
                 };
                 await iConfig.set("netron", options);
                 assert.deepEqual(await iConfig.get("netron"), options);
-                
+
                 await iConfig.set("netron.isSuper", true);
                 assert.equal(await iConfig.get("netron.isSuper"), true);
 

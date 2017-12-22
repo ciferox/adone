@@ -195,8 +195,8 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
             const projects = await u.getProjects();
             expect(projects).to.have.length(1);
             const project = projects[0];
-            expect(project.ProjectUsers).to.be.ok;
-            expect(project.status).not.to.exist;
+            expect(project.ProjectUsers).to.be.ok();
+            expect(project.status).not.to.exist();
             expect(project.ProjectUsers.status).to.equal("active");
         });
 
@@ -490,7 +490,7 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
             expect(_users).to.have.length(1);
 
             await task.setUsers(null);
-            expect(await task.getUsers()).to.be.empty;
+            expect(await task.getUsers()).to.be.empty();
         });
 
         it("should be able to set twice with custom primary keys", async function () {
@@ -716,9 +716,9 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
                 return a.userId < b.userId ? - 1 : 1;
             });
             expect(userGroups[0].userId).to.equal(1);
-            expect(userGroups[0].isAdmin).to.be.ok;
+            expect(userGroups[0].isAdmin).to.be.ok();
             expect(userGroups[1].userId).to.equal(2);
-            expect(userGroups[1].isAdmin).not.to.be.ok;
+            expect(userGroups[1].isAdmin).not.to.be.ok();
         });
 
         it("supports using the field parameter", async function () {
@@ -759,10 +759,10 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
             expect(tasks).to.have.length(2);
             expect(_.find(tasks, (item) => {
                 return item.title === "get started";
-            })).to.be.ok;
+            })).to.be.ok();
             expect(_.find(tasks, (item) => {
                 return item.title === "get done";
-            })).to.be.ok;
+            })).to.be.ok();
         });
 
         if (current.dialect.supports.transactions) {
@@ -781,8 +781,8 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
                     sequelize.transaction()
                 ]);
                 await task.addUser(user, { transaction: t });
-                expect(await task.hasUser(user)).to.be.false;
-                expect(await task.hasUser(user, { transaction: t })).to.be.true;
+                expect(await task.hasUser(user)).to.be.false();
+                expect(await task.hasUser(user, { transaction: t })).to.be.true();
                 await t.rollback();
             });
 
@@ -888,10 +888,10 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
             expect(tasks).to.have.length(2);
             expect(_.find(tasks, (item) => {
                 return item.title === "get started";
-            })).to.be.ok;
+            })).to.be.ok();
             expect(_.find(tasks, (item) => {
                 return item.title === "get done";
-            })).to.be.ok;
+            })).to.be.ok();
         });
 
         it("adds associations without removing the current ones", async function () {
@@ -998,7 +998,7 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
             await user.setTasks([task1, task2], {
                 logging: s
             });
-            expect(s.calledTwice).to.be.ok;
+            expect(s.calledTwice).to.be.ok();
         });
 
         it("uses one delete from statement", async function () {
@@ -1013,7 +1013,7 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
             await user.setTasks(null, {
                 logging: s
             });
-            expect(s.calledTwice).to.be.ok;
+            expect(s.calledTwice).to.be.ok();
         });
     }); // end optimization using bulk create, destroy and update
 
@@ -1071,11 +1071,11 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
             ParanoidUser.belongsToMany(ParanoidTask, { through: "UserTasks" });
             ParanoidTask.belongsToMany(ParanoidUser, { through: "UserTasks" });
 
-            expect(ParanoidUser.options.paranoid).to.be.ok;
-            expect(ParanoidTask.options.paranoid).to.be.ok;
+            expect(ParanoidUser.options.paranoid).to.be.ok();
+            expect(ParanoidTask.options.paranoid).to.be.ok();
 
             _.forEach(ParanoidUser.associations, (association) => {
-                expect(association.through.model.options.paranoid).not.to.be.ok;
+                expect(association.through.model.options.paranoid).not.to.be.ok();
             });
         });
     });
@@ -1103,8 +1103,8 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
 
             const attributes = this.sequelize.model("user_places").rawAttributes;
 
-            expect(attributes.place_id).to.be.ok;
-            expect(attributes.user_id).to.be.ok;
+            expect(attributes.place_id).to.be.ok();
+            expect(attributes.user_id).to.be.ok();
         });
 
         it("should infer otherKey from paired BTM relationship with a through string defined", function () {
@@ -1190,9 +1190,9 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
             const projects = await user.getProjects({
                 logging: s
             });
-            expect(s.calledOnce).to.be.ok;
+            expect(s.calledOnce).to.be.ok();
             const project = projects[0];
-            expect(project).to.be.ok;
+            expect(project).to.be.ok();
             await project.destroy();
             const _user = await self.User.findOne({
                 where: { id: user.id },
@@ -1200,7 +1200,7 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
             });
             const _projects = _user.Projects;
             const _project = _projects[0];
-            expect(_project).to.be.ok;
+            expect(_project).to.be.ok();
         });
 
         it("should correctly get associations when doubly linked", async function () {
@@ -1212,16 +1212,16 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
                 self.Project.create({ name: "Good Will Hunting" })
             ]);
             await user.addProject(project, { logging: s });
-            expect(s.calledTwice).to.be.ok; // Once for SELECT, once for INSERT
+            expect(s.calledTwice).to.be.ok(); // Once for SELECT, once for INSERT
             s.reset();
             const projects = await user.getProjects({
                 logging: s
             });
             const _project = projects[0];
-            expect(s.calledOnce).to.be.ok;
+            expect(s.calledOnce).to.be.ok();
             s.reset();
 
-            expect(_project).to.be.ok;
+            expect(_project).to.be.ok();
             await user.removeProject(_project, {
                 logging: s
             });
@@ -1280,13 +1280,13 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
             });
             {
                 const group = groups[0];
-                expect(group).to.be.ok;
+                expect(group).to.be.ok();
 
                 const user = group.Users[0];
-                expect(user).to.be.ok;
+                expect(user).to.be.ok();
 
                 const project = user.Projects[0];
-                expect(project).to.be.ok;
+                expect(project).to.be.ok();
                 expect(project.name).to.equal("Good Will Hunting");
             }
         });
@@ -1371,7 +1371,7 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
                     this.Task.create({ title: "foo" })
                 ]);
                 await user.addTask(task);
-                expect(await user.setTasks(null)).to.be.ok;
+                expect(await user.setTasks(null)).to.be.ok();
             });
         });
     });
@@ -1401,8 +1401,8 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
                 const projects = await user.getProjects();
                 {
                     const project = projects[0];
-                    expect(project.UserProjects).to.be.ok;
-                    expect(project.status).not.to.exist;
+                    expect(project.UserProjects).to.be.ok();
+                    expect(project.status).not.to.exist();
                     expect(project.UserProjects.status).to.equal("active");
                     expect(project.UserProjects.data).to.equal(42);
                 }
@@ -1418,10 +1418,10 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
                 {
                     const project = projects[0];
 
-                    expect(project.UserProjects).to.be.ok;
-                    expect(project.status).not.to.exist;
+                    expect(project.UserProjects).to.be.ok();
+                    expect(project.status).not.to.exist();
                     expect(project.UserProjects.status).to.equal("active");
-                    expect(project.UserProjects.data).not.to.exist;
+                    expect(project.UserProjects.data).not.to.exist();
                 }
             });
         });
@@ -1734,8 +1734,8 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
             Group.belongsToMany(User, { as: "MyUsers", through: "group_user" });
 
             expect(Group.associations.MyUsers.through.model === User.associations.MyGroups.through.model);
-            expect(Group.associations.MyUsers.through.model.rawAttributes.UserId).to.exist;
-            expect(Group.associations.MyUsers.through.model.rawAttributes.GroupId).to.exist;
+            expect(Group.associations.MyUsers.through.model.rawAttributes.UserId).to.exist();
+            expect(Group.associations.MyUsers.through.model.rawAttributes.GroupId).to.exist();
         });
 
         it("correctly identifies its counterpart when through is a model", function () {
@@ -1748,8 +1748,8 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
 
             expect(Group.associations.MyUsers.through.model === User.associations.MyGroups.through.model);
 
-            expect(Group.associations.MyUsers.through.model.rawAttributes.UserId).to.exist;
-            expect(Group.associations.MyUsers.through.model.rawAttributes.GroupId).to.exist;
+            expect(Group.associations.MyUsers.through.model.rawAttributes.UserId).to.exist();
+            expect(Group.associations.MyUsers.through.model.rawAttributes.GroupId).to.exist();
         });
     });
 
@@ -1941,7 +1941,7 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
                 });
 
                 const UserProjects = User.belongsToMany(Project, { foreignKey: { name: "user_id", defaultValue: 42 }, through: "UserProjects" });
-                expect(UserProjects.through.model.rawAttributes.user_id).to.be.ok;
+                expect(UserProjects.through.model.rawAttributes.user_id).to.be.ok();
                 expect(UserProjects.through.model.rawAttributes.user_id.references.model).to.equal(User.getTableName());
                 expect(UserProjects.through.model.rawAttributes.user_id.references.key).to.equal("uid");
                 expect(UserProjects.through.model.rawAttributes.user_id.defaultValue).to.equal(42);
@@ -2037,8 +2037,8 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
 
             expect(Children.foreignKey).to.equal("PersonId");
             expect(Children.otherKey).to.equal("ChildId");
-            expect(PersonChildren.rawAttributes[Children.foreignKey]).to.be.ok;
-            expect(PersonChildren.rawAttributes[Children.otherKey]).to.be.ok;
+            expect(PersonChildren.rawAttributes[Children.foreignKey]).to.be.ok();
+            expect(PersonChildren.rawAttributes[Children.otherKey]).to.be.ok();
 
             /* underscored */
             Person = this.sequelize.define("Person", {}, { underscored: true });
@@ -2047,8 +2047,8 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
 
             expect(Children.foreignKey).to.equal("person_id");
             expect(Children.otherKey).to.equal("child_id");
-            expect(PersonChildren.rawAttributes[Children.foreignKey]).to.be.ok;
-            expect(PersonChildren.rawAttributes[Children.otherKey]).to.be.ok;
+            expect(PersonChildren.rawAttributes[Children.foreignKey]).to.be.ok();
+            expect(PersonChildren.rawAttributes[Children.otherKey]).to.be.ok();
         });
     });
 });

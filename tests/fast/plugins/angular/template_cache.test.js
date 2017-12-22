@@ -344,7 +344,7 @@ describe("fast", "transform", "angular", "templateCache", () => {
                 .dest(root.path(), { produceFiles: true });
             expect(files).to.have.lengthOf(1);
             const file = root.getFile("templates.js");
-            expect(await file.exists()).to.be.true;
+            expect(await file.exists()).to.be.true();
             expect(await file.contents()).to.be.equal("angular.module('templates').run(['$templateCache', function($templateCache) {$templateCache.put('/template-a.html','<h1 id=\"template-a\">I\\'m template A!</h1>');\n$templateCache.put('/template-b.html','<h1 id=\"template-b\">I\\'m template B!</h1>');}]);");
         });
 
@@ -360,7 +360,7 @@ describe("fast", "transform", "angular", "templateCache", () => {
                 .dest(root.path(), { produceFiles: true });
             expect(files).to.have.lengthOf(1);
             const file = root.getFile("foobar.js");
-            expect(await file.exists()).to.be.true;
+            expect(await file.exists()).to.be.true();
             expect(await file.contents()).to.be.equal("angular.module('templates', []).run(['$templateCache', function($templateCache) {$templateCache.put('/views/template-a.html','<h1 id=\"template-a\">I\\'m template A!</h1>');}]);");
         });
     });

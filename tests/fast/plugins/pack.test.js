@@ -39,12 +39,12 @@ describe("fast", "transform", "pack", () => {
                 .dest(output);
 
             const archive = output.getFile("archive.tar");
-            expect(await archive.exists()).to.be.true;
+            expect(await archive.exists()).to.be.true();
             const extracted = await output.addDirectory("extracted");
             await new Promise((resolve) => {
                 archive.contentsStream().pipe(tar.unpackStream(extracted)).on("finish", resolve);
             });
-            expect(await extracted.getFile("hello").exists()).to.be.true;
+            expect(await extracted.getFile("hello").exists()).to.be.true();
             expect(await extracted.getFile("hello").contents()).to.be.equal("world");
         });
 
@@ -64,10 +64,10 @@ describe("fast", "transform", "pack", () => {
             await new Promise((resolve) => {
                 archive.contentsStream().pipe(tar.unpackStream(extracted)).on("finish", resolve);
             });
-            expect(await extracted.getDirectory("a").exists()).to.be.true;
-            expect(await extracted.getDirectory("a", "b").exists()).to.be.true;
-            expect(await extracted.getDirectory("a", "b", "c").exists()).to.be.true;
-            expect(await extracted.getDirectory("a", "d").exists()).to.be.true;
+            expect(await extracted.getDirectory("a").exists()).to.be.true();
+            expect(await extracted.getDirectory("a", "b").exists()).to.be.true();
+            expect(await extracted.getDirectory("a", "b", "c").exists()).to.be.true();
+            expect(await extracted.getDirectory("a", "d").exists()).to.be.true();
         });
 
         it("should pack directories with proper modes", {
@@ -86,15 +86,15 @@ describe("fast", "transform", "pack", () => {
                 .dest(output);
 
             const archive = output.getFile("archive.tar");
-            expect(await archive.exists()).to.be.true;
+            expect(await archive.exists()).to.be.true();
             const extracted = await output.addDirectory("extracted");
             await new Promise((resolve) => {
                 archive.contentsStream().pipe(tar.unpackStream(extracted)).on("finish", resolve);
             });
-            expect(await extracted.getDirectory("a").exists()).to.be.true;
-            expect(await extracted.getDirectory("a", "b").exists()).to.be.true;
-            expect(await extracted.getDirectory("a", "b", "c").exists()).to.be.true;
-            expect(await extracted.getDirectory("a", "d").exists()).to.be.true;
+            expect(await extracted.getDirectory("a").exists()).to.be.true();
+            expect(await extracted.getDirectory("a", "b").exists()).to.be.true();
+            expect(await extracted.getDirectory("a", "b", "c").exists()).to.be.true();
+            expect(await extracted.getDirectory("a", "d").exists()).to.be.true();
 
             expect(await extracted.getDirectory("a").mode() & 0o777).to.be.equal(0o775);
             expect(await extracted.getDirectory("a", "b").mode() & 0o777).to.be.equal(0o770);
@@ -117,13 +117,13 @@ describe("fast", "transform", "pack", () => {
                 .dest(output);
 
             const archive = output.getFile("archive.tar");
-            expect(await archive.exists()).to.be.true;
+            expect(await archive.exists()).to.be.true();
             const extracted = await output.addDirectory("extracted");
             await new Promise((resolve) => {
                 archive.contentsStream().pipe(tar.unpackStream(extracted)).on("finish", resolve);
             });
 
-            expect(await extracted.getFile("hello").exists()).to.be.true;
+            expect(await extracted.getFile("hello").exists()).to.be.true();
             expect(await extracted.getFile("hello").mode() & 0o777).to.be.equal(0o741);
         });
 
@@ -141,13 +141,13 @@ describe("fast", "transform", "pack", () => {
                 .dest(output);
 
             const archive = output.getFile("archive.tar");
-            expect(await archive.exists()).to.be.true;
+            expect(await archive.exists()).to.be.true();
             const extracted = await output.addDirectory("extracted");
             await new Promise((resolve) => {
                 archive.contentsStream().pipe(tar.unpackStream(extracted)).on("finish", resolve);
             });
 
-            expect(await extracted.getFile("hello").exists()).to.be.true;
+            expect(await extracted.getFile("hello").exists()).to.be.true();
             expect((await extracted.getFile("hello").stat()).mtimeMs).to.be.equal(1000);
         });
 
@@ -161,15 +161,15 @@ describe("fast", "transform", "pack", () => {
                 .pack("tar", { filename: "archive.tar" })
                 .dest(output);
 
-            expect(await output.getFile("archive.tar").exists()).to.be.true;
+            expect(await output.getFile("archive.tar").exists()).to.be.true();
             const archive = output.getFile("archive.tar");
-            expect(await archive.exists()).to.be.true;
+            expect(await archive.exists()).to.be.true();
             const extracted = await output.addDirectory("extracted");
             await new Promise((resolve) => {
                 archive.contentsStream().pipe(tar.unpackStream(extracted)).on("finish", resolve);
             });
 
-            expect(await extracted.getFile("hello").exists()).to.be.true;
+            expect(await extracted.getFile("hello").exists()).to.be.true();
             expect((await extracted.getFile("hello").stat()).mtimeMs).to.be.equal(1234567890000);
         });
 
@@ -187,13 +187,13 @@ describe("fast", "transform", "pack", () => {
                 .dest(output);
 
             const archive = output.getFile("archive.tar");
-            expect(await archive.exists()).to.be.true;
+            expect(await archive.exists()).to.be.true();
             const extracted = await output.addDirectory("extracted");
             await new Promise((resolve) => {
                 archive.contentsStream().pipe(tar.unpackStream(extracted)).on("finish", resolve);
             });
-            expect(await extracted.getFile("symlink").exists()).to.be.true;
-            expect((await extracted.getFile("symlink").lstat()).isSymbolicLink()).to.be.true;
+            expect(await extracted.getFile("symlink").exists()).to.be.true();
+            expect((await extracted.getFile("symlink").lstat()).isSymbolicLink()).to.be.true();
             expect(await extracted.getFile("symlink").readlink()).to.be.equal("hello");
             expect(await extracted.getFile("symlink").contents()).to.be.equal("world");
         });
@@ -226,7 +226,7 @@ describe("fast", "transform", "pack", () => {
                 .pack("zip", { filename: "archive.zip" })
                 .dest(output);
 
-            expect(await output.getFile("archive.zip").exists()).to.be.true;
+            expect(await output.getFile("archive.zip").exists()).to.be.true();
             const entries = await readEntries(output.getFile("archive.zip"));
             expect(entries).to.have.length(1);
             expect(entries[0].contents).to.be.equal("world");
@@ -243,7 +243,7 @@ describe("fast", "transform", "pack", () => {
                 .pack("zip", { filename: "archive.zip" })
                 .dest(output);
 
-            expect(await output.getFile("archive.zip").exists()).to.be.true;
+            expect(await output.getFile("archive.zip").exists()).to.be.true();
             const entries = await readEntries(output.getFile("archive.zip"));
             expect(entries).to.have.length(3);
             {
@@ -272,7 +272,7 @@ describe("fast", "transform", "pack", () => {
                 .pack("zip", { filename: "archive.zip" })
                 .dest(output);
 
-            expect(await output.getFile("archive.zip").exists()).to.be.true;
+            expect(await output.getFile("archive.zip").exists()).to.be.true();
             const entries = await readEntries(output.getFile("archive.zip"));
             expect(entries).to.have.length(1);
             expect((entries[0].externalFileAttributes >> 16) & 0o777).to.be.equal(0o600);
@@ -290,7 +290,7 @@ describe("fast", "transform", "pack", () => {
                 .pack("zip", { filename: "archive.zip" })
                 .dest(output);
 
-            expect(await output.getFile("archive.zip").exists()).to.be.true;
+            expect(await output.getFile("archive.zip").exists()).to.be.true();
             const entries = await readEntries(output.getFile("archive.zip"));
             expect(entries).to.have.length(1);
             expect((entries[0].externalFileAttributes >> 16) & 0o777).to.be.equal(0o700);
@@ -306,7 +306,7 @@ describe("fast", "transform", "pack", () => {
                 .pack("zip", { filename: "archive.zip" })
                 .dest(output);
 
-            expect(await output.getFile("archive.zip").exists()).to.be.true;
+            expect(await output.getFile("archive.zip").exists()).to.be.true();
             const entries = await readEntries(output.getFile("archive.zip"));
             expect(entries).to.have.length(1);
             expect(entries[0].getLastModDate().unix()).to.be.equal(1234567890);
@@ -322,7 +322,7 @@ describe("fast", "transform", "pack", () => {
                 .pack("zip", { filename: "archive.zip" })
                 .dest(output);
 
-            expect(await output.getFile("archive.zip").exists()).to.be.true;
+            expect(await output.getFile("archive.zip").exists()).to.be.true();
             const entries = await readEntries(output.getFile("archive.zip"));
             expect(entries).to.have.length(1);
             expect(entries[0].getLastModDate().unix()).to.be.equal(1234567890);

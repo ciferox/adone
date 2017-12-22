@@ -63,7 +63,7 @@ describe("mongodb", function () {
                     auth: [method, "admin", "root2", "root"]
                 });
             });
-            expect(Connection.connections()).to.be.empty;
+            expect(Connection.connections()).to.be.empty();
             Connection.disableConnectionAccounting();
         });
 
@@ -91,7 +91,7 @@ describe("mongodb", function () {
                 _server.destroy({
                     force: true
                 });
-                expect(Connection.connections()).to.be.empty;
+                expect(Connection.connections()).to.be.empty();
                 Connection.disableConnectionAccounting();
             }
         });
@@ -146,7 +146,7 @@ describe("mongodb", function () {
                     force: true
                 });
                 Connection.disableConnectionAccounting();
-                expect(Connection.connections()).to.be.empty;
+                expect(Connection.connections()).to.be.empty();
             }
         });
 
@@ -215,7 +215,7 @@ describe("mongodb", function () {
                 server.destroy({
                     force: true
                 });
-                expect(Connection.connections()).to.be.empty;
+                expect(Connection.connections()).to.be.empty();
                 Connection.disableConnectionAccounting();
             }
         });
@@ -261,7 +261,7 @@ describe("mongodb", function () {
                     force: true
                 });
                 Connection.disableConnectionAccounting();
-                expect(Connection.connections()).to.be.empty;
+                expect(Connection.connections()).to.be.empty();
             }
         });
 
@@ -305,7 +305,7 @@ describe("mongodb", function () {
                 _server.destroy({
                     force: true
                 });
-                expect(Connection.connections()).to.be.empty;
+                expect(Connection.connections()).to.be.empty();
                 Connection.disableConnectionAccounting();
             }
         });

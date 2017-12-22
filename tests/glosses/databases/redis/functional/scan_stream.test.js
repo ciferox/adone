@@ -16,7 +16,7 @@ describe("database", "redis", "scanStream", { skip: check }, () => {
         it("should return a readable stream", () => {
             const redis = new Redis();
             const stream = redis.scanStream();
-            expect(stream instanceof Readable).to.be.true;
+            expect(stream instanceof Readable).to.be.true();
             redis.disconnect();
         });
 

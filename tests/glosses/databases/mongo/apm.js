@@ -33,7 +33,7 @@ describe("apm", function () {
         expect(started[0].commandName).to.be.equal("insert");
         expect(started[0].command.insert).to.be.equal("apm_test");
         expect(succeeded).to.have.lengthOf(1);
-        expect(callbackTriggered).to.be.true;
+        expect(callbackTriggered).to.be.true();
         listener.uninstrument();
     });
 
@@ -48,7 +48,7 @@ describe("apm", function () {
 
         const r = await collection.insertMany([{ a: 1 }, { a: 2 }, { a: 3 }]);
         expect(r.insertedCount).to.be.equal(3);
-        expect(callbackTriggered).to.be.true;
+        expect(callbackTriggered).to.be.true();
 
         const cursor = collection.find({});
         expect(await cursor.count()).to.be.equal(3);
@@ -75,13 +75,13 @@ describe("apm", function () {
                 const cols = await this.db
                     .listCollections({}, { readPreference: mongo.ReadPreference.PRIMARY })
                     .toArray();
-                expect(cols).not.to.be.empty;
+                expect(cols).not.to.be.empty();
             }
             {
                 const cols = await this.db
                     .listCollections({}, { readPreference: mongo.ReadPreference.SECONDARY })
                     .toArray();
-                expect(cols).not.to.be.empty;
+                expect(cols).not.to.be.empty();
             }
             expect(started).to.have.lengthOf(2);
             expect(started[0].connectionId.prot).not.to.be.equal(started[1].connectionId.port);
@@ -161,7 +161,7 @@ describe("apm", function () {
             expect(started[0].command.insert).to.be.equal("apm_test_1");
             expect(started[0].operationId).to.be.equal(10000);
             expect(succeeded[0].duration).to.be.equal(0);
-            expect(callbackTriggered).to.be.true;
+            expect(callbackTriggered).to.be.true();
             listener.uninstrument();
         });
     }
@@ -190,7 +190,7 @@ describe("apm", function () {
 
                 // Do we have a getMore command or killCursor command
                 if (commandName === "getMore") {
-                    expect(result.command.getMore.isZero()).to.be.false;
+                    expect(result.command.getMore.isZero()).to.be.false();
                 } else if (commandName === "killCursors") {
                     //
                 } else {
@@ -458,14 +458,14 @@ describe("apm", function () {
         expect(docs).to.have.lengthOf(5);
         expect(started).to.have.lengthOf(3);
         expect(succeeded).to.have.lengthOf(3);
-        expect(failed).to.be.empty;
+        expect(failed).to.be.empty();
 
-        expect(succeeded[0].reply).to.be.ok;
+        expect(succeeded[0].reply).to.be.ok();
 
         expect(succeeded[0].operationId).to.be.equal(succeeded[1].operationId);
         expect(succeeded[0].operationId).to.be.equal(succeeded[2].operationId);
-        expect(succeeded[1].reply).to.be.ok;
-        expect(succeeded[2].reply).to.be.ok;
+        expect(succeeded[1].reply).to.be.ok();
+        expect(succeeded[2].reply).to.be.ok();
 
         // Started
         expect(started[0].operationId).to.be.equal(started[1].operationId);
@@ -608,7 +608,7 @@ describe("apm", function () {
 
         expect(r.insertedCount).to.be.equal(6);
 
-        expect(await collection.find({ a: 1 }).explain()).to.be.ok;
+        expect(await collection.find({ a: 1 }).explain()).to.be.ok();
 
         expect(started).to.have.lengthOf(1);
         expect(started[0].commandName).to.be.equal("explain");
@@ -644,12 +644,12 @@ describe("apm", function () {
             }
         });
 
-        expect(await this.db.command({ getnonce: true })).to.be.ok;
+        expect(await this.db.command({ getnonce: true })).to.be.ok();
         expect(started).to.have.lengthOf(1);
         expect(succeeded).to.have.lengthOf(1);
-        expect(failed).to.be.empty;
+        expect(failed).to.be.empty();
         expect(started[0].commandObj).to.be.deep.equal({ getnonce: true });
-        expect(succeeded[0].reply).to.be.empty;
+        expect(succeeded[0].reply).to.be.empty();
         listener.uninstrument();
     });
 
@@ -765,7 +765,7 @@ describe("apm", function () {
         expect(succeeded).to.have.lengthOf(3);
         const cursors = succeeded.map((x) => x.reply.cursor);
 
-        expect(cursors[0].id).to.be.ok;
+        expect(cursors[0].id).to.be.ok();
         expect(cursors[0].id.toString()).to.be.equal(cursors[1].id.toString());
         expect(cursors[2].id.toString()).to.be.equal("0");
         listener.uninstrument();
@@ -793,7 +793,7 @@ describe("apm", function () {
         expect(started).to.have.lengthOf(1);
         expect(succeeded).to.have.lengthOf(1);
         const cursor = succeeded[0].reply.cursor;
-        expect(cursor.id).to.be.ok;
+        expect(cursor.id).to.be.ok();
         listener.uninstrument();
     });
 });

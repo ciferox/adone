@@ -11,7 +11,7 @@ describe("templating", "nunjucks", "parser", () => {
             const lit = ": num-children: ";
             const sig2 = (node2.typename + lit + node2.children.length);
 
-            expect(node1.children).to.be.ok;
+            expect(node1.children).to.be.ok();
             const sig1 = (node1.typename + lit + node1.children.length);
 
             expect(sig1).to.be.equal(sig2);

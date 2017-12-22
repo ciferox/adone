@@ -1136,7 +1136,7 @@ describe("fs", "engine", "MemoryEngine", () => {
                 const fd = await engine.open("/a", c.O_WRONLY);
                 await engine.ftruncate(fd);
                 await engine.close(fd);
-                expect(await engine.readFile("/a", "utf8")).to.be.empty;
+                expect(await engine.readFile("/a", "utf8")).to.be.empty();
             });
 
             it("should truncate file to the given length", async () => {
@@ -1190,7 +1190,7 @@ describe("fs", "engine", "MemoryEngine", () => {
                 const fd = engine.openSync("/a", c.O_WRONLY);
                 engine.ftruncateSync(fd);
                 engine.closeSync(fd);
-                expect(engine.readFileSync("/a", "utf8")).to.be.empty;
+                expect(engine.readFileSync("/a", "utf8")).to.be.empty();
             });
 
             it("should truncate file to the given length", () => {
@@ -1451,9 +1451,9 @@ describe("fs", "engine", "MemoryEngine", () => {
 
                 const stat = await engine.lstat("/a");
                 expect(stat).to.be.instanceof(Stats);
-                expect(stat.isFile()).to.be.true;
-                expect(stat.isDirectory()).to.be.false;
-                expect(stat.isSymbolicLink()).to.be.false;
+                expect(stat.isFile()).to.be.true();
+                expect(stat.isDirectory()).to.be.false();
+                expect(stat.isSymbolicLink()).to.be.false();
                 expect(stat.size).to.be.equal(5);
             });
 
@@ -1466,9 +1466,9 @@ describe("fs", "engine", "MemoryEngine", () => {
 
                 const stat = await engine.lstat("/a");
                 expect(stat).to.be.instanceof(Stats);
-                expect(stat.isFile()).to.be.false;
-                expect(stat.isDirectory()).to.be.true;
-                expect(stat.isSymbolicLink()).to.be.false;
+                expect(stat.isFile()).to.be.false();
+                expect(stat.isDirectory()).to.be.true();
+                expect(stat.isSymbolicLink()).to.be.false();
             });
 
             it("should return symlink stats", async () => {
@@ -1478,9 +1478,9 @@ describe("fs", "engine", "MemoryEngine", () => {
 
                 const stat = await engine.lstat("/a");
                 expect(stat).to.be.instanceof(Stats);
-                expect(stat.isFile()).to.be.false;
-                expect(stat.isDirectory()).to.be.false;
-                expect(stat.isSymbolicLink()).to.be.true;
+                expect(stat.isFile()).to.be.false();
+                expect(stat.isDirectory()).to.be.false();
+                expect(stat.isSymbolicLink()).to.be.true();
             });
         });
 
@@ -1492,9 +1492,9 @@ describe("fs", "engine", "MemoryEngine", () => {
 
                 const stat = engine.lstatSync("/a");
                 expect(stat).to.be.instanceof(Stats);
-                expect(stat.isFile()).to.be.true;
-                expect(stat.isDirectory()).to.be.false;
-                expect(stat.isSymbolicLink()).to.be.false;
+                expect(stat.isFile()).to.be.true();
+                expect(stat.isDirectory()).to.be.false();
+                expect(stat.isSymbolicLink()).to.be.false();
                 expect(stat.size).to.be.equal(5);
             });
 
@@ -1507,9 +1507,9 @@ describe("fs", "engine", "MemoryEngine", () => {
 
                 const stat = engine.lstatSync("/a");
                 expect(stat).to.be.instanceof(Stats);
-                expect(stat.isFile()).to.be.false;
-                expect(stat.isDirectory()).to.be.true;
-                expect(stat.isSymbolicLink()).to.be.false;
+                expect(stat.isFile()).to.be.false();
+                expect(stat.isDirectory()).to.be.true();
+                expect(stat.isSymbolicLink()).to.be.false();
             });
 
             it("should return symlink stats", () => {
@@ -1519,9 +1519,9 @@ describe("fs", "engine", "MemoryEngine", () => {
 
                 const stat = engine.lstatSync("/a");
                 expect(stat).to.be.instanceof(Stats);
-                expect(stat.isFile()).to.be.false;
-                expect(stat.isDirectory()).to.be.false;
-                expect(stat.isSymbolicLink()).to.be.true;
+                expect(stat.isFile()).to.be.false();
+                expect(stat.isDirectory()).to.be.false();
+                expect(stat.isSymbolicLink()).to.be.true();
             });
         });
 
@@ -1529,7 +1529,7 @@ describe("fs", "engine", "MemoryEngine", () => {
             it("should create a directory with 0o775 mode by default", async () => {
                 await engine.mkdir("/a");
                 const stat = await engine.stat("/a");
-                expect(stat.isDirectory()).to.be.true;
+                expect(stat.isDirectory()).to.be.true();
                 expect(stat.mode & 0o777).to.be.equal(0o775);
             });
 
@@ -1578,7 +1578,7 @@ describe("fs", "engine", "MemoryEngine", () => {
             it("should create a directory with 0o775 mode by default", () => {
                 engine.mkdirSync("/a");
                 const stat = engine.statSync("/a");
-                expect(stat.isDirectory()).to.be.true;
+                expect(stat.isDirectory()).to.be.true();
                 expect(stat.mode & 0o777).to.be.equal(0o775);
             });
 
@@ -1732,7 +1732,7 @@ describe("fs", "engine", "MemoryEngine", () => {
 
                         const fd = await engine.open("/a", "w");
                         await engine.close(fd);
-                        expect(await engine.readFile("/a", "utf8")).to.be.empty;
+                        expect(await engine.readFile("/a", "utf8")).to.be.empty();
                     });
                 });
 
@@ -1793,7 +1793,7 @@ describe("fs", "engine", "MemoryEngine", () => {
                         }));
                         const fd = await engine.open("/a", "w+");
                         await engine.close(fd);
-                        expect(await engine.readFile("/a", "utf8")).to.be.empty;
+                        expect(await engine.readFile("/a", "utf8")).to.be.empty();
                     });
                 });
 
@@ -1981,7 +1981,7 @@ describe("fs", "engine", "MemoryEngine", () => {
                         }));
                         const fd = await engine.open("/a", c.O_TRUNC);
                         await engine.close(fd);
-                        expect(await engine.readFile("/a", "utf8")).to.be.empty;
+                        expect(await engine.readFile("/a", "utf8")).to.be.empty();
                     });
                 });
             });
@@ -2092,7 +2092,7 @@ describe("fs", "engine", "MemoryEngine", () => {
 
                         const fd = engine.openSync("/a", "w");
                         engine.closeSync(fd);
-                        expect(engine.readFileSync("/a", "utf8")).to.be.empty;
+                        expect(engine.readFileSync("/a", "utf8")).to.be.empty();
                     });
                 });
 
@@ -2153,7 +2153,7 @@ describe("fs", "engine", "MemoryEngine", () => {
                         }));
                         const fd = engine.openSync("/a", "w+");
                         engine.closeSync(fd);
-                        expect(engine.readFile("/a", "utf8")).to.be.empty;
+                        expect(engine.readFile("/a", "utf8")).to.be.empty();
                     });
                 });
 
@@ -2341,7 +2341,7 @@ describe("fs", "engine", "MemoryEngine", () => {
                         }));
                         const fd = engine.openSync("/a", c.O_TRUNC);
                         engine.closeSync(fd);
-                        expect(engine.readFileSync("/a", "utf8")).to.be.empty;
+                        expect(engine.readFileSync("/a", "utf8")).to.be.empty();
                     });
                 });
             });
@@ -3795,7 +3795,7 @@ describe("fs", "engine", "MemoryEngine", () => {
 
                 await engine.rename("/b", "/c");
                 const statc = await engine.lstat("/c");
-                expect(statc.isSymbolicLink()).to.be.true;
+                expect(statc.isSymbolicLink()).to.be.true();
                 expect(await engine.readFile("/c", "utf8")).to.be.equal("hello");
             });
         });
@@ -3960,7 +3960,7 @@ describe("fs", "engine", "MemoryEngine", () => {
 
                 engine.renameSync("/b", "/c");
                 const statc = engine.lstatSync("/c");
-                expect(statc.isSymbolicLink()).to.be.true;
+                expect(statc.isSymbolicLink()).to.be.true();
                 expect(engine.readFileSync("/c", "utf8")).to.be.equal("hello");
             });
         });
@@ -3974,7 +3974,7 @@ describe("fs", "engine", "MemoryEngine", () => {
                 }));
 
                 await engine.rmdir("/a");
-                expect(await engine.readdir("/")).to.be.empty;
+                expect(await engine.readdir("/")).to.be.empty();
             });
 
             it("should throw ENOTEMPTY if the directory is not empty", async () => {
@@ -4013,7 +4013,7 @@ describe("fs", "engine", "MemoryEngine", () => {
                 }));
 
                 engine.rmdirSync("/a");
-                expect(engine.readdirSync("/")).to.be.empty;
+                expect(engine.readdirSync("/")).to.be.empty();
             });
 
             it("should throw ENOTEMPTY if the directory is not empty", () => {
@@ -4051,9 +4051,9 @@ describe("fs", "engine", "MemoryEngine", () => {
 
                 const stat = await engine.stat("/a");
                 expect(stat).to.be.instanceof(Stats);
-                expect(stat.isFile()).to.be.true;
-                expect(stat.isDirectory()).to.be.false;
-                expect(stat.isSymbolicLink()).to.be.false;
+                expect(stat.isFile()).to.be.true();
+                expect(stat.isDirectory()).to.be.false();
+                expect(stat.isSymbolicLink()).to.be.false();
             });
 
             it("should return directory stat", async () => {
@@ -4065,9 +4065,9 @@ describe("fs", "engine", "MemoryEngine", () => {
 
                 const stat = await engine.stat("/a");
                 expect(stat).to.be.instanceof(Stats);
-                expect(stat.isFile()).to.be.false;
-                expect(stat.isDirectory()).to.be.true;
-                expect(stat.isSymbolicLink()).to.be.false;
+                expect(stat.isFile()).to.be.false();
+                expect(stat.isDirectory()).to.be.true();
+                expect(stat.isSymbolicLink()).to.be.false();
             });
 
             it("should follow symlinks", async () => {
@@ -4078,9 +4078,9 @@ describe("fs", "engine", "MemoryEngine", () => {
 
                 const stat = await engine.stat("/b");
                 expect(stat).to.be.instanceof(Stats);
-                expect(stat.isFile()).to.be.true;
-                expect(stat.isSymbolicLink()).to.be.false;
-                expect(stat.isDirectory()).to.be.false;
+                expect(stat.isFile()).to.be.true();
+                expect(stat.isSymbolicLink()).to.be.false();
+                expect(stat.isDirectory()).to.be.false();
                 expect(stat.size).to.be.equal(5);
             });
 
@@ -4093,9 +4093,9 @@ describe("fs", "engine", "MemoryEngine", () => {
 
                 const stat = await engine.stat("/c");
                 expect(stat).to.be.instanceof(Stats);
-                expect(stat.isFile()).to.be.true;
-                expect(stat.isSymbolicLink()).to.be.false;
-                expect(stat.isDirectory()).to.be.false;
+                expect(stat.isFile()).to.be.true();
+                expect(stat.isSymbolicLink()).to.be.false();
+                expect(stat.isDirectory()).to.be.false();
                 expect(stat.size).to.be.equal(5);
             });
         });
@@ -4108,9 +4108,9 @@ describe("fs", "engine", "MemoryEngine", () => {
 
                 const stat = engine.statSync("/a");
                 expect(stat).to.be.instanceof(Stats);
-                expect(stat.isFile()).to.be.true;
-                expect(stat.isDirectory()).to.be.false;
-                expect(stat.isSymbolicLink()).to.be.false;
+                expect(stat.isFile()).to.be.true();
+                expect(stat.isDirectory()).to.be.false();
+                expect(stat.isSymbolicLink()).to.be.false();
             });
 
             it("should return directory stat", () => {
@@ -4122,9 +4122,9 @@ describe("fs", "engine", "MemoryEngine", () => {
 
                 const stat = engine.statSync("/a");
                 expect(stat).to.be.instanceof(Stats);
-                expect(stat.isFile()).to.be.false;
-                expect(stat.isDirectory()).to.be.true;
-                expect(stat.isSymbolicLink()).to.be.false;
+                expect(stat.isFile()).to.be.false();
+                expect(stat.isDirectory()).to.be.true();
+                expect(stat.isSymbolicLink()).to.be.false();
             });
 
             it("should follow symlinks", () => {
@@ -4135,9 +4135,9 @@ describe("fs", "engine", "MemoryEngine", () => {
 
                 const stat = engine.statSync("/b");
                 expect(stat).to.be.instanceof(Stats);
-                expect(stat.isFile()).to.be.true;
-                expect(stat.isSymbolicLink()).to.be.false;
-                expect(stat.isDirectory()).to.be.false;
+                expect(stat.isFile()).to.be.true();
+                expect(stat.isSymbolicLink()).to.be.false();
+                expect(stat.isDirectory()).to.be.false();
                 expect(stat.size).to.be.equal(5);
             });
 
@@ -4150,9 +4150,9 @@ describe("fs", "engine", "MemoryEngine", () => {
 
                 const stat = engine.statSync("/c");
                 expect(stat).to.be.instanceof(Stats);
-                expect(stat.isFile()).to.be.true;
-                expect(stat.isSymbolicLink()).to.be.false;
-                expect(stat.isDirectory()).to.be.false;
+                expect(stat.isFile()).to.be.true();
+                expect(stat.isSymbolicLink()).to.be.false();
+                expect(stat.isDirectory()).to.be.false();
                 expect(stat.size).to.be.equal(5);
             });
         });
@@ -4165,7 +4165,7 @@ describe("fs", "engine", "MemoryEngine", () => {
 
                 await engine.symlink("a", "/b");
                 const stat = await engine.lstat("/b");
-                expect(stat.isSymbolicLink()).to.be.true;
+                expect(stat.isSymbolicLink()).to.be.true();
                 expect(await engine.readlink("/b")).to.be.equal("a");
                 expect(await engine.readFile("/b", "utf8")).to.be.equal("hello");
             });
@@ -4174,7 +4174,7 @@ describe("fs", "engine", "MemoryEngine", () => {
                 await engine.symlink("a", "/b");
                 expect(await engine.readlink("/b")).to.be.equal("a");
                 const stat = await engine.lstat("/b");
-                expect(stat.isSymbolicLink()).to.be.true;
+                expect(stat.isSymbolicLink()).to.be.true();
                 await assert.throws(async () => {
                     await engine.readFile("/b");
                 }, "ENOENT: no such file or directory, open '/b'");
@@ -4209,7 +4209,7 @@ describe("fs", "engine", "MemoryEngine", () => {
 
                 engine.symlinkSync("a", "/b");
                 const stat = engine.lstatSync("/b");
-                expect(stat.isSymbolicLink()).to.be.true;
+                expect(stat.isSymbolicLink()).to.be.true();
                 expect(engine.readlinkSync("/b")).to.be.equal("a");
                 expect(engine.readFileSync("/b", "utf8")).to.be.equal("hello");
             });
@@ -4218,7 +4218,7 @@ describe("fs", "engine", "MemoryEngine", () => {
                 engine.symlinkSync("a", "/b");
                 expect(engine.readlinkSync("/b")).to.be.equal("a");
                 const stat = engine.lstatSync("/b");
-                expect(stat.isSymbolicLink()).to.be.true;
+                expect(stat.isSymbolicLink()).to.be.true();
                 assert.throws(() => {
                     engine.readFileSync("/b");
                 }, "ENOENT: no such file or directory, open '/b'");
@@ -4251,9 +4251,9 @@ describe("fs", "engine", "MemoryEngine", () => {
                     a: ctx.file("hello")
                 }));
 
-                expect(await engine.readFile("/a", "utf8")).not.to.be.empty;
+                expect(await engine.readFile("/a", "utf8")).not.to.be.empty();
                 await engine.truncate("/a");
-                expect(await engine.readFile("/a", "utf8")).to.be.empty;
+                expect(await engine.readFile("/a", "utf8")).to.be.empty();
             });
 
             it("should truncate a file to the given size", async () => {
@@ -4301,9 +4301,9 @@ describe("fs", "engine", "MemoryEngine", () => {
                     a: ctx.file("hello")
                 }));
 
-                expect(engine.readFileSync("/a", "utf8")).not.to.be.empty;
+                expect(engine.readFileSync("/a", "utf8")).not.to.be.empty();
                 engine.truncateSync("/a");
-                expect(engine.readFileSync("/a", "utf8")).to.be.empty;
+                expect(engine.readFileSync("/a", "utf8")).to.be.empty();
             });
 
             it("should truncate a file to the given size", () => {
@@ -4352,7 +4352,7 @@ describe("fs", "engine", "MemoryEngine", () => {
                 }));
 
                 await engine.unlink("/a");
-                expect(await engine.readdir("/")).to.be.empty;
+                expect(await engine.readdir("/")).to.be.empty();
             });
 
             it("should remove a symlink", async () => {
@@ -4398,7 +4398,7 @@ describe("fs", "engine", "MemoryEngine", () => {
                 }));
 
                 engine.unlinkSync("/a");
-                expect(engine.readdirSync("/")).to.be.empty;
+                expect(engine.readdirSync("/")).to.be.empty();
             });
 
             it("should remove a symlink", () => {
@@ -4939,7 +4939,7 @@ describe("fs", "engine", "MemoryEngine", () => {
             }));
 
             const stat = await engine.lstat("/a/b/c/d");
-            expect(stat.isDirectory()).to.be.true;
+            expect(stat.isDirectory()).to.be.true();
         });
 
         it("should throw EACCES if some component has no search permissions", async () => {

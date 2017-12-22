@@ -185,8 +185,8 @@ describe("aggregation", function () {
 
         expect(await cursor.next()).to.be.deep.equal({ _id: { tags: "good" }, authors: ["bob"] });
         expect(await cursor.next()).to.be.deep.equal({ _id: { tags: "fun" }, authors: ["bob"] });
-        expect(await cursor.next()).to.be.null;
-        expect(cursor.isClosed()).to.be.true;
+        expect(await cursor.next()).to.be.null();
+        expect(cursor.isClosed()).to.be.true();
     });
 
     it("should correctly write the results out to a new collection", async () => {
@@ -217,7 +217,7 @@ describe("aggregation", function () {
         ], {
             out: "testingOutCollectionForAggregation"
         });
-        expect(results).to.be.empty;
+        expect(results).to.be.empty();
     });
 
     it("should correctly use allowDiskUse when performing an aggregation", async () => {
@@ -350,7 +350,7 @@ describe("aggregation", function () {
 
 
         expect(await cursor.next()).to.include({ b: 1 });
-        expect(await cursor.next()).to.be.null;
+        expect(await cursor.next()).to.be.null();
     });
 
     it("should correctly exercise hasNext function on aggregation cursor", async () => {
@@ -363,7 +363,7 @@ describe("aggregation", function () {
             $match: {}
         }], { cursor: true });
 
-        expect(await cursor.hasNext()).to.be.true;
+        expect(await cursor.hasNext()).to.be.true();
         expect(await cursor.next()).to.include({ a: 1 });
     });
 });

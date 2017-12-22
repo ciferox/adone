@@ -221,9 +221,9 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 const theFalsePassport = await _user.getPassports({ where: { isActive: false } });
                 const theTruePassport = await user.getPassports({ where: { isActive: true } });
                 expect(theFalsePassport).to.have.length(1);
-                expect(theFalsePassport[0].isActive).to.be.false;
+                expect(theFalsePassport[0].isActive).to.be.false();
                 expect(theTruePassport).to.have.length(1);
-                expect(theTruePassport[0].isActive).to.be.true;
+                expect(theTruePassport[0].isActive).to.be.true();
             });
 
             it("should be able to handle binary values through associations as well...", async function () {
@@ -498,8 +498,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         where: { title: "homework" },
                         include: [this.Worker]
                     }).then((tasks) => {
-                        expect(tasks).to.exist;
-                        expect(tasks[0].Worker).to.exist;
+                        expect(tasks).to.exist();
+                        expect(tasks[0].Worker).to.exist();
                         expect(tasks[0].Worker.name).to.equal("worker");
                     });
                 });
@@ -511,8 +511,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         limit: 1,
                         order: [["title", "DESC"]]
                     }).then((tasks) => {
-                        expect(tasks).to.exist;
-                        expect(tasks[0].Worker).to.exist;
+                        expect(tasks).to.exist();
+                        expect(tasks[0].Worker).to.exist();
                         expect(tasks[0].Worker.name).to.equal("worker");
                     });
                 });
@@ -549,8 +549,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         where: { name: "worker" },
                         include: [this.Task]
                     }).then((workers) => {
-                        expect(workers).to.exist;
-                        expect(workers[0].TaskHasOne).to.exist;
+                        expect(workers).to.exist();
+                        expect(workers[0].TaskHasOne).to.exist();
                         expect(workers[0].TaskHasOne.title).to.equal("homework");
                     });
                 });
@@ -596,8 +596,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         where: { name: "worker" },
                         include: [{ model: this.Task, as: "ToDo" }]
                     }).then((workers) => {
-                        expect(workers).to.exist;
-                        expect(workers[0].ToDo).to.exist;
+                        expect(workers).to.exist();
+                        expect(workers[0].ToDo).to.exist();
                         expect(workers[0].ToDo.title).to.equal("homework");
                     });
                 });
@@ -643,8 +643,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         where: { name: "worker" },
                         include: [this.Task]
                     }).then((workers) => {
-                        expect(workers).to.exist;
-                        expect(workers[0].tasks).to.exist;
+                        expect(workers).to.exist();
+                        expect(workers[0].tasks).to.exist();
                         expect(workers[0].tasks[0].title).to.equal("homework");
                     });
                 });
@@ -791,8 +791,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         where: { name: "worker" },
                         include: [{ model: this.Task, as: "ToDos" }]
                     }).then((workers) => {
-                        expect(workers).to.exist;
-                        expect(workers[0].ToDos).to.exist;
+                        expect(workers).to.exist();
+                        expect(workers[0].ToDos).to.exist();
                         expect(workers[0].ToDos[0].title).to.equal("homework");
                     });
                 });
@@ -884,60 +884,60 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
                 it("includes all associations", function () {
                     return this.Country.findAll({ include: [{ all: true }] }).then((countries) => {
-                        expect(countries).to.exist;
-                        expect(countries[0]).to.exist;
-                        expect(countries[0].continent).to.exist;
-                        expect(countries[0].industries).to.exist;
-                        expect(countries[0].people).to.exist;
-                        expect(countries[0].residents).to.exist;
+                        expect(countries).to.exist();
+                        expect(countries[0]).to.exist();
+                        expect(countries[0].continent).to.exist();
+                        expect(countries[0].industries).to.exist();
+                        expect(countries[0].people).to.exist();
+                        expect(countries[0].residents).to.exist();
                     });
                 });
 
                 it("includes specific type of association", function () {
                     return this.Country.findAll({ include: [{ all: "BelongsTo" }] }).then((countries) => {
-                        expect(countries).to.exist;
-                        expect(countries[0]).to.exist;
-                        expect(countries[0].continent).to.exist;
-                        expect(countries[0].industries).not.to.exist;
-                        expect(countries[0].people).not.to.exist;
-                        expect(countries[0].residents).not.to.exist;
+                        expect(countries).to.exist();
+                        expect(countries[0]).to.exist();
+                        expect(countries[0].continent).to.exist();
+                        expect(countries[0].industries).not.to.exist();
+                        expect(countries[0].people).not.to.exist();
+                        expect(countries[0].residents).not.to.exist();
                     });
                 });
 
                 it("utilises specified attributes", function () {
                     return this.Country.findAll({ include: [{ all: "HasMany", attributes: ["name"] }] }).then((countries) => {
-                        expect(countries).to.exist;
-                        expect(countries[0]).to.exist;
-                        expect(countries[0].people).to.exist;
-                        expect(countries[0].people[0]).to.exist;
-                        expect(countries[0].people[0].name).not.to.be.undefined;
-                        expect(countries[0].people[0].lastName).to.be.undefined;
-                        expect(countries[0].residents).to.exist;
-                        expect(countries[0].residents[0]).to.exist;
-                        expect(countries[0].residents[0].name).not.to.be.undefined;
-                        expect(countries[0].residents[0].lastName).to.be.undefined;
+                        expect(countries).to.exist();
+                        expect(countries[0]).to.exist();
+                        expect(countries[0].people).to.exist();
+                        expect(countries[0].people[0]).to.exist();
+                        expect(countries[0].people[0].name).not.to.be.undefined();
+                        expect(countries[0].people[0].lastName).to.be.undefined();
+                        expect(countries[0].residents).to.exist();
+                        expect(countries[0].residents[0]).to.exist();
+                        expect(countries[0].residents[0].name).not.to.be.undefined();
+                        expect(countries[0].residents[0].lastName).to.be.undefined();
                     });
                 });
 
                 it("is over-ruled by specified include", function () {
                     return this.Country.findAll({ include: [{ all: true }, { model: this.Continent, attributes: ["id"] }] }).then((countries) => {
-                        expect(countries).to.exist;
-                        expect(countries[0]).to.exist;
-                        expect(countries[0].continent).to.exist;
-                        expect(countries[0].continent.name).to.be.undefined;
+                        expect(countries).to.exist();
+                        expect(countries[0]).to.exist();
+                        expect(countries[0].continent).to.exist();
+                        expect(countries[0].continent.name).to.be.undefined();
                     });
                 });
 
                 it("includes all nested associations", function () {
                     return this.Continent.findAll({ include: [{ all: true, nested: true }] }).then((continents) => {
-                        expect(continents).to.exist;
-                        expect(continents[0]).to.exist;
-                        expect(continents[0].countries).to.exist;
-                        expect(continents[0].countries[0]).to.exist;
-                        expect(continents[0].countries[0].industries).to.exist;
-                        expect(continents[0].countries[0].people).to.exist;
-                        expect(continents[0].countries[0].residents).to.exist;
-                        expect(continents[0].countries[0].continent).not.to.exist;
+                        expect(continents).to.exist();
+                        expect(continents[0]).to.exist();
+                        expect(continents[0].countries).to.exist();
+                        expect(continents[0].countries[0]).to.exist();
+                        expect(continents[0].countries[0].industries).to.exist();
+                        expect(continents[0].countries[0].people).to.exist();
+                        expect(continents[0].countries[0].residents).to.exist();
+                        expect(continents[0].countries[0].continent).not.to.exist();
                     });
                 });
             });
@@ -989,7 +989,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         expect(kingdoms.length).to.be.eql(2);
                         kingdoms.forEach((kingdom) => {
                             // include.attributes:[] , model doesn't exists
-                            expect(kingdom.Animals).to.not.exist;
+                            expect(kingdom.Animals).to.not.exist();
                         });
                     });
                 });
@@ -1006,8 +1006,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                     }).then((kingdoms) => {
                         expect(kingdoms.length).to.be.eql(2);
                         kingdoms.forEach((kingdom) => {
-                            expect(kingdom.Animals).to.exist; // include model exists
-                            expect(kingdom.Animals[0].AnimalKingdom).to.not.exist; // through doesn't exists
+                            expect(kingdom.Animals).to.exist(); // include model exists
+                            expect(kingdom.Animals[0].AnimalKingdom).to.not.exist(); // through doesn't exists
                         });
                     });
                 });
@@ -1026,7 +1026,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         expect(kingdoms.length).to.be.eql(2);
                         kingdoms.forEach((kingdom) => {
                             // include.attributes: [], model doesn't exists
-                            expect(kingdom.Animals).to.not.exist;
+                            expect(kingdom.Animals).to.not.exist();
                         });
                     });
                 });
@@ -1091,8 +1091,8 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         return self.Continent.findAll({
                             order: [["name", params[0]]]
                         }).then((continents) => {
-                            expect(continents).to.exist;
-                            expect(continents[0]).to.exist;
+                            expect(continents).to.exist();
+                            expect(continents[0]).to.exist();
                             expect(continents[0].name).to.equal(params[1]);
                         });
                     }));
@@ -1105,11 +1105,11 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                             include: [self.Country],
                             order: [[self.Country, "name", params[0]]]
                         }).then((continents) => {
-                            expect(continents).to.exist;
-                            expect(continents[0]).to.exist;
+                            expect(continents).to.exist();
+                            expect(continents[0]).to.exist();
                             expect(continents[0].name).to.equal(params[1]);
-                            expect(continents[0].countries).to.exist;
-                            expect(continents[0].countries[0]).to.exist;
+                            expect(continents[0].countries).to.exist();
+                            expect(continents[0].countries[0]).to.exist();
                             expect(continents[0].countries[0].name).to.equal(params[2]);
                         });
                     }));
@@ -1129,16 +1129,16 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                             limit: 2,
                             order: [["name", params[0]], [self.Country, "name", params[0]]]
                         }).then((continents) => {
-                            expect(continents).to.exist;
-                            expect(continents[0]).to.exist;
+                            expect(continents).to.exist();
+                            expect(continents[0]).to.exist();
                             expect(continents[0].name).to.equal(params[1]);
-                            expect(continents[0].countries).to.exist;
+                            expect(continents[0].countries).to.exist();
                             expect(continents[0].countries.length).to.equal(0);
-                            expect(continents[1]).to.exist;
+                            expect(continents[1]).to.exist();
                             expect(continents[1].name).to.equal(params[2]);
-                            expect(continents[1].countries).to.exist;
+                            expect(continents[1].countries).to.exist();
                             expect(continents[1].countries.length).to.equal(1);
-                            expect(continents[1].countries[0]).to.exist;
+                            expect(continents[1].countries[0]).to.exist();
                             expect(continents[1].countries[0].name).to.equal(params[3]);
                         });
                     }));
@@ -1151,14 +1151,14 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                             include: [{ model: self.Country, include: [self.Person] }],
                             order: [[self.Country, self.Person, "lastName", params[0]]]
                         }).then((continents) => {
-                            expect(continents).to.exist;
-                            expect(continents[0]).to.exist;
+                            expect(continents).to.exist();
+                            expect(continents[0]).to.exist();
                             expect(continents[0].name).to.equal(params[1]);
-                            expect(continents[0].countries).to.exist;
-                            expect(continents[0].countries[0]).to.exist;
+                            expect(continents[0].countries).to.exist();
+                            expect(continents[0].countries[0]).to.exist();
                             expect(continents[0].countries[0].name).to.equal(params[2]);
-                            expect(continents[0].countries[0].people).to.exist;
-                            expect(continents[0].countries[0].people[0]).to.exist;
+                            expect(continents[0].countries[0].people).to.exist();
+                            expect(continents[0].countries[0].people[0]).to.exist();
                             expect(continents[0].countries[0].people[0].name).to.equal(params[3]);
                         });
                     }));
@@ -1171,14 +1171,14 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                             include: [{ model: self.Country, include: [self.Person, { model: self.Person, as: "residents" }] }],
                             order: [[self.Country, { model: self.Person, as: "residents" }, "lastName", params[0]]]
                         }).then((continents) => {
-                            expect(continents).to.exist;
-                            expect(continents[0]).to.exist;
+                            expect(continents).to.exist();
+                            expect(continents[0]).to.exist();
                             expect(continents[0].name).to.equal(params[1]);
-                            expect(continents[0].countries).to.exist;
-                            expect(continents[0].countries[0]).to.exist;
+                            expect(continents[0].countries).to.exist();
+                            expect(continents[0].countries[0]).to.exist();
                             expect(continents[0].countries[0].name).to.equal(params[2]);
-                            expect(continents[0].countries[0].residents).to.exist;
-                            expect(continents[0].countries[0].residents[0]).to.exist;
+                            expect(continents[0].countries[0].residents).to.exist();
+                            expect(continents[0].countries[0].residents[0]).to.exist();
                             expect(continents[0].countries[0].residents[0].name).to.equal(params[3]);
                         });
                     }));
@@ -1192,14 +1192,14 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                             order: [[{ model: self.Country }, { model: self.Person, as: "residents" }, "lastName", params[0]]],
                             limit: 3
                         }).then((continents) => {
-                            expect(continents).to.exist;
-                            expect(continents[0]).to.exist;
+                            expect(continents).to.exist();
+                            expect(continents[0]).to.exist();
                             expect(continents[0].name).to.equal(params[1]);
-                            expect(continents[0].countries).to.exist;
-                            expect(continents[0].countries[0]).to.exist;
+                            expect(continents[0].countries).to.exist();
+                            expect(continents[0].countries[0]).to.exist();
                             expect(continents[0].countries[0].name).to.equal(params[2]);
-                            expect(continents[0].countries[0].residents).to.exist;
-                            expect(continents[0].countries[0].residents[0]).to.exist;
+                            expect(continents[0].countries[0].residents).to.exist();
+                            expect(continents[0].countries[0].residents[0]).to.exist();
                             expect(continents[0].countries[0].residents[0].name).to.equal(params[3]);
                         });
                     }));
@@ -1247,11 +1247,11 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                             include: [self.Industry],
                             order: [[self.Industry, "name", params[0]]]
                         }).then((countries) => {
-                            expect(countries).to.exist;
-                            expect(countries[0]).to.exist;
+                            expect(countries).to.exist();
+                            expect(countries[0]).to.exist();
                             expect(countries[0].name).to.equal(params[1]);
-                            expect(countries[0].industries).to.exist;
-                            expect(countries[0].industries[0]).to.exist;
+                            expect(countries[0].industries).to.exist();
+                            expect(countries[0].industries[0]).to.exist();
                             expect(countries[0].industries[0].name).to.equal(params[2]);
                         });
                     }));
@@ -1267,11 +1267,11 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                             ],
                             limit: 3
                         }).then((countries) => {
-                            expect(countries).to.exist;
-                            expect(countries[0]).to.exist;
+                            expect(countries).to.exist();
+                            expect(countries[0]).to.exist();
                             expect(countries[0].name).to.equal(params[1]);
-                            expect(countries[0].industries).to.exist;
-                            expect(countries[0].industries[0]).to.exist;
+                            expect(countries[0].industries).to.exist();
+                            expect(countries[0].industries[0]).to.exist();
                             expect(countries[0].industries[0].name).to.equal(params[2]);
                         });
                     }));
@@ -1284,11 +1284,11 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                             include: [self.Industry],
                             order: [[self.Industry, self.IndustryCountry, "numYears", params[0]]]
                         }).then((countries) => {
-                            expect(countries).to.exist;
-                            expect(countries[0]).to.exist;
+                            expect(countries).to.exist();
+                            expect(countries[0]).to.exist();
                             expect(countries[0].name).to.equal(params[1]);
-                            expect(countries[0].industries).to.exist;
-                            expect(countries[0].industries[0]).to.exist;
+                            expect(countries[0].industries).to.exist();
+                            expect(countries[0].industries[0]).to.exist();
                             expect(countries[0].industries[0].name).to.equal(params[2]);
                         });
                     }));
@@ -1398,7 +1398,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         attributes: ["active"]
                     }).then((users) => {
                         users.forEach((user) => {
-                            expect(user.get("createdAt")).to.be.ok;
+                            expect(user.get("createdAt")).to.be.ok();
                             expect(user.get("active")).to.equal(true);
                         });
                     });
@@ -1571,7 +1571,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
             where: {},
             logging: s
         }).then(() => {
-            expect(s.called).to.be.ok;
+            expect(s.called).to.be.ok();
         });
     });
 

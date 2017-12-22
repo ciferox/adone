@@ -83,8 +83,8 @@ describe("net", "http", "client", "instance", () => {
         let response;
         instance.get("http://example.org/foo").then((res) => {
             response = res;
-            expect(response.options.foo).to.be.undefined;
-            expect(response.options.bar).to.be.true;
+            expect(response.options.foo).to.be.undefined();
+            expect(response.options.bar).to.be.true();
             done();
         });
     });

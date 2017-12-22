@@ -41,7 +41,7 @@ describe("database", "local", "Persistence", () => {
         });
 
         await d.load();
-        expect(d.getAllData()).to.be.empty;
+        expect(d.getAllData()).to.be.empty();
     });
 
     it("Every line represents a document", () => {
@@ -213,7 +213,7 @@ describe("database", "local", "Persistence", () => {
         fs.unlinkSync(testDb);
 
         await d.load();
-        expect(d.getAllData()).to.be.empty;
+        expect(d.getAllData()).to.be.empty();
     });
 
     it("Calling loadDatabase after the datafile was modified loads the new data", async () => {
@@ -240,8 +240,8 @@ describe("database", "local", "Persistence", () => {
             const doc3 = data.find((x) => x.a === 3);
             expect(data).to.have.lengthOf(1);
             expect(doc3.a).to.be.equal(3);
-            expect(doc1).to.be.undefined;
-            expect(doc2).to.be.undefined;
+            expect(doc1).to.be.undefined();
+            expect(doc2).to.be.undefined();
         }
     });
 
@@ -493,7 +493,7 @@ describe("database", "local", "Persistence", () => {
             expect(docs[0].hello).to.be.equal("earth");
             expect(docs[0]._id).to.be.equal(_id);
             expect(d.indexes.size).to.be.equal(2);
-            expect(d.indexes.has("idefix")).to.be.true;
+            expect(d.indexes.has("idefix")).to.be.true(););
         });
     });
 
@@ -519,9 +519,9 @@ describe("database", "local", "Persistence", () => {
 
             await storage.ensureDatafileIntegrity(p.filename);
 
-            expect(await file.exists()).to.be.true;
-            expect(await sfile.exists()).to.be.false;
-            expect(await file.contents()).to.be.empty;
+            expect(await file.exists()).to.be.true(););
+            expect(await sfile.exists()).to.be.false();
+            expect(await file.contents()).to.be.empty();
         });
 
         it("If only datafile exists, ensureDatafileIntegrity will use it", async () => {
@@ -534,13 +534,13 @@ describe("database", "local", "Persistence", () => {
 
             await file.write("something");
 
-            expect(await file.exists()).to.be.true;
-            expect(await sfile.exists()).to.be.false;
+            expect(await file.exists()).to.be.true(););
+            expect(await sfile.exists()).to.be.false();
 
             await storage.ensureDatafileIntegrity(p.filename);
 
-            expect(await file.exists()).to.be.true;
-            expect(await sfile.exists()).to.be.false;
+            expect(await file.exists()).to.be.true(););
+            expect(await sfile.exists()).to.be.false();
 
             expect(await file.contents()).to.be.equal("something");
         });
@@ -555,13 +555,13 @@ describe("database", "local", "Persistence", () => {
 
             await sfile.write("something");
 
-            expect(await file.exists()).to.be.false;
-            expect(await sfile.exists()).to.be.true;
+            expect(await file.exists()).to.be.false();
+            expect(await sfile.exists()).to.be.true(););
 
             await storage.ensureDatafileIntegrity(p.filename);
 
-            expect(await file.exists()).to.be.true;
-            expect(await sfile.exists()).to.be.false;
+            expect(await file.exists()).to.be.true(););
+            expect(await sfile.exists()).to.be.false();
 
             expect(await file.contents()).to.be.equal("something");
         });
@@ -579,13 +579,13 @@ describe("database", "local", "Persistence", () => {
             await file.write("{\"_id\":\"0\",\"hello\":\"world\"}");
             await sfile.write("{\"_id\":\"0\",\"hello\":\"other\"}");
 
-            expect(await file.exists()).to.be.true;
-            expect(await sfile.exists()).to.be.true;
+            expect(await file.exists()).to.be.true(););
+            expect(await sfile.exists()).to.be.true(););
 
             await storage.ensureDatafileIntegrity(theDb.persistence.filename);
 
-            expect(await file.exists()).to.be.true;
-            expect(await sfile.exists()).to.be.true;
+            expect(await file.exists()).to.be.true(););
+            expect(await sfile.exists()).to.be.true(););
 
             expect(await file.contents()).to.be.equal("{\"_id\":\"0\",\"hello\":\"world\"}");
 
@@ -593,8 +593,8 @@ describe("database", "local", "Persistence", () => {
             const docs = await theDb.find({});
             expect(docs).to.have.lengthOf(1);
             expect(docs[0].hello).to.be.equal("world");
-            expect(await file.exists()).to.be.true;
-            expect(await sfile.exists()).to.be.false;
+            expect(await file.exists()).to.be.true(););
+            expect(await sfile.exists()).to.be.false();
         });
 
         it("persistCachedDatabase should update the contents of the datafile and leave a clean state", async () => {
@@ -608,16 +608,16 @@ describe("database", "local", "Persistence", () => {
             if (fs.existsSync(`${testDb}~`)) {
                 fs.unlinkSync(`${testDb}~`);
             }
-            expect(fs.existsSync(testDb)).to.be.false;
+            expect(fs.existsSync(testDb)).to.be.false();
 
             fs.writeFileSync(`${testDb}~`, "something", "utf8");
-            expect(fs.existsSync(`${testDb}~`)).to.be.true;
+            expect(fs.existsSync(`${testDb}~`)).to.be.true(););
 
             await d.persistence.persistCachedDatabase();
 
             const contents = fs.readFileSync(testDb, "utf8");
-            expect(fs.existsSync(testDb)).to.be.true;
-            expect(fs.existsSync(`${testDb}~`)).to.be.false;
+            expect(fs.existsSync(testDb)).to.be.true(););
+            expect(fs.existsSync(`${testDb}~`)).to.be.false();
             expect(contents).to.match(/^{"hello":"world","_id":"[0-9a-zA-Z]{16}"}\n$/);
         });
 
@@ -632,17 +632,17 @@ describe("database", "local", "Persistence", () => {
             if (fs.existsSync(`${testDb}~`)) {
                 fs.unlinkSync(`${testDb}~`);
             }
-            expect(fs.existsSync(testDb)).to.be.false;
-            expect(fs.existsSync(`${testDb}~`)).to.be.false;
+            expect(fs.existsSync(testDb)).to.be.false();
+            expect(fs.existsSync(`${testDb}~`)).to.be.false();
 
             fs.writeFileSync(`${testDb}~`, "bloup", "utf8");
-            expect(fs.existsSync(`${testDb}~`)).to.be.true;
+            expect(fs.existsSync(`${testDb}~`)).to.be.true(););
 
             await d.persistence.persistCachedDatabase();
 
             const contents = fs.readFileSync(testDb, "utf8");
-            expect(fs.existsSync(testDb)).to.be.true;
-            expect(fs.existsSync(`${testDb}~`)).to.be.false;
+            expect(fs.existsSync(testDb)).to.be.true(););
+            expect(fs.existsSync(`${testDb}~`)).to.be.false();
             expect(contents).to.match(/^{"hello":"world","_id":"[0-9a-zA-Z]{16}"}\n$/);
         });
 
@@ -657,14 +657,14 @@ describe("database", "local", "Persistence", () => {
             }
             fs.writeFileSync(`${testDb}~`, "blabla", "utf8");
 
-            expect(fs.existsSync(testDb)).to.be.false;
-            expect(fs.existsSync(`${testDb}~`)).to.be.true;
+            expect(fs.existsSync(testDb)).to.be.false();
+            expect(fs.existsSync(`${testDb}~`)).to.be.true(););
 
             await d.persistence.persistCachedDatabase();
 
             const contents = fs.readFileSync(testDb, "utf8");
-            expect(fs.existsSync(testDb)).to.be.true;
-            expect(fs.existsSync(`${testDb}~`)).to.be.false;
+            expect(fs.existsSync(testDb)).to.be.true(););
+            expect(fs.existsSync(`${testDb}~`)).to.be.false();
             expect(contents).to.match(/^{"hello":"world","_id":"[0-9a-zA-Z]{16}"}\n$/);
         });
 
@@ -680,9 +680,9 @@ describe("database", "local", "Persistence", () => {
             await theDb.load();
 
             const contents = await file.contents();
-            expect(await file.exists()).to.be.true;
-            expect(await sfile.exists()).to.be.false;
-            expect(contents).to.be.empty;
+            expect(await file.exists()).to.be.true(););
+            expect(await sfile.exists()).to.be.false();
+            expect(contents).to.be.empty();
         });
 
         it("Persistence works as expected when everything goes fine", async () => {
@@ -697,7 +697,7 @@ describe("database", "local", "Persistence", () => {
             await theDb.load();
             {
                 const docs = await theDb.find({});
-                expect(docs).to.be.empty;
+                expect(docs).to.be.empty();
             }
 
             const doc1 = await theDb.insert({ a: "hello" });
@@ -716,8 +716,8 @@ describe("database", "local", "Persistence", () => {
                 expect(docs.find((item) => item._id === doc1._id).a).to.be.equal("hello");
                 expect(docs.find((item) => item._id === doc2._id).a).to.be.equal("world");
             }
-            expect(await file.exists()).to.be.true;
-            expect(await sfile.exists()).to.be.false;
+            expect(await file.exists()).to.be.true(););
+            expect(await sfile.exists()).to.be.false();
             const theDb2 = new Datastore({ filename: file.path() });
             await theDb2.load();
             {
@@ -727,8 +727,8 @@ describe("database", "local", "Persistence", () => {
                 expect(docs.find((item) => item._id === doc1._id).a).to.be.equal("hello");
                 expect(docs.find((item) => item._id === doc2._id).a).to.be.equal("world");
             }
-            expect(await file.exists()).to.be.true;
-            expect(await sfile.exists()).to.be.false;
+            expect(await file.exists()).to.be.true(););
+            expect(await sfile.exists()).to.be.false();
         });
 
         // The child process will load the database with the given datafile, but the fs.writeFile function
@@ -756,16 +756,16 @@ describe("database", "local", "Persistence", () => {
             });
 
             expect(code).to.be.equal(1); // See loadAndCrash.js
-            expect(await file.exists()).to.be.true;
-            expect(await sfile.exists()).to.be.true;
+            expect(await file.exists()).to.be.true(););
+            expect(await sfile.exists()).to.be.true(););
             expect((await file.contents()).length).to.be.equal(datafileLength);
             expect((await sfile.contents()).length).to.be.equal(5000);
 
             // Reload database without a crash, check that no data was lost and fs state is clean (no temp file)
             const db = new Datastore({ filename: file.path() });
             await db.load();
-            expect(await file.exists()).to.be.true;
-            expect(await sfile.exists()).to.be.false;
+            expect(await file.exists()).to.be.true(););
+            expect(await sfile.exists()).to.be.false();
             expect((await file.contents()).length).to.be.equal(datafileLength);
 
             const docs = await db.find({});
@@ -782,7 +782,7 @@ describe("database", "local", "Persistence", () => {
         it("Doesnt do anything if file already doesnt exist", async () => {
             const file = tmpdir.getFile("nonexisting");
             await storage.ensureFileDoesntExist(file.path());
-            expect(await file.exists()).to.be.false;
+            expect(await file.exists()).to.be.false();
         });
 
         it("Deletes file if it exists", async () => {
@@ -790,7 +790,7 @@ describe("database", "local", "Persistence", () => {
                 contents: "hello world"
             });
             await storage.ensureFileDoesntExist(file.path());
-            expect(await file.exists()).to.be.false;
+            expect(await file.exists()).to.be.false();
         });
     });
 });

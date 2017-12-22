@@ -15,14 +15,14 @@ describe("Interface", () => {
         beforeEach((done) => {
             test.hypervisor = new Hypervisor("test:///default");
             test.hypervisor.connect((err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 done();
             });
         });
 
         afterEach((done) => {
             test.hypervisor.disconnect((err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 done();
             });
         });
@@ -30,12 +30,12 @@ describe("Interface", () => {
         it("should define and undefine an interface from its xml description", (done) => {
             const xml = fixture("interface.xml");
             test.hypervisor.defineInterface(xml, (err, iface) => {
-                expect(err).to.not.exist;
-                expect(iface).to.exist;
-                expect(iface._parent).to.exist;
+                expect(err).to.not.exist();
+                expect(iface).to.exist();
+                expect(iface._parent).to.exist();
 
                 iface.getName((err, result) => {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                     expect(result).to.equal("eth2");
                     done();
                 });
@@ -45,17 +45,17 @@ describe("Interface", () => {
         it("should undefine the interface", (done) => {
             const xml = fixture("interface.xml");
             test.hypervisor.defineInterface(xml, (err, iface) => {
-                expect(err).to.not.exist;
-                expect(iface).to.exist;
-                expect(iface._parent).to.exist;
+                expect(err).to.not.exist();
+                expect(iface).to.exist();
+                expect(iface._parent).to.exist();
 
                 test.hypervisor.lookupInterfaceByName("eth2", (err, iface) => {
-                    expect(err).to.not.exist;
-                    expect(iface).to.exist;
-                    expect(iface._parent).to.exist;
+                    expect(err).to.not.exist();
+                    expect(iface).to.exist();
+                    expect(iface._parent).to.exist();
                     iface.undefine((err, result) => {
-                        expect(err).to.not.exist;
-                        expect(result).to.be.true;
+                        expect(err).to.not.exist();
+                        expect(result).to.be.true();
                         done();
                     });
                 });
@@ -64,12 +64,12 @@ describe("Interface", () => {
 
         it("should be located through its name", (done) => {
             test.hypervisor.lookupInterfaceByName("eth1", (err, iface) => {
-                expect(err).to.not.exist;
-                expect(iface).to.exist;
-                expect(iface._parent).to.exist;
+                expect(err).to.not.exist();
+                expect(iface).to.exist();
+                expect(iface._parent).to.exist();
 
                 iface.getName((err, result) => {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                     expect(result).to.equal("eth1");
                     done();
                 });
@@ -78,12 +78,12 @@ describe("Interface", () => {
 
         it("should be located through its mac address", (done) => {
             test.hypervisor.lookupInterfaceByMacAddress("aa:bb:cc:dd:ee:ff", (err, iface) => {
-                expect(err).to.not.exist;
-                expect(iface).to.exist;
-                expect(iface._parent).to.exist;
+                expect(err).to.not.exist();
+                expect(iface).to.exist();
+                expect(iface._parent).to.exist();
 
                 iface.getName((err, result) => {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                     expect(result).to.equal("eth1");
                     done();
                 });
@@ -95,11 +95,11 @@ describe("Interface", () => {
         beforeEach((done) => {
             test.hypervisor = new Hypervisor("test:///default");
             test.hypervisor.connect((err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 test.hypervisor.lookupInterfaceByName("eth1", (err, iface) => {
-                    expect(err).to.not.exist;
-                    expect(iface).to.exist;
-                    expect(iface._parent).to.exist;
+                    expect(err).to.not.exist();
+                    expect(iface).to.exist();
+                    expect(iface._parent).to.exist();
                     test.interface = iface;
                     done();
                 });
@@ -108,7 +108,7 @@ describe("Interface", () => {
 
         afterEach((done) => {
             test.hypervisor.disconnect((err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 test.interface = undefined;
                 done();
             });
@@ -116,10 +116,10 @@ describe("Interface", () => {
 
         it("should start", (done) => {
             test.interface.start((err, result) => {
-                expect(err).to.exist;
+                expect(err).to.exist();
 
                 // NOTE: not supported in test-driver, so result is false
-                expect(result).to.not.exist;
+                expect(result).to.not.exist();
                 done();
             });
         });
@@ -127,23 +127,23 @@ describe("Interface", () => {
         it("should stop", (done) => {
             // NOTE: not supported in test-driver, so result is false
             test.interface.stop((err, result) => {
-                expect(err).to.not.exist;
-                expect(result).to.be.false;
+                expect(err).to.not.exist();
+                expect(result).to.be.false();
                 done();
             });
         });
 
         it("should indicate if is active and running", (done) => {
             test.interface.isActive((err, result) => {
-                expect(err).to.not.exist;
-                expect(result).to.be.true;
+                expect(err).to.not.exist();
+                expect(result).to.be.true();
                 done();
             });
         });
 
         it("should return the name", (done) => {
             test.interface.getName((err, result) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(result).to.equal("eth1");
                 done();
             });
@@ -151,7 +151,7 @@ describe("Interface", () => {
 
         it("should return the mac address", (done) => {
             test.interface.getMacAddress((err, result) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(result).to.equal("aa:bb:cc:dd:ee:ff");
                 done();
             });
@@ -159,7 +159,7 @@ describe("Interface", () => {
 
         it("should return its xml description", (done) => {
             test.interface.toXml((err, result) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 expect(result).to.match(/eth1/);
                 done();
             });

@@ -3,14 +3,14 @@ const { compressor: { xz } } = adone;
 describe("compressor", "xz", () => {
     describe("#versionNumber", () => {
         it("should be present and of number type", () => {
-            assert.isOk(xz.versionNumber());
+            assert.ok(xz.versionNumber());
             assert.equal(typeof xz.versionNumber(), "number");
         });
     });
 
     describe("#versionString", () => {
         it("should be present and of string type", () => {
-            assert.isOk(xz.versionNumber());
+            assert.ok(xz.versionNumber());
             assert.equal(typeof xz.versionString(), "string");
         });
     });
@@ -32,15 +32,15 @@ describe("compressor", "xz", () => {
         });
 
         it("should be non-zero for crc32", () => {
-            assert.isOk(xz.checkSize(xz.CHECK_CRC32) > 0);
+            assert.ok(xz.checkSize(xz.CHECK_CRC32) > 0);
         });
 
         it("should be monotonous", () => {
-            assert.isOk(xz.checkSize(xz.CHECK_CRC32 | xz.CHECK_SHA256) >= xz.checkSize(xz.CHECK_CRC32));
+            assert.ok(xz.checkSize(xz.CHECK_CRC32 | xz.CHECK_SHA256) >= xz.checkSize(xz.CHECK_CRC32));
         });
 
         it("should be strictly monotonous if SHA256 is supported", () => {
-            assert.isOk(xz.checkSize(xz.CHECK_CRC32 | xz.CHECK_SHA256) > xz.checkSize(xz.CHECK_CRC32) ||
+            assert.ok(xz.checkSize(xz.CHECK_CRC32 | xz.CHECK_SHA256) > xz.checkSize(xz.CHECK_CRC32) ||
                 !xz.checkIsSupported(xz.CHECK_SHA256));
         });
     });
@@ -140,8 +140,8 @@ describe("compressor", "xz", () => {
 
     describe("#rawEncoderMemusage", () => {
         it("should be positive for LZMA1, LZMA2", () => {
-            assert.isOk(xz.rawEncoderMemusage([{ id: xz.FILTER_LZMA1 }]) > 0);
-            assert.isOk(xz.rawEncoderMemusage([{ id: xz.FILTER_LZMA2 }]) > 0);
+            assert.ok(xz.rawEncoderMemusage([{ id: xz.FILTER_LZMA1 }]) > 0);
+            assert.ok(xz.rawEncoderMemusage([{ id: xz.FILTER_LZMA2 }]) > 0);
         });
 
         it("should return null for VLI_UNKNOWN", () => {
@@ -150,7 +150,7 @@ describe("compressor", "xz", () => {
 
         it("should be monotonous in the preset parameter", () => {
             for (let i = 1; i < 9; ++i) {
-                assert.isOk(xz.rawEncoderMemusage([{ id: xz.FILTER_LZMA2, preset: i + 1 }]) >=
+                assert.ok(xz.rawEncoderMemusage([{ id: xz.FILTER_LZMA2, preset: i + 1 }]) >=
                     xz.rawEncoderMemusage([{ id: xz.FILTER_LZMA2, preset: i }]));
             }
         });
@@ -167,8 +167,8 @@ describe("compressor", "xz", () => {
 
     describe("#rawDecoderMemusage", () => {
         it("should be positive for LZMA1, LZMA2", () => {
-            assert.isOk(xz.rawDecoderMemusage([{ id: xz.FILTER_LZMA1 }]) > 0);
-            assert.isOk(xz.rawDecoderMemusage([{ id: xz.FILTER_LZMA2 }]) > 0);
+            assert.ok(xz.rawDecoderMemusage([{ id: xz.FILTER_LZMA1 }]) > 0);
+            assert.ok(xz.rawDecoderMemusage([{ id: xz.FILTER_LZMA2 }]) > 0);
         });
 
         it("should return null for VLI_UNKNOWN", () => {
@@ -177,7 +177,7 @@ describe("compressor", "xz", () => {
 
         it("should be monotonous in the preset parameter", () => {
             for (let i = 1; i < 9; ++i) {
-                assert.isOk(xz.rawDecoderMemusage([{ id: xz.FILTER_LZMA2, preset: i + 1 }]) >=
+                assert.ok(xz.rawDecoderMemusage([{ id: xz.FILTER_LZMA2, preset: i + 1 }]) >=
                     xz.rawDecoderMemusage([{ id: xz.FILTER_LZMA2, preset: i }]));
             }
         });
@@ -194,24 +194,24 @@ describe("compressor", "xz", () => {
 
     describe("#easyEncoderMemusage", () => {
         it("should be positive", () => {
-            assert.isOk(xz.easyEncoderMemusage(1) > 0);
+            assert.ok(xz.easyEncoderMemusage(1) > 0);
         });
 
         it("should be monotonous in the preset parameter", () => {
             for (let i = 1; i < 9; ++i) {
-                assert.isOk(xz.easyEncoderMemusage(i + 1) >= xz.easyEncoderMemusage(i));
+                assert.ok(xz.easyEncoderMemusage(i + 1) >= xz.easyEncoderMemusage(i));
             }
         });
     });
 
     describe("#easyDecoderMemusage", () => {
         it("should be positive", () => {
-            assert.isOk(xz.easyDecoderMemusage(1) > 0);
+            assert.ok(xz.easyDecoderMemusage(1) > 0);
         });
 
         it("should be monotonous in the preset parameter", () => {
             for (let i = 1; i < 9; ++i) {
-                assert.isOk(xz.easyDecoderMemusage(i + 1) >= xz.easyDecoderMemusage(i));
+                assert.ok(xz.easyDecoderMemusage(i + 1) >= xz.easyDecoderMemusage(i));
             }
         });
     });

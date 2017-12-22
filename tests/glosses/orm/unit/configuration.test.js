@@ -46,8 +46,8 @@ describe("Sequelize", () => {
             expect(config.password).to.equal("pass");
             expect(config.port).to.equal(999);
             expect(sequelize.options.dialect).to.equal(dialect);
-            expect(config.dialectOptions.supportBigNumbers).to.be.true;
-            expect(config.dialectOptions.bigNumberStrings).to.be.true;
+            expect(config.dialectOptions.supportBigNumbers).to.be.true();
+            expect(config.dialectOptions.bigNumberStrings).to.be.true();
         });
     });
 
@@ -106,16 +106,16 @@ describe("Sequelize", () => {
             const sequelize = orm.create("mysql://example.com:9821/dbname");
             const config = sequelize.config;
 
-            expect(config.username).to.not.be.ok;
-            expect(config.password).to.be.null;
+            expect(config.username).to.not.be.ok();
+            expect(config.password).to.be.null();
         });
 
         it("should work with no authentication options and passing additional options", () => {
             const sequelize = orm.create("mysql://example.com:9821/dbname", {});
             const config = sequelize.config;
 
-            expect(config.username).to.not.be.ok;
-            expect(config.password).to.be.null;
+            expect(config.username).to.not.be.ok();
+            expect(config.password).to.be.null();
         });
 
         it("should use the default port when no other is specified", () => {

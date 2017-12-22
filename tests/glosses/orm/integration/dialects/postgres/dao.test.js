@@ -741,7 +741,7 @@ describe("[POSTGRES Specific] DAO", {
                     return this.User.find({ where: { username: "user1" }, include: [HstoreSubmodel] });
                 })
                 .then((user) => {
-                    expect(user.hasOwnProperty("hstoreSubmodels")).to.be.ok;
+                    expect(user.hasOwnProperty("hstoreSubmodels")).to.be.ok();
                     expect(user.hstoreSubmodels.length).to.equal(1);
                     expect(user.hstoreSubmodels[0].someValue).to.deep.equal(submodelValue);
                 });
@@ -756,8 +756,8 @@ describe("[POSTGRES Specific] DAO", {
                 expect(newUser.acceptable_marks[0]).to.equal("0.65"); // lower bound
                 expect(newUser.acceptable_marks[1]).to.equal("1"); // upper bound
                 expect(newUser.acceptable_marks.inclusive).to.deep.equal([true, false]); // inclusive, exclusive
-                expect(newUser.course_period[0] instanceof Date).to.be.ok; // lower bound
-                expect(newUser.course_period[1] instanceof Date).to.be.ok; // upper bound
+                expect(newUser.course_period[0] instanceof Date).to.be.ok(); // lower bound
+                expect(newUser.course_period[1] instanceof Date).to.be.ok(); // upper bound
                 expect(newUser.course_period[0]).to.be.deep.equal(period[0]); // lower bound
                 expect(newUser.course_period[1]).to.be.deep.equal(period[1]); // upper bound
                 expect(newUser.course_period.inclusive).to.deep.equal([true, false]); // inclusive, exclusive
@@ -786,13 +786,13 @@ describe("[POSTGRES Specific] DAO", {
                 return User.findById(1).then((user) => {
                     expect(user.holidays.length).to.equal(2);
                     expect(user.holidays[0].length).to.equal(2);
-                    expect(user.holidays[0][0] instanceof Date).to.be.ok;
-                    expect(user.holidays[0][1] instanceof Date).to.be.ok;
+                    expect(user.holidays[0][0] instanceof Date).to.be.ok();
+                    expect(user.holidays[0][1] instanceof Date).to.be.ok();
                     expect(user.holidays[0][0]).to.be.deep.equal(holidays[0][0]);
                     expect(user.holidays[0][1]).to.be.deep.equal(holidays[0][1]);
                     expect(user.holidays[1].length).to.equal(2);
-                    expect(user.holidays[1][0] instanceof Date).to.be.ok;
-                    expect(user.holidays[1][1] instanceof Date).to.be.ok;
+                    expect(user.holidays[1][0] instanceof Date).to.be.ok();
+                    expect(user.holidays[1][1] instanceof Date).to.be.ok();
                     expect(user.holidays[1][0]).to.be.deep.equal(holidays[1][0]);
                     expect(user.holidays[1][1]).to.be.deep.equal(holidays[1][1]);
                 });
@@ -809,8 +809,8 @@ describe("[POSTGRES Specific] DAO", {
                 course_period: period
             }]).then(() => {
                 return User.findById(1).then((user) => {
-                    expect(user.course_period[0] instanceof Date).to.be.ok;
-                    expect(user.course_period[1] instanceof Date).to.be.ok;
+                    expect(user.course_period[0] instanceof Date).to.be.ok();
+                    expect(user.course_period[1] instanceof Date).to.be.ok();
                     expect(user.course_period[0]).to.be.deep.equal(period[0]); // lower bound
                     expect(user.course_period[1]).to.be.deep.equal(period[1]); // upper bound
                     expect(user.course_period.inclusive).to.deep.equal([true, false]); // inclusive, exclusive
@@ -828,8 +828,8 @@ describe("[POSTGRES Specific] DAO", {
                 expect(newUser.acceptable_marks[0]).to.equal("0.65"); // lower bound
                 expect(newUser.acceptable_marks[1]).to.equal("1"); // upper bound
                 expect(newUser.acceptable_marks.inclusive).to.deep.equal([true, false]); // inclusive, exclusive
-                expect(newUser.course_period[0] instanceof Date).to.be.ok;
-                expect(newUser.course_period[1] instanceof Date).to.be.ok;
+                expect(newUser.course_period[0] instanceof Date).to.be.ok();
+                expect(newUser.course_period[1] instanceof Date).to.be.ok();
                 expect(newUser.course_period[0]).to.deep.equal(period[0]); // lower bound
                 expect(newUser.course_period[1]).to.deep.equal(period[1]); // upper bound
                 expect(newUser.course_period.inclusive).to.deep.equal([true, false]); // inclusive, exclusive
@@ -839,8 +839,8 @@ describe("[POSTGRES Specific] DAO", {
                 // Check to see if updating a range field works
                 return User.update({ course_period: period2 }, { where: newUser.where() }).then(() => {
                     return newUser.reload().then(() => {
-                        expect(newUser.course_period[0] instanceof Date).to.be.ok;
-                        expect(newUser.course_period[1] instanceof Date).to.be.ok;
+                        expect(newUser.course_period[0] instanceof Date).to.be.ok();
+                        expect(newUser.course_period[1] instanceof Date).to.be.ok();
                         expect(newUser.course_period[0]).to.deep.equal(period2[0]); // lower bound
                         expect(newUser.course_period[1]).to.deep.equal(period2[1]); // upper bound
                         expect(newUser.course_period.inclusive).to.deep.equal([true, false]); // inclusive, exclusive
@@ -861,8 +861,8 @@ describe("[POSTGRES Specific] DAO", {
             // Update the user and check that the returned object's fields have been parsed by the range parser
             const [count, users] = await User.update({ course_period: period }, { where: oldUser.where(), returning: true });
             expect(count).to.equal(1);
-            expect(users[0].course_period[0] instanceof Date).to.be.ok;
-            expect(users[0].course_period[1] instanceof Date).to.be.ok;
+            expect(users[0].course_period[0] instanceof Date).to.be.ok();
+            expect(users[0].course_period[1] instanceof Date).to.be.ok();
             expect(users[0].course_period[0]).to.be.deep.equal(period[0]); // lower bound
             expect(users[0].course_period[1]).to.be.deep.equal(period[1]); // upper bound
             expect(users[0].course_period.inclusive).to.deep.equal([true, false]); // inclusive, exclusive
@@ -957,7 +957,7 @@ describe("[POSTGRES Specific] DAO", {
                     return this.User.find({ where: { username: "user" }, include: [HolidayDate] });
                 })
                 .then((user) => {
-                    expect(user.hasOwnProperty("holidayDates")).to.be.ok;
+                    expect(user.hasOwnProperty("holidayDates")).to.be.ok();
                     expect(user.holidayDates.length).to.equal(1);
                     expect(user.holidayDates[0].period.length).to.equal(2);
                     expect(user.holidayDates[0].period[0]).to.be.deep.equal(period[0]);
@@ -1010,8 +1010,8 @@ describe("[POSTGRES Specific] DAO", {
                     .create({ username: "user", fullName: "John Smith" })
                     .then((user) => {
                         // We can insert into a table with non-quoted identifiers
-                        expect(user.id).to.exist;
-                        expect(user.id).not.to.be.null;
+                        expect(user.id).to.exist();
+                        expect(user.id).not.to.be.null();
                         expect(user.username).to.equal("user");
                         expect(user.fullName).to.equal("John Smith");
 

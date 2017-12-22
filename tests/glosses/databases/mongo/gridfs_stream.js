@@ -201,12 +201,12 @@ describe("gridfs stream", function () {
             {
                 const chunksQuery = db.collection(CHUNKS_COLL).find({ files_id: id });
                 const docs = await chunksQuery.toArray();
-                expect(docs).to.be.empty;
+                expect(docs).to.be.empty();
             }
             {
                 const filesQuery = db.collection(FILES_COLL).find({ _id: id });
                 const docs = await filesQuery.toArray();
-                expect(docs).to.be.empty;
+                expect(docs).to.be.empty();
 
             }
         });
@@ -284,7 +284,7 @@ describe("gridfs stream", function () {
                 });
                 downloadStream.abort();
             });
-            expect(downloadStream.s.cursor).to.be.null;
+            expect(downloadStream.s.cursor).to.be.null();
         });
 
         it("find()", async () => {
@@ -317,12 +317,12 @@ describe("gridfs stream", function () {
             {
                 const chunksQuery = db.collection(CHUNKS_COLL).find({ files_id: id });
                 const docs = await chunksQuery.toArray();
-                expect(docs).to.be.empty;
+                expect(docs).to.be.empty();
             }
             {
                 const filesQuery = db.collection(FILES_COLL).find({ _id: id });
                 const docs = await filesQuery.toArray();
-                expect(docs).to.be.empty;
+                expect(docs).to.be.empty();
             }
         });
 
@@ -374,7 +374,7 @@ describe("gridfs stream", function () {
                     resolve();
                 });
             });
-            expect(stream.s.cursor).to.be.null;
+            expect(stream.s.cursor).to.be.null();
         });
 
         describe("spec", () => {
@@ -389,7 +389,7 @@ describe("gridfs stream", function () {
                         const key = specKeys[i];
                         expect(resKeys[i]).to.be.equal(specKeys[i]);
                         if (specDoc[key] === "*actual") {
-                            expect(resDoc[key]).to.be.ok;
+                            expect(resDoc[key]).to.be.ok();
                         } else if (specDoc[key] === "*result") {
                             expect(result.toString()).to.be.equal(resDoc[key].toString());
                         } else if (specDoc[key].$hex) {

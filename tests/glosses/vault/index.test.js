@@ -65,7 +65,7 @@ describe("Vault", () => {
         assert.equal(vInstance.location(), location);
         assert.lengthOf(vInstance.vids, 1);
         assert.equal(vInstance.nextValuableId, 2);
-        assert.isTrue(vInstance.has("v1"));
+        assert.true(vInstance.has("v1"));
         valuable = await vInstance.get("v1");
         assert.equal(valuable.id, 1);
         assert.equal(valuable.name(), "v1");
@@ -87,7 +87,7 @@ describe("Vault", () => {
     it("Predicate 'adone.is.vaultValuable' should be exists", async () => {
         await openVault();
         const valuable = await vInstance.create("v1");
-        assert.isTrue(adone.is.vaultValuable(valuable));
+        assert.true(adone.is.vaultValuable(valuable));
     });
 
     it("create/get valuable with tags", async () => {
@@ -107,7 +107,7 @@ describe("Vault", () => {
         assert.equal(vInstance.location(), location);
         assert.lengthOf(vInstance.vids, 1);
         assert.equal(vInstance.nextValuableId, 2);
-        assert.isTrue(vInstance.has("v1"));
+        assert.true(vInstance.has("v1"));
         valuable = await vInstance.get("v1");
         assert.equal(valuable.id, 1);
         assert.equal(valuable.name(), "v1");
@@ -136,8 +136,8 @@ describe("Vault", () => {
         await openVault(location);
         assert.lengthOf(vInstance.vids, 2);
         assert.equal(vInstance.nextValuableId, 3);
-        assert.isTrue(vInstance.has("v1"));
-        assert.isTrue(vInstance.has("v2"));
+        assert.true(vInstance.has("v1"));
+        assert.true(vInstance.has("v2"));
         valuable1 = await vInstance.get("v1");
         assert.equal(valuable1.id, 1);
         assert.equal(valuable1.name(), "v1");
@@ -181,9 +181,9 @@ describe("Vault", () => {
         await openVault();
         const val = await vInstance.create("val");
         await val.set("undefined", undefined);
-        expect(await val.get("undefined")).to.be.undefined;
+        expect(await val.get("undefined")).to.be.undefined();
         await val.set("null", null);
-        expect(await val.get("null")).to.be.null;
+        expect(await val.get("null")).to.be.null();
     });
 
     it("valuable add/delete simple tags", async () => {
@@ -193,12 +193,12 @@ describe("Vault", () => {
         await val.set("num", 17);
         const allNormTags = __.normalizeTags(["tag1", "tag2", "tag3", "tag4"]);
         assert.equal(await val.get("num"), 17);
-        assert.isNumber(await val.addTag("tag2"));
-        assert.isNull(await val.addTag("tag3"));
-        assert.isNumber(await val.addTag("tag4"));
+        assert.number(await val.addTag("tag2"));
+        assert.null(await val.addTag("tag3"));
+        assert.number(await val.addTag("tag4"));
         assert.sameDeepMembers(await val.tags(), allNormTags);
         assert.sameDeepMembers(await vInstance.tags(), allNormTags);
-        assert.isTrue(await val.deleteTag("tag3"));
+        assert.true(await val.deleteTag("tag3"));
         assert.notIncludeMembers(await val.tags(), [{ name: "tag3" }]);
         await vInstance.close();
 
@@ -229,13 +229,13 @@ describe("Vault", () => {
         let val = await vInstance.create("val", tags);
         await val.set("num", 17);
         assert.equal(await val.get("num"), 17);
-        assert.isNumber(await val.addTag(tag2));
-        assert.isNull(await val.addTag("tag3"));
-        assert.isNumber(await val.addTag(tag4));
+        assert.number(await val.addTag(tag2));
+        assert.null(await val.addTag("tag3"));
+        assert.number(await val.addTag(tag4));
 
         assert.sameDeepMembers(await val.tags(), allNormTags);
         assert.sameDeepMembers(await vInstance.tags(), allNormTags);
-        assert.isTrue(await val.deleteTag("tag3"));
+        assert.true(await val.deleteTag("tag3"));
         assert.notIncludeDeepMembers(await val.tags(), [tag3]);
         await vInstance.close();
 
@@ -262,7 +262,7 @@ describe("Vault", () => {
         let val = await vInstance.create("val", tags);
         assert.sameDeepMembers(await val.tags(), tags);
         assert.sameDeepMembers(await vInstance.tags(), tags);
-        assert.isTrue(await vInstance.deleteTag("tag2"));
+        assert.true(await vInstance.deleteTag("tag2"));
         assert.sameDeepMembers(await val.tags(), [tag1, tag3]);
         assert.sameDeepMembers(await vInstance.tags(), [tag1, tag3]);
         await vInstance.close();
@@ -472,8 +472,8 @@ describe("Vault", () => {
             assert.equal(obj.entries.k2, 2);
             assert.equal(obj.entries.k3, true);
             assert.deepEqual(obj.entries.k4, [1, 2, 3]);
-            assert.isUndefined(obj.id);
-            assert.isUndefined(obj.tags);
+            assert.undefined(obj.id);
+            assert.undefined(obj.tags);
         });
 
         it("includeId = true; tags = 'none'", async () => {
@@ -489,8 +489,8 @@ describe("Vault", () => {
             assert.equal(obj.entries.k2, 2);
             assert.equal(obj.entries.k3, true);
             assert.deepEqual(obj.entries.k4, [1, 2, 3]);
-            assert.isNumber(obj.id);
-            assert.isUndefined(obj.tags);
+            assert.number(obj.id);
+            assert.undefined(obj.tags);
         });
 
         it("includeId = true; tags = 'normal'", async () => {
@@ -506,7 +506,7 @@ describe("Vault", () => {
             assert.equal(obj.entries.k2, 2);
             assert.equal(obj.entries.k3, true);
             assert.deepEqual(obj.entries.k4, [1, 2, 3]);
-            assert.isNumber(obj.id);
+            assert.number(obj.id);
             assert.deepEqual(obj.tags, tags1);
         });
 
@@ -523,7 +523,7 @@ describe("Vault", () => {
             assert.equal(obj.entries.k2, 2);
             assert.equal(obj.entries.k3, true);
             assert.deepEqual(obj.entries.k4, [1, 2, 3]);
-            assert.isNumber(obj.id);
+            assert.number(obj.id);
             assert.deepEqual(obj.tags, tags1.map((t) => t.name));
         });
 
@@ -540,7 +540,7 @@ describe("Vault", () => {
             assert.equal(obj.entries.k2, 2);
             assert.equal(obj.entries.k3, true);
             assert.deepEqual(obj.entries.k4, [1, 2, 3]);
-            assert.isNumber(obj.id);
+            assert.number(obj.id);
             assert.sameMembers(obj.tags, [1, 2]);
         });
 
@@ -557,7 +557,7 @@ describe("Vault", () => {
             assert.equal(obj.entries.k2, 2);
             assert.equal(obj.entries.k3, true);
             assert.deepEqual(obj.entries.k4, [1, 2, 3]);
-            assert.isUndefined(obj.id);
+            assert.undefined(obj.id);
             assert.equal(obj.tags.length, 0);
         });
 
@@ -583,7 +583,7 @@ describe("Vault", () => {
                     c: false
                 }, type: "Object"
             });
-            assert.isUndefined(obj.id);
+            assert.undefined(obj.id);
             assert.equal(obj.tags.length, 0);
         });
     });
@@ -638,7 +638,7 @@ describe("Vault", () => {
 
             const obj = result.valuables;
 
-            assert.isUndefined(result.stats);
+            assert.undefined(result.stats);
 
             assert.equal(obj.length, 2);
 
@@ -647,7 +647,7 @@ describe("Vault", () => {
             assert.equal(obj[0].entries.k12, 2);
             assert.equal(obj[0].entries.k13, true);
             assert.deepEqual(obj[0].entries.k14, [1, 2, 3]);
-            assert.isNumber(obj[0].id);
+            assert.number(obj[0].id);
             assert.deepEqual(obj[0].tags, tags1);
 
             assert.equal(obj[1].name, "descriptor2");
@@ -655,7 +655,7 @@ describe("Vault", () => {
             assert.equal(obj[1].entries.k22, 2);
             assert.equal(obj[1].entries.k23, true);
             assert.deepEqual(obj[1].entries.k24, [1, 2, 3]);
-            assert.isNumber(obj[1].id);
+            assert.number(obj[1].id);
             assert.deepEqual(obj[1].tags, tags2);
         });
 
@@ -664,11 +664,11 @@ describe("Vault", () => {
                 includeStats: true
             });
 
-            assert.isUndefined(result.valuables);
-            assert.isNumber(result.stats.created);
-            assert.isNumber(result.stats.updated);
-            assert.isAbove(result.stats.updated, result.stats.created);
-            assert.isString(result.stats.location);
+            assert.undefined(result.valuables);
+            assert.number(result.stats.created);
+            assert.number(result.stats.updated);
+            assert.above(result.stats.updated, result.stats.created);
+            assert.string(result.stats.location);
         });
     });
 
@@ -773,7 +773,7 @@ describe("Vault", () => {
             await openVault();
             const val = await vInstance.create("val1");
             const slicedVal = vault.slice(val, "__");
-            assert.isTrue(is.vaultValuable(slicedVal));
+            assert.true(is.vaultValuable(slicedVal));
         });
 
         it("sliced valuable should be same as parent", async () => {
@@ -864,7 +864,7 @@ describe("Vault", () => {
             await val.set("__.key1", "adone");
 
             const slicedVal = vault.slice(val, "__");
-            assert.isTrue(await slicedVal.has("key1"));
+            assert.true(await slicedVal.has("key1"));
         });
 
         it("delete()", async () => {
@@ -873,11 +873,11 @@ describe("Vault", () => {
             await val.set("__.key1", "adone");
 
             const slicedVal = vault.slice(val, "__");
-            assert.isTrue(await val.has("__.key1"));
-            assert.isTrue(await slicedVal.has("key1"));
+            assert.true(await val.has("__.key1"));
+            assert.true(await slicedVal.has("key1"));
             await slicedVal.delete("key1");
-            assert.isFalse(await val.has("__.key1"));
-            assert.isFalse(await slicedVal.has("key1"));
+            assert.false(await val.has("__.key1"));
+            assert.false(await slicedVal.has("key1"));
         });
 
         it("fromJSON()", async () => {

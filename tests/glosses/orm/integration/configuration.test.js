@@ -44,7 +44,7 @@ describe(Support.getTestDialectTeaser("Configuration"), () => {
             if (dialect === "mssql") {
                 // NOTE: Travis seems to be having trouble with this test against the
                 //       AWS instance. Works perfectly fine on a local setup.
-                expect(true).to.be.true;
+                expect(true).to.be.true();
                 return;
             }
 

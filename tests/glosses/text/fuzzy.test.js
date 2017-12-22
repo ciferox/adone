@@ -58,7 +58,7 @@ describe("text", "Fuzzy", () => {
         });
         it('searching for the term "brwn"', () => {
             const result = fuzzy.search("brwn");
-            assert.isTrue(result.length > 3);
+            assert.true(result.length > 3);
             assert.deepEqual(result[0], {
                 title: "The DaVinci Code",
                 author: "Dan Brown"
@@ -103,7 +103,7 @@ describe("text", "Fuzzy", () => {
 
         it('searching for the term "Stve"', () => {
             const result = fuzzy.search("Stve");
-            assert.isTrue(result.length > 0);
+            assert.true(result.length > 0);
             assert.deepEqual(result[0], {
                 title: "The Lock Artist",
                 author: {
@@ -116,7 +116,7 @@ describe("text", "Fuzzy", () => {
         it("when searching for the term 106", () => {
             it("we get a list of exactly 1 item", () => {
                 const result = fuzzy.search("106");
-                assert.isTrue(result.length > 0);
+                assert.true(result.length > 0);
             });
 
             it("whose first value is found", () => {
@@ -160,7 +160,7 @@ describe("text", "Fuzzy", () => {
 
         it('searching for the term "Hmlt"', () => {
             const result = fuzzy.search("Hmlt");
-            assert.isTrue(result.length > 0);
+            assert.true(result.length > 0);
             assert.deepEqual(result[0], {
                 title: "The Lock Artist",
                 author: {
@@ -172,7 +172,7 @@ describe("text", "Fuzzy", () => {
 
         it('searching for the term "Stve"', () => {
             const result = fuzzy.search("Stve");
-            // assert.isTrue(result.length > 0)
+            // assert.true(result.length > 0)
             assert.equal(result.length, 0);
         });
     });
@@ -195,8 +195,8 @@ describe("text", "Fuzzy", () => {
             assert.equal(result.length, 2);
             assert.equal(result[0].item, 1);
             assert.equal(result[1].item, 2);
-            assert.isAbove(result[0].score, 0);
-            assert.isAbove(result[1].score, 0);
+            assert.above(result[0].score, 0);
+            assert.above(result[1].score, 0);
         });
     });
 
@@ -244,7 +244,7 @@ describe("text", "Fuzzy", () => {
             const result = fuzzy.search("Stve");
             assert.equal(result.length, 1);
             assert.equal(result[0].item, "0312696957");
-            assert.isAbove(result[0].score, 0);
+            assert.above(result[0].score, 0);
         });
     });
 
@@ -269,7 +269,7 @@ describe("text", "Fuzzy", () => {
             const result = fuzzy.search("Stve");
             assert.equal(result.length, 1);
             assert.equal(result[0].item, 2222);
-            assert.isAbove(result[0].score, 0);
+            assert.above(result[0].score, 0);
         });
     });
 
@@ -377,7 +377,7 @@ describe("text", "Fuzzy", () => {
         it('searching for the term "Stve"', () => {
             const result = fuzzy.search("Stve");
             assert.equal(result.length, 1);
-            assert.isString(result[0]);
+            assert.string(result[0]);
             assert.equal(result[0], "B");
         });
     });
@@ -419,7 +419,7 @@ describe("text", "Fuzzy", () => {
         it('searching for the term "Stve"', () => {
             const result = fuzzy.search("Stve");
             assert.equal(result.length, 1);
-            assert.isString(result[0]);
+            assert.string(result[0]);
             assert.equal(result[0], "B");
         });
     });
@@ -463,7 +463,7 @@ describe("text", "Fuzzy", () => {
 
         it('searching for the term "HTML5 HTML5 HTML5 HTML5 HTML5 HTML5 HTML5 HTML5 HTML5 HTML5 HTML5 HTML5 HTML5 HTML5 HTML5 HTML5"', () => {
             const result = fuzzy.search("HTML5 ");
-            assert.isTrue(Boolean(result.length));
+            assert.true(Boolean(result.length));
             assert.deepEqual(result[0], {
                 title: "HTML5",
                 author: "Remy Sharp"
@@ -547,7 +547,7 @@ describe("text", "Fuzzy", () => {
 
         it('searching for the term "wor"', () => {
             const result = fuzzy.search("wor");
-            assert.isTrue(Boolean(result.length));
+            assert.true(Boolean(result.length));
 
             const matches = result[0].matches;
             const a = matches[0].indices[0];

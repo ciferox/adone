@@ -38,7 +38,7 @@ describe("CRUD API", function () {
             const c = cursor.clone();
             expect(await c.next()).to.include({ a: 1 });
             expect(await c.next()).to.include({ a: 1 });
-            expect(await c.next()).to.be.null;
+            expect(await c.next()).to.be.null();
         }
 
         {
@@ -71,7 +71,7 @@ describe("CRUD API", function () {
             const r = await this.db.collection("t2_3").insertOne({ a: 1 }, { w: 1 });
             expect(r.result.n).to.be.equal(1);
             expect(r.insertedCount).to.be.equal(1);
-            expect(r.insertedId).to.exist;
+            expect(r.insertedId).to.exist();
         });
 
         specify("insertMany", async () => {
@@ -188,7 +188,7 @@ describe("CRUD API", function () {
             });
             expect(r.result.n).to.be.equal(1);
             expect(r.matchedCount).to.be.equal(0);
-            expect(r.upsertedId).to.exist;
+            expect(r.upsertedId).to.exist();
         });
 
         specify("replaceOne", async () => {
@@ -202,7 +202,7 @@ describe("CRUD API", function () {
             expect(r.result.n).to.be.equal(1);
             expect(r.matchedCount).to.be.equal(0);
             expect(r.ops).to.have.lengthOf(1);
-            expect(r.upsertedId).to.exist;
+            expect(r.upsertedId).to.exist();
             r = await this.db.collection("t3_3").replaceOne({
                 a: 2
             }, {
@@ -211,10 +211,10 @@ describe("CRUD API", function () {
                 upsert: true
             });
             expect(r.result.n).to.be.equal(1);
-            expect(r.result.upserted).not.to.exist;
+            expect(r.result.upserted).not.to.exist();
             expect(r.ops).to.have.lengthOf(1);
             expect(r.matchedCount).to.be.equal(1);
-            expect(r.upsertedId).not.to.exist;
+            expect(r.upsertedId).not.to.exist();
         });
 
         specify("updateMany", async () => {
@@ -230,7 +230,7 @@ describe("CRUD API", function () {
             });
             expect(r.result.n).to.be.equal(2);
             expect(r.matchedCount).to.be.equal(2);
-            expect(r.upsertedId).not.to.exist;
+            expect(r.upsertedId).not.to.exist();
 
             r = await this.db.collection("t3_4").updateMany({
                 c: 1
@@ -314,22 +314,22 @@ describe("CRUD API", function () {
     it("should correctly execute crud operations with w:0", async () => {
         const col = this.db.collection("shouldCorrectlyExecuteInsertOneWithW0");
         let r = await col.insertOne({ a: 1 }, { w: 0 });
-        expect(r.result.ok).to.be.ok;
+        expect(r.result.ok).to.be.ok();
         r = await col.insertMany([{ a: 1 }], { w: 0 });
-        expect(r.result.ok).to.be.ok;
+        expect(r.result.ok).to.be.ok();
         r = await col.updateOne({ a: 1 }, { $set: { b: 1 } }, { w: 0 });
-        expect(r.result.ok).to.be.ok;
+        expect(r.result.ok).to.be.ok();
         r = await col.updateMany({ a: 1 }, { $set: { b: 1 } }, { w: 0 });
-        expect(r.result.ok).to.be.ok;
+        expect(r.result.ok).to.be.ok();
         r = await col.deleteOne({ a: 1 }, { w: 0 });
-        expect(r.result.ok).to.be.ok;
+        expect(r.result.ok).to.be.ok();
         r = await col.deleteMany({ a: 1 }, { w: 0 });
-        expect(r.result.ok).to.be.ok;
+        expect(r.result.ok).to.be.ok();
     });
 
     it("should correctly execute updateOne operations with w:0 and upsert", async () => {
         const r = await this.db.collection("try").updateOne({ _id: 1 }, { $set: { x: 1 } }, { upsert: true, w: 0 });
-        expect(r).to.exist;
+        expect(r).to.exist();
     });
 
     describe("query", () => {
@@ -343,9 +343,9 @@ describe("CRUD API", function () {
         it("should pass options to the builder", () => {
             const t = this.db.collection("t");
             const builder1 = t.query();
-            expect(builder1.options.tailable).to.be.undefined;
+            expect(builder1.options.tailable).to.be.undefined();
             const builder2 = t.query({ tailable: true });
-            expect(builder2.options.tailable).to.be.true;
+            expect(builder2.options.tailable).to.be.true();
         });
     });
 });

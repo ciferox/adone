@@ -115,8 +115,8 @@ describe("net", "mail", "SMTP Transport Tests", function () {
 
         it("Should expose version number", () => {
             const client = new SMTPTransport();
-            expect(client.name).to.exist;
-            expect(client.version).to.exist;
+            expect(client.name).to.exist();
+            expect(client.version).to.exist();
         });
 
         it("Should detect wellknown data", () => {
@@ -126,7 +126,7 @@ describe("net", "mail", "SMTP Transport Tests", function () {
             });
             expect(client.options.host).to.equal("smtp.gmail.com");
             expect(client.options.port).to.equal(465);
-            expect(client.options.secure).to.be.true;
+            expect(client.options.secure).to.be.true();
         });
 
         it("Should fail envelope", (done) => {
@@ -190,7 +190,7 @@ describe("net", "mail", "SMTP Transport Tests", function () {
                     to: "test@valid.recipient"
                 }, message)
             }, (err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 done();
             });
         });
@@ -222,7 +222,7 @@ describe("net", "mail", "SMTP Transport Tests", function () {
                     )
                 },
                 (err) => {
-                    expect(err).to.exist;
+                    expect(err).to.exist();
                     done();
                 }
             );
@@ -308,7 +308,7 @@ describe("net", "mail", "SMTP Transport Tests", function () {
                     to: "test@valid.recipient"
                 }, message)
             }, (err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 done();
             });
         });
@@ -320,8 +320,8 @@ describe("net", "mail", "SMTP Transport Tests", function () {
             });
 
             client.verify((err, success) => {
-                expect(err).to.not.exist;
-                expect(success).to.be.true;
+                expect(err).to.not.exist();
+                expect(success).to.be.true();
                 done();
             });
         });
@@ -333,7 +333,7 @@ describe("net", "mail", "SMTP Transport Tests", function () {
             });
 
             client.verify((err) => {
-                expect(err).to.exist;
+                expect(err).to.exist();
                 done();
             });
         });
@@ -376,7 +376,7 @@ describe("net", "mail", "SMTP Transport Tests", function () {
                     to: "test@valid.recipient"
                 }, message)
             }, (err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 done();
             });
         });

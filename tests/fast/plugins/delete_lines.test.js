@@ -32,7 +32,7 @@ describe("fast", "transform", "deleteLines", () => {
         await fast.src(srcPath).deleteLines([/H[ae]llo/, "Scotland"]).dest(todir.path());
 
         const file = todir.getFile("test.txt");
-        assert.isOk(await file.exists());
+        assert.ok(await file.exists());
         assert.equal(await file.contents(), "Freedom!!!\n");
     });
 

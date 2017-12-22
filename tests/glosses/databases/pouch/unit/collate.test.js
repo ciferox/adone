@@ -155,15 +155,15 @@ describe("database", "pouch", "collate", () => {
         assert.equal(collate(b.object, a.object), 1);
         assert.equal(collate(c.object, b.object), -1);
         assert.equal(collate(b.object, c.object), 1);
-        assert.isBelow(collate(c.object, a.object), 0);
-        assert.isAbove(collate(a.object, c.object), 0);
+        assert.below(collate(c.object, a.object), 0);
+        assert.above(collate(a.object, c.object), 0);
     });
     it("objects differing only in num of keys", () => {
         assert.equal(collate({ 1: 1 }, { 1: 1, 2: 2 }), -1);
         assert.equal(collate({ 1: 1, 2: 2 }, { 1: 1 }), 1);
     });
     it("compare number to null", () => {
-        assert.isAbove(collate(a.number, null), 0);
+        assert.above(collate(a.number, null), 0);
     });
     it("compare number to function", () => {
         assert.notEqual(collate(a.number, () => { }), collate(a.number, () => { }));

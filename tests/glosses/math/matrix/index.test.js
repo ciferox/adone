@@ -22,13 +22,13 @@ describe("math", "matrix", () => {
             r2 = matrix.equals(1.0 + matrix.EPSILON / 2, 1.0);
         });
         it("should return false for different numbers", () => {
-            assert.isFalse(r0);
+            assert.false(r0);
         });
         it("should return true for the same number", () => {
-            assert.isTrue(r1);
+            assert.true(r1);
         });
         it("should return true for numbers that are close", () => {
-            assert.isTrue(r2);
+            assert.true(r2);
         });
     });
 });

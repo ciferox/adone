@@ -161,12 +161,12 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
             const user = this.User.build();
             return user.save().then(() => {
                 user.set("validateTest", 5);
-                expect(user.changed("validateTest")).to.be.ok;
+                expect(user.changed("validateTest")).to.be.ok();
                 return user.update({
                     validateCustom: "1"
                 });
             }).then(() => {
-                expect(user.changed("validateTest")).to.be.ok;
+                expect(user.changed("validateTest")).to.be.ok();
                 expect(user.validateTest).to.be.equal(5);
             }).then(() => {
                 return user.reload();
@@ -183,7 +183,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                 return user.reload();
             }).then(() => {
                 expect(user.validateSideAffected).to.be.equal(10);
-                expect(user.validateSideEffect).not.to.be.ok;
+                expect(user.validateSideEffect).not.to.be.ok();
             });
         });
 
@@ -357,7 +357,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
             return this.User.create({ username: "user" }).then((user) => {
                 return user.update({ username: "person", foo: "bar" }).then((user) => {
                     expect(user.username).to.equal("person");
-                    expect(user.foo).not.to.exist;
+                    expect(user.foo).not.to.exist();
                 });
             });
         });
@@ -401,24 +401,24 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                 return Download.create({
                     startedAt: new Date()
                 }).then((download) => {
-                    expect(download.startedAt instanceof Date).to.be.true;
-                    expect(download.canceledAt).to.not.be.ok;
-                    expect(download.finishedAt).to.not.be.ok;
+                    expect(download.startedAt instanceof Date).to.be.true();
+                    expect(download.canceledAt).to.not.be.ok();
+                    expect(download.finishedAt).to.not.be.ok();
 
                     return download.update({
                         canceledAt: new Date()
                     }).then((download) => {
-                        expect(download.startedAt instanceof Date).to.be.true;
-                        expect(download.canceledAt instanceof Date).to.be.true;
-                        expect(download.finishedAt).to.not.be.ok;
+                        expect(download.startedAt instanceof Date).to.be.true();
+                        expect(download.canceledAt instanceof Date).to.be.true();
+                        expect(download.finishedAt).to.not.be.ok();
 
                         return Download.findAll({
                             where: { finishedAt: null }
                         }).then((downloads) => {
                             downloads.forEach((download) => {
-                                expect(download.startedAt instanceof Date).to.be.true;
-                                expect(download.canceledAt instanceof Date).to.be.true;
-                                expect(download.finishedAt).to.not.be.ok;
+                                expect(download.startedAt instanceof Date).to.be.true();
+                                expect(download.canceledAt instanceof Date).to.be.true();
+                                expect(download.finishedAt).to.not.be.ok();
                             });
                         });
                     });
@@ -431,7 +431,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
             return this.User.create({}).then((user) => {
                 return user.update({ username: "yolo" }, { logging: s }).then(() => {
-                    expect(s.called).to.be.ok;
+                    expect(s.called).to.be.ok();
                 });
             });
         });

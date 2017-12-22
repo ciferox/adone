@@ -27,7 +27,7 @@ describe("fast", "transform", "sourcemaps", "integration", () => {
             .sourcemapsInit()
             .sourcemapsWrite()
             .map((data) => {
-                expect(data.sourceMap).to.be.ok;
+                expect(data.sourceMap).to.be.ok();
                 expect(data.contents.toString()).to.be.equal(
                     `${sourceContent}\n//# ${"sourceMappingURL"}=${base64JSON(data.sourceMap)}\n`,
                     "file should be sourcemapped"
@@ -40,8 +40,8 @@ describe("fast", "transform", "sourcemaps", "integration", () => {
             .sourcemapsInit({ loadMaps: true })
             .sourcemapsWrite()
             .map((data) => {
-                expect(data.sourceMap).to.be.ok;
-                expect(Boolean(data.sourceMap.preExistingComment)).to.be.true;
+                expect(data.sourceMap).to.be.ok();
+                expect(Boolean(data.sourceMap.preExistingComment)).to.be.true();
                 expect(data.contents.toString()).to.be.equal(
                     data.contents.toString(),
                     `${sourceContent}\n//# ${"sourceMappingURL"}=data:application/json;charset=utf8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiIiwic291cmNlcyI6WyJoZWxsb3dvcmxkLmpzIl0sInNvdXJjZXNDb250ZW50IjpbIid1c2Ugc3RyaWN0JztcblxuZnVuY3Rpb24gaGVsbG9Xb3JsZCgpIHtcbiAgICBjb25zb2xlLmxvZygnSGVsbG8gd29ybGQhJyk7XG59XG4iXSwiZmlsZSI6ImhlbGxvd29ybGQuanMifQ==`,
@@ -63,7 +63,7 @@ describe("fast", "transform", "sourcemaps", "integration", () => {
             .dest(root.getDirectory("to").path(), { produceFiles: true })
             .map((data) => {
                 if (/index\.js$/.test(data.path)) {
-                    expect(/\/\/# sourceMappingURL=index.js.map/.test(data.contents.toString())).to.be.true;
+                    expect(/\/\/# sourceMappingURL=index.js.map/.test(data.contents.toString())).to.be.true();
                     expect(data.contents.toString().match(/\/\/# sourceMappingURL/g).length).to.be.equal(1);
                 }
             });
@@ -83,7 +83,7 @@ describe("fast", "transform", "sourcemaps", "integration", () => {
             .dest(root.getDirectory("to").path(), { produceFiles: true })
             .map((data) => {
                 if (/index\.js$/.test(data.path)) {
-                    expect(/\/\/# sourceMappingURL=data:application.*/.test(data.contents.toString())).to.be.ok;
+                    expect(/\/\/# sourceMappingURL=data:application.*/.test(data.contents.toString())).to.be.ok();
                     expect(data.contents.toString().match(/\/\/# sourceMappingURL/g).length).to.be.equal(1);
                 }
             });
@@ -103,7 +103,7 @@ describe("fast", "transform", "sourcemaps", "integration", () => {
             .dest(root.getDirectory("to").path(), { produceFiles: true })
             .map((data) => {
                 if (/index\.js$/.test(data.path)) {
-                    expect(/\/\/# sourceMappingURL=index.js.map/.test(data.contents.toString())).to.be.ok;
+                    expect(/\/\/# sourceMappingURL=index.js.map/.test(data.contents.toString())).to.be.ok();
                     expect(data.contents.toString().match(/\/\/# sourceMappingURL/g).length).to.be.equal(1);
                 }
             });
@@ -122,7 +122,7 @@ describe("fast", "transform", "sourcemaps", "integration", () => {
             .dest(root.getDirectory("to").path(), { produceFiles: true })
             .map((data) => {
                 if (/index\.js$/.test(data.path)) {
-                    expect(/\/\/# sourceMappingURL=data:application.*/.test(data.contents.toString())).to.be.true;
+                    expect(/\/\/# sourceMappingURL=data:application.*/.test(data.contents.toString())).to.be.true();
                     expect(data.contents.toString().match(/\/\/# sourceMappingURL/g).length).to.be.equal(1);
                 }
             });
@@ -147,7 +147,7 @@ describe("fast", "transform", "sourcemaps", "integration", () => {
             .dest(root.getDirectory("to").path(), { produceFiles: true })
             .map((data) => {
                 if (/index\.js$/.test(data.path)) {
-                    expect(/\/\/# sourceMappingURL=index.js.map/.test(data.contents.toString())).to.be.true;
+                    expect(/\/\/# sourceMappingURL=index.js.map/.test(data.contents.toString())).to.be.true();
                     expect(data.contents.toString().match(/\/\/# sourceMappingURL/g).length).to.be.equal(1);
                 }
             });

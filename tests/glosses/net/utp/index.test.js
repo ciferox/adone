@@ -19,7 +19,7 @@ describe("net", "utp", () => {
                 socket.on("connect", () => {
                     socket.destroy();
                     server.close();
-                    assert.isOk(connected, "connected successfully");
+                    assert.ok(connected, "connected successfully");
                     done();
                 });
 
@@ -41,7 +41,7 @@ describe("net", "utp", () => {
                 socket.on("connect", () => {
                     socket.destroy();
                     server.close();
-                    assert.isOk(connected, "connected successfully");
+                    assert.ok(connected, "connected successfully");
                     done();
                 });
 
@@ -223,8 +223,8 @@ describe("net", "utp", () => {
                     socket1.destroy();
                     socket2.destroy();
                     server.close();
-                    assert.isOk(gotA);
-                    assert.isOk(gotB);
+                    assert.ok(gotA);
+                    assert.ok(gotB);
                     assert.deepEqual(count, 2);
                     dn();
                 };
@@ -254,8 +254,8 @@ describe("net", "utp", () => {
 
             const done = function () {
                 server.close();
-                assert.isOk(serverClosed);
-                assert.isOk(clientClosed);
+                assert.ok(serverClosed);
+                assert.ok(clientClosed);
                 dn();
             };
 
@@ -342,8 +342,8 @@ describe("net", "utp", () => {
                     return;
                 }
                 server.close();
-                assert.isOk(clientClosed);
-                assert.isOk(serverClosed);
+                assert.ok(clientClosed);
+                assert.ok(serverClosed);
                 dn();
             };
 
@@ -456,7 +456,7 @@ describe("net", "utp", () => {
                     socket.close();
                     client.destroy();
                     assert.deepEqual(data, Buffer.from("hi"));
-                    assert.isOk(gotClient);
+                    assert.ok(gotClient);
                     done();
                 });
             });
@@ -535,7 +535,7 @@ describe("net", "utp", () => {
             let inc = 0;
             const server = utp.createServer((socket) => {
                 inc++;
-                assert.isOk(inc < 3);
+                assert.ok(inc < 3);
                 socket.write("hi");
             });
 

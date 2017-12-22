@@ -19,7 +19,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
 
             it("does not call the log method of the logger", function () {
                 this.sequelize.log();
-                expect(this.spy.calledOnce).to.be.false;
+                expect(this.spy.calledOnce).to.be.false();
             });
         });
 
@@ -31,26 +31,26 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
             describe("called with no arguments", () => {
                 it("calls the log method", function () {
                     this.sequelize.log();
-                    expect(this.spy.calledOnce).to.be.true;
+                    expect(this.spy.calledOnce).to.be.true();
                 });
 
                 it("logs an empty string as info event", function () {
                     this.sequelize.log("");
-                    expect(this.spy.calledOnce).to.be.true;
+                    expect(this.spy.calledOnce).to.be.true();
                 });
             });
 
             describe("called with one argument", () => {
                 it("logs the passed string as info event", function () {
                     this.sequelize.log("my message");
-                    expect(this.spy.withArgs("my message").calledOnce).to.be.true;
+                    expect(this.spy.withArgs("my message").calledOnce).to.be.true();
                 });
             });
 
             describe("called with more than two arguments", () => {
                 it("passes the arguments to the logger", function () {
                     this.sequelize.log("error", "my message", 1, { a: 1 });
-                    expect(this.spy.withArgs("error", "my message", 1, { a: 1 }).calledOnce).to.be.true;
+                    expect(this.spy.withArgs("error", "my message", 1, { a: 1 }).calledOnce).to.be.true();
                 });
             });
         });
@@ -63,7 +63,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
 
             it("calls the custom logger method", function () {
                 this.sequelize.log("om nom");
-                expect(this.spy.calledOnce).to.be.true;
+                expect(this.spy.calledOnce).to.be.true();
             });
 
             it("calls the custom logger method with options", function () {
@@ -71,7 +71,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                 const timeTaken = 5;
                 const options = { correlationId: "ABC001" };
                 this.sequelize.log(message, timeTaken, options);
-                expect(this.spy.withArgs(message, timeTaken, options).calledOnce).to.be.true;
+                expect(this.spy.withArgs(message, timeTaken, options).calledOnce).to.be.true();
             });
         });
     });

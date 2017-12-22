@@ -19,9 +19,9 @@ describe("fast", "transform", "flatten", () => {
         it("should strip relative path without options", async () => {
             const stream = new Stream([fileInstance]).flatten();
             const [newFile] = await stream;
-            assert.isOk(newFile);
-            assert.isOk(newFile.path);
-            assert.isOk(newFile.relative);
+            assert.ok(newFile);
+            assert.ok(newFile.path);
+            assert.ok(newFile.relative);
 
             assert.equal(newFile.relative, "app.css");
         });
@@ -29,9 +29,9 @@ describe("fast", "transform", "flatten", () => {
         it("should replace relative path with option path", async () => {
             const stream = new Stream([fileInstance]).flatten({ newPath: P("new/path") });
             const [newFile] = await stream;
-            assert.isOk(newFile);
-            assert.isOk(newFile.path);
-            assert.isOk(newFile.relative);
+            assert.ok(newFile);
+            assert.ok(newFile.path);
+            assert.ok(newFile.relative);
 
             assert.equal(newFile.relative, P("new/path/app.css"));
         });
@@ -54,9 +54,9 @@ describe("fast", "transform", "flatten", () => {
 
             it("should ignore directories", async () => {
                 const [newFile] = await fast.src(path.join(fixtureDir.path(), "/test_dir/**/*.css")).flatten();
-                assert.isOk(newFile);
-                assert.isOk(newFile.path);
-                assert.isOk(newFile.relative);
+                assert.ok(newFile);
+                assert.ok(newFile.path);
+                assert.ok(newFile.relative);
 
                 assert.equal(newFile.relative, "test.css");
             });
@@ -65,9 +65,9 @@ describe("fast", "transform", "flatten", () => {
         it("should strip relative path at the specified depth if depth option is passed", async () => {
             fileInstance.path = P("/some/project/src/one/two/three/four/app.css");
             const [newFile] = await new Stream([fileInstance]).flatten({ includeParents: 2 });
-            assert.isOk(newFile);
-            assert.isOk(newFile.path);
-            assert.isOk(newFile.relative);
+            assert.ok(newFile);
+            assert.ok(newFile.path);
+            assert.ok(newFile.relative);
 
             assert.equal(newFile.relative, P("one/two/app.css"));
         });
@@ -75,9 +75,9 @@ describe("fast", "transform", "flatten", () => {
         it("should leave path from the end if depth option is passed as negative number", async () => {
             fileInstance.path = P("/some/project/src/one/two/three/four/app.css");
             const [newFile] = await new Stream([fileInstance]).flatten({ includeParents: -2 });
-            assert.isOk(newFile);
-            assert.isOk(newFile.path);
-            assert.isOk(newFile.relative);
+            assert.ok(newFile);
+            assert.ok(newFile.path);
+            assert.ok(newFile.relative);
 
             assert.equal(newFile.relative, P("three/four/app.css"));
         });
@@ -85,9 +85,9 @@ describe("fast", "transform", "flatten", () => {
         it("should make no changes if the absolute depth option is greater than the tree depth", async () => {
             fileInstance.path = P("/some/project/src/one/two/three/four/app.css");
             const [newFile] = await new Stream([fileInstance]).flatten({ includeParents: 8 });
-            assert.isOk(newFile);
-            assert.isOk(newFile.path);
-            assert.isOk(newFile.relative);
+            assert.ok(newFile);
+            assert.ok(newFile.path);
+            assert.ok(newFile.relative);
 
             assert.equal(newFile.relative, P("one/two/three/four/app.css"));
         });

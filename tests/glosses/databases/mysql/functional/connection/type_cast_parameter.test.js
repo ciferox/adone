@@ -33,7 +33,7 @@ describe("database", "mysql", "functional", "connection", "type cast parameter",
             sql: 'select "foobar" as foo',
             typeCast: false
         });
-        expect(is.buffer(rows[0].foo)).to.be.true;
+        expect(is.buffer(rows[0].foo)).to.be.true();
         expect(rows[0].foo.toString()).to.be.equal("foobar");
     });
 });

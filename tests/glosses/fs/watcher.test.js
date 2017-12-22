@@ -149,7 +149,7 @@ describe("fs", "watcher", function watcherTests() {
                     add.waitForCall()
                 ]);
                 expect(meta.args[0]).to.be.equal(testFile.path());
-                expect(meta.args[1]).to.be.ok; // stats
+                expect(meta.args[1]).to.be.ok(); // stats
                 expect(rawSpy.callCount).not.to.be.equal(0);
             });
 
@@ -167,7 +167,7 @@ describe("fs", "watcher", function watcherTests() {
                     addDir.waitForCall()
                 ]);
                 expect(meta.args[0]).to.be.equal(dir.path());
-                expect(meta.args[1]).to.be.ok; // stats
+                expect(meta.args[1]).to.be.ok(); // stats
                 expect(rawSpy.callCount).not.to.be.equal(0);
             });
 
@@ -185,7 +185,7 @@ describe("fs", "watcher", function watcherTests() {
                     change.waitForCall()
                 ]);
                 expect(meta.args[0]).to.be.equal(file.path());
-                expect(meta.args[1]).to.be.ok; // stats
+                expect(meta.args[1]).to.be.ok(); // stats
                 expect(rawSpy.callCount).not.to.be.equal(0);
                 expect(change.callCount).to.be.equal(1);
             });
@@ -207,7 +207,7 @@ describe("fs", "watcher", function watcherTests() {
                 ]);
 
                 expect(meta.args[0]).to.be.equal(file.path());
-                expect(meta.args[1]).not.to.be.ok; // no stats
+                expect(meta.args[1]).not.to.be.ok(); // no stats
                 expect(rawSpy.callCount).not.be.equal(0);
                 expect(unlink.callCount).to.be.equal(1);
             });
@@ -225,7 +225,7 @@ describe("fs", "watcher", function watcherTests() {
                     unlinkDir.waitForCall()
                 ]);
                 expect(meta.args[0]).to.be.equal(testDir.path());
-                expect(meta.args[1]).not.to.be.ok; // no stats
+                expect(meta.args[1]).not.to.be.ok(); // no stats
                 expect(rawSpy.callCount).not.to.be.equal(0);
                 expect(unlinkDir.callCount).to.be.equal(1);
             });
@@ -250,10 +250,10 @@ describe("fs", "watcher", function watcherTests() {
                     add.waitForCall()
                 ]);
                 expect(unlinkMeta.args[0]).to.be.equal(testPath);
-                expect(unlinkMeta.args[1]).not.to.be.ok; // no stats
+                expect(unlinkMeta.args[1]).not.to.be.ok(); // no stats
                 expect(add.callCount).to.be.equal(1);
                 expect(addMeta.args[0]).to.be.equal(newFile.path());
-                expect(addMeta.args[1]).to.be.ok; // stats
+                expect(addMeta.args[1]).to.be.ok(); // stats
                 expect(rawSpy.callCount).not.to.be.equal(0);
                 if (!osXFsWatch) {
                     expect(unlink.callCount).to.be.equal(1);
@@ -335,7 +335,7 @@ describe("fs", "watcher", function watcherTests() {
                 ]);
                 expect(add.callCount).to.be.equal(1);
                 expect(add.getCall(0).args[0]).to.be.equal(testFile.path());
-                expect(add.getCall(0).args[1]).to.be.ok; // stats
+                expect(add.getCall(0).args[1]).to.be.ok(); // stats
                 expect(rawSpy.callCount).not.to.be.equal(0);
             });
 
@@ -1550,7 +1550,7 @@ describe("fs", "watcher", function watcherTests() {
                         addDir.waitForArgs("subdir-renamed")
                     ]);
                     expect(addDir.callCount).to.be.equal(1);
-                    expect(addDir.getCall(0).args[1]).to.be.ok; // stats
+                    expect(addDir.getCall(0).args[1]).to.be.ok(); // stats
                 });
 
                 it("should allow separate watchers to have different cwds", async () => {

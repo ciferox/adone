@@ -69,7 +69,8 @@ describe("assertion", "expect", () => {
                 }, "Invalid property: pizza", true);
             });
 
-            it("throws when invalid property follows property assertion", () => {
+            // we have no property assertions ?
+            it.todo("throws when invalid property follows property assertion", () => {
                 err(() => {
                     expect(42).ok.pizza;
                 }, "Invalid property: pizza", true);
@@ -154,7 +155,8 @@ describe("assertion", "expect", () => {
                 }).to.not.throw();
             });
 
-            it("doesn't throw when `.length` follows property assertion", () => {
+            // we have no property assertions?
+            it.todo("doesn't throw when `.length` follows property assertion", () => {
                 expect(() => {
                     expect("foo").ok.length;
                 }).to.not.throw();
@@ -247,70 +249,70 @@ describe("assertion", "expect", () => {
     });
 
     it("true", () => {
-        expect(true).to.be.true;
-        expect(false).to.not.be.true;
-        expect(1).to.not.be.true;
+        expect(true).to.be.true();
+        expect(false).to.not.be.true();
+        expect(1).to.not.be.true();
 
         err(() => {
-            expect("test", "blah").to.be.true;
+            expect("test", "blah").to.be.true();
         }, "blah: expected 'test' to be true");
     });
 
     it("ok", () => {
-        expect(true).to.be.ok;
-        expect(false).to.not.be.ok;
-        expect(1).to.be.ok;
-        expect(0).to.not.be.ok;
+        expect(true).to.be.ok();
+        expect(false).to.not.be.ok();
+        expect(1).to.be.ok();
+        expect(0).to.not.be.ok();
 
         err(() => {
-            expect("", "blah").to.be.ok;
+            expect("", "blah").to.be.ok();
         }, "blah: expected '' to be truthy");
 
         err(() => {
-            expect("test").to.not.be.ok;
+            expect("test").to.not.be.ok();
         }, "expected 'test' to be falsy");
     });
 
     it("false", () => {
-        expect(false).to.be.false;
-        expect(true).to.not.be.false;
-        expect(0).to.not.be.false;
+        expect(false).to.be.false();
+        expect(true).to.not.be.false();
+        expect(0).to.not.be.false();
 
         err(() => {
-            expect("", "blah").to.be.false;
+            expect("", "blah").to.be.false();
         }, "blah: expected '' to be false");
     });
 
     it("null", () => {
-        expect(null).to.be.null;
-        expect(false).to.not.be.null;
+        expect(null).to.be.null();
+        expect(false).to.not.be.null();
 
         err(() => {
-            expect("", "blah").to.be.null;
+            expect("", "blah").to.be.null();
         }, "blah: expected '' to be null");
 
     });
 
     it("undefined", () => {
-        expect(undefined).to.be.undefined;
-        expect(null).to.not.be.undefined;
+        expect(undefined).to.be.undefined();
+        expect(null).to.not.be.undefined();
 
         err(() => {
-            expect("", "blah").to.be.undefined;
+            expect("", "blah").to.be.undefined();
         }, "blah: expected '' to be undefined");
     });
 
     it("exist", () => {
         let foo = "bar",
             bar;
-        expect(foo).to.exist;
-        expect(bar).to.not.exist;
-        expect(0).to.exist;
-        expect(false).to.exist;
-        expect("").to.exist;
+        expect(foo).to.exist();
+        expect(bar).to.not.exist();
+        expect(0).to.exist();
+        expect(false).to.exist();
+        expect("").to.exist();
 
         err(() => {
-            expect(bar, "blah").to.exist;
+            expect(bar, "blah").to.exist();
         }, "blah: expected undefined to exist");
 
         err(() => {
@@ -322,13 +324,13 @@ describe("assertion", "expect", () => {
         const args = (function () {
             return arguments;
         })(1, 2, 3);
-        expect(args).to.be.arguments;
-        expect([]).to.not.be.arguments;
-        expect(args).to.be.an("arguments").and.be.arguments;
-        expect([]).to.be.an("array").and.not.be.Arguments;
+        expect(args).to.be.arguments();
+        expect([]).to.not.be.arguments();
+        expect(args).to.be.an("arguments").and.be.arguments();
+        expect([]).to.be.an("array").and.not.be.Arguments();
 
         err(() => {
-            expect([], "blah").to.be.arguments;
+            expect([], "blah").to.be.arguments();
         }, "blah: expected [] to be arguments but got Array");
     });
 
@@ -1186,223 +1188,223 @@ describe("assertion", "expect", () => {
         function FakeArgs() { }
         FakeArgs.prototype.length = 0;
 
-        expect("").to.be.empty;
-        expect("foo").not.to.be.empty;
-        expect([]).to.be.empty;
-        expect(["foo"]).not.to.be.empty;
-        expect(new FakeArgs()).to.be.empty;
-        expect({ arguments: 0 }).not.to.be.empty;
-        expect({}).to.be.empty;
-        expect({ foo: "bar" }).not.to.be.empty;
+        expect("").to.be.empty();
+        expect("foo").not.to.be.empty();
+        expect([]).to.be.empty();
+        expect(["foo"]).not.to.be.empty();
+        expect(new FakeArgs()).to.be.empty();
+        expect({ arguments: 0 }).not.to.be.empty();
+        expect({}).to.be.empty();
+        expect({ foo: "bar" }).not.to.be.empty();
 
         if (is.function(WeakMap)) {
             err(() => {
-                expect(new WeakMap(), "blah").not.to.be.empty;
+                expect(new WeakMap(), "blah").not.to.be.empty();
             }, "blah: .empty was passed a weak collection");
         }
 
         if (is.function(WeakSet)) {
             err(() => {
-                expect(new WeakSet(), "blah").not.to.be.empty;
+                expect(new WeakSet(), "blah").not.to.be.empty();
             }, "blah: .empty was passed a weak collection");
         }
 
         if (is.function(Map)) {
-            expect(new Map()).to.be.empty;
+            expect(new Map()).to.be.empty();
 
             // Not using Map constructor args because not supported in IE 11.
             let map = new Map();
             map.set("a", 1);
-            expect(map).not.to.be.empty;
+            expect(map).not.to.be.empty();
 
             err(() => {
-                expect(new Map()).not.to.be.empty;
+                expect(new Map()).not.to.be.empty();
             }, "expected {} not to be empty");
 
             map = new Map();
             map.key = "val";
-            expect(map).to.be.empty;
+            expect(map).to.be.empty();
 
             err(() => {
-                expect(map).not.to.be.empty;
+                expect(map).not.to.be.empty();
             }, "expected { key: 'val' } not to be empty");
         }
 
         if (is.function(Set)) {
-            expect(new Set()).to.be.empty;
+            expect(new Set()).to.be.empty();
 
             // Not using Set constructor args because not supported in IE 11.
             let set = new Set();
             set.add(1);
-            expect(set).not.to.be.empty;
+            expect(set).not.to.be.empty();
 
             err(() => {
-                expect(new Set()).not.to.be.empty;
+                expect(new Set()).not.to.be.empty();
             }, "expected {} not to be empty");
 
             set = new Set();
             set.key = "val";
-            expect(set).to.be.empty;
+            expect(set).to.be.empty();
 
             err(() => {
-                expect(set).not.to.be.empty;
+                expect(set).not.to.be.empty();
             }, "expected { key: 'val' } not to be empty");
         }
 
         err(() => {
-            expect("", "blah").not.to.be.empty;
+            expect("", "blah").not.to.be.empty();
         }, "blah: expected \'\' not to be empty");
 
         err(() => {
-            expect("foo").to.be.empty;
+            expect("foo").to.be.empty();
         }, "expected \'foo\' to be empty");
 
         err(() => {
-            expect([]).not.to.be.empty;
+            expect([]).not.to.be.empty();
         }, "expected [] not to be empty");
 
         err(() => {
-            expect(["foo"]).to.be.empty;
+            expect(["foo"]).to.be.empty();
         }, "expected [ \'foo\' ] to be empty");
 
         err(() => {
-            expect(new FakeArgs()).not.to.be.empty;
+            expect(new FakeArgs()).not.to.be.empty();
         }, "expected { length: 0 } not to be empty");
 
         err(() => {
-            expect({ arguments: 0 }).to.be.empty;
+            expect({ arguments: 0 }).to.be.empty();
         }, "expected { arguments: 0 } to be empty");
 
         err(() => {
-            expect({}).not.to.be.empty;
+            expect({}).not.to.be.empty();
         }, "expected {} not to be empty");
 
         err(() => {
-            expect({ foo: "bar" }).to.be.empty;
+            expect({ foo: "bar" }).to.be.empty();
         }, "expected { foo: \'bar\' } to be empty");
 
         err(() => {
-            expect(null, "blah").to.be.empty;
+            expect(null, "blah").to.be.empty();
         }, "blah: .empty was passed non-string primitive null");
 
         err(() => {
-            expect(undefined).to.be.empty;
+            expect(undefined).to.be.empty();
         }, ".empty was passed non-string primitive undefined");
 
         err(() => {
-            expect().to.be.empty;
+            expect().to.be.empty();
         }, ".empty was passed non-string primitive undefined");
 
         err(() => {
-            expect(null).to.not.be.empty;
+            expect(null).to.not.be.empty();
         }, ".empty was passed non-string primitive null");
 
         err(() => {
-            expect(undefined).to.not.be.empty;
+            expect(undefined).to.not.be.empty();
         }, ".empty was passed non-string primitive undefined");
 
         err(() => {
-            expect().to.not.be.empty;
+            expect().to.not.be.empty();
         }, ".empty was passed non-string primitive undefined");
 
         err(() => {
-            expect(0).to.be.empty;
+            expect(0).to.be.empty();
         }, ".empty was passed non-string primitive 0");
 
         err(() => {
-            expect(1).to.be.empty;
+            expect(1).to.be.empty();
         }, ".empty was passed non-string primitive 1");
 
         err(() => {
-            expect(true).to.be.empty;
+            expect(true).to.be.empty();
         }, ".empty was passed non-string primitive true");
 
         err(() => {
-            expect(false).to.be.empty;
+            expect(false).to.be.empty();
         }, ".empty was passed non-string primitive false");
 
         if (!is.undefined(Symbol)) {
             err(() => {
-                expect(Symbol()).to.be.empty;
+                expect(Symbol()).to.be.empty();
             }, ".empty was passed non-string primitive Symbol()");
 
             err(() => {
-                expect(Symbol.iterator).to.be.empty;
+                expect(Symbol.iterator).to.be.empty();
             }, ".empty was passed non-string primitive Symbol(Symbol.iterator)");
         }
 
         err(() => {
-            expect(() => { }, "blah").to.be.empty;
+            expect(() => { }, "blah").to.be.empty();
         }, "blah: .empty was passed a function");
 
         if (FakeArgs.name === "FakeArgs") {
             err(() => {
-                expect(FakeArgs).to.be.empty;
+                expect(FakeArgs).to.be.empty();
             }, ".empty was passed a function FakeArgs");
         }
     });
 
     it("NaN", () => {
-        expect(NaN).to.be.NaN;
+        expect(NaN).to.be.NaN();
 
-        expect(undefined).not.to.be.NaN;
-        expect(Infinity).not.to.be.NaN;
-        expect("foo").not.to.be.NaN;
-        expect({}).not.to.be.NaN;
-        expect(4).not.to.be.NaN;
-        expect([]).not.to.be.NaN;
+        expect(undefined).not.to.be.NaN();
+        expect(Infinity).not.to.be.NaN();
+        expect("foo").not.to.be.NaN();
+        expect({}).not.to.be.NaN();
+        expect(4).not.to.be.NaN();
+        expect([]).not.to.be.NaN();
 
         err(() => {
-            expect(NaN, "blah").not.to.be.NaN;
+            expect(NaN, "blah").not.to.be.NaN();
         }, "blah: expected NaN not to be NaN");
 
         err(() => {
-            expect(undefined).to.be.NaN;
+            expect(undefined).to.be.NaN();
         }, "expected undefined to be NaN");
 
         err(() => {
-            expect(Infinity).to.be.NaN;
+            expect(Infinity).to.be.NaN();
         }, "expected Infinity to be NaN");
 
         err(() => {
-            expect("foo").to.be.NaN;
+            expect("foo").to.be.NaN();
         }, "expected 'foo' to be NaN");
 
         err(() => {
-            expect({}).to.be.NaN;
+            expect({}).to.be.NaN();
         }, "expected {} to be NaN");
 
         err(() => {
-            expect(4).to.be.NaN;
+            expect(4).to.be.NaN();
         }, "expected 4 to be NaN");
 
         err(() => {
-            expect([]).to.be.NaN;
+            expect([]).to.be.NaN();
         }, "expected [] to be NaN");
     });
 
     it("finite", () => {
-        expect(4).to.be.finite;
-        expect(-10).to.be.finite;
+        expect(4).to.be.finite();
+        expect(-10).to.be.finite();
 
         err(() => {
-            expect(NaN, "blah").to.be.finite;
+            expect(NaN, "blah").to.be.finite();
         }, "blah: expected NaN to be a finite number");
 
         err(() => {
-            expect(Infinity).to.be.finite;
+            expect(Infinity).to.be.finite();
         }, "expected Infinity to be a finite number");
 
         err(() => {
-            expect("foo").to.be.finite;
+            expect("foo").to.be.finite();
         }, "expected \'foo\' to be a finite number");
 
         err(() => {
-            expect([]).to.be.finite;
+            expect([]).to.be.finite();
         }, "expected [] to be a finite number");
 
         err(() => {
-            expect({}).to.be.finite;
+            expect({}).to.be.finite();
         }, "expected {} to be a finite number");
     });
 
@@ -3438,47 +3440,47 @@ describe("assertion", "expect", () => {
     it("extensible", () => {
         const nonExtensibleObject = Object.preventExtensions({});
 
-        expect({}).to.be.extensible;
-        expect(nonExtensibleObject).to.not.be.extensible;
+        expect({}).to.be.extensible();
+        expect(nonExtensibleObject).to.not.be.extensible();
 
         err(() => {
-            expect(nonExtensibleObject, "blah").to.be.extensible;
+            expect(nonExtensibleObject, "blah").to.be.extensible();
         }, "blah: expected {} to be extensible");
 
         err(() => {
-            expect({}).to.not.be.extensible;
+            expect({}).to.not.be.extensible();
         }, "expected {} to not be extensible");
 
         // Making sure ES6-like Object.isExtensible response is respected for all primitive types
 
-        expect(42).to.not.be.extensible;
-        expect(null).to.not.be.extensible;
-        expect("foo").to.not.be.extensible;
-        expect(false).to.not.be.extensible;
-        expect(undefined).to.not.be.extensible;
+        expect(42).to.not.be.extensible();
+        expect(null).to.not.be.extensible();
+        expect("foo").to.not.be.extensible();
+        expect(false).to.not.be.extensible();
+        expect(undefined).to.not.be.extensible();
 
         if (is.function(Symbol)) {
-            expect(Symbol()).to.not.be.extensible;
+            expect(Symbol()).to.not.be.extensible();
         }
 
         err(() => {
-            expect(42).to.be.extensible;
+            expect(42).to.be.extensible();
         }, "expected 42 to be extensible");
 
         err(() => {
-            expect(null).to.be.extensible;
+            expect(null).to.be.extensible();
         }, "expected null to be extensible");
 
         err(() => {
-            expect("foo").to.be.extensible;
+            expect("foo").to.be.extensible();
         }, "expected 'foo' to be extensible");
 
         err(() => {
-            expect(false).to.be.extensible;
+            expect(false).to.be.extensible();
         }, "expected false to be extensible");
 
         err(() => {
-            expect(undefined).to.be.extensible;
+            expect(undefined).to.be.extensible();
         }, "expected undefined to be extensible");
 
         if (is.function(Proxy)) {
@@ -3490,7 +3492,7 @@ describe("assertion", "expect", () => {
 
             err(() => {
                 // .extensible should not suppress errors, thrown in proxy traps
-                expect(proxy).to.be.extensible;
+                expect(proxy).to.be.extensible();
             }, { name: "TypeError" }, true);
         }
     });
@@ -3498,47 +3500,47 @@ describe("assertion", "expect", () => {
     it("sealed", () => {
         const sealedObject = Object.seal({});
 
-        expect(sealedObject).to.be.sealed;
-        expect({}).to.not.be.sealed;
+        expect(sealedObject).to.be.sealed();
+        expect({}).to.not.be.sealed();
 
         err(() => {
-            expect({}, "blah").to.be.sealed;
+            expect({}, "blah").to.be.sealed();
         }, "blah: expected {} to be sealed");
 
         err(() => {
-            expect(sealedObject).to.not.be.sealed;
+            expect(sealedObject).to.not.be.sealed();
         }, "expected {} to not be sealed");
 
         // Making sure ES6-like Object.isSealed response is respected for all primitive types
 
-        expect(42).to.be.sealed;
-        expect(null).to.be.sealed;
-        expect("foo").to.be.sealed;
-        expect(false).to.be.sealed;
-        expect(undefined).to.be.sealed;
+        expect(42).to.be.sealed();
+        expect(null).to.be.sealed();
+        expect("foo").to.be.sealed();
+        expect(false).to.be.sealed();
+        expect(undefined).to.be.sealed();
 
         if (is.function(Symbol)) {
-            expect(Symbol()).to.be.sealed;
+            expect(Symbol()).to.be.sealed();
         }
 
         err(() => {
-            expect(42).to.not.be.sealed;
+            expect(42).to.not.be.sealed();
         }, "expected 42 to not be sealed");
 
         err(() => {
-            expect(null).to.not.be.sealed;
+            expect(null).to.not.be.sealed();
         }, "expected null to not be sealed");
 
         err(() => {
-            expect("foo").to.not.be.sealed;
+            expect("foo").to.not.be.sealed();
         }, "expected 'foo' to not be sealed");
 
         err(() => {
-            expect(false).to.not.be.sealed;
+            expect(false).to.not.be.sealed();
         }, "expected false to not be sealed");
 
         err(() => {
-            expect(undefined).to.not.be.sealed;
+            expect(undefined).to.not.be.sealed();
         }, "expected undefined to not be sealed");
 
         if (is.function(Proxy)) {
@@ -3553,7 +3555,7 @@ describe("assertion", "expect", () => {
 
             err(() => {
                 // .sealed should not suppress errors, thrown in proxy traps
-                expect(proxy).to.be.sealed;
+                expect(proxy).to.be.sealed();
             }, { name: "TypeError" }, true);
         }
     });
@@ -3561,47 +3563,47 @@ describe("assertion", "expect", () => {
     it("frozen", () => {
         const frozenObject = Object.freeze({});
 
-        expect(frozenObject).to.be.frozen;
-        expect({}).to.not.be.frozen;
+        expect(frozenObject).to.be.frozen();
+        expect({}).to.not.be.frozen();
 
         err(() => {
-            expect({}, "blah").to.be.frozen;
+            expect({}, "blah").to.be.frozen();
         }, "blah: expected {} to be frozen");
 
         err(() => {
-            expect(frozenObject).to.not.be.frozen;
+            expect(frozenObject).to.not.be.frozen();
         }, "expected {} to not be frozen");
 
         // Making sure ES6-like Object.isFrozen response is respected for all primitive types
 
-        expect(42).to.be.frozen;
-        expect(null).to.be.frozen;
-        expect("foo").to.be.frozen;
-        expect(false).to.be.frozen;
-        expect(undefined).to.be.frozen;
+        expect(42).to.be.frozen();
+        expect(null).to.be.frozen();
+        expect("foo").to.be.frozen();
+        expect(false).to.be.frozen();
+        expect(undefined).to.be.frozen();
 
         if (is.function(Symbol)) {
-            expect(Symbol()).to.be.frozen;
+            expect(Symbol()).to.be.frozen();
         }
 
         err(() => {
-            expect(42).to.not.be.frozen;
+            expect(42).to.not.be.frozen();
         }, "expected 42 to not be frozen");
 
         err(() => {
-            expect(null).to.not.be.frozen;
+            expect(null).to.not.be.frozen();
         }, "expected null to not be frozen");
 
         err(() => {
-            expect("foo").to.not.be.frozen;
+            expect("foo").to.not.be.frozen();
         }, "expected 'foo' to not be frozen");
 
         err(() => {
-            expect(false).to.not.be.frozen;
+            expect(false).to.not.be.frozen();
         }, "expected false to not be frozen");
 
         err(() => {
-            expect(undefined).to.not.be.frozen;
+            expect(undefined).to.not.be.frozen();
         }, "expected undefined to not be frozen");
 
         if (is.function(Proxy)) {
@@ -3616,7 +3618,7 @@ describe("assertion", "expect", () => {
 
             err(() => {
                 // .frozen should not suppress errors, thrown in proxy traps
-                expect(proxy).to.be.frozen;
+                expect(proxy).to.be.frozen();
             }, { name: "TypeError" }, true);
         }
     });
@@ -3639,7 +3641,7 @@ describe("assertion", "expect", () => {
 
         it("should reject if not ok", async () => {
             const e = await expect(1).not.to.be.eventually.equal(1).then(() => null, (e) => e);
-            expect(e).to.exist;
+            expect(e).to.exist();
             expect(e.message).to.be.equal("expected 1 to not equal 1");
         });
 
@@ -3656,7 +3658,7 @@ describe("assertion", "expect", () => {
         it("should work with properties", async () => {
             // await expect(Promise.resolve(100)).to.eventually.exist;
             const e = await expect(Promise.resolve(100)).eventually.not.to.exist.then(() => null, (e) => e);
-            expect(e).to.exist;
+            expect(e).to.exist();
             expect(e.message).to.be.equal("expected 100 to not exist");
         });
 

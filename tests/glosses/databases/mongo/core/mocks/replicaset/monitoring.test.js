@@ -229,7 +229,7 @@ describe("database", "mongo", "core", function () {
                         }
                     }
                     try {
-                        expect(stopRespondingPrimary).to.be.ok;
+                        expect(stopRespondingPrimary).to.be.ok();
                         expect(currentIsMasterState).to.be.equal(1);
 
                         // Ensure the state is correct
@@ -252,7 +252,7 @@ describe("database", "mongo", "core", function () {
                         await adone.promise.delay(1000);
 
                         Connection.disableConnectionAccounting();
-                        expect(Connection.connections()).to.be.empty;
+                        expect(Connection.connections()).to.be.empty();
                     }
                 });
 
@@ -404,7 +404,7 @@ describe("database", "mongo", "core", function () {
                     await server.destroy();
                     running = false;
 
-                    expect(_server.intervalIds).to.be.empty;
+                    expect(_server.intervalIds).to.be.empty();
                 });
             });
         });

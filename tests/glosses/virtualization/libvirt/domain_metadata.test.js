@@ -29,17 +29,17 @@ const getMetadataFromXml = (test, callback) => {
 const verifyMetadata = (test, expectedFromApi, expectedFromXml, namespaceUri, done) => {
     test.domain.getMetadata(libvirt.VIR_DOMAIN_METADATA_ELEMENT, namespaceUri, 0, (err, xml) => {
         if (is.null(expectedFromApi)) {
-            expect(err).to.exist;
-            expect(xml).to.be.undefined;
+            expect(err).to.exist();
+            expect(xml).to.be.undefined();
         } else {
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             xml = xml.replace(/"/g, "'");
             expect(xml).to.equal(expectedFromApi);
         }
         getMetadataFromXml(test, (err, xml) => {
-            expect(err).to.not.exist;
+            expect(err).to.not.exist();
             if (is.null(expectedFromXml)) {
-                expect(xml).to.be.undefined;
+                expect(xml).to.be.undefined();
             } else {
                 xml = xml.replace(/"/g, "'");
                 expect(xml).to.equal(expectedFromXml);
@@ -53,16 +53,16 @@ const testText = (test, field, str, shouldPass, done) => {
     test.domain.setMetadata(field, str, null, null, 0, (err) => {
         if (err) {
             if (shouldPass) {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
             } else {
-                expect(err).to.exist;
+                expect(err).to.exist();
             }
             done();
         } else {
             test.domain.getMetadata(field, null, 0, (err, md) => {
                 // value not present is returned as "error" (and so undefined)
                 if (!is.null(str)) {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                 } else {
                     str = undefined;
                 }
@@ -86,12 +86,12 @@ describe("virtualization", "libvirt", "Domain", () => {
         beforeEach((done) => {
             test.hypervisor = new Hypervisor("test:///default");
             test.hypervisor.connect((err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
 
                 test.hypervisor.lookupDomainById(1, (err, domain) => {
-                    expect(err).to.not.exist;
-                    expect(domain).to.exist;
-                    expect(domain._parent).to.exist;
+                    expect(err).to.not.exist();
+                    expect(domain).to.exist();
+                    expect(domain._parent).to.exist();
                     test.domain = domain;
                     done();
                 });
@@ -100,7 +100,7 @@ describe("virtualization", "libvirt", "Domain", () => {
 
         afterEach((done) => {
             test.hypervisor.disconnect((err) => {
-                expect(err).to.not.exist;
+                expect(err).to.not.exist();
                 done();
             });
         });
@@ -115,7 +115,7 @@ describe("virtualization", "libvirt", "Domain", () => {
             metadata1Ns = metadata1Ns.trim();
             test.domain.setMetadata(libvirt.VIR_DOMAIN_METADATA_ELEMENT, metadata1, "herp", "http://herp.derp/", 0,
                 (err) => {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                     verifyMetadata(test, metadata1, metadata1Ns, "http://herp.derp/", done);
                 }
             );
@@ -131,7 +131,7 @@ describe("virtualization", "libvirt", "Domain", () => {
             metadata2Ns = metadata2Ns.trim();
             test.domain.setMetadata(libvirt.VIR_DOMAIN_METADATA_ELEMENT, metadata2, "blurb", "http://herp.derp/", 0,
                 (err) => {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                     verifyMetadata(test, metadata2, metadata2Ns, "http://herp.derp/", done);
                 }
             );
@@ -143,7 +143,7 @@ describe("virtualization", "libvirt", "Domain", () => {
             }
             test.domain.setMetadata(libvirt.VIR_DOMAIN_METADATA_ELEMENT, null, "", "http://herp.derp/", 0,
                 (err) => {
-                    expect(err).to.not.exist;
+                    expect(err).to.not.exist();
                     verifyMetadata(test, null, null, "http://herp.derp/", done);
                 }
             );

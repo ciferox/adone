@@ -23,7 +23,7 @@ describe("database", "pouch", "utils", () => {
             assert.equal(normalizeDesignDocFunctionName("foo/bar"), "foo/bar");
         });
         it("normalizes null to a non existing value", () => {
-            assert.isNull(normalizeDesignDocFunctionName(null));
+            assert.null(normalizeDesignDocFunctionName(null));
         });
     });
     describe("ddoc function name parser", () => {
@@ -34,8 +34,8 @@ describe("database", "pouch", "utils", () => {
             assert.deepEqual(parseDesignDocFunctionName("foo"), ["foo", "foo"]);
         });
         it("throws if it can't parse the function name", () => {
-            assert.isNull(parseDesignDocFunctionName(null));
-            assert.isNull(parseDesignDocFunctionName("foo/bar/baz"));
+            assert.null(parseDesignDocFunctionName(null));
+            assert.null(parseDesignDocFunctionName("foo/bar/baz"));
         });
     });
     describe("create error", () => {

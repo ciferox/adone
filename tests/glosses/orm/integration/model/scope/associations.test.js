@@ -166,14 +166,14 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         });
                         const user = await this.ScopeMe.findById(1);
                         const profile = await user.getProfile({ scope: false });
-                        expect(profile).to.be.ok;
+                        expect(profile).to.be.ok();
                     });
 
                     it("belongsTo", function () {
                         return this.ScopeMe.unscoped().find({ where: { username: "bob" } }).then((user) => {
                             return user.getCompany({ scope: false });
                         }).then((company) => {
-                            expect(company).to.be.ok;
+                            expect(company).to.be.ok();
                         });
                     });
 
@@ -200,14 +200,14 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         });
                         const user = await this.ScopeMe.findById(1);
                         const profile = await user.getProfile();
-                        expect(profile).not.to.be.ok;
+                        expect(profile).not.to.be.ok();
                     });
 
                     it("belongsTo", function () {
                         return this.ScopeMe.unscoped().find({ where: { username: "bob" } }).then((user) => {
                             return user.getCompany();
                         }).then((company) => {
-                            expect(company).not.to.be.ok;
+                            expect(company).not.to.be.ok();
                         });
                     });
 
@@ -215,7 +215,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         const [p] = await this.Project.findAll();
                         const companies = await p.getCompanies();
                         expect(companies).to.have.length(1);
-                        expect(companies[0].get("active")).to.be.ok;
+                        expect(companies[0].get("active")).to.be.ok();
                     });
                 });
 
@@ -236,14 +236,14 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                         });
                         const user = await this.ScopeMe.findById(1);
                         const profile = await user.getProfile({ scope: "notActive" });
-                        expect(profile).not.to.be.ok;
+                        expect(profile).not.to.be.ok();
                     });
 
                     it("belongsTo", function () {
                         return this.ScopeMe.unscoped().find({ where: { username: "bob" } }).then((user) => {
                             return user.getCompany({ scope: "notActive" });
                         }).then((company) => {
-                            expect(company).to.be.ok;
+                            expect(company).to.be.ok();
                         });
                     });
 

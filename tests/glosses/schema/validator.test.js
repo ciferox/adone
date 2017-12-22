@@ -300,8 +300,8 @@ describe("schema", "Validator", () => {
 
 
             instance.removeSchema("int");
-            expect(instance.getSchema("int")).not.to.be.ok;
-            expect(instance._cache.get(str)).not.to.be.ok;
+            expect(instance.getSchema("int")).not.to.be.ok();
+            expect(instance._cache.get(str)).not.to.be.ok();
         });
 
         it("should remove schema by id", () => {
@@ -315,8 +315,8 @@ describe("schema", "Validator", () => {
 
 
             instance.removeSchema("//e.com/int.json");
-            expect(instance.getSchema("//e.com/int.json")).not.to.be.ok;
-            expect(instance._cache.get(str)).not.to.be.ok;
+            expect(instance.getSchema("//e.com/int.json")).not.to.be.ok();
+            expect(instance._cache.get(str)).not.to.be.ok();
         });
 
         it("should remove schema by schema object", () => {
@@ -325,7 +325,7 @@ describe("schema", "Validator", () => {
             instance.addSchema(schema);
             expect(instance._cache.get(str)).to.be.an("object");
             instance.removeSchema({ type: "integer" });
-            expect(instance._cache.get(str)).not.to.be.ok;
+            expect(instance._cache.get(str)).not.to.be.ok();
         });
 
         it("should remove schema with id by schema object", () => {
@@ -334,11 +334,11 @@ describe("schema", "Validator", () => {
             instance.addSchema(schema);
             expect(instance._cache.get(str)).to.be.an("object");
             instance.removeSchema({ id: "//e.com/int.json", type: "integer" });
-            expect(instance._cache.get(str)).not.to.be.ok;
+            expect(instance._cache.get(str)).not.to.be.ok();
         });
 
         it("should not throw if there is no schema with passed id", () => {
-            expect(instance.getSchema("//e.com/int.json")).not.to.be.ok;
+            expect(instance.getSchema("//e.com/int.json")).not.to.be.ok();
             expect(() => {
                 instance.removeSchema("//e.com/int.json");
             }).not.to.throw();
@@ -356,8 +356,8 @@ describe("schema", "Validator", () => {
             expect(instance._cache.get(str2)).to.be.an("object");
 
             instance.removeSchema();
-            expect(instance._cache.get(str1)).not.to.be.ok;
-            expect(instance._cache.get(str2)).not.to.be.ok;
+            expect(instance._cache.get(str1)).not.to.be.ok();
+            expect(instance._cache.get(str2)).not.to.be.ok();
         });
 
         it("should remove all schemas but meta-schemas with key/id matching pattern", () => {
@@ -377,8 +377,8 @@ describe("schema", "Validator", () => {
             expect(instance._cache.get(str3)).to.be.an("object");
 
             instance.removeSchema(/e\.com/);
-            expect(instance._cache.get(str1)).not.to.be.ok;
-            expect(instance._cache.get(str2)).not.to.be.ok;
+            expect(instance._cache.get(str1)).not.to.be.ok();
+            expect(instance._cache.get(str2)).not.to.be.ok();
             expect(instance._cache.get(str3)).to.be.an("object");
         });
 

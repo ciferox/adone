@@ -46,7 +46,7 @@ describe("database", "local", "Model", () => {
             const b = model.serialize(a);
             const c = model.deserialize(b);
             expect(b.indexOf("\n")).to.be.equal(-1);
-            expect(c.test).to.be.true;
+            expect(c.test).to.be.true();
         });
 
         it("Can serialize and deserialize numbers", () => {
@@ -62,7 +62,7 @@ describe("database", "local", "Model", () => {
             const b = model.serialize(a);
             model.deserialize(b);
             expect(b.indexOf("\n")).to.be.equal(-1);
-            expect(a.test).to.be.null;
+            expect(a.test).to.be.null();
         });
 
         it("undefined fields are removed when serialized", () => {
@@ -71,7 +71,7 @@ describe("database", "local", "Model", () => {
             const c = model.deserialize(b);
             expect(Object.keys(c)).to.have.lengthOf(1);
             expect(c.hello).to.be.equal("world");
-            expect(c.bloup).to.be.undefined;
+            expect(c.bloup).to.be.undefined();
         });
 
         it("Can serialize and deserialize a date", () => {
@@ -81,7 +81,7 @@ describe("database", "local", "Model", () => {
             const c = model.deserialize(b);
             expect(b.indexOf("\n")).to.be.equal(-1);
             expect(b).to.be.equal(`{"test":{"$$date":${d.getTime()}}}`);
-            expect(util.isDate(c.test)).to.be.true;
+            expect(util.isDate(c.test)).to.be.true();
             expect(c.test.getTime()).to.be.equal(d.getTime());
         });
 
@@ -136,7 +136,7 @@ describe("database", "local", "Model", () => {
 
             await file.unlink().catch(adone.noop);
 
-            expect(await file.exists()).to.be.false;
+            expect(await file.exists()).to.be.false();
 
             const db1 = new Datastore({ filename: file.path() });
             await db1.load();
@@ -157,7 +157,7 @@ describe("database", "local", "Model", () => {
 
     describe("Object checking", () => {
         it("Field names beginning with a $ sign are forbidden", () => {
-            expect(model.checkObject).to.be.ok;
+            expect(model.checkObject).to.be.ok();
 
             expect(() => {
                 model.checkObject({ $bad: true });
@@ -176,7 +176,7 @@ describe("database", "local", "Model", () => {
         });
 
         it("Field names cannot contain a .", () => {
-            expect(model.checkObject).to.be.ok;
+            expect(model.checkObject).to.be.ok();
 
             expect(() => {
                 model.checkObject({ "so.bad": true });
@@ -192,18 +192,18 @@ describe("database", "local", "Model", () => {
         });
 
         it("Can check if an object is a primitive or not", () => {
-            expect(model.isPrimitiveType(5)).to.be.true;
-            expect(model.isPrimitiveType("sdsfdfs")).to.be.true;
-            expect(model.isPrimitiveType(0)).to.be.true;
-            expect(model.isPrimitiveType(true)).to.be.true;
-            expect(model.isPrimitiveType(false)).to.be.true;
-            expect(model.isPrimitiveType(new Date())).to.be.true;
-            expect(model.isPrimitiveType([])).to.be.true;
-            expect(model.isPrimitiveType([3, "try"])).to.be.true;
-            expect(model.isPrimitiveType(null)).to.be.true;
+            expect(model.isPrimitiveType(5)).to.be.true();
+            expect(model.isPrimitiveType("sdsfdfs")).to.be.true();
+            expect(model.isPrimitiveType(0)).to.be.true();
+            expect(model.isPrimitiveType(true)).to.be.true();
+            expect(model.isPrimitiveType(false)).to.be.true();
+            expect(model.isPrimitiveType(new Date())).to.be.true();
+            expect(model.isPrimitiveType([])).to.be.true();
+            expect(model.isPrimitiveType([3, "try"])).to.be.true();
+            expect(model.isPrimitiveType(null)).to.be.true();
 
-            expect(model.isPrimitiveType({})).to.be.false;
-            expect(model.isPrimitiveType({ a: 42 })).to.be.false;
+            expect(model.isPrimitiveType({})).to.be.false();
+            expect(model.isPrimitiveType({ a: 42 })).to.be.false();
         });
     });
 
@@ -294,7 +294,7 @@ describe("database", "local", "Model", () => {
             expect(t.bloup[0]).to.be.equal(1);
             expect(t.bloup[1]).to.be.equal(8);
 
-            expect(t.some).to.be.undefined;
+            expect(t.some).to.be.undefined();
             expect(t._id).to.be.equal("keepit");
         });
 
@@ -932,7 +932,7 @@ describe("database", "local", "Model", () => {
                 const toTestAgainst = [undefined, null, "someotherstring", 5, false, new Date(111111), { hello: "mars" }];
                 let i;
                 for (i = 0; i < toTest.length; i += 1) {
-                    expect(model.areThingsEqual(toTest[i], toTestAgainst[i])).to.be.false;
+                    expect(model.areThingsEqual(toTest[i], toTestAgainst[i])).to.be.false();
                 }
             });
 
@@ -940,25 +940,25 @@ describe("database", "local", "Model", () => {
                 const toTestAgainst = [null, undefined, "somestring", 42, true, new Date(72998322), { hello: "world" }];
                 let i;
                 for (i = 0; i < toTestAgainst.length; i += 1) {
-                    expect(model.areThingsEqual([1, 2, 3], toTestAgainst[i])).to.be.false;
-                    expect(model.areThingsEqual(toTestAgainst[i], [])).to.be.false;
+                    expect(model.areThingsEqual([1, 2, 3], toTestAgainst[i])).to.be.false();
+                    expect(model.areThingsEqual(toTestAgainst[i], [])).to.be.false();
 
-                    expect(model.areThingsEqual(undefined, toTestAgainst[i])).to.be.false;
-                    expect(model.areThingsEqual(toTestAgainst[i], undefined)).to.be.false;
+                    expect(model.areThingsEqual(undefined, toTestAgainst[i])).to.be.false();
+                    expect(model.areThingsEqual(toTestAgainst[i], undefined)).to.be.false();
                 }
             });
 
             it("Can test objects equality", () => {
-                expect(model.areThingsEqual({ hello: "world" }, {})).to.be.false;
-                expect(model.areThingsEqual({ hello: "world" }, { hello: "mars" })).to.be.false;
-                expect(model.areThingsEqual({ hello: "world" }, { hello: "world", temperature: 42 })).to.be.false;
+                expect(model.areThingsEqual({ hello: "world" }, {})).to.be.false();
+                expect(model.areThingsEqual({ hello: "world" }, { hello: "mars" })).to.be.false();
+                expect(model.areThingsEqual({ hello: "world" }, { hello: "world", temperature: 42 })).to.be.false();
                 expect(model.areThingsEqual({
                     hello: "world",
                     other: { temperature: 42 }
                 }, {
                     hello: "world",
                     other: { temperature: 42 }
-                })).to.be.true;
+                })).to.be.true();
             });
         });
 
@@ -968,12 +968,12 @@ describe("database", "local", "Model", () => {
                 expect(model.getDotValue({
                     hello: "world",
                     type: { planet: true, blue: true }
-                }, "type.planet")).to.be.true;
+                }, "type.planet")).to.be.true();
             });
 
             it("Return undefined if the field cannot be found in the object", () => {
-                expect(model.getDotValue({ hello: "world" }, "helloo")).to.be.undefined;
-                expect(model.getDotValue({ hello: "world", type: { planet: true } }, "type.plane")).to.be.undefined;
+                expect(model.getDotValue({ hello: "world" }, "helloo")).to.be.undefined();
+                expect(model.getDotValue({ hello: "world", type: { planet: true } }, "type.plane")).to.be.undefined();
             });
 
             it("Can navigate inside arrays with dot notation, and return the array of values in that case", () => {
@@ -1038,7 +1038,7 @@ describe("database", "local", "Model", () => {
                         { name: "Pluton", number: 9 }
                     ]
                 }, "planets.3");
-                expect(dv).to.be.undefined;
+                expect(dv).to.be.undefined();
 
                 // Index in nested array
                 dv = model.getDotValue({
@@ -1070,37 +1070,37 @@ describe("database", "local", "Model", () => {
 
         describe("Field equality", () => {
             it("Can find documents with simple fields", () => {
-                expect(model.match({ test: "yeah" }, { test: "yea" })).to.be.false;
-                expect(model.match({ test: "yeah" }, { test: "yeahh" })).to.be.false;
-                expect(model.match({ test: "yeah" }, { test: "yeah" })).to.be.true;
+                expect(model.match({ test: "yeah" }, { test: "yea" })).to.be.false();
+                expect(model.match({ test: "yeah" }, { test: "yeahh" })).to.be.false();
+                expect(model.match({ test: "yeah" }, { test: "yeah" })).to.be.true();
             });
 
             it("Can find documents with the dot-notation", () => {
-                expect(model.match({ test: { ooo: "yeah" } }, { "test.ooo": "yea" })).to.be.false;
-                expect(model.match({ test: { ooo: "yeah" } }, { "test.oo": "yeah" })).to.be.false;
-                expect(model.match({ test: { ooo: "yeah" } }, { "tst.ooo": "yeah" })).to.be.false;
-                expect(model.match({ test: { ooo: "yeah" } }, { "test.ooo": "yeah" })).to.be.true;
+                expect(model.match({ test: { ooo: "yeah" } }, { "test.ooo": "yea" })).to.be.false();
+                expect(model.match({ test: { ooo: "yeah" } }, { "test.oo": "yeah" })).to.be.false();
+                expect(model.match({ test: { ooo: "yeah" } }, { "tst.ooo": "yeah" })).to.be.false();
+                expect(model.match({ test: { ooo: "yeah" } }, { "test.ooo": "yeah" })).to.be.true();
             });
 
             it("Cannot find undefined", () => {
-                expect(model.match({ test: undefined }, { test: undefined })).to.be.false;
-                expect(model.match({ test: { pp: undefined } }, { "test.pp": undefined })).to.be.false;
+                expect(model.match({ test: undefined }, { test: undefined })).to.be.false();
+                expect(model.match({ test: { pp: undefined } }, { "test.pp": undefined })).to.be.false();
             });
 
             it("Nested objects are deep-equality matched and not treated as sub-queries", () => {
-                expect(model.match({ a: { b: 5 } }, { a: { b: 5 } })).to.be.true;
-                expect(model.match({ a: { b: 5, c: 3 } }, { a: { b: 5 } })).to.be.false;
+                expect(model.match({ a: { b: 5 } }, { a: { b: 5 } })).to.be.true();
+                expect(model.match({ a: { b: 5, c: 3 } }, { a: { b: 5 } })).to.be.false();
 
-                expect(model.match({ a: { b: 5 } }, { a: { b: { $lt: 10 } } })).to.be.false;
+                expect(model.match({ a: { b: 5 } }, { a: { b: { $lt: 10 } } })).to.be.false();
                 expect(() => {
                     model.match({ a: { b: 5 } }, { a: { $or: [{ b: 10 }, { b: 5 }] } });
                 }).to.throw();
             });
 
             it("Can match for field equality inside an array with the dot notation", () => {
-                expect(model.match({ a: true, b: ["node", "embedded", "database"] }, { "b.1": "node" })).to.be.false;
-                expect(model.match({ a: true, b: ["node", "embedded", "database"] }, { "b.1": "embedded" })).to.be.true;
-                expect(model.match({ a: true, b: ["node", "embedded", "database"] }, { "b.1": "database" })).to.be.false;
+                expect(model.match({ a: true, b: ["node", "embedded", "database"] }, { "b.1": "node" })).to.be.false();
+                expect(model.match({ a: true, b: ["node", "embedded", "database"] }, { "b.1": "embedded" })).to.be.true();
+                expect(model.match({ a: true, b: ["node", "embedded", "database"] }, { "b.1": "database" })).to.be.false();
             });
         });
 
@@ -1108,24 +1108,24 @@ describe("database", "local", "Model", () => {
             it("Matching a non-string to a regular expression always yields false", () => {
                 const d = new Date();
                 const r = new RegExp(d.getTime());
-                expect(model.match({ test: true }, { test: /true/ })).to.be.false;
-                expect(model.match({ test: null }, { test: /null/ })).to.be.false;
-                expect(model.match({ test: 42 }, { test: /42/ })).to.be.false;
-                expect(model.match({ test: d }, { test: r })).to.be.false;
+                expect(model.match({ test: true }, { test: /true/ })).to.be.false();
+                expect(model.match({ test: null }, { test: /null/ })).to.be.false();
+                expect(model.match({ test: 42 }, { test: /42/ })).to.be.false();
+                expect(model.match({ test: d }, { test: r })).to.be.false();
             });
 
             it("Can match strings using basic querying", () => {
-                expect(model.match({ test: "true" }, { test: /true/ })).to.be.true;
-                expect(model.match({ test: "babaaaar" }, { test: /aba+r/ })).to.be.true;
-                expect(model.match({ test: "babaaaar" }, { test: /^aba+r/ })).to.be.false;
-                expect(model.match({ test: "true" }, { test: /t[ru]e/ })).to.be.false;
+                expect(model.match({ test: "true" }, { test: /true/ })).to.be.true();
+                expect(model.match({ test: "babaaaar" }, { test: /aba+r/ })).to.be.true();
+                expect(model.match({ test: "babaaaar" }, { test: /^aba+r/ })).to.be.false();
+                expect(model.match({ test: "true" }, { test: /t[ru]e/ })).to.be.false();
             });
 
             it("Can match strings using the $regex operator", () => {
-                expect(model.match({ test: "true" }, { test: { $regex: /true/ } })).to.be.true;
-                expect(model.match({ test: "babaaaar" }, { test: { $regex: /aba+r/ } })).to.be.true;
-                expect(model.match({ test: "babaaaar" }, { test: { $regex: /^aba+r/ } })).to.be.false;
-                expect(model.match({ test: "true" }, { test: { $regex: /t[ru]e/ } })).to.be.false;
+                expect(model.match({ test: "true" }, { test: { $regex: /true/ } })).to.be.true();
+                expect(model.match({ test: "babaaaar" }, { test: { $regex: /aba+r/ } })).to.be.true();
+                expect(model.match({ test: "babaaaar" }, { test: { $regex: /^aba+r/ } })).to.be.false();
+                expect(model.match({ test: "true" }, { test: { $regex: /t[ru]e/ } })).to.be.false();
             });
 
             it("Will throw if $regex operator is used with a non regex value", () => {
@@ -1139,53 +1139,53 @@ describe("database", "local", "Model", () => {
             });
 
             it("Can use the $regex operator in cunjunction with other operators", () => {
-                expect(model.match({ test: "helLo" }, { test: { $regex: /ll/i, $nin: ["helL", "helLop"] } })).to.be.true;
-                expect(model.match({ test: "helLo" }, { test: { $regex: /ll/i, $nin: ["helLo", "helLop"] } })).to.be.false;
+                expect(model.match({ test: "helLo" }, { test: { $regex: /ll/i, $nin: ["helL", "helLop"] } })).to.be.true();
+                expect(model.match({ test: "helLo" }, { test: { $regex: /ll/i, $nin: ["helLo", "helLop"] } })).to.be.false();
             });
 
             it("Can use dot-notation", () => {
-                expect(model.match({ test: { nested: "true" } }, { "test.nested": /true/ })).to.be.true;
-                expect(model.match({ test: { nested: "babaaaar" } }, { "test.nested": /^aba+r/ })).to.be.false;
+                expect(model.match({ test: { nested: "true" } }, { "test.nested": /true/ })).to.be.true();
+                expect(model.match({ test: { nested: "babaaaar" } }, { "test.nested": /^aba+r/ })).to.be.false();
 
-                expect(model.match({ test: { nested: "true" } }, { "test.nested": { $regex: /true/ } })).to.be.true;
-                expect(model.match({ test: { nested: "babaaaar" } }, { "test.nested": { $regex: /^aba+r/ } })).to.be.false;
+                expect(model.match({ test: { nested: "true" } }, { "test.nested": { $regex: /true/ } })).to.be.true();
+                expect(model.match({ test: { nested: "babaaaar" } }, { "test.nested": { $regex: /^aba+r/ } })).to.be.false();
             });
         });
 
         describe("$lt", () => {
             it("Cannot compare a field to an object, an array, null or a boolean, it will return false", () => {
-                expect(model.match({ a: 5 }, { a: { $lt: { a: 6 } } })).to.be.false;
-                expect(model.match({ a: 5 }, { a: { $lt: [6, 7] } })).to.be.false;
-                expect(model.match({ a: 5 }, { a: { $lt: null } })).to.be.false;
-                expect(model.match({ a: 5 }, { a: { $lt: true } })).to.be.false;
+                expect(model.match({ a: 5 }, { a: { $lt: { a: 6 } } })).to.be.false();
+                expect(model.match({ a: 5 }, { a: { $lt: [6, 7] } })).to.be.false();
+                expect(model.match({ a: 5 }, { a: { $lt: null } })).to.be.false();
+                expect(model.match({ a: 5 }, { a: { $lt: true } })).to.be.false();
             });
 
             it("Can compare numbers, with or without dot notation", () => {
-                expect(model.match({ a: 5 }, { a: { $lt: 6 } })).to.be.true;
-                expect(model.match({ a: 5 }, { a: { $lt: 5 } })).to.be.false;
-                expect(model.match({ a: 5 }, { a: { $lt: 4 } })).to.be.false;
+                expect(model.match({ a: 5 }, { a: { $lt: 6 } })).to.be.true();
+                expect(model.match({ a: 5 }, { a: { $lt: 5 } })).to.be.false();
+                expect(model.match({ a: 5 }, { a: { $lt: 4 } })).to.be.false();
 
-                expect(model.match({ a: { b: 5 } }, { "a.b": { $lt: 6 } })).to.be.true;
-                expect(model.match({ a: { b: 5 } }, { "a.b": { $lt: 3 } })).to.be.false;
+                expect(model.match({ a: { b: 5 } }, { "a.b": { $lt: 6 } })).to.be.true();
+                expect(model.match({ a: { b: 5 } }, { "a.b": { $lt: 3 } })).to.be.false();
             });
 
             it("Can compare strings, with or without dot notation", () => {
-                expect(model.match({ a: "nedb" }, { a: { $lt: "nedc" } })).to.be.true;
-                expect(model.match({ a: "nedb" }, { a: { $lt: "neda" } })).to.be.false;
+                expect(model.match({ a: "nedb" }, { a: { $lt: "nedc" } })).to.be.true();
+                expect(model.match({ a: "nedb" }, { a: { $lt: "neda" } })).to.be.false();
 
-                expect(model.match({ a: { b: "nedb" } }, { "a.b": { $lt: "nedc" } })).to.be.true;
-                expect(model.match({ a: { b: "nedb" } }, { "a.b": { $lt: "neda" } })).to.be.false;
+                expect(model.match({ a: { b: "nedb" } }, { "a.b": { $lt: "nedc" } })).to.be.true();
+                expect(model.match({ a: { b: "nedb" } }, { "a.b": { $lt: "neda" } })).to.be.false();
             });
 
             it("If field is an array field, a match means a match on at least one element", () => {
-                expect(model.match({ a: [5, 10] }, { a: { $lt: 4 } })).to.be.false;
-                expect(model.match({ a: [5, 10] }, { a: { $lt: 6 } })).to.be.true;
-                expect(model.match({ a: [5, 10] }, { a: { $lt: 11 } })).to.be.true;
+                expect(model.match({ a: [5, 10] }, { a: { $lt: 4 } })).to.be.false();
+                expect(model.match({ a: [5, 10] }, { a: { $lt: 6 } })).to.be.true();
+                expect(model.match({ a: [5, 10] }, { a: { $lt: 11 } })).to.be.true();
             });
 
             it("Works with dates too", () => {
-                expect(model.match({ a: new Date(1000) }, { a: { $gte: new Date(1001) } })).to.be.false;
-                expect(model.match({ a: new Date(1000) }, { a: { $lt: new Date(1001) } })).to.be.true;
+                expect(model.match({ a: new Date(1000) }, { a: { $gte: new Date(1001) } })).to.be.false();
+                expect(model.match({ a: new Date(1000) }, { a: { $lt: new Date(1001) } })).to.be.true();
             });
         });
 
@@ -1193,36 +1193,36 @@ describe("database", "local", "Model", () => {
         describe("Other comparison operators: $lte, $gt, $gte, $ne, $in, $exists", () => {
 
             it("$lte", () => {
-                expect(model.match({ a: 5 }, { a: { $lte: 6 } })).to.be.true;
-                expect(model.match({ a: 5 }, { a: { $lte: 5 } })).to.be.true;
-                expect(model.match({ a: 5 }, { a: { $lte: 4 } })).to.be.false;
+                expect(model.match({ a: 5 }, { a: { $lte: 6 } })).to.be.true();
+                expect(model.match({ a: 5 }, { a: { $lte: 5 } })).to.be.true();
+                expect(model.match({ a: 5 }, { a: { $lte: 4 } })).to.be.false();
             });
 
             it("$gt", () => {
-                expect(model.match({ a: 5 }, { a: { $gt: 6 } })).to.be.false;
-                expect(model.match({ a: 5 }, { a: { $gt: 5 } })).to.be.false;
-                expect(model.match({ a: 5 }, { a: { $gt: 4 } })).to.be.true;
+                expect(model.match({ a: 5 }, { a: { $gt: 6 } })).to.be.false();
+                expect(model.match({ a: 5 }, { a: { $gt: 5 } })).to.be.false();
+                expect(model.match({ a: 5 }, { a: { $gt: 4 } })).to.be.true();
             });
 
             it("$gte", () => {
-                expect(model.match({ a: 5 }, { a: { $gte: 6 } })).to.be.false;
-                expect(model.match({ a: 5 }, { a: { $gte: 5 } })).to.be.true;
-                expect(model.match({ a: 5 }, { a: { $gte: 4 } })).to.be.true;
+                expect(model.match({ a: 5 }, { a: { $gte: 6 } })).to.be.false();
+                expect(model.match({ a: 5 }, { a: { $gte: 5 } })).to.be.true();
+                expect(model.match({ a: 5 }, { a: { $gte: 4 } })).to.be.true();
             });
 
             it("$ne", () => {
-                expect(model.match({ a: 5 }, { a: { $ne: 4 } })).to.be.true;
-                expect(model.match({ a: 5 }, { a: { $ne: 5 } })).to.be.false;
-                expect(model.match({ a: 5 }, { b: { $ne: 5 } })).to.be.true;
-                expect(model.match({ a: false }, { a: { $ne: false } })).to.be.false;
+                expect(model.match({ a: 5 }, { a: { $ne: 4 } })).to.be.true();
+                expect(model.match({ a: 5 }, { a: { $ne: 5 } })).to.be.false();
+                expect(model.match({ a: 5 }, { b: { $ne: 5 } })).to.be.true();
+                expect(model.match({ a: false }, { a: { $ne: false } })).to.be.false();
             });
 
             it("$in", () => {
-                expect(model.match({ a: 5 }, { a: { $in: [6, 8, 9] } })).to.be.false;
-                expect(model.match({ a: 6 }, { a: { $in: [6, 8, 9] } })).to.be.true;
-                expect(model.match({ a: 7 }, { a: { $in: [6, 8, 9] } })).to.be.false;
-                expect(model.match({ a: 8 }, { a: { $in: [6, 8, 9] } })).to.be.true;
-                expect(model.match({ a: 9 }, { a: { $in: [6, 8, 9] } })).to.be.true;
+                expect(model.match({ a: 5 }, { a: { $in: [6, 8, 9] } })).to.be.false();
+                expect(model.match({ a: 6 }, { a: { $in: [6, 8, 9] } })).to.be.true();
+                expect(model.match({ a: 7 }, { a: { $in: [6, 8, 9] } })).to.be.false();
+                expect(model.match({ a: 8 }, { a: { $in: [6, 8, 9] } })).to.be.true();
+                expect(model.match({ a: 9 }, { a: { $in: [6, 8, 9] } })).to.be.true();
 
                 expect(() => {
                     model.match({ a: 5 }, { a: { $in: 5 } });
@@ -1230,14 +1230,14 @@ describe("database", "local", "Model", () => {
             });
 
             it("$nin", () => {
-                expect(model.match({ a: 5 }, { a: { $nin: [6, 8, 9] } })).to.be.true;
-                expect(model.match({ a: 6 }, { a: { $nin: [6, 8, 9] } })).to.be.false;
-                expect(model.match({ a: 7 }, { a: { $nin: [6, 8, 9] } })).to.be.true;
-                expect(model.match({ a: 8 }, { a: { $nin: [6, 8, 9] } })).to.be.false;
-                expect(model.match({ a: 9 }, { a: { $nin: [6, 8, 9] } })).to.be.false;
+                expect(model.match({ a: 5 }, { a: { $nin: [6, 8, 9] } })).to.be.true();
+                expect(model.match({ a: 6 }, { a: { $nin: [6, 8, 9] } })).to.be.false();
+                expect(model.match({ a: 7 }, { a: { $nin: [6, 8, 9] } })).to.be.true();
+                expect(model.match({ a: 8 }, { a: { $nin: [6, 8, 9] } })).to.be.false();
+                expect(model.match({ a: 9 }, { a: { $nin: [6, 8, 9] } })).to.be.false();
 
                 // Matches if field doesn't exist
-                expect(model.match({ a: 9 }, { b: { $nin: [6, 8, 9] } })).to.be.true;
+                expect(model.match({ a: 9 }, { b: { $nin: [6, 8, 9] } })).to.be.true();
 
                 expect(() => {
                     model.match({ a: 5 }, { a: { $in: 5 } });
@@ -1245,21 +1245,21 @@ describe("database", "local", "Model", () => {
             });
 
             it("$exists", () => {
-                expect(model.match({ a: 5 }, { a: { $exists: 1 } })).to.be.true;
-                expect(model.match({ a: 5 }, { a: { $exists: true } })).to.be.true;
-                expect(model.match({ a: 5 }, { a: { $exists: new Date() } })).to.be.true;
-                expect(model.match({ a: 5 }, { a: { $exists: "" } })).to.be.true;
-                expect(model.match({ a: 5 }, { a: { $exists: [] } })).to.be.true;
-                expect(model.match({ a: 5 }, { a: { $exists: {} } })).to.be.true;
+                expect(model.match({ a: 5 }, { a: { $exists: 1 } })).to.be.true();
+                expect(model.match({ a: 5 }, { a: { $exists: true } })).to.be.true();
+                expect(model.match({ a: 5 }, { a: { $exists: new Date() } })).to.be.true();
+                expect(model.match({ a: 5 }, { a: { $exists: "" } })).to.be.true();
+                expect(model.match({ a: 5 }, { a: { $exists: [] } })).to.be.true();
+                expect(model.match({ a: 5 }, { a: { $exists: {} } })).to.be.true();
 
-                expect(model.match({ a: 5 }, { a: { $exists: 0 } })).to.be.false;
-                expect(model.match({ a: 5 }, { a: { $exists: false } })).to.be.false;
-                expect(model.match({ a: 5 }, { a: { $exists: null } })).to.be.false;
-                expect(model.match({ a: 5 }, { a: { $exists: undefined } })).to.be.false;
+                expect(model.match({ a: 5 }, { a: { $exists: 0 } })).to.be.false();
+                expect(model.match({ a: 5 }, { a: { $exists: false } })).to.be.false();
+                expect(model.match({ a: 5 }, { a: { $exists: null } })).to.be.false();
+                expect(model.match({ a: 5 }, { a: { $exists: undefined } })).to.be.false();
 
-                expect(model.match({ a: 5 }, { b: { $exists: true } })).to.be.false;
+                expect(model.match({ a: 5 }, { b: { $exists: true } })).to.be.false();
 
-                expect(model.match({ a: 5 }, { b: { $exists: false } })).to.be.true;
+                expect(model.match({ a: 5 }, { b: { $exists: false } })).to.be.true();
             });
         });
 
@@ -1270,19 +1270,19 @@ describe("database", "local", "Model", () => {
                     something: "else"
                 }, {
                     planets: ["Earth", "Mars"]
-                })).to.be.false;
+                })).to.be.false();
                 expect(model.match({
                     planets: ["Earth", "Mars", "Pluto"],
                     something: "else"
                 }, {
                     planets: ["Earth", "Mars", "Pluto"]
-                })).to.be.true;
+                })).to.be.true();
                 expect(model.match({
                     planets: ["Earth", "Mars", "Pluto"],
                     something: "else"
                 }, {
                     planets: ["Earth", "Pluto", "Mars"]
-                })).to.be.false;
+                })).to.be.false();
             });
 
             it("Can query on the size of an array field", () => {
@@ -1295,7 +1295,7 @@ describe("database", "local", "Model", () => {
                     ]
                 }, {
                     childrens: { $size: 0 }
-                })).to.be.false;
+                })).to.be.false();
                 expect(model.match({
                     childrens: [
                         { name: "Huey", age: 3 },
@@ -1304,7 +1304,7 @@ describe("database", "local", "Model", () => {
                     ]
                 }, {
                     childrens: { $size: 1 }
-                })).to.be.false;
+                })).to.be.false();
                 expect(model.match({
                     childrens: [
                         { name: "Huey", age: 3 },
@@ -1313,7 +1313,7 @@ describe("database", "local", "Model", () => {
                     ]
                 }, {
                     childrens: { $size: 2 }
-                })).to.be.false;
+                })).to.be.false();
                 expect(model.match({
                     childrens: [
                         { name: "Huey", age: 3 },
@@ -1322,7 +1322,7 @@ describe("database", "local", "Model", () => {
                     ]
                 }, {
                     childrens: { $size: 3 }
-                })).to.be.true;
+                })).to.be.true();
 
                 // Nested documents
                 expect(model.match({
@@ -1333,7 +1333,7 @@ describe("database", "local", "Model", () => {
                     }
                 }, {
                     "description.satellites": { $size: 0 }
-                })).to.be.false;
+                })).to.be.false();
                 expect(model.match({
                     hello: "world",
                     description: {
@@ -1342,7 +1342,7 @@ describe("database", "local", "Model", () => {
                     }
                 }, {
                     "description.satellites": { $size: 1 }
-                })).to.be.false;
+                })).to.be.false();
                 expect(model.match({
                     hello: "world",
                     description: {
@@ -1351,7 +1351,7 @@ describe("database", "local", "Model", () => {
                     }
                 }, {
                     "description.satellites": { $size: 2 }
-                })).to.be.true;
+                })).to.be.true();
                 expect(model.match({
                     hello: "world",
                     description: {
@@ -1360,7 +1360,7 @@ describe("database", "local", "Model", () => {
                     }
                 }, {
                     "description.satellites": { $size: 3 }
-                })).to.be.false;
+                })).to.be.false();
 
                 // Using a projected array
                 expect(model.match({
@@ -1371,7 +1371,7 @@ describe("database", "local", "Model", () => {
                     ]
                 }, {
                     "childrens.names": { $size: 0 }
-                })).to.be.false;
+                })).to.be.false();
                 expect(model.match({
                     childrens: [
                         { name: "Huey", age: 3 },
@@ -1380,7 +1380,7 @@ describe("database", "local", "Model", () => {
                     ]
                 }, {
                     "childrens.names": { $size: 1 }
-                })).to.be.false;
+                })).to.be.false();
                 expect(model.match({
                     childrens: [
                         { name: "Huey", age: 3 },
@@ -1389,7 +1389,7 @@ describe("database", "local", "Model", () => {
                     ]
                 }, {
                     "childrens.names": { $size: 2 }
-                })).to.be.false;
+                })).to.be.false();
                 expect(model.match({
                     childrens: [
                         { name: "Huey", age: 3 },
@@ -1398,13 +1398,13 @@ describe("database", "local", "Model", () => {
                     ]
                 }, {
                     "childrens.names": { $size: 3 }
-                })).to.be.true;
+                })).to.be.true();
             });
 
             it("$size operator works with empty arrays", () => {
-                expect(model.match({ childrens: [] }, { childrens: { $size: 0 } })).to.be.true;
-                expect(model.match({ childrens: [] }, { childrens: { $size: 2 } })).to.be.false;
-                expect(model.match({ childrens: [] }, { childrens: { $size: 3 } })).to.be.false;
+                expect(model.match({ childrens: [] }, { childrens: { $size: 0 } })).to.be.true();
+                expect(model.match({ childrens: [] }, { childrens: { $size: 2 } })).to.be.false();
+                expect(model.match({ childrens: [] }, { childrens: { $size: 3 } })).to.be.false();
             });
 
             it("Should throw an error if a query operator is used without comparing to an integer", () => {
@@ -1420,12 +1420,12 @@ describe("database", "local", "Model", () => {
             });
 
             it("Using $size operator on a non-array field should prevent match but not throw", () => {
-                expect(model.match({ a: 5 }, { a: { $size: 1 } })).to.be.false;
+                expect(model.match({ a: 5 }, { a: { $size: 1 } })).to.be.false();
             });
 
             it("Can use $size several times in the same matcher", () => {
-                expect(model.match({ childrens: ["Riri", "Fifi", "Loulou"] }, { childrens: { $size: 3 } })).to.be.true;
-                expect(model.match({ childrens: ["Riri", "Fifi", "Loulou"] }, { childrens: { $size: 4 } })).to.be.false; // Of course this can never be true
+                expect(model.match({ childrens: ["Riri", "Fifi", "Loulou"] }, { childrens: { $size: 3 } })).to.be.true();
+                expect(model.match({ childrens: ["Riri", "Fifi", "Loulou"] }, { childrens: { $size: 4 } })).to.be.false(); // Of course this can never be true
             });
 
             it("Can query array documents with multiple simultaneous conditions", () => {
@@ -1438,7 +1438,7 @@ describe("database", "local", "Model", () => {
                     ]
                 }, { childrens: {
                     $elemMatch: { name: "Dewey", age: 7 } }
-                })).to.be.true;
+                })).to.be.true();
                 expect(model.match({
                     childrens: [
                         { name: "Huey", age: 3 },
@@ -1447,7 +1447,7 @@ describe("database", "local", "Model", () => {
                     ]
                 }, { childrens: {
                     $elemMatch: { name: "Dewey", age: 12 } }
-                })).to.be.false;
+                })).to.be.false();
                 expect(model.match({
                     childrens: [
                         { name: "Huey", age: 3 },
@@ -1456,7 +1456,7 @@ describe("database", "local", "Model", () => {
                     ]
                 }, { childrens: {
                     $elemMatch: { name: "Louie", age: 3 } }
-                })).to.be.false;
+                })).to.be.false();
 
                 // Nested documents
                 expect(model.match({
@@ -1469,7 +1469,7 @@ describe("database", "local", "Model", () => {
                     }
                 }, {
                     "outer.childrens": { $elemMatch: { name: "Dewey", age: 7 } }
-                })).to.be.true;
+                })).to.be.true();
                 expect(model.match({
                     outer: {
                         childrens: [
@@ -1480,7 +1480,7 @@ describe("database", "local", "Model", () => {
                     }
                 }, {
                     "outer.childrens": { $elemMatch: { name: "Dewey", age: 12 } }
-                })).to.be.false;
+                })).to.be.false();
                 expect(model.match({
                     outer: {
                         childrens: [
@@ -1491,12 +1491,12 @@ describe("database", "local", "Model", () => {
                     }
                 }, {
                     "outer.childrens": { $elemMatch: { name: "Louie", age: 3 } }
-                })).to.be.false;
+                })).to.be.false();
             });
 
             it("$elemMatch operator works with empty arrays", () => {
-                expect(model.match({ childrens: [] }, { childrens: { $elemMatch: { name: "Mitsos" } } })).to.be.false;
-                expect(model.match({ childrens: [] }, { childrens: { $elemMatch: {} } })).to.be.false;
+                expect(model.match({ childrens: [] }, { childrens: { $elemMatch: { name: "Mitsos" } } })).to.be.false();
+                expect(model.match({ childrens: [] }, { childrens: { $elemMatch: {} } })).to.be.false();
             });
 
             it("Can use more complex comparisons inside nested query documents", () => {
@@ -1513,7 +1513,7 @@ describe("database", "local", "Model", () => {
                             age: { $gt: 6, $lt: 8 }
                         }
                     }
-                })).to.be.true;
+                })).to.be.true();
                 expect(model.match({
                     childrens: [
                         { name: "Huey", age: 3 },
@@ -1527,7 +1527,7 @@ describe("database", "local", "Model", () => {
                             age: { $in: [6, 7, 8] }
                         }
                     }
-                })).to.be.true;
+                })).to.be.true();
                 expect(model.match({
                     childrens: [
                         { name: "Huey", age: 3 },
@@ -1541,7 +1541,7 @@ describe("database", "local", "Model", () => {
                             age: { $gt: 6, $lt: 7 }
                         }
                     }
-                })).to.be.false;
+                })).to.be.false();
                 expect(model.match({
                     childrens: [
                         { name: "Huey", age: 3 },
@@ -1555,36 +1555,36 @@ describe("database", "local", "Model", () => {
                             age: { $gt: 6, $lte: 7 }
                         }
                     }
-                })).to.be.false;
+                })).to.be.false();
             });
         });
 
         describe("Logical operators $or, $and, $not", () => {
             it("Any of the subqueries should match for an $or to match", () => {
-                expect(model.match({ hello: "world" }, { $or: [{ hello: "pluton" }, { hello: "world" }] })).to.be.true;
-                expect(model.match({ hello: "pluton" }, { $or: [{ hello: "pluton" }, { hello: "world" }] })).to.be.true;
-                expect(model.match({ hello: "nope" }, { $or: [{ hello: "pluton" }, { hello: "world" }] })).to.be.false;
-                expect(model.match({ hello: "world", age: 15 }, { $or: [{ hello: "pluton" }, { age: { $lt: 20 } }] })).to.be.true;
-                expect(model.match({ hello: "world", age: 15 }, { $or: [{ hello: "pluton" }, { age: { $lt: 10 } }] })).to.be.false;
+                expect(model.match({ hello: "world" }, { $or: [{ hello: "pluton" }, { hello: "world" }] })).to.be.true();
+                expect(model.match({ hello: "pluton" }, { $or: [{ hello: "pluton" }, { hello: "world" }] })).to.be.true();
+                expect(model.match({ hello: "nope" }, { $or: [{ hello: "pluton" }, { hello: "world" }] })).to.be.false();
+                expect(model.match({ hello: "world", age: 15 }, { $or: [{ hello: "pluton" }, { age: { $lt: 20 } }] })).to.be.true();
+                expect(model.match({ hello: "world", age: 15 }, { $or: [{ hello: "pluton" }, { age: { $lt: 10 } }] })).to.be.false();
             });
 
             it("All of the subqueries should match for an $and to match", () => {
-                expect(model.match({ hello: "world", age: 15 }, { $and: [{ age: 15 }, { hello: "world" }] })).to.be.true;
-                expect(model.match({ hello: "world", age: 15 }, { $and: [{ age: 16 }, { hello: "world" }] })).to.be.false;
-                expect(model.match({ hello: "world", age: 15 }, { $and: [{ hello: "world" }, { age: { $lt: 20 } }] })).to.be.true;
-                expect(model.match({ hello: "world", age: 15 }, { $and: [{ hello: "pluton" }, { age: { $lt: 20 } }] })).to.be.false;
+                expect(model.match({ hello: "world", age: 15 }, { $and: [{ age: 15 }, { hello: "world" }] })).to.be.true();
+                expect(model.match({ hello: "world", age: 15 }, { $and: [{ age: 16 }, { hello: "world" }] })).to.be.false();
+                expect(model.match({ hello: "world", age: 15 }, { $and: [{ hello: "world" }, { age: { $lt: 20 } }] })).to.be.true();
+                expect(model.match({ hello: "world", age: 15 }, { $and: [{ hello: "pluton" }, { age: { $lt: 20 } }] })).to.be.false();
             });
 
             it("Subquery should not match for a $not to match", () => {
-                expect(model.match({ a: 5, b: 10 }, { a: 5 })).to.be.true;
-                expect(model.match({ a: 5, b: 10 }, { $not: { a: 5 } })).to.be.false;
+                expect(model.match({ a: 5, b: 10 }, { a: 5 })).to.be.true();
+                expect(model.match({ a: 5, b: 10 }, { $not: { a: 5 } })).to.be.false();
             });
 
             it("Logical operators are all top-level, only other logical operators can be above", () => {
                 expect(() => {
                     model.match({ a: { b: 7 } }, { a: { $or: [{ b: 5 }, { b: 7 }] } });
                 }).to.throw();
-                expect(model.match({ a: { b: 7 } }, { $or: [{ "a.b": 5 }, { "a.b": 7 }] })).to.be.true;
+                expect(model.match({ a: { b: 7 } }, { $or: [{ "a.b": 5 }, { "a.b": 7 }] })).to.be.true();
             });
 
             it("Logical operators can be combined as long as they are on top of the decision tree", () => {
@@ -1597,7 +1597,7 @@ describe("database", "local", "Model", () => {
                         { $and: [{ a: 5 }, { b: 8 }] },
                         { $and: [{ a: 5 }, { c: { $lt: 40 } }] }
                     ]
-                })).to.be.true;
+                })).to.be.true();
                 expect(model.match({
                     a: 5,
                     b: 7,
@@ -1607,7 +1607,7 @@ describe("database", "local", "Model", () => {
                         { $and: [{ a: 5 }, { b: 8 }] },
                         { $and: [{ a: 5 }, { c: { $lt: 10 } }] }
                     ]
-                })).to.be.false;
+                })).to.be.false();
             });
 
             it("Should throw an error if a logical operator is used without an array or if an unknown logical operator is used", () => {
@@ -1629,12 +1629,12 @@ describe("database", "local", "Model", () => {
                     $where() {
                         return this.a === 4;
                     }
-                })).to.be.true;
+                })).to.be.true();
                 expect(model.match({ a: 4 }, {
                     $where() {
                         return this.a === 5;
                     }
-                })).to.be.false;
+                })).to.be.false();
             });
 
             it("Should throw an error if the $where function is not, in fact, a function", () => {
@@ -1664,58 +1664,58 @@ describe("database", "local", "Model", () => {
                     firstName: "John",
                     lastName: "Doe",
                     email: "john.doe@gmail.com"
-                }, { $where: checkEmail })).to.be.true;
+                }, { $where: checkEmail })).to.be.true();
                 expect(model.match({
                     firstName: "john",
                     lastName: "doe",
                     email: "john.doe@gmail.com"
-                }, { $where: checkEmail })).to.be.true;
+                }, { $where: checkEmail })).to.be.true();
                 expect(model.match({
                     firstName: "Jane",
                     lastName: "Doe",
                     email: "john.doe@gmail.com"
-                }, { $where: checkEmail })).to.be.false;
+                }, { $where: checkEmail })).to.be.false();
                 expect(model.match({
                     firstName: "John",
                     lastName: "Deere",
                     email: "john.doe@gmail.com"
-                }, { $where: checkEmail })).to.be.false;
+                }, { $where: checkEmail })).to.be.false();
                 expect(model.match({
                     lastName: "Doe",
                     email: "john.doe@gmail.com"
-                }, { $where: checkEmail })).to.be.false;
+                }, { $where: checkEmail })).to.be.false();
             });
         });
 
         describe("Array fields", () => {
             it("Field equality", () => {
-                expect(model.match({ tags: ["node", "js", "db"] }, { tags: "python" })).to.be.false;
-                expect(model.match({ tags: ["node", "js", "db"] }, { tagss: "js" })).to.be.false;
-                expect(model.match({ tags: ["node", "js", "db"] }, { tags: "js" })).to.be.true;
-                expect(model.match({ tags: ["node", "js", "db"] }, { tags: "node" })).to.be.true;
+                expect(model.match({ tags: ["node", "js", "db"] }, { tags: "python" })).to.be.false();
+                expect(model.match({ tags: ["node", "js", "db"] }, { tagss: "js" })).to.be.false();
+                expect(model.match({ tags: ["node", "js", "db"] }, { tags: "js" })).to.be.true();
+                expect(model.match({ tags: ["node", "js", "db"] }, { tags: "node" })).to.be.true();
 
                 // Mixed matching with array and non array
-                expect(model.match({ tags: ["node", "js", "db"], nedb: true }, { tags: "js", nedb: true })).to.be.true;
+                expect(model.match({ tags: ["node", "js", "db"], nedb: true }, { tags: "js", nedb: true })).to.be.true();
 
                 // Nested matching
-                expect(model.match({ number: 5, data: { tags: ["node", "js", "db"] } }, { "data.tags": "js" })).to.be.true;
-                expect(model.match({ number: 5, data: { tags: ["node", "js", "db"] } }, { "data.tags": "j" })).to.be.false;
+                expect(model.match({ number: 5, data: { tags: ["node", "js", "db"] } }, { "data.tags": "js" })).to.be.true();
+                expect(model.match({ number: 5, data: { tags: ["node", "js", "db"] } }, { "data.tags": "j" })).to.be.false();
             });
 
             it("With one comparison operator", () => {
-                expect(model.match({ ages: [3, 7, 12] }, { ages: { $lt: 2 } })).to.be.false;
-                expect(model.match({ ages: [3, 7, 12] }, { ages: { $lt: 3 } })).to.be.false;
-                expect(model.match({ ages: [3, 7, 12] }, { ages: { $lt: 4 } })).to.be.true;
-                expect(model.match({ ages: [3, 7, 12] }, { ages: { $lt: 8 } })).to.be.true;
-                expect(model.match({ ages: [3, 7, 12] }, { ages: { $lt: 13 } })).to.be.true;
+                expect(model.match({ ages: [3, 7, 12] }, { ages: { $lt: 2 } })).to.be.false();
+                expect(model.match({ ages: [3, 7, 12] }, { ages: { $lt: 3 } })).to.be.false();
+                expect(model.match({ ages: [3, 7, 12] }, { ages: { $lt: 4 } })).to.be.true();
+                expect(model.match({ ages: [3, 7, 12] }, { ages: { $lt: 8 } })).to.be.true();
+                expect(model.match({ ages: [3, 7, 12] }, { ages: { $lt: 13 } })).to.be.true();
             });
 
             it("Works with arrays that are in subdocuments", () => {
-                expect(model.match({ children: { ages: [3, 7, 12] } }, { "children.ages": { $lt: 2 } })).to.be.false;
-                expect(model.match({ children: { ages: [3, 7, 12] } }, { "children.ages": { $lt: 3 } })).to.be.false;
-                expect(model.match({ children: { ages: [3, 7, 12] } }, { "children.ages": { $lt: 4 } })).to.be.true;
-                expect(model.match({ children: { ages: [3, 7, 12] } }, { "children.ages": { $lt: 8 } })).to.be.true;
-                expect(model.match({ children: { ages: [3, 7, 12] } }, { "children.ages": { $lt: 13 } })).to.be.true;
+                expect(model.match({ children: { ages: [3, 7, 12] } }, { "children.ages": { $lt: 2 } })).to.be.false();
+                expect(model.match({ children: { ages: [3, 7, 12] } }, { "children.ages": { $lt: 3 } })).to.be.false();
+                expect(model.match({ children: { ages: [3, 7, 12] } }, { "children.ages": { $lt: 4 } })).to.be.true();
+                expect(model.match({ children: { ages: [3, 7, 12] } }, { "children.ages": { $lt: 8 } })).to.be.true();
+                expect(model.match({ children: { ages: [3, 7, 12] } }, { "children.ages": { $lt: 13 } })).to.be.true();
             });
 
             it("Can query inside arrays thanks to dot notation", () => {
@@ -1725,35 +1725,35 @@ describe("database", "local", "Model", () => {
                         { name: "Dewey", age: 7 },
                         { name: "Louie", age: 12 }
                     ]
-                }, { "childrens.age": { $lt: 2 } })).to.be.false;
+                }, { "childrens.age": { $lt: 2 } })).to.be.false();
                 expect(model.match({
                     childrens: [
                         { name: "Huey", age: 3 },
                         { name: "Dewey", age: 7 },
                         { name: "Louie", age: 12 }
                     ]
-                }, { "childrens.age": { $lt: 3 } })).to.be.false;
+                }, { "childrens.age": { $lt: 3 } })).to.be.false();
                 expect(model.match({
                     childrens: [
                         { name: "Huey", age: 3 },
                         { name: "Dewey", age: 7 },
                         { name: "Louie", age: 12 }
                     ]
-                }, { "childrens.age": { $lt: 4 } })).to.be.true;
+                }, { "childrens.age": { $lt: 4 } })).to.be.true();
                 expect(model.match({
                     childrens: [
                         { name: "Huey", age: 3 },
                         { name: "Dewey", age: 7 },
                         { name: "Louie", age: 12 }
                     ]
-                }, { "childrens.age": { $lt: 8 } })).to.be.true;
+                }, { "childrens.age": { $lt: 8 } })).to.be.true();
                 expect(model.match({
                     childrens: [
                         { name: "Huey", age: 3 },
                         { name: "Dewey", age: 7 },
                         { name: "Louie", age: 12 }
                     ]
-                }, { "childrens.age": { $lt: 13 } })).to.be.true;
+                }, { "childrens.age": { $lt: 13 } })).to.be.true();
 
                 expect(model.match({
                     childrens: [
@@ -1761,21 +1761,21 @@ describe("database", "local", "Model", () => {
                         { name: "Dewey", age: 7 },
                         { name: "Louie", age: 12 }
                     ]
-                }, { "childrens.name": "Louis" })).to.be.false;
+                }, { "childrens.name": "Louis" })).to.be.false();
                 expect(model.match({
                     childrens: [
                         { name: "Huey", age: 3 },
                         { name: "Dewey", age: 7 },
                         { name: "Louie", age: 12 }
                     ]
-                }, { "childrens.name": "Louie" })).to.be.true;
+                }, { "childrens.name": "Louie" })).to.be.true();
                 expect(model.match({
                     childrens: [
                         { name: "Huey", age: 3 },
                         { name: "Dewey", age: 7 },
                         { name: "Louie", age: 12 }
                     ]
-                }, { "childrens.name": "Lewi" })).to.be.false;
+                }, { "childrens.name": "Lewi" })).to.be.false();
             });
 
             it("Can query for a specific element inside arrays thanks to dot notation", () => {
@@ -1785,28 +1785,28 @@ describe("database", "local", "Model", () => {
                         { name: "Dewey", age: 7 },
                         { name: "Louie", age: 12 }
                     ]
-                }, { "childrens.0.name": "Louie" })).to.be.false;
+                }, { "childrens.0.name": "Louie" })).to.be.false();
                 expect(model.match({
                     childrens: [
                         { name: "Huey", age: 3 },
                         { name: "Dewey", age: 7 },
                         { name: "Louie", age: 12 }
                     ]
-                }, { "childrens.1.name": "Louie" })).to.be.false;
+                }, { "childrens.1.name": "Louie" })).to.be.false();
                 expect(model.match({
                     childrens: [
                         { name: "Huey", age: 3 },
                         { name: "Dewey", age: 7 },
                         { name: "Louie", age: 12 }
                     ]
-                }, { "childrens.2.name": "Louie" })).to.be.true;
+                }, { "childrens.2.name": "Louie" })).to.be.true();
                 expect(model.match({
                     childrens: [
                         { name: "Huey", age: 3 },
                         { name: "Dewey", age: 7 },
                         { name: "Louie", age: 12 }
                     ]
-                }, { "childrens.3.name": "Louie" })).to.be.false;
+                }, { "childrens.3.name": "Louie" })).to.be.false();
             });
 
             it("A single array-specific operator and the query is treated as array specific", () => {
@@ -1819,28 +1819,28 @@ describe("database", "local", "Model", () => {
                 expect(model.match({
                     uncle: "Donald",
                     nephews: ["Riri", "Fifi", "Loulou"]
-                }, { nephews: { $size: 2 }, uncle: "Donald" })).to.be.false;
+                }, { nephews: { $size: 2 }, uncle: "Donald" })).to.be.false();
                 expect(model.match({
                     uncle: "Donald",
                     nephews: ["Riri", "Fifi", "Loulou"]
-                }, { nephews: { $size: 3 }, uncle: "Donald" })).to.be.true;
+                }, { nephews: { $size: 3 }, uncle: "Donald" })).to.be.true();
                 expect(model.match({
                     uncle: "Donald",
                     nephews: ["Riri", "Fifi", "Loulou"]
-                }, { nephews: { $size: 4 }, uncle: "Donald" })).to.be.false;
+                }, { nephews: { $size: 4 }, uncle: "Donald" })).to.be.false();
 
                 expect(model.match({
                     uncle: "Donals",
                     nephews: ["Riri", "Fifi", "Loulou"]
-                }, { nephews: { $size: 3 }, uncle: "Picsou" })).to.be.false;
+                }, { nephews: { $size: 3 }, uncle: "Picsou" })).to.be.false();
                 expect(model.match({
                     uncle: "Donald",
                     nephews: ["Riri", "Fifi", "Loulou"]
-                }, { nephews: { $size: 3 }, uncle: "Donald" })).to.be.true;
+                }, { nephews: { $size: 3 }, uncle: "Donald" })).to.be.true();
                 expect(model.match({
                     uncle: "Donald",
                     nephews: ["Riri", "Fifi", "Loulou"]
-                }, { nephews: { $size: 3 }, uncle: "Daisy" })).to.be.false;
+                }, { nephews: { $size: 3 }, uncle: "Daisy" })).to.be.false();
             });
         });
     });

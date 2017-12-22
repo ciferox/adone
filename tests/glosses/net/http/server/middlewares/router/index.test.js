@@ -1266,7 +1266,7 @@ describe("net", "http", "server", "middleware", "router", "Router", () => {
             const router = new Router();
 
             router.get("/users/:id", (ctx) => {
-                expect(ctx._matchedRouteName).to.be.undefined;
+                expect(ctx._matchedRouteName).to.be.undefined();
                 ctx.status = 200;
             });
 

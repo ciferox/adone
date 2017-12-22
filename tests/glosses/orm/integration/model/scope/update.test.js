@@ -64,7 +64,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 const rubens = await this.ScopeMe.unscoped().findAll();
                 expect(_.every(rubens, (r) => {
                     return r.get("username") === "ruben";
-                })).to.be.true;
+                })).to.be.true();
             });
 
             it("should be able to apply other scopes", async function () {

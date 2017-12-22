@@ -25,7 +25,7 @@ describe("[POSTGRES Specific] QueryInterface", { skip: !/^postgres/.test(dialect
             WHERE schema_name = 'testschema';
           `, { type: this.sequelize.queryType.SELECT }))
                 .then((res) => {
-                    expect(res, "query results").to.not.be.empty;
+                    expect(res, "query results").to.not.be.empty();
                     expect(res[0].schema_name).to.be.equal("testschema");
                 });
         });
@@ -39,7 +39,7 @@ describe("[POSTGRES Specific] QueryInterface", { skip: !/^postgres/.test(dialect
             WHERE schema_name = 'testschema';
           `, { type: this.sequelize.queryType.SELECT }))
                 .then((res) => {
-                    expect(res, "query results").to.not.be.empty;
+                    expect(res, "query results").to.not.be.empty();
                     expect(res[0].schema_name).to.be.equal("testschema");
                 });
         });
@@ -234,7 +234,7 @@ describe("[POSTGRES Specific] QueryInterface", { skip: !/^postgres/.test(dialect
                 .then(() => this.queryInterface.showIndex("Group"))
                 .then((indexes) => {
                     const indexColumns = _.uniq(indexes.map((index) => index.name));
-                    expect(indexColumns).to.be.empty;
+                    expect(indexColumns).to.be.empty();
                 });
         });
     });

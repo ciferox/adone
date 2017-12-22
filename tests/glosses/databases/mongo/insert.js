@@ -220,7 +220,7 @@ describe("insert", function () {
 
         await collection.insert({ i: undefined });
         const item = await collection.findOne();
-        expect(item.i).to.be.null;
+        expect(item.i).to.be.null();
     });
 
     it("should not throw error if serializing function ordered", async () => {
@@ -288,7 +288,7 @@ describe("insert", function () {
         const items = await collection.find().toArray();
         expect(items[1].ref.namespace).to.be.equal("shouldCorrectlyInsertDBRefWithDbNotDefined");
         expect(items[1].ref.oid.toString()).to.be.equal(doc._id.toString());
-        expect(items[1].ref.db).to.be.undefined;
+        expect(items[1].ref.db).to.be.undefined();
 
         expect(items[2].ref.namespace).to.be.equal("shouldCorrectlyInsertDBRefWithDbNotDefined");
         expect(items[2].ref.oid.toString()).to.be.equal(doc._id.toString());
@@ -511,7 +511,7 @@ describe("insert", function () {
             const result = await collection.update({ a: 1 }, { a: 1 }, { upsert: true, w: 1, fullResult: true });
             // expect(result.result).not.to.have.property("updatedExisting");
             expect(result.result.n).to.be.equal(1);
-            expect(result.result.upserted).to.be.ok;
+            expect(result.result.upserted).to.be.ok();
         }
         {
             const result = await collection.update({ a: 1 }, { a: 1 }, { upsert: true, w: 1, fullResult: true });
@@ -631,7 +631,7 @@ describe("insert", function () {
         }
         {
             const doc = await collection.findOne({ code: new bson.Code("function () {}", { a: 55 }) });
-            expect(doc).to.be.ok;
+            expect(doc).to.be.ok();
         }
     });
 
@@ -646,11 +646,11 @@ describe("insert", function () {
         await collection.insert(documents);
         {
             const doc = await collection.findOne({ x: new bson.Timestamp(1, 2) });
-            expect(doc).to.be.ok;
+            expect(doc).to.be.ok();
         }
         {
             const doc = await collection.findOne({ x: d });
-            expect(doc).to.be.ok;
+            expect(doc).to.be.ok();
         }
     });
 
@@ -837,7 +837,7 @@ describe("insert", function () {
             }
         });
         await db.collection("insert_apm_test").insertOne({ a: 1 }, { forceServerObjectId: true });
-        expect(started[0].command.documents[0]._id).to.be.undefined;
+        expect(started[0].command.documents[0]._id).to.be.undefined();
         listener.uninstrument();
     });
 
@@ -851,7 +851,7 @@ describe("insert", function () {
             }
         });
         await db.collection("insert_apm_test").insertMany([{ a: 1 }], { forceServerObjectId: true });
-        expect(started[0].command.documents[0]._id).to.be.undefined;
+        expect(started[0].command.documents[0]._id).to.be.undefined();
         listener.uninstrument();
     });
 

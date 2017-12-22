@@ -361,7 +361,7 @@ describe("collection", "BufferList", () => {
         const md5sum = crypto.createHash("md5");
         const bl = new BufferList(((err, buf) => {
             assert(is.buffer(buf));
-            assert.isNull(err);
+            assert.null(err);
             assert.deepEqual(rndhash, md5(bl.slice()));
             assert.deepEqual(rndhash, md5(buf));
 
@@ -656,7 +656,7 @@ describe("collection", "BufferList", () => {
     describe("promise api", () => {
         it("should support then", async () => {
             const data = await fs.createReadStream(__filename).pipe(new BufferList());
-            expect(data).to.exist;
+            expect(data).to.exist();
             expect(data.toString()).to.be.equal(await fs.readFile(__filename, "utf8"));
         });
 

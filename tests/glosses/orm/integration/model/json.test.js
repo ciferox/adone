@@ -757,7 +757,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                                 ["data.name.first}'); INSERT INJECTION HERE! SELECT ('"]
                             ]
                         }).then((events) => {
-                            expect(events).to.be.ok;
+                            expect(events).to.be.ok();
                             expect(events[0].get("data")).to.eql({
                                 name: {
                                     first: "Homer",

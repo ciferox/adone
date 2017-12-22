@@ -26,18 +26,18 @@ describe("collection", "Stack", () => {
     it("empty() should be the indicator of the emptiness of a stack", () => {
         const s = new Stack();
 
-        expect(s.empty).to.be.true;
+        expect(s.empty).to.be.true();
         s.push(1);
-        expect(s.empty).to.be.false;
+        expect(s.empty).to.be.false();
         s.pop();
-        expect(s.empty).to.be.true;
+        expect(s.empty).to.be.true();
     });
 
     it("top() should return the element at the top of a stack but doesnt remove it", () => {
         const s = new Stack();
         s.push(1);
         expect(s.top).to.be.equal(1);
-        expect(s.empty).to.be.false;
+        expect(s.empty).to.be.false();
         expect(s.length).to.be.equal(1);
     });
 
@@ -66,9 +66,9 @@ describe("collection", "Stack", () => {
             const s1 = Stack.from([1, 2, 3, 4, 5]);
             const s2 = Stack.from([1, 2, 3]);
             s1.moveTo(s2);
-            expect(s1.empty).to.be.true;
+            expect(s1.empty).to.be.true();
             expect(s1.length).to.be.equal(0);
-            expect(s1.pop()).to.be.undefined;
+            expect(s1.pop()).to.be.undefined();
             expect(s2.length).to.be.equal(8);
 
             // from s1, reversed order
@@ -96,12 +96,12 @@ describe("collection", "Stack", () => {
             const s = Stack.from([1, 2, 3]);
             s.clear();
             expect(s.length).to.be.equal(0);
-            expect(s.empty).to.be.true;
-            expect(s.top).to.be.undefined;
-            expect(s.pop()).to.be.undefined;
+            expect(s.empty).to.be.true();
+            expect(s.top).to.be.undefined();
+            expect(s.pop()).to.be.undefined();
             s.push(1);
             expect(s.length).to.be.equal(1);
-            expect(s.empty).to.be.false;
+            expect(s.empty).to.be.false();
             expect(s.pop()).to.be.equal(1);
         });
 

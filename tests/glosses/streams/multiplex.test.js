@@ -244,7 +244,7 @@ describe("stream", "multiplex", () => {
         });
 
         plex.on("finish", () => {
-            assert.isOk(async, "finished");
+            assert.ok(async, "finished");
             done();
         });
 
@@ -275,8 +275,8 @@ describe("stream", "multiplex", () => {
         plex1.pipe(plex2).pipe(plex1);
 
         plex2.on("stream", (stream, id) => {
-            assert.isOk(stream, "received stream");
-            assert.isOk(id, "has id");
+            assert.ok(stream, "received stream");
+            assert.ok(id, "has id");
             stream.write("hello world");
             stream.end();
         });

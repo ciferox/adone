@@ -14,7 +14,7 @@ describe("collection", "MapCache", () => {
 
         it("should return undefined if there is no such key", () => {
             const cache = new MapCache();
-            expect(cache.get("3")).to.be.undefined;
+            expect(cache.get("3")).to.be.undefined();
         });
     });
 
@@ -31,13 +31,13 @@ describe("collection", "MapCache", () => {
     describe("has", () => {
         it("should return false if the cache does not include the given key", () => {
             const cache = new MapCache();
-            expect(cache.has("a")).to.be.false;
+            expect(cache.has("a")).to.be.false();
         });
 
         it("should return true if the cache includes the given key", () => {
             const cache = new MapCache();
             cache.set("a", 1);
-            expect(cache.has("a")).to.be.true;
+            expect(cache.has("a")).to.be.true();
         });
     });
 
@@ -46,7 +46,7 @@ describe("collection", "MapCache", () => {
             const cache = new MapCache();
             cache.set("a", 1);
             cache.delete("a");
-            expect(cache.has("a")).to.be.false;
+            expect(cache.has("a")).to.be.false();
         });
 
         it("should do nothing if there is no such key", () => {
@@ -61,8 +61,8 @@ describe("collection", "MapCache", () => {
             cache.set("a", 1);
             cache.set("b", 2);
             cache.clear();
-            expect(cache.has("a")).to.be.false;
-            expect(cache.has("b")).to.be.false;
+            expect(cache.has("a")).to.be.false();
+            expect(cache.has("b")).to.be.false();
         });
     });
 });

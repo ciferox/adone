@@ -792,7 +792,7 @@ describe("collations", function () {
         const r = await collection.listIndexes().toArray();
         const indexes = r.filter((i) => i.name === "collation_test");
         expect(indexes).to.have.lengthOf(1);
-        expect(indexes[0].collation).to.be.ok;
+        expect(indexes[0].collation).to.be.ok();
     });
 
     it("should correctly create collection with collation", async () => {
@@ -801,6 +801,6 @@ describe("collations", function () {
         const collections = await db.listCollections({ name: "collation_test2" }).toArray();
         expect(collections).to.have.lengthOf(1);
         expect(collections[0].name).to.be.equal("collation_test2");
-        expect(collections[0].options.collation).to.be.ok;
+        expect(collections[0].options.collation).to.be.ok();
     });
 });

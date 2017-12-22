@@ -101,24 +101,24 @@ describe(Support.getTestDialectTeaser("associations"), () => {
                     });
                 }).then((comment) => {
                     expect(comment.get("commentable")).to.equal("post");
-                    expect(comment.get("isMain")).to.be.false;
+                    expect(comment.get("isMain")).to.be.false();
                     return this.Post.scope("withMainComment").findById(this.post.get("id"));
                 }).then((post) => {
-                    expect(post.mainComment).to.be.null;
+                    expect(post.mainComment).to.be.null();
                     return post.createMainComment({
                         title: "I am a main post comment"
                     });
                 }).then((mainComment) => {
                     this.mainComment = mainComment;
                     expect(mainComment.get("commentable")).to.equal("post");
-                    expect(mainComment.get("isMain")).to.be.true;
+                    expect(mainComment.get("isMain")).to.be.true();
                     return this.Post.scope("withMainComment").findById(this.post.id);
                 }).then((post) => {
                     expect(post.mainComment.get("id")).to.equal(this.mainComment.get("id"));
                     return post.getMainComment();
                 }).then((mainComment) => {
                     expect(mainComment.get("commentable")).to.equal("post");
-                    expect(mainComment.get("isMain")).to.be.true;
+                    expect(mainComment.get("isMain")).to.be.true();
                     return this.Comment.create({
                         title: "I am a future main comment"
                     });
@@ -128,7 +128,7 @@ describe(Support.getTestDialectTeaser("associations"), () => {
                     return this.post.getMainComment();
                 }).then((mainComment) => {
                     expect(mainComment.get("commentable")).to.equal("post");
-                    expect(mainComment.get("isMain")).to.be.true;
+                    expect(mainComment.get("isMain")).to.be.true();
                     expect(mainComment.get("title")).to.equal("I am a future main comment");
                 });
             });
@@ -161,7 +161,7 @@ describe(Support.getTestDialectTeaser("associations"), () => {
                 const comments = await this.Comment.findAll();
 
                 comments.forEach((comment) => {
-                    expect(comment.get("commentable")).to.be.ok;
+                    expect(comment.get("commentable")).to.be.ok();
                 });
                 expect(comments.map((comment) => {
                     return comment.get("commentable");

@@ -52,7 +52,7 @@ describe("net", "ip", "IPRange", () => {
             for (let i = 0; i < 44; ++i) {
                 expect(it.next().value.address).to.be.equal(`192.168.4.${i}`);
             }
-            expect(it.next().done).to.be.true;
+            expect(it.next().done).to.be.true();
         });
     });
 
@@ -104,7 +104,7 @@ describe("net", "ip", "IPRange", () => {
             for (let i = 0; i < 44; ++i) {
                 expect(it.next().value.to4().address).to.be.equal(`192.168.4.${i}`);
             }
-            expect(it.next().done).to.be.true;
+            expect(it.next().done).to.be.true();
         });
     });
 });

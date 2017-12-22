@@ -12,12 +12,12 @@ describe(Support.getTestDialectTeaser("Model"), () => {
                 name: type.STRING
             });
 
-            expect(Model.primaryKeyAttribute).not.to.be.undefined;
+            expect(Model.primaryKeyAttribute).not.to.be.undefined();
             expect(_.size(Model.primaryKeys)).to.equal(1);
 
             Model.removeAttribute("id");
 
-            expect(Model.primaryKeyAttribute).to.be.undefined;
+            expect(Model.primaryKeyAttribute).to.be.undefined();
             expect(_.size(Model.primaryKeys)).to.equal(0);
         });
 

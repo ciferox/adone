@@ -20,9 +20,9 @@ describe("collection", "RefcountedCache", () => {
             cache.set("a", "b");
             cache.ref("a");
             cache.unref("a");
-            expect(cache.has("a")).to.be.true;
+            expect(cache.has("a")).to.be.true();
             cache.unref("a");
-            expect(cache.has("a")).to.be.false;
+            expect(cache.has("a")).to.be.false();
         });
 
         it("should throw if the key is unknown", () => {

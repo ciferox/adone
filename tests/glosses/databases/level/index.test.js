@@ -74,8 +74,8 @@ class Manager {
                 const call = this.dataSpy.getCall(i);
                 if (call) {
                     assert.equal(call.args.length, 1, `ReadStream "data" event #${i} fired with 1 argument`);
-                    assert.isNotNull(call.args[0].key, `ReadStream "data" event #${i} argument has "key" property`);
-                    assert.isNotNull(call.args[0].value, `ReadStream "data" event #${i} argument has "value" property`);
+                    assert.notNull(call.args[0].key, `ReadStream "data" event #${i} argument has "key" property`);
+                    assert.notNull(call.args[0].value, `ReadStream "data" event #${i} argument has "value" property`);
                     assert.equal(call.args[0].key, d.key, `ReadStream "data" event #${i} argument has correct "key"`);
                     assert.deepEqual(Number(call.args[0].value), Number(d.value), `ReadStream "data" event #${i} argument has correct "value"`);
                 }
@@ -109,8 +109,8 @@ class Manager {
 
     static async open(options) {
         const db = new DB(options);
-        assert.isFalse(db.isOpen());
-        assert.isFalse(db.isClosed());
+        assert.false(db.isOpen());
+        assert.false(db.isClosed());
         await db.open();
         return db;
     }
@@ -148,9 +148,9 @@ describe("database", "level", () => {
                 }
 
                 let db = await Manager.open(options);
-                assert.isTrue(db.isOpen());
+                assert.true(db.isOpen());
                 await db.close();
-                assert.isFalse(db.isOpen());
+                assert.false(db.isOpen());
 
                 db = await Manager.open(options);
                 if (encMode) {
@@ -164,13 +164,13 @@ describe("database", "level", () => {
 
                 if (encMode) {
                     assert.equal(db.options.encryption.saltBytes, 32);
-                    assert.isUndefined(db.options.encryption.salt);
+                    assert.undefined(db.options.encryption.salt);
                     assert.equal(db.options.encryption.digest, "sha256");
                     assert.equal(db.options.encryption.keyBytes, 32);
                     assert.equal(db.options.encryption.iterations, 64000);
                     assert.equal(db.options.encryption.algorithm, "aes-256-cbc");
                     assert.equal(db.options.encryption.ivBytes, 16);
-                    assert.isUndefined(db.options.encryption.key);
+                    assert.undefined(db.options.encryption.key);
                 }
                 await db.close();
             });
@@ -184,11 +184,11 @@ describe("database", "level", () => {
                     key
                 }
             });
-            assert.isUndefined(db.options.encryption.saltBytes);
-            assert.isUndefined(db.options.encryption.salt);
-            assert.isUndefined(db.options.encryption.digest);
-            assert.isUndefined(db.options.encryption.keyBytes);
-            assert.isUndefined(db.options.encryption.iterations, 64000);
+            assert.undefined(db.options.encryption.saltBytes);
+            assert.undefined(db.options.encryption.salt);
+            assert.undefined(db.options.encryption.digest);
+            assert.undefined(db.options.encryption.keyBytes);
+            assert.undefined(db.options.encryption.iterations, 64000);
             assert.equal(db.options.encryption.algorithm, "aes-256-cbc");
             assert.equal(db.options.encryption.ivBytes, 16);
             assert.deepEqual(db.options.encryption.key, key);
@@ -319,7 +319,7 @@ describe("database", "level", () => {
             beforeEach(async () => {
                 const db = await Manager.open({ location: manager.nextLocation() });
                 manager.closeableDatabases.push(db);
-                assert.isTrue(db.isOpen());
+                assert.true(db.isOpen());
                 _db = db;
             });
 
@@ -480,7 +480,7 @@ describe("database", "level", () => {
         });
 
         it("sanity check on test data", () => {
-            assert.isOk(is.buffer(testData));
+            assert.ok(is.buffer(testData));
             manager.checkBinaryTestData(testData);
         });
 
@@ -627,7 +627,7 @@ describe("database", "level", () => {
             // these should exist
             for (const key of ["2", "3", "bar", "baz"]) {
                 const value = await db.get(key);
-                assert.isNotNull(value);
+                assert.notNull(value);
             }
 
             // these shouldn't exist
@@ -701,7 +701,7 @@ describe("database", "level", () => {
             // these should exist
             for (const key of ["2", "3", "bar", "baz"]) {
                 const value = await db.get(key);
-                assert.isNotNull(value);
+                assert.notNull(value);
             }
             // these shouldn't exist
             for (const key of ["1", "foo"]) {
@@ -720,7 +720,7 @@ describe("database", "level", () => {
             // these should exist
             for (const key of ["2", "3"]) {
                 const value = await db.get(key);
-                assert.isNotNull(value);
+                assert.notNull(value);
             }
             // this shouldn't exist
             await Manager.shouldThrows(() => db.get("1"), x.NotFound);
@@ -1257,8 +1257,8 @@ describe("database", "level", () => {
     //                         assert(call);
     //                         if (call) {
     //                             assert.equal(call.args.length, 1, `ReadStream "data" event #${i} fired with 1 argument`);
-    //                             assert.isNotNull(call.args[0].key, `ReadStream "data" event #${i} argument has "key" property`);
-    //                             assert.isNotNull(call.args[0].value, `ReadStream "data" event #${i} argument has "value" property`);
+    //                             assert.notNull(call.args[0].key, `ReadStream "data" event #${i} argument has "key" property`);
+    //                             assert.notNull(call.args[0].value, `ReadStream "data" event #${i} argument has "value" property`);
     //                             assert.equal(call.args[0].key, d.key, `ReadStream "data" event #${i} argument has correct "key"`);
     //                             assert.equal(Number(call.args[0].value), Number(d.value), `ReadStream "data" event #${i} argument has correct "value"`);
     //                         }

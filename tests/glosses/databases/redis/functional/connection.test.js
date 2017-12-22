@@ -186,7 +186,7 @@ describe("database", "redis", "connection", { skip: check }, () => {
             });
             redis.get("foo").catch(adone.noop);
             await getFoo.waitForCall();
-            expect(called).to.be.true;
+            expect(called).to.be.true();
             redis.disconnect();
             await node.disconnect();
         });

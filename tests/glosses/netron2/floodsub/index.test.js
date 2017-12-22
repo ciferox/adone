@@ -128,7 +128,7 @@ describe("netron2", "floodsub", () => {
                 const receivedMsg = function (msg) {
                     expect(msg.data.toString()).to.equal("banana");
                     expect(msg.from).to.be.eql(fsB.libp2p.peerInfo.id.toB58String());
-                    assert.isTrue(is.buffer(msg.seqno));
+                    assert.true(is.buffer(msg.seqno));
                     expect(msg.topicIDs).to.be.eql(["Z"]);
 
                     if (++counter === 10) {
@@ -150,7 +150,7 @@ describe("netron2", "floodsub", () => {
                 const receivedMsg = function (msg) {
                     expect(msg.data.toString()).to.equal("banana");
                     expect(msg.from).to.be.eql(fsB.libp2p.peerInfo.id.toB58String());
-                    assert.isTrue(is.buffer(msg.seqno));
+                    assert.true(is.buffer(msg.seqno));
                     expect(msg.topicIDs).to.be.eql(["Z"]);
 
                     if (++counter === 10) {

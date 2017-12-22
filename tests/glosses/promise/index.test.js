@@ -116,7 +116,7 @@ describe("promise", () => {
 
         it("should pass null as the first argument if there is no error", (done) => {
             promise.nodeify(Promise.resolve(), (err) => {
-                expect(err).to.be.null;
+                expect(err).to.be.null();
                 done();
             });
         });
@@ -165,7 +165,7 @@ describe("promise", () => {
                     resolve([err, result]);
                 });
             });
-            expect(err).to.be.null;
+            expect(err).to.be.null();
             expect(res).to.be.equal(3);
         });
 
@@ -181,7 +181,7 @@ describe("promise", () => {
             });
             expect(err).to.be.an("error");
             expect(err.message).to.be.equal("hello 1 + 2");
-            expect(res).to.be.undefined;
+            expect(res).to.be.undefined();
         });
 
         it("should not pop the last argument if it is not a callback", async () => {
@@ -247,7 +247,7 @@ describe("promise", () => {
         it("should set the promisified property", () => {
             const getSecrets = adone.noop;
             const f = promise.promisify(getSecrets);
-            expect(f[Symbol.for("adone:promise:promisified")]).to.be.true;
+            expect(f[Symbol.for("adone:promise:promisified")]).to.be.true();
         });
 
         it("should set the promisified source property", () => {
@@ -284,8 +284,8 @@ describe("promise", () => {
             const b = promise.promisifyAll(a);
             expect(await b.fAsync()).to.be.equal(1);
             expect(await b.bAsync()).to.be.equal(2);
-            expect(b.fAsync[Symbol.for("adone:promise:promisified")]).to.be.true;
-            expect(b.bAsync[Symbol.for("adone:promise:promisified")]).to.be.true;
+            expect(b.fAsync[Symbol.for("adone:promise:promisified")]).to.be.true();
+            expect(b.bAsync[Symbol.for("adone:promise:promisified")]).to.be.true();
         });
 
         it("should not modify the prev functions", () => {
@@ -376,7 +376,7 @@ describe("promise", () => {
             });
 
             assert.equal(val, fixture);
-            assert.isTrue(called);
+            assert.true(called);
         });
 
         it("callback is called when promise is rejected", async () => {
@@ -388,7 +388,7 @@ describe("promise", () => {
                 assert.equal(err, fixtureErr);
             });
 
-            assert.isTrue(called);
+            assert.true(called);
         });
 
         it("returning a rejected promise in the callback rejects the promise", async () => {

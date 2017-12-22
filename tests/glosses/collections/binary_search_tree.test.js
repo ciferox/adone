@@ -18,15 +18,15 @@ describe("collection", "BinarySearchTree", () => {
 
     it("Upon creation, left, right are null, key and data can be set", () => {
         let bst = new BinarySearchTree();
-        assert.isNull(bst.left);
-        assert.isNull(bst.right);
+        assert.null(bst.left);
+        assert.null(bst.right);
         expect(bst.hasOwnProperty("key")).to.be.equal(false);
         expect(bst.data.length).to.be.equal(0);
 
 
         bst = new BinarySearchTree({ key: 6, value: "ggg" });
-        assert.isNull(bst.left);
-        assert.isNull(bst.right);
+        assert.null(bst.left);
+        assert.null(bst.right);
         expect(bst.key).to.be.equal(6);
         expect(bst.data.length).to.be.equal(1);
         expect(bst.data[0]).to.be.equal("ggg");
@@ -274,8 +274,8 @@ describe("collection", "BinarySearchTree", () => {
             expect(bst.key).to.be.equal(10);
 
             expect(bst.data).to.be.deep.equal(["some data"]);
-            assert.isNull(bst.left);
-            assert.isNull(bst.right);
+            assert.null(bst.left);
+            assert.null(bst.right);
         });
 
         it("Insert on the left if key is less than the root's", () => {
@@ -285,12 +285,12 @@ describe("collection", "BinarySearchTree", () => {
             bst.insert(7, "some other data");
 
             bst.checkIsBST();
-            assert.isNull(bst.right);
+            assert.null(bst.right);
             expect(bst.left.key).to.be.equal(7);
 
             expect(bst.left.data).to.be.deep.equal(["some other data"]);
-            assert.isNull(bst.left.left);
-            assert.isNull(bst.left.right);
+            assert.null(bst.left.left);
+            assert.null(bst.left.right);
         });
 
         it("Insert on the right if key is greater than the root's", () => {
@@ -300,12 +300,12 @@ describe("collection", "BinarySearchTree", () => {
             bst.insert(14, "some other data");
 
             bst.checkIsBST();
-            assert.isNull(bst.left);
+            assert.null(bst.left);
             expect(bst.right.key).to.be.equal(14);
 
             expect(bst.right.data).to.be.deep.equal(["some other data"]);
-            assert.isNull(bst.right.left);
-            assert.isNull(bst.right.right);
+            assert.null(bst.right.left);
+            assert.null(bst.right.right);
         });
 
         it("Recursive insertion on the left works", () => {
@@ -317,7 +317,7 @@ describe("collection", "BinarySearchTree", () => {
             bst.insert(9, "world");
 
             bst.checkIsBST();
-            assert.isNull(bst.right);
+            assert.null(bst.right);
             expect(bst.left.key).to.be.equal(7);
 
             expect(bst.left.data).to.be.deep.equal(["some other data"]);
@@ -340,7 +340,7 @@ describe("collection", "BinarySearchTree", () => {
             bst.insert(19, "world");
 
             bst.checkIsBST();
-            assert.isNull(bst.left);
+            assert.null(bst.left);
             expect(bst.right.key).to.be.equal(17);
 
             expect(bst.right.data).to.be.deep.equal(["some other data"]);
@@ -415,8 +415,8 @@ describe("collection", "BinarySearchTree", () => {
             expect(bst.key).to.be.equal(0);
 
             expect(bst.data).to.be.deep.equal(["some data"]);
-            assert.isNull(bst.left);
-            assert.isNull(bst.right);
+            assert.null(bst.left);
+            assert.null(bst.right);
 
             bst = new BinarySearchTree();
 
@@ -426,8 +426,8 @@ describe("collection", "BinarySearchTree", () => {
             expect(bst.key).to.be.equal("");
 
             expect(bst.data).to.be.deep.equal(["some other data"]);
-            assert.isNull(bst.left);
-            assert.isNull(bst.right);
+            assert.null(bst.left);
+            assert.null(bst.right);
         });
 
         it("Can insert a lot of keys and still get a BST (sanity check)", () => {
@@ -449,7 +449,7 @@ describe("collection", "BinarySearchTree", () => {
 
             bst.checkIsBST();
 
-            assert.isNull(bst.parent);
+            assert.null(bst.parent);
             expect(bst.left.parent).to.be.equal(bst);
             expect(bst.right.parent).to.be.equal(bst);
         });
@@ -640,25 +640,25 @@ describe("collection", "BinarySearchTree", () => {
             bst.delete(3);
             bst.checkIsBST();
             checkOnlyOneWasRemoved(3);
-            assert.isNull(bst.left.left);
+            assert.null(bst.left.left);
 
             recreateBst();
             bst.delete(8);
             bst.checkIsBST();
             checkOnlyOneWasRemoved(8);
-            assert.isNull(bst.left.right);
+            assert.null(bst.left.right);
 
             recreateBst();
             bst.delete(12);
             bst.checkIsBST();
             checkOnlyOneWasRemoved(12);
-            assert.isNull(bst.right.left);
+            assert.null(bst.right.left);
 
             recreateBst();
             bst.delete(37);
             bst.checkIsBST();
             checkOnlyOneWasRemoved(37);
-            assert.isNull(bst.right.right);
+            assert.null(bst.right.right);
         });
 
         it("Able to delete the root if it has only one child", () => {

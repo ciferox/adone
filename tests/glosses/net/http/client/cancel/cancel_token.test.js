@@ -28,7 +28,7 @@ describe("net", "http", "client", "CancelToken", () => {
 
         it("returns undefined if cancellation has not been requested", () => {
             const token = new CancelToken(adone.noop);
-            expect(token.reason).to.be.undefined;
+            expect(token.reason).to.be.undefined();
         });
     });
 
@@ -78,7 +78,7 @@ describe("net", "http", "client", "CancelToken", () => {
             const source = CancelToken.source();
             expect(source.token).to.be.instanceOf(CancelToken);
             expect(source.cancel).to.be.a("function");
-            expect(source.token.reason).to.be.undefined;
+            expect(source.token.reason).to.be.undefined();
             source.cancel("Operation has been canceled.");
             expect(source.token.reason).to.be.instanceOf(Cancel);
             expect(source.token.reason.message).to.be.equal("Operation has been canceled.");

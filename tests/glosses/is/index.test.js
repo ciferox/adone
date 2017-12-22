@@ -526,23 +526,23 @@ describe("is", () => {
         }
 
         it("class => false", () => {
-            assert.isFalse(adone.is.plainObject(new Foo()));
+            assert.false(adone.is.plainObject(new Foo()));
         });
 
         it("function => false", () => {
-            assert.isFalse(adone.is.plainObject(new Bar()));
+            assert.false(adone.is.plainObject(new Bar()));
         });
 
         it("[1, 2, 3] => false", () => {
-            assert.isFalse(is.plainObject([1, 2, 3]));
+            assert.false(is.plainObject([1, 2, 3]));
         });
 
         it("{ 'x': 0, 'y': 0 } => true", () => {
-            assert.isTrue(is.plainObject({ x: 0, y: 0 }));
+            assert.true(is.plainObject({ x: 0, y: 0 }));
         });
 
         it("Object.create(null) => true", () => {
-            assert.isTrue(is.plainObject(Object.create(null)));
+            assert.true(is.plainObject(Object.create(null)));
         });
     });
 });
