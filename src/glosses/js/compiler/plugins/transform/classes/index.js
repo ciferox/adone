@@ -2,8 +2,17 @@ import LooseTransformer from "./loose";
 import VanillaTransformer from "./vanilla";
 
 const {
-    js: { compiler: { types: t, helper: { annotateAsPure, functionName } } }
+    js: { compiler: { types: t, helper: { annotateAsPure, functionName } } },
+    util: { globals }
 } = adone;
+
+const getBuiltinClasses = (category) =>
+    Object.keys(globals[category]).filter((name) => /^[A-Z]/.test(name));
+
+const builtinClasses = new Set([
+    ...getBuiltinClasses("builtin"),
+    ...getBuiltinClasses("browser")
+]);
 
 export default function (api, options) {
     const { loose } = options;
@@ -15,8 +24,8 @@ export default function (api, options) {
     return {
         visitor: {
             ExportDefaultDeclaration(path) {
-                if (!path.get("declaration").isClassDeclaration()) {
-                    return;
+                if (!path.get("declaration").isClassDeclaration()) { 
+                    return; 
                 }
 
                 const { node } = path;
@@ -47,8 +56,8 @@ export default function (api, options) {
 
             ClassExpression(path, state) {
                 const { node } = path;
-                if (node[VISITED]) {
-                    return;
+                if (node[VISITED]) { 
+                    return; 
                 }
 
                 const inferred = functionName(path);
@@ -59,7 +68,9 @@ export default function (api, options) {
 
                 node[VISITED] = true;
 
-                path.replaceWith(new Constructor(path, state.file).run());
+                path.replaceWith(
+                    new Constructor(path, state.file, builtinClasses).run(),
+                );
 
                 if (path.isCallExpression()) {
                     annotateAsPure(path);

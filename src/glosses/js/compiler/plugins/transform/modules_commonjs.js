@@ -1,4 +1,5 @@
 const {
+    is,
     js: { compiler: { template, types: t, helper: { simpleAccess, moduleTransforms: {
         isModule,
         rewriteModuleStatementsAndPrepareHeader,
@@ -16,9 +17,19 @@ export default function (api, options) {
         strict,
         strictMode,
         noInterop,
+        lazy = false,
         // Defaulting to 'true' for now. May change before 7.x major.
         allowCommonJSExports = true
     } = options;
+
+    if (
+        !is.boolean(lazy) &&
+        !is.function(lazy) &&
+        (!is.array(lazy) || !lazy.every((item) => is.string(item)))
+    ) {
+        throw new Error(".lazy must be a boolean, array of strings, or a function");
+    }
+
     const getAssertion = (localName) => template.expression.ast`
     (function(){
       throw new Error("The CommonJS '" + "${localName}" + "' variable is not available in ES6 modules.");
@@ -28,8 +39,8 @@ export default function (api, options) {
     const moduleExportsVisitor = {
         ReferencedIdentifier(path) {
             const localName = path.node.name;
-            if (localName !== "module" && localName !== "exports") { 
-                return; 
+            if (localName !== "module" && localName !== "exports") {
+                return;
             }
 
             const localBinding = path.scope.getBinding(localName);
@@ -54,15 +65,15 @@ export default function (api, options) {
             if (left.isIdentifier()) {
                 const localName = path.node.name;
                 if (localName !== "module" && localName !== "exports") {
-                    return; 
+                    return;
                 }
 
                 const localBinding = path.scope.getBinding(localName);
                 const rootBinding = this.scope.getBinding(localName);
 
                 // redeclared in this scope
-                if (rootBinding !== localBinding) { 
-                    return; 
+                if (rootBinding !== localBinding) {
+                    return;
                 }
 
                 const right = path.get("right");
@@ -72,8 +83,8 @@ export default function (api, options) {
             } else if (left.isPattern()) {
                 const ids = left.getOuterBindingIdentifiers();
                 const localName = Object.keys(ids).filter((localName) => {
-                    if (localName !== "module" && localName !== "exports") { 
-                        return false; 
+                    if (localName !== "module" && localName !== "exports") {
+                        return false;
                     }
 
                     return (
@@ -98,8 +109,8 @@ export default function (api, options) {
                 exit(path) {
                     // For now this requires unambiguous rather that just sourceType
                     // because Babel currently parses all files as sourceType:module.
-                    if (!isModule(path, true /* requireUnambiguous */)) { 
-                        return; 
+                    if (!isModule(path, true /* requireUnambiguous */)) {
+                        return;
                     }
 
                     // Rename the bindings auto-injected into the scope so there is no
@@ -121,8 +132,8 @@ export default function (api, options) {
                     }
 
                     let moduleName = this.getModuleName();
-                    if (moduleName) { 
-                        moduleName = t.stringLiteral(moduleName); 
+                    if (moduleName) {
+                        moduleName = t.stringLiteral(moduleName);
                     }
 
                     const { meta, headers } = rewriteModuleStatementsAndPrepareHeader(
@@ -133,7 +144,8 @@ export default function (api, options) {
                             strict,
                             strictMode,
                             allowTopLevelThis,
-                            noInterop
+                            noInterop,
+                            lazy
                         },
                     );
 
@@ -144,14 +156,28 @@ export default function (api, options) {
 
                         let header;
                         if (isSideEffectImport(metadata)) {
+                            if (metadata.lazy) {
+                                throw new Error("Assertion failure");
+                            }
+
                             header = t.expressionStatement(loadExpr);
                         } else {
-                            header = t.variableDeclaration("var", [
-                                t.variableDeclarator(
-                                    t.identifier(metadata.name),
-                                    wrapInterop(path, loadExpr, metadata.interop) || loadExpr,
-                                )
-                            ]);
+                            const init =
+                                wrapInterop(path, loadExpr, metadata.interop) || loadExpr;
+
+                            if (metadata.lazy) {
+                                header = template.ast`
+                  function ${metadata.name}() {
+                    const data = ${init};
+                    ${metadata.name} = function(){ return data; };
+                    return data;
+                  }
+                `;
+                            } else {
+                                header = template.ast`
+                  var ${metadata.name} = ${init};
+                `;
+                            }
                         }
                         header.loc = metadata.loc;
 

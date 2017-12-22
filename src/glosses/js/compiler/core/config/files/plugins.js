@@ -4,7 +4,6 @@
  * This file handles all logic for converting string-based configuration references into loaded objects.
  */
 
-// import resolve from "resolve";
 import path from "path";
 
 const EXACT_RE = /^module:/;
@@ -90,14 +89,14 @@ function resolveStandardizedName(
   const standardizedName = standardizeName(type, name);
 
   try {
-    return resolve.sync(standardizedName, { basedir: dirname });
+    return adone.js.Module.resolve(standardizedName, { basedir: dirname });
   } catch (e) {
     if (e.code !== "MODULE_NOT_FOUND") throw e;
 
     if (standardizedName !== name) {
       let resolvedOriginal = false;
       try {
-        resolve.sync(name, { basedir: dirname });
+        adone.js.Module.resolve(name, { basedir: dirname });
         resolvedOriginal = true;
       } catch (e2) {}
 
@@ -109,7 +108,7 @@ function resolveStandardizedName(
 
     let resolvedBabel = false;
     try {
-      resolve.sync(standardizeName(type, "@babel/" + name), {
+      adone.js.Module.resolve(standardizeName(type, "@babel/" + name), {
         basedir: dirname,
       });
       resolvedBabel = true;
@@ -123,7 +122,7 @@ function resolveStandardizedName(
     let resolvedOppositeType = false;
     const oppositeType = type === "preset" ? "plugin" : "preset";
     try {
-      resolve.sync(standardizeName(oppositeType, name), { basedir: dirname });
+      adone.js.Module.resolve(standardizeName(oppositeType, name), { basedir: dirname });
       resolvedOppositeType = true;
     } catch (e2) {}
 

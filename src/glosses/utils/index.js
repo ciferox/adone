@@ -60,7 +60,8 @@ adone.lazify({
     merge: "./merge",
     pool: "./pool",
     terraformer: "./terraformer",
-    inflection: "./inflection"
+    inflection: "./inflection",
+    globals: "./globals"
 }, adone.asNamespace(exports), require);
 
 const irregularPlurals = {

@@ -4,7 +4,6 @@ const {
   js: { compiler: { types: t } }
 } = adone;
 
-
 export function AnyTypeAnnotation() {
   this.word("any");
 }
@@ -424,9 +423,11 @@ export function ObjectTypeIndexer(node: Object) {
   }
   this._variance(node);
   this.token("[");
-  this.print(node.id, node);
-  this.token(":");
-  this.space();
+  if (node.id) {
+    this.print(node.id, node);
+    this.token(":");
+    this.space();
+  }
   this.print(node.key, node);
   this.token("]");
   this.token(":");

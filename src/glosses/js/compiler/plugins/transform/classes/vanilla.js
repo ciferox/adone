@@ -1,6 +1,8 @@
 const {
-    js: { compiler: { types: t, template, traverse } }
+    js: { compiler: { types: t, template, traverse, helper: { optimiseCallExpression, defineMap, ReplaceSupers } } }
 } = adone;
+
+type ReadonlySet<T> = Set<T> | { has(val: T): boolean };
 
 const noMethodVisitor = {
     "FunctionExpression|FunctionDeclaration"(path) {
@@ -15,22 +17,6 @@ const noMethodVisitor = {
 const verifyConstructorVisitor = traverse.visitors.merge([
     noMethodVisitor,
     {
-        MemberExpression: {
-            exit(path) {
-                const objectPath = path.get("object");
-                if (this.isDerived && !this.hasBareSuper && objectPath.isSuper()) {
-                    const hasArrowFunctionParent = path.findParent((p) =>
-                        p.isArrowFunctionExpression(),
-                    );
-                    if (!hasArrowFunctionParent) {
-                        throw objectPath.buildCodeFrameError(
-                            "'super.*' is not allowed before super()",
-                        );
-                    }
-                }
-            }
-        },
-
         CallExpression: {
             exit(path) {
                 if (path.get("callee").isSuper()) {
@@ -46,14 +32,20 @@ const verifyConstructorVisitor = traverse.visitors.merge([
         },
 
         ThisExpression(path) {
-            if (this.isDerived && !this.hasBareSuper) {
-                const fn = path.find((p) => p.isFunction());
-
-                if (!fn || !fn.isArrowFunctionExpression()) {
-                    throw path.buildCodeFrameError(
-                        "'this' is not allowed before super()",
-                    );
+            if (this.isDerived) {
+                if (path.parentPath.isMemberExpression({ object: path.node })) {
+                    // In cases like this.foo or this[foo], there is no need to add
+                    // assertThisInitialized, since they already throw if this is
+                    // undefined.
+                    return;
                 }
+
+                const assertion = t.callExpression(
+                    this.file.addHelper("assertThisInitialized"),
+                    [path.node],
+                );
+                path.replaceWith(assertion);
+                path.skip();
             }
         }
     }
@@ -69,7 +61,7 @@ const findThisesVisitor = traverse.visitors.merge([
 ]);
 
 export default class ClassTransformer {
-    constructor(path: NodePath, file) {
+    constructor(path: NodePath, file, builtinClasses: ReadonlySet<string>) {
         this.parent = path.parent;
         this.scope = path.scope;
         this.node = path.node;
@@ -87,7 +79,6 @@ export default class ClassTransformer {
 
         this.pushedConstructor = false;
         this.pushedInherits = false;
-        this.pushedThis = false;
         this.isLoose = false;
 
         this.superThises = [];
@@ -102,6 +93,12 @@ export default class ClassTransformer {
 
         this.superName = this.node.superClass || t.identifier("Function");
         this.isDerived = Boolean(this.node.superClass);
+
+        const { name } = this.superName;
+        this.extendsNative =
+            this.isDerived &&
+            builtinClasses.has(name) &&
+            !this.scope.hasBinding(name, /* noGlobals */ true);
     }
 
     run() {
@@ -121,7 +118,13 @@ export default class ClassTransformer {
 
         //
         if (this.isDerived) {
-            closureArgs.push(superName);
+            if (this.extendsNative) {
+                closureArgs.push(
+                    t.callExpression(this.file.addHelper("wrapNativeSuper"), [superName]),
+                );
+            } else {
+                closureArgs.push(superName);
+            }
 
             superName = this.scope.generateUidIdentifierBasedOnNode(superName);
             closureParams.push(superName);
@@ -148,8 +151,8 @@ export default class ClassTransformer {
 
         if (this.classId) {
             // named class with only a constructor
-            if (body.length === 1) {
-                return t.toExpression(body[0]); 
+            if (body.length === 1) { 
+                return t.toExpression(body[0]);
             }
         }
 
@@ -179,7 +182,7 @@ export default class ClassTransformer {
             mutatorMap = this.instanceMutatorMap;
         }
 
-        const map = adone.js.compiler.helper.defineMap.push(mutatorMap, node, kind, this.file, scope);
+        const map = defineMap.push(mutatorMap, node, kind, this.file, scope);
 
         if (enumerable) {
             map.enumerable = t.booleanLiteral(true);
@@ -198,12 +201,12 @@ export default class ClassTransformer {
         const paths = this.path.get("body.body");
         for (const path of (paths: Array)) {
             hasConstructor = path.equals("kind", "constructor");
-            if (hasConstructor) {
+            if (hasConstructor) { 
                 break; 
             }
         }
-        if (hasConstructor) {
-            return; 
+        if (hasConstructor) { 
+            return;
         }
 
         let params;
@@ -211,10 +214,10 @@ export default class ClassTransformer {
 
         if (this.isDerived) {
             const constructor = template.expression.ast`
-                (function () {
-                    super(...arguments);
-                })
-                `;
+        (function () {
+          super(...arguments);
+        })
+      `;
             params = constructor.params;
             body = constructor.body;
         } else {
@@ -268,21 +271,16 @@ export default class ClassTransformer {
 
                 if (isConstructor) {
                     path.traverse(verifyConstructorVisitor, this);
-
-                    if (!this.hasBareSuper && this.isDerived) {
-                        throw path.buildCodeFrameError(
-                            "missing super() call in constructor",
-                        );
-                    }
                 }
 
-                const replaceSupers = new adone.js.compiler.helper.ReplaceSupers(
+                const replaceSupers = new ReplaceSupers(
                     {
                         forceSuperMemoisation: isConstructor,
                         methodPath: path,
                         methodNode: node,
                         objectRef: this.classRef,
                         superRef: this.superName,
+                        inConstructor: isConstructor,
                         isStatic: node.static,
                         isLoose: this.isLoose,
                         scope: this.scope,
@@ -319,19 +317,19 @@ export default class ClassTransformer {
         let staticProps;
 
         if (this.hasInstanceDescriptors) {
-            instanceProps = adone.js.compiler.helper.defineMap.toClassObject(this.instanceMutatorMap);
+            instanceProps = defineMap.toClassObject(this.instanceMutatorMap);
         }
 
         if (this.hasStaticDescriptors) {
-            staticProps = adone.js.compiler.helper.defineMap.toClassObject(this.staticMutatorMap);
+            staticProps = defineMap.toClassObject(this.staticMutatorMap);
         }
 
         if (instanceProps || staticProps) {
             if (instanceProps) {
-                instanceProps = adone.js.compiler.helper.defineMap.toComputedObjectFromClass(instanceProps);
+                instanceProps = defineMap.toComputedObjectFromClass(instanceProps);
             }
             if (staticProps) {
-                staticProps = adone.js.compiler.helper.defineMap.toComputedObjectFromClass(staticProps);
+                staticProps = defineMap.toComputedObjectFromClass(staticProps);
             }
 
             const nullNode = t.nullLiteral();
@@ -344,10 +342,10 @@ export default class ClassTransformer {
                 nullNode // staticInitializers
             ];
 
-            if (instanceProps) {
-                args[1] = instanceProps; 
+            if (instanceProps) { 
+                args[1] = instanceProps;
             }
-            if (staticProps) {
+            if (staticProps) { 
                 args[2] = staticProps; 
             }
 
@@ -364,7 +362,7 @@ export default class ClassTransformer {
             let lastNonNullIndex = 0;
             for (let i = 0; i < args.length; i++) {
                 if (args[i] !== nullNode) {
-                    lastNonNullIndex = i; 
+                    lastNonNullIndex = i;
                 }
             }
             args = args.slice(0, lastNonNullIndex + 1);
@@ -410,7 +408,7 @@ export default class ClassTransformer {
                 );
             }
         } else {
-            bareSuperNode = adone.js.compiler.helper.optimiseCallExpression(
+            bareSuperNode = optimiseCallExpression(
                 t.logicalExpression(
                     "||",
                     t.memberExpression(this.classRef, t.identifier("__proto__")),
@@ -447,17 +445,12 @@ export default class ClassTransformer {
             // turn it into a return
 
             if (this.superThises.length) {
-                bareSuper.scope.push({ id: thisRef });
-                call = t.assignmentExpression("=", thisRef, call);
+                call = t.assignmentExpression("=", thisRef(), call);
             }
 
             bareSuper.parentPath.replaceWith(t.returnStatement(call));
         } else {
-            if (!this.pushedThis) {
-                body.scope.push({ id: thisRef });
-                this.pushedThis = true;
-            }
-            bareSuper.replaceWith(t.assignmentExpression("=", thisRef, call));
+            bareSuper.replaceWith(t.assignmentExpression("=", thisRef(), call));
         }
     }
 
@@ -474,7 +467,11 @@ export default class ClassTransformer {
         let guaranteedSuperBeforeFinish = Boolean(this.bareSupers.length);
 
         const superRef = this.superName || t.identifier("Function");
-        const thisRef = path.scope.generateUidIdentifier("this");
+        let thisRef = function () {
+            const ref = path.scope.generateDeclaredUidIdentifier("this");
+            thisRef = () => ref;
+            return ref;
+        };
 
         for (const bareSuper of this.bareSupers) {
             this.wrapSuperCall(bareSuper, superRef, thisRef, body);
@@ -486,7 +483,11 @@ export default class ClassTransformer {
                         return true;
                     }
 
-                    if (parentPath.isLoop() || parentPath.isConditional()) {
+                    if (
+                        parentPath.isLoop() ||
+                        parentPath.isConditional() ||
+                        parentPath.isArrowFunctionExpression()
+                    ) {
                         guaranteedSuperBeforeFinish = false;
                         return true;
                     }
@@ -495,32 +496,38 @@ export default class ClassTransformer {
         }
 
         for (const thisPath of this.superThises) {
-            thisPath.replaceWith(thisRef);
+            thisPath.replaceWith(thisRef());
         }
 
         let wrapReturn;
 
         if (this.isLoose) {
             wrapReturn = (returnArg) => {
+                const thisExpr = t.callExpression(
+                    this.file.addHelper("assertThisInitialized"),
+                    [thisRef()],
+                );
                 return returnArg
-                    ? t.logicalExpression("||", returnArg, thisRef)
-                    : thisRef;
+                    ? t.logicalExpression("||", returnArg, thisExpr)
+                    : thisExpr;
             };
         } else {
             wrapReturn = (returnArg) =>
                 t.callExpression(
                     this.file.addHelper("possibleConstructorReturn"),
-                    [thisRef].concat(returnArg || []),
+                    [thisRef()].concat(returnArg || []),
                 );
         }
 
         // if we have a return as the last node in the body then we've already caught that
         // return
         const bodyPaths = body.get("body");
-        if (bodyPaths.length && !bodyPaths.pop().isReturnStatement()) {
+        if (!bodyPaths.length || !bodyPaths.pop().isReturnStatement()) {
             body.pushContainer(
                 "body",
-                t.returnStatement(guaranteedSuperBeforeFinish ? thisRef : wrapReturn()),
+                t.returnStatement(
+                    guaranteedSuperBeforeFinish ? thisRef() : wrapReturn(),
+                ),
             );
         }
 
@@ -539,8 +546,8 @@ export default class ClassTransformer {
         const scope = path ? path.scope : this.scope;
 
         if (node.kind === "method") {
-            if (this._processMethod(node, scope)) {
-                return; 
+            if (this._processMethod(node, scope)) { 
+                return;
             }
         }
 
@@ -587,7 +594,7 @@ export default class ClassTransformer {
 
     _pushConstructor() {
         if (this.pushedConstructor) {
-            return; 
+            return;
         }
         this.pushedConstructor = true;
 
@@ -606,7 +613,7 @@ export default class ClassTransformer {
      */
 
     pushInherits() {
-        if (!this.isDerived || this.pushedInherits) {
+        if (!this.isDerived || this.pushedInherits) { 
             return; 
         }
 

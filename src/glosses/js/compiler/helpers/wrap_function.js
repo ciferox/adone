@@ -88,11 +88,8 @@ const plainFunction = function (path: NodePath, callId: Object) {
     });
 
     if (isDeclaration) {
-        const basePath = path.parentPath.isExportDeclaration()
-            ? path.parentPath
-            : path;
-        basePath.insertAfter(container[1]);
         path.replaceWith(container[0]);
+        path.insertAfter(container[1]);
     } else {
         const retFunction = container.callee.body.body[1].argument;
         if (!functionId) {

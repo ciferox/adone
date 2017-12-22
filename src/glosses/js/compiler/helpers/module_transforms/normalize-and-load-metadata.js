@@ -87,7 +87,7 @@ export function isSideEffectImport(source: SourceModuleMetadata) {
 export default function normalizeModuleAndLoadMetadata(
   programPath: NodePath,
   exportName?: string,
-  { noInterop = false, loose = false } = {},
+  { noInterop = false, loose = false, lazy = false } = {},
 ): ModuleMetadata {
   if (!exportName) {
     exportName = programPath.scope.generateUidIdentifier("exports").name;
@@ -95,7 +95,7 @@ export default function normalizeModuleAndLoadMetadata(
 
   nameAnonymousExports(programPath);
 
-  const { local, source } = getModuleMetadata(programPath, loose);
+  const { local, source } = getModuleMetadata(programPath, { loose, lazy });
 
   removeModuleDeclarations(programPath);
 
@@ -121,7 +121,10 @@ export default function normalizeModuleAndLoadMetadata(
 /**
  * Get metadata about the imports and exports present in this module.
  */
-function getModuleMetadata(programPath: NodePath, loose: boolean) {
+function getModuleMetadata(
+  programPath: NodePath,
+  { loose, lazy }: { loose: boolean, lazy: boolean },
+) {
   const localData = getLocalExportMetadata(programPath, loose);
 
   const sourceData = new Map();
@@ -147,6 +150,8 @@ function getModuleMetadata(programPath: NodePath, loose: boolean) {
         reexports: new Map(),
         reexportNamespace: new Set(),
         reexportAll: null,
+
+        lazy: false,
       };
       sourceData.set(source, data);
     }
@@ -247,6 +252,25 @@ function getModuleMetadata(programPath: NodePath, loose: boolean) {
       metadata.interop = "namespace";
     } else if (needsDefault) {
       metadata.interop = "default";
+    }
+  }
+
+  for (const [source, metadata] of sourceData) {
+    if (
+      lazy !== false &&
+      !(isSideEffectImport(metadata) || metadata.reexportAll)
+    ) {
+      if (lazy === true) {
+        // 'true' means that local relative files are eagerly loaded and
+        // dependency modules are loaded lazily.
+        metadata.lazy = !/\./.test(source);
+      } else if (Array.isArray(lazy)) {
+        metadata.lazy = lazy.indexOf(source);
+      } else if (typeof lazy === "function") {
+        metadata.lazy = lazy(source);
+      } else {
+        throw new Error(`.lazy must be a boolean, string array, or function`);
+      }
     }
   }
 
