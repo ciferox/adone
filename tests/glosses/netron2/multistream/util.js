@@ -1,28 +1,28 @@
-'use strict'
+const {
+    stream: { pull }
+} = adone;
 
-const pullPairDuplex = require('pull-pair/duplex')
+function createPair(muxer, callback) {
+    const pair = pull.pair.duplex();
 
-function createPair (muxer, callback) {
-  const pair = pullPairDuplex()
+    if (!muxer) {
+        return callback(null, pair);
+    }
 
-  if (!muxer) {
-    return callback(null, pair)
-  }
+    if (!muxer.dialer || !muxer.listener) {
+        return callback(new Error("invalid muxer"));
+    }
 
-  if (!muxer.dialer || !muxer.listener) {
-    return callback(new Error('invalid muxer'))
-  }
+    const muxDialer = muxer.dialer(pair[0]);
+    const muxListener = muxer.listener(pair[1]);
+    let dialerConn;
 
-  const muxDialer = muxer.dialer(pair[0])
-  const muxListener = muxer.listener(pair[1])
-  let dialerConn
+    muxListener.once("stream", (conn) => {
+        callback(null, [dialerConn, conn]);
+    });
 
-  muxListener.once('stream', (conn) => {
-    callback(null, [dialerConn, conn])
-  })
-
-  dialerConn = muxDialer.newStream()
+    dialerConn = muxDialer.newStream();
 }
 
-exports = module.exports
-exports.createPair = createPair
+exports = module.exports;
+exports.createPair = createPair;

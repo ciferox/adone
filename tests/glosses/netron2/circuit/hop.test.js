@@ -1,11 +1,10 @@
 const nodes = require("./fixtures/nodes");
-const handshake = require("pull-handshake");
 const waterfall = require("async/waterfall");
-const lp = require("pull-length-prefixed");
 
 const {
     multi,
-    netron2: { Connection, PeerInfo, PeerId }
+    netron2: { Connection, PeerInfo, PeerId },
+    stream: { pull }
 } = adone;
 const { StreamHandler, Hop, protocol } = adone.private(adone.netron2.circuit);
 
@@ -18,7 +17,7 @@ describe("relay", () => {
         let shake;
 
         beforeEach((done) => {
-            stream = handshake({ timeout: 1000 * 60 });
+            stream = pull.handshake({ timeout: 1000 * 60 });
             shake = stream.handshake;
             fromConn = new Connection(stream);
             fromConn.setPeerInfo(new PeerInfo(PeerId.createFromB58String("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA")));
@@ -108,7 +107,7 @@ describe("relay", () => {
             };
 
             relay.active = false;
-            lp.decodeFromReader(shake, (err, msg) => {
+            pull.lengthPrefixed.decodeFromReader(shake, (err, msg) => {
                 assert.null(err);
 
                 const response = protocol.CircuitRelay.decode(msg);
@@ -159,7 +158,7 @@ describe("relay", () => {
                 }
             };
 
-            lp.decodeFromReader(shake, (err, msg) => {
+            pull.lengthPrefixed.decodeFromReader(shake, (err, msg) => {
                 assert.null(err);
 
                 const response = protocol.CircuitRelay.decode(msg);
@@ -184,7 +183,7 @@ describe("relay", () => {
                 }
             };
 
-            lp.decodeFromReader(shake, (err, msg) => {
+            pull.lengthPrefixed.decodeFromReader(shake, (err, msg) => {
                 assert.null(err);
 
                 const response = protocol.CircuitRelay.decode(msg);
@@ -209,7 +208,7 @@ describe("relay", () => {
                 }
             };
 
-            lp.decodeFromReader(shake, (err, msg) => {
+            pull.lengthPrefixed.decodeFromReader(shake, (err, msg) => {
                 assert.null(err);
 
                 const response = protocol.CircuitRelay.decode(msg);

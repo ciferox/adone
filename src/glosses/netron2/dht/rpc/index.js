@@ -1,5 +1,3 @@
-const lp = require("pull-length-prefixed");
-
 const Message = require("../message");
 const handlers = require("./handlers");
 const utils = require("../utils");
@@ -62,7 +60,7 @@ module.exports = (dht) => {
 
             pull(
                 conn,
-                lp.decode(),
+                pull.lengthPrefixed.decode(),
                 pull.filter((msg) => msg.length < c.maxMessageSize),
                 pull.map((rawMsg) => {
                     let msg;
@@ -90,7 +88,7 @@ module.exports = (dht) => {
                     return msg;
                 }),
                 pull.filter(Boolean),
-                lp.encode(),
+                pull.lengthPrefixed.encode(),
                 conn
             );
         });

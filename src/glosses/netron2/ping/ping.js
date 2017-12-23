@@ -1,4 +1,3 @@
-const handshake = require("pull-handshake");
 const constants = require("./constants");
 
 const {
@@ -33,7 +32,7 @@ class Ping extends EventEmitter {
                 return this.emit("error", err);
             }
 
-            const stream = handshake({ timeout: 0 });
+            const stream = pull.handshake({ timeout: 0 });
             this._shake = stream.handshake;
 
             pull(

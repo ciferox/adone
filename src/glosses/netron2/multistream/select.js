@@ -1,10 +1,12 @@
-const handshake = require("pull-handshake");
-const pullLP = require("pull-length-prefixed");
 const util = require("./util");
 const writeEncoded = util.writeEncoded;
 
+const {
+    stream: { pull }
+} = adone;
+
 const select = function (multicodec, callback, log) {
-    const stream = handshake({
+    const stream = pull.handshake({
         timeout: 60 * 1000
     }, callback);
 
@@ -13,7 +15,7 @@ const select = function (multicodec, callback, log) {
     log(`writing multicodec: ${multicodec}`);
     writeEncoded(shake, Buffer.from(`${multicodec}\n`), callback);
 
-    pullLP.decodeFromReader(shake, (err, data) => {
+    pull.lengthPrefixed.decodeFromReader(shake, (err, data) => {
         if (err) {
             return callback(err);
         }

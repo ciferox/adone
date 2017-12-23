@@ -1,5 +1,3 @@
-const goodbye = require("pull-goodbye");
-
 const {
     multi,
     netron2: { transport: { WS } },
@@ -167,7 +165,7 @@ describe("netron2", "trasnport", "ws", () => {
         it("dial on IPv4", (done) => {
             const conn = ws.dial(ma);
 
-            const s = goodbye({
+            const s = pull.goodbye({
                 source: pull.values(["hey"]),
                 sink: pull.collect((err, result) => {
                     assert.notExists(err);
@@ -188,7 +186,7 @@ describe("netron2", "trasnport", "ws", () => {
             const ma = multi.address.create("/ip4/127.0.0.1/tcp/9091/ws/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
             const conn = ws.dial(ma);
 
-            const s = goodbye({
+            const s = pull.goodbye({
                 source: pull.values(["hey"]),
                 sink: pull.collect((err, result) => {
                     assert.notExists(err);

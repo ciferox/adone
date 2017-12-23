@@ -1,5 +1,4 @@
 const TimeCache = require("time-cache");
-const lp = require("pull-length-prefixed");
 const asyncEach = require("async/each");
 
 const Peer = require("./peer");
@@ -64,7 +63,7 @@ export class FloodSub extends EventEmitter {
 
         /*
           Always use an existing peer.
-    
+
           What is happening here is: "If the other peer has already dialed to me, we already have
           an establish link between the two, what might be missing is a
           Connection specifically between me and that Peer"
@@ -145,7 +144,7 @@ export class FloodSub extends EventEmitter {
     _processConnection(idB58Str, conn, peer) {
         pull(
             conn,
-            lp.decode(),
+            pull.lengthPrefixed.decode(),
             pull.map((data) => pb.rpc.RPC.decode(data)),
             pull.drain(
                 (rpc) => this._onRpc(idB58Str, rpc),

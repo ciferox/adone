@@ -1,11 +1,11 @@
-const connect = require("pull-ws/client");
 const maToUrl = require("./ma-to-url");
 const createListener = require("./listener");
 
 const {
     is,
     multi: { address: { validator } },
-    netron2: { Connection }
+    netron2: { Connection },
+    stream: { pull }
 } = adone;
 
 export default class WSTransport {
@@ -19,7 +19,7 @@ export default class WSTransport {
 
         const url = maToUrl(ma);
         adone.log("dialing %s", url);
-        const socket = connect(url, {
+        const socket = pull.ws.connect(url, {
             binary: true,
             onConnect: (err) => {
                 callback(err);

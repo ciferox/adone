@@ -1,5 +1,3 @@
-const lp = require("pull-length-prefixed");
-
 const {
     is,
     stream: { pull }
@@ -38,14 +36,14 @@ exports.createBoxStream = (cipher, mac) => {
                 });
             });
         }),
-        lp.encode(lpOpts)
+        pull.lengthPrefixed.encode(lpOpts)
     );
 };
 
 exports.createUnboxStream = (decipher, mac) => {
     return pull(
         ensureBuffer(),
-        lp.decode(lpOpts),
+        pull.lengthPrefixed.decode(lpOpts),
         pull.asyncMap((chunk, cb) => {
             const l = chunk.length;
             const macSize = mac.length;

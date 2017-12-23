@@ -1,12 +1,8 @@
-const pair = require("pull-pair/duplex");
-const lp = require("pull-length-prefixed");
-
 const {
     multi,
     netron2: { identify, PeerInfo },
     stream: { pull }
 } = adone;
-
 
 describe("netron2", "identify", () => {
     it("multicodec", () => {
@@ -27,7 +23,7 @@ describe("netron2", "identify", () => {
         });
 
         it("works", (done) => {
-            const p = pair();
+            const p = pull.pair.duplex();
             original.multiaddrs.add(multi.address.create("/ip4/127.0.0.1/tcp/5002"));
             const input = identify.message.encode({
                 protocolVersion: "ipfs/0.1.0",
@@ -39,7 +35,7 @@ describe("netron2", "identify", () => {
 
             pull(
                 pull.values([input]),
-                lp.encode(),
+                pull.lengthPrefixed.encode(),
                 p[0]
             );
 
@@ -61,27 +57,27 @@ describe("netron2", "identify", () => {
 
     describe("listener", () => {
         let info;
-    
+
         beforeEach((done) => {
             PeerInfo.create((err, _info) => {
                 if (err) {
                     return done(err);
                 }
-    
+
                 info = _info;
                 done();
             });
         });
-    
+
         it("works", (done) => {
-            const p = pair();
+            const p = pull.pair.duplex();
             info.multiaddrs.add(multi.address.create("/ip4/127.0.0.1/tcp/5002"));
             pull(
                 p[1],
-                lp.decode(),
+                pull.lengthPrefixed.decode(),
                 pull.collect((err, result) => {
                     assert.notExists(err);
-    
+
                     const input = identify.message.decode(result[0]);
                     expect(
                         input
@@ -96,12 +92,12 @@ describe("netron2", "identify", () => {
                     done();
                 })
             );
-    
+
             const conn = p[0];
             conn.getObservedAddrs = (cb) => {
                 cb(null, [multi.address.create("/ip4/127.0.0.1/tcp/5001")]);
             };
-    
+
             identify.listener(conn, info);
         });
     });

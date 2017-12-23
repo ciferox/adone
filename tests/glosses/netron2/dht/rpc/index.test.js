@@ -1,4 +1,3 @@
-const lp = require("pull-length-prefixed");
 const makePeers = require("../utils").makePeers;
 
 const {
@@ -53,10 +52,10 @@ function makeConnection(msg, info, callback) {
     const rawConn = {
         source: pull(
             pull.values([msg.serialize()]),
-            lp.encode()
+            pull.lengthPrefixed.encode()
         ),
         sink: pull(
-            lp.decode(),
+            pull.lengthPrefixed.decode(),
             pull.collect(callback)
         )
     };

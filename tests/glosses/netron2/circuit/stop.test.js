@@ -1,9 +1,9 @@
 const nodes = require("./fixtures/nodes");
-const handshake = require("pull-handshake");
 const waterfall = require("async/waterfall");
 
 const {
-    netron2: { Connection, PeerInfo, PeerId }
+    netron2: { Connection, PeerInfo, PeerId },
+    stream: { pull }
 } = adone;
 
 const { Stop, StreamHandler, protocol } = adone.private(adone.netron2.circuit);
@@ -18,7 +18,7 @@ describe("stop", () => {
         let stream;
 
         beforeEach((done) => {
-            stream = handshake({ timeout: 1000 * 60 });
+            stream = pull.handshake({ timeout: 1000 * 60 });
             conn = new Connection(stream);
             conn.setPeerInfo(new PeerInfo(PeerId.createFromB58String("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE")));
 

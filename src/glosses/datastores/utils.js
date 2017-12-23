@@ -1,5 +1,3 @@
-const Source = require("pull-defer/source");
-
 const {
     stream: { pull },
     std: { path, os },
@@ -59,7 +57,7 @@ export const asyncFilter = function (test) {
 };
 
 export const asyncSort = function (sorter) {
-    const source = Source();
+    const source = pull.defer.source();
 
     const sink = pull.collect((err, ary) => {
         if (err) {

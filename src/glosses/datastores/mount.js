@@ -1,5 +1,4 @@
 const each = require("async/each");
-const many = require("pull-many");
 
 const {
     is,
@@ -160,7 +159,7 @@ export default class MountDatastore /* :: <Value> */ {
             });
         });
 
-        let tasks = [many(qs)];
+        let tasks = [pull.many(qs)];
 
         if (!is.nil(q.filters)) {
             tasks = tasks.concat(q.filters.map((f) => asyncFilter(f)));

@@ -1,8 +1,6 @@
-const handshake = require("pull-handshake");
-const deferred = require("pull-defer");
-
 const {
-    is
+    is,
+    stream: { pull }
 } = adone;
 
 class State {
@@ -18,8 +16,8 @@ class State {
         this.timeout = timeout || 60 * 1000;
         cb = cb || (() => { });
 
-        this.secure = deferred.duplex();
-        this.stream = handshake({ timeout: this.timeout }, cb);
+        this.secure = pull.defer.duplex();
+        this.stream = pull.handshake({ timeout: this.timeout }, cb);
         this.shake = this.stream.handshake;
         delete this.stream.handshake;
     }

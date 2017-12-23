@@ -1,4 +1,3 @@
-const pair = require("pull-pair/duplex");
 const parallel = require("async/parallel");
 const series = require("async/series");
 
@@ -29,7 +28,7 @@ describe("secio", () => {
     });
 
     it("upgrades a connection", (done) => {
-        const p = pair();
+        const p = pull.pair.duplex();
         createSession(p[0], (err, local) => {
             assert.notExists(err);
 
@@ -54,7 +53,7 @@ describe("secio", () => {
     });
 
     it("works over multistream", (done) => {
-        const p = pair();
+        const p = pull.pair.duplex();
 
         const listener = new Listener();
         const dialer = new Dialer();

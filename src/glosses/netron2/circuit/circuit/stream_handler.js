@@ -1,6 +1,3 @@
-const lp = require("pull-length-prefixed");
-const handshake = require("pull-handshake");
-
 const {
     is,
     stream: { pull }
@@ -26,7 +23,7 @@ export default class StreamHandler {
             this.timeout = timeout || 1000 * 60;
         }
 
-        this.stream = handshake({ timeout: this.timeout }, cb);
+        this.stream = pull.handshake({ timeout: this.timeout }, cb);
         this.shake = this.stream.handshake;
 
         pull(this.stream, conn, this.stream);
@@ -47,7 +44,7 @@ export default class StreamHandler {
             cb(new Error("handler is not in a valid state"));
         }
 
-        lp.decodeFromReader(this.shake, { maxLength: this.maxLength }, (err, msg) => {
+        pull.lengthPrefixed.decodeFromReader(this.shake, { maxLength: this.maxLength }, (err, msg) => {
             if (err) {
                 adone.error(err);
                 // this.shake.abort(err)
@@ -74,7 +71,7 @@ export default class StreamHandler {
 
         pull(
             pull.values([msg]),
-            lp.encode(),
+            pull.lengthPrefixed.encode(),
             pull.collect((err, encoded) => {
                 if (err) {
                     adone.error(err);

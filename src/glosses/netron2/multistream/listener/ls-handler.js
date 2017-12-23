@@ -1,5 +1,3 @@
-const pullLP = require("pull-length-prefixed");
-
 const {
     data: { varint },
     stream: { pull }
@@ -29,7 +27,7 @@ const lsHandler = function (self, conn) {
 
     pull(
         pull.values(values),
-        pullLP.encode(),
+        pull.lengthPrefixed.encode(),
         conn
     );
 };

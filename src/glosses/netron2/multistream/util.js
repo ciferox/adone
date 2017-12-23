@@ -1,4 +1,3 @@
-const pullLP = require("pull-length-prefixed");
 const debug = require("debug");
 
 const {
@@ -17,7 +16,7 @@ const encode = function (msg, callback) {
 
     pull(
         pull.values(values),
-        pullLP.encode(),
+        pull.lengthPrefixed.encode(),
         pull.collect((err, encoded) => {
             if (err) {
                 return callback(err);

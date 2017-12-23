@@ -1,5 +1,4 @@
 const parallel = require("async/parallel");
-const goodbye = require("pull-goodbye");
 const utils = require("./utils");
 
 const {
@@ -278,7 +277,7 @@ describe("netron2", "swarm", () => {
                 assert.notExists(err);
             });
 
-            const s = goodbye({
+            const s = pull.goodbye({
                 source: pull.values([Buffer.from("hey")]),
                 sink: pull.collect((err, data) => {
                     assert.notExists(err);
@@ -295,7 +294,7 @@ describe("netron2", "swarm", () => {
             swarmA.transport.dial("ws", dialPeers[1], (err, conn) => {
                 assert.notExists(err);
 
-                const s = goodbye({
+                const s = pull.goodbye({
                     source: pull.values([Buffer.from("hey")]),
                     sink: pull.collect((err, data) => {
                         assert.notExists(err);

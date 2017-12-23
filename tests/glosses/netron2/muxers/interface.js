@@ -1,7 +1,5 @@
-const pair = require("pull-pair/duplex");
 const parallel = require("async/parallel");
 const series = require("async/series");
-const generate = require("pull-generate");
 const each = require("async/each");
 const eachLimit = require("async/eachLimit");
 
@@ -28,7 +26,7 @@ const marker = function (n, done) {
 };
 
 const spawn = (muxer, nStreams, nMsg, done, limit) => {
-    const p = pair();
+    const p = pull.pair.duplex();
     const dialerSocket = p[0];
     const listenerSocket = p[1];
 
@@ -68,7 +66,7 @@ const spawn = (muxer, nStreams, nMsg, done, limit) => {
             assert.exists(stream) // eslint-disable-line
             check();
             pull(
-                generate(0, (s, cb) => {
+                pull.generate(0, (s, cb) => {
                     setImmediate(() => {
                         cb(s === nMsg ? true : null, msg, s + 1);
                     });
@@ -120,7 +118,7 @@ export default (common) => {
             });
 
             it("Open a stream from the dialer", (done) => {
-                const p = pair();
+                const p = pull.pair.duplex();
                 const dialer = muxer.dialer(p[0]);
                 const listener = muxer.listener(p[1]);
 
@@ -146,7 +144,7 @@ export default (common) => {
             });
 
             it("Open a stream from the listener", (done) => {
-                const p = pair();
+                const p = pull.pair.duplex();
                 const dialer = muxer.dialer(p[0]);
                 const listener = muxer.listener(p[1]);
 
@@ -172,7 +170,7 @@ export default (common) => {
             });
 
             it("Open a stream on both sides", (done) => {
-                const p = pair();
+                const p = pull.pair.duplex();
                 const dialer = muxer.dialer(p[0]);
                 const listener = muxer.listener(p[1]);
 
@@ -210,7 +208,7 @@ export default (common) => {
             });
 
             it("Open a stream on one side, write, open a stream in the other side", (done) => {
-                const p = pair();
+                const p = pull.pair.duplex();
                 const dialer = muxer.dialer(p[0]);
                 const listener = muxer.listener(p[1]);
 
@@ -335,7 +333,7 @@ export default (common) => {
             });
 
             it("closing one of the muxed streams doesn't close others", (done) => {
-                const p = pair();
+                const p = pull.pair.duplex();
                 const dialer = muxer.dialer(p[0]);
                 const listener = muxer.listener(p[1]);
 
@@ -376,7 +374,7 @@ export default (common) => {
             });
 
             it.skip("closing on spdy doesn't close until all the streams that are being muxed are closed", (done) => {
-                const p = pair();
+                const p = pull.pair.duplex();
                 const dialer = muxer.dial(p[0]);
                 const listener = muxer.listen(p[1]);
 

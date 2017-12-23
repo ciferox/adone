@@ -1,6 +1,4 @@
-const pair = require("pull-pair/duplex");
 const parallel = require("run-parallel");
-const file = require("pull-file");
 
 const {
     multi,
@@ -20,7 +18,7 @@ describe("netron2", "muxer", "spdy", () => {
         let dialer;
 
         before(() => {
-            const p = pair();
+            const p = pull.pair.duplex();
             dialerSocket = p[0];
             listenerSocket = p[1];
         });
@@ -318,7 +316,7 @@ describe("netron2", "muxer", "spdy", () => {
 
             const filePath = fixture("1.2MiB.txt");
             pull(
-                file(filePath),
+                pull.file(filePath),
                 listener.newStream(),
                 pull.collect((err, data) => {
                     assert.notExists(err);
@@ -425,7 +423,7 @@ describe("netron2", "muxer", "spdy", () => {
 
             const filePath = fixture("1.2MiB.txt");
             pull(
-                file(filePath),
+                pull.file(filePath),
                 listener.newStream(),
                 pull.collect((err, data) => {
                     assert.notExists(err);

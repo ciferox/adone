@@ -1,7 +1,4 @@
-const toStream = require("pull-stream-to-stream");
 const pump = require("pump");
-const toPull = require("stream-to-pull-stream");
-const pullCatch = require("pull-catch");
 
 const {
     netron2: { Connection },
@@ -16,7 +13,7 @@ const catchError = function (stream) {
     return {
         source: pull(
             stream.source,
-            pullCatch((err) => {
+            pull.catch((err) => {
                 if (err.message === "Channel destroyed") {
                     return;
                 }
@@ -40,7 +37,7 @@ class Muxer extends EventEmitter {
 
         multiplex.on("stream", (stream, id) => {
             const muxedConn = new Connection(
-                catchError(toPull.duplex(stream)),
+                catchError(pull.fromStream.duplex(stream)),
                 this.conn
             );
             this.emit("stream", muxedConn);
@@ -53,7 +50,7 @@ class Muxer extends EventEmitter {
         const stream = this.multiplex.createStream();
 
         const conn = new Connection(
-            catchError(toPull.duplex(stream)),
+            catchError(pull.fromStream.duplex(stream)),
             this.conn
         );
 
@@ -70,7 +67,7 @@ class Muxer extends EventEmitter {
 }
 
 const create = function (rawConn, isListener) {
-    const stream = toStream(rawConn);
+    const stream = pull.toStream(rawConn);
 
     // Cleanup and destroy the connection when it ends
     // as the converted stream doesn't emit 'close'

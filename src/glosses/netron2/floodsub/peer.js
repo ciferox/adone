@@ -1,5 +1,3 @@
-const lp = require("pull-length-prefixed");
-const Pushable = require("pull-pushable");
 const rpc = require("./message").rpc.RPC;
 
 const {
@@ -79,11 +77,11 @@ class Peer extends EventEmitter {
      */
     attachConnection(conn) {
         this.conn = conn;
-        this.stream = new Pushable();
+        this.stream = pull.pushable();
 
         pull(
             this.stream,
-            lp.encode(),
+            pull.lengthPrefixed.encode(),
             conn,
             pull.onEnd(() => {
                 this.conn = null;

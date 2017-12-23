@@ -1,4 +1,3 @@
-const lp = require("pull-length-prefixed");
 const msg = require("./message");
 
 const {
@@ -27,7 +26,7 @@ const getObservedAddrs = (input) => {
 module.exports = (conn, callback) => {
     pull(
         conn,
-        lp.decode(),
+        pull.lengthPrefixed.decode(),
         pull.take(1),
         pull.collect((err, data) => {
             if (err) {

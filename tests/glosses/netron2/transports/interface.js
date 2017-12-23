@@ -1,6 +1,3 @@
-const goodbye = require("pull-goodbye");
-const serializer = require("pull-serializer");
-
 const {
     stream: { pull }
 } = adone;
@@ -39,7 +36,7 @@ export default (common) => {
             });
 
             it("simple", (done) => {
-                const s = serializer(goodbye({
+                const s = pull.serializer(pull.goodbye({
                     source: pull.values(["hey"]),
                     sink: pull.collect((err, values) => {
                         assert.notExists(err);

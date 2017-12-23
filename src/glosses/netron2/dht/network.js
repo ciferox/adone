@@ -1,5 +1,4 @@
 const timeout = require("async/timeout");
-const lp = require("pull-length-prefixed");
 const rpc = require("./rpc");
 const c = require("./constants");
 const Message = require("./message");
@@ -12,10 +11,10 @@ const {
 const writeReadMessage = function (conn, msg, callback) {
     pull(
         pull.values([msg]),
-        lp.encode(),
+        pull.lengthPrefixed.encode(),
         conn,
         pull.filter((msg) => msg.length < c.maxMessageSize),
-        lp.decode(),
+        pull.lengthPrefixed.decode(),
         pull.collect((err, res) => {
             if (err) {
                 return callback(err);
@@ -230,9 +229,9 @@ class Network {
     _writeMessage(conn, msg, callback) {
         pull(
             pull.values([msg]),
-            lp.encode(),
+            pull.lengthPrefixed.encode(),
             conn,
-            lp.decode(),
+            pull.lengthPrefixed.decode(),
             pull.collect((err) => callback(err))
         );
     }

@@ -1,4 +1,3 @@
-const pullLP = require("pull-length-prefixed");
 const util = require("./util");
 
 const {
@@ -27,7 +26,7 @@ describe("half-handshake", () => {
 
         pull(
             listenerConn,
-            pullLP.decode(),
+            pull.lengthPrefixed.decode(),
             pull.drain((data) => {
                 expect(data.toString()).to.equal("/multistream/1.0.0\n");
                 done();
@@ -45,7 +44,7 @@ describe("half-handshake", () => {
 
         pull(
             dialerConn,
-            pullLP.decode(),
+            pull.lengthPrefixed.decode(),
             pull.drain((data) => {
                 expect(data.toString()).to.equal("/multistream/1.0.0\n");
                 done();

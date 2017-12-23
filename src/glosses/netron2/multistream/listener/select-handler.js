@@ -1,10 +1,9 @@
-const handshake = require("pull-handshake");
-const lp = require("pull-length-prefixed");
 const writeEncoded = require("../util.js").writeEncoded;
 const some = require("async/some");
 
 const {
-    netron2: { Connection }
+    netron2: { Connection },
+    stream: { pull }
 } = adone;
 
 const matcher = function (protocol, handlers, callback) {
@@ -38,11 +37,11 @@ const selectHandler = function (rawConn, handlersMap, log) {
         log.error(err);
     };
 
-    const stream = handshake({ timeout: 60 * 1000 }, cb);
+    const stream = pull.handshake({ timeout: 60 * 1000 }, cb);
     const shake = stream.handshake;
 
     const next = function () {
-        lp.decodeFromReader(shake, (err, data) => {
+        pull.lengthPrefixed.decodeFromReader(shake, (err, data) => {
             if (err) {
                 return cb(err);
             }

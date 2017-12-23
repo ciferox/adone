@@ -1,4 +1,3 @@
-const handshake = require("pull-handshake");
 const etm = require("../etm");
 const crypto = require("./crypto");
 
@@ -13,7 +12,7 @@ module.exports = function finish(state, cb) {
 
     const proto = state.protocols;
     const stream = state.shake.rest();
-    const shake = handshake({ timeout: state.timeout }, (err) => {
+    const shake = pull.handshake({ timeout: state.timeout }, (err) => {
         if (err) {
             throw err;
         }

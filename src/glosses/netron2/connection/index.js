@@ -1,9 +1,11 @@
-const defer = require("pull-defer/duplex");
+const {
+    stream: { pull }
+} = adone;
 
 export default class Connection {
     constructor(conn, info) {
         this.peerInfo = null;
-        this.conn = defer();
+        this.conn = pull.defer.duplex();
 
         if (conn) {
             this.setInnerConn(conn, info);

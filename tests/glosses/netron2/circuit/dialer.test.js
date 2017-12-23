@@ -1,7 +1,5 @@
 const nodes = require("./fixtures/nodes");
-const handshake = require("pull-handshake");
 const waterfall = require("async/waterfall");
-const lp = require("pull-length-prefixed");
 
 const {
     multi,
@@ -70,7 +68,7 @@ describe("netron", "circuit", "dialer", () => {
         const peer = new PeerInfo(PeerId.createFromB58String("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA"));
 
         beforeEach(() => {
-            stream = handshake({ timeout: 1000 * 60 });
+            stream = pull.handshake({ timeout: 1000 * 60 });
             shake = stream.handshake;
             fromConn = new Connection(stream);
 
@@ -89,7 +87,7 @@ describe("netron", "circuit", "dialer", () => {
                     type: protocol.CircuitRelay.type.HOP,
                     code: protocol.CircuitRelay.Status.SUCCESS
                 })]),
-                lp.encode(),
+                pull.lengthPrefixed.encode(),
                 pull.collect((err, encoded) => {
                     assert.notExists(err);
                     encoded.forEach((e) => shake.write(e));
@@ -111,7 +109,7 @@ describe("netron", "circuit", "dialer", () => {
                     type: protocol.CircuitRelay.type.HOP,
                     code: protocol.CircuitRelay.Status.HOP_CANT_SPEAK_RELAY
                 })]),
-                lp.encode(),
+                pull.lengthPrefixed.encode(),
                 pull.collect((err, encoded) => {
                     assert.notExists(err);
                     encoded.forEach((e) => shake.write(e));
@@ -199,7 +197,7 @@ describe("netron", "circuit", "dialer", () => {
                 (cb) => {
                     dialer.relayConns = new Map();
                     dialer._negotiateRelay.callThrough();
-                    stream = handshake({ timeout: 1000 * 60 });
+                    stream = pull.handshake({ timeout: 1000 * 60 });
                     shake = stream.handshake;
                     conn = new Connection();
                     conn.setPeerInfo(new PeerInfo(PeerId.createFromB58String("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE")));
@@ -215,7 +213,7 @@ describe("netron", "circuit", "dialer", () => {
         });
 
         it("should write the correct dst addr", (done) => {
-            lp.decodeFromReader(shake, (err, msg) => {
+            pull.lengthPrefixed.decodeFromReader(shake, (err, msg) => {
                 shake.write(protocol.CircuitRelay.encode({
                     type: protocol.CircuitRelay.Type.STATUS,
                     code: protocol.CircuitRelay.Status.SUCCESS
@@ -236,7 +234,7 @@ describe("netron", "circuit", "dialer", () => {
             });
 
             // send failed message
-            lp.decodeFromReader(shake, (err, msg) => {
+            pull.lengthPrefixed.decodeFromReader(shake, (err, msg) => {
                 if (err) {
                     return done(err);
                 }
@@ -246,7 +244,7 @@ describe("netron", "circuit", "dialer", () => {
                         type: protocol.CircuitRelay.Type.STATUS,
                         code: protocol.CircuitRelay.Status.MALFORMED_MESSAGE
                     })]), // send arbitrary non 200 code
-                    lp.encode(),
+                    pull.lengthPrefixed.encode(),
                     pull.collect((err, encoded) => {
                         assert.notExists(err);
                         encoded.forEach((e) => shake.write(e));

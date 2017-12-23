@@ -1,4 +1,3 @@
-const handshake = require("pull-handshake");
 const constants = require("./constants");
 const PROTOCOL = constants.PROTOCOL;
 const PING_LENGTH = constants.PING_LENGTH;
@@ -9,7 +8,7 @@ const {
 
 const mount = (swarm) => {
     swarm.handle(PROTOCOL, (protocol, conn) => {
-        const stream = handshake({ timeout: 0 });
+        const stream = pull.handshake({ timeout: 0 });
         const shake = stream.handshake;
 
         // receive and echo back

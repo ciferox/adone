@@ -1,4 +1,3 @@
-const lp = require("pull-length-prefixed");
 const msg = require("./message");
 
 const {
@@ -28,7 +27,7 @@ module.exports = (conn, pInfoSelf) => {
 
         pull(
             pull.values([msgSend]),
-            lp.encode(),
+            pull.lengthPrefixed.encode(),
             conn
         );
     });

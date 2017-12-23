@@ -1,4 +1,3 @@
-const toPull = require("stream-to-pull-stream");
 import createListener from "./listener";
 
 const {
@@ -6,7 +5,8 @@ const {
     multi,
     netron2: { Connection },
     std: { net },
-    util: { once }
+    util: { once },
+    stream: { pull }
 } = adone;
 
 export default class TCPTransport {
@@ -36,7 +36,7 @@ export default class TCPTransport {
             callback();
         });
 
-        const socket = toPull.duplex(rawSocket);
+        const socket = pull.fromStream.duplex(rawSocket);
 
         const conn = new Connection(socket);
 

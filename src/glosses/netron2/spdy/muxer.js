@@ -1,7 +1,10 @@
 const EventEmitter = require("events").EventEmitter;
 const noop = require("lodash.noop");
 const Connection = require("interface-connection").Connection;
-const toPull = require("stream-to-pull-stream");
+
+const {
+    stream: { pull }
+} = adone;
 
 const SPDY_CODEC = require("./spdy-codec");
 
@@ -28,7 +31,7 @@ module.exports = class Muxer extends EventEmitter {
         // in order to confirm the stream can be open
         spdy.on("stream", (stream) => {
             stream.respond(200, {});
-            const muxedConn = new Connection(toPull.duplex(stream), this.conn);
+            const muxedConn = new Connection(pull.fromStream.duplex(stream), this.conn);
             this.emit("stream", muxedConn);
         });
     }
@@ -48,7 +51,7 @@ module.exports = class Muxer extends EventEmitter {
             if (err) {
                 return callback(err);
             }
-            conn.setInnerConn(toPull.duplex(stream), this.conn);
+            conn.setInnerConn(pull.fromStream.duplex(stream), this.conn);
             callback(null, conn);
         });
 

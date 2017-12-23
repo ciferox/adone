@@ -1,5 +1,3 @@
-const pair = require("pull-pair/duplex");
-
 const {
     netron2: { multiplex },
     stream: { pull }
@@ -13,7 +11,7 @@ describe("netron2", "muxer", "multiplex", () => {
     let dialer;
 
     before(() => {
-        const p = pair();
+        const p = pull.pair.duplex();
         dialerSocket = p[0];
         listenerSocket = p[1];
     });

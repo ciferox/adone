@@ -1,4 +1,3 @@
-const pullLP = require("pull-length-prefixed");
 const util = require("../util");
 const select = require("../select");
 const PROTOCOL_ID = require("./../constants").PROTOCOL_ID;
@@ -123,7 +122,7 @@ class Dialer {
 
             pull(
                 conn,
-                pullLP.decode(),
+                pull.lengthPrefixed.decode(),
                 collectLs(conn),
                 pull.map(stringify),
                 pull.collect((err, list) => {

@@ -1,10 +1,9 @@
-const toPull = require("stream-to-pull-stream");
-
 const {
     is,
     multi,
     netron2: { Connection },
-    std: { net, os }
+    std: { net, os },
+    stream: { pull }
 } = adone;
 
 const IPFS_CODE = 421;
@@ -55,7 +54,7 @@ export default (handler) => {
         const addr = getMultiaddr(socket);
         adone.log("new connection", addr.toString());
 
-        const s = toPull.duplex(socket);
+        const s = pull.fromStream.duplex(socket);
 
         s.getObservedAddrs = (cb) => {
             cb(null, [addr]);

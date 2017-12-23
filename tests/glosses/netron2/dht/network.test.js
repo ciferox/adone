@@ -1,4 +1,3 @@
-const lp = require("pull-length-prefixed");
 const series = require("async/series");
 const makePeers = require("./utils").makePeers;
 
@@ -61,10 +60,10 @@ describe("Network", () => {
                 const rawConn = {
                     source: pull(
                         pull.values([msg.serialize()]),
-                        lp.encode()
+                        pull.lengthPrefixed.encode()
                     ),
                     sink: pull(
-                        lp.decode(),
+                        pull.lengthPrefixed.decode(),
                         pull.collect((err, res) => {
                             assert.notExists(err);
                             expect(Message.deserialize(res[0]).type).to.eql(Message.TYPES.PING);
@@ -101,7 +100,7 @@ describe("Network", () => {
                     // hanging
                     source: (end, cb) => { },
                     sink: pull(
-                        lp.decode(),
+                        pull.lengthPrefixed.decode(),
                         pull.collect((err, res) => {
                             assert.notExists(err);
                             expect(Message.deserialize(res[0]).type).to.eql(Message.TYPES.PING);

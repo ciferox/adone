@@ -1,13 +1,12 @@
-const createServer = require("pull-ws/server") || adone.noop;
-
 const {
     multi,
     netron2: { Connection },
-    std: { os }
+    std: { os },
+    stream: { pull }
 } = adone;
 
 module.exports = (options, handler) => {
-    const listener = createServer((socket) => {
+    const listener = pull.ws.createServer((socket) => {
         socket.getObservedAddrs = (callback) => {
             // TODO research if we can reuse the address in anyway
             return callback(null, []);

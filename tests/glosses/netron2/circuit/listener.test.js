@@ -1,7 +1,5 @@
 const nodes = require("./fixtures/nodes");
 const waterfall = require("async/waterfall");
-const handshake = require("pull-handshake");
-const lp = require("pull-length-prefixed");
 
 const {
     multi,
@@ -21,7 +19,7 @@ describe("listener", () => {
         let conn = null;
 
         beforeEach((done) => {
-            stream = handshake({ timeout: 1000 * 60 });
+            stream = pull.handshake({ timeout: 1000 * 60 });
             shake = stream.handshake;
             conn = new Connection(stream);
             conn.setPeerInfo(new PeerInfo(PeerId.createFromB58String("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE")));
@@ -80,7 +78,7 @@ describe("listener", () => {
 
             pull(
                 pull.values([protocol.CircuitRelay.encode(relayMsg)]),
-                lp.encode(),
+                pull.lengthPrefixed.encode(),
                 pull.collect((err, encoded) => {
                     assert.null(err);
                     encoded.forEach((e) => shake.write(e));
@@ -117,7 +115,7 @@ describe("listener", () => {
 
             pull(
                 pull.values([protocol.CircuitRelay.encode(relayMsg)]),
-                lp.encode(),
+                pull.lengthPrefixed.encode(),
                 pull.collect((err, encoded) => {
                     assert.null(err);
                     encoded.forEach((e) => shake.write(e));
@@ -154,7 +152,7 @@ describe("listener", () => {
 
             pull(
                 pull.values([protocol.CircuitRelay.encode(relayMsg)]),
-                lp.encode(),
+                pull.lengthPrefixed.encode(),
                 pull.collect((err, encoded) => {
                     assert.null(err);
                     encoded.forEach((e) => shake.write(e));
@@ -179,12 +177,12 @@ describe("listener", () => {
 
             pull(
                 pull.values([Buffer.from([relayMsg])]),
-                lp.encode(),
+                pull.lengthPrefixed.encode(),
                 pull.collect((err, encoded) => {
                     assert.null(err);
                     encoded.forEach((e) => shake.write(e));
                 }),
-                lp.decodeFromReader(shake, { maxLength: this.maxLength }, (err, msg) => {
+                pull.lengthPrefixed.decodeFromReader(shake, { maxLength: this.maxLength }, (err, msg) => {
                     assert.null(err);
                     expect(protocol.CircuitRelay.decode(msg).type).to.equal(protocol.CircuitRelay.Type.STATUS);
                     expect(protocol.CircuitRelay.decode(msg).code).to.equal(protocol.CircuitRelay.Status.MALFORMED_MESSAGE);
