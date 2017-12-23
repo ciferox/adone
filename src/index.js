@@ -353,6 +353,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         task: "./glosses/tasks",
         odm: "./glosses/odm",
         orm: "./glosses/orm",
+        gyp: "./glosses/gyp",
 
         // components
         project: "./project",

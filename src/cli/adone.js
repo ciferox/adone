@@ -477,7 +477,7 @@ class AdoneCLI extends application.CliApplication {
             {
                 name: "--watch",
                 help: "Watch files changes"
-            },
+            }
         ],
         arguments: [
             {
@@ -526,6 +526,49 @@ class AdoneCLI extends application.CliApplication {
             await observer.result;
         } catch (err) {
             term.print(`{red-fg}${err.message}{/}\n`);
+            return 1;
+        }
+    }
+
+    @DCliCommand({
+        name: "gyp",
+        options: [
+            // proto.configDefs = {
+            //     help: Boolean, // everywhere
+            //     arch: String, // 'configure'
+            //     cafile: String, // 'install'
+            //     debug: Boolean, // 'build'
+            //     directory: String, // bin
+            //     make: String, // 'build'
+            //     msvs_version: String, // 'configure'
+            //     ensure: Boolean, // 'install'
+            //     solution: String, // 'build' (windows only)
+            //     proxy: String, // 'install'
+            //     devdir: String, // everywhere
+            //     nodedir: String, // 'configure'
+            //     loglevel: String, // everywhere
+            //     python: String, // 'configure'
+            //     "dist-url": String, // 'install'
+            //     tarball: String, // 'install'
+            //     jobs: String, // 'build'
+            //     thin: String // 'configure'
+            // };            
+        ]
+
+    })
+    async gytCommand(args) {
+        try {
+            const prog = new adone.gyp.Gyp();
+            prog.run([
+                {
+                    name: "rebuild",
+                    args: []
+                }
+            ], {});
+
+            // // return 0;
+        } catch (err) {
+            adone.error(err);
             return 1;
         }
     }

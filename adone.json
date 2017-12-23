@@ -99,6 +99,11 @@
                     "$src": "src/glosses/geoip/**/*.js",
                     "$dst": "lib/glosses/geoip"
                 },
+                "gyp": {
+                    "$task": "adoneTranspile",
+                    "$src": "src/glosses/gyp/**/*.js",
+                    "$dst": "lib/glosses/gyp"
+                },
                 "hardware": {
                     "$task": "adoneTranspile",
                     "$src": "src/glosses/hardware/**/*.js",

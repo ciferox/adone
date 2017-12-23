@@ -222,7 +222,13 @@
             },
             "geoip": {
                 "description": "Geolocation utilites",
-                "index": "glosses/geoip"
+                "index": "glosses/geoip/index",
+                "src": "glosses/geoip/**/*"
+            },
+            "gyp": {
+                "description": "Node.js native addon build tool",
+                "index": "glosses/gyp/index",
+                "src": "glosses/gyp/**/*"
             },
             "hardware": {
                 "description": "Hardware stuff",
