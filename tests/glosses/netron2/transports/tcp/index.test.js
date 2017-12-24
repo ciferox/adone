@@ -21,14 +21,14 @@ describe("netron2", "transports", "tcp", () => {
         });
 
         it("close listener with connections, through timeout", (done) => {
-            const mh = multi.address.create("/ip4/127.0.0.1/tcp/9090/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
+            const mh = multi.address.create("/ip4/127.0.0.1/tcp/9191/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
             const listener = tcp.createListener((conn) => {
                 pull(conn, conn);
             });
 
             listener.listen(mh, () => {
-                const socket1 = net.connect(9090);
-                const socket2 = net.connect(9090);
+                const socket1 = net.connect(9191);
+                const socket2 = net.connect(9191);
 
                 socket1.write("Some data that is never handled");
                 socket1.end();
@@ -49,7 +49,7 @@ describe("netron2", "transports", "tcp", () => {
         });
 
         it("listen on IPv6 addr", (done) => {
-            const mh = multi.address.create("/ip6/::/tcp/9090");
+            const mh = multi.address.create("/ip6/::/tcp/9191");
             const listener = tcp.createListener((conn) => { });
             listener.listen(mh, () => {
                 listener.close(done);
@@ -57,7 +57,7 @@ describe("netron2", "transports", "tcp", () => {
         });
 
         it("listen on any Interface", (done) => {
-            const mh = multi.address.create("/ip4/0.0.0.0/tcp/9090");
+            const mh = multi.address.create("/ip4/0.0.0.0/tcp/9191");
             const listener = tcp.createListener((conn) => { });
             listener.listen(mh, () => {
                 listener.close(done);
@@ -65,7 +65,7 @@ describe("netron2", "transports", "tcp", () => {
         });
 
         it("getAddrs", (done) => {
-            const mh = multi.address.create("/ip4/127.0.0.1/tcp/9090");
+            const mh = multi.address.create("/ip4/127.0.0.1/tcp/9191");
             const listener = tcp.createListener((conn) => { });
             listener.listen(mh, () => {
                 listener.getAddrs((err, multiaddrs) => {
@@ -90,7 +90,7 @@ describe("netron2", "transports", "tcp", () => {
         });
 
         it("getAddrs from listening on 0.0.0.0", (done) => {
-            const mh = multi.address.create("/ip4/0.0.0.0/tcp/9090");
+            const mh = multi.address.create("/ip4/0.0.0.0/tcp/9191");
             const listener = tcp.createListener((conn) => { });
             listener.listen(mh, () => {
                 listener.getAddrs((err, multiaddrs) => {
@@ -116,7 +116,7 @@ describe("netron2", "transports", "tcp", () => {
         });
 
         it("getAddrs preserves IPFS Id", (done) => {
-            const mh = multi.address.create("/ip4/127.0.0.1/tcp/9090/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
+            const mh = multi.address.create("/ip4/127.0.0.1/tcp/9191/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
             const listener = tcp.createListener((conn) => { });
             listener.listen(mh, () => {
                 listener.getAddrs((err, multiaddrs) => {
@@ -132,7 +132,7 @@ describe("netron2", "transports", "tcp", () => {
     describe("dial", () => {
         let tcp;
         let listener;
-        const ma = multi.address.create("/ip4/127.0.0.1/tcp/9090");
+        const ma = multi.address.create("/ip4/127.0.0.1/tcp/9191");
 
         beforeEach((done) => {
             tcp = new TCP();
@@ -243,7 +243,7 @@ describe("netron2", "transports", "tcp", () => {
         });
 
         it("dial on IPv4 with IPFS Id", (done) => {
-            const ma = multi.address.create("/ip4/127.0.0.1/tcp/9090/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
+            const ma = multi.address.create("/ip4/127.0.0.1/tcp/9191/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
             const conn = tcp.dial(ma);
 
             pull(
@@ -266,12 +266,12 @@ describe("netron2", "transports", "tcp", () => {
         });
 
         it("filter valid addrs for this transport", () => {
-            const mh1 = multi.address.create("/ip4/127.0.0.1/tcp/9090");
-            const mh2 = multi.address.create("/ip4/127.0.0.1/udp/9090");
-            const mh3 = multi.address.create("/ip4/127.0.0.1/tcp/9090/http");
-            const mh4 = multi.address.create("/ip4/127.0.0.1/tcp/9090/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
-            const mh5 = multi.address.create("/ip4/127.0.0.1/tcp/9090/http/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
-            const mh6 = multi.address.create("/ip4/127.0.0.1/tcp/9090/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw" +
+            const mh1 = multi.address.create("/ip4/127.0.0.1/tcp/9191");
+            const mh2 = multi.address.create("/ip4/127.0.0.1/udp/9191");
+            const mh3 = multi.address.create("/ip4/127.0.0.1/tcp/9191/http");
+            const mh4 = multi.address.create("/ip4/127.0.0.1/tcp/9191/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
+            const mh5 = multi.address.create("/ip4/127.0.0.1/tcp/9191/http/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
+            const mh6 = multi.address.create("/ip4/127.0.0.1/tcp/9191/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw" +
                 "/p2p-circuit/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
 
             const valid = tcp.filter([mh1, mh2, mh3, mh4, mh5, mh6]);
@@ -281,7 +281,7 @@ describe("netron2", "transports", "tcp", () => {
         });
 
         it("filter a single addr for this transport", () => {
-            const mh1 = multi.address.create("/ip4/127.0.0.1/tcp/9090");
+            const mh1 = multi.address.create("/ip4/127.0.0.1/tcp/9191");
 
             const valid = tcp.filter(mh1);
             expect(valid.length).to.equal(1);
@@ -296,7 +296,7 @@ describe("netron2", "transports", "tcp", () => {
             tcp = new TCP();
         });
 
-        const ma = multi.address.create("/ip4/127.0.0.1/tcp/9090");
+        const ma = multi.address.create("/ip4/127.0.0.1/tcp/9191");
 
         it("get observed addrs", (done) => {
             let dialerObsAddrs;
@@ -399,7 +399,7 @@ describe("netron2", "transports", "tcp", () => {
     describe("Connection wrap", () => {
         let tcp;
         let listener;
-        const ma = multi.address.create("/ip4/127.0.0.1/tcp/9090");
+        const ma = multi.address.create("/ip4/127.0.0.1/tcp/9191");
 
         beforeEach((done) => {
             tcp = new TCP();

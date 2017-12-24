@@ -14,7 +14,7 @@ describe("netron2", "trasnport", "ws", () => {
 
     describe("listen", () => {
         let ws;
-        const ma = multi.address.create("/ip4/127.0.0.1/tcp/9090/ws");
+        const ma = multi.address.create("/ip4/127.0.0.1/tcp/9595/ws");
 
         beforeEach(() => {
             ws = new WS();
@@ -50,7 +50,7 @@ describe("netron2", "trasnport", "ws", () => {
         });
 
         it("listen on addr with /ipfs/QmHASH", (done) => {
-            const ma = multi.address.create("/ip4/127.0.0.1/tcp/9090/ws/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
+            const ma = multi.address.create("/ip4/127.0.0.1/tcp/9595/ws/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
 
             const listener = ws.createListener((conn) => { });
 
@@ -130,7 +130,7 @@ describe("netron2", "trasnport", "ws", () => {
         });
 
         it("getAddrs preserves IPFS Id", (done) => {
-            const ma = multi.address.create("/ip4/127.0.0.1/tcp/9090/ws/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
+            const ma = multi.address.create("/ip4/127.0.0.1/tcp/9595/ws/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
 
             const listener = ws.createListener((conn) => { });
 
@@ -148,7 +148,7 @@ describe("netron2", "trasnport", "ws", () => {
     describe("dial", () => {
         let ws;
         let listener;
-        const ma = multi.address.create("/ip4/127.0.0.1/tcp/9091/ws");
+        const ma = multi.address.create("/ip4/127.0.0.1/tcp/9596/ws");
 
         beforeEach((done) => {
             ws = new WS();
@@ -183,7 +183,7 @@ describe("netron2", "trasnport", "ws", () => {
         });
 
         it("dial on IPv4 with IPFS Id", (done) => {
-            const ma = multi.address.create("/ip4/127.0.0.1/tcp/9091/ws/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
+            const ma = multi.address.create("/ip4/127.0.0.1/tcp/9596/ws/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
             const conn = ws.dial(ma);
 
             const s = pull.goodbye({
@@ -209,8 +209,8 @@ describe("netron2", "trasnport", "ws", () => {
 
         describe("filter valid addrs for this transport", () => {
             it("should fail invalid WS addresses", () => {
-                const ma1 = multi.address.create("/ip4/127.0.0.1/tcp/9090");
-                const ma2 = multi.address.create("/ip4/127.0.0.1/udp/9090");
+                const ma1 = multi.address.create("/ip4/127.0.0.1/tcp/9595");
+                const ma2 = multi.address.create("/ip4/127.0.0.1/udp/9595");
                 const ma3 = multi.address.create("/ip6/::1/tcp/80");
                 const ma4 = multi.address.create("/dns/ipfs.io/tcp/80");
 
@@ -312,10 +312,10 @@ describe("netron2", "trasnport", "ws", () => {
 
             it("should filter mixed addresses", () => {
                 const ma1 = multi.address.create("/dns6/ipfs.io/tcp/80/ws/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
-                const ma2 = multi.address.create("/ip4/127.0.0.1/tcp/9090");
-                const ma3 = multi.address.create("/ip4/127.0.0.1/udp/9090");
+                const ma2 = multi.address.create("/ip4/127.0.0.1/tcp/9595");
+                const ma3 = multi.address.create("/ip4/127.0.0.1/udp/9595");
                 const ma4 = multi.address.create("/dns6/ipfs.io/ws");
-                const mh5 = multi.address.create("/ip4/127.0.0.1/tcp/9090/ws/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw" +
+                const mh5 = multi.address.create("/ip4/127.0.0.1/tcp/9595/ws/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw" +
                     "/p2p-circuit/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
 
                 const valid = ws.filter([ma1, ma2, ma3, ma4, mh5]);
@@ -326,7 +326,7 @@ describe("netron2", "trasnport", "ws", () => {
         });
 
         it("filter a single addr for this transport", (done) => {
-            const ma = multi.address.create("/ip4/127.0.0.1/tcp/9090/ws/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
+            const ma = multi.address.create("/ip4/127.0.0.1/tcp/9595/ws/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
 
             const valid = ws.filter(ma);
             expect(valid.length).to.equal(1);

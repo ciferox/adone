@@ -1,9 +1,5 @@
 const parallel = require("async/parallel");
 const series = require("async/series");
-const signalling = require("libp2p-webrtc-star/src/sig-server");
-const rendezvous = require("libp2p-websocket-star-rendezvous");
-const WSStar = require("libp2p-websocket-star");
-const WRTCStar = require("libp2p-webrtc-star");
 const wrtc = require("wrtc");
 const waterfall = require("async/waterfall");
 
@@ -11,7 +7,7 @@ const {
     is,
     multi,
     stream: { pull },
-    netron2: { CID, circuit: { Circuit }, Node, secio, multiplex, MulticastDNS, PeerInfo, PeerId, spdy, dht: { KadDHT }, Railing, transport: { TCP, WS } },
+    netron2: { rendezvous, CID, circuit: { Circuit }, Node, secio, multiplex, MulticastDNS, PeerInfo, PeerId, spdy, dht: { KadDHT }, Railing, transport: { TCP, WS, WebRTCStar, WSStar } },
     vendor: { lodash: { times: _times } }
 } = adone;
 
@@ -505,14 +501,14 @@ describe("netron2", () => {
 
                 parallel([
                     (cb) => {
-                        signalling.start({ port: 24642 }, (err, server) => {
+                        WebRTCStar.sigServer.start({ port: 24642 }, (err, server) => {
                             assert.notExists(err);
                             ss = server;
                             cb();
                         });
                     },
                     (cb) => {
-                        const wstar = new WRTCStar({ wrtc });
+                        const wstar = new WebRTCStar({ wrtc });
                         createNode([
                             "/ip4/0.0.0.0/tcp/0",
                             "/ip4/127.0.0.1/tcp/25011/ws",
@@ -547,7 +543,7 @@ describe("netron2", () => {
                     }),
 
                     (cb) => {
-                        const wstar = new WRTCStar({ wrtc });
+                        const wstar = new WebRTCStar({ wrtc });
 
                         createNode(["/ip4/127.0.0.1/tcp/24642/ws/p2p-webrtc-star"], {
                             modules: {
@@ -990,7 +986,7 @@ describe("netron2", () => {
                 port++;
                 parallel([
                     (cb) => {
-                        signalling.start({ port }, (err, server) => {
+                        WebRTCStar.sigServer.start({ port }, (err, server) => {
                             assert.notExists(err);
                             ss = server;
                             cb();

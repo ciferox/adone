@@ -1,8 +1,10 @@
 const {
     multi,
+    noop,
     netron2: { Connection },
     std: { os },
-    stream: { pull }
+    stream: { pull },
+    vendor: { lodash: { includes } }
 } = adone;
 
 module.exports = (options, handler) => {
@@ -19,10 +21,10 @@ module.exports = (options, handler) => {
 
     listener._listen = listener.listen;
     listener.listen = (ma, callback) => {
-        callback = callback || adone.noop;
+        callback = callback || noop;
         listeningMultiaddr = ma;
 
-        if (ma.protoNames().includes("ipfs")) {
+        if (includes(ma.protoNames(), "ipfs")) {
             ma = ma.decapsulate("ipfs");
         }
 

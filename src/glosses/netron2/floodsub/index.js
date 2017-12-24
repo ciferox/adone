@@ -5,12 +5,10 @@ const Peer = require("./peer");
 export const utils = require("./utils");
 const pb = require("./message");
 const config = require("./config");
-const Buffer = require("safe-buffer").Buffer;
 
 const log = config.log;
 const multicodec = config.multicodec;
 const ensureArray = utils.ensureArray;
-const setImmediate = require("async/setImmediate");
 
 const {
     event: { EventEmitter },

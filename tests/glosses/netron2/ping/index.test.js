@@ -5,13 +5,16 @@ const {
     netron2: { swarm: { Swarm }, transport: { TCP }, PeerInfo, PeerBook, Ping }
 } = adone;
 
-describe("netron2", "ping", () => {
+describe("netron2", "ping", function () {
     let swarmA;
     let swarmB;
     let peerA;
     let peerB;
 
-    before((done) => {
+    this.timeout(25000);
+
+    before(function (done) {
+        this.timeout(25000);
         series([
             (cb) => PeerInfo.create((err, peerInfo) => {
                 assert.notExists(err);

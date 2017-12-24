@@ -26,6 +26,7 @@ describe("RoutingTable", () => {
         });
     });
 
+    // TODO fix a callback that is being called twice, making this test fail
     it("add", function (done) {
         this.timeout(60 * 1000);
         createPeers(20, (err, peers) => {
@@ -48,8 +49,8 @@ describe("RoutingTable", () => {
         });
     });
 
-    // TODO fix a callback that is being called twice, making this test fail
-    it.skip("remove", function (done) {
+    
+    it("remove", function (done) {
         this.timeout(20 * 1000);
 
         createPeers(10, (err, peers) => {
@@ -97,7 +98,7 @@ describe("RoutingTable", () => {
     });
 
     // TODO fix a callback that is being called twice, making this test fail
-    it.skip("closestPeers", function (done) {
+    it("closestPeers", function (done) {
         this.timeout(20 * 1000);
 
         createPeers(18, (err, peers) => {

@@ -1,5 +1,6 @@
 const {
-    is
+    is,
+    data: { varint }
 } = adone;
 
 const poolSize = 10 * 1024;
@@ -13,7 +14,6 @@ export default function encode(opts) {
     }, opts || {});
 
     // Only needed for varint
-    const varint = require("varint");
     let pool = opts.fixed ? null : createPool();
     let used = 0;
 

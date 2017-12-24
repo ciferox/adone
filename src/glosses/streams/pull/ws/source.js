@@ -10,15 +10,14 @@ const {
   <<< examples/read.js
 
 **/
-const Buffer = require("safe-buffer").Buffer;
 
 // copied from github.com/feross/buffer
 // Some ArrayBuffers are not passing the instanceof check, so we need to do a bit more work :(
-function isArrayBuffer(obj) {
+const isArrayBuffer = function (obj) {
     return obj instanceof ArrayBuffer ||
-    (!is.nil(obj) && !is.nil(obj.constructor) && obj.constructor.name === "ArrayBuffer" &&
-      is.number(obj.byteLength));
-}
+        (!is.nil(obj) && !is.nil(obj.constructor) && obj.constructor.name === "ArrayBuffer" &&
+            is.number(obj.byteLength));
+};
 
 module.exports = function (socket, cb) {
     const buffer = [];

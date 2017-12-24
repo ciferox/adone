@@ -1,8 +1,7 @@
-const EventEmitter = require("events").EventEmitter;
-const noop = require("lodash.noop");
-const Connection = require("interface-connection").Connection;
-
 const {
+    event: { EventEmitter },
+    netron2: { Connection },
+    noop,
     stream: { pull }
 } = adone;
 

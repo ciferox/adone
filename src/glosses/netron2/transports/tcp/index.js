@@ -9,7 +9,7 @@ const {
     stream: { pull }
 } = adone;
 
-export default class TCPTransport {
+export default class TCP {
     dial(ma, options, callback) {
         if (is.function(options)) {
             callback = options;

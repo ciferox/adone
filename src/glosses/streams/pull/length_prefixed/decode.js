@@ -1,10 +1,8 @@
 const {
     is,
+    data: { varint },
     stream: { pull }
 } = adone;
-
-const varint = require("varint");
-const Buffer = require("safe-buffer").Buffer;
 
 const MSB = 0x80;
 const isEndByte = (byte) => !(byte & MSB);

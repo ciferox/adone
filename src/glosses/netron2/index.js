@@ -20,7 +20,7 @@ adone.lazify({
     secio: "./secio",
     identify: "./identify",
     floodsub: "./floodsub",
-    Netron: "./netron"
+    rendezvous: "./ws_star_rendezvous"
 }, adone.asNamespace(exports), require);
 
 // export const crypto = require("libp2p-crypto");
@@ -29,9 +29,6 @@ adone.lazify({
 //     FloodSub: require("libp2p-floodsub")
 // };
 
-// export const transport = {
-//     TCP: require("libp2p-tcp")
-// };
 
 // export const spdy = require("libp2p-spdy");
 // export const secio = require("libp2p-secio");
@@ -45,3 +42,10 @@ adone.lazify({
 // export const PeerInfo = require("peer-info");
 // export const PeerId = require("peer-id");
 // export const PeerBook = require("peer-book");
+
+// export const circuit = {
+//     Circuit: require("libp2p-circuit")
+// };
+
+// export const multiplex = require("libp2p-multiplex");
+// export const multistream = require("multistream-select");

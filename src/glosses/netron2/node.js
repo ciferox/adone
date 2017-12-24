@@ -1,3 +1,4 @@
+const assert = require("assert");
 const each = require("async/each");
 const series = require("async/series");
 
@@ -5,7 +6,7 @@ const {
     event: { EventEmitter },
     is,
     multi,
-    netron2: { PeerInfo, PeerId, PeerBook, swarm: { Swarm }, Ping }
+    netron2: { PeerId, PeerInfo, PeerBook, Ping, swarm: { Swarm } }
 } = adone;
 
 const NOT_STARTED_ERROR_MESSAGE = "The libp2p node is not started yet";
@@ -13,13 +14,8 @@ const NOT_STARTED_ERROR_MESSAGE = "The libp2p node is not started yet";
 export default class Node extends EventEmitter {
     constructor(_modules, _peerInfo, _peerBook, _options) {
         super();
-        if (!_modules) {
-            throw new adone.x.InvalidArgument("Requires modules to equip libp2p with features");
-        }
-
-        if (!_peerInfo) {
-            throw new adone.x.InvalidArgument("Requires a PeerInfo instance");
-        }
+        assert(_modules, "requires modules to equip libp2p with features");
+        assert(_peerInfo, "requires a PeerInfo instance");
 
         this.modules = _modules;
         this.peerInfo = _peerInfo;
@@ -32,7 +28,8 @@ export default class Node extends EventEmitter {
 
         // Attach stream multiplexers
         if (this.modules.connection && this.modules.connection.muxer) {
-            const muxers = adone.util.arrify(this.modules.connection.muxer);
+            let muxers = this.modules.connection.muxer;
+            muxers = is.array(muxers) ? muxers : [muxers];
             muxers.forEach((muxer) => this.swarm.connection.addStreamMuxer(muxer));
 
             // If muxer exists, we can use Identify
@@ -145,7 +142,9 @@ export default class Node extends EventEmitter {
         }
 
         let ws;
-        const transports = adone.util.arrify(this.modules.transport);
+        let transports = this.modules.transport;
+
+        transports = is.array(transports) ? transports : [transports];
 
         // so that we can have webrtc-star addrs without adding manually the id
         const maOld = [];
@@ -161,9 +160,12 @@ export default class Node extends EventEmitter {
         const multiaddrs = this.peerInfo.multiaddrs.toArray();
         transports.forEach((transport) => {
             if (transport.filter(multiaddrs).length > 0) {
-                this.swarm.transport.add(transport.tag || transport.constructor.name, transport);
-            } else if (transport.constructor && transport.constructor.name === "WebSocket") {
-                // TODO find a cleaner way to signal that a transport is always used for dialing, even if no listener
+                this.swarm.transport.add(
+                    transport.tag || transport.constructor.name, transport);
+            } else if (transport.constructor &&
+                transport.constructor.name === "WebSockets") {
+                // TODO find a cleaner way to signal that a transport is always
+                // used for dialing, even if no listener
                 ws = transport;
             }
         });
@@ -244,10 +246,7 @@ export default class Node extends EventEmitter {
     }
 
     ping(peer, callback) {
-        if (!this.isStarted()) {
-            throw new adone.x.IllegalState(NOT_STARTED_ERROR_MESSAGE);
-        }
-
+        assert(this.isStarted(), NOT_STARTED_ERROR_MESSAGE);
         this._getPeerInfo(peer, (err, peerInfo) => {
             if (err) {
                 return callback(err);
@@ -258,9 +257,7 @@ export default class Node extends EventEmitter {
     }
 
     dial(peer, protocol, callback) {
-        if (!this.isStarted()) {
-            throw new adone.x.IllegalState(NOT_STARTED_ERROR_MESSAGE);
-        }
+        assert(this.isStarted(), NOT_STARTED_ERROR_MESSAGE);
 
         if (is.function(protocol)) {
             callback = protocol;
@@ -283,9 +280,7 @@ export default class Node extends EventEmitter {
     }
 
     hangUp(peer, callback) {
-        if (!this.isStarted()) {
-            throw new adone.x.IllegalState(NOT_STARTED_ERROR_MESSAGE);
-        }
+        assert(this.isStarted(), NOT_STARTED_ERROR_MESSAGE);
 
         this._getPeerInfo(peer, (err, peerInfo) => {
             if (err) {
@@ -321,9 +316,10 @@ export default class Node extends EventEmitter {
             try {
                 p = this.peerBook.get(peerIdB58Str);
             } catch (err) {
+                p = new PeerInfo(PeerId.createFromB58String(peerIdB58Str));
             }
-            p = new PeerInfo(PeerId.createFromB58String(peerIdB58Str));
             p.multiaddrs.add(peer);
+
             // PeerId
         } else if (PeerId.isPeerId(peer)) {
             const peerIdB58Str = peer.toB58String();

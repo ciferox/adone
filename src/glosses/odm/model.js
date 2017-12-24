@@ -3,7 +3,6 @@ import Document from "./document";
 const DocumentNotFoundError = require("./error").DocumentNotFoundError;
 const DivergentArrayError = require("./error").DivergentArrayError;
 const Error = require("./error");
-const EventEmitter = require("events").EventEmitter;
 const OverwriteModelError = require("./error").OverwriteModelError;
 const PromiseProvider = require("./promise_provider");
 import Query from "./query";
@@ -16,7 +15,6 @@ const cast = require("./cast");
 const castUpdate = require("./services/query/castUpdate");
 const discriminator = require("./services/model/discriminator");
 const isPathSelectedInclusive = require("./services/projection/isPathSelectedInclusive");
-const get = require("lodash.get");
 const mpath = require("mpath");
 const parallel = require("async/parallel");
 const parallelLimit = require("async/parallelLimit");
@@ -25,7 +23,9 @@ const util = require("util");
 const utils = require("./utils");
 
 const {
-    is
+    event: { EventEmitter },
+    is,
+    vendor: { lodash: { get } }
 } = adone;
 
 const VERSION_WHERE = 1;

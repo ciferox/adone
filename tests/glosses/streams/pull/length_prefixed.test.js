@@ -1,13 +1,12 @@
 describe("stream", "pull", "lengthPrefixed", () => {
     const {
+        data: { varint },
         stream: { pull }
     } = adone;
 
     const {
         lengthPrefixed: lp
     } = pull;
-
-    const varint = require("varint");
 
     const delay = (time) => {
         return pull.asyncMap((val, cb) => {
@@ -56,7 +55,7 @@ describe("stream", "pull", "lengthPrefixed", () => {
                             input
                         ).to.be.eql(
                             output
-                        );
+                            );
                         done();
                     })
                 );
@@ -102,7 +101,7 @@ describe("stream", "pull", "lengthPrefixed", () => {
                             err
                         ).to.be.eql(
                             "size longer than max permitted length of 1!"
-                        );
+                            );
                         done();
                     })
                 );
@@ -144,7 +143,7 @@ describe("stream", "pull", "lengthPrefixed", () => {
                     input
                 ).to.be.eql(
                     output
-                );
+                    );
                 done();
             })
         );
@@ -282,7 +281,7 @@ describe("stream", "pull", "lengthPrefixed", () => {
                                 input
                             ).to.be.eql(
                                 output
-                            );
+                                );
                             done();
                         })
                     );
@@ -328,7 +327,7 @@ describe("stream", "pull", "lengthPrefixed", () => {
                                 err
                             ).to.be.eql(
                                 "size longer than max permitted length of 1!"
-                            );
+                                );
                             done();
                         })
                     );
