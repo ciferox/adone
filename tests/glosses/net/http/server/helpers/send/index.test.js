@@ -651,6 +651,20 @@ describe("net", "http", "helpers", "send", () => {
         });
     });
 
+    describe("when trying to get a file without extension with matching .extensions sufficed with other dots in path", () => {
+        it("should 200", async () => {
+            const server = new Server();
+
+            server.use(async (ctx) => {
+                await send(ctx, "fixtures/some.path/index", { extensions: ["json"] });
+            });
+
+            await request(server)
+                .get("/")
+                .expectStatus(200);
+        });
+    });
+
     it("should set the Content-Type", async () => {
         const server = new Server();
 

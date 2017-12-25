@@ -950,6 +950,28 @@ describe("net", "http", "server", "middleware", "router", "Router", () => {
             expect(url).to.be.equal("/books/chapters/Learning%20ECMA6/123");
         });
 
+        it("generates URL for given route name within two embedded routers", (done) => {
+            const server = new Server();
+            const router = new Router({
+                prefix: "/books"
+            });
+            const embeddedRouter = new Router({
+                prefix: "/chapters"
+            });
+            const embeddedRouter2 = new Router({
+                prefix: "/:chapterName/pages"
+            });
+            embeddedRouter2.get("chapters", "/:pageNumber", (ctx) => {
+                ctx.status = 204;
+            });
+            embeddedRouter.use(embeddedRouter2.routes());
+            router.use(embeddedRouter.routes());
+            server.use(router.routes());
+            const url = router.url("chapters", { chapterName: "Learning ECMA6", pageNumber: 123 });
+            assert.equal(url, "/books/chapters/Learning%20ECMA6/pages/123");
+            done();
+        });
+
         it("generates URL for given route name with params and query params", () => {
             const router = new Router();
             router.get("books", "/books/:category/:id", (ctx) => {

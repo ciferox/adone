@@ -449,7 +449,7 @@ describe("gridfs", function () {
         await gridStore.open();
         await gridStore.seek(2);
         const stream = gridStore.stream(true);
-        const data = await stream.pipe(adone.stream.concat());
+        const data = await stream.pipe(adone.stream.concat.create());
         expect(data.toString()).to.be.equal("llo world!");
     });
 
@@ -465,7 +465,7 @@ describe("gridfs", function () {
         await gridStore.open();
         await gridStore.seek(7);
         const stream = gridStore.stream(true);
-        const data = await stream.pipe(adone.stream.concat());
+        const data = await stream.pipe(adone.stream.concat.create());
         expect(data.toString()).to.be.equal("orld!");
     });
 

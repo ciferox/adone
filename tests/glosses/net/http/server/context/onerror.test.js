@@ -1,9 +1,12 @@
 import * as helpers from "../helpers";
 
-describe("net", "http", "server", "context", "onerror(err)", () => {
-    const { net: { http: { server: { Server } } } } = adone;
-    const { context } = helpers;
+const {
+    net: { http: { server: { Server } } }
+} = adone;
 
+const { context } = helpers;
+
+describe("net", "http", "server", "context", "onerror(err)", () => {
     it("should respond", async () => {
         const server = new Server();
 
@@ -141,7 +144,7 @@ describe("net", "http", "server", "context", "onerror(err)", () => {
             const server = new Server();
 
             server.use(() => {
-                throw "string error";  // eslint-disable-line no-throw-literal
+                throw "string error"; // eslint-disable-line no-throw-literal
             });
 
             await request(server)
@@ -151,7 +154,7 @@ describe("net", "http", "server", "context", "onerror(err)", () => {
                 .expectBody("Internal Server Error");
         });
 
-        it("should use res.getHeaderNames() accessor", () => {
+        it("should use res.getHeaderNames() accessor when available", () => {
             let removed = 0;
             const ctx = context();
 
@@ -166,6 +169,23 @@ describe("net", "http", "server", "context", "onerror(err)", () => {
             ctx.onerror(new Error("error"));
 
             assert.equal(removed, 2);
+        });
+
+        it.only("should stringify error if it is an object", async (done) => {
+            const server = new Server();
+
+            server.on("error", (err) => {
+                assert.equal(err, 'Exception: Non-error thrown: {"key":"value"}');
+                done();
+            });
+
+            server.use(async (ctx) => {
+                throw { key: "value" }; // eslint-disable-line no-throw-literal
+            });
+
+            await request(server)
+                .get("/")
+                .expectStatus(500);
         });
     });
 });

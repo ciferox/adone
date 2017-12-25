@@ -61,7 +61,7 @@ export default function plugin() {
                     } else {
                         // stream
                         // ..
-                        let data = await file.contents.pipe(adone.stream.concat());
+                        let data = await file.contents.pipe(adone.stream.concat.create());
                         if (data.length === 0) {
                             // nothing was written, empty file
                             data = Buffer.alloc(0);

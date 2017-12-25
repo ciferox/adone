@@ -160,7 +160,7 @@ describe("archive", "zip", "unpack", () => {
                                     readStream = await zipfile.openReadStream(entry);
                                 }
 
-                                const actualContents = await readStream.pipe(adone.stream.concat("buffer"));
+                                const actualContents = await readStream.pipe(adone.stream.concat.create("buffer"));
 
                                 if (Buffer.compare(actualContents, expectedContents) !== 0) {
                                     throw new Error(`${messagePrefix}wrong contents`);
@@ -430,7 +430,7 @@ describe("archive", "zip", "unpack", () => {
             }
             const readStream = await zipfile.openReadStream(entry);
             if (!adone.is.null(contents)) {
-                const data = await readStream.pipe(adone.stream.concat("string"));
+                const data = await readStream.pipe(adone.stream.concat.create("string"));
                 if (data !== contents) {
                     throw new Error(`expected contents:\n${contents}\ngot:\n${data.toString()}\n`);
                 }
@@ -553,7 +553,7 @@ describe("archive", "zip", "unpack", () => {
                             options.decrypt = false;
                         }
                         const readStream = await zipfile.openReadStream(entry, options);
-                        const data = await readStream.pipe(adone.stream.concat("buffer"));
+                        const data = await readStream.pipe(adone.stream.concat.create("buffer"));
                         const prefix = `openReadStream with range(${start},${end},${index}): `;
                         if (Buffer.compare(data, expectedSlice) !== 0) {
                             throw new Error(`${prefix}contents mismatch`);

@@ -29,7 +29,7 @@ describe("archive", "zip", "pack", () => {
                 break;
             }
             const readStream = await zipFile.openReadStream(entry);
-            const data = await readStream.pipe(adone.stream.concat("buffer"));
+            const data = await readStream.pipe(adone.stream.concat.create("buffer"));
             buffers.push(data);
         }
         expect(buffers).to.have.lengthOf(5);
@@ -69,7 +69,7 @@ describe("archive", "zip", "pack", () => {
                 if (finalSize === -1) {
                     throw new Error("finalSize should be known");
                 }
-                const data = await zipfile.outputStream.pipe(adone.stream.concat("buffer"));
+                const data = await zipfile.outputStream.pipe(adone.stream.concat.create("buffer"));
                 expect(finalSize).to.be.equal(data.length);
             });
         }
@@ -85,7 +85,7 @@ describe("archive", "zip", "pack", () => {
         zipfile.addEmptyDirectory("e");
         const finalSize = await zipfile.end();
         expect(finalSize).to.be.equal(-1, "final size should be unknown");
-        const data = await zipfile.outputStream.pipe(adone.stream.concat("buffer"));
+        const data = await zipfile.outputStream.pipe(adone.stream.concat.create("buffer"));
         const zipFile = await unpack.fromBuffer(data, { lazyEntries: true });
         const expected = ["a.txt", "b.txt", "c.txt", "d/", "e/"];
         const actual = [];
@@ -105,7 +105,7 @@ describe("archive", "zip", "pack", () => {
         zipfile.addBuffer(Buffer.from("hello"), "hello.txt", { compress: false });
         const finalSize = await zipfile.end();
         expect(finalSize).not.to.be.equal(-1, "final size should be known");
-        const data = await zipfile.outputStream.pipe(adone.stream.concat("buffer"));
+        const data = await zipfile.outputStream.pipe(adone.stream.concat.create("buffer"));
         expect(data.length).to.be.equal(finalSize, "prediction is wrong");
         const zipFile = await unpack.fromBuffer(data, { lazyEntries: true });
         const actual = [];

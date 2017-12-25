@@ -1,5 +1,13 @@
-const { is, net: { http }, x, util } = adone;
-const { server: { helper: { assert, status, Cookies } } } = http;
+const {
+    is,
+    net: { http },
+    x,
+    util
+} = adone;
+
+const {
+    server: { helper: { assert, status, Cookies } }
+} = http;
 
 export default class Context {
     constructor(server, request, response) {
@@ -30,7 +38,7 @@ export default class Context {
         }
 
         if (!(err instanceof Error)) {
-            err = new x.Exception(`non-error thrown: ${err}`);
+            err = new x.Exception(adone.std.util.format("Non-error thrown: %j", err));
         }
 
         let headerSent = false;

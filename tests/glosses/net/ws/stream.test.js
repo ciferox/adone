@@ -205,7 +205,7 @@ describe("net", "ws", "stream", () => {
     it("stream end", (done) => {
         const server = adone.std.http.createServer();
         adone.net.ws.stream.createServer({ server }, (stream) => {
-            stream.pipe(adone.stream.concat()).then((body) => {
+            stream.pipe(adone.stream.concat.create()).then((body) => {
                 assert.equal(body.toString(), "pizza cats\n");
                 server.close(done);
             }, done);

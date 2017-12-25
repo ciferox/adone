@@ -1,6 +1,31 @@
-describe("net", "http", "helpers", "on finished", () => {
-    const { net: { http: { server: { helper: { onFinished } } } }, std: { net, http }, noop } = adone;
+const {
+    net: { http: { server: { helper: { onFinished } } } },
+    std: { net, http },
+    noop
+} = adone;
 
+describe("net", "http", "helpers", "on finished", () => {
+    const sendget = function (server) {
+        server.listen(function onListening() {
+            const port = this.address().port;
+            http.get(`http://localhost:${port}`, function onResponse(res) {
+                res.resume();
+                res.on("end", () => server.close());
+            });
+        });
+    };
+
+    const writerequest = function (socket, chunked) {
+        socket.write("GET / HTTP/1.1\r\n");
+        socket.write("Host: localhost\r\n");
+        socket.write("Connection: keep-alive\r\n");
+
+        if (chunked) {
+            socket.write("Transfer-Encoding: chunked\r\n");
+        }
+
+        socket.write("\r\n");
+    };
 
     describe("onFinished(res, listener)", () => {
         it("should invoke listener given an unknown object", (done) => {
@@ -132,7 +157,8 @@ describe("net", "http", "helpers", "on finished", () => {
         });
 
         describe("when response errors", () => {
-            it("should fire with error", (done) => {
+            it.todo("should fire with error", (done) => {
+                let socket;
                 const server = http.createServer((req, res) => {
                     onFinished(res, (err) => {
                         server.close();
@@ -143,7 +169,6 @@ describe("net", "http", "helpers", "on finished", () => {
                     socket.on("error", noop);
                     socket.write("W");
                 });
-                let socket;
 
                 server.listen(function () {
                     socket = net.connect(this.address().port, function () {
@@ -153,6 +178,7 @@ describe("net", "http", "helpers", "on finished", () => {
             });
 
             it("should include the response object", (done) => {
+                let socket;
                 const server = http.createServer((req, res) => {
                     onFinished(res, (err, msg) => {
                         server.close();
@@ -164,7 +190,6 @@ describe("net", "http", "helpers", "on finished", () => {
                     socket.on("error", noop);
                     socket.write("W");
                 });
-                let socket;
 
                 server.listen(function () {
                     socket = net.connect(this.address().port, function () {
@@ -235,6 +260,7 @@ describe("net", "http", "helpers", "on finished", () => {
         describe("when using keep-alive", () => {
             it("should fire for each request", (done) => {
                 let called = false;
+                let socket;
                 const server = http.createServer((req, res) => {
                     let data = "";
 
@@ -264,7 +290,6 @@ describe("net", "http", "helpers", "on finished", () => {
                     socket.write("1\r\nA\r\n");
                     socket.write("0\r\n\r\n");
                 });
-                let socket;
 
                 server.listen(function () {
                     socket = net.connect(this.address().port, function () {
@@ -275,7 +300,8 @@ describe("net", "http", "helpers", "on finished", () => {
         });
 
         describe("when request errors", () => {
-            it("should fire with error", (done) => {
+            it.todo("should fire with error", (done) => {
+                let socket;
                 const server = http.createServer((req, res) => {
                     onFinished(req, (err) => {
                         server.close();
@@ -286,7 +312,6 @@ describe("net", "http", "helpers", "on finished", () => {
                     socket.on("error", noop);
                     socket.write("W");
                 });
-                let socket;
 
                 server.listen(function () {
                     socket = net.connect(this.address().port, function () {
@@ -296,6 +321,7 @@ describe("net", "http", "helpers", "on finished", () => {
             });
 
             it("should include the request objecy", (done) => {
+                let socket;
                 const server = http.createServer((req, res) => {
                     onFinished(req, (err, msg) => {
                         server.close();
@@ -307,7 +333,6 @@ describe("net", "http", "helpers", "on finished", () => {
                     socket.on("error", noop);
                     socket.write("W");
                 });
-                let socket;
 
                 server.listen(function () {
                     socket = net.connect(this.address().port, function () {
@@ -532,26 +557,4 @@ describe("net", "http", "helpers", "on finished", () => {
             });
         });
     });
-
-    function sendget(server) {
-        server.listen(function onListening() {
-            const port = this.address().port;
-            http.get(`http://localhost:${port}`, function onResponse(res) {
-                res.resume();
-                res.on("end", () => server.close());
-            });
-        });
-    }
-
-    function writerequest(socket, chunked) {
-        socket.write("GET / HTTP/1.1\r\n");
-        socket.write("Host: localhost\r\n");
-        socket.write("Connection: keep-alive\r\n");
-
-        if (chunked) {
-            socket.write("Transfer-Encoding: chunked\r\n");
-        }
-
-        socket.write("\r\n");
-    }
 });

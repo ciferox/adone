@@ -35,7 +35,7 @@ export default function plugin() {
                                     entryFile.stat.mode |= std.fs.constants.S_IFREG;
 
                                     if (isBuffer) {
-                                        stream.pipe(adone.stream.concat()).then((data) => {
+                                        stream.pipe(adone.stream.concat.create()).then((data) => {
                                             if (is.array(data)) {
                                                 data = Buffer.alloc(0);
                                             }

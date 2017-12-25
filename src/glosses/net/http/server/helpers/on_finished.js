@@ -1,4 +1,6 @@
-const { net: { http: { server: { helper: { isFinished } } } } } = adone;
+const {
+    net: { http: { server: { helper: { isFinished } } } }
+} = adone;
 
 const attachFinishedListener = (msg, callback) => {
     let finished = false;

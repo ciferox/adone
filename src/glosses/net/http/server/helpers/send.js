@@ -1,4 +1,3 @@
-
 const {
     std: { path: { normalize, basename, extname, resolve, parse, sep } },
     net: { http: { server: { helper: { resolvePath } } } },
@@ -78,7 +77,7 @@ export default async function send(ctx, path, opts = {}) {
         encodingExt = ".gz";
     }
 
-    if (extensions && !/\..*$/.exec(path)) {
+    if (extensions && !/\.[^/]*$/.exec(path)) {
         for (let ext of extensions) {
             if (!is.string(ext)) {
                 throw new x.InvalidArgument("option extensions must be array of strings or false");

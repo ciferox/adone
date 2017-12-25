@@ -1,4 +1,9 @@
-const { is, x, util, net: { http: { server: { helper: { pathToRegexp } } } } } = adone;
+const {
+    is,
+    x,
+    util,
+    net: { http: { server: { helper: { pathToRegexp } } } }
+} = adone;
 
 const safeDecodeURIComponent = (text) => {
     try {
@@ -61,7 +66,7 @@ export default class Layer {
 
     url(params, options, ...rest) {
         let args = params;
-        const url = this.path.replace("(.*)", "");
+        const url = this.path.replace(/\(\.\*\)/g, "");
         const toPath = pathToRegexp.compile(url);
 
         if (!is.object(params)) {

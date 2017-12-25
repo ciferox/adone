@@ -494,7 +494,9 @@ describe("net", "utp", () => {
         });
     });
 
-    describe("timeouts", () => {
+    describe("timeouts", function () {
+        this.timeout(60000);
+        
         it("connection timeout. this may take >20s", (done) => {
             const socket = dgram.createSocket("udp4");
             socket.bind(0, () => {
