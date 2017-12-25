@@ -13,9 +13,9 @@ describe("net", "http", "client", "defaults", () => {
     });
 
     afterEach(() => {
-        delete request.options.baseURL;
-        delete request.options.headers.get["X-CUSTOM-HEADER"];
-        delete request.options.headers.post["X-CUSTOM-HEADER"];
+        delete request.config.baseURL;
+        delete request.config.headers.get["X-CUSTOM-HEADER"];
+        delete request.config.headers.post["X-CUSTOM-HEADER"];
         // document.cookie = XSRF_COOKIE_NAME + "=;expires=" + new Date(Date.now() - 86400000).toGMTString();
     });
 
@@ -49,7 +49,7 @@ describe("net", "http", "client", "defaults", () => {
     });
 
     it("should use modified defaults config", (done) => {
-        request.options.baseURL = "http://example.org/";
+        request.config.baseURL = "http://example.org/";
 
         nock("http://example.org")
             .get("/foo")
@@ -73,7 +73,7 @@ describe("net", "http", "client", "defaults", () => {
     });
 
     it("should use GET headers", (done) => {
-        request.options.headers.get["X-CUSTOM-HEADER"] = "foo";
+        request.config.headers.get["X-CUSTOM-HEADER"] = "foo";
 
         nock("http://example.org", {
             reqheaders: {
@@ -99,7 +99,7 @@ describe("net", "http", "client", "defaults", () => {
                 done();
             });
 
-        request.options.headers.post["X-CUSTOM-HEADER"] = "foo";
+        request.config.headers.post["X-CUSTOM-HEADER"] = "foo";
         request.post("http://example.org/foo", {});
 
     });
@@ -147,7 +147,7 @@ describe("net", "http", "client", "defaults", () => {
                 done();
             });
 
-        request.options.baseURL = "http://example.org/";
+        request.config.baseURL = "http://example.org/";
         const instance = create();
 
         instance.get("/foo");
@@ -161,7 +161,7 @@ describe("net", "http", "client", "defaults", () => {
             });
 
         const instance = create();
-        request.options.baseURL = "http://example.org/";
+        request.config.baseURL = "http://example.org/";
 
         instance.get("/foo");
     });

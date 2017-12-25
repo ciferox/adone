@@ -35,24 +35,25 @@ const buildURL = (url, params, paramsSerializer) => {
 };
 
 
-export default function adapter(options) {
+export default function adapter(config) {
     return new Promise((resolve, reject) => {
-        let data = options.data;
-        const headers = options.headers;
+        let data = config.data;
+        const headers = config.headers;
         let timer;
-        let aborted = false;
 
         if (!is.string(headers["User-Agent"]) && !is.string(headers["user-agent"])) {
             headers["User-Agent"] = `Adone/${adone.package.version}`;
         }
 
         if (data && !is.stream(data)) {
-            if (is.arrayBuffer(data)) {
+            if (is.buffer(data)) {
+                // Nothing to do...
+            } else if (is.arrayBuffer(data)) {
                 data = Buffer.from(new Uint8Array(data));
             } else if (is.string(data)) {
                 data = Buffer.from(data, "utf-8");
             } else {
-                return reject(imports.createError("Data after transformation must be a string, an ArrayBuffer, or a Stream", options));
+                return reject(imports.createError("Data after transformation must be a string, an ArrayBuffer, a Buffer, or a Stream'", config));
             }
 
             // Add Content-Length header if data exists
@@ -63,12 +64,12 @@ export default function adapter(options) {
 
         // HTTP basic authentication
         let auth = undefined;
-        if (options.auth) {
-            auth = `${options.auth.username || ""}:${options.auth.password || ""}`;
+        if (config.auth) {
+            auth = `${config.auth.username || ""}:${config.auth.password || ""}`;
         }
 
         // Parse url
-        const parsedUrl = adone.std.url.parse(options.url);
+        const parsedUrl = adone.std.url.parse(config.url);
         const protocol = parsedUrl.protocol || "http:";
 
         if (!auth && parsedUrl.auth) {
@@ -81,24 +82,24 @@ export default function adapter(options) {
         }
 
         const isHttps = protocol === "https:";
-        const agent = isHttps ? options.httpsAgent : options.httpAgent;
+        const agent = isHttps ? config.httpsAgent : config.httpAgent;
 
         const nodeOptions = {
             hostname: parsedUrl.hostname,
             port: parsedUrl.port,
-            path: buildURL(parsedUrl.path, options.params, options.paramsSerializer).replace(/^\?/, ""),
-            method: options.method.toUpperCase(),
+            path: buildURL(parsedUrl.path, config.params, config.paramsSerializer).replace(/^\?/, ""),
+            method: config.method.toUpperCase(),
             headers,
             agent,
             auth
         };
 
         if (isHttps) {
-            nodeOptions.rejectUnauthorized = is.boolean(options.rejectUnauthorized) ? options.rejectUnauthorized : true;
+            nodeOptions.rejectUnauthorized = is.boolean(config.rejectUnauthorized) ? config.rejectUnauthorized : true;
         }
 
-        let proxy = options.proxy;
-        if (is.nil(proxy)) {
+        let proxy = config.proxy;
+        if (!proxy && proxy !== false) {
             const proxyEnv = `${protocol.slice(0, -1)}_proxy`;
             const proxyUrl = process.env[proxyEnv] || process.env[proxyEnv.toUpperCase()];
             if (is.string(proxyUrl)) {
@@ -133,15 +134,17 @@ export default function adapter(options) {
         }
 
         let transport;
-        if (options.maxRedirects === 0) {
+        if (config.transport) {
+            transport = config.transport;
+        } else if (config.maxRedirects === 0) {
             transport = isHttps ? adone.std.https : adone.std.http;
         } else {
-            nodeOptions.maxRedirects = options.maxRedirects;
+            nodeOptions.maxRedirects = config.maxRedirects;
             transport = isHttps ? imports.followRedirects.https : imports.followRedirects.http;
         }
 
         const req = transport.request(nodeOptions, (res) => {
-            if (aborted) {
+            if (req.aborted) {
                 return;
             }
 
@@ -164,15 +167,18 @@ export default function adapter(options) {
                     break;
             }
 
+            // return the last request in case of redirects
+            const lastRequest = res.req || req;
+
             const response = {
                 status: res.statusCode,
                 statusText: res.statusMessage,
                 headers: res.headers,
-                options,
-                request: req
+                config,
+                request: lastRequest
             };
 
-            if (options.responseType === "stream") {
+            if (config.responseType === "stream") {
                 response.data = stream;
                 imports.settle(resolve, reject, response);
             } else {
@@ -181,21 +187,21 @@ export default function adapter(options) {
                     responseBuffer.push(chunk);
 
                     // make sure the content length is not over the maxContentLength if specified
-                    if (options.maxContentLength > -1 && Buffer.concat(responseBuffer).length > options.maxContentLength) {
-                        reject(imports.createError(`maxContentLength size of ${options.maxContentLength} exceeded`, options));
+                    if (config.maxContentLength > -1 && Buffer.concat(responseBuffer).length > config.maxContentLength) {
+                        reject(imports.createError(`maxContentLength size of ${config.maxContentLength} exceeded`, config, null, lastRequest));
                     }
                 });
 
                 stream.on("error", function handleStreamError(err) {
-                    if (aborted) {
+                    if (req.aborted) {
                         return;
                     }
-                    reject(imports.enhanceError(err, options));
+                    reject(imports.enhanceError(err, config, null, lastRequest));
                 });
 
                 stream.on("end", function handleStreamEnd() {
                     let responseData = Buffer.concat(responseBuffer);
-                    if (options.responseType !== "arraybuffer") {
+                    if (config.responseType !== "arraybuffer") {
                         responseData = responseData.toString("utf8");
                     }
 
@@ -206,36 +212,34 @@ export default function adapter(options) {
         });
 
         req.on("error", (err) => {
-            if (!aborted) {
-                reject(imports.enhanceError(err, options));
+            if (!req.aborted) {
+                reject(imports.enhanceError(err, config, null, req));
             }
         });
 
-        if (options.timeout && !timer) {
+        if (config.timeout && !timer) {
             timer = setTimeout(() => {
                 req.abort();
-                reject(imports.createError(`timeout of ${options.timeout}ms exceeded`, options, "ECONNABORTED"));
-                aborted = true;
-            }, options.timeout);
+                reject(imports.createError(`timeout of ${config.timeout}ms exceeded`, config, "ECONNABORTED", req));
+            }, config.timeout);
         }
 
-        if (options.cancelToken) {
-            options.cancelToken.promise.then((cancel) => {
-                if (!aborted) {
+        if (config.cancelToken) {
+            config.cancelToken.promise.then((cancel) => {
+                if (!req.aborted) {
                     req.abort();
                     reject(cancel);
-                    aborted = true;
                 }
             });
         }
 
-        // if (typeof options.onDownloadProgress === "function") {
-        //     request.addEventListener("progress", options.onDownloadProgress);
+        // if (typeof config.onDownloadProgress === "function") {
+        //     request.addEventListener("progress", config.onDownloadProgress);
         // }
 
         let uploadProgress;
-        if (is.function(options.onUploadProgress)) {
-            uploadProgress = options.onUploadProgress;
+        if (is.function(config.onUploadProgress)) {
+            uploadProgress = config.onUploadProgress;
         } else {
             uploadProgress = adone.noop;
         }

@@ -24,7 +24,7 @@ describe("net", "http", "client", "promise", () => {
             expect(response.data.hello).to.be.equal("world");
             expect(response.status).to.be.equal(200);
             expect(response.headers["content-type"]).to.be.equal("application/json");
-            expect(response.options.url).to.be.equal("http://example.org/foo");
+            expect(response.config.url).to.be.equal("http://example.org/foo");
             done();
         });
     });

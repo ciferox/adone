@@ -4,14 +4,16 @@
  * @param {Error} error The error to update.
  * @param {Object} config The config.
  * @param {string} [code] The error code (for example, 'ECONNABORTED').
- @ @param {Object} [response] The response.
+ * @param {Object} [request] The request.
+ * @param {Object} [response] The response.
  * @returns {Error} The error.
  */
-export default function enhanceError(error, config, code, response) {
+export default function enhanceError(error, config, code, request, response) {
     error.config = config;
     if (code) {
         error.code = code;
     }
+    error.request = request;
     error.response = response;
     return error;
 }

@@ -10,10 +10,11 @@ const imports = adone.lazify({
  * @param {string} message The error message.
  * @param {Object} config The config.
  * @param {string} [code] The error code (for example, 'ECONNABORTED').
- @ @param {Object} [response] The response.
+ * @param {Object} [request] The request.
+ * @param {Object} [response] The response.
  * @returns {Error} The created error.
  */
-export default function createError(message, config, code, response) {
+export default function createError(message, config, code, request, response) {
     const error = new Error(message);
-    return imports.enhanceError(error, config, code, response);
+    return imports.enhanceError(error, config, code, request, response);
 }

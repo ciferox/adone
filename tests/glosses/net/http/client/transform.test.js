@@ -62,7 +62,7 @@ describe("net", "http", "client", "transform", () => {
         };
 
         request.post("http://example.org/foo", data, {
-            transformRequest: request.options.transformRequest.concat(
+            transformRequest: request.config.transformRequest.concat(
                 (data) => {
                     return data.replace("bar", "baz");
                 }

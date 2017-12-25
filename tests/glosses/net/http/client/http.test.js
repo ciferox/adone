@@ -85,6 +85,7 @@ describe("net", "http", "client", "unit", () => {
             }).listen(PORT, () => {
                 request.get(`http://localhost:${PORT}/one`).then((res) => {
                     expect(res.data).to.be.equal(str);
+                    assert.equal(res.request.path, "/two");
                     done();
                 });
             });
@@ -246,6 +247,31 @@ describe("net", "http", "client", "unit", () => {
             });
         });
 
+        it("should support buffer", (done) => {
+            const buf = Buffer.alloc(1024); // Unsafe buffer < Buffer.poolSize (8192 bytes)
+            buf.fill("x");
+            server = http.createServer((req, res) => {
+                assert.equal(req.headers["content-length"], buf.length.toString());
+                req.pipe(res);
+            }).listen(PORT, () => {
+                request.post(`http://localhost:${PORT}/`,
+                    buf, {
+                        responseType: "stream"
+                    }).then((res) => {
+                    const stream = res.data;
+                    let string = "";
+                    stream.on("data", (chunk) => {
+                        string += chunk.toString("utf8");
+                    });
+                    stream.on("end", () => {
+                        assert.equal(string, buf.toString());
+                        done();
+                    });
+                });
+            });
+        });
+
+
         it("should support http proxying", (done) => {
             server = http.createServer((req, res) => {
                 res.setHeader("Content-Type", "text/html; charset=UTF-8");
@@ -282,6 +308,23 @@ describe("net", "http", "client", "unit", () => {
                         expect(res.data).to.be.equal(123456789);
                         done();
                     });
+                });
+            });
+        });
+
+        it("should not pass through proxy", (done) => {
+            // set the env variable
+            process.env.http_proxy = "http://does-not-exists.example.com:4242/";
+
+            server = http.createServer((req, res) => {
+                res.setHeader("Content-Type", "text/html; charset=UTF-8");
+                res.end("123456789");
+            }).listen(PORT, () => {
+                request.get(`http://localhost:${PORT}/`, {
+                    proxy: false
+                }).then((res) => {
+                    assert.equal(res.data, "123456789", "should not pass through proxy");
+                    done();
                 });
             });
         });

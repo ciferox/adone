@@ -93,16 +93,18 @@ export const transformData = (data, headers, fns) => {
 export const defaults = {
     transformRequest: [(data, headers = {}) => {
         // Normalize headers
-        for (const normalizedName of ["Content-Type"]) {
-            for (const name of Object.keys(headers)) {
-                if (name !== normalizedName && name.toUpperCase() === normalizedName.toUpperCase()) {
-                    headers[normalizedName] = headers[name];
-                    delete headers[name];
-                }
+        const normalizedName = "Content-Type";
+        for (const name of Object.keys(headers)) {
+            if (name !== normalizedName && name.toUpperCase() === normalizedName.toUpperCase()) {
+                headers[normalizedName] = headers[name];
+                delete headers[name];
             }
         }
 
-        if (is.arrayBuffer(data) || is.stream(data)) {
+        if (/*isFormData(data) ||*/
+            is.arrayBuffer(data) ||
+            is.buffer(data) ||
+            is.stream(data)) {
             return data;
         }
         if (is.arrayBufferView(data)) {
@@ -118,7 +120,7 @@ export const defaults = {
     }],
 
     transformResponse: [(data) => {
-        if (is.string(data)) {  // TODO: check content-type?
+        if (is.string(data)) {
             try {
                 data = JSON.parse(data);
             } catch (e) { /* Ignore */ }
@@ -152,7 +154,6 @@ for (const method of ["post", "put", "patch"]) {
     };
 }
 
-
 /**
  * Throws a `Cancel` if cancellation has been requested.
  */
@@ -172,32 +173,34 @@ const combineURLs = (baseURL, relativeURL) => {
 
 export class Client {
     constructor(options) {
-        this.options = options;
+        this.config = options;
         this.interceptors = {
             request: new imports.InterceptorManager(),
             response: new imports.InterceptorManager()
         };
     }
 
-    request(options, ...args) {
-        if (is.string(options)) {
-            options = lodash.merge({
-                url: options
+    request(config, ...args) {
+        if (is.string(config)) {
+            config = lodash.merge({
+                url: config
             }, args[0]);
         }
 
-        options = lodash.merge({}, defaults, this.options, {
+        config = lodash.merge({}, defaults, this.config, {
             method: "get"
-        }, options);
-        // Support baseURL config
-        if (options.baseURL && !isAbsoluteURL(options.url)) {
-            options.url = combineURLs(options.baseURL, options.url);
-        }
+        }, config);
+        config.method = config.method.toLowerCase();
 
         // Hook up interceptors middleware
         const chain = [
             (options) => {
                 throwIfCancellationRequested(options);
+
+                // Support baseURL config
+                if (config.baseURL && !isAbsoluteURL(config.url)) {
+                    config.url = combineURLs(config.baseURL, config.url);
+                }
 
                 // Ensure headers exist
                 options.headers = options.headers || {};
@@ -242,7 +245,7 @@ export class Client {
             chain.push(interceptor.fulfilled, interceptor.rejected);
         });
 
-        let promise = Promise.resolve(options);
+        let promise = Promise.resolve(config);
         while (chain.length) {
             promise = promise.then(chain.shift(), chain.shift());
         }
@@ -271,6 +274,10 @@ export class Client {
 
     delete(url, options = {}) {
         return this.request(lodash.merge({}, options, { method: "delete", url }));
+    }
+
+    options(url, options = {}) {
+        return this.request(lodash.merge({}, options, { method: "options", url }));
     }
 }
 

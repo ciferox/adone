@@ -1,19 +1,31 @@
-const safeMethods = { GET: true, HEAD: true, OPTIONS: true, TRACE: true };
+const assert = require("assert");
+
+const {
+    is,
+    std: { url, http, https, stream: { Writable } }
+} = adone;
+
+const nativeProtocols = { "http:": http, "https:": https };
 const schemes = {};
+exports = module.exports = {
+    maxRedirects: 21
+};
 // RFC7231§4.2.1: Of the request methods defined by this specification,
 // the GET, HEAD, OPTIONS, and TRACE methods are defined to be safe.
+const safeMethods = { GET: true, HEAD: true, OPTIONS: true, TRACE: true };
 
 // Create handlers that pass events from native requests
 const eventHandlers = Object.create(null);
-for (const event of ["abort", "aborte", "error", "socket"]) {
+["abort", "aborted", "error", "socket"].forEach((event) => {
     eventHandlers[event] = function (arg) {
         this._redirectable.emit(event, arg);
     };
-}
+});
 
 // An HTTP(S) request that can be redirected
-class RedirectableRequest extends adone.std.stream.Writable {
+class RedirectableRequest extends Writable {
     constructor(options, responseCallback) {
+        // Initialize the request
         super();
         this._options = options;
         this._redirectCount = 0;
@@ -25,7 +37,21 @@ class RedirectableRequest extends adone.std.stream.Writable {
         }
 
         // React to responses of native requests
-        this._onNativeResponse = (response) => this._processResponse(response);
+        const self = this;
+        this._onNativeResponse = function (response) {
+            self._processResponse(response);
+        };
+
+        // Complete the URL object when necessary
+        if (!options.pathname && options.path) {
+            const searchPos = options.path.indexOf("?");
+            if (searchPos < 0) {
+                options.pathname = options.path;
+            } else {
+                options.pathname = options.path.substring(0, searchPos);
+                options.search = options.path.substring(searchPos);
+            }
+        }
 
         // Perform the first request
         this._performRequest();
@@ -41,13 +67,15 @@ class RedirectableRequest extends adone.std.stream.Writable {
         }
 
         // Create the native request
-        const nativeProtocol = this._options.protocol === "http:" ? adone.std.http : adone.std.https;
-        const request = this._currentRequest = nativeProtocol.request(this._options, this._onNativeResponse);
-        this._currentUrl = adone.std.url.format(this._options);
+        const nativeProtocol = nativeProtocols[protocol];
+        const request = this._currentRequest =
+            nativeProtocol.request(this._options, this._onNativeResponse);
+        this._currentUrl = url.format(this._options);
 
         // Set up event handlers
         request._redirectable = this;
         for (const event in eventHandlers) {
+            /* istanbul ignore else */
             if (event) {
                 request.on(event, eventHandlers[event]);
             }
@@ -55,7 +83,7 @@ class RedirectableRequest extends adone.std.stream.Writable {
 
         // End a redirected request
         // (The first request must be ended explicitly with RedirectableRequest#end)
-        if (this._currentResponse) {
+        if (this._isRedirect) {
             // If the request doesn't have en entity, end directly.
             const bufferedWrites = this._bufferedWrites;
             if (bufferedWrites.length === 0) {
@@ -84,7 +112,8 @@ class RedirectableRequest extends adone.std.stream.Writable {
         // referenced by the Location field value,
         // even if the specific status code is not understood.
         const location = response.headers.location;
-        if (location && this._options.followRedirects !== false && response.statusCode >= 300 && response.statusCode < 400) {
+        if (location && this._options.followRedirects !== false &&
+            response.statusCode >= 300 && response.statusCode < 400) {
             // RFC7231§6.4: A client SHOULD detect and intervene
             // in cyclical redirections (i.e., "infinite" redirection loops).
             if (++this._redirectCount > this._options.maxRedirects) {
@@ -98,21 +127,32 @@ class RedirectableRequest extends adone.std.stream.Writable {
             // that the target resource resides temporarily under a different URI
             // and the user agent MUST NOT change the request method
             // if it performs an automatic redirection to that URI.
+            let header;
+            const headers = this._options.headers;
             if (response.statusCode !== 307 && !(this._options.method in safeMethods)) {
                 this._options.method = "GET";
                 // Drop a possible entity and headers related to it
                 this._bufferedWrites = [];
-                for (const header in this._options.headers) {
+                for (header in headers) {
                     if (/^content-/i.test(header)) {
-                        delete this._options.headers[header];
+                        delete headers[header];
+                    }
+                }
+            }
+
+            // Drop the Host header, as the redirect might lead to a different host
+            if (!this._isRedirect) {
+                for (header in headers) {
+                    if (/^host$/i.test(header)) {
+                        delete headers[header];
                     }
                 }
             }
 
             // Perform the redirected request
-            const redirectUrl = adone.std.url.resolve(this._currentUrl, location);
-            Object.assign(this._options, adone.std.url.parse(redirectUrl));
-            this._currentResponse = response;
+            const redirectUrl = url.resolve(this._currentUrl, location);
+            Object.assign(this._options, url.parse(redirectUrl));
+            this._isRedirect = true;
             this._performRequest();
         } else {
             // The response is not a redirect; return it as-is
@@ -151,7 +191,7 @@ class RedirectableRequest extends adone.std.stream.Writable {
     }
 
     // Writes buffered data to the current native request
-    _write(data, encoding, callback) {
+    write(data, encoding, callback) {
         this._currentRequest.write(data, encoding, callback);
         this._bufferedWrites.push({ data, encoding });
     }
@@ -165,31 +205,24 @@ class RedirectableRequest extends adone.std.stream.Writable {
     }
 }
 
-const followRedirects = adone.lazify({
-    http: () => wrapProtocol("http:"),
-    https: () => wrapProtocol("https:")
-}, {
-    maxRedirects: 21
-});
-
-export default followRedirects;
-
 // Export a redirecting wrapper for each native protocol
-
-function wrapProtocol(protocol) {
-    const scheme = protocol.substr(0, protocol.length - 1);
-    const nativeProtocol = adone.std[scheme];
-    const wrappedProtocol = Object.create(nativeProtocol);
+Object.keys(nativeProtocols).forEach((protocol) => {
+    const scheme = schemes[protocol] = protocol.substr(0, protocol.length - 1);
+    const nativeProtocol = nativeProtocols[protocol];
+    const wrappedProtocol = exports[scheme] = Object.create(nativeProtocol);
 
     // Executes an HTTP request, following redirects
     wrappedProtocol.request = function (options, callback) {
-        if (adone.is.string(options)) {
-            options = adone.std.url.parse(options);
-            options.maxRedirects = followRedirects.maxRedirects;
+        if (is.string(options)) {
+            options = url.parse(options);
+            options.maxRedirects = exports.maxRedirects;
         } else {
-            options = Object.assign({ maxRedirects: followRedirects.maxRedirects, protocol }, options);
+            options = Object.assign({
+                maxRedirects: exports.maxRedirects,
+                protocol
+            }, options);
         }
-        adone.std.assert.equal(options.protocol, protocol, "protocol mismatch");
+        assert.equal(options.protocol, protocol, "protocol mismatch");
 
         return new RedirectableRequest(options, callback);
     };
@@ -200,5 +233,4 @@ function wrapProtocol(protocol) {
         request.end();
         return request;
     };
-    return wrappedProtocol;
-}
+});

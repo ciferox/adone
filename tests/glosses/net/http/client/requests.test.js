@@ -22,6 +22,20 @@ describe("net", "http", "client", "requests", () => {
         request("http://example.org/foo");
     });
 
+    it("should treat method value as lowercase string", (done) => {
+        nock("http://example.org")
+            .post("/foo")
+            .reply(200);
+
+        request({
+            url: "http://example.org/foo",
+            method: "POST"
+        }).then((response) => {
+            expect(response.config.method).to.equal("post");
+            done();
+        });
+    });
+
     it("should allow string arg as url, and config arg", (done) => {
         nock("http://example.org")
             .post("/foo")
@@ -45,11 +59,12 @@ describe("net", "http", "client", "requests", () => {
             const reason = rejectSpy.getCall(0).args[0];
             expect(reason.code).to.be.equal("ENOTFOUND");
             expect(reason.config.method).to.be.equal("get");
-            expect(reason.config.url).to.be.equal("http://suchaservershouldnoexist31337.org");
+            expect(reason.config.url).to.be.equal("http://suchaservershouldnoexist31337.org/foo");
+            expect(adone.is.object(reason.request)).to.be.true();
             done();
         };
 
-        request("http://suchaservershouldnoexist31337.org")
+        request("http://suchaservershouldnoexist31337.org/foo")
             .then(resolveSpy, rejectSpy)
             .then(finish, finish);
     });
@@ -104,10 +119,10 @@ describe("net", "http", "client", "requests", () => {
             username: null,
             password: null
         }, {
-            headers: {
-                Accept: "application/json"
-            }
-        })
+                headers: {
+                    Accept: "application/json"
+                }
+            })
             .catch(({ response }) => {
                 expect(typeof response.data).to.be.equal("object");
                 expect(response.data.error).to.be.equal("BAD USERNAME");

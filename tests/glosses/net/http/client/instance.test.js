@@ -60,8 +60,8 @@ describe("net", "http", "client", "instance", () => {
             baseURL: "https://api.example.com"
         });
 
-        expect(typeof instance.options.headers, "object");
-        expect(typeof instance.options.headers.common, "object");
+        expect(typeof instance.config.headers, "object");
+        expect(typeof instance.config.headers.common, "object");
     });
 
     it("should have interceptors on the instance", (done) => {
@@ -83,8 +83,8 @@ describe("net", "http", "client", "instance", () => {
         let response;
         instance.get("http://example.org/foo").then((res) => {
             response = res;
-            expect(response.options.foo).to.be.undefined();
-            expect(response.options.bar).to.be.true();
+            expect(response.config.foo).to.be.undefined();
+            expect(response.config.bar).to.be.true();
             done();
         });
     });

@@ -10,15 +10,16 @@ const imports = adone.lazify({
  * @param {object} response The response.
  */
 export default function settle(resolve, reject, response) {
-    const validateStatus = response.options.validateStatus;
+    const validateStatus = response.config.validateStatus;
     // Note: status is not exposed by XDomainRequest
     if (!response.status || !validateStatus || validateStatus(response.status)) {
         resolve(response);
     } else {
         reject(imports.createError(
             `Request failed with status code ${response.status}`,
-            response.options,
+            response.config,
             null,
+            response.request,
             response
         ));
     }

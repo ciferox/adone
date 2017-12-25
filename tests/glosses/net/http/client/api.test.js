@@ -9,6 +9,7 @@ describe("net", "http", "client", () => {
             expect(typeof request.post).to.be.equal("function");
             expect(typeof request.put).to.be.equal("function");
             expect(typeof request.patch).to.be.equal("function");
+            expect(typeof request.options).to.be.equal("function");
         });
 
         it("should have promise method helpers", () => {
@@ -19,8 +20,8 @@ describe("net", "http", "client", () => {
         });
 
         it("should have default options", () => {
-            expect(typeof request.options).to.be.equal("object");
-            expect(typeof request.options.headers).to.be.equal("object");
+            expect(typeof request.config).to.be.equal("object");
+            expect(typeof request.config.headers).to.be.equal("object");
         });
 
         it("should have interceptors", () => {

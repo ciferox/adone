@@ -11,7 +11,7 @@ describe("net", "http", "client", "core", "settle", () => {
 
     it("should resolve promise if status is not set", () => {
         const response = {
-            options: {
+            config: {
                 validateStatus() {
                     return true;
                 }
@@ -26,7 +26,7 @@ describe("net", "http", "client", "core", "settle", () => {
     it("should resolve promise if validateStatus is not set", () => {
         const response = {
             status: 500,
-            options: {
+            config: {
             }
         };
         settle(resolve, reject, response);
@@ -38,7 +38,7 @@ describe("net", "http", "client", "core", "settle", () => {
     it("should resolve promise if validateStatus returns true", () => {
         const response = {
             status: 500,
-            options: {
+            config: {
                 validateStatus() {
                     return true;
                 }
@@ -51,20 +51,25 @@ describe("net", "http", "client", "core", "settle", () => {
     });
 
     it("should reject promise if validateStatus returns false", () => {
+        const req = {
+            path: "/foo"
+        };
         const response = {
             status: 500,
-            options: {
+            config: {
                 validateStatus() {
                     return false;
                 }
-            }
+            },
+            request: req
         };
         settle(resolve, reject, response);
         expect(resolve).not.to.have.been.called;
         expect(reject).to.have.been.calledOnce;
         const reason = reject.getCall(0).args[0];
         expect(reason.message).to.be.equal("Request failed with status code 500");
-        expect(reason.config).to.be.deep.equal(response.options);
+        expect(reason.config).to.be.deep.equal(response.config);
+        expect(reason.request).to.be.deep.equal(req);
         expect(reason.response).to.be.deep.equal(response);
     });
 
@@ -72,7 +77,7 @@ describe("net", "http", "client", "core", "settle", () => {
         const validateStatus = spy();
         const response = {
             status: 500,
-            options: {
+            config: {
                 validateStatus
             }
         };

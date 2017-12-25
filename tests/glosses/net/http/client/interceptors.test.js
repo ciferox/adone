@@ -1,4 +1,4 @@
-const { request } = adone.net.http.client;
+const { request, create } = adone.net.http.client;
 
 describe("net", "http", "client", "interceptors", () => {
     beforeEach(() => {
@@ -224,5 +224,24 @@ describe("net", "http", "client", "interceptors", () => {
         request.post("http://example.org/foo", {
             foo: "bar"
         });
+    });
+
+    it("should modify base URL in request interceptor", (done) => {
+        nock("http://rebase.com")
+            .get("/foo")
+            .reply(200, () => {
+                done();
+            });
+
+        const instance = create({
+            baseURL: "http://test.com/"
+        });
+
+        instance.interceptors.request.use((config) => {
+            config.baseURL = "http://rebase.com/";
+            return config;
+        });
+
+        instance.get("/foo");
     });
 });

@@ -17,7 +17,7 @@ describe("net", "http", "client", "headers", () => {
     });
 
     it("should default common headers", (done) => {
-        const headers = request.options.headers.common;
+        const headers = request.config.headers.common;
 
         nock("http://example.org", {
             reqheaders: headers
@@ -31,7 +31,7 @@ describe("net", "http", "client", "headers", () => {
     });
 
     it("should add extra headers for post", (done) => {
-        const headers = request.options.headers.common;
+        const headers = request.config.headers.common;
 
         nock("http://example.org", {
             reqheaders: headers
