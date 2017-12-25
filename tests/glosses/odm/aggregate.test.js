@@ -3,20 +3,6 @@ const Aggregate = adone.odm.Aggregate; // require('../lib/aggregate');
 const mongoose = adone.odm;
 const Schema = mongoose.Schema;
 
-/**
- * Test data
- */
-
-const EmployeeSchema = new Schema({
-    name: String,
-    sal: Number,
-    dept: String,
-    customers: [String],
-    reportsTo: String
-});
-
-mongoose.model("Employee", EmployeeSchema);
-
 const setupData = async () => {
     const emps = [
         { name: "Alice", sal: 18000, dept: "sales", customers: ["Eve", "Fred"] },
@@ -39,6 +25,18 @@ const setupData = async () => {
  */
 
 describe("aggregate: ", () => {
+    before(() => {
+        const EmployeeSchema = new Schema({
+            name: String,
+            sal: Number,
+            dept: String,
+            customers: [String],
+            reportsTo: String
+        });
+
+        mongoose.model("Employee", EmployeeSchema);
+    });
+
     describe("append", () => {
         it("(pipeline)", () => {
             const aggregate = new Aggregate();

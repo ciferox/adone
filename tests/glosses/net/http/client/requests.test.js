@@ -45,11 +45,11 @@ describe("net", "http", "client", "requests", () => {
             const reason = rejectSpy.getCall(0).args[0];
             expect(reason.code).to.be.equal("ENOTFOUND");
             expect(reason.config.method).to.be.equal("get");
-            expect(reason.config.url).to.be.equal("http://thisisnotaserver");
+            expect(reason.config.url).to.be.equal("http://suchaservershouldnoexist31337.org");
             done();
         };
 
-        request("http://thisisnotaserver")
+        request("http://suchaservershouldnoexist31337.org")
             .then(resolveSpy, rejectSpy)
             .then(finish, finish);
     });

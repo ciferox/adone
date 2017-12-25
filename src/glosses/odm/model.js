@@ -263,7 +263,6 @@ const _handleSafe = function (options) {
 const _ensureIndexes = function (model, options, callback) {
     const indexes = model.schema.indexes();
     options = options || {};
-
     const done = function (err) {
         if (err && model.schema.options.emitIndexErrors) {
             model.emit("error", err);
@@ -1719,8 +1718,7 @@ export default class Model extends Document {
         const _this = this;
         const Promise = PromiseProvider.get();
         this.$init = new Promise.ES6(((resolve, reject) => {
-            if ((_this.schema.options.autoIndex) ||
-                (is.nil(_this.schema.options.autoIndex) && _this.db.config.autoIndex)) {
+            if ((_this.schema.options.autoIndex) || (is.nil(_this.schema.options.autoIndex) && _this.db.config.autoIndex)) {
                 _this.ensureIndexes({ _automatic: true, __noPromise: true }, (error) => {
                     if (error) {
                         callback && callback(error);
@@ -4011,11 +4009,9 @@ Model.prototype.baseModelName;
  * Give the constructor the ability to emit events.
  */
 
-for (const i in EventEmitter.prototype) {
+for (const i of adone.util.keys(EventEmitter.prototype, { all: true })) {
     Model[i] = EventEmitter.prototype[i];
 }
-
-
 
 /**
  * Schema the model uses.

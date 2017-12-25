@@ -2480,8 +2480,8 @@ export default class Document {
  * `on`, `once`, etc.
  */
 utils.each(["on", "once", "emit", "listeners", "removeListener", "setMaxListeners", "removeAllListeners", "addListener"], (emitterFn) => {
-    Document.prototype[emitterFn] = function () {
-        return this.$__.emitter[emitterFn].apply(this.$__.emitter, arguments);
+    Document.prototype[emitterFn] = function (...args) {
+        return this.$__.emitter[emitterFn](...args);
     };
 });
 
