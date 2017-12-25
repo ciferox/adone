@@ -87,9 +87,7 @@ export default class ObjectId extends SchemaType {
      * @api private
      */
     cast(value, doc, init) {
-        console.log(2);
         if (SchemaType._isRef(this, value, doc, init)) {
-            console.log(3);
             // wait! we may need to cast this to a document
 
             if (is.nil(value)) {

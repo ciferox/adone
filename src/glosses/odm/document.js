@@ -605,7 +605,6 @@ export default class Document {
      * @api public
      */
     $set(path, val, type, options) {
-        console.log([path, val]);
         if (type && utils.getFunctionName(type.constructor) === "Object") {
             options = type;
             type = undefined;
@@ -654,7 +653,6 @@ export default class Document {
                 if (pathtype === "real" || pathtype === "virtual") {
                     // Check for setting single embedded schema to document (gh-3535)
                     let p = path[key];
-                    console.log(pathName, p instanceof Document);
                     if (this.schema.paths[pathName] &&
                         this.schema.paths[pathName].$isSingleNested &&
                         path[key] instanceof Document) {
