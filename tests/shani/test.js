@@ -4644,6 +4644,234 @@ describe("Engine", () => {
             assert.deepEqual(res, [["test2", true]]);
         });
     });
+
+    describe("slow", () => {
+        it("should ignore slow nodes by default", async () => {
+            const engine = new Engine();
+            const { describe, it, start } = engine.context();
+
+            const calls = [];
+
+            describe("/", () => {
+                it.slow("test1", () => calls.push("test1"));
+
+                describe.slow("a", () => {
+                    it("test2", () => calls.push("test2"));
+                });
+
+                it("test3", () => calls.push("test3"));
+            });
+            const e = start();
+
+            await waitFor(e, "done");
+            assert.deepEqual(calls, ["test1", "test2", "test3"]);
+        });
+
+        it("should skip slow tests when skipSlow is true", async () => {
+            const engine = new Engine({ skipSlow: true });
+            const { describe, it, start } = engine.context();
+
+            const calls = [];
+            const res = [];
+
+            describe("/", () => {
+                it.slow("test1", () => calls.push("test1"));
+
+                describe.slow("a", () => {
+                    it("test2", () => calls.push("test2"));
+                });
+
+                it("test3", () => calls.push("test3"));
+            });
+            const e = start();
+
+            e.on("skip test", ({ test }) => {
+                res.push([test.description, test.isSlow()]);
+            });
+
+            await waitFor(e, "done");
+            assert.deepEqual(calls, ["test3"]);
+            assert.deepEqual(res, [["test1", true], ["test2", true]]);
+        });
+
+        it("should remove all non slow nodes when onlySlow is true", async () => {
+            const engine = new Engine({ onlySlow: true });
+            const { describe, it, start } = engine.context();
+
+            const calls = [];
+            const res = [];
+
+            describe("/", () => {
+                it.slow("test1", () => calls.push("test1"));
+
+                describe.slow("a", () => {
+                    it("test2", () => calls.push("test2"));
+                });
+
+                it("test3", () => calls.push("test3"));
+            });
+            const e = start();
+
+            e.on("skip test", ({ test }) => {
+                res.push([test.description, test.isSlow()]);
+            });
+
+            await waitFor(e, "done");
+            assert.deepEqual(calls, ["test1", "test2"]);
+            assert.deepEqual(res, []);
+        });
+
+        it("should work when onlySlow and skip marks", async () => {
+            const engine = new Engine({ onlySlow: true });
+            const { describe, it, start } = engine.context();
+
+            const calls = [];
+            const res = [];
+
+            describe("/", () => {
+                it.slow("test1", () => calls.push("test1"));
+
+                describe.slow("a", () => {
+                    it("test2", () => calls.push("test2"));
+
+                    it.skip("test4", () => calls.push("test4"));
+                });
+
+                it("test3", () => calls.push("test3"));
+            });
+            const e = start();
+
+            e.on("skip test", ({ test }) => {
+                res.push([test.description, test.isSlow()]);
+            });
+
+            await waitFor(e, "done");
+            assert.deepEqual(calls, ["test1", "test2"]);
+            assert.deepEqual(res, [["test4", true]]);
+        });
+
+        it("should work when onlySlow and only marks", async () => {
+            const engine = new Engine({ onlySlow: true });
+            const { describe, it, start } = engine.context();
+
+            const calls = [];
+
+            describe("/", () => {
+                it.slow("test1", () => calls.push("test1"));
+
+                describe.slow("a", () => {
+                    it("test2", () => calls.push("test2"));
+
+                    it.only("test4", () => calls.push("test4"));
+                });
+
+                it.only("test3", () => calls.push("test3"));
+            });
+            const e = start();
+
+            await waitFor(e, "done");
+            assert.deepEqual(calls, ["test4"]);
+        });
+
+        it("should be possible to mix slow and skip marks", async () => {
+            const engine = new Engine({ onlySlow: true });
+            const { describe, it, start } = engine.context();
+
+            const calls = [];
+            const res = [];
+
+            describe("/", () => {
+                it.slow("test1", () => calls.push("test1"));
+
+                describe("a", () => {
+                    it.slow("test2", () => calls.push("test2"));
+
+                    it.skip.slow("test4", () => calls.push("test4"));
+                });
+
+                describe.skip.slow("b", () => {
+                    it("test5", () => calls.push("test5"));
+                });
+
+                it.only("test3", () => calls.push("test3"));
+            });
+            const e = start();
+
+            e.on("skip test", ({ test }) => {
+                res.push([test.description, test.isSlow()]);
+            });
+
+            await waitFor(e, "done");
+            assert.deepEqual(calls, ["test1", "test2"]);
+            assert.deepEqual(res, [["test4", true], ["test5", true]]);
+        });
+
+        it("should be possible to mix slow and todo marks", async () => {
+            const engine = new Engine({ onlySlow: true });
+            const { describe, it, start } = engine.context();
+
+            const calls = [];
+            const res = [];
+
+            describe("/", () => {
+                it.slow("test1", () => calls.push("test1"));
+
+                describe("a", () => {
+                    it.slow("test2", () => calls.push("test2"));
+
+                    it.todo.slow("test4", () => calls.push("test4"));
+                });
+
+                describe.todo.slow("b", () => {
+                    it("test5", () => calls.push("test5"));
+                });
+
+                it.only("test3", () => calls.push("test3"));
+            });
+            const e = start();
+
+            e.on("skip test", ({ test }) => {
+                res.push([test.description, test.isSlow() && test.isTodo()]);
+            });
+
+            await waitFor(e, "done");
+            assert.deepEqual(calls, ["test1", "test2"]);
+            assert.deepEqual(res, [["test4", true], ["test5", true]]);
+        });
+
+        it("should be possible to mix slow and only marks", async () => {
+            const engine = new Engine({ onlySlow: true });
+            const { describe, it, start } = engine.context();
+
+            const calls = [];
+            const res = [];
+
+            describe("/", () => {
+                it.slow("test1", () => calls.push("test1"));
+
+                describe("a", () => {
+                    it.slow("test2", () => calls.push("test2"));
+
+                    it.only.slow("test4", () => calls.push("test4"));
+
+                    describe.slow.only("b", () => {
+                        it("test5", () => calls.push("test5"));
+                    });
+                });
+
+                it.only("test3", () => calls.push("test3"));
+            });
+            const e = start();
+
+            e.on("skip test", ({ test }) => {
+                res.push([test.description, test.isSlow() && test.isTodo()]);
+            });
+
+            await waitFor(e, "done");
+            assert.deepEqual(calls, ["test4", "test5"]);
+            assert.deepEqual(res, []);
+        });
+    });
 });
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));

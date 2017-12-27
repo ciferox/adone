@@ -301,6 +301,12 @@ class Block {
         }
     }
 
+    slow() {
+        for (const i of this.children) {
+            i.slow();
+        }
+    }
+
     timeout(ms = adone.null) {
         if (ms !== adone.null) {
             if (is.number(ms) && ms > SET_TIMEOUT_MAX) {
@@ -366,6 +372,7 @@ class Test {
         this._skip = false;
         this._only = false;
         this._todo = false;
+        this._slow = false;
         this._cancelled = false;
         this._timeout = adone.null;
         this._beforeHooks = [];
@@ -581,6 +588,15 @@ class Test {
         return this;
     }
 
+    slow() {
+        this._slow = true;
+        return this;
+    }
+
+    isSlow() {
+        return this._slow === true;
+    }
+
     timeout(ms = adone.null) {
         if (ms !== adone.null) {
             if (is.number(ms) && ms > SET_TIMEOUT_MAX) {
@@ -628,13 +644,50 @@ class Test {
     }
 }
 
+const createModifiersObject = (modifiers) => {
+    const obj = {};
+    for (const i of modifiers) {
+        obj[i] = false;
+    }
+    return obj;
+};
+
+/**
+ * Creates a proxy objects which creates a chaining interface for the given properties(modifiers),
+ * when the proxy is called it calls the given callback with the arguments and enabled modifiers
+ *
+ * it.slow.only("test", () => {})
+ */
+const chainingInterace = (fn, modifiers) => {
+    return new Proxy(adone.noop, {
+        get(target, name) {
+            const newValues = createModifiersObject(modifiers);
+            newValues[name] = true;
+            return new Proxy(adone.noop, {
+                get(target, name, receiver) {
+                    newValues[name] = true;
+                    return receiver;
+                },
+                apply(target, thisValue, args) {
+                    return fn(newValues, args);
+                }
+            });
+        },
+        apply(target, thisValue, args) {
+            return fn(createModifiersObject(modifiers), args);
+        }
+    });
+};
+
 export class Engine {
     constructor({
         defaultTimeout = 5000,
         defaultHookTimeout = 5000,
         transpilerOptions = {},
         callGc = false,
-        watch = false
+        watch = false,
+        skipSlow = false,
+        onlySlow = false
     } = {}) {
         this._paths = []; // path can be a glob or a path
         this.defaultTimeout = defaultTimeout;
@@ -642,6 +695,8 @@ export class Engine {
         this.transpilerOptions = transpilerOptions;
         this.callGc = callGc;
         this.watch = watch;
+        this.skipSlow = skipSlow;
+        this.onlySlow = onlySlow;
     }
 
     include(...paths) {
@@ -660,7 +715,7 @@ export class Engine {
 
         const runtimeContext = {};
 
-        const describe = (...args) => {
+        const _describe = (...args) => {
             const callback = args.pop();
 
             if (!is.function(callback)) {
@@ -697,11 +752,21 @@ export class Engine {
             return block;
         };
 
+        const describe = chainingInterace((modifiers, args) => {
+            const block = _describe(...args);
+            for (const [k, v] of Object.entries(modifiers)) {
+                if (v) {
+                    block[k]();
+                }
+            }
+            return block;
+        }, ["skip", "only", "slow", "todo"]);
+
         describe.skip = (...args) => describe(...args).skip();
         describe.only = (...args) => describe(...args).only();
         describe.todo = (...args) => describe(...args).todo();
 
-        const it = (description, options, callback) => {
+        const _it = (description, options, callback) => {
             if (is.function(options)) {
                 [options, callback] = [null, options];
             }
@@ -711,9 +776,15 @@ export class Engine {
             return test;
         };
 
-        it.skip = (...args) => it(...args).skip();
-        it.only = (...args) => it(...args).only();
-        it.todo = (...args) => it(...args).todo();
+        const it = chainingInterace((modifiers, args) => {
+            const test = _it(...args);
+            for (const [k, v] of Object.entries(modifiers)) {
+                if (v) {
+                    test[k]();
+                }
+            }
+            return test;
+        }, ["skip", "only", "slow", "todo"]);
 
         const before = (description, callback) => {
             if (adone.is.function(description)) {
@@ -779,9 +850,8 @@ export class Engine {
             }
         };
 
-        const start = function () {
+        const start = () => {
             const emitter = new adone.event.EventEmitter();
-
             let stopped = false;
 
             emitter.stop = () => {
@@ -798,6 +868,47 @@ export class Engine {
                         }
                     }
                 })(root);
+
+                if (this.onlySlow) {
+                    // remove all non-slow nodes
+                    (function removeNonSlow(block) {
+                        const children = block.children;
+                        let hasSlowNodes = false;
+                        for (let i = 0; i < children.length; ++i) {
+                            const node = children[i];
+                            if (node instanceof Block) {
+                                // if it has slow nodes, we must not remove it
+                                if (removeNonSlow(node)) {
+                                    hasSlowNodes = true;
+                                } else {
+                                    // it has no slow nested nodes, we can remove it
+                                    children.splice(i--, 1);
+                                }
+                            } else {
+                                // this is a test node
+                                if (!node.isSlow()) {
+                                    children.splice(i--, 1);
+                                } else {
+                                    hasSlowNodes = true;
+                                }
+                            }
+                        }
+                        return hasSlowNodes;
+                    })(root);
+                }
+
+                if (this.skipSlow) {
+                    // skip all slow nodes
+                    (function skipSlow(block) {
+                        for (const node of block.children) {
+                            if (node instanceof Block) {
+                                skipSlow(node);
+                            } else if (node.isSlow()) {
+                                node.skip();
+                            }
+                        }
+                    })(root);
+                }
 
                 // mark all the skipped nodes
                 (function markSkipped(block) {
