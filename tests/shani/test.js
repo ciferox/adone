@@ -1336,44 +1336,23 @@ describe("Engine", () => {
                 });
             }
 
-            describe("defaultHookTimeout", () => {
-                it("should set timeout to the default value", async () => {
-                    const engine = new Engine();
-                    const { describe, it, start, before } = engine.context();
+            it("should inherit block's timeout", async () => {
+                const engine = new Engine();
+                const { describe, it, start, before } = engine.context();
 
-                    let timeout = null;
+                let timeout = null;
 
-                    describe("/", () => {
-                        before(function () {
-                            timeout = this.timeout();
-                        });
-
-                        it("test1", () => { });
+                describe("/", { timeout: 12345 }, () => {
+                    before(function () {
+                        timeout = this.timeout();
                     });
 
-                    const e = start();
-                    await waitFor(e, "done");
-                    assert.equal(timeout, 5000);
+                    it("test1", () => { });
                 });
 
-                it("should change the default value", async () => {
-                    const engine = new Engine({ defaultHookTimeout: 12345 });
-                    const { describe, it, start, before } = engine.context();
-
-                    let timeout = null;
-
-                    describe("/", () => {
-                        before(function () {
-                            timeout = this.timeout();
-                        });
-
-                        it("test1", () => { });
-                    });
-
-                    const e = start();
-                    await waitFor(e, "done");
-                    assert.equal(timeout, 12345);
-                });
+                const e = start();
+                await waitFor(e, "done");
+                assert.equal(timeout, 12345);
             });
         });
 
@@ -1747,44 +1726,23 @@ describe("Engine", () => {
                 assert.deepEqual(["1", "2", "Timeout of 240ms exceeded"], results);
             });
 
-            describe("defaultHookTimeout", () => {
-                it("should set timeout to the default value", async () => {
-                    const engine = new Engine();
-                    const { describe, it, start, after } = engine.context();
+            it("should inherit block's timeout", async () => {
+                const engine = new Engine();
+                const { describe, it, start, after } = engine.context();
 
-                    let timeout = null;
+                let timeout = null;
 
-                    describe("/", () => {
-                        after(function () {
-                            timeout = this.timeout();
-                        });
-
-                        it("test1", () => { });
+                describe("/", { timeout: 12345 }, () => {
+                    after(function () {
+                        timeout = this.timeout();
                     });
 
-                    const e = start();
-                    await waitFor(e, "done");
-                    assert.equal(timeout, 5000);
+                    it("test1", () => { });
                 });
 
-                it("should change the default value", async () => {
-                    const engine = new Engine({ defaultHookTimeout: 12345 });
-                    const { describe, it, start, after } = engine.context();
-
-                    let timeout = null;
-
-                    describe("/", () => {
-                        after(function () {
-                            timeout = this.timeout();
-                        });
-
-                        it("test1", () => { });
-                    });
-
-                    const e = start();
-                    await waitFor(e, "done");
-                    assert.equal(timeout, 12345);
-                });
+                const e = start();
+                await waitFor(e, "done");
+                assert.equal(timeout, 12345);
             });
         });
 
@@ -2111,44 +2069,23 @@ describe("Engine", () => {
                 assert.deepEqual(["Timeout of 240ms exceeded", "Timeout of 240ms exceeded"], results);
             });
 
-            describe("defaultHookTimeout", () => {
-                it("should set timeout to the default value", async () => {
-                    const engine = new Engine();
-                    const { describe, it, start, beforeEach } = engine.context();
+            it("should inherit block's timeout", async () => {
+                const engine = new Engine();
+                const { describe, it, start, beforeEach } = engine.context();
 
-                    let timeout = null;
+                let timeout = null;
 
-                    describe("/", () => {
-                        beforeEach(function () {
-                            timeout = this.timeout();
-                        });
-
-                        it("test1", () => { });
+                describe("/", { timeout: 12345 }, () => {
+                    beforeEach(function () {
+                        timeout = this.timeout();
                     });
 
-                    const e = start();
-                    await waitFor(e, "done");
-                    assert.equal(timeout, 5000);
+                    it("test1", () => { });
                 });
 
-                it("should change the default value", async () => {
-                    const engine = new Engine({ defaultHookTimeout: 12345 });
-                    const { describe, it, start, beforeEach } = engine.context();
-
-                    let timeout = null;
-
-                    describe("/", () => {
-                        beforeEach(function () {
-                            timeout = this.timeout();
-                        });
-
-                        it("test1", () => { });
-                    });
-
-                    const e = start();
-                    await waitFor(e, "done");
-                    assert.equal(timeout, 12345);
-                });
+                const e = start();
+                await waitFor(e, "done");
+                assert.equal(timeout, 12345);
             });
         });
 
@@ -2471,44 +2408,23 @@ describe("Engine", () => {
                 assert.deepEqual(["1", "Timeout of 240ms exceeded", "2", "Timeout of 240ms exceeded"], results);
             });
 
-            describe("defaultHookTimeout", () => {
-                it("should set timeout to the default value", async () => {
-                    const engine = new Engine();
-                    const { describe, it, start, afterEach } = engine.context();
+            it("should inherit block's timeout", async () => {
+                const engine = new Engine();
+                const { describe, it, start, afterEach } = engine.context();
 
-                    let timeout = null;
+                let timeout = null;
 
-                    describe("/", () => {
-                        afterEach(function () {
-                            timeout = this.timeout();
-                        });
-
-                        it("test1", () => { });
+                describe("/", { timeout: 12345 }, () => {
+                    afterEach(function () {
+                        timeout = this.timeout();
                     });
 
-                    const e = start();
-                    await waitFor(e, "done");
-                    assert.equal(timeout, 5000);
+                    it("test1", () => { });
                 });
 
-                it("should change the default value", async () => {
-                    const engine = new Engine({ defaultHookTimeout: 12345 });
-                    const { describe, it, start, afterEach } = engine.context();
-
-                    let timeout = null;
-
-                    describe("/", () => {
-                        afterEach(function () {
-                            timeout = this.timeout();
-                        });
-
-                        it("test1", () => { });
-                    });
-
-                    const e = start();
-                    await waitFor(e, "done");
-                    assert.equal(timeout, 12345);
-                });
+                const e = start();
+                await waitFor(e, "done");
+                assert.equal(timeout, 12345);
             });
         });
 
@@ -4240,44 +4156,26 @@ describe("Engine", () => {
                 }
             });
 
-            describe("defaultHookTimeout", () => {
-                it("should set timeout to the default value", async () => {
-                    const engine = new Engine();
-                    const { describe, it, start } = engine.context();
-
-                    let timeout = null;
-
-                    describe("/", () => {
-                        it("test1", {
-                            before() {
-                                timeout = this.timeout();
-                            }
-                        }, () => { });
+            it("should inherit block's timeout", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                const chain = [];
+                describe("1", { timeout: 12345 }, () => {
+                    it("1", {
+                        before() {
+                            chain.push(["before 1", this.timeout()]);
+                        }
+                    }, () => {
+                        chain.push("1");
                     });
 
-                    const e = start();
-                    await waitFor(e, "done");
-                    assert.equal(timeout, 5000);
-                });
-
-                it("should change the default value", async () => {
-                    const engine = new Engine({ defaultHookTimeout: 12345 });
-                    const { describe, it, start } = engine.context();
-
-                    let timeout = null;
-
-                    describe("/", () => {
-                        it("test1", {
-                            before() {
-                                timeout = this.timeout();
-                            }
-                        }, () => { });
+                    it("2", () => {
+                        chain.push("2");
                     });
-
-                    const e = start();
-                    await waitFor(e, "done");
-                    assert.equal(timeout, 12345);
                 });
+                const emitter = start();
+                await waitFor(emitter, "done");
+                assert.deepEqual(chain, [["before 1", 12345], "1", "2"]);
             });
         });
 
@@ -4465,44 +4363,26 @@ describe("Engine", () => {
                 }
             });
 
-            describe("defaultHookTimeout", () => {
-                it("should set timeout to the default value", async () => {
-                    const engine = new Engine();
-                    const { describe, it, start } = engine.context();
-
-                    let timeout = null;
-
-                    describe("/", () => {
-                        it("test1", {
-                            after() {
-                                timeout = this.timeout();
-                            }
-                        }, () => { });
+            it("should inherit block's timeout", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                const chain = [];
+                describe("1", { timeout: 12345 }, () => {
+                    it("1", {
+                        after() {
+                            chain.push(["after 1", this.timeout()]);
+                        }
+                    }, () => {
+                        chain.push("1");
                     });
 
-                    const e = start();
-                    await waitFor(e, "done");
-                    assert.equal(timeout, 5000);
-                });
-
-                it("should change the default value", async () => {
-                    const engine = new Engine({ defaultHookTimeout: 12345 });
-                    const { describe, it, start } = engine.context();
-
-                    let timeout = null;
-
-                    describe("/", () => {
-                        it("test1", {
-                            after() {
-                                timeout = this.timeout();
-                            }
-                        }, () => { });
+                    it("2", () => {
+                        chain.push("2");
                     });
-
-                    const e = start();
-                    await waitFor(e, "done");
-                    assert.equal(timeout, 12345);
                 });
+                const emitter = start();
+                await waitFor(emitter, "done");
+                assert.deepEqual(chain, ["1", ["after 1", 12345], "2"]);
             });
         });
     });

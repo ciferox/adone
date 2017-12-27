@@ -15,14 +15,31 @@ const SET_TIMEOUT_MAX = 2 ** 31 - 1;
 
 const callGc = typeof gc === "undefined" ? adone.noop : gc; // eslint-disable-line
 
+/**
+ * Returns the place from where a function was called
+ */
+const getCurrentLocation = () => {
+    const err = new Error();
+    const lines = err.stack.split("\n");
+    const frame = lines[3];
+    const match = frame.match(/\((.+):(\d+):(\d+)\)$/);
+    return {
+        path: match[1],
+        line: Number(match[2]),
+        column: Number(match[3])
+    };
+};
+
 class Hook {
-    constructor(description, callback, runtimeContext) {
+    constructor(block, description, callback, runtimeContext, meta) {
+        this.block = block;
         this.description = description;
         this.callback = callback;
-        this._timeout = 5000; // global hook timeout
+        this._timeout = adone.null;
         this._fired = false;
         this._failed = null;
         this.runtimeContext = runtimeContext;
+        this.meta = meta;
     }
 
     fired() {
@@ -45,7 +62,10 @@ class Hook {
             this._timeout = ms;
             return this;
         }
-        return this._timeout;
+        if (this._timeout !== adone.null) {
+            return this._timeout;
+        }
+        return this.block.timeout();
     }
 
     async run() {
@@ -330,7 +350,7 @@ class TestModule extends adone.js.Module {
 }
 
 class Test {
-    constructor(description, callback, block, runtimeContext, engineOptions = {}, options = {}) {
+    constructor(description, callback, block, runtimeContext, meta, engineOptions = {}, options = {}) {
         this.description = description;
         this.callback = callback;
         this.block = block;
@@ -344,6 +364,7 @@ class Test {
         this._afterHooks = [];
         this._beforeHooksFired = false;
         this._afterHooksFired = false;
+        this.meta = meta;
         this._engineOptions = engineOptions;
         this._options = options;
         this.id = generateId(block);
@@ -572,8 +593,7 @@ class Test {
         if (adone.is.function(description)) {
             [description, callback] = ["", description];
         }
-        const hook = new Hook(description, callback, this.runtimeContext);
-        hook.timeout(this._engineOptions.defaultHookTimeout);
+        const hook = new Hook(this.block, description, callback, this.runtimeContext);
         this._afterHooks.push(hook);
         return this;
     }
@@ -582,8 +602,7 @@ class Test {
         if (adone.is.function(description)) {
             [description, callback] = ["", description];
         }
-        const hook = new Hook(description, callback, this.runtimeContext);
-        hook.timeout(this._engineOptions.defaultHookTimeout);
+        const hook = new Hook(this.block, description, callback, this.runtimeContext);
         this._beforeHooks.push(hook);
         return this;
     }
@@ -678,9 +697,8 @@ export class Engine {
             if (is.function(options)) {
                 [options, callback] = [null, options];
             }
-            const test = new Test(description, callback, stack.top, runtimeContext, {
-                defaultHookTimeout: this.defaultHookTimeout
-            }, options);
+            const meta = { location: getCurrentLocation() };
+            const test = new Test(description, callback, stack.top, runtimeContext, meta, {}, options);
             stack.top.addChild(test);
             return test;
         };
@@ -693,8 +711,8 @@ export class Engine {
             if (adone.is.function(description)) {
                 [description, callback] = ["", description];
             }
-            const hook = new Hook(description, callback, runtimeContext);
-            hook.timeout(this.defaultHookTimeout);
+            const meta = { location: getCurrentLocation() };
+            const hook = new Hook(stack.top, description, callback, runtimeContext, meta);
             stack.top.hooks.before.push(hook);
         };
 
@@ -702,8 +720,8 @@ export class Engine {
             if (adone.is.function(description)) {
                 [description, callback] = ["", description];
             }
-            const hook = new Hook(description, callback, runtimeContext);
-            hook.timeout(this.defaultHookTimeout);
+            const meta = { location: getCurrentLocation() };
+            const hook = new Hook(stack.top, description, callback, runtimeContext, meta);
             stack.top.hooks.after.push(hook);
         };
 
@@ -711,8 +729,8 @@ export class Engine {
             if (adone.is.function(description)) {
                 [description, callback] = ["", description];
             }
-            const hook = new Hook(description, callback, runtimeContext);
-            hook.timeout(this.defaultHookTimeout);
+            const meta = { location: getCurrentLocation() };
+            const hook = new Hook(stack.top, description, callback, runtimeContext, meta);
             stack.top.hooks.beforeEach.push(hook);
         };
 
@@ -720,8 +738,8 @@ export class Engine {
             if (adone.is.function(description)) {
                 [description, callback] = ["", description];
             }
-            const hook = new Hook(description, callback, runtimeContext);
-            hook.timeout(this.defaultHookTimeout);
+            const meta = { location: getCurrentLocation() };
+            const hook = new Hook(stack.top, description, callback, runtimeContext, meta);
             stack.top.hooks.afterEach.push(hook);
         };
 
@@ -911,6 +929,7 @@ export class Engine {
                                 emitter.emit("end before hook", { block, hook, meta });
                                 if (meta.err) {
                                     err = meta.err;
+                                    err.hook = hook; // ..
                                     hookFailed = true;
                                     break;
                                 }
@@ -954,6 +973,7 @@ export class Engine {
                                         emitter.emit("end before each hook", { block, test: node, hook, meta });
                                         if (meta.err) {
                                             err = meta.err;
+                                            err.hook = hook;
                                             hookFailed = true;
                                             break;
                                         }
@@ -978,6 +998,7 @@ export class Engine {
                                             emitter.emit("end before test hook", { block, test: node, hook, meta });
                                             if (meta.err) {
                                                 err = meta.err;
+                                                err.hook = hook;
                                                 hookFailed = true;
                                                 break;
                                             }
@@ -1570,6 +1591,7 @@ export const consoleReporter = ({
                             block = block.parent;
                         } while (block && block.level() >= 0);
                         log(`${idx}) {escape}${[...stack].join(` ${symbol.arrowRight}  `)} : ${failed.description}{/escape}`);
+                        log(`    at ${failed.meta.location.path}:${failed.meta.location.line}:${failed.meta.location.column}`);
                         log();
 
                         if (err.name && err.message) {
@@ -1601,7 +1623,8 @@ export const consoleReporter = ({
                             stack.push(block.name);
                             block = block.parent;
                         } while (block && block.level() >= 0);
-                        log(`${idx}) ${type} hook failed {escape}${[...stack].join(` ${symbol.arrowRight}  `)} ${hook.description ? `: ${hook.description}` : ""}{/escape}`);
+                        log(`${idx}) ${type} hook failed: {escape}${[...stack].join(` ${symbol.arrowRight}  `)} ${hook.description ? `: ${hook.description}` : ""}{/escape}`);
+                        log(`    at ${hook.meta.location.path}:${hook.meta.location.line}:${hook.meta.location.column}`);
                         log();
 
                         if (err.name && err.message) {
@@ -1622,6 +1645,7 @@ export const consoleReporter = ({
                     log("Cancel reasons:\n");
                     for (const [idx, test] of adone.util.enumerate(cancelled, 1)) {
                         const err = test.cancelReason;
+                        const hook = err.hook;
                         const type = test.cancelType;
                         let block = test.block;
                         // print block chain
@@ -1631,6 +1655,8 @@ export const consoleReporter = ({
                             block = block.parent;
                         } while (block && block.level() >= 0);
                         log(`${idx}) {escape}${[...stack].join(` ${symbol.arrowRight}  `)} : ${test.description}{/escape} was cancelled due to ${type} fail:`);
+                        log(`    hook at ${hook.meta.location.path}:${hook.meta.location.line}:${hook.meta.location.column}`);
+                        log(`    test at ${test.meta.location.path}:${test.meta.location.line}:${test.meta.location.column}`);
                         log();
 
                         if (err.name && err.message) {
@@ -2079,6 +2105,7 @@ export const simpleReporter = ({
                             block = block.parent;
                         } while (block && block.level() >= 0);
                         log(`${idx}) {escape}${[...stack].join(` ${symbol.arrowRight}  `)} : ${failed.description}{/escape}`);
+                        log(`    at ${failed.meta.location.path}:${failed.meta.location.line}:${failed.meta.location.column}`);
                         log();
 
                         if (err.name && err.message) {
@@ -2111,7 +2138,8 @@ export const simpleReporter = ({
                             stack.push(block.name);
                             block = block.parent;
                         } while (block && block.level() >= 0);
-                        log(`${idx}) ${type} hook failed {escape}${[...stack].join(` ${symbol.arrowRight}  `)} ${hook.description ? `: ${hook.description}` : ""}{/escape}`);
+                        log(`${idx}) ${type} hook failed: {escape}${[...stack].join(` ${symbol.arrowRight}  `)} ${hook.description ? `: ${hook.description}` : ""}{/escape}`);
+                        log(`    at ${hook.meta.location.path}:${hook.meta.location.line}:${hook.meta.location.column}`);
                         log();
 
                         if (err.name && err.message) {
@@ -2132,6 +2160,7 @@ export const simpleReporter = ({
                     log("Cancel reasons:\n");
                     for (const [idx, test] of adone.util.enumerate(cancelled, 1)) {
                         const err = test.cancelReason;
+                        const hook = err.hook;
                         const type = test.cancelType;
                         let block = test.block;
                         // print block chain
@@ -2141,6 +2170,8 @@ export const simpleReporter = ({
                             block = block.parent;
                         } while (block && block.level() >= 0);
                         log(`${idx}) {escape}${[...stack].join(` ${symbol.arrowRight}  `)} : ${test.description}{/escape} was cancelled due to ${type} fail:`);
+                        log(`    hook at ${hook.meta.location.path}:${hook.meta.location.line}:${hook.meta.location.column}`);
+                        log(`    test at ${test.meta.location.path}:${test.meta.location.line}:${test.meta.location.column}`);
                         log();
 
                         if (err.name && err.message) {
