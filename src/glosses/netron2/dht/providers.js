@@ -1,11 +1,11 @@
 const cache = require("hashlru");
 const each = require("async/each");
-const Key = require("interface-datastore").Key;
 const c = require("./constants");
 const utils = require("./utils");
 
 const {
     data: { varint },
+    datastore: { Key },
     netron2: { PeerId, CID },
     stream: { pull }
 } = adone;

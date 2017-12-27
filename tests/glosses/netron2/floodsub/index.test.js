@@ -1,9 +1,7 @@
 const parallel = require("async/parallel");
 const series = require("async/series");
 const utils = require("./utils");
-const first = utils.first;
-const createNode = utils.createNode;
-const expectSet = utils.expectSet;
+const { first, createNode, expectSet } = utils;
 
 const {
     is,
@@ -12,7 +10,7 @@ const {
 } = adone;
 
 describe("netron2", "floodsub", () => {
-    describe("basics between 2 nodes", () => {
+    describe.only("basics between 2 nodes", () => {
         const shouldNotHappen = function (msg) {
             assert.fail();
         };

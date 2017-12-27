@@ -7,7 +7,6 @@ const __ = adone.lazify({
     names: ["./constants", (mod) => mod.names],
     codes: ["./constants", (mod) => mod.codes],
     defaultLengths: ["./constants", (mod) => mod.defaultLengths],
-    async: "./async",
     crypto: "./crypto",
     functions: () => {
         /**

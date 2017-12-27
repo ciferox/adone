@@ -211,19 +211,4 @@ describe("datastore", () => {
             expect(datastore.utils.tmpdir()).to.not.equal("");
         });
     });
-
-
-
-    describe("Memory", () => {
-        describe("interface-datastore", () => {
-            require("./tests")({
-                setup(callback) {
-                    callback(null, new datastore.Memory());
-                },
-                teardown(callback) {
-                    callback();
-                }
-            });
-        });
-    });
 });

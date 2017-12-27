@@ -2,7 +2,7 @@ const {
     datastore: { shard }
 } = adone;
 
-describe("shard", () => {
+describe("datastore", "shard", () => {
     it("prefix", () => {
         expect(
             new shard.Prefix(2).fun("hello")

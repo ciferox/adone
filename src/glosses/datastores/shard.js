@@ -1,24 +1,35 @@
-const readme = require("./shard-readme");
-
 const {
     is,
     datastore: { Key }
 } = adone;
 
-// eslint-disable-next-line
-/*:: import type {Datastore, Callback} from 'interface-datastore'
+export const readme = `This is a repository of IPLD objects. Each IPLD object is in a single file,
+named <base32 encoding of cid>.data. Where <base32 encoding of cid> is the
+"base32" encoding of the CID (as specified in
+https://github.com/multiformats/multibase) without the 'B' prefix.
+All the object files are placed in a tree of directories, based on a
+function of the CID. This is a form of sharding similar to
+the objects directory in git repositories. Previously, we used
+prefixes, we now use the next-to-last two charters.
+    func NextToLast(base32cid string) {
+      nextToLastLen := 2
+      offset := len(base32cid) - nextToLastLen - 1
+      return str[offset : offset+nextToLastLen]
+    }
+For example, an object with a base58 CIDv1 of
+    zb2rhYSxw4ZjuzgCnWSt19Q94ERaeFhu9uSqRgjSdx9bsgM6f
+has a base32 CIDv1 of
+    BAFKREIA22FLID5AJ2KU7URG47MDLROZIH6YF2KALU2PWEFPVI37YLKRSCA
+and will be placed at
+    SC/AFKREIA22FLID5AJ2KU7URG47MDLROZIH6YF2KALU2PWEFPVI37YLKRSCA.data
+with 'SC' being the last-to-next two characters and the 'B' at the
+beginning of the CIDv1 string is the multibase prefix that is not
+stored in the filename.
+`;
 
-export interface ShardV1 {
-  name: string;
-  param: number;
-  fun(string): string;
-  toString(): string;
-}
-*/
-
-const PREFIX = exports.PREFIX = "/repo/flatfs/shard/";
-const SHARDING_FN = exports.SHARDING_FN = "SHARDING";
-exports.README_FN = "_README";
+export const PREFIX = "/repo/flatfs/shard/";
+export const SHARDING_FN = "SHARDING";
+export const README_FN = "_README";
 
 class Shard {
     /* :: name: string */
@@ -38,7 +49,7 @@ class Shard {
     }
 }
 
-class Prefix extends Shard {
+export class Prefix extends Shard {
     constructor(prefixLen /* : number */) {
         super(prefixLen);
         this._padding = "".padStart(prefixLen, "_");
@@ -50,7 +61,7 @@ class Prefix extends Shard {
     }
 }
 
-class Suffix extends Shard {
+export class Suffix extends Shard {
     constructor(suffixLen /* : number */) {
         super(suffixLen);
         this._padding = "".padStart(suffixLen, "_");
@@ -63,7 +74,7 @@ class Suffix extends Shard {
     }
 }
 
-class NextToLast extends Shard {
+export class NextToLast extends Shard {
     constructor(suffixLen /* : number */) {
         super(suffixLen);
         this._padding = "".padStart(suffixLen + 1, "_");
@@ -83,7 +94,7 @@ class NextToLast extends Shard {
  * @param {string} str
  * @returns {ShardV1}
  */
-const parseShardFun = (str /* : string */) /* : ShardV1 */ => {
+export const parseShardFun = (str /* : string */) /* : ShardV1 */ => {
     str = str.trim();
 
     if (str.length === 0) {
@@ -121,7 +132,7 @@ const parseShardFun = (str /* : string */) /* : ShardV1 */ => {
     }
 };
 
-exports.readShardFun = (path /* : string */, store /* : Datastore<Buffer> */, callback /* : Callback<ShardV1> */) /* : void */ => {
+export const readShardFun = (path /* : string */, store /* : Datastore<Buffer> */, callback /* : Callback<ShardV1> */) /* : void */ => {
     const key = new Key(path).child(new Key(SHARDING_FN));
     const get = is.function(store.getRaw) ? store.getRaw.bind(store) : store.get.bind(store);
 
@@ -140,9 +151,3 @@ exports.readShardFun = (path /* : string */, store /* : Datastore<Buffer> */, ca
         callback(null, shard);
     });
 };
-
-exports.readme = readme;
-exports.parseShardFun = parseShardFun;
-exports.Prefix = Prefix;
-exports.Suffix = Suffix;
-exports.NextToLast = NextToLast;

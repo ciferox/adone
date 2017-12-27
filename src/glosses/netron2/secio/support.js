@@ -1,7 +1,7 @@
 const {
     netron2: { crypto },
     stream: { pull },
-    multi: { hash: { async: mh } }
+    multi
 } = adone;
 
 exports.exchanges = [
@@ -81,7 +81,7 @@ exports.selectBest = (local, remote) => {
     };
 };
 
-exports.digest = (buf) => mh.digest(buf, "sha2-256", buf.length);
+exports.digest = (buf) => multi.hash.digest(buf, "sha2-256", buf.length);
 
 exports.write = function write(state, msg, cb) {
     cb = cb || (() => { });

@@ -1,10 +1,10 @@
-const pathSepS = "/";
-const pathSepB = Buffer.from(pathSepS);
-const pathSep = pathSepB[0];
-
 const {
     is
 } = adone;
+
+const pathSepS = "/";
+const pathSepB = Buffer.from(pathSepS);
+const pathSep = pathSepB[0];
 
 /**
  * The first component of a namespace. `foo` in `foo:bar`
@@ -48,8 +48,6 @@ const namespaceValue = (ns /* : string */) /* : string */ => {
  *
  */
 export default class Key {
-    /* :: _buf: Buffer */
-
     constructor(s /* : string|Buffer */, clean /* : ?bool */) {
         if (is.string(s)) {
             this._buf = Buffer.from(s);
@@ -71,20 +69,20 @@ export default class Key {
     }
 
     /**
-   * Convert to the string representation
-   *
-   * @param {string} [encoding='utf8']
-   * @returns {string}
-   */
+     * Convert to the string representation
+     *
+     * @param {string} [encoding='utf8']
+     * @returns {string}
+     */
     toString(encoding/* : ?buffer$Encoding */)/* : string */ {
         return this._buf.toString(encoding || "utf8");
     }
 
     /**
-   * Return the buffer representation of the key
-   *
-   * @returns {Buffer}
-   */
+     * Return the buffer representation of the key
+     *
+     * @returns {Buffer}
+     */
     toBuffer() /* : Buffer */ {
         return this._buf;
     }
@@ -96,39 +94,39 @@ export default class Key {
     }
 
     /**
-   * Constructs a key out of a namespace array.
-   *
-   * @param {Array<string>} list
-   * @returns {Key}
-   *
-   * @example
-   * Key.withNamespaces(['one', 'two'])
-   * // => Key('/one/two')
-   *
-   */
+     * Constructs a key out of a namespace array.
+     *
+     * @param {Array<string>} list
+     * @returns {Key}
+     *
+     * @example
+     * Key.withNamespaces(['one', 'two'])
+     * // => Key('/one/two')
+     *
+     */
     static withNamespaces(list /* : Array<string> */) /* : Key */ {
         return new Key(list.join(pathSepS));
     }
 
     /**
-   * Returns a randomly (uuid) generated key.
-   *
-   * @returns {Key}
-   *
-   * @example
-   * Key.random()
-   * // => Key('/f98719ea086343f7b71f32ea9d9d521d')
-   *
-   */
+     * Returns a randomly (uuid) generated key.
+     *
+     * @returns {Key}
+     *
+     * @example
+     * Key.random()
+     * // => Key('/f98719ea086343f7b71f32ea9d9d521d')
+     *
+     */
     static random() /* : Key */ {
         return new Key(adone.util.uuid.v4().replace(/-/g, ""));
     }
 
     /**
-   * Cleanup the current key
-   *
-   * @returns {void}
-   */
+     * Cleanup the current key
+     *
+     * @returns {void}
+     */
     clean() {
         if (!this._buf || this._buf.length === 0) {
             this._buf = Buffer.from(pathSepS);
@@ -145,11 +143,11 @@ export default class Key {
     }
 
     /**
-   * Check if the given key is sorted lower than ourself.
-   *
-   * @param {Key} key
-   * @returns {bool}
-   */
+     * Check if the given key is sorted lower than ourself.
+     *
+     * @param {Key} key
+     * @returns {bool}
+     */
     less(key /* : Key */) /* : bool */ {
         const list1 = this.list();
         const list2 = key.list();
@@ -173,106 +171,106 @@ export default class Key {
     }
 
     /**
-   * Returns the key with all parts in reversed order.
-   *
-   * @returns {Key}
-   *
-   * @example
-   * new Key('/Comedy/MontyPython/Actor:JohnCleese').reverse()
-   * // => Key('/Actor:JohnCleese/MontyPython/Comedy')
-   */
+     * Returns the key with all parts in reversed order.
+     *
+     * @returns {Key}
+     *
+     * @example
+     * new Key('/Comedy/MontyPython/Actor:JohnCleese').reverse()
+     * // => Key('/Actor:JohnCleese/MontyPython/Comedy')
+     */
     reverse() /* : Key */ {
         return Key.withNamespaces(this.list().slice().reverse());
     }
 
     /**
-   * Returns the `namespaces` making up this Key.
-   *
-   * @returns {Array<string>}
-   */
+     * Returns the `namespaces` making up this Key.
+     *
+     * @returns {Array<string>}
+     */
     namespaces() /* : Array<string> */ {
         return this.list();
     }
 
     /** Returns the "base" namespace of this key.
-   *
-   * @returns {string}
-   *
-   * @example
-   * new Key('/Comedy/MontyPython/Actor:JohnCleese').baseNamespace()
-   * // => 'Actor:JohnCleese'
-   *
-   */
+     *
+     * @returns {string}
+     *
+     * @example
+     * new Key('/Comedy/MontyPython/Actor:JohnCleese').baseNamespace()
+     * // => 'Actor:JohnCleese'
+     *
+     */
     baseNamespace() /* : string */ {
         const ns = this.namespaces();
         return ns[ns.length - 1];
     }
 
     /**
-   * Returns the `list` representation of this key.
-   *
-   * @returns {Array<string>}
-   *
-   * @example
-   * new Key('/Comedy/MontyPython/Actor:JohnCleese').list()
-   * // => ['Comedy', 'MontyPythong', 'Actor:JohnCleese']
-   *
-   */
+     * Returns the `list` representation of this key.
+     *
+     * @returns {Array<string>}
+     *
+     * @example
+     * new Key('/Comedy/MontyPython/Actor:JohnCleese').list()
+     * // => ['Comedy', 'MontyPythong', 'Actor:JohnCleese']
+     *
+     */
     list() /* : Array<string> */ {
         return this.toString().split(pathSepS).slice(1);
     }
 
     /**
-   * Returns the "type" of this key (value of last namespace).
-   *
-   * @returns {string}
-   *
-   * @example
-   * new Key('/Comedy/MontyPython/Actor:JohnCleese').type()
-   * // => 'Actor'
-   *
-   */
+     * Returns the "type" of this key (value of last namespace).
+     *
+     * @returns {string}
+     *
+     * @example
+     * new Key('/Comedy/MontyPython/Actor:JohnCleese').type()
+     * // => 'Actor'
+     *
+     */
     type() /* : string */ {
         return namespaceType(this.baseNamespace());
     }
 
     /**
-   * Returns the "name" of this key (field of last namespace).
-   *
-   * @returns {string}
-   *
-   * @example
-   * new Key('/Comedy/MontyPython/Actor:JohnCleese').name()
-   * // => 'JohnCleese'
-   */
+     * Returns the "name" of this key (field of last namespace).
+     *
+     * @returns {string}
+     *
+     * @example
+     * new Key('/Comedy/MontyPython/Actor:JohnCleese').name()
+     * // => 'JohnCleese'
+     */
     name() /* : string */ {
         return namespaceValue(this.baseNamespace());
     }
 
     /**
-   * Returns an "instance" of this type key (appends value to namespace).
-   *
-   * @param {string} s
-   * @returns {Key}
-   *
-   * @example
-   * new Key('/Comedy/MontyPython/Actor').instance('JohnClesse')
-   * // => Key('/Comedy/MontyPython/Actor:JohnCleese')
-   */
+     * Returns an "instance" of this type key (appends value to namespace).
+     *
+     * @param {string} s
+     * @returns {Key}
+     *
+     * @example
+     * new Key('/Comedy/MontyPython/Actor').instance('JohnClesse')
+     * // => Key('/Comedy/MontyPython/Actor:JohnCleese')
+     */
     instance(s /* : string */) /* : Key */ {
         return new Key(`${this.toString()}:${s}`);
     }
 
     /**
-   * Returns the "path" of this key (parent + type).
-   *
-   * @returns {Key}
-   *
-   * @example
-   * new Key('/Comedy/MontyPython/Actor:JohnCleese').path()
-   * // => Key('/Comedy/MontyPython/Actor')
-   *
-   */
+     * Returns the "path" of this key (parent + type).
+     *
+     * @returns {Key}
+     *
+     * @example
+     * new Key('/Comedy/MontyPython/Actor:JohnCleese').path()
+     * // => Key('/Comedy/MontyPython/Actor')
+     *
+     */
     path() /* : Key */ {
         let p = this.parent().toString();
         if (!p.endsWith(pathSepS)) {
@@ -283,15 +281,15 @@ export default class Key {
     }
 
     /**
-   * Returns the `parent` Key of this Key.
-   *
-   * @returns {Key}
-   *
-   * @example
-   * new Key("/Comedy/MontyPython/Actor:JohnCleese").parent()
-   * // => Key("/Comedy/MontyPython")
-   *
-   */
+     * Returns the `parent` Key of this Key.
+     *
+     * @returns {Key}
+     *
+     * @example
+     * new Key("/Comedy/MontyPython/Actor:JohnCleese").parent()
+     * // => Key("/Comedy/MontyPython")
+     *
+     */
     parent() /* : Key */ {
         const list = this.list();
         if (list.length === 1) {
@@ -302,16 +300,16 @@ export default class Key {
     }
 
     /**
-   * Returns the `child` Key of this Key.
-   *
-   * @param {Key} key
-   * @returns {Key}
-   *
-   * @example
-   * new Key('/Comedy/MontyPython').child(new Key('Actor:JohnCleese'))
-   * // => Key('/Comedy/MontyPython/Actor:JohnCleese')
-   *
-   */
+     * Returns the `child` Key of this Key.
+     *
+     * @param {Key} key
+     * @returns {Key}
+     *
+     * @example
+     * new Key('/Comedy/MontyPython').child(new Key('Actor:JohnCleese'))
+     * // => Key('/Comedy/MontyPython/Actor:JohnCleese')
+     *
+     */
     child(key /* : Key */) /* : Key */ {
         if (this.toString() === pathSepS) {
             return key;
@@ -323,16 +321,16 @@ export default class Key {
     }
 
     /**
-   * Returns whether this key is a prefix of `other`
-   *
-   * @param {Key} other
-   * @returns {bool}
-   *
-   * @example
-   * new Key('/Comedy').isAncestorOf('/Comedy/MontyPython')
-   * // => true
-   *
-   */
+     * Returns whether this key is a prefix of `other`
+     *
+     * @param {Key} other
+     * @returns {bool}
+     *
+     * @example
+     * new Key('/Comedy').isAncestorOf('/Comedy/MontyPython')
+     * // => true
+     *
+     */
     isAncestorOf(other /* : Key */) /* : bool */ {
         if (other.toString() === this.toString()) {
             return false;
@@ -342,16 +340,16 @@ export default class Key {
     }
 
     /**
-   * Returns whether this key is a contains another as prefix.
-   *
-   * @param {Key} other
-   * @returns {bool}
-   *
-   * @example
-   * new Key('/Comedy/MontyPython').isDecendantOf('/Comedy')
-   * // => true
-   *
-   */
+     * Returns whether this key is a contains another as prefix.
+     *
+     * @param {Key} other
+     * @returns {bool}
+     *
+     * @example
+     * new Key('/Comedy/MontyPython').isDecendantOf('/Comedy')
+     * // => true
+     *
+     */
     isDecendantOf(other /* : Key */) /* : bool */ {
         if (other.toString() === this.toString()) {
             return false;
@@ -361,11 +359,11 @@ export default class Key {
     }
 
     /**
-   * Returns wether this key has only one namespace.
-   *
-   * @returns {bool}
-   *
-   */
+     * Returns wether this key has only one namespace.
+     *
+     * @returns {bool}
+     *
+     */
     isTopLevel() /* : bool */ {
         return this.list().length === 1;
     }

@@ -1,8 +1,6 @@
-const MemoryStore = require("interface-datastore").MemoryDatastore;
 const waterfall = require("async/waterfall");
 const each = require("async/each");
 const timeout = require("async/timeout");
-
 const RoutingTable = require("./routing");
 const utils = require("./utils");
 const c = require("./constants");
@@ -15,6 +13,7 @@ const Message = require("./message");
 
 const {
     is,
+    datastore: { backend: { Memory: MemoryStore } },
     netron2: { PeerId, PeerInfo, crypto, record }
 } = adone;
 

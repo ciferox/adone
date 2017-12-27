@@ -1,14 +1,13 @@
-const Store = require("interface-datastore").MemoryDatastore;
 const parallel = require("async/parallel");
 const waterfall = require("async/waterfall");
 const map = require("async/map");
 const timesSeries = require("async/timesSeries");
 const each = require("async/each");
 const eachSeries = require("async/eachSeries");
-const LevelStore = require("datastore-level");
 const util = require("./utils");
 
 const {
+    datastore: { backend: { Memory: MemoryStore, Level: LevelStore } },
     multi,
     netron2: { dht, CID },
     vendor: { lodash: { range } },
@@ -17,16 +16,18 @@ const {
 const { Providers } = adone.private(dht);
 
 
-describe("Providers", () => {
+describe("Providers", function () {
+    this.timeout(300 * 1000);
+
     let infos;
 
-    before(function () {
-        this.timeout(10 * 1000);
+    before(() => {
+
         infos = util.makePeers(3);
     });
 
     it("simple add and get of providers", (done) => {
-        const providers = new Providers(new Store(), infos[2].id);
+        const providers = new Providers(new MemoryStore(), infos[2].id);
 
         const cid = new CID("QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n");
 
@@ -44,7 +45,7 @@ describe("Providers", () => {
     });
 
     it("more providers than space in the lru cache", (done) => {
-        const providers = new Providers(new Store(), infos[2].id, 10);
+        const providers = new Providers(new MemoryStore(), infos[2].id, 10);
 
         waterfall([
             (cb) => map(
@@ -77,7 +78,7 @@ describe("Providers", () => {
     });
 
     it("expires", (done) => {
-        const providers = new Providers(new Store(), infos[2].id);
+        const providers = new Providers(new MemoryStore(), infos[2].id);
         providers.cleanupInterval = 100;
         providers.provideValidity = 200;
 
@@ -106,7 +107,7 @@ describe("Providers", () => {
     });
 
     // slooow so only run when you need to
-    it.skip("many", (done) => {
+    it("many", (done) => {
         const p = path.join(
             os.tmpdir(), (Math.random() * 100).toString()
         );

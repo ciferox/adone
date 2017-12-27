@@ -1,10 +1,10 @@
 const debug = require("debug");
-const Key = require("interface-datastore").Key;
 const base32 = require("base32.js");
 const distance = require("xor-distance");
 const map = require("async/map");
 
 const {
+    datastore: { Key },
     netron2: { PeerId, record: { Record } },
     multi
 } = adone;
