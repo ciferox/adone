@@ -1,5 +1,3 @@
-const parallel = require("async/parallel");
-const waterfall = require("async/waterfall");
 const support = require("../support");
 
 const {
@@ -25,38 +23,28 @@ exports.createProposal = (state) => {
     return state.proposalEncoded.out;
 };
 
-exports.createExchange = (state, callback) => {
-    crypto.keys.generateEphemeralKeyPair(state.protocols.local.curveT, (err, res) => {
-        if (err) {
-            return callback(err);
-        }
+exports.createExchange = (state) => {
+    const res = crypto.keys.generateEphemeralKeyPair(state.protocols.local.curveT);
+    state.ephemeralKey.local = res.key;
+    state.shared.generate = res.genSharedKey;
 
-        state.ephemeralKey.local = res.key;
-        state.shared.generate = res.genSharedKey;
+    // Gather corpus to sign.
+    const selectionOut = Buffer.concat([
+        state.proposalEncoded.out,
+        state.proposalEncoded.in,
+        state.ephemeralKey.local
+    ]);
 
-        // Gather corpus to sign.
-        const selectionOut = Buffer.concat([
-            state.proposalEncoded.out,
-            state.proposalEncoded.in,
-            state.ephemeralKey.local
-        ]);
+    const sig = state.key.local.sign(selectionOut);
+    state.exchange.out = {
+        epubkey: state.ephemeralKey.local,
+        signature: sig
+    };
 
-        state.key.local.sign(selectionOut, (err, sig) => {
-            if (err) {
-                return callback(err);
-            }
-
-            state.exchange.out = {
-                epubkey: state.ephemeralKey.local,
-                signature: sig
-            };
-
-            callback(null, pbm.Exchange.encode(state.exchange.out));
-        });
-    });
+    return pbm.Exchange.encode(state.exchange.out);
 };
 
-exports.identify = (state, msg, callback) => {
+exports.identify = (state, msg) => {
     adone.log("1.1 identify");
 
     state.proposalEncoded.in = msg;
@@ -64,19 +52,13 @@ exports.identify = (state, msg, callback) => {
     const pubkey = state.proposal.in.pubkey;
 
     state.key.remote = crypto.keys.unmarshalPublicKey(pubkey);
-    PeerId.createFromPubKey(pubkey.toString("base64"), (err, remoteId) => {
-        if (err) {
-            return callback(err);
-        }
+    const remoteId = PeerId.createFromPubKey(pubkey.toString("base64"));
+    state.id.remote = remoteId;
 
-        state.id.remote = remoteId;
-
-        adone.log("1.1 identify - %s - identified remote peer as %s", state.id.local.toB58String(), state.id.remote.toB58String());
-        callback();
-    });
+    adone.log("1.1 identify - %s - identified remote peer as %s", state.id.local.toB58String(), state.id.remote.toB58String());
 };
 
-exports.selectProtocols = (state, callback) => {
+exports.selectProtocols = (state) => {
     adone.log("1.2 selection");
 
     const local = {
@@ -95,30 +77,25 @@ exports.selectProtocols = (state, callback) => {
         nonce: state.proposal.in.rand
     };
 
-    support.selectBest(local, remote, (err, selected) => {
-        if (err) {
-            return callback(err);
-        }
-        // we use the same params for both directions (must choose same curve)
-        // WARNING: if they dont SelectBest the same way, this won't work...
-        state.protocols.remote = {
-            order: selected.order,
-            curveT: selected.curveT,
-            cipherT: selected.cipherT,
-            hashT: selected.hashT
-        };
+    const selected = support.selectBest(local, remote);
+    // we use the same params for both directions (must choose same curve)
+    // WARNING: if they dont SelectBest the same way, this won't work...
+    state.protocols.remote = {
+        order: selected.order,
+        curveT: selected.curveT,
+        cipherT: selected.cipherT,
+        hashT: selected.hashT
+    };
 
-        state.protocols.local = {
-            order: selected.order,
-            curveT: selected.curveT,
-            cipherT: selected.cipherT,
-            hashT: selected.hashT
-        };
-        callback();
-    });
+    state.protocols.local = {
+        order: selected.order,
+        curveT: selected.curveT,
+        cipherT: selected.cipherT,
+        hashT: selected.hashT
+    };
 };
 
-exports.verify = (state, msg, callback) => {
+exports.verify = (state, msg) => {
     adone.log("2.1. verify");
 
     state.exchange.in = pbm.Exchange.decode(msg);
@@ -130,67 +107,46 @@ exports.verify = (state, msg, callback) => {
         state.ephemeralKey.remote
     ]);
 
-    state.key.remote.verify(selectionIn, state.exchange.in.signature, (err, sigOk) => {
-        if (err) {
-            return callback(err);
-        }
+    const sigOk = state.key.remote.verify(selectionIn, state.exchange.in.signature);
+    if (!sigOk) {
+        throw new Error("Bad signature");
+    }
 
-        if (!sigOk) {
-            return callback(new Error("Bad signature"));
-        }
-
-        adone.log("2.1. verify - signature verified");
-        callback();
-    });
+    adone.log("2.1. verify - signature verified");
 };
 
-exports.generateKeys = (state, callback) => {
+exports.generateKeys = (state) => {
     adone.log("2.2. keys");
 
-    waterfall([
-        (cb) => state.shared.generate(state.exchange.in.epubkey, cb),
-        (secret, cb) => {
-            state.shared.secret = secret;
+    const secret = state.shared.generate(state.exchange.in.epubkey);
+    state.shared.secret = secret;
 
-            crypto.keys.keyStretcher(
-                state.protocols.local.cipherT,
-                state.protocols.local.hashT,
-                state.shared.secret,
-                cb
-            );
-        },
-        (keys, cb) => {
-            // use random nonces to decide order.
-            if (state.protocols.local.order > 0) {
-                state.protocols.local.keys = keys.k1;
-                state.protocols.remote.keys = keys.k2;
-            } else if (state.protocols.local.order < 0) {
-                // swap
-                state.protocols.local.keys = keys.k2;
-                state.protocols.remote.keys = keys.k1;
-            } else {
-                // we should've bailed before state. but if not, bail here.
-                return cb(new Error("you are trying to talk to yourself"));
-            }
+    const keys = crypto.keys.keyStretcher(state.protocols.local.cipherT, state.protocols.local.hashT, state.shared.secret);
+    // use random nonces to decide order.
+    if (state.protocols.local.order > 0) {
+        state.protocols.local.keys = keys.k1;
+        state.protocols.remote.keys = keys.k2;
+    } else if (state.protocols.local.order < 0) {
+        // swap
+        state.protocols.local.keys = keys.k2;
+        state.protocols.remote.keys = keys.k1;
+    } else {
+        // we should've bailed before state. but if not, bail here.
+        throw new Error("you are trying to talk to yourself");
+    }
 
-            adone.log("2.3. mac + cipher");
+    adone.log("2.3. mac + cipher");
 
-            parallel([
-                (cb) => support.makeMacAndCipher(state.protocols.local, cb),
-                (cb) => support.makeMacAndCipher(state.protocols.remote, cb)
-            ], cb);
-        }
-    ], callback);
+    return [
+        support.makeMacAndCipher(state.protocols.local),
+        support.makeMacAndCipher(state.protocols.remote)
+    ];
 };
 
 exports.verifyNonce = (state, n2) => {
     const n1 = state.proposal.out.rand;
 
-    if (n1.equals(n2)) {
-        return;
+    if (!n1.equals(n2)) {
+        throw new Error(`Failed to read our encrypted nonce: ${n1.toString("hex")} != ${n2.toString("hex")}`);
     }
-
-    throw new Error(
-        `Failed to read our encrypted nonce: ${n1.toString("hex")} != ${n2.toString("hex")}`
-    );
 };

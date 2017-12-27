@@ -19,20 +19,12 @@ module.exports = (config, http) => {
     const log = config.log;
     const io = new SocketIO(http.listener);
     const proto = new util.Protocol(log);
-    const getConfig = () => config;
-
-    proto.addRequest("ss-join", ["multiaddr", "string", "function"], join);
-    proto.addRequest("ss-leave", ["multiaddr"], leave);
-    proto.addRequest("disconnect", [], disconnect);
-    proto.addRequest("ss-dial", ["multiaddr", "multiaddr", "string", "function"], dial); // dialFrom, dialTo, dialId, cb
-    io.on("connection", handle);
-
-    log("create new server", config);
-
-    this._peers = {};
-    const nonces = {};
 
     const peersMetric = config.metrics ? new client.Gauge({ name: "rendezvous_peers", help: "peers online now" }) : fake.gauge;
+
+    const getPeers = () => this._peers; // it's a function because, and I'm not kidding, the value of that var is different for every peer that has joined
+    const refreshMetrics = () => peersMetric.set(Object.keys(getPeers()).length);
+
     const dialsSuccessTotal = config.metrics ? new client.Counter({ name: "rendezvous_dials_total_success", help: "sucessfully completed dials since server started" }) : fake.counter;
     const dialsFailureTotal = config.metrics ? new client.Counter({ name: "rendezvous_dials_total_failure", help: "failed dials since server started" }) : fake.counter;
     const dialsTotal = config.metrics ? new client.Counter({ name: "rendezvous_dials_total", help: "all dials since server started" }) : fake.counter;
@@ -40,12 +32,8 @@ module.exports = (config, http) => {
     const joinsFailureTotal = config.metrics ? new client.Counter({ name: "rendezvous_joins_total_failure", help: "failed joins since server started" }) : fake.counter;
     const joinsTotal = config.metrics ? new client.Counter({ name: "rendezvous_joins_total", help: "all joins since server started" }) : fake.counter;
 
-    const getPeers = () => this._peers; // it's a function because, and I'm not kidding, the value of that var is different for every peer that has joined
-    const refreshMetrics = () => peersMetric.set(Object.keys(getPeers()).length);
 
-    this.peers = () => getPeers();
-
-    function safeEmit(addr, event, arg) {
+    const safeEmit = function (addr, event, arg) {
         const peer = getPeers()[addr];
         if (!peer) {
             log("trying to emit %s but peer is gone", event);
@@ -53,19 +41,70 @@ module.exports = (config, http) => {
         }
 
         peer.emit(event, arg);
-    }
+    };
 
-    function handle(socket) {
+    const handle = function (socket) {
         socket.addrs = [];
         socket.cleanaddrs = {};
         sp(socket, {
             codec: "buffer"
         });
         proto.handleSocket(socket);
-    }
+    };
+
+    const getConfig = () => config;
+
+    const joinFinalize = function (socket, multiaddr, cb) {
+        const log = getConfig().log.bind(getConfig().log, `[${socket.id}]`);
+        getPeers()[multiaddr] = socket;
+        if (!socket.stopSendingPeersIntv) {
+            socket.stopSendingPeersIntv = {};
+        }
+        joinsSuccessTotal.inc();
+        refreshMetrics();
+        socket.addrs.push(multiaddr);
+        log("registered as", multiaddr);
+
+        // discovery
+
+        const sendPeers = function () {
+            const list = Object.keys(getPeers());
+            log(multiaddr, "sending", (list.length - 1).toString(), "peer(s)");
+            list.forEach((mh) => {
+                if (mh === multiaddr) {
+                    return;
+                }
+
+                safeEmit(mh, "ws-peer", multiaddr);
+            });
+        };
+
+        let refreshInterval;
+
+        const stopSendingPeers = function () {
+            if (refreshInterval) {
+                log(multiaddr, "stop sending peers");
+                clearInterval(refreshInterval);
+                refreshInterval = null;
+            }
+        };
+
+        refreshInterval = setInterval(sendPeers, getConfig().refreshPeerListIntervalMS);
+
+        socket.once("disconnect", stopSendingPeers);
+
+        sendPeers();
+
+        socket.stopSendingPeersIntv[multiaddr] = stopSendingPeers;
+
+        cb();
+    };
+
+    const nonces = {};
+
 
     // join this signaling server network
-    function join(socket, multiaddr, pub, cb) {
+    const join = function (socket, multiaddr, pub, cb) {
         const log = socket.log = config.log.bind(config.log, `[${socket.id}]`);
 
         if (getConfig().strictMultiaddr && !util.validateMa(multiaddr)) {
@@ -87,31 +126,30 @@ module.exports = (config, http) => {
 
             if (nonces[socket.id][multiaddr]) {
                 log("response cryptoChallenge", multiaddr);
+                let ok;
+                try {
+                    ok = nonces[socket.id][multiaddr].key.verify(nonces[socket.id][multiaddr].nonce, Buffer.from(pub, "hex"));
+                } catch (err) {
+                    joinsTotal.inc();
+                    joinsFailureTotal.inc();
+                    return cb("Crypto error");
+                }
+                // the errors NEED to be a string otherwise JSON.stringify() turns them into {}
+                if (!ok) {
+                    joinsTotal.inc();
+                    joinsFailureTotal.inc();
+                    return cb("Signature Invalid");
+                }
 
-                nonces[socket.id][multiaddr].key.verify(nonces[socket.id][multiaddr].nonce, Buffer.from(pub, "hex"), (err, ok) => {
-                    if (err || !ok) {
-                        joinsTotal.inc();
-                        joinsFailureTotal.inc();
-                    }
-                    if (err) {
-                        return cb("Crypto error");
-                    } // the errors NEED to be a string otherwise JSON.stringify() turns them into {}
-                    if (!ok) {
-                        return cb("Signature Invalid");
-                    }
-
-                    joinFinalize(socket, multiaddr, cb);
-                });
+                joinFinalize(socket, multiaddr, cb);
             } else {
                 joinsTotal.inc();
                 const addr = multiaddr.split("ipfs/").pop();
 
                 log("do cryptoChallenge", multiaddr, addr);
 
-                util.getIdAndValidate(pub, addr, (err, key) => {
-                    if (err) {
-                        joinsFailureTotal.inc(); return cb(err);
-                    }
+                try {
+                    const key = util.getIdAndValidate(pub, addr);
                     const nonce = uuid() + uuid();
 
                     socket.once("disconnect", () => {
@@ -120,59 +158,18 @@ module.exports = (config, http) => {
 
                     nonces[socket.id][multiaddr] = { nonce, key };
                     cb(null, nonce);
-                });
+                } catch (err) {
+                    joinsFailureTotal.inc();
+                    return cb(err);
+                }
             }
         } else {
             joinsTotal.inc();
             joinFinalize(socket, multiaddr, cb);
         }
-    }
+    };
 
-    function joinFinalize(socket, multiaddr, cb) {
-        const log = getConfig().log.bind(getConfig().log, `[${socket.id}]`);
-        getPeers()[multiaddr] = socket;
-        if (!socket.stopSendingPeersIntv) {
-            socket.stopSendingPeersIntv = {};
-        }
-        joinsSuccessTotal.inc();
-        refreshMetrics();
-        socket.addrs.push(multiaddr);
-        log("registered as", multiaddr);
-
-        // discovery
-
-        let refreshInterval = setInterval(sendPeers, getConfig().refreshPeerListIntervalMS);
-
-        socket.once("disconnect", stopSendingPeers);
-
-        sendPeers();
-
-        function sendPeers() {
-            const list = Object.keys(getPeers());
-            log(multiaddr, "sending", (list.length - 1).toString(), "peer(s)");
-            list.forEach((mh) => {
-                if (mh === multiaddr) {
-                    return;
-                }
-
-                safeEmit(mh, "ws-peer", multiaddr);
-            });
-        }
-
-        function stopSendingPeers() {
-            if (refreshInterval) {
-                log(multiaddr, "stop sending peers");
-                clearInterval(refreshInterval);
-                refreshInterval = null;
-            }
-        }
-
-        socket.stopSendingPeersIntv[multiaddr] = stopSendingPeers;
-
-        cb();
-    }
-
-    function leave(socket, multiaddr) {
+    const leave = function (socket, multiaddr) {
         if (getPeers()[multiaddr] && getPeers()[multiaddr].id === socket.id) {
             socket.log("leaving", multiaddr);
             delete getPeers()[multiaddr];
@@ -183,18 +180,18 @@ module.exports = (config, http) => {
             }
             refreshMetrics();
         }
-    }
+    };
 
-    function disconnect(socket) {
+    const disconnect = function (socket) {
         socket.log("disconnected");
         Object.keys(getPeers()).forEach((mh) => {
             if (getPeers()[mh].id === socket.id) {
                 leave(socket, mh);
             }
         });
-    }
+    };
 
-    function dial(socket, from, to, dialId, cb) {
+    const dial = function (socket, from, to, dialId, cb) {
         const log = socket.log;
         const s = socket.addrs.filter((a) => a === from)[0];
 
@@ -225,7 +222,19 @@ module.exports = (config, http) => {
             peer.createProxy(`${dialId}.listener`, socket);
             cb();
         });
-    }
+    };
+
+    proto.addRequest("ss-join", ["multiaddr", "string", "function"], join);
+    proto.addRequest("ss-leave", ["multiaddr"], leave);
+    proto.addRequest("disconnect", [], disconnect);
+    proto.addRequest("ss-dial", ["multiaddr", "multiaddr", "string", "function"], dial); // dialFrom, dialTo, dialId, cb
+    io.on("connection", handle);
+
+    log("create new server", config);
+
+    this._peers = {};
+
+    this.peers = () => getPeers();
 
     return this;
 };

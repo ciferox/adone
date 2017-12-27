@@ -11,12 +11,8 @@ describe("rpc - handlers - Ping", () => {
     let peers;
     let dht;
 
-    before((done) => {
-        util.makePeers(2, (err, res) => {
-            assert.notExists(err);
-            peers = res;
-            done();
-        });
+    before(() => {
+        peers = util.makePeers(2);
     });
 
     afterEach((done) => util.teardown(done));

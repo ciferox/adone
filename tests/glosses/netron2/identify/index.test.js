@@ -11,15 +11,9 @@ describe("netron2", "identify", () => {
 
     describe("dialer", () => {
         let original;
-        beforeEach((done) => {
-            PeerInfo.create((err, info) => {
-                if (err) {
-                    return done(err);
-                }
-
-                original = info;
-                done();
-            });
+        beforeEach(function () {
+            this.timeout(30000);
+            original = PeerInfo.create();
         });
 
         it("works", (done) => {
@@ -58,15 +52,9 @@ describe("netron2", "identify", () => {
     describe("listener", () => {
         let info;
 
-        beforeEach((done) => {
-            PeerInfo.create((err, _info) => {
-                if (err) {
-                    return done(err);
-                }
-
-                info = _info;
-                done();
-            });
+        beforeEach(function () {
+            this.timeout(30000);
+            info = PeerInfo.create();
         });
 
         it("works", (done) => {

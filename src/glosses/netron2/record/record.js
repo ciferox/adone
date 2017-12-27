@@ -71,25 +71,13 @@ export default class Record {
      * @param {function(Error, Buffer)} callback
      * @returns {undefined}
      */
-    serializeSigned(privKey, callback) {
+    serializeSigned(privKey) {
         const blob = this.blobForSignature();
 
-        privKey.sign(blob, (err, signature) => {
-            if (err) {
-                return callback(err);
-            }
+        const signature = privKey.sign(blob);
+        this.signature = signature;
 
-            this.signature = signature;
-
-            let rec;
-            try {
-                rec = this.serialize();
-            } catch (err) {
-                return callback(err);
-            }
-
-            callback(null, rec);
-        });
+        return this.serialize();
     }
 
     /**
@@ -133,22 +121,14 @@ export default class Record {
      * Verify the signature of a record against the given public key.
      *
      * @param {PublicKey} pubKey
-     * @param {function(Error)} callback
      * @returns {undefined}
      */
-    verifySignature(pubKey, callback) {
+    verifySignature(pubKey) {
         const blob = this.blobForSignature();
 
-        pubKey.verify(blob, this.signature, (err, good) => {
-            if (err) {
-                return callback(err);
-            }
-
-            if (!good) {
-                return callback(new Error("Invalid record signature"));
-            }
-
-            callback();
-        });
+        const good = pubKey.verify(blob, this.signature);
+        if (!good) {
+            throw new Error("Invalid record signature");
+        }
     }
 }

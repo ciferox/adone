@@ -1,6 +1,6 @@
 const {
     crypto: { secp256k1 },
-    multi: { hash: { async: multihashing } }
+    multi
 } = adone;
 
 const HASH_ALGORITHM = "sha2-256";
@@ -8,50 +8,25 @@ const HASH_ALGORITHM = "sha2-256";
 module.exports = (randomBytes) => {
     const privateKeyLength = 32;
 
-    const generateKey = function (callback) {
-        const done = (err, res) => setImmediate(() => callback(err, res));
-
+    const generateKey = function () {
         let privateKey;
         do {
             privateKey = randomBytes(32);
         } while (!secp256k1.privateKeyVerify(privateKey));
 
-        done(null, privateKey);
+        return privateKey;
     };
 
-    const hashAndSign = function (key, msg, callback) {
-        const done = (err, res) => setImmediate(() => callback(err, res));
-
-        multihashing.digest(msg, HASH_ALGORITHM, (err, digest) => {
-            if (err) {
-                return done(err);
-            }
-
-            try {
-                const sig = secp256k1.sign(digest, key);
-                const sigDER = secp256k1.signatureExport(sig.signature);
-                return done(null, sigDER);
-            } catch (err) {
-                done(err);
-            }
-        });
+    const hashAndSign = function (key, msg) {
+        const digest = multi.hash.digest(msg, HASH_ALGORITHM);
+        const sig = secp256k1.sign(digest, key);
+        return secp256k1.signatureExport(sig.signature);
     };
 
-    const hashAndVerify = function (key, sig, msg, callback) {
-        const done = (err, res) => setImmediate(() => callback(err, res));
-
-        multihashing.digest(msg, HASH_ALGORITHM, (err, digest) => {
-            if (err) {
-                return done(err);
-            }
-            try {
-                sig = secp256k1.signatureImport(sig);
-                const valid = secp256k1.verify(digest, sig, key);
-                return done(null, valid);
-            } catch (err) {
-                done(err);
-            }
-        });
+    const hashAndVerify = function (key, sig, msg) {
+        const digest = multi.hash.digest(msg, HASH_ALGORITHM);
+        sig = secp256k1.signatureImport(sig);
+        return secp256k1.verify(digest, sig, key);
     };
 
     const compressPublicKey = function (key) {

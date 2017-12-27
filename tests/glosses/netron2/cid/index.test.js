@@ -7,14 +7,8 @@ const {
 describe("CID", () => {
     let hash;
 
-    before((done) => {
-        multi.hash.async(Buffer.from("abc"), "sha2-256", (err, d) => {
-            if (err) {
-                return done(err);
-            }
-            hash = d;
-            done();
-        });
+    before(() => {
+        hash = multi.hash.create(Buffer.from("abc"), "sha2-256");
     });
 
     describe("v0", () => {
@@ -29,20 +23,17 @@ describe("CID", () => {
             expect(cid.toBaseEncodedString()).to.be.eql(mhStr);
         });
 
-        it("handles Buffer multihash", (done) => {
-            multi.hash.async(Buffer.from("hello world"), "sha2-256", (err, mh) => {
-                assert.notExists(err);
-                const mhStr = "QmaozNR7DZHQK1ZcU9p7QdrshMvXqWK6gpu5rmrkPdT3L4";
+        it("handles Buffer multihash", () => {
+            const mh = multi.hash.create(Buffer.from("hello world"), "sha2-256");
+            const mhStr = "QmaozNR7DZHQK1ZcU9p7QdrshMvXqWK6gpu5rmrkPdT3L4";
 
-                const cid = new CID(mh);
+            const cid = new CID(mh);
 
-                expect(cid).to.have.property("codec", "dag-pb");
-                expect(cid).to.have.property("version", 0);
-                expect(cid).to.have.property("multihash").that.eql(mh);
+            expect(cid).to.have.property("codec", "dag-pb");
+            expect(cid).to.have.property("version", 0);
+            expect(cid).to.have.property("multihash").that.eql(mh);
 
-                expect(cid.toBaseEncodedString()).to.eql(mhStr);
-                done();
-            });
+            expect(cid.toBaseEncodedString()).to.eql(mhStr);
         });
 
         it("create by parts", () => {

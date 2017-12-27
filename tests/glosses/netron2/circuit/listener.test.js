@@ -1,5 +1,4 @@
 const nodes = require("./fixtures/nodes");
-const waterfall = require("async/waterfall");
 
 const {
     multi,
@@ -18,31 +17,26 @@ describe("listener", () => {
         let shake = null;
         let conn = null;
 
-        beforeEach((done) => {
+        beforeEach(() => {
             stream = pull.handshake({ timeout: 1000 * 60 });
             shake = stream.handshake;
             conn = new Connection(stream);
             conn.setPeerInfo(new PeerInfo(PeerId.createFromB58String("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE")));
 
-            waterfall([
-                (cb) => PeerId.createFromJSON(nodes.node4, cb),
-                (peerId, cb) => PeerInfo.create(peerId, cb),
-                (peer, cb) => {
-                    swarm = {
-                        _peerInfo: peer,
-                        handle: spy((proto, h) => {
-                            handlerSpy = spy(h);
-                        }),
-                        conns: {
-                            QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE: new Connection()
-                        }
-                    };
-
-                    listener = createListener(swarm, {}, () => { });
-                    listener.listen();
-                    cb();
+            const peerId = PeerId.createFromJSON(nodes.node4);
+            const peer = PeerInfo.create(peerId);
+            swarm = {
+                _peerInfo: peer,
+                handle: spy((proto, h) => {
+                    handlerSpy = spy(h);
+                }),
+                conns: {
+                    QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE: new Connection()
                 }
-            ], done);
+            };
+
+            listener = createListener(swarm, {}, () => { });
+            listener.listen();
         });
 
         afterEach(() => {
@@ -197,20 +191,15 @@ describe("listener", () => {
         let listener = null;
         let peerInfo = null;
 
-        beforeEach((done) => {
-            waterfall([
-                (cb) => PeerId.createFromJSON(nodes.node4, cb),
-                (peerId, cb) => PeerInfo.create(peerId, cb),
-                (peer, cb) => {
-                    swarm = {
-                        _peerInfo: peer
-                    };
+        beforeEach(() => {
+            const peerId = PeerId.createFromJSON(nodes.node4);
+            const peer = PeerInfo.create(peerId);
+            swarm = {
+                _peerInfo: peer
+            };
 
-                    peerInfo = peer;
-                    listener = createListener(swarm, {}, () => { });
-                    cb();
-                }
-            ], done);
+            peerInfo = peer;
+            listener = createListener(swarm, {}, () => { });
         });
 
         afterEach(() => {

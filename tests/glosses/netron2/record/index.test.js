@@ -1,5 +1,3 @@
-const waterfall = require("async/waterfall");
-const parallel = require("async/parallel");
 const fixture = require("./fixtures/go-record.js");
 
 const {
@@ -10,29 +8,15 @@ const { Record } = record;
 
 const date = new Date(Date.UTC(2012, 1, 25, 10, 10, 10, 10));
 
-describe("record", () => {
+describe("netron2", "record", () => {
     let key;
     let otherKey;
     let id;
 
-    before((done) => {
-        waterfall([
-            (cb) => parallel([
-                (cb) => crypto.keys.generateKeyPair("rsa", 1024, cb),
-                (cb) => crypto.keys.generateKeyPair("rsa", 1024, cb)
-            ], cb),
-            (keys, cb) => {
-                otherKey = keys[0];
-                key = keys[1];
-
-                PeerId.createFromPrivKey(key.bytes, cb);
-            },
-            (_id, cb) => {
-                id = _id;
-
-                cb();
-            }
-        ], done);
+    before(() => {
+        otherKey = crypto.keys.generateKeyPair("rsa", 1024);
+        key = crypto.keys.generateKeyPair("rsa", 1024);
+        id = PeerId.createFromPrivKey(key.bytes);
     });
 
     it("new", () => {
@@ -58,50 +42,34 @@ describe("record", () => {
         expect(dec.timeReceived).to.be.eql(date);
     });
 
-    it("serializeSigned", (done) => {
+    it("serializeSigned", () => {
         const rec = new Record(Buffer.from("hello2"), Buffer.from("world2"), id, date);
-        rec.serializeSigned(key, (err, enc) => {
-            assert.notExists(err);
+        const enc = rec.serializeSigned(key);
+        const dec = Record.deserialize(enc);
+        expect(dec).to.have.property("key").eql(Buffer.from("hello2"));
+        expect(dec).to.have.property("value").eql(Buffer.from("world2"));
+        expect(dec).to.have.property("author");
+        expect(dec.author.id.equals(id.id)).to.be.eql(true);
+        expect(dec.timeReceived).to.be.eql(date);
 
-            const dec = Record.deserialize(enc);
-            expect(dec).to.have.property("key").eql(Buffer.from("hello2"));
-            expect(dec).to.have.property("value").eql(Buffer.from("world2"));
-            expect(dec).to.have.property("author");
-            expect(dec.author.id.equals(id.id)).to.be.eql(true);
-            expect(dec.timeReceived).to.be.eql(date);
+        const blob = rec.blobForSignature();
 
-            const blob = rec.blobForSignature();
-
-            key.sign(blob, (err, signature) => {
-                assert.notExists(err);
-
-                expect(dec.signature).to.be.eql(signature);
-                done();
-            });
-        });
+        const signature = key.sign(blob);
+        expect(dec.signature).to.be.eql(signature);
     });
 
     describe("verifySignature", () => {
-        it("valid", (done) => {
+        it("valid", () => {
             const rec = new Record(Buffer.from("hello"), Buffer.from("world"), id);
 
-            rec.serializeSigned(key, (err, enc) => {
-                assert.notExists(err);
-
-                rec.verifySignature(key.public, done);
-            });
+            rec.serializeSigned(key);
+            rec.verifySignature(key.public);
         });
 
-        it("invalid", (done) => {
+        it("invalid", () => {
             const rec = new Record(Buffer.from("hello"), Buffer.from("world"), id);
-            rec.serializeSigned(key, (err, enc) => {
-                assert.notExists(err);
-
-                rec.verifySignature(otherKey.public, (err) => {
-                    expect(err).to.match(/Invalid record signature/);
-                    done();
-                });
-            });
+            rec.serializeSigned(key);
+            assert.throws(() => rec.verifySignature(otherKey.public), /Invalid record signature/);
         });
     });
 

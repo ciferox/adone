@@ -7,7 +7,50 @@ const __ = adone.lazify({
     names: ["./constants", (mod) => mod.names],
     codes: ["./constants", (mod) => mod.codes],
     defaultLengths: ["./constants", (mod) => mod.defaultLengths],
-    async: "./async"
+    async: "./async",
+    crypto: "./crypto",
+    functions: () => {
+        /**
+         * Mapping of multihash codes to their hashing functions.
+         * @type {Object}
+         */
+        const funcs = {
+            // sha1
+            0x11: __.crypto.sha1,
+            // sha2-256
+            0x12: __.crypto.sha2256,
+            // sha2-512
+            0x13: __.crypto.sha2512,
+            // sha3-512
+            0x14: __.crypto.sha3512,
+            // sha3-384
+            0x15: __.crypto.sha3384,
+            // sha3-256
+            0x16: __.crypto.sha3256,
+            // sha3-224
+            0x17: __.crypto.sha3224,
+            // shake-128
+            0x18: __.crypto.shake128,
+            // shake-256
+            0x19: __.crypto.shake256,
+            // keccak-224
+            0x1A: __.crypto.keccak224,
+            // keccak-256
+            0x1B: __.crypto.keccak256,
+            // keccak-384
+            0x1C: __.crypto.keccak384,
+            // keccak-512
+            0x1D: __.crypto.keccak512,
+            // murmur3-128
+            0x22: __.crypto.murmur3128,
+            // murmur3-32
+            0x23: __.crypto.murmur332
+        };
+
+        // add blake functions
+        __.crypto.addBlake(funcs);
+        return funcs;
+    }
 }, adone.asNamespace(exports), require);
 
 
@@ -214,4 +257,52 @@ export const prefix = (multihash) => {
     validate(multihash);
 
     return multihash.slice(0, 2);
+};
+
+
+// from multihashing-async
+
+/**
+ * @param {string|number} func
+ *
+ * @returns {function} - The to `func` corresponding hash function.
+ */
+export const createHash = function (func) {
+    func = coerceCode(func);
+    if (!__.functions[func]) {
+        throw new Error(`multihash function ${func} not yet supported`);
+    }
+
+    return __.functions[func];
+};
+
+/**
+ * @param {Buffer} buf - The value to hash.
+ * @param {number|string} func - The algorithm to use.
+ * @param {number} [length] - Optionally trim the result to this length.
+ * @param {function(Error, Buffer)} callback
+ * @returns {undefined}
+ */
+export const digest = function (buf, func, length) {
+    const hash = createHash(func);
+    const digest = hash(buf);
+    if (length) {
+        return digest.slice(0, length);
+    }
+    return digest;
+};
+
+/**
+ * Hash the given `buf` using the algorithm specified
+ * by `func`.
+ *
+ * @param {Buffer} buf - The value to hash.
+ * @param {number|string} func - The algorithm to use.
+ * @param {number} [length] - Optionally trim the result to this length.
+ * @param {function(Error, Buffer)} callback
+ * @returns {undefined}
+ */
+export const create = function (buf, func, length) {
+    const dgst = digest(buf, func, length);
+    return encode(dgst, func, length);
 };

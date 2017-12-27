@@ -1,4 +1,3 @@
-const parallel = require("async/parallel");
 const waterfall = require("async/waterfall");
 const util = require("../../utils");
 
@@ -14,16 +13,9 @@ describe("rpc - handlers - GetProviders", () => {
     let values;
     let dht;
 
-    before((done) => {
-        parallel([
-            (cb) => util.makePeers(3, cb),
-            (cb) => util.makeValues(2, cb)
-        ], (err, res) => {
-            assert.notExists(err);
-            peers = res[0];
-            values = res[1];
-            done();
-        });
+    before(() => {
+        peers = util.makePeers(3);
+        values = util.makeValues(2);
     });
 
     afterEach((done) => util.teardown(done));
@@ -74,8 +66,8 @@ describe("rpc - handlers - GetProviders", () => {
         const prov = peers[1].id;
         const closer = peers[2];
 
+        dht._add(closer);
         waterfall([
-            (cb) => dht._add(closer, cb),
             (cb) => dht.providers.addProvider(v.cid, prov, cb),
             (cb) => getProviders(dht)(peers[0], msg, cb)
         ], (err, response) => {

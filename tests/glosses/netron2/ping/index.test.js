@@ -15,26 +15,16 @@ describe("netron2", "ping", function () {
 
     before(function (done) {
         this.timeout(25000);
+        peerA = PeerInfo.create();
+        peerA.multiaddrs.add("/ip4/127.0.0.1/tcp/0");
+        peerB = PeerInfo.create();
+        peerB.multiaddrs.add("/ip4/127.0.0.1/tcp/0");
+        swarmA = new Swarm(peerA, new PeerBook());
+        swarmB = new Swarm(peerB, new PeerBook());
+        swarmA.transport.add("tcp", new TCP());
+        swarmB.transport.add("tcp", new TCP());
+
         series([
-            (cb) => PeerInfo.create((err, peerInfo) => {
-                assert.notExists(err);
-                peerA = peerInfo;
-                peerA.multiaddrs.add("/ip4/127.0.0.1/tcp/0");
-                cb();
-            }),
-            (cb) => PeerInfo.create((err, peerInfo) => {
-                assert.notExists(err);
-                peerB = peerInfo;
-                peerB.multiaddrs.add("/ip4/127.0.0.1/tcp/0");
-                cb();
-            }),
-            (cb) => {
-                swarmA = new Swarm(peerA, new PeerBook());
-                swarmB = new Swarm(peerB, new PeerBook());
-                swarmA.transport.add("tcp", new TCP());
-                swarmB.transport.add("tcp", new TCP());
-                cb();
-            },
             (cb) => swarmA.listen(cb),
             (cb) => swarmB.listen(cb),
             (cb) => {

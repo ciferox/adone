@@ -1,9 +1,8 @@
-const multiaddr = require("multiaddr");
 const each = require("async/each");
-const map = require("async/map");
 const pull = require("pull-stream");
 
 const {
+    multi,
     netron2: { PeerId, transport: { WSStar } }
 } = adone;
 
@@ -27,7 +26,7 @@ describe("dial", () => {
 
     const maLocalIP4 = "/ip4/127.0.0.1/tcp/15001";
     // const maLocalIP6 = '/ip6/::1/tcp/15003'
-    const maGen = (base, id, sec) => multiaddr(`/${base}/${sec ? "wss" : "ws"}/p2p-websocket-star/ipfs/${id}`);
+    const maGen = (base, id, sec) => multi.address.create(`/${base}/${sec ? "wss" : "ws"}/p2p-websocket-star/ipfs/${id}`);
 
     if (process.env.REMOTE_DNS) {
         // test with deployed signalling server using DNS
@@ -54,20 +53,20 @@ describe("dial", () => {
     }
 
     before((done) => {
-        map(require("./ids.json"), PeerId.createFromJSON, (err, ids) => {
-            if (err) {
-                return done(err);
-            }
-            ws1 = new WSStar({ id: ids[0], allowJoinWithDisabledChallenge: true });
-            ws2 = new WSStar({ id: ids[1], allowJoinWithDisabledChallenge: true });
+        const jsons = require("./ids.json");
+        const ids = [];
+        for (const json of jsons) {
+            ids.push(PeerId.createFromJSON(json));
+        }
+        ws1 = new WSStar({ id: ids[0], allowJoinWithDisabledChallenge: true });
+        ws2 = new WSStar({ id: ids[1], allowJoinWithDisabledChallenge: true });
 
-            each([
-                [ws1, ma1],
-                [ws2, ma2]
-                // [ws1, ma1v6],
-                // [ws2, ma2v6]
-            ], (i, n) => listeners[listeners.push(i[0].createListener((conn) => pull(conn, conn))) - 1].listen(i[1], n), done);
-        });
+        each([
+            [ws1, ma1],
+            [ws2, ma2]
+            // [ws1, ma1v6],
+            // [ws2, ma2v6]
+        ], (i, n) => listeners[listeners.push(i[0].createListener((conn) => pull(conn, conn))) - 1].listen(i[1], n), done);
     });
 
     it("dial on IPv4, check callback", (done) => {
@@ -90,7 +89,7 @@ describe("dial", () => {
     });
 
     it("dial offline / non-exist()ent node on IPv4, check callback", (done) => {
-        const maOffline = multiaddr("/ip4/127.0.0.1/tcp/40404/ws/p2p-websocket-star/ipfs/ABCD");
+        const maOffline = multi.address.create("/ip4/127.0.0.1/tcp/40404/ws/p2p-websocket-star/ipfs/ABCD");
 
         ws1.dial(maOffline, (err) => {
             assert.exists(err);

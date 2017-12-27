@@ -20,16 +20,9 @@ const { Providers } = adone.private(dht);
 describe("Providers", () => {
     let infos;
 
-    before(function (done) {
+    before(function () {
         this.timeout(10 * 1000);
-        util.makePeers(3, (err, peers) => {
-            if (err) {
-                return done(err);
-            }
-
-            infos = peers;
-            done();
-        });
+        infos = util.makePeers(3);
     });
 
     it("simple add and get of providers", (done) => {
@@ -41,8 +34,6 @@ describe("Providers", () => {
             (cb) => providers.addProvider(cid, infos[0].id, cb),
             (cb) => providers.addProvider(cid, infos[1].id, cb)
         ], (err) => {
-            
-            
             providers.getProviders(cid, (err, provs) => {
                 assert.notExists(err);
                 expect(provs).to.be.eql([infos[0].id, infos[1].id]);
@@ -58,7 +49,9 @@ describe("Providers", () => {
         waterfall([
             (cb) => map(
                 range(100),
-                (i, cb) => multi.hash.async(Buffer.from(`hello ${i}`), "sha2-256", cb),
+                (i, cb) => {
+                    cb(null, multi.hash.create(Buffer.from(`hello ${i}`), "sha2-256"));
+                },
                 cb
             ),
             (hashes, cb) => {
@@ -121,39 +114,31 @@ describe("Providers", () => {
         const providers = new Providers(store, infos[2].id, 10);
 
         console.log("starting");
-        waterfall([
-            (cb) => parallel([
-                (cb) => util.makeValues(100, cb),
-                (cb) => util.makePeers(600, cb)
-            ], cb),
-            (res, cb) => {
-                console.log("got values and peers");
-                const values = res[0];
-                const peers = res[1];
-                const total = Date.now();
-                eachSeries(values, (v, cb) => {
-                    eachSeries(peers, (p, cb) => {
-                        providers.addProvider(v.cid, p.id, cb);
-                    }, cb);
-                }, (err) => {
-                    console.log("addProvider %s peers %s cids in %sms", peers.length, values.length, Date.now() - total);
-                    assert.notExists(err);
-                    console.log("starting profile with %s peers and %s cids", peers.length, values.length);
-                    timesSeries(3, (i, cb) => {
-                        const start = Date.now();
-                        each(values, (v, cb) => {
-                            providers.getProviders(v.cid, cb);
-                        }, (err) => {
-                            assert.notExists(err);
-                            console.log("query %sms", (Date.now() - start));
-                            cb();
-                        });
-                    }, cb);
-                });
-            }
-        ], (err) => {
+        const peers = util.makePeers(600);
+        const values = util.makeValues(100);
+        console.log("got values and peers");
+        const total = Date.now();
+        eachSeries(values, (v, cb) => {
+            eachSeries(peers, (p, cb) => {
+                providers.addProvider(v.cid, p.id, cb);
+            }, cb);
+        }, (err) => {
+            console.log("addProvider %s peers %s cids in %sms", peers.length, values.length, Date.now() - total);
             assert.notExists(err);
-            store.close(done);
+            console.log("starting profile with %s peers and %s cids", peers.length, values.length);
+            timesSeries(3, (i, cb) => {
+                const start = Date.now();
+                each(values, (v, cb) => {
+                    providers.getProviders(v.cid, cb);
+                }, (err) => {
+                    assert.notExists(err);
+                    console.log("query %sms", (Date.now() - start));
+                    cb();
+                });
+            }, () => {
+                store.close(done);
+            });
         });
+
     });
 });

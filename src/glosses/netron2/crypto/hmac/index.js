@@ -4,19 +4,13 @@ const lengths = {
     SHA512: 64
 };
 
-exports.create = function (hash, secret, callback) {
-    const res = {
-        digest(data, cb) {
+exports.create = function (hash, secret) {
+    return {
+        digest(data) {
             const hmac = adone.std.crypto.createHmac(hash.toLowerCase(), secret);
-
             hmac.update(data);
-
-            setImmediate(() => {
-                cb(null, hmac.digest());
-            });
+            return hmac.digest();
         },
         length: lengths[hash]
     };
-
-    callback(null, res);
 };

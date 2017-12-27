@@ -24,34 +24,22 @@ describe("netron2", "swarm", () => {
         let peerB;
         let dialPeers;
 
-        before((done) => {
-            utils.createInfos(5, (err, infos) => {
-                if (err) {
-                    return done(err);
-                }
-                peerA = infos[0];
-                peerB = infos[1];
-                dialPeers = infos.slice(2);
+        before(() => {
+            const infos = utils.createInfos(5);
+            peerA = infos[0];
+            peerB = infos[1];
+            dialPeers = infos.slice(2);
 
-                peerA.multiaddrs.add("/ip4/127.0.0.1/tcp/9888");
-                peerB.multiaddrs.add("/ip4/127.0.0.1/tcp/9999");
-                swarmA = new Swarm(peerA, new PeerBook());
-                swarmB = new Swarm(peerB, new PeerBook());
-                done();
-            });
+            peerA.multiaddrs.add("/ip4/127.0.0.1/tcp/9888");
+            peerB.multiaddrs.add("/ip4/127.0.0.1/tcp/9999");
+            swarmA = new Swarm(peerA, new PeerBook());
+            swarmB = new Swarm(peerB, new PeerBook());
         });
 
         let peer;
-        beforeEach(function (done) {
+        beforeEach(function () {
             this.timeout(20000); // hook fails with timeout for a number of tests
-            PeerInfo.create((err, info) => {
-                if (err) {
-                    return done(err);
-                }
-
-                peer = info;
-                done();
-            });
+            peer = PeerInfo.create();
         });
 
         it(".transport.add", (done) => {
@@ -66,10 +54,7 @@ describe("netron2", "swarm", () => {
 
         it(".transport.listen", (done) => {
             let count = 0;
-            swarmA.transport.listen("tcp", {}, (conn) => pull(conn, conn), ready);
-            swarmB.transport.listen("tcp", {}, (conn) => pull(conn, conn), ready);
-
-            function ready() {
+            const ready = function () {
                 if (++count === 2) {
                     expect(peerA.multiaddrs.size).to.equal(1);
                     expect(peerA.multiaddrs.has("/ip4/127.0.0.1/tcp/9888")).to.equal(true);
@@ -78,7 +63,9 @@ describe("netron2", "swarm", () => {
                     expect(peerB.multiaddrs.has("/ip4/127.0.0.1/tcp/9999")).to.equal(true);
                     done();
                 }
-            }
+            };
+            swarmA.transport.listen("tcp", {}, (conn) => pull(conn, conn), ready);
+            swarmB.transport.listen("tcp", {}, (conn) => pull(conn, conn), ready);
         });
 
         it(".transport.dial to a multiaddr", (done) => {
@@ -136,69 +123,64 @@ describe("netron2", "swarm", () => {
 
         it("support port 0", (done) => {
             const ma = "/ip4/127.0.0.1/tcp/0";
-            let swarm;
             peer.multiaddrs.add(ma);
 
-            swarm = new Swarm(peer, new PeerBook());
+            const swarm = new Swarm(peer, new PeerBook());
 
             swarm.transport.add("tcp", new TCP());
-            swarm.transport.listen("tcp", {}, (conn) => pull(conn, conn), ready);
-
-            function ready() {
+            const ready = function () {
                 expect(peer.multiaddrs.size).to.equal(1);
                 // should not have /tcp/0 anymore
                 expect(peer.multiaddrs.has(ma)).to.equal(false);
                 swarm.close(done);
-            }
+            };
+            swarm.transport.listen("tcp", {}, (conn) => pull(conn, conn), ready);
         });
 
         it("support addr /ip4/0.0.0.0/tcp/9050", (done) => {
             const ma = "/ip4/0.0.0.0/tcp/9050";
-            let swarm;
             peer.multiaddrs.add(ma);
-            swarm = new Swarm(peer, new PeerBook());
+            const swarm = new Swarm(peer, new PeerBook());
             swarm.transport.add("tcp", new TCP());
-            swarm.transport.listen("tcp", {}, (conn) => pull(conn, conn), ready);
-
-            function ready() {
+            const ready = function () {
                 expect(peer.multiaddrs.size >= 1).to.equal(true);
                 expect(peer.multiaddrs.has(ma)).to.equal(false);
                 swarm.close(done);
-            }
+            };
+            swarm.transport.listen("tcp", {}, (conn) => pull(conn, conn), ready);
         });
 
         it("support addr /ip4/0.0.0.0/tcp/0", (done) => {
             const ma = "/ip4/0.0.0.0/tcp/0";
-            let swarm;
             peer.multiaddrs.add(ma);
 
-            swarm = new Swarm(peer, new PeerBook());
+            const swarm = new Swarm(peer, new PeerBook());
             swarm.transport.add("tcp", new TCP());
-            swarm.transport.listen("tcp", {}, (conn) => pull(conn, conn), ready);
-
-            function ready() {
+            const ready = function () {
                 expect(peer.multiaddrs.size >= 1).to.equal(true);
                 expect(peer.multiaddrs.has(ma)).to.equal(false);
                 swarm.close(done);
-            }
+            };
+            swarm.transport.listen("tcp", {}, (conn) => pull(conn, conn), ready);
         });
 
         it("listen in several addrs", function (done) {
             this.timeout(12000);
 
-            let swarm;
             peer.multiaddrs.add("/ip4/127.0.0.1/tcp/9001");
             peer.multiaddrs.add("/ip4/127.0.0.1/tcp/9002");
             peer.multiaddrs.add("/ip4/127.0.0.1/tcp/9003");
 
-            swarm = new Swarm(peer, new PeerBook());
+            const swarm = new Swarm(peer, new PeerBook());
             swarm.transport.add("tcp", new TCP());
-            swarm.transport.listen("tcp", {}, (conn) => pull(conn, conn), ready);
 
-            function ready() {
+            const ready = function () {
                 expect(peer.multiaddrs.size).to.equal(3);
                 swarm.close(done);
-            }
+            };
+            swarm.transport.listen("tcp", {}, (conn) => pull(conn, conn), ready);
+
+
         });
 
         it("handles EADDRINUSE error when trying to listen", (done) => {
@@ -212,14 +194,14 @@ describe("netron2", "swarm", () => {
 
                 swarm2 = new Swarm(peerB, new PeerBook());
                 swarm2.transport.add("tcp", new TCP());
+
+                const ready = function (err) {
+                    assert.exists(err);
+                    expect(err.code).to.equal("EADDRINUSE");
+                    swarm1.close(() => swarm2.close(done));
+                };
                 swarm2.transport.listen("tcp", {}, (conn) => pull(conn, conn), ready);
             });
-
-            function ready(err) {
-                assert.exists(err);
-                expect(err.code).to.equal("EADDRINUSE");
-                swarm1.close(() => swarm2.close(done));
-            }
         });
     });
 
@@ -230,22 +212,17 @@ describe("netron2", "swarm", () => {
         let peerB;
         let dialPeers;
 
-        before((done) => {
-            utils.createInfos(5, (err, infos) => {
-                if (err) {
-                    return done(err);
-                }
-                peerA = infos[0];
-                peerB = infos[1];
-                dialPeers = infos.slice(2);
+        before(() => {
+            const infos = utils.createInfos(5);
+            peerA = infos[0];
+            peerB = infos[1];
+            dialPeers = infos.slice(2);
 
-                peerA.multiaddrs.add("/ip4/127.0.0.1/tcp/9888/ws");
-                peerB.multiaddrs.add("/ip4/127.0.0.1/tcp/9999/ws/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC");
+            peerA.multiaddrs.add("/ip4/127.0.0.1/tcp/9888/ws");
+            peerB.multiaddrs.add("/ip4/127.0.0.1/tcp/9999/ws/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC");
 
-                swarmA = new Swarm(peerA, new PeerBook());
-                swarmB = new Swarm(peerB, new PeerBook());
-                done();
-            });
+            swarmA = new Swarm(peerA, new PeerBook());
+            swarmB = new Swarm(peerB, new PeerBook());
         });
 
         it("add", (done) => {
@@ -335,32 +312,25 @@ describe("netron2", "swarm", () => {
         let peerC; // just a peer
         let dialSpyA;
 
-        before((done) => {
-            utils.createInfos(3, (err, infos) => {
-                if (err) {
-                    return done(err);
-                }
+        before(() => {
+            const infos = utils.createInfos(3);
+            peerA = infos[0];
+            peerB = infos[1];
+            peerC = infos[2];
 
-                peerA = infos[0];
-                peerB = infos[1];
-                peerC = infos[2];
+            peerA.multiaddrs.add("/ip4/127.0.0.1/tcp/9001");
+            peerB.multiaddrs.add("/ip4/127.0.0.1/tcp/9002/ws");
 
-                peerA.multiaddrs.add("/ip4/127.0.0.1/tcp/9001");
-                peerB.multiaddrs.add("/ip4/127.0.0.1/tcp/9002/ws");
+            swarmA = new Swarm(peerA, new PeerBook());
+            swarmB = new Swarm(peerB, new PeerBook());
+            swarmC = new Swarm(peerC, new PeerBook());
 
-                swarmA = new Swarm(peerA, new PeerBook());
-                swarmB = new Swarm(peerB, new PeerBook());
-                swarmC = new Swarm(peerC, new PeerBook());
+            swarmA.transport.add("tcp", new TCP());
+            swarmA.transport.add("WebSockets", new WS());
 
-                swarmA.transport.add("tcp", new TCP());
-                swarmA.transport.add("WebSockets", new WS());
+            swarmB.transport.add("WebSockets", new WS());
 
-                swarmB.transport.add("WebSockets", new WS());
-
-                dialSpyA = spy(swarmA.transport, "dial");
-
-                done();
-            });
+            dialSpyA = spy(swarmA.transport, "dial");
         });
 
         after((done) => {
@@ -455,26 +425,20 @@ describe("netron2", "swarm", () => {
         let swarmE; // ws
         let peerE;
 
-        before((done) => {
-            utils.createInfos(5, (err, infos) => {
-                if (err) {
-                    return done(err);
-                }
+        before(() => {
+            const infos = utils.createInfos(5);
 
-                peerA = infos[0];
-                peerB = infos[1];
-                peerC = infos[2];
-                peerD = infos[3];
-                peerE = infos[4];
+            peerA = infos[0];
+            peerB = infos[1];
+            peerC = infos[2];
+            peerD = infos[3];
+            peerE = infos[4];
 
-                swarmA = new Swarm(peerA, new PeerBook());
-                swarmB = new Swarm(peerB, new PeerBook());
-                swarmC = new Swarm(peerC, new PeerBook());
-                swarmD = new Swarm(peerD, new PeerBook());
-                swarmE = new Swarm(peerE, new PeerBook());
-
-                done();
-            });
+            swarmA = new Swarm(peerA, new PeerBook());
+            swarmB = new Swarm(peerB, new PeerBook());
+            swarmC = new Swarm(peerC, new PeerBook());
+            swarmD = new Swarm(peerD, new PeerBook());
+            swarmE = new Swarm(peerE, new PeerBook());
         });
 
         after(function (done) {
@@ -502,7 +466,7 @@ describe("netron2", "swarm", () => {
             ], done);
         });
 
-        it.skip("add utp", (done) => { });
+        it.skip("add utp", () => { });
 
         it("add websockets", (done) => {
             peerB.multiaddrs.add("/ip4/127.0.0.1/tcp/9012/ws");
@@ -629,7 +593,7 @@ describe("netron2", "swarm", () => {
         it("dial from tcp+ws to tcp+ws", (done) => {
             let i = 0;
 
-            function check(err) {
+            const check = function (err) {
                 if (err) {
                     return done(err);
                 }
@@ -637,7 +601,7 @@ describe("netron2", "swarm", () => {
                 if (i++ === 2) {
                     done();
                 }
-            }
+            };
 
             swarmC.handle("/mamao/1.0.0", (protocol, conn) => {
                 conn.getPeerInfo((err, peerInfo) => {
@@ -708,28 +672,24 @@ describe("netron2", "swarm", () => {
         let peerB;
 
         before((done) => {
-            utils.createInfos(2, (err, infos) => {
-                if (err) {
-                    return done(err);
-                }
+            const infos = utils.createInfos(2);
 
-                peerA = infos[0];
-                peerB = infos[1];
+            peerA = infos[0];
+            peerB = infos[1];
 
-                peerA.multiaddrs.add("/ip4/127.0.0.1/tcp/9001");
-                peerB.multiaddrs.add("/ip4/127.0.0.1/tcp/9002/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC");
+            peerA.multiaddrs.add("/ip4/127.0.0.1/tcp/9001");
+            peerB.multiaddrs.add("/ip4/127.0.0.1/tcp/9002/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC");
 
-                swarmA = new Swarm(peerA, new PeerBook());
-                swarmB = new Swarm(peerB, new PeerBook());
+            swarmA = new Swarm(peerA, new PeerBook());
+            swarmB = new Swarm(peerB, new PeerBook());
 
-                swarmA.transport.add("tcp", new TCP());
-                swarmB.transport.add("tcp", new TCP());
+            swarmA.transport.add("tcp", new TCP());
+            swarmB.transport.add("tcp", new TCP());
 
-                parallel([
-                    (cb) => swarmA.transport.listen("tcp", {}, null, cb),
-                    (cb) => swarmB.transport.listen("tcp", {}, null, cb)
-                ], done);
-            });
+            parallel([
+                (cb) => swarmA.transport.listen("tcp", {}, null, cb),
+                (cb) => swarmB.transport.listen("tcp", {}, null, cb)
+            ], done);
         });
 
         after((done) => {
@@ -803,33 +763,29 @@ describe("netron2", "swarm", () => {
         let peerC;
 
         before((done) => {
-            utils.createInfos(3, (err, infos) => {
-                if (err) {
-                    return done(err);
-                }
+            const infos = utils.createInfos(3);
 
-                peerA = infos[0];
-                peerB = infos[1];
-                peerC = infos[2];
+            peerA = infos[0];
+            peerB = infos[1];
+            peerC = infos[2];
 
-                peerA.multiaddrs.add("/ip4/127.0.0.1/tcp/9001");
-                peerB.multiaddrs.add("/ip4/127.0.0.1/tcp/9002");
-                peerC.multiaddrs.add("/ip4/127.0.0.1/tcp/9003");
+            peerA.multiaddrs.add("/ip4/127.0.0.1/tcp/9001");
+            peerB.multiaddrs.add("/ip4/127.0.0.1/tcp/9002");
+            peerC.multiaddrs.add("/ip4/127.0.0.1/tcp/9003");
 
-                swarmA = new Swarm(peerA, new PeerBook());
-                swarmB = new Swarm(peerB, new PeerBook());
-                swarmC = new Swarm(peerC, new PeerBook());
+            swarmA = new Swarm(peerA, new PeerBook());
+            swarmB = new Swarm(peerB, new PeerBook());
+            swarmC = new Swarm(peerC, new PeerBook());
 
-                swarmA.transport.add("tcp", new TCP());
-                swarmB.transport.add("tcp", new TCP());
-                swarmC.transport.add("tcp", new TCP());
+            swarmA.transport.add("tcp", new TCP());
+            swarmB.transport.add("tcp", new TCP());
+            swarmC.transport.add("tcp", new TCP());
 
-                parallel([
-                    (cb) => swarmA.transport.listen("tcp", {}, null, cb),
-                    (cb) => swarmB.transport.listen("tcp", {}, null, cb),
-                    (cb) => swarmC.transport.listen("tcp", {}, null, cb)
-                ], done);
-            });
+            parallel([
+                (cb) => swarmA.transport.listen("tcp", {}, null, cb),
+                (cb) => swarmB.transport.listen("tcp", {}, null, cb),
+                (cb) => swarmC.transport.listen("tcp", {}, null, cb)
+            ], done);
         });
 
         after((done) => {
@@ -922,37 +878,32 @@ describe("netron2", "swarm", () => {
         let peerC;
 
         before((done) => {
-            utils.createInfos(3, (err, infos) => {
-                if (err) {
-                    return done(err);
-                }
+            const infos = utils.createInfos(3);
+            peerA = infos[0];
+            peerB = infos[1];
+            peerC = infos[2];
 
-                peerA = infos[0];
-                peerB = infos[1];
-                peerC = infos[2];
+            peerA.multiaddrs.add("/ip4/127.0.0.1/tcp/9001");
+            peerB.multiaddrs.add("/ip4/127.0.0.1/tcp/9002");
+            peerC.multiaddrs.add("/ip4/127.0.0.1/tcp/9003");
 
-                peerA.multiaddrs.add("/ip4/127.0.0.1/tcp/9001");
-                peerB.multiaddrs.add("/ip4/127.0.0.1/tcp/9002");
-                peerC.multiaddrs.add("/ip4/127.0.0.1/tcp/9003");
+            swarmA = new Swarm(peerA, new PeerBook());
+            swarmB = new Swarm(peerB, new PeerBook());
+            swarmC = new Swarm(peerC, new PeerBook());
 
-                swarmA = new Swarm(peerA, new PeerBook());
-                swarmB = new Swarm(peerB, new PeerBook());
-                swarmC = new Swarm(peerC, new PeerBook());
+            swarmA.connection.crypto(secio.tag, secio.encrypt);
+            swarmB.connection.crypto(secio.tag, secio.encrypt);
+            swarmC.connection.crypto(secio.tag, secio.encrypt);
 
-                swarmA.connection.crypto(secio.tag, secio.encrypt);
-                swarmB.connection.crypto(secio.tag, secio.encrypt);
-                swarmC.connection.crypto(secio.tag, secio.encrypt);
+            swarmA.transport.add("tcp", new TCP());
+            swarmB.transport.add("tcp", new TCP());
+            swarmC.transport.add("tcp", new TCP());
 
-                swarmA.transport.add("tcp", new TCP());
-                swarmB.transport.add("tcp", new TCP());
-                swarmC.transport.add("tcp", new TCP());
-
-                parallel([
-                    (cb) => swarmA.transport.listen("tcp", {}, null, cb),
-                    (cb) => swarmB.transport.listen("tcp", {}, null, cb),
-                    (cb) => swarmC.transport.listen("tcp", {}, null, cb)
-                ], done);
-            });
+            parallel([
+                (cb) => swarmA.transport.listen("tcp", {}, null, cb),
+                (cb) => swarmB.transport.listen("tcp", {}, null, cb),
+                (cb) => swarmC.transport.listen("tcp", {}, null, cb)
+            ], done);
         });
 
         after(function (done) {
@@ -1041,38 +992,33 @@ describe("netron2", "swarm", () => {
         let peerD;
 
         before((done) => {
-            utils.createInfos(4, (err, infos) => {
-                if (err) {
-                    return done(err);
-                }
+            const infos = utils.createInfos(4);
+            peerA = infos[0];
+            peerB = infos[1];
+            peerC = infos[2];
+            peerD = infos[3];
 
-                peerA = infos[0];
-                peerB = infos[1];
-                peerC = infos[2];
-                peerD = infos[3];
+            peerA.multiaddrs.add("/ip4/127.0.0.1/tcp/9001");
+            peerB.multiaddrs.add("/ip4/127.0.0.1/tcp/9002");
+            peerC.multiaddrs.add("/ip4/127.0.0.1/tcp/9003");
+            peerD.multiaddrs.add("/ip4/127.0.0.1/tcp/9004");
 
-                peerA.multiaddrs.add("/ip4/127.0.0.1/tcp/9001");
-                peerB.multiaddrs.add("/ip4/127.0.0.1/tcp/9002");
-                peerC.multiaddrs.add("/ip4/127.0.0.1/tcp/9003");
-                peerD.multiaddrs.add("/ip4/127.0.0.1/tcp/9004");
+            swarmA = new Swarm(peerA, new PeerBook());
+            swarmB = new Swarm(peerB, new PeerBook());
+            swarmC = new Swarm(peerC, new PeerBook());
+            swarmD = new Swarm(peerD, new PeerBook());
 
-                swarmA = new Swarm(peerA, new PeerBook());
-                swarmB = new Swarm(peerB, new PeerBook());
-                swarmC = new Swarm(peerC, new PeerBook());
-                swarmD = new Swarm(peerD, new PeerBook());
+            swarmA.transport.add("tcp", new TCP());
+            swarmB.transport.add("tcp", new TCP());
+            swarmC.transport.add("tcp", new TCP());
+            swarmD.transport.add("tcp", new TCP());
 
-                swarmA.transport.add("tcp", new TCP());
-                swarmB.transport.add("tcp", new TCP());
-                swarmC.transport.add("tcp", new TCP());
-                swarmD.transport.add("tcp", new TCP());
-
-                parallel([
-                    (cb) => swarmA.transport.listen("tcp", {}, null, cb),
-                    (cb) => swarmB.transport.listen("tcp", {}, null, cb),
-                    (cb) => swarmC.transport.listen("tcp", {}, null, cb),
-                    (cb) => swarmD.transport.listen("tcp", {}, null, cb)
-                ], done);
-            });
+            parallel([
+                (cb) => swarmA.transport.listen("tcp", {}, null, cb),
+                (cb) => swarmB.transport.listen("tcp", {}, null, cb),
+                (cb) => swarmC.transport.listen("tcp", {}, null, cb),
+                (cb) => swarmD.transport.listen("tcp", {}, null, cb)
+            ], done);
         });
 
         after((done) => {
@@ -1197,19 +1143,14 @@ describe("netron2", "swarm", () => {
         // TODO: create a similar version, but that spawns a swarm in a
         // different proc
         it.skip("blow up a socket, with WebSockets", (done) => {
-            let swarmE;
-            let peerE;
-            let swarmF;
-            let peerF;
-
-            peerE = new PeerInfo();
-            peerF = new PeerInfo();
+            const peerE = new PeerInfo();
+            const peerF = new PeerInfo();
 
             peerE.multiaddrs.add("/ip4/127.0.0.1/tcp/9110/ws");
             peerF.multiaddrs.add("/ip4/127.0.0.1/tcp/9120/ws");
 
-            swarmE = new Swarm(peerE, new PeerBook());
-            swarmF = new Swarm(peerF, new PeerBook());
+            const swarmE = new Swarm(peerE, new PeerBook());
+            const swarmF = new Swarm(peerF, new PeerBook());
 
             swarmE.transport.add("ws", new WS());
             swarmF.transport.add("ws", new WS());
@@ -1219,12 +1160,14 @@ describe("netron2", "swarm", () => {
             swarmE.connection.reuse();
             swarmF.connection.reuse();
 
-            parallel([
-                (cb) => swarmE.transport.listen("ws", {}, null, cb),
-                (cb) => swarmF.transport.listen("ws", {}, null, cb)
-            ], next);
+            const close = function () {
+                parallel([
+                    (cb) => swarmE.close(cb),
+                    (cb) => swarmF.close(cb)
+                ], done);
+            };
 
-            function next() {
+            const next = function () {
                 let count = 0;
                 const destroyed = () => ++count === 2 ? close() : null;
 
@@ -1247,14 +1190,12 @@ describe("netron2", "swarm", () => {
                         swarmF.muxedConns[peerE.id.toB58String()].conn
                     );
                 });
-            }
+            };
 
-            function close() {
-                parallel([
-                    (cb) => swarmE.close(cb),
-                    (cb) => swarmF.close(cb)
-                ], done);
-            }
+            parallel([
+                (cb) => swarmE.transport.listen("ws", {}, null, cb),
+                (cb) => swarmF.transport.listen("ws", {}, null, cb)
+            ], next);
         });
 
         it("close one end, make sure the other does not blow", (done) => {
@@ -1271,19 +1212,14 @@ describe("netron2", "swarm", () => {
     describe("netron2", "Swarm", "LimitDialer", () => {
         let peers;
 
-        before((done) => {
-            utils.createInfos(5, (err, infos) => {
-                if (err) {
-                    return done(err);
-                }
-                peers = infos;
+        before(() => {
+            const infos = utils.createInfos(5);
+            peers = infos;
 
-                peers.forEach((peer, i) => {
-                    peer.multiaddrs.add(multi.address.create(`/ip4/191.0.0.1/tcp/123${i}`));
-                    peer.multiaddrs.add(multi.address.create(`/ip4/192.168.0.1/tcp/923${i}`));
-                    peer.multiaddrs.add(multi.address.create(`/ip4/193.168.0.99/tcp/923${i}`));
-                });
-                done();
+            peers.forEach((peer, i) => {
+                peer.multiaddrs.add(multi.address.create(`/ip4/191.0.0.1/tcp/123${i}`));
+                peer.multiaddrs.add(multi.address.create(`/ip4/192.168.0.1/tcp/923${i}`));
+                peer.multiaddrs.add(multi.address.create(`/ip4/193.168.0.99/tcp/923${i}`));
             });
         });
 

@@ -14,7 +14,7 @@ const dates = [[
     "2012-02-25T10:10:10.10000000Z"
 ]];
 
-describe("utils", () => {
+describe("netron2", "record", "utils", () => {
     it("toRFC3339", () => {
         dates.forEach((c) => {
             expect(utils.toRFC3339(c[0])).to.be.eql(c[1]);
@@ -29,16 +29,8 @@ describe("utils", () => {
 
     it("to and from RFC3339", () => {
         dates.forEach((c) => {
-            expect(
-                utils.parseRFC3339(utils.toRFC3339(c[0]))
-            ).to.be.eql(
-                c[0]
-                );
-            expect(
-                utils.toRFC3339(utils.parseRFC3339(c[1]))
-            ).to.be.eql(
-                c[1]
-                );
+            expect(utils.parseRFC3339(utils.toRFC3339(c[0]))).to.be.eql(c[0]);
+            expect(utils.toRFC3339(utils.parseRFC3339(c[1]))).to.be.eql(c[1]);
         });
     });
 });

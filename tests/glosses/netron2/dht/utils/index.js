@@ -1,7 +1,5 @@
-const times = require("async/times");
 const each = require("async/each");
 const series = require("async/series");
-const waterfall = require("async/waterfall");
 
 const {
     multi,
@@ -10,23 +8,21 @@ const {
 const { KadDHT } = dht;
 
 // Creates multiple PeerInfos
-exports.makePeers = (n, callback) => {
-    times(n, (i, cb) => PeerId.create({ bits: 1024 }, cb), (err, ids) => {
-        if (err) {
-            return callback(err);
-        }
-        callback(null, ids.map((i) => new PeerInfo(i)));
-    });
+exports.makePeers = (n) => {
+    const ids = [];
+    for (let i = 0; i < n; i++) {
+        ids.push(new PeerInfo(PeerId.create({ bits: 1024 })));
+    }
+
+    return ids;
 };
 
 // TODO break this setupDHT to be a self contained thing.
 let nodes = [];
 
 exports.setupDHT = (callback) => {
-    exports.makePeers(1, (err, peers) => {
-        if (err) {
-            return callback(err);
-        }
+    try {
+        const peers = exports.makePeers(1);
 
         const p = peers[0];
         p.multiaddrs.add("/ip4/0.0.0.0/tcp/0");
@@ -39,8 +35,7 @@ exports.setupDHT = (callback) => {
         const dht = new KadDHT(swarm);
 
         dht.validators.v = {
-            func(key, publicKey, callback) {
-                setImmediate(callback);
+            func(key, publicKey) {
             },
             sign: false
         };
@@ -57,7 +52,9 @@ exports.setupDHT = (callback) => {
             nodes.push(dht);
             callback(null, dht);
         });
-    });
+    } catch (err) {
+        return callback(err);
+    }
 };
 
 exports.teardown = (callback) => {
@@ -72,13 +69,12 @@ exports.teardown = (callback) => {
     });
 };
 
-exports.makeValues = (n, callback) => {
-    times(n, (i, cb) => {
+exports.makeValues = (n) => {
+    const values = [];
+    for (let i = 0; i < n; i++) {
         const bytes = crypto.randomBytes(32);
-
-        waterfall([
-            (cb) => multi.hash.async(bytes, "sha2-256", cb),
-            (h, cb) => cb(null, { cid: new CID(h), value: bytes })
-        ], cb);
-    }, callback);
+        const h = multi.hash.create(bytes, "sha2-256");
+        values.push({ cid: new CID(h), value: bytes });
+    }
+    return values;
 };

@@ -6,6 +6,8 @@ const {
     multi
 } = adone;
 
+const fixtures = require("./fixtures/async_encodes");
+
 const sample = (code, size, hex) => {
     return Buffer.concat([
         Buffer.from([code, size]),
@@ -205,5 +207,31 @@ describe("multi", "hash", () => {
             assert.true(Object.isFrozen(multi.hash.codes));
             assert.true(Object.isFrozen(multi.hash.defaultLengths));
         });
+    });
+
+
+    fixtures.forEach((fixture) => {
+        const raw = fixture[0];
+        const func = fixture[1];
+        const encoded = fixture[2];
+
+        it(`encodes in ${func}`, () => {
+            const digest = multi.hash.create(Buffer.from(raw), func);
+            assert.deepEqual(digest.toString("hex"), encoded);
+        });
+    });
+
+    it("cuts the length", () => {
+        const buf = Buffer.from("beep boop");
+
+        const digest = multi.hash.create(buf, "sha2-256", 10);
+        assert.deepEqual(digest, Buffer.from("120a90ea688e275d58056732", "hex"));
+    });
+
+    it("digest only, without length", () => {
+        const buf = Buffer.from("beep boop");
+
+        const digest = multi.hash.digest(buf, "sha2-256");
+        assert.deepEqual(digest, Buffer.from("90ea688e275d580567325032492b597bc77221c62493e76330b85ddda191ef7c", "hex"));
     });
 });

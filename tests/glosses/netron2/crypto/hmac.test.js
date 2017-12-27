@@ -4,18 +4,12 @@ const {
 
 const hashes = ["SHA1", "SHA256", "SHA512"];
 
-describe("HMAC", () => {
+describe("netron2", "crypto", "HMAC", () => {
     hashes.forEach((hash) => {
-        it(`${hash} - sign and verify`, (done) => {
-            crypto.hmac.create(hash, Buffer.from("secret"), (err, hmac) => {
-                assert.notExists(err);
-
-                hmac.digest(Buffer.from("hello world"), (err, sig) => {
-                    assert.notExists(err);
-                    expect(sig).to.have.length(hmac.length);
-                    done();
-                });
-            });
+        it(`${hash} - sign and verify`, () => {
+            const hmac = crypto.hmac.create(hash, Buffer.from("secret"));
+            const sig = hmac.digest(Buffer.from("hello world"));
+            expect(sig).to.have.length(hmac.length);
         });
     });
 });

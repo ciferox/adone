@@ -12,12 +12,8 @@ describe("rpc - handlers - GetValue", () => {
     let peers;
     let dht;
 
-    before((done) => {
-        util.makePeers(2, (err, res) => {
-            assert.notExists(err);
-            peers = res;
-            done();
-        });
+    before(() => {
+        peers = util.makePeers(2);
     });
 
     afterEach((done) => util.teardown(done));
@@ -62,8 +58,8 @@ describe("rpc - handlers - GetValue", () => {
         const msg = new Message(T, key, 0);
         const other = peers[1];
 
+        dht._add(other);
         waterfall([
-            (cb) => dht._add(other, cb),
             (cb) => getValue(dht)(peers[0], msg, cb)
         ], (err, response) => {
             assert.notExists(err);
@@ -99,8 +95,8 @@ describe("rpc - handlers - GetValue", () => {
 
             const msg = new Message(T, key, 0);
 
+            dht._add(other);
             waterfall([
-                (cb) => dht._add(other, cb),
                 (cb) => getValue(dht)(peers[0], msg, cb)
             ], (err, response) => {
                 assert.notExists(err);

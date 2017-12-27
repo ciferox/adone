@@ -1,4 +1,3 @@
-const parallel = require("async/parallel");
 const fixtures = require("../fixtures/go-elliptic-key");
 
 const {
@@ -17,51 +16,36 @@ const secretLengths = {
     "P-521": 66
 };
 
-describe("generateEphemeralKeyPair", () => {
+describe("netron2", "crypto", "keys", "generateEphemeralKeyPair", () => {
     curves.forEach((curve) => {
-        it(`generate and shared key ${curve}`, (done) => {
-            parallel([
-                (cb) => crypto.keys.generateEphemeralKeyPair(curve, cb),
-                (cb) => crypto.keys.generateEphemeralKeyPair(curve, cb)
-            ], (err, keys) => {
-                assert.notExists(err);
-                expect(keys[0].key).to.have.length(lengths[curve]);
-                expect(keys[1].key).to.have.length(lengths[curve]);
+        it(`generate and shared key ${curve}`, () => {
+            const key0 = crypto.keys.generateEphemeralKeyPair(curve);
+            const key1 = crypto.keys.generateEphemeralKeyPair(curve);
 
-                keys[0].genSharedKey(keys[1].key, (err, shared) => {
-                    assert.notExists(err);
-                    expect(shared).to.have.length(secretLengths[curve]);
-                    done();
-                });
-            });
+            expect(key0.key).to.have.length(lengths[curve]);
+            expect(key1.key).to.have.length(lengths[curve]);
+
+            const shared = key0.genSharedKey(key1.key);
+            expect(shared).to.have.length(secretLengths[curve]);
         });
     });
 
     describe("go interop", () => {
-        it("generates a shared secret", (done) => {
+        it("generates a shared secret", () => {
             const curve = fixtures.curve;
 
-            parallel([
-                (cb) => crypto.keys.generateEphemeralKeyPair(curve, cb),
-                (cb) => crypto.keys.generateEphemeralKeyPair(curve, cb)
-            ], (err, res) => {
-                assert.notExists(err);
-                const alice = res[0];
-                const bob = res[1];
-                bob.key = fixtures.bob.public;
+            const res0 = crypto.keys.generateEphemeralKeyPair(curve);
+            const res1 = crypto.keys.generateEphemeralKeyPair(curve);
 
-                parallel([
-                    (cb) => alice.genSharedKey(bob.key, cb),
-                    (cb) => bob.genSharedKey(alice.key, fixtures.bob, cb)
-                ], (err, secrets) => {
-                    assert.notExists(err);
+            const alice = res0;
+            const bob = res1;
+            bob.key = fixtures.bob.public;
 
-                    expect(secrets[0]).to.eql(secrets[1]);
-                    expect(secrets[0]).to.have.length(32);
+            const secret0 = alice.genSharedKey(bob.key);
+            const secret1 = bob.genSharedKey(alice.key, fixtures.bob);
 
-                    done();
-                });
-            });
+            expect(secret0).to.eql(secret1);
+            expect(secret0).to.have.length(32);
         });
     });
 });

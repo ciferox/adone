@@ -7,79 +7,46 @@ const {
 
 const rsa = crypto.keys.supportedKeys.rsa;
 
-describe("RSA", function () {
+describe("netron2", "crypto", "keys", "RSA", function () {
     this.timeout(20 * 1000);
     let key;
 
-    before((done) => {
-        crypto.keys.generateKeyPair("RSA", 2048, (err, _key) => {
-            if (err) {
-                return done(err);
-            }
-            key = _key;
-            done();
-        });
+    before(() => {
+        key = crypto.keys.generateKeyPair("RSA", 2048);
     });
 
-    it("generates a valid key", (done) => {
+    it("generates a valid key", () => {
         expect(key).to.be.an.instanceof(rsa.RsaPrivateKey);
 
-        key.hash((err, digest) => {
-            if (err) {
-                return done(err);
-            }
-
-            expect(digest).to.have.length(34);
-            done();
-        });
+        const digest = key.hash();
+        expect(digest).to.have.length(34);
     });
 
-    it("signs", (done) => {
+    it("signs", () => {
         const text = key.genSecret();
-
-        key.sign(text, (err, sig) => {
-            if (err) {
-                return done(err);
-            }
-
-            key.public.verify(text, sig, (err, res) => {
-                if (err) {
-                    return done(err);
-                }
-
-                expect(res).to.be.eql(true);
-                done();
-            });
-        });
+        const sig = key.sign(text);
+        expect(key.public.verify(text, sig)).to.be.eql(true);
     });
 
-    it("encoding", (done) => {
+    it("encoding", () => {
         const keyMarshal = key.marshal();
-        rsa.unmarshalRsaPrivateKey(keyMarshal, (err, key2) => {
-            if (err) {
-                return done(err);
-            }
-            const keyMarshal2 = key2.marshal();
+        const key2 = rsa.unmarshalRsaPrivateKey(keyMarshal);
+        const keyMarshal2 = key2.marshal();
 
-            expect(keyMarshal).to.eql(keyMarshal2);
+        expect(keyMarshal).to.eql(keyMarshal2);
 
-            const pk = key.public;
-            const pkMarshal = pk.marshal();
-            const pk2 = rsa.unmarshalRsaPublicKey(pkMarshal);
-            const pkMarshal2 = pk2.marshal();
+        const pk = key.public;
+        const pkMarshal = pk.marshal();
+        const pk2 = rsa.unmarshalRsaPublicKey(pkMarshal);
+        const pkMarshal2 = pk2.marshal();
 
-            expect(pkMarshal).to.eql(pkMarshal2);
-            done();
-        });
+        expect(pkMarshal).to.eql(pkMarshal2);
     });
 
-    it("key id", (done) => {
-        key.id((err, id) => {
-            assert.notExists(err);
-            assert.exists(id);
-            expect(id).to.be.a("string");
-            done();
-        });
+    it("key id", () => {
+        const id = key.id();
+        assert.exists(id);
+        expect(id).to.be.a("string");
     });
 
     describe("key equals", () => {
@@ -89,90 +56,50 @@ describe("RSA", function () {
             expect(key.public.equals(key.public)).to.eql(true);
         });
 
-        it("not equals other key", (done) => {
-            crypto.keys.generateKeyPair("RSA", 2048, (err, key2) => {
-                if (err) {
-                    return done(err);
-                }
+        it("not equals other key", () => {
+            const key2 = crypto.keys.generateKeyPair("RSA", 2048);
 
-                expect(key.equals(key2)).to.eql(false);
-                expect(key2.equals(key)).to.eql(false);
-                expect(key.public.equals(key2.public)).to.eql(false);
-                expect(key2.public.equals(key.public)).to.eql(false);
-                done();
-            });
+            expect(key.equals(key2)).to.eql(false);
+            expect(key2.equals(key)).to.eql(false);
+            expect(key.public.equals(key2.public)).to.eql(false);
+            expect(key2.public.equals(key.public)).to.eql(false);
         });
     });
 
-    it("sign and verify", (done) => {
+    it("sign and verify", () => {
         const data = Buffer.from("hello world");
-        key.sign(data, (err, sig) => {
-            if (err) {
-                return done(err);
-            }
-
-            key.public.verify(data, sig, (err, valid) => {
-                if (err) {
-                    return done(err);
-                }
-                expect(valid).to.be.eql(true);
-                done();
-            });
-        });
+        const sig = key.sign(data);
+        const valid = key.public.verify(data, sig);
+        expect(valid).to.be.eql(true);
     });
 
-    it("fails to verify for different data", (done) => {
+    it("fails to verify for different data", () => {
         const data = Buffer.from("hello world");
-        key.sign(data, (err, sig) => {
-            if (err) {
-                return done(err);
-            }
-
-            key.public.verify(Buffer.from("hello"), sig, (err, valid) => {
-                if (err) {
-                    return done(err);
-                }
-                expect(valid).to.be.eql(false);
-                done();
-            });
-        });
+        const sig = key.sign(data);
+        const valid = key.public.verify(Buffer.from("hello"), sig);
+        expect(valid).to.be.eql(false);
     });
 
     describe("export and import", () => {
-        it("password protected PKCS #8", (done) => {
-            key.export("pkcs-8", "my secret", (err, pem) => {
-                assert.notExists(err);
-                assert.true(pem.startsWith("-----BEGIN ENCRYPTED PRIVATE KEY-----"));
-                crypto.keys.import(pem, "my secret", (err, clone) => {
-                    assert.notExists(err);
-                    assert.exists(clone);
-                    expect(key.equals(clone)).to.eql(true);
-                    done();
-                });
-            });
+        it("password protected PKCS #8", () => {
+            const pem = key.export("pkcs-8", "my secret");
+            assert.true(pem.startsWith("-----BEGIN ENCRYPTED PRIVATE KEY-----"));
+            const clone = crypto.keys.import(pem, "my secret");
+            assert.exists(clone);
+            expect(key.equals(clone)).to.eql(true);
         });
 
-        it("defaults to PKCS #8", (done) => {
-            key.export("another secret", (err, pem) => {
-                assert.notExists(err);
-                assert.true(pem.startsWith("-----BEGIN ENCRYPTED PRIVATE KEY-----"));
-                crypto.keys.import(pem, "another secret", (err, clone) => {
-                    assert.notExists(err);
-                    assert.exists(clone);
-                    expect(key.equals(clone)).to.eql(true);
-                    done();
-                });
-            });
+        it("defaults to PKCS #8", () => {
+            const pem = key.export("another secret");
+            assert.true(pem.startsWith("-----BEGIN ENCRYPTED PRIVATE KEY-----"));
+            const clone = crypto.keys.import(pem, "another secret");
+            assert.exists(clone);
+            expect(key.equals(clone)).to.eql(true);
         });
 
-        it("needs correct password", (done) => {
-            key.export("another secret", (err, pem) => {
-                assert.notExists(err);
-                crypto.keys.import(pem, "not the secret", (err, clone) => {
-                    assert.exists(err);
-                    done();
-                });
-            });
+        it("needs correct password", () => {
+            const pem = key.export("another secret");
+            assert.throws(() => crypto.keys.import(pem, "not the secret"));
         });
     });
 
@@ -183,22 +110,15 @@ describe("RSA", function () {
     });
 
     describe("go interop", () => {
-        it("verifies with data from go", (done) => {
+        it("verifies with data from go", () => {
             const key = crypto.keys.unmarshalPublicKey(fixtures.verify.publicKey);
-
-            key.verify(fixtures.verify.data, fixtures.verify.signature, (err, ok) => {
-                if (err) {
-                    throw err;
-                }
-                assert.notExists(err);
-                expect(ok).to.equal(true);
-                done();
-            });
+            const ok = key.verify(fixtures.verify.data, fixtures.verify.signature);
+            expect(ok).to.equal(true);
         });
     });
 
     describe("openssl interop", () => {
-        it("can read a private key", (done) => {
+        it("can read a private key", () => {
             /*
              * Generated with
              * openssl genpkey -algorithm RSA
@@ -246,19 +166,14 @@ gnjREs10u7zyqBIZH7KYVgyh27WxLr859ap8cKAH6Fb+UOPtZo3sUeeume60aebn
 4pMwXeXP+LO8NIfRXV8mgrm86g==
 -----END PRIVATE KEY-----
 `;
-            crypto.keys.import(pem, "", (err, key) => {
-                assert.notExists(err);
-                assert.exists(key);
-                key.id((err, id) => {
-                    assert.notExists(err);
-                    expect(id).to.equal("QmfWu2Xp8DZzCkZZzoPB9rcrq4R4RZid6AWE6kmrUAzuHy");
-                    done();
-                });
-            });
+            const key = crypto.keys.import(pem, "");
+            assert.exists(key);
+            const id = key.id();
+            expect(id).to.equal("QmfWu2Xp8DZzCkZZzoPB9rcrq4R4RZid6AWE6kmrUAzuHy");
         });
 
         // AssertionError: expected 'this only supports pkcs5PBES2' to not exist
-        it.skip("can read a private encrypted key (v1)", (done) => {
+        it.skip("can read a private encrypted key (v1)", () => {
             /*
              * Generated with
              * openssl genpkey -algorithm RSA
@@ -285,15 +200,12 @@ mBdkD5r+ixWF174naw53L8U9wF8kiK7pIE1N9TR4USEeovLwX6Ni/2MMDZedOfof
 0uxzo5Y=
 -----END ENCRYPTED PRIVATE KEY-----
 `;
-            crypto.keys.import(pem, "mypassword", (err, key) => {
-                assert.notExists(err);
-                assert.exists(key);
-                done();
-            });
+            const key = crypto.keys.import(pem, "mypassword");
+            assert.exists(key);
         });
 
         // AssertionError: expected 'this only supports TripleDES' to not exist
-        it.skip("can read a private encrypted key (v2 aes-256-cbc)", (done) => {
+        it.skip("can read a private encrypted key (v2 aes-256-cbc)", () => {
             /*
              * Generated with
              * openssl genpkey -algorithm RSA
@@ -321,14 +233,11 @@ mBUuWAZMpz7njBi7h+JDfmSW/GAaMwrVFC2gef5375R0TejAh+COAjItyoeYEvv8
 DQd8
 -----END ENCRYPTED PRIVATE KEY-----
 `;
-            crypto.keys.import(pem, "mypassword", (err, key) => {
-                assert.notExists(err);
-                assert.exists(key);
-                done();
-            });
+            const key = crypto.keys.import(pem, "mypassword");
+            assert.exists(key);
         });
 
-        it("can read a private encrypted key (v2 des3)", (done) => {
+        it("can read a private encrypted key (v2 des3)", () => {
             /*
              * Generated with
              * openssl genpkey -algorithm RSA
@@ -355,11 +264,8 @@ NT2TO3kSzXpQ5M2VjOoHPm2fqxD/js+ThDB3QLi4+C7HqakfiTY1lYzXl9/vayt6
 DUD29r9pYL9ErB9tYko2rat54EY7k7Ts6S5jf+8G7Zz234We1APhvqaG
 -----END ENCRYPTED PRIVATE KEY-----
 `;
-            crypto.keys.import(pem, "mypassword", (err, key) => {
-                assert.notExists(err);
-                assert.exists(key);
-                done();
-            });
+            const key = crypto.keys.import(pem, "mypassword");
+            assert.exists(key);
         });
     });
 });

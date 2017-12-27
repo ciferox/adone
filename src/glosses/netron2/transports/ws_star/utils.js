@@ -1,5 +1,3 @@
-const mafmt = require("mafmt");
-
 const {
     is,
     multi,
@@ -94,17 +92,13 @@ const Protocol = function (log) {
     };
 };
 
-const getIdAndValidate = function (pub, id, cb) {
-    PeerId.createFromPubKey(Buffer.from(pub, "hex"), (err, _id) => {
-        if (err) {
-            return cb(new Error("Crypto error"));
-        }
-        if (_id.toB58String() !== id) {
-            return cb(new Error("Id is not matching"));
-        }
+const getIdAndValidate = function (pub, id) {
+    const _id = PeerId.createFromPubKey(Buffer.from(pub, "hex"));
+    if (_id.toB58String() !== id) {
+        throw new Error("Id is not matching");
+    }
 
-        return cb(null, crypto.keys.unmarshalPublicKey(Buffer.from(pub, "hex")));
-    });
+    return crypto.keys.unmarshalPublicKey(Buffer.from(pub, "hex"));
 };
 
 exports = module.exports;
@@ -112,4 +106,4 @@ exports.cleanUrlSIO = cleanUrlSIO;
 exports.validate = validate;
 exports.Protocol = Protocol;
 exports.getIdAndValidate = getIdAndValidate;
-exports.validateMa = (ma) => mafmt.WebSocketStar.matches(multi.address.create(ma));
+exports.validateMa = (ma) => multi.address.validator.WebSocketStar.matches(multi.address.create(ma));

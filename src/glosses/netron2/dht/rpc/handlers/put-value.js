@@ -21,13 +21,8 @@ module.exports = (dht) => {
             log.error("Got empty record from: %s", peer.id.toB58String());
             return callback(new Error("Empty record"));
         }
-
-        dht._verifyRecordLocally(record, (err) => {
-            if (err) {
-                log.error(err.message);
-                return callback(err);
-            }
-
+        try {
+            dht._verifyRecordLocally(record);
             record.timeReceived = new Date();
 
             const key = utils.bufferToKey(record.key);
@@ -39,6 +34,9 @@ module.exports = (dht) => {
 
                 callback(null, msg);
             });
-        });
+        } catch (err) {
+            log.error(err.message);
+            return callback(err);
+        }
     };
 };

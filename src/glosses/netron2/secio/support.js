@@ -1,5 +1,3 @@
-const parallel = require("async/parallel");
-
 const {
     netron2: { crypto },
     stream: { pull },
@@ -48,70 +46,42 @@ exports.theBest = (order, p1, p2) => {
     throw new Error("No algorithms in common!");
 };
 
-const makeMac = function (hash, key, callback) {
-    crypto.hmac.create(hash, key, callback);
+const makeMac = function (hash, key) {
+    return crypto.hmac.create(hash, key);
 };
 
-const makeCipher = function (cipherType, iv, key, callback) {
+const makeCipher = function (cipherType, iv, key) {
     if (cipherType === "AES-128" || cipherType === "AES-256") {
-        return crypto.aes.create(key, iv, callback);
+        return crypto.aes.create(key, iv);
     }
 
     // TODO: figure out if Blowfish is needed and if so find a library for it.
-    callback(new Error(`unrecognized cipher type: ${cipherType}`));
+    throw new Error(`unrecognized cipher type: ${cipherType}`);
 };
 
-exports.makeMacAndCipher = (target, callback) => {
-    parallel([
-        (cb) => makeMac(target.hashT, target.keys.macKey, cb),
-        (cb) => makeCipher(target.cipherT, target.keys.iv, target.keys.cipherKey, cb)
-    ], (err, macAndCipher) => {
-        if (err) {
-            return callback(err);
-        }
-
-        target.mac = macAndCipher[0];
-        target.cipher = macAndCipher[1];
-        callback();
-    });
+exports.makeMacAndCipher = (target) => {
+    target.mac = makeMac(target.hashT, target.keys.macKey);
+    target.cipher = makeCipher(target.cipherT, target.keys.iv, target.keys.cipherKey);
 };
 
-exports.selectBest = (local, remote, cb) => {
-    exports.digest(Buffer.concat([
-        remote.pubKeyBytes,
-        local.nonce
-    ]), (err, oh1) => {
-        if (err) {
-            return cb(err);
-        }
+exports.selectBest = (local, remote) => {
+    const oh1 = exports.digest(Buffer.concat([remote.pubKeyBytes, local.nonce]));
+    const oh2 = exports.digest(Buffer.concat([local.pubKeyBytes, remote.nonce]));
+    const order = Buffer.compare(oh1, oh2);
 
-        exports.digest(Buffer.concat([
-            local.pubKeyBytes,
-            remote.nonce
-        ]), (err, oh2) => {
-            if (err) {
-                return cb(err);
-            }
+    if (order === 0) {
+        throw new Error("you are trying to talk to yourself");
+    }
 
-            const order = Buffer.compare(oh1, oh2);
-
-            if (order === 0) {
-                return cb(new Error("you are trying to talk to yourself"));
-            }
-
-            cb(null, {
-                curveT: exports.theBest(order, local.exchanges, remote.exchanges),
-                cipherT: exports.theBest(order, local.ciphers, remote.ciphers),
-                hashT: exports.theBest(order, local.hashes, remote.hashes),
-                order
-            });
-        });
-    });
+    return {
+        curveT: exports.theBest(order, local.exchanges, remote.exchanges),
+        cipherT: exports.theBest(order, local.ciphers, remote.ciphers),
+        hashT: exports.theBest(order, local.hashes, remote.hashes),
+        order
+    };
 };
 
-exports.digest = (buf, cb) => {
-    mh.digest(buf, "sha2-256", buf.length, cb);
-};
+exports.digest = (buf) => mh.digest(buf, "sha2-256", buf.length);
 
 exports.write = function write(state, msg, cb) {
     cb = cb || (() => { });

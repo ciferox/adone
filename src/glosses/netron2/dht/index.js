@@ -164,11 +164,9 @@ export class KadDHT {
      * @returns {void}
      */
     getClosestPeers(key, callback) {
-        this._log("getClosestPeers to %s", key.toString());
-        utils.convertBuffer(key, (err, id) => {
-            if (err) {
-                return callback(err);
-            }
+        try {
+            this._log("getClosestPeers to %s", key.toString());
+            const id = utils.convertBuffer(key);
 
             const tablePeers = this.routingTable.closestPeers(id, c.ALPHA);
 
@@ -197,7 +195,9 @@ export class KadDHT {
                     (sorted, cb) => cb(null, sorted.slice(0, c.K))
                 ], callback);
             });
-        });
+        } catch (err) {
+            return callback(err);
+        }
     }
 
     /**
@@ -217,9 +217,9 @@ export class KadDHT {
             return callback(err);
         }
 
+        const rec = utils.createPutRecord(key, value, this.peerInfo.id, sign);
         waterfall([
-            (cb) => utils.createPutRecord(key, value, this.peerInfo.id, sign, cb),
-            (rec, cb) => waterfall([
+            (cb) => waterfall([
                 (cb) => this._putLocal(key, rec, cb),
                 (cb) => this.getClosestPeers(key, cb),
                 (peers, cb) => each(peers, (peer, cb) => {
@@ -287,9 +287,9 @@ export class KadDHT {
                 return callback(null, vals);
             }
 
+            const id = utils.convertBuffer(key);
             waterfall([
-                (cb) => utils.convertBuffer(key, cb),
-                (id, cb) => {
+                (cb) => {
                     const rtp = this.routingTable.closestPeers(id, c.ALPHA);
                     this._log("peers in rt: %d", rtp.length);
                     if (rtp.length === 0) {
@@ -449,10 +449,8 @@ export class KadDHT {
 
         this._log("findPeer %s", id.toB58String());
 
-        this.findPeerLocal(id, (err, pi) => {
-            if (err) {
-                return callback(err);
-            }
+        try {
+            const pi = this.findPeerLocal(id);
 
             // already got it
             if (!is.nil(pi)) {
@@ -460,9 +458,9 @@ export class KadDHT {
                 return callback(null, pi);
             }
 
+            const key = utils.convertPeerId(id);
             waterfall([
-                (cb) => utils.convertPeerId(id, cb),
-                (key, cb) => {
+                (cb) => {
                     const peers = this.routingTable.closestPeers(key, c.ALPHA);
 
                     if (peers.length === 0) {
@@ -510,7 +508,9 @@ export class KadDHT {
                     cb(null, result.peer);
                 }
             ], callback);
-        });
+        } catch (err) {
+            return callback(err);
+        }
     }
 
     /**
@@ -521,17 +521,12 @@ export class KadDHT {
      * @param {function(Error, PeerInfo)} callback
      * @returns {void}
      */
-    findPeerLocal(peer, callback) {
+    findPeerLocal(peer) {
         this._log("findPeerLocal %s", peer.toB58String());
-        this.routingTable.find(peer, (err, p) => {
-            if (err) {
-                return callback(err);
-            }
-            if (!p || !this.peerBook.has(p)) {
-                return callback();
-            }
-            callback(null, this.peerBook.get(p));
-        });
+        const p = this.routingTable.find(peer);
+        if (p && this.peerBook.has(p)) {
+            return this.peerBook.get(p);
+        }
     }
 
     /**

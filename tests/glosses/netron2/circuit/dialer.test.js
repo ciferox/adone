@@ -183,29 +183,21 @@ describe("netron", "circuit", "dialer", () => {
         let shake;
         const callback = stub();
 
-        beforeEach((done) => {
-            waterfall([
-                (cb) => PeerId.createFromJSON(nodes.node4, cb),
-                (peerId, cb) => PeerInfo.create(peerId, cb),
-                (peer, cb) => {
-                    peer.multiaddrs.add("/p2p-circuit/ipfs/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE");
-                    dialer.swarm = {
-                        _peerInfo: peer
-                    };
-                    cb();
-                },
-                (cb) => {
-                    dialer.relayConns = new Map();
-                    dialer._negotiateRelay.callThrough();
-                    stream = pull.handshake({ timeout: 1000 * 60 });
-                    shake = stream.handshake;
-                    conn = new Connection();
-                    conn.setPeerInfo(new PeerInfo(PeerId.createFromB58String("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE")));
-                    conn.setInnerConn(stream);
-                    dialer._negotiateRelay(conn, dstMa, callback);
-                    cb();
-                }
-            ], done);
+        beforeEach(() => {
+            const peerId = PeerId.createFromJSON(nodes.node4);
+            const peer = PeerInfo.create(peerId);
+            peer.multiaddrs.add("/p2p-circuit/ipfs/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE");
+            dialer.swarm = {
+                _peerInfo: peer
+            };
+            dialer.relayConns = new Map();
+            dialer._negotiateRelay.callThrough();
+            stream = pull.handshake({ timeout: 1000 * 60 });
+            shake = stream.handshake;
+            conn = new Connection();
+            conn.setPeerInfo(new PeerInfo(PeerId.createFromB58String("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE")));
+            conn.setInnerConn(stream);
+            dialer._negotiateRelay(conn, dstMa, callback);
         });
 
         afterEach(() => {

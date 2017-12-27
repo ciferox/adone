@@ -141,13 +141,13 @@ class Network {
             // TODO: conn.close()
             pull(pull.empty(), conn);
 
-            this.dht._add(peer, (err) => {
-                if (err) {
-                    return this._log.error("Failed to add to the routing table", err);
-                }
-
+            try {
+                this.dht._add(peer);
                 this._log("added to the routing table: %s", peer.id.toB58String());
-            });
+
+            } catch (err) {
+                return this._log.error("Failed to add to the routing table", err);
+            }
         });
     }
 

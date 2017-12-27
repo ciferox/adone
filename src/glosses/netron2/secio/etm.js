@@ -22,19 +22,13 @@ exports.createBoxStream = (cipher, mac) => {
     return pull(
         ensureBuffer(),
         pull.asyncMap((chunk, cb) => {
-            cipher.encrypt(chunk, (err, data) => {
-                if (err) {
-                    return cb(err);
-                }
-
-                mac.digest(data, (err, digest) => {
-                    if (err) {
-                        return cb(err);
-                    }
-
-                    cb(null, Buffer.concat([data, digest]));
-                });
-            });
+            try {
+                const data = cipher.encrypt(chunk);
+                const digest = mac.digest(data);
+                cb(null, Buffer.concat([data, digest]));
+            } catch (err) {
+                cb(err);
+            }
         }),
         pull.lengthPrefixed.encode(lpOpts)
     );
@@ -56,25 +50,20 @@ exports.createUnboxStream = (decipher, mac) => {
             const data = chunk.slice(0, mark);
             const macd = chunk.slice(mark);
 
-            mac.digest(data, (err, expected) => {
-                if (err) {
-                    return cb(err);
-                }
+            try {
+                const expected = mac.digest(data);
 
                 if (!macd.equals(expected)) {
-                    return cb(new Error(`MAC Invalid: ${macd.toString("hex")} != ${expected.toString("hex")}`));
+                    throw new Error(`MAC Invalid: ${macd.toString("hex")} != ${expected.toString("hex")}`);
                 }
 
                 // all good, decrypt
-                decipher.decrypt(data, (err, decrypted) => {
-                    if (err) {
-                        return cb(err);
-                    }
+                const decrypted = decipher.decrypt(data);
 
-                    cb(null, decrypted);
-                });
-            });
+                cb(null, decrypted);
+            } catch (err) {
+                cb(err);
+            }
         })
     );
 };
-

@@ -1,6 +1,6 @@
 const {
     is,
-    multi: { hash: { async: multihashing } }
+    multi
 } = adone;
 
 /**
@@ -13,36 +13,27 @@ const {
  * @param {function(Error)} callback
  * @returns {undefined}
  */
-const validatePublicKeyRecord = (key, publicKey, callback) => {
-    const done = (err) => setImmediate(() => callback(err));
-
+const validatePublicKeyRecord = (key, publicKey) => {
     if (!is.buffer(key)) {
-        return done(new Error('"key" must be a Buffer'));
+        throw new Error('"key" must be a Buffer');
     }
 
     if (key.length < 3) {
-        return done(new Error("invalid public key record"));
+        throw new Error("invalid public key record");
     }
 
     const prefix = key.slice(0, 4).toString();
 
     if (prefix !== "/pk/") {
-        return done(new Error("key was not prefixed with /pk/"));
+        throw new Error("key was not prefixed with /pk/");
     }
 
     const keyhash = key.slice(4);
 
-    multihashing(publicKey, "sha2-256", (err, publicKeyHash) => {
-        if (err) {
-            return done(err);
-        }
-
-        if (!keyhash.equals(publicKeyHash)) {
-            return done(new Error("public key does not match passed in key"));
-        }
-
-        done();
-    });
+    const publicKeyHash = multi.hash.create(publicKey, "sha2-256");
+    if (!keyhash.equals(publicKeyHash)) {
+        throw new Error("public key does not match passed in key");
+    }
 };
 
 module.exports = {

@@ -1,5 +1,4 @@
 const nodes = require("./fixtures/nodes");
-const waterfall = require("async/waterfall");
 
 const {
     multi,
@@ -16,7 +15,7 @@ describe("relay", () => {
         let stream;
         let shake;
 
-        beforeEach((done) => {
+        beforeEach(() => {
             stream = pull.handshake({ timeout: 1000 * 60 });
             shake = stream.handshake;
             fromConn = new Connection(stream);
@@ -35,37 +34,30 @@ describe("relay", () => {
                 peers[key]._connectedMultiaddr = true;
             }); // make it truthy
 
-            waterfall([
-                (cb) => PeerId.createFromJSON(nodes.node4, cb),
-                (peerId, cb) => PeerInfo.create(peerId, cb),
-                (peer, cb) => {
-                    peer.multiaddrs.add("/p2p-circuit/ipfs/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE");
-                    swarm = {
-                        _peerInfo: peer,
-                        conns: {
-                            QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE: new Connection(),
-                            QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA: new Connection(),
-                            QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy: new Connection()
-                        },
-                        _peerBook: {
-                            get: (peer) => {
-                                if (!peers[peer]) {
-                                    throw new Error();
-                                }
-
-                                return peers[peer];
-                            }
+            const peerId = PeerId.createFromJSON(nodes.node4);
+            const peer = PeerInfo.create(peerId);
+            peer.multiaddrs.add("/p2p-circuit/ipfs/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE");
+            swarm = {
+                _peerInfo: peer,
+                conns: {
+                    QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE: new Connection(),
+                    QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA: new Connection(),
+                    QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy: new Connection()
+                },
+                _peerBook: {
+                    get: (peer) => {
+                        if (!peers[peer]) {
+                            throw new Error();
                         }
-                    };
 
-                    cb();
+                        return peers[peer];
+                    }
                 }
-            ], () => {
-                relay = new Hop(swarm, { enabled: true });
-                relay._circuit = stub();
-                relay._circuit.callsArg(2, null, new Connection());
-                done();
-            });
+            };
+
+            relay = new Hop(swarm, { enabled: true });
+            relay._circuit = stub();
+            relay._circuit.callsArg(2, null, new Connection());
         });
 
         afterEach(() => {

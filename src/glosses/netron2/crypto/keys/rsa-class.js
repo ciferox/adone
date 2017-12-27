@@ -2,28 +2,19 @@ const crypto = require("./rsa");
 const KEYUTIL = require("jsrsasign").KEYUTIL;
 
 const {
-    is,
     data: { base58, protobuf },
-    multi: { hash: { async: multihashing } }
+    multi
 } = adone;
 
 const pbm = protobuf.create(require("./keys.proto"));
-
-
-const ensure = function (cb) {
-    if (!is.function(cb)) {
-        throw new Error("callback is required");
-    }
-};
 
 class RsaPublicKey {
     constructor(key) {
         this._key = key;
     }
 
-    verify(data, sig, callback) {
-        ensure(callback);
-        crypto.hashAndVerify(this._key, sig, data, callback);
+    verify(data, sig) {
+        return crypto.hashAndVerify(this._key, sig, data);
     }
 
     marshal() {
@@ -45,9 +36,8 @@ class RsaPublicKey {
         return this.bytes.equals(key.bytes);
     }
 
-    hash(callback) {
-        ensure(callback);
-        multihashing(this.bytes, "sha2-256", callback);
+    hash() {
+        return multi.hash.create(this.bytes, "sha2-256");
     }
 }
 
@@ -63,9 +53,8 @@ class RsaPrivateKey {
         return crypto.getRandomValues(new Uint8Array(16));
     }
 
-    sign(message, callback) {
-        ensure(callback);
-        crypto.hashAndSign(this._key, message, callback);
+    sign(message) {
+        return crypto.hashAndSign(this._key, message);
     }
 
     get public() {
@@ -95,9 +84,8 @@ class RsaPrivateKey {
         return this.bytes.equals(key.bytes);
     }
 
-    hash(callback) {
-        ensure(callback);
-        multihashing(this.bytes, "sha2-256", callback);
+    hash() {
+        return multi.hash.create(this.bytes, "sha2-256");
     }
 
     /**
@@ -110,13 +98,9 @@ class RsaPrivateKey {
    * @param {function(Error, id)} callback
    * @returns {undefined}
    */
-    id(callback) {
-        this.public.hash((err, hash) => {
-            if (err) {
-                return callback(err);
-            }
-            callback(null, base58.encode(hash));
-        });
+    id() {
+        const hash = this.public.hash();
+        return base58.encode(hash);
     }
 
     /**
@@ -127,43 +111,24 @@ class RsaPrivateKey {
      * @param {function(Error, KeyInfo)} callback
      * @returns {undefined}
      */
-    export(format, password, callback) {
-        if (is.function(password)) {
-            callback = password;
+    export(format, password) {
+        if (!password) {
             password = format;
             format = "pkcs-8";
         }
 
-        setImmediate(() => {
-            ensure(callback);
-
-            let err = null;
-            let pem = null;
-            try {
-                const key = KEYUTIL.getKey(this._key); // _key is a JWK (JSON Web Key)
-                if (format === "pkcs-8") {
-                    pem = KEYUTIL.getPEM(key, "PKCS8PRV", password);
-                } else {
-                    err = new Error(`Unknown export format '${format}'`);
-                }
-            } catch (e) {
-                err = e;
-            }
-
-            callback(err, pem);
-        });
+        const key = KEYUTIL.getKey(this._key); // _key is a JWK (JSON Web Key)
+        if (format === "pkcs-8") {
+            return KEYUTIL.getPEM(key, "PKCS8PRV", password);
+        }
+        throw new Error(`Unknown export format '${format}'`);
     }
 }
 
-const unmarshalRsaPrivateKey = function (bytes, callback) {
+const unmarshalRsaPrivateKey = function (bytes) {
     const jwk = crypto.utils.pkcs1ToJwk(bytes);
-    crypto.unmarshalPrivateKey(jwk, (err, keys) => {
-        if (err) {
-            return callback(err);
-        }
-
-        callback(null, new RsaPrivateKey(keys.privateKey, keys.publicKey));
-    });
+    const keys = crypto.unmarshalPrivateKey(jwk);
+    return new RsaPrivateKey(keys.privateKey, keys.publicKey);
 };
 
 const unmarshalRsaPublicKey = function (bytes) {
@@ -172,24 +137,14 @@ const unmarshalRsaPublicKey = function (bytes) {
     return new RsaPublicKey(jwk);
 };
 
-const generateKeyPair = function (bits, cb) {
-    crypto.generateKey(bits, (err, keys) => {
-        if (err) {
-            return cb(err);
-        }
-
-        cb(null, new RsaPrivateKey(keys.privateKey, keys.publicKey));
-    });
+const generateKeyPair = function (bits) {
+    const keys = crypto.generateKey(bits);
+    return new RsaPrivateKey(keys.privateKey, keys.publicKey);
 };
 
-const fromJwk = function (jwk, callback) {
-    crypto.unmarshalPrivateKey(jwk, (err, keys) => {
-        if (err) {
-            return callback(err);
-        }
-
-        callback(null, new RsaPrivateKey(keys.privateKey, keys.publicKey));
-    });
+const fromJwk = function (jwk) {
+    const keys = crypto.unmarshalPrivateKey(jwk);
+    return new RsaPrivateKey(keys.privateKey, keys.publicKey);
 };
 
 module.exports = {

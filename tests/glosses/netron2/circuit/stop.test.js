@@ -1,5 +1,4 @@
 const nodes = require("./fixtures/nodes");
-const waterfall = require("async/waterfall");
 
 const {
     netron2: { Connection, PeerInfo, PeerId },
@@ -17,27 +16,22 @@ describe("stop", () => {
         let conn;
         let stream;
 
-        beforeEach((done) => {
+        beforeEach(() => {
             stream = pull.handshake({ timeout: 1000 * 60 });
             conn = new Connection(stream);
             conn.setPeerInfo(new PeerInfo(PeerId.createFromB58String("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE")));
 
-            waterfall([
-                (cb) => PeerId.createFromJSON(nodes.node4, cb),
-                (peerId, cb) => PeerInfo.create(peerId, cb),
-                (peer, cb) => {
-                    peer.multiaddrs.add("/p2p-circuit/ipfs/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE");
-                    swarm = {
-                        _peerInfo: peer,
-                        conns: {
-                            QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE: new Connection()
-                        }
-                    };
-
-                    stopHandler = new Stop(swarm);
-                    cb();
+            const peerId = PeerId.createFromJSON(nodes.node4);
+            const peer = PeerInfo.create(peerId);
+            peer.multiaddrs.add("/p2p-circuit/ipfs/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE");
+            swarm = {
+                _peerInfo: peer,
+                conns: {
+                    QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE: new Connection()
                 }
-            ], done);
+            };
+
+            stopHandler = new Stop(swarm);
         });
 
         it("handle request with a valid multiaddr", (done) => {

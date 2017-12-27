@@ -14,14 +14,9 @@ class PeerQueue {
      * @param {function(Error, PeerQueue)} callback
      * @returns {void}
      */
-    static fromPeerId(id, callback) {
-        utils.convertPeerId(id, (err, key) => {
-            if (err) {
-                return callback(err);
-            }
-
-            callback(null, new PeerQueue(key));
-        });
+    static fromPeerId(id) {
+        const key = utils.convertPeerId(id);
+        return new PeerQueue(key);
     }
 
     /**
@@ -31,14 +26,8 @@ class PeerQueue {
      * @param {function(Error, PeerQueue)} callback
      * @returns {void}
      */
-    static fromKey(key, callback) {
-        utils.convertBuffer(key, (err, key) => {
-            if (err) {
-                return callback(err);
-            }
-
-            callback(null, new PeerQueue(key));
-        });
+    static fromKey(key) {
+        return new PeerQueue(utils.convertBuffer(key));
     }
 
     /**
@@ -59,21 +48,15 @@ class PeerQueue {
      * @param {function(Error)} callback
      * @returns {void}
      */
-    enqueue(id, callback) {
+    enqueue(id) {
         adone.log("enqueue %s", id.id.toString("hex"));
-        utils.convertPeerId(id, (err, key) => {
-            if (err) {
-                return callback(err);
-            }
+        const key = utils.convertPeerId(id);
+        const el = {
+            id,
+            distance: distance(this.from, key)
+        };
 
-            const el = {
-                id,
-                distance: distance(this.from, key)
-            };
-
-            this.heap.push(el);
-            callback();
-        });
+        this.heap.push(el);
     }
 
     /**

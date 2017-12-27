@@ -8,25 +8,24 @@ const {
  *
  * @param {Object} validators
  * @param {Record} record
- * @param {function(Error)} callback
  * @returns {undefined}
  */
-const verifyRecord = (validators, record, callback) => {
+const verifyRecord = (validators, record) => {
     const key = record.key;
     const parts = splitBuffer(key, Buffer.from("/"));
 
     if (parts.length < 3) {
         // No validator available
-        return callback();
+        return;
     }
 
     const validator = validators[parts[1].toString()];
 
     if (!validator) {
-        return callback(new Error("Invalid record keytype"));
+        throw new Error("Invalid record keytype");
     }
 
-    validator.func(key, record.value, callback);
+    validator.func(key, record.value);
 };
 
 /**

@@ -22,23 +22,22 @@ module.exports = (dht) => {
      * @private
      */
     const handleMessage = function (peer, msg, callback) {
-        // update the peer
-        dht._add(peer, (err) => {
-            if (err) {
-                log.error("Failed to update the kbucket store");
-                log.error(err);
-            }
+        try {
+            // update the peer
+            dht._add(peer);
+        } catch (err) {
+            log.error("Failed to update the kbucket store");
+            log.error(err);
+        }
+        // get handler & exectue it
+        const handler = getMessageHandler(msg.type);
 
-            // get handler & exectue it
-            const handler = getMessageHandler(msg.type);
+        if (!handler) {
+            log.error(`no handler found for message type: ${msg.type}`);
+            return callback();
+        }
 
-            if (!handler) {
-                log.error(`no handler found for message type: ${msg.type}`);
-                return callback();
-            }
-
-            handler(peer, msg, callback);
-        });
+        handler(peer, msg, callback);
     };
 
     /**

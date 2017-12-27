@@ -112,13 +112,13 @@ class Listener extends EventEmitter {
 
                 this.log("performing cryptoChallenge");
 
-                this.id.privKey.sign(Buffer.from(sig), (err, signature) => {
-                    if (err) {
-                        return callback(err);
-                    }
+                try {
+                    const signature = this.id.privKey.sign(Buffer.from(sig));
                     this.signature = signature.toString("hex");
                     this._join(callback);
-                });
+                } catch (err) {
+                    callback(err);
+                }
             } else {
                 if (!this.flag) {
                     this._down();

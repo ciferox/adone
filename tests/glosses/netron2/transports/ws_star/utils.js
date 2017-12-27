@@ -1,6 +1,5 @@
-const multiaddr = require("multiaddr");
-
 const {
+    multi,
     netron2: { transport: { WSStar: { utils: { cleanUrlSIO } } } }
 } = adone;
 
@@ -16,14 +15,14 @@ describe("utils", () => {
     const invalidMultiaddrStringDNS3 = "/dns4/star-signal.cloud.ipfs.team/ws/p2p-websocket-star/ipfs/QmWxLfixekyv6GAzvDEtXfXjj7gb1z3G8i5aQNHLhw1zA1";
 
     // Create actual multiaddrs
-    const modernMultiaddrDNS = multiaddr(modernMultiaddrStringDNS);
-    const modernMultiaddrDNS2 = multiaddr(modernMultiaddrStringDNS2);
-    const modernMultiaddrDNS3 = multiaddr(modernMultiaddrStringDNS3);
-    const modernMultiaddrDNS4 = multiaddr(modernMultiaddrStringDNS4);
+    const modernMultiaddrDNS = multi.address.create(modernMultiaddrStringDNS);
+    const modernMultiaddrDNS2 = multi.address.create(modernMultiaddrStringDNS2);
+    const modernMultiaddrDNS3 = multi.address.create(modernMultiaddrStringDNS3);
+    const modernMultiaddrDNS4 = multi.address.create(modernMultiaddrStringDNS4);
 
-    const invalidMultiaddrDNS = multiaddr(invalidMultiaddrStringDNS);
-    const invalidMultiaddrDNS2 = multiaddr(invalidMultiaddrStringDNS2);
-    const invalidMultiaddrDNS3 = multiaddr(invalidMultiaddrStringDNS3);
+    const invalidMultiaddrDNS = multi.address.create(invalidMultiaddrStringDNS);
+    const invalidMultiaddrDNS2 = multi.address.create(invalidMultiaddrStringDNS2);
+    const invalidMultiaddrDNS3 = multi.address.create(invalidMultiaddrStringDNS3);
 
     it("cleanUrlSIO websocket-star modern", () => {
         const newUrlSIOStringDNS = cleanUrlSIO(modernMultiaddrDNS);

@@ -1,6 +1,5 @@
-const multiaddr = require("multiaddr");
-
 const {
+    multi,
     netron2: { transport: { WSStar } }
 } = adone;
 
@@ -9,8 +8,8 @@ const {
 describe("listen", () => {
     let ws;
 
-    const ma = multiaddr("/ip4/127.0.0.1/tcp/15001/ws/p2p-websocket-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSooooA");
-    const mav6 = multiaddr("/ip6/::1/tcp/15003/ws/p2p-websocket-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSooooB");
+    const ma = multi.address.create("/ip4/127.0.0.1/tcp/15001/ws/p2p-websocket-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSooooA");
+    const mav6 = multi.address.create("/ip6/::1/tcp/15003/ws/p2p-websocket-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSooooB");
 
     before(() => {
         ws = new WSStar({ allowJoinWithDisabledChallenge: true });

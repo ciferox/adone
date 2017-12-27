@@ -1,18 +1,12 @@
-const makePeers = require("./utils").makePeers;
+const { makePeers } = require("./utils");
 
 const { PeerList } = adone.private(adone.netron2.dht);
 
 describe("PeerList", () => {
     let peers;
 
-    before((done) => {
-        makePeers(3, (err, p) => {
-            if (err) {
-                return done(err);
-            }
-            peers = p;
-            done();
-        });
+    before(() => {
+        peers = makePeers(3);
     });
 
     it("basics", () => {

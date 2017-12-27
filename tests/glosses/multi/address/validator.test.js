@@ -133,7 +133,7 @@ describe("multi", "address", "validator", () => {
         const tests = Array.from(arguments).slice(1);
         tests.forEach((test) => {
             test.forEach((testcase) => {
-                expect(p.matches(testcase)).to.be.eql(true)
+                expect(p.matches(testcase)).to.be.eql(true);
             });
         });
     };
@@ -142,10 +142,10 @@ describe("multi", "address", "validator", () => {
         const tests = Array.from(arguments).slice(1);
         tests.forEach((test) => {
             test.forEach((testcase) => {
-                expect(p.matches(testcase)).to.be.eql(false)
+                expect(p.matches(testcase)).to.be.eql(false);
             });
         });
-    }
+    };
 
     it("DNS validation", () => {
         assertMatches(validator.DNS, goodDNS);

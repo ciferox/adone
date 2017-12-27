@@ -1,4 +1,3 @@
-const parallel = require("async/parallel");
 const fixtures = require("./test-data/ids.json").infos;
 
 const {
@@ -6,25 +5,18 @@ const {
 } = adone;
 
 
-exports.createInfos = (num, callback) => {
-    const tasks = [];
+exports.createInfos = (num) => {
+    const infos = [];
 
     for (let i = 0; i < num; i++) {
-        tasks.push((cb) => {
-            if (fixtures[i]) {
-                PeerId.createFromJSON(fixtures[i].id, (err, id) => {
-                    if (err) {
-                        return cb(err);
-                    }
-
-                    cb(null, new PeerInfo(id));
-                });
-                return;
-            }
-
-            PeerInfo.create(cb);
-        });
+        let peerInfo;
+        if (fixtures[i]) {
+            peerInfo = new PeerInfo(PeerId.createFromJSON(fixtures[i].id));
+        } else {
+            peerInfo = PeerInfo.create();
+        }
+        infos.push(peerInfo);
     }
 
-    parallel(tasks, callback);
+    return infos;
 };

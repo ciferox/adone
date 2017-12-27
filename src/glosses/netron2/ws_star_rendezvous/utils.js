@@ -1,8 +1,6 @@
-const multiaddr = require("multiaddr");
-const mafmt = require("mafmt");
-
 const {
     is,
+    multi,
     netron2: { PeerId, crypto }
 } = adone;
 
@@ -30,7 +28,7 @@ const cleanUrlSIO = function (ma) {
         }
         throw new Error(`invalid multiaddr: ${ma.toString()}`);
 
-    } else if (multiaddr.isName(ma)) {
+    } else if (multi.address.isName(ma)) {
         const wsProto = ma.protos()[1].name;
         if (wsProto === "ws") {
             return `http://${maStrSplit[2]}`;
@@ -53,7 +51,7 @@ const types = {
         }
 
         try {
-            multiaddr(v);
+            multi.address.create(v);
             return true;
         } catch (err) {
             return false;
@@ -103,18 +101,13 @@ const Protocol = function (log) {
     };
 };
 
-const getIdAndValidate = function (pub, id, cb) {
-    PeerId.createFromPubKey(Buffer.from(pub, "hex"), (err, _id) => {
-        if (err) {
-            return cb(new Error("Crypto error"));
-        }
+const getIdAndValidate = function (pub, id) {
+    const _id = PeerId.createFromPubKey(Buffer.from(pub, "hex"));
+    if (_id.toB58String() !== id) {
+        throw new Error("Id is not matching");
+    }
 
-        if (_id.toB58String() !== id) {
-            return cb(new Error("Id is not matching"));
-        }
-
-        return cb(null, crypto.keys.unmarshalPublicKey(Buffer.from(pub, "hex")));
-    });
+    return crypto.keys.unmarshalPublicKey(Buffer.from(pub, "hex"));
 };
 
 exports = module.exports;
@@ -122,4 +115,4 @@ exports.cleanUrlSIO = cleanUrlSIO;
 exports.validate = validate;
 exports.Protocol = Protocol;
 exports.getIdAndValidate = getIdAndValidate;
-exports.validateMa = (ma) => mafmt.WebSocketStar.matches(multiaddr(ma));
+exports.validateMa = (ma) => multi.address.validator.WebSocketStar.matches(multi.address.create(ma));

@@ -1,8 +1,7 @@
-const multiaddr = require("multiaddr");
 const each = require("async/each");
-const map = require("async/map");
 
 const {
+    multi,
     netron2: { PeerId, transport: { WSStar } },
     stream: { pull }
 } = adone;
@@ -20,17 +19,16 @@ describe("strict", () => {
     let l2;
     let w2;
 
-    before((done) => {
-        map(require("./ids.json"), PeerId.createFromJSON, (err, keys) => {
-            assert.notExists(err);
-
-            id1 = keys.shift();
-            id2 = keys.shift();
-            ma1 = multiaddr(`/ip4/127.0.0.1/tcp/${SERVER_PORT}/ws/p2p-websocket-star/ipfs/${id1.toB58String()}`);
-            ma2 = multiaddr(`/ip4/127.0.0.1/tcp/${SERVER_PORT}/ws/p2p-websocket-star/ipfs/${id2.toB58String()}`);
-
-            done();
-        });
+    before(() => {
+        const jsons = require("./ids.json");
+        const ids = [];
+        for (const json of jsons) {
+            ids.push(PeerId.createFromJSON(json));
+        }
+        id1 = ids.shift();
+        id2 = ids.shift();
+        ma1 = multi.address.create(`/ip4/127.0.0.1/tcp/${SERVER_PORT}/ws/p2p-websocket-star/ipfs/${id1.toB58String()}`);
+        ma2 = multi.address.create(`/ip4/127.0.0.1/tcp/${SERVER_PORT}/ws/p2p-websocket-star/ipfs/${id2.toB58String()}`);
     });
 
     it("listen on the server", (done) => {

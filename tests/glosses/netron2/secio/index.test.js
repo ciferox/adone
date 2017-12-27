@@ -9,16 +9,10 @@ const {
 const Listener = multistream.Listener;
 const Dialer = multistream.Dialer;
 
-const createSession = function (insecure, callback) {
-    crypto.keys.generateKeyPair("RSA", 2048, (err, key) => {
-        assert.notExists(err);
-
-        key.public.hash((err, digest) => {
-            assert.notExists(err);
-
-            callback(null, secio.encrypt(new PeerId(digest, key), key, insecure));
-        });
-    });
+const createSession = function (insecure) {
+    const key = crypto.keys.generateKeyPair("RSA", 2048);
+    const digest = key.public.hash();
+    return secio.encrypt(new PeerId(digest, key), key, insecure);
 };
 
 
@@ -29,27 +23,21 @@ describe("secio", () => {
 
     it("upgrades a connection", (done) => {
         const p = pull.pair.duplex();
-        createSession(p[0], (err, local) => {
-            assert.notExists(err);
+        const local = createSession(p[0]);
+        const remote = createSession(p[1]);
+        pull(
+            pull.values([Buffer.from("hello world")]),
+            local
+        );
 
-            createSession(p[1], (err, remote) => {
+        pull(
+            remote,
+            pull.collect((err, chunks) => {
                 assert.notExists(err);
-
-                pull(
-                    pull.values([Buffer.from("hello world")]),
-                    local
-                );
-
-                pull(
-                    remote,
-                    pull.collect((err, chunks) => {
-                        assert.notExists(err);
-                        expect(chunks).to.eql([Buffer.from("hello world")]);
-                        done();
-                    })
-                );
-            });
-        });
+                expect(chunks).to.eql([Buffer.from("hello world")]);
+                done();
+            })
+        );
     });
 
     it("works over multistream", (done) => {
@@ -65,31 +53,27 @@ describe("secio", () => {
             ], cb),
             (cb) => {
                 listener.addHandler("/banana/1.0.0", (protocol, conn) => {
-                    createSession(conn, (err, local) => {
-                        assert.notExists(err);
-                        pull(
-                            local,
-                            pull.collect((err, chunks) => {
-                                assert.notExists(err);
-                                expect(chunks).to.be.eql([Buffer.from("hello world")]);
-                                done();
-                            })
-                        );
-                    });
+                    const local = createSession(conn);
+                    pull(
+                        local,
+                        pull.collect((err, chunks) => {
+                            assert.notExists(err);
+                            expect(chunks).to.be.eql([Buffer.from("hello world")]);
+                            done();
+                        })
+                    );
                 });
                 cb();
             },
             (cb) => dialer.select("/banana/1.0.0", (err, conn) => {
                 assert.notExists(err);
 
-                createSession(conn, (err, remote) => {
-                    assert.notExists(err);
-                    pull(
-                        pull.values([Buffer.from("hello world")]),
-                        remote
-                    );
-                    cb();
-                });
+                const remote = createSession(conn);
+                pull(
+                    pull.values([Buffer.from("hello world")]),
+                    remote
+                );
+                cb();
             })
         ], (err) => assert.notExists(err));
     });

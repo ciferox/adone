@@ -28,27 +28,27 @@ exports.keyStretcher = require("./key-stretcher");
 exports.generateEphemeralKeyPair = require("./ephemeral-keys");
 
 // Generates a keypair of the given type and bitsize
-exports.generateKeyPair = (type, bits, cb) => {
+exports.generateKeyPair = (type, bits) => {
     const key = supportedKeys[type.toLowerCase()];
 
     if (!key) {
-        return cb(new Error("invalid or unsupported key type"));
+        throw new Error("invalid or unsupported key type");
     }
 
-    key.generateKeyPair(bits, cb);
+    return key.generateKeyPair(bits);
 };
 
 // Generates a keypair of the given type and bitsize
 // seed is a 32 byte uint8array
-exports.generateKeyPairFromSeed = (type, seed, bits, cb) => {
+exports.generateKeyPairFromSeed = (type, seed, bits) => {
     const key = supportedKeys[type.toLowerCase()];
     if (!key) {
-        return cb(new Error("invalid or unsupported key type"));
+        throw new Error("invalid or unsupported key type");
     }
     if (type.toLowerCase() !== "ed25519") {
-        return cb(new Error("Seed key derivation is unimplemented for RSA or secp256k1"));
+        throw new Error("Seed key derivation is unimplemented for RSA or secp256k1");
     }
-    key.generateKeyPairFromSeed(seed, bits, cb);
+    return key.generateKeyPairFromSeed(seed, bits);
 };
 
 // Converts a protobuf serialized public key into its
@@ -67,7 +67,6 @@ exports.unmarshalPublicKey = (buf) => {
                 return supportedKeys.secp256k1.unmarshalSecp256k1PublicKey(data);
             }
             throw new Error("secp256k1 support requires secp256k1");
-
         default:
             throw new Error("invalid or unsupported key type");
     }
@@ -122,15 +121,11 @@ exports.marshalPrivateKey = (key, type) => {
 };
 
 
-exports.import = (pem, password, callback) => {
-    try {
-        const key = KEYUTIL.getKey(pem, password);
-        if (key instanceof jsrsasign.RSAKey) {
-            const jwk = KEYUTIL.getJWKFromKey(key);
-            return supportedKeys.rsa.fromJwk(jwk, callback);
-        }
-        throw new Error(`Unknown key type '${key.prototype.toString()}'`);
-    } catch (err) {
-        callback(err);
+exports.import = (pem, password) => {
+    const key = KEYUTIL.getKey(pem, password);
+    if (key instanceof jsrsasign.RSAKey) {
+        const jwk = KEYUTIL.getJWKFromKey(key);
+        return supportedKeys.rsa.fromJwk(jwk);
     }
+    throw new Error(`Unknown key type '${key.prototype.toString()}'`);
 };

@@ -1,20 +1,14 @@
-const makePeers = require("./utils").makePeers;
+const { makePeers } = require("./utils");
 
 const { LimitedPeerList } = adone.private(adone.netron2.dht);
 
 describe("LimitedPeerList", () => {
     let peers;
 
-    before(function (done) {
+    before(function () {
         this.timeout(10 * 1000);
 
-        makePeers(5, (err, p) => {
-            if (err) {
-                return done(err);
-            }
-            peers = p;
-            done();
-        });
+        peers = makePeers(5);
     });
 
     it("basics", () => {

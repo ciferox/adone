@@ -23,7 +23,8 @@ module.exports = (dht) => {
                     return cb(null, [dht.peerInfo]);
                 }
 
-                dht._betterPeersToQuery(msg, peer, cb);
+                const closer = dht._betterPeersToQuery(msg, peer);
+                cb(null, closer);
             },
             (closer, cb) => {
                 const response = new Message(msg.type, Buffer.alloc(0), msg.clusterLevel);

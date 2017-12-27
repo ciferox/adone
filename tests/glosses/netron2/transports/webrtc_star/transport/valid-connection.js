@@ -1,6 +1,9 @@
-const multiaddr = require("multiaddr");
 const series = require("async/series");
-const pull = require("pull-stream");
+
+const {
+    multi,
+    stream: { pull }
+} = adone;
 
 module.exports = (create) => {
     describe("valid Connection", () => {
@@ -9,10 +12,10 @@ module.exports = (create) => {
         const base = (id) => {
             return `/ip4/127.0.0.1/tcp/15555/ws/p2p-webrtc-star/ipfs/${id}`;
         };
-        const ma1 = multiaddr(base("QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSooo3A"));
+        const ma1 = multi.address.create(base("QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSooo3A"));
 
         let ws2;
-        const ma2 = multiaddr(base("QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSooo3B"));
+        const ma2 = multi.address.create(base("QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSooo3B"));
 
         let conn;
 

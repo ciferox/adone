@@ -14,19 +14,14 @@ class RoutingTable {
         this.self = self;
         this._onPing = this._onPing.bind(this);
 
-        utils.convertPeerId(self, (err, selfKey) => {
-            if (err) {
-                throw err;
-            }
-
-            this.kb = new KBucket({
-                localNodeId: selfKey,
-                numberOfNodesPerKBucket: kBucketSize,
-                numberOfNodesToPing: 1
-            });
-
-            this.kb.on("ping", this._onPing);
+        const selfKey = utils.convertPeerId(self);
+        this.kb = new KBucket({
+            localNodeId: selfKey,
+            numberOfNodesPerKBucket: kBucketSize,
+            numberOfNodesToPing: 1
         });
+
+        this.kb.on("ping", this._onPing);
     }
 
     // -- Private Methods
@@ -69,22 +64,15 @@ class RoutingTable {
      * Find a specific peer by id.
      *
      * @param {PeerId} peer
-     * @param {function(Error, PeerId)} callback
      * @returns {void}
      */
-    find(peer, callback) {
-        utils.convertPeerId(peer, (err, key) => {
-            if (err) {
-                return callback(err);
-            }
-            const closest = this.closestPeer(key);
+    find(peer) {
+        const key = utils.convertPeerId(peer);
+        const closest = this.closestPeer(key);
 
-            if (closest && closest.isEqual(peer)) {
-                return callback(null, closest);
-            }
-
-            callback();
-        });
+        if (closest && closest.isEqual(peer)) {
+            return closest;
+        }
     }
 
     /**
@@ -116,34 +104,22 @@ class RoutingTable {
      * Add or update the routing table with the given peer.
      *
      * @param {PeerId} peer
-     * @param {function(Error)} callback
      * @returns {undefined}
      */
-    add(peer, callback) {
-        utils.convertPeerId(peer, (err, id) => {
-            if (err) {
-                return callback(err);
-            }
-            this.kb.add({ id, peer });
-            callback();
-        });
+    add(peer) {
+        const id = utils.convertPeerId(peer);
+        this.kb.add({ id, peer });
     }
 
     /**
      * Remove a given peer from the table.
      *
      * @param {PeerId} peer
-     * @param {function(Error)} callback
      * @returns {undefined}
      */
-    remove(peer, callback) {
-        utils.convertPeerId(peer, (err, id) => {
-            if (err) {
-                return callback(err);
-            }
-            this.kb.remove(id);
-            callback();
-        });
+    remove(peer) {
+        const id = utils.convertPeerId(peer);
+        this.kb.remove(id);
     }
 }
 

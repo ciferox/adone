@@ -1,7 +1,7 @@
 const base32 = require("base32.js");
 const distance = require("xor-distance");
 const waterfall = require("async/waterfall");
-const makePeers = require("./utils").makePeers;
+const { makePeers } = require("./utils");
 
 const {
     netron2: { dht, PeerId }
@@ -21,16 +21,11 @@ describe("utils", () => {
     });
 
     describe("convertBuffer", () => {
-        it("returns the sha2-256 hash of the buffer", (done) => {
+        it("returns the sha2-256 hash of the buffer", () => {
             const buf = Buffer.from("hello world");
 
-            utils.convertBuffer(buf, (err, digest) => {
-                assert.notExists(err);
-
-                expect(digest)
-                    .to.eql(Buffer.from("b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9", "hex"));
-                done();
-            });
+            const digest = utils.convertBuffer(buf);
+            expect(digest).to.eql(Buffer.from("b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9", "hex"));
         });
     });
 
@@ -54,9 +49,9 @@ describe("utils", () => {
                 ids[0]
             ];
 
+            const id = utils.convertPeerId(ids[0]);
             waterfall([
-                (cb) => utils.convertPeerId(ids[0], cb),
-                (id, cb) => utils.sortClosestPeers(input, id, cb),
+                (cb) => utils.sortClosestPeers(input, id, cb),
                 (out, cb) => {
                     expect(
                         out.map((m) => m.toB58String())
@@ -66,7 +61,7 @@ describe("utils", () => {
                         ids[2],
                         ids[1]
                     ].map((m) => m.toB58String()));
-                    done();
+                    cb();
                 }
             ], done);
         });
@@ -89,31 +84,21 @@ describe("utils", () => {
     });
 
     describe("keyForPublicKey", () => {
-        it("works", (done) => {
-            makePeers(1, (err, peers) => {
-                assert.notExists(err);
-
-                expect(utils.keyForPublicKey(peers[0].id))
-                    .to.eql(Buffer.concat([Buffer.from("/pk/"), peers[0].id.id]));
-                done();
-            });
+        it("works", () => {
+            const peers = makePeers(1);
+            expect(utils.keyForPublicKey(peers[0].id)).to.eql(Buffer.concat([Buffer.from("/pk/"), peers[0].id.id]));
         });
     });
 
     describe("fromPublicKeyKey", () => {
-        it("round trips", function (done) {
+        it("round trips", function () {
             this.timeout(40 * 1000);
 
-            makePeers(50, (err, peers) => {
-                assert.notExists(err);
-
-                peers.forEach((p, i) => {
-                    const id = p.id;
-                    expect(utils.isPublicKeyKey(utils.keyForPublicKey(id))).to.eql(true);
-                    expect(utils.fromPublicKeyKey(utils.keyForPublicKey(id)).id)
-                        .to.eql(id.id);
-                });
-                done();
+            const peers = makePeers(50);
+            peers.forEach((p, i) => {
+                const id = p.id;
+                expect(utils.isPublicKeyKey(utils.keyForPublicKey(id))).to.eql(true);
+                expect(utils.fromPublicKeyKey(utils.keyForPublicKey(id)).id).to.eql(id.id);
             });
         });
     });

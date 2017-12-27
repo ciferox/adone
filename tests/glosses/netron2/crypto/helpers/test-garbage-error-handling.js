@@ -19,14 +19,8 @@ const doTests = function (fncName, fnc, num, skipBuffersAndStrings) {
         for (let i = 0; i < num; i++) {
             args.push(garbage);
         }
-        it(`${fncName}(${args.map((garbage) => util.inspect(garbage)).join(", ")})`, (cb) => {
-            args.push((err, res) => {
-                assert.exists(err);
-                assert.notExists(res);
-                cb();
-            });
-
-            fnc.apply(null, args);
+        it(`${fncName}(${args.map((garbage) => util.inspect(garbage)).join(", ")})`, () => {
+            assert.throws(() => fnc(...args));
         });
     });
 };

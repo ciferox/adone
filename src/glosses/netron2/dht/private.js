@@ -3,7 +3,6 @@ const series = require("async/series");
 const each = require("async/each");
 const timeout = require("async/timeout");
 const times = require("async/times");
-
 const utils = require("./utils");
 const errors = require("./errors");
 const Message = require("./message");
@@ -14,7 +13,7 @@ const LimitedPeerList = require("./limited-peer-list");
 const {
     is,
     netron2: { PeerInfo, PeerId, crypto, record: { Record, validator, selection } },
-    multi: { hash: { async: multihashing } }
+    multi
 } = adone;
 
 module.exports = (dht) => ({
@@ -27,25 +26,15 @@ module.exports = (dht) => ({
      * @returns {undefined}
      * @private
      */
-    _nearestPeersToQuery(msg, callback) {
-        utils.convertBuffer(msg.key, (err, key) => {
-            if (err) {
-                return callback(err);
-            }
-            let ids;
-            try {
-                ids = dht.routingTable.closestPeers(key, dht.ncp);
-            } catch (err) {
-                return callback(err);
-            }
+    _nearestPeersToQuery(msg) {
+        const key = utils.convertBuffer(msg.key);
+        const ids = dht.routingTable.closestPeers(key, dht.ncp);
 
-            callback(null, ids.map((p) => {
-                if (dht.peerBook.has(p)) {
-                    return dht.peerBook.get(p);
-                }
-                return dht.peerBook.put(new PeerInfo(p));
-
-            }));
+        return ids.map((p) => {
+            if (dht.peerBook.has(p)) {
+                return dht.peerBook.get(p);
+            }
+            return dht.peerBook.put(new PeerInfo(p));
         });
     },
     /**
@@ -58,25 +47,21 @@ module.exports = (dht) => ({
      * @returns {undefined}
      * @private
      */
-    _betterPeersToQuery(msg, peer, callback) {
+    _betterPeersToQuery(msg, peer) {
         dht._log("betterPeersToQuery");
-        dht._nearestPeersToQuery(msg, (err, closer) => {
-            if (err) {
-                return callback(err);
+        const closer = dht._nearestPeersToQuery(msg);
+
+        const filtered = closer.filter((closer) => {
+            if (dht._isSelf(closer.id)) {
+                // Should bail, not sure
+                dht._log.error("trying to return self as closer");
+                return false;
             }
 
-            const filtered = closer.filter((closer) => {
-                if (dht._isSelf(closer.id)) {
-                    // Should bail, not sure
-                    dht._log.error("trying to return self as closer");
-                    return false;
-                }
-
-                return !closer.id.isEqual(peer.id);
-            });
-
-            callback(null, filtered);
+            return !closer.id.isEqual(peer.id);
         });
+
+        return filtered;
     },
     /**
      * Try to fetch a given record by from the local datastore.
@@ -150,9 +135,9 @@ module.exports = (dht) => ({
      *
      * @private
      */
-    _add(peer, callback) {
+    _add(peer) {
         peer = dht.peerBook.put(peer);
-        dht.routingTable.add(peer.id, callback);
+        dht.routingTable.add(peer.id);
     },
     /**
      * Verify a record without searching the DHT.
@@ -163,32 +148,23 @@ module.exports = (dht) => ({
      *
      * @private
      */
-    _verifyRecordLocally(record, callback) {
+    _verifyRecordLocally(record) {
         dht._log("verifyRecordLocally");
-        series([
-            (cb) => {
-                if (record.signature) {
-                    const peer = record.author;
-                    let info;
-                    if (dht.peerBook.has(peer)) {
-                        info = dht.peerBook.get(peer);
-                    }
+        if (record.signature) {
+            const peer = record.author;
+            let info;
+            if (dht.peerBook.has(peer)) {
+                info = dht.peerBook.get(peer);
+            }
 
-                    if (!info || !info.id.pubKey) {
-                        return callback(new Error(`Missing public key for: ${peer.toB58String()}`));
-                    }
+            if (!info || !info.id.pubKey) {
+                throw new Error(`Missing public key for: ${peer.toB58String()}`);
+            }
 
-                    record.verifySignature(info.id.pubKey, cb);
-                } else {
-                    cb();
-                }
-            },
-            (cb) => validator.verifyRecord(
-                dht.validators,
-                record,
-                cb
-            )
-        ], callback);
+            record.verifySignature(info.id.pubKey);
+        }
+
+        validator.verifyRecord(dht.validators, record);
     },
     /**
      * Find close peers for a given peer
@@ -304,9 +280,9 @@ module.exports = (dht) => ({
                 }
 
                 // Send out correction record
+                const fixupRec = utils.createPutRecord(key, best, dht.peerInfo.id, true);
                 waterfall([
-                    (cb) => utils.createPutRecord(key, best, dht.peerInfo.id, true, cb),
-                    (fixupRec, cb) => each(vals, (v, cb) => {
+                    (cb) => each(vals, (v, cb) => {
                         // no need to do anything
                         if (v.val.equals(best)) {
                             return cb();
@@ -358,13 +334,12 @@ module.exports = (dht) => ({
                     return cb(err);
                 }
 
-                dht._verifyRecordLocally(rec, (err) => {
-                    if (err) {
-                        return cb(err);
-                    }
-
+                try {
+                    dht._verifyRecordLocally(rec);
                     cb(null, rec);
-                });
+                } catch (err) {
+                    return cb(err);
+                }
             }
         ], callback);
     },
@@ -439,14 +414,24 @@ module.exports = (dht) => ({
                     // fetch the public key
                     waterfall([
                         (cb) => dht.getPublicKey(record.author, cb),
-                        (pk, cb) => record.verifySignature(pk, cb)
+                        (pk, cb) => {
+                            try {
+                                record.verifySignature(pk);
+                            } catch (err) {
+                                cb(err);
+                            }
+                        }
                     ], cb);
                 } else {
                     cb();
                 }
             },
             (cb) => {
-                validator.verifyRecord(dht.validators, record, cb);
+                try {
+                    validator.verifyRecord(dht.validators, record);
+                } catch (err) {
+                    cb(err);
+                }
             }
         ], callback);
     },
@@ -468,7 +453,7 @@ module.exports = (dht) => ({
                     return cb(new Error(`Node not responding with its public key: ${peer.toB58String()}`));
                 }
 
-                PeerId.createFromPubKey(msg.record.value, cb);
+                cb(null, PeerId.createFromPubKey(msg.record.value));
             },
             (recPeer, cb) => {
                 // compare hashes of the pub key
@@ -624,12 +609,8 @@ module.exports = (dht) => ({
      *
      * @private
      */
-    _generateBootstrapId(callback) {
-        multihashing(crypto.randomBytes(16), "sha2-256", (err, digest) => {
-            if (err) {
-                return callback(err);
-            }
-            callback(null, new PeerId(digest));
-        });
+    _generateBootstrapId() {
+        const digest = multi.hash.create(crypto.randomBytes(16), "sha2-256");
+        return new PeerId(digest);
     }
 });

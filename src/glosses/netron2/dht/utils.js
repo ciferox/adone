@@ -6,30 +6,24 @@ const map = require("async/map");
 
 const {
     netron2: { PeerId, record: { Record } },
-    multi: { hash: { async: multihashing } }
+    multi
 } = adone;
 
 /**
  * Creates a DHT ID by hashing a given buffer.
  *
  * @param {Buffer} buf
- * @param {function(Error, Buffer)} callback
  * @returns {void}
  */
-exports.convertBuffer = (buf, callback) => {
-    multihashing.digest(buf, "sha2-256", callback);
-};
+exports.convertBuffer = (buf) => multi.hash.digest(buf, "sha2-256");
 
 /**
  * Creates a DHT ID by hashing a Peer ID
  *
  * @param {PeerId} peer
- * @param {function(Error, Buffer)} callback
  * @returns {void}
  */
-exports.convertPeerId = (peer, callback) => {
-    multihashing.digest(peer.id, "sha2-256", callback);
-};
+exports.convertPeerId = (peer) => multi.hash.digest(peer.id, "sha2-256");
 
 /**
  * Convert a buffer to their SHA2-256 hash.
@@ -101,16 +95,16 @@ exports.decodeBase32 = (raw) => {
  */
 exports.sortClosestPeers = (peers, target, callback) => {
     map(peers, (peer, cb) => {
-        exports.convertPeerId(peer, (err, id) => {
-            if (err) {
-                return cb(err);
-            }
+        try {
+            const id = exports.convertPeerId(peer);
 
             cb(null, {
                 peer,
                 distance: distance(id, target)
             });
-        });
+        } catch (err) {
+            cb(err);
+        }
     }, (err, distances) => {
         if (err) {
             return callback(err);
@@ -141,16 +135,14 @@ exports.xorCompare = (a, b) => {
  * @param {function(Error, Buffer)} callback
  * @returns {void}
  */
-exports.createPutRecord = (key, value, peer, sign, callback) => {
+exports.createPutRecord = (key, value, peer, sign) => {
     const rec = new Record(key, value, peer);
 
     if (sign) {
-        return rec.serializeSigned(peer.privKey, callback);
+        return rec.serializeSigned(peer.privKey);
     }
 
-    setImmediate(() => {
-        callback(null, rec.serialize());
-    });
+    return rec.serialize();
 };
 
 /**

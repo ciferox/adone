@@ -40,16 +40,16 @@ module.exports = (conn, callback) => {
 
             const input = msg.decode(data[0]);
 
-            PeerId.createFromPubKey(input.publicKey, (err, id) => {
-                if (err) {
-                    return callback(err);
-                }
-
+            try {
+                const id = PeerId.createFromPubKey(input.publicKey);
+    
                 const peerInfo = new PeerInfo(id);
                 input.listenAddrs.map(multi.address.create).forEach((ma) => peerInfo.multiaddrs.add(ma));
-
+    
                 callback(null, peerInfo, getObservedAddrs(input));
-            });
+            } catch (err) {
+                callback(err);
+            }
         })
     );
 };

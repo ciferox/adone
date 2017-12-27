@@ -2,24 +2,6 @@ const {
     is
 } = adone;
 
-exports.toCallback = (doWork) => {
-    return function (input, callback) {
-        const done = (err, res) => setImmediate(() => {
-            callback(err, res);
-        });
-
-        let res;
-        try {
-            res = doWork(input);
-        } catch (err) {
-            done(err);
-            return;
-        }
-
-        done(null, res);
-    };
-};
-
 exports.toBuf = (doWork, other) => (input) => {
     const result = doWork(input, other);
     return Buffer.from(result, "hex");

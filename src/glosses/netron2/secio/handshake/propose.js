@@ -15,9 +15,17 @@ module.exports = function propose(state, cb) {
         (cb) => support.read(state.shake, cb),
         (msg, cb) => {
             adone.log("1. propose - reading proposal", msg);
-            crypto.identify(state, msg, cb);
+            crypto.identify(state, msg);
+            cb();
         },
-        (cb) => crypto.selectProtocols(state, cb)
+        (cb) => {
+            try {
+                crypto.selectProtocols(state);
+                cb();
+            } catch (err) {
+                return cb(err);
+            }
+        }
     ], (err) => {
         if (err) {
             return cb(err);

@@ -11,47 +11,21 @@ describe("MulticastDNS", () => {
     let pC;
     let pD;
 
-    before(function (done) {
+    before(function () {
         this.timeout(25000);
-        parallel([
-            (cb) => {
-                PeerInfo.create((err, peer) => {
-                    assert.notExists(err);
 
-                    pA = peer;
-                    pA.multiaddrs.add(multi.address.create("/ip4/127.0.0.1/tcp/20001"));
-                    cb();
-                });
-            },
-            (cb) => {
-                PeerInfo.create((err, peer) => {
-                    assert.notExists(err);
+        pA = PeerInfo.create();
+        pA.multiaddrs.add(multi.address.create("/ip4/127.0.0.1/tcp/20001"));
 
-                    pB = peer;
-                    pB.multiaddrs.add(multi.address.create("/ip4/127.0.0.1/tcp/20002"));
-                    cb();
-                });
-            },
-            (cb) => {
-                PeerInfo.create((err, peer) => {
-                    assert.notExists(err);
-                    pC = peer;
-                    pC.multiaddrs.add(multi.address.create("/ip4/127.0.0.1/tcp/20003"));
-                    pC.multiaddrs.add(multi.address.create("/ip4/127.0.0.1/tcp/30003/ws"));
-                    cb();
-                });
-            },
-            (cb) => {
-                PeerInfo.create((err, peer) => {
-                    if (err) {
-                        cb(err);
-                    }
-                    pD = peer;
-                    pD.multiaddrs.add(multi.address.create("/ip4/127.0.0.1/tcp/30003/ws"));
-                    cb();
-                });
-            }
-        ], done);
+        pB = PeerInfo.create();
+        pB.multiaddrs.add(multi.address.create("/ip4/127.0.0.1/tcp/20002"));
+
+        pC = PeerInfo.create();
+        pC.multiaddrs.add(multi.address.create("/ip4/127.0.0.1/tcp/20003"));
+        pC.multiaddrs.add(multi.address.create("/ip4/127.0.0.1/tcp/30003/ws"));
+
+        pD = PeerInfo.create();
+        pD.multiaddrs.add(multi.address.create("/ip4/127.0.0.1/tcp/30003/ws"));
     });
 
     it("find another peer", (done) => {

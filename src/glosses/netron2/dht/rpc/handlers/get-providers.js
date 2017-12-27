@@ -40,7 +40,9 @@ module.exports = (dht) => {
                 cb(null, exists);
             }),
             (cb) => dht.providers.getProviders(cid, cb),
-            (cb) => dht._betterPeersToQuery(msg, peer, cb)
+            (cb) => {
+                cb(null, dht._betterPeersToQuery(msg, peer));
+            }
         ], (err, res) => {
             if (err) {
                 return callback(err);

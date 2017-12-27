@@ -48,7 +48,9 @@ module.exports = (dht) => {
 
         parallel([
             (cb) => dht._checkLocalDatastore(key, cb),
-            (cb) => dht._betterPeersToQuery(msg, peer, cb)
+            (cb) => {
+                cb(null, dht._betterPeersToQuery(msg, peer));
+            }
         ], (err, res) => {
             if (err) {
                 return callback(err);

@@ -10,14 +10,10 @@ const T = Message.TYPES.FIND_NODE;
 
 describe("rpc - handlers - FindNode", () => {
     let peers;
-    let dht;
+    let myDht;
 
-    before((done) => {
-        util.makePeers(3, (err, res) => {
-            assert.notExists(err);
-            peers = res;
-            done();
-        });
+    before(() => {
+        peers = util.makePeers(3);
     });
 
     afterEach((done) => util.teardown(done));
@@ -25,20 +21,20 @@ describe("rpc - handlers - FindNode", () => {
     beforeEach((done) => {
         util.setupDHT((err, res) => {
             assert.notExists(err);
-            dht = res;
+            myDht = res;
             done();
         });
     });
 
     it("returns self, if asked for self", (done) => {
-        const msg = new Message(T, dht.peerInfo.id.id, 0);
+        const msg = new Message(T, myDht.peerInfo.id.id, 0);
 
-        findNode(dht)(peers[1], msg, (err, response) => {
+        findNode(myDht)(peers[1], msg, (err, response) => {
             assert.notExists(err);
             expect(response.closerPeers).to.have.length(1);
             const peer = response.closerPeers[0];
 
-            expect(peer.id.id).to.be.eql(dht.peerInfo.id.id);
+            expect(peer.id.id).to.be.eql(myDht.peerInfo.id.id);
             done();
         });
     });
@@ -47,20 +43,16 @@ describe("rpc - handlers - FindNode", () => {
         const msg = new Message(T, Buffer.from("hello"), 0);
         const other = peers[1];
 
+        myDht._add(other);
         waterfall([
-            (cb) => dht._add(other, cb),
-            (cb) => findNode(dht)(peers[2], msg, cb)
+            (cb) => findNode(myDht)(peers[2], msg, cb)
         ], (err, response) => {
             assert.notExists(err);
             expect(response.closerPeers).to.have.length(1);
             const peer = response.closerPeers[0];
 
             expect(peer.id.id).to.be.eql(peers[1].id.id);
-            expect(
-                peer.multiaddrs.toArray()
-            ).to.be.eql(
-                peers[1].multiaddrs.toArray()
-            );
+            expect(peer.multiaddrs.toArray()).to.be.eql(peers[1].multiaddrs.toArray());
 
             done();
         });
@@ -69,7 +61,7 @@ describe("rpc - handlers - FindNode", () => {
     it("handles no peers found", (done) => {
         const msg = new Message(T, Buffer.from("hello"), 0);
 
-        findNode(dht)(peers[2], msg, (err, response) => {
+        findNode(myDht)(peers[2], msg, (err, response) => {
             assert.notExists(err);
             expect(response.closerPeers).to.have.length(0);
             done();

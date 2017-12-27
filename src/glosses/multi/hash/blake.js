@@ -2,8 +2,6 @@ const {
     crypto: { hash: { blake } }
 } = adone;
 
-const toCallback = require("./utils").toCallback;
-
 const minB = 0xb201;
 const minS = 0xb241;
 
@@ -19,11 +17,11 @@ const blake2s = {
     digest: blake.blake2sFinal
 };
 
-const makeB2Hash = (size, hf) => toCallback((buf) => {
+const makeB2Hash = (size, hf) => (buf) => {
     const ctx = hf.init(size, null);
     hf.update(ctx, buf);
     return Buffer.from(hf.digest(ctx));
-});
+};
 
 module.exports = (table) => {
     for (let i = 0; i < 64; i++) {

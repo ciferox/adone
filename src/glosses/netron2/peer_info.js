@@ -135,26 +135,17 @@ export default class PeerInfo {
         return this._connectedMultiaddr;
     }
 
-    static create(peerId, callback) {
-        if (is.function(peerId)) {
-            callback = peerId;
-            peerId = null;
-
-            PeerId.create((err, id) => {
-                if (err) {
-                    return callback(err);
-                }
-
-                callback(null, new PeerInfo(id));
-            });
-            return;
+    static create(peerId) {
+        if (!peerId) {
+            const id = PeerId.create();
+            return new PeerInfo(id);
         }
 
         // Already a PeerId instance
         if (is.function(peerId.toJSON)) {
-            return callback(null, new PeerInfo(peerId));
+            return new PeerInfo(peerId);
         }
-        PeerId.createFromJSON(peerId, (err, id) => callback(err, new PeerInfo(id)));
+        return new PeerInfo(PeerId.createFromJSON(peerId));
     }
 
     static isPeerInfo(peerInfo) {

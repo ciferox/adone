@@ -7,19 +7,13 @@ const {
 describe("netron2", "crypto", function () {
     this.timeout(20 * 1000);
     let key;
-    before((done) => {
-        crypto.keys.generateKeyPair("RSA", 2048, (err, _key) => {
-            if (err) {
-                return done(err);
-            }
-            key = _key;
-            done();
-        });
+    before(function() {
+        this.timeout(20000);
+        key = crypto.keys.generateKeyPair("RSA", 2048);
     });
 
     it("marshalPublicKey and unmarshalPublicKey", () => {
-        const key2 = crypto.keys.unmarshalPublicKey(
-            crypto.keys.marshalPublicKey(key.public));
+        const key2 = crypto.keys.unmarshalPublicKey(crypto.keys.marshalPublicKey(key.public));
 
         expect(key2.equals(key.public)).to.be.eql(true);
 
@@ -28,71 +22,43 @@ describe("netron2", "crypto", function () {
         }).to.throw();
     });
 
-    it("marshalPrivateKey and unmarshalPrivateKey", (done) => {
+    it("marshalPrivateKey and unmarshalPrivateKey", () => {
         expect(() => {
             crypto.keys.marshalPrivateKey(key, "invalid-key-type");
         }).to.throw();
 
-        crypto.keys.unmarshalPrivateKey(crypto.keys.marshalPrivateKey(key), (err, key2) => {
-            if (err) {
-                return done(err);
-            }
-
-            expect(key2.equals(key)).to.be.eql(true);
-            expect(key2.public.equals(key.public)).to.be.eql(true);
-            done();
-        });
+        const key2 = crypto.keys.unmarshalPrivateKey(crypto.keys.marshalPrivateKey(key));
+        expect(key2.equals(key)).to.be.eql(true);
+        expect(key2.public.equals(key.public)).to.be.eql(true);
     });
 
     // marshalled keys seem to be slightly different
     // unsure as to if this is just a difference in encoding
     // or a bug
     describe("go interop", () => {
-        it("unmarshals private key", (done) => {
-            crypto.keys.unmarshalPrivateKey(fixtures.private.key, (err, key) => {
-                if (err) {
-                    return done(err);
-                }
-                const hash = fixtures.private.hash;
-                expect(fixtures.private.key).to.eql(key.bytes);
+        it("unmarshals private key", () => {
+            const key = crypto.keys.unmarshalPrivateKey(fixtures.private.key);
+            const hash = fixtures.private.hash;
+            expect(fixtures.private.key).to.eql(key.bytes);
 
-                key.hash((err, digest) => {
-                    if (err) {
-                        return done(err);
-                    }
-
-                    expect(digest).to.eql(hash);
-                    done();
-                });
-            });
+            const digest = key.hash();
+            expect(digest).to.eql(hash);
         });
 
-        it("unmarshals public key", (done) => {
+        it("unmarshals public key", () => {
             const key = crypto.keys.unmarshalPublicKey(fixtures.public.key);
             const hash = fixtures.public.hash;
 
             expect(crypto.keys.marshalPublicKey(key)).to.eql(fixtures.public.key);
 
-            key.hash((err, digest) => {
-                if (err) {
-                    return done(err);
-                }
-
-                expect(digest).to.eql(hash);
-                done();
-            });
+            const digest = key.hash();
+            expect(digest).to.eql(hash);
         });
 
-        it("unmarshal -> marshal, private key", (done) => {
-            crypto.keys.unmarshalPrivateKey(fixtures.private.key, (err, key) => {
-                if (err) {
-                    return done(err);
-                }
-
-                const marshalled = crypto.keys.marshalPrivateKey(key);
-                expect(marshalled).to.eql(fixtures.private.key);
-                done();
-            });
+        it("unmarshal -> marshal, private key", () => {
+            const key = crypto.keys.unmarshalPrivateKey(fixtures.private.key);
+            const marshalled = crypto.keys.marshalPrivateKey(key);
+            expect(marshalled).to.eql(fixtures.private.key);
         });
 
         it("unmarshal -> marshal, public key", () => {

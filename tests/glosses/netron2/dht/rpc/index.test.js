@@ -1,4 +1,4 @@
-const makePeers = require("../utils").makePeers;
+const { makePeers } = require("../utils");
 
 const {
     netron2: { Connection, multiplex, dht, swarm: { Swarm }, PeerBook, transport: { TCP } },
@@ -10,15 +10,24 @@ const { rpc, Message } = adone.private(dht);
 describe("rpc", () => {
     let peerInfos;
 
-    before((done) => {
-        makePeers(2, (err, peers) => {
-            if (err) {
-                return done(err);
-            }
+    const makeConnection = function (msg, info, callback) {
+        const rawConn = {
+            source: pull(
+                pull.values([msg.serialize()]),
+                pull.lengthPrefixed.encode()
+            ),
+            sink: pull(
+                pull.lengthPrefixed.decode(),
+                pull.collect(callback)
+            )
+        };
+        const conn = new Connection(rawConn);
+        conn.setPeerInfo(info);
+        return conn;
+    };
 
-            peerInfos = peers;
-            done();
-        });
+    before(() => {
+        peerInfos = makePeers(2);
     });
 
     describe("protocolHandler", () => {
@@ -47,19 +56,3 @@ describe("rpc", () => {
         });
     });
 });
-
-function makeConnection(msg, info, callback) {
-    const rawConn = {
-        source: pull(
-            pull.values([msg.serialize()]),
-            pull.lengthPrefixed.encode()
-        ),
-        sink: pull(
-            pull.lengthPrefixed.decode(),
-            pull.collect(callback)
-        )
-    };
-    const conn = new Connection(rawConn);
-    conn.setPeerInfo(info);
-    return conn;
-}

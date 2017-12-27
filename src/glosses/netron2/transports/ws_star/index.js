@@ -3,7 +3,6 @@ const log = debug("libp2p:websocket-star");
 const utils = require("./utils");
 const Listener = require("./listener");
 const cleanUrlSIO = utils.cleanUrlSIO;
-const mafmt = require("mafmt");
 
 const {
     event: { EventEmitter },
@@ -111,7 +110,7 @@ class WebsocketStar {
             multiaddrs = [multiaddrs];
         }
 
-        return multiaddrs.filter((ma) => mafmt.WebSocketStar.matches(ma));
+        return multiaddrs.filter((ma) => multi.address.validator.WebSocketStar.matches(ma));
     }
 
     /**

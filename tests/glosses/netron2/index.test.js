@@ -77,30 +77,17 @@ class TestNode extends Node {
     }
 }
 
-const createNode = function (multiaddrs, options, callback) {
-    if (is.function(options)) {
-        callback = options;
-        options = {};
-    }
-
+const createNode = function (multiaddrs, options) {
     options = options || {};
 
     if (!is.array(multiaddrs)) {
         multiaddrs = [multiaddrs];
     }
 
-    waterfall([
-        (cb) => PeerId.create({ bits: 1024 }, cb),
-        (peerId, cb) => PeerInfo.create(peerId, cb),
-        (peerInfo, cb) => {
-            multiaddrs.map((ma) => peerInfo.multiaddrs.add(ma));
-            cb(null, peerInfo);
-        },
-        (peerInfo, cb) => {
-            const node = new TestNode(peerInfo, undefined, options);
-            cb(null, node);
-        }
-    ], callback);
+    const peerId = PeerId.create({ bits: 1024 });
+    const peerInfo = PeerInfo.create(peerId);
+    multiaddrs.map((ma) => peerInfo.multiaddrs.add(ma));
+    return new TestNode(peerInfo, undefined, options);
 };
 
 const echo = function (protocol, conn) {
@@ -108,25 +95,23 @@ const echo = function (protocol, conn) {
 };
 
 describe("netron2", () => {
-    describe("trasports", () => {
+    describe("transports", () => {
         describe("TCP only", () => {
             let nodeA;
             let nodeB;
 
             before((done) => {
                 parallel([
-                    (cb) => createNode("/ip4/0.0.0.0/tcp/0", (err, node) => {
-                        assert.notExists(err);
-                        nodeA = node;
-                        node.handle("/echo/1.0.0", echo);
-                        node.start(cb);
-                    }),
-                    (cb) => createNode("/ip4/0.0.0.0/tcp/0", (err, node) => {
-                        assert.notExists(err);
-                        nodeB = node;
-                        node.handle("/echo/1.0.0", echo);
-                        node.start(cb);
-                    })
+                    (cb) => {
+                        nodeA = createNode("/ip4/0.0.0.0/tcp/0");
+                        nodeA.handle("/echo/1.0.0", echo);
+                        nodeA.start(cb);
+                    },
+                    (cb) => {
+                        nodeB = createNode("/ip4/0.0.0.0/tcp/0");
+                        nodeB.handle("/echo/1.0.0", echo);
+                        nodeB.start(cb);
+                    }
                 ], done);
             });
 
@@ -338,31 +323,21 @@ describe("netron2", () => {
 
             before((done) => {
                 parallel([
-                    (cb) => createNode([
-                        "/ip4/0.0.0.0/tcp/0"
-                    ], (err, node) => {
-                        assert.notExists(err);
-                        nodeTCP = node;
-                        node.handle("/echo/1.0.0", echo);
-                        node.start(cb);
-                    }),
-                    (cb) => createNode([
-                        "/ip4/0.0.0.0/tcp/0",
-                        "/ip4/127.0.0.1/tcp/25011/ws"
-                    ], (err, node) => {
-                        assert.notExists(err);
-                        nodeTCPnWS = node;
-                        node.handle("/echo/1.0.0", echo);
-                        node.start(cb);
-                    }),
-                    (cb) => createNode([
-                        "/ip4/127.0.0.1/tcp/25022/ws"
-                    ], (err, node) => {
-                        assert.notExists(err);
-                        nodeWS = node;
-                        node.handle("/echo/1.0.0", echo);
-                        node.start(cb);
-                    })
+                    (cb) => {
+                        nodeTCP = createNode(["/ip4/0.0.0.0/tcp/0"]);
+                        nodeTCP.handle("/echo/1.0.0", echo);
+                        nodeTCP.start(cb);
+                    },
+                    (cb) => {
+                        nodeTCPnWS = createNode(["/ip4/0.0.0.0/tcp/0", "/ip4/127.0.0.1/tcp/25011/ws"]);
+                        nodeTCPnWS.handle("/echo/1.0.0", echo);
+                        nodeTCPnWS.start(cb);
+                    },
+                    (cb) => {
+                        nodeWS = createNode(["/ip4/127.0.0.1/tcp/25022/ws"]);
+                        nodeWS.handle("/echo/1.0.0", echo);
+                        nodeWS.start(cb);
+                    }
                 ], done);
             });
 
@@ -488,7 +463,7 @@ describe("netron2", () => {
             });
         });
 
-        describe("TCP + WebSockets + WebRTCStar", () => {
+        describe.todo("TCP + WebSockets + WebRTCStar", () => {
             let nodeAll;
             let nodeTCP;
             let nodeWS;
@@ -497,7 +472,7 @@ describe("netron2", () => {
             let ss;
 
             before(function (done) {
-                this.timeout(5 * 1000);
+                this.timeout(30000);
 
                 parallel([
                     (cb) => {
@@ -509,53 +484,37 @@ describe("netron2", () => {
                     },
                     (cb) => {
                         const wstar = new WebRTCStar({ wrtc });
-                        createNode([
-                            "/ip4/0.0.0.0/tcp/0",
-                            "/ip4/127.0.0.1/tcp/25011/ws",
-                            "/ip4/127.0.0.1/tcp/24642/ws/p2p-webrtc-star"
-                        ], {
+                        nodeAll = createNode(["/ip4/0.0.0.0/tcp/0", "/ip4/127.0.0.1/tcp/25011/ws", "/ip4/127.0.0.1/tcp/24642/ws/p2p-webrtc-star"], {
                             modules: {
                                 transport: [wstar],
                                 discovery: [wstar.discovery]
                             }
-                        }, (err, node) => {
-                            assert.notExists(err);
-                            nodeAll = node;
-                            node.handle("/echo/1.0.0", echo);
-                            node.start(cb);
                         });
+                        nodeAll.handle("/echo/1.0.0", echo);
+                        nodeAll.start(cb);
                     },
-                    (cb) => createNode([
-                        "/ip4/0.0.0.0/tcp/0"
-                    ], (err, node) => {
-                        assert.notExists(err);
-                        nodeTCP = node;
-                        node.handle("/echo/1.0.0", echo);
-                        node.start(cb);
-                    }),
-                    (cb) => createNode([
-                        "/ip4/127.0.0.1/tcp/25022/ws"
-                    ], (err, node) => {
-                        assert.notExists(err);
-                        nodeWS = node;
-                        node.handle("/echo/1.0.0", echo);
-                        node.start(cb);
-                    }),
-
+                    (cb) => {
+                        nodeTCP = createNode(["/ip4/0.0.0.0/tcp/0"]);
+                        nodeTCP.handle("/echo/1.0.0", echo);
+                        nodeTCP.start(cb);
+                    },
+                    (cb) => {
+                        nodeWS = createNode(["/ip4/127.0.0.1/tcp/25022/ws"]);
+                        nodeWS.handle("/echo/1.0.0", echo);
+                        nodeWS.start(cb);
+                    },
                     (cb) => {
                         const wstar = new WebRTCStar({ wrtc });
 
-                        createNode(["/ip4/127.0.0.1/tcp/24642/ws/p2p-webrtc-star"], {
+                        nodeWStar = createNode(["/ip4/127.0.0.1/tcp/24642/ws/p2p-webrtc-star"], {
                             modules: {
                                 transport: [wstar],
                                 discovery: [wstar.discovery]
                             }
-                        }, (err, node) => {
-                            assert.notExists(err);
-                            nodeWStar = node;
-                            node.handle("/echo/1.0.0", echo);
-                            node.start(cb);
                         });
+
+                        nodeWStar.handle("/echo/1.0.0", echo);
+                        nodeWStar.start(cb);
                     }
                 ], done);
             });
@@ -629,7 +588,7 @@ describe("netron2", () => {
             });
         });
 
-        describe("TCP + WebSockets + WebSocketStar", () => {
+        describe.todo("TCP + WebSockets + WebSocketStar", () => {
             let nodeAll;
             let nodeTCP;
             let nodeWS;
@@ -648,57 +607,40 @@ describe("netron2", () => {
                     },
                     (cb) => {
                         const wstar = new WSStar();
-                        createNode([
-                            "/ip4/0.0.0.0/tcp/0",
-                            "/ip4/127.0.0.1/tcp/25011/ws",
-                            "/ip4/127.0.0.1/tcp/24642/ws/p2p-websocket-star"
+                        nodeAll = createNode(["/ip4/0.0.0.0/tcp/0", "/ip4/127.0.0.1/tcp/25011/ws", "/ip4/127.0.0.1/tcp/24642/ws/p2p-websocket-star"
                         ], {
-                            modules: {
-                                transport: [wstar],
-                                discovery: [wstar.discovery]
-                            }
-                        }, (err, node) => {
-                            assert.notExists(err);
-                            nodeAll = node;
-                            wstar.lazySetId(node.peerInfo.id);
-                            node.handle("/echo/1.0.0", echo);
-                            node.start(cb);
-                        });
-                    },
-                    (cb) => createNode([
-                        "/ip4/0.0.0.0/tcp/0"
-                    ], (err, node) => {
-                        assert.notExists(err);
-                        nodeTCP = node;
-                        node.handle("/echo/1.0.0", echo);
-                        node.start(cb);
-                    }),
-                    (cb) => createNode([
-                        "/ip4/127.0.0.1/tcp/25022/ws"
-                    ], (err, node) => {
-                        assert.notExists(err);
-                        nodeWS = node;
-                        node.handle("/echo/1.0.0", echo);
-                        node.start(cb);
-                    }),
+                                modules: {
+                                    transport: [wstar],
+                                    discovery: [wstar.discovery]
+                                }
+                            });
+                        wstar.lazySetId(nodeAll.peerInfo.id);
+                        nodeAll.handle("/echo/1.0.0", echo);
+                        nodeAll.start(cb);
 
+                    },
+                    (cb) => {
+                        nodeTCP = createNode(["/ip4/0.0.0.0/tcp/0"]);
+                        nodeTCP.handle("/echo/1.0.0", echo);
+                        nodeTCP.start(cb);
+                    },
+                    (cb) => {
+                        nodeWS = createNode(["/ip4/127.0.0.1/tcp/25022/ws"]);
+                        nodeWS.handle("/echo/1.0.0", echo);
+                        nodeWS.start(cb);
+                    },
                     (cb) => {
                         const wstar = new WSStar({});
 
-                        createNode([
-                            "/ip4/127.0.0.1/tcp/24642/ws/p2p-websocket-star"
-                        ], {
+                        nodeWStar = createNode(["/ip4/127.0.0.1/tcp/24642/ws/p2p-websocket-star"], {
                             modules: {
                                 transport: [wstar],
                                 discovery: [wstar.discovery]
                             }
-                        }, (err, node) => {
-                            assert.notExists(err);
-                            nodeWStar = node;
-                            wstar.lazySetId(node.peerInfo.id);
-                            node.handle("/echo/1.0.0", echo);
-                            node.start(cb);
                         });
+                        wstar.lazySetId(nodeWStar.peerInfo.id);
+                        nodeWStar.handle("/echo/1.0.0", echo);
+                        nodeWStar.start(cb);
                     }
                 ], done);
             });
@@ -804,22 +746,21 @@ describe("netron2", () => {
 
             const setup = function (callback) {
                 parallel([
-                    (cb) => createNode("/ip4/0.0.0.0/tcp/0", {
-                        muxer: ["spdy"]
-                    }, (err, node) => {
-                        assert.notExists(err);
-                        nodeA = node;
-                        node.handle("/echo/1.0.0", echo);
-                        node.start(cb);
-                    }),
-                    (cb) => createNode("/ip4/0.0.0.0/tcp/0", {
-                        muxer: ["spdy"]
-                    }, (err, node) => {
-                        assert.notExists(err);
-                        nodeB = node;
-                        node.handle("/echo/1.0.0", echo);
-                        node.start(cb);
-                    })
+                    (cb) => {
+                        nodeA = createNode("/ip4/0.0.0.0/tcp/0", {
+                            muxer: ["spdy"]
+                        });
+
+                        nodeA.handle("/echo/1.0.0", echo);
+                        nodeA.start(cb);
+                    },
+                    (cb) => {
+                        nodeB = createNode("/ip4/0.0.0.0/tcp/0", {
+                            muxer: ["spdy"]
+                        });
+                        nodeB.handle("/echo/1.0.0", echo);
+                        nodeB.start(cb);
+                    }
                 ], callback);
             };
 
@@ -836,22 +777,20 @@ describe("netron2", () => {
 
             const setup = function (callback) {
                 parallel([
-                    (cb) => createNode("/ip4/0.0.0.0/tcp/0", {
-                        muxer: ["multiplex"]
-                    }, (err, node) => {
-                        assert.notExists(err);
-                        nodeA = node;
-                        node.handle("/echo/1.0.0", echo);
-                        node.start(cb);
-                    }),
-                    (cb) => createNode("/ip4/0.0.0.0/tcp/0", {
-                        muxer: ["multiplex"]
-                    }, (err, node) => {
-                        assert.notExists(err);
-                        nodeB = node;
-                        node.handle("/echo/1.0.0", echo);
-                        node.start(cb);
-                    })
+                    (cb) => {
+                        nodeA = createNode("/ip4/0.0.0.0/tcp/0", {
+                            muxer: ["multiplex"]
+                        });
+                        nodeA.handle("/echo/1.0.0", echo);
+                        nodeA.start(cb);
+                    },
+                    (cb) => {
+                        nodeB = createNode("/ip4/0.0.0.0/tcp/0", {
+                            muxer: ["multiplex"]
+                        });
+                        nodeB.handle("/echo/1.0.0", echo);
+                        nodeB.start(cb);
+                    }
                 ], callback);
             };
 
@@ -870,22 +809,20 @@ describe("netron2", () => {
 
             const setup = function (callback) {
                 parallel([
-                    (cb) => createNode("/ip4/0.0.0.0/tcp/0", {
-                        muxer: ["spdy", "multiplex"]
-                    }, (err, node) => {
-                        assert.notExists(err);
-                        nodeA = node;
-                        node.handle("/echo/1.0.0", echo);
-                        node.start(cb);
-                    }),
-                    (cb) => createNode("/ip4/0.0.0.0/tcp/0", {
-                        muxer: ["spdy", "multiplex"]
-                    }, (err, node) => {
-                        assert.notExists(err);
-                        nodeB = node;
-                        node.handle("/echo/1.0.0", echo);
-                        node.start(cb);
-                    })
+                    (cb) => {
+                        nodeA = createNode("/ip4/0.0.0.0/tcp/0", {
+                            muxer: ["spdy", "multiplex"]
+                        });
+                        nodeA.handle("/echo/1.0.0", echo);
+                        nodeA.start(cb);
+                    },
+                    (cb) => {
+                        nodeB = createNode("/ip4/0.0.0.0/tcp/0", {
+                            muxer: ["spdy", "multiplex"]
+                        });
+                        nodeB.handle("/echo/1.0.0", echo);
+                        nodeB.start(cb);
+                    }
                 ], callback);
             };
 
@@ -904,22 +841,20 @@ describe("netron2", () => {
 
             const setup = function (callback) {
                 parallel([
-                    (cb) => createNode("/ip4/0.0.0.0/tcp/0", {
-                        muxer: ["spdy", "multiplex"]
-                    }, (err, node) => {
-                        assert.notExists(err);
-                        nodeA = node;
-                        node.handle("/echo/1.0.0", echo);
-                        node.start(cb);
-                    }),
-                    (cb) => createNode("/ip4/0.0.0.0/tcp/0", {
-                        muxer: ["multiplex", "spdy"]
-                    }, (err, node) => {
-                        assert.notExists(err);
-                        nodeB = node;
-                        node.handle("/echo/1.0.0", echo);
-                        node.start(cb);
-                    })
+                    (cb) => {
+                        nodeA = createNode("/ip4/0.0.0.0/tcp/0", {
+                            muxer: ["spdy", "multiplex"]
+                        });
+                        nodeA.handle("/echo/1.0.0", echo);
+                        nodeA.start(cb);
+                    },
+                    (cb) => {
+                        nodeB = createNode("/ip4/0.0.0.0/tcp/0", {
+                            muxer: ["multiplex", "spdy"]
+                        });
+                        nodeB.handle("/echo/1.0.0", echo);
+                        nodeB.start(cb);
+                    }
                 ], callback);
             };
 
@@ -938,22 +873,21 @@ describe("netron2", () => {
 
             const setup = function (callback) {
                 parallel([
-                    (cb) => createNode("/ip4/0.0.0.0/tcp/0", {
-                        muxer: ["spdy"]
-                    }, (err, node) => {
-                        assert.notExists(err);
-                        nodeA = node;
-                        node.handle("/echo/1.0.0", echo);
-                        node.start(cb);
-                    }),
-                    (cb) => createNode("/ip4/0.0.0.0/tcp/0", {
-                        muxer: ["multiplex"]
-                    }, (err, node) => {
-                        assert.notExists(err);
-                        nodeB = node;
-                        node.handle("/echo/1.0.0", echo);
-                        node.start(cb);
-                    })
+                    (cb) => {
+                        nodeA = createNode("/ip4/0.0.0.0/tcp/0", {
+                            muxer: ["spdy"]
+                        });
+                        nodeA.handle("/echo/1.0.0", echo);
+                        nodeA.start(cb);
+                    },
+                    (cb) => {
+
+                        nodeB = createNode("/ip4/0.0.0.0/tcp/0", {
+                            muxer: ["multiplex"]
+                        });
+                        nodeB.handle("/echo/1.0.0", echo);
+                        nodeB.start(cb);
+                    }
                 ], callback);
             };
 
@@ -978,7 +912,7 @@ describe("netron2", () => {
     describe("peer discovery", () => {
         let nodeA;
         let nodeB;
-        let port = 24642;
+        let port = 24649;
         let ss;
 
         const setup = function (options) {
@@ -992,24 +926,16 @@ describe("netron2", () => {
                             cb();
                         });
                     },
-                    (cb) => createNode([
-                        "/ip4/0.0.0.0/tcp/0",
-                        `/ip4/127.0.0.1/tcp/${port}/ws/p2p-webrtc-star`
-                    ], options, (err, node) => {
-                        assert.notExists(err);
-                        nodeA = node;
-                        node.handle("/echo/1.0.0", echo);
-                        node.start(cb);
-                    }),
-                    (cb) => createNode([
-                        "/ip4/0.0.0.0/tcp/0",
-                        `/ip4/127.0.0.1/tcp/${port}/ws/p2p-webrtc-star`
-                    ], options, (err, node) => {
-                        assert.notExists(err);
-                        nodeB = node;
-                        node.handle("/echo/1.0.0", echo);
-                        node.start(cb);
-                    })
+                    (cb) => {
+                        nodeA = createNode(["/ip4/0.0.0.0/tcp/0", `/ip4/127.0.0.1/tcp/${port}/ws/p2p-webrtc-star`], options);
+                        nodeA.handle("/echo/1.0.0", echo);
+                        nodeA.start(cb);
+                    },
+                    (cb) => {
+                        nodeB = createNode(["/ip4/0.0.0.0/tcp/0", `/ip4/127.0.0.1/tcp/${port}/ws/p2p-webrtc-star`], options);
+                        nodeB.handle("/echo/1.0.0", echo);
+                        nodeB.start(cb);
+                    }
                 ], done);
             });
 
@@ -1050,7 +976,7 @@ describe("netron2", () => {
             });
         });
 
-        describe("MulticastDNS + WebRTCStar", () => {
+        describe.todo("MulticastDNS + WebRTCStar", () => {
             setup({
                 webRTCStar: true,
                 mdns: true
@@ -1078,13 +1004,11 @@ describe("netron2", () => {
             this.timeout(5 * 1000);
 
             const tasks = _times(5, () => (cb) => {
-                createNode("/ip4/0.0.0.0/tcp/0", {
+                const node = createNode("/ip4/0.0.0.0/tcp/0", {
                     mdns: false,
                     dht: true
-                }, (err, node) => {
-                    assert.notExists(err);
-                    node.start((err) => cb(err, node));
                 });
+                node.start((err) => cb(err, node));
             });
 
             parallel(tasks, (err, nodes) => {
@@ -1161,13 +1085,11 @@ describe("netron2", () => {
         before(function (done) {
             this.timeout(5 * 1000);
             const tasks = _times(5, () => (cb) => {
-                createNode("/ip4/0.0.0.0/tcp/0", {
+                const node = createNode("/ip4/0.0.0.0/tcp/0", {
                     mdns: false,
                     dht: true
-                }, (err, node) => {
-                    assert.notExists(err);
-                    node.start((err) => cb(err, node));
                 });
+                node.start((err) => cb(err, node));
             });
 
             parallel(tasks, (err, nodes) => {
@@ -1246,16 +1168,13 @@ describe("netron2", () => {
 
             options = options || {};
 
-            return createNode(addrs, options, (err, node) => {
+            const node = createNode(addrs, options);
+            node.handle("/echo/1.0.0", echo);
+            return node.start((err) => {
                 assert.notExists(err);
 
-                node.handle("/echo/1.0.0", echo);
-                node.start((err) => {
-                    assert.notExists(err);
-
-                    handlerSpies.push(spy(node.swarm.transports[Circuit.tag].listeners[0].hopHandler, "handle"));
-                    cb(node);
-                });
+                handlerSpies.push(spy(node.swarm.transports[Circuit.tag].listeners[0].hopHandler, "handle"));
+                cb(node);
             });
         };
 
@@ -1268,79 +1187,79 @@ describe("netron2", () => {
                     "/ip4/0.0.0.0/tcp/0/ws",
                     "/ip4/0.0.0.0/tcp/0"
                 ], {
-                    relay: {
-                        enabled: true,
-                        hop: {
+                        relay: {
                             enabled: true,
-                            active: false // passive relay
+                            hop: {
+                                enabled: true,
+                                active: false // passive relay
+                            }
                         }
-                    }
-                }, (node) => {
-                    relayNode1 = node;
-                    cb();
-                }),
+                    }, (node) => {
+                        relayNode1 = node;
+                        cb();
+                    }),
                 // setup active relay
                 (cb) => setupNode([
                     "/ip4/0.0.0.0/tcp/0/ws",
                     "/ip4/0.0.0.0/tcp/0"
                 ], {
-                    relay: {
-                        enabled: true,
-                        hop: {
+                        relay: {
                             enabled: true,
-                            active: false // passive relay
+                            hop: {
+                                enabled: true,
+                                active: false // passive relay
+                            }
                         }
-                    }
-                }, (node) => {
-                    relayNode2 = node;
-                    cb();
-                }),
+                    }, (node) => {
+                        relayNode2 = node;
+                        cb();
+                    }),
                 // setup node with WS
                 (cb) => setupNode([
                     "/ip4/0.0.0.0/tcp/0/ws"
                 ], {
-                    relay: {
-                        enabled: true
-                    }
-                }, (node) => {
-                    nodeWS1 = node;
-                    cb();
-                }),
+                        relay: {
+                            enabled: true
+                        }
+                    }, (node) => {
+                        nodeWS1 = node;
+                        cb();
+                    }),
                 // setup node with WS
                 (cb) => setupNode([
                     "/ip4/0.0.0.0/tcp/0/ws"
                 ], {
-                    relay: {
-                        enabled: true
-                    }
-                }, (node) => {
-                    nodeWS2 = node;
-                    cb();
-                }),
+                        relay: {
+                            enabled: true
+                        }
+                    }, (node) => {
+                        nodeWS2 = node;
+                        cb();
+                    }),
                 // set up node with TCP and listening on relay1
                 (cb) => setupNode([
                     "/ip4/0.0.0.0/tcp/0",
                     `/ipfs/${relayNode1.peerInfo.id.toB58String()}/p2p-circuit`
                 ], {
-                    relay: {
-                        enabled: true
-                    }
-                }, (node) => {
-                    nodeTCP1 = node;
-                    cb();
-                }),
+                        relay: {
+                            enabled: true
+                        }
+                    }, (node) => {
+                        nodeTCP1 = node;
+                        cb();
+                    }),
                 // set up node with TCP and listening on relay2 over TCP transport
                 (cb) => setupNode([
                     "/ip4/0.0.0.0/tcp/0",
                     `/ip4/0.0.0.0/tcp/0/ipfs/${relayNode2.peerInfo.id.toB58String()}/p2p-circuit`
                 ], {
-                    relay: {
-                        enabled: true
-                    }
-                }, (node) => {
-                    nodeTCP2 = node;
-                    cb();
-                })
+                        relay: {
+                            enabled: true
+                        }
+                    }, (node) => {
+                        nodeTCP2 = node;
+                        cb();
+                    })
             ], (err) => {
                 assert.notExists(err);
 
@@ -1443,18 +1362,14 @@ describe("netron2", () => {
             let node;
 
             series([
-                (cb) => createNode([
-                    "/ip4/0.0.0.0/tcp/999/wss/p2p-webrtc-direct",
-                    "/ip4/127.0.0.1/tcp/55555/ws",
-                    "/ip4/0.0.0.0/tcp/0/"
-                ], (err, _node) => {
-                    assert.notExists(err);
-                    node = _node;
+                (cb) => {
+                    node = createNode(["/ip4/0.0.0.0/tcp/999/wss/p2p-webrtc-direct", "/ip4/127.0.0.1/tcp/55555/ws", "/ip4/0.0.0.0/tcp/0/"
+                    ]);
                     const multiaddrs = node.peerInfo.multiaddrs.toArray();
                     // multiaddrs.forEach((ma) => console.log(ma.toString()))
                     expect(multiaddrs).to.have.length(3);
                     cb();
-                }),
+                },
                 (cb) => node.start(cb)
             ], (err) => {
                 assert.notExists(err);

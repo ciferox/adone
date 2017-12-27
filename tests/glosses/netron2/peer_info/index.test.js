@@ -8,28 +8,19 @@ const {
 describe("netron2", "PeerInfo", () => {
     let pi;
 
-    beforeEach((done) => {
-        PeerId.create({ bits: 512 }, (err, id) => {
-            if (err) {
-                return done(err);
-            }
-            pi = new PeerInfo(id);
-            done();
-        });
+    beforeEach(() => {
+        pi = new PeerInfo(PeerId.create({ bits: 512 }));
     });
 
-    it("create with PeerId class", (done) => {
-        PeerId.create({ bits: 512 }, (err, id) => {
-            assert.notExists(err);
-            const pi = new PeerInfo(id);
-            const pi2 = new PeerInfo(id);
-            assert.exists(pi.id);
-            expect(pi.id).to.eql(id);
-            assert.exists(pi2);
-            assert.exists(pi2.id);
-            expect(pi2.id).to.eql(id);
-            done();
-        });
+    it("create with PeerId class", () => {
+        const id = PeerId.create({ bits: 512 });
+        const pi = new PeerInfo(id);
+        const pi2 = new PeerInfo(id);
+        assert.exists(pi.id);
+        expect(pi.id).to.eql(id);
+        assert.exists(pi2);
+        assert.exists(pi2.id);
+        expect(pi2.id).to.eql(id);
     });
 
     it("throws when not passing an PeerId", () => {
@@ -42,34 +33,23 @@ describe("netron2", "PeerInfo", () => {
         expect(PeerInfo.isPeerInfo("bananas")).to.equal(false);
     });
 
-    it(".create", function (done) {
+    it(".create", function () {
         this.timeout(20 * 1000);
-        PeerInfo.create((err, pi) => {
-            assert.notExists(err);
-            assert.exists(pi.id);
-            done();
-        });
+        const pi = PeerInfo.create();
+        assert.exists(pi.id);
     });
 
-    it("create with PeerId as JSON", (done) => {
-        PeerInfo.create(peerIdJSON, (err, pi) => {
-            assert.notExists(err);
-            assert.exists(pi.id);
-            expect(pi.id.toJSON()).to.eql(peerIdJSON);
-            done();
-        });
+    it("create with PeerId as JSON", () => {
+        const pi = PeerInfo.create(peerIdJSON);
+        assert.exists(pi.id);
+        expect(pi.id.toJSON()).to.eql(peerIdJSON);
     });
 
-    it(".create with existing id", (done) => {
-        PeerId.create({ bits: 512 }, (err, id) => {
-            assert.notExists(err);
-            PeerInfo.create(id, (err, pi) => {
-                assert.notExists(err);
-                assert.exists(pi.id);
-                expect(pi.id.isEqual(id)).to.equal(true);
-                done();
-            });
-        });
+    it(".create with existing id", () => {
+        const id = PeerId.create({ bits: 512 });
+        const pi = PeerInfo.create(id);
+        assert.exists(pi.id);
+        expect(pi.id.isEqual(id)).to.equal(true);
     });
 
     it("add multiaddr", () => {

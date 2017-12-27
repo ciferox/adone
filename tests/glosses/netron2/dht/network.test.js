@@ -1,5 +1,5 @@
 const series = require("async/series");
-const makePeers = require("./utils").makePeers;
+const { makePeers } = require("./utils");
 
 const {
     netron2: { multiplex, dht, swarm: { Swarm }, PeerBook, Connection, transport: { TCP } },
@@ -14,23 +14,17 @@ describe("Network", () => {
 
     before(function (done) {
         this.timeout(10 * 1000);
-        makePeers(3, (err, result) => {
-            if (err) {
-                return done(err);
-            }
+        peerInfos = makePeers(3);
+        const swarm = new Swarm(peerInfos[0], new PeerBook());
+        swarm.transport.add("tcp", new TCP());
+        swarm.connection.addStreamMuxer(multiplex);
+        swarm.connection.reuse();
+        dht = new KadDHT(swarm);
 
-            peerInfos = result;
-            const swarm = new Swarm(peerInfos[0], new PeerBook());
-            swarm.transport.add("tcp", new TCP());
-            swarm.connection.addStreamMuxer(multiplex);
-            swarm.connection.reuse();
-            dht = new KadDHT(swarm);
-
-            series([
-                (cb) => swarm.listen(cb),
-                (cb) => dht.start(cb)
-            ], done);
-        });
+        series([
+            (cb) => swarm.listen(cb),
+            (cb) => dht.start(cb)
+        ], done);
     });
 
     after(function (done) {

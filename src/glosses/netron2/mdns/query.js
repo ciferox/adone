@@ -64,15 +64,14 @@ module.exports = {
 
         const peerId = PeerId.createFromB58String(b58Id);
 
-        PeerInfo.create(peerId, (err, peerFound) => {
-            if (err) {
-                return adone.error("Error creating PeerInfo from new found peer", err);
-            }
-
+        try {
+            const peerFound = PeerInfo.create(peerId);    
             multiaddrs.forEach((addr) => peerFound.multiaddrs.add(addr));
-
             callback(null, peerFound);
-        });
+        } catch (err) {
+            callback(err);
+            return adone.error("Error creating PeerInfo from new found peer", err);
+        }
     },
 
     gotQuery(qry, mdns, peerInfo, serviceTag, broadcast) {

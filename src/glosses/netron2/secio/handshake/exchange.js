@@ -9,17 +9,30 @@ module.exports = function exchange(state, cb) {
     adone.log("2. exchange - start");
 
     adone.log("2. exchange - writing exchange");
+
+    const ex = crypto.createExchange(state);
     waterfall([
-        (cb) => crypto.createExchange(state, cb),
-        (ex, cb) => {
+        (cb) => {
             support.write(state, ex);
             support.read(state.shake, cb);
         },
         (msg, cb) => {
             adone.log("2. exchange - reading exchange");
-            crypto.verify(state, msg, cb);
+            try {
+                crypto.verify(state, msg);
+                cb();
+            } catch (err) {
+                cb(err);
+            }
         },
-        (cb) => crypto.generateKeys(state, cb)
+        (cb) => {
+            try {
+                crypto.generateKeys(state);
+                cb();
+            } catch (err) {
+                cb(err);
+            }
+        }
     ], (err) => {
         if (err) {
             return cb(err);

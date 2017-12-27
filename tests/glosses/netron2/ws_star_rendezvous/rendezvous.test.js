@@ -1,8 +1,8 @@
 const io = require("socket.io-client");
-const multiaddr = require("multiaddr");
 const uuid = require("uuid");
 
 const {
+    multi,
     netron2: { rendezvous }
 } = adone;
 
@@ -19,10 +19,10 @@ describe("rendezvous", () => {
     let c3;
     let c4;
 
-    const c1mh = multiaddr("/ip4/127.0.0.1/tcp/9090/ws/p2p-websocket-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo1");
-    const c2mh = multiaddr("/ip4/127.0.0.1/tcp/9090/ws/p2p-websocket-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo2");
-    const c3mh = multiaddr("/ip4/127.0.0.1/tcp/9090/ws/p2p-websocket-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo3");
-    const c4mh = multiaddr("/ip4/127.0.0.1/tcp/9090/ws/p2p-websocket-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4");
+    const c1mh = multi.address.create("/ip4/127.0.0.1/tcp/9090/ws/p2p-websocket-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo1");
+    const c2mh = multi.address.create("/ip4/127.0.0.1/tcp/9090/ws/p2p-websocket-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo2");
+    const c3mh = multi.address.create("/ip4/127.0.0.1/tcp/9090/ws/p2p-websocket-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo3");
+    const c4mh = multi.address.create("/ip4/127.0.0.1/tcp/9090/ws/p2p-websocket-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4");
 
     it("start and stop signalling server (default port)", (done) => {
         rendezvous.start((err, server) => {

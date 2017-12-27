@@ -1,4 +1,4 @@
-const makePeers = require("./utils").makePeers;
+const { makePeers } = require("./utils");
 
 const {
     netron2: { multiplex, dht, swarm: { Swarm }, PeerBook, transport: { TCP } }
@@ -10,22 +10,14 @@ describe("Query", () => {
     let peerInfos;
     let dht;
 
-    before(function (done) {
+    before(function () {
         this.timeout(5 * 1000);
-        makePeers(3, (err, result) => {
-            if (err) {
-                return done(err);
-            }
-
-            peerInfos = result;
-            const swarm = new Swarm(peerInfos[0], new PeerBook());
-            swarm.transport.add("tcp", new TCP());
-            swarm.connection.addStreamMuxer(multiplex);
-            swarm.connection.reuse();
-            dht = new KadDHT(swarm);
-
-            done();
-        });
+        peerInfos = makePeers(3);
+        const swarm = new Swarm(peerInfos[0], new PeerBook());
+        swarm.transport.add("tcp", new TCP());
+        swarm.connection.addStreamMuxer(multiplex);
+        swarm.connection.reuse();
+        dht = new KadDHT(swarm);
     });
 
     it("simple run", (done) => {

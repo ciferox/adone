@@ -160,7 +160,9 @@
     "muxrpc": "^2.1.0",
     "pull-json-doubleline": "^2.0.0",
     "pull-randomly-split": "^1.0.4",
-    "wsurl": "^1.0.0"
+    "wsurl": "^1.0.0",
+    "engine.io-client": "^3.1.4",
+    "nanoid": "^1.0.1"
   },
   "optionalDependencies": {
     "fsevents": "^1.0.0"
@@ -172,8 +174,5 @@
   "repository": "https://github.com/ciferox/adone",
   "bin": {
     "adone": "./bin/adone.js"
-  },
-  "dependencies": {
-    "nanoid": "^1.0.1"
   }
 }

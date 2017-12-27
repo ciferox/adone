@@ -14,68 +14,52 @@ const bytes = {
 const encryptAndDecrypt = function (cipher) {
     const data = Buffer.alloc(100);
     data.fill(Math.ceil(Math.random() * 100));
-    return (cb) => {
-        cipher.encrypt(data, (err, res) => {
-            assert.notExists(err);
-            cipher.decrypt(res, (err, res) => {
-                assert.notExists(err);
-                expect(res).to.be.eql(data);
-                cb();
-            });
-        });
+    return () => {
+        let res = cipher.encrypt(data);
+        res = cipher.decrypt(res);
+        expect(res).to.be.eql(data);
     };
 };
 
 
 describe("netron2", "crypto", "AES-CTR", () => {
     Object.keys(bytes).forEach((byte) => {
-        it(`${bytes[byte]} - encrypt and decrypt`, (done) => {
+        it(`${bytes[byte]} - encrypt and decrypt`, () => {
             const key = Buffer.alloc(parseInt(byte, 10));
             key.fill(5);
 
             const iv = Buffer.alloc(16);
             iv.fill(1);
 
-            crypto.aes.create(key, iv, (err, cipher) => {
-                assert.notExists(err);
-
-                series([
-                    encryptAndDecrypt(cipher),
-                    encryptAndDecrypt(cipher),
-                    encryptAndDecrypt(cipher),
-                    encryptAndDecrypt(cipher),
-                    encryptAndDecrypt(cipher)
-                ], done);
-            });
+            const cipher = crypto.aes.create(key, iv);
+            encryptAndDecrypt(cipher);
+            encryptAndDecrypt(cipher);
+            encryptAndDecrypt(cipher);
+            encryptAndDecrypt(cipher);
+            encryptAndDecrypt(cipher);
         });
     });
 
     Object.keys(bytes).forEach((byte) => {
-        it(`${bytes[byte]} - fixed - encrypt and decrypt`, (done) => {
+        it(`${bytes[byte]} - fixed - encrypt and decrypt`, () => {
             const key = Buffer.alloc(parseInt(byte, 10));
             key.fill(5);
 
             const iv = Buffer.alloc(16);
             iv.fill(1);
 
-            crypto.aes.create(key, iv, (err, cipher) => {
-                assert.notExists(err);
-
-                series(fixtures[byte].inputs.map((rawIn, i) => (cb) => {
-                    const input = Buffer.from(rawIn);
-                    const output = Buffer.from(fixtures[byte].outputs[i]);
-                    cipher.encrypt(input, (err, res) => {
-                        assert.notExists(err);
-                        expect(res).to.have.length(output.length);
-                        expect(res).to.eql(output);
-                        cipher.decrypt(res, (err, res) => {
-                            assert.notExists(err);
-                            expect(res).to.eql(input);
-                            cb();
-                        });
-                    });
-                }), done);
-            });
+            const cipher = crypto.aes.create(key, iv);
+            let i = 0;
+            for (const rawIn of fixtures[byte].inputs) {
+                const input = Buffer.from(rawIn);
+                const output = Buffer.from(fixtures[byte].outputs[i]);
+                let res = cipher.encrypt(input);
+                expect(res).to.have.length(output.length);
+                expect(res).to.eql(output);
+                res = cipher.decrypt(res);
+                expect(res).to.eql(input);
+                i++;
+            }
         });
     });
 
@@ -84,31 +68,25 @@ describe("netron2", "crypto", "AES-CTR", () => {
             return;
         }
 
-        it(`${bytes[byte]} - go interop - encrypt and decrypt`, (done) => {
+        it(`${bytes[byte]} - go interop - encrypt and decrypt`, () => {
             const key = Buffer.alloc(parseInt(byte, 10));
             key.fill(5);
 
             const iv = Buffer.alloc(16);
             iv.fill(1);
 
-            crypto.aes.create(key, iv, (err, cipher) => {
-                assert.notExists(err);
-
-                series(goFixtures[byte].inputs.map((rawIn, i) => (cb) => {
-                    const input = Buffer.from(rawIn);
-                    const output = Buffer.from(goFixtures[byte].outputs[i]);
-                    cipher.encrypt(input, (err, res) => {
-                        assert.notExists(err);
-                        expect(res).to.have.length(output.length);
-                        expect(res).to.be.eql(output);
-                        cipher.decrypt(res, (err, res) => {
-                            assert.notExists(err);
-                            expect(res).to.be.eql(input);
-                            cb();
-                        });
-                    });
-                }), done);
-            });
+            const cipher = crypto.aes.create(key, iv);
+            let i = 0;
+            for (const rawIn of goFixtures[byte].inputs) {
+                const input = Buffer.from(rawIn);
+                const output = Buffer.from(goFixtures[byte].outputs[i]);
+                let res = cipher.encrypt(input);
+                expect(res).to.have.length(output.length);
+                expect(res).to.be.eql(output);
+                res = cipher.decrypt(res);
+                expect(res).to.be.eql(input);
+                i++;
+            }
         });
     });
 });

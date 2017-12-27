@@ -1,5 +1,4 @@
 const async = require("async");
-const waterfall = require("async/waterfall");
 
 const {
     is,
@@ -7,24 +6,15 @@ const {
     netron2: { PeerId, PeerInfo, PeerBook }
 } = adone;
 
-const createPeerInfo = function (multiaddrs, options, callback) {
-    if (is.function(options)) {
-        callback = options;
-        options = {};
-    }
-
+const createPeerInfo = function (multiaddrs) {
     if (!is.array(multiaddrs)) {
         multiaddrs = [multiaddrs];
     }
 
-    waterfall([
-        (cb) => PeerId.create({ bits: 1024 }, cb),
-        (peerId, cb) => PeerInfo.create(peerId, cb),
-        (peerInfo, cb) => {
-            multiaddrs.map((ma) => peerInfo.multiaddrs.add(ma));
-            cb(null, peerInfo);
-        }
-    ], callback);
+    const peerId = PeerId.create({ bits: 1024 });
+    const peerInfo = PeerInfo.create(peerId);
+    multiaddrs.map((ma) => peerInfo.multiaddrs.add(ma));
+    return peerInfo;
 };
 
 
@@ -35,36 +25,11 @@ describe("netron2", "PeerBook", () => {
     let p3;
     let p4;
 
-    before((done) => {
-        async.parallel([
-            (cb) => createPeerInfo([
-                "/tcp/1000",
-                "/tcp/1001"
-            ], cb),
-            (cb) => createPeerInfo([
-                "/tcp/2000",
-                "/tcp/2001"
-            ], cb),
-            (cb) => createPeerInfo([
-                "/tcp/3000",
-                "/tcp/3001"
-            ], cb),
-            (cb) => createPeerInfo([
-                "/tcp/4000",
-                "/tcp/4001"
-            ], cb)
-        ], (err, infos) => {
-            if (err) {
-                return done(err);
-            }
-
-            p1 = infos[0];
-            p2 = infos[1];
-            p3 = infos[2];
-            p4 = infos[3];
-
-            done();
-        });
+    before(() => {
+        p1 = createPeerInfo(["/tcp/1000", "/tcp/1001"]);
+        p2 = createPeerInfo(["/tcp/2000", "/tcp/2001"]);
+        p3 = createPeerInfo(["/tcp/3000", "/tcp/3001"]);
+        p4 = createPeerInfo(["/tcp/4000", "/tcp/4001"]);
     });
 
     it("create PeerBook", () => {

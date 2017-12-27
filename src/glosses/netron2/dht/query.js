@@ -15,17 +15,11 @@ const utils = require("./utils");
  * @returns {void}
  * @private
  */
-const addPeerToQuery = function (next, dht, run, callback) {
-    if (dht._isSelf(next)) {
-        return callback();
+const addPeerToQuery = function (next, dht, run) {
+    if (!dht._isSelf(next) && !run.peersSeen.has(next)) {
+        run.peersSeen.add(next);
+        run.peersToQuery.enqueue(next);
     }
-
-    if (run.peersSeen.has(next)) {
-        return callback();
-    }
-
-    run.peersSeen.add(next);
-    run.peersToQuery.enqueue(next, callback);
 };
 
 /**
@@ -53,7 +47,8 @@ const execQuery = function (next, query, run, callback) {
                     return cb();
                 }
                 closer = query.dht.peerBook.put(closer);
-                addPeerToQuery(closer.id, query.dht, run, cb);
+                addPeerToQuery(closer.id, query.dht, run);
+                cb();
             }, callback);
         } else {
             callback();
@@ -160,11 +155,14 @@ class Query {
             return callback();
         }
 
+        const q = PeerQueue.fromKey(this.key);
         waterfall([
-            (cb) => PeerQueue.fromKey(this.key, cb),
-            (q, cb) => {
+            (cb) => {
                 run.peersToQuery = q;
-                each(peers, (p, cb) => addPeerToQuery(p, this.dht, run, cb), cb);
+                each(peers, (p, cb) => {
+                    addPeerToQuery(p, this.dht, run);
+                    cb();
+                }, cb);
             },
             (cb) => workerQueue(this, run, cb)
         ], (err) => {

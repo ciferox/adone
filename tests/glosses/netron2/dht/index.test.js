@@ -38,23 +38,18 @@ const connectNoSync = function (a, b, callback) {
 
 const find = function (a, b, cb) {
     retry({ times: 50, interval: 100 }, (cb) => {
-        a.routingTable.find(b.peerInfo.id, (err, match) => {
-            if (err) {
-                return cb(err);
-            }
+        try {
+            const match = a.routingTable.find(b.peerInfo.id);
             if (!match) {
-                return cb(new Error("not found"));
+                throw new Error("not found");
             }
 
-            try {
-                expect(a.peerBook.get(b.peerInfo).multiaddrs.toArray()[0].toString())
-                    .to.eql(b.peerInfo.multiaddrs.toArray()[0].toString());
-            } catch (err) {
-                return cb(err);
-            }
+            expect(a.peerBook.get(b.peerInfo).multiaddrs.toArray()[0].toString()).to.eql(b.peerInfo.multiaddrs.toArray()[0].toString());
 
             cb();
-        });
+        } catch (err) {
+            cb(err);
+        }
     }, cb);
 };
 
@@ -110,18 +105,10 @@ describe("KadDHT", () => {
     let peerInfos;
     let values;
 
-    before(function (done) {
+    before(function () {
         this.timeout(10 * 1000);
-
-        parallel([
-            (cb) => makePeers(3, cb),
-            (cb) => makeValues(20, cb)
-        ], (err, res) => {
-            assert.notExists(err);
-            peerInfos = res[0];
-            values = res[1];
-            done();
-        });
+        peerInfos = makePeers(3);
+        values = makeValues(20);
     });
 
     // Give the nodes some time to finish request
@@ -304,8 +291,8 @@ describe("KadDHT", () => {
                 (cb) => times(20, (i, cb) => {
                     connect(guy, others[i], cb);
                 }, cb),
-                (cb) => kadUtils.convertBuffer(val, (err, rtval) => {
-                    assert.notExists(err);
+                (cb) => {
+                    const rtval = kadUtils.convertBuffer(val);
                     const rtablePeers = guy.routingTable.closestPeers(rtval, c.ALPHA);
                     expect(rtablePeers).to.have.length(3);
 
@@ -338,7 +325,7 @@ describe("KadDHT", () => {
                             cb();
                         });
                     });
-                })
+                }
             ], done);
         });
     });
@@ -403,7 +390,7 @@ describe("KadDHT", () => {
         });
     });
 
-    it("_nearestPeersToQuery", (done) => {
+    it("_nearestPeersToQuery", () => {
         const swarm = new Swarm(peerInfos[0], new PeerBook());
         swarm.transport.add("tcp", new TCP());
         swarm.connection.addStreamMuxer(multiplex);
@@ -411,17 +398,12 @@ describe("KadDHT", () => {
         const dht = new KadDHT(swarm);
 
         dht.peerBook.put(peerInfos[1]);
-        series([
-            (cb) => dht._add(peerInfos[1], cb),
-            (cb) => dht._nearestPeersToQuery({ key: "hello" }, cb)
-        ], (err, res) => {
-            assert.notExists(err);
-            expect(res[1]).to.be.eql([peerInfos[1]]);
-            done();
-        });
+        dht._add(peerInfos[1]);
+        const res = dht._nearestPeersToQuery({ key: "hello" });
+        expect(res).to.be.eql([peerInfos[1]]);
     });
 
-    it("_betterPeersToQuery", (done) => {
+    it("_betterPeersToQuery", () => {
         const swarm = new Swarm(peerInfos[0], new PeerBook());
         swarm.transport.add("tcp", new TCP());
         swarm.connection.addStreamMuxer(multiplex);
@@ -431,19 +413,15 @@ describe("KadDHT", () => {
         dht.peerBook.put(peerInfos[1]);
         dht.peerBook.put(peerInfos[2]);
 
-        series([
-            (cb) => dht._add(peerInfos[1], cb),
-            (cb) => dht._add(peerInfos[2], cb),
-            (cb) => dht._betterPeersToQuery({ key: "hello" }, peerInfos[1], cb)
-        ], (err, res) => {
-            assert.notExists(err);
-            expect(res[2]).to.be.eql([peerInfos[2]]);
-            done();
-        });
+        dht._add(peerInfos[1]);
+        dht._add(peerInfos[2]);
+
+        const res = dht._betterPeersToQuery({ key: "hello" }, peerInfos[1]);
+        expect(res).to.be.eql([peerInfos[2]]);
     });
 
     describe("_verifyRecordLocally", () => {
-        it("invalid record (missing public key)", (done) => {
+        it("invalid record (missing public key)", () => {
             const swarm = new Swarm(peerInfos[0], new PeerBook());
             swarm.transport.add("tcp", new TCP());
             swarm.connection.addStreamMuxer(multiplex);
@@ -459,16 +437,11 @@ describe("KadDHT", () => {
                 peerInfos[1].id
             );
 
-            waterfall([
-                (cb) => record.serializeSigned(peerInfos[1].id.privKey, cb),
-                (enc, cb) => dht._verifyRecordLocally(Record.deserialize(enc), (err) => {
-                    expect(err).to.match(/Missing public key/);
-                    cb();
-                })
-            ], done);
+            const enc = record.serializeSigned(peerInfos[1].id.privKey);
+            assert.throws(() => dht._verifyRecordLocally(Record.deserialize(enc)), /Missing public key/);
         });
 
-        it("valid record - signed", (done) => {
+        it("valid record - signed", () => {
             const swarm = new Swarm(peerInfos[0], new PeerBook());
             swarm.transport.add("tcp", new TCP());
             swarm.connection.addStreamMuxer(multiplex);
@@ -483,13 +456,11 @@ describe("KadDHT", () => {
                 peerInfos[1].id
             );
 
-            waterfall([
-                (cb) => record.serializeSigned(peerInfos[1].id.privKey, cb),
-                (enc, cb) => dht._verifyRecordLocally(Record.deserialize(enc), cb)
-            ], done);
+            const enc = record.serializeSigned(peerInfos[1].id.privKey);
+            dht._verifyRecordLocally(Record.deserialize(enc));
         });
 
-        it("valid record - not signed", (done) => {
+        it("valid record - not signed", () => {
             const swarm = new Swarm(peerInfos[0], new PeerBook());
             swarm.transport.add("tcp", new TCP());
             swarm.connection.addStreamMuxer(multiplex);
@@ -503,11 +474,7 @@ describe("KadDHT", () => {
                 Buffer.from("world"),
                 peerInfos[1].id
             );
-
-            waterfall([
-                (cb) => cb(null, record.serialize()),
-                (enc, cb) => dht._verifyRecordLocally(Record.deserialize(enc), cb)
-            ], done);
+            dht._verifyRecordLocally(Record.deserialize(record.serialize()));
         });
     });
 });

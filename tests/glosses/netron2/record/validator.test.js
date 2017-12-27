@@ -1,5 +1,3 @@
-const waterfall = require("async/waterfall");
-const each = require("async/each");
 const fixture = require("./fixtures/go-key-records.js");
 
 const {
@@ -39,37 +37,27 @@ describe("validator", () => {
     let hash;
     let cases;
 
-    before((done) => {
-        waterfall([
-            (cb) => crypto.keys.generateKeyPair("rsa", 1024, cb),
-            (pair, cb) => {
-                key = pair;
-                pair.public.hash(cb);
-            },
-            (_hash, cb) => {
-                hash = _hash;
-                cases = generateCases(hash);
-                cb();
-            }
-        ], done);
+    before(() => {
+        key = crypto.keys.generateKeyPair("rsa", 1024);
+        hash = key.public.hash();
+        cases = generateCases(hash);
     });
 
     describe("verifyRecord", () => {
-        it("calls matching validator", (done) => {
+        it("calls matching validator", () => {
             const k = Buffer.from("/hello/you");
             const rec = new Record(k, Buffer.from("world"), new PeerId(hash));
 
             const validators = {
                 hello: {
-                    func(key, value, cb) {
+                    func(key, value) {
                         expect(key).to.eql(k);
                         expect(value).to.eql(Buffer.from("world"));
-                        cb();
                     },
                     sign: false
                 }
             };
-            validator.verifyRecord(validators, rec, done);
+            validator.verifyRecord(validators, rec);
         });
     });
 
@@ -77,15 +65,13 @@ describe("validator", () => {
         it("returns false for missing validator", () => {
             const validators = {};
 
-            expect(validator.isSigned(validators, Buffer.from("/hello")))
-                .to.eql(false);
+            expect(validator.isSigned(validators, Buffer.from("/hello"))).to.eql(false);
         });
 
         it("throws on unkown validator", () => {
             const validators = {};
 
-            expect(() => validator.isSigned(validators, Buffer.from("/hello/world")))
-                .to.throw(/Invalid record keytype/);
+            expect(() => validator.isSigned(validators, Buffer.from("/hello/world"))).to.throw(/Invalid record keytype/);
         });
 
         it("returns the value from the matching validator", () => {
@@ -113,33 +99,27 @@ describe("validator", () => {
                 expect(pk).to.have.property("sign", false);
             });
 
-            it("does not error on valid record", (done) => {
-                each(cases.valid.publicKey, (k, cb) => {
-                    validator.validators.pk.func(k, key.public.bytes, cb);
-                }, done);
+            it("does not error on valid record", () => {
+                for (const k of cases.valid.publicKey) {
+                    validator.validators.pk.func(k, key.public.bytes);
+                }
             });
 
-            it("throws on invalid records", (done) => {
-                each(cases.invalid.publicKey, (k, cb) => {
-                    validator.validators.pk.func(k, key.public.bytes, (err) => {
-                        assert.exists(err);
-                        cb();
-                    });
-                }, done);
+            it("throws on invalid records", () => {
+                for (const k of cases.invalid.publicKey) {
+                    assert.throws(() => validator.validators.pk.func(k, key.public.bytes));
+                }
             });
         });
     });
 
     describe("go interop", () => {
-        it("record with key from from go", (done) => {
+        it("record with key from from go", () => {
             const pubKey = crypto.keys.unmarshalPublicKey(fixture.publicKey);
 
-            pubKey.hash((err, hash) => {
-                assert.notExists(err);
-                const k = Buffer.concat([Buffer.from("/pk/"), hash]);
-
-                validator.validators.pk.func(k, pubKey.bytes, done);
-            });
+            const hash = pubKey.hash();
+            const k = Buffer.concat([Buffer.from("/pk/"), hash]);
+            validator.validators.pk.func(k, pubKey.bytes);
         });
     });
 });

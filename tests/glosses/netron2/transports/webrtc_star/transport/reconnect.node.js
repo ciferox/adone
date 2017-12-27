@@ -1,13 +1,14 @@
-const multiaddr = require("multiaddr");
-
 const {
+    multi,
     netron2: { transport: { WebRTCStar: { sigServer } } }
 } = adone;
 
 const SERVER_PORT = 13580;
 
 module.exports = (create) => {
-    describe("reconnect to signaling server", () => {
+    describe("reconnect to signaling server", function () {
+        this.timeout(30000);
+        
         let sigS;
 
         const base = (id) => {
@@ -18,9 +19,9 @@ module.exports = (create) => {
         let ws2;
         let ws3;
 
-        const ma1 = multiaddr(base("QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSooo3A"));
-        const ma2 = multiaddr(base("QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSooo3B"));
-        const ma3 = multiaddr(base("QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSooo3C"));
+        const ma1 = multi.address.create(base("QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSooo3A"));
+        const ma2 = multi.address.create(base("QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSooo3B"));
+        const ma3 = multi.address.create(base("QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSooo3C"));
 
         before((done) => {
             sigS = sigServer.start({ port: SERVER_PORT }, done);
