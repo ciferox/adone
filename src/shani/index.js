@@ -15,13 +15,21 @@ const SET_TIMEOUT_MAX = 2 ** 31 - 1;
 
 const callGc = typeof gc === "undefined" ? adone.noop : gc; // eslint-disable-line
 
+const isShaniFrame = (frame) => {
+    return /adone.(?:lib|src).shani.index\.js/.test(frame);
+};
+
 /**
  * Returns the place from where a function was called
  */
 const getCurrentLocation = () => {
     const err = new Error();
     const lines = err.stack.split("\n");
-    const frame = lines[3];
+    let i = 1;
+    while (isShaniFrame(lines[i])) {
+        ++i;
+    }
+    const frame = lines[i];
     const match = frame.match(/\((.+):(\d+):(\d+)\)$/);
     return {
         path: match[1],
@@ -593,7 +601,7 @@ class Test {
         if (adone.is.function(description)) {
             [description, callback] = ["", description];
         }
-        const hook = new Hook(this.block, description, callback, this.runtimeContext);
+        const hook = new Hook(this.block, description, callback, this.runtimeContext, this.meta); // use current test location ??
         this._afterHooks.push(hook);
         return this;
     }
@@ -602,7 +610,7 @@ class Test {
         if (adone.is.function(description)) {
             [description, callback] = ["", description];
         }
-        const hook = new Hook(this.block, description, callback, this.runtimeContext);
+        const hook = new Hook(this.block, description, callback, this.runtimeContext, this.meta); // use current test location ??
         this._beforeHooks.push(hook);
         return this;
     }
@@ -1352,7 +1360,7 @@ export class Engine {
 
 const filterShaniFrames = (frames) => {
     for (let i = 0; i < frames.length; ++i) {
-        if (/adone.(?:lib|src).shani.index\.js/.test(frames[i])) {
+        if (isShaniFrame(frames[i])) {
             return frames.slice(0, i);
         }
     }
