@@ -43,6 +43,7 @@ module.exports = {
             "before": false,
             "after": true
         }],
+        "semi-style": ["error", "last"],
         "comma-spacing": ["error", {
             "before": false,
             "after": true
@@ -129,6 +130,8 @@ module.exports = {
         "no-extend-native": "error",
         "no-extra-bind": "error",
         "no-extra-label": "error",
+        "no-extra-semi": "error",
+        "no-extra-parens": ["error", "all", { "nestedBinaryExpressions": false }],
         "no-fallthrough": "error",
         "no-floating-decimal": "error",
         "no-implied-eval": "error",
@@ -141,6 +144,7 @@ module.exports = {
         "no-useless-return": "error",
         "no-warning-comments": "warn",
         "prefer-promise-reject-errors": "error",
+        "lines-between-class-members": ["error", "always"],
         "adone/no-typeof": "error",
         "adone/no-buffer-constructor": "error",
         "adone/no-undefined-comp": "error",
@@ -149,7 +153,6 @@ module.exports = {
         "adone/no-array-isarray": "error",
         "adone/no-isnan": "error",
         "no-path-concat": "error",  // disallow string concatenation with __dirname and __filename
-        "callback-return": "warn",  // require return statements after callbacks
         "adone/no-number-methods": "error",  // disallow Number.isNaN, Number.isFinite etc
         "adone/no-is.undefined-or-is.null": "error", // disallow is.undefined(t) || is.null(t)
         "adone/no-not-is.undefined-and-not-is.null": "error", // disallow !is.undefined(t) && !is.null(t)

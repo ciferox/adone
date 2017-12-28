@@ -177,6 +177,15 @@ class Differ extends adone.event.EventEmitter {
                 this.emit("exit", "set");
                 break;
             }
+            case "ArrayBuffer": {
+                // compare it like uint8arrays
+                this.emit("enter", "arrayBuffer");
+
+                handleArray([...new Uint8Array(actual)], [...new Uint8Array(expected)]);
+
+                this.emit("exit", "arrayBuffer");
+                break;
+            }
             case "Object": {
                 // if (adone.is.plainObject(actual) && adone.is.plainObject(expected)) {
                 this.emit("enter", "object", key);
@@ -353,6 +362,31 @@ export const getDiff = (actual, expected) => {
                 result += `\n${indent(level)}${colorizer("]", "square.bracket")}`;
                 return result;
             }
+            case "ArrayBuffer": {
+                if (obj.byteLength === 0) {
+                    return `${
+                        colorizer("ArrayBuffer", "class.name")
+                    } ${
+                        colorizer("{", "curly.bracket")
+                    }${
+                        colorizer("}", "curly.bracket")
+                    }`;
+                }
+                let result = `${
+                    colorizer("ArrayBuffer", "class.name")
+                } as ${
+                    colorizer("Uint8Array", "class.name")
+                } ${
+                    colorizer("{", "curly.bracket")
+                }\n`;
+                const view = new Uint8Array(obj);
+                for (let i = 0; i < view.length; ++i) {
+                    const byte = `0x${view[i].toString(16).padStart(2, "0").toUpperCase()}`;
+                    result += `${indent(level + 1)}${colorizer(byte, "number")}${i === view.length - 1 ? "" : ", "}\n`;
+                }
+                result += `${indent(level)}${colorizer("}", "curly.bracket")}`;
+                return result;
+            }
             case "Object": {
                 if (adone.is.plainObject(obj)) {
                     return handlePlainObject(obj);
@@ -501,6 +535,7 @@ export const getDiff = (actual, expected) => {
             if (!stack.top.firstElement) {
                 result += ",";
             }
+            stack.top.firstElement = false;
             result += `\n${indent()}`;
             if (key) {
                 switch (stack.top.type) {
@@ -531,6 +566,9 @@ export const getDiff = (actual, expected) => {
                 result += `${colorizer("Set", "class.name")} ${colorizer("{", "curly.bracket")}`;
                 break;
             }
+            case "arrayBuffer": {
+                result += `${colorizer("ArrayBuffer", "class.name")} as ${colorizer("Uint8Array", "class.name")} ${colorizer("{", "curly.bracket")}`;
+            }
         }
         ++level;
         stack.push(state);
@@ -547,6 +585,7 @@ export const getDiff = (actual, expected) => {
             }
             case "map":
             case "set":
+            case "arrayBuffer":
             case "object": {
                 result += colorizer("}", "curly.bracket");
                 break;
@@ -588,24 +627,21 @@ export const getDiff = (actual, expected) => {
             }
         }
 
-        const i = indent();
-
-        if (adone.is.string(val)) {
-            let _i = i;
-            if (marker.endsWith(" ") && i.length > 1) {
-                _i = _i.slice(2);
-            }
-            result += `${_i}${marker}${k}${mask ? stringify(applyMask(val, type, mask)) : colorizer(stringify(val), "string")}`;
-        } else {
-            result += `${k}${stringify(val)}`.split("\n").map((x) => {
-                let _i = i;
-                if (marker.endsWith(" ") && i.length > 1) {
-                    _i = _i.slice(2);
-                }
-                return `${_i}${marker}${x}`;
-            }).join("\n");
+        let i = indent();
+        if (marker.endsWith(" ") && i.length > 1) {
+            i = i.slice(2); // correctly indent the marker, keep the value on its place
         }
 
+        if (adone.is.string(val)) {
+            result += `${i}${marker}${k}${mask ? stringify(applyMask(val, type, mask)) : colorizer(stringify(val), "string")}`;
+        } else if (stack.top.type === "arrayBuffer") {
+            const byte = `0x${val.toString(16).padStart(2, "0").toUpperCase()}`;
+            result += `${i}${marker}${colorizer(byte, "number")}`;
+        } else {
+            result += `${k}${stringify(val)}`.split("\n").map((x) => {
+                return `${i}${marker}${x}`;
+            }).join("\n");
+        }
     });
 
     differ.diff(actual, expected);
