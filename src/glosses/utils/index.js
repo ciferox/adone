@@ -1041,3 +1041,16 @@ export const signalNameToCode = (sigName) => {
         }
     }
 };
+
+/**
+ * Transforms the given Buffer to ArrayBuffer
+ *
+ * @param {Buffer} buf
+ * @returns {ArrayBuffer}
+ */
+export const bufferToArrayBuffer = (buf) => {
+    if (buf.byteOffset === 0 && buf.byteLength === buf.buffer.byteLength) {
+        return buf.buffer;
+    }
+    return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+};

@@ -28,6 +28,9 @@ const RE_FOOTER_RFC4716_PUB = /^---- END SSH2 PUBLIC KEY ----$/i;
 const RE_HEADER_OPENSSH = /^([^:]+):\s*([\S].*)?$/i;
 const RE_HEADER_RFC4716 = /^([^:]+): (.*)?$/i;
 
+const nullByte = new Uint8Array([0x00]).buffer;
+
+const { util: { bufferToArrayBuffer } } = adone;
 
 export const parseKey = (data) => {
     if (is.buffer(data)) {
@@ -83,28 +86,21 @@ export const parseKey = (data) => {
                 ret.fulltype = `ssh-${keyType}`;
             } else {
                 // ECDSA
-                const asnReader = new asn1.ber.Reader(privData);
-                asnReader.readSequence();
-                asnReader.readInt();
-                asnReader.readString(asn1.type.OctetString, true);
-                asnReader.readByte(); // Skip "complex" context type byte
-                const offset = asnReader.readLength(); // Skip context length
-                if (!is.null(offset)) {
-                    asnReader._offset = offset;
-                    switch (asnReader.readOID()) {
-                        case "1.2.840.10045.3.1.7":
-                            // prime256v1/secp256r1
-                            ret.fulltype = "ecdsa-sha2-nistp256";
-                            break;
-                        case "1.3.132.0.34":
-                            // secp384r1
-                            ret.fulltype = "ecdsa-sha2-nistp384";
-                            break;
-                        case "1.3.132.0.35":
-                            // secp521r1
-                            ret.fulltype = "ecdsa-sha2-nistp521";
-                            break;
-                    }
+                const asnData = asn1.fromBER(bufferToArrayBuffer(privData)).result;
+                const oid = asnData.valueBlock.value[2].valueBlock.value[0].valueBlock.toString()
+                switch (oid) {
+                    case "1.2.840.10045.3.1.7":
+                        // prime256v1/secp256r1
+                        ret.fulltype = "ecdsa-sha2-nistp256";
+                        break;
+                    case "1.3.132.0.34":
+                        // secp384r1
+                        ret.fulltype = "ecdsa-sha2-nistp384";
+                        break;
+                    case "1.3.132.0.35":
+                        // secp521r1
+                        ret.fulltype = "ecdsa-sha2-nistp521";
+                        break;
                 }
                 if (is.undefined(ret.fulltype)) {
                     return new Error("Unsupported EC private key type");
@@ -308,7 +304,7 @@ export const readString = (buffer, start, encoding, stream, cb, maxLen) => {
 
     start || (start = 0);
     const bufferLen = buffer.length;
-    const left = (bufferLen - start);
+    const left = bufferLen - start;
     if (start < 0 || start >= bufferLen || left < 4) {
         stream && stream._cleanup(cb);
         return false;
@@ -375,7 +371,8 @@ export const convertPPKPrivate = (keyInfo) => {
 
     const pub = keyInfo.public;
     const priv = keyInfo.private;
-    const asnWriter = new asn1.ber.Writer();
+    let asnData;
+
     let p;
     let q;
 
@@ -394,17 +391,37 @@ export const convertPPKPrivate = (keyInfo) => {
         dmp1 = dmp1.mod(p1.sub(adone.math.BigNumber.ONE)).toBuffer();
         dmq1 = dmq1.mod(q1.sub(adone.math.BigNumber.ONE)).toBuffer();
 
-        asnWriter.startSequence();
-        asnWriter.writeInt(0x00, asn1.type.Integer);
-        asnWriter.writeBuffer(n, asn1.type.Integer);
-        asnWriter.writeBuffer(e, asn1.type.Integer);
-        asnWriter.writeBuffer(d, asn1.type.Integer);
-        asnWriter.writeBuffer(p, asn1.type.Integer);
-        asnWriter.writeBuffer(q, asn1.type.Integer);
-        asnWriter.writeBuffer(dmp1, asn1.type.Integer);
-        asnWriter.writeBuffer(dmq1, asn1.type.Integer);
-        asnWriter.writeBuffer(iqmp, asn1.type.Integer);
-        asnWriter.endSequence();
+        asnData = new asn1.Sequence({
+            value: [
+                new asn1.Integer({
+                    value: 0
+                }),
+                new asn1.Integer({
+                    valueHex: bufferToArrayBuffer(n)
+                }),
+                new asn1.Integer({
+                    valueHex: bufferToArrayBuffer(e)
+                }),
+                new asn1.Integer({
+                    valueHex: bufferToArrayBuffer(d)
+                }),
+                new asn1.Integer({
+                    valueHex: bufferToArrayBuffer(p)
+                }),
+                new asn1.Integer({
+                    valueHex: bufferToArrayBuffer(q)
+                }),
+                new asn1.Integer({
+                    valueHex: bufferToArrayBuffer(dmp1)
+                }),
+                new asn1.Integer({
+                    valueHex: bufferToArrayBuffer(dmq1)
+                }),
+                new asn1.Integer({
+                    valueHex: bufferToArrayBuffer(iqmp)
+                })
+            ]
+        });
     } else {
         p = readString(pub, 4 + 7);
         q = readString(pub, pub._pos);
@@ -412,20 +429,36 @@ export const convertPPKPrivate = (keyInfo) => {
         const y = readString(pub, pub._pos);
         const x = readString(priv, 0);
 
-        asnWriter.startSequence();
-        asnWriter.writeInt(0x00, asn1.type.Integer);
-        asnWriter.writeBuffer(p, asn1.type.Integer);
-        asnWriter.writeBuffer(q, asn1.type.Integer);
-        asnWriter.writeBuffer(g, asn1.type.Integer);
-        asnWriter.writeBuffer(y, asn1.type.Integer);
-        asnWriter.writeBuffer(x, asn1.type.Integer);
-        asnWriter.endSequence();
+        asnData = new asn1.Sequence({
+            value: [
+                new asn1.Integer({
+                    value: 0
+                }),
+                new asn1.Integer({
+                    valueHex: bufferToArrayBuffer(p)
+                }),
+                new asn1.Integer({
+                    valueHex: bufferToArrayBuffer(q)
+                }),
+                new asn1.Integer({
+                    valueHex: bufferToArrayBuffer(g)
+                }),
+                new asn1.Integer({
+                    valueHex: bufferToArrayBuffer(y)
+                }),
+                new asn1.Integer({
+                    valueHex: bufferToArrayBuffer(x)
+                })
+            ]
+        });
     }
 
-    const b64key = asnWriter.buffer.toString("base64").replace(RE_KEY_LEN, "$1\n");
+    const ber = Buffer.from(asnData.toBER());
+
+    const b64key = ber.toString("base64").replace(RE_KEY_LEN, "$1\n");
     const fullkey = `-----BEGIN ${keyInfo.type === "rsa" ? "RSA" : "DSA"} PRIVATE KEY-----\n${b64key}${b64key[b64key.length - 1] === "\n" ? "" : "\n"}-----END ${keyInfo.type === "rsa" ? "RSA" : "DSA"} PRIVATE KEY-----`;
 
-    keyInfo.private = asnWriter.buffer;
+    keyInfo.private = ber;
     keyInfo.privateOrig = Buffer.from(fullkey);
     keyInfo._converted = true;
     return true;
@@ -451,7 +484,7 @@ export const verifyPPKMAC = (keyInfo, passphrase, privateKey) => {
     // encryption algorithm is converted at this point for use with OpenSSL,
     // so we need to use the original value so that the MAC is calculated
     // correctly
-    const enc = (keyInfo.encryption ? "aes256-cbc" : "none");
+    const enc = keyInfo.encryption ? "aes256-cbc" : "none";
     const enclen = enc.length;
     const commlen = Buffer.byteLength(keyInfo.comment);
     const pub = keyInfo.public;
@@ -488,7 +521,7 @@ export const verifyPPKMAC = (keyInfo, passphrase, privateKey) => {
         .update(macdata)
         .digest("hex");
 
-    return (keyInfo._macresult = (calcMAC === mac));
+    return keyInfo._macresult = calcMAC === mac;
 };
 
 export const DSASigBERToBare = (signature) => {
@@ -498,10 +531,12 @@ export const DSASigBERToBare = (signature) => {
     // This is a quick and dirty way to get from BER encoded r and s that
     // OpenSSL gives us, to just the bare values back to back (40 bytes
     // total) like OpenSSH (and possibly others) are expecting
-    const asnReader = new asn1.ber.Reader(signature);
-    asnReader.readSequence();
-    let r = asnReader.readString(asn1.type.Integer, true);
-    let s = asnReader.readString(asn1.type.Integer, true);
+    const asnData = asn1.fromBER(bufferToArrayBuffer(signature)).result;
+    if (asnData.error) {
+        throw new Error(`Invalid signature: ${asnData.error}`);
+    }
+    let r = Buffer.from(asnData.valueBlock.value[0].valueBlock.valueHex);
+    let s = Buffer.from(asnData.valueBlock.value[1].valueBlock.valueHex);
     let rOffset = 0;
     let sOffset = 0;
     if (r.length < 20) {
@@ -533,8 +568,7 @@ export const DSASigBareToBER = (signature) => {
         return signature;
     }
     // Change bare signature r and s values to ASN.1 BER values for OpenSSL
-    const asnWriter = new asn1.ber.Writer();
-    asnWriter.startSequence();
+
     let r = signature.slice(0, 20);
     let s = signature.slice(20);
     if (r[0] & 0x80) {
@@ -553,10 +587,19 @@ export const DSASigBareToBER = (signature) => {
     } else if (s[0] === 0x00 && !(s[1] & 0x80)) {
         s = s.slice(1);
     }
-    asnWriter.writeBuffer(r, asn1.type.Integer);
-    asnWriter.writeBuffer(s, asn1.type.Integer);
-    asnWriter.endSequence();
-    return asnWriter.buffer;
+
+    const asnData = new asn1.Sequence({
+        value: [
+            new asn1.Integer({
+                valueHex: bufferToArrayBuffer(r)
+            }),
+            new asn1.Integer({
+                valueHex: bufferToArrayBuffer(s)
+            })
+        ]
+    });
+
+    return Buffer.from(asnData.toBER());
 };
 
 export const ECDSASigASN1ToSSH = (signature) => {
@@ -564,13 +607,16 @@ export const ECDSASigASN1ToSSH = (signature) => {
         return signature;
     }
     // Convert SSH signature parameters to ASN.1 BER values for OpenSSL
-    const asnReader = new asn1.ber.Reader(signature);
-    asnReader.readSequence();
-    const r = asnReader.readString(asn1.type.Integer, true);
-    const s = asnReader.readString(asn1.type.Integer, true);
-    if (is.null(r) || is.null(s)) {
-        throw new Error("Invalid signature");
+
+    const asnData = asn1.fromBER(bufferToArrayBuffer(signature)).result;
+
+    if (asnData.error) {
+        throw new Error(`Invalid signature: ${asnData.error}`);
     }
+
+    const r = Buffer.from(asnData.valueBlock.value[0].valueBlock.valueHex);
+    const s = Buffer.from(asnData.valueBlock.value[1].valueBlock.valueHex);
+
     const newSig = Buffer.allocUnsafe(4 + r.length + 4 + s.length);
     newSig.writeUInt32BE(r.length, 0, true);
     r.copy(newSig, 4);
@@ -590,12 +636,18 @@ export const ECDSASigSSHToASN1 = (signature, self, callback) => {
         return false;
     }
 
-    const asnWriter = new asn1.ber.Writer();
-    asnWriter.startSequence();
-    asnWriter.writeBuffer(r, asn1.type.Integer);
-    asnWriter.writeBuffer(s, asn1.type.Integer);
-    asnWriter.endSequence();
-    return asnWriter.buffer;
+    const asnData = new asn1.Sequence({
+        value: [
+            new asn1.Integer({
+                valueHex: bufferToArrayBuffer(r)
+            }),
+            new asn1.Integer({
+                valueHex: bufferToArrayBuffer(s)
+            })
+        ]
+    });
+
+    return Buffer.from(asnData.toBER());
 };
 
 export const RSAKeySSHToASN1 = (key, self, callback) => {
@@ -609,25 +661,38 @@ export const RSAKeySSHToASN1 = (key, self, callback) => {
         return false;
     }
 
-    const asnWriter = new asn1.ber.Writer();
-    asnWriter.startSequence();
-    // algorithm
-    asnWriter.startSequence();
-    asnWriter.writeOID("1.2.840.113549.1.1.1"); // rsaEncryption
-    // algorithm parameters (RSA has none)
-    asnWriter.writeNull();
-    asnWriter.endSequence();
+    const asnData = new asn1.Sequence({
+        value: [
+            new asn1.Sequence({
+                value: [
+                    new asn1.ObjectIdentifier({
+                        value: "1.2.840.113549.1.1.1"
+                    }),
+                    new asn1.Null()
+                ]
+            }),
+            new asn1.BitString({
+                isConstructed: true,
+                value: [
+                    new asn1.RawData({
+                        data: nullByte
+                    }),
+                    new asn1.Sequence({
+                        value: [
+                            new asn1.Integer({
+                                valueHex: bufferToArrayBuffer(n)
+                            }),
+                            new asn1.Integer({
+                                valueHex: bufferToArrayBuffer(e)
+                            })
+                        ]
+                    })
+                ]
+            })
+        ]
+    });
 
-    // subjectPublicKey
-    asnWriter.startSequence(asn1.type.BitString);
-    asnWriter.writeByte(0x00);
-    asnWriter.startSequence();
-    asnWriter.writeBuffer(n, asn1.type.Integer);
-    asnWriter.writeBuffer(e, asn1.type.Integer);
-    asnWriter.endSequence();
-    asnWriter.endSequence();
-    asnWriter.endSequence();
-    return asnWriter.buffer;
+    return Buffer.from(asnData.toBER());
 };
 
 export const DSAKeySSHToASN1 = (key, self, callback) => {
@@ -649,26 +714,43 @@ export const DSAKeySSHToASN1 = (key, self, callback) => {
         return false;
     }
 
-    const asnWriter = new asn1.ber.Writer();
-    asnWriter.startSequence();
-    // algorithm
-    asnWriter.startSequence();
-    asnWriter.writeOID("1.2.840.10040.4.1"); // id-dsa
-    // algorithm parameters
-    asnWriter.startSequence();
-    asnWriter.writeBuffer(p, asn1.type.Integer);
-    asnWriter.writeBuffer(q, asn1.type.Integer);
-    asnWriter.writeBuffer(g, asn1.type.Integer);
-    asnWriter.endSequence();
-    asnWriter.endSequence();
+    const asnData = new asn1.Sequence({
+        value: [
+            new asn1.Sequence({
+                value: [
+                    new asn1.ObjectIdentifier({
+                        value: "1.2.840.10040.4.1" // id-rsa
+                    }),
+                    new asn1.Sequence({
+                        value: [
+                            new asn1.Integer({
+                                valueHex: bufferToArrayBuffer(p)
+                            }),
+                            new asn1.Integer({
+                                valueHex: bufferToArrayBuffer(q)
+                            }),
+                            new asn1.Integer({
+                                valueHex: bufferToArrayBuffer(g)
+                            })
+                        ]
+                    })
+                ]
+            }),
+            new asn1.BitString({
+                isConstructed: true,
+                value: [
+                    new asn1.RawData({
+                        data: nullByte
+                    }),
+                    new asn1.Integer({
+                        valueHex: bufferToArrayBuffer(y)
+                    })
+                ]
+            })
+        ]
+    });
 
-    // subjectPublicKey
-    asnWriter.startSequence(asn1.type.BitString);
-    asnWriter.writeByte(0x00);
-    asnWriter.writeBuffer(y, asn1.type.Integer);
-    asnWriter.endSequence();
-    asnWriter.endSequence();
-    return asnWriter.buffer;
+    return Buffer.from(asnData.toBER());
 };
 
 export const ECDSAKeySSHToASN1 = (key, self, callback) => {
@@ -699,26 +781,34 @@ export const ECDSAKeySSHToASN1 = (key, self, callback) => {
         default:
             return false;
     }
-    const asnWriter = new asn1.ber.Writer();
-    asnWriter.startSequence();
-    // algorithm
-    asnWriter.startSequence();
-    asnWriter.writeOID("1.2.840.10045.2.1"); // id-ecPublicKey
-    // algorithm parameters (namedCurve)
-    asnWriter.writeOID(ecCurveOID);
-    asnWriter.endSequence();
 
-    // subjectPublicKey
-    asnWriter.startSequence(asn1.type.BitString);
-    asnWriter.writeByte(0x00);
-    // XXX: hack to write a raw buffer without a tag -- yuck
-    asnWriter._ensure(Q.length);
-    Q.copy(asnWriter._buf, asnWriter._offset, 0, Q.length);
-    asnWriter._offset += Q.length;
-    // end hack
-    asnWriter.endSequence();
-    asnWriter.endSequence();
-    return asnWriter.buffer;
+    const asnData = new asn1.Sequence({
+        value: [
+            new asn1.Sequence({
+                value: [
+                    new asn1.ObjectIdentifier({
+                        value: "1.2.840.10045.2.1" // id-ecPublicKey
+                    }),
+                    new asn1.ObjectIdentifier({
+                        value: ecCurveOID
+                    })
+                ]
+            }),
+            new asn1.BitString({
+                isConstructed: true,
+                value: [
+                    new asn1.RawData({
+                        data: nullByte
+                    }),
+                    new asn1.RawData({
+                        data: bufferToArrayBuffer(Q)
+                    })
+                ]
+            })
+        ]
+    });
+
+    return Buffer.from(asnData.toBER());
 };
 
 export const decryptKey = (keyInfo, passphrase) => {
@@ -730,8 +820,8 @@ export const decryptKey = (keyInfo, passphrase) => {
     let key;
     let iv;
 
-    keyInfo.encryption = (SSH_TO_OPENSSL[keyInfo.encryption] ||
-        keyInfo.encryption);
+    keyInfo.encryption = SSH_TO_OPENSSL[keyInfo.encryption] ||
+        keyInfo.encryption;
     switch (keyInfo.encryption) {
         case "aes-256-cbc":
         case "aes-256-ctr":
@@ -777,11 +867,11 @@ export const decryptKey = (keyInfo, passphrase) => {
         while (keylen > key.length) {
             key = Buffer.concat([
                 key,
-                (crypto.createHash("md5")
+                crypto.createHash("md5")
                     .update(key)
                     .update(passphrase, "utf8")
                     .update(iv)
-                    .digest()).slice(0, 8)
+                    .digest().slice(0, 8)
             ]);
         }
         if (key.length > keylen) {
@@ -821,28 +911,24 @@ export const decryptKey = (keyInfo, passphrase) => {
         keyInfo.fulltype = `ssh-${keyInfo.type}`;
     } else {
         // ECDSA
-        const asnReader = new asn1.ber.Reader(keyInfo.private);
-        asnReader.readSequence();
-        asnReader.readInt();
-        asnReader.readString(asn1.type.OctetString, true);
-        asnReader.readByte(); // Skip "complex" context type byte
-        const offset = asnReader.readLength(); // Skip context length
-        if (!is.null(offset)) {
-            asnReader._offset = offset;
-            switch (asnReader.readOID()) {
-                case "1.2.840.10045.3.1.7":
-                    // prime256v1/secp256r1
-                    keyInfo.fulltype = "ecdsa-sha2-nistp256";
-                    break;
-                case "1.3.132.0.34":
-                    // secp384r1
-                    keyInfo.fulltype = "ecdsa-sha2-nistp384";
-                    break;
-                case "1.3.132.0.35":
-                    // secp521r1
-                    keyInfo.fulltype = "ecdsa-sha2-nistp521";
-                    break;
-            }
+
+        const asnData = asn1.fromBER(bufferToArrayBuffer(keyInfo.private)).result;
+
+        const oid = asnData.valueBlock.value[2].valueBlock.value[0].valueBlock.toString()
+
+        switch (oid) {
+            case "1.2.840.10045.3.1.7":
+                // prime256v1/secp256r1
+                keyInfo.fulltype = "ecdsa-sha2-nistp256";
+                break;
+            case "1.3.132.0.34":
+                // secp384r1
+                keyInfo.fulltype = "ecdsa-sha2-nistp384";
+                break;
+            case "1.3.132.0.35":
+                // secp521r1
+                keyInfo.fulltype = "ecdsa-sha2-nistp521";
+                break;
         }
         if (is.undefined(keyInfo.fulltype)) {
             return new Error("Unsupported EC private key type");
@@ -873,20 +959,11 @@ export const genPublicKey = (keyInfo) => {
     if (keyInfo.private) {
         // parsing private key in ASN.1 format in order to generate a public key
         const privKey = keyInfo.private;
-        const asnReader = new asn1.ber.Reader(privKey);
+        const asnData = asn1.fromBER(bufferToArrayBuffer(privKey)).result;
         let errMsg;
 
-        if (is.null(asnReader.readSequence())) {
-            errMsg = "Malformed private key (expected sequence)";
-            if (keyInfo._decrypted) {
-                errMsg += ". Bad passphrase?";
-            }
-            throw new Error(errMsg);
-        }
-
-        // version (ignored)
-        if (is.null(asnReader.readInt())) {
-            errMsg = "Malformed private key (expected version)";
+        if (asnData.error) {
+            errMsg = `Malformed private key (${asnData.error})`;
             if (keyInfo._decrypted) {
                 errMsg += ". Bad passphrase?";
             }
@@ -895,7 +972,7 @@ export const genPublicKey = (keyInfo) => {
 
         if (keyInfo.type === "rsa") {
             // modulus (n) -- integer
-            n = asnReader.readString(asn1.type.Integer, true);
+            n = Buffer.from(asnData.valueBlock.value[1].valueBlock.valueHex);
             if (is.null(n)) {
                 errMsg = "Malformed private key (expected RSA n value)";
                 if (keyInfo._decrypted) {
@@ -905,7 +982,7 @@ export const genPublicKey = (keyInfo) => {
             }
 
             // public exponent (e) -- integer
-            e = asnReader.readString(asn1.type.Integer, true);
+            e = Buffer.from(asnData.valueBlock.value[2].valueBlock.valueHex);
             if (is.null(e)) {
                 errMsg = "Malformed private key (expected RSA e value)";
                 if (keyInfo._decrypted) {
@@ -930,44 +1007,16 @@ export const genPublicKey = (keyInfo) => {
             n.copy(publicKey, i += 4);
         } else if (keyInfo.type === "dss") { // DSA
             // prime (p) -- integer
-            p = asnReader.readString(asn1.type.Integer, true);
-            if (is.null(p)) {
-                errMsg = "Malformed private key (expected DSA p value)";
-                if (keyInfo._decrypted) {
-                    errMsg += ". Bad passphrase?";
-                }
-                throw new Error(errMsg);
-            }
+            p = Buffer.from(asnData.valueBlock.value[1].valueBlock.valueHex);
 
             // group order (q) -- integer
-            q = asnReader.readString(asn1.type.Integer, true);
-            if (is.null(q)) {
-                errMsg = "Malformed private key (expected DSA q value)";
-                if (keyInfo._decrypted) {
-                    errMsg += ". Bad passphrase?";
-                }
-                throw new Error(errMsg);
-            }
+            q = Buffer.from(asnData.valueBlock.value[2].valueBlock.valueHex);
 
             // group generator (g) -- integer
-            g = asnReader.readString(asn1.type.Integer, true);
-            if (is.null(g)) {
-                errMsg = "Malformed private key (expected DSA g value)";
-                if (keyInfo._decrypted) {
-                    errMsg += ". Bad passphrase?";
-                }
-                throw new Error(errMsg);
-            }
+            g = Buffer.from(asnData.valueBlock.value[3].valueBlock.valueHex);
 
             // public key value (y) -- integer
-            y = asnReader.readString(asn1.type.Integer, true);
-            if (is.null(y)) {
-                errMsg = "Malformed private key (expected DSA y value)";
-                if (keyInfo._decrypted) {
-                    errMsg += ". Bad passphrase?";
-                }
-                throw new Error(errMsg);
-            }
+            y = Buffer.from(asnData.valueBlock.value[4].valueBlock.valueHex);
 
             publicKey = Buffer.allocUnsafe(4 + 7 // ssh-dss
                 +
@@ -992,20 +1041,8 @@ export const genPublicKey = (keyInfo) => {
             publicKey.writeUInt32BE(y.length, i += g.length, true);
             y.copy(publicKey, i += 4);
         } else { // ECDSA
-            d = asnReader.readString(asn1.type.OctetString, true);
-            if (is.null(d)) {
-                throw new Error("Malformed private key (expected ECDSA private key)");
-            }
-            asnReader.readByte(); // Skip "complex" context type byte
-            const offset = asnReader.readLength(); // Skip context length
-            if (is.null(offset)) {
-                throw new Error("Malformed private key (expected ECDSA context value)");
-            }
-            asnReader._offset = offset;
-            ecCurveOID = asnReader.readOID();
-            if (is.null(ecCurveOID)) {
-                throw new Error("Malformed private key (expected ECDSA curve)");
-            }
+            d = Buffer.from(asnData.valueBlock.value[1].valueBlock.valueHex);
+            ecCurveOID = asnData.valueBlock.value[2].valueBlock.value[0].valueBlock.toString();
             let tempECDH;
             switch (ecCurveOID) {
                 case "1.2.840.10045.3.1.7":

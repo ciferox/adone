@@ -634,7 +634,7 @@ export const getDiff = (actual, expected) => {
 
         if (adone.is.string(val)) {
             result += `${i}${marker}${k}${mask ? stringify(applyMask(val, type, mask)) : colorizer(stringify(val), "string")}`;
-        } else if (stack.top.type === "arrayBuffer") {
+        } else if (!stack.empty && stack.top.type === "arrayBuffer") {
             const byte = `0x${val.toString(16).padStart(2, "0").toUpperCase()}`;
             result += `${i}${marker}${colorizer(byte, "number")}`;
         } else {

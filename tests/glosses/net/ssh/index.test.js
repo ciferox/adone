@@ -1637,7 +1637,7 @@ describe("net", "ssh", () => {
         });
     });
 
-    it("Client signing errors are caught and emitted", function (done) {
+    it.todo("Client signing errors are caught and emitted", function (done) {
         let cliError;
 
         const r = setup(
@@ -1685,7 +1685,7 @@ describe("net", "ssh", () => {
         });
     });
 
-    it("Server signing errors are caught and emitted", function (done) {
+    it.todo("Server signing errors are caught and emitted", function (done) {
         let srvError;
         let cliError;
 
