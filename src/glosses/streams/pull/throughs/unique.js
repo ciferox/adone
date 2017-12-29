@@ -1,18 +1,20 @@
-'use strict'
+import prop from "../util/prop"; // todo
 
-function id (e) { return e }
-var prop = require('../util/prop')
-var filter = require('./filter')
+const {
+    stream: { pull }
+} = adone;
 
 //drop items you have already seen.
-module.exports = function unique (field, invert) {
-  field = prop(field) || id
-  var seen = {}
-  return filter(function (data) {
-    var key = field(data)
-    if(seen[key]) return !!invert //false, by default
-    else seen[key] = true
-    return !invert //true by default
-  })
-}
+export default function unique(field, invert) {
+    field = prop(field) || adone.identity;
+    const seen = {};
+    return pull.filter((data) => {
+        const key = field(data);
+        if (seen[key]) {
+            return Boolean(invert);
 
+        } //false, by default
+        seen[key] = true;
+        return !invert; //true by default
+    });
+}

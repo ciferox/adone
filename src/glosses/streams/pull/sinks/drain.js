@@ -1,48 +1,62 @@
-'use strict'
+const {
+    is
+} = adone;
 
-module.exports = function drain (op, done) {
-  var read, abort
+export default function drain(op, done) {
+    let read;
+    let abort;
 
-  function sink (_read) {
-    read = _read
-    if(abort) return sink.abort()
-    //this function is much simpler to write if you
-    //just use recursion, but by using a while loop
-    //we do not blow the stack if the stream happens to be sync.
-    ;(function next() {
-        var loop = true, cbed = false
-        while(loop) {
-          cbed = false
-          read(null, function (end, data) {
-            cbed = true
-            if(end = end || abort) {
-              loop = false
-              if(done) done(end === true ? null : end)
-              else if(end && end !== true)
-                throw end
-            }
-            else if(op && false === op(data) || abort) {
-              loop = false
-              read(abort || true, done || function () {})
-            }
-            else if(!loop){
-              next()
-            }
-          })
-          if(!cbed) {
-            loop = false
-            return
-          }
+    const sink = (_read) => {
+        read = _read;
+        if (abort) {
+            return sink.abort();
+            //this function is much simpler to write if you
+            //just use recursion, but by using a while loop
+            //we do not blow the stack if the stream happens to be sync.
         }
-      })()
-  }
+        (function next() {
+            let loop = true;
+            let cbed = false;
+            const cb = (end, data) => {
+                cbed = true;
+                end = end || abort;
+                if (end) {
+                    loop = false;
+                    if (done) {
+                        done(end === true ? null : end);
 
-  sink.abort = function (err, cb) {
-    if('function' == typeof err)
-      cb = err, err = true
-    abort = err || true
-    if(read) return read(abort, cb || function () {})
-  }
+                    } else if (end && end !== true) {
+                        throw end;
 
-  return sink
+                    }
+                } else if (op && op(data) === false || abort) {
+                    loop = false;
+                    read(abort || true, done || (() => { }));
+                } else if (!loop) {
+                    next();
+                }
+            };
+            while (loop) {
+                cbed = false;
+                read(null, cb);
+                if (!cbed) {
+                    loop = false;
+                    return;
+                }
+            }
+        })();
+    };
+
+    sink.abort = function (err, cb) {
+        if (is.function(err)) {
+            cb = err, err = true;
+        }
+        abort = err || true;
+        if (read) {
+            return read(abort, cb || (() => { }));
+
+        }
+    };
+
+    return sink;
 }

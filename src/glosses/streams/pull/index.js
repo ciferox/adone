@@ -1,24 +1,36 @@
-const sources = require("./sources");
-const sinks = require("./sinks");
-const throughs = require("./throughs");
-
-exports = module.exports = require("./pull");
-
-exports.pull = exports;
-
-for (var k in sources) {
-    exports[k] = sources[k];
-}
-
-for (var k in throughs) {
-    exports[k] = throughs[k];
-}
-
-for (var k in sinks) {
-    exports[k] = sinks[k];
-}
+import pull from "./pull";
 
 adone.lazify({
+    // sinks
+    drain: "./sinks/drain",
+    onEnd: "./sinks/on_end",
+    log: "./sinks/log",
+    find: "./sinks/find",
+    reduce: "./sinks/reduce",
+    collect: "./sinks/collect",
+    concat: "./sinks/concat",
+
+    // sources
+    keys: "./sources/keys",
+    once: "./sources/once",
+    values: "./sources/values",
+    count: "./sources/count",
+    infinite: "./sources/infinite",
+    empty: "./sources/empty",
+    error: "./sources/error",
+
+    // throughs
+    map: "./throughs/map",
+    asyncMap: "./throughs/async_map",
+    filter: "./throughs/filter",
+    filterNot: "./throughs/filter_not",
+    through: "./throughs/through",
+    take: "./throughs/take",
+    unique: "./throughs/unique",
+    nonUnique: "./throughs/non_unique",
+    flatten: "./throughs/flatten",
+
+    //
     many: "./many",
     defer: "./defer",
     handshake: "./handshake",
@@ -46,4 +58,6 @@ adone.lazify({
     paramap: "./paramap",
     sort: "./sort",
     split: "./split"
-}, exports, require);
+}, pull, require);
+
+export default pull;

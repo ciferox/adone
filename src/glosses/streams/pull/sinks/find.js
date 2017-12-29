@@ -1,28 +1,29 @@
-'use strict'
+import prop from "../util/prop"; // todo
 
-function id (e) { return e }
-var prop = require('../util/prop')
-var drain = require('./drain')
+const {
+    stream: { pull }
+} = adone;
 
-module.exports = function find (test, cb) {
-  var ended = false
-  if(!cb)
-    cb = test, test = id
-  else
-    test = prop(test) || id
+export default function find(test, cb) {
+    let ended = false;
+    if (!cb) {
+        cb = test, test = adone.identity;
+    } else {
+        test = prop(test) || adone.identity;
 
-  return drain(function (data) {
-    if(test(data)) {
-      ended = true
-      cb(null, data)
-    return false
     }
-  }, function (err) {
-    if(ended) return //already called back
-    cb(err === true ? null : err, null)
-  })
+
+    return pull.drain((data) => {
+        if (test(data)) {
+            ended = true;
+            cb(null, data);
+            return false;
+        }
+    }, (err) => {
+        if (ended) {
+            return;
+
+        } //already called back
+        cb(err === true ? null : err, null);
+    });
 }
-
-
-
-

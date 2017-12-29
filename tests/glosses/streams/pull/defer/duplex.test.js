@@ -1,6 +1,6 @@
 describe("stream", "pull", "defer", "duplex", () => {
     const { stream: { pull } } = adone;
-    const { pull: { defer: { duplex } } } = pull;
+    const { defer: { duplex } } = pull;
 
     it("simple", (done) => {
         const d = duplex();

@@ -1,35 +1,23 @@
 const {
-    is
+    is,
+    std: {
+        stream: { Stream }
+    }
 } = adone;
 
-const Stream = require("stream");
-
-module.exports = duplex;
-
-
-module.exports.source = function (source) {
-    return duplex(null, source);
-};
-
-module.exports.sink = function (sink) {
-    return duplex(sink, null);
-};
-
-const next = (
-    is.undefined(setImmediate)
-        ? process.nextTick
-        : setImmediate
-);
-
-function duplex(reader, read) {
-    if (reader && typeof reader === "object") {
+export default function duplex(reader, read) {
+    if (reader && is.object(reader) && !is.function(reader)) {
         read = reader.source;
         reader = reader.sink;
     }
 
-    let cbs = [], input = [], ended, needDrain;
+    const cbs = [];
+    const input = [];
+    let ended;
+    let needDrain;
     const s = new Stream();
     s.writable = s.readable = true;
+
     s.write = function (data) {
         if (cbs.length) {
             cbs.shift()(null, data);
@@ -43,18 +31,6 @@ function duplex(reader, read) {
         return Boolean(cbs.length);
     };
 
-    s.end = function () {
-        if (read) {
-            if (input.length) {
-                drain();
-            } else {
-                read(ended = true, cbs.length ? cbs.shift() : () => {});
-            }
-        } else if (cbs.length) {
-            cbs.shift()(true);
-        }
-    };
-
     s.source = function (end, cb) {
         if (input.length) {
             cb(null, input.shift());
@@ -62,7 +38,7 @@ function duplex(reader, read) {
                 s.emit("drain");
             }
         } else {
-            if (ended = ended || end) {
+            if (ended || end) {
                 cb(ended);
             } else {
                 cbs.push(cb);
@@ -83,12 +59,63 @@ function duplex(reader, read) {
         read = n;
     }
 
-    let output = [], _cbs = [];
-    let _ended = false, waiting = false, busy = false;
+    const output = [];
+    let _ended = false;
+    let busy = false;
+
+    const drain = () => {
+        if (!read || busy) {
+            return;
+        }
+        while (output.length && !s.paused) {
+            s.emit("data", output.shift());
+        }
+        if (s.paused) {
+            return;
+        }
+        if (_ended) {
+            return s.emit("end");
+        }
+        busy = true;
+        read(null, function next(end, data) {
+            busy = false;
+            if (s.paused) {
+                if (end === true) {
+                    _ended = end;
+                } else if (end) {
+                    s.emit("error", end);
+                } else {
+                    output.push(data);
+                }
+            } else {
+                if (end && (ended = end) !== true) {
+                    s.emit("error", end);
+                } else if (ended || end) {
+                    s.emit("end");
+                } else {
+                    s.emit("data", data);
+                    busy = true;
+                    read(null, next);
+                }
+            }
+        });
+    };
+
+    s.end = function () {
+        if (read) {
+            if (input.length) {
+                drain();
+            } else {
+                read(ended = true, cbs.length ? cbs.shift() : () => {});
+            }
+        } else if (cbs.length) {
+            cbs.shift()(true);
+        }
+    };
 
     s.sink = function (_read) {
         read = _read;
-        next(drain);
+        setImmediate(drain);
     };
 
     if (read) {
@@ -104,47 +131,6 @@ function duplex(reader, read) {
 
             return res;
         };
-    }
-
-    function drain() {
-        waiting = false;
-        if (!read || busy) {
-            return;
-        }
-        while (output.length && !s.paused) {
-            s.emit("data", output.shift());
-        }
-        if (s.paused) {
-            return;
-        }
-        if (_ended) {
-            return s.emit("end");
-        }
-        let i = 0;
-        busy = true;
-        read(null, function next(end, data) {
-            busy = false;
-            if (s.paused) {
-                if (end === true) {
-                    _ended = end;
-                } else if (end) {
-                    s.emit("error", end);
-                } else {
-                    output.push(data);
-                }
-                waiting = true;
-            } else {
-                if (end && (ended = end) !== true) {
-                    s.emit("error", end);
-                } else if (ended = ended || end) {
-                    s.emit("end");
-                } else {
-                    s.emit("data", data);
-                    busy = true;
-                    read(null, next);
-                }
-            }
-        });
     }
 
     s.pause = function () {
@@ -171,3 +157,12 @@ function duplex(reader, read) {
     };
     return s;
 }
+
+
+duplex.source = function (source) {
+    return duplex(null, source);
+};
+
+duplex.sink = function (sink) {
+    return duplex(sink, null);
+};

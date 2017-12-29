@@ -1,9 +1,28 @@
 const {
     is
 } = adone;
-const looper = require("looper");
 
-export default function (writer, ender) {
+const looper = function (fun) {
+    (function next() {
+        let loop = true;
+        let sync = false;
+        const cb = () => {
+            if (sync) {
+                loop = true;
+            } else {
+                next();
+            }
+        };
+        do {
+            sync = true;
+            loop = false;
+            fun.call(this, cb);
+            sync = false;
+        } while (loop);
+    })();
+};
+
+export default function transform(writer, ender) {
     return function (read) {
         const queue = [];
         let ended;
@@ -23,15 +42,17 @@ export default function (writer, ender) {
 
         const emitter = {
             emit(event, data) {
-                if (event == "data") {
-                    enqueue(data);
-                }
-                if (event == "end") {
-                    ended = true, enqueue(null);
-                }
-                if (event == "error") {
-                    error = data;
-
+                switch (event) {
+                    case "data":
+                        enqueue(data);
+                        break;
+                    case "end":
+                        ended = true;
+                        enqueue(null);
+                        break;
+                    case "error":
+                        error = data;
+                        break;
                 }
             },
             queue: enqueue
@@ -67,7 +88,7 @@ export default function (writer, ender) {
                         if (end && end !== true) {
                             error = end; return next();
                         }
-                        if (ended = ended || end) {
+                        if (ended || end) {
                             ender.call(emitter);
                         } else if (!is.null(data)) {
                             writer.call(emitter, data);

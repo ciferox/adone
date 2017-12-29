@@ -1,17 +1,21 @@
 const {
-    is
+    is,
+    event: { EventEmitter },
+    stream: { pull },
+    std: {
+        http,
+        https
+    }
 } = adone;
-const ws = adone.stream.pull.ws;
-const WebSocket = require("ws");
-const url = require("url");
-const http = require("http");
-const https = require("https");
 
-const EventEmitter = require("events").EventEmitter;
+const {
+    ws: {
+        duplex
+    }
+} = pull;
 
-module.exports = function (opts, onConnection) {
+export default function (opts, onConnection) {
     const emitter = new EventEmitter();
-    var server;
     if (is.function(opts)) {
         onConnection = opts;
         opts = null;
@@ -23,18 +27,16 @@ module.exports = function (opts, onConnection) {
 
     }
 
-    function proxy(server, event) {
-        return server.on(event, function () {
-            const args = [].slice.call(arguments);
+    const proxy = (server, event) => {
+        return server.on(event, (...args) => {
             args.unshift(event);
             emitter.emit.apply(emitter, args);
         });
-    }
+    };
 
-    var server = opts.server ||
-    (opts.key && opts.cert ? https.createServer(opts) : http.createServer());
+    const server = opts.server || (opts.key && opts.cert ? https.createServer(opts) : http.createServer());
 
-    const wsServer = new WebSocket.Server({
+    const wsServer = new adone.net.ws.Server({
         server,
         perMessageDeflate: false,
         verifyClient: opts.verifyClient
@@ -44,9 +46,9 @@ module.exports = function (opts, onConnection) {
     proxy(server, "request");
     proxy(server, "close");
 
-    wsServer.on("connection", (socket) => {
-        const stream = ws.duplex(socket);
-        stream.remoteAddress = socket.upgradeReq.socket.remoteAddress;
+    wsServer.on("connection", (socket, req) => {
+        const stream = duplex(socket);
+        stream.remoteAddress = req.socket.remoteAddress;
         emitter.emit("connection", stream);
     });
 
@@ -67,5 +69,4 @@ module.exports = function (opts, onConnection) {
 
     emitter.address = server.address.bind(server);
     return emitter;
-};
-
+}

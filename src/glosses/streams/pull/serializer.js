@@ -1,8 +1,9 @@
 const {
+    is,
     stream: { pull }
 } = adone;
 
-export default function (ps, _JSON, opts) {
+export default function serializer(ps, _JSON, opts) {
     _JSON = _JSON || JSON;
     opts = opts || {};
     const separator = opts.separator || "\n";
@@ -28,7 +29,7 @@ export default function (ps, _JSON, opts) {
         source: pull(
             ps.source,
             pull.map((data) => {
-                if (data !== void 0) {
+                if (!is.undefined(data)) {
                     return _JSON.stringify(data) + separator;
                 }
             })

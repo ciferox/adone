@@ -1,9 +1,9 @@
-'use strict'
+const {
+    stream: { pull }
+} = adone;
 
-var drain = require('./drain')
-
-module.exports = function log (done) {
-  return drain(function (data) {
-    console.log(data)
-  }, done)
+export default function log(done) {
+    return pull.drain((data) => {
+        console.log(data);
+    }, done);
 }

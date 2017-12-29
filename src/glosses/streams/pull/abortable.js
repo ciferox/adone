@@ -1,6 +1,5 @@
 export default function abortable(onEnd) {
     let aborted = false;
-    let reading = false;
     let ended = false;
     let _cb;
     let _read;
@@ -53,9 +52,7 @@ export default function abortable(onEnd) {
             if (aborted) {
                 return;
             }
-            reading = true;
             read(abort, (end, data) => {
-                reading = false;
                 if (aborted) {
                     return !abort && read(aborted, () => {});
 

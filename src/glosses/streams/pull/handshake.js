@@ -17,7 +17,7 @@ export default function (opts, _cb) {
     if (is.function(opts)) {
         _cb = opts, opts = {};
     }
-    _cb = once(_cb || function noop() {});
+    _cb = once(_cb || adone.noop);
     const reader = pull.reader(opts && opts.timeout || 5e3);
     const writer = pull.pushable((err) => {
         if (err) {
@@ -32,8 +32,7 @@ export default function (opts, _cb) {
             read: reader.read,
             abort(err) {
                 writer.end(err);
-                reader.abort(err, (err) => {
-                });
+                reader.abort(err, adone.noop);
                 _cb(err);
             },
             write: writer.push,

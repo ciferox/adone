@@ -1,23 +1,34 @@
-'use strict'
-var abortCb = require('../util/abort-cb')
+import abortCb from "../util/abort_cb"; // todo
 
-module.exports = function values (array, onAbort) {
-  if(!array)
-    return function (abort, cb) {
-      if(abort) return abortCb(cb, abort, onAbort)
-      return cb(true)
+const {
+    is
+} = adone;
+
+export default function values(array, onAbort) {
+    if (!array) {
+        return function (abort, cb) {
+            if (abort) {
+                return abortCb(cb, abort, onAbort);
+
+            }
+            return cb(true);
+        };
     }
-  if(!Array.isArray(array))
-    array = Object.keys(array).map(function (k) {
-      return array[k]
-    })
-  var i = 0
-  return function (abort, cb) {
-    if(abort)
-      return abortCb(cb, abort, onAbort)
-    if(i >= array.length)
-      cb(true)
-    else
-      cb(null, array[i++])
-  }
+    if (!is.array(array)) {
+        array = Object.keys(array).map((k) => {
+            return array[k];
+        });
+    }
+    let i = 0;
+    return function (abort, cb) {
+        if (abort) {
+            return abortCb(cb, abort, onAbort);
+        }
+        if (i >= array.length) {
+            cb(true);
+
+        } else {
+            cb(null, array[i++]);
+        }
+    };
 }

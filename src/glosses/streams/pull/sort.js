@@ -2,8 +2,7 @@ const {
     stream: { pull }
 } = adone;
 
-export default function (compare) {
-
+export default function sort(compare) {
     const source = pull.defer.source();
 
     const sink = pull.collect((err, ary) => {

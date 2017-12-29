@@ -24,4 +24,4 @@ export default function _catch(onError) {
             });
         };
     };
-};
+}

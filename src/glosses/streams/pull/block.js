@@ -24,7 +24,7 @@ export default function block(size, opts) {
         opts = {};
 
     }
-    if (typeof size === "object") {
+    if (is.object(size)) {
         opts = size;
         size = opts.size;
     }
@@ -54,10 +54,11 @@ export default function block(size, opts) {
             let targetLength = 0;
             const target = [];
             let index = 0;
-            var b, end, out;
+            let end;
+            let out;
 
             while (targetLength < size) {
-                b = buffered[index];
+                const b = buffered[index];
 
                 // Slice as much as we can from the next buffer.
                 end = Math.min(bufferSkip + size - targetLength, b.length);
@@ -82,7 +83,7 @@ export default function block(size, opts) {
 
             emittedChunk = true;
         }
-    }, function flush(end) {
+    }, function flush() {
         if ((opts.emitEmpty && !emittedChunk) || bufferedBytes) {
             if (zeroPadding) {
                 const zeroes = Buffer.alloc(size - bufferedBytes);
@@ -101,4 +102,4 @@ export default function block(size, opts) {
         }
         this.queue(null);
     });
-};
+}

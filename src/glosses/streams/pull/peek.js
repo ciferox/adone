@@ -1,5 +1,4 @@
 export default function (first) {
-
     let end;
     let data;
     let waiting;
@@ -26,14 +25,12 @@ export default function (first) {
             if (!(end || data)) {
                 // abort = _abort;
                 waiting = cb;
-            }
-            //if it has, but we havn't called back yet.
-            else if (!peeked) {
+            } else if (!peeked) {
+                //if it has, but we havn't called back yet.
                 peeked = true;
                 cb(end, data);
-            }
-            //if we are streaming as normal.
-            else {
+            } else {
+                //if we are streaming as normal.
                 read(_abort, cb);
 
             }

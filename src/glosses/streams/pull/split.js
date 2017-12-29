@@ -27,7 +27,7 @@ export default function split(matcher, mapper, reverse, last) {
 
     return pull.transform(function (buffer) {
         const stream = this;
-        const pieces = ( reverse ? buffer + soFar : soFar + buffer).split(matcher);
+        const pieces = (reverse ? buffer + soFar : soFar + buffer).split(matcher);
 
         soFar = reverse ? pieces.shift() : pieces.pop();
         const l = pieces.length;
@@ -35,7 +35,7 @@ export default function split(matcher, mapper, reverse, last) {
             map(stream, pieces[reverse ? l - 1 - i : i ]);
         }
     }, function () {
-        if (last && soFar == "") {
+        if (last && soFar === "") {
             return this.queue(null);
 
         }

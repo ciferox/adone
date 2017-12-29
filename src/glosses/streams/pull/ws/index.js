@@ -4,5 +4,6 @@ adone.lazify({
     sink: "./sink",
     createServer: "./server",
     connect: "./client",
-    wsurl: "./ws-url"
+    wsurl: "./wsurl",
+    ready: "./ready"
 }, exports, require);

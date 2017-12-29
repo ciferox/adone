@@ -4,7 +4,6 @@ export default function hang(onAbort) {
         if (abort) {
             if (_cb) {
                 _cb(abort);
-
             }
             cb(abort);
             if (onAbort) {
@@ -15,6 +14,5 @@ export default function hang(onAbort) {
             _cb = cb;
 
         }
-
     };
 }

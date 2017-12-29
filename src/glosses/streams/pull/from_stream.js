@@ -1,70 +1,70 @@
-const looper = require("looper");
+const {
+    is
+} = adone;
 
-function destroy(stream, cb) {
-    function onClose() {
-        cleanup(); cb();
-    }
-    function onError(err) {
-        cleanup(); cb(err);
-    }
-    function cleanup() {
-        stream.removeListener("close", onClose);
-        stream.removeListener("error", onError);
-    }
-    stream.on("close", onClose);
-    stream.on("error", onError);
-}
+const looper = (fun) => {
+    (function next() {
+        let loop = true;
+        let sync = false;
+        const cb = () => {
+            if (sync) {
+                loop = true;
+            } else {
+                next();
+            }
+        };
+        do {
+            sync = true; loop = false;
+            fun.call(this, cb);
+            sync = false;
+        } while (loop);
+    })();
+};
 
-function destroy(stream) {
+
+const destroy = (stream) => {
     if (!stream.destroy) {
-        console.error(
-            "warning, stream-to-pull-stream: \n"
-    + "the wrapped node-stream does not implement `destroy`, \n"
-    + "this may cause resource leaks."
-        );
+        adone.warn("warning, stream-to-pull-stream: the wrapped node-stream does not implement `destroy`, this may cause resource leaks.");
     } else {
-        stream.destroy()
-        ;
+        stream.destroy();
     }
+};
 
-}
-
-function write(read, stream, cb) {
-    let ended, closed = false, did;
-    function done() {
+const write = (read, stream, cb) => {
+    let ended;
+    let closed = false;
+    let did;
+    const done = () => {
         if (did) {
-            return
-            ;
+            return;
         }
         did = true;
         cb && cb(ended === true ? null : ended);
-    }
+    };
 
-    function onClose() {
+    const onClose = () => {
         if (closed) {
-            return
-            ;
+            return;
         }
         closed = true;
         cleanup();
         if (!ended) {
             read(ended = true, done);
         } else {
-            done()
-            ;
+            done();
         }
-    }
-    function onError(err) {
+    };
+    const onError = (err) => {
         cleanup();
         if (!ended) {
             read(ended = err, done);
         }
-    }
-    function cleanup() {
+    };
+    const cleanup = () => {
         stream.on("finish", onClose);
         stream.removeListener("close", onClose);
         stream.removeListener("error", onError);
-    }
+    };
     stream.on("close", onClose);
     stream.on("finish", onClose);
     stream.on("error", onError);
@@ -77,7 +77,7 @@ function write(read, stream, cb) {
                     return stream._isStdio ? done() : stream.end();
                 }
 
-                if (ended = ended || end) {
+                if (ended) {
                     destroy(stream);
                     return done(ended);
                 }
@@ -90,86 +90,69 @@ function write(read, stream, cb) {
                 if (stream._isStdio) {
                     stream.write(data, () => {
                         next();
-                    })
-                    ;
+                    });
                 } else {
                     const pause = stream.write(data);
                     if (pause === false) {
-                        stream.once("drain", next)
-                        ;
+                        stream.once("drain", next);
                     } else {
-                        next()
-                        ;
+                        next();
                     }
                 }
             });
         });
     });
-}
+};
 
-function first(emitter, events, handler) {
-    function listener(val) {
-        events.forEach((e) => {
-            emitter.removeListener(e, listener);
-        });
-        handler(val);
-    }
-    events.forEach((e) => {
-        emitter.on(e, listener);
-    });
-    return emitter;
-}
-
-function read2(stream) {
-    let ended = false, waiting = false;
+const read2 = (stream) => {
+    let ended = false;
+    let waiting = false;
     let _cb;
 
-    function read() {
+    const read = () => {
         const data = stream.read();
         if (!is.null(data) && _cb) {
             const cb = _cb; _cb = null;
             cb(null, data);
         }
-    }
+    };
 
     stream.on("readable", () => {
         waiting = true;
         _cb && read();
-    })
-        .on("end", () => {
-            ended = true;
-            _cb && _cb(ended);
-        })
-        .on("error", (err) => {
-            ended = err;
-            _cb && _cb(ended);
-        });
+    }).on("end", () => {
+        ended = true;
+        _cb && _cb(ended);
+    }).on("error", (err) => {
+        ended = err;
+        _cb && _cb(ended);
+    });
 
-    return function (end, cb) {
+    return (end, cb) => {
         _cb = cb;
         if (ended) {
             cb(ended);
         } else if (waiting) {
-            read()
-            ;
+            read();
         }
     };
-}
+};
 
-function read1(stream) {
-    let buffer = [], cbs = [], ended, paused = false;
+const read1 = (stream) => {
+    const buffer = [];
+    const cbs = [];
+    let ended;
+    let paused = false;
 
-    let draining;
-    function drain() {
+    const drain = () => {
         while ((buffer.length || ended) && cbs.length) {
-            cbs.shift()(buffer.length ? null : ended, buffer.shift())
-            ;
+            cbs.shift()(buffer.length ? null : ended, buffer.shift());
         }
-        if (!buffer.length && (paused)) {
+        if (!buffer.length && paused) {
             paused = false;
             stream.resume();
         }
-    }
+    };
 
     stream.on("data", (data) => {
         buffer.push(data);
@@ -191,19 +174,17 @@ function read1(stream) {
         ended = err;
         drain();
     });
-    return function (abort, cb) {
+    return (abort, cb) => {
         if (!cb) {
-            throw new Error("*must* provide cb")
-            ;
+            throw new Error("*must* provide cb");
         }
         if (abort) {
-            function onAbort() {
+            const onAbort = () => {
                 while (cbs.length) {
-                    cbs.shift()(abort)
-                    ;
+                    cbs.shift()(abort);
                 }
                 cb(abort);
-            }
+            };
             //if the stream happens to have already ended, then we don't need to abort.
             if (ended) {
                 return onAbort();
@@ -215,47 +196,37 @@ function read1(stream) {
             drain();
         }
     };
-}
+};
 
 const read = read1;
 
-const sink = function (stream, cb) {
-    return function (read) {
-        return write(read, stream, cb);
-    };
-};
+const sink = (stream, cb) => (read) => write(read, stream, cb);
 
-const source = function (stream) {
-    return read1(stream);
-};
+const source = (stream) => read1(stream);
 
-exports = module.exports = function (stream, cb) {
-    return (
-        (stream.writable && stream.write)
-            ? stream.readable
-                ? function (_read) {
-                    write(_read, stream, cb);
-                    return read1(stream);
-                }
-                : sink(stream, cb)
-            : source(stream)
-    );
-};
+export default function fromStream(stream, cb) {
+    if (stream.writable && stream.write) {
+        if (stream.readable) {
+            return (_read) => {
+                write(_read, stream, cb);
+                return read1(stream);
+            };
+        }
+        return sink(stream, cb);
+    }
+    return source(stream);
+}
 
-exports.sink = sink;
-exports.source = source;
-exports.read = read;
-exports.read1 = read1;
-exports.read2 = read2;
-exports.duplex = function (stream, cb) {
-    return {
-        source: source(stream),
-        sink: sink(stream, cb)
-    };
-};
-exports.transform = function (stream) {
-    return function (read) {
-        const _source = source(stream);
-        sink(stream)(read); return _source;
-    };
+fromStream.sink = sink;
+fromStream.source = source;
+fromStream.read = read;
+fromStream.read1 = read1;
+fromStream.read2 = read2;
+fromStream.duplex = (stream, cb) => ({
+    source: source(stream),
+    sink: sink(stream, cb)
+});
+fromStream.transform = (stream) => (read) => {
+    const _source = source(stream);
+    sink(stream)(read); return _source;
 };

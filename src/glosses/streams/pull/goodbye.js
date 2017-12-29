@@ -16,12 +16,10 @@ export default function (stream, goodbye) {
             pull.filter((data) => {
                 if (data !== goodbye) {
                     return true;
-
                 }
                 e.end();
             }),
             stream.sink
         )
     };
-
-};
+}

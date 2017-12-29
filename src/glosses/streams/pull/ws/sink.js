@@ -1,27 +1,21 @@
 const {
-    is
+    is,
+    stream: { pull }
 } = adone;
 
-const ready = require("./ready");
+const {
+    ws: {
+        ready
+    }
+} = pull;
 
-/**
-  ### `sink(socket, opts?)`
-
-  Create a pull-stream `Sink` that will write data to the `socket`.
-
-  <<< examples/write.js
-
-**/
-
-const nextTick = !is.undefined(setImmediate) ? setImmediate : process.nextTick;
-
-module.exports = function (socket, opts) {
+export default function (socket, opts) {
     return function (read) {
         opts = opts || {};
         const closeOnEnd = opts.closeOnEnd !== false;
         const onClose = is.function(opts) ? opts : opts.onClose;
 
-        function next(end, data) {
+        const next = (end, data) => {
             // if the stream has ended, simply return
             if (end) {
                 if (closeOnEnd && socket.readyState <= 1) {
@@ -50,12 +44,12 @@ module.exports = function (socket, opts) {
                     return read(end, () => {});
                 }
                 socket.send(data);
-                nextTick(() => {
+                setImmediate(() => {
                     read(null, next);
                 });
             });
-        }
+        };
 
         read(null, next);
     };
-};
+}

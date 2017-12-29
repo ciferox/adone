@@ -2,13 +2,13 @@ const {
     is
 } = adone;
 
-export default function (streams) {
-    if (!is.array(streams)) {
-        streams = [].slice.call(arguments);
+export default function zip(...streams) {
+    if (is.array(streams[0])) {
+        streams = streams[0];
     }
     let queue = [];
     const ended = [];
-    let err;
+
     return function (end, cb) {
         let n = streams.length;
         queue = [];

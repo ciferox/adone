@@ -389,12 +389,15 @@ export default class Client extends adone.event.EventEmitter {
     get CONNECTING() {
         return Client.CONNECTING;
     }
+
     get CLOSING() {
         return Client.CLOSING;
     }
+
     get CLOSED() {
         return Client.CLOSED;
     }
+
     get OPEN() {
         return Client.OPEN;
     }

@@ -2,31 +2,14 @@ const {
     is
 } = adone;
 
-/**
-  ### `source(socket)`
-
-  Create a pull-stream `Source` that will read data from the `socket`.
-
-  <<< examples/read.js
-
-**/
-
-// copied from github.com/feross/buffer
-// Some ArrayBuffers are not passing the instanceof check, so we need to do a bit more work :(
-const isArrayBuffer = function (obj) {
-    return obj instanceof ArrayBuffer ||
-        (!is.nil(obj) && !is.nil(obj.constructor) && obj.constructor.name === "ArrayBuffer" &&
-            is.number(obj.byteLength));
-};
-
-module.exports = function (socket, cb) {
+export default function (socket, cb) {
     const buffer = [];
     let receiver;
     let ended;
     let started = false;
     socket.addEventListener("message", (evt) => {
         let data = evt.data;
-        if (isArrayBuffer(data)) {
+        if (is.arrayBuffer(data)) {
             data = Buffer.from(data);
         }
 
@@ -68,32 +51,21 @@ module.exports = function (socket, cb) {
         started = true;
     });
 
-    function read(abort, cb) {
+    return (abort, cb) => {
         receiver = null;
 
         //if stream has already ended.
         if (ended) {
             return cb(ended);
-        }
-
-        // if ended, abort
-        else if (abort) {
+        } else if (abort) {
             //this will callback when socket closes
             receiver = cb;
             socket.close();
-        }
-
-        // return data, if any
-        else if (buffer.length > 0) {
+        } else if (buffer.length > 0) {
             cb(null, buffer.shift());
-        }
-
-        // wait for more data (or end)
-        else {
+        } else {
+            // wait for more data (or end)
             receiver = cb;
         }
-
-    }
-
-    return read;
-};
+    };
+}

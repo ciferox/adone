@@ -1,13 +1,15 @@
 const {
-    is
+    stream: { pull }
 } = adone;
 
-const source = require("./source");
-const sink = require("./sink");
+const {
+    ws: {
+        source,
+        sink
+    }
+} = pull;
 
-module.exports = duplex;
-
-function duplex(ws, opts) {
+export default function duplex(ws, opts) {
     const req = ws.upgradeReq || {};
     if (opts && opts.binaryType) {
         ws.binaryType = opts.binaryType;

@@ -41,15 +41,35 @@ could you describe this declaritively or something?
 */
 
 export default function (ary) {
-
     const create = function (stream) {
-        return { ready: false, reading: false, ended: false, read: stream, data: null };
+        return {
+            ready: false,
+            reading: false,
+            ended: false,
+            read: stream,
+            data: null
+        };
+    };
+
+    let capped = Boolean(ary);
+    const inputs = (ary || []).map(create);
+    let i = 0;
+    let abort;
+    let cb;
+
+    const clean = function () {
+        let l = inputs.length;
+        //iterate backwards so that we can remove items.
+        while (l--) {
+            if (inputs[l].ended) {
+                inputs.splice(l, 1);
+            }
+        }
     };
 
     const check = function () {
         if (!cb) {
-            return
-            ;
+            return;
         }
         clean();
         const l = inputs.length;
@@ -66,18 +86,9 @@ export default function (ary) {
                 const data = current.data;
                 current.ready = false;
                 current.data = null;
-                i ++; cb = null;
+                i++;
+                cb = null;
                 return _cb(null, data);
-            }
-        }
-    };
-
-    const clean = function () {
-        let l = inputs.length;
-        //iterate backwards so that we can remove items.
-        while (l--) {
-            if (inputs[l].ended) {
-                inputs.splice(l, 1);
             }
         }
     };
@@ -107,8 +118,7 @@ export default function (ary) {
                     }
                     //check whether we need to abort this stream.
                     if (abort && !end) {
-                        current.read(abort, next)
-                        ;
+                        current.read(abort, next);
                     }
                     if (!sync) {
                         check();
@@ -139,17 +149,11 @@ export default function (ary) {
         next();
     };
 
-    read.cap = function (err) {
+    read.cap = function () {
         read.add(null);
     };
 
-    let capped = Boolean(ary);
-    const inputs = (ary || []).map(create);
-    let i = 0;
-    let abort;
-    let cb;
-
     return read;
-};
+}
 
 

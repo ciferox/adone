@@ -6,7 +6,7 @@ const {
     }
 } = adone;
 
-export default function (enc) {
+export default function utf8decoder(enc) {
     const decoder = new Decode(enc);
     let ended;
     return function (read) {
@@ -18,19 +18,18 @@ export default function (enc) {
             read(abort, (end, data) => {
                 ended = end;
                 if (end === true) {
-                    if (data = decoder.end()) {
+                    data = decoder.end();
+                    if (data) {
                         cb(null, data);
                     } else {
                         cb(true);
-
                     }
-                } else if (end && (end !== true)) {
+                } else if (end && end !== true) {
                     cb(end);
                 } else {
                     cb(null, decoder.write(data));
-
                 }
             });
         };
     };
-};
+}

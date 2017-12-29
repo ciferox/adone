@@ -2,7 +2,7 @@ const {
     is
 } = adone;
 
-export default function (separated, onClose) {
+export default function pushable(separated, onClose) {
     if (is.function(separated)) {
         onClose = separated;
         separated = false;
@@ -23,6 +23,23 @@ export default function (separated, onClose) {
     let abort;
     let cb;
 
+    // `callback` calls back to waiting sink,
+    // and removes references to sink cb.
+    const callback = (err, val) => {
+        const _cb = cb;
+        // if error and pushable passed onClose, call it
+        // the first time this stream ends or errors.
+        if (err && onClose) {
+            const c = onClose;
+            onClose = null;
+            c(err === true ? null : err);
+        }
+        cb = null;
+        _cb(err, val);
+    };
+
+    let ended;
+
     // `drain` calls back to (if any) waiting
     // sink with abort, end, or next data.
     const drain = () => {
@@ -39,19 +56,10 @@ export default function (separated, onClose) {
         }
     };
 
-    // `callback` calls back to waiting sink,
-    // and removes references to sink cb.
-    const callback = (err, val) => {
-        const _cb = cb;
-        // if error and pushable passed onClose, call it
-        // the first time this stream ends or errors.
-        if (err && onClose) {
-            const c = onClose;
-            onClose = null;
-            c(err === true ? null : err);
-        }
-        cb = null;
-        _cb(err, val);
+    const end = (end) => {
+        ended = ended || end || true;
+        // attempt to drain
+        drain();
     };
 
     const read = (_abort, _cb) => {
@@ -63,13 +71,6 @@ export default function (separated, onClose) {
             }
         }
         cb = _cb;
-        drain();
-    };
-
-    let ended;
-    const end = (end) => {
-        ended = ended || end || true;
-        // attempt to drain
         drain();
     };
 
