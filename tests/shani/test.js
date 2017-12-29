@@ -2973,10 +2973,9 @@ describe("Engine", () => {
         }
     });
 
-    const script = (p) => path.join(__dirname, "_test", p);
+    const script = (...p) => path.join(__dirname, "_test", ...p);
 
     describe("reading from files", () => {
-
         it("should work", async () => {
             const engine = new Engine();
             engine.include(script("simple.js"));
@@ -3103,6 +3102,164 @@ describe("Engine", () => {
                 "exit nested",
                 "exit /"
             ]);
+        });
+
+        describe(".shanirc.js", () => {
+            it("should handle .shanirc.js file", async () => {
+                const engine = new Engine({ root: __dirname });
+                engine.include(script("rc_test", "sync", "a.js"));
+
+                const results = [];
+                const emitter = engine.start();
+
+                emitter.on("start before hook", () => {
+                    results.push("before");
+                }).on("start before each hook", () => {
+                    results.push("beforeEach");
+                }).on("start after hook", () => {
+                    results.push("after");
+                }).on("start after each hook", () => {
+                    results.push("afterEach");
+                }).on("start test", ({ test }) => {
+                    results.push(test.description);
+                });
+
+                await waitFor(emitter, "done");
+
+                expect(results).to.be.deep.equal([
+                    "before",
+                    "beforeEach",
+                    "a",
+                    "afterEach",
+                    "beforeEach",
+                    "b",
+                    "afterEach",
+                    "after"
+                ]);
+            });
+
+            it("should support async functions", async () => {
+                const engine = new Engine({ root: __dirname });
+                engine.include(script("rc_test", "async", "a.js"));
+
+                const results = [];
+                const emitter = engine.start();
+
+                emitter.on("start before hook", () => {
+                    results.push("before");
+                }).on("start before each hook", () => {
+                    results.push("beforeEach");
+                }).on("start after hook", () => {
+                    results.push("after");
+                }).on("start after each hook", () => {
+                    results.push("afterEach");
+                }).on("start test", ({ test }) => {
+                    results.push(test.description);
+                });
+
+                await waitFor(emitter, "done");
+
+                expect(results).to.be.deep.equal([
+                    "before",
+                    "beforeEach",
+                    "a",
+                    "afterEach",
+                    "beforeEach",
+                    "b",
+                    "afterEach",
+                    "after"
+                ]);
+            });
+
+            it("should handle nested rc files", async () => {
+                const engine = new Engine({ root: __dirname });
+                engine.include(script("rc_test", "nested", "dir", "a.js"));
+
+                const results = [];
+                const emitter = engine.start();
+
+                emitter.on("start before hook", ({ hook }) => {
+                    results.push(hook.description);
+                }).on("start before each hook", ({ hook }) => {
+                    results.push(hook.description);
+                }).on("start after hook", ({ hook }) => {
+                    results.push(hook.description);
+                }).on("start after each hook", ({ hook }) => {
+                    results.push(hook.description);
+                }).on("start test", ({ test }) => {
+                    results.push(test.description);
+                });
+
+                await waitFor(emitter, "done");
+
+                expect(results).to.be.deep.equal([
+                    "first before",
+                    "second before",
+                    "first beforeEach",
+                    "second beforeEach",
+                    "a",
+                    "second afterEach",
+                    "first afterEach",
+                    "first beforeEach",
+                    "second beforeEach",
+                    "b",
+                    "second afterEach",
+                    "first afterEach",
+                    "second after",
+                    "first after"
+                ]);
+            });
+
+            it("should support prefixes", async () => {
+                const engine = new Engine({ root: __dirname });
+                engine.include(script("rc_test", "prefix", "*", "{a,b}.js"));
+
+                const results = [];
+                const emitter = engine.start();
+
+                emitter.on("start test", ({ test }) => {
+                    results.push(test.chain());
+                });
+
+                await waitFor(emitter, "done");
+
+                assert.deepEqual(results, [
+                    "prefixed - a : a",
+                    "prefixed - b : b"
+                ]);
+            });
+
+            it("should support timeout", async () => {
+                const engine = new Engine({ root: __dirname });
+                engine.include(script("rc_test", "timeout", "a.js"));
+
+                const results = [];
+                const emitter = engine.start();
+
+                emitter.on("start test", ({ test }) => {
+                    results.push(test.timeout());
+                });
+
+                await waitFor(emitter, "done");
+
+                assert.deepEqual(results, [100]);
+            });
+
+            it("should support skip", async () => {
+                const engine = new Engine({ root: __dirname });
+                engine.include(script("rc_test", "skip", "**", "*.js"));
+
+                const results = [];
+                const emitter = engine.start();
+
+                emitter.on("skip test", ({ test }) => {
+                    results.push(test.description);
+                });
+
+                await waitFor(emitter, "done");
+
+                assert.deepEqual(results, ["a", "b"]);
+            });
         });
     });
 
@@ -3483,63 +3640,6 @@ describe("Engine", () => {
             const engine = new Engine();
             const { it, specify } = engine.context();
             assert.equal(it, specify);
-        });
-    });
-
-    describe("root skipping", () => {
-        it("should skip the root describe", async () => {
-            const engine = new Engine();
-            const { root, skip } = engine.context();
-            skip(() => true);
-            await skip.promise;
-            assert.ok(root.isExclusive());
-        });
-
-        it("should not skip the root describe", async () => {
-            const engine = new Engine();
-            const { root, skip } = engine.context();
-            skip(() => false);
-            await skip.promise;
-            assert.ok(!root.isExclusive());
-        });
-
-        it("should support promises", async () => {
-            const engine = new Engine();
-            const { root, skip } = engine.context();
-            skip(() => Promise.resolve(true));
-            await skip.promise;
-            assert.ok(root.isExclusive());
-        });
-
-        it("should not be skipped by default", () => {
-            const engine = new Engine();
-            const { root } = engine.context();
-            assert.ok(!root.isExclusive());
-        });
-
-        it("should pass the skip function into contexts", async () => {
-            const engine = new Engine();
-            engine.include(script("skipping.js"));
-            const results = [];
-            const emitter = engine.start();
-            emitter.on("end test", () => {
-                results.push(1);
-            });
-            await waitFor(emitter, "done");
-            assert.equal(results.length, 0);
-        });
-
-        it("should wait and only then run the tests", async () => {
-            const engine = new Engine();
-            engine.include(script("skipping_2.js"));
-            let t1 = null;
-            const t = new Date();
-            const emitter = engine.start();
-            emitter.on("end test", () => {
-                t1 = new Date();
-            });
-            await waitFor(emitter, "done");
-            assert.ok(t1 - t >= 1000);
         });
     });
 

@@ -644,40 +644,81 @@ class Test {
     }
 }
 
-const createModifiersObject = (modifiers) => {
-    const obj = {};
-    for (const i of modifiers) {
-        obj[i] = false;
-    }
-    return obj;
+const chainingInterace = (cb, modifiers) => {
+    const createFn = (values = {}) => {
+        const fn = (...args) => cb(values, args);
+        for (const mod of modifiers) {
+            Object.defineProperty(fn, mod, {
+                get() {
+                    return createFn({ ...values, [mod]: true });
+                }
+            });
+        }
+        return fn;
+    };
+
+    return createFn();
 };
 
 /**
- * Creates a proxy objects which creates a chaining interface for the given properties(modifiers),
- * when the proxy is called it calls the given callback with the arguments and enabled modifiers
- *
- * it.slow.only("test", () => {})
+ * Represents a config loader which handles .shanirc.js files
  */
-const chainingInterace = (fn, modifiers) => {
-    return new Proxy(adone.noop, {
-        get(target, name) {
-            const newValues = createModifiersObject(modifiers);
-            newValues[name] = true;
-            return new Proxy(adone.noop, {
-                get(target, name, receiver) {
-                    newValues[name] = true;
-                    return receiver;
-                },
-                apply(target, thisValue, args) {
-                    return fn(newValues, args);
-                }
-            });
-        },
-        apply(target, thisValue, args) {
-            return fn(createModifiersObject(modifiers), args);
+class ConfigLoader {
+    constructor(root) {
+        this.root = root;
+        this._existsCache = new adone.collection.MapCache();
+        this._rcCache = new adone.collection.MapCache();
+    }
+
+    getRcPath(dirname) {
+        return std.path.join(dirname, ".shanirc.js");
+    }
+
+    isExists(path) {
+        if (this._existsCache.has(path)) {
+            return this._existsCache.get(path);
         }
-    });
-};
+        const exists = std.fs.existsSync(path);
+        this._existsCache.set(path, exists);
+        return exists;
+    }
+
+    getConfigFor(dirname) {
+        if (this._rcCache.has(dirname)) {
+            return this._rcCache.get(dirname);
+        }
+        const p = this.getRcPath(dirname);
+        let config;
+        if (!this.isExists(p)) {
+            config = null;
+        } else {
+            config = adone.require(p);
+            if (config.default) {
+                config = config.default;
+            }
+        }
+        this._rcCache.set(dirname, config);
+        return config;
+    }
+
+    async loadConfigFor(path, context) {
+        let dirname = std.path.dirname(path);
+        const configChain = [];
+        do {
+            const config = this.getConfigFor(dirname);
+            if (config) {
+                configChain.unshift(config);
+            }
+            dirname = std.path.dirname(dirname);
+        } while (dirname !== this.root);
+
+        for (const fn of configChain) {
+            // apply all init functions from the root
+            // todo: apply from the leaf ? with optional parent init
+            await fn(context);
+        }
+    }
+}
 
 export class Engine {
     constructor({
@@ -687,7 +728,8 @@ export class Engine {
         callGc = false,
         watch = false,
         skipSlow = false,
-        onlySlow = false
+        onlySlow = false,
+        root = process.cwd()
     } = {}) {
         this._paths = []; // path can be a glob or a path
         this.defaultTimeout = defaultTimeout;
@@ -697,6 +739,7 @@ export class Engine {
         this.watch = watch;
         this.skipSlow = skipSlow;
         this.onlySlow = onlySlow;
+        this.configLoader = new ConfigLoader(root);
     }
 
     include(...paths) {
@@ -762,10 +805,6 @@ export class Engine {
             return block;
         }, ["skip", "only", "slow", "todo"]);
 
-        describe.skip = (...args) => describe(...args).skip();
-        describe.only = (...args) => describe(...args).only();
-        describe.todo = (...args) => describe(...args).todo();
-
         const _it = (description, options, callback) => {
             if (is.function(options)) {
                 [options, callback] = [null, options];
@@ -821,15 +860,6 @@ export class Engine {
             const hook = new Hook(stack.top, description, callback, runtimeContext, meta);
             stack.top.hooks.afterEach.push(hook);
         };
-
-        const skip = function (callback) {
-            skip.promise = new Promise((resolve) => resolve(callback())).then((skipped) => {
-                if (skipped) {
-                    root.skip();
-                }
-            });
-        };
-        skip.promise = Promise.resolve();
 
         // debug..
         const printStructure = (block = root, level = 0) => {
@@ -1238,7 +1268,18 @@ export class Engine {
             start,
             structure,
             root,
-            skip
+            runtime: runtimeContext,
+            skip: () => {
+                root.skip();
+            },
+            timeout: (ms) => root.timeout(ms),
+            prefix: (...names) => {
+                for (const name of names) {
+                    const block = new Block(name, stack.top);
+                    stack.top.addChild(block);
+                    stack.push(block);
+                }
+            }
         };
     }
 
@@ -1333,6 +1374,16 @@ export class Engine {
 
                 const dirname = std.path.dirname(path);
 
+
+                try {
+                    // load config if exists
+                    await this.configLoader.loadConfigFor(path, context);
+                } catch (err) {
+                    err.message = `Error while loading config for this file: ${path}\n${err.message}`;
+                    emitter.emit("error", err);
+                    continue; // ?
+                }
+
                 const m = new TestModule(path, {
                     transform,
                     loaders: { ".js": loader }
@@ -1385,11 +1436,11 @@ export class Engine {
                 } catch (err) {
                     err.message = `Error while loading this file: ${path}\n${err.message}`;
                     emitter.emit("error", err);
+                    continue; // ?
                 }
 
                 let mustContinue = true;
                 try {
-                    await context.skip.promise; // omg, delete?
                     const res = await cb(context, path);
                     if (is.boolean(res)) {
                         mustContinue = res;
