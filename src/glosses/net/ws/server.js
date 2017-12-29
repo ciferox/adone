@@ -1,14 +1,32 @@
-const { is } = adone;
+const {
+    is,
+    net: { ws: { Client, PerMessageDeflate, exts, constants } },
+    std: { crypto, http, url }
+} = adone;
 
-const socketError = () => {
+
+/**
+ * Handle premature socket errors.
+ *
+ * @private
+ */
+const socketError = function () {
     this.destroy();
 };
 
-const abortConnection = (socket, code, message) => {
+/**
+ * Close the connection when preconditions are not fulfilled.
+ *
+ * @param {net.Socket} socket The socket of the upgrade request
+ * @param {Number} code The HTTP response status code
+ * @param {String} [message] The HTTP response body
+ * @private
+ */
+const abortConnection = function (socket, code, message) {
     if (socket.writable) {
-        message = message || adone.std.http.STATUS_CODES[code];
+        message = message || http.STATUS_CODES[code];
         socket.write(
-            `${`HTTP/1.1 ${code} ${adone.std.http.STATUS_CODES[code]}\r\n` +
+            `${`HTTP/1.1 ${code} ${http.STATUS_CODES[code]}\r\n` +
             "Connection: close\r\n" +
             "Content-type: text/html\r\n" +
             `Content-Length: ${Buffer.byteLength(message)}\r\n` +
@@ -20,7 +38,29 @@ const abortConnection = (socket, code, message) => {
     socket.destroy();
 };
 
+
+/**
+ * Class representing a WebSocket server.
+ *
+ * @extends EventEmitter
+ */
 export default class Server extends adone.event.EventEmitter {
+    /**
+     * Create a `Server` instance.
+     *
+     * @param {Object} options Configuration options
+     * @param {String} options.host The hostname where to bind the server
+     * @param {Number} options.port The port where to bind the server
+     * @param {http.Server} options.server A pre-created HTTP/S server to use
+     * @param {Function} options.verifyClient An hook to reject connections
+     * @param {Function} options.handleProtocols An hook to handle protocols
+     * @param {String} options.path Accept only connections matching this path
+     * @param {Boolean} options.noServer Enable no server mode
+     * @param {Boolean} options.clientTracking Specifies whether or not to track clients
+     * @param {(Boolean|Object)} options.perMessageDeflate Enable/disable permessage-deflate
+     * @param {Number} options.maxPayload The maximum allowed message size
+     * @param {Function} callback A listener for the `listening` event
+     */
     constructor(options, callback) {
         super();
 
@@ -42,9 +82,9 @@ export default class Server extends adone.event.EventEmitter {
             throw new TypeError("Missing or invalid options");
         }
 
-        if (is.exist(options.port)) {
-            this._server = adone.std.http.createServer((req, res) => {
-                const body = adone.std.http.STATUS_CODES[426];
+        if (!is.nil(options.port)) {
+            this._server = http.createServer((req, res) => {
+                const body = http.STATUS_CODES[426];
 
                 res.writeHead(426, {
                     "Content-Length": body.length,
@@ -52,7 +92,6 @@ export default class Server extends adone.event.EventEmitter {
                 });
                 res.end(body);
             });
-            this._server.allowHalfOpen = false;
             this._server.listen(options.port, options.host, options.backlog, callback);
         } else if (options.server) {
             this._server = options.server;
@@ -76,17 +115,18 @@ export default class Server extends adone.event.EventEmitter {
         if (options.perMessageDeflate === true) {
             options.perMessageDeflate = {};
         }
-
         if (options.clientTracking) {
             this.clients = new Set();
         }
         this.options = options;
     }
 
-    address() {
-        return this._server.address();
-    }
-
+    /**
+     * Close the server.
+     *
+     * @param {Function} cb Callback
+     * @public
+     */
     close(cb) {
         //
         // Terminate all associated clients.
@@ -108,24 +148,40 @@ export default class Server extends adone.event.EventEmitter {
             //
             // Close the http server if it was internally created.
             //
-            if (is.exist(this.options.port)) {
+            if (!is.nil(this.options.port)) {
                 return server.close(cb);
             }
         }
 
         if (cb) {
-            return cb();
+            cb();
         }
     }
 
+    /**
+     * See if a given request should be handled by this server instance.
+     *
+     * @param {http.IncomingMessage} req Request object to inspect
+     * @return {Boolean} `true` if the request is valid, else `false`
+     * @public
+     */
     shouldHandle(req) {
-        if (this.options.path && adone.std.url.parse(req.url).pathname !== this.options.path) {
+        if (this.options.path && url.parse(req.url).pathname !== this.options.path) {
             return false;
         }
 
         return true;
     }
 
+    /**
+     * Handle a HTTP Upgrade request.
+     *
+     * @param {http.IncomingMessage} req The request object
+     * @param {net.Socket} socket The network socket between the server and client
+     * @param {Buffer} head The first packet of the upgraded stream
+     * @param {Function} cb Callback
+     * @public
+     */
     handleUpgrade(req, socket, head, cb) {
         socket.on("error", socketError);
 
@@ -141,20 +197,20 @@ export default class Server extends adone.event.EventEmitter {
         }
 
         if (this.options.perMessageDeflate) {
-            const perMessageDeflate = new adone.net.ws.PerMessageDeflate(
+            const perMessageDeflate = new PerMessageDeflate(
                 this.options.perMessageDeflate,
                 true,
                 this.options.maxPayload
             );
 
             try {
-                const offers = adone.net.ws.exts.parse(
+                const offers = exts.parse(
                     req.headers["sec-websocket-extensions"]
                 );
 
-                if (offers[adone.net.ws.PerMessageDeflate.extensionName]) {
-                    perMessageDeflate.accept(offers[adone.net.ws.PerMessageDeflate.extensionName]);
-                    extensions[adone.net.ws.PerMessageDeflate.extensionName] = perMessageDeflate;
+                if (offers[PerMessageDeflate.extensionName]) {
+                    perMessageDeflate.accept(offers[PerMessageDeflate.extensionName]);
+                    extensions[PerMessageDeflate.extensionName] = perMessageDeflate;
                 }
             } catch (err) {
                 return abortConnection(socket, 400);
@@ -203,6 +259,7 @@ export default class Server extends adone.event.EventEmitter {
                 });
                 return;
             }
+
             if (!this.options.verifyClient(info)) {
                 return abortConnection(socket, 401);
             }
@@ -211,6 +268,18 @@ export default class Server extends adone.event.EventEmitter {
         this.completeUpgrade(protocol, extensions, version, req, socket, head, cb);
     }
 
+    /**
+     * Upgrade the connection to WebSocket.
+     *
+     * @param {String} protocol The chosen subprotocol
+     * @param {Object} extensions The accepted extensions
+     * @param {Number} version The WebSocket protocol version
+     * @param {http.IncomingMessage} req The request object
+     * @param {net.Socket} socket The network socket between the server and client
+     * @param {Buffer} head The first packet of the upgraded stream
+     * @param {Function} cb Callback
+     * @private
+     */
     completeUpgrade(protocol, extensions, version, req, socket, head, cb) {
         //
         // Destroy the socket if the client has already sent a FIN packet.
@@ -219,8 +288,8 @@ export default class Server extends adone.event.EventEmitter {
             return socket.destroy();
         }
 
-        const key = adone.std.crypto.createHash("sha1")
-            .update(req.headers["sec-websocket-key"] + adone.net.ws.constants.GUID, "binary")
+        const key = crypto.createHash("sha1")
+            .update(req.headers["sec-websocket-key"] + constants.GUID, "binary")
             .digest("base64");
 
         const headers = [
@@ -233,11 +302,10 @@ export default class Server extends adone.event.EventEmitter {
         if (protocol) {
             headers.push(`Sec-WebSocket-Protocol: ${protocol}`);
         }
-
-        if (extensions[adone.net.ws.PerMessageDeflate.extensionName]) {
-            const params = extensions[adone.net.ws.PerMessageDeflate.extensionName].params;
-            const value = adone.net.ws.exts.format({
-                [adone.net.ws.PerMessageDeflate.extensionName]: [params]
+        if (extensions[PerMessageDeflate.extensionName]) {
+            const params = extensions[PerMessageDeflate.extensionName].params;
+            const value = exts.format({
+                [PerMessageDeflate.extensionName]: [params]
             });
             headers.push(`Sec-WebSocket-Extensions: ${value}`);
         }
@@ -249,7 +317,7 @@ export default class Server extends adone.event.EventEmitter {
 
         socket.write(headers.concat("\r\n").join("\r\n"));
 
-        const client = new adone.net.ws.Client([socket, head], null, {
+        const client = new Client([socket, head], null, {
             maxPayload: this.options.maxPayload,
             protocolVersion: version,
             extensions,

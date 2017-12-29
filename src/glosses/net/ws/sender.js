@@ -1,6 +1,16 @@
-const { is } = adone;
-
-const viewToBuffer = (view) => {
+const {
+    is,
+    net: { ws: { errorCodes, PerMessageDeflate } },
+    std: { crypto }
+} = adone;
+/**
+ * Converts an `ArrayBuffer` view into a buffer.
+ *
+ * @param {(DataView|TypedArray)} view The view to convert
+ * @return {Buffer} Converted view
+ * @private
+ */
+const viewToBuffer = function (view) {
     const buf = Buffer.from(view.buffer);
 
     if (view.byteLength !== view.buffer.byteLength) {
@@ -10,7 +20,16 @@ const viewToBuffer = (view) => {
     return buf;
 };
 
+/**
+ * HyBi Sender implementation.
+ */
 export default class Sender {
+    /**
+     * Creates a Sender instance.
+     *
+     * @param {net.Socket} socket The connection socket
+     * @param {Object} extensions An object containing the negotiated extensions
+     */
     constructor(socket, extensions) {
         this._extensions = extensions || {};
         this._socket = socket;
@@ -23,6 +42,19 @@ export default class Sender {
         this._queue = [];
     }
 
+    /**
+     * Frames a piece of data according to the HyBi WebSocket protocol.
+     *
+     * @param {Buffer} data The data to frame
+     * @param {Object} options Options object
+     * @param {Number} options.opcode The opcode
+     * @param {Boolean} options.readOnly Specifies whether `data` can be modified
+     * @param {Boolean} options.fin Specifies whether or not to set the FIN bit
+     * @param {Boolean} options.mask Specifies whether or not to mask `data`
+     * @param {Boolean} options.rsv1 Specifies whether or not to set the RSV1 bit
+     * @return {Buffer[]} The framed data as a list of `Buffer` instances
+     * @public
+     */
     static frame(data, options) {
         const merge = data.length < 1024 || (options.mask && options.readOnly);
         let offset = options.mask ? 6 : 2;
@@ -60,7 +92,7 @@ export default class Sender {
             return [target, data];
         }
 
-        const mask = adone.std.crypto.randomBytes(4);
+        const mask = crypto.randomBytes(4);
 
         target[1] = payloadLength | 0x80;
         target[offset - 4] = mask[0];
@@ -77,15 +109,34 @@ export default class Sender {
         return [target, data];
     }
 
+    /**
+     * Sends a close message to the other peer.
+     *
+     * @param {(Number|undefined)} code The status code component of the body
+     * @param {String} data The message component of the body
+     * @param {Boolean} mask Specifies whether or not to mask the message
+     * @param {Function} cb Callback
+     * @public
+     */
     close(code, data, mask, cb) {
-        if (!is.undefined(code) && (!is.number(code) || !adone.net.ws.errorCodes.isValidErrorCode(code))) {
+        let buf;
+
+        if (is.undefined(code)) {
+            code = 1000;
+        } else if (!is.number(code) || !errorCodes.isValidErrorCode(code)) {
             throw new Error("First argument must be a valid error code number");
         }
 
-        const buf = Buffer.allocUnsafe(2 + (data ? Buffer.byteLength(data) : 0));
-
-        buf.writeUInt16BE(code || 1000, 0, true);
-        if (buf.length > 2) {
+        if (is.undefined(data) || data === "") {
+            if (code === 1000) {
+                buf = adone.EMPTY_BUFFER;
+            } else {
+                buf = Buffer.allocUnsafe(2);
+                buf.writeUInt16BE(code, 0, true);
+            }
+        } else {
+            buf = Buffer.allocUnsafe(2 + Buffer.byteLength(data));
+            buf.writeUInt16BE(code, 0, true);
             buf.write(data, 2);
         }
 
@@ -96,6 +147,14 @@ export default class Sender {
         }
     }
 
+    /**
+     * Frames and sends a close message.
+     *
+     * @param {Buffer} data The message to send
+     * @param {Boolean} mask Specifies whether or not to mask `data`
+     * @param {Function} cb Callback
+     * @private
+     */
     doClose(data, mask, cb) {
         this.sendFrame(Sender.frame(data, {
             fin: true,
@@ -106,6 +165,13 @@ export default class Sender {
         }), cb);
     }
 
+    /**
+     * Sends a ping message to the other peer.
+     *
+     * @param {*} data The message to send
+     * @param {Boolean} mask Specifies whether or not to mask `data`
+     * @public
+     */
     ping(data, mask) {
         let readOnly = true;
 
@@ -127,6 +193,14 @@ export default class Sender {
         }
     }
 
+    /**
+     * Frames and sends a ping message.
+     *
+     * @param {*} data The message to send
+     * @param {Boolean} mask Specifies whether or not to mask `data`
+     * @param {Boolean} readOnly Specifies whether `data` can be modified
+     * @private
+     */
     doPing(data, mask, readOnly) {
         this.sendFrame(Sender.frame(data, {
             fin: true,
@@ -137,6 +211,13 @@ export default class Sender {
         }));
     }
 
+    /**
+     * Sends a pong message to the other peer.
+     *
+     * @param {*} data The message to send
+     * @param {Boolean} mask Specifies whether or not to mask `data`
+     * @public
+     */
     pong(data, mask) {
         let readOnly = true;
 
@@ -158,6 +239,14 @@ export default class Sender {
         }
     }
 
+    /**
+     * Frames and sends a pong message.
+     *
+     * @param {*} data The message to send
+     * @param {Boolean} mask Specifies whether or not to mask `data`
+     * @param {Boolean} readOnly Specifies whether `data` can be modified
+     * @private
+     */
     doPong(data, mask, readOnly) {
         this.sendFrame(Sender.frame(data, {
             fin: true,
@@ -168,6 +257,18 @@ export default class Sender {
         }));
     }
 
+    /**
+     * Sends a data message to the other peer.
+     *
+     * @param {*} data The message to send
+     * @param {Object} options Options object
+     * @param {Boolean} options.compress Specifies whether or not to compress `data`
+     * @param {Boolean} options.binary Specifies whether `data` is binary or text
+     * @param {Boolean} options.fin Specifies whether the fragment is the last one
+     * @param {Boolean} options.mask Specifies whether or not to mask `data`
+     * @param {Function} cb Callback
+     * @public
+     */
     send(data, options, cb) {
         let opcode = options.binary ? 2 : 1;
         let rsv1 = options.compress;
@@ -184,7 +285,8 @@ export default class Sender {
             }
         }
 
-        const perMessageDeflate = this._extensions[adone.net.ws.PerMessageDeflate.extensionName];
+        const perMessageDeflate = this._extensions[PerMessageDeflate.extensionName];
+
         if (this._firstFragment) {
             this._firstFragment = false;
             if (rsv1 && perMessageDeflate) {
@@ -225,16 +327,30 @@ export default class Sender {
         }
     }
 
+    /**
+     * Dispatches a data message.
+     *
+     * @param {Buffer} data The message to send
+     * @param {Boolean} compress Specifies whether or not to compress `data`
+     * @param {Object} options Options object
+     * @param {Number} options.opcode The opcode
+     * @param {Boolean} options.readOnly Specifies whether `data` can be modified
+     * @param {Boolean} options.fin Specifies whether or not to set the FIN bit
+     * @param {Boolean} options.mask Specifies whether or not to mask `data`
+     * @param {Boolean} options.rsv1 Specifies whether or not to set the RSV1 bit
+     * @param {Function} cb Callback
+     * @private
+     */
     dispatch(data, compress, options, cb) {
         if (!compress) {
             this.sendFrame(Sender.frame(data, options), cb);
             return;
         }
 
-        const perMessageDeflate = this._extensions[adone.net.ws.PerMessageDeflate.extensionName];
+        const perMessageDeflate = this._extensions[PerMessageDeflate.extensionName];
 
         this._deflating = true;
-        perMessageDeflate.compress(data, options.fin, (err, buf) => {
+        perMessageDeflate.compress(data, options.fin, (_, buf) => {
             options.readOnly = false;
             this.sendFrame(Sender.frame(buf, options), cb);
             this._deflating = false;
@@ -242,6 +358,11 @@ export default class Sender {
         });
     }
 
+    /**
+     * Executes queued send operations.
+     *
+     * @private
+     */
     dequeue() {
         while (!this._deflating && this._queue.length) {
             const params = this._queue.shift();
@@ -251,11 +372,24 @@ export default class Sender {
         }
     }
 
+    /**
+     * Enqueues a send operation.
+     *
+     * @param {Array} params Send operation parameters.
+     * @private
+     */
     enqueue(params) {
         this._bufferedBytes += params[1].length;
         this._queue.push(params);
     }
 
+    /**
+     * Sends a frame.
+     *
+     * @param {Buffer[]} list The frame to send
+     * @param {Function} cb Callback
+     * @private
+     */
     sendFrame(list, cb) {
         if (list.length === 2) {
             this._socket.write(list[0]);

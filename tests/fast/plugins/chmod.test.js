@@ -12,7 +12,7 @@ describe("fast", "transform", "chmod", () => {
                 stat: {
                     mode: 0o100644
                 },
-                contents: adone.emptyBuffer
+                contents: adone.EMPTY_BUFFER
             })
         ]).chmod(0o755);
         expect(file.stat.mode.toString(8)).to.be.equal("755");
@@ -24,7 +24,7 @@ describe("fast", "transform", "chmod", () => {
                 stat: {
                     mode: 0o100644
                 },
-                contents: adone.emptyBuffer
+                contents: adone.EMPTY_BUFFER
             })
         ]).chmod({
             owner: {
@@ -49,7 +49,7 @@ describe("fast", "transform", "chmod", () => {
                 stat: {
                     mode: 0o100644
                 },
-                contents: adone.emptyBuffer
+                contents: adone.EMPTY_BUFFER
             })
         ]).chmod({
             read: false
@@ -129,7 +129,7 @@ describe("fast", "transform", "chmod", () => {
     it("should handle no stat object", async () => {
         const [file] = await new Stream([
             new File({
-                contents: adone.emptyBuffer
+                contents: adone.EMPTY_BUFFER
             })
         ]).chmod(0o755);
 
@@ -140,7 +140,7 @@ describe("fast", "transform", "chmod", () => {
         const [file] = await new Stream([
             new File({
                 stat: {},
-                contents: adone.emptyBuffer
+                contents: adone.EMPTY_BUFFER
             })
         ]).chmod(0o755);
         expect(file.stat.mode).to.be.equal(0o755);
@@ -151,7 +151,7 @@ describe("fast", "transform", "chmod", () => {
         let checkedFile = false;
         await new Stream([
             new File({
-                contents: adone.emptyBuffer
+                contents: adone.EMPTY_BUFFER
             }),
             new File({
                 stat: {

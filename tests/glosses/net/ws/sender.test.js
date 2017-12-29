@@ -1,4 +1,6 @@
-const { net: { ws: { Sender, PerMessageDeflate } } } = adone;
+const {
+    net: { ws: { Sender, PerMessageDeflate } }
+} = adone;
 
 describe("net", "ws", "Sender", () => {
     describe(".frame", () => {
@@ -281,7 +283,7 @@ describe("net", "ws", "Sender", () => {
             sender.send("bar", { compress: true, fin: true });
             sender.send("baz", { compress: true, fin: true });
 
-            sender.close(1000, null, false, () => {
+            sender.close(1000, undefined, false, () => {
                 assert.strictEqual(count, 4);
                 done();
             });

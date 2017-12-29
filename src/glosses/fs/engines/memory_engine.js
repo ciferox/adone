@@ -288,7 +288,7 @@ class AbstractFile extends event.EventEmitter {
 class File extends AbstractFile {
     constructor({
         size = 0,
-        contents = adone.emptyBuffer,
+        contents = adone.EMPTY_BUFFER,
         beforeHook = noop,
         afterHook = noop,
         mtime,

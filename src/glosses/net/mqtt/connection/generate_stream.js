@@ -2,7 +2,7 @@ const generateStream = () => {
     let stream = null;
 
     const process = function (chunk, enc, cb) {
-        let packet = adone.emptyBuffer;
+        let packet = adone.EMPTY_BUFFER;
 
         try {
             packet = adone.net.mqtt.packet.generate(chunk);

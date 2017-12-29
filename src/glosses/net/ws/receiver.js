@@ -1,3 +1,7 @@
+const {
+    net: { ws: { constants, errorCodes, PerMessageDeflate } }
+} = adone;
+
 const GET_INFO = 0;
 const GET_PAYLOAD_LENGTH_16 = 1;
 const GET_PAYLOAD_LENGTH_64 = 2;
@@ -5,17 +9,31 @@ const GET_MASK = 3;
 const GET_DATA = 4;
 const INFLATING = 5;
 
-const toBuffer = (fragments, messageLength) => {
+/**
+ * Makes a buffer from a list of fragments.
+ *
+ * @param {Buffer[]} fragments The list of fragments composing the message
+ * @param {Number} messageLength The length of the message
+ * @return {Buffer}
+ * @private
+ */
+const toBuffer = function (fragments, messageLength) {
     if (fragments.length === 1) {
         return fragments[0];
     }
     if (fragments.length > 1) {
         return adone.util.buffer.concat(fragments, messageLength);
     }
-    return adone.emptyBuffer;
+    return adone.EMPTY_BUFFER;
 };
 
-const toArrayBuffer = (buf) => {
+/**
+ * Converts a buffer to an `ArrayBuffer`.
+ *
+ * @param {Buffer} The buffer to convert
+ * @return {ArrayBuffer} Converted buffer
+ */
+const toArrayBuffer = function (buf) {
     if (buf.byteOffset === 0 && buf.byteLength === buf.buffer.byteLength) {
         return buf.buffer;
     }
@@ -24,9 +42,19 @@ const toArrayBuffer = (buf) => {
 };
 
 
+/**
+ * HyBi Receiver implementation.
+ */
 export default class Receiver {
+    /**
+     * Creates a Receiver instance.
+     *
+     * @param {Object} extensions An object containing the negotiated extensions
+     * @param {Number} maxPayload The maximum allowed message length
+     * @param {String} binaryType The type for binary data
+     */
     constructor(extensions, maxPayload, binaryType) {
-        this._binaryType = binaryType || adone.net.ws.constants.BINARY_TYPES[0];
+        this._binaryType = binaryType || constants.BINARY_TYPES[0];
         this._extensions = extensions || {};
         this._maxPayload = maxPayload | 0;
 
@@ -59,6 +87,13 @@ export default class Receiver {
         this._state = GET_INFO;
     }
 
+    /**
+     * Consumes bytes from the available buffered data.
+     *
+     * @param {Number} bytes The number of bytes to consume
+     * @return {Buffer} Consumed bytes
+     * @private
+     */
     readBuffer(bytes) {
         let offset = 0;
         let dst;
@@ -76,7 +111,7 @@ export default class Receiver {
             return dst;
         }
 
-        dst = Buffer.alloc(bytes);
+        dst = Buffer.allocUnsafe(bytes);
 
         while (bytes > 0) {
             l = this._buffers[0].length;
@@ -96,6 +131,14 @@ export default class Receiver {
         return dst;
     }
 
+    /**
+     * Checks if the number of buffered bytes is bigger or equal than `n` and
+     * calls `cleanup` if necessary.
+     *
+     * @param {Number} n The number of bytes to check against
+     * @return {Boolean} `true` if `bufferedBytes >= n`, else `false`
+     * @private
+     */
     hasBufferedBytes(n) {
         if (this._bufferedBytes >= n) {
             return true;
@@ -108,6 +151,11 @@ export default class Receiver {
         return false;
     }
 
+    /**
+     * Adds new data to the parser.
+     *
+     * @public
+     */
     add(data) {
         if (this._dead) {
             return;
@@ -118,6 +166,11 @@ export default class Receiver {
         this.startLoop();
     }
 
+    /**
+     * Starts the parsing loop.
+     *
+     * @private
+     */
     startLoop() {
         this._loop = true;
 
@@ -144,6 +197,11 @@ export default class Receiver {
         }
     }
 
+    /**
+     * Reads the first two bytes of a frame.
+     *
+     * @private
+     */
     getInfo() {
         if (!this.hasBufferedBytes(2)) {
             return;
@@ -158,7 +216,7 @@ export default class Receiver {
 
         const compressed = (buf[0] & 0x40) === 0x40;
 
-        if (compressed && !this._extensions[adone.net.ws.PerMessageDeflate.extensionName]) {
+        if (compressed && !this._extensions[PerMessageDeflate.extensionName]) {
             this.error(new Error("RSV1 must be clear"), 1002);
             return;
         }
@@ -221,6 +279,11 @@ export default class Receiver {
         }
     }
 
+    /**
+     * Gets extended payload length (7+16).
+     *
+     * @private
+     */
     getPayloadLength16() {
         if (!this.hasBufferedBytes(2)) {
             return;
@@ -230,6 +293,11 @@ export default class Receiver {
         this.haveLength();
     }
 
+    /**
+     * Gets extended payload length (7+64).
+     *
+     * @private
+     */
     getPayloadLength64() {
         if (!this.hasBufferedBytes(8)) {
             return;
@@ -251,6 +319,11 @@ export default class Receiver {
         this.haveLength();
     }
 
+    /**
+     * Payload length has been read.
+     *
+     * @private
+     */
     haveLength() {
         if (this._opcode < 0x08 && this.maxPayloadExceeded(this._payloadLength)) {
             return;
@@ -263,6 +336,11 @@ export default class Receiver {
         }
     }
 
+    /**
+     * Reads mask bytes.
+     *
+     * @private
+     */
     getMask() {
         if (!this.hasBufferedBytes(4)) {
             return;
@@ -272,8 +350,13 @@ export default class Receiver {
         this._state = GET_DATA;
     }
 
+    /**
+     * Reads data bytes.
+     *
+     * @private
+     */
     getData() {
-        let data = adone.emptyBuffer;
+        let data = adone.EMPTY_BUFFER;
 
         if (this._payloadLength) {
             if (!this.hasBufferedBytes(this._payloadLength)) {
@@ -296,10 +379,16 @@ export default class Receiver {
         }
     }
 
+    /**
+     * Decompresses data.
+     *
+     * @param {Buffer} data Compressed data
+     * @private
+     */
     decompress(data) {
-        const extension = this._extensions[adone.net.ws.PerMessageDeflate.extensionName];
+        const perMessageDeflate = this._extensions[PerMessageDeflate.extensionName];
 
-        extension.decompress(data, this._fin, (err, buf) => {
+        perMessageDeflate.decompress(data, this._fin, (err, buf) => {
             if (err) {
                 this.error(err, err.closeCode === 1009 ? 1009 : 1007);
                 return;
@@ -312,6 +401,11 @@ export default class Receiver {
         });
     }
 
+    /**
+     * Handles a data message.
+     *
+     * @private
+     */
     dataMessage() {
         if (this._fin) {
             const messageLength = this._messageLength;
@@ -349,6 +443,12 @@ export default class Receiver {
         this._state = GET_INFO;
     }
 
+    /**
+     * Handles a control message.
+     *
+     * @param {Buffer} data Data to handle
+     * @private
+     */
     controlMessage(data) {
         if (this._opcode === 0x08) {
             if (data.length === 0) {
@@ -360,7 +460,7 @@ export default class Receiver {
             } else {
                 const code = data.readUInt16BE(0, true);
 
-                if (!adone.net.ws.errorCodes.isValidErrorCode(code)) {
+                if (!errorCodes.isValidErrorCode(code)) {
                     this.error(new Error(`Invalid status code: ${code}`), 1002);
                     return;
                 }
@@ -389,6 +489,13 @@ export default class Receiver {
         this._state = GET_INFO;
     }
 
+    /**
+     * Handles an error.
+     *
+     * @param {Error} err The error
+     * @param {Number} code Close code
+     * @private
+     */
     error(err, code) {
         this.onerror(err, code);
         this._hadError = true;
@@ -396,6 +503,12 @@ export default class Receiver {
         this.cleanup(this._cleanupCallback);
     }
 
+    /**
+     * Checks payload size, disconnects socket when it exceeds `maxPayload`.
+     *
+     * @param {Number} length Payload length
+     * @private
+     */
     maxPayloadExceeded(length) {
         if (length === 0 || this._maxPayload < 1) {
             return false;
@@ -412,6 +525,14 @@ export default class Receiver {
         return true;
     }
 
+    /**
+     * Appends a fragment in the fragments array after checking that the sum of
+     * fragment lengths does not exceed `maxPayload`.
+     *
+     * @param {Buffer} fragment The fragment to add
+     * @return {Boolean} `true` if `maxPayload` is not exceeded, else `false`
+     * @private
+     */
     pushFragment(fragment) {
         if (fragment.length === 0) {
             return true;
@@ -429,6 +550,12 @@ export default class Receiver {
         return false;
     }
 
+    /**
+     * Releases resources used by the receiver.
+     *
+     * @param {Function} cb Callback
+     * @public
+     */
     cleanup(cb) {
         this._dead = true;
 
@@ -448,7 +575,7 @@ export default class Receiver {
             this.onpong = null;
 
             if (cb) {
-                return cb();
+                cb();
             }
         }
     }

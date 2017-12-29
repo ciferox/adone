@@ -1,7 +1,7 @@
 const {
     is,
     net: { ws: { constants, Client, Server } },
-    std: { http, https, fs, crypto, net }
+    std: { http, https, fs, crypto, net, os, dns }
 } = adone;
 
 class CustomAgent extends http.Agent {
@@ -11,7 +11,7 @@ class CustomAgent extends http.Agent {
 describe("net", "ws", "WebSocket", () => {
     describe("#ctor", () => {
         it("throws an error when using an invalid url", () => {
-            assert.throws(() => new Client("echo.websocket.org"), /^invalid url$/);
+            assert.throws(() => new Client("echo.websocket.org"), /^Invalid url$/);
         });
     });
 
@@ -52,11 +52,16 @@ describe("net", "ws", "WebSocket", () => {
                 });
 
                 ws.on("error", (err) => {
-                    // Skip this test on machines where 127.0.0.2 is disabled.
-                    if (err.code === "EADDRNOTAVAIL") {
-                        err = undefined;
-                    }
-                    wss.close(() => done(err));
+                    wss.close(() => {
+                        //
+                        // Skip this test on machines where 127.0.0.2 is disabled.
+                        //
+                        if (err.code === "EADDRNOTAVAIL") {
+                            return this.skip();
+                        }
+
+                        done(err);
+                    });
                 });
             });
 
@@ -78,22 +83,42 @@ describe("net", "ws", "WebSocket", () => {
         });
 
         it("accepts the family option", (done) => {
-            const wss = new Server({ host: "::1", port: 0 }, () => {
-                const port = wss._server.address().port;
-                new Client(`ws://localhost:${port}`, { family: 6 });
+            const re = process.platform === "win32" ? /Loopback Pseudo-Interface/ : /lo/;
+            const ifaces = os.networkInterfaces();
+            const hasIPv6 = Object.keys(ifaces).some((name) => {
+                return re.test(name) && ifaces[name].some((info) => info.family === "IPv6");
             });
 
-            wss.on("error", (err) => {
-                // Skip this test on machines where IPv6 is not supported.
-                if (err.code === "EADDRNOTAVAIL") {
-                    err = undefined;
+            //
+            // Skip this test on machines where IPv6 is not supported.
+            //
+            if (!hasIPv6) {
+                return this.skip();
+            }
+
+            dns.lookup("localhost", { family: 6, all: true }, (err, addresses) => {
+                //
+                // Skip this test if localhost does not resolve to ::1.
+                //
+                if (err) {
+                    return err.code === "ENOTFOUND" || err.code === "EAI_AGAIN"
+                        ? this.skip()
+                        : done(err);
                 }
-                wss.close(() => done(err));
-            });
 
-            wss.on("connection", (ws, req) => {
-                assert.strictEqual(req.connection.remoteAddress, "::1");
-                wss.close(done);
+                if (!addresses.some((val) => val.address === "::1")) {
+                    return this.skip();
+                }
+
+                const wss = new Server({ host: "::1", port: 0 }, () => {
+                    const port = wss._server.address().port;
+                    const ws = new Client(`ws://localhost:${port}`, { family: 6 });
+                });
+
+                wss.on("connection", (ws, req) => {
+                    assert.strictEqual(req.connection.remoteAddress, "::1");
+                    wss.close(done);
+                });
             });
         });
     });
@@ -360,7 +385,7 @@ describe("net", "ws", "WebSocket", () => {
 
             ws.on("error", (err) => {
                 assert.ok(err instanceof Error);
-                assert.strictEqual(err.message, "invalid server key");
+                assert.strictEqual(err.message, "Invalid server key");
                 done();
             });
         });
@@ -502,7 +527,7 @@ describe("net", "ws", "WebSocket", () => {
             ws.on("open", () => done(new Error("unexpected 'open' event")));
             ws.on("error", (err) => {
                 assert.ok(err instanceof Error);
-                assert.strictEqual(err.message, "invalid Sec-WebSocket-Extensions header");
+                assert.strictEqual(err.message, "Invalid Sec-WebSocket-Extensions header");
                 ws.on("close", () => done());
             });
         });
@@ -561,13 +586,13 @@ describe("net", "ws", "WebSocket", () => {
         it("throws an error when `readyState` is not `OPEN` (pause)", () => {
             const ws = new Client("ws://localhost", { agent: new CustomAgent() });
 
-            assert.throws(() => ws.pause(), /^not opened$/);
+            assert.throws(() => ws.pause(), /^Not opened$/);
         });
 
         it("throws an error when `readyState` is not `OPEN` (resume)", () => {
             const ws = new Client("ws://localhost", { agent: new CustomAgent() });
 
-            assert.throws(() => ws.resume(), /^not opened$/);
+            assert.throws(() => ws.resume(), /^Not opened$/);
         });
 
         it("pauses the underlying stream", (done) => {
@@ -621,7 +646,7 @@ describe("net", "ws", "WebSocket", () => {
                 agent: new CustomAgent()
             });
 
-            assert.throws(() => ws.ping(), /^not opened$/);
+            assert.throws(() => ws.ping(), /^Not opened$/);
         });
 
         it("before connect can silently fail", () => {
@@ -690,7 +715,7 @@ describe("net", "ws", "WebSocket", () => {
                 agent: new CustomAgent()
             });
 
-            assert.throws(() => ws.pong(), /^not opened$/);
+            assert.throws(() => ws.pong(), /^Not opened$/);
         });
 
         it("before connect can silently fail", () => {
@@ -921,7 +946,7 @@ describe("net", "ws", "WebSocket", () => {
                 agent: new CustomAgent()
             });
 
-            assert.throws(() => ws.send("hi"), /^not opened$/);
+            assert.throws(() => ws.send("hi"), /^Not opened$/);
         });
 
         it("before connect should pass error through callback, if present", () => {
@@ -931,7 +956,7 @@ describe("net", "ws", "WebSocket", () => {
 
             ws.send("hi", (err) => {
                 assert.ok(err instanceof Error);
-                assert.strictEqual(err.message, "not opened");
+                assert.strictEqual(err.message, "Not opened");
             });
         });
 
@@ -1148,14 +1173,6 @@ describe("net", "ws", "WebSocket", () => {
                 });
 
                 wss.on("connection", (ws) => {
-                    //
-                    // Remove our `'error'` listener from the socket to ensure that
-                    // `WebSocket#finalize()` is not called before the `Sender#close()`
-                    // callback.
-                    //
-                    const listeners = ws._socket.listeners("error");
-                    ws._socket.removeListener("error", listeners[listeners.length - 1]);
-
                     ws.on("error", (err) => {
                         assert.ok(err instanceof Error);
                         assert.ok(err.message.startsWith("write E"));
@@ -1167,6 +1184,34 @@ describe("net", "ws", "WebSocket", () => {
                     });
                     ws.close();
                 });
+            });
+        });
+
+        it("sends the close status code only when necessary", (done) => {
+            let sent;
+            const wss = new Server({ port: 0 }, () => {
+                const port = wss._server.address().port;
+                const ws = new Client(`ws://localhost:${port}`);
+
+                ws.on("open", () => {
+                    ws._socket.once("data", (data) => {
+                        sent = data;
+                    });
+                });
+            });
+
+            wss.on("connection", (ws) => {
+                ws._socket.once("data", (received) => {
+                    assert.ok(received.slice(0, 2).equals(Buffer.from([0x88, 0x80])));
+                    assert.ok(sent.equals(Buffer.from([0x88, 0x00])));
+
+                    ws.on("close", (code, reason) => {
+                        assert.strictEqual(code, 1000);
+                        assert.strictEqual(reason, "");
+                        wss.close(done);
+                    });
+                });
+                ws.close();
             });
         });
 
@@ -1262,39 +1307,6 @@ describe("net", "ws", "WebSocket", () => {
             wss.on("connection", (ws) => ws.close(1013));
         });
 
-        it("closes the connection when an error occurs", (done) => {
-            const server = http.createServer();
-            const wss = new Server({ server });
-            let closed = false;
-
-            wss.on("connection", (ws) => {
-                ws.on("error", (err) => {
-                    assert.ok(err instanceof Error);
-                    assert.strictEqual(err.message, "RSV2 and RSV3 must be clear");
-
-                    ws.on("close", (code, reason) => {
-                        assert.strictEqual(code, 1006);
-                        assert.strictEqual(reason, "");
-
-                        closed = true;
-                    });
-                });
-            });
-
-            server.listen(0, () => {
-                const ws = new Client(`ws://localhost:${server.address().port}`);
-
-                ws.on("open", () => ws._socket.write(Buffer.from([0xa1, 0x00])));
-                ws.on("close", (code, reason) => {
-                    assert.strictEqual(code, 1002);
-                    assert.strictEqual(reason, "");
-                    assert.ok(closed);
-
-                    server.close(done);
-                });
-            });
-        });
-
         it("does nothing if the connection is already CLOSED", (done) => {
             const wss = new Server({ port: 0 }, () => {
                 const port = wss._server.address().port;
@@ -1387,77 +1399,6 @@ describe("net", "ws", "WebSocket", () => {
             });
 
             wss.on("connection", (ws) => ws.terminate());
-        });
-    });
-
-    describe("abnormal closures", () => {
-        it("ignores close frame data if connection is forcibly closed", (done) => {
-            const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
-                const emitClose = ws.emitClose;
-                const messages = [];
-
-                ws.on("message", (message) => {
-                    messages.push(message);
-                    if (messages.length > 1) {
-                        ws.terminate();
-                    }
-                });
-
-                ws.emitClose = (error) => {
-                    assert.deepStrictEqual(messages, ["", "", ""]);
-                    assert.strictEqual(ws._closeMessage, "foo");
-                    assert.strictEqual(ws._closeCode, 4000);
-                    assert.strictEqual(error, true);
-                    emitClose.call(ws, error);
-                };
-
-                ws.on("close", (code, message) => {
-                    assert.strictEqual(message, "");
-                    assert.strictEqual(code, 1006);
-                    wss.close(done);
-                });
-            });
-
-            wss.on("connection", (ws) => {
-                const buf = Buffer.from("81008100810088050fa0666f6f", "hex");
-                ws._socket.write(buf);
-            });
-        });
-
-        it("closes with 1006 if close frame is received but not sent", (done) => {
-            const wss = new Server({
-                perMessageDeflate: { threshold: 0 },
-                port: 0
-            }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
-                const emitClose = ws.emitClose;
-                const messages = [];
-
-                ws.on("message", (message) => messages.push(message));
-
-                ws.emitClose = (error) => {
-                    assert.deepStrictEqual(messages, ["", "", ""]);
-                    assert.strictEqual(ws._closeFrameSent, false);
-                    assert.strictEqual(ws._closeMessage, "foo");
-                    assert.strictEqual(ws._closeCode, 4000);
-                    assert.strictEqual(error, undefined);
-                    emitClose.call(ws, error);
-                };
-
-                ws.on("close", (code, message) => {
-                    assert.strictEqual(message, "");
-                    assert.strictEqual(code, 1006);
-                    wss.close(done);
-                });
-            });
-
-            wss.on("connection", (ws) => {
-                const buf = Buffer.from("c10100c10100c1010088050fa0666f6f", "hex");
-                ws._socket.end(buf);
-            });
         });
     });
 
@@ -1637,6 +1578,7 @@ describe("net", "ws", "WebSocket", () => {
 
                 ws.addEventListener("close", (closeEvent) => {
                     assert.ok(closeEvent.wasClean);
+                    assert.strictEqual(closeEvent.reason, "");
                     assert.strictEqual(closeEvent.code, 1000);
 
                     wss.close(done);
@@ -1646,44 +1588,15 @@ describe("net", "ws", "WebSocket", () => {
             wss.on("connection", (client) => client.close(1000));
         });
 
-        it("should assign 'true' to wasClean when server closes with code 3000", (done) => {
-            const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
-
-                ws.addEventListener("close", (closeEvent) => {
-                    assert.ok(closeEvent.wasClean);
-                    wss.close(done);
-                });
-            });
-
-            wss.on("connection", (client) => client.close(3000));
-        });
-
-        it("should assign 'true' to wasClean when server closes with code 4999", (done) => {
-            const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
-
-                ws.addEventListener("close", (closeEvent) => {
-                    assert.ok(closeEvent.wasClean);
-                    wss.close(done);
-                });
-            });
-
-            wss.on("connection", (client) => client.close(4999));
-        });
-
         it("should receive valid CloseEvent when server closes with code 1001", (done) => {
             const wss = new Server({ port: 0 }, () => {
                 const port = wss._server.address().port;
                 const ws = new Client(`ws://localhost:${port}`);
 
                 ws.addEventListener("close", (closeEvent) => {
-                    assert.ok(!closeEvent.wasClean);
-                    assert.strictEqual(closeEvent.code, 1001);
+                    assert.ok(closeEvent.wasClean);
                     assert.strictEqual(closeEvent.reason, "some daft reason");
-
+                    assert.strictEqual(closeEvent.code, 1001);
                     wss.close(done);
                 });
             });
@@ -2092,7 +2005,7 @@ describe("net", "ws", "WebSocket", () => {
                         serverNoContextTakeover: true,
                         clientNoContextTakeover: true,
                         serverMaxWindowBits: 10,
-                        clientMaxWindowBits: true
+                        client_max_window_bits: true
                     }
                 });
 
@@ -2279,24 +2192,35 @@ describe("net", "ws", "WebSocket", () => {
 
             it("can be used while data is being processed", (done) => {
                 const wss = new Server({
-                    perMessageDeflate: { threshold: 0 },
+                    perMessageDeflate: true,
                     port: 0
                 }, () => {
                     const port = wss._server.address().port;
-                    const ws = new Client(`ws://localhost:${port}`, {
-                        perMessageDeflate: { threshold: 0 }
-                    });
+                    const ws = new Client(`ws://localhost:${port}`);
+                    const messages = [];
 
-                    wss.on("connection", (client) => {
-                        for (let i = 0; i < 10; i++) {
-                            client.send("hi");
+                    ws.on("message", (message) => {
+                        if (messages.push(message) > 1) {
+                            return;
                         }
-                        client.send("hi", () => {
+
+                        process.nextTick(() => {
                             assert.strictEqual(ws._receiver._state, 5);
-                            ws.on("close", () => wss.close(done));
                             ws.terminate();
                         });
                     });
+
+                    ws.on("close", (code, reason) => {
+                        assert.deepStrictEqual(messages, ["", "", "", ""]);
+                        assert.strictEqual(code, 1006);
+                        assert.strictEqual(reason, "");
+                        wss.close(done);
+                    });
+                });
+
+                wss.on("connection", (ws) => {
+                    const buf = Buffer.from("c10100c10100c10100c10100", "hex");
+                    ws._socket.write(buf);
                 });
             });
         });

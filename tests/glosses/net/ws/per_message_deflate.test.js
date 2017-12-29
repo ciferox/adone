@@ -18,7 +18,7 @@ describe("PerMessageDeflate", () => {
                 serverNoContextTakeover: true,
                 clientNoContextTakeover: true,
                 serverMaxWindowBits: 10,
-                clientMaxWindowBits: 11
+                client_max_window_bits: 11
             });
 
             assert.deepStrictEqual(perMessageDeflate.offer(), {
@@ -59,7 +59,7 @@ describe("PerMessageDeflate", () => {
                     serverNoContextTakeover: true,
                     clientNoContextTakeover: true,
                     serverMaxWindowBits: 12,
-                    clientMaxWindowBits: 11
+                    client_max_window_bits: 11
                 }, true);
                 const extensions = exts.parse(
                     "permessage-deflate; server_max_window_bits=14; client_max_window_bits=13"
@@ -106,7 +106,7 @@ describe("PerMessageDeflate", () => {
             });
 
             it("should throw an error if client_max_window_bits is unsupported on client", () => {
-                const perMessageDeflate = new PerMessageDeflate({ clientMaxWindowBits: 10 }, true);
+                const perMessageDeflate = new PerMessageDeflate({ client_max_window_bits: 10 }, true);
                 const extensions = exts.parse("permessage-deflate");
 
                 assert.throws(() => perMessageDeflate.accept(extensions["permessage-deflate"]));
@@ -144,21 +144,31 @@ describe("PerMessageDeflate", () => {
             });
 
             it("should throw an error if client_max_window_bits is unsupported", () => {
-                const perMessageDeflate = new PerMessageDeflate({ clientMaxWindowBits: false });
+                const perMessageDeflate = new PerMessageDeflate({ client_max_window_bits: false });
                 const extensions = exts.parse("permessage-deflate; client_max_window_bits=10");
 
                 assert.throws(() => perMessageDeflate.accept(extensions["permessage-deflate"]));
             });
 
             it("should throw an error if client_max_window_bits is greater than configuration", () => {
-                const perMessageDeflate = new PerMessageDeflate({ clientMaxWindowBits: 10 });
+                const perMessageDeflate = new PerMessageDeflate({ client_max_window_bits: 10 });
                 const extensions = exts.parse("permessage-deflate; client_max_window_bits=11");
 
                 assert.throws(() => perMessageDeflate.accept(extensions["permessage-deflate"]));
             });
+
+            it("uses the config value if client_max_window_bits is not specified", () => {
+                const perMessageDeflate = new PerMessageDeflate({
+                    client_max_window_bits: 10
+                });
+
+                assert.deepStrictEqual(perMessageDeflate.accept([{}]), {
+                    client_max_window_bits: 10
+                });
+            });
         });
 
-        describe("validate parameters", () => {
+        describe("client_max_window_bits", () => {
             it("should throw an error if a parameter has multiple values", () => {
                 const perMessageDeflate = new PerMessageDeflate();
                 const extensions = exts.parse(
@@ -183,17 +193,29 @@ describe("PerMessageDeflate", () => {
             });
 
             it("should throw an error if server_max_window_bits has an invalid value", () => {
-                const perMessageDeflate = new PerMessageDeflate();
-                const extensions = exts.parse("permessage-deflate; server_max_window_bits=7");
+                const perMessageDeflate = new PerMessageDeflate({}, true);
 
+                let extensions = exts.parse("permessage-deflate; server_max_window_bits=7");
+                assert.throws(() => perMessageDeflate.accept(extensions["permessage-deflate"]));
+
+                extensions = exts.parse("permessage-deflate; server_max_window_bits");
                 assert.throws(() => perMessageDeflate.accept(extensions["permessage-deflate"]));
             });
 
             it("should throw an error if client_max_window_bits has an invalid value", () => {
                 const perMessageDeflate = new PerMessageDeflate();
-                const extensions = exts.parse("permessage-deflate; client_max_window_bits=16");
 
+                let extensions = exts.parse("permessage-deflate; client_max_window_bits=16");
                 assert.throws(() => perMessageDeflate.accept(extensions["permessage-deflate"]));
+
+                extensions = exts.parse("permessage-deflate; client_max_window_bits");
+                assert.throws(() => perMessageDeflate.accept(extensions["permessage-deflate"]));
+            });
+
+            it("throws an error if a parameter has an invalid name", () => {
+                const perMessageDeflate = new PerMessageDeflate();
+                const extensions = exts.parse("permessage-deflate;foo");
+                assert.throws(() => perMessageDeflate.accept(extensions["permessage-deflate"]), /^Not defined extension parameter \(foo\)$/);
             });
         });
     });
@@ -293,11 +315,10 @@ describe("PerMessageDeflate", () => {
                 threshold: 0,
                 level: 0
             });
-            const extensionStr = (
+            const extensionStr =
                 "permessage-deflate; server_no_context_takeover; " +
                 "client_no_context_takeover; server_max_window_bits=10; " +
-                "client_max_window_bits=11"
-            );
+                "client_max_window_bits=11";
             const srcData = "Some compressible data, it's compressible.";
             const srcDataBuffer = Buffer.from(srcData, "utf8");
 

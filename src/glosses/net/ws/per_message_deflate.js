@@ -7,21 +7,14 @@ const {
 
 const TRAILER = Buffer.from([0x00, 0x00, 0xff, 0xff]);
 const EMPTY_BLOCK = Buffer.from([0x00]);
+
 const kWriteInProgress = Symbol("write-in-progress");
 const kPendingClose = Symbol("pending-close");
 const kTotalLength = Symbol("total-length");
-const kReject = Symbol("callback");
+const kCallback = Symbol("callback");
 const kBuffers = Symbol("buffers");
 const kError = Symbol("error");
 const kOwner = Symbol("owner");
-
-// We limit zlib concurrency, which prevents severe memory fragmentation
-// as documented in https://github.com/nodejs/node/issues/8871#issuecomment-250915913
-// and https://github.com/websockets/ws/issues/1202
-//
-// Intentionally global; it's the global thread pool that's an issue.
-//
-let zlibLimiter;
 
 
 /**
@@ -59,21 +52,33 @@ const inflateOnData = function (chunk) {
 };
 
 /**
-   * The listener of the `zlib.InflateRaw` stream `'error'` event.
-   *
-   * @param {Error} err The emitted error
-   * @private
-   */
+ * The listener of the `zlib.InflateRaw` stream `'error'` event.
+ *
+ * @param {Error} err The emitted error
+ * @private
+ */
 const inflateOnError = function (err) {
     //
     // There is no need to call `Zlib#close()` as the handle is automatically
     // closed when an error is emitted.
     //
     this[kOwner]._inflate = null;
-    this[kReject](err);
+    this[kCallback](err);
 };
 
 
+//
+// We limit zlib concurrency, which prevents severe memory fragmentation
+// as documented in https://github.com/nodejs/node/issues/8871#issuecomment-250915913
+// and https://github.com/websockets/ws/issues/1202
+//
+// Intentionally global; it's the global thread pool that's an issue.
+//
+let zlibLimiter;
+
+/**
+ * permessage-deflate implementation.
+ */
 export default class PerMessageDeflate {
     /**
      * Creates a PerMessageDeflate instance.
@@ -98,13 +103,16 @@ export default class PerMessageDeflate {
      * @param {Number} maxPayload The maximum allowed message length
      */
     constructor(options, isServer, maxPayload) {
-        this._options = options || {};
-        this._isServer = Boolean(isServer);
-        this._inflate = null;
-        this._deflate = null;
-        this.params = null;
         this._maxPayload = maxPayload | 0;
-        this._threshold = is.undefined(this._options.threshold) ? 1024 : this._options.threshold;
+        this._options = options || {};
+        this._threshold = !is.undefined(this._options.threshold)
+            ? this._options.threshold
+            : 1024;
+        this._isServer = Boolean(isServer);
+        this._deflate = null;
+        this._inflate = null;
+
+        this.params = null;
 
         if (!zlibLimiter) {
             const concurrency = !is.undefined(this._options.concurrencyLimit)
@@ -121,6 +129,12 @@ export default class PerMessageDeflate {
         return "permessage-deflate";
     }
 
+    /**
+     * Create extension parameters offer.
+     *
+     * @return {Object} Extension parameters
+     * @public
+     */
     offer() {
         const params = {};
 
@@ -142,20 +156,24 @@ export default class PerMessageDeflate {
         return params;
     }
 
+    /**
+     * Accept extension offer.
+     *
+     * @param {Array} paramsList Extension parameters
+     * @return {Object} Accepted configuration
+     * @public
+     */
     accept(paramsList) {
         paramsList = this.normalizeParams(paramsList);
-
-        let params;
-        if (this._isServer) {
-            params = this.acceptAsServer(paramsList);
-        } else {
-            params = this.acceptAsClient(paramsList);
-        }
-
-        this.params = params;
-        return params;
+        this.params = this._isServer ? this.acceptAsServer(paramsList) : this.acceptAsClient(paramsList);
+        return this.params;
     }
 
+    /**
+     * Releases all resources used by the extension.
+     *
+     * @public
+     */
     cleanup() {
         if (this._inflate) {
             if (this._inflate[kWriteInProgress]) {
@@ -175,115 +193,166 @@ export default class PerMessageDeflate {
         }
     }
 
+    /**
+     * Accept extension offer from client.
+     *
+     * @param {Array} paramsList Extension parameters
+     * @return {Object} Accepted configuration
+     * @private
+     */
     acceptAsServer(paramsList) {
-        const accepted = {};
-        const result = paramsList.some((params) => {
-            if ((this._options.serverNoContextTakeover === false && params.server_no_context_takeover) ||
-                (this._options.serverMaxWindowBits === false && params.server_max_window_bits) ||
-                (is.number(this._options.serverMaxWindowBits) && is.number(params.server_max_window_bits) && this._options.serverMaxWindowBits > params.server_max_window_bits) ||
-                (is.number(this._options.clientMaxWindowBits) && !params.client_max_window_bits)
+        const opts = this._options;
+        const accepted = paramsList.find((params) => {
+            if (
+                (opts.serverNoContextTakeover === false &&
+                    params.server_no_context_takeover) ||
+                (params.server_max_window_bits &&
+                    (opts.serverMaxWindowBits === false ||
+                        (is.number(opts.serverMaxWindowBits) &&
+                            opts.serverMaxWindowBits > params.server_max_window_bits))) ||
+                (is.number(opts.clientMaxWindowBits) &&
+                    !params.client_max_window_bits)
             ) {
                 return false;
             }
 
-            if (this._options.serverNoContextTakeover || params.server_no_context_takeover) {
-                accepted.server_no_context_takeover = true;
-            }
-            if (this._options.clientNoContextTakeover || (this._options.clientNoContextTakeover !== false && params.client_no_context_takeover)) {
-                accepted.client_no_context_takeover = true;
-            }
-            if (is.number(this._options.serverMaxWindowBits)) {
-                accepted.server_max_window_bits = this._options.serverMaxWindowBits;
-            } else if (is.number(params.server_max_window_bits)) {
-                accepted.server_max_window_bits = params.server_max_window_bits;
-            }
-            if (is.number(this._options.clientMaxWindowBits)) {
-                accepted.client_max_window_bits = this._options.clientMaxWindowBits;
-            } else if (this._options.clientMaxWindowBits !== false && is.number(params.client_max_window_bits)) {
-                accepted.client_max_window_bits = params.client_max_window_bits;
-            }
             return true;
         });
 
-        if (!result) { 
-            throw new Error("Doesn't support the offered configuration"); 
+        if (!accepted) {
+            throw new Error("Doesn't support the offered configuration");
+        }
+
+        if (opts.serverNoContextTakeover) {
+            accepted.server_no_context_takeover = true;
+        }
+        if (opts.clientNoContextTakeover) {
+            accepted.client_no_context_takeover = true;
+        }
+        if (is.number(opts.serverMaxWindowBits)) {
+            accepted.server_max_window_bits = opts.serverMaxWindowBits;
+        }
+        if (is.number(opts.clientMaxWindowBits)) {
+            accepted.client_max_window_bits = opts.clientMaxWindowBits;
+        } else if (
+            accepted.client_max_window_bits === true ||
+            opts.clientMaxWindowBits === false
+        ) {
+            delete accepted.client_max_window_bits;
         }
 
         return accepted;
     }
 
+    /**
+     * Accept extension response from server.
+     *
+     * @param {Array} paramsList Extension parameters
+     * @return {Object} Accepted configuration
+     * @private
+     */
     acceptAsClient(paramsList) {
         const params = paramsList[0];
 
-        if (is.exist(this._options.clientNoContextTakeover)) {
-            if (this._options.clientNoContextTakeover === false && params.client_no_context_takeover) {
-                throw new Error('Invalid value for "client_no_context_takeover"');
-            }
+        if (
+            this._options.clientNoContextTakeover === false &&
+            params.client_no_context_takeover
+        ) {
+            throw new Error('Invalid value for "client_no_context_takeover"');
         }
-        if (is.exist(this._options.clientMaxWindowBits)) {
-            if (this._options.clientMaxWindowBits === false && params.client_max_window_bits) {
-                throw new Error('Invalid value for "client_max_window_bits"');
+
+        if (!params.client_max_window_bits) {
+            if (is.number(this._options.clientMaxWindowBits)) {
+                params.client_max_window_bits = this._options.clientMaxWindowBits;
             }
-            if (is.number(this._options.clientMaxWindowBits) && (!params.client_max_window_bits || params.client_max_window_bits > this._options.clientMaxWindowBits)) {
-                throw new Error('Invalid value for "client_max_window_bits"');
-            }
+        } else if (
+            this._options.clientMaxWindowBits === false ||
+            (is.number(this._options.clientMaxWindowBits) &&
+                params.client_max_window_bits > this._options.clientMaxWindowBits)
+        ) {
+            throw new Error('Invalid value for "client_max_window_bits"');
         }
 
         return params;
     }
 
+    /**
+     * Normalize extensions parameters.
+     *
+     * @param {Array} paramsList Extension parameters
+     * @return {Array} Normalized extensions parameters
+     * @private
+     */
     normalizeParams(paramsList) {
-        return paramsList.map((params) => {
+        paramsList.forEach((params) => {
             Object.keys(params).forEach((key) => {
                 let value = params[key];
+
                 if (value.length > 1) {
                     throw new Error(`Multiple extension parameters for ${key}`);
                 }
 
                 value = value[0];
 
-                switch (key) {
-                    case "server_no_context_takeover":
-                    case "client_no_context_takeover":
-                        if (value !== true) {
+                if (key === "client_max_window_bits") {
+                    if (value !== true) {
+                        value = Number(value);
+                        if (!is.integer(value) || value < 8 || value > 15) {
                             throw new Error(`Invalid extension parameter value for ${key} (${value})`);
                         }
-                        params[key] = true;
-                        break;
-                    case "server_max_window_bits":
-                    case "client_max_window_bits":
-                        if (is.string(value)) {
-                            value = parseInt(value, 10);
-                            if (is.nan(value) || value < zlib.Z_MIN_WINDOWBITS || value > zlib.Z_MAX_WINDOWBITS) {
-                                throw new Error(`Invalid extension parameter value for ${key} (${value})`);
-                            }
-                        }
-                        if (!this._isServer && value === true) {
-                            throw new Error(`Missing extension parameter value for ${key}`);
-                        }
-                        params[key] = value;
-                        break;
-                    default:
-                        throw new Error(`Not defined extension parameter (${key})`);
+                    } else if (!this._isServer) {
+                        throw new Error(`Missing extension parameter value for ${key}`);
+                    }
+                } else if (key === "server_max_window_bits") {
+                    value = Number(value);
+                    if (!is.integer(value) || value < 8 || value > 15) {
+                        throw new Error(`Invalid extension parameter value for ${key} (${value})`);
+                    }
+                } else if (
+                    key === "client_no_context_takeover" ||
+                    key === "server_no_context_takeover"
+                ) {
+                    if (value !== true) {
+                        throw new Error(`Invalid extension parameter value for ${key} (${value})`);
+                    }
+                } else {
+                    throw new Error(`Not defined extension parameter (${key})`);
                 }
+
+                params[key] = value;
             });
-            return params;
         });
+
+        return paramsList;
     }
 
+    /**
+     * Decompress data. Concurrency limited by async-limiter.
+     *
+     * @param {Buffer} data Compressed data
+     * @param {Boolean} fin Specifies whether or not this is the last fragment
+     * @param {Function} callback Callback
+     * @public
+     */
     decompress(data, fin, callback) {
         promise.nodeify(zlibLimiter(() => this._decompress(data, fin)), callback);
     }
 
+    /**
+     * Decompress data.
+     *
+     * @param {Buffer} data Compressed data
+     * @param {Boolean} fin Specifies whether or not this is the last fragment
+     * @param {Function} callback Callback
+     * @private
+     */
     _decompress(data, fin) {
         return new Promise((resolve, reject) => {
             const endpoint = this._isServer ? "client" : "server";
 
             if (!this._inflate) {
                 const key = `${endpoint}_max_window_bits`;
-                const windowBits = !is.number(this.params[key])
-                    ? zlib.Z_DEFAULT_WINDOWBITS
-                    : this.params[key];
+                const windowBits = !is.number(this.params[key]) ? zlib.Z_DEFAULT_WINDOWBITS : this.params[key];
 
                 this._inflate = zlib.createInflateRaw({ windowBits });
                 this._inflate[kTotalLength] = 0;
@@ -293,7 +362,7 @@ export default class PerMessageDeflate {
                 this._inflate.on("data", inflateOnData);
             }
 
-            this._inflate[kReject] = reject;
+            this._inflate[kCallback] = reject;
             this._inflate[kWriteInProgress] = true;
 
             this._inflate.write(data);
@@ -333,12 +402,28 @@ export default class PerMessageDeflate {
         });
     }
 
+    /**
+     * Compress data. Concurrency limited by async-limiter.
+     *
+     * @param {Buffer} data Data to compress
+     * @param {Boolean} fin Specifies whether or not this is the last fragment
+     * @param {Function} callback Callback
+     * @public
+     */
     compress(data, fin, callback) {
         promise.nodeify(zlibLimiter(() => this._compress(data, fin)), callback);
     }
 
+    /**
+     * Compress data.
+     *
+     * @param {Buffer} data Data to compress
+     * @param {Boolean} fin Specifies whether or not this is the last fragment
+     * @param {Function} callback Callback
+     * @private
+     */
     _compress(data, fin) {
-        return new Promise((resolve, reject) => { // no reject, what?
+        return new Promise((resolve, reject) => {
             if (!data || data.length === 0) {
                 resolve(EMPTY_BLOCK);
                 return;

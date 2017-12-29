@@ -217,7 +217,7 @@ export default class ByteArray {
             noAssert = Boolean(noAssert);
         }
 
-        this.buffer = capacity === 0 ? adone.emptyBuffer : Buffer.allocUnsafe(capacity);
+        this.buffer = capacity === 0 ? adone.EMPTY_BUFFER : Buffer.allocUnsafe(capacity);
         this.offset = 0;
         this.markedOffset = -1;
         this.limit = capacity;
@@ -1757,7 +1757,7 @@ export default class ByteArray {
         }
         const len = end - begin;
         if (len === 0) {
-            this.buffer = adone.emptyBuffer;
+            this.buffer = adone.EMPTY_BUFFER;
             if (this.markedOffset >= 0) {
                 this.markedOffset -= begin;
             }

@@ -258,7 +258,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         rootPath: () => adone.std.path.join(__dirname, ".."),
         etcPath: () => adone.std.path.join(adone.rootPath, "etc"),
 
-        emptyBuffer: () => Buffer.allocUnsafe(0),
+        EMPTY_BUFFER: () => Buffer.allocUnsafe(0),
         assert: () => adone.assertion.loadAssertInterface().assert,
         expect: () => adone.assertion.loadExpectInterface().expect,
 

@@ -98,19 +98,6 @@ describe("net", "ws", "WebSocketServer", () => {
                 ws.on("open", () => new Client(`ws+unix://${sockPath}`));
             });
         });
-
-        it("will not crash when it receives an unhandled opcode", (done) => {
-            const wss = new Server({ port: 0 });
-
-            wss.on("connection", (ws) => {
-                ws.onerror = () => wss.close(done);
-            });
-
-            const port = wss._server.address().port;
-            const ws = new Client(`ws://localhost:${port}/`);
-
-            ws.onopen = () => ws._socket.write(Buffer.from([0x85, 0x00]));
-        });
     });
 
     describe("#close", () => {
@@ -135,7 +122,7 @@ describe("net", "ws", "WebSocketServer", () => {
                     }
                 });
             });
-            
+
             wss.on("connection", (client) => {
                 client.on("close", () => {
                     if (++closes === 2) {
@@ -968,6 +955,35 @@ describe("net", "ws", "WebSocketServer", () => {
                 client.send(data);
             });
         });
+
+        it("does not crash when it receives an unhandled opcode", (done) => {
+            let closed = false;
+            const wss = new Server({ port: 0 }, () => {
+                const port = wss._server.address().port;
+                const ws = new Client(`ws://localhost:${port}/`);
+
+                ws.on("open", () => ws._socket.write(Buffer.from([0x85, 0x00])));
+                ws.on("close", (code, reason) => {
+                    assert.strictEqual(code, 1006);
+                    assert.strictEqual(reason, "");
+                    assert.ok(closed);
+                    wss.close(done);
+                });
+            });
+
+            wss.on("connection", (ws) => {
+                ws.on("error", (err) => {
+                    assert.ok(err instanceof Error);
+                    assert.strictEqual(err.message, "Invalid opcode: 5");
+
+                    ws.on("close", (code, reason) => {
+                        assert.strictEqual(code, 1002);
+                        assert.strictEqual(reason, "");
+                        closed = true;
+                    });
+                });
+            });
+        });
     });
 
     describe("client properties", () => {
@@ -1063,26 +1079,21 @@ describe("net", "ws", "WebSocketServer", () => {
                 perMessageDeflate: true,
                 port: 0
             }, () => {
-                const port = wss._server.address().port;
-                const req = http.request({
+                const req = http.get({
+                    port: wss._server.address().port,
                     headers: {
                         Connection: "Upgrade",
                         Upgrade: "websocket",
                         "Sec-WebSocket-Key": "dGhlIHNhbXBsZSBub25jZQ==",
                         "Sec-WebSocket-Version": 13,
                         "Sec-WebSocket-Extensions": "permessage-deflate; server_max_window_bits=foo"
-                    },
-                    host: "127.0.0.1",
-                    port
+                    }
                 });
 
                 req.on("response", (res) => {
                     assert.strictEqual(res.statusCode, 400);
-                    wss.close();
-                    done();
+                    wss.close(done);
                 });
-
-                req.end();
             });
 
             wss.on("connection", (ws) => {
