@@ -776,6 +776,7 @@ class ExternalRunner {
         this.engine = engine;
         this.path = path;
         this.proc = null;
+        this.exitPromise = null;
     }
 
     async waitForMessage() {
@@ -790,6 +791,7 @@ class ExternalRunner {
         this.proc = std.child_process.fork(std.path.resolve(__dirname, "external_runner.js"), [adone.rootPath], {
             stdio: ["inherit", "inherit", "inherit", "ipc"]
         });
+        this.exitPromise = new Promise((resolve) => this.proc.once("exit", (code, signal) => resolve({ code, signal })));
         await this.waitForMessage();
         this.send(adone.data.bson.encode({
             defaultTimeout: this.engine.defaultTimeout,
@@ -1450,6 +1452,8 @@ export class Engine {
                         executing.once("done", resolve);
                     });
                     done = true;
+
+                    await runner.exitPromise;
 
                     if (stopped) {
                         break;

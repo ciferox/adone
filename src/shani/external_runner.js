@@ -5,12 +5,6 @@ adone.sourcemap.support(Error).install();
 // if i use adone.application.runCli sometimes it requires "Enter" in console after exit
 
 const main = async () => {
-    this._uncaughtException = (err) => {
-        adone.log("Uncaught exception", err.stack);
-    };
-    this._unhandledRejection = (err) => {
-        adone.log("Unhandled rejection", err.stack);
-    };
     const p = new Promise((resolve) => {
         process.once("message", resolve);
     });
@@ -70,7 +64,7 @@ const main = async () => {
     }
 
     await new Promise((resolve) => {
-        emitter.once("done", resolve).once("error", resolve);
+        emitter.once("done", resolve);
     });
 };
 
