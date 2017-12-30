@@ -1,11 +1,9 @@
-import Support from "../../support";
+describe("scope", function () {
+    const { orm } = adone;
+    const { type } = orm;
+    const { Model } = adone.private(orm);
+    const current = this.sequelize;
 
-const { orm } = adone;
-const { type } = orm;
-const { Model } = adone.private(orm);
-const current = Support.sequelize;
-
-describe(Support.getTestDialectTeaser("Model"), () => {
     const Project = current.define("project");
     const User = current.define("user");
 
@@ -74,7 +72,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
         scopes
     });
 
-    describe(".scope", () => {
+    describe("scope", () => {
         describe("attribute exclude / include", () => {
             const User = current.define("user", {
                 password: type.STRING,

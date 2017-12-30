@@ -1,11 +1,9 @@
-import Support from "../../support";
+describe("include", function () {
+    const current = this.sequelize;
+    const { orm } = adone;
+    const { type } = orm;
+    const { Model } = adone.private(orm);
 
-const current = Support.sequelize;
-const { orm } = adone;
-const { type } = orm;
-const { Model } = adone.private(orm);
-
-describe(Support.getTestDialectTeaser("Model"), () => {
     describe("all", () => {
 
         const Referral = current.define("referal");

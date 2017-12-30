@@ -1,15 +1,12 @@
-import Support from "./support";
+describe("include", function () {
+    const { orm, vendor: { lodash: _ }, promise } = adone;
+    const { type } = orm;
+    const dialect = this.getTestDialect();
 
-const { vendor: { lodash: _ }, promise } = adone;
-const { orm } = adone;
-const { type } = orm;
-const dialect = Support.getTestDialect();
+    const sortById = function (a, b) {
+        return a.id < b.id ? -1 : 1;
+    };
 
-const sortById = function (a, b) {
-    return a.id < b.id ? -1 : 1;
-};
-
-describe(Support.getTestDialectTeaser("Include"), () => {
     describe("find", () => {
         it("should support an empty belongsTo include", function () {
             const Company = this.sequelize.define("Company", {});
@@ -213,7 +210,7 @@ describe(Support.getTestDialectTeaser("Include"), () => {
             await Promise.all([
                 props.task.setUser(props.user),
                 props.user.setGroup(props.group)
-            ])
+            ]);
 
             const task = await Task.findOne({
                 where: {

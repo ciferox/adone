@@ -1,14 +1,9 @@
-import Support from "../../support";
-
-const { vendor: { lodash: _ } } = adone;
-const dialect = Support.getTestDialect();
-const { orm } = adone;
-const { type } = orm;
-
-describe("[POSTGRES] Sequelize", { skip: !/^postgres/.test(dialect) }, () => {
+describe("Connection manager", function () {
+    const { orm, vendor: { lodash: _ } } = adone;
+    const { type } = orm;
     const checkTimezoneParsing = (baseOptions) => {
         const options = _.extend({}, baseOptions, { timezone: "Asia/Kolkata", timestamps: true });
-        const sequelize = Support.createSequelizeInstance(options);
+        const sequelize = this.createSequelizeInstance(options);
 
         const tzTable = sequelize.define("tz_table", { foo: type.STRING });
         return tzTable.sync({ force: true }).then(() => {

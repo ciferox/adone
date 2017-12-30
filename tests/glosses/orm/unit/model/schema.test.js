@@ -1,8 +1,11 @@
-import Support from "../../support";
+describe("schemas", function () {
 
-const current = Support.sequelize;
+    const current = this.sequelize;
 
-describe(`${Support.getTestDialectTeaser("Model")}Schemas`, { skip: !current.dialect.supports.schemas }, () => {
+    if (!current.dialect.supports.schemas) {
+        return;
+    }
+
     const Project = current.define("project");
     const Company = current.define("company", {}, {
         schema: "default",

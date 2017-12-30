@@ -1,9 +1,7 @@
-import Support from "../support";
+describe("bulk operations", () => {
+    const { orm } = adone;
+    const { type } = orm;
 
-const { orm } = adone;
-const { type } = orm;
-
-describe(Support.getTestDialectTeaser("Hooks"), () => {
     beforeEach(function () {
         this.User = this.sequelize.define("User", {
             username: {
@@ -29,7 +27,8 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
         return this.sequelize.sync({ force: true });
     });
 
-    describe("#bulkCreate", () => {
+
+    describe("bulkCreate", () => {
         describe("on success", () => {
             it("should run hooks", function () {
                 const beforeBulk = spy();
@@ -163,7 +162,7 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
         });
     });
 
-    describe("#bulkUpdate", () => {
+    describe("bulkUpdate", () => {
         describe("on success", () => {
             it("should run hooks", function () {
                 const self = this;
@@ -319,7 +318,7 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
         });
     });
 
-    describe("#bulkDestroy", () => {
+    describe("bulkDestroy", () => {
         describe("on success", () => {
             it("should run hooks", function () {
                 const beforeBulk = spy();
@@ -456,7 +455,7 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
         });
     });
 
-    describe("#bulkRestore", () => {
+    describe("bulkRestore", () => {
         beforeEach(async function () {
             await this.ParanoidUser.bulkCreate([
                 { username: "adam", mood: "happy" },

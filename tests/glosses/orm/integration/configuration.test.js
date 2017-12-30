@@ -1,17 +1,17 @@
-import Support from "./support";
-import config from "../config/config";
+describe("configuration", function () {
+    const dialect = this.getTestDialect();
+    const Sequelize = this.Sequelize;
+    const { orm } = adone;
+    const fs = require("fs");
+    const path = require("path");
+    const config = this.config;
 
-const dialect = Support.getTestDialect();
-const Sequelize = Support.Sequelize;
-const { orm } = adone;
-const fs = require("fs");
-const path = require("path");
+    let sqlite3;
 
-if (dialect === "sqlite") {
-  var sqlite3 = require('sqlite3'); // eslint-disable-line
-}
+    if (dialect === "sqlite") {
+        sqlite3 = require('sqlite3'); // eslint-disable-line
+    }
 
-describe(Support.getTestDialectTeaser("Configuration"), () => {
     describe("Connections problems should fail with a nice message", () => {
         it("when we don't have the correct server details", async () => {
             const seq = orm.create(config[dialect].database, config[dialect].username, config[dialect].password, {
@@ -146,5 +146,4 @@ describe(Support.getTestDialectTeaser("Configuration"), () => {
             });
         }
     });
-
 });

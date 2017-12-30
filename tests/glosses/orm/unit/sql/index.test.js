@@ -1,12 +1,9 @@
-import Support from "../../support";
-
-const expectsql = Support.expectsql;
-const current = Support.sequelize;
-const sql = current.dialect.QueryGenerator;
-
 // Notice: [] will be replaced by dialect specific tick/quote character when there is not dialect specific expectation but only a default expectation
+describe("index", function () {
+    const expectsql = this.expectsql;
+    const current = this.sequelize;
+    const sql = current.dialect.QueryGenerator;
 
-describe(Support.getTestDialectTeaser("SQL"), () => {
     describe("addIndex", () => {
         it("naming", () => {
             expectsql(sql.addIndexQuery("table", ["column1", "column2"], {}, "table"), {

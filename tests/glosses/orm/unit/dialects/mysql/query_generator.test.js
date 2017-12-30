@@ -1,21 +1,17 @@
-import Support from "../../../support";
+describe("QueryGenerator", () => {
+    const { orm } = adone;
 
-const dialect = Support.getTestDialect();
+    const { vendor: { lodash: _ } } = adone;
 
-const { orm } = adone;
+    const {
+        dialect: {
+            mysql: { QueryGenerator }
+        }
+    } = adone.private(orm);
+    const {
+        operator
+    } = orm;
 
-const { vendor: { lodash: _ } } = adone;
-
-const {
-    dialect: {
-        mysql: { QueryGenerator }
-    }
-} = adone.private(orm);
-const {
-    operator
-} = orm;
-
-describe("[MYSQL Specific] QueryGenerator", { skip: dialect !== "mysql" }, () => {
     const suites = {
         arithmeticQuery: [
             {

@@ -1,10 +1,11 @@
-import Support from "./support";
+describe("pooling", function () {
+    const { orm } = adone;
+    const dialect = this.getTestDialect();
 
-const { orm } = adone;
-const dialect = Support.getTestDialect();
-const Sequelize = Support.Sequelize;
+    if (dialect === "sqlite") {
+        return;
+    }
 
-describe(Support.getTestDialectTeaser("Pooling"), { skip: dialect === "sqlite" }, function () {
     beforeEach(() => {
         this.sinon = adone.shani.util.sandbox.create();
     });

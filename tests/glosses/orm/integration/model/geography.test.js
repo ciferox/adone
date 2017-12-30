@@ -1,13 +1,13 @@
-import Support from "../support";
+describe("geography", function () {
+    const { orm } = adone;
+    const { type } = orm;
 
-const { orm } = adone;
-const { type } = orm;
+    const current = this.sequelize;
 
-const current = Support.sequelize;
+    if (!current.dialect.supports.GEOGRAPHY) {
+        return;
+    }
 
-describe(Support.getTestDialectTeaser("Model"), {
-    skip: !current.dialect.supports.GEOGRAPHY
-}, () => {
     describe("GEOGRAPHY", () => {
         beforeEach(function () {
             this.User = this.sequelize.define("User", {

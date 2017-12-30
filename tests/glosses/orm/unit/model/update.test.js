@@ -1,54 +1,48 @@
-import Support from "../../support";
+describe("update", function () {
+    const current = this.sequelize;
+    const { orm, vendor: { lodash: _ } } = adone;
+    const { type } = orm;
 
-const current = Support.sequelize;
-const { vendor: { lodash: _ } } = adone;
-const { orm } = adone;
-const { type } = orm;
-
-describe(Support.getTestDialectTeaser("Model"), () => {
-
-    describe("method update", () => {
-        beforeEach(function () {
-            this.User = current.define("User", {
-                name: type.STRING,
-                secretValue: type.INTEGER
-            });
-            this.updates = { name: "Batman", secretValue: "7" };
-            this.cloneUpdates = _.clone(this.updates);
-            this.stubUpdate = stub(current.getQueryInterface(), "bulkUpdate").callsFake(() => {
-                return Promise.resolve([]);
-            });
+    beforeEach(function () {
+        this.User = current.define("User", {
+            name: type.STRING,
+            secretValue: type.INTEGER
         });
-
-        afterEach(function () {
-            delete this.updates;
-            delete this.cloneUpdates;
-            this.stubUpdate.restore();
+        this.updates = { name: "Batman", secretValue: "7" };
+        this.cloneUpdates = _.clone(this.updates);
+        this.stubUpdate = stub(current.getQueryInterface(), "bulkUpdate").callsFake(() => {
+            return Promise.resolve([]);
         });
+    });
 
-        describe("properly clones input values", () => {
-            it("with default options", async function () {
-                const self = this;
-                await this.User.update(self.updates, { where: { secretValue: "1" } });
-                expect(self.updates).to.be.deep.eql(self.cloneUpdates);
-            });
+    afterEach(function () {
+        delete this.updates;
+        delete this.cloneUpdates;
+        this.stubUpdate.restore();
+    });
 
-            it("when using fields option", async function () {
-                const self = this;
-                await this.User.update(self.updates, { where: { secretValue: "1" }, fields: ["name"] });
-                expect(self.updates).to.be.deep.eql(self.cloneUpdates);
-            });
-        });
-
-        it("can detect complexe objects", async function () {
+    describe("properly clones input values", () => {
+        it("with default options", async function () {
             const self = this;
-            const Where = function () {
-                this.secretValue = "1";
-            };
+            await this.User.update(self.updates, { where: { secretValue: "1" } });
+            expect(self.updates).to.be.deep.eql(self.cloneUpdates);
+        });
 
-            await assert.throws(async () => {
-                await this.User.update(self.updates, { where: new Where() });
-            });
+        it("when using fields option", async function () {
+            const self = this;
+            await this.User.update(self.updates, { where: { secretValue: "1" }, fields: ["name"] });
+            expect(self.updates).to.be.deep.eql(self.cloneUpdates);
+        });
+    });
+
+    it("can detect complexe objects", async function () {
+        const self = this;
+        const Where = function () {
+            this.secretValue = "1";
+        };
+
+        await assert.throws(async () => {
+            await this.User.update(self.updates, { where: new Where() });
         });
     });
 });

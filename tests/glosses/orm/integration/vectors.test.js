@@ -1,9 +1,7 @@
-import Support from "./support";
+describe("vectors", () => {
+    const { orm } = adone;
+    const { type } = orm;
 
-const { orm } = adone;
-const { type } = orm;
-
-describe(Support.getTestDialectTeaser("Vectors"), () => {
     it("should not allow insert backslash", function () {
         const Student = this.sequelize.define("student", {
             name: type.STRING

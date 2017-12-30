@@ -1,10 +1,8 @@
-import Support from "../support";
+describe("hooks", function () {
+    const { orm } = adone;
+    const { type } = orm;
+    const dialect = this.getTestDialect();
 
-const { orm } = adone;
-const { type } = orm;
-const dialect = Support.getTestDialect();
-
-describe(Support.getTestDialectTeaser("Hooks"), () => {
     beforeEach(function () {
         this.User = this.sequelize.define("User", {
             username: {

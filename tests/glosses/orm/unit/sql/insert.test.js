@@ -1,17 +1,14 @@
-import Support from "../../support";
-
-const { orm } = adone;
-const { type } = orm;
-const expectsql = Support.expectsql;
-const current = Support.sequelize;
-const sql = current.dialect.QueryGenerator;
-
 // Notice: [] will be replaced by dialect specific tick/quote character when there is not dialect specific expectation but only a default expectation
+describe("insert", function () {
+    const { orm } = adone;
+    const { type } = orm;
+    const expectsql = this.expectsql;
+    const current = this.sequelize;
+    const sql = current.dialect.QueryGenerator;
 
-describe(Support.getTestDialectTeaser("SQL"), () => {
     describe("insert", () => {
         it("with temp table for trigger", () => {
-            const User = Support.sequelize.define("user", {
+            const User = this.sequelize.define("user", {
                 username: {
                     type: type.STRING,
                     field: "user_name"
@@ -37,8 +34,8 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
 
     describe("dates", () => {
         it("formats the date correctly when inserting", () => {
-            const timezoneSequelize = Support.createSequelizeInstance({
-                timezone: Support.getTestDialect() === "sqlite" ? "+00:00" : "CET"
+            const timezoneSequelize = this.createSequelizeInstance({
+                timezone: this.getTestDialect() === "sqlite" ? "+00:00" : "CET"
             });
 
             const User = timezoneSequelize.define("user", {
@@ -59,8 +56,8 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
         });
 
         it("formats date correctly when sub-second precision is explicitly specified", () => {
-            const timezoneSequelize = Support.createSequelizeInstance({
-                timezone: Support.getTestDialect() === "sqlite" ? "+00:00" : "CET"
+            const timezoneSequelize = this.createSequelizeInstance({
+                timezone: this.getTestDialect() === "sqlite" ? "+00:00" : "CET"
             });
 
             const User = timezoneSequelize.define("user", {
@@ -84,11 +81,11 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
     describe("bulkCreate", () => {
         it("bulk create with onDuplicateKeyUpdate", () => {
             // Skip mssql for now, it seems broken
-            if (Support.getTestDialect() === "mssql") {
+            if (this.getTestDialect() === "mssql") {
                 return;
             }
 
-            const User = Support.sequelize.define("user", {
+            const User = this.sequelize.define("user", {
                 username: {
                     type: type.STRING,
                     field: "user_name"

@@ -1,15 +1,13 @@
-import Support from "../../../support";
+describe("query", function () {
+    const { Query } = adone.private(adone.orm).dialect.mssql;
+    const sequelize = this.sequelize;
+    const tedious = require("tedious");
+    const tediousIsolationLevel = tedious.ISOLATION_LEVEL;
+    const connectionStub = { beginTransaction: () => { }, lib: tedious };
 
-const { Query } = adone.private(adone.orm).dialect.mssql;
-const sequelize = Support.sequelize;
-const tedious = require("tedious");
-const tediousIsolationLevel = tedious.ISOLATION_LEVEL;
-const connectionStub = { beginTransaction: () => { }, lib: tedious };
+    let sandbox;
+    let query;
 
-let sandbox;
-let query;
-
-describe("[MSSQL]", { skip: Support.getTestDialect() !== "mssql" }, () => {
     describe("beginTransaction", () => {
         beforeEach(() => {
             sandbox = adone.shani.util.sandbox.create();

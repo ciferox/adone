@@ -1,10 +1,6 @@
-import Support from "../../support";
-
-const dialect = Support.getTestDialect();
-const { orm } = adone;
-const { type } = orm;
-
-describe("[MYSQL Specific] Errors", { skip: dialect !== "mysql" }, () => {
+describe("Errors", () => {
+    const { orm } = adone;
+    const { type } = orm;
 
     const validateError = async (promise, errClass, errValues) => {
         const wanted = Object.assign({}, errValues);

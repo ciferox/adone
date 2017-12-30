@@ -1,11 +1,9 @@
-import Support from "./support";
-import config from "../config/config";
+describe("instance validator", function () {
+    const { orm } = adone;
+    const { type } = orm;
+    const { is } = adone;
+    const config = this.config;
 
-const { orm } = adone;
-const { type } = orm;
-const { is } = adone;
-
-describe(Support.getTestDialectTeaser("InstanceValidator"), () => {
     describe("#update", () => {
         it("should allow us to update specific columns without tripping the validations", function () {
             const User = this.sequelize.define("model", {
@@ -471,7 +469,7 @@ describe(Support.getTestDialectTeaser("InstanceValidator"), () => {
         }, {
             validate: {
                 xnor() {
-                    if (is.null(this.field1) === (is.null(this.field2))) {
+                    if (is.null(this.field1) === is.null(this.field2)) {
                         throw new Error("xnor failed");
                     }
                 }

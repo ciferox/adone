@@ -1,11 +1,9 @@
-import Support from "../support";
+describe("belongsToMany", function () {
+    const { vendor: { lodash: _ } } = adone;
+    const { type, Transaction } = adone.orm;
+    const current = this.sequelize;
+    const dialect = this.getTestDialect();
 
-const { vendor: { lodash: _ } } = adone;
-const { type, Transaction } = adone.orm;
-const current = Support.sequelize;
-const dialect = Support.getTestDialect();
-
-describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
     describe("getAssociations", () => {
         beforeEach(async function () {
             const self = this;
@@ -29,7 +27,7 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
 
         if (current.dialect.supports.transactions) {
             it("supports transactions", async function () {
-                const sequelize = await Support.prepareTransactionTest(this.sequelize);
+                const sequelize = await this.prepareTransactionTest(this.sequelize);
                 const Article = sequelize.define("Article", { title: type.STRING });
                 const Label = sequelize.define("Label", { text: type.STRING });
 
@@ -674,7 +672,7 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
 
         if (current.dialect.supports.transactions) {
             it("supports transactions", async function () {
-                const sequelize = await Support.prepareTransactionTest(this.sequelize);
+                const sequelize = await this.prepareTransactionTest(this.sequelize);
                 const User = sequelize.define("User", { username: type.STRING });
                 const Task = sequelize.define("Task", { title: type.STRING });
 
@@ -709,7 +707,7 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
             const group = await Group.create({});
             await Promise.all([
                 group.createUser({ id: 1 }, { through: { isAdmin: true } }),
-                group.createUser({ id: 2 }, { through: { isAdmin: false } }),
+                group.createUser({ id: 2 }, { through: { isAdmin: false } })
             ]);
             const userGroups = await UserGroups.findAll();
             userGroups.sort((a, b) => {
@@ -767,7 +765,7 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
 
         if (current.dialect.supports.transactions) {
             it("supports transactions", async function () {
-                const sequelize = await Support.prepareTransactionTest(this.sequelize);
+                const sequelize = await this.prepareTransactionTest(this.sequelize);
                 const User = sequelize.define("User", { username: type.STRING });
                 const Task = sequelize.define("Task", { title: type.STRING });
 
@@ -787,7 +785,7 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
             });
 
             it("supports transactions when updating a through model", async function () {
-                const sequelize = await Support.prepareTransactionTest(this.sequelize);
+                const sequelize = await this.prepareTransactionTest(this.sequelize);
                 const User = sequelize.define("User", { username: type.STRING });
                 const Task = sequelize.define("Task", { title: type.STRING });
 
@@ -1060,7 +1058,7 @@ describe(Support.getTestDialectTeaser("BelongsToMany"), () => {
         });
 
         it("makes join table non-paranoid by default", () => {
-            const paranoidSequelize = Support.createSequelizeInstance({
+            const paranoidSequelize = this.createSequelizeInstance({
                 define: {
                     paranoid: true
                 }

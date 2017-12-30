@@ -1,12 +1,13 @@
-import Support from "./support";
+describe("transaction", function () {
+    const dialect = this.getTestDialect();
+    const { promise } = adone;
+    const { orm } = adone;
+    const { type, Transaction } = orm;
+    const current = this.sequelize;
 
-const dialect = Support.getTestDialect();
-const { promise } = adone;
-const { orm } = adone;
-const { type, Transaction } = orm;
-const current = Support.sequelize;
-
-describe(Support.getTestDialectTeaser("Transaction"), { skip: !current.dialect.supports.transactions }, () => {
+    if (!current.dialect.supports.transactions) {
+        return;
+    }
     beforeEach(function () {
         this.sinon = adone.shani.util.sandbox.create();
     });
@@ -266,7 +267,7 @@ describe(Support.getTestDialectTeaser("Transaction"), { skip: !current.dialect.s
 
     if (dialect === "sqlite") {
         it("automatically retries on SQLITE_BUSY failure", async function () {
-            const sequelize = await Support.prepareTransactionTest(this.sequelize);
+            const sequelize = await this.prepareTransactionTest(this.sequelize);
             const User = sequelize.define("User", { username: type.STRING });
             await User.sync({ force: true });
             const newTransactionFunc = async () => {
@@ -281,7 +282,7 @@ describe(Support.getTestDialectTeaser("Transaction"), { skip: !current.dialect.s
         });
 
         it("fails with SQLITE_BUSY when retry.match is changed", async function () {
-            const sequelize = await Support.prepareTransactionTest(this.sequelize);
+            const sequelize = await this.prepareTransactionTest(this.sequelize);
             const User = sequelize.define("User", { id: { type: type.INTEGER, primaryKey: true }, username: type.STRING });
             await User.sync({ force: true });
             const newTransactionFunc = async () => {

@@ -213,6 +213,7 @@ class Block {
         this._cancelled = false;
         this._only = false;
         this._watch = false;
+        this._disabled = false;
         this._options = options;
         this.id = generateId(parent);
     }
@@ -356,6 +357,14 @@ class Block {
         for (const i of this.children) {
             i.slow();
         }
+    }
+
+    disable() {
+        this._disabled = true;
+    }
+
+    isDisabled() {
+        return this._disabled === true;
     }
 
     timeout(ms = adone.null) {
@@ -1396,6 +1405,9 @@ export class Engine {
             skip: () => {
                 root.skip();
             },
+            disable: () => {
+                root.disable();
+            },
             timeout: (ms) => root.timeout(ms),
             prefix: (...names) => {
                 for (const name of names) {
@@ -1552,6 +1564,11 @@ export class Engine {
                     err.message = `Error while loading config for this file: ${path}\n${err.message}`;
                     emitter.emit("error", wrapError(err));
                     continue; // ?
+                }
+
+                if (context.root.isDisabled()) {
+                    // the test was disabled by the config
+                    continue;
                 }
 
                 const m = new TestModule(path, {

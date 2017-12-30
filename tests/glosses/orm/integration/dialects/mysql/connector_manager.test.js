@@ -1,10 +1,7 @@
-import Support from "../../support";
+describe("Connection Manager", function () {
+    const { promise, orm } = adone;
+    const { type } = orm;
 
-const dialect = Support.getTestDialect();
-const { promise, orm } = adone;
-const { type } = orm;
-
-describe("[MYSQL Specific] Connection Manager", { skip: dialect !== "mysql" }, () => {
     it("works correctly after being idle", function () {
         const User = this.sequelize.define("User", { username: type.STRING });
         const s = spy();
@@ -30,7 +27,7 @@ describe("[MYSQL Specific] Connection Manager", { skip: dialect !== "mysql" }, (
 
     it("accepts new queries after shutting down a connection", () => {
         // Create a sequelize instance with fast disconnecting connection
-        const sequelize = Support.createSequelizeInstance({ pool: { idle: 50, max: 1, evict: 10 } });
+        const sequelize = this.createSequelizeInstance({ pool: { idle: 50, max: 1, evict: 10 } });
         const User = sequelize.define("User", { username: type.STRING });
 
         return User
@@ -49,7 +46,7 @@ describe("[MYSQL Specific] Connection Manager", { skip: dialect !== "mysql" }, (
     });
 
     it("should maintain connection", () => {
-        const sequelize = Support.createSequelizeInstance({ pool: { min: 1, max: 1, handleDisconnects: true, idle: 5000 } });
+        const sequelize = this.createSequelizeInstance({ pool: { min: 1, max: 1, handleDisconnects: true, idle: 5000 } });
         const cm = sequelize.connectionManager;
         let conn;
 
@@ -75,7 +72,7 @@ describe("[MYSQL Specific] Connection Manager", { skip: dialect !== "mysql" }, (
     });
 
     it("should work with handleDisconnects before release", () => {
-        const sequelize = Support.createSequelizeInstance({ pool: { max: 1, min: 1, handleDisconnects: true, idle: 5000 } });
+        const sequelize = this.createSequelizeInstance({ pool: { max: 1, min: 1, handleDisconnects: true, idle: 5000 } });
         const cm = sequelize.connectionManager;
         let conn;
 
@@ -105,7 +102,7 @@ describe("[MYSQL Specific] Connection Manager", { skip: dialect !== "mysql" }, (
     });
 
     it("-FOUND_ROWS can be suppressed to get back legacy behavior", async () => {
-        const sequelize = Support.createSequelizeInstance({ dialectOptions: { flags: "" } });
+        const sequelize = this.createSequelizeInstance({ dialectOptions: { flags: "" } });
         const User = sequelize.define("User", { username: type.STRING });
 
         await User.sync({ force: true });
@@ -120,7 +117,7 @@ describe("[MYSQL Specific] Connection Manager", { skip: dialect !== "mysql" }, (
     });
 
     it("should work with handleDisconnects", () => {
-        const sequelize = Support.createSequelizeInstance({ pool: { min: 1, max: 1, handleDisconnects: true, idle: 5000 } });
+        const sequelize = this.createSequelizeInstance({ pool: { min: 1, max: 1, handleDisconnects: true, idle: 5000 } });
         const cm = sequelize.connectionManager;
         let conn;
 

@@ -1,17 +1,13 @@
-import Support from "../../support";
-
-const { orm } = adone;
-const { type } = orm;
-const { Model } = adone.private(orm);
-
-const util = require("util");
-const expectsql = Support.expectsql;
-const current = Support.sequelize;
-const sql = current.dialect.QueryGenerator;
-
 // Notice: [] will be replaced by dialect specific tick/quote character when there is not dialect specific expectation but only a default expectation
+describe("select", function () {
+    const { orm, std: { util } } = adone;
+    const { type } = orm;
+    const { Model } = adone.private(orm);
 
-describe(Support.getTestDialectTeaser("SQL"), () => {
+    const expectsql = this.expectsql;
+    const current = this.sequelize;
+    const sql = current.dialect.QueryGenerator;
+
     describe("select", () => {
         const testsql = function (options, expectation) {
             const model = options.model;
@@ -73,8 +69,8 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
             }) AS [User];`
         });
 
-        (function () {
-            const User = Support.sequelize.define("user", {
+        (() => {
+            const User = this.sequelize.define("user", {
                 id: {
                     type: type.INTEGER,
                     primaryKey: true,
@@ -82,11 +78,11 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                     field: "id_user"
                 }
             });
-            const Project = Support.sequelize.define("project", {
+            const Project = this.sequelize.define("project", {
                 title: type.STRING
             });
 
-            const ProjectUser = Support.sequelize.define("project_user", {
+            const ProjectUser = this.sequelize.define("project_user", {
                 userId: {
                     type: type.INTEGER,
                     field: "user_id"
@@ -188,10 +184,10 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                     ].join(current.dialect.supports["UNION ALL"] ? " UNION ALL " : " UNION ")
                 }) AS [user] ORDER BY [subquery_order_0] ASC;`
             });
-        }());
+        })();
 
-        (function () {
-            const User = Support.sequelize.define("user", {
+        (() => {
+            const User = this.sequelize.define("user", {
                 id: {
                     type: type.INTEGER,
                     primaryKey: true,
@@ -211,7 +207,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
             {
                 tableName: "users"
             });
-            const Post = Support.sequelize.define("Post", {
+            const Post = this.sequelize.define("Post", {
                 title: type.STRING,
                 userId: {
                     type: type.INTEGER,
@@ -224,7 +220,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
 
             User.Posts = User.hasMany(Post, { foreignKey: "userId", as: "POSTS" });
 
-            const Comment = Support.sequelize.define("Comment", {
+            const Comment = this.sequelize.define("Comment", {
                 title: type.STRING,
                 postId: {
                     type: type.INTEGER,
@@ -285,7 +281,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
                     ["first_name", "firstName"],
                     ["last_name", "lastName"]
                 ],
-                order: [["[last_name]".replace(/\[/g, Support.sequelize.dialect.TICK_CHAR_LEFT).replace(/\]/g, Support.sequelize.dialect.TICK_CHAR_RIGHT), "ASC"]],
+                order: [["[last_name]".replace(/\[/g, this.sequelize.dialect.TICK_CHAR_LEFT).replace(/\]/g, this.sequelize.dialect.TICK_CHAR_RIGHT), "ASC"]],
                 limit: 30,
                 offset: 10,
                 hasMultiAssociation: true, //must be set only for mssql dialect here
@@ -341,14 +337,14 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
         })();
 
         it("include (left outer join)", () => {
-            const User = Support.sequelize.define("User", {
+            const User = this.sequelize.define("User", {
                 name: type.STRING,
                 age: type.INTEGER
             },
             {
                 freezeTableName: true
             });
-            const Post = Support.sequelize.define("Post", {
+            const Post = this.sequelize.define("Post", {
                 title: type.STRING
             },
             {
@@ -373,14 +369,14 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
         });
 
         it("include (subQuery alias)", () => {
-            const User = Support.sequelize.define("User", {
+            const User = this.sequelize.define("User", {
                 name: type.STRING,
                 age: type.INTEGER
             },
             {
                 freezeTableName: true
             });
-            const Post = Support.sequelize.define("Post", {
+            const Post = this.sequelize.define("Post", {
                 title: type.STRING
             },
             {
@@ -416,7 +412,7 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
         });
 
         it("properly stringify IN values as per field definition", () => {
-            const User = Support.sequelize.define("User", {
+            const User = this.sequelize.define("User", {
                 name: type.STRING,
                 age: type.INTEGER,
                 data: type.BLOB
@@ -464,14 +460,14 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
         });
 
         it("include (left outer join)", () => {
-            const User = Support.sequelize.define("User", {
+            const User = this.sequelize.define("User", {
                 name: type.STRING,
                 age: type.INTEGER
             },
             {
                 freezeTableName: true
             });
-            const Post = Support.sequelize.define("Post", {
+            const Post = this.sequelize.define("Post", {
                 title: type.STRING
             },
             {
@@ -498,20 +494,20 @@ describe(Support.getTestDialectTeaser("SQL"), () => {
 
 
         it("nested include (left outer join)", () => {
-            const User = Support.sequelize.define("User", {
+            const User = this.sequelize.define("User", {
                 name: type.STRING,
                 age: type.INTEGER
             },
             {
                 freezeTableName: true
             });
-            const Post = Support.sequelize.define("Post", {
+            const Post = this.sequelize.define("Post", {
                 title: type.STRING
             },
             {
                 freezeTableName: true
             });
-            const Comment = Support.sequelize.define("Comment", {
+            const Comment = this.sequelize.define("Comment", {
                 title: type.STRING
             },
             {

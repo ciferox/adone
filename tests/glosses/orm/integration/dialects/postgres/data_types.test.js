@@ -1,8 +1,6 @@
-import Support from "../../support";
+describe("Data Types", function () {
+    const dialect = this.getTestDialect();
 
-const dialect = Support.getTestDialect();
-
-describe("[POSTGRES Specific] Data Types", { skip: dialect !== "postgres" }, () => {
     adone.private(adone.orm).dialect.postgres; // load postgres just to be sure the types are defined
 
     const { type } = adone.orm;

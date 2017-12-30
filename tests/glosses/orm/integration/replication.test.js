@@ -1,11 +1,9 @@
-import Support from "./support";
+describe("replication", function () {
+    const { orm } = adone;
+    const { type } = orm;
 
-const { orm } = adone;
-const { type } = orm;
+    const dialect = this.getTestDialect();
 
-const dialect = Support.getTestDialect();
-
-describe(Support.getTestDialectTeaser("Replication"), { skip: dialect === "sqlite" }, function () {
     if (dialect === "sqlite") {
         return;
     }
@@ -17,10 +15,10 @@ describe(Support.getTestDialectTeaser("Replication"), { skip: dialect === "sqlit
     beforeEach(() => {
         sandbox = adone.shani.util.sandbox.create();
 
-        this.sequelize = Support.getSequelizeInstance(null, null, null, {
+        this.sequelize = this.getSequelizeInstance(null, null, null, {
             replication: {
-                write: Support.getConnectionOptions(),
-                read: [Support.getConnectionOptions()]
+                write: this.getConnectionOptions(),
+                read: [this.getConnectionOptions()]
             }
         });
 

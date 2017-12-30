@@ -1,9 +1,6 @@
-import Support from "../../../support";
+describe("ForeignKeyConstraintError - error message parsing", function () {
+    const queryProto = this.sequelize.dialect.Query.prototype;
 
-const dialect = Support.getTestDialect();
-const queryProto = Support.sequelize.dialect.Query.prototype;
-
-describe("[MYSQL Specific] ForeignKeyConstraintError - error message parsing", { skip: dialect !== "mysql" }, () => {
     it("FK Errors with ` quotation char are parsed correctly", () => {
         const fakeErr = new Error("Cannot delete or update a parent row: a foreign key constraint fails (`table`.`brothers`, CONSTRAINT `brothers_ibfk_1` FOREIGN KEY (`personId`) REFERENCES `people` (`id`) ON UPDATE CASCADE).");
 
@@ -11,7 +8,7 @@ describe("[MYSQL Specific] ForeignKeyConstraintError - error message parsing", {
 
         const parsedErr = queryProto.formatError(fakeErr);
 
-        expect(parsedErr).to.be.instanceOf(Support.sequelize.ForeignKeyConstraintError);
+        expect(parsedErr).to.be.instanceOf(this.sequelize.ForeignKeyConstraintError);
         expect(parsedErr.parent).to.equal(fakeErr);
         expect(parsedErr.reltype).to.equal("parent");
         expect(parsedErr.table).to.equal("people");
@@ -27,7 +24,7 @@ describe("[MYSQL Specific] ForeignKeyConstraintError - error message parsing", {
 
         const parsedErr = queryProto.formatError(fakeErr);
 
-        expect(parsedErr).to.be.instanceOf(Support.sequelize.ForeignKeyConstraintError);
+        expect(parsedErr).to.be.instanceOf(this.sequelize.ForeignKeyConstraintError);
         expect(parsedErr.parent).to.equal(fakeErr);
         expect(parsedErr.reltype).to.equal("parent");
         expect(parsedErr.table).to.equal("people");

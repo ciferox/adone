@@ -1,9 +1,7 @@
-import Support from "../support";
+describe("updateAttributes", () => {
+    const { orm } = adone;
+    const { type } = orm;
 
-const { orm } = adone;
-const { type } = orm;
-
-describe(Support.getTestDialectTeaser("Hooks"), () => {
     beforeEach(function () {
         this.User = this.sequelize.define("User", {
             username: {
@@ -18,149 +16,147 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
         return this.sequelize.sync({ force: true });
     });
 
-    describe("#updateAttributes", () => {
-        describe("on success", () => {
-            it("should run hooks", function () {
-                const beforeHook = spy();
-                const afterHook = spy();
-                const beforeSave = spy();
-                const afterSave = spy();
+    describe("on success", () => {
+        it("should run hooks", function () {
+            const beforeHook = spy();
+            const afterHook = spy();
+            const beforeSave = spy();
+            const afterSave = spy();
 
-                this.User.beforeUpdate(beforeHook);
-                this.User.afterUpdate(afterHook);
-                this.User.beforeSave(beforeSave);
-                this.User.afterSave(afterSave);
+            this.User.beforeUpdate(beforeHook);
+            this.User.afterUpdate(afterHook);
+            this.User.beforeSave(beforeSave);
+            this.User.afterSave(afterSave);
 
-                return this.User.create({ username: "Toni", mood: "happy" }).then((user) => {
-                    return user.updateAttributes({ username: "Chong" }).then((user) => {
-                        expect(beforeHook).to.have.been.calledOnce;
-                        expect(afterHook).to.have.been.calledOnce;
-                        expect(beforeSave).to.have.been.calledTwice;
-                        expect(afterSave).to.have.been.calledTwice;
-                        expect(user.username).to.equal("Chong");
-                    });
+            return this.User.create({ username: "Toni", mood: "happy" }).then((user) => {
+                return user.updateAttributes({ username: "Chong" }).then((user) => {
+                    expect(beforeHook).to.have.been.calledOnce;
+                    expect(afterHook).to.have.been.calledOnce;
+                    expect(beforeSave).to.have.been.calledTwice;
+                    expect(afterSave).to.have.been.calledTwice;
+                    expect(user.username).to.equal("Chong");
                 });
             });
         });
+    });
 
-        describe("on error", () => {
-            it("should return an error from before", async function () {
-                const beforeHook = spy();
-                const afterHook = spy();
-                const beforeSave = spy();
-                const afterSave = spy();
+    describe("on error", () => {
+        it("should return an error from before", async function () {
+            const beforeHook = spy();
+            const afterHook = spy();
+            const beforeSave = spy();
+            const afterSave = spy();
 
-                this.User.beforeUpdate(() => {
-                    beforeHook();
-                    throw new Error("Whoops!");
-                });
-                this.User.afterUpdate(afterHook);
-                this.User.beforeSave(beforeSave);
-                this.User.afterSave(afterSave);
+            this.User.beforeUpdate(() => {
+                beforeHook();
+                throw new Error("Whoops!");
+            });
+            this.User.afterUpdate(afterHook);
+            this.User.beforeSave(beforeSave);
+            this.User.afterSave(afterSave);
 
-                const user = await this.User.create({ username: "Toni", mood: "happy" });
-                await assert.throws(async () => {
-                    await user.updateAttributes({ username: "Chong" });
-                });
-                expect(beforeHook).to.have.been.calledOnce;
-                expect(beforeSave).to.have.been.calledOnce;
-                expect(afterHook).not.to.have.been.called;
-                expect(afterSave).to.have.been.calledOnce;
+            const user = await this.User.create({ username: "Toni", mood: "happy" });
+            await assert.throws(async () => {
+                await user.updateAttributes({ username: "Chong" });
+            });
+            expect(beforeHook).to.have.been.calledOnce;
+            expect(beforeSave).to.have.been.calledOnce;
+            expect(afterHook).not.to.have.been.called;
+            expect(afterSave).to.have.been.calledOnce;
+        });
+
+        it("should return an error from after", async function () {
+            const beforeHook = spy();
+            const afterHook = spy();
+            const beforeSave = spy();
+            const afterSave = spy();
+
+            this.User.beforeUpdate(beforeHook);
+            this.User.afterUpdate(() => {
+                afterHook();
+                throw new Error("Whoops!");
+            });
+            this.User.beforeSave(beforeSave);
+            this.User.afterSave(afterSave);
+
+            const user = await this.User.create({ username: "Toni", mood: "happy" });
+
+            await assert.throws(async () => {
+                await user.updateAttributes({ username: "Chong" });
             });
 
-            it("should return an error from after", async function () {
-                const beforeHook = spy();
-                const afterHook = spy();
-                const beforeSave = spy();
-                const afterSave = spy();
+            expect(beforeHook).to.have.been.calledOnce;
+            expect(afterHook).to.have.been.calledOnce;
+            expect(beforeSave).to.have.been.calledTwice;
+            expect(afterSave).to.have.been.calledOnce;
+        });
+    });
 
-                this.User.beforeUpdate(beforeHook);
-                this.User.afterUpdate(() => {
-                    afterHook();
-                    throw new Error("Whoops!");
-                });
-                this.User.beforeSave(beforeSave);
-                this.User.afterSave(afterSave);
+    describe("preserves changes to instance", () => {
+        it("beforeValidate", function () {
 
-                const user = await this.User.create({ username: "Toni", mood: "happy" });
+            this.User.beforeValidate((user) => {
+                user.mood = "happy";
+            });
 
-                await assert.throws(async () => {
-                    await user.updateAttributes({ username: "Chong" });
-                });
-
-                expect(beforeHook).to.have.been.calledOnce;
-                expect(afterHook).to.have.been.calledOnce;
-                expect(beforeSave).to.have.been.calledTwice;
-                expect(afterSave).to.have.been.calledOnce;
+            return this.User.create({ username: "fireninja", mood: "invalid" }).then((user) => {
+                return user.updateAttributes({ username: "hero" });
+            }).then((user) => {
+                expect(user.username).to.equal("hero");
+                expect(user.mood).to.equal("happy");
             });
         });
 
-        describe("preserves changes to instance", () => {
-            it("beforeValidate", function () {
+        it("afterValidate", function () {
 
-                this.User.beforeValidate((user) => {
-                    user.mood = "happy";
-                });
-
-                return this.User.create({ username: "fireninja", mood: "invalid" }).then((user) => {
-                    return user.updateAttributes({ username: "hero" });
-                }).then((user) => {
-                    expect(user.username).to.equal("hero");
-                    expect(user.mood).to.equal("happy");
-                });
+            this.User.afterValidate((user) => {
+                user.mood = "sad";
             });
 
-            it("afterValidate", function () {
+            return this.User.create({ username: "fireninja", mood: "nuetral" }).then((user) => {
+                return user.updateAttributes({ username: "spider" });
+            }).then((user) => {
+                expect(user.username).to.equal("spider");
+                expect(user.mood).to.equal("sad");
+            });
+        });
 
-                this.User.afterValidate((user) => {
-                    user.mood = "sad";
-                });
+        it("beforeSave", function () {
+            let hookCalled = 0;
 
-                return this.User.create({ username: "fireninja", mood: "nuetral" }).then((user) => {
-                    return user.updateAttributes({ username: "spider" });
-                }).then((user) => {
-                    expect(user.username).to.equal("spider");
-                    expect(user.mood).to.equal("sad");
-                });
+            this.User.beforeSave((user) => {
+                user.mood = "happy";
+                hookCalled++;
             });
 
-            it("beforeSave", function () {
-                let hookCalled = 0;
+            return this.User.create({ username: "fireninja", mood: "nuetral" }).then((user) => {
+                return user.updateAttributes({ username: "spider", mood: "sad" });
+            }).then((user) => {
+                expect(user.username).to.equal("spider");
+                expect(user.mood).to.equal("happy");
+                expect(hookCalled).to.equal(2);
+            });
+        });
 
-                this.User.beforeSave((user) => {
-                    user.mood = "happy";
-                    hookCalled++;
-                });
+        it("beforeSave with beforeUpdate", function () {
+            let hookCalled = 0;
 
-                return this.User.create({ username: "fireninja", mood: "nuetral" }).then((user) => {
-                    return user.updateAttributes({ username: "spider", mood: "sad" });
-                }).then((user) => {
-                    expect(user.username).to.equal("spider");
-                    expect(user.mood).to.equal("happy");
-                    expect(hookCalled).to.equal(2);
-                });
+            this.User.beforeUpdate((user) => {
+                user.mood = "sad";
+                hookCalled++;
             });
 
-            it("beforeSave with beforeUpdate", function () {
-                let hookCalled = 0;
+            this.User.beforeSave((user) => {
+                user.mood = "happy";
+                hookCalled++;
+            });
 
-                this.User.beforeUpdate((user) => {
-                    user.mood = "sad";
-                    hookCalled++;
-                });
-
-                this.User.beforeSave((user) => {
-                    user.mood = "happy";
-                    hookCalled++;
-                });
-
-                return this.User.create({ username: "akira" }).then((user) => {
-                    return user.updateAttributes({ username: "spider", mood: "sad" });
-                }).then((user) => {
-                    expect(user.mood).to.equal("happy");
-                    expect(user.username).to.equal("spider");
-                    expect(hookCalled).to.equal(3);
-                });
+            return this.User.create({ username: "akira" }).then((user) => {
+                return user.updateAttributes({ username: "spider", mood: "sad" });
+            }).then((user) => {
+                expect(user.mood).to.equal("happy");
+                expect(user.username).to.equal("spider");
+                expect(hookCalled).to.equal(3);
             });
         });
     });

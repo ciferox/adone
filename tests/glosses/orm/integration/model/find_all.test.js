@@ -1,14 +1,12 @@
-import Support from "../support";
-import config from "../../config/config";
+describe("findAll", function () {
+    const { promise } = adone;
+    const { vendor: { lodash: _ } } = adone;
+    const { orm } = adone;
+    const { type } = orm;
+    const dialect = this.getTestDialect();
+    const current = this.sequelize;
+    const config = this.config;
 
-const { promise } = adone;
-const { vendor: { lodash: _ } } = adone;
-const { orm } = adone;
-const { type } = orm;
-const dialect = Support.getTestDialect();
-const current = Support.sequelize;
-
-describe(Support.getTestDialectTeaser("Model"), () => {
     beforeEach(function () {
         this.User = this.sequelize.define("User", {
             username: type.STRING,
@@ -26,7 +24,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
     describe("findAll", () => {
         if (current.dialect.supports.transactions) {
             it("supports transactions", async function () {
-                const sequelize = await Support.prepareTransactionTest(this.sequelize);
+                const sequelize = await this.prepareTransactionTest(this.sequelize);
                 const User = sequelize.define("User", { username: type.STRING });
 
                 await User.sync({ force: true });
@@ -1423,7 +1421,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
         if (current.dialect.supports.transactions) {
             it("supports transactions", async function () {
-                const sequelize = await Support.prepareTransactionTest(this.sequelize);
+                const sequelize = await this.prepareTransactionTest(this.sequelize);
                 const User = sequelize.define("User", { username: type.STRING });
 
                 await User.sync({ force: true });
@@ -1544,7 +1542,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
 
         if (current.dialect.supports.transactions) {
             it("supports transactions", async function () {
-                const sequelize = await Support.prepareTransactionTest(this.sequelize);
+                const sequelize = await this.prepareTransactionTest(this.sequelize);
                 const User = sequelize.define("User", { username: type.STRING });
                 await User.sync({ force: true });
                 const t = await sequelize.transaction();

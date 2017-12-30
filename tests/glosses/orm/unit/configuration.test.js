@@ -1,9 +1,7 @@
-import Support from "../support";
+describe("configuration", function () {
+    const { orm } = adone;
+    const dialect = this.getTestDialect();
 
-const { orm } = adone;
-const dialect = Support.getTestDialect();
-
-describe("Sequelize", () => {
     describe("dialect is required", () => {
         it("throw error when no dialect is supplied", () => {
             expect(() => {
@@ -67,7 +65,7 @@ describe("Sequelize", () => {
         });
 
         describe("sqllite path inititalization", () => {
-            const current = Support.sequelize;
+            const current = this.sequelize;
             if (current.dialect.name === "sqlite") {
                 it("should accept relative paths for sqlite", () => {
                     const sequelize = orm.create("sqlite:subfolder/dbname.db");

@@ -1,6 +1,4 @@
-import Support from "../support";
-
-describe(Support.getTestDialectTeaser("Alias"), () => {
+describe("alias", () => {
     it("should uppercase the first letter in alias getter, but not in eager loading", async function () {
         const User = this.sequelize.define("user", {});
         const Task = this.sequelize.define("task", {});

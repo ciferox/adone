@@ -1,9 +1,7 @@
-import Support from "../../support";
+describe("belongsTo", function () {
+    const current = this.sequelize;
+    const { AssociationError } = adone.orm;
 
-const current = Support.sequelize;
-const { AssociationError } = adone.orm;
-
-describe(Support.getTestDialectTeaser("belongsTo"), () => {
     it("should throw an AssociationError when two associations have the same alias", () => {
         const User = current.define("User");
         const Task = current.define("Task");

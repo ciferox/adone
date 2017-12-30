@@ -1,15 +1,18 @@
-import Support from "../support";
+describe("schema", function () {
+    const { orm } = adone;
+    const { type } = orm;
+    const current = this.sequelize;
+    const SCHEMA_ONE = "schema_one";
+    const SCHEMA_TWO = "schema_two";
 
-const { orm } = adone;
-const { type } = orm;
-const current = Support.sequelize;
-const SCHEMA_ONE = "schema_one";
-const SCHEMA_TWO = "schema_two";
+    let locationId;
 
-let locationId;
+    if (!current.dialect.supports.schemas) {
+        return;
+    }
 
-describe(Support.getTestDialectTeaser("Model"), { skip: !current.dialect.supports.schemas }, () => {
     describe("global schema", () => {
+
         before(function () {
             current.options.schema = null;
             this.RestaurantOne = current.define("restaurant", {

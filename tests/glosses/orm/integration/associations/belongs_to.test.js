@@ -1,10 +1,8 @@
-import Support from "../support";
+describe("belongsTo", function () {
+    const { orm } = adone;
+    const { type } = orm;
+    const current = this.sequelize;
 
-const { orm } = adone;
-const { type } = orm;
-const current = Support.sequelize;
-
-describe(Support.getTestDialectTeaser("BelongsTo"), () => {
     describe("Model.associations", () => {
         it("should store all assocations when associting to the same table multiple times", function () {
             const User = this.sequelize.define("User", {});
@@ -59,7 +57,7 @@ describe(Support.getTestDialectTeaser("BelongsTo"), () => {
 
         if (current.dialect.supports.transactions) {
             it("supports transactions", function () {
-                return Support.prepareTransactionTest(this.sequelize).then((sequelize) => {
+                return this.prepareTransactionTest(this.sequelize).then((sequelize) => {
                     const User = sequelize.define("User", { username: type.STRING });
                     const Group = sequelize.define("Group", { name: type.STRING });
 
@@ -132,7 +130,7 @@ describe(Support.getTestDialectTeaser("BelongsTo"), () => {
 
         if (current.dialect.supports.transactions) {
             it("supports transactions", function () {
-                return Support.prepareTransactionTest(this.sequelize).then((sequelize) => {
+                return this.prepareTransactionTest(this.sequelize).then((sequelize) => {
                     const User = sequelize.define("User", { username: type.STRING });
                     const Group = sequelize.define("Group", { name: type.STRING });
 
@@ -354,7 +352,7 @@ describe(Support.getTestDialectTeaser("BelongsTo"), () => {
 
         if (current.dialect.supports.transactions) {
             it("supports transactions", function () {
-                return Support.prepareTransactionTest(this.sequelize).then((sequelize) => {
+                return this.prepareTransactionTest(this.sequelize).then((sequelize) => {
                     const User = sequelize.define("User", { username: type.STRING });
                     const Group = sequelize.define("Group", { name: type.STRING });
 
@@ -559,7 +557,7 @@ describe(Support.getTestDialectTeaser("BelongsTo"), () => {
         }
 
         // NOTE: mssql does not support changing an autoincrement primary key
-        if (Support.getTestDialect() !== "mssql") {
+        if (this.getTestDialect() !== "mssql") {
             it("can cascade updates", function () {
                 const Task = this.sequelize.define("Task", { title: type.STRING });
                 const User = this.sequelize.define("User", { username: type.STRING });
@@ -790,97 +788,98 @@ describe(Support.getTestDialectTeaser("BelongsTo"), () => {
                 .throw("Naming collision between attribute 'person' and association 'person' on model car. To remedy this, change either foreignKey or as in your association definition");
         });
     });
-});
 
-describe("Association", () => {
-    it("should set foreignKey on foreign table", function () {
-        const Mail = this.sequelize.define("mail", {}, { timestamps: false });
-        const Entry = this.sequelize.define("entry", {}, { timestamps: false });
-        const User = this.sequelize.define("user", {}, { timestamps: false });
-        Entry.belongsTo(User, { as: "owner", foreignKey: { name: "ownerId", allowNull: false } });
-        Entry.belongsTo(Mail, {
-            as: "mail",
-            foreignKey: {
-                name: "mailId",
-                allowNull: false
-            }
-        });
-        Mail.belongsToMany(User, {
-            as: "recipients",
-            through: "MailRecipients",
-            otherKey: {
-                name: "recipientId",
-                allowNull: false
-            },
-            foreignKey: {
-                name: "mailId",
-                allowNull: false
-            },
-            timestamps: false
-        });
-        Mail.hasMany(Entry, {
-            as: "entries",
-            foreignKey: {
-                name: "mailId",
-                allowNull: false
-            }
-        });
-        User.hasMany(Entry, {
-            as: "entries",
-            foreignKey: {
-                name: "ownerId",
-                allowNull: false
-            }
-        });
-        return this.sequelize.sync({ force: true })
-            .then(() => User.create({}))
-            .then(() => Mail.create({}))
-            .then((mail) =>
-                Entry.create({ mailId: mail.id, ownerId: 1 })
-                    .then(() => Entry.create({ mailId: mail.id, ownerId: 1 }))
-                    // set recipients
-                    .then(() => mail.setRecipients([1]))
-            )
-            .then(() => Entry.findAndCount({
-                offset: 0,
-                limit: 10,
-                order: [["id", "DESC"]],
-                include: [
-                    {
-                        association: Entry.associations.mail,
-                        include: [
-                            {
-                                association: Mail.associations.recipients,
-                                through: {
-                                    where: {
+    describe("Association", () => {
+        it("should set foreignKey on foreign table", function () {
+            const Mail = this.sequelize.define("mail", {}, { timestamps: false });
+            const Entry = this.sequelize.define("entry", {}, { timestamps: false });
+            const User = this.sequelize.define("user", {}, { timestamps: false });
+            Entry.belongsTo(User, { as: "owner", foreignKey: { name: "ownerId", allowNull: false } });
+            Entry.belongsTo(Mail, {
+                as: "mail",
+                foreignKey: {
+                    name: "mailId",
+                    allowNull: false
+                }
+            });
+            Mail.belongsToMany(User, {
+                as: "recipients",
+                through: "MailRecipients",
+                otherKey: {
+                    name: "recipientId",
+                    allowNull: false
+                },
+                foreignKey: {
+                    name: "mailId",
+                    allowNull: false
+                },
+                timestamps: false
+            });
+            Mail.hasMany(Entry, {
+                as: "entries",
+                foreignKey: {
+                    name: "mailId",
+                    allowNull: false
+                }
+            });
+            User.hasMany(Entry, {
+                as: "entries",
+                foreignKey: {
+                    name: "ownerId",
+                    allowNull: false
+                }
+            });
+            return this.sequelize.sync({ force: true })
+                .then(() => User.create({}))
+                .then(() => Mail.create({}))
+                .then((mail) =>
+                    Entry.create({ mailId: mail.id, ownerId: 1 })
+                        .then(() => Entry.create({ mailId: mail.id, ownerId: 1 }))
+                        // set recipients
+                        .then(() => mail.setRecipients([1]))
+                )
+                .then(() => Entry.findAndCount({
+                    offset: 0,
+                    limit: 10,
+                    order: [["id", "DESC"]],
+                    include: [
+                        {
+                            association: Entry.associations.mail,
+                            include: [
+                                {
+                                    association: Mail.associations.recipients,
+                                    through: {
+                                        where: {
+                                            recipientId: 1
+                                        }
+                                    },
+                                    required: true
+                                }
+                            ],
+                            required: true
+                        }
+                    ]
+                })).then((result) => {
+                    expect(result.count).to.equal(2);
+                    expect(result.rows[0].get({ plain: true })).to.deep.equal(
+                        {
+                            id: 2,
+                            ownerId: 1,
+                            mailId: 1,
+                            mail: {
+                                id: 1,
+                                recipients: [{
+                                    id: 1,
+                                    MailRecipients: {
+                                        mailId: 1,
                                         recipientId: 1
                                     }
-                                },
-                                required: true
+                                }]
                             }
-                        ],
-                        required: true
-                    }
-                ]
-            })).then((result) => {
-                expect(result.count).to.equal(2);
-                expect(result.rows[0].get({ plain: true })).to.deep.equal(
-                    {
-                        id: 2,
-                        ownerId: 1,
-                        mailId: 1,
-                        mail: {
-                            id: 1,
-                            recipients: [{
-                                id: 1,
-                                MailRecipients: {
-                                    mailId: 1,
-                                    recipientId: 1
-                                }
-                            }]
                         }
-                    }
-                );
-            });
+                    );
+                });
+        });
     });
 });
+

@@ -1,12 +1,7 @@
-import Support from "../../support";
+describe("DAO", () => {
+    const { orm } = adone;
+    const { type } = orm;
 
-const dialect = Support.getTestDialect();
-const { orm } = adone;
-const { type } = orm;
-
-describe("[POSTGRES Specific] DAO", {
-    skip: !/^postgres/.test(dialect)
-}, () => {
     beforeEach(function () {
         this.sequelize.options.quoteIdentifiers = true;
         this.User = this.sequelize.define("User", {

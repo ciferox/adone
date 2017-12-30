@@ -1,10 +1,7 @@
-import Support from "../../support";
+describe("Query Queue", () => {
+    const { orm } = adone;
+    const { type } = orm;
 
-const { orm } = adone;
-const { type } = orm;
-const dialect = Support.getTestDialect();
-
-describe("[MSSQL Specific] Query Queue", { skip: !/^mssql/.test(dialect) }, () => {
     beforeEach(function () {
         const User = this.User = this.sequelize.define("User", {
             username: type.STRING

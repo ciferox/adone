@@ -1,11 +1,9 @@
-import Support from "../../../support";
+describe("query", function () {
+    const { orm } = adone;
+    const { type } = orm;
+    const { Query } = adone.private(adone.orm).dialect.abstract;
+    const current = this.sequelize;
 
-const { orm } = adone;
-const { type } = orm;
-const { Query } = adone.private(adone.orm).dialect.abstract;
-const current = Support.sequelize;
-
-describe("[ABSTRACT]", () => {
     describe("_groupJoinData", () => {
 
         it("should hash second nested set correctly, when has multiple primary keys and one is a Buffer", () => {

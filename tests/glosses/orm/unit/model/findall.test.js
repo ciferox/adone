@@ -1,10 +1,8 @@
-import Support from "../../support";
+describe("findAll", function () {
+    const current = this.sequelize;
+    const { orm } = adone;
+    const { type } = orm;
 
-const current = Support.sequelize;
-const { orm } = adone;
-const { type } = orm;
-
-describe(Support.getTestDialectTeaser("Model"), () => {
     describe("warnOnInvalidOptions", function () {
         beforeEach(() => {
             this.loggerSpy = spy(orm.util, "warn");
@@ -34,7 +32,7 @@ describe(Support.getTestDialectTeaser("Model"), () => {
         });
     });
 
-    describe("method findAll", function () {
+    describe("findAll", function () {
         const Model = current.define("model", {
             name: type.STRING
         }, { timestamps: false });

@@ -1,14 +1,11 @@
-import Support from "../support";
+describe("create", function () {
+    const { orm, vendor: { lodash: _ } } = adone;
+    const { type } = orm;
+    const dialect = this.getTestDialect();
+    const current = this.sequelize;
 
-const { vendor: { lodash: _ } } = adone;
-const { orm } = adone;
-const { type } = orm;
-const dialect = Support.getTestDialect();
-const current = Support.sequelize;
-
-describe(Support.getTestDialectTeaser("Model"), () => {
     beforeEach(async function () {
-        this.sequelize = await Support.prepareTransactionTest(this.sequelize);
+        this.sequelize = await this.prepareTransactionTest(this.sequelize);
 
         this.User = this.sequelize.define("User", {
             username: type.STRING,

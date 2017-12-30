@@ -1,12 +1,10 @@
-import Support from "../../../support";
+describe("QueryGenerator", function () {
+    const { vendor: { lodash: _ } } = adone;
+    const expectsql = this.expectsql;
+    const current = this.sequelize;
+    const { operator } = adone.orm;
+    const { QueryGenerator } = adone.private(adone.orm).dialect.mssql;
 
-const { vendor: { lodash: _ } } = adone;
-const expectsql = Support.expectsql;
-const current = Support.sequelize;
-const { operator } = adone.orm;
-const { QueryGenerator } = adone.private(adone.orm).dialect.mssql;
-
-describe("[MSSQL Specific] QueryGenerator", { skip: current.dialect.name !== "mssql" }, () => {
     // Dialect would normally be set by the query interface that instantiates the query-generator, but here we specify it explicitly
     QueryGenerator._dialect = current.dialect;
     //Aliases might not be needed here since it doesn't seem like this test uses any operators

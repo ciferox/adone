@@ -1,15 +1,13 @@
-import Support from "../support";
+describe("schema", function () {
+    const { promise } = adone;
+    const { orm } = adone;
+    const { type } = orm;
+    const dialect = this.getTestDialect();
 
-const { promise } = adone;
-const { orm } = adone;
-const { type } = orm;
-const dialect = Support.getTestDialect();
+    const sortById = function (a, b) {
+        return a.id < b.id ? -1 : 1;
+    };
 
-const sortById = function (a, b) {
-    return a.id < b.id ? -1 : 1;
-};
-
-describe(Support.getTestDialectTeaser("Includes with schemas"), () => {
     describe("findAll", () => {
         beforeEach(function () {
             const self = this;

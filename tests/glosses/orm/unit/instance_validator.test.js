@@ -1,13 +1,11 @@
-import Support from "../support";
+describe("instance validator", function () {
+    const InstanceValidator = adone.private(adone.orm).InstanceValidator;
+    const ValidationError = adone.orm.x.ValidationError;
+    const { orm } = adone;
+    const { type } = orm;
 
-const InstanceValidator = adone.private(adone.orm).InstanceValidator;
-const ValidationError = adone.orm.x.ValidationError;
-const { orm } = adone;
-const { type } = orm;
-
-describe(Support.getTestDialectTeaser("InstanceValidator"), function () {
     beforeEach(() => {
-        this.User = Support.sequelize.define("user", {
+        this.User = this.sequelize.define("user", {
             fails: {
                 type: type.BOOLEAN,
                 validate: {
@@ -65,7 +63,7 @@ describe(Support.getTestDialectTeaser("InstanceValidator"), function () {
         });
 
         it("has a useful default error message for not null validation failures", async () => {
-            const User = Support.sequelize.define("user", {
+            const User = this.sequelize.define("user", {
                 name: {
                     type: type.STRING,
                     allowNull: false

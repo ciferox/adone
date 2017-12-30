@@ -1,15 +1,14 @@
-import Support from "../../support";
+describe("removeConstraint", function () {
+    const current = this.sequelize;
+    const expectsql = this.expectsql;
+    const sql = current.dialect.QueryGenerator;
 
-const current = Support.sequelize;
-const expectsql = Support.expectsql;
-const sql = current.dialect.QueryGenerator;
-
-describe(Support.getTestDialectTeaser("SQL"), { skip: !current.dialect.supports.constraints.dropConstraint }, () => {
-    describe("removeConstraint", () => {
-        it("naming", () => {
-            expectsql(sql.removeConstraintQuery("myTable", "constraint_name"), {
-                default: "ALTER TABLE [myTable] DROP CONSTRAINT [constraint_name]"
-            });
+    if (!current.dialect.supports.constraints.dropConstraint) {
+        return;
+    }
+    it("naming", () => {
+        expectsql(sql.removeConstraintQuery("myTable", "constraint_name"), {
+            default: "ALTER TABLE [myTable] DROP CONSTRAINT [constraint_name]"
         });
     });
 });

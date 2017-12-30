@@ -1,9 +1,6 @@
-import Support from "../support";
-
-const { orm } = adone;
-const { type } = orm;
-
-describe(Support.getTestDialectTeaser("Paranoid"), () => {
+describe("paranoid", () => {
+    const { orm } = adone;
+    const { type } = orm;
 
     beforeEach(function ( ) {
         const S = this.sequelize;

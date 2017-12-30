@@ -1,10 +1,8 @@
-import Support from "../support";
+describe("hasOne", function () {
+    const { orm } = adone;
+    const { type } = orm;
+    const current = this.sequelize;
 
-const { orm } = adone;
-const { type } = orm;
-const current = Support.sequelize;
-
-describe(Support.getTestDialectTeaser("HasOne"), () => {
     describe("Model.associations", () => {
         it("should store all assocations when associting to the same table multiple times", function () {
             const User = this.sequelize.define("User", {});
@@ -59,7 +57,7 @@ describe(Support.getTestDialectTeaser("HasOne"), () => {
     describe("getAssocation", () => {
         if (current.dialect.supports.transactions) {
             it("supports transactions", function () {
-                return Support.prepareTransactionTest(this.sequelize).then((sequelize) => {
+                return this.prepareTransactionTest(this.sequelize).then((sequelize) => {
                     const User = sequelize.define("User", { username: type.STRING });
                     const Group = sequelize.define("Group", { name: type.STRING });
 
@@ -119,7 +117,7 @@ describe(Support.getTestDialectTeaser("HasOne"), () => {
     describe("setAssociation", () => {
         if (current.dialect.supports.transactions) {
             it("supports transactions", function () {
-                return Support.prepareTransactionTest(this.sequelize).then((sequelize) => {
+                return this.prepareTransactionTest(this.sequelize).then((sequelize) => {
                     const User = sequelize.define("User", { username: type.STRING });
                     const Group = sequelize.define("Group", { name: type.STRING });
 
@@ -302,7 +300,7 @@ describe(Support.getTestDialectTeaser("HasOne"), () => {
 
         if (current.dialect.supports.transactions) {
             it("supports transactions", function () {
-                return Support.prepareTransactionTest(this.sequelize).then((sequelize) => {
+                return this.prepareTransactionTest(this.sequelize).then((sequelize) => {
                     const User = sequelize.define("User", { username: type.STRING });
                     const Group = sequelize.define("Group", { name: type.STRING });
 
@@ -493,7 +491,7 @@ describe(Support.getTestDialectTeaser("HasOne"), () => {
         });
 
         // NOTE: mssql does not support changing an autoincrement primary key
-        if (Support.getTestDialect() !== "mssql") {
+        if (this.getTestDialect() !== "mssql") {
             it("can cascade updates", function () {
                 const Task = this.sequelize.define("Task", { title: type.STRING });
                 const User = this.sequelize.define("User", { username: type.STRING });

@@ -1,11 +1,8 @@
-import Support from "../../support";
-import config from "../../../config/config";
+describe("DAOFactory", function () {
+    const { orm } = adone;
+    const { type } = orm;
+    const config = this.config;
 
-const dialect = Support.getTestDialect();
-const { orm } = adone;
-const { type } = orm;
-
-describe("[MYSQL Specific] DAOFactory", { skip: dialect !== "mysql" }, () => {
     describe("constructor", () => {
         it("handles extended attributes (unique)", function () {
             const User = this.sequelize.define(`User${config.rand()}`, {

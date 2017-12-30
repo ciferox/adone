@@ -1,13 +1,10 @@
-import Support from "../support";
+describe("hooks", function () {
+    const { vendor: { lodash: _ } } = adone;
+    const { orm } = adone;
+    const { type } = orm;
 
-const { vendor: { lodash: _ } } = adone;
-const { orm } = adone;
-const { type } = orm;
-const current = Support.sequelize;
-
-describe(Support.getTestDialectTeaser("Hooks"), () => {
     beforeEach(function () {
-        this.Model = current.define("m");
+        this.Model = this.sequelize.define("m");
     });
 
     describe("arguments", () => {
@@ -25,14 +22,14 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
 
     describe("proxies", function () {
         beforeEach(() => {
-            stub(current, "query").returns(Promise.resolve([{
+            stub(this.sequelize, "query").returns(Promise.resolve([{
                 _previousDataValues: {},
                 dataValues: { id: 1, name: "abc" }
             }]));
         });
 
         afterEach(() => {
-            current.query.restore();
+            this.sequelize.query.restore();
         });
 
         describe("defined by options.hooks", () => {
@@ -41,7 +38,7 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                 this.afterSaveHook = spy();
                 this.afterCreateHook = spy();
 
-                this.Model = current.define("m", {
+                this.Model = this.sequelize.define("m", {
                     name: type.STRING
                 }, {
                     hooks: {
@@ -66,7 +63,7 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                 this.beforeSaveHook = spy();
                 this.afterSaveHook = spy();
 
-                this.Model = current.define("m", {
+                this.Model = this.sequelize.define("m", {
                     name: type.STRING
                 });
 
@@ -87,7 +84,7 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                 this.beforeSaveHook = spy();
                 this.afterSaveHook = spy();
 
-                this.Model = current.define("m", {
+                this.Model = this.sequelize.define("m", {
                     name: type.STRING
                 });
 
@@ -135,7 +132,7 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
             });
 
             it("using define", function () {
-                return current.define("M", {}, {
+                return this.sequelize.define("M", {}, {
                     hooks: {
                         beforeCreate: [this.hook1, this.hook2, this.hook3]
                     }
@@ -143,7 +140,7 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
             });
 
             it("using a mixture", function () {
-                const Model = current.define("M", {}, {
+                const Model = this.sequelize.define("M", {}, {
                     hooks: {
                         beforeCreate: this.hook1
                     }
@@ -193,7 +190,7 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
             it("invokes the global hook", function () {
                 const globalHook = spy();
 
-                current.addHook("beforeUpdate", globalHook);
+                this.sequelize.addHook("beforeUpdate", globalHook);
 
                 return this.Model.runHooks("beforeUpdate").then(() => {
                     expect(globalHook).to.have.been.calledOnce;
@@ -205,15 +202,15 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
                 const globalHookAfter = spy();
                 const localHook = spy();
 
-                current.addHook("beforeUpdate", globalHookBefore);
+                this.sequelize.addHook("beforeUpdate", globalHookBefore);
 
-                const Model = current.define("m", {}, {
+                const Model = this.sequelize.define("m", {}, {
                     hooks: {
                         beforeUpdate: localHook
                     }
                 });
 
-                current.addHook("beforeUpdate", globalHookAfter);
+                this.sequelize.addHook("beforeUpdate", globalHookAfter);
 
                 return Model.runHooks("beforeUpdate").then(() => {
                     expect(globalHookBefore).to.have.been.calledOnce;
@@ -229,7 +226,7 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
         describe("using define hooks", () => {
             beforeEach(function () {
                 this.beforeCreate = spy();
-                this.sequelize = Support.createSequelizeInstance({
+                this.sequelize = this.createSequelizeInstance({
                     define: {
                         hooks: {
                             beforeCreate: this.beforeCreate
@@ -426,7 +423,7 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
             orm.hooks.add("afterInit", "h3", this.hook3);
             orm.hooks.add("afterInit", "h4", this.hook4);
 
-            Support.createSequelizeInstance();
+            this.createSequelizeInstance();
 
             expect(this.hook1).to.have.been.calledOnce;
             expect(this.hook2).to.have.been.calledOnce;
@@ -439,7 +436,7 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
             orm.hooks.remove("afterInit", "h3");
             orm.hooks.remove("afterInit", "h4");
 
-            Support.createSequelizeInstance();
+            this.createSequelizeInstance();
 
             // check if hooks were removed
             expect(this.hook1).to.have.been.calledOnce;
@@ -449,7 +446,7 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
         });
 
         it("runs all beforDefine/afterDefine hooks", function () {
-            const sequelize = Support.createSequelizeInstance();
+            const sequelize = this.createSequelizeInstance();
             sequelize.addHook("beforeDefine", this.hook1);
             sequelize.addHook("beforeDefine", this.hook2);
             sequelize.addHook("afterDefine", this.hook3);

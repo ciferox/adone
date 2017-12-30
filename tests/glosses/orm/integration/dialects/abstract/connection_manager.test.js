@@ -1,17 +1,14 @@
-import Support from "../../support";
-import Config from "../../../config/config";
+describe("Connection Manager", function () {
+    const { vendor: { lodash: _ } } = adone;
+    const { ConnectionManager } = adone.private(adone.orm).dialect.abstract;
 
-const { vendor: { lodash: _ } } = adone;
-const { ConnectionManager } = adone.private(adone.orm).dialect.abstract;
+    const baseConf = this.config[this.getTestDialect()];
+    const poolEntry = {
+        host: baseConf.host,
+        port: baseConf.port,
+        pool: {}
+    };
 
-const baseConf = Config[Support.getTestDialect()];
-const poolEntry = {
-    host: baseConf.host,
-    port: baseConf.port,
-    pool: {}
-};
-
-describe("Connection Manager", () => {
     let sandbox;
 
     beforeEach(() => {
@@ -26,8 +23,8 @@ describe("Connection Manager", () => {
         const options = {
             replication: null
         };
-        const sequelize = Support.createSequelizeInstance(options);
-        const connectionManager = new ConnectionManager(Support.getTestDialect(), sequelize);
+        const sequelize = this.createSequelizeInstance(options);
+        const connectionManager = new ConnectionManager(this.getTestDialect(), sequelize);
 
         const poolSpy = sandbox.spy(adone.util.pool, "create");
         connectionManager.initPools();
@@ -41,8 +38,8 @@ describe("Connection Manager", () => {
                 read: [_.clone(poolEntry), _.clone(poolEntry)]
             }
         };
-        const sequelize = Support.createSequelizeInstance(options);
-        const connectionManager = new ConnectionManager(Support.getTestDialect(), sequelize);
+        const sequelize = this.createSequelizeInstance(options);
+        const connectionManager = new ConnectionManager(this.getTestDialect(), sequelize);
 
         const poolSpy = sandbox.spy(adone.util.pool, "create");
         connectionManager.initPools();
@@ -50,7 +47,7 @@ describe("Connection Manager", () => {
     });
 
     it("should round robin calls to the read pool", () => {
-        if (Support.getTestDialect() === "sqlite") {
+        if (this.getTestDialect() === "sqlite") {
             return;
         }
 
@@ -65,8 +62,8 @@ describe("Connection Manager", () => {
                 read: [slave1, slave2]
             }
         };
-        const sequelize = Support.createSequelizeInstance(options);
-        const connectionManager = new ConnectionManager(Support.getTestDialect(), sequelize);
+        const sequelize = this.createSequelizeInstance(options);
+        const connectionManager = new ConnectionManager(this.getTestDialect(), sequelize);
 
         const resolvedPromise = new Promise((resolve) => {
             resolve({
@@ -111,8 +108,8 @@ describe("Connection Manager", () => {
                 read: [_.clone(poolEntry)]
             }
         };
-        const sequelize = Support.createSequelizeInstance(options);
-        const connectionManager = new ConnectionManager(Support.getTestDialect(), sequelize);
+        const sequelize = this.createSequelizeInstance(options);
+        const connectionManager = new ConnectionManager(this.getTestDialect(), sequelize);
 
         const resolvedPromise = new Promise((resolve) => {
             resolve({
@@ -143,8 +140,8 @@ describe("Connection Manager", () => {
         const options = {
             replication: null
         };
-        const sequelize = Support.createSequelizeInstance(options);
-        const connectionManager = new ConnectionManager(Support.getTestDialect(), sequelize);
+        const sequelize = this.createSequelizeInstance(options);
+        const connectionManager = new ConnectionManager(this.getTestDialect(), sequelize);
 
         connectionManager.initPools();
 

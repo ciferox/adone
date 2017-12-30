@@ -1,10 +1,8 @@
-import Support from "../support";
+describe("self", () => {
+    const { vendor: { lodash: _ } } = adone;
+    const { orm } = adone;
+    const { type } = orm;
 
-const { vendor: { lodash: _ } } = adone;
-const { orm } = adone;
-const { type } = orm;
-
-describe(Support.getTestDialectTeaser("Self"), () => {
     it("supports freezeTableName", function () {
         const Group = this.sequelize.define("Group", {}, {
             tableName: "user_group",

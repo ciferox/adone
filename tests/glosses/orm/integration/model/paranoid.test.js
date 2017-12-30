@@ -1,159 +1,155 @@
-import Support from "../support";
+describe("paranoid", function () {
+    const { orm } = adone;
+    const { type } = orm;
+    const current = this.sequelize;
 
-const { orm } = adone;
-const { type } = orm;
-const current = Support.sequelize;
+    before(function () {
+        this.clock = fakeClock.install();
+    });
 
-describe(Support.getTestDialectTeaser("Model"), () => {
-    describe("paranoid", () => {
-        before(function () {
-            this.clock = fakeClock.install();
+    after(function () {
+        this.clock.uninstall();
+    });
+
+    it("should be able to soft delete with timestamps", function () {
+        const Account = this.sequelize.define("Account", {
+            ownerId: {
+                type: type.INTEGER,
+                allowNull: false,
+                field: "owner_id"
+            },
+            name: {
+                type: type.STRING
+            }
+        }, {
+            paranoid: true,
+            timestamps: true
         });
 
-        after(function () {
-            this.clock.uninstall();
-        });
-
-        it("should be able to soft delete with timestamps", function () {
-            const Account = this.sequelize.define("Account", {
-                ownerId: {
-                    type: type.INTEGER,
-                    allowNull: false,
-                    field: "owner_id"
-                },
-                name: {
-                    type: type.STRING
-                }
-            }, {
-                paranoid: true,
-                timestamps: true
-            });
-
-            return Account.sync({ force: true })
-                .then(() => Account.create({ ownerId: 12 }))
-                .then(() => Account.count())
-                .then((count) => {
-                    expect(count).to.be.equal(1);
-                    return Account.destroy({ where: { ownerId: 12 } })
-                        .then((result) => {
-                            expect(result).to.be.equal(1);
-                        });
-                })
-                .then(() => Account.count())
-                .then((count) => {
-                    expect(count).to.be.equal(0);
-                    return Account.count({ paranoid: false });
-                })
-                .then((count) => {
-                    expect(count).to.be.equal(1);
-                    return Account.restore({ where: { ownerId: 12 } });
-                })
-                .then(() => Account.count())
-                .then((count) => {
-                    expect(count).to.be.equal(1);
-                });
-        });
-
-        it("should be able to soft delete without timestamps", function () {
-            const Account = this.sequelize.define("Account", {
-                ownerId: {
-                    type: type.INTEGER,
-                    allowNull: false,
-                    field: "owner_id"
-                },
-                name: {
-                    type: type.STRING
-                },
-                deletedAt: {
-                    type: type.DATE,
-                    allowNull: true,
-                    field: "deleted_at"
-                }
-            }, {
-                paranoid: true,
-                timestamps: true,
-                deletedAt: "deletedAt",
-                createdAt: false,
-                updatedAt: false
-            });
-
-            return Account.sync({ force: true })
-                .then(() => Account.create({ ownerId: 12 }))
-                .then(() => Account.count())
-                .then((count) => {
-                    expect(count).to.be.equal(1);
-                    return Account.destroy({ where: { ownerId: 12 } });
-                })
-                .then(() => Account.count())
-                .then((count) => {
-                    expect(count).to.be.equal(0);
-                    return Account.count({ paranoid: false });
-                })
-                .then((count) => {
-                    expect(count).to.be.equal(1);
-                    return Account.restore({ where: { ownerId: 12 } });
-                })
-                .then(() => Account.count())
-                .then((count) => {
-                    expect(count).to.be.equal(1);
-                });
-        });
-
-        if (current.dialect.supports.JSON) {
-            describe("JSON", () => {
-                before(function () {
-                    this.Model = this.sequelize.define("Model", {
-                        name: {
-                            type: type.STRING
-                        },
-                        data: {
-                            type: type.JSON
-                        },
-                        deletedAt: {
-                            type: type.DATE,
-                            allowNull: true,
-                            field: "deleted_at"
-                        }
-                    }, {
-                        paranoid: true,
-                        timestamps: true,
-                        deletedAt: "deletedAt"
+        return Account.sync({ force: true })
+            .then(() => Account.create({ ownerId: 12 }))
+            .then(() => Account.count())
+            .then((count) => {
+                expect(count).to.be.equal(1);
+                return Account.destroy({ where: { ownerId: 12 } })
+                    .then((result) => {
+                        expect(result).to.be.equal(1);
                     });
-                });
+            })
+            .then(() => Account.count())
+            .then((count) => {
+                expect(count).to.be.equal(0);
+                return Account.count({ paranoid: false });
+            })
+            .then((count) => {
+                expect(count).to.be.equal(1);
+                return Account.restore({ where: { ownerId: 12 } });
+            })
+            .then(() => Account.count())
+            .then((count) => {
+                expect(count).to.be.equal(1);
+            });
+    });
 
-                beforeEach(function () {
-                    return this.Model.sync({ force: true });
-                });
+    it("should be able to soft delete without timestamps", function () {
+        const Account = this.sequelize.define("Account", {
+            ownerId: {
+                type: type.INTEGER,
+                allowNull: false,
+                field: "owner_id"
+            },
+            name: {
+                type: type.STRING
+            },
+            deletedAt: {
+                type: type.DATE,
+                allowNull: true,
+                field: "deleted_at"
+            }
+        }, {
+            paranoid: true,
+            timestamps: true,
+            deletedAt: "deletedAt",
+            createdAt: false,
+            updatedAt: false
+        });
 
-                it("should soft delete with JSON condition", function () {
-                    return this.Model.bulkCreate([{
-                        name: "One",
+        return Account.sync({ force: true })
+            .then(() => Account.create({ ownerId: 12 }))
+            .then(() => Account.count())
+            .then((count) => {
+                expect(count).to.be.equal(1);
+                return Account.destroy({ where: { ownerId: 12 } });
+            })
+            .then(() => Account.count())
+            .then((count) => {
+                expect(count).to.be.equal(0);
+                return Account.count({ paranoid: false });
+            })
+            .then((count) => {
+                expect(count).to.be.equal(1);
+                return Account.restore({ where: { ownerId: 12 } });
+            })
+            .then(() => Account.count())
+            .then((count) => {
+                expect(count).to.be.equal(1);
+            });
+    });
+
+    if (current.dialect.supports.JSON) {
+        describe("JSON", () => {
+            before(function () {
+                this.Model = this.sequelize.define("Model", {
+                    name: {
+                        type: type.STRING
+                    },
+                    data: {
+                        type: type.JSON
+                    },
+                    deletedAt: {
+                        type: type.DATE,
+                        allowNull: true,
+                        field: "deleted_at"
+                    }
+                }, {
+                    paranoid: true,
+                    timestamps: true,
+                    deletedAt: "deletedAt"
+                });
+            });
+
+            beforeEach(function () {
+                return this.Model.sync({ force: true });
+            });
+
+            it("should soft delete with JSON condition", function () {
+                return this.Model.bulkCreate([{
+                    name: "One",
+                    data: {
+                        field: {
+                            deep: true
+                        }
+                    }
+                }, {
+                    name: "Two",
+                    data: {
+                        field: {
+                            deep: false
+                        }
+                    }
+                }]).then(() => this.Model.destroy({
+                    where: {
                         data: {
                             field: {
                                 deep: true
                             }
                         }
-                    }, {
-                        name: "Two",
-                        data: {
-                            field: {
-                                deep: false
-                            }
-                        }
-                    }]).then(() => this.Model.destroy({
-                        where: {
-                            data: {
-                                field: {
-                                    deep: true
-                                }
-                            }
-                        }
-                    })).then(() => this.Model.findAll()).then((records) => {
-                        expect(records.length).to.equal(1);
-                        expect(records[0].get("name")).to.equal("Two");
-                    });
+                    }
+                })).then(() => this.Model.findAll()).then((records) => {
+                    expect(records.length).to.equal(1);
+                    expect(records[0].get("name")).to.equal("Two");
                 });
             });
-        }
-    });
+        });
+    }
 });

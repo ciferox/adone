@@ -1,12 +1,9 @@
-import Support from "./support";
+describe("DataTypes", function () {
+    const { orm, vendor: { lodash: _ } } = adone;
+    const { type } = orm;
+    const current = this.sequelize;
+    const dialect = this.getTestDialect();
 
-const { vendor: { lodash: _ } } = adone;
-const current = Support.sequelize;
-const { orm } = adone;
-const { type } = orm;
-const dialect = Support.getTestDialect();
-
-describe(Support.getTestDialectTeaser("DataTypes"), () => {
     afterEach(function () {
         // Restore some sanity by resetting all parsers
         switch (dialect) {
@@ -470,7 +467,7 @@ describe(Support.getTestDialectTeaser("DataTypes"), () => {
         const testDate = adone.datetime().format("YYYY-MM-DD");
         const newDate = new Date();
 
-        await Model.sync({ force: true })
+        await Model.sync({ force: true });
         let record = await Model.create({ stamp: testDate });
         expect(typeof record.stamp).to.be.eql("string");
         expect(record.stamp).to.be.eql(testDate);

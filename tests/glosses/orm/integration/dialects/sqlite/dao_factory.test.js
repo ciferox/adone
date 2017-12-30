@@ -1,12 +1,11 @@
-import Support from "../../support";
 
-const { orm } = adone;
-const { type } = orm;
-const dialect = Support.getTestDialect();
-const dbFile = `${__dirname}/test.sqlite`;
-const storages = [dbFile];
+describe("DAOFactory", () => {
+    const { orm } = adone;
+    const { type } = orm;
+    const dbFile = adone.std.path.join(__dirname, "test.sqlite");
 
-describe("[SQLITE Specific] DAOFactory", { skip: dialect !== "sqlite" }, () => {
+    const storages = [dbFile];
+
     after(function () {
         this.sequelize.options.storage = ":memory:";
     });

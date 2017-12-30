@@ -1,15 +1,15 @@
-import Support from "./support";
+describe("timezone", function () {
+    const dialect = this.getTestDialect();
 
-const dialect = Support.getTestDialect();
+    if (dialect === "sqlite") {
+        return; // Sqlite does not support setting timezone
+    }
 
-describe(Support.getTestDialectTeaser("Timezone"), {
-    skip: dialect === "sqlite" // Sqlite does not support setting timezone
-}, () => {
     beforeEach(function () {
-        this.sequelizeWithTimezone = Support.createSequelizeInstance({
+        this.sequelizeWithTimezone = this.createSequelizeInstance({
             timezone: "+07:00"
         });
-        this.sequelizeWithNamedTimezone = Support.createSequelizeInstance({
+        this.sequelizeWithNamedTimezone = this.createSequelizeInstance({
             timezone: "America/New_York"
         });
     });

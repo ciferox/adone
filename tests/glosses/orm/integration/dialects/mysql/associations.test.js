@@ -1,10 +1,7 @@
-import Support from "../../support";
+describe("Associations", () => {
+    const { orm } = adone;
+    const { type } = orm;
 
-const dialect = Support.getTestDialect();
-const { orm } = adone;
-const { type } = orm;
-
-describe("[MYSQL Specific] Associations", { skip: dialect !== "mysql" }, () => {
     describe("many-to-many", () => {
         describe("where tables have the same prefix", () => {
             it("should create a table wp_table1wp_table2s", function () {

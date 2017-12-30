@@ -1,11 +1,7 @@
-import Support from "../../support";
+describe("DAO", () => {
+    const { orm } = adone;
+    const { type } = orm;
 
-const Sequelize = Support.Sequelize;
-const dialect = Support.getTestDialect();
-const { orm } = adone;
-const { type } = orm;
-
-describe("[SQLITE Specific] DAO", { skip: dialect !== "sqlite" }, () => {
     beforeEach(function () {
         this.User = this.sequelize.define("User", {
             username: type.STRING,

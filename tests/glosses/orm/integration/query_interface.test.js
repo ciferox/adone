@@ -1,21 +1,19 @@
-import Support from "./support";
+describe("QueryInterface", function () {
+    const { orm } = adone;
+    const { type } = orm;
 
-const { orm } = adone;
-const { type } = orm;
+    const { vendor: { lodash: _ } } = adone;
+    const dialect = this.getTestDialect();
+    const current = this.sequelize;
+    let count = 0;
 
-const { vendor: { lodash: _ } } = adone;
-const dialect = Support.getTestDialect();
-const current = Support.sequelize;
-let count = 0;
-
-const log = function () {
+    const log = function () {
     // sqlite fires a lot more querys than the other dbs. this is just a simple hack, since i'm lazy
-    if (dialect !== "sqlite" || count === 0) {
-        count++;
-    }
-};
+        if (dialect !== "sqlite" || count === 0) {
+            count++;
+        }
+    };
 
-describe(Support.getTestDialectTeaser("QueryInterface"), () => {
     beforeEach(function () {
         this.sequelize.options.quoteIdenifiers = true;
         this.queryInterface = this.sequelize.getQueryInterface();

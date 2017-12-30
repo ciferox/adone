@@ -1,11 +1,9 @@
-import Support from "../support";
+describe("hasMany", function () {
+    const { vendor: { lodash: _ } } = adone;
+    const { type } = adone.orm;
+    const current = this.sequelize;
+    const dialect = this.getTestDialect();
 
-const { vendor: { lodash: _ } } = adone;
-const { type } = adone.orm;
-const current = Support.sequelize;
-const dialect = Support.getTestDialect();
-
-describe(Support.getTestDialectTeaser("HasMany"), () => {
     describe("Model.associations", () => {
         it("should store all assocations when associting to the same table multiple times", function () {
             const User = this.sequelize.define("User", {});
@@ -349,7 +347,7 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
 
             if (current.dialect.supports.transactions) {
                 it("supports transactions", async function () {
-                    const sequelize = await Support.prepareTransactionTest(this.sequelize);
+                    const sequelize = await this.prepareTransactionTest(this.sequelize);
                     const Article = sequelize.define("Article", { title: type.STRING });
                     const Label = sequelize.define("Label", { text: type.STRING });
 
@@ -435,7 +433,7 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
 
             if (current.dialect.supports.transactions) {
                 it("supports transactions", async function () {
-                    const sequelize = await Support.prepareTransactionTest(this.sequelize);
+                    const sequelize = await this.prepareTransactionTest(this.sequelize);
                     const Article = sequelize.define("Article", { title: type.STRING });
                     const Label = sequelize.define("Label", { text: type.STRING });
 
@@ -504,7 +502,7 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
         describe("setAssociations", () => {
             if (current.dialect.supports.transactions) {
                 it("supports transactions", async function () {
-                    const sequelize = await Support.prepareTransactionTest(this.sequelize);
+                    const sequelize = await this.prepareTransactionTest(this.sequelize);
                     const Article = sequelize.define("Article", { title: type.STRING });
                     const Label = sequelize.define("Label", { text: type.STRING });
 
@@ -572,7 +570,7 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
         describe("addAssociations", () => {
             if (current.dialect.supports.transactions) {
                 it("supports transactions", async function () {
-                    const sequelize = await Support.prepareTransactionTest(this.sequelize);
+                    const sequelize = await this.prepareTransactionTest(this.sequelize);
                     const Article = sequelize.define("Article", { title: type.STRING });
                     const Label = sequelize.define("Label", { text: type.STRING });
                     Article.hasMany(Label);
@@ -712,7 +710,7 @@ describe(Support.getTestDialectTeaser("HasMany"), () => {
 
             if (current.dialect.supports.transactions) {
                 it("supports transactions", async function () {
-                    const sequelize = await Support.prepareTransactionTest(this.sequelize);
+                    const sequelize = await this.prepareTransactionTest(this.sequelize);
                     const Article = sequelize.define("Article", { title: type.STRING });
                     const Label = sequelize.define("Label", { text: type.STRING });
 

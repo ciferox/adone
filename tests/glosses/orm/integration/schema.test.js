@@ -1,9 +1,7 @@
-import Support from "./support";
+describe("schema", () => {
+    const { orm } = adone;
+    const { type } = orm;
 
-const { orm } = adone;
-const { type } = orm;
-
-describe(Support.getTestDialectTeaser("Schema"), () => {
     beforeEach(function () {
         return this.sequelize.createSchema("testschema");
     });

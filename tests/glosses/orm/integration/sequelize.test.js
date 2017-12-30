@@ -1,25 +1,22 @@
-import Support from "./support";
-import config from "../config/config";
-const { is } = adone;
-const { orm } = adone;
-const { type, Transaction } = orm;
+describe("Sequelize", function () {
+    const { is } = adone;
+    const { orm } = adone;
+    const { type, Transaction } = orm;
 
-const { vendor: { lodash: _ } } = adone;
-const dialect = Support.getTestDialect();
-const current = Support.sequelize;
+    const { vendor: { lodash: _ } } = adone;
+    const dialect = this.getTestDialect();
+    const current = this.sequelize;
+    const config = this.config;
 
+    const qq = function (str) {
+        if (dialect === "postgres" || dialect === "mssql") {
+            return `"${str}"`;
+        } else if (dialect === "mysql" || dialect === "sqlite") {
+            return `\`${str}\``;
+        }
+        return str;
+    };
 
-const qq = function (str) {
-    if (dialect === "postgres" || dialect === "mssql") {
-        return `"${str}"`;
-    } else if (dialect === "mysql" || dialect === "sqlite") {
-        return `\`${str}\``;
-    }
-    return str;
-
-};
-
-describe(Support.getTestDialectTeaser("Sequelize"), () => {
     describe("constructor", () => {
         afterEach(() => {
             orm.util.deprecate.restore && orm.util.deprecate.restore();
@@ -30,7 +27,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                 const ConnectionManager = current.dialect.connectionManager;
                 const connectionSpy = ConnectionManager.connect = spy(ConnectionManager.connect);
 
-                Support.createSequelizeInstance({
+                this.createSequelizeInstance({
                     pool: {
                         min: 2
                     }
@@ -40,14 +37,14 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
         }
 
         it("should pass the global options correctly", () => {
-            const sequelize = Support.createSequelizeInstance({ logging: false, define: { underscored: true } });
+            const sequelize = this.createSequelizeInstance({ logging: false, define: { underscored: true } });
             const DAO = sequelize.define("dao", { name: type.STRING });
 
             expect(DAO.options.underscored).to.be.ok();
         });
 
         it("should correctly set the host and the port", () => {
-            const sequelize = Support.createSequelizeInstance({ host: "127.0.0.1", port: 1234 });
+            const sequelize = this.createSequelizeInstance({ host: "127.0.0.1", port: 1234 });
             expect(sequelize.config.port).to.equal(1234);
             expect(sequelize.config.host).to.equal("127.0.0.1");
         });
@@ -55,17 +52,17 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
 
         it("should log deprecated warning if operators aliases were not set", () => {
             stub(orm.util, "deprecate");
-            Support.createSequelizeInstance();
+            this.createSequelizeInstance();
             expect(orm.util.deprecate.calledOnce).to.be.true();
             expect(orm.util.deprecate.args[0][0]).to.be.equal("String based operators are now deprecated. Please use Symbol based operators for better security, read more at http://docs.sequelizejs.com/manual/tutorial/querying.html#operators");
             orm.util.deprecate.reset();
-            Support.createSequelizeInstance({ operatorsAliases: {} });
+            this.createSequelizeInstance({ operatorsAliases: {} });
             expect(orm.util.deprecate.called).to.be.false();
         });
 
         it("should set operators aliases on dialect QueryGenerator", () => {
             const operatorsAliases = { fake: true };
-            const sequelize = Support.createSequelizeInstance({ operatorsAliases });
+            const sequelize = this.createSequelizeInstance({ operatorsAliases });
 
             expect(sequelize).to.have.property("dialect");
             expect(sequelize.dialect).to.have.property("QueryGenerator");
@@ -269,7 +266,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
         describe("logging", () => {
             it("executes a query with global benchmarking option and default logger", () => {
                 const logger = spy(console, "log");
-                const sequelize = Support.createSequelizeInstance({
+                const sequelize = this.createSequelizeInstance({
                     logging: logger,
                     benchmark: true
                 });
@@ -290,7 +287,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                     }
 
                     const logger = spy();
-                    const sequelize = Support.createSequelizeInstance({
+                    const sequelize = this.createSequelizeInstance({
                         logging: logger,
                         benchmark: false,
                         showWarnings: true
@@ -309,7 +306,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
 
             it("executes a query with global benchmarking option and custom logger", () => {
                 const logger = spy();
-                const sequelize = Support.createSequelizeInstance({
+                const sequelize = this.createSequelizeInstance({
                     logging: logger,
                     benchmark: true
                 });
@@ -509,6 +506,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                 constructor() {
                     this.values = [1, 2];
                 }
+
                 get query() {
                     return "select ? as foo, ? as bar";
                 }
@@ -581,7 +579,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
         });
 
         it("replaces named parameters with the passed object using the same key twice", async function () {
-            const [res] = await this.sequelize.query("select :one as foo, :two as bar, :one as baz", { raw: true, replacements: { one: 1, two: 2 } })
+            const [res] = await this.sequelize.query("select :one as foo, :two as bar, :one as baz", { raw: true, replacements: { one: 1, two: 2 } });
             expect(res).to.be.deep.equal([{ foo: 1, bar: 2, baz: 1 }]);
         });
 
@@ -771,7 +769,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
             expect(adone.datetime(result[0].t).isValid()).to.be.true();
         });
 
-        if (Support.getTestDialect() === "postgres") {
+        if (this.getTestDialect() === "postgres") {
             it("replaces named parameters with the passed object and ignores casts", async function () {
                 const [res] = await this.sequelize.query("select :one as foo, :two as bar, '1000'::integer as baz", { raw: true, replacements: { one: 1, two: 2 } });
                 return expect(res).to.deep.equal([{ foo: 1, bar: 2, baz: 1000 }]);
@@ -783,7 +781,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
             });
         }
 
-        if (Support.getTestDialect() === "sqlite") {
+        if (this.getTestDialect() === "sqlite") {
             it("binds array parameters for upsert are replaced. $$ unescapes only once", function () {
                 let logSql;
                 return this.sequelize.query("select $1 as foo, $2 as bar, '$$$$' as baz", { type: this.sequelize.queryType.UPSERT, bind: [1, 2], logging(s) {
@@ -912,25 +910,25 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
         });
 
         it("overwrites global options", () => {
-            const sequelize = Support.createSequelizeInstance({ define: { collate: "utf8_general_ci" } });
+            const sequelize = this.createSequelizeInstance({ define: { collate: "utf8_general_ci" } });
             const DAO = sequelize.define("foo", { bar: type.STRING }, { collate: "utf8_bin" });
             expect(DAO.options.collate).to.equal("utf8_bin");
         });
 
         it("overwrites global rowFormat options", () => {
-            const sequelize = Support.createSequelizeInstance({ define: { rowFormat: "compact" } });
+            const sequelize = this.createSequelizeInstance({ define: { rowFormat: "compact" } });
             const DAO = sequelize.define("foo", { bar: type.STRING }, { rowFormat: "default" });
             expect(DAO.options.rowFormat).to.equal("default");
         });
 
         it("inherits global collate option", () => {
-            const sequelize = Support.createSequelizeInstance({ define: { collate: "utf8_general_ci" } });
+            const sequelize = this.createSequelizeInstance({ define: { collate: "utf8_general_ci" } });
             const DAO = sequelize.define("foo", { bar: type.STRING });
             expect(DAO.options.collate).to.equal("utf8_general_ci");
         });
 
         it("inherits global rowFormat option", () => {
-            const sequelize = Support.createSequelizeInstance({ define: { rowFormat: "default" } });
+            const sequelize = this.createSequelizeInstance({ define: { rowFormat: "default" } });
             const DAO = sequelize.define("foo", { bar: type.STRING });
             expect(DAO.options.rowFormat).to.equal("default");
         });
@@ -1216,7 +1214,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
         ].forEach((status) => {
             describe("enum", () => {
                 beforeEach(function () {
-                    this.sequelize = Support.createSequelizeInstance({
+                    this.sequelize = this.createSequelizeInstance({
                         typeValidation: true
                     });
 
@@ -1288,7 +1286,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                 beforeEach(async function () {
                     const self = this;
 
-                    const sequelize = await Support.prepareTransactionTest(this.sequelize);
+                    const sequelize = await this.prepareTransactionTest(this.sequelize);
                     self.sequelizeWithTransaction = sequelize;
                 });
 
@@ -1299,6 +1297,7 @@ describe(Support.getTestDialectTeaser("Sequelize"), () => {
                 it("passes a transaction object to the callback", function () {
                     return this.sequelizeWithTransaction.transaction().then((t) => {
                         expect(t).to.be.instanceOf(Transaction);
+                        return t.commit();
                     });
                 });
 

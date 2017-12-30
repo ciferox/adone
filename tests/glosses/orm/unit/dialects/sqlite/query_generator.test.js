@@ -1,22 +1,19 @@
-import Support from "../../../support";
+describe("QueryGenerator", () => {
+    const { orm } = adone;
 
-const { orm } = adone;
+    const {
+        dialect: {
+            sqlite: { QueryGenerator }
+        }
+    } = adone.private(orm);
 
-const {
-    dialect: {
-        sqlite: { QueryGenerator }
-    }
-} = adone.private(orm);
+    const {
+        operator,
+        type
+    } = orm;
 
-const {
-    operator,
-    type
-} = orm;
+    const { vendor: { lodash: _ } } = adone;
 
-const dialect = Support.getTestDialect();
-const { vendor: { lodash: _ } } = adone;
-
-describe("[SQLITE Specific] QueryGenerator", { skip: dialect !== "sqlite" }, () => {
     beforeEach(function () {
         this.User = this.sequelize.define("User", {
             username: type.STRING

@@ -1,13 +1,11 @@
-import Support from "../../../support";
+describe("Connection Manager", function () {
+    const { Sequelize } = this;
 
-const { Sequelize } = Support;
+    const tedious = require("tedious");
+    const connectionStub = stub(tedious, "Connection");
 
-const tedious = require("tedious");
-const connectionStub = stub(tedious, "Connection");
+    connectionStub.returns({ on() { } });
 
-connectionStub.returns({ on() { } });
-
-describe("[MSSQL] Connection Manager", { skip: Support.getTestDialect() !== "mssql" }, () => {
     let instance;
     let config;
     beforeEach(() => {

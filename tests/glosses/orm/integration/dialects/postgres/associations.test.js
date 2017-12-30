@@ -1,11 +1,8 @@
-import Support from "../../support";
-import config from "../../../config/config";
+describe("associations", function () {
+    const { orm } = adone;
+    const { type } = orm;
+    const config = this.config;
 
-const dialect = Support.getTestDialect();
-const { orm } = adone;
-const { type } = orm;
-
-describe("[POSTGRES Specific] associations", { skip: !/^postgres/.test(dialect) }, () => {
     describe("many-to-many", () => {
         describe("where tables have the same prefix", () => {
             it("should create a table wp_table1wp_table2s", function () {

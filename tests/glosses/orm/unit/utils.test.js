@@ -1,15 +1,13 @@
-import Support from "../support";
+describe("utils", function () {
+    const { orm } = adone;
+    const { type } = orm;
 
-const { orm } = adone;
-const { type } = orm;
+    const tedious = require("tedious");
+    const tediousIsolationLevel = tedious.ISOLATION_LEVEL;
 
-const tedious = require("tedious");
-const tediousIsolationLevel = tedious.ISOLATION_LEVEL;
-
-describe(Support.getTestDialectTeaser("util"), () => {
     describe("merge", () => {
         it("does not clone sequelize models", () => {
-            const User = Support.sequelize.define("user");
+            const User = this.sequelize.define("user");
             const merged = orm.util.merge({}, { include: [{ model: User }] });
             const merged2 = orm.util.merge({}, { user: User });
 
@@ -45,7 +43,7 @@ describe(Support.getTestDialectTeaser("util"), () => {
                 attributes: [
                     "active"
                 ]
-            }, Support.sequelize.define("User", {
+            }, this.sequelize.define("User", {
                 createdAt: {
                     type: type.DATE,
                     field: "created_at"
@@ -62,7 +60,7 @@ describe(Support.getTestDialectTeaser("util"), () => {
         });
 
         it("multiple calls", () => {
-            const Model = Support.sequelize.define("User", {
+            const Model = this.sequelize.define("User", {
                 createdAt: {
                     type: type.DATE,
                     field: "created_at"
@@ -97,7 +95,7 @@ describe(Support.getTestDialectTeaser("util"), () => {
                     firstName: "Paul",
                     lastName: "Atreides"
                 }
-            }, Support.sequelize.define("User", {
+            }, this.sequelize.define("User", {
                 firstName: {
                     type: type.STRING,
                     field: "first_name"
@@ -122,7 +120,7 @@ describe(Support.getTestDialectTeaser("util"), () => {
                         lastName: "Atreides"
                     }
                 }
-            }, Support.sequelize.define("User", {
+            }, this.sequelize.define("User", {
                 firstName: {
                     type: type.STRING,
                     field: "first_name"
@@ -149,7 +147,7 @@ describe(Support.getTestDialectTeaser("util"), () => {
                         { lastName: "Atreides" }
                     ]
                 }
-            }, Support.sequelize.define("User", {
+            }, this.sequelize.define("User", {
                 firstName: {
                     type: type.STRING,
                     field: "first_name"
@@ -176,7 +174,7 @@ describe(Support.getTestDialectTeaser("util"), () => {
                         lastName: "Atreides"
                     }
                 }
-            }, Support.sequelize.define("User", {
+            }, this.sequelize.define("User", {
                 firstName: {
                     type: type.STRING,
                     field: "first_name"
@@ -221,10 +219,10 @@ describe(Support.getTestDialectTeaser("util"), () => {
     });
 
     describe("Sequelize.cast", () => {
-        const sql = Support.sequelize;
+        const sql = this.sequelize;
         const generator = sql.queryInterface.QueryGenerator;
         const run = generator.handleSequelizeMethod.bind(generator);
-        const expectsql = Support.expectsql;
+        const expectsql = this.expectsql.bind(this);
 
         it("accepts condition object (auto casting)", () => {
             expectsql(run(sql.fn("SUM", sql.cast({
@@ -266,7 +264,7 @@ describe(Support.getTestDialectTeaser("util"), () => {
         });
     });
 
-    if (Support.getTestDialect() === "mssql") {
+    if (this.getTestDialect() === "mssql") {
         describe("mapIsolationLevelStringToTedious", () => {
             it("READ_UNCOMMITTED", () => {
                 expect(orm.util.mapIsolationLevelStringToTedious("READ_UNCOMMITTED", tedious)).to.equal(tediousIsolationLevel.READ_UNCOMMITTED);

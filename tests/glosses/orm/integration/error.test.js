@@ -1,9 +1,7 @@
-import Support from "./support";
+describe("errors", () => {
+    const { orm } = adone;
+    const { type } = orm;
 
-const { orm } = adone;
-const { type } = orm;
-
-describe(Support.getTestDialectTeaser("Sequelize Errors"), () => {
     describe("API Surface", () => {
 
         it.skip("Should have the Error constructors exposed", () => {

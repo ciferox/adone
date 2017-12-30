@@ -1,20 +1,14 @@
-import Support from "../support";
-
-const Sequelize = Support.Sequelize;
-const dialect = Support.getTestDialect();
-const current = Support.sequelize;
-
-describe("Transaction", function () {
+describe("transaction", function () {
     beforeEach(() => {
-        this.stub = stub(current, "query").returns(Promise.resolve({}));
+        this.stub = stub(this.sequelize, "query").returns(Promise.resolve({}));
 
-        this.stubConnection = stub(current.connectionManager, "getConnection")
+        this.stubConnection = stub(this.sequelize.connectionManager, "getConnection")
             .returns(Promise.resolve({
                 uuid: "ssfdjd-434fd-43dfg23-2d",
                 close() { }
             }));
 
-        this.stubRelease = stub(current.connectionManager, "releaseConnection")
+        this.stubRelease = stub(this.sequelize.connectionManager, "releaseConnection")
             .returns(Promise.resolve());
     });
 
@@ -36,8 +30,8 @@ describe("Transaction", function () {
                 "BEGIN TRANSACTION;"
             ]
         };
-        return current.transaction(() => {
-            expect(this.stub.args.map((arg) => arg[0])).to.deep.equal(expectations[dialect] || expectations.all);
+        return this.sequelize.transaction(() => {
+            expect(this.stub.args.map((arg) => arg[0])).to.deep.equal(expectations[this.getTestDialect()] || expectations.all);
             return Promise.resolve();
         });
     });

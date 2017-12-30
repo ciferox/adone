@@ -1,11 +1,7 @@
-import Support from "../../support";
+describe("QueryInterface", () => {
+    const { orm, vendor: { lodash: _ } } = adone;
+    const { type } = orm;
 
-const { vendor: { lodash: _ } } = adone;
-const dialect = Support.getTestDialect();
-const { orm } = adone;
-const { type } = orm;
-
-describe("[POSTGRES Specific] QueryInterface", { skip: !/^postgres/.test(dialect) }, () => {
     beforeEach(function () {
         this.sequelize.options.quoteIdenifiers = true;
         this.queryInterface = this.sequelize.getQueryInterface();

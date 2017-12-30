@@ -1,11 +1,8 @@
-import Support from "../support";
+describe("connection manager", function () {
+    const ConnectionManager = adone.private(adone.orm).dialect.abstract.ConnectionManager;
 
-
-const ConnectionManager = adone.private(adone.orm).dialect.abstract.ConnectionManager;
-
-describe("connection manager", () => {
     describe("_connect", () => {
-        beforeEach(function () {
+        beforeEach(() => {
             this.connection = {};
             this.stub = stub().returns(Promise.resolve(this.connection));
 
@@ -15,7 +12,7 @@ describe("connection manager", () => {
                 }
             };
 
-            this.sequelize = Support.createSequelizeInstance();
+            this.sequelize = this.createSequelizeInstance();
         });
 
         it("should resolve connection on dialect connection manager", async function () {

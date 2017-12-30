@@ -1,14 +1,12 @@
-import Support from "./support";
-import config from "../config/config";
+describe("instance", function () {
+    const { is } = adone;
+    const { orm } = adone;
+    const { type } = orm;
 
-const { is } = adone;
-const { orm } = adone;
-const { type } = orm;
+    const dialect = this.getTestDialect();
+    const current = this.sequelize;
+    const config = this.config;
 
-const dialect = Support.getTestDialect();
-const current = Support.sequelize;
-
-describe(Support.getTestDialectTeaser("Instance"), () => {
     before(function () {
         this.clock = fakeClock.install();
     });
@@ -122,7 +120,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
         if (current.dialect.supports.transactions) {
             it("supports transactions", async function () {
-                const sequelize = await Support.prepareTransactionTest(this.sequelize);
+                const sequelize = await this.prepareTransactionTest(this.sequelize);
                 const User = sequelize.define("User", { number: type.INTEGER });
 
                 await User.sync({ force: true });
@@ -282,7 +280,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
 
         if (current.dialect.supports.transactions) {
             it("supports transactions", async function () {
-                const sequelize = await Support.prepareTransactionTest(this.sequelize);
+                const sequelize = await this.prepareTransactionTest(this.sequelize);
                 const User = sequelize.define("User", { number: type.INTEGER });
 
                 await User.sync({ force: true });
@@ -302,7 +300,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
                 const user1 = await this.User.findById(1);
                 await user1.decrement("aNumber", { by: 2 });
                 expect(user1.aNumber).to.be.equal(-2);
-                const user3 = await user1.decrement('bNumber', { by: 2, returning: false });
+                const user3 = await user1.decrement("bNumber", { by: 2, returning: false });
                 expect(user3.bNumber).to.be.equal(0);
             });
         }
@@ -436,7 +434,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
     describe("reload", () => {
         if (current.dialect.supports.transactions) {
             it("supports transactions", async function () {
-                const sequelize = await Support.prepareTransactionTest(this.sequelize);
+                const sequelize = await this.prepareTransactionTest(this.sequelize);
                 const User = sequelize.define("User", { username: type.STRING });
 
                 await User.sync({ force: true });
@@ -819,7 +817,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
     describe("save", () => {
         if (current.dialect.supports.transactions) {
             it("supports transactions", async function () {
-                const sequelize = await Support.prepareTransactionTest(this.sequelize);
+                const sequelize = await this.prepareTransactionTest(this.sequelize);
                 const User = sequelize.define("User", { username: type.STRING });
                 await User.sync({ force: true });
                 const t = await sequelize.transaction();
@@ -1756,7 +1754,7 @@ describe(Support.getTestDialectTeaser("Instance"), () => {
     describe("destroy", () => {
         if (current.dialect.supports.transactions) {
             it("supports transactions", async function () {
-                const sequelize = await Support.prepareTransactionTest(this.sequelize);
+                const sequelize = await this.prepareTransactionTest(this.sequelize);
                 const User = sequelize.define("User", { username: type.STRING });
                 await User.sync({ force: true });
                 const user = await User.create({ username: "foo" });

@@ -1,9 +1,7 @@
-import Support from "../support";
+describe("multiple level filters", () => {
+    const { orm } = adone;
+    const { type } = orm;
 
-const { orm } = adone;
-const { type } = orm;
-
-describe(Support.getTestDialectTeaser("Multiple Level Filters"), () => {
     it("can filter through belongsTo", function () {
         const User = this.sequelize.define("User", { username: type.STRING });
         const Task = this.sequelize.define("Task", { title: type.STRING });

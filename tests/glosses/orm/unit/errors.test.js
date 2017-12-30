@@ -1,6 +1,6 @@
-const { x } = adone.orm;
-
 describe("errors", () => {
+    const { x } = adone.orm;
+
     it("should maintain stack trace with message", () => {
         const errorsWithMessage = [
             "ValidationError", "UnknownConstraintError", "InstanceError",

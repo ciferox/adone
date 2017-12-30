@@ -1,22 +1,18 @@
-import Support from "../../support";
+describe("hasAlias", function () {
+    const current = this.sequelize;
 
-const current = Support.sequelize;
+    beforeEach(function () {
+        this.User = current.define("user");
+        this.Task = current.define("task");
+    });
 
-describe(Support.getTestDialectTeaser("Model"), () => {
-    describe("hasAlias", () => {
-        beforeEach(function () {
-            this.User = current.define("user");
-            this.Task = current.define("task");
-        });
+    it("returns true if a model has an association with the specified alias", function () {
+        this.Task.belongsTo(this.User, { as: "owner" });
+        expect(this.Task.hasAlias("owner")).to.equal(true);
+    });
 
-        it("returns true if a model has an association with the specified alias", function () {
-            this.Task.belongsTo(this.User, { as: "owner" });
-            expect(this.Task.hasAlias("owner")).to.equal(true);
-        });
-
-        it("returns false if a model does not have an association with the specified alias", function () {
-            this.Task.belongsTo(this.User, { as: "owner" });
-            expect(this.Task.hasAlias("notOwner")).to.equal(false);
-        });
+    it("returns false if a model does not have an association with the specified alias", function () {
+        this.Task.belongsTo(this.User, { as: "owner" });
+        expect(this.Task.hasAlias("notOwner")).to.equal(false);
     });
 });

@@ -1,9 +1,7 @@
-import Support from "../../../support";
+describe("QueryGenerator", function () {
+    const { operator } = adone.orm;
+    const getAbstractQueryGenerator = this.getAbstractQueryGenerator;
 
-const { operator } = adone.orm;
-const getAbstractQueryGenerator = Support.getAbstractQueryGenerator;
-
-describe("QueryGenerator", () => {
     describe("whereItemQuery", () => {
         it("should generate correct query for Symbol operators", function () {
             const QG = getAbstractQueryGenerator(this.sequelize);

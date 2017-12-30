@@ -1,13 +1,10 @@
-import Support from "../../support";
-import config from "../../config/config";
+describe("validation", function () {
+    const { is } = adone;
+    const { orm } = adone;
+    const { type } = orm;
+    const current = this.sequelize;
+    const config = this.config;
 
-const { is } = adone;
-const { orm } = adone;
-const { type } = orm;
-const current = Support.sequelize;
-
-
-describe(Support.getTestDialectTeaser("InstanceValidator"), () => {
     describe("validations", () => {
         const checks = {
             is: {
@@ -256,7 +253,7 @@ describe(Support.getTestDialectTeaser("InstanceValidator"), () => {
     });
 
     describe("datatype validations", () => {
-        const current = Support.createSequelizeInstance({
+        const current = this.createSequelizeInstance({
             typeValidation: true
         });
 
@@ -419,7 +416,6 @@ describe(Support.getTestDialectTeaser("InstanceValidator"), () => {
     });
 
     describe("custom validation functions", () => {
-
         const User = current.define("user", {
             age: {
                 type: type.INTEGER,
@@ -517,7 +513,6 @@ describe(Support.getTestDialectTeaser("InstanceValidator"), () => {
     });
 
     describe("custom validation functions returning promises", () => {
-
         const User = current.define("user", {
             name: type.STRING
         }, {
@@ -581,5 +576,4 @@ describe(Support.getTestDialectTeaser("InstanceValidator"), () => {
             });
         });
     });
-
 });

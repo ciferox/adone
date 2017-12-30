@@ -1,17 +1,15 @@
-import Support from "../../support";
+describe("hasMany", function () {
+    const { vendor: { lodash: _ } } = adone;
+    const { orm } = adone;
+    const { type } = orm;
+    const { operator } = orm;
+    const {
+        association: {
+            HasMany
+        }
+    } = adone.private(orm);
+    const current = this.sequelize;
 
-const { vendor: { lodash: _ } } = adone;
-const { orm } = adone;
-const { type } = orm;
-const { operator } = orm;
-const {
-    association: {
-        HasMany
-    }
-} = adone.private(orm);
-const current = Support.sequelize;
-
-describe(Support.getTestDialectTeaser("hasMany"), () => {
     describe("optimizations using bulk create, destroy and update", () => {
         const User = current.define("User", { username: type.STRING });
         const Task = current.define("Task", { title: type.STRING });

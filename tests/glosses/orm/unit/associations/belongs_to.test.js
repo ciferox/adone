@@ -1,9 +1,7 @@
-import Support from "../../support";
+describe("belongsTo", function () {
+    const { vendor: { lodash: _ } } = adone;
+    const current = this.sequelize;
 
-const { vendor: { lodash: _ } } = adone;
-const current = Support.sequelize;
-
-describe(Support.getTestDialectTeaser("belongsTo"), () => {
     it("should not override custom methods with association mixin", () => {
         const methods = {
             getTask: "get",

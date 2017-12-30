@@ -1,11 +1,13 @@
-import Support from "../support";
+describe("upsert", function () {
+    const { orm } = adone;
+    const { type } = orm;
+    const dialect = this.getTestDialect();
+    const current = this.sequelize;
 
-const { orm } = adone;
-const { type } = orm;
-const dialect = Support.getTestDialect();
-const current = Support.sequelize;
+    if (!current.dialect.supports.upserts) {
+        return;
+    }
 
-describe(Support.getTestDialectTeaser("Model"), () => {
     before(function () {
         this.clock = fakeClock.install();
     });
@@ -49,480 +51,477 @@ describe(Support.getTestDialectTeaser("Model"), () => {
         this.clock.uninstall();
     });
 
-    if (current.dialect.supports.upserts) {
-        describe("upsert", () => {
-            it("works with upsert on id", async function () {
-                {
-                    const created = await this.User.upsert({ id: 42, username: "john" });
+
+    it("works with upsert on id", async function () {
+        {
+            const created = await this.User.upsert({ id: 42, username: "john" });
+            if (dialect === "sqlite") {
+                expect(created).to.be.undefined();
+            } else {
+                expect(created).to.be.ok();
+            }
+
+            this.clock.tick(1000);
+        }
+        {
+            const created = await this.User.upsert({ id: 42, username: "doe" });
+            if (dialect === "sqlite") {
+                expect(created).to.be.undefined();
+            } else {
+                expect(created).not.to.be.ok();
+            }
+        }
+        {
+            const user = await this.User.findById(42);
+            expect(user.createdAt).to.be.ok();
+            expect(user.username).to.equal("doe");
+            expect(user.updatedAt.getTime()).to.be.greaterThan(user.createdAt.getTime());
+        }
+    });
+
+    it("works with upsert on a composite key", async function () {
+        {
+            const created = await this.User.upsert({ foo: "baz", bar: 19, username: "john" });
+            if (dialect === "sqlite") {
+                expect(created).to.be.undefined();
+            } else {
+                expect(created).to.be.ok();
+            }
+
+            this.clock.tick(1000);
+        }
+        {
+            const created = await this.User.upsert({ foo: "baz", bar: 19, username: "doe" });
+            if (dialect === "sqlite") {
+                expect(created).to.be.undefined();
+            } else {
+                expect(created).not.to.be.ok();
+            }
+        }
+        {
+            const user = await this.User.find({ where: { foo: "baz", bar: 19 } });
+            expect(user.createdAt).to.be.ok();
+            expect(user.username).to.equal("doe");
+            expect(user.updatedAt.getTime()).to.be.greaterThan(user.createdAt.getTime());
+        }
+    });
+
+    it("should work with UUIDs wth default values", function () {
+        const User = this.sequelize.define("User", {
+            id: {
+                primaryKey: true,
+                allowNull: false,
+                unique: true,
+                type: type.UUID,
+                defaultValue: type.UUIDV4
+            },
+
+            name: {
+                type: type.STRING
+            }
+        });
+
+        return User.sync({ force: true }).then(() => {
+            return User.upsert({ name: "John Doe" });
+        });
+    });
+
+    it("works with upsert on a composite primary key", async function () {
+        const User = this.sequelize.define("user", {
+            a: {
+                type: type.STRING,
+                primaryKey: true
+            },
+            b: {
+                type: type.STRING,
+                primaryKey: true
+            },
+            username: type.STRING
+        });
+
+        await User.sync({ force: true });
+        const [created1, created2] = await Promise.all([
+            // Create two users
+            User.upsert({ a: "a", b: "b", username: "john" }),
+            User.upsert({ a: "a", b: "a", username: "curt" })
+        ]);
+        if (dialect === "sqlite") {
+            expect(created1).to.be.undefined();
+            expect(created2).to.be.undefined();
+        } else {
+            expect(created1).to.be.ok();
+            expect(created2).to.be.ok();
+        }
+
+
+        this.clock.tick(1000);
+        // Update the first one
+        const created = await User.upsert({ a: "a", b: "b", username: "doe" });
+        if (dialect === "sqlite") {
+            expect(created).to.be.undefined();
+        } else {
+            expect(created).not.to.be.ok();
+        }
+
+        const user1 = await User.find({ where: { a: "a", b: "b" } });
+        expect(user1.createdAt).to.be.ok();
+        expect(user1.username).to.equal("doe");
+        expect(user1.updatedAt.getTime()).to.be.greaterThan(user1.createdAt.getTime());
+
+        const user2 = await User.find({ where: { a: "a", b: "a" } });
+        // The second one should not be updated
+        expect(user2.createdAt).to.be.ok();
+        expect(user2.username).to.equal("curt");
+        expect(user2.updatedAt).to.be.deep.equal(user2.createdAt);
+    });
+
+    it("supports validations", async function () {
+        const User = this.sequelize.define("user", {
+            email: {
+                type: type.STRING,
+                validate: {
+                    isEmail: true
+                }
+            }
+        });
+
+        await assert.throws(async () => {
+            await User.upsert({ email: "notanemail" });
+        }, this.sequelize.ValidationError);
+    });
+
+    it("works with BLOBs", async function () {
+        {
+            const created = await this.User.upsert({ id: 42, username: "john", blob: Buffer.from("kaj") });
+            if (dialect === "sqlite") {
+                expect(created).to.be.undefined();
+            } else {
+                expect(created).to.be.ok();
+            }
+
+            this.clock.tick(1000);
+        }
+        {
+            const created = await this.User.upsert({ id: 42, username: "doe", blob: Buffer.from("andrea") });
+            if (dialect === "sqlite") {
+                expect(created).to.be.undefined();
+            } else {
+                expect(created).not.to.be.ok();
+            }
+        }
+        {
+            const user = await this.User.findById(42);
+            expect(user.createdAt).to.be.ok();
+            expect(user.username).to.equal("doe");
+            expect(user.blob.toString()).to.equal("andrea");
+            expect(user.updatedAt.getTime()).to.be.greaterThan(user.createdAt.getTime());
+        }
+    });
+
+    it("works with .field", async function () {
+        {
+            const created = await this.User.upsert({ id: 42, baz: "foo" });
+            if (dialect === "sqlite") {
+                expect(created).to.be.undefined();
+            } else {
+                expect(created).to.be.ok();
+            }
+        }
+        {
+            const created = await this.User.upsert({ id: 42, baz: "oof" });
+            if (dialect === "sqlite") {
+                expect(created).to.be.undefined();
+            } else {
+                expect(created).not.to.be.ok();
+            }
+        }
+        {
+            const user = await this.User.findById(42);
+            expect(user.baz).to.equal("oof");
+        }
+    });
+
+    it("works with primary key using .field", async function () {
+        {
+
+            const created = await this.ModelWithFieldPK.upsert({ userId: 42, foo: "first" });
+            if (dialect === "sqlite") {
+                expect(created).to.be.undefined();
+            } else {
+                expect(created).to.be.ok();
+            }
+
+
+            this.clock.tick(1000);
+        }
+        {
+            const created = await this.ModelWithFieldPK.upsert({ userId: 42, foo: "second" });
+            if (dialect === "sqlite") {
+                expect(created).to.be.undefined();
+            } else {
+                expect(created).not.to.be.ok();
+            }
+        }
+        {
+            const instance = await this.ModelWithFieldPK.findOne({ where: { userId: 42 } });
+            expect(instance.foo).to.equal("second");
+        }
+    });
+
+    it("works with database functions", async function () {
+        {
+            const created = await this.User.upsert({ id: 42, username: "john", foo: this.sequelize.fn("upper", "mixedCase1") });
+            if (dialect === "sqlite") {
+                expect(created).to.be.undefined();
+            } else {
+                expect(created).to.be.ok();
+            }
+
+
+            this.clock.tick(1000);
+        }
+        {
+            const created = await this.User.upsert({ id: 42, username: "doe", foo: this.sequelize.fn("upper", "mixedCase2") });
+            if (dialect === "sqlite") {
+                expect(created).to.be.undefined();
+            } else {
+                expect(created).not.to.be.ok();
+            }
+        }
+        {
+            const user = await this.User.findById(42);
+            expect(user.createdAt).to.be.ok();
+            expect(user.username).to.equal("doe");
+            expect(user.foo).to.equal("MIXEDCASE2");
+        }
+    });
+
+    it("does not overwrite createdAt time on update", async function () {
+        let originalCreatedAt;
+        let originalUpdatedAt;
+        await this.User.create({ id: 42, username: "john" });
+        {
+            const user = await this.User.findById(42);
+            originalCreatedAt = user.createdAt;
+            originalUpdatedAt = user.updatedAt;
+            this.clock.tick(5000);
+        }
+        await this.User.upsert({ id: 42, username: "doe" });
+        {
+            const user = await this.User.findById(42);
+            expect(user.updatedAt).to.be.gt(originalUpdatedAt);
+            expect(user.createdAt).to.deep.equal(originalCreatedAt);
+        }
+    });
+
+    it("does not update using default values", async function () {
+        await this.User.create({ id: 42, username: "john", baz: "new baz value" });
+        {
+            const user = await this.User.findById(42);
+            // 'username' should be 'john' since it was set
+            expect(user.username).to.equal("john");
+            // 'baz' should be 'new baz value' since it was set
+            expect(user.baz).to.equal("new baz value");
+        }
+        await this.User.upsert({ id: 42, username: "doe" });
+        {
+            const user = await this.User.findById(42);
+            // 'username' was updated
+            expect(user.username).to.equal("doe");
+            // 'baz' should still be 'new baz value' since it was not updated
+            expect(user.baz).to.equal("new baz value");
+        }
+    });
+
+    it("does not update when setting current values", async function () {
+        await this.User.create({ id: 42, username: "john" });
+        const user = await this.User.findById(42);
+        const created = await this.User.upsert({ id: user.id, username: user.username });
+        if (dialect === "sqlite") {
+            expect(created).to.be.undefined();
+        } else {
+            // After set node-mysql flags = '-FOUND_ROWS' in connection of mysql,
+            // result from upsert should be false when upsert a row to its current value
+            // https://dev.mysql.com/doc/refman/5.7/en/insert-on-duplicate.html
+            expect(created).to.equal(false);
+        }
+    });
+
+    it("Works when two separate uniqueKeys are passed", async function () {
+        const User = this.sequelize.define("User", {
+            username: {
+                type: type.STRING,
+                unique: true
+            },
+            email: {
+                type: type.STRING,
+                unique: true
+            },
+            city: {
+                type: type.STRING
+            }
+        });
+        await User.sync({ force: true });
+        {
+            const created = await User.upsert({ username: "user1", email: "user1@domain.ext", city: "City" });
+            if (dialect === "sqlite") {
+                expect(created).to.be.undefined();
+            } else {
+                expect(created).to.be.ok();
+            }
+            this.clock.tick(1000);
+        }
+        {
+            const created = await User.upsert({ username: "user1", email: "user1@domain.ext", city: "New City" });
+            if (dialect === "sqlite") {
+                expect(created).to.be.undefined();
+            } else {
+                expect(created).not.to.be.ok();
+            }
+            this.clock.tick(1000);
+        }
+        {
+            const user = await User.findOne({ where: { username: "user1", email: "user1@domain.ext" } });
+            expect(user.createdAt).to.be.ok();
+            expect(user.city).to.equal("New City");
+            expect(user.updatedAt.getTime()).to.be.greaterThan(user.createdAt.getTime());
+        }
+    });
+
+    it("works when indexes are created via indexes array", function () {
+        const User = this.sequelize.define("User", {
+            username: type.STRING,
+            email: type.STRING,
+            city: type.STRING
+        }, {
+            indexes: [{
+                unique: true,
+                fields: ["username"]
+            }, {
+                unique: true,
+                fields: ["email"]
+            }]
+        });
+
+        return User.sync({ force: true }).then(() => {
+            return User.upsert({ username: "user1", email: "user1@domain.ext", city: "City" })
+                .then((created) => {
                     if (dialect === "sqlite") {
                         expect(created).to.be.undefined();
                     } else {
                         expect(created).to.be.ok();
                     }
-
-                    this.clock.tick(1000);
-                }
-                {
-                    const created = await this.User.upsert({ id: 42, username: "doe" });
+                    return User.upsert({ username: "user1", email: "user1@domain.ext", city: "New City" });
+                }).then((created) => {
                     if (dialect === "sqlite") {
                         expect(created).to.be.undefined();
                     } else {
                         expect(created).not.to.be.ok();
                     }
-                }
-                {
-                    const user = await this.User.findById(42);
-                    expect(user.createdAt).to.be.ok();
-                    expect(user.username).to.equal("doe");
-                    expect(user.updatedAt.getTime()).to.be.greaterThan(user.createdAt.getTime());
-                }
-            });
-
-            it("works with upsert on a composite key", async function () {
-                {
-                    const created = await this.User.upsert({ foo: "baz", bar: 19, username: "john" });
-                    if (dialect === "sqlite") {
-                        expect(created).to.be.undefined();
-                    } else {
-                        expect(created).to.be.ok();
-                    }
-
-                    this.clock.tick(1000);
-                }
-                {
-                    const created = await this.User.upsert({ foo: "baz", bar: 19, username: "doe" });
-                    if (dialect === "sqlite") {
-                        expect(created).to.be.undefined();
-                    } else {
-                        expect(created).not.to.be.ok();
-                    }
-                }
-                {
-                    const user = await this.User.find({ where: { foo: "baz", bar: 19 } });
-                    expect(user.createdAt).to.be.ok();
-                    expect(user.username).to.equal("doe");
-                    expect(user.updatedAt.getTime()).to.be.greaterThan(user.createdAt.getTime());
-                }
-            });
-
-            it("should work with UUIDs wth default values", function () {
-                const User = this.sequelize.define("User", {
-                    id: {
-                        primaryKey: true,
-                        allowNull: false,
-                        unique: true,
-                        type: type.UUID,
-                        defaultValue: type.UUIDV4
-                    },
-
-                    name: {
-                        type: type.STRING
-                    }
-                });
-
-                return User.sync({ force: true }).then(() => {
-                    return User.upsert({ name: "John Doe" });
-                });
-            });
-
-            it("works with upsert on a composite primary key", async function () {
-                const User = this.sequelize.define("user", {
-                    a: {
-                        type: type.STRING,
-                        primaryKey: true
-                    },
-                    b: {
-                        type: type.STRING,
-                        primaryKey: true
-                    },
-                    username: type.STRING
-                });
-
-                await User.sync({ force: true });
-                const [created1, created2] = await Promise.all([
-                    // Create two users
-                    User.upsert({ a: "a", b: "b", username: "john" }),
-                    User.upsert({ a: "a", b: "a", username: "curt" })
-                ]);
-                if (dialect === "sqlite") {
-                    expect(created1).to.be.undefined();
-                    expect(created2).to.be.undefined();
-                } else {
-                    expect(created1).to.be.ok();
-                    expect(created2).to.be.ok();
-                }
-
-
-                this.clock.tick(1000);
-                // Update the first one
-                const created = await User.upsert({ a: "a", b: "b", username: "doe" });
-                if (dialect === "sqlite") {
-                    expect(created).to.be.undefined();
-                } else {
-                    expect(created).not.to.be.ok();
-                }
-
-                const user1 = await User.find({ where: { a: "a", b: "b" } });
-                expect(user1.createdAt).to.be.ok();
-                expect(user1.username).to.equal("doe");
-                expect(user1.updatedAt.getTime()).to.be.greaterThan(user1.createdAt.getTime());
-
-                const user2 = await User.find({ where: { a: "a", b: "a" } });
-                // The second one should not be updated
-                expect(user2.createdAt).to.be.ok();
-                expect(user2.username).to.equal("curt");
-                expect(user2.updatedAt).to.be.deep.equal(user2.createdAt);
-            });
-
-            it("supports validations", async function () {
-                const User = this.sequelize.define("user", {
-                    email: {
-                        type: type.STRING,
-                        validate: {
-                            isEmail: true
-                        }
-                    }
-                });
-
-                await assert.throws(async () => {
-                    await User.upsert({ email: "notanemail" });
-                }, this.sequelize.ValidationError);
-            });
-
-            it("works with BLOBs", async function () {
-                {
-                    const created = await this.User.upsert({ id: 42, username: "john", blob: Buffer.from("kaj") })
-                    if (dialect === "sqlite") {
-                        expect(created).to.be.undefined();
-                    } else {
-                        expect(created).to.be.ok();
-                    }
-
-                    this.clock.tick(1000);
-                }
-                {
-                    const created = await this.User.upsert({ id: 42, username: "doe", blob: Buffer.from("andrea") });
-                    if (dialect === "sqlite") {
-                        expect(created).to.be.undefined();
-                    } else {
-                        expect(created).not.to.be.ok();
-                    }
-                }
-                {
-                    const user = await this.User.findById(42);
-                    expect(user.createdAt).to.be.ok();
-                    expect(user.username).to.equal("doe");
-                    expect(user.blob.toString()).to.equal("andrea");
-                    expect(user.updatedAt.getTime()).to.be.greaterThan(user.createdAt.getTime());
-                }
-            });
-
-            it("works with .field", async function () {
-                {
-                    const created = await this.User.upsert({ id: 42, baz: "foo" });
-                    if (dialect === "sqlite") {
-                        expect(created).to.be.undefined();
-                    } else {
-                        expect(created).to.be.ok();
-                    }
-                }
-                {
-                    const created = await this.User.upsert({ id: 42, baz: "oof" });
-                    if (dialect === "sqlite") {
-                        expect(created).to.be.undefined();
-                    } else {
-                        expect(created).not.to.be.ok();
-                    }
-                }
-                {
-                    const user = await this.User.findById(42);
-                    expect(user.baz).to.equal("oof");
-                }
-            });
-
-            it("works with primary key using .field", async function () {
-                {
-
-                    const created = await this.ModelWithFieldPK.upsert({ userId: 42, foo: "first" });
-                    if (dialect === "sqlite") {
-                        expect(created).to.be.undefined();
-                    } else {
-                        expect(created).to.be.ok();
-                    }
-
-
-                    this.clock.tick(1000);
-                }
-                {
-                    const created = await this.ModelWithFieldPK.upsert({ userId: 42, foo: "second" });
-                    if (dialect === "sqlite") {
-                        expect(created).to.be.undefined();
-                    } else {
-                        expect(created).not.to.be.ok();
-                    }
-                }
-                {
-                    const instance = await this.ModelWithFieldPK.findOne({ where: { userId: 42 } });
-                    expect(instance.foo).to.equal("second");
-                }
-            });
-
-            it("works with database functions", async function () {
-                {
-                    const created = await this.User.upsert({ id: 42, username: "john", foo: this.sequelize.fn("upper", "mixedCase1") });
-                    if (dialect === "sqlite") {
-                        expect(created).to.be.undefined();
-                    } else {
-                        expect(created).to.be.ok();
-                    }
-
-
-                    this.clock.tick(1000);
-                }
-                {
-                    const created = await this.User.upsert({ id: 42, username: "doe", foo: this.sequelize.fn("upper", "mixedCase2") });
-                    if (dialect === "sqlite") {
-                        expect(created).to.be.undefined();
-                    } else {
-                        expect(created).not.to.be.ok();
-                    }
-                }
-                {
-                    const user = await this.User.findById(42);
-                    expect(user.createdAt).to.be.ok();
-                    expect(user.username).to.equal("doe");
-                    expect(user.foo).to.equal("MIXEDCASE2");
-                }
-            });
-
-            it("does not overwrite createdAt time on update", async function () {
-                let originalCreatedAt;
-                let originalUpdatedAt;
-                await this.User.create({ id: 42, username: "john" });
-                {
-                    const user = await this.User.findById(42)
-                    originalCreatedAt = user.createdAt;
-                    originalUpdatedAt = user.updatedAt;
-                    this.clock.tick(5000);
-                }
-                await this.User.upsert({ id: 42, username: "doe" });
-                {
-                    const user = await this.User.findById(42);
-                    expect(user.updatedAt).to.be.gt(originalUpdatedAt);
-                    expect(user.createdAt).to.deep.equal(originalCreatedAt);
-                }
-            });
-
-            it("does not update using default values", async function () {
-                await this.User.create({ id: 42, username: "john", baz: "new baz value" });
-                {
-                    const user = await this.User.findById(42);
-                    // 'username' should be 'john' since it was set
-                    expect(user.username).to.equal("john");
-                    // 'baz' should be 'new baz value' since it was set
-                    expect(user.baz).to.equal("new baz value");
-                }
-                await this.User.upsert({ id: 42, username: "doe" });
-                {
-                    const user = await this.User.findById(42);
-                    // 'username' was updated
-                    expect(user.username).to.equal("doe");
-                    // 'baz' should still be 'new baz value' since it was not updated
-                    expect(user.baz).to.equal("new baz value");
-                }
-            });
-
-            it("does not update when setting current values", async function () {
-                await this.User.create({ id: 42, username: "john" });
-                const user = await this.User.findById(42);
-                const created = await this.User.upsert({ id: user.id, username: user.username });
-                if (dialect === "sqlite") {
-                    expect(created).to.be.undefined();
-                } else {
-                    // After set node-mysql flags = '-FOUND_ROWS' in connection of mysql,
-                    // result from upsert should be false when upsert a row to its current value
-                    // https://dev.mysql.com/doc/refman/5.7/en/insert-on-duplicate.html
-                    expect(created).to.equal(false);
-                }
-            });
-
-            it("Works when two separate uniqueKeys are passed", async function () {
-                const User = this.sequelize.define("User", {
-                    username: {
-                        type: type.STRING,
-                        unique: true
-                    },
-                    email: {
-                        type: type.STRING,
-                        unique: true
-                    },
-                    city: {
-                        type: type.STRING
-                    }
-                });
-                await User.sync({ force: true });
-                {
-                    const created = await User.upsert({ username: "user1", email: "user1@domain.ext", city: "City" });
-                    if (dialect === "sqlite") {
-                        expect(created).to.be.undefined();
-                    } else {
-                        expect(created).to.be.ok();
-                    }
-                    this.clock.tick(1000);
-                }
-                {
-                    const created = await User.upsert({ username: "user1", email: "user1@domain.ext", city: "New City" });
-                    if (dialect === "sqlite") {
-                        expect(created).to.be.undefined();
-                    } else {
-                        expect(created).not.to.be.ok();
-                    }
-                    this.clock.tick(1000);
-                }
-                {
-                    const user = await User.findOne({ where: { username: "user1", email: "user1@domain.ext" } });
+                    return User.findOne({ where: { username: "user1", email: "user1@domain.ext" } });
+                })
+                .then((user) => {
                     expect(user.createdAt).to.be.ok();
                     expect(user.city).to.equal("New City");
-                    expect(user.updatedAt.getTime()).to.be.greaterThan(user.createdAt.getTime());
+                });
+        });
+    });
+
+    it("works when composite indexes are created via indexes array", () => {
+        const User = current.define("User", {
+            name: type.STRING,
+            address: type.STRING,
+            city: type.STRING
+        }, {
+            indexes: [{
+                unique: "users_name_address",
+                fields: ["name", "address"]
+            }]
+        });
+
+        return User.sync({ force: true }).then(() => {
+            return User.upsert({ name: "user1", address: "address", city: "City" })
+                .then((created) => {
+                    if (dialect === "sqlite") {
+                        expect(created).to.be.undefined();
+                    } else {
+                        expect(created).to.be.ok();
+                    }
+                    return User.upsert({ name: "user1", address: "address", city: "New City" });
+                }).then((created) => {
+                    if (dialect === "sqlite") {
+                        expect(created).to.be.undefined();
+                    } else {
+                        expect(created).not.to.be.ok();
+                    }
+                    return User.findOne({ where: { name: "user1", address: "address" } });
+                })
+                .then((user) => {
+                    expect(user.createdAt).to.be.ok();
+                    expect(user.city).to.equal("New City");
+                });
+        });
+    });
+
+    if (dialect === "mssql") {
+        it("Should throw foreignKey violation for MERGE statement as ForeignKeyConstraintError", async function () {
+            const User = this.sequelize.define("User", {
+                username: {
+                    type: type.STRING,
+                    primaryKey: true
                 }
             });
+            const Posts = this.sequelize.define("Posts", {
+                title: {
+                    type: type.STRING,
+                    primaryKey: true
+                },
+                username: type.STRING
+            });
+            Posts.belongsTo(User, { foreignKey: "username" });
+            await this.sequelize.sync({ force: true });
+            await User.create({ username: "user1" });
+            await assert.throws(async () => {
+                await Posts.upsert({ title: "Title", username: "user2" });
+            }, orm.x.ForeignKeyConstraintError);
+        });
+    }
 
-            it("works when indexes are created via indexes array", function () {
-                const User = this.sequelize.define("User", {
-                    username: type.STRING,
-                    email: type.STRING,
-                    city: type.STRING
-                }, {
-                    indexes: [{
-                        unique: true,
-                        fields: ["username"]
-                    }, {
-                        unique: true,
-                        fields: ["email"]
-                    }]
-                });
-
-                return User.sync({ force: true }).then(() => {
-                    return User.upsert({ username: "user1", email: "user1@domain.ext", city: "City" })
-                        .then((created) => {
-                            if (dialect === "sqlite") {
-                                expect(created).to.be.undefined();
-                            } else {
-                                expect(created).to.be.ok();
-                            }
-                            return User.upsert({ username: "user1", email: "user1@domain.ext", city: "New City" });
-                        }).then((created) => {
-                            if (dialect === "sqlite") {
-                                expect(created).to.be.undefined();
-                            } else {
-                                expect(created).not.to.be.ok();
-                            }
-                            return User.findOne({ where: { username: "user1", email: "user1@domain.ext" } });
-                        })
-                        .then((user) => {
-                            expect(user.createdAt).to.be.ok();
-                            expect(user.city).to.equal("New City");
-                        });
-                });
+    if (dialect.match(/^postgres/)) {
+        it("works when deletedAt is Infinity and part of primary key", function () {
+            const User = this.sequelize.define("User", {
+                name: {
+                    type: type.STRING,
+                    primaryKey: true
+                },
+                address: type.STRING,
+                deletedAt: {
+                    type: type.DATE,
+                    primaryKey: true,
+                    allowNull: false,
+                    defaultValue: Infinity
+                }
+            }, {
+                paranoid: true
             });
 
-            it("works when composite indexes are created via indexes array", () => {
-                const User = current.define("User", {
-                    name: type.STRING,
-                    address: type.STRING,
-                    city: type.STRING
-                }, {
-                    indexes: [{
-                        unique: "users_name_address",
-                        fields: ["name", "address"]
-                    }]
-                });
+            return User.sync({ force: true }).then(() => {
+                return Promise.all([
+                    User.create({ name: "user1" }),
+                    User.create({ name: "user2", deletedAt: Infinity }),
 
-                return User.sync({ force: true }).then(() => {
-                    return User.upsert({ name: "user1", address: "address", city: "City" })
-                        .then((created) => {
-                            if (dialect === "sqlite") {
-                                expect(created).to.be.undefined();
-                            } else {
-                                expect(created).to.be.ok();
-                            }
-                            return User.upsert({ name: "user1", address: "address", city: "New City" });
-                        }).then((created) => {
-                            if (dialect === "sqlite") {
-                                expect(created).to.be.undefined();
-                            } else {
-                                expect(created).not.to.be.ok();
-                            }
-                            return User.findOne({ where: { name: "user1", address: "address" } });
-                        })
-                        .then((user) => {
-                            expect(user.createdAt).to.be.ok();
-                            expect(user.city).to.equal("New City");
-                        });
+                    // this record is soft deleted
+                    User.create({ name: "user3", deletedAt: -Infinity })
+                ]).then(() => {
+                    return User.upsert({ name: "user1", address: "address" });
+                }).then(() => {
+                    return User.findAll({
+                        where: { address: null }
+                    });
+                }).then((users) => {
+                    expect(users).to.have.lengthOf(2);
                 });
             });
-
-            if (dialect === "mssql") {
-                it("Should throw foreignKey violation for MERGE statement as ForeignKeyConstraintError", async function () {
-                    const User = this.sequelize.define("User", {
-                        username: {
-                            type: type.STRING,
-                            primaryKey: true
-                        }
-                    });
-                    const Posts = this.sequelize.define("Posts", {
-                        title: {
-                            type: type.STRING,
-                            primaryKey: true
-                        },
-                        username: type.STRING
-                    });
-                    Posts.belongsTo(User, { foreignKey: "username" });
-                    await this.sequelize.sync({ force: true });
-                    await User.create({ username: "user1" });
-                    await assert.throws(async () => {
-                        await Posts.upsert({ title: "Title", username: "user2" });
-                    }, orm.x.ForeignKeyConstraintError);
-                });
-            }
-
-            if (dialect.match(/^postgres/)) {
-                it("works when deletedAt is Infinity and part of primary key", function () {
-                    const User = this.sequelize.define("User", {
-                        name: {
-                            type: type.STRING,
-                            primaryKey: true
-                        },
-                        address: type.STRING,
-                        deletedAt: {
-                            type: type.DATE,
-                            primaryKey: true,
-                            allowNull: false,
-                            defaultValue: Infinity
-                        }
-                    }, {
-                        paranoid: true
-                    });
-
-                    return User.sync({ force: true }).then(() => {
-                        return Promise.all([
-                            User.create({ name: "user1" }),
-                            User.create({ name: "user2", deletedAt: Infinity }),
-
-                            // this record is soft deleted
-                            User.create({ name: "user3", deletedAt: -Infinity })
-                        ]).then(() => {
-                            return User.upsert({ name: "user1", address: "address" });
-                        }).then(() => {
-                            return User.findAll({
-                                where: { address: null }
-                            });
-                        }).then((users) => {
-                            expect(users).to.have.lengthOf(2);
-                        });
-                    });
-                });
-            }
         });
     }
 });

@@ -1,9 +1,7 @@
-import Support from "../support";
+describe("count", () => {
+    const { orm } = adone;
+    const { type } = orm;
 
-const { orm } = adone;
-const { type } = orm;
-
-describe(Support.getTestDialectTeaser("Hooks"), () => {
     beforeEach(function () {
         this.User = this.sequelize.define("User", {
             username: {
@@ -18,49 +16,47 @@ describe(Support.getTestDialectTeaser("Hooks"), () => {
         return this.sequelize.sync({ force: true }); F;
     });
 
-    describe("#count", () => {
-        beforeEach(function () {
-            return this.User.bulkCreate([
-                { username: "adam", mood: "happy" },
-                { username: "joe", mood: "sad" },
-                { username: "joe", mood: "happy" }
-            ]);
-        });
 
-        describe("on success", () => {
-            it("hook runs", function () {
-                let beforeHook = false;
+    beforeEach(function () {
+        return this.User.bulkCreate([
+            { username: "adam", mood: "happy" },
+            { username: "joe", mood: "sad" },
+            { username: "joe", mood: "happy" }
+        ]);
+    });
 
-                this.User.beforeCount(() => {
-                    beforeHook = true;
-                });
+    describe("on success", () => {
+        it("hook runs", function () {
+            let beforeHook = false;
 
-                return this.User.count().then((count) => {
-                    expect(count).to.equal(3);
-                    expect(beforeHook).to.be.true();
-                });
+            this.User.beforeCount(() => {
+                beforeHook = true;
             });
 
-            it("beforeCount hook can change options", async function () {
-                this.User.beforeCount((options) => {
-                    options.where.username = "adam";
-                });
-
-                expect(await this.User.count({ where: { username: "joe" } })).to.be.equal(1);
+            return this.User.count().then((count) => {
+                expect(count).to.equal(3);
+                expect(beforeHook).to.be.true();
             });
         });
 
-        describe("on error", () => {
-            it("in beforeCount hook returns error", async function () {
-                this.User.beforeCount(() => {
-                    throw new Error("Oops!");
-                });
-
-                await assert.throws(async () => {
-                    await this.User.count({ where: { username: "adam" } });
-                }, "Oops!");
+        it("beforeCount hook can change options", async function () {
+            this.User.beforeCount((options) => {
+                options.where.username = "adam";
             });
+
+            expect(await this.User.count({ where: { username: "joe" } })).to.be.equal(1);
         });
     });
 
+    describe("on error", () => {
+        it("in beforeCount hook returns error", async function () {
+            this.User.beforeCount(() => {
+                throw new Error("Oops!");
+            });
+
+            await assert.throws(async () => {
+                await this.User.count({ where: { username: "adam" } });
+            }, "Oops!");
+        });
+    });
 });

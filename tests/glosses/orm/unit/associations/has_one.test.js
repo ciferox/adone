@@ -1,11 +1,9 @@
-import Support from "../../support";
+describe("hasOne", function () {
+    const { vendor: { lodash: _ } } = adone;
+    const { orm } = adone;
+    const { type } = orm;
+    const current = this.sequelize;
 
-const { vendor: { lodash: _ } } = adone;
-const { orm } = adone;
-const { type } = orm;
-const current = Support.sequelize;
-
-describe(Support.getTestDialectTeaser("hasOne"), () => {
     it("properly use the `as` key to generate foreign key name", () => {
         const User = current.define("User", { username: type.STRING });
         const Task = current.define("Task", { title: type.STRING });

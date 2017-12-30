@@ -1,14 +1,17 @@
-import Support from "./support";
-const { promise } = adone;
+describe("Sequelize#transaction", function () {
+    const { promise } = adone;
 
-const {
-    Transaction,
-    type
-} = adone.orm;
+    const {
+        Transaction,
+        type
+    } = adone.orm;
 
-const current = Support.sequelize;
+    const current = this.sequelize;
 
-describe(Support.getTestDialectTeaser("Sequelize#transaction"), { skip: !current.dialect.supports.transactions }, () => {
+    if (!current.dialect.supports.transactions) {
+        return;
+    }
+
     beforeEach(function () {
         this.sinon = adone.shani.util.sandbox.create();
     });
@@ -46,9 +49,9 @@ describe(Support.getTestDialectTeaser("Sequelize#transaction"), { skip: !current
                 });
         });
 
-        if (Support.getTestDialect() !== "sqlite") {
+        if (this.getTestDialect() !== "sqlite") {
             it("works for long running transactions", async function () {
-                this.sequelize = await Support.prepareTransactionTest(this.sequelize);
+                this.sequelize = await this.prepareTransactionTest(this.sequelize);
 
                 this.User = this.sequelize.define("User", {
                     name: type.STRING
@@ -58,7 +61,7 @@ describe(Support.getTestDialectTeaser("Sequelize#transaction"), { skip: !current
                 const t = await this.sequelize.transaction();
                 let query = "select sleep(2);";
 
-                switch (Support.getTestDialect()) {
+                switch (this.getTestDialect()) {
                     case "postgres":
                         query = "select pg_sleep(2);";
                         break;
@@ -85,7 +88,7 @@ describe(Support.getTestDialectTeaser("Sequelize#transaction"), { skip: !current
 
     describe("complex long running example", () => {
         it("works with promise syntax", function () {
-            return Support.prepareTransactionTest(this.sequelize).then((sequelize) => {
+            return this.prepareTransactionTest(this.sequelize).then((sequelize) => {
                 const Test = sequelize.define("Test", {
                     id: { type: type.INTEGER, primaryKey: true, autoIncrement: true },
                     name: { type: type.STRING }
@@ -120,7 +123,7 @@ describe(Support.getTestDialectTeaser("Sequelize#transaction"), { skip: !current
             beforeEach(function () {
                 const self = this;
 
-                return Support.prepareTransactionTest(this.sequelize).then((sequelize) => {
+                return this.prepareTransactionTest(this.sequelize).then((sequelize) => {
                     self.sequelize = sequelize;
 
                     self.Model = sequelize.define("Model", {

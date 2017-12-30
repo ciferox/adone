@@ -1,23 +1,21 @@
-import Support from "../../../support";
+describe("QueryGenerator", function () {
+    const { orm } = adone;
 
-const { orm } = adone;
+    const {
+        dialect: {
+            postgres: { QueryGenerator }
+        }
+    } = adone.private(orm);
 
-const {
-    dialect: {
-        postgres: { QueryGenerator }
-    }
-} = adone.private(orm);
+    const {
+        operator,
+        type
+    } = orm;
 
-const {
-    operator,
-    type
-} = orm;
+    const { vendor: { lodash: _ } } = adone;
+    const current = this.sequelize;
 
-const { vendor: { lodash: _ } } = adone;
-const dialect = Support.getTestDialect();
-const current = Support.sequelize;
 
-describe("[POSTGRES Specific] QueryGenerator", { skip: !/^postgres/.test(dialect) }, () => {
     const suites = {
         arithmeticQuery: [
             {

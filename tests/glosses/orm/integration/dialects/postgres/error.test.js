@@ -1,11 +1,8 @@
-import Support from "../../support";
 
-const { vendor: { lodash: _ } } = adone;
-const { orm } = adone;
-const { type } = orm;
-const dialect = Support.getTestDialect();
+describe("error", () => {
+    const { orm, vendor: { lodash: _ } } = adone;
+    const { type } = orm;
 
-if (dialect.match(/^postgres/)) {
     const constraintName = "overlap_period";
     beforeEach(function () {
         const self = this;
@@ -20,7 +17,7 @@ if (dialect.match(/^postgres/)) {
             });
     });
 
-    describe("[POSTGRES Specific] ExclusionConstraintError", () => {
+    describe("ExclusionConstraintError", () => {
 
         it("should contain error specific properties", () => {
             const errDetails = {
@@ -57,4 +54,4 @@ if (dialect.match(/^postgres/)) {
             }, orm.x.ExclusionConstraintError);
         });
     });
-}
+});

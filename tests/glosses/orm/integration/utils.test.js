@@ -1,9 +1,7 @@
-import Support from "./support";
+describe("utils", function () {
+    const { orm } = adone;
+    const { type } = orm;
 
-const { orm } = adone;
-const { type } = orm;
-
-describe(Support.getTestDialectTeaser("Utils"), () => {
     describe("removeCommentsFromFunctionString", () => {
         it("removes line comments at the start of a line", () => {
             const functionWithLineComments = function () {
@@ -178,7 +176,7 @@ describe(Support.getTestDialectTeaser("Utils"), () => {
         });
     });
 
-    if (Support.getTestDialect() === "postgres") {
+    if (this.getTestDialect() === "postgres") {
         describe("json", () => {
             const {
                 dialect: {
@@ -252,9 +250,9 @@ describe(Support.getTestDialectTeaser("Utils"), () => {
             });
         });
 
-        if (Support.getTestDialect() !== "mssql") {
+        if (this.getTestDialect() !== "mssql") {
             it("accepts condition object (with cast)", async function () {
-                const type = Support.getTestDialect() === "mysql" ? "unsigned" : "int";
+                const type = this.getTestDialect() === "mysql" ? "unsigned" : "int";
 
                 const [airplane] = await Airplane.findAll({
                     attributes: [
@@ -278,7 +276,7 @@ describe(Support.getTestDialectTeaser("Utils"), () => {
             });
         }
 
-        if (Support.getTestDialect() !== "mssql" && Support.getTestDialect() !== "postgres") {
+        if (this.getTestDialect() !== "mssql" && this.getTestDialect() !== "postgres") {
             it("accepts condition object (auto casting)", async function () {
                 const [airplane] = await Airplane.findAll({
                     attributes: [

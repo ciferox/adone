@@ -1,25 +1,24 @@
-import Support from "../../support";
+describe("belongsToMany", function () {
+    const { vendor: { lodash: _ } } = adone;
 
-const { vendor: { lodash: _ } } = adone;
+    const { orm } = adone;
+    const { type } = orm;
 
-const { orm } = adone;
-const { type } = orm;
+    const {
+        x: { AssociationError }
+    } = orm;
 
-const {
-    x: { AssociationError }
-} = orm;
+    const {
+        association: {
+            BelongsTo,
+            HasMany,
+            HasOne
+        }
+    } = adone.private(orm);
 
-const {
-    association: {
-        BelongsTo,
-        HasMany,
-        HasOne
-    }
-} = adone.private(orm);
+    const current = this.sequelize;
 
-const current = Support.sequelize;
 
-describe(Support.getTestDialectTeaser("belongsToMany"), () => {
     it("should not inherit scopes from parent to join table", () => {
         const A = current.define("a");
         const B = current.define("b", {}, {
@@ -135,7 +134,7 @@ describe(Support.getTestDialectTeaser("belongsToMany"), () => {
         });
 
         it("follows the global timestamps false option", () => {
-            const current = Support.createSequelizeInstance({
+            const current = this.createSequelizeInstance({
                 timestamps: false
             });
 

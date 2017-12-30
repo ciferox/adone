@@ -1,10 +1,6 @@
-import Support from "../../support";
-
-const dialect = Support.getTestDialect();
-
-describe("[MSSQL Specific] Query Queue", { skip: !/^mssql/.test(dialect) }, () => {
+describe("Query Queue", function () {
     it("should work with handleDisconnects", () => {
-        const sequelize = Support.createSequelizeInstance({ pool: { min: 1, max: 1, idle: 5000 } });
+        const sequelize = this.createSequelizeInstance({ pool: { min: 1, max: 1, idle: 5000 } });
         const cm = sequelize.connectionManager;
         let conn;
 
@@ -29,7 +25,7 @@ describe("[MSSQL Specific] Query Queue", { skip: !/^mssql/.test(dialect) }, () =
     });
 
     it("should handle double disconnect", () => {
-        const sequelize = Support.createSequelizeInstance({ pool: { min: 1, max: 1, idle: 5000 } });
+        const sequelize = this.createSequelizeInstance({ pool: { min: 1, max: 1, idle: 5000 } });
         const cm = sequelize.connectionManager;
         let count = 0;
         let conn = null;
@@ -53,7 +49,7 @@ describe("[MSSQL Specific] Query Queue", { skip: !/^mssql/.test(dialect) }, () =
     });
 
     it("should not throw when non pooled connection is unexpectedly closed", () => {
-        const sequelize = Support.createSequelizeInstance({ pool: { min: 1, max: 1, idle: 5000 } });
+        const sequelize = this.createSequelizeInstance({ pool: { min: 1, max: 1, idle: 5000 } });
         const cm = sequelize.connectionManager;
 
         let conn;
@@ -78,28 +74,28 @@ describe("[MSSQL Specific] Query Queue", { skip: !/^mssql/.test(dialect) }, () =
 
     describe("Errors", () => {
         it("ECONNREFUSED", async () => {
-            const sequelize = Support.createSequelizeInstance({ port: 34237 });
+            const sequelize = this.createSequelizeInstance({ port: 34237 });
             await assert.throws(async () => {
                 await sequelize.connectionManager.getConnection();
             }, sequelize.ConnectionRefusedError);
         });
 
         it("ENOTFOUND", async () => {
-            const sequelize = Support.createSequelizeInstance({ host: "http://wowow.example.com" });
+            const sequelize = this.createSequelizeInstance({ host: "http://wowow.example.com" });
             await assert.throws(async () => {
                 await sequelize.connectionManager.getConnection();
             }, sequelize.HostNotFoundError);
         });
 
         it("EHOSTUNREACH", async () => {
-            const sequelize = Support.createSequelizeInstance({ host: "255.255.255.255" });
+            const sequelize = this.createSequelizeInstance({ host: "255.255.255.255" });
             await assert.throws(async () => {
                 await sequelize.connectionManager.getConnection();
             }, sequelize.HostNotReachableError);
         });
 
         it("ER_ACCESS_DENIED_ERROR | ELOGIN", async () => {
-            const sequelize = new Support.Sequelize("localhost", "was", "ddsd", Support.sequelize.options);
+            const sequelize = new this.Sequelize("localhost", "was", "ddsd", this.sequelize.options);
             await assert.throws(async () => {
                 await sequelize.connectionManager.getConnection();
             }, sequelize.AccessDeniedError);
