@@ -4,12 +4,12 @@ describe("fast", "transform", "wrap", () => {
 
     it("should pass an empty file as it is", async () => {
         const [file] = await new Stream([new File({})]).wrap("");
-        expect(file.isNull()).to.be.true();););
+        expect(file.isNull()).to.be.true();
     });
 
     it("should produce expected file via buffer", async () => {
         const [file] = await new Stream([new File({ contents: Buffer.from("foo") })]).wrap("<%= contents %>bar");
-        expect(file.isBuffer()).to.be.true();););
+        expect(file.isBuffer()).to.be.true();
         expect(String(file.contents)).to.be.equal("foobar");
     });
 
@@ -17,8 +17,8 @@ describe("fast", "transform", "wrap", () => {
         const s = new adone.std.stream.PassThrough().pause();
         s.end(Buffer.from("b"));
         const [file] = await new Stream([new File({ contents: s })]).wrap("a<%= contents %>c");
-        expect(file.isStream()).to.be.true();););
-        const data = await file.contents.pipe(stream.concat());
+        expect(file.isStream()).to.be.true();
+        const data = await file.contents.pipe(stream.concat.create());
         expect(String(data)).to.be.equal("abc");
     });
 
@@ -32,13 +32,13 @@ describe("fast", "transform", "wrap", () => {
         const file = await FS.createTempFile();
         await file.write("BEFORE <%= contents %> AFTER");
         const [data] = await new Stream([new File({ contents: Buffer.from("Hello") })]).wrap({ src: file.path() });
-        expect(data.isBuffer()).to.be.true();););
+        expect(data.isBuffer()).to.be.true();
         expect(String(data.contents)).to.be.equal("BEFORE Hello AFTER");
     });
 
     it("should handle a template from a function", async () => {
         const [file] = await new Stream([new File({ contents: Buffer.from("Hello") })]).wrap(() => "BEFORE <%= contents %> AFTER");
-        expect(file.isBuffer()).to.be.true();););
+        expect(file.isBuffer()).to.be.true();
         expect(String(file.contents)).to.be.equal("BEFORE Hello AFTER");
     });
 
@@ -55,7 +55,7 @@ describe("fast", "transform", "wrap", () => {
                 { someVar: "someVal" },
                 { variable: "data" }
             );
-        expect(file.isBuffer()).to.be.true();););
+        expect(file.isBuffer()).to.be.true();
         expect(String(file.contents)).to.be.equal("BEFORE Hello someVal AFTER");
     });
 
@@ -70,7 +70,7 @@ describe("fast", "transform", "wrap", () => {
                     return { variable: file.dataProp };
                 }
             );
-        expect(file.isBuffer()).to.be.true();););
+        expect(file.isBuffer()).to.be.true();
         expect(String(file.contents)).to.be.equal("BEFORE Hello someVal AFTER");
     });
 

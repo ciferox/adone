@@ -145,6 +145,7 @@ module.exports = {
         "no-warning-comments": "warn",
         "prefer-promise-reject-errors": "error",
         "lines-between-class-members": ["error", "always"],
+        "no-path-concat": "error",  // disallow string concatenation with __dirname and __filename
         "adone/no-typeof": "error",
         "adone/no-buffer-constructor": "error",
         "adone/no-undefined-comp": "error",
@@ -152,7 +153,6 @@ module.exports = {
         "adone/no-buffer-isbuffer": "error",
         "adone/no-array-isarray": "error",
         "adone/no-isnan": "error",
-        "no-path-concat": "error",  // disallow string concatenation with __dirname and __filename
         "adone/no-number-methods": "error",  // disallow Number.isNaN, Number.isFinite etc
         "adone/no-is.undefined-or-is.null": "error", // disallow is.undefined(t) || is.null(t)
         "adone/no-not-is.undefined-and-not-is.null": "error", // disallow !is.undefined(t) && !is.null(t)

@@ -59,7 +59,7 @@ describe("database", "local", "Executor", () => {
 
         beforeEach(async () => {
             d = new Datastore({ inMemoryOnly: true, timestampData: true });
-            expect(d.inMemoryOnly).to.be.true(););
+            expect(d.inMemoryOnly).to.be.true();
 
             await d.load();
             expect(d.getAllData()).to.be.empty();

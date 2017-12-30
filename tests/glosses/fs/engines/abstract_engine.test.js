@@ -232,7 +232,7 @@ describe("fs", "engine", "AbstactEngine", () => {
             }));
             engine.mock(obj);
 
-            expect((await obj.lstat("/a")).isFile()).to.be.true(););
+            expect((await obj.lstat("/a")).isFile()).to.be.true();
             expect(await obj.readdir("/b")).to.be.deep.equal(["c"]);
             expect(lstat).to.have.not.been.called;
             expect(readdir).to.have.not.been.called;

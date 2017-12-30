@@ -24,7 +24,7 @@ describe("database", "redis", "scanStream", { skip: check }, () => {
             const redis = new Redis();
             await redis.mset("foo1", 1, "foo2", 1, "foo3", 1, "foo4", 1, "foo10", 1);
             const stream = redis.scanStream();
-            const keys = await stream.pipe(core()).flatten();
+            const keys = await stream.pipe(core.create()).flatten();
             expect(keys.sort()).to.be.deep.equal(["foo1", "foo10", "foo2", "foo3", "foo4"]);
             redis.disconnect();
         });
@@ -35,7 +35,7 @@ describe("database", "redis", "scanStream", { skip: check }, () => {
             const stream = redis.scanStream({
                 match: "foo??"
             });
-            const keys = await stream.pipe(core()).flatten();
+            const keys = await stream.pipe(core.create()).flatten();
             expect(keys).to.be.deep.equal(["foo10"]);
             redis.disconnect();
         });
@@ -59,7 +59,7 @@ describe("database", "redis", "scanStream", { skip: check }, () => {
             const stream = redis.scanStream({
                 count: 2
             });
-            const keys = await stream.pipe(core()).flatten();
+            const keys = await stream.pipe(core.create()).flatten();
             expect(keys.sort()).to.be.deep.equal(["foo1", "foo10", "foo2", "foo3", "foo4"]);
             redis.disconnect();
         });
@@ -82,7 +82,7 @@ describe("database", "redis", "scanStream", { skip: check }, () => {
             const redis = new Redis({ dropBufferSupport: false });
             await redis.mset("foo1", 1, "foo2", 1, "foo3", 1, "foo4", 1, "foo10", 1);
             const stream = redis.scanBufferStream();
-            const keys = await stream.pipe(core()).flatten();
+            const keys = await stream.pipe(core.create()).flatten();
             expect(keys.sort()).to.be.deep.equal(["foo1", "foo10", "foo2", "foo3", "foo4"].map(Buffer.from));
             redis.disconnect();
         });
@@ -93,7 +93,7 @@ describe("database", "redis", "scanStream", { skip: check }, () => {
             const redis = new Redis();
             await redis.sadd("set", "foo1", "foo2", "foo3", "foo4", "foo10");
             const stream = redis.sscanStream("set", { match: "foo??" });
-            expect(await stream.pipe(core()).flatten()).to.be.deep.equal(["foo10"]);
+            expect(await stream.pipe(core.create()).flatten()).to.be.deep.equal(["foo10"]);
             redis.disconnect();
         });
     });
@@ -127,7 +127,7 @@ describe("database", "redis", "scanStream", { skip: check }, () => {
             ]);
             await cluster.sadd("set", serverKeys);
             const stream = cluster.sscanStream("set");
-            expect(await stream.pipe(core()).flatten()).to.be.deep.equal(serverKeys);
+            expect(await stream.pipe(core.create()).flatten()).to.be.deep.equal(serverKeys);
             cluster.disconnect();
             await node1.disconnect();
             await node2.disconnect();

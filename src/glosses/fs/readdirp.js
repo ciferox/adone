@@ -38,7 +38,7 @@ export default function readdirp(root, {
     let resolvedRoot;
     let pending = 0;
 
-    const source = stream.core().through(async function ([path, depth]) {
+    const source = stream.core.create().through(async function ([path, depth]) {
         --pending;
         const realPath = await fs.realpath(path);
 

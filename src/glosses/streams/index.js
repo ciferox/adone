@@ -21,7 +21,6 @@ const stream = adone.lazify({
     through: "./through",
     replace: "./replace",
     core: "./core",
-    CoreStream: () => stream.core.CoreStream,
     AssertByteCountStream: "./assert_byte_count",
     pull: "./pull",
     Multiplex: "./multiplex"

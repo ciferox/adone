@@ -412,7 +412,7 @@ describe("find", function () {
         }
         {
             const cursor = collection.find({}, { timeout: true });
-            expect(cursor.s.cmd.noCursorTimeout).to.be.true(););
+            expect(cursor.s.cmd.noCursorTimeout).to.be.true();
         }
         {
             const cursor = collection.find({});
@@ -822,7 +822,7 @@ describe("find", function () {
             })));
             expect(results.length).to.be.equal(2000);
             for (const cursor of cursors) {
-                expect(cursor.isClosed()).to.be.true(););
+                expect(cursor.isClosed()).to.be.true();
             }
         });
 
@@ -843,7 +843,7 @@ describe("find", function () {
             }));
             expect(results.length).to.be.equal(2000);
             for (const cursor of cursors) {
-                expect(cursor.isClosed()).to.be.true(););
+                expect(cursor.isClosed()).to.be.true();
             }
         });
 
@@ -854,7 +854,7 @@ describe("find", function () {
             const cursors = await collection.parallelCollectionScan({ numCursors: 1 });
             expect(cursors).to.have.lengthOf(1);
             await cursors[0].close();
-            expect(cursors[0].isClosed()).to.be.true(););
+            expect(cursors[0].isClosed()).to.be.true();
         });
 
         it("should correctly execute parallelCollectionScan with single cursor streaming", async () => {
@@ -866,7 +866,7 @@ describe("find", function () {
             const results = await core.merge(cursors.map((x) => x.stream()));
             expect(results.length).to.be.equal(2000);
             for (const cursor of cursors) {
-                expect(cursor.isClosed()).to.be.true(););
+                expect(cursor.isClosed()).to.be.true();
             }
         });
 
@@ -887,7 +887,7 @@ describe("find", function () {
             }));
             expect(results.length).to.be.equal(2000);
             for (const cursor of cursors) {
-                expect(cursor.isClosed()).to.be.true(););
+                expect(cursor.isClosed()).to.be.true();
             }
         });
     }
@@ -984,7 +984,7 @@ describe("find", function () {
         const collection = db.collection("test_find_simple_cursor_inheritance");
         await collection.insert([{ a: 2 }, { b: 3, c: undefined }]);
         const cursor = collection.find({ c: undefined });
-        expect(cursor.s.options.ignoreUndefined).to.be.true(););
+        expect(cursor.s.options.ignoreUndefined).to.be.true();
         const docs = await cursor.toArray();
         expect(docs).to.have.lengthOf(2);
     });

@@ -1247,7 +1247,7 @@ describe("core", () => {
 
     describe("CoreStream", () => {
         it("should create a passthrough stream", async () => {
-            const stream = core();
+            const stream = core.create();
             const data = spy();
             const end = spy();
             stream.on("data", data).once("end", end);
@@ -1265,7 +1265,7 @@ describe("core", () => {
 
         it("should create a passthrough stream with flush function", async () => {
             const flush = spy();
-            const stream = core(null, { flush });
+            const stream = core.create(null, { flush });
             const data = spy();
             const end = spy();
             stream.on("data", data).once("end", end);
@@ -1285,7 +1285,7 @@ describe("core", () => {
 
         it("should create a synchronous transform", async () => {
             const flush = spy();
-            const stream = core(null, {
+            const stream = core.create(null, {
                 transform(x) {
                     this.push(-x);
                 },
@@ -1311,7 +1311,7 @@ describe("core", () => {
 
         it("should create an asynchronous transform", async () => {
             const flush = spy();
-            const stream = core(null, {
+            const stream = core.create(null, {
                 async transform(x) {
                     await promise.delay(10);
                     this.push(-x);
@@ -1337,7 +1337,7 @@ describe("core", () => {
         });
 
         it("should not emit data events while paused", async () => {
-            const stream = core();
+            const stream = core.create();
             const data = spy();
             stream.on("data", data);
             stream.write(1);
@@ -1352,7 +1352,7 @@ describe("core", () => {
         });
 
         it("should emit data after resume, but on the next tick", async () => {
-            const stream = core();
+            const stream = core.create();
             const data = spy();
             stream.on("data", data);
             stream.write(1);
@@ -1368,7 +1368,7 @@ describe("core", () => {
         });
 
         it("should pause stream", async () => {
-            const stream = core();
+            const stream = core.create();
             const data = spy();
             stream.on("data", data);
             stream.resume();
@@ -1388,7 +1388,7 @@ describe("core", () => {
         });
 
         it("should create stream from array", async () => {
-            const stream = core([1, 2, 3, 4, 5]);
+            const stream = core.create([1, 2, 3, 4, 5]);
             const [data, end] = [spy(), spy()];
             stream.on("data", data).once("end", end);
             expect(data).to.have.not.been.called;
@@ -1406,7 +1406,7 @@ describe("core", () => {
         describe("api", () => {
             describe("throughSync", () => {
                 it("should add a synchronous transform", async () => {
-                    const a = core();
+                    const a = core.create();
                     a.throughSync(function (x) {
                         this.push(x + 1);
                     });
@@ -1420,7 +1420,7 @@ describe("core", () => {
                 });
 
                 it("should call flush function before end", async () => {
-                    const a = core();
+                    const a = core.create();
                     const flush = spy();
                     a.throughSync(function (x) {
                         this.push(x + 1);
@@ -1436,7 +1436,7 @@ describe("core", () => {
                 });
 
                 it("should catch errors and not end the stream", async () => {
-                    const a = core();
+                    const a = core.create();
                     a.throughSync(function (x) {
                         if (x === 1) {
                             throw new Error("hello");
@@ -1465,7 +1465,7 @@ describe("core", () => {
                 });
 
                 it("should catch error inside flush function", async () => {
-                    const a = core();
+                    const a = core.create();
                     a.throughSync(passthrough, () => {
                         throw new Error("hello");
                     });
@@ -1480,7 +1480,7 @@ describe("core", () => {
                 });
 
                 it("should catch transform errors in multiple consequent transforms", async () => {
-                    const a = core();
+                    const a = core.create();
                     const [f1, f2, f3] = [spy(), spy(), spy()];
                     const t1 = stub().callsFake(function (x) {
                         if (x === 1) {
@@ -1529,7 +1529,7 @@ describe("core", () => {
                 });
 
                 it("should catch flush errors in multiple consequent transforms", async () => {
-                    const a = core();
+                    const a = core.create();
                     const flush1 = stub().throws(new Error("hello"));
                     const flush2 = stub().throws(new Error("hello"));
                     a
@@ -1548,13 +1548,13 @@ describe("core", () => {
                 });
 
                 it("should return self", () => {
-                    const a = core();
+                    const a = core.create();
                     expect(a.throughSync(passthrough)).to.be.equal(a);
                 });
 
                 it("should chain multiple transforms", async () => {
                     const [f1, f2, f3] = [spy(), spy(), spy()];
-                    const a = core().throughSync(function (x) {
+                    const a = core.create().throughSync(function (x) {
                         this.push(x + 1);
                     }, f1).throughSync(function (x) {
                         this.push(x + 2);
@@ -1582,7 +1582,7 @@ describe("core", () => {
 
             describe("throughAsync", () => {
                 it("should add an asynchronous transform", async () => {
-                    const a = core();
+                    const a = core.create();
                     a.throughAsync(async function (x) {
                         this.push(x + 1);
                     });
@@ -1597,7 +1597,7 @@ describe("core", () => {
                 });
 
                 it("should call flush function before end", async () => {
-                    const a = core();
+                    const a = core.create();
                     const flush = spy();
                     a.throughAsync(async function (x) {
                         this.push(x + 1);
@@ -1613,7 +1613,7 @@ describe("core", () => {
                 });
 
                 it("should catch errors and not end the stream", async () => {
-                    const a = core();
+                    const a = core.create();
                     a.throughAsync(async function (x) {
                         if (x === 1) {
                             throw new Error("hello");
@@ -1643,7 +1643,7 @@ describe("core", () => {
                 });
 
                 it("should catch error inside flush function", async () => {
-                    const a = core();
+                    const a = core.create();
                     a.throughAsync(passthrough, () => {
                         throw new Error("hello");
                     });
@@ -1658,7 +1658,7 @@ describe("core", () => {
                 });
 
                 it("should catch transform errors in multiple consequent transforms", async () => {
-                    const a = core();
+                    const a = core.create();
                     const [f1, f2, f3] = [spy(), spy(), spy()];
                     const t1 = stub().callsFake(async function (x) {
                         await promise.delay(10);
@@ -1710,7 +1710,7 @@ describe("core", () => {
                 });
 
                 it("should catch flush errors in multiple consequent transforms", async () => {
-                    const a = core();
+                    const a = core.create();
                     const flush1 = stub().throws(new Error("hello"));
                     const flush2 = stub().throws(new Error("hello"));
                     a
@@ -1729,13 +1729,13 @@ describe("core", () => {
                 });
 
                 it("should return self", () => {
-                    const a = core();
+                    const a = core.create();
                     expect(a.throughAsync(passthrough)).to.be.equal(a);
                 });
 
                 it("should chain multiple transforms", async () => {
                     const [f1, f2, f3] = [spy(), spy(), spy()];
-                    const a = core().throughSync(async function (x) {
+                    const a = core.create().throughSync(async function (x) {
                         await promise.delay(10);
                         this.push(x + 1);
                     }, f1).throughSync(async function (x) {
@@ -1767,7 +1767,7 @@ describe("core", () => {
 
             describe("through", () => {
                 it("should create async transform if transform is async function", async () => {
-                    const a = core();
+                    const a = core.create();
                     const flush = spy();
                     a.through(async function (x) {
                         await promise.delay(10);
@@ -1788,7 +1788,7 @@ describe("core", () => {
                 });
 
                 it("should create sync transform if transform is sync function", async () => {
-                    const a = core();
+                    const a = core.create();
                     const flush = spy();
                     a.through(function (x) {
                         this.push(x + 1);
@@ -1808,7 +1808,7 @@ describe("core", () => {
                 });
 
                 it("should return itself", () => {
-                    const a = core();
+                    const a = core.create();
                     expect(a.through(async () => { })).to.be.equal(a);
                     expect(a.through(() => { })).to.be.equal(a);
                 });
@@ -1816,13 +1816,13 @@ describe("core", () => {
 
             describe("forEach", () => {
                 it("should return itself", () => {
-                    const a = core();
+                    const a = core.create();
                     expect(a.forEach(noop)).to.be.equal(a);
                 });
 
                 it("should call callback on each element", async () => {
                     const cb = spy();
-                    core([1, 2, 3, 4, 5]).forEach(cb).resume();
+                    core.create([1, 2, 3, 4, 5]).forEach(cb).resume();
                     await cb.waitForNCalls(5);
                     for (let i = 0; i < 5; ++i) {
                         expect(cb.getCall(i)).to.have.been.calledWithExactly(i + 1);
@@ -1831,7 +1831,7 @@ describe("core", () => {
 
                 it("should resume stream", async () => {
                     const cb = spy();
-                    const c = core([1, 2, 3, 4, 5]).forEach(cb);
+                    const c = core.create([1, 2, 3, 4, 5]).forEach(cb);
                     const end = spy();
                     c.once("end", end);
                     await end.waitForCall();
@@ -1844,13 +1844,13 @@ describe("core", () => {
                 it("should not passthrough elements", async () => {
                     const cb = spy();
                     const cb2 = spy();
-                    core([1, 2, 3, 4, 5]).forEach(cb).forEach(cb2).resume();
+                    core.create([1, 2, 3, 4, 5]).forEach(cb).forEach(cb2).resume();
                     expect(cb2).to.have.not.been.called;
                 });
 
                 it("should passthrough elements if passthrough = true", async () => {
                     const data = spy();
-                    core([1, 2, 3, 4, 5])
+                    core.create([1, 2, 3, 4, 5])
                         .forEach(() => {
 
                         }, { passthrough: true })
@@ -1870,7 +1870,7 @@ describe("core", () => {
                 it("should wait for async functions", async () => {
                     const fEnd = spy();
                     const end = spy();
-                    core([1]).forEach(async () => {
+                    core.create([1]).forEach(async () => {
                         await promise.delay(50);
                         fEnd();
                     }).once("end", end);
@@ -1881,7 +1881,7 @@ describe("core", () => {
                 it("should not wait for async functions if wait = false", async () => {
                     const fEnd = spy();
                     const end = spy();
-                    core([1]).forEach(async () => {
+                    core.create([1]).forEach(async () => {
                         await promise.delay(50);
                         fEnd();
                     }, { wait: false }).once("end", end);
@@ -1893,7 +1893,7 @@ describe("core", () => {
 
             describe("toArray", () => {
                 it("should gather all the values into an array and call the callback", (done) => {
-                    const a = core([1, 2, 3, 4, 5]);
+                    const a = core.create([1, 2, 3, 4, 5]);
                     a.toArray((values) => {
                         expect(values).to.be.deep.equal([1, 2, 3, 4, 5]);
                         done();
@@ -1901,7 +1901,7 @@ describe("core", () => {
                 });
 
                 it("should resume stream", (done) => {
-                    const a = core([1, 2, 3, 4, 5]);
+                    const a = core.create([1, 2, 3, 4, 5]);
                     a.toArray((values) => {
                         expect(values).to.be.deep.equal([1, 2, 3, 4, 5]);
                         done();
@@ -1909,12 +1909,12 @@ describe("core", () => {
                 });
 
                 it("should return itself", () => {
-                    const a = core();
+                    const a = core.create();
                     expect(a.toArray(adone.noop)).to.be.equal(a);
                 });
 
                 it("should call the callback with an empty array if the stream has ended", async () => {
-                    const c = core().end();
+                    const c = core.create().end();
                     const end = spy();
                     c.once("end", end);
                     await end.waitForCall();
@@ -1925,7 +1925,7 @@ describe("core", () => {
                 });
 
                 it("should call the callback on the next tick when ended", async () => {
-                    const c = core().end();
+                    const c = core.create().end();
                     const end = spy();
                     c.once("end", end);
                     await end.waitForCall();
@@ -1940,19 +1940,19 @@ describe("core", () => {
             describe("promise", () => {
                 describe("then", () => {
                     it("should return Promise", () => {
-                        const c = core();
+                        const c = core.create();
                         expect(c.then(noop, noop)).to.be.instanceOf(Promise);
                     });
 
                     it("should resolve using toArray result", async () => {
-                        const c = core([1, 2, 3, 4, 5]);
+                        const c = core.create([1, 2, 3, 4, 5]);
                         const res = await c;
                         expect(res).to.be.deep.equal([1, 2, 3, 4, 5]);
                     });
 
                     it("should destroy stream on the first error", async () => {
                         const [a, b, c, d] = [spy(), spy(), spy(), spy()];
-                        const s = core([1, 2, 3, 4, 5])
+                        const s = core.create([1, 2, 3, 4, 5])
                             .through(function (x) {
                                 a();
                                 this.push(x);
@@ -1980,7 +1980,7 @@ describe("core", () => {
                     });
 
                     it("should reject if transform fails", async () => {
-                        const c = core([1, 2, 3, 4, 5]).through(() => {
+                        const c = core.create([1, 2, 3, 4, 5]).through(() => {
                             throw new Error();
                         });
                         await assert.throws(async () => {
@@ -1989,7 +1989,7 @@ describe("core", () => {
                     });
 
                     it("should reject if flushing fails", async () => {
-                        const c = core([1, 2, 3, 4, 5]).through(passthrough, () => {
+                        const c = core.create([1, 2, 3, 4, 5]).through(passthrough, () => {
                             throw new Error();
                         });
                         await assert.throws(async () => {
@@ -1998,7 +1998,7 @@ describe("core", () => {
                     });
 
                     it("should save all the errors", async () => {
-                        const c = core([1, 2, 3, 4, 5])
+                        const c = core.create([1, 2, 3, 4, 5])
                             .through(passthrough, () => {
                                 throw new Error("hello");
                             })
@@ -2021,7 +2021,7 @@ describe("core", () => {
 
                 describe("catch", () => {
                     it("should be the same as then where onResolve is undefined", async () => {
-                        const c = core();
+                        const c = core.create();
                         const then = spy(c, "then");
                         const cb = noop;
                         c.catch(cb);
@@ -2033,18 +2033,18 @@ describe("core", () => {
 
             describe("map", () => {
                 it("should map values", async () => {
-                    const res = await core([1, 2, 3, 4, 5]).map((x) => x * x);
+                    const res = await core.create([1, 2, 3, 4, 5]).map((x) => x * x);
                     expect(res).to.be.deep.equal([1, 4, 9, 16, 25]);
                 });
 
                 it("should support promises", async () => {
-                    const res = await core([1, 2, 3, 4, 5]).map(async (x) => x * x);
+                    const res = await core.create([1, 2, 3, 4, 5]).map(async (x) => x * x);
                     expect(res).to.be.deep.equal([1, 4, 9, 16, 25]);
                 });
 
                 it("should emit an error if someting goes wrong inside a callback", async () => {
                     await assert.throws(async () => {
-                        await core([1, 2, 3, 4, 5]).map((x) => {
+                        await core.create([1, 2, 3, 4, 5]).map((x) => {
                             if (x === 3) {
                                 throw new Error("hello");
                             }
@@ -2055,7 +2055,7 @@ describe("core", () => {
 
                 it("should emit an error if someting goes wrong inside an async callback", async () => {
                     await assert.throws(async () => {
-                        await core([1, 2, 3, 4, 5]).map(async (x) => {
+                        await core.create([1, 2, 3, 4, 5]).map(async (x) => {
                             if (x === 3) {
                                 throw new Error("hello");
                             }
@@ -2065,7 +2065,7 @@ describe("core", () => {
                 });
 
                 it("should create a sync transform if handler is sync", async () => {
-                    const c = core().map((x) => x + 1);
+                    const c = core.create().map((x) => x + 1);
                     const data = spy();
                     c.on("data", data);
                     c.resume();
@@ -2076,7 +2076,7 @@ describe("core", () => {
                 });
 
                 it("should create an async transform if handler is async", async () => {
-                    const c = core().map(async (x) => x + 1);
+                    const c = core.create().map(async (x) => x + 1);
                     const data = spy();
                     c.on("data", data);
                     c.resume();
@@ -2089,24 +2089,24 @@ describe("core", () => {
 
                 it("should throw if the callback is not a function", () => {
                     expect(() => {
-                        core().map();
+                        core.create().map();
                     }).to.throw(x.InvalidArgument, "'callback' must be a function");
                 });
             });
 
             describe("mapIf", () => {
                 it("should map values with adone.truly", async () => {
-                    const res = await core([1, 2, 3, 4, 5]).mapIf(adone.truly, (x) => x * x);
+                    const res = await core.create([1, 2, 3, 4, 5]).mapIf(adone.truly, (x) => x * x);
                     expect(res).to.be.deep.equal([1, 4, 9, 16, 25]);
                 });
 
                 it("should not map values with adone.falsely", async () => {
-                    const res = await core([1, 2, 3, 4, 5]).mapIf(adone.falsely, (x) => x * x);
+                    const res = await core.create([1, 2, 3, 4, 5]).mapIf(adone.falsely, (x) => x * x);
                     expect(res).to.be.deep.equal([1, 2, 3, 4, 5]);
                 });
 
                 it("should create a sync transform for sync condition and callback", async () => {
-                    const c = core().mapIf(adone.truly, (x) => x * x);
+                    const c = core.create().mapIf(adone.truly, (x) => x * x);
                     const data = spy();
                     c.on("data", data);
                     c.resume();
@@ -2117,7 +2117,7 @@ describe("core", () => {
                 });
 
                 it("should create an async transform for sync condition and async callback", async () => {
-                    const c = core().mapIf(adone.truly, async (x) => x * x);
+                    const c = core.create().mapIf(adone.truly, async (x) => x * x);
                     const data = spy();
                     c.on("data", data);
                     c.resume();
@@ -2129,7 +2129,7 @@ describe("core", () => {
                 });
 
                 it("should create an async transform for async condition and sync callback", async () => {
-                    const c = core().mapIf(async () => true, (x) => x * x);
+                    const c = core.create().mapIf(async () => true, (x) => x * x);
                     const data = spy();
                     c.on("data", data);
                     c.resume();
@@ -2141,7 +2141,7 @@ describe("core", () => {
                 });
 
                 it("should create an async transform for async condition and async callback", async () => {
-                    const c = core().mapIf(async () => true, async (x) => x * x);
+                    const c = core.create().mapIf(async () => true, async (x) => x * x);
                     const data = spy();
                     c.on("data", data);
                     c.resume();
@@ -2154,31 +2154,31 @@ describe("core", () => {
 
                 it("should throw if the condition is not a function", () => {
                     expect(() => {
-                        core().mapIf();
+                        core.create().mapIf();
                     }).to.throw(x.InvalidArgument, "'condition' must be a function");
                 });
 
                 it("should throw if the callback is not a function", () => {
                     expect(() => {
-                        core().mapIf(() => { });
+                        core.create().mapIf(() => { });
                     }).to.throw(x.InvalidArgument, "'callback' must be a function");
                 });
             });
 
             describe("filter", () => {
                 it("should filter values using the callback", async () => {
-                    const res = await core([1, 2, 3, 4, 5]).filter((x) => x % 2);
+                    const res = await core.create([1, 2, 3, 4, 5]).filter((x) => x % 2);
                     expect(res).to.be.deep.equal([1, 3, 5]);
                 });
 
                 it("should support promises", async () => {
-                    const res = await core([1, 2, 3, 4, 5]).filter(async (x) => x % 2);
+                    const res = await core.create([1, 2, 3, 4, 5]).filter(async (x) => x % 2);
                     expect(res).to.be.deep.equal([1, 3, 5]);
                 });
 
                 it("should throw if something goes wrong inside a callback", async () => {
                     await assert.throws(async () => {
-                        await core([1, 2, 3, 4, 5]).filter((x) => {
+                        await core.create([1, 2, 3, 4, 5]).filter((x) => {
                             if (x === 3) {
                                 throw new Error("hello");
                             }
@@ -2189,7 +2189,7 @@ describe("core", () => {
 
                 it("should throw if something goes wrong inside an async callback", async () => {
                     await assert.throws(async () => {
-                        await core([1, 2, 3, 4, 5]).filter((x) => {
+                        await core.create([1, 2, 3, 4, 5]).filter((x) => {
                             if (x === 3) {
                                 throw new Error("hello");
                             }
@@ -2200,12 +2200,12 @@ describe("core", () => {
 
                 it("should throw if the callback is not a function", () => {
                     expect(() => {
-                        core().filter();
+                        core.create().filter();
                     }).to.throw(x.InvalidArgument, "'callback' must be a function");
                 });
 
                 it("should create a sync transform if callback is sync", async () => {
-                    const c = core().filter(() => true);
+                    const c = core.create().filter(() => true);
                     const data = spy();
                     c.on("data", data);
                     c.resume();
@@ -2215,7 +2215,7 @@ describe("core", () => {
                 });
 
                 it("should create an sync transform if callback is async", async () => {
-                    const c = core().filter(async () => true);
+                    const c = core.create().filter(async () => true);
                     const data = spy();
                     c.on("data", data);
                     c.resume();
@@ -2230,7 +2230,7 @@ describe("core", () => {
                 it("should call the callback at the end", async () => {
                     const cb = spy();
                     const end = spy();
-                    core([1, 2, 3]).done(cb).resume().once("end", end);
+                    core.create([1, 2, 3]).done(cb).resume().once("end", end);
                     await end.waitForCall();
                     expect(cb).to.have.been.calledOnce;
                     expect(cb).to.have.been.calledBefore(end);
@@ -2239,7 +2239,7 @@ describe("core", () => {
                 it("should autoresume", async () => {
                     const cb = spy();
                     const end = spy();
-                    core([1, 2, 3]).done(cb).once("end", end);
+                    core.create([1, 2, 3]).done(cb).once("end", end);
                     await end.waitForCall();
                     expect(cb).to.have.been.calledOnce;
                     expect(cb).to.have.been.calledBefore(end);
@@ -2249,7 +2249,7 @@ describe("core", () => {
                     const cb = spy();
                     const arr = spy();
                     const end = spy();
-                    core([1, 2, 3]).done(cb).toArray(arr).resume().once("end", end);
+                    core.create([1, 2, 3]).done(cb).toArray(arr).resume().once("end", end);
                     await end.waitForCall();
                     expect(cb).to.have.been.calledOnce;
                     expect(cb).to.have.been.calledBefore(end);
@@ -2262,7 +2262,7 @@ describe("core", () => {
                     const cb = spy();
                     const arr = spy();
                     const end = spy();
-                    core([1, 2, 3]).done(cb, { passthrough: true }).toArray(arr).resume().once("end", end);
+                    core.create([1, 2, 3]).done(cb, { passthrough: true }).toArray(arr).resume().once("end", end);
                     await end.waitForCall();
                     expect(cb).to.have.been.calledOnce;
                     expect(cb).to.have.been.calledBefore(end);
@@ -2273,20 +2273,20 @@ describe("core", () => {
 
                 it("should throw if the callback is not a function", () => {
                     expect(() => {
-                        core().done();
+                        core.create().done();
                     }).to.throw(adone.x.InvalidArgument, "'callback' must be a function");
                 });
             });
 
             describe("unique", () => {
                 it("should pass one element two times", async () => {
-                    const a = core([1, 2, 3, 4, 5, 1, 2, 3, 4, 5]);
+                    const a = core.create([1, 2, 3, 4, 5, 1, 2, 3, 4, 5]);
                     a.unique();
                     expect(await a).to.be.deep.equal([1, 2, 3, 4, 5]);
                 });
 
                 it("should filter values using a property function", async () => {
-                    const a = core([
+                    const a = core.create([
                         { a: 1, b: 1 },
                         { a: 1, b: 2 },
                         { a: 2, b: 1 },
@@ -2304,16 +2304,16 @@ describe("core", () => {
 
                 it("should throw if the argument is not a function", () => {
                     expect(() => {
-                        core().unique(123);
+                        core.create().unique(123);
                     }).to.throw(adone.x.InvalidArgument, "'prop' must be a function or null");
                 });
 
                 it("should not throw if the argument is null", () => {
-                    core().unique(null);
+                    core.create().unique(null);
                 });
 
                 it("should clear the cache after the end", async () => {
-                    const a = core([]);
+                    const a = core.create([]);
                     const clear = spy(Set.prototype, "clear");
                     a.unique();
                     await a;
@@ -2323,12 +2323,12 @@ describe("core", () => {
 
             describe("stash/unstash", () => {
                 it("should stash even numbers", async () => {
-                    const numbers = await core([1, 2, 3, 4, 5]).stash("even", (x) => x % 2 === 0);
+                    const numbers = await core.create([1, 2, 3, 4, 5]).stash("even", (x) => x % 2 === 0);
                     expect(numbers).to.be.deep.equal([1, 3, 5]);
                 });
 
                 it("should unstash even numbers", async () => {
-                    const numbers = await core([1, 2, 3, 4, 5])
+                    const numbers = await core.create([1, 2, 3, 4, 5])
                         .stash("even", (x) => x % 2 === 0)
                         .map((x) => {
                             expect(x % 2).to.be.equal(1);
@@ -2341,7 +2341,7 @@ describe("core", () => {
                 it("should correctly handle multiple stashes", async () => {
                     let hadNumbers = false;
 
-                    const values = await core([1, 2, 3, 4, 5, "a", "b", "c", ["key"], ["value"]])
+                    const values = await core.create([1, 2, 3, 4, 5, "a", "b", "c", ["key"], ["value"]])
                         .stash("numbers", (x) => is.number(x))
                         .stash("strings", (x) => is.string(x))
                         .map((x) => {
@@ -2363,7 +2363,7 @@ describe("core", () => {
                 });
 
                 specify("unamed stash should work like a stack", async () => {
-                    const values = await core([1, 2, 3, 4, 5])
+                    const values = await core.create([1, 2, 3, 4, 5])
                         .stash((x) => x === 1) // hide 1
                         .stash((x) => x === 2) // hide 2
                         .map((x) => [x])
@@ -2376,17 +2376,17 @@ describe("core", () => {
 
             describe("flatten", () => {
                 it("should work", async () => {
-                    const res = await core([[1], [2], [3], [4], [5, 6, 7], [8, 9, 10]]).flatten();
+                    const res = await core.create([[1], [2], [3], [4], [5, 6, 7], [8, 9, 10]]).flatten();
                     expect(res).to.be.deep.equal([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
                 });
 
                 it("should work fine with nested arrays", async () => {
-                    const res = await core([[1], [2, [3], [4, [5]], [6]], [[7, [[[8]]]]]]).flatten();
+                    const res = await core.create([[1], [2, [3], [4, [5]], [6]], [[7, [[[8]]]]]]).flatten();
                     expect(res).to.be.deep.equal([1, 2, 3, 4, 5, 6, 7, 8]);
                 });
 
                 it("should work if there is no arrays", async () => {
-                    const res = await core([1, 2, 3, 4, "hello", {}]).flatten();
+                    const res = await core.create([1, 2, 3, 4, "hello", {}]).flatten();
                     expect(res).to.be.deep.equal([1, 2, 3, 4, "hello", {}]);
                 });
             });
@@ -2395,9 +2395,9 @@ describe("core", () => {
                 describe("merge", () => {
                     it("should merge multiple streams", async () => {
                         const res = await core.merge([
-                            core([1, 2, 3]),
-                            core([4, 5, 6]),
-                            core([7, 8, 9])
+                            core.create([1, 2, 3]),
+                            core.create([4, 5, 6]),
+                            core.create([7, 8, 9])
                         ]);
                         res.sort((a, b) => a - b);
                         expect(res).to.be.deep.equal([1, 2, 3, 4, 5, 6, 7, 8, 9]);
@@ -2405,9 +2405,9 @@ describe("core", () => {
 
                     it("should not end the stream if end = false", async () => {
                         const stream = core.merge([
-                            core([1, 2, 3]),
-                            core([4, 5, 6]),
-                            core([7, 8, 9])
+                            core.create([1, 2, 3]),
+                            core.create([4, 5, 6]),
+                            core.create([7, 8, 9])
                         ], { end: false });
                         const data = spy();
                         stream.on("data", data).resume();
@@ -2417,8 +2417,8 @@ describe("core", () => {
                     });
 
                     it("should emit an error if merged stream emits an error", () => {
-                        const a = core();
-                        const b = core();
+                        const a = core.create();
+                        const b = core.create();
                         const error = spy();
                         const c = core.merge([a, b]);
                         c.on("error", error);
@@ -2432,8 +2432,8 @@ describe("core", () => {
 
                     it("should ignore falsy streams", async () => {
                         const c = core.merge([
-                            core([1, 2, 3]),
-                            core([4, 5, 6]),
+                            core.create([1, 2, 3]),
+                            core.create([4, 5, 6]),
                             null
                         ]);
                         expect((await c).sort()).to.be.deep.equal([1, 2, 3, 4, 5, 6]);
@@ -2441,43 +2441,43 @@ describe("core", () => {
 
                     it("should ignore ended streams", async () => {
                         const c = core.merge([
-                            core().end(),
-                            core([4, 5, 6])
+                            core.create().end(),
+                            core.create([4, 5, 6])
                         ]);
                         expect(await c).to.be.deep.equal([4, 5, 6]);
                     });
 
                     it("should not ignore ending streams", async () => { // a strange one
                         const c = core.merge([
-                            core([1, 2, 3], { flush: () => adone.promise.delay(100) }),
-                            core([4, 5, 6])
+                            core.create([1, 2, 3], { flush: () => adone.promise.delay(100) }),
+                            core.create([4, 5, 6])
                         ]);
                         expect((await c).sort()).to.be.deep.equal([1, 2, 3, 4, 5, 6]);
                     });
 
                     it("should correclty handle the case of 1 input core stream", async () => {
-                        const a = core([1, 2, 3]);
+                        const a = core.create([1, 2, 3]);
                         const c = core.merge([a]);
                         expect(await c).to.be.deep.equal([1, 2, 3]);
                     });
 
                     it("should correcly work using inheritance", async () => {
-                        class ExCore extends adone.stream.CoreStream {
+                        class ExCore extends adone.stream.core.Stream {
                             somethingUseful() {
                                 return this.map((x) => x + 1);
                             }
                         }
 
                         const a = ExCore.merge([
-                            core([1, 2, 3]),
-                            core([4, 5, 6])
+                            core.create([1, 2, 3]),
+                            core.create([4, 5, 6])
                         ]).somethingUseful();
                         expect((await a).sort()).to.be.deep.equal([2, 3, 4, 5, 6, 7]);
                     });
 
                     it("should pass options to the source stream", async () => {
-                        const a = core([1, 2, 3]);
-                        const b = core([4, 5, 6]);
+                        const a = core.create([1, 2, 3]);
+                        const b = core.create([4, 5, 6]);
                         const c = core.merge([a, b], {
                             sourceOptions: {
                                 transform(x) {

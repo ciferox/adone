@@ -90,7 +90,7 @@ describe("Streams", function () {
                         await p;
                         await adone.promise.delay(1000);
                     } else {
-                        const coreStream = new adone.stream.CoreStream();
+                        const coreStream = adone.stream.core.create();
                         rStream.pipe(coreStream);
                         p = coreStream.map((d) => data = d).on("end", () => rEnd = true);
                         (dataCase === "with") && wStream.write("adone");
@@ -128,7 +128,7 @@ describe("Streams", function () {
         const rStream = await p;
 
         let data = null;
-        const coreStream = new adone.stream.CoreStream();
+        const coreStream = adone.stream.core.create();
         rStream.pipe(coreStream);
         p = coreStream.map((d) => data = d).on("end", () => rEnd = true);
 
@@ -161,7 +161,7 @@ describe("Streams", function () {
         const rStream = await p;
 
         let data = null;
-        const coreServerStream = new adone.stream.CoreStream();
+        const coreServerStream = adone.stream.core.create();
         rStream.pipe(coreServerStream);
         p = coreServerStream.map((d) => data = d).on("end", () => rEnd = true);
 
@@ -176,7 +176,7 @@ describe("Streams", function () {
         assert.equal(wEnd, false, "On writable side 'end' event was not happened");
         assert.equal(rEnd, true, "On readable side 'end' event was not happened");
 
-        const coreClientStream = new adone.stream.CoreStream();
+        const coreClientStream = adone.stream.core.create();
         wStream.pipe(coreClientStream);
         p = coreClientStream.map((d) => data = d).on("end", () => wEnd = true);
         rStream.write("enoda");
@@ -201,7 +201,7 @@ describe("Streams", function () {
         const rStream = await p;
 
         const actualMessages = [];
-        const coreStream = new adone.stream.CoreStream();
+        const coreStream = adone.stream.core.create();
         rStream.pipe(coreStream);
         p = coreStream.map((data) => {
             actualMessages.push(data);
@@ -221,7 +221,7 @@ describe("Streams", function () {
         wStream.end();
 
         await p;
-        
+
         for (let id = 0; id < 3000; id++) {
             assert.deepEqual(rMessages[id], actualMessages[id]);
         }
@@ -243,7 +243,7 @@ describe("Streams", function () {
             const serverStream = await p;
 
             const actualClientMessages = [];
-            const coreServerStream = new adone.stream.CoreStream();
+            const coreServerStream = adone.stream.core.create();
             serverStream.pipe(coreServerStream);
             const p1 = coreServerStream.map((data) => {
                 actualClientMessages.push(data);
@@ -251,7 +251,7 @@ describe("Streams", function () {
             });
 
             const actualServerMessages = [];
-            const coreClientStream = new adone.stream.CoreStream();
+            const coreClientStream = adone.stream.core.create();
             clientStream.pipe(coreClientStream);
             const p2 = coreClientStream.map((data) => {
                 actualServerMessages.push(data);

@@ -1,4 +1,12 @@
-const { noop, is, x, event: { EventEmitter }, util, std, collection } = adone;
+const {
+    noop,
+    is,
+    x,
+    event: { EventEmitter },
+    util,
+    std,
+    collection
+} = adone;
 
 const __ = adone.lazify({
     Transform: "./transform",
@@ -7,8 +15,8 @@ const __ = adone.lazify({
     PassThrough: "./pass_through"
 }, null, require);
 
-const wrapBefore = (cb, func) => {
-    switch (util.functionParams(func).length) {
+const wrapBefore = (cb, func, nargs) => {
+    switch (nargs) {
         case 0: {
             return function () {
                 cb.call(this);
@@ -48,9 +56,9 @@ const _checkDestroyed = function () {
     }
 };
 
-const checkDestroyed = (target, key, descriptor) => {
+const checkDestroyed = (nargs) => (target, key, descriptor) => {
     const { value } = descriptor;
-    descriptor.value = wrapBefore(_checkDestroyed, value);
+    descriptor.value = wrapBefore(_checkDestroyed, value, nargs);
 };
 
 const STASHES = Symbol("stashes");
@@ -58,7 +66,7 @@ const STASHES = Symbol("stashes");
 /**
  * Represents a chain of transform streams
  */
-class CoreStream extends EventEmitter {
+export class Stream extends EventEmitter {
     constructor(source, options) {
         super();
         this._chain = [this._createFirstStream(options)];
@@ -129,12 +137,12 @@ class CoreStream extends EventEmitter {
         return this._chain[this._chain.length - 1];
     }
 
-    @checkDestroyed
+    @checkDestroyed(1)
     write(value) {
         return this._first.write(value);
     }
 
-    @checkDestroyed
+    @checkDestroyed(1)
     push(value) {
         return this._last.push(value);
     }
@@ -156,7 +164,7 @@ class CoreStream extends EventEmitter {
         return this;
     }
 
-    @checkDestroyed
+    @checkDestroyed(0)
     pause() {
         for (let i = this._chain.length - 1; i >= 0; --i) {
             this._chain[i].pause();
@@ -164,7 +172,7 @@ class CoreStream extends EventEmitter {
         return this;
     }
 
-    @checkDestroyed
+    @checkDestroyed(0)
     resume() {
         for (let i = this._chain.length - 1; i >= 0; --i) {
             this._chain[i].resume();
@@ -205,19 +213,19 @@ class CoreStream extends EventEmitter {
         return this;
     }
 
-    @checkDestroyed
+    @checkDestroyed(2)
     throughSync(transform, flush) {
         const stream = new __.SyncTransform(transform, flush);
         return this._throughTransform(stream);
     }
 
-    @checkDestroyed
+    @checkDestroyed(2)
     throughAsync(transform, flush) {
         const stream = new __.AsyncTransform(transform, flush);
         return this._throughTransform(stream);
     }
 
-    @checkDestroyed
+    @checkDestroyed(2)
     through(transform, flush) {
         if (is.asyncFunction(transform)) {
             return this.throughAsync(transform, flush);
@@ -225,7 +233,7 @@ class CoreStream extends EventEmitter {
         return this.throughSync(transform, flush);
     }
 
-    @checkDestroyed
+    @checkDestroyed(1)
     map(callback) {
         if (!is.function(callback)) {
             throw new x.InvalidArgument("'callback' must be a function");
@@ -240,7 +248,7 @@ class CoreStream extends EventEmitter {
         });
     }
 
-    @checkDestroyed
+    @checkDestroyed(2)
     mapIf(condition, callback) {
         if (!is.function(condition)) {
             throw new x.InvalidArgument("'condition' must be a function");
@@ -268,7 +276,7 @@ class CoreStream extends EventEmitter {
         });
     }
 
-    @checkDestroyed
+    @checkDestroyed(1)
     filter(callback) {
         if (!is.function(callback)) {
             throw new x.InvalidArgument("'callback' must be a function");
@@ -287,7 +295,7 @@ class CoreStream extends EventEmitter {
         });
     }
 
-    @checkDestroyed
+    @checkDestroyed(2)
     forEach(callback, { wait = true, passthrough = false } = {}) {
         if (!is.function(callback)) {
             throw new x.InvalidArgument("'callback' must be a function");
@@ -317,7 +325,7 @@ class CoreStream extends EventEmitter {
         }).resume();
     }
 
-    @checkDestroyed
+    @checkDestroyed(2)
     done(callback, { passthrough = false } = {}) {
         if (!is.function(callback)) {
             throw new x.InvalidArgument("'callback' must be a function");
@@ -334,7 +342,7 @@ class CoreStream extends EventEmitter {
         }).resume();
     }
 
-    @checkDestroyed
+    @checkDestroyed(2)
     toArray(callback, { passthrough = false } = {}) {
         if (!is.function(callback)) {
             throw new x.InvalidArgument("'callback' must be a function");
@@ -354,7 +362,7 @@ class CoreStream extends EventEmitter {
         }).resume();
     }
 
-    @checkDestroyed
+    @checkDestroyed(1)
     unique(prop = null) {
         if (!is.null(prop) && !is.function(prop)) {
             throw new x.InvalidArgument("'prop' must be a function or null");
@@ -490,7 +498,7 @@ class CoreStream extends EventEmitter {
             if (!x) {
                 return false;
             }
-            if (x instanceof CoreStream) {
+            if (x instanceof Stream) {
                 return !x.isEnded();
             }
             if (x instanceof std.stream.Readable) {
@@ -536,17 +544,10 @@ class CoreStream extends EventEmitter {
         return src;
     }
 }
-adone.tag.add(CoreStream, "CORE_STREAM");
+adone.tag.add(Stream, "CORE_STREAM");
 
-/**
- * Creates a CoreStream instance
- */
-export default function core(source, options) {
-    return new CoreStream(source, options);
-}
+export const create = (source, options) => new Stream(source, options);
 
-core.CoreStream = CoreStream;
+export const merge = Stream.merge.bind(Stream); // this way we will always create base core stream...
 
-core.merge = CoreStream.merge;
-
-adone.definePrivate(__, core);
+adone.definePrivate(__, exports);

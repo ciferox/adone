@@ -274,7 +274,7 @@ describe("database", "pouch", "compaction", () => {
         }).then((docsAndRevs) => {
             assert.lengthOf(docsAndRevs, 2);
             assert.exists(docsAndRevs[0].doc);
-            assert.undefinedocsAndRevs[1].doc);
+            assert.undefined(docsAndRevs[1].doc);
         });
     });
 
@@ -294,8 +294,8 @@ describe("database", "pouch", "compaction", () => {
         }).then((docsAndRevs) => {
             assert.lengthOf(docsAndRevs, 3);
             assert.exists(docsAndRevs[0].doc);
-            assert.undefinedocsAndRevs[1].doc);
-            assert.undefinedocsAndRevs[2].doc);
+            assert.undefined(docsAndRevs[1].doc);
+            assert.undefined(docsAndRevs[2].doc);
         });
     });
 
@@ -341,8 +341,8 @@ describe("database", "pouch", "compaction", () => {
                 asMap[docAndRev.rev] = docAndRev.doc;
             });
             // only leafs remain
-            assert.undefinedsMap["1-a1"]);
-            assert.undefinedsMap["2-a2"]);
+            assert.undefined(asMap["1-a1"]);
+            assert.undefined(asMap["2-a2"]);
             assert.exists(asMap["3-a3"]);
             assert.exists(asMap["1-b1"]);
         });
@@ -366,8 +366,8 @@ describe("database", "pouch", "compaction", () => {
         }).then((docsAndRevs) => {
             assert.lengthOf(docsAndRevs, 3);
             assert.exists(docsAndRevs[0].doc);
-            assert.undefinedocsAndRevs[1].doc);
-            assert.undefinedocsAndRevs[2].doc);
+            assert.undefined(docsAndRevs[1].doc);
+            assert.undefined(docsAndRevs[2].doc);
         });
     });
 
@@ -388,8 +388,8 @@ describe("database", "pouch", "compaction", () => {
         }).then((docsAndRevs) => {
             assert.lengthOf(docsAndRevs, 3);
             assert.exists(docsAndRevs[0].doc);
-            assert.undefinedocsAndRevs[1].doc);
-            assert.undefinedocsAndRevs[2].doc);
+            assert.undefined(docsAndRevs[1].doc);
+            assert.undefined(docsAndRevs[2].doc);
         });
     });
 
@@ -1887,7 +1887,7 @@ describe("database", "pouch", "compaction", () => {
         }).then((docsAndRevs) => {
             assert.lengthOf(docsAndRevs, 2);
             assert.exists(docsAndRevs[0].doc);
-            assert.undefinedocsAndRevs[1].doc);
+            assert.undefined(docsAndRevs[1].doc);
         });
     });
 
@@ -1905,8 +1905,8 @@ describe("database", "pouch", "compaction", () => {
         }).then((docsAndRevs) => {
             assert.lengthOf(docsAndRevs, 3);
             assert.exists(docsAndRevs[0].doc);
-            assert.undefinedocsAndRevs[1].doc);
-            assert.undefinedocsAndRevs[2].doc);
+            assert.undefined(docsAndRevs[1].doc);
+            assert.undefined(docsAndRevs[2].doc);
         });
     });
 
@@ -1943,8 +1943,8 @@ describe("database", "pouch", "compaction", () => {
                 asMap[docAndRev.rev] = docAndRev.doc;
             });
             // only leafs remain
-            assert.undefinedsMap["1-a1"]);
-            assert.undefinedsMap["2-a2"]);
+            assert.undefined(asMap["1-a1"]);
+            assert.undefined(asMap["2-a2"]);
             assert.exists(asMap["3-a3"]);
             assert.exists(asMap["1-b1"]);
         });
@@ -1966,8 +1966,8 @@ describe("database", "pouch", "compaction", () => {
         }).then((docsAndRevs) => {
             assert.lengthOf(docsAndRevs, 3);
             assert.exists(docsAndRevs[0].doc);
-            assert.undefinedocsAndRevs[1].doc);
-            assert.undefinedocsAndRevs[2].doc);
+            assert.undefined(docsAndRevs[1].doc);
+            assert.undefined(docsAndRevs[2].doc);
         });
     });
 
@@ -1986,8 +1986,8 @@ describe("database", "pouch", "compaction", () => {
         }).then((docsAndRevs) => {
             assert.lengthOf(docsAndRevs, 3);
             assert.exists(docsAndRevs[0].doc);
-            assert.undefinedocsAndRevs[1].doc);
-            assert.undefinedocsAndRevs[2].doc);
+            assert.undefined(docsAndRevs[1].doc);
+            assert.undefined(docsAndRevs[2].doc);
         });
     });
 

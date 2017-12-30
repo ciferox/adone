@@ -297,7 +297,7 @@ describe("fast", "transform", "notify", () => {
                 endStream: true
             });
 
-            const stream = adone.stream.core(null, {
+            const stream = adone.stream.core.create(null, {
                 transform() {
                     this.emit("error", "error");
                 }

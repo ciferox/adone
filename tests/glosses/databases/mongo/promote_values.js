@@ -77,7 +77,7 @@ describe("promote values", function () {
             int: 1234
         })));
         const cursor = collection.find({}, { limit: 102, promoteValues: false });
-        const docs = await cursor.stream().pipe(core());
+        const docs = await cursor.stream().pipe(core.create());
         for (const doc of docs) {
             expect(doc.int).to.be.instanceOf(bson.Int32);
             expect(doc.long).to.be.instanceOf(bson.Long);

@@ -503,7 +503,7 @@ describe("cursor", function () {
 
         const stream = cursor.stream();
 
-        const docs = await stream.pipe(core());
+        const docs = await stream.pipe(core.create());
 
         expect(docs).to.have.lengthOf(1000);
         if (this.topology === "sharded") {

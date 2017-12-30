@@ -1352,7 +1352,7 @@ describe("database", "pouch", "mapreduce", () => {
             }
             {
                 const res = await db.query(queryFun);
-                expect(res.rows[0].value).to.be.true(););
+                expect(res.rows[0].value).to.be.true();
             }
         } finally {
             await cleanup();
@@ -1751,7 +1751,7 @@ describe("database", "pouch", "mapreduce", () => {
             }).then(() => {
                 return db.viewCleanup();
             }).then((res) => {
-                expect(res.ok).to.be.true(););
+                expect(res.ok).to.be.true();
             });
         });
     });
@@ -3402,7 +3402,7 @@ describe("database", "pouch", "mapreduce", () => {
                 });
             });
         }).then((res) => {
-            expect(res).to.be.true(););
+            expect(res).to.be.true();
         });
     });
 

@@ -643,7 +643,7 @@ describe("gridfs stream", function () {
                 readStream.pipe(uploadStream);
             });
             const downloadStream = bucket.openDownloadStreamByName("teststart.dat", { start: 1 }).end(6);
-            const data = await downloadStream.pipe(stream.concat());
+            const data = await downloadStream.pipe(stream.concat.create());
             expect(data).to.be.deep.equal(thisFile.slice(1, 6));
         });
     }

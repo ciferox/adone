@@ -114,16 +114,16 @@ describe("database", "pouch", "suite2 replication", () => {
         remote.bulkDocs({ docs }, {}).then(() => {
             DB.replicate(
                 dbRemote, dbName).on("complete", (result) => {
-                    assert.equal(result.ok, true);
-                    assert.equal(result.docs_written, docs.length);
-                    new DB(dbName).info().then((info) => {
-                        verifyInfo(info, {
-                            update_seq: numDocs,
-                            doc_count: numDocs
-                        });
-                        done();
+                assert.equal(result.ok, true);
+                assert.equal(result.docs_written, docs.length);
+                new DB(dbName).info().then((info) => {
+                    verifyInfo(info, {
+                        update_seq: numDocs,
+                        doc_count: numDocs
                     });
+                    done();
                 });
+            });
         });
     });
 
@@ -273,20 +273,20 @@ describe("database", "pouch", "suite2 replication", () => {
         remote.bulkDocs({ docs }, { new_edits: false }).then(() => {
             DB.replicate(
                 dbRemote, dbName).on("complete", (result) => {
-                    assert.equal(result.ok, true);
-                    assert.equal(result.docs_written, docs.length);
-                    const db = new DB(dbName);
-                    db.info().then((info) => {
-                        assert.equal(info.doc_count, 1, "doc_count");
-                        db.get("doc", { open_revs: "all" }).then((docs) => {
-                            const okDocs = docs.filter((doc) => {
-                                return doc.ok;
-                            });
-                            assert.lengthOf(okDocs, numRevs);
-                            done();
+                assert.equal(result.ok, true);
+                assert.equal(result.docs_written, docs.length);
+                const db = new DB(dbName);
+                db.info().then((info) => {
+                    assert.equal(info.doc_count, 1, "doc_count");
+                    db.get("doc", { open_revs: "all" }).then((docs) => {
+                        const okDocs = docs.filter((doc) => {
+                            return doc.ok;
                         });
+                        assert.lengthOf(okDocs, numRevs);
+                        done();
                     });
                 });
+            });
         });
     });
 
@@ -865,7 +865,7 @@ describe("database", "pouch", "suite2 replication", () => {
                     docs: [{
                         _id: "foo",
                         _rev: `2-${i}`,
-                        _deleted: (i % 3 === 1)
+                        _deleted: i % 3 === 1
                     }],
                     new_edits: false
                 });
@@ -1841,7 +1841,7 @@ describe("database", "pouch", "suite2 replication", () => {
             return remote.allDocs({ keys: ["0"] });
         }).then((res) => {
             const row = res.rows[0];
-            assert.undefinedow.error);
+            assert.undefined(row.error);
             // set rev to latest so we go at the end (otherwise new
             // rev is 1 and the subsequent remove below won't win)
             const doc = {
@@ -1968,12 +1968,12 @@ describe("database", "pouch", "suite2 replication", () => {
             return db.get("foo", { conflicts: true });
         }).then((doc) => {
             assert.equal(doc.generation, 3);
-            assert.undefinedoc._conflicts);
+            assert.undefined(doc._conflicts);
         }).then(() => {
             return remote.get("foo", { conflicts: true });
         }).then((doc) => {
             assert.equal(doc.generation, 3);
-            assert.undefinedoc._conflicts);
+            assert.undefined(doc._conflicts);
         });
     });
 
@@ -2696,8 +2696,8 @@ describe("database", "pouch", "suite2 replication", () => {
             ]);
         }).then((res) => {
             // [0] = target checkpoint, [1] = source checkpoint
-            assert.undefinedes[0].session_id);
-            assert.undefinedes[1].session_id);
+            assert.undefined(res[0].session_id);
+            assert.undefined(res[1].session_id);
 
             return source.put(doc, {});
         }).then(() => {
@@ -3288,13 +3288,13 @@ describe("database", "pouch", "suite2 replication", () => {
                 assert.equal(revs[0].ok._id, docid, "rev 1, correct document id");
                 assert.equal(revs[1].ok._id, docid, "rev 2, correct document id");
                 // order of revisions is not specified
-                assert.true(((
+                assert.true((
                     revs[0].ok._rev === a_doc._rev &&
                     revs[1].ok._rev === b_doc._rev) ||
                     (
                         revs[0].ok._rev === b_doc._rev &&
                         revs[1].ok._rev === a_doc._rev)
-                ));
+                );
             });
         })
 

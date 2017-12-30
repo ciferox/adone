@@ -92,7 +92,7 @@ describe("db", function () {
                 { a: 4, b: 4, c: 4 }
             ]);
             await collection.ensureIndex({ a: 1, b: 1 }, { unique: true, background: true, w: 1 });
-            expect(await collection.reIndex()).to.be.true(););
+            expect(await collection.reIndex()).to.be.true();
             const indexInformation = await collection.indexInformation();
             expect(indexInformation._id_).to.be.deep.equal([["_id", 1]]);
             expect(indexInformation.a_1_b_1).to.be.deep.equal([["a", 1], ["b", 1]]);
@@ -100,7 +100,7 @@ describe("db", function () {
     }
 
     it("should correctly get error dropping non existing db", async () => {
-        expect(await this.db.db("nonexistingdb").dropDatabase()).to.be.true(););
+        expect(await this.db.db("nonexistingdb").dropDatabase()).to.be.true();
     });
 
     it("should correctly throw when trying ro reppen connection", async () => {

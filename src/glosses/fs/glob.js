@@ -7,7 +7,9 @@ const {
     is,
     util,
     event: { EventEmitter },
-    stream: { CoreStream },
+    stream: {
+        core: { Stream: CoreStream }
+    },
     identity
 } = adone;
 

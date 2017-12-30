@@ -151,7 +151,7 @@ export const watchSource = (globs, {
         globsParents = globs.map((x) => adone.util.globParent(x));
     }
 
-    const stream = core(null, {
+    const stream = core.create(null, {
         flush: () => {
             // eslint-disable-next-line no-use-before-define
             watcher.close();

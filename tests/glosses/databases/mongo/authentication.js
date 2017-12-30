@@ -31,7 +31,7 @@ describe("authentication", function () {
             // Add the new user to the admin database
             expect(await adminDb.addUser("admin14", "admin14")).to.be.ok();
             // Authenticate using the newly added user
-            expect(await adminDb.authenticate("admin14", "admin14")).to.be.true(););
+            expect(await adminDb.authenticate("admin14", "admin14")).to.be.true();
             // Retrive the server Info, returns error if we are not
             // running a replicaset
             expect(await adminDb.replSetGetStatus()).to.be.ok();
@@ -47,7 +47,7 @@ describe("authentication", function () {
             const adminDb = this.db.admin();
             await adminDb.addUser("admin", "admin");
 
-            expect(await adminDb.authenticate("admin", "admin")).to.be.true(););
+            expect(await adminDb.authenticate("admin", "admin")).to.be.true();
             const doc = await adminDb.validateCollection("shouldCorrectlyCallValidateCollectionUsingAuthenticatedMode");
             expect(doc).to.be.ok();
             await adminDb.removeUser("admin");
@@ -68,7 +68,7 @@ describe("authentication", function () {
             // Add the new user to the admin database
             expect(await adminDb.addUser("admin15", "admin15")).to.be.ok();
             // Authenticate using the newly added user
-            expect(await adminDb.authenticate("admin15", "admin15")).to.be.true(););
+            expect(await adminDb.authenticate("admin15", "admin15")).to.be.true();
             await authenticated;
             await adminDb.removeUser("admin15");
         });
@@ -82,7 +82,7 @@ describe("authentication", function () {
                 await this.db.collection("test").insert({ a: 1 });
             });
 
-            expect(await this.db.admin().authenticate("admin", "admin")).to.be.true(););
+            expect(await this.db.admin().authenticate("admin", "admin")).to.be.true();
             await this.db.collection("test").insert({ a: 1 });
             await this.db.admin().logout();
             await assert.throws(async () => {
@@ -450,7 +450,7 @@ describe("authentication", function () {
                 await db.admin().authenticate("admin", "admin");
                 await db.collection("test").insert({ a: 1 }, { w: 1 });
                 await db.addUser("test", "test", { w: 3, wtimeout: 25000 });
-                expect(await await db.authenticate("test", "test")).to.be.true(););
+                expect(await await db.authenticate("test", "test")).to.be.true();
                 const primary = await manager.primary();
                 await primary.stop();
                 await new Promise((resolve) => {

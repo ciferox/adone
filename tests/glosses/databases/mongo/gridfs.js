@@ -552,7 +552,7 @@ describe("gridfs", function () {
         await gridStore.close();
 
         gridStore = new GridStore(db, "test_stream_write_2", "r");
-        const data = await gridStore.stream().pipe(stream.concat());
+        const data = await gridStore.stream().pipe(stream.concat.create());
         expect(data).to.be.deep.equal(await file.contents("buffer"));
     });
 
@@ -1141,7 +1141,7 @@ describe("gridfs", function () {
         expect(await gridStore.tell()).to.be.equal(1024);
         await gridStore.seek(0, GridStore.IO_SEEK_SET);
         expect(await gridStore.tell()).to.be.equal(0);
-        expect(data).to.be.deep.equal(await gridStore.stream().pipe(stream.concat()));
+        expect(data).to.be.deep.equal(await gridStore.stream().pipe(stream.concat.create()));
     });
 
     it("should correctly write fake png to gridstore", async () => {

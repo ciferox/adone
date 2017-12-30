@@ -1,4 +1,4 @@
-export default class FastStream extends adone.stream.CoreStream {
+export default class FastStream extends adone.stream.core.Stream  {
 }
 adone.tag.add(FastStream, "FAST_STREAM");
 

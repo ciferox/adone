@@ -45,12 +45,12 @@ describe("fast", "transform", "revision hash replace", () => {
             const extension = path.extname(file.path);
 
             if (extension === ".html") {
-                expect(!unreplacedCSSFilePattern.test(contents)).to.be.true(););
-                expect(!unreplacedPNGFilePattern.test(contents)).to.be.true(););
+                expect(!unreplacedCSSFilePattern.test(contents)).to.be.true();
+                expect(!unreplacedPNGFilePattern.test(contents)).to.be.true();
             } else if (extension === ".css") {
-                expect(!unreplacedSVGFilePattern.test(contents)).to.be.true(););
+                expect(!unreplacedSVGFilePattern.test(contents)).to.be.true();
             } else if (extension === ".svg") {
-                expect(contents === svgFileBody).to.be.true(););
+                expect(contents === svgFileBody).to.be.true();
             }
         }
     });
@@ -79,7 +79,7 @@ describe("fast", "transform", "revision hash replace", () => {
             const contents = file.contents.toString();
             const extension = path.extname(file.path);
             if (extension === ".html") {
-                expect(unreplacedCSSFilePattern.test(contents)).to.be.true(););
+                expect(unreplacedCSSFilePattern.test(contents)).to.be.true();
             }
         }
     });
@@ -108,7 +108,7 @@ describe("fast", "transform", "revision hash replace", () => {
             const contents = file.contents.toString();
             const extension = path.extname(file.path);
             if (extension === ".html") {
-                expect(unreplacedCSSFilePattern.test(contents)).to.be.true(););
+                expect(unreplacedCSSFilePattern.test(contents)).to.be.true();
             }
         }
     });
@@ -137,7 +137,7 @@ describe("fast", "transform", "revision hash replace", () => {
             const contents = file.contents.toString();
             const extension = path.extname(file.path);
             if (extension === ".html") {
-                expect(replacedCSSFilePattern.test(contents)).to.be.true(););
+                expect(replacedCSSFilePattern.test(contents)).to.be.true();
             }
         }
     });
@@ -221,12 +221,12 @@ describe("fast", "transform", "revision hash replace", () => {
                 const extension = path.extname(file.path);
 
                 if (extension === ".html") {
-                    expect(replacedCSSFilePattern.test(contents)).to.be.true(););
-                    expect(replacedPNGFilePattern.test(contents)).to.be.true(););
+                    expect(replacedCSSFilePattern.test(contents)).to.be.true();
+                    expect(replacedPNGFilePattern.test(contents)).to.be.true();
                 } else if (extension === ".css") {
-                    expect(replacedSVGFilePattern.test(contents)).to.be.true(););
+                    expect(replacedSVGFilePattern.test(contents)).to.be.true();
                 } else if (extension === ".svg") {
-                    expect(contents === svgFileBody).to.be.true(););
+                    expect(contents === svgFileBody).to.be.true();
                 }
             }
         });
@@ -257,7 +257,7 @@ describe("fast", "transform", "revision hash replace", () => {
                 const contents = file.contents.toString();
                 const extension = path.extname(file.path);
                 if (extension === ".html") {
-                    expect(replacedCSSFilePattern.test(contents)).to.be.true(););
+                    expect(replacedCSSFilePattern.test(contents)).to.be.true();
                 }
             }
         });
@@ -306,9 +306,9 @@ describe("fast", "transform", "revision hash replace", () => {
                 const extension = path.extname(file.path);
 
                 if (extension === ".js") {
-                    expect(replacedJSMapFilePattern.test(contents)).to.be.true(););
+                    expect(replacedJSMapFilePattern.test(contents)).to.be.true();
                 } else if (extension === ".html") {
-                    expect(replacedCSSFilePattern.test(contents)).to.be.true(););
+                    expect(replacedCSSFilePattern.test(contents)).to.be.true();
                 }
             }
         });
