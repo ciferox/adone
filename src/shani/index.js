@@ -4,7 +4,10 @@ const {
     lazify,
     hrtime,
     util,
-    std
+    std,
+    text: {
+        unicode: { symbol }
+    }
 } = adone;
 
 const shani = lazify({
@@ -14,6 +17,54 @@ const shani = lazify({
 const SET_TIMEOUT_MAX = 2 ** 31 - 1;
 
 const callGc = typeof gc === "undefined" ? adone.noop : gc; // eslint-disable-line
+
+const wrapError = (err) => {
+    const result = {};
+    if (err.name) {
+        result.name = err.name;
+    }
+    if (err.message) {
+        result.message = err.message;
+    }
+    if (err.stack) {
+        result.stack = err.stack;
+    }
+    if (err.actual && err.expected) {
+        result.diff = shani.util.diff.getDiff(err.actual, err.expected);
+    }
+    if (err.diff) {
+        result.diff = err.diff;
+    }
+    return result;
+};
+
+const wrapHook = (hook) => {
+    return {
+        description: hook.description,
+        meta: hook.meta,
+        timeout: hook.timeout()
+    };
+};
+
+const wrapBlock = (block) => {
+    return {
+        level: block.level(),
+        name: block.name,
+        chain: block.chain()
+    };
+};
+
+const wrapTest = (test) => {
+    return {
+        description: test.description,
+        timeout: test.timeout(),
+        isTodo: test.isTodo(),
+        isCancelled: test.isCancelled(),
+        cancelReason: test.cancelReason,
+        cancelType: test.cancelType,
+        meta: test.meta
+    };
+};
 
 const isShaniFrame = (frame) => {
     return /adone.(?:lib|src).shani.index\.js/.test(frame);
@@ -106,7 +157,7 @@ class Hook {
             if (!_err) {
                 _err = new Error("Promise rejected with no or falsy reason");
             }
-            err = _err;
+            err = wrapError(_err);
         } finally {
             delete this.runtimeContext.timeout;
             process.removeListener("uncaughtException", uncaughtException);
@@ -117,7 +168,7 @@ class Hook {
         const elapsed = s[0] * 1e3 + s[1] / 1e6;
         const timeout = this.timeout();
         if (timeout && elapsed >= timeout) {
-            this._failed = new x.Timeout(`Timeout of ${this.timeout()}ms exceeded`);
+            this._failed = wrapError(new x.Timeout(`Timeout of ${this.timeout()}ms exceeded`));
             if (err) {
                 this._failed.original = err.original || err;
             }
@@ -342,7 +393,7 @@ class Block {
         if (!p) {
             return this.name;
         }
-        return `${p} - ${this.name}`;
+        return `${p} ${symbol.arrowRight} ${this.name}`;
     }
 
     blockChain() {
@@ -525,7 +576,7 @@ class Test {
             if (!_err) {
                 _err = new Error("Promise rejected with no or falsy reason");
             }
-            err = _err;
+            err = wrapError(_err);
         } finally {
             delete this.runtimeContext.skip;
             delete this.runtimeContext.timeout;
@@ -537,7 +588,7 @@ class Test {
         const elapsed = s[0] * 1e3 + s[1] / 1e6;
         const timeout = this.timeout();
         if (timeout && elapsed >= timeout) {
-            const _err = new x.Timeout(`Timeout of ${this.timeout()}ms exceeded`);
+            const _err = wrapError(new x.Timeout(`Timeout of ${this.timeout()}ms exceeded`));
             if (err) {
                 _err.original = err;
             }
@@ -720,6 +771,72 @@ class ConfigLoader {
     }
 }
 
+class ExternalRunner {
+    constructor(engine, path) {
+        this.engine = engine;
+        this.path = path;
+        this.proc = null;
+    }
+
+    async waitForMessage() {
+        return new Promise((resolve) => this.proc.once("message", resolve));
+    }
+
+    send(obj) {
+        this.proc.send(obj);
+    }
+
+    async startProcess() {
+        this.proc = std.child_process.fork(std.path.resolve(__dirname, "external_runner.js"), [adone.rootPath], {
+            stdio: ["inherit", "inherit", "inherit", "ipc"]
+        });
+        await this.waitForMessage();
+        this.send(adone.data.bson.encode({
+            defaultTimeout: this.engine.defaultTimeout,
+            defaultHookTimeout: this.engine.defaultHookTimeout,
+            transpilerOptions: this.engine.transpilerOptions,
+            skipSlow: this.engine.skipSlow,
+            onlySlow: this.engine.onlySlow,
+            root: this.engine.root,
+            path: this.path
+        }).toString("hex"));
+        await this.waitForMessage();
+    }
+
+    start() {
+        this.send("start");
+        const emitter = new adone.event.EventEmitter();
+
+        this.proc.on("message", ({ event, args }) => {
+            emitter.emit(event, ...args);
+        });
+
+        let done = false;
+
+        emitter.once("done", () => {
+            done = true;
+        });
+
+        this.proc.once("exit", (code, signal) => {
+            if (done) {
+                return;
+            }
+            if (code !== 0) {
+                emitter.emit("error", wrapError(new Error(`Process for ${this.path} unexpectedly exited: code = ${code}, signal = ${signal}`)));
+                process.nextTick(() => {
+                    emitter.emit("done");
+                });
+            }
+        });
+
+        emitter.stop = () => {
+            this.send("stop");
+        };
+
+        return emitter;
+    }
+}
+
 export class Engine {
     constructor({
         defaultTimeout = 5000,
@@ -729,7 +846,8 @@ export class Engine {
         watch = false,
         skipSlow = false,
         onlySlow = false,
-        root = process.cwd()
+        root = process.cwd(),
+        perProcess = false
     } = {}) {
         this._paths = []; // path can be a glob or a path
         this.defaultTimeout = defaultTimeout;
@@ -739,7 +857,9 @@ export class Engine {
         this.watch = watch;
         this.skipSlow = skipSlow;
         this.onlySlow = onlySlow;
+        this.root = root;
         this.configLoader = new ConfigLoader(root);
+        this.perProcess = perProcess;
     }
 
     include(...paths) {
@@ -1041,8 +1161,9 @@ export class Engine {
                 })(root);
 
                 const executor = async (block) => {
+                    const wrappedBlock = wrapBlock(block);
                     if (block !== root) {
-                        emitter.emit("enter block", { block });
+                        emitter.emit("enter block", { block: wrappedBlock });
                     }
                     let failed = false;
                     let hookFailed = false;
@@ -1051,7 +1172,7 @@ export class Engine {
                             if (node instanceof Block) {
                                 executor(node); // should skip all nested the tests
                             } else {
-                                emitter.emit("skip test", { block, test: node });
+                                emitter.emit("skip test", { block: wrappedBlock, test: wrapTest(node) });
                             }
                         }
                     } else {
@@ -1072,13 +1193,13 @@ export class Engine {
                                 if (hook.fired()) {
                                     continue;
                                 }
-                                emitter.emit("start before hook", { block, hook });
+                                emitter.emit("start before hook", { block: wrappedBlock, hook: wrapHook(hook) });
                                 // eslint-disable-next-line no-await-in-loop
                                 const meta = await hook.run();
-                                emitter.emit("end before hook", { block, hook, meta });
+                                emitter.emit("end before hook", { block: wrappedBlock, hook: wrapHook(hook), meta });
                                 if (meta.err) {
                                     err = meta.err;
-                                    err.hook = hook; // ..
+                                    err.hook = wrapHook(hook); // ..
                                     hookFailed = true;
                                     break;
                                 }
@@ -1095,7 +1216,7 @@ export class Engine {
                                 node.cancel(err, "beforeHook");
                             }
                             if (node instanceof Test && node.isExclusive()) {
-                                emitter.emit("skip test", { block, test: node, runtime: false });
+                                emitter.emit("skip test", { block: wrappedBlock, test: wrapTest(node), runtime: false });
                                 continue;
                             }
                             if (node instanceof Block) {
@@ -1105,6 +1226,7 @@ export class Engine {
                                 // hookFailed should be always false here, so just assign
                                 // hookFailed = meta.hookFailed;
                             } else {
+                                const wrappedNode = wrapTest(node);
                                 const blocksFired = [];
                                 let hookFailed = false;
                                 let err;
@@ -1116,13 +1238,13 @@ export class Engine {
                                         if (stopped) {
                                             break;
                                         }
-                                        emitter.emit("start before each hook", { block, test: node, hook });
+                                        emitter.emit("start before each hook", { block: wrappedBlock, test: wrappedNode, hook: wrapHook(hook) });
                                         // eslint-disable-next-line no-await-in-loop
                                         const meta = await hook.run();
-                                        emitter.emit("end before each hook", { block, test: node, hook, meta });
+                                        emitter.emit("end before each hook", { block: wrappedBlock, test: wrappedNode, hook: wrapHook(hook), meta });
                                         if (meta.err) {
                                             err = meta.err;
-                                            err.hook = hook;
+                                            err.hook = wrapHook(hook);
                                             hookFailed = true;
                                             break;
                                         }
@@ -1135,19 +1257,19 @@ export class Engine {
                                 if (!stopped) {
                                     if (hookFailed) {
                                         node.cancel(err, "beforeEach");
-                                        emitter.emit("skip test", { block, test: node, runtime: false });
+                                        emitter.emit("skip test", { block: wrappedBlock, test: wrappedNode, runtime: false });
                                     } else {
                                         for (const hook of node.beforeHooks()) {
                                             if (stopped) {
                                                 break;
                                             }
-                                            emitter.emit("start before test hook", { block, test: node, hook });
+                                            emitter.emit("start before test hook", { block: wrappedBlock, test: wrappedNode, hook: wrapHook(hook) });
                                             // eslint-disable-next-line no-await-in-loop
                                             const meta = await hook.run();
-                                            emitter.emit("end before test hook", { block, test: node, hook, meta });
+                                            emitter.emit("end before test hook", { block: wrappedBlock, test: wrappedNode, hook: wrapHook(hook), meta });
                                             if (meta.err) {
                                                 err = meta.err;
-                                                err.hook = hook;
+                                                err.hook = wrapHook(hook);
                                                 hookFailed = true;
                                                 break;
                                             }
@@ -1155,25 +1277,25 @@ export class Engine {
                                         if (!stopped) {
                                             if (hookFailed) {
                                                 node.cancel(err, "beforeTest");
-                                                emitter.emit("skip test", { block, test: node, runtime: false });
+                                                emitter.emit("skip test", { block: wrappedBlock, test: wrappedNode, runtime: false });
                                                 continue;
                                             } else {
-                                                emitter.emit("start test", { block, test: node });
+                                                emitter.emit("start test", { block: wrappedBlock, test: wrappedNode });
                                                 let meta;
                                                 if (!hookFailed) {
                                                     // eslint-disable-next-line no-await-in-loop
                                                     meta = await node.run();
                                                 } else {
-                                                    meta = { elapsed: 0, err: new Error("Rejected due the hook fail") };
+                                                    meta = { elapsed: 0, err: wrapError(new Error("Rejected due the hook fail")) };
                                                 }
 
                                                 // it can be skipped in runtime
                                                 meta.skipped = node.isExclusive();
                                                 if (meta.skipped) {
-                                                    emitter.emit("skip test", { block, test: node, runtime: true });
+                                                    emitter.emit("skip test", { block: wrappedBlock, test: wrappedNode, runtime: true });
                                                 }
 
-                                                emitter.emit("end test", { block, test: node, meta });
+                                                emitter.emit("end test", { block: wrappedBlock, test: wrappedNode, meta });
                                                 if (meta.err) {
                                                     failed = true;
                                                 }
@@ -1181,10 +1303,10 @@ export class Engine {
                                         }
                                     }
                                     for (const hook of node.afterHooks()) {
-                                        emitter.emit("start after test hook", { block, test: node, hook });
+                                        emitter.emit("start after test hook", { block: wrappedBlock, test: wrappedNode, hook: wrapHook(hook) });
                                         // eslint-disable-next-line no-await-in-loop
                                         const meta = await hook.run();
-                                        emitter.emit("end after test hook", { block, test: node, hook, meta });
+                                        emitter.emit("end after test hook", { block: wrappedBlock, test: wrappedNode, hook: wrapHook(hook), meta });
                                         if (meta.err) {
                                             hookFailed = true;
                                             break;
@@ -1193,10 +1315,10 @@ export class Engine {
                                 }
                                 for (const parentBlock of blocksFired.reverse()) {
                                     for (const hook of parentBlock.afterEachHooks()) {
-                                        emitter.emit("start after each hook", { block, test: node, hook });
+                                        emitter.emit("start after each hook", { block: wrappedBlock, test: wrappedNode, hook: wrapHook(hook) });
                                         // eslint-disable-next-line no-await-in-loop
                                         const meta = await hook.run();
-                                        emitter.emit("end after each hook", { block, test: node, hook, meta });
+                                        emitter.emit("end after each hook", { block: wrappedBlock, test: wrappedNode, hook: wrapHook(hook), meta });
                                         if (meta.err) {
                                             hookFailed = true;
                                         }
@@ -1208,10 +1330,10 @@ export class Engine {
                             if (hook.fired()) {
                                 continue;
                             }
-                            emitter.emit("start after hook", { block, hook });
+                            emitter.emit("start after hook", { block: wrappedBlock, hook: wrapHook(hook) });
                             // eslint-disable-next-line no-await-in-loop
                             const meta = await hook.run();
-                            emitter.emit("end after hook", { block, hook, meta });
+                            emitter.emit("end after hook", { block: wrappedBlock, hook: wrapHook(hook), meta });
                             if (meta.err) {
                                 hookFailed = true;
                             }
@@ -1219,7 +1341,7 @@ export class Engine {
                     }
 
                     if (block !== root) {
-                        emitter.emit("exit block", { block });
+                        emitter.emit("exit block", { block: wrappedBlock });
                     }
                     return { failed, hookFailed };
                 };
@@ -1283,11 +1405,59 @@ export class Engine {
         };
     }
 
-    // TODO: refactor the shit
-    _process(cb, { wrapLogFunctions = true } = {}) {
+    start() {
         const emitter = new adone.event.EventEmitter();
 
+        let executing = null;
+        let stopped = false;
+
+        emitter.stop = () => {
+            stopped = true;
+            if (executing) {
+                executing.stop();
+            }
+        };
+
         const main = async (paths) => {
+            if (this.perProcess) {
+                for (const path of (await adone.fs.glob(paths)).sort()) {
+                    const runner = new ExternalRunner(this, path);
+                    await runner.startProcess();
+                    executing = runner.start();
+
+                    const events = [
+                        "enter block", "exit block",
+                        "start test", "end test", "skip test",
+                        "start before hook", "end before hook",
+                        "start after hook", "end after hook",
+                        "start before each hook", "end before each hook",
+                        "start before test hook", "end before test hook",
+                        "start after each hook", "end after each hook",
+                        "start after test hook", "end after test hook",
+                        "error"
+                    ];
+                    let done = false;
+                    for (const e of events) {
+                        executing.on(e, (...data) => {
+                            if (done) {
+                                return;
+                            }
+                            emitter.emit(e, ...data);
+                        });
+                    }
+
+                    await new Promise((resolve, reject) => {
+                        executing.once("done", resolve);
+                    });
+                    done = true;
+
+                    if (stopped) {
+                        break;
+                    }
+                }
+
+                return;
+            }
             const contentCache = new Map();
             const transpiledCache = new Map();
             const loader = (module, filename) => {
@@ -1357,10 +1527,8 @@ export class Engine {
                 }
             };
 
-            if (wrapLogFunctions) {
-                stub.stub(console, "log", "error", "debug", "info", "dir", "warn");
-                stub.stub(adone, "log", "fatal", "error", "warn", "info", "debug", "trace");
-            }
+            stub.stub(console, "log", "error", "debug", "info", "dir", "warn");
+            stub.stub(adone, "log", "fatal", "error", "warn", "info", "debug", "trace");
 
             for (const path of (await adone.fs.glob(paths)).sort()) {
                 const context = this.context();
@@ -1368,19 +1536,17 @@ export class Engine {
                     "describe", "context",
                     "it", "specify",
                     "before", "after",
-                    "beforeEach", "afterEach",
-                    "skip"
+                    "beforeEach", "afterEach"
                 ];
 
                 const dirname = std.path.dirname(path);
-
 
                 try {
                     // load config if exists
                     await this.configLoader.loadConfigFor(path, context);
                 } catch (err) {
                     err.message = `Error while loading config for this file: ${path}\n${err.message}`;
-                    emitter.emit("error", err);
+                    emitter.emit("error", wrapError(err));
                     continue; // ?
                 }
 
@@ -1435,79 +1601,56 @@ export class Engine {
                     m.loadItself();
                 } catch (err) {
                     err.message = `Error while loading this file: ${path}\n${err.message}`;
-                    emitter.emit("error", err);
+                    emitter.emit("error", wrapError(err));
                     continue; // ?
                 }
 
-                let mustContinue = true;
+                executing = context.start();
+
+                const events = [
+                    "enter block", "exit block",
+                    "start test", "end test", "skip test",
+                    "start before hook", "end before hook",
+                    "start after hook", "end after hook",
+                    "start before each hook", "end before each hook",
+                    "start before test hook", "end before test hook",
+                    "start after each hook", "end after each hook",
+                    "start after test hook", "end after test hook",
+                    "error"
+                ];
+                let done = false;
+                for (const e of events) {
+                    executing.on(e, (...data) => {
+                        if (done) {
+                            return;
+                        }
+                        emitter.emit(e, ...data);
+                    });
+                }
+
                 try {
-                    const res = await cb(context, path);
-                    if (is.boolean(res)) {
-                        mustContinue = res;
-                    }
+                    await new Promise((resolve) => {
+                        executing.once("done", resolve);
+                    });
                 } finally {
+                    done = true;
                     m.cache.delete(path);
                     if (this.callGc) {
                         callGc();
                     }
                 }
-                if (!mustContinue) {
+                if (stopped) {
                     break;
                 }
             }
-            if (wrapLogFunctions) {
-                stub.restore();
-            }
+            stub.restore();
         };
 
         Promise.resolve().then(() => main(this._paths)).catch((err) => {
-            emitter.emit("error", err);
+            emitter.emit("error", wrapError(err));
         }).then(() => {
             emitter.emit("done");
         });
-
-        return emitter;
-    }
-
-    start() {
-        let mustContinue = true;
-
-        let executing = null;
-        const executingDone = () => new Promise((resolve, reject) => {
-            executing.once("error", reject);
-            executing.once("done", resolve);
-        });
-
-        const emitter = this._process(async (context) => {
-            executing = context.start();
-            const events = [
-                "enter block", "exit block",
-                "start test", "end test", "skip test",
-                "start before hook", "end before hook",
-                "start after hook", "end after hook",
-                "start before each hook", "end before each hook",
-                "start before test hook", "end before test hook",
-                "start after each hook", "end after each hook",
-                "start after test hook", "end after test hook"
-            ];
-            for (const e of events) {
-                executing.on(e, (...data) => {
-                    emitter.emit(e, ...data);
-                });
-            }
-
-            // eslint-disable-next-line no-await-in-loop
-            await executingDone();
-
-            return mustContinue;
-        });
-
-        emitter.stop = () => {
-            mustContinue = false;
-            if (executing) {
-                executing.stop();
-            }
-        };
 
         return emitter;
     }
@@ -1538,8 +1681,6 @@ export const consoleReporter = ({
     const term = adone.runtime.term;
 
     const { isTTY } = process.stdout;
-
-    const { text: { unicode: { symbol } } } = adone;
 
     const ansiRegexp = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-PRZcf-nqry=><]/g;
     const parse = (str) => {
@@ -1599,12 +1740,12 @@ export const consoleReporter = ({
             const startHookHandler = (type) => {
                 type = colorizeHook(type);
                 return ({ block, hook, test }) => {
-                    const padding = "    ".repeat(Math.max(block.level() + (test ? 1 : 0), 0));
+                    const padding = "    ".repeat(Math.max(block.level + (test ? 1 : 0), 0));
                     const options = {
                         schema: `${padding}:spinner ${type} hook {grey-fg}{escape}${hook.description}{/escape}{/}:suffix`
                     };
                     if (timers || allTimings) {
-                        options.timeFormatter = (x) => elapsedToString(x, hook.timeout());
+                        options.timeFormatter = (x) => elapsedToString(x, hook.timeout);
                     }
                     bar = adone.runtime.term.progress(options);
                     bar.update(0, {
@@ -1659,13 +1800,13 @@ export const consoleReporter = ({
         let enteredBlocks = [];
         let blockLevel = 0;
 
-        const createTestBar = (test) => {
-            const padding = "    ".repeat(test.block.level() + 1);
+        const createTestBar = (test, block) => {
+            const padding = "    ".repeat(block.level + 1);
             const options = {
                 schema: `${padding}:spinner {:tag}{escape}${test.description}{/escape}{/}:suffix`
             };
             if (timers || allTimings) {
-                options.timeFormatter = (x) => elapsedToString(x, test.timeout());
+                options.timeFormatter = (x) => elapsedToString(x, test.timeout);
             }
             return adone.runtime.term.progress(options);
         };
@@ -1698,14 +1839,14 @@ export const consoleReporter = ({
             .on("exit block", () => {
                 --blockLevel;
             })
-            .on("start test", reportOnThrow(({ test }) => {
-                bar = createTestBar(test);
+            .on("start test", reportOnThrow(({ test, block }) => {
+                bar = createTestBar(test, block);
                 bar.update(0, {
                     tag: "grey-fg",
                     suffix: timers ? " (:elapsed)" : ""
                 });
             }))
-            .on("end test", reportOnThrow(({ test, meta: { err, elapsed, skipped } }) => {
+            .on("end test", reportOnThrow(({ block, test, meta: { err, elapsed, skipped } }) => {
                 if (skipped) {
                     // shouldn't be handled here
                     return;
@@ -1719,27 +1860,27 @@ export const consoleReporter = ({
                 testsElapsed += elapsed;
                 if (err) {
                     ++failed;
-                    errors.push([test, err]);
+                    errors.push([test, block, err]);
                 } else {
                     ++passed;
                 }
             }))
-            .on("skip test", reportOnThrow(({ test, runtime }) => {
+            .on("skip test", reportOnThrow(({ test, block, runtime }) => {
                 if (!runtime) {
-                    bar = createTestBar(test);
+                    bar = createTestBar(test, block);
                 }
-                if (test.isTodo()) {
+                if (test.isTodo) {
                     bar.complete("{yellow-fg}?{/yellow-fg}", {
                         tag: "yellow-fg",
                         suffix: ""
                     });
                     ++todos;
-                } else if (test.isCancelled()) {
+                } else if (test.isCancelled) {
                     bar.complete("{magenta-fg}#{/magenta-fg}", {
                         tag: "magenta-fg",
                         suffix: ""
                     });
-                    cancelled.push(test);
+                    cancelled.push([test, block]);
                 } else {
                     bar.complete(`{cyan-fg}${symbol.minus}{/cyan-fg}`, {
                         tag: "cyan-fg",
@@ -1752,15 +1893,9 @@ export const consoleReporter = ({
                 if (errors.length) {
                     log();
                     log("Errors:\n");
-                    for (const [idx, [failed, err]] of adone.util.enumerate(errors, 1)) {
+                    for (const [idx, [failed, block, err]] of adone.util.enumerate(errors, 1)) {
                         // print block chain
-                        const stack = new adone.collection.Stack();
-                        let block = failed.block;
-                        do {
-                            stack.push(block.name);
-                            block = block.parent;
-                        } while (block && block.level() >= 0);
-                        log(`${idx}) {escape}${[...stack].join(` ${symbol.arrowRight}  `)} : ${failed.description}{/escape}`);
+                        log(`${idx}) {escape}${block.chain} : ${failed.description}{/escape}`);
                         log(`    at ${failed.meta.location.path}:${failed.meta.location.line}:${failed.meta.location.column}`);
                         log();
 
@@ -1770,9 +1905,9 @@ export const consoleReporter = ({
                             log(`{red-fg}{escape}${err}{/escape}{/}`);
                         }
 
-                        if (err.expected && err.actual) {
+                        if (err.diff) {
                             log();
-                            log(adone.text.indent(shani.util.diff.getDiff(err.actual, err.expected), 2));
+                            log(adone.text.indent(err.diff, 2));
                         }
                         log();
                         if (adone.is.string(err.stack)) {
@@ -1786,14 +1921,8 @@ export const consoleReporter = ({
                 if (hooksFails.length) {
                     log();
                     log("Hooks fails:\n");
-                    for (let [idx, [hook, err, type, block]] of adone.util.enumerate(hooksFails, 1)) {
-                        // print block chain
-                        const stack = new adone.collection.Stack();
-                        do {
-                            stack.push(block.name);
-                            block = block.parent;
-                        } while (block && block.level() >= 0);
-                        log(`${idx}) ${type} hook failed: {escape}${[...stack].join(` ${symbol.arrowRight}  `)} ${hook.description ? `: ${hook.description}` : ""}{/escape}`);
+                    for (const [idx, [hook, err, type, block]] of adone.util.enumerate(hooksFails, 1)) {
+                        log(`${idx}) ${type} hook failed: {escape}${block.chain} ${hook.description ? `: ${hook.description}` : ""}{/escape}`);
                         log(`    at ${hook.meta.location.path}:${hook.meta.location.line}:${hook.meta.location.column}`);
                         log();
 
@@ -1813,18 +1942,11 @@ export const consoleReporter = ({
                 if (cancelled.length) {
                     log();
                     log("Cancel reasons:\n");
-                    for (const [idx, test] of adone.util.enumerate(cancelled, 1)) {
+                    for (const [idx, [test, block]] of adone.util.enumerate(cancelled, 1)) {
                         const err = test.cancelReason;
                         const hook = err.hook;
                         const type = test.cancelType;
-                        let block = test.block;
-                        // print block chain
-                        const stack = new adone.collection.Stack();
-                        do {
-                            stack.push(block.name);
-                            block = block.parent;
-                        } while (block && block.level() >= 0);
-                        log(`${idx}) {escape}${[...stack].join(` ${symbol.arrowRight}  `)} : ${test.description}{/escape} was cancelled due to ${type} fail:`);
+                        log(`${idx}) {escape}${block.chain} : ${test.description}{/escape} was cancelled due to ${type} fail:`);
                         log(`    hook at ${hook.meta.location.path}:${hook.meta.location.line}:${hook.meta.location.column}`);
                         log(`    test at ${test.meta.location.path}:${test.meta.location.line}:${test.meta.location.column}`);
                         log();
@@ -2036,15 +2158,8 @@ export const minimalReporter = () => {
 
                 if (errors.length) {
                     log();
-                    for (const [idx, [failed, err]] of adone.util.enumerate(errors, 1)) {
-                        // print block chain
-                        const stack = new adone.collection.Stack();
-                        let block = failed.block;
-                        do {
-                            stack.push(block.name);
-                            block = block.parent;
-                        } while (block && block.level() >= 0);
-                        log(`${idx}) {escape}${[...stack].join(` ${symbol.arrowRight}  `)} ${symbol.arrowRight}  ${failed.description}{/escape}`);
+                    for (const [idx, [failed, block, err]] of adone.util.enumerate(errors, 1)) {
+                        log(`${idx}) {escape}${block.chain} ${symbol.arrowRight}  ${failed.description}{/escape}`);
                         log();
 
                         if (err.name && err.message) {
@@ -2053,11 +2168,9 @@ export const minimalReporter = () => {
                             log(`{red-fg}{escape}${err}{/escape}{/}`);
                         }
 
-                        if (err.expected && err.actual) {
-                            if (err.expected && err.actual) {
-                                log();
-                                log(adone.text.indent(shani.util.diff.getDiff(err.actual, err.expected), 2));
-                            }
+                        if (err.diff) {
+                            log();
+                            log(adone.text.indent(err.diff, 2));
                         }
                         log();
                         if (adone.is.string(err.stack)) {
@@ -2161,11 +2274,11 @@ export const simpleReporter = ({
             const endHookHandler = (type) => {
                 type = colorizeHook(type);
                 return ({ hook, block, test, meta }) => {
-                    const padding = "    ".repeat(Math.max(block.level() + (test ? 1 : 0), 0));
+                    const padding = "    ".repeat(Math.max(block.level + (test ? 1 : 0), 0));
                     let msg = `${padding} ${meta.err ? `{red-fg}${symbol.cross}` : `{green-fg}${symbol.tick}`}{/} ${type} hook{escape}${hook.description ? `: ${hook.description}` : ""}{/escape}`;
                     const elapsedString = elapsedToString(
                         meta.elapsed,
-                        hook.timeout(),
+                        hook.timeout,
                         allTimings
                     );
                     if (elapsedString) {
@@ -2222,12 +2335,12 @@ export const simpleReporter = ({
             .on("exit block", () => {
                 --blockLevel;
             })
-            .on("end test", ({ test, meta: { err, elapsed, skipped } }) => {
+            .on("end test", ({ test, block, meta: { err, elapsed, skipped } }) => {
                 if (skipped) {
                     // shouldn't be handled here
                     return;
                 }
-                const timeout = test.timeout();
+                const timeout = test.timeout;
 
                 const elapsedString = elapsedToString(elapsed, timeout, allTimings);
                 let msg;
@@ -2239,42 +2352,35 @@ export const simpleReporter = ({
                 if (elapsedString) {
                     msg = `${msg} (${elapsedString})`;
                 }
-                log(`${"    ".repeat(test.block.level() + 1)} ${msg} ${" ".repeat(10)}`);
+                log(`${"    ".repeat(block.level + 1)} ${msg} ${" ".repeat(10)}`);
                 testsElapsed += elapsed;
                 if (err) {
                     ++failed;
-                    errors.push([test, err]);
+                    errors.push([test, block, err]);
                 } else {
                     ++passed;
                 }
             })
-            .on("skip test", ({ test }) => {
+            .on("skip test", ({ block, test }) => {
                 let msg;
-                if (test.isTodo()) {
+                if (test.isTodo) {
                     msg = `{yellow-fg}? {escape}${test.description}{/escape}{/}`;
                     ++todos;
-                } else if (test.isCancelled()) {
+                } else if (test.isCancelled) {
                     msg = `{magenta-fg}# {escape}${test.description}{/escape}{/}`;
-                    cancelled.push(test);
+                    cancelled.push([test, block]);
                 } else {
                     msg = `{cyan-fg}\u2212 {escape}${test.description}{/escape}{/}`;
                     ++pending;
                 }
-                log(`${"    ".repeat(test.block.level() + 1)} ${msg}`);
+                log(`${"    ".repeat(block.level + 1)} ${msg}`);
             })
             .on("done", () => {
                 if (errors.length) {
                     log();
                     log("Errors:\n");
-                    for (const [idx, [failed, err]] of adone.util.enumerate(errors, 1)) {
-                        // print block chain
-                        const stack = new adone.collection.Stack();
-                        let block = failed.block;
-                        do {
-                            stack.push(block.name);
-                            block = block.parent;
-                        } while (block && block.level() >= 0);
-                        log(`${idx}) {escape}${[...stack].join(` ${symbol.arrowRight}  `)} : ${failed.description}{/escape}`);
+                    for (const [idx, [failed, block, err]] of adone.util.enumerate(errors, 1)) {
+                        log(`${idx}) {escape}${block.chain} : ${failed.description}{/escape}`);
                         log(`    at ${failed.meta.location.path}:${failed.meta.location.line}:${failed.meta.location.column}`);
                         log();
 
@@ -2284,11 +2390,9 @@ export const simpleReporter = ({
                             log(`{red-fg}{escape}${err}{/escape}{/}`);
                         }
 
-                        if (err.expected && err.actual) {
-                            if (err.expected && err.actual) {
-                                log();
-                                log(adone.text.indent(shani.util.diff.getDiff(err.actual, err.expected), 2));
-                            }
+                        if (err.diff) {
+                            log();
+                            log(adone.text.indent(err.diff, 2));
                         }
                         if (adone.is.string(err.stack)) {
                             const stackMsg = filterShaniFrames(err.stack.split("\n")).slice(1).map((x) => `    ${x.trim()}`).join("\n");
@@ -2301,14 +2405,9 @@ export const simpleReporter = ({
                 if (hooksFails.length) {
                     log();
                     log("Hooks fails:\n");
-                    for (let [idx, [hook, err, type, block]] of adone.util.enumerate(hooksFails, 1)) {
+                    for (const [idx, [hook, err, type, block]] of adone.util.enumerate(hooksFails, 1)) {
                         // print block chain
-                        const stack = new adone.collection.Stack();
-                        do {
-                            stack.push(block.name);
-                            block = block.parent;
-                        } while (block && block.level() >= 0);
-                        log(`${idx}) ${type} hook failed: {escape}${[...stack].join(` ${symbol.arrowRight}  `)} ${hook.description ? `: ${hook.description}` : ""}{/escape}`);
+                        log(`${idx}) ${type} hook failed: {escape}${block.chain} ${hook.description ? `: ${hook.description}` : ""}{/escape}`);
                         log(`    at ${hook.meta.location.path}:${hook.meta.location.line}:${hook.meta.location.column}`);
                         log();
 
@@ -2328,18 +2427,11 @@ export const simpleReporter = ({
                 if (cancelled.length) {
                     log();
                     log("Cancel reasons:\n");
-                    for (const [idx, test] of adone.util.enumerate(cancelled, 1)) {
+                    for (const [idx, [test, block]] of adone.util.enumerate(cancelled, 1)) {
                         const err = test.cancelReason;
                         const hook = err.hook;
                         const type = test.cancelType;
-                        let block = test.block;
-                        // print block chain
-                        const stack = new adone.collection.Stack();
-                        do {
-                            stack.push(block.name);
-                            block = block.parent;
-                        } while (block && block.level() >= 0);
-                        log(`${idx}) {escape}${[...stack].join(` ${symbol.arrowRight}  `)} : ${test.description}{/escape} was cancelled due to ${type} fail:`);
+                        log(`${idx}) {escape}${block.chain} : ${test.description}{/escape} was cancelled due to ${type} fail:`);
                         log(`    hook at ${hook.meta.location.path}:${hook.meta.location.line}:${hook.meta.location.column}`);
                         log(`    test at ${test.meta.location.path}:${test.meta.location.line}:${test.meta.location.column}`);
                         log();
