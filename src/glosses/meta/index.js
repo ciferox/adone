@@ -15,7 +15,23 @@ adone.lazify({
     nsNames: () => adone.meta.namespaces.map((ns) => ns.name).sort((a, b) => a.localeCompare(b))
 }, adone.asNamespace(exports), require);
 
-const metaNamespace = require("../../../.adone/meta.json");
+const adoneConf = adone.configuration.Adone.loadSync({
+    cwd: adone.rootPath
+});
+
+const metaNamespace = adoneConf.getNamespaceTopology();
+
+// Add global namespace
+metaNamespace.global = metaNamespace.adone.namespace.global = {
+    description: "Global namespace"
+};
+
+const isNamespace = (name) => {
+    if (name === "global.adone") {
+        return true;
+    }
+    return adone.meta.names.includes(name);
+};
 
 export const namespaces = [];
 export const namespaceMap = metaNamespace;
@@ -81,13 +97,6 @@ export const listNamespaces = (keyword = "", { threshold = 0.3 } = {}) => {
     }
 
     return adone.vendor.lodash.cloneDeep(result.sort((a, b) => a.name.localeCompare(b.name)));
-};
-
-export const isNamespace = (name) => {
-    if (name === "global.adone") {
-        return true;
-    }
-    return adone.meta.names.includes(name);
 };
 
 export const search = (keyword, nsName = "adone", { threshold = 0.3 } = {}) => {

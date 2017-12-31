@@ -4,11 +4,11 @@
     "author": "noname",
     "main": "lib",
     "type": "cli.command",
-    "structure": {
+    "struct": {
         "src": {
-            "$task": "transpile",
-            "$src": "src/**/*",
-            "$dst": "lib"
+            "task": "transpile",
+            "src": "src/**/*",
+            "dst": "lib"
         }
     }
 }

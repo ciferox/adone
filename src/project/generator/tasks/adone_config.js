@@ -22,7 +22,7 @@ export default class AdoneConfigTask extends project.generator.task.Base {
 
         if (is.plainObject(input)) {
             // Update config
-            config.merge(util.pick(input, ["name", "description", "version", "author", "type", "structure", "bin", "main"]));
+            config.merge(util.pick(input, ["name", "description", "version", "author", "type", "struct", "bin", "main"]));
         }
         return config.save();
     }

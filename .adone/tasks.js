@@ -34,7 +34,7 @@ class AdoneTranspileExeTask extends project.task.TranspileExe {
 
 class AdoneDotCompilerTask extends project.task.Transform {
     async initialize(params) {
-        this.defs = (await fast.src(std.path.join(adone.util.globParent(params.$src), "*.def"), {
+        this.defs = (await fast.src(std.path.join(adone.util.globParent(params.src), "*.def"), {
             cwd: this.manager.path
         })).reduce((defs, file) => {
             const name = std.path.basename(file.path, ".def");

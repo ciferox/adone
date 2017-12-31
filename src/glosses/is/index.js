@@ -49,7 +49,7 @@ const platform = process.platform;
 adone.asNamespace(exports);
 
 // Checks whether `field` is a field owned by `object`.
-export const propertyOwned = (obj, field) => (hasOwnProperty.call(obj, field));
+export const propertyOwned = (obj, field) => hasOwnProperty.call(obj, field);
 
 // Checks whether given value is `null`.
 const null_ = (value) => value === null; // eslint-disable-line
@@ -95,7 +95,7 @@ export const exist = (value) => value != null; // eslint-disable-line
 export const nil = (value) => value == null; // eslint-disable-line
 
 // Checks whether given value is an empty string, i.e, a string with whitespace characters only.
-export const emptyString = (str) => (string(str) && /^\s*$/.test(str));
+export const emptyString = (str) => string(str) && /^\s*$/.test(str);
 
 // Checks whether given value is a number.
 export const number = (value) => typeof value === "number"; // eslint-disable-line
@@ -127,13 +127,13 @@ export const long = (obj) => adone.tag.has(obj, "LONG");
 export const bigNumber = (obj) => adone.tag.has(obj, "BIGNUMBER");
 
 // Checks whether given value is an infinite number, i.e: +∞ or -∞.
-export const infinite = (val) => (val === +1 / 0 || val === -1 / 0);
+export const infinite = (val) => val === +1 / 0 || val === -1 / 0;
 
 // Checks whether given value is an odd number.
-export const odd = (val) => (integer(val) && val % 2 === 1);
+export const odd = (val) => integer(val) && val % 2 === 1;
 
 // Checks whether given value is an even number.
-export const even = (val) => (integer(val) && val % 2 === 0);
+export const even = (val) => integer(val) && val % 2 === 0;
 
 // Checks whether given value is a float number.
 export const float = (val) => number(val) && val !== Math.floor(val);
@@ -162,32 +162,32 @@ export const substring = (substr, str, offset) => {
 };
 
 // Checks whether `str` starts with `prefix`.
-export const prefix = (prefix, str) => (getTag(str) === "str" && str.startsWith(prefix));
+export const prefix = (prefix, str) => getTag(str) === "str" && str.startsWith(prefix);
 
 // Checks whether `str` ends with `suffix`.
-export const suffix = (suffix, str) => (getTag(str) === "str" && str.endsWith(suffix));
+export const suffix = (suffix, str) => getTag(str) === "str" && str.endsWith(suffix);
 
 // Checks whether given value is a boolean.
-export const boolean = (value) => (value === true || value === false);
+export const boolean = (value) => value === true || value === false;
 
 export const arrayBuffer = (x) => objectProto.toString.call(x) === "[object ArrayBuffer]";
 
 export const arrayBufferView = (x) => ArrayBuffer.isView(x);
 
-export const date = (value) => (getTag(value) === "date");
+export const date = (value) => getTag(value) === "date";
 
-export const error = (value) => (getTag(value) === "error");
+export const error = (value) => getTag(value) === "error";
 
-export const map = (value) => (getTag(value) === "map");
+export const map = (value) => getTag(value) === "map";
 
-export const regexp = (value) => (getTag(value) === "regexp");
+export const regexp = (value) => getTag(value) === "regexp";
 
-export const set = (value) => (getTag(value) === "set");
+export const set = (value) => getTag(value) === "set";
 
-export const symbol = (value) => (getTag(value) === "symbol");
+export const symbol = (value) => getTag(value) === "symbol";
 
 // Checks whether given value is a primitive.
-export const primitive = (value) => (nil(value) || number(value) || string(value) || boolean(value) || symbol(value));
+export const primitive = (value) => nil(value) || number(value) || string(value) || boolean(value) || symbol(value);
 
 export const equal = (value, other) => (value === other || (value !== value && other !== other)); // eslint-disable-line
 
@@ -222,10 +222,10 @@ export const plainObject = (value) => {
     return function_(Ctor) && Ctor instanceof Ctor && funcToString.call(Ctor) === objectCtorString; // eslint-disable-line
 };
 
-export const namespace = (value) => object(value) && value[Symbol.for("adone::namespace")] === true;
+export const namespace = (value) => object(value) && value[Symbol.for("adone:namespace")] === true;
 
 // Checks whether given value is an empty object, i.e, an object without any own, enumerable, string keyed properties.
-export const emptyObject = (obj) => (object(obj) && Object.keys(obj).length === 0);
+export const emptyObject = (obj) => object(obj) && Object.keys(obj).length === 0;
 
 // Checks whether `path` is a direct or inherited property of `object`.
 export const propertyDefined = (obj, path) => {
@@ -670,11 +670,11 @@ export const coreStream = (value) => adone.tag.has(value, "CORE_STREAM");
 export const utf8 = (bytes) => {
     let i = 0;
     while (i < bytes.length) {
-        if ((bytes[i] === 0x09 || bytes[i] === 0x0A || bytes[i] === 0x0D || (bytes[i] >= 0x20 && bytes[i] <= 0x7E))) { // ASCII
+        if (bytes[i] === 0x09 || bytes[i] === 0x0A || bytes[i] === 0x0D || (bytes[i] >= 0x20 && bytes[i] <= 0x7E)) { // ASCII
             i += 1;
             continue;
         }
-        if (((bytes[i] >= 0xC2 && bytes[i] <= 0xDF) && (bytes[i + 1] >= 0x80 && bytes[i + 1] <= 0xBF))) { // non-overlong 2-byte
+        if ((bytes[i] >= 0xC2 && bytes[i] <= 0xDF) && (bytes[i + 1] >= 0x80 && bytes[i + 1] <= 0xBF)) { // non-overlong 2-byte
             i += 2;
             continue;
         }
@@ -736,10 +736,10 @@ export const win32PathAbsolute = (path) => {
     return Boolean(result[2]) || isUnc;
 };
 
-export const pathAbsolute = (platform === "win32" ? win32PathAbsolute : posixPathAbsolute);
+export const pathAbsolute = platform === "win32" ? win32PathAbsolute : posixPathAbsolute;
 
 // Checks whether given `str` is glob or extglob (can use for test extglobs with the same performance)
-export const glob = (str) => (string(str) && (/[@?!+*]\(/.test(str) || /[*!?{}(|)[\]]/.test(str)));
+export const glob = (str) => string(str) && (/[@?!+*]\(/.test(str) || /[*!?{}(|)[\]]/.test(str));
 
 export const dotfile = (str) => {
     if (str.charCodeAt(0) === 46 /* . */ && str.indexOf("/", 1) === -1) {
@@ -752,13 +752,13 @@ export const dotfile = (str) => {
 
 export const asyncFunction = (fn) => fn && toString.call(fn).slice(8, -1) === "AsyncFunction";
 
-export const promise = (obj) => (!nil(obj) && function_(obj.then));
+export const promise = (obj) => !nil(obj) && function_(obj.then);
 
 export const validDate = (str) => !isNaN(Date.parse(str)); // eslint-disable-line
 
 export const buffer = (obj) => obj != null && ((Boolean(obj.constructor) && function_(obj.constructor.isBuffer) && obj.constructor.isBuffer(obj)) || Boolean(obj._isBuffer)); // eslint-disable-line
 
-export const callback = (fn, names) => (inArray(names || callbackNames, adone.util.functionName(fn)));
+export const callback = (fn, names) => inArray(names || callbackNames, adone.util.functionName(fn));
 
 export const generator = (value) => {
     if (!value || !value.constructor) {
@@ -788,15 +788,15 @@ export const cliApplication = (obj) => adone.tag.has(obj, "CLI_APPLICATION");
 export const configuration = (obj) => adone.tag.has(obj, "CONFIGURATION");
 export const datetime = (obj) => adone.tag.has(obj, "DATETIME");
 
-export const windows = (platform === "win32");
+export const windows = platform === "win32";
 
-export const linux = (platform === "linux");
+export const linux = platform === "linux";
 
-export const freebsd = (platform === "freebsd");
+export const freebsd = platform === "freebsd";
 
-export const darwin = (platform === "darwin");
+export const darwin = platform === "darwin";
 
-export const sunos = (platform === "sunos");
+export const sunos = platform === "sunos";
 
 export const uppercase = (str) => {
     for (const i of str) {
@@ -998,7 +998,7 @@ export const before = (str, date = String(new Date())) => {
 
 export const after = (str, date = String(new Date())) => {
     if (!string(str)) {
-        return false;  // TODO: Date and datetime support
+        return false; // TODO: Date and datetime support
     }
     const comparison = toDate(date);
     const original = toDate(str);
@@ -1009,5 +1009,5 @@ adone.lazify({
     validUTF8: () => adone.native.Common.isValidUTF8,
     fqdn: "./fqdn",
     url: "./url",
-    email: "./email",
+    email: "./email"
 }, exports, require);

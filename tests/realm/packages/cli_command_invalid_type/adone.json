@@ -5,11 +5,11 @@
     "author": "noname",
     "main": "lib",
     "type": "some.type",
-    "structure": {
+    "struct": {
         "src": {
-            "$task": "transpile",
-            "$src": "src/**/*",
-            "$dst": "lib"
+            "task": "transpile",
+            "src": "src/**/*",
+            "dst": "lib"
         }
     }
 }

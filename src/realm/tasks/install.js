@@ -192,14 +192,14 @@ export default class InstallTask extends task.Task {
                 let srcPath;
                 let dstDir;
 
-                if (is.string(info.$dst)) {
-                    srcPath = util.globize(info.$dst, {
+                if (is.string(info.dst)) {
+                    srcPath = util.globize(info.dst, {
                         recursively: true
                     });
-                    dstDir = info.$dst;
+                    dstDir = info.dst;
                 } else {
-                    srcPath = info.$src;
-                    dstDir = adone.util.globParent(info.$src);
+                    srcPath = info.src;
+                    dstDir = adone.util.globParent(info.src);
                 }
 
                 // eslint-disable-next-line

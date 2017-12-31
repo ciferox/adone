@@ -26,11 +26,11 @@ export default class CliCommandProjectTask extends project.generator.task.Base {
         // Update adone config
         await this.runTask("adoneConfig", {
             cwd: input.cwd,
-            structure: {
+            struct: {
                 src: {
-                    $task: "transpile",
-                    $src: "src/**/*.js",
-                    $dst: "lib"
+                    task: "transpile",
+                    src: "src/**/*.js",
+                    dst: "lib"
                 }    
             },
             main: "lib"

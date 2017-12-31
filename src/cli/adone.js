@@ -556,19 +556,15 @@ class AdoneCLI extends application.CliApplication {
         ]
 
     })
-    async gytCommand(args) {
+    async gypCommand(args) {
         try {
-            const prog = new adone.gyp.Gyp();
-            prog.run([
-                {
-                    name: "rebuild",
-                    args: []
-                }
-            ], {});
-
-            // // return 0;
+            const path = args.has("path") ? args.get("path") : null;
+            const manager = new adone.project.Manager();
+            await manager.load();
+            const observer = await manager.nativeBuild(path);
+            await observer.result;
         } catch (err) {
-            adone.error(err);
+            term.print(`{red-fg}${err.message}{/}\n`);
             return 1;
         }
     }

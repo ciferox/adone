@@ -2,11 +2,11 @@
     "name": "sub1",
     "type": "cli.command",
     "main": "lib",
-    "structure": {
+    "struct": {
         "src": {
-            "$task": "transpile",
-            "$src": "src/**/*.js",
-            "$dst": "lib"
+            "task": "transpile",
+            "src": "src/**/*.js",
+            "dst": "lib"
         }
     },
     "description": "multiple commands",

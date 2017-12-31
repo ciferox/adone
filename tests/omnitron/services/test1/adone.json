@@ -5,11 +5,11 @@
     "description": "test service #1",
     "type": "omnitron.service",
     "main": "lib",
-    "structure": {
+    "struct": {
         "src": {
-            "$task": "transpile",
-            "$src": "src/**/*",
-            "$dst": "lib"
+            "task": "transpile",
+            "src": "src/**/*",
+            "dst": "lib"
         }
     }
 }

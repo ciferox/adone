@@ -20,7 +20,7 @@ export default class TransformTask extends adone.project.task.Base {
 
     initialize(params) {
         if (is.null(this.stream)) {
-            this.stream = fast.src(params.$src, this.streamOptions());
+            this.stream = fast.src(params.src, this.streamOptions());
         }
 
         this.stream = this.transform(this.stream, params);
@@ -32,7 +32,7 @@ export default class TransformTask extends adone.project.task.Base {
 
     main(params) {
         if (is.fastLocalStream(this.stream)) {
-            return this.stream.dest(params.$dst);
+            return this.stream.dest(params.dst);
         }
     }
 
@@ -44,7 +44,7 @@ export default class TransformTask extends adone.project.task.Base {
         if (is.fastLocalStream(stream)) {
             stream.notify({
                 onLast: true,
-                title: params.$id,
+                title: params.id,
                 filter: null,
                 message: "Done"
             });
@@ -54,7 +54,7 @@ export default class TransformTask extends adone.project.task.Base {
     notifyError(stream, params) {
         if (is.fastLocalStream(stream)) {
             const notify = fast.plugin.notify.onError({
-                title: params.$id,
+                title: params.id,
                 message: (error) => error.message
             });
             stream.on("error", (err) => {

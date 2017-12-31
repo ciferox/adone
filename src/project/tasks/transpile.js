@@ -7,7 +7,7 @@ export default class TranspileTask extends adone.project.task.Transform {
         return stream.sourcemapsInit()
             .transpile(transpileOptions)
             .sourcemapsWrite(".", {
-                destPath: params.$dst
+                destPath: params.dst
             });
     }
 

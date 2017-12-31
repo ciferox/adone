@@ -1,0 +1,39 @@
+{
+    "name": "adone",
+    "description": "The generalized core of 'cyber-fractal systems' infrastructure.",
+    "version": "0.6.70",
+    "author": "Adone Core Team <info@adone.io>",
+    "struct": {
+        "assets": {
+            "description": "Assets",
+            "src": [
+                "src/**/*",
+                "!src/**/*.js",
+                "!src/glosses/schema/__/dot/*",
+                "!src/**/native/**/*"
+            ],
+            "dst": "lib"
+        },
+        "code1": {
+            "description": "The generalized core of 'cyber-fractal systems' infrastructure",
+            "index": "index.js",
+            "src": [
+                "src/**/*",
+                "!src/cli/adone.js"
+            ],
+            "dst": "lib",
+            "namespace": "adone1"
+        },
+        "code2": {
+            "description": "The generalized core of 'cyber-fractal systems' infrastructure",
+            "index": "index.js",
+            "src": [
+                "src/**/*",
+                "!src/cli/adone.js"
+            ],
+            "dst": "lib",
+            "namespace": "adone2"
+        }
+
+    }
+}

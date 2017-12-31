@@ -374,7 +374,7 @@ describe("project", function () {
                     assert.true(await fs.is.directory(std.path.join(subCwd, "src")));
                     assert.true(await fs.exists(std.path.join(subCwd, "src", "index.js")));
 
-                    assert.equal(manager.config.raw.structure.service, "service");
+                    assert.equal(manager.config.raw.struct.service, "service");
 
                     const relativeDir = std.path.relative(context.project.cwd, std.path.join(subContext.project.cwd, "src"));
                     const jsconfig = await adone.configuration.Jsconfig.load({

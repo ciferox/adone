@@ -51,7 +51,7 @@ export default class ProjectGenerator extends task.Manager {
         
         // Adone parent adone.json
         const subName = is.string(input.dirName) ? input.dirName : input.name;
-        this.owner.config.set(["structure", subName], std.path.relative(this.owner.cwd, cwd));
+        this.owner.config.set(["struct", subName], std.path.relative(this.owner.cwd, cwd));
         await this.owner.config.save();
 
         if (is.string(input.type)) {

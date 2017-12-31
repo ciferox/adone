@@ -3,7 +3,7 @@
     "description": "descr",
     "version": "1.0.0",
     "author": "unknown",
-    "structure": {
+    "struct": {
         "sub1": "sub1",
         "sub2": "sub2"
     }

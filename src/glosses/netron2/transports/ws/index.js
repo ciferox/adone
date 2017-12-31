@@ -6,7 +6,7 @@ const {
     is,
     multi,
     netron2: { Connection },
-    stream: { pull },
+    stream: { pull }
 } = adone;
 
 const maToUrl = function (ma) {

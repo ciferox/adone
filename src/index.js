@@ -3,8 +3,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 
 if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
-    const namespaceSymbol = Symbol.for("adone::namespace");
-    const privateSymbol = Symbol.for("adone::private");
+    const namespaceSymbol = Symbol.for("adone:namespace");
+    const privateSymbol = Symbol.for("adone:private");
 
     const asNamespace = (obj) => {
         obj[namespaceSymbol] = true;

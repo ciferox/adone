@@ -8,12 +8,12 @@ const {
 } = adone;
 
 const checkEntry = (entry) => {
-    if (is.nil(entry.$dst)) {
+    if (is.nil(entry.dst)) {
         return false;
     }
 
-    if (!is.string(entry.$task)) {
-        entry.$task = "copy";
+    if (!is.string(entry.task)) {
+        entry.task = "copy";
     }
 
     return true;
@@ -59,6 +59,7 @@ export default class ProjectManager extends task.Manager {
         await this.addTask("transpileExe", project.task.TranspileExe);
         await this.addTask("watch", project.task.Watch);
         await this.addTask("incver", project.task.IncreaseVersion);
+        await this.addTask("buildNative", project.task.BuildNative);
 
         // Load custom tasks
         const tasksPath = std.path.join(this.cwd, ".adone", "tasks.js");
@@ -98,7 +99,7 @@ export default class ProjectManager extends task.Manager {
         return generator.createFile(input);
     }
 
-    getProjectEntries(path) {
+    getProjectEntries({ path }) {
         return this.config.getEntries(path);
     }
 
@@ -113,7 +114,7 @@ export default class ProjectManager extends task.Manager {
     build(path) {
         this._checkLoaded();
         return this.runInParallel(this._getEntries(path).map((entry) => ({
-            task: entry.$task,
+            task: entry.task,
             args: entry
         })));
     }
@@ -143,6 +144,11 @@ export default class ProjectManager extends task.Manager {
     async incVersion(options) {
         this._checkLoaded();
         return this.run("incver", options);
+    }
+
+    buildNative(options) {
+        this._checkLoaded();
+        return this.run("buildNative", options);
     }
 
     _getEntries(path) {

@@ -4,20 +4,18 @@
     "version": "2.0.0",
     "author": "noname",
     "type": "omnitron-service",
-    "structure": {
-        "src": {
-            "js": {
-                "$task": "transpile",
-                "$src": "src/**/*.js",
-                "$dst": "lib"
-            },
-            "other": {
-                "$src": [
-                    "!src/**/*.js",
-                    "src/**/*"
-                ],
-                "$dst": "lib"
-            }
+    "struct": {
+        "js": {
+            "task": "transpile",
+            "src": "src/**/*.js",
+            "dst": "lib"
+        },
+        "other": {
+            "src": [
+                "!src/**/*.js",
+                "src/**/*"
+            ],
+            "dst": "lib"
         }
     }
 }
