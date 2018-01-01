@@ -21,19 +21,19 @@ export default ExDate.defineLocale("gl", {
     },
     calendar: {
         sameDay() {
-            return `[hoxe ${(this.hours() !== 1) ? "ás" : "á"}] LT`;
+            return `[hoxe ${this.hours() !== 1 ? "ás" : "á"}] LT`;
         },
         nextDay() {
-            return `[mañá ${(this.hours() !== 1) ? "ás" : "á"}] LT`;
+            return `[mañá ${this.hours() !== 1 ? "ás" : "á"}] LT`;
         },
         nextWeek() {
-            return `dddd [${(this.hours() !== 1) ? "ás" : "a"}] LT`;
+            return `dddd [${this.hours() !== 1 ? "ás" : "a"}] LT`;
         },
         lastDay() {
-            return `[onte ${(this.hours() !== 1) ? "á" : "a"}] LT`;
+            return `[onte ${this.hours() !== 1 ? "á" : "a"}] LT`;
         },
         lastWeek() {
-            return `[o] dddd [pasado ${(this.hours() !== 1) ? "ás" : "a"}] LT`;
+            return `[o] dddd [pasado ${this.hours() !== 1 ? "ás" : "a"}] LT`;
         },
         sameElse: "L"
     },
@@ -46,6 +46,7 @@ export default ExDate.defineLocale("gl", {
         },
         past: "hai %s",
         s: "uns segundos",
+        ss: "%d segundos",
         m: "un minuto",
         mm: "%d minutos",
         h: "unha hora",
@@ -61,7 +62,7 @@ export default ExDate.defineLocale("gl", {
     ordinal: "%dº",
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 4  // The week that contains Jan 4th is the first week of the year.
+        doy: 4 // The week that contains Jan 4th is the first week of the year.
     }
 });
 

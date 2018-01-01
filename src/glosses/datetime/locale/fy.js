@@ -42,6 +42,7 @@ export default ExDate.defineLocale("fy", {
         future: "oer %s",
         past: "%s lyn",
         s: "in pear sekonden",
+        ss: "%d sekonden",
         m: "ien minút",
         mm: "%d minuten",
         h: "ien oere",
@@ -55,10 +56,10 @@ export default ExDate.defineLocale("fy", {
     },
     dayOfMonthOrdinalParse: /\d{1,2}(ste|de)/,
     ordinal(number) {
-        return number + ((number === 1 || number === 8 || number >= 20) ? "ste" : "de");
+        return number + (number === 1 || number === 8 || number >= 20 ? "ste" : "de");
     },
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 4  // The week that contains Jan 4th is the first week of the year.
+        doy: 4 // The week that contains Jan 4th is the first week of the year.
     }
 });

@@ -51,6 +51,7 @@ export default ExDate.defineLocale("tr", {
         future: "%s sonra",
         past: "%s önce",
         s: "birkaç saniye",
+        ss: "%d saniye",
         m: "bir dakika",
         mm: "%d dakika",
         h: "bir saat",

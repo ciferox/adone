@@ -4,30 +4,30 @@
 
 import ExDate from "..";
 
-let symbolMap = {
-        1: "೧",
-        2: "೨",
-        3: "೩",
-        4: "೪",
-        5: "೫",
-        6: "೬",
-        7: "೭",
-        8: "೮",
-        9: "೯",
-        0: "೦"
-    },
-    numberMap = {
-        "೧": "1",
-        "೨": "2",
-        "೩": "3",
-        "೪": "4",
-        "೫": "5",
-        "೬": "6",
-        "೭": "7",
-        "೮": "8",
-        "೯": "9",
-        "೦": "0"
-    };
+const symbolMap = {
+    1: "೧",
+    2: "೨",
+    3: "೩",
+    4: "೪",
+    5: "೫",
+    6: "೬",
+    7: "೭",
+    8: "೮",
+    9: "೯",
+    0: "೦"
+};
+const numberMap = {
+    "೧": "1",
+    "೨": "2",
+    "೩": "3",
+    "೪": "4",
+    "೫": "5",
+    "೬": "6",
+    "೭": "7",
+    "೮": "8",
+    "೯": "9",
+    "೦": "0"
+};
 
 export default ExDate.defineLocale("kn", {
     months: "ಜನವರಿ_ಫೆಬ್ರವರಿ_ಮಾರ್ಚ್_ಏಪ್ರಿಲ್_ಮೇ_ಜೂನ್_ಜುಲೈ_ಆಗಸ್ಟ್_ಸೆಪ್ಟೆಂಬರ್_ಅಕ್ಟೋಬರ್_ನವೆಂಬರ್_ಡಿಸೆಂಬರ್".split("_"),
@@ -56,6 +56,7 @@ export default ExDate.defineLocale("kn", {
         future: "%s ನಂತರ",
         past: "%s ಹಿಂದೆ",
         s: "ಕೆಲವು ಕ್ಷಣಗಳು",
+        ss: "%d ಸೆಕೆಂಡುಗಳು",
         m: "ಒಂದು ನಿಮಿಷ",
         mm: "%d ನಿಮಿಷ",
         h: "ಒಂದು ಗಂಟೆ",
@@ -111,6 +112,6 @@ export default ExDate.defineLocale("kn", {
     },
     week: {
         dow: 0, // Sunday is the first day of the week.
-        doy: 6  // The week that contains Jan 1st is the first week of the year.
+        doy: 6 // The week that contains Jan 1st is the first week of the year.
     }
 });

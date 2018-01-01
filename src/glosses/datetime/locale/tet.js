@@ -30,6 +30,7 @@ export default ExDate.defineLocale("tet", {
         future: "iha %s",
         past: "%s liuba",
         s: "minutu balun",
+        ss: "minutu %d",
         m: "minutu ida",
         mm: "minutus %d",
         h: "horas ida",
@@ -44,14 +45,14 @@ export default ExDate.defineLocale("tet", {
     dayOfMonthOrdinalParse: /\d{1,2}(st|nd|rd|th)/,
     ordinal(number) {
         const b = number % 10;
-        const output = (~~(number % 100 / 10) === 1) ? "th" :
-            (b === 1) ? "st" :
-            (b === 2) ? "nd" :
-            (b === 3) ? "rd" : "th";
+        const output = ~~(number % 100 / 10) === 1 ? "th" :
+            b === 1 ? "st" :
+                b === 2 ? "nd" :
+                    b === 3 ? "rd" : "th";
         return number + output;
     },
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 4  // The week that contains Jan 4th is the first week of the year.
+        doy: 4 // The week that contains Jan 4th is the first week of the year.
     }
 });

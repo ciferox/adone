@@ -23,28 +23,28 @@ export default ExDate.defineLocale("es-us", {
     weekdaysMin: "do_lu_ma_mi_ju_vi_sá".split("_"),
     weekdaysParseExact: true,
     longDateFormat: {
-        LT: "H:mm",
-        LTS: "H:mm:ss",
+        LT: "h:mm A",
+        LTS: "h:mm:ss A",
         L: "MM/DD/YYYY",
         LL: "MMMM [de] D [de] YYYY",
-        LLL: "MMMM [de] D [de] YYYY H:mm",
-        LLLL: "dddd, MMMM [de] D [de] YYYY H:mm"
+        LLL: "MMMM [de] D [de] YYYY h:mm A",
+        LLLL: "dddd, MMMM [de] D [de] YYYY h:mm A"
     },
     calendar: {
         sameDay() {
-            return `[hoy a la${(this.hours() !== 1) ? "s" : ""}] LT`;
+            return `[hoy a la${this.hours() !== 1 ? "s" : ""}] LT`;
         },
         nextDay() {
-            return `[mañana a la${(this.hours() !== 1) ? "s" : ""}] LT`;
+            return `[mañana a la${this.hours() !== 1 ? "s" : ""}] LT`;
         },
         nextWeek() {
-            return `dddd [a la${(this.hours() !== 1) ? "s" : ""}] LT`;
+            return `dddd [a la${this.hours() !== 1 ? "s" : ""}] LT`;
         },
         lastDay() {
-            return `[ayer a la${(this.hours() !== 1) ? "s" : ""}] LT`;
+            return `[ayer a la${this.hours() !== 1 ? "s" : ""}] LT`;
         },
         lastWeek() {
-            return `[el] dddd [pasado a la${(this.hours() !== 1) ? "s" : ""}] LT`;
+            return `[el] dddd [pasado a la${this.hours() !== 1 ? "s" : ""}] LT`;
         },
         sameElse: "L"
     },
@@ -52,6 +52,7 @@ export default ExDate.defineLocale("es-us", {
         future: "en %s",
         past: "hace %s",
         s: "unos segundos",
+        ss: "%d segundos",
         m: "un minuto",
         mm: "%d minutos",
         h: "una hora",

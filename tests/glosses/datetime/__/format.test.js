@@ -1,6 +1,21 @@
 describe("datetime", "format", () => {
+    const { is } = adone;
+
     before(() => {
         adone.datetime.locale("en");
+    });
+
+    it("format using constants", () => {
+        const m = adone.datetime("2017-09-01T23:40:40.678");
+        assert.equal(m.format(adone.datetime.HTML5_FMT.DATETIME_LOCAL), "2017-09-01T23:40", "datetime local format constant");
+        assert.equal(m.format(adone.datetime.HTML5_FMT.DATETIME_LOCAL_SECONDS), "2017-09-01T23:40:40", "datetime local format constant");
+        assert.equal(m.format(adone.datetime.HTML5_FMT.DATETIME_LOCAL_MS), "2017-09-01T23:40:40.678", "datetime local format constant with seconds and millis");
+        assert.equal(m.format(adone.datetime.HTML5_FMT.DATE), "2017-09-01", "date format constant");
+        assert.equal(m.format(adone.datetime.HTML5_FMT.TIME), "23:40", "time format constant");
+        assert.equal(m.format(adone.datetime.HTML5_FMT.TIME_SECONDS), "23:40:40", "time format constant with seconds");
+        assert.equal(m.format(adone.datetime.HTML5_FMT.TIME_MS), "23:40:40.678", "time format constant with seconds and millis");
+        assert.equal(m.format(adone.datetime.HTML5_FMT.WEEK), "2017-W35", "week format constant");
+        assert.equal(m.format(adone.datetime.HTML5_FMT.MONTH), "2017-09", "month format constant");
     });
 
     it("format YY", () => {
@@ -104,7 +119,7 @@ describe("datetime", "format", () => {
 
     it("utcOffset sanity checks", () => {
         assert.equal(adone.datetime().utcOffset() % 15, 0,
-                `utc offset should be a multiple of 15 (was ${adone.datetime().utcOffset()})`);
+            `utc offset should be a multiple of 15 (was ${adone.datetime().utcOffset()})`);
 
         assert.equal(adone.datetime().utcOffset(), -(new Date()).getTimezoneOffset(),
             "utcOffset should return the opposite of getTimezoneOffset");
@@ -121,7 +136,7 @@ describe("datetime", "format", () => {
     });
 
     it("toJSON", () => {
-        const supportsJson = typeof JSON !== "undefined" && JSON.stringify && JSON.stringify.call;
+        const supportsJson = !is.undefined(JSON) && JSON.stringify && JSON.stringify.call;
         const date = adone.datetime("2012-10-09T21:30:40.678+0100");
 
         assert.equal(date.toJSON(), "2012-10-09T20:30:40.678Z", "should output ISO8601 on adone.datetime.fn.toJSON");
@@ -150,6 +165,26 @@ describe("datetime", "format", () => {
         //invalid dates
         date = adone.datetime.utc("2017-12-32");
         assert.equal(date.toISOString(), null, "An invalid date to iso string is null");
+    });
+
+    it("toISOString without UTC conversion", () => {
+        let date = adone.datetime.utc("2016-12-31T19:53:45.678").utcOffset("+05:30");
+
+        assert.equal(date.toISOString(true), "2017-01-01T01:23:45.678+05:30", "should output ISO8601 on moment.fn.toISOString");
+
+        // big years
+        date = adone.datetime.utc("+020122-12-31T19:53:45.678").utcOffset("+05:30");
+        assert.equal(date.toISOString(true), "+020123-01-01T01:23:45.678+05:30", "ISO8601 format on big positive year");
+        // negative years
+        date = adone.datetime.utc("-000002-12-31T19:53:45.678").utcOffset("+05:30");
+        assert.equal(date.toISOString(true), "-000001-01-01T01:23:45.678+05:30", "ISO8601 format on negative year");
+        // big negative years
+        date = adone.datetime.utc("-020124-12-31T19:53:45.678").utcOffset("+05:30");
+        assert.equal(date.toISOString(true), "-020123-01-01T01:23:45.678+05:30", "ISO8601 format on big negative year");
+
+        //invalid dates
+        date = adone.datetime.utc("2017-12-32").utcOffset("+05:30");
+        assert.equal(date.toISOString(true), null, "An invalid date to iso string is null");
     });
 
     // See https://nodejs.org/dist/latest/docs/api/util.html#util_custom_inspect_function_on_objects
@@ -382,7 +417,7 @@ describe("datetime", "format", () => {
             const z = zones[i];
             const a = adone.datetime().utcOffset(z).startOf("day").subtract({ m: 1 });
             assert.equal(adone.datetime(a).utcOffset(z).calendar(), "Yesterday at 11:59 PM",
-                         `Yesterday at 11:59 PM, not Today, or the wrong time, tz = ${z}`);
+                `Yesterday at 11:59 PM, not Today, or the wrong time, tz = ${z}`);
         }
 
         assert.equal(adone.datetime(b).utc().calendar(), "Yesterday at 11:59 PM", "Yesterday at 11:59 PM, not Today, or the wrong time");

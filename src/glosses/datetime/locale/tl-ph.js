@@ -29,6 +29,7 @@ export default ExDate.defineLocale("tl-ph", {
         future: "sa loob ng %s",
         past: "%s ang nakalipas",
         s: "ilang segundo",
+        ss: "%d segundo",
         m: "isang minuto",
         mm: "%d minuto",
         h: "isang oras",
@@ -46,7 +47,7 @@ export default ExDate.defineLocale("tl-ph", {
     },
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 4  // The week that contains Jan 4th is the first week of the year.
+        doy: 4 // The week that contains Jan 4th is the first week of the year.
     }
 });
 

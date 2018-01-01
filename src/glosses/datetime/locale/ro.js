@@ -4,8 +4,9 @@
 
 import ExDate from "..";
 
-function relativeTimeWithPlural(number, withoutSuffix, key) {
+const relativeTimeWithPlural = (number, withoutSuffix, key) => {
     const format = {
+        ss: "secunde",
         mm: "minute",
         hh: "ore",
         dd: "zile",
@@ -17,7 +18,7 @@ function relativeTimeWithPlural(number, withoutSuffix, key) {
         separator = " de ";
     }
     return number + separator + format[key];
-}
+};
 
 export default ExDate.defineLocale("ro", {
     months: "ianuarie_februarie_martie_aprilie_mai_iunie_iulie_august_septembrie_octombrie_noiembrie_decembrie".split("_"),
@@ -46,6 +47,7 @@ export default ExDate.defineLocale("ro", {
         future: "peste %s",
         past: "%s în urmă",
         s: "câteva secunde",
+        ss: relativeTimeWithPlural,
         m: "un minut",
         mm: relativeTimeWithPlural,
         h: "o oră",
@@ -59,6 +61,6 @@ export default ExDate.defineLocale("ro", {
     },
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 7  // The week that contains Jan 1st is the first week of the year.
+        doy: 7 // The week that contains Jan 1st is the first week of the year.
     }
 });

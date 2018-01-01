@@ -40,19 +40,19 @@ export default ExDate.defineLocale("es-do", {
     },
     calendar: {
         sameDay() {
-            return `[hoy a la${(this.hours() !== 1) ? "s" : ""}] LT`;
+            return `[hoy a la${this.hours() !== 1 ? "s" : ""}] LT`;
         },
         nextDay() {
-            return `[mañana a la${(this.hours() !== 1) ? "s" : ""}] LT`;
+            return `[mañana a la${this.hours() !== 1 ? "s" : ""}] LT`;
         },
         nextWeek() {
-            return `dddd [a la${(this.hours() !== 1) ? "s" : ""}] LT`;
+            return `dddd [a la${this.hours() !== 1 ? "s" : ""}] LT`;
         },
         lastDay() {
-            return `[ayer a la${(this.hours() !== 1) ? "s" : ""}] LT`;
+            return `[ayer a la${this.hours() !== 1 ? "s" : ""}] LT`;
         },
         lastWeek() {
-            return `[el] dddd [pasado a la${(this.hours() !== 1) ? "s" : ""}] LT`;
+            return `[el] dddd [pasado a la${this.hours() !== 1 ? "s" : ""}] LT`;
         },
         sameElse: "L"
     },
@@ -60,6 +60,7 @@ export default ExDate.defineLocale("es-do", {
         future: "en %s",
         past: "hace %s",
         s: "unos segundos",
+        ss: "%d segundos",
         m: "un minuto",
         mm: "%d minutos",
         h: "una hora",

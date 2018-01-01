@@ -638,11 +638,11 @@ describe("util", "Pool", () => {
             specify("acquireTimeout handles timed out acquire calls", async () => {
                 const factory = {
                     create() {
-                        return new Promise(((resolve) => {
+                        return new Promise((resolve) => {
                             setTimeout(() => {
                                 resolve({});
                             }, 100);
-                        }));
+                        });
                     },
                     destroy() {
                         return Promise.resolve();
@@ -667,11 +667,11 @@ describe("util", "Pool", () => {
                 const myResource = {};
                 const factory = {
                     create() {
-                        return new Promise(((resolve) => {
+                        return new Promise((resolve) => {
                             setTimeout(() => {
                                 resolve(myResource);
                             }, 10);
-                        }));
+                        });
                     },
                     destroy() {
                         return Promise.resolve();
@@ -690,6 +690,21 @@ describe("util", "Pool", () => {
                 pool.release(resource);
                 await pool.drain();
                 await pool.clear();
+            });
+        });
+
+        specify("use", async () => {
+            const pool = createPool({
+                create() {
+                    return Promise.resolve({
+                        id: "validId"
+                    });
+                },
+                destroy(client) {}
+            });
+            await pool.use((resource) => {
+                assert.equal("validId", resource.id);
+                return Promise.resolve();
             });
         });
     });

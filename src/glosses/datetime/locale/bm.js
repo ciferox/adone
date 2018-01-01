@@ -30,6 +30,7 @@ export default ExDate.defineLocale("bm", {
         future: "%s kɔnɔ",
         past: "a bɛ %s bɔ",
         s: "sanga dama dama",
+        ss: "sekondi %d",
         m: "miniti kelen",
         mm: "miniti %d",
         h: "lɛrɛ kelen",

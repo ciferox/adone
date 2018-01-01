@@ -194,7 +194,7 @@ export default class Pool extends EventEmitter {
 
         const pooledResource = this._availableObjects.shift();
         this._dispatchPooledResourceToNextWaitingClient(pooledResource);
-
+        return false;
     }
 
     /**
@@ -391,7 +391,9 @@ export default class Pool extends EventEmitter {
     }
 
     _descheduleEvictorRun() {
-        clearTimeout(this._scheduledEviction);
+        if (this._scheduledEviction) {
+            clearTimeout(this._scheduledEviction);
+        }
         this._scheduledEviction = null;
     }
 
@@ -418,7 +420,7 @@ export default class Pool extends EventEmitter {
      *   be the first parameter, else it will be null.
      *   The acquired resource will be the second parameter.
      *
-     * @param {Number} priority
+     * @param {number} priority
      *   Optional.  Integer between 0 and (priorityRange - 1).  Specifies the priority
      *   of the caller if there are no available resources.  Lower numbers mean higher
      *   priority.
@@ -454,6 +456,26 @@ export default class Pool extends EventEmitter {
         this._dispense();
 
         return resourceRequest.promise;
+    }
+
+    /**
+     * [use method, aquires a resource, passes the resource to a user supplied function and releases it]
+     * @param  {Function} fn [a function that accepts a resource and returns a promise that resolves/rejects once it has finished using the resource]
+     * @return {Promise}      [resolves once the resource is released to the pool]
+     */
+    use(fn) {
+        return this.acquire().then((resource) => {
+            fn(resource).then(
+                (result) => {
+                    this.release(resource);
+                    return result;
+                },
+                (err) => {
+                    this.release(resource);
+                    throw err;
+                }
+            );
+        });
     }
 
     /**
@@ -604,7 +626,7 @@ export default class Pool extends EventEmitter {
      * How many resources are available to allocated
      * (includes resources that have not been tested and may faul validation)
      * NOTE: internal for now as the name is awful and might not be useful to anyone
-     * @return {Number} number of resources the pool has to allocate
+     * @return {number} number of resources the pool has to allocate
      */
     get _potentiallyAllocableResourceCount() {
         return (
@@ -620,7 +642,7 @@ export default class Pool extends EventEmitter {
      * process of being created
      * Does NOT include resources in the process of being destroyed
      * sort of legacy...
-     * @return {Number}
+     * @return {number}
      */
     get _count() {
         return this._allObjects.size + this._factoryCreateOperations.size;
@@ -628,7 +650,7 @@ export default class Pool extends EventEmitter {
 
     /**
      * How many more resources does the pool have room for
-     * @return {Number} number of resources the pool could create before hitting any limits
+     * @return {number} number of resources the pool could create before hitting any limits
      */
     get spareResourceCapacity() {
         return (
@@ -639,7 +661,7 @@ export default class Pool extends EventEmitter {
 
     /**
      * see _count above
-     * @return {Number} [description]
+     * @return {number} [description]
      */
     get size() {
         return this._count;
@@ -647,7 +669,7 @@ export default class Pool extends EventEmitter {
 
     /**
      * number of available resources
-     * @return {Number} [description]
+     * @return {number} [description]
      */
     get available() {
         return this._availableObjects.length;
@@ -655,7 +677,7 @@ export default class Pool extends EventEmitter {
 
     /**
      * number of resources that are currently acquired
-     * @return {[type]} [description]
+     * @return {number} [description]
      */
     get borrowed() {
         return this._resourceLoans.size;
@@ -663,7 +685,7 @@ export default class Pool extends EventEmitter {
 
     /**
      * number of waiting acquire calls
-     * @return {[type]} [description]
+     * @return {number} [description]
      */
     get pending() {
         return this._waitingClientsQueue.length;
@@ -671,7 +693,7 @@ export default class Pool extends EventEmitter {
 
     /**
      * maximum size of the pool
-     * @return {[type]} [description]
+     * @return {number} [description]
      */
     get max() {
         return this._config.max;
@@ -679,7 +701,7 @@ export default class Pool extends EventEmitter {
 
     /**
      * minimum size of the pool
-     * @return {[type]} [description]
+     * @return {number} [description]
      */
     get min() {
         return this._config.min;

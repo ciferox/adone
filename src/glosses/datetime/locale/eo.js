@@ -42,6 +42,7 @@ export default ExDate.defineLocale("eo", {
         future: "post %s",
         past: "antaŭ %s",
         s: "sekundoj",
+        ss: "%d sekundoj",
         m: "minuto",
         mm: "%d minutoj",
         h: "horo",
@@ -57,7 +58,7 @@ export default ExDate.defineLocale("eo", {
     ordinal: "%da",
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 7  // The week that contains Jan 1st is the first week of the year.
+        doy: 7 // The week that contains Jan 1st is the first week of the year.
     }
 });
 

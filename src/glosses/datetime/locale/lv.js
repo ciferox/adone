@@ -5,6 +5,7 @@
 import ExDate from "..";
 
 const units = {
+    ss: "sekundes_sekundēm_sekunde_sekundes".split("_"),
     m: "minūtes_minūtēm_minūte_minūtes".split("_"),
     mm: "minūtes_minūtēm_minūte_minūtes".split("_"),
     h: "stundas_stundām_stunda_stundas".split("_"),
@@ -16,28 +17,32 @@ const units = {
     y: "gada_gadiem_gads_gadi".split("_"),
     yy: "gada_gadiem_gads_gadi".split("_")
 };
+
 /**
  * @param withoutSuffix boolean true = a length of time; false = before/after a period of time.
  */
-function format(forms, number, withoutSuffix) {
+const format = (forms, number, withoutSuffix) => {
     if (withoutSuffix) {
         // E.g. "21 minūte", "3 minūtes".
         return number % 10 === 1 && number % 100 !== 11 ? forms[2] : forms[3];
-    } 
-        // E.g. "21 minūtes" as in "pēc 21 minūtes".
-        // E.g. "3 minūtēm" as in "pēc 3 minūtēm".
+    }
+    // E.g. "21 minūtes" as in "pēc 21 minūtes".
+    // E.g. "3 minūtēm" as in "pēc 3 minūtēm".
     return number % 10 === 1 && number % 100 !== 11 ? forms[0] : forms[1];
-    
-}
-function relativeTimeWithPlural(number, withoutSuffix, key) {
+
+};
+
+const relativeTimeWithPlural = (number, withoutSuffix, key) => {
     return `${number} ${format(units[key], number, withoutSuffix)}`;
-}
-function relativeTimeWithSingular(number, withoutSuffix, key) {
+};
+
+const relativeTimeWithSingular = (number, withoutSuffix, key) => {
     return format(units[key], number, withoutSuffix);
-}
-function relativeSeconds(number, withoutSuffix) {
+};
+
+const relativeSeconds = (number, withoutSuffix) => {
     return withoutSuffix ? "dažas sekundes" : "dažām sekundēm";
-}
+};
 
 export default ExDate.defineLocale("lv", {
     months: "janvāris_februāris_marts_aprīlis_maijs_jūnijs_jūlijs_augusts_septembris_oktobris_novembris_decembris".split("_"),
@@ -66,6 +71,7 @@ export default ExDate.defineLocale("lv", {
         future: "pēc %s",
         past: "pirms %s",
         s: relativeSeconds,
+        ss: relativeTimeWithPlural,
         m: relativeTimeWithSingular,
         mm: relativeTimeWithPlural,
         h: relativeTimeWithSingular,
@@ -81,7 +87,7 @@ export default ExDate.defineLocale("lv", {
     ordinal: "%d.",
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 4  // The week that contains Jan 4th is the first week of the year.
+        doy: 4 // The week that contains Jan 4th is the first week of the year.
     }
 });
 

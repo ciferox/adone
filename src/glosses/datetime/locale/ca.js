@@ -28,19 +28,19 @@ export default ExDate.defineLocale("ca", {
     },
     calendar: {
         sameDay() {
-            return `[avui a ${(this.hours() !== 1) ? "les" : "la"}] LT`;
+            return `[avui a ${this.hours() !== 1 ? "les" : "la"}] LT`;
         },
         nextDay() {
-            return `[demà a ${(this.hours() !== 1) ? "les" : "la"}] LT`;
+            return `[demà a ${this.hours() !== 1 ? "les" : "la"}] LT`;
         },
         nextWeek() {
-            return `dddd [a ${(this.hours() !== 1) ? "les" : "la"}] LT`;
+            return `dddd [a ${this.hours() !== 1 ? "les" : "la"}] LT`;
         },
         lastDay() {
-            return `[ahir a ${(this.hours() !== 1) ? "les" : "la"}] LT`;
+            return `[ahir a ${this.hours() !== 1 ? "les" : "la"}] LT`;
         },
         lastWeek() {
-            return `[el] dddd [passat a ${(this.hours() !== 1) ? "les" : "la"}] LT`;
+            return `[el] dddd [passat a ${this.hours() !== 1 ? "les" : "la"}] LT`;
         },
         sameElse: "L"
     },
@@ -48,6 +48,7 @@ export default ExDate.defineLocale("ca", {
         future: "d'aquí %s",
         past: "fa %s",
         s: "uns segons",
+        ss: "%d segons",
         m: "un minut",
         mm: "%d minuts",
         h: "una hora",
@@ -61,10 +62,10 @@ export default ExDate.defineLocale("ca", {
     },
     dayOfMonthOrdinalParse: /\d{1,2}(r|n|t|è|a)/,
     ordinal(number, period) {
-        let output = (number === 1) ? "r" :
-            (number === 2) ? "n" :
-                (number === 3) ? "r" :
-                    (number === 4) ? "t" : "è";
+        let output = number === 1 ? "r" :
+            number === 2 ? "n" :
+                number === 3 ? "r" :
+                    number === 4 ? "t" : "è";
         if (period === "w" || period === "W") {
             output = "a";
         }

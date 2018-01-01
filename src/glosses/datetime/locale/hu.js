@@ -4,10 +4,13 @@
 import ExDate from "..";
 
 const weekEndings = "vasárnap hétfőn kedden szerdán csütörtökön pénteken szombaton".split(" ");
-function translate(number, withoutSuffix, key, isFuture) {
+
+const translate = (number, withoutSuffix, key, isFuture) => {
     switch (key) {
         case "s":
-            return (isFuture || withoutSuffix) ? "néhány másodperc" : "néhány másodperce";
+            return isFuture || withoutSuffix ? "néhány másodperc" : "néhány másodperce";
+        case "ss":
+            return number + (isFuture || withoutSuffix) ? " másodperc" : " másodperce";
         case "m":
             return `egy${isFuture || withoutSuffix ? " perc" : " perce"}`;
         case "mm":
@@ -30,10 +33,11 @@ function translate(number, withoutSuffix, key, isFuture) {
             return number + (isFuture || withoutSuffix ? " év" : " éve");
     }
     return "";
-}
-function week(isFuture) {
+};
+
+const week = function (isFuture) {
     return `${isFuture ? "" : "[múlt] "}[${weekEndings[this.day()]}] LT[-kor]`;
-}
+};
 
 export default ExDate.defineLocale("hu", {
     months: "január_február_március_április_május_június_július_augusztus_szeptember_október_november_december".split("_"),
@@ -56,9 +60,9 @@ export default ExDate.defineLocale("hu", {
     meridiem(hours, minutes, isLower) {
         if (hours < 12) {
             return isLower === true ? "de" : "DE";
-        } 
+        }
         return isLower === true ? "du" : "DU";
-        
+
     },
     calendar: {
         sameDay: "[ma] LT[-kor]",
@@ -76,6 +80,7 @@ export default ExDate.defineLocale("hu", {
         future: "%s múlva",
         past: "%s",
         s: translate,
+        ss: translate,
         m: translate,
         mm: translate,
         h: translate,
@@ -91,6 +96,6 @@ export default ExDate.defineLocale("hu", {
     ordinal: "%d.",
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 4  // The week that contains Jan 4th is the first week of the year.
+        doy: 4 // The week that contains Jan 4th is the first week of the year.
     }
 });

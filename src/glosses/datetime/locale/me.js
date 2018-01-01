@@ -5,6 +5,7 @@ import ExDate from "..";
 
 const translator = {
     words: { //Different grammatical cases
+        ss: ["sekund", "sekunda", "sekundi"],
         m: ["jedan minut", "jednog minuta"],
         mm: ["minut", "minuta", "minuta"],
         h: ["jedan sat", "jednog sata"],
@@ -14,15 +15,15 @@ const translator = {
         yy: ["godina", "godine", "godina"]
     },
     correctGrammaticalCase(number, wordKey) {
-        return number === 1 ? wordKey[0] : (number >= 2 && number <= 4 ? wordKey[1] : wordKey[2]);
+        return number === 1 ? wordKey[0] : number >= 2 && number <= 4 ? wordKey[1] : wordKey[2];
     },
     translate(number, withoutSuffix, key) {
         const wordKey = translator.words[key];
         if (key.length === 1) {
             return withoutSuffix ? wordKey[0] : wordKey[1];
-        } 
+        }
         return `${number} ${translator.correctGrammaticalCase(number, wordKey)}`;
-        
+
     }
 };
 
@@ -80,6 +81,7 @@ export default ExDate.defineLocale("me", {
         future: "za %s",
         past: "prije %s",
         s: "nekoliko sekundi",
+        ss: translator.translate,
         m: translator.translate,
         mm: translator.translate,
         h: translator.translate,
@@ -95,6 +97,6 @@ export default ExDate.defineLocale("me", {
     ordinal: "%d.",
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 7  // The week that contains Jan 1st is the first week of the year.
+        doy: 7 // The week that contains Jan 1st is the first week of the year.
     }
 });

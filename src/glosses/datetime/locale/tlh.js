@@ -5,34 +5,55 @@ import ExDate from "..";
 
 const numbersNouns = "pagh_wa’_cha’_wej_loS_vagh_jav_Soch_chorgh_Hut".split("_");
 
-function translateFuture(output) {
+const translateFuture = (output) => {
     let time = output;
-    time = (output.indexOf("jaj") !== -1) ?
-    `${time.slice(0, -3)}leS` :
-    (output.indexOf("jar") !== -1) ?
-    `${time.slice(0, -3)}waQ` :
-    (output.indexOf("DIS") !== -1) ?
-    `${time.slice(0, -3)}nem` :
-    `${time} pIq`;
+    time = output.includes("jaj")
+        ? `${time.slice(0, -3)}leS`
+        : output.includes("jar")
+            ? `${time.slice(0, -3)}waQ`
+            : output.includes("DIS")
+                ? `${time.slice(0, -3)}nem`
+                : `${time} pIq`;
     return time;
-}
+};
 
-function translatePast(output) {
+const translatePast = (output) => {
     let time = output;
-    time = (output.indexOf("jaj") !== -1) ?
-    `${time.slice(0, -3)}Hu’` :
-    (output.indexOf("jar") !== -1) ?
-    `${time.slice(0, -3)}wen` :
-    (output.indexOf("DIS") !== -1) ?
-    `${time.slice(0, -3)}ben` :
-    `${time} ret`;
+    time = output.includes("jaj")
+        ? `${time.slice(0, -3)}Hu’`
+        : output.includes("jar")
+            ? `${time.slice(0, -3)}wen`
+            : output.includes("DIS")
+                ? `${time.slice(0, -3)}ben`
+                : `${time} ret`;
     return time;
-}
+};
 
-// eslint-disable-next-line no-unused-vars
-function translate(number, withoutSuffix, string, isFuture) {
+const numberAsNoun = (number) => {
+    let word = "";
+
+    const hundred = Math.floor((number % 1000) / 100);
+    if (hundred > 0) {
+        word += `${numbersNouns[hundred]}vatlh`;
+    }
+
+    const ten = Math.floor((number % 100) / 10);
+    if (ten > 0) {
+        word += `${(word !== "" ? " " : "") + numbersNouns[ten]}maH`;
+    }
+
+    const one = number % 10;
+    if (one > 0) {
+        word += (word !== "" ? " " : "") + numbersNouns[one];
+    }
+    return word === "" ? "pagh" : word;
+};
+
+const translate = (number, withoutSuffix, string, isFuture) => {
     const numberNoun = numberAsNoun(number);
     switch (string) {
+        case "ss":
+            return `${numberNoun} lup`;
         case "mm":
             return `${numberNoun} tup`;
         case "hh":
@@ -44,27 +65,7 @@ function translate(number, withoutSuffix, string, isFuture) {
         case "yy":
             return `${numberNoun} DIS`;
     }
-}
-
-function numberAsNoun(number) {
-    let word = "";
-
-    const hundred = Math.floor((number % 1000) / 100);
-    if (hundred > 0) {
-        word += `${numbersNouns[hundred]}vatlh`;
-    }
-
-    const ten = Math.floor((number % 100) / 10);
-    if (ten > 0) {
-        word += `${((word !== "") ? " " : "") + numbersNouns[ten]}maH`;
-    }
-
-    const one = number % 10;
-    if (one > 0) {
-        word += ((word !== "") ? " " : "") + numbersNouns[one];
-    }
-    return (word === "") ? "pagh" : word;
-}
+};
 
 export default ExDate.defineLocale("tlh", {
     months: "tera’ jar wa’_tera’ jar cha’_tera’ jar wej_tera’ jar loS_tera’ jar vagh_tera’ jar jav_tera’ jar Soch_tera’ jar chorgh_tera’ jar Hut_tera’ jar wa’maH_tera’ jar wa’maH wa’_tera’ jar wa’maH cha’".split("_"),
@@ -93,6 +94,7 @@ export default ExDate.defineLocale("tlh", {
         future: translateFuture,
         past: translatePast,
         s: "puS lup",
+        ss: translate,
         m: "wa’ tup",
         mm: translate,
         h: "wa’ rep",
@@ -108,6 +110,6 @@ export default ExDate.defineLocale("tlh", {
     ordinal: "%d.",
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 4  // The week that contains Jan 4th is the first week of the year.
+        doy: 4 // The week that contains Jan 4th is the first week of the year.
     }
 });

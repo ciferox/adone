@@ -68,6 +68,7 @@ export default ExDate.defineLocale("ar-sa", {
         future: "في %s",
         past: "منذ %s",
         s: "ثوان",
+        ss: "%d ثانية",
         m: "دقيقة",
         mm: "%d دقائق",
         h: "ساعة",
@@ -91,6 +92,6 @@ export default ExDate.defineLocale("ar-sa", {
     },
     week: {
         dow: 0, // Sunday is the first day of the week.
-        doy: 6  // The week that contains Jan 1st is the first week of the year.
+        doy: 6 // The week that contains Jan 1st is the first week of the year.
     }
 });

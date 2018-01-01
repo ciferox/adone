@@ -51,9 +51,9 @@ export default ExDate.defineLocale("dv", {
     meridiem(hour, minute, isLower) {
         if (hour < 12) {
             return "މކ";
-        } 
+        }
         return "މފ";
-        
+
     },
     calendar: {
         sameDay: "[މިއަދު] LT",
@@ -67,6 +67,7 @@ export default ExDate.defineLocale("dv", {
         future: "ތެރޭގައި %s",
         past: "ކުރިން %s",
         s: "ސިކުންތުކޮޅެއް",
+        ss: "d% ސިކުންތު",
         m: "މިނިޓެއް",
         mm: "މިނިޓު %d",
         h: "ގަޑިއިރެއް",
@@ -85,7 +86,7 @@ export default ExDate.defineLocale("dv", {
         return string.replace(/,/g, "،");
     },
     week: {
-        dow: 7,  // Sunday is the first day of the week.
-        doy: 12  // The week that contains Jan 1st is the first week of the year.
+        dow: 7, // Sunday is the first day of the week.
+        doy: 12 // The week that contains Jan 1st is the first week of the year.
     }
 });

@@ -4,6 +4,24 @@
 
 import ExDate from "..";
 
+const processRelativeTime = (number, withoutSuffix, key, isFuture) => {
+    const format = {
+        s: ["viensas secunds", "'iensas secunds"],
+        ss: [`${number} secunds`, `${String(number)} secunds`],
+        m: ["'n míut", "'iens míut"],
+        mm: [`${number} míuts`, `${String(number)} míuts`],
+        h: ["'n þora", "'iensa þora"],
+        hh: [`${number} þoras`, `${String(number)} þoras`],
+        d: ["'n ziua", "'iensa ziua"],
+        dd: [`${number} ziuas`, `${String(number)} ziuas`],
+        M: ["'n mes", "'iens mes"],
+        MM: [`${number} mesen`, `${String(number)} mesen`],
+        y: ["'n ar", "'iens ar"],
+        yy: [`${number} ars`, `${String(number)} ars`]
+    };
+    return isFuture ? format[key][0] : withoutSuffix ? format[key][0] : format[key][1];
+};
+
 // After the year there should be a slash and the amount of years since December 26, 1979 in Roman numerals.
 // This is currently too difficult (maybe even impossible) to add.
 export default ExDate.defineLocale("tzl", {
@@ -27,9 +45,9 @@ export default ExDate.defineLocale("tzl", {
     meridiem(hours, minutes, isLower) {
         if (hours > 11) {
             return isLower ? "d'o" : "D'O";
-        } 
+        }
         return isLower ? "d'a" : "D'A";
-        
+
     },
     calendar: {
         sameDay: "[oxhi à] LT",
@@ -43,6 +61,7 @@ export default ExDate.defineLocale("tzl", {
         future: "osprei %s",
         past: "ja%s",
         s: processRelativeTime,
+        ss: processRelativeTime,
         m: processRelativeTime,
         mm: processRelativeTime,
         h: processRelativeTime,
@@ -58,24 +77,6 @@ export default ExDate.defineLocale("tzl", {
     ordinal: "%d.",
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 4  // The week that contains Jan 4th is the first week of the year.
+        doy: 4 // The week that contains Jan 4th is the first week of the year.
     }
 });
-
-function processRelativeTime(number, withoutSuffix, key, isFuture) {
-    const format = {
-        s: ["viensas secunds", "'iensas secunds"],
-        m: ["'n míut", "'iens míut"],
-        mm: [`${number} míuts`, `${String(number)} míuts`],
-        h: ["'n þora", "'iensa þora"],
-        hh: [`${number} þoras`, `${String(number)} þoras`],
-        d: ["'n ziua", "'iensa ziua"],
-        dd: [`${number} ziuas`, `${String(number)} ziuas`],
-        M: ["'n mes", "'iens mes"],
-        MM: [`${number} mesen`, `${String(number)} mesen`],
-        y: ["'n ar", "'iens ar"],
-        yy: [`${number} ars`, `${String(number)} ars`]
-    };
-    return isFuture ? format[key][0] : (withoutSuffix ? format[key][0] : format[key][1]);
-}
-

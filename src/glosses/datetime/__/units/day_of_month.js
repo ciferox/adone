@@ -33,11 +33,11 @@ addRegexToken("DD", match1to2, match2);
 addRegexToken("Do", (isStrict, locale) => {
     // TODO: Remove "ordinalParse" fallback in next major release.
     return isStrict
-        ? (locale._dayOfMonthOrdinalParse || locale._ordinalParse)
+        ? locale._dayOfMonthOrdinalParse || locale._ordinalParse
         : locale._dayOfMonthOrdinalParseLenient;
 });
 
 addParseToken(["D", "DD"], DATE);
 addParseToken("Do", (input, array) => {
-    array[DATE] = __.util.toInt(input.match(match1to2)[0], 10);
+    array[DATE] = __.util.toInt(input.match(match1to2)[0]);
 });

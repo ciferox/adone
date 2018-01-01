@@ -39,9 +39,9 @@ export default ExDate.defineLocale("id", {
             return "siang";
         } else if (hours < 19) {
             return "sore";
-        } 
+        }
         return "malam";
-        
+
     },
     calendar: {
         sameDay: "[Hari ini pukul] LT",
@@ -55,6 +55,7 @@ export default ExDate.defineLocale("id", {
         future: "dalam %s",
         past: "%s yang lalu",
         s: "beberapa detik",
+        ss: "%d detik",
         m: "semenit",
         mm: "%d menit",
         h: "sejam",
@@ -68,6 +69,6 @@ export default ExDate.defineLocale("id", {
     },
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 7  // The week that contains Jan 1st is the first week of the year.
+        doy: 7 // The week that contains Jan 1st is the first week of the year.
     }
 });

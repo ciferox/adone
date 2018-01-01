@@ -55,6 +55,7 @@ export default ExDate.defineLocale("nl", {
         future: "over %s",
         past: "%s geleden",
         s: "een paar seconden",
+        ss: "%d seconden",
         m: "één minuut",
         mm: "%d minuten",
         h: "één uur",
@@ -68,7 +69,7 @@ export default ExDate.defineLocale("nl", {
     },
     dayOfMonthOrdinalParse: /\d{1,2}(ste|de)/,
     ordinal(number) {
-        return number + ((number === 1 || number === 8 || number >= 20) ? "ste" : "de");
+        return number + (number === 1 || number === 8 || number >= 20 ? "ste" : "de");
     },
     week: {
         dow: 1, // Monday is the first day of the week.

@@ -3,9 +3,18 @@
 
 import ExDate from "..";
 
-function translate(number, withoutSuffix, key) {
+const translate = (number, withoutSuffix, key) => {
     let result = `${number} `;
     switch (key) {
+        case "ss":
+            if (number === 1) {
+                result += "sekunda";
+            } else if (number === 2 || number === 3 || number === 4) {
+                result += "sekunde";
+            } else {
+                result += "sekundi";
+            }
+            return result;
         case "m":
             return withoutSuffix ? "jedna minuta" : "jedne minute";
         case "mm":
@@ -54,7 +63,7 @@ function translate(number, withoutSuffix, key) {
             }
             return result;
     }
-}
+};
 
 export default ExDate.defineLocale("hr", {
     months: {
@@ -114,6 +123,7 @@ export default ExDate.defineLocale("hr", {
         future: "za %s",
         past: "prije %s",
         s: "par sekundi",
+        ss: translate,
         m: translate,
         mm: translate,
         h: translate,
@@ -129,6 +139,6 @@ export default ExDate.defineLocale("hr", {
     ordinal: "%d.",
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 7  // The week that contains Jan 1st is the first week of the year.
+        doy: 7 // The week that contains Jan 1st is the first week of the year.
     }
 });

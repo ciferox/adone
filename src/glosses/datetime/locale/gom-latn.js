@@ -4,9 +4,10 @@
 
 import ExDate from "..";
 
-function processRelativeTime(number, withoutSuffix, key, isFuture) {
+const processRelativeTime = (number, withoutSuffix, key, isFuture) => {
     const format = {
         s: ["thodde secondanim", "thodde second"],
+        ss: [`${number} secondanim`, `${number} second`],
         m: ["eka mintan", "ek minute"],
         mm: [`${number} mintanim`, `${number} mintam`],
         h: ["eka horan", "ek hor"],
@@ -19,7 +20,7 @@ function processRelativeTime(number, withoutSuffix, key, isFuture) {
         yy: [`${number} vorsanim`, `${number} vorsam`]
     };
     return withoutSuffix ? format[key][0] : format[key][1];
-}
+};
 
 export default ExDate.defineLocale("gom-latn", {
     months: "Janer_Febrer_Mars_Abril_Mai_Jun_Julai_Agost_Setembr_Otubr_Novembr_Dezembr".split("_"),
@@ -50,6 +51,7 @@ export default ExDate.defineLocale("gom-latn", {
         future: "%s",
         past: "%s adim",
         s: processRelativeTime,
+        ss: processRelativeTime,
         m: processRelativeTime,
         mm: processRelativeTime,
         h: processRelativeTime,
@@ -79,7 +81,7 @@ export default ExDate.defineLocale("gom-latn", {
     },
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 4  // The week that contains Jan 4th is the first week of the year.
+        doy: 4 // The week that contains Jan 4th is the first week of the year.
     },
     meridiemParse: /rati|sokalli|donparam|sanje/,
     meridiemHour(hour, meridiem) {

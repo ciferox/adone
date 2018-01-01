@@ -30,6 +30,7 @@ export default ExDate.defineLocale("ml", {
         future: "%s കഴിഞ്ഞ്",
         past: "%s മുൻപ്",
         s: "അൽപ നിമിഷങ്ങൾ",
+        ss: "%d സെക്കൻഡ്",
         m: "ഒരു മിനിറ്റ്",
         mm: "%d മിനിറ്റ്",
         h: "ഒരു മണിക്കൂർ",
@@ -50,9 +51,9 @@ export default ExDate.defineLocale("ml", {
                 meridiem === "ഉച്ച കഴിഞ്ഞ്" ||
                 meridiem === "വൈകുന്നേരം") {
             return hour + 12;
-        } 
+        }
         return hour;
-        
+
     },
     // eslint-disable-next-line no-unused-vars
     meridiem(hour, minute, isLower) {
@@ -64,8 +65,8 @@ export default ExDate.defineLocale("ml", {
             return "ഉച്ച കഴിഞ്ഞ്";
         } else if (hour < 20) {
             return "വൈകുന്നേരം";
-        } 
+        }
         return "രാത്രി";
-        
+
     }
 });

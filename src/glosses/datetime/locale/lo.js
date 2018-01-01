@@ -26,9 +26,9 @@ export default ExDate.defineLocale("lo", {
     meridiem(hour, minute, isLower) {
         if (hour < 12) {
             return "ຕອນເຊົ້າ";
-        } 
+        }
         return "ຕອນແລງ";
-        
+
     },
     calendar: {
         sameDay: "[ມື້ນີ້ເວລາ] LT",
@@ -42,6 +42,7 @@ export default ExDate.defineLocale("lo", {
         future: "ອີກ %s",
         past: "%sຜ່ານມາ",
         s: "ບໍ່ເທົ່າໃດວິນາທີ",
+        ss: "%d ວິນາທີ",
         m: "1 ນາທີ",
         mm: "%d ນາທີ",
         h: "1 ຊົ່ວໂມງ",

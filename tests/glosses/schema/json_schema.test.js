@@ -6,22 +6,11 @@ describe("schema", "json schema", () => {
     const remoteRefs = {
         "http://localhost:1234/integer.json": require("./remotes/integer.json"),
         "http://localhost:1234/subSchemas.json": require("./remotes/sub_schemas.json"),
-        "http://localhost:1234/folder/folderInteger.json": require("./remotes/folder/folder_integer.json")
+        "http://localhost:1234/folder/folderInteger.json": require("./remotes/folder/folder_integer.json"),
+        "http://localhost:1234/name.json": require("./remotes/name.json")
     };
 
-    const thisDir = new adone.fs.Directory(__dirname);
-    const testsDir = thisDir.getDirectory("tests");
-
-    const draft4Dir = testsDir.getDirectory("draft4");
-    const draft4Files = draft4Dir.findSync().map((x) => x.relativePath(thisDir));
-    runTest(getInstances(adone.util.clone(options, { meta: false })), 4, draft4Files);
-
-    const draft6Dir = testsDir.getDirectory("draft6");
-    const draft6Files = draft6Dir.findSync().map((x) => x.relativePath(thisDir));
-    runTest(getInstances(adone.util.clone(options)), 6, draft6Files);
-
-
-    function runTest(instances, draft, tests) {
+    const runTest = (instances, draft, tests) => {
         instances.forEach((instance) => {
             instance.addMetaSchema(adone.schema.refs["json-schema-draft-04"]);
             if (draft === 4) {
@@ -62,6 +51,21 @@ describe("schema", "json schema", () => {
             hideFolder: `draft${draft}/`,
             timeout: 120000
         });
-    }
+    };
 
+    const thisDir = new adone.fs.Directory(__dirname);
+    const testsDir = thisDir.getDirectory("tests");
+
+    const draft4Dir = testsDir.getDirectory("draft4");
+    const draft4Files = draft4Dir.findSync().map((x) => x.relativePath(thisDir));
+    runTest(getInstances(adone.util.clone(options, { meta: false })), 4, draft4Files);
+
+    const draft6Dir = testsDir.getDirectory("draft6");
+    const draft6Files = draft6Dir.findSync().map((x) => x.relativePath(thisDir));
+    runTest(getInstances(adone.util.clone(options), {
+        format: "full",
+        formats: {
+            "json-pointer": /^(?:\/(?:[^~/]|~0|~1)*)*$/
+        }
+    }), 6, draft6Files);
 });

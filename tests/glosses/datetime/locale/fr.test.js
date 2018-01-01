@@ -33,7 +33,7 @@ describe("datetime", "locale", "fr", () => {
             ["M Mo MM MMMM MMM", "2 2e 02 février févr."],
             ["YYYY YY", "2010 10"],
             ["D Do DD", "14 14 14"],
-            ["d do dddd ddd dd", "0 0e dimanche dim. Di"],
+            ["d do dddd ddd dd", "0 0e dimanche dim. di"],
             ["DDD DDDo DDDD", "45 45e 045"],
             ["w wo ww", "6 6e 06"],
             ["h hh", "3 03"],
@@ -123,8 +123,8 @@ describe("datetime", "locale", "fr", () => {
     });
 
     it("format week", () => {
-        const expected = "dimanche dim. Di_lundi lun. Lu_mardi mar. Ma_mercredi mer. Me_jeudi jeu. Je_vendredi ven. Ve_samedi sam. Sa".split("_");
         let i;
+        const expected = "dimanche dim. di_lundi lun. lu_mardi mar. ma_mercredi mer. me_jeudi jeu. je_vendredi ven. ve_samedi sam. sa".split("_");
 
         for (i = 0; i < expected.length; i++) {
             assert.equal(adone.datetime([2011, 0, 2 + i]).format("dddd ddd dd"), expected[i], expected[i]);

@@ -344,8 +344,8 @@ describe("datetime", "create", () => {
         const c = adone.datetime("2011 2 1 10 -05:00", "YYYY MM DD HH Z");
         const d = adone.datetime("2011 2 1 8 -07:00", "YYYY MM DD HH Z");
         assert.equal(c.hours(), d.hours(), "10 am central time == 8 am pacific time");
-        const e = adone.datetime.utc("Fri, 20 Jul 2012 17:15:00", "ddd, DD MMM YYYY HH:mm:ss");
-        const f = adone.datetime.utc("Fri, 20 Jul 2012 10:15:00 -0700", "ddd, DD MMM YYYY HH:mm:ss ZZ");
+        const e = adone.datetime.utc("20 07 2012 17:15:00", "DD MM YYYY HH:mm:ss");
+        const f = adone.datetime.utc("20 07 2012 10:15:00 -0700", "DD MM YYYY HH:mm:ss ZZ");
         assert.equal(e.hours(), f.hours(), "parse timezone offset in utc");
     });
 
@@ -547,9 +547,9 @@ describe("datetime", "create", () => {
             }
             return String(input);
         };
-        const hourOffset = (offset > 0 ? Math.floor(offset / 60) : Math.ceil(offset / 60));
+        const hourOffset = offset > 0 ? Math.floor(offset / 60) : Math.ceil(offset / 60);
         const minOffset = offset - (hourOffset * 60);
-        const tz = (offset >= 0) ?
+        const tz = offset >= 0 ?
             `+${pad(hourOffset)}:${pad(minOffset)}` :
             `-${pad(-hourOffset)}:${pad(-minOffset)}`;
         const tz2 = tz.replace(":", "");
@@ -738,6 +738,30 @@ describe("datetime", "create", () => {
         assert.equal(adone.datetime.utc("2010-W01").format(), "2010-01-04T00:00:00Z", "2010 week 1 (1st Jan Fri)");
         assert.equal(adone.datetime.utc("2011-W01").format(), "2011-01-03T00:00:00Z", "2011 week 1 (1st Jan Sat)");
         assert.equal(adone.datetime.utc("2012-W01").format(), "2012-01-02T00:00:00Z", "2012 week 1 (1st Jan Sun)");
+    });
+
+    it("parsing weekdays verifies the day", () => {
+        // string with format
+        assert.ok(!adone.datetime("Wed 08-10-2017", "ddd MM-DD-YYYY").isValid(), "because day of week is incorrect for the date");
+        assert.ok(adone.datetime("Thu 08-10-2017", "ddd MM-DD-YYYY").isValid(), "because day of week is correct for the date");
+    });
+
+    it("parsing weekday on utc dates verifies day acccording to utc time", () => {
+        assert.ok(adone.datetime.utc("Mon 03:59", "ddd HH:mm").isValid(), "Monday 03:59");
+    });
+
+    it("parsing weekday on local dates verifies day acccording to local time", () => {
+        // this doesn't do much useful if you're not in the US or at least close to it
+        assert.ok(adone.datetime("Mon 03:59", "ddd HH:mm").isValid(), "Monday 03:59");
+    });
+
+    it("parsing weekday on utc dates with specified offsets verifies day acccording to that offset", () => {
+        assert.ok(adone.datetime.utc("Mon 03:59 +12:00", "ddd HH:mm Z", true).isValid(), "Monday 03:59");
+    });
+
+    it("parsing weekday on local dates with specified offsets verifies day acccording to that offset", () => {
+        // if you're in the US, these times will all be sometime Sunday, but they shoud parse as Monday
+        assert.ok(adone.datetime("Mon 03:59 +12:00", "ddd HH:mm Z", true).isValid(), "Monday 03:59");
     });
 
     it("parsing week year/week/weekday (dow 1, doy 4)", () => {
@@ -999,11 +1023,11 @@ describe("datetime", "create", () => {
         const currentWeekOfYear = adone.datetime().weeks();
         const expectedDate2012 = adone.datetime([2012, 0, 1])
             .day(0)
-            .add((currentWeekOfYear - 1), "weeks")
+            .add(currentWeekOfYear - 1, "weeks")
             .format("YYYY MM DD");
         const expectedDate1999 = adone.datetime([1999, 0, 1])
             .day(0)
-            .add((currentWeekOfYear - 1), "weeks")
+            .add(currentWeekOfYear - 1, "weeks")
             .format("YYYY MM DD");
 
         // year
@@ -1209,11 +1233,5 @@ describe("datetime", "create", () => {
                 assert.equal(adone.datetime(kkVal, "kk:mm:ss").format("kk:mm:ss"), kkVal, `${kkVal} skk parsing`);
             }
         }
-    });
-
-    it("mismatching day-of-week and date", () => {
-        // string with format
-        assert.ok(!adone.datetime("Wed 08-10-2017", "ddd MM-DD-YYYY").isValid(), "because day of week is incorrect for the date");
-        assert.ok(adone.datetime("Thu 08-10-2017", "ddd MM-DD-YYYY").isValid(), "because day of week is correct for the date");
     });
 });

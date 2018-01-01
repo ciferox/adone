@@ -51,6 +51,7 @@ export default ExDate.defineLocale("az", {
         future: "%s sonra",
         past: "%s əvvəl",
         s: "birneçə saniyyə",
+        ss: "%d saniyə",
         m: "bir dəqiqə",
         mm: "%d dəqiqə",
         h: "bir saat",
@@ -80,7 +81,7 @@ export default ExDate.defineLocale("az", {
     },
     dayOfMonthOrdinalParse: /\d{1,2}-(ıncı|inci|nci|üncü|ncı|uncu)/,
     ordinal(number) {
-        if (number === 0) {  // special case for zero
+        if (number === 0) { // special case for zero
             return `${number}-ıncı`;
         }
         const a = number % 10;
@@ -90,6 +91,6 @@ export default ExDate.defineLocale("az", {
     },
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 7  // The week that contains Jan 1st is the first week of the year.
+        doy: 7 // The week that contains Jan 1st is the first week of the year.
     }
 });

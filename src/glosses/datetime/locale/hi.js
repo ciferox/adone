@@ -56,6 +56,7 @@ export default ExDate.defineLocale("hi", {
         future: "%s में",
         past: "%s पहले",
         s: "कुछ ही क्षण",
+        ss: "%d सेकंड",
         m: "एक मिनट",
         mm: "%d मिनट",
         h: "एक घंटा",
@@ -104,12 +105,12 @@ export default ExDate.defineLocale("hi", {
             return "दोपहर";
         } else if (hour < 20) {
             return "शाम";
-        } 
+        }
         return "रात";
-        
+
     },
     week: {
         dow: 0, // Sunday is the first day of the week.
-        doy: 6  // The week that contains Jan 1st is the first week of the year.
+        doy: 6 // The week that contains Jan 1st is the first week of the year.
     }
 });

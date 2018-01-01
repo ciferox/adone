@@ -3,19 +3,25 @@
 
 import ExDate from "..";
 
-function plural(n) {
+const plural = (n) => {
     if (n % 100 === 11) {
         return true;
     } else if (n % 10 === 1) {
         return false;
     }
     return true;
-}
-function translate(number, withoutSuffix, key, isFuture) {
+};
+
+const translate = (number, withoutSuffix, key, isFuture) => {
     const result = `${number} `;
     switch (key) {
         case "s":
             return withoutSuffix || isFuture ? "nokkrar sekúndur" : "nokkrum sekúndum";
+        case "ss":
+            if (plural(number)) {
+                return result + (withoutSuffix || isFuture ? "sekúndur" : "sekúndum");
+            }
+            return `${result}sekúnda`;
         case "m":
             return withoutSuffix ? "mínúta" : "mínútu";
         case "mm":
@@ -68,7 +74,7 @@ function translate(number, withoutSuffix, key, isFuture) {
             }
             return result + (withoutSuffix || isFuture ? "ár" : "ári");
     }
-}
+};
 
 export default ExDate.defineLocale("is", {
     months: "janúar_febrúar_mars_apríl_maí_júní_júlí_ágúst_september_október_nóvember_desember".split("_"),
@@ -96,6 +102,7 @@ export default ExDate.defineLocale("is", {
         future: "eftir %s",
         past: "fyrir %s síðan",
         s: translate,
+        ss: translate,
         m: translate,
         mm: translate,
         h: "klukkustund",
@@ -111,7 +118,7 @@ export default ExDate.defineLocale("is", {
     ordinal: "%d.",
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 4  // The week that contains Jan 4th is the first week of the year.
+        doy: 4 // The week that contains Jan 4th is the first week of the year.
     }
 });
 

@@ -56,6 +56,7 @@ export default ExDate.defineLocale("pa-in", {
         future: "%s ਵਿੱਚ",
         past: "%s ਪਿਛਲੇ",
         s: "ਕੁਝ ਸਕਿੰਟ",
+        ss: "%d ਸਕਿੰਟ",
         m: "ਇਕ ਮਿੰਟ",
         mm: "%d ਮਿੰਟ",
         h: "ਇੱਕ ਘੰਟਾ",
@@ -104,12 +105,12 @@ export default ExDate.defineLocale("pa-in", {
             return "ਦੁਪਹਿਰ";
         } else if (hour < 20) {
             return "ਸ਼ਾਮ";
-        } 
+        }
         return "ਰਾਤ";
-        
+
     },
     week: {
         dow: 0, // Sunday is the first day of the week.
-        doy: 6  // The week that contains Jan 1st is the first week of the year.
+        doy: 6 // The week that contains Jan 1st is the first week of the year.
     }
 });

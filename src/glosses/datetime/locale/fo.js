@@ -29,6 +29,7 @@ export default ExDate.defineLocale("fo", {
         future: "um %s",
         past: "%s síðani",
         s: "fá sekund",
+        ss: "%d sekundir",
         m: "ein minutt",
         mm: "%d minuttir",
         h: "ein tími",
@@ -44,7 +45,7 @@ export default ExDate.defineLocale("fo", {
     ordinal: "%d.",
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 4  // The week that contains Jan 4th is the first week of the year.
+        doy: 4 // The week that contains Jan 4th is the first week of the year.
     }
 });
 

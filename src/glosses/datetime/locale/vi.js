@@ -18,9 +18,9 @@ export default ExDate.defineLocale("vi", {
     meridiem(hours, minutes, isLower) {
         if (hours < 12) {
             return isLower ? "sa" : "SA";
-        } 
+        }
         return isLower ? "ch" : "CH";
-        
+
     },
     longDateFormat: {
         LT: "HH:mm",
@@ -46,6 +46,7 @@ export default ExDate.defineLocale("vi", {
         future: "%s tới",
         past: "%s trước",
         s: "vài giây",
+        ss: "%d giây",
         m: "một phút",
         mm: "%d phút",
         h: "một giờ",
@@ -63,7 +64,7 @@ export default ExDate.defineLocale("vi", {
     },
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 4  // The week that contains Jan 4th is the first week of the year.
+        doy: 4 // The week that contains Jan 4th is the first week of the year.
     }
 });
 

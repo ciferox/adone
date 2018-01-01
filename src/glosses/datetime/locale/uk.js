@@ -4,12 +4,18 @@
 
 import ExDate from "..";
 
-function plural(word, num) {
+const plural = (word, num) => {
     const forms = word.split("_");
-    return num % 10 === 1 && num % 100 !== 11 ? forms[0] : (num % 10 >= 2 && num % 10 <= 4 && (num % 100 < 10 || num % 100 >= 20) ? forms[1] : forms[2]);
-}
-function relativeTimeWithPlural(number, withoutSuffix, key) {
+    return num % 10 === 1 && num % 100 !== 11
+        ? forms[0]
+        : num % 10 >= 2 && num % 10 <= 4 && (num % 100 < 10 || num % 100 >= 20)
+            ? forms[1]
+            : forms[2];
+};
+
+const relativeTimeWithPlural = (number, withoutSuffix, key) => {
     const format = {
+        ss: withoutSuffix ? "секунда_секунди_секунд" : "секунду_секунди_секунд",
         mm: withoutSuffix ? "хвилина_хвилини_хвилин" : "хвилину_хвилини_хвилин",
         hh: withoutSuffix ? "година_години_годин" : "годину_години_годин",
         dd: "день_дні_днів",
@@ -22,9 +28,9 @@ function relativeTimeWithPlural(number, withoutSuffix, key) {
         return withoutSuffix ? "година" : "годину";
     }
     return `${number} ${plural(format[key], Number(number))}`;
+};
 
-}
-function weekdaysCaseReplace(m, format) {
+const weekdaysCaseReplace = (m, format) => {
     const weekdays = {
         nominative: "неділя_понеділок_вівторок_середа_четвер_п’ятниця_субота".split("_"),
         accusative: "неділю_понеділок_вівторок_середу_четвер_п’ятницю_суботу".split("_"),
@@ -37,16 +43,17 @@ function weekdaysCaseReplace(m, format) {
 
     const nounCase = (/(\[[ВвУу]\]) ?dddd/).test(format) ?
         "accusative" :
-        ((/\[?(?:минулої|наступної)? ?\] ?dddd/).test(format) ?
+        (/\[?(?:минулої|наступної)? ?\] ?dddd/).test(format) ?
             "genitive" :
-            "nominative");
+            "nominative";
     return weekdays[nounCase][m.day()];
-}
-function processHoursFunction(str) {
+};
+
+const processHoursFunction = (str) => {
     return function () {
         return `${str}о${this.hours() === 11 ? "б" : ""}] LT`;
     };
-}
+};
 
 export default ExDate.defineLocale("uk", {
     months: {
@@ -89,6 +96,7 @@ export default ExDate.defineLocale("uk", {
         future: "за %s",
         past: "%s тому",
         s: "декілька секунд",
+        ss: relativeTimeWithPlural,
         m: relativeTimeWithPlural,
         mm: relativeTimeWithPlural,
         h: "годину",
@@ -134,6 +142,6 @@ export default ExDate.defineLocale("uk", {
     },
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 7  // The week that contains Jan 1st is the first week of the year.
+        doy: 7 // The week that contains Jan 1st is the first week of the year.
     }
 });

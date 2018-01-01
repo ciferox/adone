@@ -4,9 +4,10 @@
 
 import ExDate from "..";
 
-function processRelativeTime(number, withoutSuffix, key, isFuture) {
+const processRelativeTime = (number, withoutSuffix, key, isFuture) => {
     const format = {
         s: ["mõne sekundi", "mõni sekund", "paar sekundit"],
+        ss: [`${number}sekundi`, `${number}sekundit`],
         m: ["ühe minuti", "üks minut"],
         mm: [`${number} minuti`, `${number} minutit`],
         h: ["ühe tunni", "tund aega", "üks tund"],
@@ -21,7 +22,7 @@ function processRelativeTime(number, withoutSuffix, key, isFuture) {
         return format[key][2] ? format[key][2] : format[key][1];
     }
     return isFuture ? format[key][0] : format[key][1];
-}
+};
 
 export default ExDate.defineLocale("et", {
     months: "jaanuar_veebruar_märts_aprill_mai_juuni_juuli_august_september_oktoober_november_detsember".split("_"),
@@ -49,6 +50,7 @@ export default ExDate.defineLocale("et", {
         future: "%s pärast",
         past: "%s tagasi",
         s: processRelativeTime,
+        ss: processRelativeTime,
         m: processRelativeTime,
         mm: processRelativeTime,
         h: processRelativeTime,
@@ -64,7 +66,7 @@ export default ExDate.defineLocale("et", {
     ordinal: "%d.",
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 4  // The week that contains Jan 4th is the first week of the year.
+        doy: 4 // The week that contains Jan 4th is the first week of the year.
     }
 });
 

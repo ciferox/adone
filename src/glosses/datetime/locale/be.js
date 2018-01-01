@@ -5,12 +5,18 @@
 
 import ExDate from "..";
 
-function plural(word, num) {
+const plural = (word, num) => {
     const forms = word.split("_");
-    return num % 10 === 1 && num % 100 !== 11 ? forms[0] : (num % 10 >= 2 && num % 10 <= 4 && (num % 100 < 10 || num % 100 >= 20) ? forms[1] : forms[2]);
-}
-function relativeTimeWithPlural(number, withoutSuffix, key) {
+    return num % 10 === 1 && num % 100 !== 11
+        ? forms[0]
+        : num % 10 >= 2 && num % 10 <= 4 && (num % 100 < 10 || num % 100 >= 20)
+            ? forms[1]
+            : forms[2];
+};
+
+const relativeTimeWithPlural = (number, withoutSuffix, key) => {
     const format = {
+        ss: withoutSuffix ? "секунда_секунды_секунд" : "секунду_секунды_секунд",
         mm: withoutSuffix ? "хвіліна_хвіліны_хвілін" : "хвіліну_хвіліны_хвілін",
         hh: withoutSuffix ? "гадзіна_гадзіны_гадзін" : "гадзіну_гадзіны_гадзін",
         dd: "дзень_дні_дзён",
@@ -24,7 +30,7 @@ function relativeTimeWithPlural(number, withoutSuffix, key) {
     }
     return `${number} ${plural(format[key], Number(number))}`;
 
-}
+};
 
 export default ExDate.defineLocale("be", {
     months: {
@@ -117,6 +123,6 @@ export default ExDate.defineLocale("be", {
     },
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 7  // The week that contains Jan 1st is the first week of the year.
+        doy: 7 // The week that contains Jan 1st is the first week of the year.
     }
 });

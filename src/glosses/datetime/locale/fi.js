@@ -9,11 +9,21 @@ const numbersFuture = [
     numbersPast[7], numbersPast[8], numbersPast[9]
 ];
 
-function translate(number, withoutSuffix, key, isFuture) {
+const verbalNumber = (number, isFuture) => {
+    return number < 10
+        ? isFuture
+            ? numbersFuture[number]
+            : numbersPast[number]
+        : number;
+};
+
+const translate = (number, withoutSuffix, key, isFuture) => {
     let result = "";
     switch (key) {
         case "s":
             return isFuture ? "muutaman sekunnin" : "muutama sekunti";
+        case "ss":
+            return isFuture ? "sekunnin" : "sekuntia";
         case "m":
             return isFuture ? "minuutin" : "minuutti";
         case "mm":
@@ -42,10 +52,7 @@ function translate(number, withoutSuffix, key, isFuture) {
     }
     result = `${verbalNumber(number, isFuture)} ${result}`;
     return result;
-}
-function verbalNumber(number, isFuture) {
-    return number < 10 ? (isFuture ? numbersFuture[number] : numbersPast[number]) : number;
-}
+};
 
 export default ExDate.defineLocale("fi", {
     months: "tammikuu_helmikuu_maaliskuu_huhtikuu_toukokuu_kesäkuu_heinäkuu_elokuu_syyskuu_lokakuu_marraskuu_joulukuu".split("_"),
@@ -77,6 +84,7 @@ export default ExDate.defineLocale("fi", {
         future: "%s päästä",
         past: "%s sitten",
         s: translate,
+        ss: translate,
         m: translate,
         mm: translate,
         h: translate,
@@ -92,6 +100,6 @@ export default ExDate.defineLocale("fi", {
     ordinal: "%d.",
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 4  // The week that contains Jan 4th is the first week of the year.
+        doy: 4 // The week that contains Jan 4th is the first week of the year.
     }
 });

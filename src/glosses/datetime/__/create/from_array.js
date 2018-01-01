@@ -148,6 +148,7 @@ export const configFromArray = (config) => {
     }
 
     config._d = (config._useUTC ? __.create.createUTCDate : __.create.createDate).apply(null, input);
+    const expectedWeekday = config._useUTC ? config._d.getUTCDay() : config._d.getDay();
     // Apply timezone offset from input. The actual utcOffset can be changed
     // with parseZone.
     if (is.exist(config._tzm)) {
@@ -159,7 +160,7 @@ export const configFromArray = (config) => {
     }
 
     // check for mismatching day of week
-    if (config._w && !is.undefined(config._w.d) && config._w.d !== config._d.getDay()) {
+    if (config._w && !is.undefined(config._w.d) && config._w.d !== expectedWeekday) {
         __.create.getParsingFlags(config).weekdayMismatch = true;
     }
 };

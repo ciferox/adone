@@ -16,7 +16,7 @@ export default ExDate.defineLocale("it", {
         L: "DD/MM/YYYY",
         LL: "D MMMM YYYY",
         LLL: "D MMMM YYYY HH:mm",
-        LLLL: "dddd, D MMMM YYYY HH:mm"
+        LLLL: "dddd D MMMM YYYY HH:mm"
     },
     calendar: {
         sameDay: "[Oggi alle] LT",
@@ -39,6 +39,7 @@ export default ExDate.defineLocale("it", {
         },
         past: "%s fa",
         s: "alcuni secondi",
+        ss: "%d secondi",
         m: "un minuto",
         mm: "%d minuti",
         h: "un'ora",
@@ -54,7 +55,7 @@ export default ExDate.defineLocale("it", {
     ordinal: "%dº",
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 4  // The week that contains Jan 4th is the first week of the year.
+        doy: 4 // The week that contains Jan 4th is the first week of the year.
     }
 });
 

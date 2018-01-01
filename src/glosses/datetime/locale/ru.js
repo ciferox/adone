@@ -5,12 +5,18 @@
 
 import ExDate from "..";
 
-function plural(word, num) {
+const plural = (word, num) => {
     const forms = word.split("_");
-    return num % 10 === 1 && num % 100 !== 11 ? forms[0] : (num % 10 >= 2 && num % 10 <= 4 && (num % 100 < 10 || num % 100 >= 20) ? forms[1] : forms[2]);
-}
-function relativeTimeWithPlural(number, withoutSuffix, key) {
+    return num % 10 === 1 && num % 100 !== 11
+        ? forms[0]
+        : num % 10 >= 2 && num % 10 <= 4 && (num % 100 < 10 || num % 100 >= 20)
+            ? forms[1]
+            : forms[2];
+};
+
+const relativeTimeWithPlural = (number, withoutSuffix, key) => {
     const format = {
+        ss: withoutSuffix ? "секунда_секунды_секунд" : "секунду_секунды_секунд",
         mm: withoutSuffix ? "минута_минуты_минут" : "минуту_минуты_минут",
         hh: "час_часа_часов",
         dd: "день_дня_дней",
@@ -21,8 +27,8 @@ function relativeTimeWithPlural(number, withoutSuffix, key) {
         return withoutSuffix ? "минута" : "минуту";
     }
     return `${number} ${plural(format[key], Number(number))}`;
+};
 
-}
 const monthsParse = [/^янв/i, /^фев/i, /^мар/i, /^апр/i, /^ма[йя]/i, /^июн/i, /^июл/i, /^авг/i, /^сен/i, /^окт/i, /^ноя/i, /^дек/i];
 
 // http://new.gramota.ru/spravka/rules/139-prop : § 103
@@ -61,12 +67,12 @@ export default ExDate.defineLocale("ru", {
     // Выражение, которое соотвествует только сокращённым формам
     monthsShortStrictRegex: /^(янв\.|февр?\.|мар[т.]|апр\.|ма[яй]|июн[ья.]|июл[ья.]|авг\.|сент?\.|окт\.|нояб?\.|дек\.)/i,
     longDateFormat: {
-        LT: "HH:mm",
-        LTS: "HH:mm:ss",
+        LT: "H:mm",
+        LTS: "H:mm:ss",
         L: "DD.MM.YYYY",
         LL: "D MMMM YYYY г.",
-        LLL: "D MMMM YYYY г., HH:mm",
-        LLLL: "dddd, D MMMM YYYY г., HH:mm"
+        LLL: "D MMMM YYYY г., H:mm",
+        LLLL: "dddd, D MMMM YYYY г., H:mm"
     },
     calendar: {
         sameDay: "[Сегодня в] LT",
@@ -122,6 +128,7 @@ export default ExDate.defineLocale("ru", {
         future: "через %s",
         past: "%s назад",
         s: "несколько секунд",
+        ss: relativeTimeWithPlural,
         m: relativeTimeWithPlural,
         mm: relativeTimeWithPlural,
         h: "час",

@@ -30,12 +30,12 @@ const numberMap = {
     "०": "0"
 };
 
-// eslint-disable-next-line no-unused-vars
-function relativeTimeMr(number, withoutSuffix, string, isFuture) {
+const relativeTimeMr = (number, withoutSuffix, string, isFuture) => {
     let output = "";
     if (withoutSuffix) {
         switch (string) {
             case "s": output = "काही सेकंद"; break;
+            case "ss": output = "%d सेकंद"; break;
             case "m": output = "एक मिनिट"; break;
             case "mm": output = "%d मिनिटे"; break;
             case "h": output = "एक तास"; break;
@@ -50,6 +50,7 @@ function relativeTimeMr(number, withoutSuffix, string, isFuture) {
     } else {
         switch (string) {
             case "s": output = "काही सेकंदां"; break;
+            case "ss": output = "%d सेकंदां"; break;
             case "m": output = "एका मिनिटा"; break;
             case "mm": output = "%d मिनिटां"; break;
             case "h": output = "एका तासा"; break;
@@ -63,7 +64,7 @@ function relativeTimeMr(number, withoutSuffix, string, isFuture) {
         }
     }
     return output.replace(/%d/i, number);
-}
+};
 
 export default ExDate.defineLocale("mr", {
     months: "जानेवारी_फेब्रुवारी_मार्च_एप्रिल_मे_जून_जुलै_ऑगस्ट_सप्टेंबर_ऑक्टोबर_नोव्हेंबर_डिसेंबर".split("_"),
@@ -92,6 +93,7 @@ export default ExDate.defineLocale("mr", {
         future: "%sमध्ये",
         past: "%sपूर्वी",
         s: relativeTimeMr,
+        ss: relativeTimeMr,
         m: relativeTimeMr,
         mm: relativeTimeMr,
         h: relativeTimeMr,
@@ -138,12 +140,12 @@ export default ExDate.defineLocale("mr", {
             return "दुपारी";
         } else if (hour < 20) {
             return "सायंकाळी";
-        } 
+        }
         return "रात्री";
-        
+
     },
     week: {
         dow: 0, // Sunday is the first day of the week.
-        doy: 6  // The week that contains Jan 1st is the first week of the year.
+        doy: 6 // The week that contains Jan 1st is the first week of the year.
     }
 });

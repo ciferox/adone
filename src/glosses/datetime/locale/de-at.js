@@ -6,8 +6,7 @@
 
 import ExDate from "..";
 
-// eslint-disable-next-line no-unused-vars
-function processRelativeTime(number, withoutSuffix, key, isFuture) {
+const processRelativeTime = (number, withoutSuffix, key, isFuture) => {
     const format = {
         m: ["eine Minute", "einer Minute"],
         h: ["eine Stunde", "einer Stunde"],
@@ -19,7 +18,7 @@ function processRelativeTime(number, withoutSuffix, key, isFuture) {
         yy: [`${number} Jahre`, `${number} Jahren`]
     };
     return withoutSuffix ? format[key][0] : format[key][1];
-}
+};
 
 export default ExDate.defineLocale("de-at", {
     months: "Jänner_Februar_März_April_Mai_Juni_Juli_August_September_Oktober_November_Dezember".split("_"),
@@ -49,6 +48,7 @@ export default ExDate.defineLocale("de-at", {
         future: "in %s",
         past: "vor %s",
         s: "ein paar Sekunden",
+        ss: "%d Sekunden",
         m: processRelativeTime,
         mm: "%d Minuten",
         h: processRelativeTime,

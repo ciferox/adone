@@ -29,7 +29,7 @@ export default ExDate.defineLocale("el", {
 
     },
     isPM(input) {
-        return ((`${input}`).toLowerCase()[0] === "μ");
+        return `${input}`.toLowerCase()[0] === "μ";
     },
     meridiemParse: /[ΠΜ]\.?Μ?\.?/i,
     longDateFormat: {
@@ -61,12 +61,13 @@ export default ExDate.defineLocale("el", {
         if (is.function(output)) {
             output = output.apply(mom);
         }
-        return output.replace("{}", (hours % 12 === 1 ? "στη" : "στις"));
+        return output.replace("{}", hours % 12 === 1 ? "στη" : "στις");
     },
     relativeTime: {
         future: "σε %s",
         past: "%s πριν",
         s: "λίγα δευτερόλεπτα",
+        ss: "%d δευτερόλεπτα",
         m: "ένα λεπτό",
         mm: "%d λεπτά",
         h: "μία ώρα",

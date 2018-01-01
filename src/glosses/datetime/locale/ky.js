@@ -53,6 +53,7 @@ export default ExDate.defineLocale("ky", {
         future: "%s ичинде",
         past: "%s мурун",
         s: "бирнече секунд",
+        ss: "%d секунд",
         m: "бир мүнөт",
         mm: "%d мүнөт",
         h: "бир саат",
@@ -72,6 +73,6 @@ export default ExDate.defineLocale("ky", {
     },
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 7  // The week that contains Jan 1st is the first week of the year.
+        doy: 7 // The week that contains Jan 1st is the first week of the year.
     }
 });

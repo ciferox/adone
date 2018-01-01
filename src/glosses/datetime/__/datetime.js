@@ -389,26 +389,31 @@ export class Datetime {
             units = "day";
         }
 
-        return this.startOf(units).add(1, (units === "isoWeek" ? "week" : units)).subtract(1, "ms");
+        return this.startOf(units).add(1, units === "isoWeek" ? "week" : units).subtract(1, "ms");
     }
 
     toString() {
         return this.clone().locale("en").format("ddd MMM DD YYYY HH:mm:ss [GMT]ZZ");
     }
 
-    toISOString() {
+    toISOString(keepOffset) {
         if (!this.isValid()) {
             return null;
         }
-        const m = this.clone().utc();
+        const utc = keepOffset !== true;
+        const m = utc ? this.clone().utc() : this;
         if (m.year() < 0 || m.year() > 9999) {
-            return __.format.formatExDate(m, "YYYYYY-MM-DD[T]HH:mm:ss.SSS[Z]");
+            return __.format.formatExDate(m, utc ? "YYYYYY-MM-DD[T]HH:mm:ss.SSS[Z]" : "YYYYYY-MM-DD[T]HH:mm:ss.SSSZ");
         }
         if (is.function(Date.prototype.toISOString)) {
             // native implementation is ~50x faster, use it when we can
-            return this.toDate().toISOString();
+            if (utc) {
+                return this.toDate().toISOString();
+            }
+            return new Date(this._d.valueOf()).toISOString().replace("Z", __.format.formatExDate(m, "Z"));
+
         }
-        return __.format.formatExDate(m, "YYYY-MM-DD[T]HH:mm:ss.SSS[Z]");
+        return __.format.formatExDate(m, utc ? "YYYY-MM-DD[T]HH:mm:ss.SSS[Z]" : "YYYY-MM-DD[T]HH:mm:ss.SSSZ");
     }
 
     /**
@@ -428,7 +433,7 @@ export class Datetime {
             zone = "Z";
         }
         const prefix = `[${func}("]`;
-        const year = (this.year() >= 0 && this.year() <= 9999) ? "YYYY" : "YYYYYY";
+        const year = this.year() >= 0 && this.year() <= 9999 ? "YYYY" : "YYYYYY";
         const datetime = "-MM-DD[T]HH:mm:ss.SSS";
         const suffix = `${zone}[")]`;
 
@@ -725,7 +730,7 @@ export class Datetime {
 
     dayOfYear(input) {
         const dayOfYear = Math.round((this.clone().startOf("day") - this.clone().startOf("year")) / 864e5) + 1;
-        return is.nil(input) ? dayOfYear : this.add((input - dayOfYear), "d");
+        return is.nil(input) ? dayOfYear : this.add(input - dayOfYear, "d");
     }
 
     // keepLocalTime = true means only change the timezone, without

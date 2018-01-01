@@ -31,6 +31,7 @@ export default ExDate.defineLocale("si", {
         future: "%sකින්",
         past: "%sකට පෙර",
         s: "තත්පර කිහිපය",
+        ss: "තත්පර %d",
         m: "මිනිත්තුව",
         mm: "මිනිත්තු %d",
         h: "පැය",
@@ -53,8 +54,8 @@ export default ExDate.defineLocale("si", {
     meridiem(hours, minutes, isLower) {
         if (hours > 11) {
             return isLower ? "ප.ව." : "පස් වරු";
-        } 
+        }
         return isLower ? "පෙ.ව." : "පෙර වරු";
-        
+
     }
 });

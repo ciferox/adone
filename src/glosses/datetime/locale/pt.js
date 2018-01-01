@@ -24,7 +24,7 @@ export default ExDate.defineLocale("pt", {
         nextWeek: "dddd [às] LT",
         lastDay: "[Ontem às] LT",
         lastWeek() {
-            return (this.day() === 0 || this.day() === 6) ?
+            return this.day() === 0 || this.day() === 6 ?
                 "[Último] dddd [às] LT" : // Saturday + Sunday
                 "[Última] dddd [às] LT"; // Monday - Friday
         },
@@ -34,6 +34,7 @@ export default ExDate.defineLocale("pt", {
         future: "em %s",
         past: "há %s",
         s: "segundos",
+        ss: "%d segundos",
         m: "um minuto",
         mm: "%d minutos",
         h: "uma hora",

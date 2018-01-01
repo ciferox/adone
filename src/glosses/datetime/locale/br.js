@@ -3,15 +3,46 @@
 
 import ExDate from "..";
 
-function relativeTimeWithMutation(number, withoutSuffix, key) {
+const {
+    is
+} = adone;
+
+const lastNumber = (number) => {
+    if (number > 9) {
+        return lastNumber(number % 10);
+    }
+    return number;
+};
+
+const softMutation = (text) => {
+    const mutationTable = {
+        m: "v",
+        b: "v",
+        d: "z"
+    };
+    if (is.undefined(mutationTable[text.charAt(0)])) {
+        return text;
+    }
+    return mutationTable[text.charAt(0)] + text.substring(1);
+};
+
+const mutation = (text, number) => {
+    if (number === 2) {
+        return softMutation(text);
+    }
+    return text;
+};
+
+const relativeTimeWithMutation = (number, withoutSuffix, key) => {
     const format = {
         mm: "munutenn",
         MM: "miz",
         dd: "devezh"
     };
     return `${number} ${mutation(format[key], number)}`;
-}
-function specialMutationForYears(number) {
+};
+
+const specialMutationForYears = (number) => {
     switch (lastNumber(number)) {
         case 1:
         case 3:
@@ -22,30 +53,7 @@ function specialMutationForYears(number) {
         default:
             return `${number} vloaz`;
     }
-}
-function lastNumber(number) {
-    if (number > 9) {
-        return lastNumber(number % 10);
-    }
-    return number;
-}
-function mutation(text, number) {
-    if (number === 2) {
-        return softMutation(text);
-    }
-    return text;
-}
-function softMutation(text) {
-    const mutationTable = {
-        m: "v",
-        b: "v",
-        d: "z"
-    };
-    if (mutationTable[text.charAt(0)] === undefined) {
-        return text;
-    }
-    return mutationTable[text.charAt(0)] + text.substring(1);
-}
+};
 
 export default ExDate.defineLocale("br", {
     months: "Genver_C'hwevrer_Meurzh_Ebrel_Mae_Mezheven_Gouere_Eost_Gwengolo_Here_Du_Kerzu".split("_"),
@@ -74,6 +82,7 @@ export default ExDate.defineLocale("br", {
         future: "a-benn %s",
         past: "%s 'zo",
         s: "un nebeud segondennoù",
+        ss: "%d eilenn",
         m: "ur vunutenn",
         mm: relativeTimeWithMutation,
         h: "un eur",
@@ -87,12 +96,12 @@ export default ExDate.defineLocale("br", {
     },
     dayOfMonthOrdinalParse: /\d{1,2}(añ|vet)/,
     ordinal(number) {
-        const output = (number === 1) ? "añ" : "vet";
+        const output = number === 1 ? "añ" : "vet";
         return number + output;
     },
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 4  // The week that contains Jan 4th is the first week of the year.
+        doy: 4 // The week that contains Jan 4th is the first week of the year.
     }
 });
 

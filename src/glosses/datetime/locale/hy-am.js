@@ -36,6 +36,7 @@ export default ExDate.defineLocale("hy-am", {
         future: "%s հետո",
         past: "%s առաջ",
         s: "մի քանի վայրկյան",
+        ss: "%d վայրկյան",
         m: "րոպե",
         mm: "%d րոպե",
         h: "ժամ",
@@ -58,9 +59,9 @@ export default ExDate.defineLocale("hy-am", {
             return "առավոտվա";
         } else if (hour < 17) {
             return "ցերեկվա";
-        } 
+        }
         return "երեկոյան";
-        
+
     },
     dayOfMonthOrdinalParse: /\d{1,2}|\d{1,2}-(ին|րդ)/,
     ordinal(number, period) {
@@ -79,7 +80,7 @@ export default ExDate.defineLocale("hy-am", {
     },
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 7  // The week that contains Jan 1st is the first week of the year.
+        doy: 7 // The week that contains Jan 1st is the first week of the year.
     }
 });
 

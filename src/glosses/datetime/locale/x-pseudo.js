@@ -30,6 +30,7 @@ export default ExDate.defineLocale("x-pseudo", {
         future: "í~ñ %s",
         past: "%s á~gó",
         s: "á ~féw ~sécó~ñds",
+        ss: "%d s~écóñ~ds",
         m: "á ~míñ~úté",
         mm: "%d m~íñú~tés",
         h: "á~ñ hó~úr",
@@ -44,14 +45,14 @@ export default ExDate.defineLocale("x-pseudo", {
     dayOfMonthOrdinalParse: /\d{1,2}(th|st|nd|rd)/,
     ordinal(number) {
         const b = number % 10;
-        const output = (~~(number % 100 / 10) === 1) ? "th" :
-            (b === 1) ? "st" :
-            (b === 2) ? "nd" :
-            (b === 3) ? "rd" : "th";
+        const output = ~~(number % 100 / 10) === 1 ? "th" :
+            b === 1 ? "st" :
+                b === 2 ? "nd" :
+                    b === 3 ? "rd" : "th";
         return number + output;
     },
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 4  // The week that contains Jan 4th is the first week of the year.
+        doy: 4 // The week that contains Jan 4th is the first week of the year.
     }
 });

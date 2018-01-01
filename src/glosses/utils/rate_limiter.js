@@ -1,5 +1,13 @@
 const { is, x, promise } = adone;
 
+const getMilliseconds = function () {
+    const hrtime = process.hrtime();
+    const seconds = hrtime[0];
+    const nanoseconds = hrtime[1];
+
+    return seconds * 1e3 + Math.floor(nanoseconds / 1e6);
+};
+
 class TokenBucket {
     constructor(bucketSize = 1, tokensPerInterval = 1, interval = 1000, parentBucket = null) {
         this.bucketSize = bucketSize;
@@ -26,6 +34,8 @@ class TokenBucket {
                     this.interval = 1000 * 60 * 60 * 24;
                     break;
                 }
+                default:
+                    throw new Error(`Invaid interval ${interval}`);
             }
         } else {
             this.interval = interval;
@@ -135,7 +145,7 @@ export default class RateLimiter {
         // Fill the token bucket to start
         this.tokenBucket.content = tokensPerInterval;
 
-        this.curIntervalStart = Number(new Date());
+        this.curIntervalStart = getMilliseconds();
         this.tokensThisInterval = 0;
         this.fireImmediately = fireImmediately;
     }
@@ -146,7 +156,7 @@ export default class RateLimiter {
             throw new x.LimitExceeded(`Requested tokens ${count} exceeds maximum tokens per interval ${this.tokenBucket.bucketSize}`);
         }
 
-        const now = Date.now();
+        const now = getMilliseconds();
 
         // Advance the current interval and reset the current interval token count if needed
         if (now - this.curIntervalStart >= this.tokenBucket.interval) {
@@ -176,7 +186,7 @@ export default class RateLimiter {
             return false;
         }
 
-        const now = Date.now();
+        const now = getMilliseconds();
 
         // Advance the current interval and reset the current interval token count
         // if needed

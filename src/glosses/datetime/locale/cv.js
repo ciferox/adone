@@ -32,6 +32,7 @@ export default ExDate.defineLocale("cv", {
         },
         past: "%s каялла",
         s: "пӗр-ик ҫеккунт",
+        ss: "%d ҫеккунт",
         m: "пӗр минут",
         mm: "%d минут",
         h: "пӗр сехет",
@@ -47,6 +48,6 @@ export default ExDate.defineLocale("cv", {
     ordinal: "%d-мӗш",
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 7  // The week that contains Jan 1st is the first week of the year.
+        doy: 7 // The week that contains Jan 1st is the first week of the year.
     }
 });

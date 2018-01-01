@@ -97,10 +97,11 @@ export default function (locale) {
         let i;
         let m;
 
-        if (locale === "tr" || locale === "az" || locale === "ro") {
+        if (locale === "tr" || locale === "az" || locale === "ro" || locale === "mt") {
             // tr, az: There is a lower-case letter (ı), that converted to
             // upper then lower changes to i
             // ro: there is the letter ț which behaves weird under IE8
+            // mt: letter Ħ
             expect(0);
             return;
         }
@@ -114,7 +115,6 @@ export default function (locale) {
             assert.equal(r.weekday(), m.weekday(), `${baseMsg} upper`);
             r = adone.datetime(m.format(format).toLocaleLowerCase(), format);
             assert.equal(r.weekday(), m.weekday(), `${baseMsg} lower`);
-
             r = adone.datetime(m.format(format), format, true);
             assert.equal(r.weekday(), m.weekday(), `${baseMsg} strict`);
             r = adone.datetime(m.format(format).toLocaleUpperCase(), format, true);

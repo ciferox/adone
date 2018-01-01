@@ -6,12 +6,15 @@ import ExDate from "..";
 const monthsNominative = "styczeń_luty_marzec_kwiecień_maj_czerwiec_lipiec_sierpień_wrzesień_październik_listopad_grudzień".split("_");
 const monthsSubjective = "stycznia_lutego_marca_kwietnia_maja_czerwca_lipca_sierpnia_września_października_listopada_grudnia".split("_");
 
-function plural(n) {
+const plural = (n) => {
     return (n % 10 < 5) && (n % 10 > 1) && ((~~(n / 10) % 10) !== 1);
-}
-function translate(number, withoutSuffix, key) {
+};
+
+const translate = (number, withoutSuffix, key) => {
     const result = `${number} `;
     switch (key) {
+        case "ss":
+            return result + (plural(number) ? "sekundy" : "sekund");
         case "m":
             return withoutSuffix ? "minuta" : "minutę";
         case "mm":
@@ -25,7 +28,7 @@ function translate(number, withoutSuffix, key) {
         case "yy":
             return result + (plural(number) ? "lata" : "lat");
     }
-}
+};
 
 export default ExDate.defineLocale("pl", {
     months(momentToFormat, format) {
@@ -94,6 +97,7 @@ export default ExDate.defineLocale("pl", {
         future: "za %s",
         past: "%s temu",
         s: "kilka sekund",
+        ss: translate,
         m: translate,
         mm: translate,
         h: translate,

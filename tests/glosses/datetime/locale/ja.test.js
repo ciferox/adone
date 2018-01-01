@@ -256,4 +256,8 @@ describe("datetime", "locale", "ja", () => {
         assert.equal(adone.datetime([2012, 0, 14]).format("w ww wo"), "2 02 2", "Jan 14 2012 should be week 2");
         assert.equal(adone.datetime([2012, 0, 15]).format("w ww wo"), "3 03 3", "Jan 15 2012 should be week 3");
     });
+
+    it("parse with japanese parentheses", () => {
+        assert.ok(adone.datetime("2016年5月18日（水）", "YYYY年M月D日（dd）", true).isValid(), "parse with japanese parentheses");
+    });
 });

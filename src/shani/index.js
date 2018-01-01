@@ -764,13 +764,16 @@ class ConfigLoader {
     async loadConfigFor(path, context) {
         let dirname = std.path.dirname(path);
         const configChain = [];
-        do {
+        for ( ; ; ) {
             const config = this.getConfigFor(dirname);
             if (config) {
                 configChain.unshift(config);
             }
+            if (dirname === this.root) {
+                break;
+            }
             dirname = std.path.dirname(dirname);
-        } while (dirname !== this.root);
+        }
 
         for (const fn of configChain) {
             // apply all init functions from the root

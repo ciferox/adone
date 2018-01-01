@@ -35,6 +35,7 @@ export default ExDate.defineLocale("he", {
         future: "בעוד %s",
         past: "לפני %s",
         s: "מספר שניות",
+        ss: "%d שניות",
         m: "דקה",
         mm: "%d דקות",
         h: "שעה",
@@ -81,9 +82,9 @@ export default ExDate.defineLocale("he", {
             return isLower ? "לפנה\"צ" : "לפני הצהריים";
         } else if (hour < 18) {
             return isLower ? "אחה\"צ" : "אחרי הצהריים";
-        } 
+        }
         return "בערב";
-        
+
     }
 });
 

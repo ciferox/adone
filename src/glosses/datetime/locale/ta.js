@@ -55,6 +55,7 @@ export default ExDate.defineLocale("ta", {
         future: "%s இல்",
         past: "%s முன்",
         s: "ஒரு சில விநாடிகள்",
+        ss: "%d விநாடிகள்",
         m: "ஒரு நிமிடம்",
         mm: "%d நிமிடங்கள்",
         h: "ஒரு மணி நேரம்",
@@ -87,7 +88,7 @@ export default ExDate.defineLocale("ta", {
         if (hour < 2) {
             return " யாமம்";
         } else if (hour < 6) {
-            return " வைகறை";  // வைகறை
+            return " வைகறை"; // வைகறை
         } else if (hour < 10) {
             return " காலை"; // காலை
         } else if (hour < 14) {
@@ -96,9 +97,9 @@ export default ExDate.defineLocale("ta", {
             return " எற்பாடு"; // எற்பாடு
         } else if (hour < 22) {
             return " மாலை"; // மாலை
-        } 
+        }
         return " யாமம்";
-        
+
     },
     meridiemHour(hour, meridiem) {
         if (hour === 12) {
@@ -110,12 +111,12 @@ export default ExDate.defineLocale("ta", {
             return hour;
         } else if (meridiem === "நண்பகல்") {
             return hour >= 10 ? hour : hour + 12;
-        } 
+        }
         return hour + 12;
-        
+
     },
     week: {
         dow: 0, // Sunday is the first day of the week.
-        doy: 6  // The week that contains Jan 1st is the first week of the year.
+        doy: 6 // The week that contains Jan 1st is the first week of the year.
     }
 });

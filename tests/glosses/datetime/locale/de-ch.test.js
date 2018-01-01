@@ -31,7 +31,7 @@ describe("datetime", "locale", "de-ch", () => {
 
     it("format", () => {
         const a = [
-            ["dddd, Do MMMM YYYY, h.mm.ss a", "Sonntag, 14. Februar 2010, 3.25.50 pm"],
+            ["dddd, Do MMMM YYYY, h:mm:ss a", "Sonntag, 14. Februar 2010, 3:25:50 pm"],
             ["ddd, hA", "So, 3PM"],
             ["M Mo MM MMMM MMM", "2 2. 02 Februar Feb."],
             ["YYYY YY", "2010 10"],
@@ -45,15 +45,16 @@ describe("datetime", "locale", "de-ch", () => {
             ["s ss", "50 50"],
             ["a A", "pm PM"],
             ["[the] DDDo [day of the year]", "the 45. day of the year"],
-            ["LTS", "15.25.50"],
+            ["LT", "15:25"],
+            ["LTS", "15:25:50"],
             ["L", "14.02.2010"],
             ["LL", "14. Februar 2010"],
-            ["LLL", "14. Februar 2010 15.25"],
-            ["LLLL", "Sonntag, 14. Februar 2010 15.25"],
+            ["LLL", "14. Februar 2010 15:25"],
+            ["LLLL", "Sonntag, 14. Februar 2010 15:25"],
             ["l", "14.2.2010"],
             ["ll", "14. Feb. 2010"],
-            ["lll", "14. Feb. 2010 15.25"],
-            ["llll", "So, 14. Feb. 2010 15.25"]
+            ["lll", "14. Feb. 2010 15:25"],
+            ["llll", "So, 14. Feb. 2010 15:25"]
         ];
         const b = adone.datetime(new Date(2010, 1, 14, 15, 25, 50, 125));
         let i;
@@ -159,12 +160,12 @@ describe("datetime", "locale", "de-ch", () => {
     it("calendar day", () => {
         const a = adone.datetime().hours(12).minutes(0).seconds(0);
 
-        assert.equal(adone.datetime(a).calendar(), "heute um 12.00 Uhr", "today at the same time");
-        assert.equal(adone.datetime(a).add({ m: 25 }).calendar(), "heute um 12.25 Uhr", "Now plus 25 min");
-        assert.equal(adone.datetime(a).add({ h: 1 }).calendar(), "heute um 13.00 Uhr", "Now plus 1 hour");
-        assert.equal(adone.datetime(a).add({ d: 1 }).calendar(), "morgen um 12.00 Uhr", "tomorrow at the same time");
-        assert.equal(adone.datetime(a).subtract({ h: 1 }).calendar(), "heute um 11.00 Uhr", "Now minus 1 hour");
-        assert.equal(adone.datetime(a).subtract({ d: 1 }).calendar(), "gestern um 12.00 Uhr", "yesterday at the same time");
+        assert.equal(adone.datetime(a).calendar(), "heute um 12:00 Uhr", "today at the same time");
+        assert.equal(adone.datetime(a).add({ m: 25 }).calendar(), "heute um 12:25 Uhr", "Now plus 25 min");
+        assert.equal(adone.datetime(a).add({ h: 1 }).calendar(), "heute um 13:00 Uhr", "Now plus 1 hour");
+        assert.equal(adone.datetime(a).add({ d: 1 }).calendar(), "morgen um 12:00 Uhr", "tomorrow at the same time");
+        assert.equal(adone.datetime(a).subtract({ h: 1 }).calendar(), "heute um 11:00 Uhr", "Now minus 1 hour");
+        assert.equal(adone.datetime(a).subtract({ d: 1 }).calendar(), "gestern um 12:00 Uhr", "yesterday at the same time");
     });
 
     it("calendar next week", () => {

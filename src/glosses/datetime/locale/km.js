@@ -29,6 +29,7 @@ export default ExDate.defineLocale("km", {
         future: "%sទៀត",
         past: "%sមុន",
         s: "ប៉ុន្មានវិនាទី",
+        ss: "%d វិនាទី",
         m: "មួយនាទី",
         mm: "%d នាទី",
         h: "មួយម៉ោង",

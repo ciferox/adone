@@ -4,6 +4,7 @@
 import ExDate from "..";
 
 const units = {
+    ss: "sekundė_sekundžių_sekundes",
     m: "minutė_minutės_minutę",
     mm: "minutės_minučių_minutes",
     h: "valanda_valandos_valandą",
@@ -15,36 +16,46 @@ const units = {
     y: "metai_metų_metus",
     yy: "metai_metų_metus"
 };
-function translateSeconds(number, withoutSuffix, key, isFuture) {
+
+const translateSeconds = (number, withoutSuffix, key, isFuture) => {
     if (withoutSuffix) {
         return "kelios sekundės";
-    } 
+    }
     return isFuture ? "kelių sekundžių" : "kelias sekundes";
-    
-}
-function translateSingular(number, withoutSuffix, key, isFuture) {
-    return withoutSuffix ? forms(key)[0] : (isFuture ? forms(key)[1] : forms(key)[2]);
-}
-function special(number) {
-    return number % 10 === 0 || (number > 10 && number < 20);
-}
-function forms(key) {
+
+};
+
+const forms = (key) => {
     return units[key].split("_");
-}
-function translate(number, withoutSuffix, key, isFuture) {
+};
+
+const translateSingular = (number, withoutSuffix, key, isFuture) => {
+    return withoutSuffix
+        ? forms(key)[0]
+        : isFuture
+            ? forms(key)[1]
+            : forms(key)[2];
+};
+
+const special = (number) => {
+    return number % 10 === 0 || (number > 10 && number < 20);
+};
+
+const translate = (number, withoutSuffix, key, isFuture) => {
     const result = `${number} `;
     if (number === 1) {
         return result + translateSingular(number, withoutSuffix, key[0], isFuture);
     } else if (withoutSuffix) {
         return result + (special(number) ? forms(key)[1] : forms(key)[0]);
-    } 
+    }
     if (isFuture) {
         return result + forms(key)[1];
-    } 
+    }
     return result + (special(number) ? forms(key)[1] : forms(key)[2]);
-        
-    
-}
+
+
+};
+
 export default ExDate.defineLocale("lt", {
     months: {
         format: "sausio_vasario_kovo_balandžio_gegužės_birželio_liepos_rugpjūčio_rugsėjo_spalio_lapkričio_gruodžio".split("_"),
@@ -84,6 +95,7 @@ export default ExDate.defineLocale("lt", {
         future: "po %s",
         past: "prieš %s",
         s: translateSeconds,
+        ss: translate,
         m: translateSingular,
         mm: translate,
         h: translateSingular,
@@ -101,7 +113,7 @@ export default ExDate.defineLocale("lt", {
     },
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 4  // The week that contains Jan 4th is the first week of the year.
+        doy: 4 // The week that contains Jan 4th is the first week of the year.
     }
 });
 

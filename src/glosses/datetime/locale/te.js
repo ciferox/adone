@@ -30,6 +30,7 @@ export default ExDate.defineLocale("te", {
         future: "%s లో",
         past: "%s క్రితం",
         s: "కొన్ని క్షణాలు",
+        ss: "%d సెకన్లు",
         m: "ఒక నిమిషం",
         mm: "%d నిమిషాలు",
         h: "ఒక గంట",
@@ -68,12 +69,12 @@ export default ExDate.defineLocale("te", {
             return "మధ్యాహ్నం";
         } else if (hour < 20) {
             return "సాయంత్రం";
-        } 
+        }
         return "రాత్రి";
-        
+
     },
     week: {
         dow: 0, // Sunday is the first day of the week.
-        doy: 6  // The week that contains Jan 1st is the first week of the year.
+        doy: 6 // The week that contains Jan 1st is the first week of the year.
     }
 });

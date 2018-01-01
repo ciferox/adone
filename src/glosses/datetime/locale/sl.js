@@ -3,11 +3,22 @@
 
 import ExDate from "..";
 
-function processRelativeTime(number, withoutSuffix, key, isFuture) {
+const processRelativeTime = (number, withoutSuffix, key, isFuture) => {
     let result = `${number} `;
     switch (key) {
         case "s":
             return withoutSuffix || isFuture ? "nekaj sekund" : "nekaj sekundami";
+        case "ss":
+            if (number === 1) {
+                result += withoutSuffix ? "sekundo" : "sekundi";
+            } else if (number === 2) {
+                result += withoutSuffix || isFuture ? "sekundi" : "sekundah";
+            } else if (number < 5) {
+                result += withoutSuffix || isFuture ? "sekunde" : "sekundah";
+            } else {
+                result += withoutSuffix || isFuture ? "sekund" : "sekund";
+            }
+            return result;
         case "m":
             return withoutSuffix ? "ena minuta" : "eno minuto";
         case "mm":
@@ -72,7 +83,7 @@ function processRelativeTime(number, withoutSuffix, key, isFuture) {
             }
             return result;
     }
-}
+};
 
 export default ExDate.defineLocale("sl", {
     months: "januar_februar_marec_april_maj_junij_julij_avgust_september_oktober_november_december".split("_"),
@@ -131,6 +142,7 @@ export default ExDate.defineLocale("sl", {
         future: "čez %s",
         past: "pred %s",
         s: processRelativeTime,
+        ss: processRelativeTime,
         m: processRelativeTime,
         mm: processRelativeTime,
         h: processRelativeTime,
@@ -146,6 +158,6 @@ export default ExDate.defineLocale("sl", {
     ordinal: "%d.",
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 7  // The week that contains Jan 1st is the first week of the year.
+        doy: 7 // The week that contains Jan 1st is the first week of the year.
     }
 });

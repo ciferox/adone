@@ -31,6 +31,7 @@ export default ExDate.defineLocale("ss", {
         future: "nga %s",
         past: "wenteka nga %s",
         s: "emizuzwana lomcane",
+        ss: "%d mzuzwana",
         m: "umzuzu",
         mm: "%d emizuzu",
         h: "lihora",
@@ -51,9 +52,9 @@ export default ExDate.defineLocale("ss", {
             return "emini";
         } else if (hours < 19) {
             return "entsambama";
-        } 
+        }
         return "ebusuku";
-        
+
     },
     meridiemHour(hour, meridiem) {
         if (hour === 12) {
@@ -74,6 +75,6 @@ export default ExDate.defineLocale("ss", {
     ordinal: "%d",
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 4  // The week that contains Jan 4th is the first week of the year.
+        doy: 4 // The week that contains Jan 4th is the first week of the year.
     }
 });

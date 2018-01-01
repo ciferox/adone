@@ -39,9 +39,9 @@ export default ExDate.defineLocale("jv", {
             return "siyang";
         } else if (hours < 19) {
             return "sonten";
-        } 
+        }
         return "ndalu";
-        
+
     },
     calendar: {
         sameDay: "[Dinten puniko pukul] LT",
@@ -55,6 +55,7 @@ export default ExDate.defineLocale("jv", {
         future: "wonten ing %s",
         past: "%s ingkang kepengker",
         s: "sawetawis detik",
+        ss: "%d detik",
         m: "setunggal menit",
         mm: "%d menit",
         h: "setunggal jam",
@@ -68,6 +69,6 @@ export default ExDate.defineLocale("jv", {
     },
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 7  // The week that contains Jan 1st is the first week of the year.
+        doy: 7 // The week that contains Jan 1st is the first week of the year.
     }
 });

@@ -4,8 +4,7 @@
 
 import ExDate from "..";
 
-// eslint-disable-next-line no-unused-vars
-function processRelativeTime(number, withoutSuffix, key, isFuture) {
+const processRelativeTime = (number, withoutSuffix, key, isFuture) => {
     const format = {
         m: ["eng Minutt", "enger Minutt"],
         h: ["eng Stonn", "enger Stonn"],
@@ -14,21 +13,24 @@ function processRelativeTime(number, withoutSuffix, key, isFuture) {
         y: ["ee Joer", "engem Joer"]
     };
     return withoutSuffix ? format[key][0] : format[key][1];
-}
-function processFutureTime(string) {
+};
+
+const processFutureTime = (string) => {
     const number = string.substr(0, string.indexOf(" "));
     if (eifelerRegelAppliesToNumber(number)) {
         return `a ${string}`;
     }
     return `an ${string}`;
-}
-function processPastTime(string) {
+};
+
+const processPastTime = (string) => {
     const number = string.substr(0, string.indexOf(" "));
     if (eifelerRegelAppliesToNumber(number)) {
         return `viru ${string}`;
     }
     return `virun ${string}`;
-}
+};
+
 /**
  * Returns true if the word before the given number loses the '-n' ending.
  * e.g. 'an 10 Deeg' but 'a 5 Deeg'
@@ -36,7 +38,7 @@ function processPastTime(string) {
  * @param number {integer}
  * @returns {boolean}
  */
-function eifelerRegelAppliesToNumber(number) {
+const eifelerRegelAppliesToNumber = (number) => {
     number = parseInt(number, 10);
     if (isNaN(number)) {
         return false;
@@ -64,12 +66,12 @@ function eifelerRegelAppliesToNumber(number) {
             number = number / 10;
         }
         return eifelerRegelAppliesToNumber(number);
-    } 
-        // Anything larger than 4 digits: recursively check first n-3 digits
+    }
+    // Anything larger than 4 digits: recursively check first n-3 digits
     number = number / 1000;
     return eifelerRegelAppliesToNumber(number);
-    
-}
+
+};
 
 export default ExDate.defineLocale("lb", {
     months: "Januar_Februar_Mäerz_Abrëll_Mee_Juni_Juli_August_September_Oktober_November_Dezember".split("_"),
@@ -108,6 +110,7 @@ export default ExDate.defineLocale("lb", {
         future: processFutureTime,
         past: processPastTime,
         s: "e puer Sekonnen",
+        ss: "%d Sekonnen",
         m: processRelativeTime,
         mm: "%d Minutten",
         h: processRelativeTime,
@@ -123,6 +126,6 @@ export default ExDate.defineLocale("lb", {
     ordinal: "%d.",
     week: {
         dow: 1, // Monday is the first day of the week.
-        doy: 4  // The week that contains Jan 4th is the first week of the year.
+        doy: 4 // The week that contains Jan 4th is the first week of the year.
     }
 });
