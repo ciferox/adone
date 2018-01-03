@@ -131,7 +131,7 @@ module.exports = {
         "no-extra-bind": "error",
         "no-extra-label": "error",
         "no-extra-semi": "error",
-        "no-extra-parens": ["error", "all", { "nestedBinaryExpressions": false }],
+        // "no-extra-parens": ["error", "all", { "nestedBinaryExpressions": false }],
         "no-fallthrough": "error",
         "no-floating-decimal": "error",
         "no-implied-eval": "error",

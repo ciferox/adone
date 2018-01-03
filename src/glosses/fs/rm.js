@@ -115,15 +115,21 @@ export default async function rm(path, { glob = true, maxBusyTries = 3, emfileWa
         }
     };
 
-    path = std.path.resolve(cwd, path);
+    if (is.string(path)) {
+        path = std.path.resolve(cwd, path);
 
-    if (!glob || !is.glob(path)) {
-        return afterGlob([path]);
+        if (!glob || !is.glob(path)) {
+            return afterGlob([path]);
+        }
+
+        const st = await fs.lstat(path).catch(noop);
+        if (st) { // directory or file
+            return afterGlob([path]);
+        }
     }
 
-    const st = await fs.lstat(path).catch(noop);
-    if (st) { // directory or file
-        return afterGlob([path]);
-    }
-    return afterGlob(await fs.glob(path, glob));
+    return afterGlob((await fs.glob(path, {
+        cwd,
+        ...(is.plainObject(glob) ? glob : undefined)
+    }).map((x) => std.path.resolve(cwd, x))));
 };

@@ -107,7 +107,10 @@ export default class ProjectManager extends task.Manager {
         this._checkLoaded();
         return this.runInParallel(this._getEntries(path).map((entry) => ({
             task: "delete",
-            args: entry
+            args: {
+                ...entry,
+                task: "delete"
+            }
         })));
     }
 

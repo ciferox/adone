@@ -46,7 +46,7 @@ export default class TransformTask extends adone.project.task.Base {
                 onLast: true,
                 title: params.id,
                 filter: null,
-                message: "Done"
+                message: params.task
             });
         }
     }

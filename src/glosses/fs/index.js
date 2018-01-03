@@ -220,7 +220,7 @@ const fs = adone.lazify({
     Mode: "./mode",
     glob: "./glob",
     Watcher: "./watcher",
-    watch: () => (paths, options) => (new adone.fs.Watcher(options || {}).add(paths)),
+    watch: () => (paths, options) => new adone.fs.Watcher(options || {}).add(paths),
     is: () => adone.lazify({
         file: () => (path) => adone.fs.stat(path).then((st) => st.isFile()),
         fileSync: () => (path) => adone.fs.statSync(path).isFile(),
@@ -651,7 +651,7 @@ export const copyTo = async (srcPath, dstPath, { ignoreExisting = false, cwd = u
             return [dstFilePath, null];
         }
 
-        const srcAbsPath = (is.string(cwd) && !std.path.isAbsolute(p)) ? std.path.resolve(cwd, p) : p;
+        const srcAbsPath = is.string(cwd) && !std.path.isAbsolute(p) ? std.path.resolve(cwd, p) : p;
         return [dstFilePath, await readFile(srcAbsPath, { check: true })];
     }).map(async (fData) => {
         const content = fData[1];
@@ -777,7 +777,7 @@ export const tmpName = async ({ name = null, tries = 3, template = null, dir = o
  * This behaviour can be overriden by adding following line to the sudoers file:
  * Defaults env_keep += "HOME"
  */
-export const homeDir = () => (is.windows ? process.env.USERPROFILE : process.env.HOME);
+export const homeDir = () => is.windows ? process.env.USERPROFILE : process.env.HOME;
 
 export const lookup = async (path) => {
     try {

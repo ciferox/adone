@@ -12,7 +12,13 @@
                 "!src/glosses/schema/__/dot/*",
                 "!src/**/native/**/*"
             ],
-            "dst": "lib"
+            "dst": "lib",
+            "dstClean": [
+                "lib/**/*",
+                "!lib/**/*.js",
+                "!lib/**/*.map",
+                "!lib/native/**/*"
+            ]
         },
         "bin": {
             "description": "Adone CLI",
@@ -24,10 +30,14 @@
             "description": "",
             "index": "index.js",
             "src": [
-                "src/**/*",
+                "src/**/*.js",
                 "!src/cli/adone.js"
             ],
             "dst": "lib",
+            "dstClean": [
+                "lib/**/*.js",
+                "lib/**/*.map"
+            ],
             "namespace": "adone",
             "struct": {
                 "cli": {
@@ -102,8 +112,7 @@
                     "src": "src/glosses/crypto/**/*.js",
                     "dst": "lib/glosses/crypto",
                     "task": "adoneTranspile",
-                    "namespace": "crypto",
-                    "struct": {}
+                    "namespace": "crypto"
                 },
                 "data": {
                     "description": "Data generic manipulation utilites and serializers",
