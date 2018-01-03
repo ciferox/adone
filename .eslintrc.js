@@ -157,7 +157,8 @@ module.exports = {
         "adone/no-is.undefined-or-is.null": "error", // disallow is.undefined(t) || is.null(t)
         "adone/no-not-is.undefined-and-not-is.null": "error", // disallow !is.undefined(t) && !is.null(t)
         "adone/no-function-expression-class-property": "error", // disallow properties like a = function () {
-        "adone/indexof": "warn"  // warnings for include-like indexOf usages
+        "adone/indexof": "warn",  // warnings for include-like indexOf usages,
+        "adone/multiline-comment-indent": "error"
     },
     "plugins": [
         "adone",
