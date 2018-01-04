@@ -263,10 +263,32 @@ class Runtime {
         dot,
         stat,
         strict,
-        follow
+        follow,
+        lstatCache,
+        statCache,
+        readdirCache
     }) {
-        this.statCache = new collection.MapCache();
-        this.readdirCache = new collection.MapCache();
+        if (lstatCache) {
+            this._clearLstatCache = false;
+            this.lstatCache = lstatCache;
+        } else {
+            this._clearLstatCache = true;
+            this.lstatCache = new collection.MapCache();
+        }
+        if (statCache) {
+            this._clearStatCache = false;
+            this.statCache = statCache;
+        } else {
+            this._clearStatCache = true;
+            this.statCache = new collection.MapCache();
+        }
+        if (readdirCache) {
+            this._clearReaddirCache = false;
+            this.readdirCache = readdirCache;
+        } else {
+            this._clearReaddirCache = true;
+            this.readdirCache = new collection.MapCache();
+        }
         this.isChildIgnored = isChildIgnored;
         this.isChildDirIgnored = isChildDirIgnored;
         this.dot = dot;
@@ -276,8 +298,15 @@ class Runtime {
     }
 
     clearCache() {
-        this.statCache.clear();
-        this.readdirCache.clear();
+        if (this._clearLstatCache) {
+            this.lstatCache.clear();
+        }
+        if (this._clearStatCache) {
+            this.statCache.clear();
+        }
+        if (this._clearReaddirCache) {
+            this.readdirCache.clear();
+        }
     }
 }
 
@@ -363,14 +392,14 @@ class Pattern {
 
     async lstat() {
         const { staticPart, runtime } = this;
-        const { statCache } = runtime;
+        const { lstatCache } = runtime;
         const { absolute } = staticPart;
 
-        if (statCache.has(absolute)) {
-            return statCache.get(absolute);
+        if (lstatCache.has(absolute)) {
+            return lstatCache.get(absolute);
         }
         const promise = fs.lstat(absolute).catch(identity);
-        statCache.set(absolute, promise);
+        lstatCache.set(absolute, promise);
         return promise;
     }
 
@@ -379,13 +408,11 @@ class Pattern {
         const { statCache } = runtime;
         const { absolute } = staticPart;
 
-        const key = `\x00stat\x00${absolute}`; // use the same cache for stat calls, but a prefixed key
-
-        if (statCache.has(key)) {
-            return statCache.get(key);
+        if (statCache.has(absolute)) {
+            return statCache.get(absolute);
         }
         const promise = fs.stat(absolute).catch(identity);
-        statCache.set(key, promise);
+        statCache.set(absolute, promise);
         return promise;
     }
 
@@ -814,7 +841,10 @@ class Glob extends EventEmitter {
         absolute = false,
         normalized = false,
         index = false,
-        root = defaultRoot
+        root = defaultRoot,
+        lstatCache,
+        statCache,
+        readdirCache
     } = {}) {
         super();
         this.emitQueue = new collection.Queue();
@@ -904,7 +934,10 @@ class Glob extends EventEmitter {
             dot,
             stat: stat || nodir, // if nodir is enabled we have to stat all the entries to know where directories are
             strict,
-            follow
+            follow,
+            lstatCache,
+            statCache,
+            readdirCache
         });
 
         this.nodir = nodir;

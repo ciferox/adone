@@ -4,6 +4,9 @@ const {
 } = adone;
 
 describe("fs", "rm", () => {
+    /**
+     * @type {adone.fs.Directory}
+     */
     let rootTmp = null;
 
     before(async () => {
@@ -121,74 +124,187 @@ describe("fs", "rm", () => {
 
     // gathered from https://github.com/sindresorhus/del
     describe("complex glob", () => {
-        const fixtures = [
-            "1.tmp",
-            "2.tmp",
-            "3.tmp",
-            "4.tmp",
-            ".dot.tmp"
-        ];
-
+        /**
+         * @type {adone.fs.Directory}
+         */
         let tmp;
 
-        const exists = (files) => {
-            for (const file of files) {
-                assert.true(fs.existsSync(std.path.join(tmp, file)));
-            }
-        };
-
-        const notExists = (files) => {
-            for (const file of files) {
-                assert.false(fs.existsSync(std.path.join(tmp, file)));
-            }
-        };
+        beforeEach(async () => {
+            tmp = await rootTmp.addDirectory("complex");
+        });
 
         beforeEach(async () => {
-            tmp = await adone.fs.tmpName();
-
-            for (const fixture of fixtures) {
-                await adone.fs.mkdirp(std.path.join(tmp, fixture)); // eslint-disable-line
-            }
+            await FS.createStructure(tmp, [
+                "1.tmp",
+                "2.tmp",
+                "3.tmp",
+                "4.tmp",
+                ".dot.tmp",
+                ["dir", [
+                    "1.tmp"
+                ]]
+            ]);
         });
 
         afterEach(async () => {
-            await fs.rm(tmp);
+            await tmp.clean();
         });
 
-        it("delete files", async () => {
-            await fs.rm(["*.tmp", "!1*"], { cwd: tmp });
+        const exists = async (files) => {
+            for (let file of files) {
+                file = adone.util.arrify(file);
+                const relative = std.path.join(...file);
+                const p = std.path.join(tmp.path(), relative);
+                assert.true(await fs.exists(p), `expected ${relative} to exist`); // eslint-disable-line
+            }
+        };
 
-            exists(["1.tmp", ".dot.tmp"]);
-            notExists(["2.tmp", "3.tmp", "4.tmp"]);
+        const notExists = async (files) => {
+            for (let file of files) {
+                file = adone.util.arrify(file);
+                const relative = std.path.join(...file);
+                const p = std.path.join(tmp.path(), relative);
+                assert.false(await fs.exists(p), `expected ${relative} not to exist`); // eslint-disable-line
+            }
+        };
+
+        it("delete files", async () => {
+            await fs.rm(["*.tmp", "!1*"], { cwd: tmp.path() });
+
+            await exists(["1.tmp", ".dot.tmp", ["dir", "1.tmp"]]);
+            await notExists(["2.tmp", "3.tmp", "4.tmp"]);
         });
 
         it("take options into account", async () => {
             await fs.rm(["*.tmp", "!1*"], {
-                cwd: tmp,
+                cwd: tmp.path(),
                 glob: {
                     dot: true
                 }
             });
 
-            exists(["1.tmp"]);
-            notExists(["2.tmp", "3.tmp", "4.tmp", ".dot.tmp"]);
+            await exists(["1.tmp", ["dir", "1.tmp"]]);
+            await notExists(["2.tmp", "3.tmp", "4.tmp", ".dot.tmp"]);
         });
 
-        it.todo("return deleted files", async () => {
-            assert.deepEqual(await fs.rm("1.tmp", { cwd: tmp }), [std.path.join(tmp, "1.tmp")]);
+        it("return deleted files", async () => {
+            assert.deepEqual(await fs.rm("1.tmp", { cwd: tmp.path() }), [std.path.join(tmp.path(), "1.tmp")]);
         });
 
-        it.todo("don't delete files, but return them", async () => {
-            const deletedFiles = await fs.rm(["*.tmp", "!1*"], {
-                cwd: tmp,
-                dryRun: true
-            });
-            exists(["1.tmp", "2.tmp", "3.tmp", "4.tmp", ".dot.tmp"]);
-            assert.deepEqual(deletedFiles, [
-                std.path.join(tmp, "2.tmp"),
-                std.path.join(tmp, "3.tmp"),
-                std.path.join(tmp, "4.tmp")
+        it("should append sep suffix for deleted directories", async () => {
+            const files = await fs.rm("dir", { cwd: tmp.path() });
+            assert.deepEqual(files.sort(), [
+                std.path.join(tmp.path(), "dir", std.path.sep),
+                std.path.join(tmp.path(), "dir", "1.tmp")
             ]);
         });
+
+        it("don't delete files, but return them", async () => {
+            const deletedFiles = await fs.rm(["*.tmp", "!1*"], {
+                cwd: tmp.path(),
+                dryRun: true
+            });
+            await exists(["1.tmp", "2.tmp", "3.tmp", "4.tmp", ".dot.tmp"]);
+            assert.deepEqual(deletedFiles.sort(), [
+                std.path.join(tmp.path(), "2.tmp"),
+                std.path.join(tmp.path(), "3.tmp"),
+                std.path.join(tmp.path(), "4.tmp")
+            ]);
+        });
+    });
+
+    it("should handle ignoring regular files", async () => {
+        await FS.createStructure(rootTmp, [
+            ["dir", [
+                "1.txt",
+                "2.txt"
+            ]]
+        ]);
+        const [a, b] = [rootTmp.getFile("dir", "1.txt"), rootTmp.getFile("dir", "2.txt")];
+        expect(await a.exists()).to.be.true();
+        expect(await b.exists()).to.be.true();
+        await fs.rm(["dir", "!dir/2.txt"], { cwd: rootTmp.path() });
+        expect(await a.exists()).to.be.false();
+        expect(await b.exists()).to.be.true();
+    });
+
+    it("should handle ignoring glob patters", async () => {
+        await FS.createStructure(rootTmp, [
+            "1.txt",
+            "1.js",
+            ["dir", [
+                "2.txt",
+                "2.js",
+                ["dir2", [
+                    "3.txt",
+                    "3.js"
+                ]]
+            ]],
+            ["dir2", [
+                "1.txt",
+                "2.txt",
+                "3.js"
+            ]],
+            ["dir3", [
+                "1",
+                "2",
+                "3",
+                ["dir4", [
+                    "1"
+                ]],
+                ["dir5", []]
+            ]]
+        ]);
+        await fs.rm(["**/*", "!**/*.js", "!dir2/**"], { cwd: rootTmp.path() });
+        expect(await rootTmp.getFile("1.txt").exists()).to.be.false();
+        expect(await rootTmp.getFile("1.js").exists()).to.be.true();
+        expect(await rootTmp.getFile("dir", "2.txt").exists()).to.be.false();
+        expect(await rootTmp.getFile("dir", "2.js").exists()).to.be.true();
+        expect(await rootTmp.getFile("dir", "dir2", "3.txt").exists()).to.be.false();
+        expect(await rootTmp.getFile("dir", "dir2", "3.js").exists()).to.be.true();
+        expect(await rootTmp.getFile("dir2", "1.txt").exists()).to.be.true();
+        expect(await rootTmp.getFile("dir2", "2.txt").exists()).to.be.true();
+        expect(await rootTmp.getFile("dir2", "3.js").exists()).to.be.true();
+        expect(await rootTmp.getFile("dir3").exists()).to.be.false();
+    });
+
+    it("should handle ignoring glob patterns with non glob targets", async () => {
+        await FS.createStructure(rootTmp, [
+            "1.txt",
+            "1.js",
+            ["dir", [
+                "2.txt",
+                "2.js",
+                ["dir2", [
+                    "3.txt",
+                    "3.js"
+                ]]
+            ]],
+            ["dir2", [
+                "1.txt",
+                "2.txt",
+                "3.js"
+            ]],
+            ["dir3", [
+                "1",
+                "2",
+                "3",
+                ["dir4", [
+                    "1"
+                ]],
+                ["dir5", []]
+            ]]
+        ]);
+        await fs.rm(["dir", "dir2", "dir3", "!**/*.js", "!dir2/**"], { cwd: rootTmp.path() });
+        expect(await rootTmp.getFile("1.txt").exists()).to.be.true();
+        expect(await rootTmp.getFile("1.js").exists()).to.be.true();
+        expect(await rootTmp.getFile("dir", "2.txt").exists()).to.be.false();
+        expect(await rootTmp.getFile("dir", "2.js").exists()).to.be.true();
+        expect(await rootTmp.getFile("dir", "dir2", "3.txt").exists()).to.be.false();
+        expect(await rootTmp.getFile("dir", "dir2", "3.js").exists()).to.be.true();
+        expect(await rootTmp.getFile("dir2", "1.txt").exists()).to.be.true();
+        expect(await rootTmp.getFile("dir2", "2.txt").exists()).to.be.true();
+        expect(await rootTmp.getFile("dir2", "3.js").exists()).to.be.true();
+        expect(await rootTmp.getFile("dir3").exists()).to.be.false();
     });
 });
