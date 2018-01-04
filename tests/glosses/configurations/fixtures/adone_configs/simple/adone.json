@@ -20,7 +20,7 @@
             "dst": "bin",
             "task": "adoneTranspileExe"
         },
-        "code": {
+        "lib": {
             "description": "The generalized core of 'cyber-fractal systems' infrastructure",
             "index": "index.js",
             "src": [
@@ -153,7 +153,7 @@
                         "bson": {
                             "description": "Implementation of BSON serializer",
                             "index": "glosses/data/bson/index.js",
-                            "src": "glosses/data/bson/**/*",
+                            "src": "src/glosses/data/bson/**/*.js",
                             "dst": "lib/glosses/data/bson",
                             "namespace": "bson",
                             "native": {
@@ -163,7 +163,8 @@
                         "json": {
                             "description": "Implementation of JSON serializers",
                             "index": "glosses/data/json/index.js",
-                            "src": "src/glosses/data/json/**/*",
+                            "src": "src/glosses/data/json/**/*.js",
+                            "dst": "lib/glosses/data/json",
                             "namespace": "json"
                         },
                         "json5": {
@@ -181,7 +182,8 @@
                         "yaml": {
                             "description": "Implementation of YAML serializer",
                             "index": "glosses/data/yaml/index.js",
-                            "src": "src/glosses/data/yaml/**/*",
+                            "src": "src/glosses/data/yaml/**/*.js",
+                            "dst": "lib/glosses/data/yaml",
                             "namespace": "yaml"
                         },
                         "base58": {
@@ -205,7 +207,8 @@
                         "protobuf": {
                             "description": "Implementation of Protocol Buffers",
                             "index": "glosses/data/protobuf/index.js",
-                            "src": "src/glosses/data/protobuf/**/*",
+                            "src": "src/glosses/data/protobuf/**/*.js",
+                            "dst": "lib/glosses/data/protobuf",
                             "namespace": "protobuf"
                         }
                     }
@@ -309,14 +312,14 @@
                         "adone": {
                             "description": "Implementation of adone code analysis and modification toolkit",
                             "index": "glosses/js/adone/index.js",
-                            "src": "glosses/js/adone/**/*.js",
+                            "src": "src/glosses/js/adone/**/*.js",
                             "dst": "lib/glosses/js/adone",
                             "namespace": "adone"
                         },
                         "compiler": {
                             "description": "Compiler",
                             "index": "glosses/js/compiler/index.js",
-                            "src": "glosses/js/compiler/**/*",
+                            "src": "src/glosses/js/compiler/**/*",
                             "dst": "lib/glosses/js/compiler",
                             "namespace": "compiler"
                         }
@@ -592,15 +595,18 @@
                     "task": "adoneTranspile",
                     "src": "src/glosses/templating/**/*.js",
                     "dst": "lib/glosses/templating",
+                    "dstClean": "lib/glosses/templating/**/*",
                     "namespace": "templating",
                     "struct": {
                         "dot": {
-                            "src": "src/glosses/templating/dot/*.js",
+                            "description": "Implementation of DoT template engine",
+                            "src": "src/glosses/templating/dot/**/*.js",
                             "dst": "lib/glosses/templating/dot",
                             "namespace": "dot"
                         },
                         "nunjucks": {
-                            "src": "src/glosses/templating/nunjucks/*.js",
+                            "description": "Implementation of Nunjucks template engine",
+                            "src": "src/glosses/templating/nunjucks/**/*.js",
                             "dst": "lib/glosses/templating/nunjucks",
                             "namespace": "nunjucks"
                         }

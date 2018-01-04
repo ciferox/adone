@@ -26,8 +26,8 @@
             "dst": "bin",
             "task": "adoneTranspileExe"
         },
-        "code": {
-            "description": "",
+        "lib": {
+            "description": "Glosses and components",
             "index": "index.js",
             "src": [
                 "src/**/*.js",
@@ -119,8 +119,78 @@
                     "index": "glosses/data/index.js",
                     "src": "src/glosses/data/**/*.js",
                     "dst": "lib/glosses/data",
+                    "dstClean": "lib/glosses/data/**/*",
                     "task": "adoneTranspile",
-                    "namespace": "data"
+                    "namespace": "data",
+                    "struct": {
+                        "base64": {
+                            "description": "Implementation of BASE64 serializer",
+                            "index": "glosses/data/base64",
+                            "src": "src/glosses/data/base64.js",
+                            "namespace": "base64"
+                        },
+                        "bson": {
+                            "description": "Implementation of BSON serializer",
+                            "index": "glosses/data/bson/index.js",
+                            "src": "src/glosses/data/bson/**/*.js",
+                            "dst": "lib/glosses/data/bson",
+                            "namespace": "bson",
+                            "native": {
+                                "src": "glosses/data/bson/native/**/*"
+                            }
+                        },
+                        "json": {
+                            "description": "Implementation of JSON serializers",
+                            "index": "glosses/data/json/index.js",
+                            "src": "src/glosses/data/json/**/*.js",
+                            "dst": "lib/glosses/data/json",
+                            "namespace": "json"
+                        },
+                        "json5": {
+                            "description": "Implementation of JSON5 serializer",
+                            "index": "glosses/data/json5",
+                            "src": "src/glosses/data/json5.js",
+                            "namespace": "json5"
+                        },
+                        "mpak": {
+                            "description": "Implementation of MessagePack serializer",
+                            "index": "glosses/data/mpak",
+                            "src": "src/glosses/data/mpak.js",
+                            "namespace": "mpak"
+                        },
+                        "yaml": {
+                            "description": "Implementation of YAML serializer",
+                            "index": "glosses/data/yaml/index.js",
+                            "src": "src/glosses/data/yaml/**/*.js",
+                            "dst": "lib/glosses/data/yaml",
+                            "namespace": "yaml"
+                        },
+                        "base58": {
+                            "description": "Implementation of Base58 serializer",
+                            "index": "glosses/data/base58",
+                            "src": "src/glosses/data/base58.js",
+                            "namespace": "base58"
+                        },
+                        "varint": {
+                            "description": "Implementation of Protobuf varint",
+                            "index": "glosses/data/varint",
+                            "src": "src/glosses/data/varint.js",
+                            "namespace": "varint"
+                        },
+                        "varintSigned": {
+                            "description": "Implementation of Protobuf signed varint",
+                            "index": "glosses/data/varint_signed",
+                            "src": "src/glosses/data/varint_signed.js",
+                            "namespace": "varintSigned"
+                        },
+                        "protobuf": {
+                            "description": "Implementation of Protocol Buffers",
+                            "index": "glosses/data/protobuf/index.js",
+                            "src": "src/glosses/data/protobuf/**/*.js",
+                            "dst": "lib/glosses/data/protobuf",
+                            "namespace": "protobuf"
+                        }
+                    }
                 },
                 "database": {
                     "description": "Databases",
@@ -390,7 +460,22 @@
                     "task": "adoneTranspile",
                     "src": "src/glosses/templating/**/*.js",
                     "dst": "lib/glosses/templating",
-                    "namespace": "templating"
+                    "dstClean": "lib/glosses/templating/**/*",
+                    "namespace": "templating",
+                    "struct": {
+                        "dot": {
+                            "description": "Implementation of DoT template engine",
+                            "src": "src/glosses/templating/dot/**/*.js",
+                            "dst": "lib/glosses/templating/dot",
+                            "namespace": "dot"
+                        },
+                        "nunjucks": {
+                            "description": "Implementation of Nunjucks template engine",
+                            "src": "src/glosses/templating/nunjucks/**/*.js",
+                            "dst": "lib/glosses/templating/nunjucks",
+                            "namespace": "nunjucks"
+                        }
+                    }
                 },
                 "terminal": {
                     "description": "Terminal stuff",

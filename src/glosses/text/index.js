@@ -391,5 +391,6 @@ adone.lazify({
         table: "./pretties/table"
     }, null, require),
     Fuzzy: "./fuzzy",
-    charcode: "./charcodes"
+    charcode: "./charcodes",
+    longestCommonPrefix: "./longest_common_prefix"
 }, adone.asNamespace(exports), require);

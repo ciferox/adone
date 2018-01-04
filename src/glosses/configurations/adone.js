@@ -15,7 +15,10 @@ const normalizeValue = (dirName, parent, item, name) => {
         }
         return vals;
     } else if (is.string(val)) {
-        return std.path.join(dirName, val);
+        if (is.string(dirName)) {
+            return std.path.join(dirName, val);
+        }
+        return val;
     }
 
     if (is.plainObject(parent)) {
@@ -111,7 +114,14 @@ export default class Configuration extends adone.configuration.Generic {
             result = result.concat(sub.config._getEntries(key, sub.dirName));
         }
 
-        return is.string(path) ? result.filter((entry) => entry.id.startsWith(path)) : result;
+        let validator;
+        if (is.regexp(path)) {
+            validator = (entry) => path.test(entry.id);
+        } else {
+            validator = (entry) => entry.id.startsWith(path);
+        }
+
+        return !is.nil(path) ? result.filter(validator) : result;
     }
 
     getNamespaceTopology() {
@@ -186,34 +196,68 @@ export default class Configuration extends adone.configuration.Generic {
     }
 
     _parseStructure(prefix, dirName, parent, struct, units) {
+        const srcs = [];
         for (const [key, val] of Object.entries(struct)) {
             if (is.plainObject(val)) {
                 const fullKey = prefix.length > 0 ? `${prefix}.${key}` : key;
+
+                const unit = units[fullKey] = {
+                    ...adone.util.omit(val, ["struct", "src", "dst", "task"])
+                };
+
+                const src = normalizeValue(dirName, null, val, "src");
+                if (src) {
+                    unit.src = src;
+                    srcs.push(src);
+                }
+
+                const dst = normalizeValue(dirName, parent, val, "dst");
+                if (dst) {
+                    unit.dst = dst;
+                }
+
+                const task = normalizeValue(null, parent, val, "task");
+                if (task) {
+                    unit.task = task;
+                }
+
                 if (is.plainObject(val.struct)) {
-                    this._parseStructure(fullKey, dirName, val, val.struct, units);
-                } else {
-                    const unit = units[fullKey] = {
-                        ...adone.util.omit(val, ["struct", "src", "dst", "task"])
-                    };
-    
-                    const src = normalizeValue(dirName, parent, val, "src");
-                    if (src) {
-                        unit.src = src;
+                    const childSrcs = this._parseStructure(fullKey, dirName, val, val.struct, units);
+                    if (childSrcs.length > 0) {
+                        const excludes = [];
+                        for (const src of childSrcs) {
+                            if (is.string(src)) {
+                                if (!src.startsWith("!")) {
+                                    excludes.push(src);
+                                }
+                            } else { // array
+                                for (const s of src) {
+                                    if (!s.startsWith("!")) {
+                                        excludes.push(s);
+                                    }
+                                }
+                            }
+                        }
+
+                        const parents = excludes.map((x) => adone.util.globParent(x));
+                        const prefix = adone.text.longestCommonPrefix(parents);
+                        if (prefix === "") {
+                            throw new adone.x.NotValid(`No common glob prefix in '${fullKey}' block`);
+                        }
+
+                        if (is.exist(unit.src)) {
+                            unit.src = adone.util.arrify(unit.src).concat(excludes.map((x) => `!${x}`));
+                        } else {
+                            const srcGlob = excludes.map((x) => `!${x}`);
+                            srcGlob.unshift(adone.util.globize(prefix, { recursively: true }));
+                            unit.src = srcGlob;
+                        }
                     }
-    
-                    const dst = normalizeValue(dirName, parent, val, "dst");
-                    if (dst) {
-                        unit.dst = dst;
-                    }
-    
-                    const task = normalizeValue(dirName, parent, val, "task");
-                    if (task) {
-                        unit.task = task;
-                    }
-    
                 }
             }
         }
+
+        return srcs;
     }
 
     async _loadSubConfigs(prefix, struct) {

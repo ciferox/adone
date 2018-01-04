@@ -209,6 +209,7 @@ const fs = adone.lazify({
     mkdirp: ["./mkdirp", (x) => x.mkdirp],
     mkdirpSync: ["./mkdirp", (x) => x.mkdirpSync],
     rm: "./rm",
+    rmEmpty: "./rm_empty",
     File: "./file",
     Directory: "./directory",
     SymbolicLinkFile: "./symlink_file",

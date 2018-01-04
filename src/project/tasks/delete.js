@@ -9,13 +9,9 @@ export default class DeleteTask extends adone.project.task.Base {
     async main(params) {
         let srcGlob;
 
+        let dstGlob;
         if (is.exist(params.dstClean)) {
-            await fs.rm(params.dstClean, {
-                cwd: this.manager.cwd,
-                glob: {
-                    nodir: true
-                }
-            });
+            dstGlob = params.dstClean;
         } else {
             if (is.array(params.src)) {
                 // It is assumed that for one project's entry only one glob is specified, the remaining globs are exclusive.
@@ -29,15 +25,19 @@ export default class DeleteTask extends adone.project.task.Base {
                 srcGlob = params.src;
             }
 
-            await fs.rm(std.path.join(params.dst, std.path.relative(util.globParent(srcGlob), srcGlob)), {
-                cwd: this.manager.cwd,
-                glob: {
-                    nodir: true
-                }
-            });
+            dstGlob = std.path.join(params.dst, std.path.relative(util.globParent(srcGlob), srcGlob));
         }
 
-        // TODO: remove empty folders
+        await fs.rm(dstGlob, {
+            cwd: this.manager.cwd,
+            glob: {
+                nodir: true
+            }
+        });
+
+        await fs.rmEmpty(adone.util.globParent(dstGlob), {
+            cwd: this.manager.cwd
+        });
 
         if (!this.manager.silent) {
             adone.info(`[${params.id}] ${params.task}`);

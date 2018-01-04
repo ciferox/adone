@@ -175,5 +175,6 @@
   "repository": "https://github.com/ciferox/adone",
   "bin": {
     "adone": "./bin/adone.js"
-  }
+  },
+  "dependencies": {}
 }

@@ -32,7 +32,7 @@ describe("configuration", "Adone", () => {
             assert.true(is.plainObject(rawConfig.struct));
         });
 
-        it.only("project entries", async () => {
+        it("project entries", async () => {
             assert.includeDeepMembers(config.getEntries(), [
                 {
                     id: "assets",
@@ -46,16 +46,28 @@ describe("configuration", "Adone", () => {
                     dst: "lib"
                 },
                 {
-                    id: "code.data",
+                    id: "lib.data",
                     description: "Data generic manipulation utilites and serializers",
                     index: "glosses/data/index.js",
-                    src: "src/glosses/data/**/*.js",
+                    src: [
+                        "src/glosses/data/**/*.js",
+                        "!src/glosses/data/base64.js",
+                        "!src/glosses/data/bson/**/*.js",
+                        "!src/glosses/data/json/**/*.js",
+                        "!src/glosses/data/json5.js",
+                        "!src/glosses/data/mpak.js",
+                        "!src/glosses/data/yaml/**/*.js",
+                        "!src/glosses/data/base58.js",
+                        "!src/glosses/data/varint.js",
+                        "!src/glosses/data/varint_signed.js",
+                        "!src/glosses/data/protobuf/**/*.js"
+                    ],
                     dst: "lib/glosses/data",
                     task: "adoneTranspile",
                     namespace: "data"
                 },
                 {
-                    id: "code.data.base64",
+                    id: "lib.data.base64",
                     description: "Implementation of BASE64 serializer",
                     index: "glosses/data/base64",
                     src: "src/glosses/data/base64.js",
@@ -67,26 +79,35 @@ describe("configuration", "Adone", () => {
         });
 
         it("project entries for path", async () => {
-            assert.sameDeepMembers(config.getEntries("code.templating"), [
+            assert.sameDeepMembers(config.getEntries("lib.templating"), [
                 {
-                    id: "code.templating",
+                    id: "lib.templating",
                     description: "Template engines",
                     index: "glosses/templating/index.js",
                     task: "adoneTranspile",
-                    src: "src/glosses/templating/**/*.js",
+                    src: [
+                        "src/glosses/templating/**/*.js",
+                        "!src/glosses/templating/dot/**/*.js",
+                        "!src/glosses/templating/nunjucks/**/*.js"
+                    ],
                     dst: "lib/glosses/templating",
+                    dstClean: "lib/glosses/templating/**/*",
                     namespace: "templating"
                 },
                 {
-                    id: "code.templating.dot",
-                    src: "src/glosses/templating/dot/*.js",
+                    id: "lib.templating.dot",
+                    description: "Implementation of DoT template engine",
+                    src: "src/glosses/templating/dot/**/*.js",
                     dst: "lib/glosses/templating/dot",
+                    task: "adoneTranspile",
                     namespace: "dot"
                 },
                 {
-                    id: "code.templating.nunjucks",
-                    src: "src/glosses/templating/nunjucks/*.js",
+                    id: "lib.templating.nunjucks",
+                    description: "Implementation of Nunjucks template engine",
+                    src: "src/glosses/templating/nunjucks/**/*.js",
                     dst: "lib/glosses/templating/nunjucks",
+                    task: "adoneTranspile",
                     namespace: "nunjucks"
                 }
             ]);
