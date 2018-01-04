@@ -5,7 +5,7 @@ export default function plugin() {
         x
     } = adone;
 
-    return function unpack(archiveType, extractorOptions = {}) {
+    return function unpack(archiveType, { inRoot = false, dirname, ...extractorOptions } = {}) {
         if (!(archiveType in adone.archive)) {
             throw new x.InvalidArgument(`Unknown archive type: ${archiveType}`);
         }
@@ -16,6 +16,11 @@ export default function plugin() {
                 this.push(file);
                 return;
             }
+            const _dirname = inRoot
+                ? file.dirname
+                : dirname
+                    ? dirname
+                    : std.path.resolve(file.dirname, file.stem)
             switch (archiveType) {
                 case "tar": {
                     const isBuffer = file.isBuffer();
@@ -24,7 +29,7 @@ export default function plugin() {
                         stream.on("entry", (header, stream, next) => {
                             const entryFile = file.clone({ contents: false });
                             entryFile.contents = null;
-                            entryFile.path = std.path.resolve(entryFile.dirname, entryFile.stem, header.name);
+                            entryFile.path = std.path.resolve(_dirname, header.name);
                             entryFile.stat = new std.fs.Stats();
                             entryFile.stat.mtime = header.mtime;
                             entryFile.stat.mode = header.mode;
@@ -112,10 +117,10 @@ export default function plugin() {
                         entryFile.stat.mtimeMs = entryFile.stat.mtime.getTime();
                         if (entry.fileName.endsWith("/")) {
                             entryFile.stat.mode |= std.fs.constants.S_IFDIR;
-                            entryFile.path = std.path.resolve(entryFile.dirname, entryFile.stem, entry.fileName.slice(0, -1));
+                            entryFile.path = std.path.resolve(_dirname, entry.fileName.slice(0, -1));
                             entryFile.contents = null;
                         } else {
-                            entryFile.path = std.path.resolve(entryFile.dirname, entryFile.stem, entry.fileName);
+                            entryFile.path = std.path.resolve(_dirname, entry.fileName);
                             entryFile.stat.mode |= std.fs.constants.S_IFREG;
                             entryFile.contents = await zipfile.openReadStream(entry); // eslint-disable-line
                         }

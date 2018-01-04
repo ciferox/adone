@@ -214,6 +214,64 @@ describe("util", "throttle", () => {
                 });
             });
         });
+
+        describe("drops", () => {
+            const { DROPPED } = throttle;
+
+            it("dropes other calls if max is reached", async () => {
+                let i = 0;
+                const fn = throttle(() => adone.promise.delay(100).then(() => ++i), { max: 2, drop: true });
+
+                let [a, b, c, d] = await Promise.all([
+                    fn(),
+                    fn(),
+                    fn(),
+                    fn()
+                ]);
+                expect(a).to.be.equal(1);
+                expect(b).to.be.equal(2);
+                expect(c).to.be.equal(DROPPED);
+                expect(d).to.be.equal(DROPPED);
+
+                [a, b, c, d] = await Promise.all([
+                    fn(),
+                    fn(),
+                    fn(),
+                    fn()
+                ]);
+                expect(a).to.be.equal(3);
+                expect(b).to.be.equal(4);
+                expect(c).to.be.equal(DROPPED);
+                expect(d).to.be.equal(DROPPED);
+            });
+
+            it("should not drop last call if dropLast is false", async () => {
+                let i = 0;
+                const fn = throttle(() => adone.promise.delay(100).then(() => ++i), { max: 2, drop: true, dropLast: false });
+
+                let [a, b, c, d] = await Promise.all([
+                    fn(),
+                    fn(),
+                    fn(),
+                    fn()
+                ]);
+                expect(a).to.be.equal(1);
+                expect(b).to.be.equal(2);
+                expect(c).to.be.equal(DROPPED);
+                expect(d).to.be.equal(3);
+
+                [a, b, c, d] = await Promise.all([
+                    fn(),
+                    fn(),
+                    fn(),
+                    fn()
+                ]);
+                expect(a).to.be.equal(4);
+                expect(b).to.be.equal(5);
+                expect(c).to.be.equal(DROPPED);
+                expect(d).to.be.equal(6);
+            });
+        });
     });
 
     describe("intervals", () => {
@@ -356,6 +414,61 @@ describe("util", "throttle", () => {
                 await f(s, 1, 2, 3);
                 expect(s).to.be.calledOnce;
                 expect(s).to.be.calledWith(1, 2, 3);
+            });
+        });
+
+        describe("drops", () => {
+            const { DROPPED } = throttle;
+
+            describe.todo("waitForReturn = true", () => {
+                it("works", () => {});
+            });
+
+            it("should drop calls if max is reached", async () => {
+                const fn = throttle(() => null, { max: 2, interval: 1000, drop: true, waitForReturn: false });
+
+                const [a, b, c, d] = await Promise.all([
+                    fn(1),
+                    fn(2),
+                    fn(3),
+                    fn(4)
+                ]);
+
+                expect(a).to.be.equal(null);
+                expect(b).to.be.equal(null);
+                expect(c).to.be.equal(DROPPED);
+                expect(d).to.be.equal(DROPPED);
+            });
+
+            it("should not drop last call if dropLast = false", async () => {
+                const fn = throttle(() => null, { max: 2, interval: 1000, drop: true, dropLast: false, waitForReturn: false });
+
+                const a = fn();
+                const b = fn();
+                const c = fn();
+
+                await promise.delay(100);
+
+                const d = fn();
+
+                await promise.delay(2000);
+
+                const e = fn();
+                const f = fn();
+
+                await promise.delay(100);
+
+                const g = fn();
+                const h = fn();
+
+                expect(await a).to.be.equal(null);
+                expect(await b).to.be.equal(null);
+                expect(await c).to.be.equal(DROPPED);
+                expect(await d).to.be.equal(null);
+                expect(await e).to.be.equal(null);
+                expect(await f).to.be.equal(null);
+                expect(await g).to.be.equal(DROPPED);
+                expect(await h).to.be.equal(null);
             });
         });
     });

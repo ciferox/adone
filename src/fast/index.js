@@ -27,7 +27,7 @@ adone.lazifyPrivate({
 
 fast.plugin = lazify({
     compress: "./plugins/compress",
-    decompres: "./plugins/decompress",
+    decompress: "./plugins/decompress",
     pack: "./plugins/pack",
     unpack: "./plugins/unpack",
     archive: "./plugins/archive",

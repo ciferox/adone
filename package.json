@@ -51,7 +51,7 @@
     "engine.io-client": "^3.1.4",
     "epimetheus": "^1.0.55",
     "eslint": "^4.4.0",
-    "eslint-plugin-adone": "^0.6.52-1",
+    "eslint-plugin-adone": "^0.6.71-2",
     "eslint-plugin-babel": "^4.1.2",
     "eslint-plugin-flowtype": "^2.39.1",
     "eslint-plugin-import": "^2.8.0",
