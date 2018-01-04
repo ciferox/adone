@@ -120,7 +120,7 @@
                     "src": "src/glosses/data/**/*.js",
                     "dst": "lib/glosses/data",
                     "dstClean": "lib/glosses/data/**/*",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "namespace": "data",
                     "struct": {
                         "base64": {
@@ -315,10 +315,37 @@
                 "multi": {
                     "description": "Multiformats",
                     "index": "glosses/multi/index.js",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/multi/**/*.js",
                     "dst": "lib/glosses/multi",
-                    "namespace": "multi"
+                    "dstClean": "lib/glosses/multi/**/*",
+                    "namespace": "multi",
+                    "struct": {
+                        "address": {
+                            "description": "Multiaddr implementation",
+                            "src": "src/glosses/multi/address/**/*.js",
+                            "dst": "lib/glosses/multi/address",
+                            "namespace": "address"
+                        },
+                        "base": {
+                            "description": "Multibase implementation",
+                            "src": "src/glosses/multi/base/**/*.js",
+                            "dst": "lib/glosses/multi/base",
+                            "namespace": "base"
+                        },
+                        "codec": {
+                            "description": "Multicodec implementation",
+                            "src": "src/glosses/multi/codec/**/*.js",
+                            "dst": "lib/glosses/multi/codec",
+                            "namespace": "codec"
+                        },
+                        "hash": {
+                            "description": "Multihash implementation",
+                            "src": "src/glosses/multi/hash/**/*.js",
+                            "dst": "lib/glosses/multi/hash",
+                            "namespace": "hash"
+                        }
+                    }
                 },
                 "net": {
                     "description": "Implementation of different network abstractions, protocols and associated stuff",

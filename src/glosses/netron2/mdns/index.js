@@ -10,6 +10,7 @@ export default class MulticastDNS extends adone.event.EventEmitter {
         this.serviceTag = options.serviceTag || "_ipfs-discovery._udp";
         this.port = options.port || 5353;
         this.peerInfo = peerInfo;
+        this._queryInterval = null;
     }
 
     start(callback) {
@@ -18,7 +19,7 @@ export default class MulticastDNS extends adone.event.EventEmitter {
 
         this.mdns = mdns;
 
-        query.queryLAN(this.mdns, this.serviceTag, this.interval);
+        this._queryInterval = query.queryLAN(this.mdns, this.serviceTag, this.interval);
 
         mdns.on("response", (event) => {
             query.gotResponse(event, this.peerInfo, this.serviceTag, (err, foundPeer) => {
@@ -41,6 +42,8 @@ export default class MulticastDNS extends adone.event.EventEmitter {
         if (!this.mdns) {
             callback(new Error("MulticastDNS service had not started yet"));
         } else {
+            clearInterval(this._queryInterval);
+            this._queryInterval = null;
             this.mdns.destroy(callback);
             this.mdns = undefined;
         }

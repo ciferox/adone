@@ -1,7 +1,7 @@
 adone.lazify({
     Base: "./base",
     Transform: "./transform",
-    Delete: "./delete",
+    Clean: "./clean",
     Copy: "./copy",
     Transpile: "./transpile",
     TranspileExe: "./transpile_exe",

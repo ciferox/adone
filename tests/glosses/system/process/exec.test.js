@@ -30,6 +30,13 @@ describe("system", "process", () => {
         assert.equal(stdout, "foo");
     });
 
+    if (is.windows) {
+        it("execa() - cmd file", async () => {
+            const { stdout } = await exec("hello.cmd");
+            assert.equal(stdout, "Hello World");
+        });
+    }
+
     it("buffer", async () => {
         const { stdout } = await exec("noop", ["foo"], { encoding: null });
         assert.true(is.buffer(stdout));
@@ -481,6 +488,16 @@ describe("system", "process", () => {
         const result = await adone.stream.as.string(exec("max-buffer", ["stdout", "21"], { maxBuffer: 10 }).stdout);
 
         assert.equal(result, "....................\n");
+    });
+
+    it("detach child process", async () => {
+        const file = await adone.fs.tmpName({ ext: ".txt" });
+
+        await exec("detach", [file]);
+
+        await adone.promise.delay(3000);
+
+        assert.equal(await adone.fs.readFile(file, "utf8"), "foo\n");
     });
 
     it("stdio", () => {

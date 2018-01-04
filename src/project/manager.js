@@ -53,7 +53,7 @@ export default class ProjectManager extends task.Manager {
         });
 
         // Add default tasks
-        await this.addTask("delete", project.task.Delete);
+        await this.addTask("clean", project.task.Clean);
         await this.addTask("copy", project.task.Copy);
         await this.addTask("transpile", project.task.Transpile);
         await this.addTask("transpileExe", project.task.TranspileExe);
@@ -106,10 +106,10 @@ export default class ProjectManager extends task.Manager {
     clean(path) {
         this._checkLoaded();
         return this.runInParallel(this._getEntries(path).map((entry) => ({
-            task: "delete",
+            task: "clean",
             args: {
                 ...entry,
-                task: "delete"
+                task: "clean"
             }
         })));
     }

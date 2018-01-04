@@ -1,3 +1,7 @@
+const {
+    is
+} = adone;
+
 let db;
 let leveldown;
 let testCommon;
@@ -18,25 +22,7 @@ export const setUp = function (_leveldown, _testCommon) {
 
 export const args = function () {
     describe("get()", () => {
-        it("test _serialize object", async () => {
-            const db = leveldown(testCommon.location());
-            db._get = function (key, opts, callback) {
-                assert.equal(Buffer.isBuffer(key) ? String(key) : key, "[object Object]");
-                callback();
-            };
-            await db.get({});
-        });
-
-        it("test _serialize buffer", async () => {
-            const db = leveldown(testCommon.location());
-            db._get = function (key, opts, callback) {
-                assert.deepEqual(key, Buffer.from("key"));
-                callback();
-            };
-            await db.get(Buffer.from("key"));
-        });
-
-        it("test custom _serialize*", async () => {
+        it("custom _serialize*", async () => {
             const db = leveldown(testCommon.location());
             db._serializeKey = function (data) {
                 return data;
@@ -54,16 +40,16 @@ export const args = function () {
 
 export const get = function () {
     describe("get()", () => {
-        it("test simple get()", async () => {
+        it("simple get()", async () => {
             await db.put("foo", "bar");
             let value = await db.get("foo");
-            assert.ok(typeof value !== "string", "should not be string by default");
+            assert.ok(!is.string(value), "should not be string by default");
 
             let result;
             if (isTypedArray(value)) {
                 result = String.fromCharCode.apply(null, new Uint16Array(value));
             } else {
-                assert.ok(typeof Buffer !== "undefined" && value instanceof Buffer);
+                assert.ok(!is.undefined(Buffer) && value instanceof Buffer);
                 try {
                     result = value.toString();
                 } catch (e) {
@@ -74,12 +60,12 @@ export const get = function () {
             assert.equal(result, "bar");
 
             value = await db.get("foo", {});
-            assert.ok(typeof value !== "string", "should not be string by default");
+            assert.ok(!is.string(value), "should not be string by default");
 
             if (isTypedArray(value)) {
                 result = String.fromCharCode.apply(null, new Uint16Array(value));
             } else {
-                assert.ok(typeof Buffer !== "undefined" && value instanceof Buffer);
+                assert.ok(!is.undefined(Buffer) && value instanceof Buffer);
                 try {
                     result = value.toString();
                 } catch (e) {
@@ -90,11 +76,11 @@ export const get = function () {
             assert.equal(result, "bar");
 
             value = await db.get("foo", { asBuffer: false });
-            assert.ok(typeof value === "string", "should be string if not buffer");
+            assert.ok(is.string(value), "should be string if not buffer");
             assert.equal(value, "bar");
         });
 
-        it("test simultaniously get()", async () => {
+        it("simultaniously get()", async () => {
             await db.put("hello", "world");
 
             for (let i = 0; i < 10; ++i) {
@@ -107,10 +93,15 @@ export const get = function () {
                     await db.get("not found");
                 } catch (err) {
                     assert.ok(verifyNotFoundError(err), "should have correct error message");
-                    assert.ok(typeof value === "undefined", "value is undefined");
                 }
             }
         });
+    });
+
+    it("get() not found error is asynchronous", async () => {
+        await db.put("hello", "world");
+        const err = await assert.throws(async () => db.get("not found"));
+        assert.ok(verifyNotFoundError(err));
     });
 };
 

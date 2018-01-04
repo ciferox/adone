@@ -1,3 +1,7 @@
+const {
+    is
+} = adone;
+
 let db;
 let testBuffer;
 const verifyNotFoundError = require("./util").verifyNotFoundError;
@@ -41,15 +45,15 @@ const makePutGetDelSuccessfulTest = function (type, key, value, expectedResult) 
     it(`put()/get()/del() with ${type}`, async () => {
         await db.put(key, value);
         const _value = await db.get(key);
-        assert.ok(Buffer.isBuffer(_value), "is a Buffer");
+        assert.ok(is.buffer(_value), "is a Buffer");
         let result = _value;
         if (hasExpectedResult) {
             assert.equal(result.toString(), expectedResult);
         } else {
-            if (result != null) {
+            if (!is.nil(result)) {
                 result = _value.toString();
             }
-            if (value != null) {
+            if (!is.nil(value)) {
                 value = value.toString();
             }
             assert.equal(result, value);
@@ -70,7 +74,9 @@ const makeErrorKeyTest = (type, key, expectedError) => {
     makePutErrorTest(type, key, "foo", expectedError);
 };
 
-/**** SETUP ENVIRONMENT ****/
+/**
+ * ** SETUP ENVIRONMENT ***
+ */
 
 export const setUp = function (leveldown, testCommon) {
     describe("put()/get()/del()", () => {
@@ -87,7 +93,7 @@ export const errorKeys = function () {
         makeErrorKeyTest("null key", null, /key cannot be `null` or `undefined`/);
         makeErrorKeyTest("undefined key", undefined, /key cannot be `null` or `undefined`/);
         makeErrorKeyTest("empty String key", "", /key cannot be an empty String/);
-        makeErrorKeyTest("empty Buffer key", new Buffer(0), /key cannot be an empty \w*Buffer/);
+        makeErrorKeyTest("empty Buffer key", Buffer.alloc(0), /key cannot be an empty \w*Buffer/);
         makeErrorKeyTest("empty Array key", [], /key cannot be an empty String/);
     });
 };
@@ -114,7 +120,9 @@ export const nonErrorKeys = function () {
     });
 };
 
-/**** TEST ERROR VALUES ****/
+/**
+ * ** TEST ERROR VALUES ***
+ */
 
 export const errorValues = function () {
 };
@@ -131,7 +139,7 @@ export const nonErrorValues = function () {
         makePutGetDelSuccessfulTest("`null` value", "foo null", null, "");
         makePutGetDelSuccessfulTest("`undefined` value", "foo undefined", undefined, "");
         makePutGetDelSuccessfulTest("empty String value", "foo", "", "");
-        makePutGetDelSuccessfulTest("empty Buffer value", "foo", new Buffer(0), "");
+        makePutGetDelSuccessfulTest("empty Buffer value", "foo", Buffer.alloc(0), "");
         makePutGetDelSuccessfulTest("empty Array value", "foo", [], "");
 
         // standard String value
@@ -149,7 +157,9 @@ export const nonErrorValues = function () {
     });
 };
 
-/**** CLEANUP ENVIRONMENT ****/
+/**
+ * ** CLEANUP ENVIRONMENT ***
+ */
 
 export const tearDown = function (testCommon) {
     describe("put()/get()/del()", () => {

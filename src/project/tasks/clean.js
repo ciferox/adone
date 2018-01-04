@@ -5,7 +5,7 @@ const {
     util
 } = adone;
 
-export default class DeleteTask extends adone.project.task.Base {
+export default class CleanTask extends adone.project.task.Base {
     async main(params) {
         let srcGlob;
 

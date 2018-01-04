@@ -1,5 +1,6 @@
 const {
-    is
+    is,
+    std
 } = adone;
 
 // The Node team wants to deprecate `process.bind(...)`.
@@ -93,7 +94,7 @@ const resolveCommand = (command, noExtension) => {
     }
 
     try {
-        resolved = !noExtension ? adone.fs.whichSync(command) : adone.fs.whichSync(command, { pathExt: adone.std.path.delimiter + (process.env.PATHEXT || "") });
+        resolved = !noExtension ? adone.fs.whichSync(command) : adone.fs.whichSync(command, { pathExt: std.path.delimiter + (process.env.PATHEXT || "") });
     } catch (e) { /* empty */ }
 
     commandCache.set(`${command}!${noExtension}`, resolved);
@@ -164,9 +165,9 @@ const readShebang = (command) => {
     const buffer = Buffer.allocUnsafe(150);
 
     try {
-        fd = adone.std.fs.openSync(command, "r");
-        adone.std.fs.readSync(fd, buffer, 0, 150, 0);
-        adone.std.fs.closeSync(fd);
+        fd = std.fs.openSync(command, "r");
+        std.fs.readSync(fd, buffer, 0, 150, 0);
+        std.fs.closeSync(fd);
     } catch (e) { /* empty */ }
 
     // Attempt to extract shebang (null is returned if not a shebang)
@@ -301,20 +302,20 @@ const env = (opts) => {
     }, opts);
 
     let prev;
-    let pth = adone.std.path.resolve(opts.cwd);
+    let pth = std.path.resolve(opts.cwd);
     const ret = [];
 
     while (prev !== pth) {
-        ret.push(adone.std.path.join(pth, "node_modules/.bin"));
+        ret.push(std.path.join(pth, "node_modules/.bin"));
         prev = pth;
-        pth = adone.std.path.resolve(pth, "..");
+        pth = std.path.resolve(pth, "..");
     }
 
     // ensure the running `node` binary is used
-    ret.push(adone.std.path.dirname(process.execPath));
+    ret.push(std.path.dirname(process.execPath));
 
 
-    env[path] = ret.concat(opts.path).join(adone.std.path.delimiter);
+    env[path] = ret.concat(opts.path).join(std.path.delimiter);
 
     return env;
 };
@@ -361,6 +362,16 @@ const handleArgs = (cmd, args, opts) => {
 
     if (opts.preferLocal) {
         opts.env = env(Object.assign({}, opts, { cwd: opts.localDir }));
+    }
+
+    if (opts.detached) {
+        // #115
+        opts.cleanup = false;
+    }
+
+    if (is.windows && std.path.basename(parsed.command) === "cmd.exe") {
+        // #116
+        parsed.args.unshift("/q");
     }
 
     return {
@@ -531,7 +542,7 @@ export const exec = (cmd, args, opts) => {
 
     let spawned;
     try {
-        spawned = adone.std.child_process.spawn(parsed.cmd, parsed.args, parsed.opts);
+        spawned = std.child_process.spawn(parsed.cmd, parsed.args, parsed.opts);
     } catch (err) {
         return Promise.reject(err);
     }
@@ -663,7 +674,7 @@ export const execSync = (cmd, args, opts) => {
         throw new TypeError("The `input` option cannot be a stream in sync mode");
     }
 
-    const result = adone.std.child_process.spawnSync(parsed.cmd, parsed.args, parsed.opts);
+    const result = std.child_process.spawnSync(parsed.cmd, parsed.args, parsed.opts);
 
     if (result.error || result.status !== 0) {
         throw (result.error || new Error(result.stderr === "" ? result.stdout : result.stderr));

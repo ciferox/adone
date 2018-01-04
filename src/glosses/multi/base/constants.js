@@ -1,6 +1,9 @@
+import base16 from "./base16";
+import base32 from "./base32";
+import base64 from "./base64";
+
 const {
-    data: { basex },
-    is
+    data: { basex }
 } = adone;
 
 
@@ -27,27 +30,6 @@ class Base {
     }
 }
 
-
-const base16 = (alphabet) => {
-    return {
-        encode(input) {
-            if (is.string(input)) {
-                return Buffer.from(input).toString("hex");
-            }
-            return input.toString("hex");
-        },
-        decode(input) {
-            for (const char of input) {
-                if (!alphabet.includes(char)) {
-                    throw new Error("invalid base16 character");
-                }
-            }
-            return Buffer.from(input, "hex");
-        }
-    };
-};
-
-
 // name, code, implementation, alphabet
 const constants = [
     ["base1", "1", "", "1"],
@@ -55,13 +37,17 @@ const constants = [
     ["base8", "7", basex, "01234567"],
     ["base10", "9", basex, "0123456789"],
     ["base16", "f", base16, "0123456789abcdef"],
-    ["base32hex", "v", basex, "0123456789abcdefghijklmnopqrstuv"],
-    ["base32", "b", basex, "abcdefghijklmnopqrstuvwxyz234567"],
-    ["base32z", "h", basex, "ybndrfg8ejkmcpqxot1uwisza345h769"],
+    ["base32", "b", base32, "abcdefghijklmnopqrstuvwxyz234567"],
+    ["base32pad", "c", base32, "abcdefghijklmnopqrstuvwxyz234567="],
+    ["base32hex", "v", base32, "0123456789abcdefghijklmnopqrstuv"],
+    ["base32hexpad", "t", base32, "0123456789abcdefghijklmnopqrstuv="],
+    ["base32z", "h", base32, "ybndrfg8ejkmcpqxot1uwisza345h769"],
     ["base58flickr", "Z", basex, "123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ"],
     ["base58btc", "z", basex, "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"],
-    ["base64", "m", basex, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"],
-    ["base64url", "u", basex, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"]
+    ["base64", "m", base64, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"],
+    ["base64pad", "M", base64, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="],
+    ["base64url", "u", base64, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"],
+    ["base64urlpad", "U", base64, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_="]
 ];
 
 export const names = constants.reduce((prev, tupple) => {

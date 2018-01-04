@@ -8,7 +8,7 @@ const tcp = new TCP();
 
 module.exports = {
     queryLAN(mdns, serviceTag, interval) {
-        setInterval(() => {
+        return setInterval(() => {
             mdns.query({
                 questions: [{
                     name: serviceTag,

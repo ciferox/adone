@@ -41,7 +41,7 @@ export default function (ALPHABET) {
 
         // deal with leading zeros
         for (let k = 0; source[k] === 0 && k < source.length - 1; ++k) {
-            string += ALPHABET[0];
+            string += LEADER;
         }
         // convert digits to a string
         for (let q = digits.length - 1; q >= 0; --q) {

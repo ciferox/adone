@@ -28,16 +28,6 @@ export const args = function () {
             await db.put({}, {});
         });
 
-        it("_serialize buffer", async () => {
-            const db = leveldown(testCommon.location());
-            db._put = function (key, value, opts, callback) {
-                assert.deepEqual(key, Buffer.from("key"));
-                assert.deepEqual(value, Buffer.from("value"));
-                callback();
-            };
-            await db.put(Buffer.from("key"), Buffer.from("value"));
-        });
-
         it("custom _serialize*", async () => {
             const db = leveldown(testCommon.location());
             db._serializeKey = db._serializeValue = function (data) {

@@ -1,3 +1,7 @@
+const {
+    is
+} = adone;
+
 let db;
 const verifyNotFoundError = require("./util").verifyNotFoundError;
 const isTypedArray = require("./util").isTypedArray;
@@ -52,6 +56,14 @@ export const args = function () {
             assert.fail("Should have thrown");
         });
 
+        it("batch() with missing `type`", async () => {
+            await assert.throws(async () => db.batch([{ key: "key", value: "value" }]), "`type` must be 'put' or 'del'");
+        });
+
+        it("batch() with wrong `type`", async () => {
+            await assert.throws(async () => db.batch([{ key: "key", value: "value", type: "foo" }]), "`type` must be 'put' or 'del'");
+        });
+
         it("batch() with missing array", async () => {
             try {
                 await db.batch();
@@ -86,6 +98,14 @@ export const args = function () {
             await db.batch([], null);
         });
     });
+
+    [null, undefined, 1, true].forEach((element) => {
+        const type = is.null(element) ? "null" : typeof element;
+
+        it(`test batch() with ${type} element`, async () => {
+            await assert.throws(async () => db.batch([element], /batch(array) element must be an object and not `null`/));
+        });
+    });
 };
 
 export const batch = function () {
@@ -101,7 +121,7 @@ export const batch = function () {
             if (isTypedArray(value)) {
                 result = String.fromCharCode.apply(null, new Uint16Array(value));
             } else {
-                assert.ok(typeof Buffer !== "undefined" && value instanceof Buffer);
+                assert.ok(!is.undefined(Buffer) && value instanceof Buffer);
                 result = value.toString();
             }
             assert.equal(result, "bar");
@@ -120,7 +140,7 @@ export const batch = function () {
             if (isTypedArray(value)) {
                 result = String.fromCharCode.apply(null, new Uint16Array(value));
             } else {
-                assert.ok(typeof Buffer !== "undefined" && value instanceof Buffer);
+                assert.ok(!is.undefined(Buffer) && value instanceof Buffer);
                 result = value.toString();
             }
             assert.equal(result, "bar1");
@@ -130,7 +150,7 @@ export const batch = function () {
                 value = await db.get("foobatch2");
             } catch (err) {
                 assert.ok(err, "entry not found");
-                assert.ok(typeof value === "undefined", "value is undefined");
+                assert.ok(is.undefined(value), "value is undefined");
                 assert.ok(verifyNotFoundError(err), "NotFound error");
             }
 
@@ -138,7 +158,7 @@ export const batch = function () {
             if (isTypedArray(value)) {
                 result = String.fromCharCode.apply(null, new Uint16Array(value));
             } else {
-                assert.ok(typeof Buffer !== "undefined" && value instanceof Buffer);
+                assert.ok(!is.undefined(Buffer) && value instanceof Buffer);
                 result = value.toString();
             }
             assert.equal(result, "bar3");
@@ -171,7 +191,7 @@ export const atomic = function () {
                 } catch (err) {
                     err_ = err;
                 }
-                
+
                 assert.ok(err, "should not be found");
             }
         });

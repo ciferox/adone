@@ -1,0 +1,18 @@
+#!/usr/bin/env node
+
+require("a"); // adone
+const fs = require("fs");
+
+adone.application.run({
+    async main() {
+        const fd = fs.openSync(process.argv[2], "w");
+
+        const cp = adone.system.process.exec("noop", ["foo"], {
+            detached: true,
+            stdio: ["ignore", fd]
+        });
+        cp.unref();
+
+        return 0;
+    }
+});

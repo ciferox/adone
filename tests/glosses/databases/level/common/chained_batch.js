@@ -173,18 +173,6 @@ export const args = function () {
             });
         });
 
-        it("test serialize buffer", () => {
-            const batch = db.chainedBatch();
-            const ops = collectBatchOps(batch);
-
-            batch
-                .put(Buffer.from("foo"), Buffer.from("bar"))
-                .del(Buffer.from("baz"));
-            assert.equal(ops[0].key.toString(), "foo");
-            assert.equal(ops[0].value.toString(), "bar");
-            assert.equal(ops[1].key.toString(), "baz");
-        });
-
         it("test custom _serialize*", () => {
             const _db = Object.create(db);
             _db._serializeKey = _db._serializeValue = function (data) {

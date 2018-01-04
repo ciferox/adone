@@ -1,8 +1,11 @@
+const {
+    is
+} = adone;
+
 let db;
 let leveldown;
 let testCommon;
 const verifyNotFoundError = require("./util").verifyNotFoundError;
-const isTypedArray = require("./util").isTypedArray;
 
 export const setUp = function (_leveldown, _testCommon) {
     describe("del()", () => {
@@ -18,24 +21,6 @@ export const setUp = function (_leveldown, _testCommon) {
 
 export const args = function () {
     describe("del()", () => {
-        it("test _serialize object", async () => {
-            const db = leveldown(testCommon.location());
-            db._del = function (key, opts, callback) {
-                assert.equal(Buffer.isBuffer(key) ? String(key) : key, "[object Object]");
-                callback();
-            };
-            await db.del({});
-        });
-
-        it("test _serialize buffer", async () => {
-            const db = leveldown(testCommon.location());
-            db._del = function (key, opts, callback) {
-                assert.ok(Buffer.isBuffer(key));
-                callback();
-            };
-            await db.del(Buffer.from("buf"));
-        });
-
         it("test custom _serialize*", async () => {
             const db = leveldown(testCommon.location());
             db._serializeKey = function (data) {
@@ -61,7 +46,6 @@ export const del = function () {
                 await db.get("foo");
             } catch (err) {
                 assert.ok(err, "entry propertly deleted");
-                assert.ok(typeof value === "undefined", "value is undefined");
                 assert.ok(verifyNotFoundError(err), "NotFound error");
             }
         });
