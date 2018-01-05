@@ -4,7 +4,7 @@ describe("net", "http", "server", "response", "writable", () => {
     describe("when continuous requests in one persistent connection", () => {
         const requestTwice = (server, done) => {
             const port = server.address().port;
-            const buf = new Buffer(`GET / HTTP/1.1\r\nHost: localhost:${port}\r\nConnection: keep-alive\r\n\r\n`);
+            const buf = Buffer.from(`GET / HTTP/1.1\r\nHost: localhost:${port}\r\nConnection: keep-alive\r\n\r\n`);
             const client = net.connect(port);
             const datas = [];
             client.on("error", done).on("data", (data) => datas.push(data)).on("end", () => done(null, datas));
@@ -37,7 +37,7 @@ describe("net", "http", "server", "response", "writable", () => {
     describe("when socket closed before response sent", () => {
         const requsetClosed = (server) => {
             const port = server.address().port;
-            const buf = new Buffer(`GET / HTTP/1.1\r\nHost: localhost:${port}\r\nConnection: keep-alive\r\n\r\n`);
+            const buf = Buffer.from(`GET / HTTP/1.1\r\nHost: localhost:${port}\r\nConnection: keep-alive\r\n\r\n`);
             const client = net.connect(port);
             setImmediate(() => {
                 client.write(buf);
@@ -65,7 +65,7 @@ describe("net", "http", "server", "response", "writable", () => {
     describe("when response finished", () => {
         const request = (server) => {
             const port = server.address().port;
-            const buf = new Buffer(`GET / HTTP/1.1\r\nHost: localhost:${port}\r\nConnection: keep-alive\r\n\r\n`);
+            const buf = Buffer.from(`GET / HTTP/1.1\r\nHost: localhost:${port}\r\nConnection: keep-alive\r\n\r\n`);
             const client = net.connect(port);
             setImmediate(() => {
                 client.write(buf);

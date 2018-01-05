@@ -188,8 +188,8 @@ describe("utils", () => {
         const a = new MongooseBuffer(str);
         const b = new MongooseBuffer(str);
         const c = new Buffer(str);
-        const d = new Buffer("this is the way");
-        const e = new Buffer("other length");
+        const d = Buffer.from("this is the way");
+        const e = Buffer.from("other length");
 
         assert.ok(utils.deepEqual(a, b));
         assert.ok(utils.deepEqual(a, c));

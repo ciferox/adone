@@ -1,17 +1,13 @@
-
-const assert = require("assert");
-const util = require("util");
-
 const debug = {
     client: require("debug")("spdy:stream:client"),
     server: require("debug")("spdy:stream:server")
 };
-const Buffer = require("safe-buffer").Buffer;
-const Duplex = require("readable-stream").Duplex;
 
 const {
+    assert,
     is,
-    net: { spdy: transport }
+    net: { spdy: transport },
+    std: { util, stream: { Duplex } }
 } = adone;
 
 function Stream(connection, options) {
@@ -371,7 +367,7 @@ Stream.prototype._onFinish = function _onFinish() {
             id: this.id,
             priority: state.priority.getPriority(),
             fin: true,
-            data: new Buffer(0)
+            data: Buffer.alloc(0)
         });
     }
 

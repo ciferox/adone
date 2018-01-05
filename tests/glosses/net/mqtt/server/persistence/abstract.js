@@ -45,7 +45,7 @@ module.exports = function (create, buildOpts) {
             const packet = {
                 topic: "hello",
                 qos: 0,
-                payload: new Buffer("world"),
+                payload: Buffer.from("world"),
                 messageId: "42",
                 retain: true
             };
@@ -70,7 +70,7 @@ module.exports = function (create, buildOpts) {
             const packet = {
                 topic: "hello",
                 qos: 0,
-                payload: new Buffer("world"),
+                payload: Buffer.from("world"),
                 messageId: "42",
                 retain: true
             };
@@ -102,7 +102,7 @@ module.exports = function (create, buildOpts) {
                 return {
                     topic: "hello",
                     qos: 0,
-                    payload: new Buffer("world"),
+                    payload: Buffer.from("world"),
                     messageId: "packetMessageId",
                     retain: true
                 };
@@ -138,7 +138,7 @@ module.exports = function (create, buildOpts) {
             const packet = {
                 topic: "hello",
                 qos: 0,
-                payload: new Buffer("world"),
+                payload: Buffer.from("world"),
                 messageId: "42",
                 retain: true
             };
@@ -146,7 +146,7 @@ module.exports = function (create, buildOpts) {
             const packet2 = {
                 topic: "hello",
                 qos: 0,
-                payload: new Buffer("matteo"),
+                payload: Buffer.from("matteo"),
                 messageId: "43",
                 retain: true
             };
@@ -170,7 +170,7 @@ module.exports = function (create, buildOpts) {
             const packet = {
                 topic: "hello",
                 qos: 0,
-                payload: new Buffer("world"),
+                payload: Buffer.from("world"),
                 messageId: "42",
                 retain: true
             };
@@ -201,7 +201,7 @@ module.exports = function (create, buildOpts) {
             const packet1 = {
                 topic: "hello/1",
                 qos: 0,
-                payload: new Buffer("world"),
+                payload: Buffer.from("world"),
                 messageId: "42",
                 retain: true
             };
@@ -209,7 +209,7 @@ module.exports = function (create, buildOpts) {
             const packet2 = {
                 topic: "hello/2",
                 qos: 0,
-                payload: new Buffer("world"),
+                payload: Buffer.from("world"),
                 messageId: "43",
                 retain: true
             };
@@ -239,7 +239,7 @@ module.exports = function (create, buildOpts) {
             const packet1 = {
                 topic: "hello/1",
                 qos: 0,
-                payload: new Buffer("world"),
+                payload: Buffer.from("world"),
                 messageId: "42",
                 retain: true
             };
@@ -247,7 +247,7 @@ module.exports = function (create, buildOpts) {
             const packet2 = {
                 topic: "hello/2",
                 qos: 0,
-                payload: new Buffer("world"),
+                payload: Buffer.from("world"),
                 messageId: "43",
                 retain: true
             };
@@ -279,7 +279,7 @@ module.exports = function (create, buildOpts) {
             const packet1 = {
                 topic: "hello/1",
                 qos: 0,
-                payload: new Buffer("world"),
+                payload: Buffer.from("world"),
                 messageId: "42",
                 retain: true
             };
@@ -300,7 +300,7 @@ module.exports = function (create, buildOpts) {
             const packet1 = {
                 topic: "hello/1",
                 qos: 0,
-                payload: new Buffer("world"),
+                payload: Buffer.from("world"),
                 messageId: "42",
                 retain: true
             };
@@ -603,7 +603,7 @@ module.exports = function (create, buildOpts) {
         const packet = {
             topic: "hello",
             qos: 1,
-            payload: new Buffer("world"),
+            payload: Buffer.from("world"),
             messageId: "42"
         };
 
@@ -830,14 +830,14 @@ module.exports = function (create, buildOpts) {
         const first_packet = {
             topic: "hello",
             qos: 1,
-            payload: new Buffer("world"),
+            payload: Buffer.from("world"),
             messageId: "42"
         };
 
         const second_packet = {
             topic: "hello",
             qos: 1,
-            payload: new Buffer("mosca"),
+            payload: Buffer.from("mosca"),
             messageId: "43"
         };
 
@@ -880,7 +880,7 @@ module.exports = function (create, buildOpts) {
         const packet = {
             topic: "hello/42",
             qos: 0,
-            payload: new Buffer("world"),
+            payload: Buffer.from("world"),
             messageId: "42"
         };
 
@@ -903,7 +903,7 @@ module.exports = function (create, buildOpts) {
         const packet = {
             topic: "hello",
             qos: 1,
-            payload: new Buffer("world"),
+            payload: Buffer.from("world"),
             messageId: "42"
         };
         const client = {
@@ -998,7 +998,7 @@ module.exports = function (create, buildOpts) {
                 topic: "hello/42",
                 qos: 0,
                 retain: false,
-                payload: new Buffer("world"),
+                payload: Buffer.from("world"),
                 // TODO: if messageId is an integer then persist redis test fail !!!
                 messageId: "42"
             };
@@ -1025,7 +1025,7 @@ module.exports = function (create, buildOpts) {
                 topic: "hello/42",
                 qos: 0,
                 retain: true,
-                payload: new Buffer("world"),
+                payload: Buffer.from("world"),
                 // TODO: if messageId is an integer then persist redis test fail !!!
                 messageId: "42"
             };
@@ -1078,7 +1078,7 @@ module.exports = function (create, buildOpts) {
                 topic: "hello/42",
                 qos: 0,
                 retain: false,
-                payload: new Buffer("world"),
+                payload: Buffer.from("world"),
                 // TODO: if messageId is an integer then persist redis test fail !!!
                 messageId: "42"
             };
@@ -1105,7 +1105,7 @@ module.exports = function (create, buildOpts) {
                 topic: "hello/42",
                 qos: 0,
                 retain: true,
-                payload: new Buffer("world"),
+                payload: Buffer.from("world"),
                 // TODO: if messageId is an integer then persist redis test fail !!!
                 messageId: "42"
             };
@@ -1142,7 +1142,7 @@ module.exports = function (create, buildOpts) {
             topic: "hello/42",
             qos: 0,
             retain: false,
-            payload: new Buffer("hello"),
+            payload: Buffer.from("hello"),
             // TODO: if messageId is an integer then persist redis test fail !!!
             messageId: "42"
         };
@@ -1151,7 +1151,7 @@ module.exports = function (create, buildOpts) {
             topic: "hello/42",
             qos: 0,
             retain: false,
-            payload: new Buffer("my"),
+            payload: Buffer.from("my"),
             // TODO: if messageId is an integer then persist redis test fail !!!
             messageId: "43"
         };
@@ -1160,7 +1160,7 @@ module.exports = function (create, buildOpts) {
             topic: "hello/42",
             qos: 0,
             retain: false,
-            payload: new Buffer("world"),
+            payload: Buffer.from("world"),
             // TODO: if messageId is an integer then persist redis test fail !!!
             messageId: "44"
         };
@@ -1216,7 +1216,7 @@ module.exports = function (create, buildOpts) {
                 topic: "hello/42",
                 qos: 1,
                 retain: false,
-                payload: new Buffer("world"),
+                payload: Buffer.from("world"),
                 messageId: "42"
             };
 
@@ -1238,7 +1238,7 @@ module.exports = function (create, buildOpts) {
                 topic: "hello/42",
                 qos: 1,
                 retain: false,
-                payload: new Buffer("hello"),
+                payload: Buffer.from("hello"),
                 messageId: "42"
             };
 
@@ -1246,7 +1246,7 @@ module.exports = function (create, buildOpts) {
                 topic: "hello/42",
                 qos: 1,
                 retain: false,
-                payload: new Buffer("my"),
+                payload: Buffer.from("my"),
                 messageId: "43"
             };
 
@@ -1254,7 +1254,7 @@ module.exports = function (create, buildOpts) {
                 topic: "hello/42",
                 qos: 1,
                 retain: false,
-                payload: new Buffer("world"),
+                payload: Buffer.from("world"),
                 messageId: "44"
             };
 

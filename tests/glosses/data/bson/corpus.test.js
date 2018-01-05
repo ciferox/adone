@@ -1,8 +1,11 @@
 import { deserialize, serialize } from "./extended_json";
 
-describe("data", "bson", "corpus", () => {
-    const { data: { bson: { BSON, Decimal128 } }, std: { assert } } = adone;
+const {
+    data: { bson: { BSON, Decimal128 } },
+    std: { assert }
+} = adone;
 
+describe("data", "bson", "corpus", () => {
     const bson = new BSON();
 
     const executeValid = (spec, scenarios) => {
@@ -10,7 +13,7 @@ describe("data", "bson", "corpus", () => {
             const scenario = scenarios[i];
 
             // Get the scenario bson
-            const B = new Buffer(scenario.bson, "hex");
+            const B = Buffer.from(scenario.bson, "hex");
             let E = null;
 
             // Get the extended json
@@ -21,7 +24,7 @@ describe("data", "bson", "corpus", () => {
             // If we have a canonical bson use it instead
             let cB;
             if (scenario.canonical_bson) {
-                cB = new Buffer(scenario.canonical_bson, "hex");
+                cB = Buffer.from(scenario.canonical_bson, "hex");
             } else {
                 cB = B;
             }
@@ -92,7 +95,7 @@ describe("data", "bson", "corpus", () => {
             const scenario = scenarios[i];
 
             // Convert the hex string to a binary buffer
-            const buffer = new Buffer(scenario.bson, "hex");
+            const buffer = Buffer.from(scenario.bson, "hex");
             let failed = false;
 
             try {

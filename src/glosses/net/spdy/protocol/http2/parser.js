@@ -1,15 +1,14 @@
 const parser = exports;
 
 const {
+    assert,
     is,
-    net: { spdy: transport }
+    net: { spdy: transport },
+    std: { util }
 } = adone;
 const base = transport.protocol.base;
 const utils = base.utils;
 const constants = require("./").constants;
-
-const assert = require("assert");
-const util = require("util");
 
 function Parser(options) {
     base.Parser.call(this, options);

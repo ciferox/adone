@@ -1,11 +1,9 @@
-const fs = require("fs");
-const util = require("util");
-const path = require("path");
-const zlib = require("zlib");
-const assert = require("assert");
-const cp = require("child_process");
-const exec = cp.execFileSync;
+const {
+    assert,
+    std: { fs, path, zlib, child_process: cp }
+} = adone;
 
+const exec = cp.execFileSync;
 
 function PNG(file, options) {
     let buf;
@@ -548,7 +546,7 @@ PNG.prototype.sampleInterlacedLines = function (raw) {
             if (xstep === 1) {
                 assert.equal(xstart, 0);
                 offset = y * vpr;
-                for (k = offset, f = 0; k < offset + vpr; k++, f++) {
+                for (k = offset, f = 0; k < offset + vpr; k++ , f++) {
                     samples[k] = flat[f];
                 }
             } else {
@@ -1413,7 +1411,7 @@ function GIF(file, options) {
     if (this.gct) {
         this.colors = [];
         total = 1 << this.gctsize;
-        for (i = 0; i < total; i++, p += 3) {
+        for (i = 0; i < total; i++ , p += 3) {
             this.colors.push([buf[p], buf[p + 1], buf[p + 2], 255]);
         }
     }
@@ -1448,7 +1446,7 @@ function GIF(file, options) {
                 if (img.lct) {
                     img.lcolors = [];
                     total = 1 << img.lctsize;
-                    for (i = 0; i < total; i++, p += 3) {
+                    for (i = 0; i < total; i++ , p += 3) {
                         img.lcolors.push([buf[p], buf[p + 1], buf[p + 2], 255]);
                     }
                 }

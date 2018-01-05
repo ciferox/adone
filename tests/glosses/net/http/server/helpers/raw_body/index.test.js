@@ -203,14 +203,14 @@ describe("net", "http", "helper", "raw body", () => {
         });
 
         it("should decode codepage string", async () => {
-            const stream = createStream(new Buffer("bf43f36d6f20657374e1733f", "hex"));
+            const stream = createStream(Buffer.from("bf43f36d6f20657374e1733f", "hex"));
             const string = "¿Cómo estás?";
             const str = await getRawBody(stream, "iso-8859-1", );
             assert.equal(str, string);
         });
 
         it("should decode UTF-8 string", async () => {
-            const stream = createStream(new Buffer("c2bf43c3b36d6f20657374c3a1733f", "hex"));
+            const stream = createStream(Buffer.from("c2bf43c3b36d6f20657374c3a1733f", "hex"));
             const string = "¿Cómo estás?";
             const str = await getRawBody(stream, "utf-8");
             assert.equal(str, string);
@@ -218,7 +218,7 @@ describe("net", "http", "helper", "raw body", () => {
 
         it("should decode UTF-16 string (LE BOM)", async () => {
             // BOM makes this LE
-            const stream = createStream(new Buffer("fffebf004300f3006d006f002000650073007400e10073003f00", "hex"));
+            const stream = createStream(Buffer.from("fffebf004300f3006d006f002000650073007400e10073003f00", "hex"));
             const string = "¿Cómo estás?";
             const str = await getRawBody(stream, "utf-16");
             assert.equal(str, string);
@@ -226,7 +226,7 @@ describe("net", "http", "helper", "raw body", () => {
 
         it("should decode UTF-16 string (BE BOM)", async () => {
             // BOM makes this BE
-            const stream = createStream(new Buffer("feff00bf004300f3006d006f002000650073007400e10073003f", "hex"));
+            const stream = createStream(Buffer.from("feff00bf004300f3006d006f002000650073007400e10073003f", "hex"));
             const string = "¿Cómo estás?";
             const str = await getRawBody(stream, "utf-16");
             assert.equal(str, string);
@@ -234,14 +234,14 @@ describe("net", "http", "helper", "raw body", () => {
 
         it("should decode UTF-16LE string", async () => {
             // UTF-16LE is different from UTF-16 due to BOM behavior
-            const stream = createStream(new Buffer("bf004300f3006d006f002000650073007400e10073003f00", "hex"));
+            const stream = createStream(Buffer.from("bf004300f3006d006f002000650073007400e10073003f00", "hex"));
             const string = "¿Cómo estás?";
             const str = await getRawBody(stream, "utf-16le");
             assert.equal(str, string);
         });
 
         it("should correctly calculate the expected length", async () => {
-            const stream = createStream(new Buffer('{"test":"å"}'));
+            const stream = createStream(Buffer.from('{"test":"å"}'));
 
             await getRawBody(stream, {
                 encoding: "utf-8",

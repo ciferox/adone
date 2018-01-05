@@ -40,7 +40,7 @@ describe("net", "mail", "Quoted-Printable Tests", () => {
         });
 
         it("shoud encode Buffer to QP", () => {
-            expect(qp.encode(new Buffer([0x00, 0x01, 0x02, 0x20, 0x03]))).to.equal("=00=01=02 =03");
+            expect(qp.encode(Buffer.from([0x00, 0x01, 0x02, 0x20, 0x03]))).to.equal("=00=01=02 =03");
         });
     });
 
@@ -90,7 +90,7 @@ describe("net", "mail", "Quoted-Printable Tests", () => {
                 }
 
                 const ord = bytes[i++];
-                encoder.write(new Buffer([ord]));
+                encoder.write(Buffer.from([ord]));
                 setImmediate(sendNextByte);
             };
 

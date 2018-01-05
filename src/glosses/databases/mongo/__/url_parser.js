@@ -397,7 +397,7 @@ export default function parseUrl(url, options) {
                     dbOptions.gssapiServiceRealm = o.SERVICE_REALM;
                 }
                 if (is.string(o.CANONICALIZE_HOST_NAME)) {
-                    dbOptions.gssapiCanonicalizeHostName = o.CANONICALIZE_HOST_NAME == "true" ? true : false;
+                    dbOptions.gssapiCanonicalizeHostName = o.CANONICALIZE_HOST_NAME === "true" ? true : false;
                 }
                 break;
             }

@@ -1,31 +1,33 @@
 // provides boilerplate for managing http and https servers during tests
 
-const http = require("http");
-const https = require("https");
-const assert = require("assert");
+const {
+    is,
+    std: { http, https }
+} = adone;
+
 const BPromise = require("bluebird");
 
 module.exports = function (defaultPorts) {
-	// set default ports for each protocol i.e. {http: 80, https: 443}
+    // set default ports for each protocol i.e. {http: 80, https: 443}
     defaultPorts = defaultPorts || {};
     let servers = [];
 
-	/**
-	 * Starts a server
-	 *
-	 * If options is a function, uses that the request handler for a `http` server on the default port.
-	 * options.protocol - the protocol to use (`http` or `https`). Defaults to `http`.
-	 * options.port - the port to use, will fall back to defaultPorts[protocol].
-	 * options.app - the request handler passed to http|https.createServer
-	 *
-	 * the options object will also be passed to as the https config for https servers
-	 *
-	 * @param options
-	 * @returns {Promise} that resolves when the server successfully started
-	 */
-    function start(options) {
+    /**
+     * Starts a server
+     *
+     * If options is a function, uses that the request handler for a `http` server on the default port.
+     * options.protocol - the protocol to use (`http` or `https`). Defaults to `http`.
+     * options.port - the port to use, will fall back to defaultPorts[protocol].
+     * options.app - the request handler passed to http|https.createServer
+     *
+     * the options object will also be passed to as the https config for https servers
+     *
+     * @param options
+     * @returns {Promise} that resolves when the server successfully started
+     */
+    const start = function (options) {
         return BPromise.fromNode((callback) => {
-            if (typeof options === "function") {
+            if (is.function(options)) {
                 options = {
                     app: options
                 };
@@ -45,25 +47,21 @@ module.exports = function (defaultPorts) {
             servers.push(server);
             server.listen(port, callback);
         });
-    }
+    };
 
-	/**
-	 * Stops all the currently running servers previously created with `start`
-	 * @returns {Promise} that resolves when all servers have successfully shut down.
-	 */
-    function stop() {
-        return BPromise.all(servers.map(stopServer)).finally(clearServers);
-    }
+    const stopServer = (server) => BPromise.fromNode((callback) => {
+        server.close(callback);
+    });
 
-    function stopServer(server) {
-        return BPromise.fromNode((callback) => {
-            server.close(callback);
-        });
-    }
-
-    function clearServers() {
+    const clearServers = () => {
         servers = [];
-    }
+    };
+
+    /**
+     * Stops all the currently running servers previously created with `start`
+     * @returns {Promise} that resolves when all servers have successfully shut down.
+     */
+    const stop = () => BPromise.all(servers.map(stopServer)).finally(clearServers);
 
     return {
         start,

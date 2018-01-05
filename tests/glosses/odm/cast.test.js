@@ -81,8 +81,8 @@ describe("cast: ", () => {
 
         it("with a buffer", (done) => {
             const schema = new Schema({ x: Number });
-            assert.deepEqual(cast(schema, { x: { $bitsAnyClear: new Buffer([3]) } }),
-                { x: { $bitsAnyClear: new Buffer([3]) } });
+            assert.deepEqual(cast(schema, { x: { $bitsAnyClear: Buffer.from([3]) } }),
+                { x: { $bitsAnyClear: Buffer.from([3]) } });
             done();
         });
 

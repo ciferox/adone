@@ -444,7 +444,7 @@ describe("net", "mail", "Fetch Tests", () => {
 
     it("should post stream data", (done) => {
         const body = new PassThrough();
-        const data = new Buffer("hello=world%20%F0%9F%98%AD&another=value");
+        const data = Buffer.from("hello=world%20%F0%9F%98%AD&another=value");
 
         const req = fetch(`http://localhost:${HTTP_PORT}/post`, {
             method: "post",

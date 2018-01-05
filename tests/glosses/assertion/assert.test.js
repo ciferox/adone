@@ -7,14 +7,14 @@ const { assert, expect, AssertionError, getAssertion } = assertion;
 describe("assertion", "assert", () => {
     it("assert", () => {
         const foo = "bar";
-        assert(foo == "bar", "expected foo to equal `bar`");
+        assert(foo === "bar", "expected foo to equal `bar`");
 
         err(() => {
-            assert(foo == "baz", "expected foo to equal `bar`");
+            assert(foo === "baz", "expected foo to equal `bar`");
         }, "expected foo to equal `bar`");
 
         err(() => {
-            assert(foo == "baz", () => {
+            assert(foo === "baz", () => {
                 return "expected foo to equal `bar`";
             });
         }, "expected foo to equal `bar`");

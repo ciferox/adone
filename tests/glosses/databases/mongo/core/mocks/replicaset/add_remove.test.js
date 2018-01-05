@@ -981,11 +981,11 @@ describe("database", "mongo", "core", function () {
 
                     await new Promise((resolve) => {
                         server.on("joined", (_type, _server) => {
-                            if (_type == "arbiter") {
+                            if (_type === "arbiter") {
                                 arbiters[_server.name] = _server;
                                 // Flip the ismaster message
                                 currentIsMasterIndex = currentIsMasterIndex + 1;
-                            } else if (_type == "secondary") {
+                            } else if (_type === "secondary") {
                                 // test.equal(true, server.__connected);
                                 secondaries[_server.name] = _server;
                                 if (Object.keys(secondaries).length == 2) {

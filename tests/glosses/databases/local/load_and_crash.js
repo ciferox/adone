@@ -102,7 +102,7 @@ fs.writeFile = function (path, data, options) {
     });
 
     function writeFd(fd, isUserFd) {
-        const buffer = (data instanceof Buffer) ? data : new Buffer(`${data}`,
+        const buffer = (data instanceof Buffer) ? data : Buffer.from(`${data}`,
             options.encoding || "utf8");
         const position = /a/.test(flag) ? null : 0;
 

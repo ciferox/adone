@@ -87,15 +87,15 @@ describe("text", "Table", () => {
                 expect(truncate("hello", 5)).to.equal("hello");
             });
 
-            it('truncate("hello sir", 7, "…") == "hello …"', () => {
+            it('truncate("hello sir", 7, "…") === "hello …"', () => {
                 expect(truncate("hello sir", 7, "…")).to.equal("hello …");
             });
 
-            it('truncate("hello sir", 6, "…") == "hello…"', () => {
+            it('truncate("hello sir", 6, "…") === "hello…"', () => {
                 expect(truncate("hello sir", 6, "…")).to.equal("hello…");
             });
 
-            it('truncate("goodnight moon", 8, "…") == "goodnig…"', () => {
+            it('truncate("goodnight moon", 8, "…") === "goodnig…"', () => {
                 expect(truncate("goodnight moon", 8, "…")).to.equal("goodnig…");
             });
 

@@ -443,8 +443,8 @@ describe("database", "level", () => {
             await db.batch([
                 {
                     type: "put",
-                    key: new Buffer([1, 2, 3]),
-                    value: new Buffer([4, 5, 6]),
+                    key: Buffer.from([1, 2, 3]),
+                    value: Buffer.from([4, 5, 6]),
                     keyEncoding: "binary",
                     valueEncoding: "binary"
                 },
@@ -454,7 +454,7 @@ describe("database", "level", () => {
                     value: "string"
                 }
             ], { keyEncoding: "utf8", valueEncoding: "utf8" });
-            let val = await db.get(new Buffer([1, 2, 3]), {
+            let val = await db.get(Buffer.from([1, 2, 3]), {
                 keyEncoding: "binary",
                 valueEncoding: "binary"
             });

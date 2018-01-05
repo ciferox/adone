@@ -3849,7 +3849,7 @@ describe("document", () => {
 
             const Test = db.model("gh4800", TestSchema);
 
-            Test.create({ buf: new Buffer("abcd") }).
+            Test.create({ buf: Buffer.from("abcd") }).
                 then((doc) => {
                     return Test.findById(doc._id);
                 }).

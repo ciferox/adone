@@ -360,7 +360,7 @@ describe("schema", () => {
             assert.equal(typeof strings[1], "string");
             assert.equal(strings[1], "123");
 
-            const buffers = Loki.path("buffers").cast(["\0\0\0", new Buffer("abc")]);
+            const buffers = Loki.path("buffers").cast(["\0\0\0", Buffer.from("abc")]);
 
             assert.ok(buffers[0] instanceof Buffer);
             assert.ok(buffers[1] instanceof Buffer);

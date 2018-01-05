@@ -95,7 +95,7 @@ function jsonSchemaTest(validators, opts) {
 
 
                                         function testResults(valid, errors) {
-                                            if (opts.asyncValid == "data" && test.valid === true) {
+                                            if (opts.asyncValid === "data" && test.valid === true) {
                                                 valid = valid === data;
                                             }
                                             const passed = valid === test.valid;

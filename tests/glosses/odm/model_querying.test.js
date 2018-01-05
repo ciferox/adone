@@ -605,16 +605,16 @@ describe("model: querying:", () => {
                 BlogPostB = db.model('BlogPostB', collection);
 
             BlogPostB.create({
-                sigs: [new Buffer([1, 2, 3]),
-                new Buffer([4, 5, 6]),
-                new Buffer([7, 8, 9])]
+                sigs: [Buffer.from([1, 2, 3]),
+                Buffer.from([4, 5, 6]),
+                Buffer.from([7, 8, 9])]
             }, function (err, created) {
                 assert.ifError(err);
-                BlogPostB.findOne({ sigs: new Buffer([1, 2, 3]) }, function (err, found) {
+                BlogPostB.findOne({ sigs: Buffer.from([1, 2, 3]) }, function (err, found) {
                     assert.ifError(err);
                     found.id;
                     assert.equal(found._id.toString(), created._id);
-                    var query = { sigs: { '$in': [new Buffer([3, 3, 3]), new Buffer([4, 5, 6])] } };
+                    var query = { sigs: { '$in': [Buffer.from([3, 3, 3]), Buffer.from([4, 5, 6])] } };
                     BlogPostB.findOne(query, function (err) {
                         assert.ifError(err);
                         db.close();
@@ -1947,8 +1947,8 @@ describe("model: querying:", () => {
             BufSchema = new Schema({ name: String, block: Buffer }),
             Test = db.model("BufferTest", BufSchema, "buffers");
 
-        let docA = { name: "A", block: new Buffer("über") };
-        let docB = { name: "B", block: new Buffer("buffer shtuffs are neat") };
+        let docA = { name: "A", block: Buffer.from("über") };
+        let docB = { name: "B", block: Buffer.from("buffer shtuffs are neat") };
         let docC = { name: "C", block: "hello world" };
 
         Test.create(docA, docB, docC, (err, a, b, c) => {
@@ -1976,7 +1976,7 @@ describe("model: querying:", () => {
                                 assert.ifError(err);
                                 assert.strictEqual(rb, null);
 
-                                Test.findOne({ block: new Buffer('aGVsbG8gd29ybGQ=', 'base64') }, function (err, rb) {
+                                Test.findOne({ block: Buffer.from('aGVsbG8gd29ybGQ=', 'base64') }, function (err, rb) {
                                     assert.ifError(err);
                                     assert.equal(rb.block.toString('utf8'), 'hello world');
 
@@ -2015,7 +2015,7 @@ describe("model: querying:", () => {
             assert.equal(b.block.toString('utf8'), 'buffer shtuffs are neat');
             assert.equal(c.block.toString('utf8'), 'hello world');
 
-            Test.find({ block: { $in: [[195, 188, 98, 101, 114], 'buffer shtuffs are neat', new Buffer('aGVsbG8gd29ybGQ=', 'base64')] } }, function (err, tests) {
+            Test.find({ block: { $in: [[195, 188, 98, 101, 114], 'buffer shtuffs are neat', Buffer.from('aGVsbG8gd29ybGQ=', 'base64')] } }, function (err, tests) {
                 assert.ifError(err);
                 assert.equal(tests.length, 3);
                 cb();
@@ -2040,7 +2040,7 @@ describe("model: querying:", () => {
                 cb();
             });
 
-            Test.find({ block: { $nin: [[195, 188, 98, 101, 114], new Buffer('aGVsbG8gd29ybGQ=', 'base64')] } }, function (err, tests) {
+            Test.find({ block: { $nin: [[195, 188, 98, 101, 114], Buffer.from('aGVsbG8gd29ybGQ=', 'base64')] } }, function (err, tests) {
                 assert.ifError(err);
                 assert.equal(tests.length, 1);
                 assert.equal(tests[0].block.toString('utf8'), 'buffer shtuffs are neat');
@@ -2065,7 +2065,7 @@ describe("model: querying:", () => {
                 cb();
             });
 
-            Test.find({ block: { $lt: new Buffer('buffer shtuffs are neat') } }, function (err, tests) {
+            Test.find({ block: { $lt: Buffer.from('buffer shtuffs are neat') } }, function (err, tests) {
                 assert.ifError(err);
                 assert.equal(tests.length, 2);
                 var ret = {};

@@ -1,0 +1,29 @@
+[
+    {
+        "scope": "http://google.com:80",
+        "method": "GET",
+        "path": "/",
+        "body": "",
+        "status": 302,
+        "response": "<HTML><HEAD><meta http-equiv=\"content-type\" content=\"text/html;charset=utf-8\">\n<TITLE>302 Moved</TITLE></HEAD><BODY>\n<H1>302 Moved</H1>\nThe document has moved\n<A HREF=\"http://www.google.ru/?gfe_rd=cr&amp;dcr=0&amp;ei=v_RPWu-SLNH07gTshbf4Cg\">here</A>.\r\n</BODY></HTML>\r\n",
+        "rawHeaders": [
+            "Cache-Control",
+            "private",
+            "Content-Type",
+            "text/html; charset=UTF-8",
+            "Referrer-Policy",
+            "no-referrer",
+            "Location",
+            "http://www.google.ru/?gfe_rd=cr&dcr=0&ei=v_RPWu-SLNH07gTshbf4Cg",
+            "Content-Length",
+            "268",
+            "Date",
+            "Fri, 05 Jan 2018 21:57:19 GMT",
+            "Connection",
+            "close"
+        ],
+        "reqheaders": {
+            "host": "google.com"
+        }
+    }
+]

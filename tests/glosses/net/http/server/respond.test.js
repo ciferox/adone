@@ -92,7 +92,7 @@ describe("net", "http", "server", "respond", () => {
             const server = new Server();
 
             server.use((ctx) => {
-                ctx.body = new Buffer("hello world");
+                ctx.body = Buffer.from("hello world");
             });
 
             await request(server)

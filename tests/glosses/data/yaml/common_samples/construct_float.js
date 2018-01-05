@@ -1,5 +1,7 @@
-const assert = require("assert");
-const { is } = adone;
+const {
+    assert,
+    is
+} = adone;
 
 const expected = {
     canonical: 685230.15,

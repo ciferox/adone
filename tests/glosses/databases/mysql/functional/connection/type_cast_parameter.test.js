@@ -19,7 +19,7 @@ describe("database", "mysql", "functional", "connection", "type cast parameter",
         const [rows] = await connection.query({
             sql: 'select "foo uppercase" as foo',
             typeCast(field, next) {
-                if (field.type == "VAR_STRING") {
+                if (field.type === "VAR_STRING") {
                     return field.string().toUpperCase();
                 }
                 return next();

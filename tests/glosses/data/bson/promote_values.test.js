@@ -1,8 +1,11 @@
 import { BinaryParser } from "./binary_parser";
 
-describe("data", "bson", "promote values", () => {
-    const { data: { bson: { BSON, Int32, Double } } } = adone;
+const {
+    is,
+    data: { bson: { BSON, Int32, Double } }
+} = adone;
 
+describe("data", "bson", "promote values", () => {
     BSON.BSON_BINARY_SUBTYPE_DEFAULT = 0;
     BSON.BSON_BINARY_SUBTYPE_FUNCTION = 1;
     BSON.BSON_BINARY_SUBTYPE_BYTE_ARRAY = 2;
@@ -27,22 +30,22 @@ describe("data", "bson", "promote values", () => {
                 serializedData = serializedData + BinaryParser.fromByte(bytes[i]);
             }
 
-            const object = new BSON().deserialize(new Buffer(serializedData, "binary"), { promoteValues: false });
+            const object = new BSON().deserialize(Buffer.from(serializedData, "binary"), { promoteValues: false });
             // Perform tests
             expect("hello").to.be.equal(object.string);
             expect([new Int32(1), new Int32(2), new Int32(3)]).to.be.deep.equal(object.array);
             expect(new Int32(1)).to.be.deep.equal(object.hash.a);
             expect(new Int32(2)).to.be.deep.equal(object.hash.b);
-            expect(object.date !== null).to.be.ok();
-            expect(object.oid !== null).to.be.ok();
-            expect(object.binary !== null).to.be.ok();
+            expect(!is.null(object.date)).to.be.ok();
+            expect(!is.null(object.oid)).to.be.ok();
+            expect(!is.null(object.binary)).to.be.ok();
             expect(new Int32(42)).to.be.deep.equal(object.int);
             expect(new Double(33.3333)).to.be.deep.equal(object.float);
-            expect(object.regexp !== null).to.be.ok();
+            expect(!is.null(object.regexp)).to.be.ok();
             expect(true).to.be.equal(object.boolean);
-            expect(object.where !== null).to.be.ok();
-            expect(object.dbref !== null).to.be.ok();
-            expect(object.null == null).to.be.ok();
+            expect(!is.null(object.where)).to.be.ok();
+            expect(!is.null(object.dbref)).to.be.ok();
+            expect(is.nil(object.null)).to.be.ok();
         });
     });
 });

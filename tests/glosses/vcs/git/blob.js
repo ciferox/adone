@@ -1,5 +1,3 @@
-// var assert = require("assert");
-// var path = require("path");
 // var local = path.join.bind(path, __dirname);
 // var promisify = require("promisify-node");
 // var fse = promisify("fs-extra");

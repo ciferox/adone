@@ -1,36 +1,37 @@
+const {
+    std: { url, net, fs, path },
+    noop,
+    stream: { concat }
+} = adone;
+
+const express = require("express");
+const server = require("./lib/test-server")({
+    https: 3601,
+    http: 3600
+});
+
 import followRedirects from "adone/glosses/net/http/client/follow_redirects";
 
+const http = followRedirects.http;
+const https = followRedirects.https;
+const BPromise = require("bluebird");
+
+const util = require("./lib/util");
+const concatJson = util.concatJson;
+const redirectsTo = util.redirectsTo;
+const sendsJson = util.sendsJson;
+const asPromise = util.asPromise;
+
 describe("net", "http", "client", "helpers", "follow-redirects ", () => {
-    const express = require("express");
-    const assert = require("assert");
-    const net = require("net");
-    const server = require("./lib/test-server")({
-        https: 3601,
-        http: 3600
-    });
-    const url = require("url");
-    const http = followRedirects.http;
-    const https = followRedirects.https;
-    const BPromise = require("bluebird");
-
-    const util = require("./lib/util");
-    const concat = require("concat-stream");
-    const concatJson = util.concatJson;
-    const redirectsTo = util.redirectsTo;
-    const sendsJson = util.sendsJson;
-    const asPromise = util.asPromise;
-
-    const fs = require("fs");
-    const path = require("path");
-
-    function httpsOptions(app) {
+    const httpsOptions = function (app) {
         return {
             app,
             protocol: "https",
             cert: fs.readFileSync(path.join(__dirname, "lib/TestServer.crt")),
             key: fs.readFileSync(path.join(__dirname, "lib/TestServer.pem"))
         };
-    }
+    };
+
     const ca = fs.readFileSync(path.join(__dirname, "lib/TestCA.crt"));
 
     let app;
@@ -173,27 +174,27 @@ describe("net", "http", "client", "helpers", "follow-redirects ", () => {
     it.skip("should allow aborting", (done) => {
         let request;
 
+        const callAbort = function () {
+            request.abort();
+        };
+
         app.get("/a", redirectsTo("/b"));
         app.get("/b", redirectsTo("/c"));
         app.get("/c", callAbort);
 
         server.start(app)
             .then(asPromise((resolve, reject) => {
+                const onAbort = function () {
+                    request.removeListener("error", reject);
+                    request.on("error", noop);
+                    resolve();
+                };
+
                 request = http.get("http://localhost:3600/a", resolve);
                 request.on("response", reject);
                 request.on("error", reject);
                 request.on("abort", onAbort);
-                function onAbort() {
-                    request.removeListener("error", reject);
-                    request.on("error", noop);
-                    resolve();
-                }
-            }))
-            .nodeify(done);
-
-        function callAbort() {
-            request.abort();
-        }
+            })).nodeify(done);
     });
 
     it("should provide flushHeaders", (done) => {
@@ -306,18 +307,7 @@ describe("net", "http", "client", "helpers", "follow-redirects ", () => {
     });
 
     describe("should switch to safe methods when appropriate", () => {
-        function mustUseSameMethod(statusCode, useSameMethod) {
-            describe(`when redirecting with status code ${statusCode}`, () => {
-                itRedirectsWith(statusCode, "GET", "GET");
-                itRedirectsWith(statusCode, "HEAD", "HEAD");
-                itRedirectsWith(statusCode, "OPTIONS", "OPTIONS");
-                itRedirectsWith(statusCode, "TRACE", "TRACE");
-                itRedirectsWith(statusCode, "POST", useSameMethod ? "POST" : "GET");
-                itRedirectsWith(statusCode, "PUT", useSameMethod ? "PUT" : "GET");
-            });
-        }
-
-        function itRedirectsWith(statusCode, originalMethod, redirectedMethod) {
+        const itRedirectsWith = function (statusCode, originalMethod, redirectedMethod) {
             const description = `should ${
                 originalMethod === redirectedMethod ? `reuse ${originalMethod}` :
                     `switch from ${originalMethod} to ${redirectedMethod}`}`;
@@ -339,7 +329,18 @@ describe("net", "http", "client", "helpers", "follow-redirects ", () => {
                     })
                     .nodeify(done);
             });
-        }
+        };
+
+        const mustUseSameMethod = function (statusCode, useSameMethod) {
+            describe(`when redirecting with status code ${statusCode}`, () => {
+                itRedirectsWith(statusCode, "GET", "GET");
+                itRedirectsWith(statusCode, "HEAD", "HEAD");
+                itRedirectsWith(statusCode, "OPTIONS", "OPTIONS");
+                itRedirectsWith(statusCode, "TRACE", "TRACE");
+                itRedirectsWith(statusCode, "POST", useSameMethod ? "POST" : "GET");
+                itRedirectsWith(statusCode, "PUT", useSameMethod ? "PUT" : "GET");
+            });
+        };
 
         mustUseSameMethod(300, false);
         mustUseSameMethod(301, false);
@@ -401,7 +402,7 @@ describe("net", "http", "client", "helpers", "follow-redirects ", () => {
                 req.on("error", reject);
             }))
             .then(asPromise((resolve, reject, res) => {
-                res.pipe(concat({ encoding: "string" }, resolve)).on("error", reject);
+                res.pipe(concat.create({ encoding: "string" }, resolve)).on("error", reject);
             }))
             .then((str) => {
                 assert.equal(str, fs.readFileSync(__filename, "utf8"));
@@ -425,7 +426,7 @@ describe("net", "http", "client", "helpers", "follow-redirects ", () => {
                 req.on("error", reject);
             }))
             .then(asPromise((resolve, reject, res) => {
-                res.pipe(concat({ encoding: "string" }, resolve)).on("error", reject);
+                res.pipe(concat.create({ encoding: "string" }, resolve)).on("error", reject);
             }))
             .then((str) => {
                 assert.equal(str, fs.readFileSync(__filename, "utf8"));
@@ -448,7 +449,7 @@ describe("net", "http", "client", "helpers", "follow-redirects ", () => {
                 req.on("error", reject);
             }))
             .then(asPromise((resolve, reject, res) => {
-                res.pipe(concat({ encoding: "string" }, resolve)).on("error", reject);
+                res.pipe(concat.create({ encoding: "string" }, resolve)).on("error", reject);
             }))
             .then((str) => {
                 assert.equal(str, fs.readFileSync(__filename, "utf8"));
@@ -472,7 +473,7 @@ describe("net", "http", "client", "helpers", "follow-redirects ", () => {
                 req.on("error", reject);
             }))
             .then(asPromise((resolve, reject, res) => {
-                res.pipe(concat({ encoding: "string" }, resolve)).on("error", reject);
+                res.pipe(concat.create({ encoding: "string" }, resolve)).on("error", reject);
             }))
             .then((str) => {
                 assert.equal(str, fs.readFileSync(__filename, "utf8"));
@@ -498,7 +499,7 @@ describe("net", "http", "client", "helpers", "follow-redirects ", () => {
                 req.on("error", reject);
             }))
             .then(asPromise((resolve, reject, res) => {
-                res.pipe(concat({ encoding: "string" }, resolve)).on("error", reject);
+                res.pipe(concat.create({ encoding: "string" }, resolve)).on("error", reject);
             }))
             .then((str) => {
                 assert.equal(str, fs.readFileSync(__filename, "utf8"));
@@ -525,7 +526,7 @@ describe("net", "http", "client", "helpers", "follow-redirects ", () => {
                 req.on("error", reject);
             }))
             .then(asPromise((resolve, reject, res) => {
-                res.pipe(concat({ encoding: "string" }, resolve)).on("error", reject);
+                res.pipe(concat.create({ encoding: "string" }, resolve)).on("error", reject);
             }))
             .then((str) => {
                 assert.equal(str, fs.readFileSync(__filename, "utf8"));
@@ -534,7 +535,7 @@ describe("net", "http", "client", "helpers", "follow-redirects ", () => {
     });
 
     describe("should drop the entity and associated headers", () => {
-        function itDropsBodyAndHeaders(originalMethod) {
+        const itDropsBodyAndHeaders = function (originalMethod) {
             it(`when switching from ${originalMethod} to GET`, (done) => {
                 app[originalMethod.toLowerCase()]("/a", redirectsTo(302, "http://localhost:3600/b"));
                 app.get("/b", (req, res) => {
@@ -557,7 +558,7 @@ describe("net", "http", "client", "helpers", "follow-redirects ", () => {
                         req.on("error", reject);
                     }))
                     .then(asPromise((resolve, reject, res) => {
-                        res.pipe(concat({ encoding: "string" }, resolve)).on("error", reject);
+                        res.pipe(concat.create({ encoding: "string" }, resolve)).on("error", reject);
                     }))
                     .then((str) => {
                         const body = JSON.parse(str);
@@ -598,9 +599,7 @@ describe("net", "http", "client", "helpers", "follow-redirects ", () => {
             app2.get("/b", redirectsTo("https://localhost:3601/c"));
             app.get("/c", sendsJson({ yes: "no" }));
 
-            const httpAgent = addRequestLogging(new http.Agent());
-            const httpsAgent = addRequestLogging(new https.Agent());
-            function addRequestLogging(agent) {
+            const addRequestLogging = function (agent) {
                 agent._requests = [];
                 agent._addRequest = agent.addRequest;
                 agent.addRequest = function (request, options) {
@@ -608,7 +607,10 @@ describe("net", "http", "client", "helpers", "follow-redirects ", () => {
                     this._addRequest(request, options);
                 };
                 return agent;
-            }
+            };
+
+            const httpAgent = addRequestLogging(new http.Agent());
+            const httpsAgent = addRequestLogging(new https.Agent());
 
             BPromise.all([server.start(httpsOptions(app)), server.start(app2)])
                 .then(asPromise((resolve, reject) => {
@@ -617,7 +619,7 @@ describe("net", "http", "client", "helpers", "follow-redirects ", () => {
                     opts.agents = { http: httpAgent, https: httpsAgent };
                     https.get(opts, concatJson(resolve, reject)).on("error", reject);
                 }))
-                .then(() => Badone.promise.delay(1000))
+                .then(() => adone.promise.delay(1000))
                 .then((res) => {
                     assert.deepEqual(httpAgent._requests, ["/b"]);
                     assert.deepEqual(httpsAgent._requests, ["/a", "/c"]);

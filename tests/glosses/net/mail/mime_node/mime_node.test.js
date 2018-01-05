@@ -1135,7 +1135,7 @@ describe("net", "mail", "MimeNode Tests", () => {
                     if (i >= data.length) {
                         return res.end();
                     }
-                    res.write(new Buffer([data[i++]]));
+                    res.write(Buffer.from([data[i++]]));
                     setImmediate(sendByte);
                 };
 

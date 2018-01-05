@@ -125,7 +125,7 @@ function buildLabelStatement(prefix, key = "label") {
         const label = node[key];
         if (label) {
             this.space();
-            const isLabel = key == "label";
+            const isLabel = key === "label";
             const terminatorState = this.startTerminatorless(isLabel);
             this.print(label, node);
             this.endTerminatorless(terminatorState);

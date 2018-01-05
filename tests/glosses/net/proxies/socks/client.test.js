@@ -56,7 +56,7 @@ describe("net", "proxy", "socks", "Client", () => {
             }).on("error", (err) => {
                 assert(false, `Unexpected error: ${err}`);
             });
-            stream.emit("data", new Buffer([0x05, 0xFF]));
+            stream.emit("data", Buffer.from([0x05, 0xFF]));
             assert(method === 0xFF, `Unexpected method: ${method}`);
         });
 
@@ -71,8 +71,8 @@ describe("net", "proxy", "socks", "Client", () => {
             }).on("error", (err) => {
                 assert(false, `Unexpected error: ${err}`);
             });
-            stream.emit("data", new Buffer([0x05]));
-            stream.emit("data", new Buffer([0x09]));
+            stream.emit("data", Buffer.from([0x05]));
+            stream.emit("data", Buffer.from([0x09]));
             assert(method === 0x09, `Unexpected method: ${method}`);
         });
 
@@ -87,7 +87,7 @@ describe("net", "proxy", "socks", "Client", () => {
             }).on("error", (err) => {
                 errors.push(err);
             });
-            stream.emit("data", new Buffer([0x04, 0x09]));
+            stream.emit("data", Buffer.from([0x04, 0x09]));
             assert(errors.length === 1 && /Incompatible SOCKS protocol version: 4/i.test(errors[0].message), "Error(s) mismatch");
         });
 
@@ -103,7 +103,7 @@ describe("net", "proxy", "socks", "Client", () => {
             }).on("error", (err) => {
                 assert(false, `Unexpected error: ${err}`);
             });
-            stream.emit("data", new Buffer([0x05,
+            stream.emit("data", Buffer.from([0x05,
                 0x00,
                 0x00,
                 0x01,
@@ -124,7 +124,7 @@ describe("net", "proxy", "socks", "Client", () => {
             }).on("error", (err) => {
                 assert(false, `Unexpected error: ${err}`);
             });
-            stream.emit("data", new Buffer([0x05,
+            stream.emit("data", Buffer.from([0x05,
                 0x00,
                 0x00,
                 0x04,
@@ -151,7 +151,7 @@ describe("net", "proxy", "socks", "Client", () => {
             }).on("error", (err) => {
                 assert(false, `Unexpected error: ${err}`);
             });
-            stream.emit("data", new Buffer([0x05,
+            stream.emit("data", Buffer.from([0x05,
                 0x00,
                 0x00,
                 0x03,
@@ -177,11 +177,11 @@ describe("net", "proxy", "socks", "Client", () => {
             }).on("error", (err) => {
                 assert(false, `Unexpected error: ${err}`);
             });
-            stream.emit("data", new Buffer([0x05, 0x00]));
-            stream.emit("data", new Buffer([0x00, 0x03, 0x0A, 0x6E, 0x6F, 0x64, 0x65]));
-            stream.emit("data", new Buffer([0x6A, 0x73, 0x2E, 0x6F, 0x72]));
-            stream.emit("data", new Buffer([0x67, 0x05]));
-            stream.emit("data", new Buffer([0x39]));
+            stream.emit("data", Buffer.from([0x05, 0x00]));
+            stream.emit("data", Buffer.from([0x00, 0x03, 0x0A, 0x6E, 0x6F, 0x64, 0x65]));
+            stream.emit("data", Buffer.from([0x6A, 0x73, 0x2E, 0x6F, 0x72]));
+            stream.emit("data", Buffer.from([0x67, 0x05]));
+            stream.emit("data", Buffer.from([0x39]));
             assert.deepEqual(reply,
                 {
                     bndAddr: "nodejs.org",
@@ -201,7 +201,7 @@ describe("net", "proxy", "socks", "Client", () => {
             }).on("error", (err) => {
                 errors.push(err);
             });
-            stream.emit("data", new Buffer([0x05, 0x02]));
+            stream.emit("data", Buffer.from([0x05, 0x02]));
             assert(errors.length === 1 && /connection not allowed by ruleset/i.test(errors[0].message), "Error(s) mismatch");
         });
 
@@ -217,7 +217,7 @@ describe("net", "proxy", "socks", "Client", () => {
             }).on("error", (err) => {
                 errors.push(err);
             });
-            stream.emit("data", new Buffer([0x04, 0x02]));
+            stream.emit("data", Buffer.from([0x04, 0x02]));
             assert(errors.length === 1 && /Incompatible SOCKS protocol version: 4/i.test(errors[0].message), "Error(s) mismatch");
         });
 
@@ -233,11 +233,11 @@ describe("net", "proxy", "socks", "Client", () => {
             }).on("error", (err) => {
                 errors.push(err);
             });
-            stream.emit("data", new Buffer([0x05, 0x00]));
-            stream.emit("data", new Buffer([0x00, 0xFF, 0x0A, 0x6E, 0x6F, 0x64, 0x65]));
-            stream.emit("data", new Buffer([0x6A, 0x73, 0x2E, 0x6F, 0x72]));
-            stream.emit("data", new Buffer([0x67, 0x05]));
-            stream.emit("data", new Buffer([0x39]));
+            stream.emit("data", Buffer.from([0x05, 0x00]));
+            stream.emit("data", Buffer.from([0x00, 0xFF, 0x0A, 0x6E, 0x6F, 0x64, 0x65]));
+            stream.emit("data", Buffer.from([0x6A, 0x73, 0x2E, 0x6F, 0x72]));
+            stream.emit("data", Buffer.from([0x67, 0x05]));
+            stream.emit("data", Buffer.from([0x39]));
             assert(errors.length === 1 && /Invalid request address type: 255/i.test(errors[0].message), "Error(s) mismatch");
         });
     });

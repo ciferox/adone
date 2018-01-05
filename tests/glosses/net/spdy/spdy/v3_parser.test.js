@@ -4,7 +4,6 @@ const {
 } = adone;
 
 const spdy = transport.protocol.spdy;
-const Buffer = require("safe-buffer").Buffer;
 
 describe("SPDY Parser (v3)", () => {
     let parser;

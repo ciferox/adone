@@ -23,8 +23,8 @@ describe("net", "proxy", "socks", "Server", () => {
             }).on("error", (err) => {
                 assert(false, `Unexpected error: ${err}`);
             });
-            stream.emit("data", new Buffer([0x05, 0x01, 0x00]));
-            assert.deepEqual(methods, new Buffer([0x00]), `Unexpected methods: ${adone.std.util.inspect(methods)}`);
+            stream.emit("data", Buffer.from([0x05, 0x01, 0x00]));
+            assert.deepEqual(methods, Buffer.from([0x00]), `Unexpected methods: ${adone.std.util.inspect(methods)}`);
             done();
         });
         it("Phase 1 - Valid (split)", (done) => {
@@ -38,10 +38,10 @@ describe("net", "proxy", "socks", "Server", () => {
             }).on("error", (err) => {
                 assert(false, `Unexpected error: ${err}`);
             });
-            stream.emit("data", new Buffer([0x05]));
-            stream.emit("data", new Buffer([0x01]));
-            stream.emit("data", new Buffer([0x00]));
-            assert.deepEqual(methods, new Buffer([0x00]), `Unexpected methods: ${adone.std.util.inspect(methods)}`);
+            stream.emit("data", Buffer.from([0x05]));
+            stream.emit("data", Buffer.from([0x01]));
+            stream.emit("data", Buffer.from([0x00]));
+            assert.deepEqual(methods, Buffer.from([0x00]), `Unexpected methods: ${adone.std.util.inspect(methods)}`);
             done();
         });
 
@@ -56,7 +56,7 @@ describe("net", "proxy", "socks", "Server", () => {
             }).on("error", (err) => {
                 errors.push(err);
             });
-            stream.emit("data", new Buffer([0x04, 0x01, 0x00]));
+            stream.emit("data", Buffer.from([0x04, 0x01, 0x00]));
             assert(errors.length === 1 && /Incompatible SOCKS protocol version: 4/i.test(errors[0].message), "Error(s) mismatch");
             done();
         });
@@ -71,7 +71,7 @@ describe("net", "proxy", "socks", "Server", () => {
             }).on("error", (err) => {
                 errors.push(err);
             });
-            stream.emit("data", new Buffer([0x05, 0x00]));
+            stream.emit("data", Buffer.from([0x05, 0x00]));
             assert(errors.length === 1 && /empty methods list/i.test(errors[0].message), "Error(s) mismatch");
             done();
         });
@@ -87,7 +87,7 @@ describe("net", "proxy", "socks", "Server", () => {
             }).on("error", (err) => {
                 assert(false, `Unexpected error: ${err}`);
             });
-            stream.emit("data", new Buffer([0x05,
+            stream.emit("data", Buffer.from([0x05,
                 0x01,
                 0x00,
                 0x01,
@@ -115,7 +115,7 @@ describe("net", "proxy", "socks", "Server", () => {
             }).on("error", (err) => {
                 assert(false, `Unexpected error: ${err}`);
             });
-            stream.emit("data", new Buffer([0x05,
+            stream.emit("data", Buffer.from([0x05,
                 0x02,
                 0x00,
                 0x01,
@@ -143,7 +143,7 @@ describe("net", "proxy", "socks", "Server", () => {
             }).on("error", (err) => {
                 assert(false, `Unexpected error: ${err}`);
             });
-            stream.emit("data", new Buffer([0x05,
+            stream.emit("data", Buffer.from([0x05,
                 0x03,
                 0x00,
                 0x01,
@@ -172,7 +172,7 @@ describe("net", "proxy", "socks", "Server", () => {
             }).on("error", (err) => {
                 assert(false, `Unexpected error: ${err}`);
             });
-            stream.emit("data", new Buffer([0x05,
+            stream.emit("data", Buffer.from([0x05,
                 0x01,
                 0x00,
                 0x04,
@@ -204,7 +204,7 @@ describe("net", "proxy", "socks", "Server", () => {
             }).on("error", (err) => {
                 assert(false, `Unexpected error: ${err}`);
             });
-            stream.emit("data", new Buffer([0x05,
+            stream.emit("data", Buffer.from([0x05,
                 0x01,
                 0x00,
                 0x03,
@@ -234,14 +234,14 @@ describe("net", "proxy", "socks", "Server", () => {
             }).on("error", (err) => {
                 assert(false, `Unexpected error: ${err}`);
             });
-            stream.emit("data", new Buffer([0x05]));
-            stream.emit("data", new Buffer([0x01, 0x00, 0x03]));
-            stream.emit("data", new Buffer([0x0A]));
-            stream.emit("data", new Buffer([0x6E, 0x6F, 0x64, 0x65, 0x6A, 0x73]));
-            stream.emit("data", new Buffer([0x2E, 0x6F, 0x72]));
-            stream.emit("data", new Buffer([0x67]));
-            stream.emit("data", new Buffer([0x05]));
-            stream.emit("data", new Buffer([0x39]));
+            stream.emit("data", Buffer.from([0x05]));
+            stream.emit("data", Buffer.from([0x01, 0x00, 0x03]));
+            stream.emit("data", Buffer.from([0x0A]));
+            stream.emit("data", Buffer.from([0x6E, 0x6F, 0x64, 0x65, 0x6A, 0x73]));
+            stream.emit("data", Buffer.from([0x2E, 0x6F, 0x72]));
+            stream.emit("data", Buffer.from([0x67]));
+            stream.emit("data", Buffer.from([0x05]));
+            stream.emit("data", Buffer.from([0x39]));
             assert.deepEqual(request, {
                 cmd: "connect",
                 srcAddr: undefined,
@@ -264,7 +264,7 @@ describe("net", "proxy", "socks", "Server", () => {
             }).on("error", (err) => {
                 errors.push(err);
             });
-            stream.emit("data", new Buffer([0x04,
+            stream.emit("data", Buffer.from([0x04,
                 0x01,
                 0x00,
                 0x01,
@@ -286,7 +286,7 @@ describe("net", "proxy", "socks", "Server", () => {
             }).on("error", (err) => {
                 errors.push(err);
             });
-            stream.emit("data", new Buffer([0x05,
+            stream.emit("data", Buffer.from([0x05,
                 0xFE,
                 0x00,
                 0x01,
@@ -308,7 +308,7 @@ describe("net", "proxy", "socks", "Server", () => {
             }).on("error", (err) => {
                 errors.push(err);
             });
-            stream.emit("data", new Buffer([0x05,
+            stream.emit("data", Buffer.from([0x05,
                 0x01,
                 0x00,
                 0xFF,
@@ -577,7 +577,7 @@ describe("net", "proxy", "socks", "Server", () => {
                 tmr = setTimeout(() => {
                     assert(false, "Timeout while waiting for bad client socket end");
                 }, 100);
-                clientSock.write(new Buffer([0x04, 0x01, 0x00]));
+                clientSock.write(Buffer.from([0x04, 0x01, 0x00]));
             }).connect(this.address().port, "localhost");
         });
     });

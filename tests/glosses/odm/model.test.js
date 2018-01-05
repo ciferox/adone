@@ -3023,13 +3023,13 @@ describe("Model", () => {
 
                 BufList.findOne({ _id: t.get("_id") }, (err, doc) => {
                     assert.ifError(err);
-                    doc.get("buffers").push(new Buffer([140]));
+                    doc.get("buffers").push(Buffer.from([140]));
                     save(doc);
                 });
 
                 BufList.findOne({ _id: t.get("_id") }, (err, doc) => {
                     assert.ifError(err);
-                    doc.get("buffers").push(new Buffer([141]), new Buffer([142]));
+                    doc.get("buffers").push(Buffer.from([141]), Buffer.from([142]));
                     save(doc);
                 });
             });

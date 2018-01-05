@@ -144,7 +144,7 @@ describe("templating", "nunjucks", "compiler", () => {
             { hungry: false, like_pizza: true, anchovies: true },
             "good");
 
-        equal('{% if food == "pizza" %}pizza{% endif %}' +
+        equal('{% if food === "pizza" %}pizza{% endif %}' +
             '{% if food =="beer" %}beer{% endif %}',
         { food: "beer" },
         "beer");
@@ -169,7 +169,7 @@ describe("templating", "nunjucks", "compiler", () => {
             { anchovies: true },
             "yuck");
 
-        equal('{% if topping == "pepperoni" %}yum{% elseif topping == "anchovies" %}' +
+        equal('{% if topping === "pepperoni" %}yum{% elseif topping === "anchovies" %}' +
             "yuck{% else %}hmmm{% endif %}",
         { topping: "sausage" },
         "hmmm");
@@ -197,8 +197,8 @@ describe("templating", "nunjucks", "compiler", () => {
             { hungry: false, like_pizza: true }, "good");
         equal('{{ "good" if (hungry or like_pizza) and anchovies }}',
             { hungry: false, like_pizza: true, anchovies: true }, "good");
-        equal('{{ "pizza" if food == "pizza" }}' +
-            '{{ "beer" if food == "beer" }}',
+        equal('{{ "pizza" if food === "pizza" }}' +
+            '{{ "beer" if food === "beer" }}',
         { food: "beer" }, "beer");
 
         finish(done);

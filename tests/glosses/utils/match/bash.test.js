@@ -1,7 +1,6 @@
 import match from "./support/match";
 const mm = adone.util.match;
 
-const assert = require("assert");
 const isWindows = require("is-windows");
 
 // from the Bash 4.3 specification/unit tests

@@ -70,9 +70,9 @@ Response.prototype.isParsed = function () {
 };
 
 // Validation buffers
-const firstBatch = new Buffer("firstBatch", "utf8");
-const nextBatch = new Buffer("nextBatch", "utf8");
-const cursorId = new Buffer("id", "utf8").toString("hex");
+const firstBatch = Buffer.from("firstBatch", "utf8");
+const nextBatch = Buffer.from("nextBatch", "utf8");
+const cursorId = Buffer.from("id", "utf8").toString("hex");
 
 const documentBuffers = {
     firstBatch: firstBatch.toString("hex"),

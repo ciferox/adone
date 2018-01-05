@@ -1972,13 +1972,13 @@ describe("types array", () => {
                     assert.ifError(err);
                     B.findById(post, function (err, post) {
                         assert.ifError(err);
-                        post.bufferIds.remove(new Buffer('a'));
+                        post.bufferIds.remove(Buffer.from('a'));
                         post.save(function (err) {
                             assert.ifError(err);
                             B.findById(post, function (err, post) {
                                 assert.ifError(err);
                                 assert.equal(post.bufferIds.length, 3);
-                                assert.ok(!post.bufferIds.id(new Buffer('a')));
+                                assert.ok(!post.bufferIds.id(Buffer.from('a')));
                                 done();
                             });
                         });

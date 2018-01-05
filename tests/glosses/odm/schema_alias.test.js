@@ -22,7 +22,7 @@ describe("schema alias option", () => {
             string: "hello",
             number: 1,
             date: new Date(),
-            buffer: new Buffer("World"),
+            buffer: Buffer.from("World"),
             boolean: false,
             mixed: [1, [], "three", { four: 5 }],
             objectId: new mongoose.Types.ObjectId(),

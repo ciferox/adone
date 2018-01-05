@@ -4,8 +4,6 @@ const {
 
 const base = transport.protocol.base;
 
-const Buffer = require("safe-buffer").Buffer;
-
 exports.PREFACE_SIZE = 24;
 exports.PREFACE = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n";
 exports.PREFACE_BUFFER = Buffer.from(exports.PREFACE);

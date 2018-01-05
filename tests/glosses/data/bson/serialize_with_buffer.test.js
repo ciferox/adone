@@ -1,10 +1,12 @@
-describe("data", "bson", "serialize with buffer", () => {
-    const { data: { bson: { BSON } } } = adone;
+const {
+    data: { bson: { BSON } }
+} = adone;
 
+describe("data", "bson", "serialize with buffer", () => {
     it("correctly serialize into buffer using serializeWithBufferAndIndex", () => {
         const bson = new BSON();
         // Create a buffer
-        const b = new Buffer(256);
+        const b = Buffer.alloc(256);
         // Serialize from index 0
         let r = bson.serializeWithBufferAndIndex({ a: 1 }, b);
         expect(11).to.be.equal(r);

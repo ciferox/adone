@@ -78,19 +78,19 @@ describe("types.buffer", () => {
                     assert.equal(err.errors.required.kind, 'Buffer');
                     assert.equal(err.errors.required.message, 'Cast to Buffer failed for value "{ x: [ 20 ] }" at path "required"');
                     assert.deepEqual(err.errors.required.value, { x: [20] });
-                    t.required = new Buffer('hello');
+                    t.required = Buffer.from('hello');
 
                     t.sub.push({ name: 'Friday Friday' });
                     t.save(function (err) {
                         assert.ok(err.message.indexOf('UserBuffer validation failed') === 0, err.message);
                         assert.equal(err.errors['sub.0.buf'].kind, 'required');
-                        t.sub[0].buf = new Buffer('well well');
+                        t.sub[0].buf = Buffer.from('well well');
                         t.save(function (err) {
                             assert.ok(err.message.indexOf('UserBuffer validation failed') === 0, err.message);
                             assert.equal(err.errors['sub.0.buf'].kind, 'user defined');
                             assert.equal(err.errors['sub.0.buf'].message, 'valid failed');
 
-                            t.sub[0].buf = new Buffer('well well well');
+                            t.sub[0].buf = Buffer.from('well well well');
                             t.validate(function (err) {
                                 db.close();
                                 assert.ifError(err);
@@ -108,7 +108,7 @@ describe("types.buffer", () => {
             User = db.model("UserBuffer", UserBuffer, `usersbuffer_${  random()}`);
 
         User.on("index", () => {
-            let sampleBuffer = new Buffer([123, 223, 23, 42, 11]);
+            let sampleBuffer = Buffer.from([123, 223, 23, 42, 11]);
 
             let tj = new User({
                 name: "tj",
@@ -139,7 +139,7 @@ describe("types.buffer", () => {
             User = db.model("UserBuffer", UserBuffer, `usersbuffer_${  random()}`);
 
         User.on("index", () => {
-            let sampleBuffer = new Buffer([123, 223, 23, 42, 11]);
+            let sampleBuffer = Buffer.from([123, 223, 23, 42, 11]);
 
             let tj = new User({
                 name: "tj",
@@ -160,7 +160,7 @@ describe("types.buffer", () => {
                         db.close();
                         assert.ifError(err);
 
-                        var expectedBuffer = new Buffer([123, 97, 97, 42, 11]);
+                        var expectedBuffer = Buffer.from([123, 97, 97, 42, 11]);
 
                         assert.equal(expectedBuffer.toString('base64'),
                             user.serial.toString('base64'), 'buffer mismatch');
@@ -422,20 +422,20 @@ describe("types.buffer", () => {
         });
 
         it("default value", (done) => {
-            let b = new B({ buf: new Buffer("hi") });
+            let b = new B({ buf: Buffer.from("hi") });
             assert.strictEqual(0, b.buf._subtype);
             done();
         });
 
         it("method works", (done) => {
-            let b = new B({ buf: new Buffer("hi") });
+            let b = new B({ buf: Buffer.from("hi") });
             b.buf.subtype(128);
             assert.strictEqual(128, b.buf._subtype);
             done();
         });
 
         it("is stored", (done) => {
-            let b = new B({ buf: new Buffer("hi") });
+            let b = new B({ buf: Buffer.from("hi") });
             b.buf.subtype(128);
             b.save((err) => {
                 if (err) {
@@ -454,7 +454,7 @@ describe("types.buffer", () => {
         });
 
         it("changes are retained", (done) => {
-            let b = new B({ buf: new Buffer("hi") });
+            let b = new B({ buf: Buffer.from("hi") });
             b.buf.subtype(128);
             b.save((err) => {
                 if (err) {

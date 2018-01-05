@@ -1,4 +1,4 @@
-const stream = adone.lazify({
+adone.lazify({
     buffer: () => adone.lazify({
         DEFAULT_INITIAL_SIZE: ["./buffer_stream", (mod) => mod.DEFAULT_INITIAL_SIZE],
         DEFAULT_INCREMENT_AMOUNT: ["./buffer_stream", (mod) => mod.DEFAULT_INCREMENT_AMOUNT],
@@ -23,5 +23,6 @@ const stream = adone.lazify({
     core: "./core",
     AssertByteCountStream: "./assert_byte_count",
     pull: "./pull",
-    Multiplex: "./multiplex"
+    Multiplex: "./multiplex",
+    pump: "./pump"
 }, adone.asNamespace(exports), require);

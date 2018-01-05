@@ -20,13 +20,13 @@ export class Circuit {
     }
 
     /**
-   * Creates an instance of Dialer.
-   *
-   * @param {Swarm} swarm - the swarm
-   * @param {any} options - config options
-   *
-   * @memberOf Dialer
-   */
+     * Creates an instance of Dialer.
+     *
+     * @param {Swarm} swarm - the swarm
+     * @param {any} options - config options
+     *
+     * @memberOf Dialer
+     */
     constructor(swarm, options) {
         this.options = options || {};
 
@@ -52,11 +52,11 @@ export class Circuit {
     }
 
     /**
-   * Dial the relays in the Addresses.Swarm config
-   *
-   * @param {Array} relays
-   * @return {void}
-   */
+     * Dial the relays in the Addresses.Swarm config
+     *
+     * @param {Array} relays
+     * @return {void}
+     */
     _dialSwarmRelays() {
         // if we have relay addresses in swarm config, then dial those relays
         this.relays.forEach((relay) => {
@@ -72,26 +72,26 @@ export class Circuit {
     }
 
     /**
-   * Dial a peer over a relay
-   *
-   * @param {multiaddr} ma - the multiaddr of the peer to dial
-   * @param {Object} options - dial options
-   * @param {Function} cb - a callback called once dialed
-   * @returns {Connection} - the connection
-   *
-   * @memberOf Dialer
-   */
+     * Dial a peer over a relay
+     *
+     * @param {multiaddr} ma - the multiaddr of the peer to dial
+     * @param {Object} options - dial options
+     * @param {Function} cb - a callback called once dialed
+     * @returns {Connection} - the connection
+     *
+     * @memberOf Dialer
+     */
     dial(ma, options, cb) {
         return this.dialer.dial(ma, options, cb);
     }
 
     /**
-   * Create a listener
-   *
-   * @param {any} options
-   * @param {Function} handler
-   * @return {listener}
-   */
+     * Create a listener
+     *
+     * @param {any} options
+     * @param {Function} handler
+     * @return {listener}
+     */
     createListener(options, handler) {
         if (is.function(options)) {
             handler = options;
@@ -104,14 +104,14 @@ export class Circuit {
     }
 
     /**
-   * Filter check for all multiaddresses
-   * that this transport can dial on
-   *
-   * @param {any} multiaddrs
-   * @returns {Array<multiaddr>}
-   *
-   * @memberOf Dialer
-   */
+     * Filter check for all multiaddresses
+     * that this transport can dial on
+     *
+     * @param {any} multiaddrs
+     * @returns {Array<multiaddr>}
+     *
+     * @memberOf Dialer
+     */
     filter(multiaddrs) {
         if (!is.array(multiaddrs)) {
             multiaddrs = [multiaddrs];

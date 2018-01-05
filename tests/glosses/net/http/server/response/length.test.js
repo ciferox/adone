@@ -34,12 +34,12 @@ describe("net", "http", "server", "response", "length", () => {
                 expect(res.length).to.be.equal(3);
 
 
-                res.body = new Buffer("foo bar");
+                res.body = Buffer.from("foo bar");
                 res.remove("Content-Length");
                 expect(res.length).to.be.equal(7);
 
 
-                res.body = new Buffer("foo bar");
+                res.body = Buffer.from("foo bar");
                 expect(res.length).to.be.equal(7);
 
 

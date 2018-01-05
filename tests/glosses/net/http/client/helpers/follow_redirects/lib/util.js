@@ -1,22 +1,25 @@
-const concat = require("concat-stream");
 const BPromise = require("bluebird");
 
-function redirectsTo(/* opt_status, path */) {
+const {
+    stream: { concat }
+} = adone;
+
+const redirectsTo = function (/* opt_status, path */) {
     const args = Array.prototype.slice.call(arguments);
     return function (req, res) {
         res.redirect.apply(res, args);
     };
-}
+};
 
-function sendsJson(json) {
+const sendsJson = function (json) {
     return function (req, res) {
         res.json(json);
     };
-}
+};
 
-function concatJson(resolve, reject) {
+const concatJson = function (resolve, reject) {
     return function (res) {
-        res.pipe(concat({ encoding: "string" }, (string) => {
+        res.pipe(concat.create({ encoding: "string" }, (string) => {
             try {
                 res.parsedJson = JSON.parse(string);
                 resolve(res);
@@ -25,15 +28,15 @@ function concatJson(resolve, reject) {
             }
         })).on("error", reject);
     };
-}
+};
 
-function asPromise(cb) {
+const asPromise = function (cb) {
     return function (result) {
         return new BPromise((resolve, reject) => {
             cb(resolve, reject, result);
         });
     };
-}
+};
 
 module.exports = {
     redirectsTo,

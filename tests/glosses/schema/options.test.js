@@ -435,7 +435,7 @@ describe("schema", "options", () => {
             }).to.throw();
         });
 
-        it('should not throw and pass validation with missingRef == "ignore"', () => {
+        it('should not throw and pass validation with missingRef === "ignore"', () => {
             testMissingRefsIgnore(new Validator({ missingRefs: "ignore" }));
             testMissingRefsIgnore(new Validator({ missingRefs: "ignore", allErrors: true }));
 
@@ -445,7 +445,7 @@ describe("schema", "options", () => {
             }
         });
 
-        it('should not throw and fail validation with missingRef == "fail" if the ref is used', () => {
+        it('should not throw and fail validation with missingRef === "fail" if the ref is used', () => {
             testMissingRefsFail(new Validator({ missingRefs: "fail" }));
             testMissingRefsFail(new Validator({ missingRefs: "fail", verbose: true }));
             testMissingRefsFail(new Validator({ missingRefs: "fail", allErrors: true }));
@@ -647,9 +647,9 @@ describe("schema", "options", () => {
                 const data2 = {};
                 expect(validate(data2)).to.be.equal(true);
 
-                if (useDefaultsMode == "reference") {
+                if (useDefaultsMode === "reference") {
                     expect(data2.items).to.be.deep.equal(["a-default", "another-value"]);
-                } else if (useDefaultsMode == "value") {
+                } else if (useDefaultsMode === "value") {
                     expect(data2.items).to.be.deep.equal(["a-default"]);
                 } else {
                     throw new Error("unknown useDefaults mode");

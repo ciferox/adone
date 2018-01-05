@@ -36,6 +36,6 @@ re = /a/ /* comment */
 re = /a/g /* comment */
 
 silly = /a/ ? true : false
-if (/a/ == "/a/") {}
+if (/a/ === "/a/") {}
 if (/a/ && foo) {}
 if (/a/ || foo) {}

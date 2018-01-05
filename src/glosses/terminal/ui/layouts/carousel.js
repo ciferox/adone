@@ -43,10 +43,10 @@ export default class Carousel {
 
         if (this.options.controlKeys) {
             this.screen.key(["right", "left"], (ch, key) => {
-                if (key.name == "right") {
+                if (key.name === "right") {
                     self.next();
                 }
-                if (key.name == "left") {
+                if (key.name === "left") {
                     self.prev();
                 }
             });

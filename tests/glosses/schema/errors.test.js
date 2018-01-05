@@ -78,9 +78,9 @@ describe("schema", "validation errors", () => {
             shouldBeError(fullValidate.errors[0], "additionalProperties", "#/additionalProperties", path("/baz"), undefined, { additionalProperty: "baz" });
             shouldBeError(fullValidate.errors[1], "additionalProperties", "#/additionalProperties", path("/quux"), undefined, { additionalProperty: "quux" });
 
-            if (errorDataPath == "property") {
+            if (errorDataPath === "property") {
                 fullValidate.errors.filter((err) => {
-                    return err.keyword == "additionalProperties";
+                    return err.keyword === "additionalProperties";
                 }).map((err) => {
                     return fullInstance._opts.jsonPointers ? err.dataPath.substr(1) : err.dataPath.slice(2, -2);
                 }).forEach((p) => {
@@ -384,13 +384,13 @@ describe("schema", "validation errors", () => {
 
     function pathFunc(errorDataPath) {
         return function (dataPath) {
-            return errorDataPath == "property" ? dataPath : "";
+            return errorDataPath === "property" ? dataPath : "";
         };
     }
 
     function msgFunc(errorDataPath) {
         return function (prop) {
-            return errorDataPath == "property" ? "is a required property" : `should have required property '${prop}'`;
+            return errorDataPath === "property" ? "is a required property" : `should have required property '${prop}'`;
         };
     }
 

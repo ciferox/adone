@@ -1,13 +1,13 @@
 const parser = exports;
 
 const constants = require("./constants");
-const assert = require("assert");
-const util = require("util");
 const OffsetBuffer = require("obuf");
 
 const {
+    assert,
     is,
-    net: { spdy: transport }
+    net: { spdy: transport },
+    std: { util }
 } = adone;
 
 const base = transport.protocol.base;

@@ -332,7 +332,7 @@ describe("data", "bson", () => {
     });
 
     it("should correctly serialize and deserialize Buffer", () => {
-        const doc = { doc: new Buffer("hello world") };
+        const doc = { doc: Buffer.from("hello world") };
         const serializedData = new BSON().serialize(doc);
 
         const serializedData2 = new Buffer(new BSON().calculateObjectSize(doc));
@@ -345,7 +345,7 @@ describe("data", "bson", () => {
     });
 
     it("should correctly serialize and deserialize Buffer with promoteBuffers option", () => {
-        const doc = { doc: new Buffer("hello world") };
+        const doc = { doc: Buffer.from("hello world") };
         const serializedData = new BSON().serialize(doc);
 
         const serializedData2 = new Buffer(new BSON().calculateObjectSize(doc));
@@ -551,7 +551,7 @@ describe("data", "bson", () => {
     });
 
     it("should correctly serialize and deserialize a Type 2 Binary object", () => {
-        const bin = new Binary(new Buffer("binstring"), Binary.SUBTYPE_BYTE_ARRAY);
+        const bin = new Binary(Buffer.from("binstring"), Binary.SUBTYPE_BYTE_ARRAY);
         const string = "binstring";
         for (let index = 0; index < string.length; index++) {
             bin.put(string.charAt(index));
@@ -912,7 +912,7 @@ describe("data", "bson", () => {
         serializedData2 = new BSON().serialize(doc2, false, true);
 
         for (let i = 0; i < serializedData2.length; i++) {
-            require("assert").equal(serializedData2[i], serializedData[i]);
+            assert.equal(serializedData2[i], serializedData[i]);
         }
     });
 
@@ -940,7 +940,7 @@ describe("data", "bson", () => {
         serializedData2 = new BSON().serialize(doc2, false, true);
 
         for (let i = 0; i < serializedData2.length; i++) {
-            require("assert").equal(serializedData2[i], serializedData[i]);
+            assert.equal(serializedData2[i], serializedData[i]);
         }
     });
 
@@ -979,7 +979,7 @@ describe("data", "bson", () => {
         serializedData2 = new BSON().serialize(doc);
 
         for (let i = 0; i < serializedData2.length; i++) {
-            require("assert").equal(serializedData2[i], serializedData[i]);
+            assert.equal(serializedData2[i], serializedData[i]);
         }
     });
 

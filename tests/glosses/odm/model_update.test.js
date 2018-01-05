@@ -1879,7 +1879,7 @@ describe("model: update:", () => {
 
             var ModelA = db.model('gh3890', ModelASchema);
 
-            var propValue = new Buffer('aa267824dc1796f265ab47870e279780', 'base64');
+            var propValue = Buffer.from('aa267824dc1796f265ab47870e279780', 'base64');
 
             var update = {
                 $push: {
@@ -1900,7 +1900,7 @@ describe("model: update:", () => {
 
             var Model = db.model('gh3961', schema);
 
-            var value = new Buffer('aa267824dc1796f265ab47870e279780', 'base64');
+            var value = Buffer.from('aa267824dc1796f265ab47870e279780', 'base64');
             var instance = new Model({ name: null });
 
             instance.save(function (error) {

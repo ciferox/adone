@@ -1,9 +1,3 @@
-
-
-
-const assert = require("assert");
-
-
 function testHandler(actual) {
     const expected = testHandler.expected;
 

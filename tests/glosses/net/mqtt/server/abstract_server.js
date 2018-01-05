@@ -1666,7 +1666,7 @@ module.exports = function (moscaSettings, createConnection) {
 
     it("should support overriding the payload during authorization", (done) => {
         instance.authorizePublish = function (client, topic, payload, callback) {
-            callback(null, new Buffer("rewritten"));
+            callback(null, Buffer.from("rewritten"));
         };
 
         instance.on("published", (packet) => {
@@ -1910,7 +1910,7 @@ module.exports = function (moscaSettings, createConnection) {
                         client.publish({
                             topic: "hello",
                             qos: 1,
-                            payload: new Buffer("world world"),
+                            payload: Buffer.from("world world"),
                             messageId: 42,
                             retain: true
                         });
@@ -1990,7 +1990,7 @@ module.exports = function (moscaSettings, createConnection) {
 
                     client.on("connack", (packet) => {
                         for (let c = 1; c <= totalMessages; c++) {
-                            defaultMessage.payload = (c == totalMessages) ? new Buffer("Final Message") : new Buffer(`Message ${c}`);
+                            defaultMessage.payload = (c == totalMessages) ? Buffer.from("Final Message") : Buffer.from(`Message ${c}`);
                             defaultMessage.messageId = 40 + c;
                             client.publish(defaultMessage);
                         }

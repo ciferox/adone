@@ -1,7 +1,6 @@
 import matcher from "./support/match";
 const mm = adone.util.match;
 
-const assert = require("assert");
 const path = require("path");
 const sep = path.sep;
 

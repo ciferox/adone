@@ -4,7 +4,6 @@ import mm from "./support/match";
 const { is } = adone;
 
 const path = require("path");
-const assert = require("assert");
 const isWindows = require("is-windows");
 const extend = require("extend-shallow");
 

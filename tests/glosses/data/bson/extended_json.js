@@ -1,13 +1,17 @@
+const {
+    is
+} = adone;
+
 const bson = adone.data.bson;
-let Binary = bson.Binary,
-    Long = bson.Long,
-    MaxKey = bson.MaxKey,
-    MinKey = bson.MinKey,
-    BSONRegExp = bson.BSONRegExp,
-    Timestamp = bson.Timestamp,
-    ObjectId = bson.ObjectId,
-    Code = bson.Code,
-    Decimal128 = bson.Decimal128;
+const Binary = bson.Binary;
+const Long = bson.Long;
+const MaxKey = bson.MaxKey;
+const MinKey = bson.MinKey;
+const BSONRegExp = bson.BSONRegExp;
+const Timestamp = bson.Timestamp;
+const ObjectId = bson.ObjectId;
+const Code = bson.Code;
+const Decimal128 = bson.Decimal128;
 
 const serialize = function (document) {
     if (document && typeof document === "object") {
@@ -21,7 +25,7 @@ const serialize = function (document) {
         for (var i = 0; i < keys.length; i++) {
             const name = keys[i];
 
-            if (Array.isArray(document[name])) {
+            if (is.array(document[name])) {
                 // Create a new array
                 doc[name] = new Array(document[name].length);
                 // Process all the items
@@ -29,32 +33,32 @@ const serialize = function (document) {
                     doc[name][i] = serialize(document[name][i]);
                 }
             } else if (document[name] && typeof document[name] === "object") {
-                if (document[name] instanceof Binary || document[name]._bsontype == "Binary") {
+                if (document[name] instanceof Binary || document[name]._bsontype === "Binary") {
                     doc[name] = {
-                        $binary: document[name].buffer.toString("base64"), $type: new Buffer([document[name].subType]).toString("hex")
+                        $binary: document[name].buffer.toString("base64"), $type: Buffer.from([document[name].subType]).toString("hex")
                     };
-                } else if (document[name] instanceof Code || document[name]._bsontype == "Code") {
+                } else if (document[name] instanceof Code || document[name]._bsontype === "Code") {
                     doc[name] = { $code: document[name].code };
                     if (document[name].scope) {
                         doc[name].$scope = document[name].scope;
                     }
                 } else if (document[name] instanceof Date) {
                     doc[name] = { $date: document[name].toISOString() };
-                } else if (document[name] instanceof Long || document[name]._bsontype == "Long") {
+                } else if (document[name] instanceof Long || document[name]._bsontype === "Long") {
                     doc[name] = { $numberLong: document[name].toString() };
-                } else if (document[name] instanceof MaxKey || document[name]._bsontype == "MaxKey") {
+                } else if (document[name] instanceof MaxKey || document[name]._bsontype === "MaxKey") {
                     doc[name] = { $maxKey: true };
-                } else if (document[name] instanceof MinKey || document[name]._bsontype == "MinKey") {
+                } else if (document[name] instanceof MinKey || document[name]._bsontype === "MinKey") {
                     doc[name] = { $minKey: true };
-                } else if (document[name] instanceof ObjectId || document[name]._bsontype == "ObjectId") {
+                } else if (document[name] instanceof ObjectId || document[name]._bsontype === "ObjectId") {
                     doc[name] = { $oid: document[name].toString() };
                 } else if (document[name] instanceof BSONRegExp) {
                     doc[name] = { $regex: document[name].pattern, $options: document[name].options };
-                } else if (document[name] instanceof Timestamp || document[name]._bsontype == "Timestamp") {
+                } else if (document[name] instanceof Timestamp || document[name]._bsontype === "Timestamp") {
                     doc[name] = { $timestamp: { t: document[name].high, i: document[name].low } };
-                } else if (document[name] instanceof Decimal128 || document[name]._bsontype == "Decimal128") {
+                } else if (document[name] instanceof Decimal128 || document[name]._bsontype === "Decimal128") {
                     doc[name] = { $numberDecimal: document[name].toString() };
-                } else if (document[name] === undefined) {
+                } else if (is.undefined(document[name])) {
                     doc[name] = { $undefined: true };
                 } else {
                     doc[name] = serialize(document[name]);
@@ -75,7 +79,7 @@ const deserialize = function (document) {
         const doc = {};
 
         for (const name in document) {
-            if (Array.isArray(document[name])) {
+            if (is.array(document[name])) {
                 // Create a new array
                 doc[name] = new Array(document[name].length);
                 // Process all the items
@@ -83,16 +87,16 @@ const deserialize = function (document) {
                     doc[name][i] = deserialize(document[name][i]);
                 }
             } else if (document[name] && typeof document[name] === "object") {
-                if (document[name].$binary != undefined) {
+                if (!is.nil(document[name].$binary)) {
                     const buffer = new Buffer(document[name].$binary, "base64");
                     const type = new Buffer(document[name].$type, "hex")[0];
                     doc[name] = new Binary(buffer, type);
-                } else if (document[name].$code != undefined) {
+                } else if (!is.nil(document[name].$code)) {
                     const code = document[name].$code;
                     const scope = document[name].$scope;
                     doc[name] = new Code(code, scope);
-                } else if (document[name].$date != undefined) {
-                    if (typeof document[name].$date === "string") {
+                } else if (!is.nil(document[name].$date)) {
+                    if (is.string(document[name].$date)) {
                         doc[name] = new Date(document[name].$date);
                     } else if (typeof document[name].$date === "object"
                         && document[name].$date.$numberLong) {
@@ -101,21 +105,21 @@ const deserialize = function (document) {
                         date.setTime(time);
                         doc[name] = date;
                     }
-                } else if (document[name].$numberLong != undefined) {
+                } else if (!is.nil(document[name].$numberLong)) {
                     doc[name] = Long.fromString(document[name].$numberLong);
-                } else if (document[name].$maxKey != undefined) {
+                } else if (!is.nil(document[name].$maxKey)) {
                     doc[name] = new MaxKey();
-                } else if (document[name].$minKey != undefined) {
+                } else if (!is.nil(document[name].$minKey)) {
                     doc[name] = new MinKey();
-                } else if (document[name].$oid != undefined) {
+                } else if (!is.nil(document[name].$oid)) {
                     doc[name] = new ObjectId(new Buffer(document[name].$oid, "hex"));
-                } else if (document[name].$regex != undefined) {
+                } else if (!is.nil(document[name].$regex)) {
                     doc[name] = new BSONRegExp(document[name].$regex, document[name].$options);
-                } else if (document[name].$timestamp != undefined) {
+                } else if (!is.nil(document[name].$timestamp)) {
                     doc[name] = new Timestamp(document[name].$timestamp.i, document[name].$timestamp.t);
-                } else if (document[name].$numberDecimal != undefined) {
+                } else if (!is.nil(document[name].$numberDecimal)) {
                     doc[name] = Decimal128.fromString(document[name].$numberDecimal);
-                } else if (document[name].$undefined != undefined) {
+                } else if (!is.nil(document[name].$undefined)) {
                     doc[name] = undefined;
                 } else {
                     doc[name] = deserialize(document[name]);

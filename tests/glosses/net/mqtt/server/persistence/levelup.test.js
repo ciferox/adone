@@ -43,7 +43,7 @@ describe("mosca.persistence.LevelUp", function () {
             const packet = {
                 topic: "hello/42",
                 qos: 0,
-                payload: new Buffer("world"),
+                payload: Buffer.from("world"),
                 messageId: "42"
             };
 

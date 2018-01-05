@@ -3078,7 +3078,7 @@ function decodeBasicProperties(buffer) {
   return fields;
 }
 
-var Buffer = require("safe-buffer").Buffer, codec = require("./codec"), ints = require("buffer-more-ints"), encodeTable = codec.encodeTable, decodeFields = codec.decodeFields, SCRATCH = Buffer.alloc(16384), EMPTY_OBJECT = Object.freeze({});
+var codec = require("./codec"), ints = require("buffer-more-ints"), encodeTable = codec.encodeTable, decodeFields = codec.decodeFields, SCRATCH = Buffer.alloc(16384), EMPTY_OBJECT = Object.freeze({});
 
 module.exports.constants = {
   FRAME_METHOD: 1,

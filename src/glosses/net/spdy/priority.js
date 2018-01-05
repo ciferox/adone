@@ -1,8 +1,8 @@
 const {
+    assert,
     net: { spdy: { utils } }
 } = adone;
 
-const assert = require("assert");
 const debug = require("debug")("spdy:priority");
 
 const {

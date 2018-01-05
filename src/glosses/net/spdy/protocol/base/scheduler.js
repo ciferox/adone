@@ -1,12 +1,11 @@
 const {
-    net: { spdy: transport }
+    assert,
+    net: { spdy: transport },
+    std: { util, stream: { Readable } }
 } = adone;
 const utils = transport.utils;
 
-const assert = require("assert");
-const util = require("util");
 const debug = require("debug")("spdy:scheduler");
-const Readable = require("readable-stream").Readable;
 
 /**
  * We create following structure in `pending`:

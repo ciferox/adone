@@ -1,6 +1,5 @@
 require("../.."); // adone
 const EventEmitter = require("events");
-const assert = require("assert");
 const path = require("path");
 
 const { is, shani: { Engine } } = adone;

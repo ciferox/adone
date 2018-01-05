@@ -1,8 +1,8 @@
-const assert = require("assert");
 const each = require("async/each");
 const series = require("async/series");
 
 const {
+    assert,
     event: { EventEmitter },
     is,
     multi,

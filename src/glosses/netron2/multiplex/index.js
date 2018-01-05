@@ -1,9 +1,7 @@
-const pump = require("pump");
-
 const {
     netron2: { Connection },
     event: { EventEmitter },
-    stream: { pull, Multiplex }
+    stream: { pull, Multiplex, pump }
 } = adone;
 
 const MULTIPLEX_CODEC = "/mplex/6.7.0";

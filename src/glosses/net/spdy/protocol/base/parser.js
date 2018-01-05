@@ -1,12 +1,12 @@
 const {
     is,
-    net: { spdy: transport }
+    net: { spdy: transport },
+    std: { stream: { Transform }}
 } = adone;
 
 const util = require("util");
 const utils = require("./").utils;
 const OffsetBuffer = require("obuf");
-const Transform = require("readable-stream").Transform;
 
 function Parser(options) {
     Transform.call(this, {

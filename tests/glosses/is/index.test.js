@@ -379,13 +379,13 @@ describe("is", () => {
             describe("buffers", () => {
 
                 it("returns true for same buffers", () => {
-                    assert(is.deepEqual(new Buffer([1]), new Buffer([1])) === true,
-                        "eql(new Buffer([ 1 ]), new Buffer([ 1 ])) === true");
+                    assert(is.deepEqual(Buffer.from([1]), Buffer.from([1])) === true,
+                        "eql(Buffer.from([ 1 ]), Buffer.from([ 1 ])) === true");
                 });
 
                 it("returns false for different buffers", () => {
-                    assert(is.deepEqual(new Buffer([1]), new Buffer([2])) === false,
-                        "eql(new Buffer([ 1 ]), new Buffer([ 2 ])) === false");
+                    assert(is.deepEqual(Buffer.from([1]), Buffer.from([2])) === false,
+                        "eql(Buffer.from([ 1 ]), Buffer.from([ 2 ])) === false");
                 });
 
             });

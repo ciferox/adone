@@ -23,7 +23,7 @@ describe("database", "mysql", "functional", "connection", "encoding", "charset",
             const [rows, fields] = await connection.query("SELECT ?", [payload]);
 
             let iconvEncoding = encoding;
-            if (encoding == "utf8mb4") {
+            if (encoding === "utf8mb4") {
                 iconvEncoding = "utf8";
             }
             assert.equal(mysql.c.charsetEncoding[fields[0].characterSet], iconvEncoding);
@@ -38,7 +38,7 @@ describe("database", "mysql", "functional", "connection", "encoding", "charset",
             const [rows, fields] = await connection.execute("SELECT ? as n", [payload]);
 
             let iconvEncoding = encoding;
-            if (encoding == "utf8mb4") {
+            if (encoding === "utf8mb4") {
                 iconvEncoding = "utf8";
             }
             assert.equal(mysql.c.charsetEncoding[fields[0].characterSet], iconvEncoding);

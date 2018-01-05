@@ -2432,7 +2432,7 @@ describe("model", function () {
         describe("buffers", () => {
             it("should be able to take a buffer as parameter to a BLOB field", function () {
                 return this.BlobUser.create({
-                    data: new Buffer("Sequelize")
+                    data: Buffer.from("Sequelize")
                 }).then((user) => {
                     expect(user).to.be.ok();
                 });
@@ -2441,7 +2441,7 @@ describe("model", function () {
             it("should return a buffer when fetching a blob", function () {
                 const self = this;
                 return this.BlobUser.create({
-                    data: new Buffer("Sequelize")
+                    data: Buffer.from("Sequelize")
                 }).then((user) => {
                     return self.BlobUser.findById(user.id).then((user) => {
                         expect(user.data).to.be.an.instanceOf(Buffer);

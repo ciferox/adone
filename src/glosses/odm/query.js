@@ -610,9 +610,9 @@ export default class Query extends mongo.QueryBuilder {
         const userProvidedFields = this._userProvidedFields || (this._userProvidedFields = {});
         const type = typeof arg;
 
-        if ((type == "string" || Object.prototype.toString.call(arg) === "[object Arguments]") &&
+        if ((type === "string" || Object.prototype.toString.call(arg) === "[object Arguments]") &&
             is.number(arg.length) || is.array(arg)) {
-            if (type == "string") {
+            if (type === "string") {
                 arg = arg.split(/\s+/);
             }
 
@@ -621,7 +621,7 @@ export default class Query extends mongo.QueryBuilder {
                 if (!field) {
                     continue;
                 }
-                const include = field[0] == "-" ? 0 : 1;
+                const include = field[0] === "-" ? 0 : 1;
                 if (include === 0) {
                     field = field.substring(1);
                 }

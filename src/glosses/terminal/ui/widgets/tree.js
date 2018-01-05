@@ -45,7 +45,7 @@ export default class Tree extends adone.terminal.ui.widget.Element {
             node.parent = null;
         }
 
-        if (treeDepth == "" && node.name) {
+        if (treeDepth === "" && node.name) {
             this.lineNbr = 0;
             this.nodeLines[this.lineNbr++] = node;
             lines.push(node.name);

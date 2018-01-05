@@ -1,7 +1,6 @@
 const async = require("async");
 const streamPair = require("stream-pair");
 const fixtures = require("./fixtures");
-const Buffer = require("safe-buffer").Buffer;
 
 const expectData = fixtures.expectData;
 const everyProtocol = fixtures.everyProtocol;

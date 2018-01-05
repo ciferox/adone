@@ -370,7 +370,7 @@ describe("QueryGenerator", () => {
                 context: QueryGenerator
             }, {
                 title: "buffer as where argument",
-                arguments: ["myTable", { where: { field: new Buffer("Sequelize") } }],
+                arguments: ["myTable", { where: { field: Buffer.from("Sequelize") } }],
                 expectation: "SELECT * FROM `myTable` WHERE `myTable`.`field` = X'53657175656c697a65';",
                 context: QueryGenerator
             }, {
@@ -420,7 +420,7 @@ describe("QueryGenerator", () => {
                 arguments: ["myTable", { name: "foo", foo: 1 }],
                 expectation: "INSERT INTO `myTable` (`name`,`foo`) VALUES ('foo',1);"
             }, {
-                arguments: ["myTable", { data: new Buffer("Sequelize") }],
+                arguments: ["myTable", { data: Buffer.from("Sequelize") }],
                 expectation: "INSERT INTO `myTable` (`data`) VALUES (X'53657175656c697a65');"
             }, {
                 arguments: ["myTable", { name: "foo", foo: 1, nullValue: null }],

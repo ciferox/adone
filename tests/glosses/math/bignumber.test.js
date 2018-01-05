@@ -344,7 +344,7 @@ describe("math", "bignumber", () => {
             expect(b.toBuffer({ endian: "big", size: "auto" }).toString("hex")).to.be.deep.equal("0102030405");
             expect(b.toBuffer({ endian: "little", size: "auto" }).toString("hex")).to.be.deep.equal("0504030201");
 
-            const c = new Buffer("000102030405", "hex");
+            const c = Buffer.from("000102030405", "hex");
             expect(BigNumber.fromBuffer(c, { endian: "big", size: "auto" }).toString(16)).to.be.deep.equal("0102030405");
             expect(BigNumber.fromBuffer(c, { endian: "little", size: "auto" }).toString(16)).to.be.deep.equal("050403020100");
         });
@@ -393,7 +393,7 @@ describe("math", "bignumber", () => {
     describe("buf", () => {
 
         it("bufBe", () => {
-            const buf1 = new Buffer([1, 2, 3, 4]);
+            const buf1 = Buffer.from([1, 2, 3, 4]);
             const num = BigNumber.fromBuffer(buf1, { size: 4 }).toNumber();
             expect(num).to.be.deep.equal(Number(Math.pow(256, 3)) + 2 * Math.pow(256, 2) + 3 * 256 + 4);
 
@@ -403,7 +403,7 @@ describe("math", "bignumber", () => {
         });
 
         it("bufLe", () => {
-            const buf1 = new Buffer([1, 2, 3, 4]);
+            const buf1 = Buffer.from([1, 2, 3, 4]);
             const num = BigNumber.fromBuffer(buf1, { size: 4, endian: "little" }).toNumber();
 
             const buf2 = new Buffer(4);
@@ -412,8 +412,8 @@ describe("math", "bignumber", () => {
         });
 
         it("bufBe_le", () => {
-            const bufBe = new Buffer([1, 2, 3, 4, 5, 6, 7, 8]);
-            const bufLe = new Buffer([4, 3, 2, 1, 8, 7, 6, 5]);
+            const bufBe = Buffer.from([1, 2, 3, 4, 5, 6, 7, 8]);
+            const bufLe = Buffer.from([4, 3, 2, 1, 8, 7, 6, 5]);
 
             const numBe = BigNumber.fromBuffer(bufBe, { size: 4, endian: "big" }).toString();
 
@@ -423,8 +423,8 @@ describe("math", "bignumber", () => {
         });
 
         it("buf_high_bits", () => {
-            const bufBe = new Buffer([201, 202, 203, 204, 205, 206, 207, 208]);
-            const bufLe = new Buffer([204, 203, 202, 201, 208, 207, 206, 205]);
+            const bufBe = Buffer.from([201, 202, 203, 204, 205, 206, 207, 208]);
+            const bufLe = Buffer.from([204, 203, 202, 201, 208, 207, 206, 205]);
 
             const numBe = BigNumber.fromBuffer(bufBe, { size: 4, endian: "big" }).toString();
 
@@ -450,7 +450,7 @@ describe("math", "bignumber", () => {
         });
 
         it("toBuf", () => {
-            const buf = new Buffer([0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f]);
+            const buf = Buffer.from([0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f]);
             const b = new BigNumber(0x0a * 256 * 256 * 256 * 256 * 256 + 0x0b * 256 * 256 * 256 * 256 + 0x0c * 256 * 256 * 256 + 0x0d * 256 * 256 + 0x0e * 256 + 0x0f);
 
             expect(b.toString(16)).to.be.deep.equal("0a0b0c0d0e0f");
@@ -483,11 +483,11 @@ describe("math", "bignumber", () => {
             // http://tools.ietf.org/html/rfc4251#page-10
 
             const refs = {
-                0: new Buffer([0x00, 0x00, 0x00, 0x00]),
-                "9a378f9b2e332a7": new Buffer([0x00, 0x00, 0x00, 0x08, 0x09, 0xa3, 0x78, 0xf9, 0xb2, 0xe3, 0x32, 0xa7]),
-                80: new Buffer([0x00, 0x00, 0x00, 0x02, 0x00, 0x80]),
-                "-1234": new Buffer([0x00, 0x00, 0x00, 0x02, 0xed, 0xcc]),
-                "-deadbeef": new Buffer([0x00, 0x00, 0x00, 0x05, 0xff, 0x21, 0x52, 0x41, 0x11])
+                0: Buffer.from([0x00, 0x00, 0x00, 0x00]),
+                "9a378f9b2e332a7": Buffer.from([0x00, 0x00, 0x00, 0x08, 0x09, 0xa3, 0x78, 0xf9, 0xb2, 0xe3, 0x32, 0xa7]),
+                80: Buffer.from([0x00, 0x00, 0x00, 0x02, 0x00, 0x80]),
+                "-1234": Buffer.from([0x00, 0x00, 0x00, 0x02, 0xed, 0xcc]),
+                "-deadbeef": Buffer.from([0x00, 0x00, 0x00, 0x05, 0xff, 0x21, 0x52, 0x41, 0x11])
             };
 
             Object.keys(refs).forEach((key) => {

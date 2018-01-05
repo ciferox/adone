@@ -1,7 +1,6 @@
-const assert = require("assert");
-
 const {
     is,
+    assert,
     std: { url, http, https, stream: { Writable } }
 } = adone;
 

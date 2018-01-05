@@ -1,4 +1,3 @@
-const assert = require("assert");
 const { is } = adone;
 const { Snapdragon } = adone.util;
 const { Parser, Compiler, Node, util } = adone.private(Snapdragon);

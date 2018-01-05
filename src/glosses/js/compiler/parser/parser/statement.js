@@ -580,9 +580,9 @@ export default class StatementParser extends ExpressionParser {
     node.body = this.parseStatement(true);
 
     if (
-      node.body.type == "ClassDeclaration" ||
-      (node.body.type == "VariableDeclaration" && node.body.kind !== "var") ||
-      (node.body.type == "FunctionDeclaration" &&
+      node.body.type === "ClassDeclaration" ||
+      (node.body.type === "VariableDeclaration" && node.body.kind !== "var") ||
+      (node.body.type === "FunctionDeclaration" &&
         (this.state.strict || node.body.generator || node.body.async))
     ) {
       this.raise(node.body.start, "Invalid labeled declaration");

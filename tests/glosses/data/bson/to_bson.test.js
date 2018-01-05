@@ -1,6 +1,8 @@
-describe("data", "bson", "to bson", () => {
-    const { data: { bson: { BSON, ObjectId } } } = adone;
+const {
+    data: { bson: { BSON, ObjectId } }
+} = adone;
 
+describe("data", "bson", "to bson", () => {
     it("should correctly handle toBson function for an object", () => {
         const doc = {
             hello: new ObjectId(),

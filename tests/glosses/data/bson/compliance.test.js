@@ -1,17 +1,17 @@
-describe("data", "bson", "compliance", () => {
-    const { data: { bson }, is } = adone;
-    const {
-        BSON,
-        Code,
-        Binary,
-        Timestamp,
-        Long,
-        ObjectId,
-        DBRef,
-        MinKey,
-        MaxKey
-    } = bson;
+const { data: { bson }, is } = adone;
+const {
+    BSON,
+    Code,
+    Binary,
+    Timestamp,
+    Long,
+    ObjectId,
+    DBRef,
+    MinKey,
+    MaxKey
+} = bson;
 
+describe("data", "bson", "compliance", () => {
     it("should pass all corrupt BSON scenarios ./compliance/corrupt.json", () => {
         // Read and parse the json file
         const scenarios = require(`${__dirname}/compliance/corrupt`);
@@ -28,7 +28,7 @@ describe("data", "bson", "compliance", () => {
             let err;
             try {
                 // Create a buffer containing the payload
-                const buffer = new Buffer(doc.encoded, "hex");
+                const buffer = Buffer.from(doc.encoded, "hex");
                 // Attempt to deserialize
                 bson.deserialize(buffer);
             } catch (_err) {

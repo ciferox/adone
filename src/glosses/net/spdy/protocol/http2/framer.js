@@ -1,13 +1,13 @@
 const {
+    assert,
     is,
-    net: { spdy: transport }
+    net: { spdy: transport },
+    std: { util }
 } = adone;
 
 const base = transport.protocol.base;
 const constants = require("./").constants;
 
-const assert = require("assert");
-const util = require("util");
 const WriteBuffer = require("wbuf");
 const OffsetBuffer = require("obuf");
 const debug = require("debug")("spdy:framer");

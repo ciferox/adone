@@ -9,8 +9,8 @@ describe("net", "http", "server", "response", "body", () => {
             it("should not override", () => {
                 const res = response();
                 res.type = "png";
-                res.body = new Buffer("something");
-                assert(res.header["content-type"] == "image/png");
+                res.body = Buffer.from("something");
+                assert(res.header["content-type"] === "image/png");
             });
 
             describe("when body is an object", () => {
@@ -18,10 +18,10 @@ describe("net", "http", "server", "response", "body", () => {
                     const res = response();
 
                     res.body = "<em>hey</em>";
-                    assert(res.header["content-type"] == "text/html; charset=utf-8");
+                    assert(res.header["content-type"] === "text/html; charset=utf-8");
 
                     res.body = { foo: "bar" };
-                    assert(res.header["content-type"] == "application/json; charset=utf-8");
+                    assert(res.header["content-type"] === "application/json; charset=utf-8");
                 });
             });
 
@@ -37,20 +37,20 @@ describe("net", "http", "server", "response", "body", () => {
             it("should default to text", () => {
                 const res = response();
                 res.body = "Hello";
-                assert(res.header["content-type"] == "text/plain; charset=utf-8");
+                assert(res.header["content-type"] === "text/plain; charset=utf-8");
             });
 
             it("should set length", () => {
                 const res = response();
                 res.body = "Hello";
-                assert(res.header["content-length"] == "5");
+                assert(res.header["content-length"] === "5");
             });
 
             describe("and contains a non-leading <", () => {
                 it("should default to text", () => {
                     const res = response();
                     res.body = "aklsdjf < klajsdlfjasd";
-                    assert(res.header["content-type"] == "text/plain; charset=utf-8");
+                    assert(res.header["content-type"] === "text/plain; charset=utf-8");
                 });
             });
         });
@@ -59,7 +59,7 @@ describe("net", "http", "server", "response", "body", () => {
             it("should default to html", () => {
                 const res = response();
                 res.body = "<h1>Hello</h1>";
-                assert(res.header["content-type"] == "text/html; charset=utf-8");
+                assert(res.header["content-type"] === "text/html; charset=utf-8");
             });
 
             it("should set length", () => {
@@ -81,7 +81,7 @@ describe("net", "http", "server", "response", "body", () => {
                 it("should default to html", () => {
                     const res = response();
                     res.body = "    <h1>Hello</h1>";
-                    assert(res.header["content-type"] == "text/html; charset=utf-8");
+                    assert(res.header["content-type"] === "text/html; charset=utf-8");
                 });
             });
         });
@@ -97,7 +97,7 @@ describe("net", "http", "server", "response", "body", () => {
 
                 const res = response();
                 res.body = '<?xml version="1.0" encoding="UTF-8"?>\n<俄语>данные</俄语>';
-                assert(res.header["content-type"] == "text/html; charset=utf-8");
+                assert(res.header["content-type"] === "text/html; charset=utf-8");
             });
         });
 
@@ -107,7 +107,7 @@ describe("net", "http", "server", "response", "body", () => {
                 const stream = fs.createReadStream(__filename);
                 res.body = stream;
                 try {
-                    assert(res.header["content-type"] == "application/octet-stream");
+                    assert(res.header["content-type"] === "application/octet-stream");
                 } finally {
                     stream.destroy();
                 }
@@ -117,14 +117,14 @@ describe("net", "http", "server", "response", "body", () => {
         describe("when a buffer is given", () => {
             it("should default to an octet stream", () => {
                 const res = response();
-                res.body = new Buffer("hey");
-                assert(res.header["content-type"] == "application/octet-stream");
+                res.body = Buffer.from("hey");
+                assert(res.header["content-type"] === "application/octet-stream");
             });
 
             it("should set length", () => {
                 const res = response();
-                res.body = new Buffer("Hello");
-                assert(res.header["content-length"] == "5");
+                res.body = Buffer.from("Hello");
+                assert(res.header["content-length"] === "5");
             });
         });
 
@@ -132,7 +132,7 @@ describe("net", "http", "server", "response", "body", () => {
             it("should default to json", () => {
                 const res = response();
                 res.body = { foo: "bar" };
-                assert(res.header["content-type"] == "application/json; charset=utf-8");
+                assert(res.header["content-type"] === "application/json; charset=utf-8");
             });
         });
     });

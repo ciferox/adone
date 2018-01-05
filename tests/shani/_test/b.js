@@ -1,5 +1,3 @@
-const assert = require("assert");
-
 /*eslint no-undef:0*/
 describe("first", () => {
     before(() => {

@@ -80,7 +80,7 @@ describe("database", "mongo", "QueryBuilder", "util", () => {
         });
 
         it("clones Binary", (done) => {
-            const buf = new Buffer("hi");
+            const buf = Buffer.from("hi");
             const binary = new adone.data.bson.Binary(buf, 2);
             const clone = util.clone(binary);
             assert.equal(binary.sub_type, clone.sub_type);

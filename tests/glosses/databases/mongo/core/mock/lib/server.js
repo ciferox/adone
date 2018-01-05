@@ -104,7 +104,7 @@ Server.prototype.receive = function () {
 
     return new Promise((resolve, reject) => {
         var waiting = function () {
-            if (self.state == "destroyed") {
+            if (self.state === "destroyed") {
                 return reject(new Error("mock server is in destroyed state"));
             }
 

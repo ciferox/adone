@@ -1,11 +1,12 @@
 import { BinaryParser } from "./binary_parser";
 
-describe("data", "bson", "full", () => {
-    const {
-        data: { bson: { BSON, ObjectId, Binary, BSONRegExp } },
-        std: { fs, assert, path }
-    } = adone;
+const {
+    is,
+    data: { bson: { BSON, ObjectId, Binary, BSONRegExp } },
+    std: { fs, assert, path }
+} = adone;
 
+describe("data", "bson", "full", () => {
     const serializer = new BSON();
 
     it("should correctly deserialize object", () => {
@@ -29,7 +30,7 @@ describe("data", "bson", "full", () => {
             serializedВata = serializedВata + BinaryParser.fromByte(bytes[i]);
         }
 
-        const object = serializer.deserialize(new Buffer(serializedВata, "binary"));
+        const object = serializer.deserialize(Buffer.from(serializedВata, "binary"));
         assert.equal("a_1", object.name);
         assert.equal(false, object.unique);
         assert.equal(1, object.key.a);
@@ -79,21 +80,21 @@ describe("data", "bson", "full", () => {
             serializedВata = serializedВata + BinaryParser.fromByte(bytes[i]);
         }
 
-        const object = serializer.deserialize(new Buffer(serializedВata, "binary"));
+        const object = serializer.deserialize(Buffer.from(serializedВata, "binary"));
         assert.equal("hello", object.string);
         assert.deepEqual([1, 2, 3], object.array);
         assert.equal(1, object.hash.a);
         assert.equal(2, object.hash.b);
-        assert.ok(object.date !== null);
-        assert.ok(object.oid !== null);
-        assert.ok(object.binary !== null);
+        assert.ok(!is.null(object.date));
+        assert.ok(!is.null(object.oid));
+        assert.ok(!is.null(object.binary));
         assert.equal(42, object.int);
         assert.equal(33.3333, object.float);
-        assert.ok(object.regexp !== null);
+        assert.ok(!is.null(object.regexp));
         assert.equal(true, object.boolean);
-        assert.ok(object.where !== null);
-        assert.ok(object.dbref !== null);
-        assert.ok(object.null === null);
+        assert.ok(!is.null(object.where));
+        assert.ok(!is.null(object.dbref));
+        assert.ok(is.null(object.null));
     });
 
     it("should serialize and deserialize String", () => {
@@ -118,7 +119,7 @@ describe("data", "bson", "full", () => {
     it("should correctly serialize and deserialize undefined value", () => {
         const testUndefined = { doc: undefined };
         const serializedData = serializer.serialize(testUndefined);
-        const object = serializer.deserialize(new Buffer(serializedData, "binary"));
+        const object = serializer.deserialize(Buffer.from(serializedData, "binary"));
         assert.equal(null, object.doc);
     });
 
@@ -194,14 +195,14 @@ describe("data", "bson", "full", () => {
     });
 
     it("should correctly serialize and deserialize Buffer", () => {
-        const doc = { doc: new Buffer("123451234512345") };
+        const doc = { doc: Buffer.from("123451234512345") };
         const serializedData = serializer.serialize(doc);
 
         assert.equal("123451234512345", serializer.deserialize(serializedData).doc.buffer.toString("ascii"));
     });
 
     it("should correctly serialize and deserialize Buffer with promoteBuffers option", () => {
-        const doc = { doc: new Buffer("123451234512345") };
+        const doc = { doc: Buffer.from("123451234512345") };
         const serializedData = serializer.serialize(doc);
 
         const options = { promoteBuffers: true };
@@ -273,7 +274,7 @@ describe("data", "bson", "full", () => {
     });
 
     it("should correctly fail due to attempting serialization of illegal key values", () => {
-        const k = new Buffer(15);
+        const k = Buffer.alloc(15);
         for (let i = 0; i < 15; i++) {
             k[i] = 0;
         }
@@ -282,7 +283,7 @@ describe("data", "bson", "full", () => {
         k[6] = 0x06;
         k.write("world", 10);
 
-        const v = new Buffer(65801);
+        const v = Buffer.alloc(65801);
         for (let i = 0; i < 65801; i++) {
             v[i] = 1;
         }

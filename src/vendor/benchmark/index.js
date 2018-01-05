@@ -604,7 +604,7 @@
          * @returns {boolean} Returns `true` if the value is of the specified class, else `false`.
          */
          function isClassOf(value, name) {
-             return value != null && toString.call(value) == "[object " + name + "]";
+             return value != null && toString.call(value) === "[object " + name + "]";
          }
 
         /**
@@ -913,7 +913,7 @@
              function isAsync(object) {
                 // Avoid using `instanceof` here because of IE memory leak issues with host objects.
                 const async = args[0] && args[0].async;
-                return name == "run" && (object instanceof Benchmark) &&
+                return name === "run" && (object instanceof Benchmark) &&
                     ((async == null ? object.options.async : async) && support.timeout || object.defer);
             }
 
@@ -952,7 +952,7 @@
                 options.onStart.call(benches, Event(eventProps));
 
                 // End early if the suite was aborted in an "onStart" listener.
-                if (name == "run" && (benches instanceof Suite) && benches.aborted) {
+                if (name === "run" && (benches instanceof Suite) && benches.aborted) {
                     // Emit "cycle" event.
                     eventProps.type = "cycle";
                     options.onCycle.call(benches, Event(eventProps));
@@ -1674,12 +1674,12 @@
                 });
 
                 // Use API of chosen timer.
-                if (timer.unit == "ns") {
+                if (timer.unit === "ns") {
                     _.assign(templateData, {
                         "begin": interpolate("s#=n#()"),
                         "end": interpolate("r#=n#(s#);r#=r#[0]+(r#[1]/1e9)")
                     });
-                }                else if (timer.unit == "us") {
+                }                else if (timer.unit === "us") {
                     if (timer.ns.stop) {
                         _.assign(templateData, {
                             "begin": interpolate("s#=n#.start()"),
@@ -1734,7 +1734,7 @@
 
                 // Get average smallest measurable time.
                 while (count--) {
-                    if (unit == "us") {
+                    if (unit === "us") {
                         divisor = 1e6;
                         if (ns.stop) {
                             ns.start();
@@ -1743,7 +1743,7 @@
                             begin = ns();
                             while (!(measured = ns() - begin)) { }
                         }
-                    }                    else if (unit == "ns") {
+                    }                    else if (unit === "ns") {
                         divisor = 1e9;
                         begin = (begin = ns())[0] + (begin[1] / divisor);
                         while (!(measured = ((measured = ns())[0] + (measured[1] / divisor)) - begin)) { }
@@ -1849,14 +1849,14 @@
                     type = event.type;
 
                 if (bench.running) {
-                    if (type == "start") {
+                    if (type === "start") {
                         // Note: `clone.minTime` prop is inited in `clock()`.
                         clone.count = bench.initCount;
                     }                    else {
-                        if (type == "error") {
+                        if (type === "error") {
                             bench.error = clone.error;
                         }
-                        if (type == "abort") {
+                        if (type === "abort") {
                             bench.abort();
                             bench.emit("cycle");
                         } else {

@@ -1,7 +1,3 @@
-
-
-const assert = require("assert");
-
 const expected = [
     0.0,
     1.0,

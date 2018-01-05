@@ -47,7 +47,7 @@ describe("mosca.persistence.Redis", function () {
             const packet = {
                 topic: "hello/42",
                 qos: 0,
-                payload: new Buffer("world"),
+                payload: Buffer.from("world"),
                 messageId: "42"
             };
 
@@ -106,7 +106,7 @@ describe("mosca.persistence.Redis", function () {
             const packet = {
                 topic: "hello/43",
                 qos: 0,
-                payload: new Buffer("world"),
+                payload: Buffer.from("world"),
                 messageId: "43"
             };
 
@@ -140,7 +140,7 @@ describe("mosca.persistence.Redis", function () {
             const packet = {
                 topic: "hello/42",
                 qos: 0,
-                payload: new Buffer("world"),
+                payload: Buffer.from("world"),
                 messageId: "42"
             };
 
@@ -188,7 +188,7 @@ describe("mosca.persistence.Redis", function () {
             const packet = {
                 topic: "hello/46",
                 qos: 0,
-                payload: new Buffer("world"),
+                payload: Buffer.from("world"),
                 messageId: "46"
             };
 
@@ -211,13 +211,13 @@ describe("mosca.persistence.Redis", function () {
             let firstPacket = {
                 topic: "hello/46",
                 qos: 0,
-                payload: new Buffer("world"),
+                payload: Buffer.from("world"),
                 messageId: "46"
             },
                 secondPacket = {
                     topic: "hello/47",
                     qos: 0,
-                    payload: new Buffer("mosca"),
+                    payload: Buffer.from("mosca"),
                     messageId: "47"
                 };
 
@@ -264,7 +264,7 @@ describe("mosca.persistence.Redis", function () {
             const packet = {
                 topic: "hello/42",
                 qos: 0,
-                payload: new Buffer("world"),
+                payload: Buffer.from("world"),
                 messageId: "42"
             };
 

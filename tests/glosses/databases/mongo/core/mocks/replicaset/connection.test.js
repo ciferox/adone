@@ -1317,7 +1317,7 @@ describe("database", "mongo", "core", function () {
 
                         await new Promise((resolve) => {
                             server.on("joined", (_type) => {
-                                if (_type == "arbiter" || _type == "secondary" || _type == "primary") {
+                                if (_type === "arbiter" || _type === "secondary" || _type === "primary") {
                                     if (server.s.replicaSetState.secondaries.length == 1 &&
                                         server.s.replicaSetState.arbiters.length == 1 &&
                                         server.s.replicaSetState.primary) {
