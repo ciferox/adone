@@ -1,12 +1,12 @@
 const debug = require("debug");
-const base32 = require("base32.js");
-const distance = require("xor-distance");
 const map = require("async/map");
 
 const {
+    data: { base32 },
     datastore: { Key },
     netron2: { PeerId, record: { Record } },
-    multi
+    multi,
+    util: { xorDistance }
 } = adone;
 
 /**
@@ -100,7 +100,7 @@ exports.sortClosestPeers = (peers, target, callback) => {
 
             cb(null, {
                 peer,
-                distance: distance(id, target)
+                distance: xorDistance.create(id, target)
             });
         } catch (err) {
             cb(err);
@@ -122,7 +122,7 @@ exports.sortClosestPeers = (peers, target, callback) => {
  * @returns {number}
  */
 exports.xorCompare = (a, b) => {
-    return distance.compare(a.distance, b.distance);
+    return xorDistance.compare(a.distance, b.distance);
 };
 
 /**

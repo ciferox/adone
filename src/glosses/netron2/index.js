@@ -20,7 +20,8 @@ adone.lazify({
     secio: "./secio",
     identify: "./identify",
     floodsub: "./floodsub",
-    rendezvous: "./ws_star_rendezvous"
+    rendezvous: "./ws_star_rendezvous",
+    KBucket: "./k_bucket"
 }, adone.asNamespace(exports), require);
 
 // export const crypto = require("libp2p-crypto");

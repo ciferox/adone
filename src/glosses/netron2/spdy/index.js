@@ -1,6 +1,5 @@
-const spdy = require("spdy-transport");
-
 const {
+    net: { spdy },
     stream: { pull }
 } = adone;
 

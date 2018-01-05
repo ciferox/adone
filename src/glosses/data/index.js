@@ -7,6 +7,7 @@ adone.lazify({
     base64url: "./base64url",
     yaml: "./yaml",
     basex: "./basex",
+    base32: "./base32",
     base58: "./base58",
     varint: "./varint",
     varintSigned: "./varint_signed",

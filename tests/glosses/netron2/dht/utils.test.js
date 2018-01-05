@@ -1,10 +1,10 @@
-const base32 = require("base32.js");
-const distance = require("xor-distance");
 const waterfall = require("async/waterfall");
 const { makePeers } = require("./utils");
 
 const {
-    netron2: { dht, PeerId }
+    data: { base32 },
+    netron2: { dht, PeerId },
+    util: { xorDistance }
 } = adone;
 const { utils } = adone.private(dht);
 
@@ -71,10 +71,10 @@ describe("utils", () => {
         it("sorts two distances", () => {
             const target = Buffer.from("11140beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a90");
             const a = {
-                distance: distance(Buffer.from("11140beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a95"), target)
+                distance: xorDistance.create(Buffer.from("11140beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a95"), target)
             };
             const b = {
-                distance: distance(Buffer.from("11140beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a96"), target)
+                distance: xorDistance.create(Buffer.from("11140beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a96"), target)
             };
 
             expect(utils.xorCompare(a, b)).to.eql(-1);

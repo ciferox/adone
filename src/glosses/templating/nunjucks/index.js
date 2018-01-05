@@ -13,7 +13,7 @@ const nunjucks = adone.lazify({
     x: "./x",
     nodes: "./nodes",
     installJinjaCompat: "./jinja_compat"
-}, exports, require);
+}, adone.asNamespace(exports), require);
 
 // A single instance of an environment, since this is so commonly used
 let environment = null;

@@ -1,4 +1,3 @@
-const cache = require("hashlru");
 const each = require("async/each");
 const c = require("./constants");
 const utils = require("./utils");
@@ -118,7 +117,7 @@ class Providers {
          */
         this.lruCacheSize = cacheSize || c.PROVIDERS_LRU_CACHE_SIZE;
 
-        this.providers = cache(this.lruCacheSize);
+        this.providers = new adone.collection.FastLRU(this.lruCacheSize);
     }
 
     /**

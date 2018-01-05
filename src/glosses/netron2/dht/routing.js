@@ -1,5 +1,8 @@
-const KBucket = require("k-bucket");
 const utils = require("./utils");
+
+const {
+    netron2: { KBucket }
+} = adone;
 
 /**
  * A wrapper around `k-bucket`, to provide easy store and

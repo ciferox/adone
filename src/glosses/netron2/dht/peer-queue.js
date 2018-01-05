@@ -1,6 +1,9 @@
-const Heap = require("heap");
-const distance = require("xor-distance");
 const utils = require("./utils");
+
+const {
+    collection: { Heap },
+    util: { xorDistance }
+} = adone;
 
 /**
  * PeerQueue is a heap that sorts its entries (PeerIds) by their
@@ -53,7 +56,7 @@ class PeerQueue {
         const key = utils.convertPeerId(id);
         const el = {
             id,
-            distance: distance(this.from, key)
+            distance: xorDistance.create(this.from, key)
         };
 
         this.heap.push(el);

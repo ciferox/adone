@@ -264,4 +264,4 @@ doT.process = function (options) {
     return new InstallDots(options).compileAll();
 };
 
-export default doT;
+export default adone.asNamespace(doT);

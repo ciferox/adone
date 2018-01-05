@@ -89,15 +89,15 @@ class RsaPrivateKey {
     }
 
     /**
-   * Gets the ID of the key.
-   *
-   * The key id is the base58 encoding of the SHA-256 multihash of its public key.
-   * The public key is a protobuf encoding containing a type and the DER encoding
-   * of the PKCS SubjectPublicKeyInfo.
-   *
-   * @param {function(Error, id)} callback
-   * @returns {undefined}
-   */
+     * Gets the ID of the key.
+     *
+     * The key id is the base58 encoding of the SHA-256 multihash of its public key.
+     * The public key is a protobuf encoding containing a type and the DER encoding
+     * of the PKCS SubjectPublicKeyInfo.
+     *
+     * @param {function(Error, id)} callback
+     * @returns {undefined}
+     */
     id() {
         const hash = this.public.hash();
         return base58.encode(hash);

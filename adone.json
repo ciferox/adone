@@ -40,6 +40,9 @@
             ],
             "namespace": "adone",
             "struct": {
+                "dev": {
+                    "namespace": "dev"
+                },
                 "cli": {
                     "description": "Adone CLI stuff",
                     "index": "cli/index.js",
@@ -82,13 +85,13 @@
                     "task": "adoneTranspile",
                     "namespace": "assertion"
                 },
-                "collections": {
+                "collection": {
                     "description": "Implementations of common collections",
                     "index": "glosses/collections/index.js",
                     "src": "src/glosses/collections/**/*.js",
                     "dst": "lib/glosses/collections",
                     "task": "adoneTranspile",
-                    "namespace": "collections"
+                    "namespace": "collection"
                 },
                 "compressor": {
                     "description": "Compressors",
