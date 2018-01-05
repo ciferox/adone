@@ -59,9 +59,12 @@ const wrapTest = (test) => {
         description: test.description,
         timeout: test.timeout(),
         isTodo: test.isTodo(),
+        isSlow: test.isSlow(),
         isCancelled: test.isCancelled(),
+        isExclusive: test.isExclusive(),
         cancelReason: test.cancelReason,
         cancelType: test.cancelType,
+        chain: test.chain(),
         meta: test.meta
     };
 };
@@ -101,6 +104,10 @@ class Hook {
         this.meta = meta;
     }
 
+    get dryRun() {
+        return this.block.dryRun;
+    }
+
     fired() {
         return this._fired === true;
     }
@@ -135,6 +142,10 @@ class Hook {
         let unhandledRejection;
         try {
             let p = new Promise((resolve, reject) => {
+                if (this.dryRun) {
+                    resolve();
+                    return;
+                }
                 uncaughtException = reject;
                 unhandledRejection = reject;
                 process.once("uncaughtException", uncaughtException);
@@ -159,9 +170,11 @@ class Hook {
             }
             err = wrapError(_err);
         } finally {
-            delete this.runtimeContext.timeout;
-            process.removeListener("uncaughtException", uncaughtException);
-            process.removeListener("unhandledRejection", unhandledRejection);
+            if (!this.dryRun) {
+                delete this.runtimeContext.timeout;
+                process.removeListener("uncaughtException", uncaughtException);
+                process.removeListener("unhandledRejection", unhandledRejection);
+            }
             s = hrtime(s);
         }
         this._failed = err;
@@ -192,7 +205,7 @@ const generateId = (parent) => {
 };
 
 class Block {
-    constructor(name, parent = null, options) {
+    constructor(name, parent = null, options, dryRun) {
         this.name = name;
         this.hooks = {
             before: [],
@@ -215,6 +228,7 @@ class Block {
         this._watch = false;
         this._disabled = false;
         this._options = options;
+        this.dryRun = dryRun;
         this.id = generateId(parent);
     }
 
@@ -234,6 +248,9 @@ class Block {
                     break;
                 }
                 case "function": {
+                    if (this.dryRun) {
+                        break;
+                    }
                     if (await skip()) {
                         this.skip();
                     }
@@ -256,6 +273,9 @@ class Block {
                     break;
                 }
                 case "function": {
+                    if (this.dryRun) {
+                        break;
+                    }
                     const value = await timeout();
                     if (value < 0) {
                         throw new x.InvalidArgument("timeout: cannot be negative");
@@ -445,6 +465,10 @@ class Test {
         this.id = generateId(block);
     }
 
+    get dryRun() {
+        return this.block.dryRun;
+    }
+
     async prepare() {
         const { _options: options } = this;
         if (!options) {
@@ -461,6 +485,9 @@ class Test {
                     break;
                 }
                 case "function": {
+                    if (this.dryRun) {
+                        break;
+                    }
                     if (await skip()) {
                         this.skip();
                     }
@@ -483,6 +510,9 @@ class Test {
                     break;
                 }
                 case "function": {
+                    if (this.dryRun) {
+                        break;
+                    }
                     const value = await timeout();
                     if (value < 0) {
                         throw new x.InvalidArgument("timeout: cannot be negative");
@@ -562,6 +592,10 @@ class Test {
         let unhandledRejection;
         try {
             let p = new Promise((resolve, reject) => {
+                if (this.dryRun) {
+                    resolve();
+                    return;
+                }
                 uncaughtException = reject;
                 unhandledRejection = reject;
                 process.once("uncaughtException", uncaughtException);
@@ -587,11 +621,13 @@ class Test {
             }
             err = wrapError(_err);
         } finally {
-            delete this.runtimeContext.skip;
-            delete this.runtimeContext.timeout;
+            if (!this.dryRun) {
+                delete this.runtimeContext.skip;
+                delete this.runtimeContext.timeout;
 
-            process.removeListener("uncaughtException", uncaughtException);
-            process.removeListener("unhandledRejection", unhandledRejection);
+                process.removeListener("uncaughtException", uncaughtException);
+                process.removeListener("unhandledRejection", unhandledRejection);
+            }
             s = hrtime(s);
         }
         const elapsed = s[0] * 1e3 + s[1] / 1e6;
@@ -812,7 +848,8 @@ class ExternalRunner {
             skipSlow: this.engine.skipSlow,
             onlySlow: this.engine.onlySlow,
             root: this.engine.root,
-            path: this.path
+            path: this.path,
+            dryRun: this.engine.dryRun
         }).toString("hex"));
         await this.waitForMessage();
     }
@@ -861,7 +898,8 @@ export class Engine {
         skipSlow = false,
         onlySlow = false,
         root = process.cwd(),
-        perProcess = false
+        perProcess = false,
+        dryRun = false
     } = {}) {
         this._paths = []; // path can be a glob or a path
         this.defaultTimeout = defaultTimeout;
@@ -874,6 +912,7 @@ export class Engine {
         this.root = root;
         this.configLoader = new ConfigLoader(root);
         this.perProcess = perProcess;
+        this.dryRun = dryRun;
     }
 
     include(...paths) {
@@ -909,7 +948,7 @@ export class Engine {
                 stack.top.addChild(block);
                 stack.push(block);
             }
-            const block = new Block(args[args.length - 1], stack.top, options);
+            const block = new Block(args[args.length - 1], stack.top, options, this.dryRun);
             stack.top.addChild(block);
             stack.push(block);
 
@@ -1184,7 +1223,7 @@ export class Engine {
                     if (block.children.every((x) => x.isExclusive())) {
                         for (const node of block.children) {
                             if (node instanceof Block) {
-                                executor(node); // should skip all nested the tests
+                                await executor(node); // should skip all nested the tests
                             } else {
                                 emitter.emit("skip test", { block: wrappedBlock, test: wrapTest(node) });
                             }
@@ -1240,7 +1279,6 @@ export class Engine {
                                 // hookFailed should be always false here, so just assign
                                 // hookFailed = meta.hookFailed;
                             } else {
-                                const wrappedNode = wrapTest(node);
                                 const blocksFired = [];
                                 let hookFailed = false;
                                 let err;
@@ -1252,10 +1290,10 @@ export class Engine {
                                         if (stopped) {
                                             break;
                                         }
-                                        emitter.emit("start before each hook", { block: wrappedBlock, test: wrappedNode, hook: wrapHook(hook) });
+                                        emitter.emit("start before each hook", { block: wrappedBlock, test: wrapTest(node), hook: wrapHook(hook) });
                                         // eslint-disable-next-line no-await-in-loop
                                         const meta = await hook.run();
-                                        emitter.emit("end before each hook", { block: wrappedBlock, test: wrappedNode, hook: wrapHook(hook), meta });
+                                        emitter.emit("end before each hook", { block: wrappedBlock, test: wrapTest(node), hook: wrapHook(hook), meta });
                                         if (meta.err) {
                                             err = meta.err;
                                             err.hook = wrapHook(hook);
@@ -1271,16 +1309,16 @@ export class Engine {
                                 if (!stopped) {
                                     if (hookFailed) {
                                         node.cancel(err, "beforeEach");
-                                        emitter.emit("skip test", { block: wrappedBlock, test: wrappedNode, runtime: false });
+                                        emitter.emit("skip test", { block: wrappedBlock, test: wrapTest(node), runtime: false });
                                     } else {
                                         for (const hook of node.beforeHooks()) {
                                             if (stopped) {
                                                 break;
                                             }
-                                            emitter.emit("start before test hook", { block: wrappedBlock, test: wrappedNode, hook: wrapHook(hook) });
+                                            emitter.emit("start before test hook", { block: wrappedBlock, test: wrapTest(node), hook: wrapHook(hook) });
                                             // eslint-disable-next-line no-await-in-loop
                                             const meta = await hook.run();
-                                            emitter.emit("end before test hook", { block: wrappedBlock, test: wrappedNode, hook: wrapHook(hook), meta });
+                                            emitter.emit("end before test hook", { block: wrappedBlock, test: wrapTest(node), hook: wrapHook(hook), meta });
                                             if (meta.err) {
                                                 err = meta.err;
                                                 err.hook = wrapHook(hook);
@@ -1291,10 +1329,10 @@ export class Engine {
                                         if (!stopped) {
                                             if (hookFailed) {
                                                 node.cancel(err, "beforeTest");
-                                                emitter.emit("skip test", { block: wrappedBlock, test: wrappedNode, runtime: false });
+                                                emitter.emit("skip test", { block: wrappedBlock, test: wrapTest(node), runtime: false });
                                                 continue;
                                             } else {
-                                                emitter.emit("start test", { block: wrappedBlock, test: wrappedNode });
+                                                emitter.emit("start test", { block: wrappedBlock, test: wrapTest(node) });
                                                 let meta;
                                                 if (!hookFailed) {
                                                     // eslint-disable-next-line no-await-in-loop
@@ -1306,10 +1344,10 @@ export class Engine {
                                                 // it can be skipped in runtime
                                                 meta.skipped = node.isExclusive();
                                                 if (meta.skipped) {
-                                                    emitter.emit("skip test", { block: wrappedBlock, test: wrappedNode, runtime: true });
+                                                    emitter.emit("skip test", { block: wrappedBlock, test: wrapTest(node), runtime: true });
                                                 }
 
-                                                emitter.emit("end test", { block: wrappedBlock, test: wrappedNode, meta });
+                                                emitter.emit("end test", { block: wrappedBlock, test: wrapTest(node), meta });
                                                 if (meta.err) {
                                                     failed = true;
                                                 }
@@ -1317,10 +1355,10 @@ export class Engine {
                                         }
                                     }
                                     for (const hook of node.afterHooks()) {
-                                        emitter.emit("start after test hook", { block: wrappedBlock, test: wrappedNode, hook: wrapHook(hook) });
+                                        emitter.emit("start after test hook", { block: wrappedBlock, test: wrapTest(node), hook: wrapHook(hook) });
                                         // eslint-disable-next-line no-await-in-loop
                                         const meta = await hook.run();
-                                        emitter.emit("end after test hook", { block: wrappedBlock, test: wrappedNode, hook: wrapHook(hook), meta });
+                                        emitter.emit("end after test hook", { block: wrappedBlock, test: wrapTest(node), hook: wrapHook(hook), meta });
                                         if (meta.err) {
                                             hookFailed = true;
                                             break;
@@ -1329,10 +1367,10 @@ export class Engine {
                                 }
                                 for (const parentBlock of blocksFired.reverse()) {
                                     for (const hook of parentBlock.afterEachHooks()) {
-                                        emitter.emit("start after each hook", { block: wrappedBlock, test: wrappedNode, hook: wrapHook(hook) });
+                                        emitter.emit("start after each hook", { block: wrappedBlock, test: wrapTest(node), hook: wrapHook(hook) });
                                         // eslint-disable-next-line no-await-in-loop
                                         const meta = await hook.run();
-                                        emitter.emit("end after each hook", { block: wrappedBlock, test: wrappedNode, hook: wrapHook(hook), meta });
+                                        emitter.emit("end after each hook", { block: wrappedBlock, test: wrapTest(node), hook: wrapHook(hook), meta });
                                         if (meta.err) {
                                             hookFailed = true;
                                         }
@@ -1700,7 +1738,8 @@ export const consoleReporter = ({
     allTimings = false,
     timers = false,
     showHooks = false,
-    keepHooks = false
+    keepHooks = false,
+    onlyStats = false
 } = {}) => {
     const term = adone.runtime.term;
 
@@ -1753,7 +1792,7 @@ export const consoleReporter = ({
             return elapsedString;
         };
 
-        if (showHooks) {
+        if (showHooks && !onlyStats) {
             const colorizeHook = (type) => {
                 return type
                     .replace("before", "{#d9534f-fg}before{/}")
@@ -1847,8 +1886,18 @@ export const consoleReporter = ({
 
         Error.stackTraceLimit = 100;
 
+        if (onlyStats) {
+            bar = adone.runtime.term.progress({
+                schema: "    :spinner executing",
+                clean: true
+            });
+        }
+
         emitter
             .on("enter block", reportOnThrow(({ block }) => {
+                if (onlyStats) {
+                    return;
+                }
                 if (firstBlock) {
                     log();
                     firstBlock = false;
@@ -1861,9 +1910,15 @@ export const consoleReporter = ({
                 ++blockLevel;
             }))
             .on("exit block", () => {
+                if (onlyStats) {
+                    return;
+                }
                 --blockLevel;
             })
             .on("start test", reportOnThrow(({ test, block }) => {
+                if (onlyStats) {
+                    return;
+                }
                 bar = createTestBar(test, block);
                 bar.update(0, {
                     tag: "grey-fg",
@@ -1876,11 +1931,13 @@ export const consoleReporter = ({
                     return;
                 }
 
-                bar.complete(!err, {
-                    tag: err ? "red-fg" : "grey-fg",
-                    prefix: err ? `${failed + 1})` : "",
-                    suffix: allTimings ? " (:elapsed)" : ""
-                });
+                if (!onlyStats) {
+                    bar.complete(!err, {
+                        tag: err ? "red-fg" : "grey-fg",
+                        prefix: err ? `${failed + 1})` : "",
+                        suffix: allTimings ? " (:elapsed)" : ""
+                    });
+                }
                 testsElapsed += elapsed;
                 if (err) {
                     ++failed;
@@ -1890,30 +1947,39 @@ export const consoleReporter = ({
                 }
             }))
             .on("skip test", reportOnThrow(({ test, block, runtime }) => {
-                if (!runtime) {
+                if (!runtime && !onlyStats) {
                     bar = createTestBar(test, block);
                 }
                 if (test.isTodo) {
-                    bar.complete("{yellow-fg}?{/yellow-fg}", {
-                        tag: "yellow-fg",
-                        suffix: ""
-                    });
+                    if (!onlyStats) {
+                        bar.complete("{yellow-fg}?{/yellow-fg}", {
+                            tag: "yellow-fg",
+                            suffix: ""
+                        });
+                    }
                     ++todos;
                 } else if (test.isCancelled) {
-                    bar.complete("{magenta-fg}#{/magenta-fg}", {
-                        tag: "magenta-fg",
-                        suffix: ""
-                    });
+                    if (!onlyStats) {
+                        bar.complete("{magenta-fg}#{/magenta-fg}", {
+                            tag: "magenta-fg",
+                            suffix: ""
+                        });
+                    }
                     cancelled.push([test, block]);
                 } else {
-                    bar.complete(`{cyan-fg}${symbol.minus}{/cyan-fg}`, {
-                        tag: "cyan-fg",
-                        suffix: ""
-                    });
+                    if (!onlyStats) {
+                        bar.complete(`{cyan-fg}${symbol.minus}{/cyan-fg}`, {
+                            tag: "cyan-fg",
+                            suffix: ""
+                        });
+                    }
                     ++pending;
                 }
             }))
             .on("done", reportOnThrow(() => {
+                if (onlyStats) {
+                    bar.complete(true);
+                }
                 if (errors.length) {
                     log();
                     log("Errors:\n");
@@ -2235,7 +2301,8 @@ export const minimalReporter = () => {
 
 export const simpleReporter = ({
     allTimings = false,
-    showHooks = false
+    showHooks = false,
+    onlyStats = false
 } = {}) => {
     const term = adone.runtime.term;
     const { text: { unicode: { symbol } } } = adone;
@@ -2287,7 +2354,7 @@ export const simpleReporter = ({
             return elapsedString;
         };
 
-        if (showHooks) {
+        if (showHooks && !onlyStats) {
             const colorizeHook = (type) => {
                 return type
                     .replace("before", "{#d9534f-fg}before{/}")
@@ -2343,8 +2410,15 @@ export const simpleReporter = ({
 
         Error.stackTraceLimit = 100;
 
+        if (onlyStats) {
+            log("    executing");
+        }
+
         emitter
             .on("enter block", ({ block }) => {
+                if (onlyStats) {
+                    return;
+                }
                 if (firstBlock) {
                     log();
                     firstBlock = false;
@@ -2357,6 +2431,9 @@ export const simpleReporter = ({
                 ++blockLevel;
             })
             .on("exit block", () => {
+                if (onlyStats) {
+                    return;
+                }
                 --blockLevel;
             })
             .on("end test", ({ test, block, meta: { err, elapsed, skipped } }) => {
@@ -2366,17 +2443,19 @@ export const simpleReporter = ({
                 }
                 const timeout = test.timeout;
 
-                const elapsedString = elapsedToString(elapsed, timeout, allTimings);
-                let msg;
-                if (err) {
-                    msg = `{red-fg}${symbol.cross} ${failed + 1}) {escape}${test.description}{/escape}{/}`;
-                } else {
-                    msg = `{green-fg}${symbol.tick} {grey-fg}{escape}${test.description}{/escape}{/}`;
+                if (!onlyStats) {
+                    const elapsedString = elapsedToString(elapsed, timeout, allTimings);
+                    let msg;
+                    if (err) {
+                        msg = `{red-fg}${symbol.cross} ${failed + 1}) {escape}${test.description}{/escape}{/}`;
+                    } else {
+                        msg = `{green-fg}${symbol.tick} {grey-fg}{escape}${test.description}{/escape}{/}`;
+                    }
+                    if (elapsedString) {
+                        msg = `${msg} (${elapsedString})`;
+                    }
+                    log(`${"    ".repeat(block.level + 1)} ${msg} ${" ".repeat(10)}`);
                 }
-                if (elapsedString) {
-                    msg = `${msg} (${elapsedString})`;
-                }
-                log(`${"    ".repeat(block.level + 1)} ${msg} ${" ".repeat(10)}`);
                 testsElapsed += elapsed;
                 if (err) {
                     ++failed;
@@ -2397,9 +2476,16 @@ export const simpleReporter = ({
                     msg = `{cyan-fg}\u2212 {escape}${test.description}{/escape}{/}`;
                     ++pending;
                 }
-                log(`${"    ".repeat(block.level + 1)} ${msg}`);
+                if (!onlyStats) {
+                    log(`${"    ".repeat(block.level + 1)} ${msg}`);
+                }
             })
             .on("done", () => {
+                if (onlyStats) {
+                    adone.runtime.term.up(1);
+                    adone.runtime.term.eraseLineAfter();
+                }
+
                 if (errors.length) {
                     log();
                     log("Errors:\n");

@@ -1151,7 +1151,7 @@ describe("Engine", () => {
                 });
 
                 e.on("skip test", ({ test }) => {
-                    results.push([test.description, test.isCancelled()]);
+                    results.push([test.description, test.isCancelled]);
                 });
 
                 await waitFor(e, "done");
@@ -1965,7 +1965,7 @@ describe("Engine", () => {
                 });
 
                 e.on("skip test", ({ test }) => {
-                    results.push([test.description, test.isCancelled()]);
+                    results.push([test.description, test.isCancelled]);
                 });
 
                 await waitFor(e, "done");
@@ -3218,14 +3218,14 @@ describe("Engine", () => {
                 const emitter = engine.start();
 
                 emitter.on("start test", ({ test }) => {
-                    results.push(test.chain());
+                    results.push(test.chain);
                 });
 
                 await waitFor(emitter, "done");
 
                 assert.deepEqual(results, [
-                    "prefixed - a : a",
-                    "prefixed - b : b"
+                    "prefixed → a : a",
+                    "prefixed → b : b"
                 ]);
             });
 
@@ -3237,7 +3237,7 @@ describe("Engine", () => {
                 const emitter = engine.start();
 
                 emitter.on("start test", ({ test }) => {
-                    results.push(test.timeout());
+                    results.push(test.timeout);
                 });
 
                 await waitFor(emitter, "done");
@@ -4680,7 +4680,7 @@ describe("Engine", () => {
             const e = start();
 
             e.on("skip test", ({ test }) => {
-                res.push([test.description, test.isExclusive() && test.isTodo()]);
+                res.push([test.description, test.isExclusive && test.isTodo]);
             });
 
             await waitFor(e, "done");
@@ -4709,7 +4709,7 @@ describe("Engine", () => {
             const e = start();
 
             e.on("skip test", ({ test }) => {
-                res.push([test.description, test.isExclusive() && test.isTodo()]);
+                res.push([test.description, test.isExclusive && test.isTodo]);
             });
 
             await waitFor(e, "done");
@@ -4736,7 +4736,7 @@ describe("Engine", () => {
             const e = start();
 
             e.on("skip test", ({ test }) => {
-                res.push([test.description, test.isExclusive() && test.isTodo()]);
+                res.push([test.description, test.isExclusive && test.isTodo]);
             });
 
             await waitFor(e, "done");
@@ -4786,7 +4786,7 @@ describe("Engine", () => {
             const e = start();
 
             e.on("skip test", ({ test }) => {
-                res.push([test.description, test.isSlow()]);
+                res.push([test.description, test.isSlow]);
             });
 
             await waitFor(e, "done");
@@ -4813,7 +4813,7 @@ describe("Engine", () => {
             const e = start();
 
             e.on("skip test", ({ test }) => {
-                res.push([test.description, test.isSlow()]);
+                res.push([test.description, test.isSlow]);
             });
 
             await waitFor(e, "done");
@@ -4842,7 +4842,7 @@ describe("Engine", () => {
             const e = start();
 
             e.on("skip test", ({ test }) => {
-                res.push([test.description, test.isSlow()]);
+                res.push([test.description, test.isSlow]);
             });
 
             await waitFor(e, "done");
@@ -4898,7 +4898,7 @@ describe("Engine", () => {
             const e = start();
 
             e.on("skip test", ({ test }) => {
-                res.push([test.description, test.isSlow()]);
+                res.push([test.description, test.isSlow]);
             });
 
             await waitFor(e, "done");
@@ -4931,7 +4931,7 @@ describe("Engine", () => {
             const e = start();
 
             e.on("skip test", ({ test }) => {
-                res.push([test.description, test.isSlow() && test.isTodo()]);
+                res.push([test.description, test.isSlow && test.isTodo]);
             });
 
             await waitFor(e, "done");
@@ -4964,7 +4964,7 @@ describe("Engine", () => {
             const e = start();
 
             e.on("skip test", ({ test }) => {
-                res.push([test.description, test.isSlow() && test.isTodo()]);
+                res.push([test.description, test.isSlow && test.isTodo]);
             });
 
             await waitFor(e, "done");

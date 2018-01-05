@@ -17,7 +17,8 @@ const main = async () => {
         skipSlow,
         onlySlow,
         root,
-        path
+        path,
+        dryRun
     } = adone.data.bson.decode(Buffer.from(await p, "hex"));
 
     const engine = new adone.shani.Engine({
@@ -26,7 +27,8 @@ const main = async () => {
         transpilerOptions,
         skipSlow,
         onlySlow,
-        root
+        root,
+        dryRun
     });
 
     engine.include(path);
