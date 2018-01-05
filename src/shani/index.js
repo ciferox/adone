@@ -866,6 +866,7 @@ class ExternalRunner {
 
         emitter.once("done", () => {
             done = true;
+            this.proc.kill();
         });
 
         this.proc.once("exit", (code, signal) => {

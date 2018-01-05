@@ -70,4 +70,4 @@ const main = async () => {
     });
 };
 
-main().then(() => process.exit(0), () => process.exit(1));
+main().catch(() => process.exit(1));
