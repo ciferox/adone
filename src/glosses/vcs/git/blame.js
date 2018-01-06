@@ -18,6 +18,7 @@ Blame.FLAG = {
 /**
  * Retrieve the blame of a file
  *
+ * @async
  * @param {Repository} repo that contains the file
  * @param {String} path to the file to get the blame of
  * @param {BlameOptions} [options] Options for the blame

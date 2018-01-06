@@ -10,7 +10,7 @@ import type { Pos, Position } from "../../util/location";
 import { isNewLine } from "../../util/whitespace";
 
 const {
-  text: { charcode }
+  text: { charcode: charCodes }
 } = adone;
 
 const HEX_NUMBER = /^[\da-fA-F]+$/;
@@ -88,10 +88,10 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         const ch = this.input.charCodeAt(this.state.pos);
 
         switch (ch) {
-          case charcode.lessThan:
-          case charcode.leftCurlyBrace:
+          case charCodes.lessThan:
+          case charCodes.leftCurlyBrace:
             if (this.state.pos === this.state.start) {
-              if (ch === charcode.lessThan && this.state.exprAllowed) {
+              if (ch === charCodes.lessThan && this.state.exprAllowed) {
                 ++this.state.pos;
                 return this.finishToken(tt.jsxTagStart);
               }
@@ -100,7 +100,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             out += this.input.slice(chunkStart, this.state.pos);
             return this.finishToken(tt.jsxText, out);
 
-          case charcode.ampersand:
+          case charCodes.ampersand:
             out += this.input.slice(chunkStart, this.state.pos);
             out += this.jsxReadEntity();
             chunkStart = this.state.pos;
@@ -123,8 +123,8 @@ export default (superClass: Class<Parser>): Class<Parser> =>
       let out;
       ++this.state.pos;
       if (
-        ch === charcode.carriageReturn &&
-        this.input.charCodeAt(this.state.pos) === charcode.lineFeed
+        ch === charCodes.carriageReturn &&
+        this.input.charCodeAt(this.state.pos) === charCodes.lineFeed
       ) {
         ++this.state.pos;
         out = normalizeCRLF ? "\n" : "\r\n";
@@ -147,7 +147,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
 
         const ch = this.input.charCodeAt(this.state.pos);
         if (ch === quote) break;
-        if (ch === charcode.ampersand) {
+        if (ch === charCodes.ampersand) {
           out += this.input.slice(chunkStart, this.state.pos);
           out += this.jsxReadEntity();
           chunkStart = this.state.pos;
@@ -211,7 +211,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
       const start = this.state.pos;
       do {
         ch = this.input.charCodeAt(++this.state.pos);
-      } while (isIdentifierChar(ch) || ch === charcode.dash);
+      } while (isIdentifierChar(ch) || ch === charCodes.dash);
       return this.finishToken(
         tt.jsxName,
         this.input.slice(start, this.state.pos),
@@ -473,7 +473,8 @@ export default (superClass: Class<Parser>): Class<Parser> =>
       if (this.match(tt.relational) && this.state.value === "<") {
         this.raise(
           this.state.start,
-          "Adjacent JSX elements must be wrapped in an enclosing tag",
+          "Adjacent JSX elements must be wrapped in an enclosing tag. " +
+            "Did you want a JSX fragment <>...</>?",
         );
       }
 
@@ -519,20 +520,20 @@ export default (superClass: Class<Parser>): Class<Parser> =>
           return this.jsxReadWord();
         }
 
-        if (code === charcode.greaterThan) {
+        if (code === charCodes.greaterThan) {
           ++this.state.pos;
           return this.finishToken(tt.jsxTagEnd);
         }
 
         if (
-          (code === charcode.quotationMark || code === charcode.apostrophe) &&
+          (code === charCodes.quotationMark || code === charCodes.apostrophe) &&
           context === tc.j_oTag
         ) {
           return this.jsxReadString(code);
         }
       }
 
-      if (code === charcode.lessThan && this.state.exprAllowed) {
+      if (code === charCodes.lessThan && this.state.exprAllowed) {
         ++this.state.pos;
         return this.finishToken(tt.jsxTagStart);
       }

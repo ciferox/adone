@@ -44,8 +44,13 @@ protocols.table = [
     [55, V, "dns6", "resolvable"],
     [132, 16, "sctp"],
     // all of the below use varint for size
+    [301, 0, "udt"], // new
     [302, 0, "utp"],
+    [400, protocols.lengthPrefixedVarSize, "unix"], // new (unix socket)
+    [401, protocols.lengthPrefixedVarSize, "winpipe"], // new (windows pipe name)
+    [420, protocols.lengthPrefixedVarSize, "p2p"], // new
     [421, protocols.lengthPrefixedVarSize, "ipfs"],
+    [460, 0, "quic"], // new
     [480, 0, "http"],
     [443, 0, "https"],
     [477, 0, "ws"],

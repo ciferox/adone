@@ -17,6 +17,7 @@ extern "C" {
 
 #include "../include/typedefs.h"
 
+#include "../include/str_array_converter.h"
 #include "../include/repository.h"
 #include "../include/object.h"
 #include "../include/checkout_options.h"

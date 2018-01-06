@@ -1,7 +1,7 @@
 const {
     fs,
     std: { path },
-    vcs: { git: { Reference, FilterRegistry, Error: GitError, Signature, Checkout, Repository } }
+    vcs: { git: { Registry, Reference, FilterRegistry, Error: GitError, Signature, Checkout, Repository, Filter, FilterList } }
 } = adone;
 
 const local = path.join.bind(path, __dirname, "fixtures");
@@ -449,7 +449,7 @@ describe("Filter", () => {
         // this test is useless on 32 bit CI, because we cannot construct
         // a buffer big enough to test anything of significance :)...
         if (process.arch === "x64") {
-            it("applies the massive filter data on checkout", function () {
+            it.todo("applies the massive filter data on checkout", function () {
                 this.timeout(350000);
                 const test = this;
                 const largeBuffer = Buffer.alloc(largeBufferSize, "a");
@@ -717,6 +717,177 @@ describe("Filter", () => {
             }).then(() => {
                 assert.notStrictEqual(cleaned, true);
             });
+        });
+    });
+
+    describe.todo("Manually Apply", () => {
+        beforeEach(function () {
+            const test = this;
+            const opts = {
+                checkoutStrategy: Checkout.STRATEGY.FORCE,
+                paths: "README.md"
+            };
+            return Checkout.head(test.repository, opts)
+                .then(() => fs.readFile(readmePath, "utf8"))
+                .then(((content) => {
+                    test.originalReadmeContent = content;
+                }));
+        });
+
+        afterEach(function () {
+            this.timeout(15000);
+            return fs.writeFile(readmePath, this.originalReadmeContent);
+        });
+
+        const message = "This is the filtered content, friends";
+        const length = message.length;
+        const tempBuffer = Buffer.from(message, "utf-8");
+
+        it("applies the filters for a path on demand", function () {
+            const test = this;
+            let list;
+
+            return FilterRegistry.register(filterName, {
+                apply(to, from, source) {
+                    return to.set(tempBuffer, length)
+                        .then(() => {
+                            return GitError.CODE.OK;
+                        });
+                },
+                check(src, attr) {
+                    return GitError.CODE.OK;
+                }
+            }, 0)
+                .then((result) => {
+                    assert.strictEqual(result, 0);
+                })
+                .then(() => {
+                    const readmeContent = fs.readFileSync(
+                        readmePath,
+                        "utf-8"
+                    );
+                    assert.notStrictEqual(readmeContent, message);
+                    fs.writeFileSync(readmePath, "whoa", "utf8");
+
+                    return FilterList.load(
+                        test.repository,
+                        null,
+                        "README.md",
+                        Filter.MODE.CLEAN,
+                        Filter.FLAG.DEFAULT
+                    );
+                })
+                .then((_list) => {
+                    list = _list;
+                    return list.applyToFile(test.repository, "README.md");
+                })
+                .then((content) => {
+                    assert.equal(content, message);
+                    list.free();
+                });
+        });
+
+        it("applies the filters to a buffer on demand", function () {
+            const test = this;
+            let list;
+
+            return FilterRegistry.register(filterName, {
+                apply(to, from, source) {
+                    return to.set(tempBuffer, length)
+                        .then(() => {
+                            return GitError.CODE.OK;
+                        });
+                },
+                check(src, attr) {
+                    return GitError.CODE.OK;
+                }
+            }, 0)
+                .then((result) => {
+                    assert.strictEqual(result, 0);
+                })
+                .then(() => {
+                    const readmeContent = fs.readFileSync(
+                        readmePath,
+                        "utf-8"
+                    );
+                    assert.notStrictEqual(readmeContent, message);
+                    fs.writeFileSync(readmePath, "whoa", "utf8");
+
+                    return FilterList.load(
+                        test.repository,
+                        null,
+                        "README.md",
+                        Filter.MODE.CLEAN,
+                        Filter.FLAG.DEFAULT
+                    );
+                })
+                .then((_list) => {
+                    list = _list;
+                    /* jshint ignore:start */
+                    return list.applyToData(new String("garbo garbo garbo garbo"));
+                    /* jshint ignore:end */
+                })
+                .then((content) => {
+                    assert.equal(content, message);
+                    list.free();
+                });
+        });
+
+        it("applies the filters to a blob on demand", function () {
+            const test = this;
+            let list;
+
+            return FilterRegistry.register(filterName, {
+                apply(to, from, source) {
+                    return to.set(tempBuffer, length)
+                        .then(() => {
+                            return GitError.CODE.OK;
+                        });
+                },
+                check(src, attr) {
+                    return GitError.CODE.OK;
+                }
+            }, 0)
+                .then((result) => {
+                    assert.strictEqual(result, 0);
+                })
+                .then(() => {
+                    const readmeContent = fs.readFileSync(
+                        readmePath,
+                        "utf-8"
+                    );
+                    assert.notStrictEqual(readmeContent, message);
+                    fs.writeFileSync(readmePath, "whoa", "utf8");
+
+                    return FilterList.load(
+                        test.repository,
+                        null,
+                        "README.md",
+                        Filter.MODE.CLEAN,
+                        Filter.FLAG.DEFAULT
+                    );
+                })
+                .then((_list) => {
+                    list = _list;
+
+                    return test.repository.getHeadCommit();
+                })
+                .then((commit) => {
+                    return commit.getTree();
+                })
+                .then((tree) => {
+                    return tree.entryByPath("README.md");
+                })
+                .then((entry) => {
+                    return test.repository.getBlob(entry.id());
+                })
+                .then((blob) => {
+                    return list.applyToBlob(blob);
+                })
+                .then((content) => {
+                    assert.equal(content, message);
+                    list.free();
+                });
         });
     });
 });

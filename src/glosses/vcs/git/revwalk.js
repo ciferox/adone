@@ -131,7 +131,6 @@ Revwalk.prototype.sorting = function () {
  *
  * @param  {Oid} oid
  * @param  {Function} callback
- * @return {Commit}
  */
 Revwalk.prototype.walk = function (oid, callback) {
     const revwalk = this;

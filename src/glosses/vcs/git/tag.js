@@ -15,14 +15,15 @@ Tag.prototype.dup = promisifyAll(Tag.prototype.dup);
 Tag.list = promisifyAll(Tag.list);
 Tag.lookup = promisifyAll(Tag.lookup);
 Tag.lookupPrefix = promisifyAll(Tag.lookupPrefix);
+Tag.prototype.peel = promisifyAll(Tag.prototype.peel);
 
 /**
-* Retrieves the tag pointed to by the oid
-* @async
-* @param {Repository} repo The repo that the tag lives in
-* @param {String|Oid|Tag} id The tag to lookup
-* @return {Tag}
-*/
+ * Retrieves the tag pointed to by the oid
+ * @async
+ * @param {Repository} repo The repo that the tag lives in
+ * @param {String|Oid|Tag} id The tag to lookup
+ * @return {Tag}
+ */
 Tag.lookup = lookupWrapper(Tag);
 
 export default Tag;

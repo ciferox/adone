@@ -17,6 +17,9 @@ extern "C" {
 
 #include "../include/typedefs.h"
 
+#include "../include/buf.h"
+#include "../include/blob.h"
+#include "../include/repository.h"
 // Forward declaration.
 struct git_filter_list {
 };
@@ -37,7 +40,7 @@ struct GitFilterListTraits {
 
   static const bool isFreeable = true;
   static void free(git_filter_list *raw) {
-    ::free(raw); // :: to avoid calling this free recursively
+    ::git_filter_list_free(raw); // :: to avoid calling this free recursively
    }
 };
 
@@ -49,7 +52,7 @@ class GitFilterList : public
    public:
     static void InitializeComponent (v8::Local<v8::Object> target);
 
- 
+                            
 
   private:
     GitFilterList()
@@ -61,6 +64,108 @@ class GitFilterList : public
       : NodeGitWrapper<GitFilterListTraits>(raw, selfFreeing, owner)
     {}
     ~GitFilterList();
- };
+                            
+    struct ApplyToBlobBaton {
+      int error_code;
+      const git_error* error;
+      git_buf * out;
+      git_filter_list * filters;
+      git_blob * blob;
+    };
+    class ApplyToBlobWorker : public Nan::AsyncWorker {
+      public:
+        ApplyToBlobWorker(
+            ApplyToBlobBaton *_baton,
+            Nan::Callback *callback
+        ) : Nan::AsyncWorker(callback)
+          , baton(_baton) {};
+        ~ApplyToBlobWorker() {};
+        void Execute();
+        void HandleOKCallback();
+
+      private:
+        ApplyToBlobBaton *baton;
+    };
+
+    static NAN_METHOD(ApplyToBlob);
+
+    struct ApplyToDataBaton {
+      int error_code;
+      const git_error* error;
+      git_buf * out;
+      git_filter_list * filters;
+      git_buf * in;
+    };
+    class ApplyToDataWorker : public Nan::AsyncWorker {
+      public:
+        ApplyToDataWorker(
+            ApplyToDataBaton *_baton,
+            Nan::Callback *callback
+        ) : Nan::AsyncWorker(callback)
+          , baton(_baton) {};
+        ~ApplyToDataWorker() {};
+        void Execute();
+        void HandleOKCallback();
+
+      private:
+        ApplyToDataBaton *baton;
+    };
+
+    static NAN_METHOD(ApplyToData);
+
+    struct ApplyToFileBaton {
+      int error_code;
+      const git_error* error;
+      git_buf * out;
+      git_filter_list * filters;
+      git_repository * repo;
+      const char * path;
+    };
+    class ApplyToFileWorker : public Nan::AsyncWorker {
+      public:
+        ApplyToFileWorker(
+            ApplyToFileBaton *_baton,
+            Nan::Callback *callback
+        ) : Nan::AsyncWorker(callback)
+          , baton(_baton) {};
+        ~ApplyToFileWorker() {};
+        void Execute();
+        void HandleOKCallback();
+
+      private:
+        ApplyToFileBaton *baton;
+    };
+
+    static NAN_METHOD(ApplyToFile);
+
+    static NAN_METHOD(Free);
+
+    struct LoadBaton {
+      int error_code;
+      const git_error* error;
+      git_filter_list * filters;
+      git_repository * repo;
+      git_blob * blob;
+      const char * path;
+      git_filter_mode_t mode;
+      uint32_t flags;
+    };
+    class LoadWorker : public Nan::AsyncWorker {
+      public:
+        LoadWorker(
+            LoadBaton *_baton,
+            Nan::Callback *callback
+        ) : Nan::AsyncWorker(callback)
+          , baton(_baton) {};
+        ~LoadWorker() {};
+        void Execute();
+        void HandleOKCallback();
+
+      private:
+        LoadBaton *baton;
+    };
+
+    static NAN_METHOD(Load);
+};
 
 #endif

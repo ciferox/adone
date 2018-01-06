@@ -17,6 +17,7 @@ extern "C" {
 
 #include "../include/typedefs.h"
 
+#include "../include/str_array_converter.h"
 #include "../include/pathspec_match_list.h"
 #include "../include/diff.h"
 #include "../include/index.h"

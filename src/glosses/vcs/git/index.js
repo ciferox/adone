@@ -248,6 +248,7 @@ adone.lazify({
     DiffLine: "./diff_line",
     Fetch: "./fetch",
     Filter: "./filter",
+    FilterList: "./filter_list",
     FilterRegistry: "./filter_registry",
     Graph: "./graph",
     Hashing: "./hashing",

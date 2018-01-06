@@ -15,6 +15,8 @@ const {
         AnnotatedCommit,
         Diff,
         Branch,
+        Filter,
+        FilterList,
         Blob,
         Checkout,
         Commit,
@@ -107,7 +109,6 @@ const applySelectedLinesToTarget = (originalContent, newLines, pathHunks, isStag
     let oldIndex = 0;
     const linesPromises = [];
 
-    // split the original file into lines
     const oldLines = originalContent.toString().split("\n");
 
     // if no selected lines were sent, return the original content
@@ -186,6 +187,7 @@ const applySelectedLinesToTarget = (originalContent, newLines, pathHunks, isStag
                 }
             }
         }
+
         return newContent;
     });
 };
@@ -318,11 +320,11 @@ const performRebase = (repository, rebase, signature, beforeNextFn, beforeFinish
  * @async
  * @param {String} startPath The base path where the lookup starts.
  * @param {Number} acrossFs If non-zero, then the lookup will not stop when a
-                            filesystem device change is detected while exploring
-                            parent directories.
+ * filesystem device change is detected while exploring
+ * parent directories.
  * @param {String} ceilingDirs A list of absolute symbolic link free paths.
-                              the search will stop if any of these paths
-                              are hit. This may be set to null
+ * the search will stop if any of these paths
+ * are hit. This may be set to null
  * @return {String} Path of the git repository
  */
 Repository.discover = function (startPath, acrossFs, ceilingDirs, callback) {
@@ -692,21 +694,49 @@ Repository.prototype.discardLines = function (filePath, selectedLines, additiona
     const fullFilePath = path.join(repo.workdir(), filePath);
     let index;
     let originalContent;
+    let filterList;
 
     return repo.refreshIndex().then((indexResult) => {
         index = indexResult;
+        return FilterList.load(repo, null, filePath, Filter.MODE.CLEAN, Filter.FLAG.DEFAULT);
+    }).then((_filterList) => {
+        filterList = _filterList;
 
-        return adone.fs.readFile(fullFilePath, { encoding: "utf8" });
+        if (filterList) {
+            return filterList.applyToFile(repo, filePath);
+        }
+
+        return adone.fs.readFile(fullFilePath, "utf8");
     }).then((content) => {
         originalContent = content;
+        if (filterList) {
+            filterList.free();
+            filterList = null;
+        }
 
         return getPathHunks(repo, index, filePath, false, additionalDiffOptions);
     }).then((hunks) => {
-        return applySelectedLinesToTarget(
-            originalContent, selectedLines, hunks, false, true
-        );
+        return applySelectedLinesToTarget(originalContent, selectedLines, hunks, false, true);
     }).then((newContent) => {
-        return adone.fs.writeFile(fullFilePath, newContent);
+        return FilterList.load(repo, null, filePath, Filter.MODE.SMUDGE, Filter.FLAG.DEFAULT).then((_filterList) => {
+            filterList = _filterList;
+            if (filterList) {
+                /* jshint ignore:start */
+                // We need the constructor for the check in NodeGit's C++ layer
+                // to accept an object, and this seems to be a nice way to do it
+                return filterList.applyToData(new String(newContent));
+                /* jshint ignore:end */
+            }
+
+            return newContent;
+        });
+    }).then((filteredContent) => {
+        if (filterList) {
+            filterList.free();
+            filterList = null;
+        }
+
+        return adone.fs.writeFile(fullFilePath, filteredContent);
     });
 };
 
@@ -830,25 +860,25 @@ Repository.prototype.getBlob = function (oid, callback) {
 };
 
 /**
-* Look up a branch. Alias for `getReference`
-*
-* @async
-* @param {String|Reference} name Ref name, e.g. "master", "refs/heads/master"
-*                              or Branch Ref
-* @return {Reference}
-*/
+ * Look up a branch. Alias for `getReference`
+ *
+ * @async
+ * @param {String|Reference} name Ref name, e.g. "master", "refs/heads/master"
+ *                              or Branch Ref
+ * @return {Reference}
+ */
 Repository.prototype.getBranch = function (name, callback) {
     return this.getReference(name, callback);
 };
 
 /**
-* Look up a branch's most recent commit. Alias to `getReferenceCommit`
-*
-* @async
-* @param {String|Reference} name Ref name, e.g. "master", "refs/heads/master"
-*                          or Branch Ref
-* @return {Commit}
-*/
+ * Look up a branch's most recent commit. Alias to `getReferenceCommit`
+ *
+ * @async
+ * @param {String|Reference} name Ref name, e.g. "master", "refs/heads/master"
+ *                          or Branch Ref
+ * @return {Commit}
+ */
 Repository.prototype.getBranchCommit = function (name, callback) {
     return this.getReferenceCommit(name, callback);
 };
@@ -1016,12 +1046,12 @@ Repository.prototype.getRemote = function (remote, callback) {
 };
 
 /**
-* Lists out the remotes in the given repository.
-*
-* @async
-* @param {Function} Optional callback
-* @return {Object} Promise object.
-*/
+ * Lists out the remotes in the given repository.
+ *
+ * @async
+ * @param {Function} Optional callback
+ * @return {Object} Promise object.
+ */
 Repository.prototype.getRemotes = function (callback) {
     return Remote.list(this).then((remotes) => {
         if (is.function(callback)) {
@@ -1048,7 +1078,7 @@ Repository.prototype.getStatus = function (opts) {
     if (!opts) {
         opts = {
             flags: Status.OPT.INCLUDE_UNTRACKED |
-            Status.OPT.RECURSE_UNTRACKED_DIRS
+                Status.OPT.RECURSE_UNTRACKED_DIRS
         };
     }
 
@@ -1071,10 +1101,10 @@ Repository.prototype.getStatusExt = function (opts) {
     if (!opts) {
         opts = {
             flags: Status.OPT.INCLUDE_UNTRACKED |
-            Status.OPT.RECURSE_UNTRACKED_DIRS |
-            Status.OPT.RENAMES_INDEX_TO_WORKDIR |
-            Status.OPT.RENAMES_HEAD_TO_INDEX |
-            Status.OPT.RENAMES_FROM_REWRITES
+                Status.OPT.RECURSE_UNTRACKED_DIRS |
+                Status.OPT.RENAMES_INDEX_TO_WORKDIR |
+                Status.OPT.RENAMES_HEAD_TO_INDEX |
+                Status.OPT.RENAMES_FROM_REWRITES
         };
     }
 
@@ -1381,7 +1411,7 @@ Repository.prototype.mergeBranches = function (to, from, signature, mergePrefere
                         // Checkout the tree if we're on the branch
                         const opts = {
                             checkoutStrategy: Checkout.STRATEGY.SAFE |
-                            Checkout.STRATEGY.RECREATE_MISSING
+                                Checkout.STRATEGY.RECREATE_MISSING
                         };
                         return Checkout.tree(repo, tree, opts);
                     }
@@ -1437,7 +1467,7 @@ Repository.prototype.mergeBranches = function (to, from, signature, mergePrefere
                         }).then((tree) => {
                             const opts = {
                                 checkoutStrategy: Checkout.STRATEGY.SAFE |
-                                Checkout.STRATEGY.RECREATE_MISSING
+                                    Checkout.STRATEGY.RECREATE_MISSING
                             };
                             return Checkout.tree(repo, tree, opts);
                         }).then(() => {
@@ -1558,9 +1588,9 @@ Repository.prototype.stageLines = function (filePath, selectedLines, isSelection
     const lastHunkStagedPromise = function lastHunkStagedPromise(result) {
         return Diff.indexToWorkdir(repo, index, {
             flags:
-            Diff.OPTION.SHOW_UNTRACKED_CONTENT |
-            Diff.OPTION.RECURSE_UNTRACKED_DIRS |
-            (additionalDiffOptions || 0)
+                Diff.OPTION.SHOW_UNTRACKED_CONTENT |
+                Diff.OPTION.RECURSE_UNTRACKED_DIRS |
+                (additionalDiffOptions || 0)
         }).then((diff) => {
             return diff.patches();
         }).then((patches) => {

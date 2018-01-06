@@ -790,6 +790,7 @@
         "src/native/vcs/git/src/convenient_patch.cc",
         "src/native/vcs/git/src/convenient_hunk.cc",
         "src/native/vcs/git/src/filter_registry.cc",
+        "src/native/vcs/git/src/git_buf_converter.cc",
         "src/native/vcs/git/src/str_array_converter.cc",
         "src/native/vcs/git/src/thread_pool.cc",
         "src/native/vcs/git/src/annotated_commit.cc",
@@ -981,25 +982,18 @@
             }
         ],
         [
-            "OS=='linux' or OS=='mac'", {
+          "OS=='linux' or OS=='mac'", {
             "libraries": [
-                "-lcurl"
+              "-lcurl"
             ]
-            }
+          }
         ],
         [
-            "OS=='linux' and '<!(echo \"$CXX\")'=='clang++'", {
+          "OS=='linux' or OS.endswith('bsd')", {
             "cflags": [
-                "-Wno-c++11-extensions"
+              "-std=c++11"
             ]
-            }
-        ],
-        [
-            "OS=='linux' and '<!(echo \"$CXX\")'!='clang++'", {
-            "cflags": [
-                "-std=c++0x"
-            ]
-            }
+          }
         ]
       ]
     },

@@ -61,17 +61,21 @@ export default function () {
         );
     };
 
+    const hasClassDecorators = function (classNode) {
+        return Boolean(classNode.decorators && classNode.decorators.length);
+    };
+
     /**
      * Given a class expression with class-level decorators, create a new expression
      * with the proper decorated behavior.
      */
     const applyClassDecorators = function (classPath) {
-        const decorators = classPath.node.decorators || [];
-        classPath.node.decorators = null;
-
-        if (decorators.length === 0) {
+        if (!hasClassDecorators(classPath.node)) {
             return;
         }
+
+        const decorators = classPath.node.decorators || [];
+        classPath.node.decorators = null;
 
         const name = classPath.scope.generateDeclaredUidIdentifier("class");
 
@@ -85,6 +89,10 @@ export default function () {
                     INNER: acc
                 }).expression;
             }, classPath.node);
+    };
+
+    const hasMethodDecorators = function (body) {
+        return body.some((node) => node.decorators && node.decorators.length);
     };
 
     /**
@@ -195,11 +203,7 @@ export default function () {
      * with the proper decorated behavior.
      */
     const applyMethodDecorators = function (path, state) {
-        const hasMethodDecorators = path.node.body.body.some((node) => {
-            return (node.decorators || []).length > 0;
-        });
-
-        if (!hasMethodDecorators) {
+        if (!hasMethodDecorators(path.node.body.body)) {
             return;
         }
 
@@ -211,11 +215,7 @@ export default function () {
      * with the proper decorated behavior.
      */
     const applyObjectDecorators = function (path, state) {
-        const hasMethodDecorators = path.node.properties.some((node) => {
-            return (node.decorators || []).length > 0;
-        });
-
-        if (!hasMethodDecorators) {
+        if (!hasMethodDecorators(path.node.properties)) {
             return;
         }
 
@@ -226,34 +226,29 @@ export default function () {
         inherits: adone.js.compiler.plugin.syntax.decorators,
 
         visitor: {
-            ExportDefaultDeclaration(path) {
-                if (!path.get("declaration").isClassDeclaration()) {
-                    return;
-                }
-
-                const { node } = path;
-                const ref =
-                    node.declaration.id || path.scope.generateUidIdentifier("default");
-                node.declaration.id = ref;
-
-                // Split the class declaration and the export into two separate statements.
-                path.replaceWith(node.declaration);
-                path.insertAfter(
-                    t.exportNamedDeclaration(null, [
-                        t.exportSpecifier(ref, t.identifier("default"))
-                    ]),
-                );
-            },
             ClassDeclaration(path) {
                 const { node } = path;
 
-                const ref = node.id || path.scope.generateUidIdentifier("class");
+                if (!hasClassDecorators(node) && !hasMethodDecorators(node.body.body)) {
+                    return;
+                }
 
-                path.replaceWith(
-                    t.variableDeclaration("let", [
-                        t.variableDeclarator(ref, t.toExpression(node))
-                    ]),
-                );
+                const ref = node.id || path.scope.generateUidIdentifier("class");
+                const letDeclaration = t.variableDeclaration("let", [
+                    t.variableDeclarator(ref, t.toExpression(node))
+                ]);
+
+                if (path.parentPath.isExportDefaultDeclaration()) {
+                    // Split the class declaration and the export into two separate statements.
+                    path.parentPath.replaceWithMultiple([
+                        letDeclaration,
+                        t.exportNamedDeclaration(null, [
+                            t.exportSpecifier(ref, t.identifier("default"))
+                        ])
+                    ]);
+                } else {
+                    path.replaceWith(letDeclaration);
+                }
             },
             ClassExpression(path, state) {
                 // Create a replacement for the class node if there is one. We do one pass to replace classes with

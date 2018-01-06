@@ -39,6 +39,6 @@ a ? async (b => c) : d => e; // a ? (async(b => c)) : (d => e)
 a ? async (b) => (c => d) : e => f; // a ? (async (b) => c => d) : (e => f)
 
 // https://github.com/prettier/prettier/issues/2194
-let icecream = what === "cone"
+let icecream = what == "cone"
   ? p => (!!p ? `here's your ${p} cone` : `just the empty cone for you`)
   : p => `here's your ${p} ${what}`;

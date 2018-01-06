@@ -14,6 +14,7 @@ extern "C" {
 #include "nodegit_wrapper.cc"
 #include "../include/async_libgit2_queue_worker.h"
 
+  #include "../include/str_array_converter.h"
   #include "../include/oid.h"
   #include "../include/repository.h"
   #include "../include/object.h"
@@ -1823,42 +1824,142 @@ NAN_METHOD(GitTag::Owner) {
     return info.GetReturnValue().Set(scope.Escape(to));
   }
 }
-   
+  
 /*
- * @param Object tag_target_out
-       * @return Number  result    */
+     * @param Object callback
+   */
 NAN_METHOD(GitTag::Peel) {
-  Nan::EscapableHandleScope scope;
 
-  if (info.Length() == 0 || !info[0]->IsObject()) {
-    return Nan::ThrowError("Object tag_target_out is required.");
+  if (info.Length() == 0 || !info[0]->IsFunction()) {
+    return Nan::ThrowError("Callback is required and must be a Function.");
   }
 
-// start convert_from_v8 block
-  git_object ** from_tag_target_out = NULL;
-*from_tag_target_out = Nan::ObjectWrap::Unwrap<GitObject>(info[0]->ToObject())->GetValue();
-// end convert_from_v8 block
- 
+  PeelBaton* baton = new PeelBaton;
+
+  baton->error_code = GIT_OK;
+  baton->error = NULL;
+
+  baton->tag = Nan::ObjectWrap::Unwrap<GitTag>(info.This())->GetValue();
+
+  Nan::Callback *callback = new Nan::Callback(v8::Local<Function>::Cast(info[0]));
+  PeelWorker *worker = new PeelWorker(baton, callback);
+  worker->SaveToPersistent("tag", info.This());
+
+  AsyncLibgit2QueueWorker(worker);
+  return;
+}
+
+void GitTag::PeelWorker::Execute() {
   giterr_clear();
 
   {
-    LockMaster lockMaster(/*asyncAction: */false        ,    from_tag_target_out
-        ,    Nan::ObjectWrap::Unwrap<GitTag>(info.This())->GetValue()
+    LockMaster lockMaster(/*asyncAction: */true        ,baton->tag
 );
 
-    int result = git_tag_peel(
-  from_tag_target_out
-,  Nan::ObjectWrap::Unwrap<GitTag>(info.This())->GetValue()
-    );
+  int result = git_tag_peel(
+&baton->tag_target_out,baton->tag    );
 
- 
-    v8::Local<v8::Value> to;
-// start convert_to_v8 block
-     to = Nan::New<Number>( result);
-  // end convert_to_v8 block
-    return info.GetReturnValue().Set(scope.Escape(to));
   }
 }
+
+void GitTag::PeelWorker::HandleOKCallback() {
+  if (baton->error_code == GIT_OK) {
+    v8::Local<v8::Value> to;
+// start convert_to_v8 block
+  
+  if (baton->tag_target_out != NULL) {
+    // GitObject baton->tag_target_out
+       to = GitObject::New(baton->tag_target_out, false  );
+   }
+  else {
+    to = Nan::Null();
+  }
+
+ // end convert_to_v8 block
+    v8::Local<v8::Value> result = to;
+    v8::Local<v8::Value> argv[2] = {
+      Nan::Null(),
+      result
+    };
+    callback->Call(2, argv);
+  } else {
+    if (baton->error) {
+      v8::Local<v8::Object> err;
+      if (baton->error->message) {
+        err = Nan::Error(baton->error->message)->ToObject();
+      } else {
+        err = Nan::Error("Method peel has thrown an error.")->ToObject();
+      }
+      err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+      err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Tag.peel").ToLocalChecked());
+      v8::Local<v8::Value> argv[1] = {
+        err
+      };
+      callback->Call(1, argv);
+      if (baton->error->message)
+        free((void *)baton->error->message);
+      free((void *)baton->error);
+    } else if (baton->error_code < 0) {
+      std::queue< v8::Local<v8::Value> > workerArguments;
+      bool callbackFired = false;
+      while(!workerArguments.empty()) {
+        v8::Local<v8::Value> node = workerArguments.front();
+        workerArguments.pop();
+
+        if (
+          !node->IsObject()
+          || node->IsArray()
+          || node->IsBooleanObject()
+          || node->IsDate()
+          || node->IsFunction()
+          || node->IsNumberObject()
+          || node->IsRegExp()
+          || node->IsStringObject()
+        ) {
+          continue;
+        }
+
+        v8::Local<v8::Object> nodeObj = node->ToObject();
+        v8::Local<v8::Value> checkValue = GetPrivate(nodeObj, Nan::New("NodeGitPromiseError").ToLocalChecked());
+
+        if (!checkValue.IsEmpty() && !checkValue->IsNull() && !checkValue->IsUndefined()) {
+          v8::Local<v8::Value> argv[1] = {
+            checkValue->ToObject()
+          };
+          callback->Call(1, argv);
+          callbackFired = true;
+          break;
+        }
+
+        v8::Local<v8::Array> properties = nodeObj->GetPropertyNames();
+        for (unsigned int propIndex = 0; propIndex < properties->Length(); ++propIndex) {
+          v8::Local<v8::String> propName = properties->Get(propIndex)->ToString();
+          v8::Local<v8::Value> nodeToQueue = nodeObj->Get(propName);
+          if (!nodeToQueue->IsUndefined()) {
+            workerArguments.push(nodeToQueue);
+          }
+        }
+      }
+
+      if (!callbackFired) {
+        v8::Local<v8::Object> err = Nan::Error("Method peel has thrown an error.")->ToObject();
+        err->Set(Nan::New("errno").ToLocalChecked(), Nan::New(baton->error_code));
+        err->Set(Nan::New("errorFunction").ToLocalChecked(), Nan::New("Tag.peel").ToLocalChecked());
+        v8::Local<v8::Value> argv[1] = {
+          err
+        };
+        callback->Call(1, argv);
+      }
+    } else {
+      callback->Call(0, NULL);
+    }
+
+  }
+
+
+  delete baton;
+}
+
    
 /*
      * @return Signature  result    */

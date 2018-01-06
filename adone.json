@@ -436,7 +436,14 @@
                     "task": "adoneTranspile",
                     "src": "src/glosses/schema/**/*.js",
                     "dst": "lib/glosses/schema",
-                    "namespace": "schema"
+                    "namespace": "schema",
+                    "struct": {
+                        "dot": {
+                            "task": "adoneDotCompiler",
+                            "src": "src/glosses/schema/__/dot/*.jst",
+                            "dst": "lib/glosses/schema/__/dot"
+                        }
+                    }
                 },
                 "semver": {
                     "description": "Semantic version parser",

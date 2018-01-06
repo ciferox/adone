@@ -17,6 +17,7 @@ extern "C" {
 
 #include "../include/typedefs.h"
 
+#include "../include/str_array_converter.h"
 #include "../include/oid.h"
 #include "../include/repository.h"
 #include "../include/object.h"
@@ -279,6 +280,27 @@ class GitTag : public
     static NAN_METHOD(Name);
 
     static NAN_METHOD(Owner);
+
+    struct PeelBaton {
+      int error_code;
+      const git_error* error;
+      git_object * tag_target_out;
+      const git_tag * tag;
+    };
+    class PeelWorker : public Nan::AsyncWorker {
+      public:
+        PeelWorker(
+            PeelBaton *_baton,
+            Nan::Callback *callback
+        ) : Nan::AsyncWorker(callback)
+          , baton(_baton) {};
+        ~PeelWorker() {};
+        void Execute();
+        void HandleOKCallback();
+
+      private:
+        PeelBaton *baton;
+    };
 
     static NAN_METHOD(Peel);
 

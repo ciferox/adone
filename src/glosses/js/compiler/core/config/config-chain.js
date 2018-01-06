@@ -90,14 +90,6 @@ export function buildRootChain(
   // resolve all .babelrc files
   if (opts.babelrc !== false && context.filename !== null) {
     const filename = context.filename;
-    const babelrcFile = findBabelrc(filename, context.envName);
-    if (babelrcFile) {
-      const result = loadFileChain(babelrcFile, context);
-      if (!result) return null;
-
-      mergeChain(fileChain, result);
-    }
-
     const babelignoreFile = findBabelignore(filename);
     if (
       babelignoreFile &&
@@ -109,6 +101,14 @@ export function buildRootChain(
       )
     ) {
       return null;
+    }
+
+    const babelrcFile = findBabelrc(filename, context.envName);
+    if (babelrcFile) {
+      const result = loadFileChain(babelrcFile, context);
+      if (!result) return null;
+
+      mergeChain(fileChain, result);
     }
   }
 
@@ -180,14 +180,14 @@ function buildEnvDescriptors(
 function makeChainWalker<
   ArgT,
   InnerT: { options: ValidatedOptions, dirname: string },
-> ({
+>({
   init,
   root,
   env,
 }: {
   init: ArgT => InnerT,
-    root: InnerT => OptionsAndDescriptors,
-      env: (InnerT, string) => OptionsAndDescriptors | null,
+  root: InnerT => OptionsAndDescriptors,
+  env: (InnerT, string) => OptionsAndDescriptors | null,
 }): (ArgT, ConfigContext, Set<ConfigFile> | void) => ConfigChain | null {
   return (arg, context, files = new Set()) => {
     const input = init(arg);
@@ -242,8 +242,8 @@ function mergeExtendsChain(
   if (files.has(file)) {
     throw new Error(
       `Configuration cycle detected loading ${file.filepath}.\n` +
-      `File already loaded following the config chain:\n` +
-      Array.from(files, file => ` - ${file.filepath}`).join("\n"),
+        `File already loaded following the config chain:\n` +
+        Array.from(files, file => ` - ${file.filepath}`).join("\n"),
     );
   }
 
@@ -310,7 +310,7 @@ function dedupDescriptors(
   const map: Map<
     Function,
     Map<string | void, { value: UnloadedDescriptor | null }>,
-    > = new Map();
+  > = new Map();
 
   const descriptors = [];
 

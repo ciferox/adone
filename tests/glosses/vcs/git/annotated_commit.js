@@ -56,4 +56,27 @@ describe("AnnotatedCommit", () => {
             assert(id, annotatedCommit.id());
         });
     });
+
+    it("can lookup an AnnotatedCommit from a revspec", function () {
+        const test = this;
+
+        return AnnotatedCommit.fromRevspec(test.repository, "checkout-test")
+            .then((annotatedCommit) => {
+                assert.equal(annotatedCommit.id().toString(),
+                    "1729c73906bb8467f4095c2f4044083016b4dfde");
+            });
+    });
+
+    it("can lookup an AnnotatedCommit from a fetchhead", function () {
+        const test = this;
+
+        return AnnotatedCommit.fromFetchhead(test.repository,
+            "rev-walk",
+            "https://github.com/nodegit/test",
+            "32789a79e71fbc9e04d3eff7425e1771eb595150")
+            .then((annotatedCommit) => {
+                assert.equal(annotatedCommit.id().toString(),
+                    "32789a79e71fbc9e04d3eff7425e1771eb595150");
+            });
+    });
 });

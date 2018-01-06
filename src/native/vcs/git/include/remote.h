@@ -17,6 +17,7 @@ extern "C" {
 
 #include "../include/typedefs.h"
 
+#include "../include/str_array_converter.h"
 #include "../include/remote_head.h"
 #include "../include/repository.h"
 #include "../include/remote_callbacks.h"

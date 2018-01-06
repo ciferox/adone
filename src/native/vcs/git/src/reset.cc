@@ -14,6 +14,7 @@ extern "C" {
 #include "nodegit_wrapper.cc"
 #include "../include/async_libgit2_queue_worker.h"
 
+  #include "../include/str_array_converter.h"
   #include "../include/repository.h"
   #include "../include/object.h"
   #include "../include/checkout_options.h"

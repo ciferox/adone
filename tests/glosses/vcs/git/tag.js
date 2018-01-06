@@ -177,4 +177,14 @@ describe("Tag", () => {
             assert(object.type(), Obj.TYPE.TAG);
         });
     });
+
+    it("can peel a tag", function () {
+        return this.repository.getTagByName(tagName)
+            .then((tag) => {
+                return tag.peel();
+            })
+            .then((object) => {
+                assert.equal(object.isCommit(), true);
+            });
+    });
 });
