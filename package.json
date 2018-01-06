@@ -42,6 +42,7 @@
     "dot": "^1.1.1",
     "double-ended-queue": "2.1.0-0",
     "electron-webrtc": "^0.3.0",
+    "elliptic": "^6.4.0",
     "email-templates": "^2.5.4",
     "engine.io-client": "^3.1.4",
     "epimetheus": "^1.0.55",
@@ -168,6 +169,5 @@
   "repository": "https://github.com/ciferox/adone",
   "bin": {
     "adone": "./bin/adone.js"
-  },
-  "dependencies": {}
+  }
 }

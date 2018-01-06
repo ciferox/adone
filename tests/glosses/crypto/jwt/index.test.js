@@ -958,7 +958,7 @@ describe("crypto", "jwt", () => {
             it("should return error when secret is not a cert for RS256", (done) => {
                 //this throw an error because the secret is not a cert and RS256 requires a cert.
                 jwt.sign({ foo: "bar" }, secret, { algorithm: "RS256" }, (err) => {
-                    assert.okrr);
+                    assert.ok(err);
                     done();
                 });
             });
@@ -966,7 +966,7 @@ describe("crypto", "jwt", () => {
             it("should return error on wrong arguments", (done) => {
                 //this throw an error because the secret is not a cert and RS256 requires a cert.
                 jwt.sign({ foo: "bar" }, secret, { notBefore: {} }, (err) => {
-                    assert.okrr);
+                    assert.ok(err);
                     done();
                 });
             });

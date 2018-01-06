@@ -1,15 +1,14 @@
 const crypto = require("crypto");
-const keypair = require("keypair");
 const pemToJwk = require("pem-jwk").pem2jwk;
 const jwkToPem = require("pem-jwk").jwk2pem;
 
 exports.utils = require("./rsa-utils");
 
 exports.generateKey = function (bits) {
-    const key = keypair({ bits });
+    const pair = adone.crypto.pki.rsa.generateKeyPair(bits);
     return {
-        privateKey: pemToJwk(key.private),
-        publicKey: pemToJwk(key.public)
+        privateKey: pemToJwk(adone.crypto.pki.privateKeyToPem(pair.privateKey)),
+        publicKey: pemToJwk(adone.crypto.pki.publicKeyToPem(pair.publicKey))
     };
 };
 

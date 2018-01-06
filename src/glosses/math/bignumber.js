@@ -44,6 +44,10 @@ BigNumber.prototype.toString = function (base) {
     }
     if (base > 10 && is.string(value)) {
         value = value.toLowerCase();
+        // they are left padded with zero..
+        if (value.length > 1 && value[0] === "0") {
+            value = value.slice(1);
+        }
     }
     return value;
 };
@@ -360,6 +364,11 @@ BigNumber.prototype.toBuffer = function (opts = {}) {
     });
 
     return buf;
+};
+
+BigNumber.prototype.byteValue = function () {
+    const val = this.and(0xFF).toNumber();
+    return (val << 24) >> 24;
 };
 
 Object.keys(BigNumber.prototype).forEach((name) => {

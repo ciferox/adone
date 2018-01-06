@@ -15,22 +15,22 @@ const { util } = adone.private(asn1);
  */
 export default class LocalBaseBlock {
     /**
-	 * Constructor for "LocalBaseBlock" class
-	 * @param {Object} [parameters={}]
-	 * @property {ArrayBuffer} [valueBeforeDecode]
-	 */
+     * Constructor for "LocalBaseBlock" class
+     * @param {Object} [parameters={}]
+     * @property {ArrayBuffer} [valueBeforeDecode]
+     */
     constructor(parameters = {}) {
         /**
-		 * @type {number} blockLength
-		 */
+         * @type {number} blockLength
+         */
         this.blockLength = util.getParametersValue(parameters, "blockLength", 0);
         /**
-		 * @type {string} error
-		 */
+         * @type {string} error
+         */
         this.error = util.getParametersValue(parameters, "error", "");
         /**
-		 * @type {Array.<string>} warnings
-		 */
+         * @type {Array.<string>} warnings
+         */
         this.warnings = util.getParametersValue(parameters, "warnings", []);
         //noinspection JSCheckFunctionSignatures
         /**
@@ -44,17 +44,17 @@ export default class LocalBaseBlock {
     }
 
     /**
-	 * Aux function, need to get a block name. Need to have it here for inhiritence
-	 * @returns {string}
-	 */
+     * Aux function, need to get a block name. Need to have it here for inhiritence
+     * @returns {string}
+     */
     static blockName() {
         return "baseBlock";
     }
 
     /**
-	 * Convertion for the block to JSON object
-	 * @returns {{blockName: string, blockLength: number, error: string, warnings: Array.<string>, valueBeforeDecode: string}}
-	 */
+     * Convertion for the block to JSON object
+     * @returns {{blockName: string, blockLength: number, error: string, warnings: Array.<string>, valueBeforeDecode: string}}
+     */
     toJSON() {
         return {
             blockName: this.constructor.blockName(),

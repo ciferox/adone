@@ -10,5 +10,11 @@ adone.lazify({
     jws: "./jws",
     jwt: "./jwt",
     secp256k1: "./secp256k1",
-    hash: "./hashes"
+    hash: "./hashes",
+    pki: "./pki",
+    random: "./random",
+    md: "./md",
+    pkcs1: "./pkcs1",
+    pkcs5: "./pkcs5",
+    pem: "./pem"
 }, adone.asNamespace(exports), require);

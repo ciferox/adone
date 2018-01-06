@@ -84,7 +84,15 @@ const getCurrentLocation = () => {
         ++i;
     }
     const frame = lines[i];
-    const match = frame.match(/\((.+):(\d+):(\d+)\)$/);
+    let match = frame.match(/\((.+):(\d+):(\d+)\)$/);
+    if (match) {
+        return {
+            path: match[1],
+            line: Number(match[2]),
+            column: Number(match[3])
+        };
+    }
+    match = frame.match(/at (.+):(\d+):(\d+)$/);
     return {
         path: match[1],
         line: Number(match[2]),

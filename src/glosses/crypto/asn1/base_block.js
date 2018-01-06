@@ -12,13 +12,13 @@ const {
 // Declaration of basic ASN.1 block class
 export default class BaseBlock extends LocalBaseBlock {
     /**
-	 * Constructor for "BaseBlock" class
-	 * @param {Object} [parameters={}]
-	 * @property {Object} [primitiveSchema]
-	 * @property {string} [name]
-	 * @property {boolean} [optional]
-	 * @param valueBlockType Type of value block
-	 */
+     * Constructor for "BaseBlock" class
+     * @param {Object} [parameters={}]
+     * @property {Object} [primitiveSchema]
+     * @property {string} [name]
+     * @property {boolean} [optional]
+     * @param valueBlockType Type of value block
+     */
     constructor(parameters = {}, valueBlockType = __.LocalValueBlock) {
         super(parameters);
 
@@ -38,20 +38,20 @@ export default class BaseBlock extends LocalBaseBlock {
     }
 
     /**
-	 * Aux function, need to get a block name. Need to have it here for inhiritence
-	 * @returns {string}
-	 */
+     * Aux function, need to get a block name. Need to have it here for inhiritence
+     * @returns {string}
+     */
     static blockName() {
         return "BaseBlock";
     }
 
     /**
-	 * Base function for converting block from BER encoded array of bytes
-	 * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-	 * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-	 * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-	 * @returns {number}
-	 */
+     * Base function for converting block from BER encoded array of bytes
+     * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+     * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+     * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+     * @returns {number}
+     */
     fromBER(inputBuffer, inputOffset, inputLength) {
         const resultOffset = this.valueBlock.fromBER(inputBuffer, inputOffset, this.lenBlock.isIndefiniteForm === true ? inputLength : this.lenBlock.length);
         if (resultOffset === -1) {
@@ -75,10 +75,10 @@ export default class BaseBlock extends LocalBaseBlock {
     }
 
     /**
-	 * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
-	 * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
-	 * @returns {ArrayBuffer}
-	 */
+     * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
+     * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
+     * @returns {ArrayBuffer}
+     */
     toBER(sizeOnly = false) {
         let retBuf;
 
@@ -117,9 +117,9 @@ export default class BaseBlock extends LocalBaseBlock {
     }
 
     /**
-	 * Convertion for the block to JSON object
-	 * @returns {{blockName, blockLength, error, warnings, valueBeforeDecode}|{blockName: string, blockLength: number, error: string, warnings: Array.<string>, valueBeforeDecode: string}}
-	 */
+     * Convertion for the block to JSON object
+     * @returns {{blockName, blockLength, error, warnings, valueBeforeDecode}|{blockName: string, blockLength: number, error: string, warnings: Array.<string>, valueBeforeDecode: string}}
+     */
     toJSON() {
         let object = {};
 
