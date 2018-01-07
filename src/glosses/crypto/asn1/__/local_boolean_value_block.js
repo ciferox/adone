@@ -9,9 +9,9 @@ const {
 
 export default class LocalBooleanValueBlock extends LocalValueBlock {
     /**
-	 * Constructor for "LocalBooleanValueBlock" class
-	 * @param {Object} [parameters={}]
-	 */
+     * Constructor for "LocalBooleanValueBlock" class
+     * @param {Object} [parameters={}]
+     */
     constructor(parameters = {}) {
         super(parameters);
 
@@ -30,15 +30,14 @@ export default class LocalBooleanValueBlock extends LocalValueBlock {
     }
 
     /**
-	 * Base function for converting block from BER encoded array of bytes
-	 * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-	 * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-	 * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-	 * @returns {number} Offset after least decoded byte
-	 */
+     * Base function for converting block from BER encoded array of bytes
+     * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+     * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+     * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+     * @returns {number} Offset after least decoded byte
+     */
     fromBER(inputBuffer, inputOffset, inputLength) {
         //region Basic check for parameters
-        //noinspection JSCheckFunctionSignatures
         if (util.checkBufferParams(this, inputBuffer, inputOffset, inputLength) === false) {
             return -1;
         }
@@ -71,26 +70,26 @@ export default class LocalBooleanValueBlock extends LocalValueBlock {
     }
 
     /**
-	 * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
-	 * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
-	 * @returns {ArrayBuffer}
-	 */
+     * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
+     * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
+     * @returns {ArrayBuffer}
+     */
     toBER(sizeOnly = false) {
         return this.valueHex;
     }
 
     /**
-	 * Aux function, need to get a block name. Need to have it here for inhiritence
-	 * @returns {string}
-	 */
+     * Aux function, need to get a block name. Need to have it here for inhiritence
+     * @returns {string}
+     */
     static blockName() {
         return "BooleanValueBlock";
     }
 
     /**
-	 * Convertion for the block to JSON object
-	 * @returns {{blockName, blockLength, error, warnings, valueBeforeDecode}|{blockName: string, blockLength: number, error: string, warnings: Array.<string>, valueBeforeDecode: string}}
-	 */
+     * Convertion for the block to JSON object
+     * @returns {{blockName, blockLength, error, warnings, valueBeforeDecode}|{blockName: string, blockLength: number, error: string, warnings: Array.<string>, valueBeforeDecode: string}}
+     */
     toJSON() {
         let object = {};
 

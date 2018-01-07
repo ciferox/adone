@@ -3,7 +3,6 @@ const {
 } = adone;
 
 const forge = require("node-forge");
-const asn1 = forge.asn1;
 
 /**
  * Gets a fingerprint for the given public key.
@@ -27,10 +26,10 @@ export default function getPublicKeyFingerprint(key, options) {
     let bytes;
     switch (type) {
         case "RSAPublicKey":
-            bytes = asn1.toDer(pki.publicKeyToRSAPublicKey(key)).getBytes();
+            bytes = Buffer.from(pki.publicKeyToRSAPublicKey(key).toBER()).toString("binary");
             break;
         case "SubjectPublicKeyInfo":
-            bytes = asn1.toDer(pki.publicKeyToAsn1(key)).getBytes();
+            bytes = Buffer.from(pki.publicKeyToAsn1(key).toBER()).toString("binary");
             break;
         default:
             throw new Error(`Unknown fingerprint type "${options.type}".`);

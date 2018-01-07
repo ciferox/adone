@@ -10,10 +10,10 @@ const __ = adone.private(asn1);
 
 export default class ObjectIdentifier extends BaseBlock {
     /**
-	 * Constructor for "ObjectIdentifier" class
-	 * @param {Object} [parameters={}]
-	 * @property {ArrayBuffer} [valueHex]
-	 */
+     * Constructor for "ObjectIdentifier" class
+     * @param {Object} [parameters={}]
+     * @property {ArrayBuffer} [valueHex]
+     */
     constructor(parameters = {}) {
         super(parameters, __.LocalObjectIdentifierValueBlock);
 
@@ -22,9 +22,9 @@ export default class ObjectIdentifier extends BaseBlock {
     }
 
     /**
-	 * Aux function, need to get a block name. Need to have it here for inhiritence
-	 * @returns {string}
-	 */
+     * Aux function, need to get a block name. Need to have it here for inhiritence
+     * @returns {string}
+     */
     static blockName() {
         return "ObjectIdentifier";
     }

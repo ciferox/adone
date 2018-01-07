@@ -2,9 +2,6 @@ const {
     crypto
 } = adone;
 
-const forge = require("node-forge");
-const asn1 = forge.asn1;
-
 /**
  * Converts a PrivateKeyInfo to PEM format.
  *
@@ -17,7 +14,7 @@ export default function PrivateKeyInfoToPem(pki, maxline) {
     // convert to DER, then PEM-encode
     const msg = {
         type: "PRIVATE KEY",
-        body: asn1.toDer(pki).getBytes()
+        body: Buffer.from(pki.toBER()).toString("binary")
     };
     return crypto.pem.encode(msg, { maxline });
 }

@@ -1,102 +1,72 @@
 const {
     is,
-    crypto: { pki }
+    crypto
 } = adone;
+
+const {
+    pki,
+    asn1
+} = crypto;
+
 const __ = adone.private(pki);
-const forge = require("node-forge");
-const asn1 = forge.asn1;
-
-// validator for an SubjectPublicKeyInfo structure
-// Note: Currently only works with an RSA public key
-const publicKeyValidator = forge.pki.rsa.publicKeyValidator;
-
 
 // validator for a CertificationRequestInfo structure
-const certificationRequestInfoValidator = {
-    name: "CertificationRequestInfo",
-    tagClass: asn1.Class.UNIVERSAL,
-    type: asn1.Type.SEQUENCE,
-    constructed: true,
-    captureAsn1: "certificationRequestInfo",
-    value: [{
-        name: "CertificationRequestInfo.integer",
-        tagClass: asn1.Class.UNIVERSAL,
-        type: asn1.Type.INTEGER,
-        constructed: false,
-        capture: "certificationRequestInfoVersion"
-    }, {
-        // Name (subject) (RDNSequence)
-        name: "CertificationRequestInfo.subject",
-        tagClass: asn1.Class.UNIVERSAL,
-        type: asn1.Type.SEQUENCE,
-        constructed: true,
-        captureAsn1: "certificationRequestInfoSubject"
-    },
-    // SubjectPublicKeyInfo
-    publicKeyValidator,
-    {
-        name: "CertificationRequestInfo.attributes",
-        tagClass: asn1.Class.CONTEXT_SPECIFIC,
-        type: 0,
-        constructed: true,
-        optional: true,
-        capture: "certificationRequestInfoAttributes",
-        value: [{
-            name: "CertificationRequestInfo.attributes",
-            tagClass: asn1.Class.UNIVERSAL,
-            type: asn1.Type.SEQUENCE,
-            constructed: true,
-            value: [{
-                name: "CertificationRequestInfo.attributes.type",
-                tagClass: asn1.Class.UNIVERSAL,
-                type: asn1.Type.OID,
-                constructed: false
-            }, {
-                name: "CertificationRequestInfo.attributes.value",
-                tagClass: asn1.Class.UNIVERSAL,
-                type: asn1.Type.SET,
-                constructed: true
-            }]
-        }]
-    }]
-};
+const certificationRequestInfoValidator = new asn1.Sequence({
+    name: "certificationRequestInfo",
+    value: [
+        new asn1.Integer({
+            name: "csrVersion"
+        }),
+        new asn1.Sequence({
+            // Name (subject) (RDNSequence)
+            name: "certificationRequestInfoSubject"
+        }),
+        // SubjectPublicKeyInfo
+        __.publicKeyValidator,
+        new asn1.Constructed({
+            optional: true,
+            idBlock: {
+                tagClass: 3, // CONTEXT-SPECIFIC
+                tagNumber: 0 // [0]
+            },
+            name: "certificationRequestInfoAttributes",
+            value: [
+                new asn1.Sequence({
+                    optional: true,
+                    value: [
+                        new asn1.ObjectIdentifier(),
+                        new asn1.Set()
+                    ]
+                })
+            ]
+        })
+    ]
+});
 
 // validator for a CertificationRequest structure
-const certificationRequestValidator = {
-    name: "CertificationRequest",
-    tagClass: asn1.Class.UNIVERSAL,
-    type: asn1.Type.SEQUENCE,
-    constructed: true,
-    captureAsn1: "csr",
+const certificationRequestValidator = new asn1.Sequence({
+    name: "csr",
     value: [
-        certificationRequestInfoValidator, {
+        certificationRequestInfoValidator,
+        new asn1.Sequence({
             // AlgorithmIdentifier (signature algorithm)
-            name: "CertificationRequest.signatureAlgorithm",
-            tagClass: asn1.Class.UNIVERSAL,
-            type: asn1.Type.SEQUENCE,
-            constructed: true,
-            value: [{
-                // algorithm
-                name: "CertificationRequest.signatureAlgorithm.algorithm",
-                tagClass: asn1.Class.UNIVERSAL,
-                type: asn1.Type.OID,
-                constructed: false,
-                capture: "csrSignatureOid"
-            }, {
-                name: "CertificationRequest.signatureAlgorithm.parameters",
-                tagClass: asn1.Class.UNIVERSAL,
-                optional: true,
-                captureAsn1: "csrSignatureParams"
-            }]
-        }, {
+            value: [
+                new asn1.ObjectIdentifier({
+                    // algorithm
+                    name: "csrSignatureOid"
+                }),
+                new asn1.Any({
+                    optional: true,
+                    name: "csrSignatureParams"
+                })
+            ]
+        }),
+        new asn1.BitString({
             // signature
-            name: "CertificationRequest.signature",
-            tagClass: asn1.Class.UNIVERSAL,
-            type: asn1.Type.BITSTRING,
-            constructed: false,
-            captureBitStringValue: "csrSignature"
-        }]
-};
+            name: "csrSignature"
+        })
+    ]
+});
 
 /**
  * Converts a PKCS#10 certification request (CSR) from an ASN.1 object.
@@ -113,33 +83,33 @@ const certificationRequestValidator = {
  */
 export default function certificationRequestFromAsn1(obj, computeHash) {
     // validate certification request and capture data
-    const capture = {};
-    const errors = [];
-    if (!asn1.validate(obj, certificationRequestValidator, capture, errors)) {
-        const error = new Error("Cannot read PKCS#10 certificate request. ASN.1 object is not a PKCS#10 CertificationRequest.");
-        error.errors = errors;
-        throw error;
+    const validation = asn1.compareSchema(obj, obj, certificationRequestValidator);
+
+    if (!validation.verified) {
+        throw new Error("Cannot read PKCS#10 certificate request. ASN.1 object is not a PKCS#10 CertificationRequest.");
     }
 
+    const { result } = validation;
+
     // get oid
-    const oid = asn1.derToOid(capture.publicKeyOid);
+    const oid = result.publicKeyOid.valueBlock.toString();
+
     if (oid !== pki.oids.rsaEncryption) {
         throw new Error("Cannot read public key. OID is not RSA.");
     }
 
     // create certification request
     const csr = pki.createCertificationRequest();
-    csr.version = capture.csrVersion ? capture.csrVersion.charCodeAt(0) : 0;
-    csr.signatureOid = forge.asn1.derToOid(capture.csrSignatureOid);
-    csr.signatureParameters = __.readSignatureParameters(
-        csr.signatureOid, capture.csrSignatureParams, true);
-    csr.siginfo.algorithmOid = forge.asn1.derToOid(capture.csrSignatureOid);
-    csr.siginfo.parameters = __.readSignatureParameters(
-        csr.siginfo.algorithmOid, capture.csrSignatureParams, false);
-    csr.signature = capture.csrSignature;
+
+    csr.version = result.csrVersion.valueBlock.valueDec;
+    csr.signatureOid = result.csrSignatureOid.valueBlock.toString();
+    csr.signatureParameters = __.readSignatureParameters(csr.signatureOid, result.csrSignatureParams, true);
+    csr.siginfo.algorithmOid = result.csrSignatureOid.valueBlock.toString();
+    csr.siginfo.parameters = __.readSignatureParameters(csr.siginfo.algorithmOid, result.csrSignatureParams, false);
+    csr.signature = Buffer.from(result.csrSignature.valueBlock.valueHex).toString("binary");
 
     // keep CertificationRequestInfo to preserve signature when exporting
-    csr.certificationRequestInfo = capture.certificationRequestInfo;
+    csr.certificationRequestInfo = result.certificationRequestInfo;
 
     if (computeHash) {
         // check signature OID for supported signature types
@@ -147,39 +117,38 @@ export default function certificationRequestFromAsn1(obj, computeHash) {
         if (csr.signatureOid in pki.oids) {
             switch (pki.oids[csr.signatureOid]) {
                 case "sha1WithRSAEncryption":
-                    csr.md = forge.md.sha1.create();
+                    csr.md = crypto.md.sha1.create();
                     break;
                 case "md5WithRSAEncryption":
-                    csr.md = forge.md.md5.create();
+                    csr.md = crypto.md.md5.create();
                     break;
                 case "sha256WithRSAEncryption":
-                    csr.md = forge.md.sha256.create();
+                    csr.md = crypto.md.sha256.create();
                     break;
                 case "sha384WithRSAEncryption":
-                    csr.md = forge.md.sha384.create();
+                    csr.md = crypto.md.sha384.create();
                     break;
                 case "sha512WithRSAEncryption":
-                    csr.md = forge.md.sha512.create();
+                    csr.md = crypto.md.sha512.create();
                     break;
                 case "RSASSA-PSS":
-                    csr.md = forge.md.sha256.create();
+                    csr.md = crypto.md.sha256.create();
                     break;
             }
         }
         if (is.null(csr.md)) {
-            const error = new Error("Could not compute certification request digest. " +
-          "Unknown signature OID.");
+            const error = new Error("Could not compute certification request digest. Unknown signature OID.");
             error.signatureOid = csr.signatureOid;
             throw error;
         }
 
         // produce DER formatted CertificationRequestInfo and digest it
-        const bytes = asn1.toDer(csr.certificationRequestInfo);
-        csr.md.update(bytes.getBytes());
+        const bytes = Buffer.from(csr.certificationRequestInfo.toBER()).toString("binary");
+        csr.md.update(bytes);
     }
 
     // handle subject, build subject message digest
-    const smd = forge.md.sha1.create();
+    const smd = crypto.md.sha1.create();
     csr.subject.getField = function (sn) {
         return __.getAttribute(csr.subject, sn);
     };
@@ -187,12 +156,11 @@ export default function certificationRequestFromAsn1(obj, computeHash) {
         __.fillMissingFields([attr]);
         csr.subject.attributes.push(attr);
     };
-    csr.subject.attributes = pki.RDNAttributesAsArray(
-        capture.certificationRequestInfoSubject, smd);
+    csr.subject.attributes = pki.RDNAttributesAsArray(result.certificationRequestInfoSubject, smd);
     csr.subject.hash = smd.digest().toHex();
 
     // convert RSA public key from ASN.1
-    csr.publicKey = pki.publicKeyFromAsn1(capture.subjectPublicKeyInfo);
+    csr.publicKey = pki.publicKeyFromAsn1(asn1.fromBER(result.subjectPublicKey.valueBlock.valueHex).result);
 
     // convert attributes from ASN.1
     csr.getAttribute = function (sn) {
@@ -202,8 +170,8 @@ export default function certificationRequestFromAsn1(obj, computeHash) {
         __.fillMissingFields([attr]);
         csr.attributes.push(attr);
     };
-    csr.attributes = pki.CRIAttributesAsArray(
-        capture.certificationRequestInfoAttributes || []);
+
+    csr.attributes = pki.CRIAttributesAsArray(result.certificationRequestInfoAttributes || []);
 
     return csr;
 }

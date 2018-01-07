@@ -59,9 +59,10 @@ const {
  */
 export default function certificateExtensionsFromAsn1(exts) {
     const rval = [];
-    for (let i = 0; i < exts.value.length; ++i) {
+    const value = exts.valueBlock.value;
+    for (let i = 0; i < value.length; ++i) {
         // get extension sequence
-        const extseq = exts.value[i];
+        const extseq = value[i].valueBlock;
         for (let ei = 0; ei < extseq.value.length; ++ei) {
             rval.push(pki.certificateExtensionFromAsn1(extseq.value[ei]));
         }

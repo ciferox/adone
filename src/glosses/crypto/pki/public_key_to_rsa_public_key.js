@@ -1,11 +1,15 @@
 const {
-    crypto: { pki }
+    crypto: {
+        pki,
+        asn1
+    }
 } = adone;
 
 const __ = adone.private(pki);
 
-const forge = require("node-forge");
-const asn1 = forge.asn1;
+const tobuf = (bn) => {
+    return adone.util.bufferToArrayBuffer(Buffer.from(__.bnToBytes(bn), "binary"));
+};
 
 /**
  * Converts a public key to an ASN.1 RSAPublicKey.
@@ -16,10 +20,16 @@ const asn1 = forge.asn1;
  */
 export default function publicKeyToRSAPublicKey(key) {
     // RSAPublicKey
-    return asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-        // modulus (n)
-        asn1.create(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false, __.bnToBytes(key.n)),
-        // publicExponent (e)
-        asn1.create(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false, __.bnToBytes(key.e))
-    ]);
+    return new asn1.Sequence({
+        value: [
+            // modulus (n)
+            new asn1.Integer({
+                valueHex: tobuf(key.n)
+            }),
+            // publicExponent (e)
+            new asn1.Integer({
+                valueHex: tobuf(key.e)
+            })
+        ]
+    });
 }

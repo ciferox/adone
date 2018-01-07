@@ -8,11 +8,10 @@ const {
 } = adone.private(asn1);
 
 export default class LocalUniversalStringValueBlock extends LocalHexBlock(LocalBaseBlock) {
-    //**********************************************************************************
     /**
-	 * Constructor for "LocalUniversalStringValueBlock" class
-	 * @param {Object} [parameters={}]
-	 */
+     * Constructor for "LocalUniversalStringValueBlock" class
+     * @param {Object} [parameters={}]
+     */
     constructor(parameters = {}) {
         super(parameters);
 
@@ -20,21 +19,18 @@ export default class LocalUniversalStringValueBlock extends LocalHexBlock(LocalB
         this.value = "";
     }
 
-    //**********************************************************************************
     /**
-	 * Aux function, need to get a block name. Need to have it here for inhiritence
-	 * @returns {string}
-	 */
+     * Aux function, need to get a block name. Need to have it here for inhiritence
+     * @returns {string}
+     */
     static blockName() {
         return "UniversalStringValueBlock";
     }
 
-    //**********************************************************************************
-    //noinspection JSUnusedGlobalSymbols
     /**
-	 * Convertion for the block to JSON object
-	 * @returns {Object}
-	 */
+     * Convertion for the block to JSON object
+     * @returns {Object}
+     */
     toJSON() {
         let object = {};
 
@@ -50,5 +46,4 @@ export default class LocalUniversalStringValueBlock extends LocalHexBlock(LocalB
 
         return object;
     }
-    //**********************************************************************************
 }

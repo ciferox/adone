@@ -1,11 +1,11 @@
 const {
-    crypto: { pki }
+    crypto: {
+        pki,
+        asn1
+    }
 } = adone;
 
 const __ = adone.private(pki);
-
-const forge = require("node-forge");
-const asn1 = forge.asn1;
 
 /**
  * Gets the ASN.1 CertificationRequestInfo part of a
@@ -17,17 +17,18 @@ const asn1 = forge.asn1;
  */
 export default function getCertificationRequestInfo(csr) {
     // CertificationRequestInfo
-    const cri = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-        // version
-        asn1.create(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false,
-            asn1.integerToDer(csr.version).getBytes()),
-        // subject
-        __.dnToAsn1(csr.subject),
-        // SubjectPublicKeyInfo
-        pki.publicKeyToAsn1(csr.publicKey),
-        // attributes
-        __.CRIAttributesToAsn1(csr)
-    ]);
-
-    return cri;
-};
+    return new asn1.Sequence({
+        value: [
+            // version
+            new asn1.Integer({
+                value: csr.version
+            }),
+            // subject
+            __.dnToAsn1(csr.subject),
+            // SubjectPublicKeyInfo
+            pki.publicKeyToAsn1(csr.publicKey),
+            // attributes
+            __.CRIAttributesToAsn1(csr)
+        ]
+    });
+}

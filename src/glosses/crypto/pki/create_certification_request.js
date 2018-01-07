@@ -1,11 +1,13 @@
 const {
     is,
-    crypto: { pki }
+    crypto
 } = adone;
-const __ = adone.private(pki);
 
-const forge = require("node-forge");
-const asn1 = forge.asn1;
+const {
+    pki
+} = crypto;
+
+const __ = adone.private(pki);
 
 /**
  * Creates an empty certification request (a CSR or certificate signing
@@ -75,7 +77,7 @@ export default function createCertificationRequest() {
      */
     csr.sign = function (key, md) {
         // TODO: get signature OID from private key
-        csr.md = md || forge.md.sha1.create();
+        csr.md = md || crypto.md.sha1.create();
         const algorithmOid = pki.oids[`${csr.md.algorithm}WithRSAEncryption`];
         if (!algorithmOid) {
             const error = new Error("Could not compute certification request digest. Unknown message digest algorithm OID.");
@@ -86,10 +88,10 @@ export default function createCertificationRequest() {
 
         // get CertificationRequestInfo, convert to DER
         csr.certificationRequestInfo = pki.getCertificationRequestInfo(csr);
-        const bytes = asn1.toDer(csr.certificationRequestInfo);
+        const bytes = Buffer.from(csr.certificationRequestInfo.toBER()).toString("binary");
 
         // digest and sign
-        csr.md.update(bytes.getBytes());
+        csr.md.update(bytes);
         csr.signature = key.sign(csr.md);
     };
 
@@ -115,22 +117,22 @@ export default function createCertificationRequest() {
                 const oid = pki.oids[csr.signatureOid];
                 switch (oid) {
                     case "sha1WithRSAEncryption":
-                        md = forge.md.sha1.create();
+                        md = crypto.md.sha1.create();
                         break;
                     case "md5WithRSAEncryption":
-                        md = forge.md.md5.create();
+                        md = crypto.md.md5.create();
                         break;
                     case "sha256WithRSAEncryption":
-                        md = forge.md.sha256.create();
+                        md = crypto.md.sha256.create();
                         break;
                     case "sha384WithRSAEncryption":
-                        md = forge.md.sha384.create();
+                        md = crypto.md.sha384.create();
                         break;
                     case "sha512WithRSAEncryption":
-                        md = forge.md.sha512.create();
+                        md = crypto.md.sha512.create();
                         break;
                     case "RSASSA-PSS":
-                        md = forge.md.sha256.create();
+                        md = crypto.md.sha256.create();
                         break;
                 }
             }
@@ -141,10 +143,9 @@ export default function createCertificationRequest() {
             }
 
             // produce DER formatted CertificationRequestInfo and digest it
-            const cri = csr.certificationRequestInfo ||
-          pki.getCertificationRequestInfo(csr);
-            const bytes = asn1.toDer(cri);
-            md.update(bytes.getBytes());
+            const cri = csr.certificationRequestInfo || pki.getCertificationRequestInfo(csr);
+            const bytes = Buffer.from(cri.toBER()).toString("binary");
+            md.update(bytes);
         }
 
         if (!is.null(md)) {
@@ -187,15 +188,13 @@ export default function createCertificationRequest() {
                         throw error;
                     }
 
-                    scheme = forge.pss.create(forge.md[hash].create(), mgf,
-                        csr.signatureParameters.saltLength);
+                    scheme = forge.pss.create(forge.md[hash].create(), mgf, csr.signatureParameters.saltLength);
                     break;
                 }
             }
 
             // verify signature on csr using its public key
-            rval = csr.publicKey.verify(
-                md.digest().getBytes(), csr.signature, scheme);
+            rval = csr.publicKey.verify(md.digest().getBytes(), csr.signature, scheme);
         }
 
         return rval;

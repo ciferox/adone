@@ -2,14 +2,12 @@ const {
     is,
     crypto: {
         pki,
-        pkcs1
+        pkcs1,
+        asn1
     }
 } = adone;
 
 const __ = adone.private(adone.crypto.pki.rsa);
-
-const forge = require("node-forge");
-const asn1 = forge.asn1;
 
 /**
  * Sets an RSA public key from BigIntegers modulus and exponent.
@@ -118,9 +116,13 @@ export default function setPublicKey(n, e) {
                     // remove padding
                     d = __.decodePKCS1v15(d, key, true);
                     // d is ASN.1 BER-encoded DigestInfo
-                    const obj = asn1.fromDer(d);
+                    const buf = adone.util.bufferToArrayBuffer(Buffer.from(d, "binary"));
+                    const { result } = asn1.fromBER(buf);
+                    if (result.error) {
+                        return false;
+                    }
                     // compare the given digest to the decrypted one
-                    return digest === obj.value[1].value;
+                    return digest === Buffer.from(result.valueBlock.value[1].valueBlock.valueHex).toString("binary");
                 }
             };
         } else if (scheme === "NONE" || scheme === "NULL" || is.null(scheme)) {

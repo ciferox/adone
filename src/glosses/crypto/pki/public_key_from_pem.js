@@ -1,19 +1,20 @@
 const {
-    crypto: { pki }
+    crypto: {
+        pki,
+        asn1,
+        pem
+    }
 } = adone;
-
-const forge = require("node-forge");
-const asn1 = forge.asn1;
 
 /**
  * Converts an RSA public key from PEM format.
  *
- * @param pem the PEM-formatted public key.
+ * @param _pem the PEM-formatted public key.
  *
  * @return the public key.
  */
-export default function publicKeyFromPem(pem) {
-    const msg = forge.pem.decode(pem)[0];
+export default function publicKeyFromPem(_pem) {
+    const msg = pem.decode(_pem)[0];
 
     if (msg.type !== "PUBLIC KEY" && msg.type !== "RSA PUBLIC KEY") {
         const error = new Error("Could not convert public key from PEM; PEM header " +
@@ -26,7 +27,8 @@ export default function publicKeyFromPem(pem) {
     }
 
     // convert DER to ASN.1 object
-    const obj = asn1.fromDer(msg.body);
+    const buf = adone.util.bufferToArrayBuffer(Buffer.from(msg.body, "binary"));
+    const obj = asn1.fromBER(buf).result;
 
     return pki.publicKeyFromAsn1(obj);
 }

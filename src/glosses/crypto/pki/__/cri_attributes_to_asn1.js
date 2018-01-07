@@ -1,5 +1,11 @@
-const forge = require("node-forge");
-const asn1 = forge.asn1;
+const {
+    crypto: {
+        asn1,
+        pki
+    }
+} = adone;
+
+const __ = adone.private(pki);
 
 /**
  * Converts a certification request's attributes to an ASN.1 set of
@@ -11,7 +17,12 @@ const asn1 = forge.asn1;
  */
 export default function CRIAttributesToAsn1(csr) {
     // create an empty context-specific container
-    const rval = asn1.create(asn1.Class.CONTEXT_SPECIFIC, 0, true, []);
+    const rval = new asn1.Constructed({
+        idBlock: {
+            tagClass: 3, // CONTEXT_SPECIFIC
+            tagNumber: 0
+        }
+    });
 
     // no attributes, return empty container
     if (csr.attributes.length === 0) {
@@ -25,12 +36,12 @@ export default function CRIAttributesToAsn1(csr) {
         let value = attr.value;
 
         // reuse tag class for attribute value if available
-        let valueTagClass = asn1.Type.UTF8;
+        let valueTagClass = 12; // UTF8
         if ("valueTagClass" in attr) {
             valueTagClass = attr.valueTagClass;
         }
-        if (valueTagClass === asn1.Type.UTF8) {
-            value = forge.util.encodeUtf8(value);
+        if (valueTagClass === 12) { // UTF8
+            value = __.encodeUtf8(value);
         }
         let valueConstructed = false;
         if ("valueConstructed" in attr) {
@@ -41,17 +52,39 @@ export default function CRIAttributesToAsn1(csr) {
         // create a RelativeDistinguishedName set
         // each value in the set is an AttributeTypeAndValue first
         // containing the type (an OID) and second the value
-        const seq = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-        // AttributeType
-            asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false,
-                asn1.oidToDer(attr.type).getBytes()),
-            asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SET, true, [
-                // AttributeValue
-                asn1.create(
-                    asn1.Class.UNIVERSAL, valueTagClass, valueConstructed, value)
-            ])
-        ]);
-        rval.value.push(seq);
+        const idBlock = {
+            tagClass: 1, // UNIVERSAL
+            tagNumber: valueTagClass
+        };
+
+        let attrValue;
+        if (valueConstructed) {
+            attrValue = new asn1.Constructed({
+                idBlock,
+                value
+            });
+        } else {
+            attrValue = new asn1.Primitive({
+                idBlock,
+                valueHex: adone.util.bufferToArrayBuffer(Buffer.from(value, "binary"))
+            });
+        }
+
+        const seq = new asn1.Sequence({
+            value: [
+                // AttributeType
+                new asn1.ObjectIdentifier({
+                    value: attr.type
+                }),
+                new asn1.Set({
+                    value: [
+                        // AttributeValue
+                        attrValue
+                    ]
+                })
+            ]
+        });
+        rval.valueBlock.value.push(seq);
     }
 
     return rval;

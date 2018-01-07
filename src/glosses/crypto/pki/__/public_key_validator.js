@@ -16,13 +16,8 @@ export default new asn1.Sequence({
         }),
         new asn1.BitString({
             // subjectPublicKey
-            value: [
-                new asn1.Sequence({
-                    // RSAPublicKey
-                    optional: true,
-                    name: "rsaPublicKey"
-                })
-            ]
+            name: "subjectPublicKey",
+            optional: true
         })
     ]
 });

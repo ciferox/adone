@@ -16,10 +16,10 @@ const digitsString = "0123456789";
  */
 export default class LocalIntegerValueBlock extends LocalHexBlock(LocalValueBlock) {
     /**
-	 * Constructor for "LocalIntegerValueBlock" class
-	 * @param {Object} [parameters={}]
-	 * @property {ArrayBuffer} [valueHex]
-	 */
+     * Constructor for "LocalIntegerValueBlock" class
+     * @param {Object} [parameters={}]
+     * @property {ArrayBuffer} [valueHex]
+     */
     constructor(parameters = {}) {
         super(parameters);
 
@@ -29,9 +29,9 @@ export default class LocalIntegerValueBlock extends LocalHexBlock(LocalValueBloc
     }
 
     /**
-	 * Setter for "valueHex"
-	 * @param {ArrayBuffer} _value
-	 */
+     * Setter for "valueHex"
+     * @param {ArrayBuffer} _value
+     */
     set valueHex(_value) {
         this._valueHex = _value.slice(0);
 
@@ -49,17 +49,17 @@ export default class LocalIntegerValueBlock extends LocalHexBlock(LocalValueBloc
     }
 
     /**
-	 * Getter for "valueHex"
-	 * @returns {ArrayBuffer}
-	 */
+     * Getter for "valueHex"
+     * @returns {ArrayBuffer}
+     */
     get valueHex() {
         return this._valueHex;
     }
 
     /**
-	 * Getter for "valueDec"
-	 * @param {number} _value
-	 */
+     * Getter for "valueDec"
+     * @param {number} _value
+     */
     set valueDec(_value) {
         this._valueDec = _value;
 
@@ -68,21 +68,21 @@ export default class LocalIntegerValueBlock extends LocalHexBlock(LocalValueBloc
     }
 
     /**
-	 * Getter for "valueDec"
-	 * @returns {number}
-	 */
+     * Getter for "valueDec"
+     * @returns {number}
+     */
     get valueDec() {
         return this._valueDec;
     }
 
     /**
-	 * Base function for converting block from DER encoded array of bytes
-	 * @param {!ArrayBuffer} inputBuffer ASN.1 DER encoded array
-	 * @param {!number} inputOffset Offset in ASN.1 DER encoded array where decoding should be started
-	 * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-	 * @param {number} [expectedLength=0] Expected length of converted "valueHex" buffer
-	 * @returns {number} Offset after least decoded byte
-	 */
+     * Base function for converting block from DER encoded array of bytes
+     * @param {!ArrayBuffer} inputBuffer ASN.1 DER encoded array
+     * @param {!number} inputOffset Offset in ASN.1 DER encoded array where decoding should be started
+     * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+     * @param {number} [expectedLength=0] Expected length of converted "valueHex" buffer
+     * @returns {number} Offset after least decoded byte
+     */
     fromDER(inputBuffer, inputOffset, inputLength, expectedLength = 0) {
         const offset = this.fromBER(inputBuffer, inputOffset, inputLength);
         if (offset === -1) {
@@ -119,48 +119,45 @@ export default class LocalIntegerValueBlock extends LocalHexBlock(LocalValueBloc
     }
 
     /**
-	 * Encoding of current ASN.1 block into ASN.1 encoded array (DER rules)
-	 * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
-	 * @returns {ArrayBuffer}
-	 */
+     * Encoding of current ASN.1 block into ASN.1 encoded array (DER rules)
+     * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
+     * @returns {ArrayBuffer}
+     */
     toDER(sizeOnly = false) {
         const view = new Uint8Array(this._valueHex);
 
         switch (true) {
-            case (view[0] & 0x80) !== 0:
-                {
-                    const updatedValueHex = new ArrayBuffer(this._valueHex.byteLength + 1);
-                    const updatedView = new Uint8Array(updatedValueHex);
+            case (view[0] & 0x80) !== 0: {
+                const updatedValueHex = new ArrayBuffer(this._valueHex.byteLength + 1);
+                const updatedView = new Uint8Array(updatedValueHex);
 
-                    updatedView[0] = 0x00;
-                    updatedView.set(view, 1);
+                updatedView[0] = 0x00;
+                updatedView.set(view, 1);
 
-                    this._valueHex = updatedValueHex.slice(0);
-                }
+                this._valueHex = updatedValueHex.slice(0);
                 break;
-            case (view[0] === 0x00) && ((view[1] & 0x80) === 0):
-                {
-                    const updatedValueHex = new ArrayBuffer(this._valueHex.byteLength - 1);
-                    const updatedView = new Uint8Array(updatedValueHex);
+            }
+            case (view[0] === 0x00) && ((view[1] & 0x80) === 0): {
+                const updatedValueHex = new ArrayBuffer(this._valueHex.byteLength - 1);
+                const updatedView = new Uint8Array(updatedValueHex);
 
-                    updatedView.set(new Uint8Array(this._valueHex, 1, this._valueHex.byteLength - 1));
+                updatedView.set(new Uint8Array(this._valueHex, 1, this._valueHex.byteLength - 1));
 
-                    this._valueHex = updatedValueHex.slice(0);
-                }
+                this._valueHex = updatedValueHex.slice(0);
                 break;
-            default:
+            }
         }
 
         return this.toBER(sizeOnly);
     }
 
     /**
-	 * Base function for converting block from BER encoded array of bytes
-	 * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-	 * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-	 * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-	 * @returns {number} Offset after least decoded byte
-	 */
+     * Base function for converting block from BER encoded array of bytes
+     * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+     * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+     * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+     * @returns {number} Offset after least decoded byte
+     */
     fromBER(inputBuffer, inputOffset, inputLength) {
         const resultOffset = super.fromBER(inputBuffer, inputOffset, inputLength);
         if (resultOffset === -1) {
@@ -173,27 +170,26 @@ export default class LocalIntegerValueBlock extends LocalHexBlock(LocalValueBloc
     }
 
     /**
-	 * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
-	 * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
-	 * @returns {ArrayBuffer}
-	 */
+     * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
+     * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
+     * @returns {ArrayBuffer}
+     */
     toBER(sizeOnly = false) {
-        //noinspection JSCheckFunctionSignatures
         return this.valueHex.slice(0);
     }
 
     /**
-	 * Aux function, need to get a block name. Need to have it here for inhiritence
-	 * @returns {string}
-	 */
+     * Aux function, need to get a block name. Need to have it here for inhiritence
+     * @returns {string}
+     */
     static blockName() {
         return "IntegerValueBlock";
     }
 
     /**
-	 * Convertion for the block to JSON object
-	 * @returns {Object}
-	 */
+     * Convertion for the block to JSON object
+     * @returns {Object}
+     */
     toJSON() {
         let object = {};
 
@@ -211,8 +207,8 @@ export default class LocalIntegerValueBlock extends LocalHexBlock(LocalValueBloc
     }
 
     /**
-	 * Convert current value to decimal string representation
-	 */
+     * Convert current value to decimal string representation
+     */
     toString() {
         //region Aux functions
         const viewAdd = (first, second) => {

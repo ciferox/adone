@@ -1,8 +1,7 @@
 const {
+    crypto,
     math: { BigNumber }
 } = adone;
-
-const forge = require("node-forge");
 
 /**
  * Performs x^c mod n (RSA encryption or decryption operation).
@@ -120,7 +119,7 @@ export default function modPow(x, key, pub) {
     // cryptographic blinding
     let r;
     do {
-        r = BigNumber.fromBuffer(Buffer.from(forge.random.getBytes(key.n.bitLength() / 8), "binary"));
+        r = BigNumber.fromBuffer(crypto.random.getBytesSync(key.n.bitLength() / 8));
     } while (r.cmp(key.n) >= 0 || !r.gcd(key.n).eq(BigNumber.ONE));
     x = x.mul(r.powm(key.e, key.n)).mod(key.n);
 

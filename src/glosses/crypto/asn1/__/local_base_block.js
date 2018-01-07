@@ -32,7 +32,6 @@ export default class LocalBaseBlock {
          * @type {Array.<string>} warnings
          */
         this.warnings = util.getParametersValue(parameters, "warnings", []);
-        //noinspection JSCheckFunctionSignatures
         /**
 		 * @type {ArrayBuffer} valueBeforeDecode
 		 */

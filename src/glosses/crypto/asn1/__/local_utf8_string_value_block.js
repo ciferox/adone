@@ -8,12 +8,10 @@ const {
 } = adone.private(asn1);
 
 export default class LocalUtf8StringValueBlock extends LocalHexBlock(LocalBaseBlock) {
-    //**********************************************************************************
-    //noinspection JSUnusedGlobalSymbols
     /**
-	 * Constructor for "LocalUtf8StringValueBlock" class
-	 * @param {Object} [parameters={}]
-	 */
+     * Constructor for "LocalUtf8StringValueBlock" class
+     * @param {Object} [parameters={}]
+     */
     constructor(parameters = {}) {
         super(parameters);
 
@@ -21,21 +19,18 @@ export default class LocalUtf8StringValueBlock extends LocalHexBlock(LocalBaseBl
         this.value = ""; // String representation of decoded ArrayBuffer
     }
 
-    //**********************************************************************************
     /**
-	 * Aux function, need to get a block name. Need to have it here for inhiritence
-	 * @returns {string}
-	 */
+     * Aux function, need to get a block name. Need to have it here for inhiritence
+     * @returns {string}
+     */
     static blockName() {
         return "Utf8StringValueBlock";
     }
 
-    //**********************************************************************************
-    //noinspection JSUnusedGlobalSymbols
     /**
-	 * Convertion for the block to JSON object
-	 * @returns {Object}
-	 */
+     * Convertion for the block to JSON object
+     * @returns {Object}
+     */
     toJSON() {
         let object = {};
 
@@ -51,5 +46,4 @@ export default class LocalUtf8StringValueBlock extends LocalHexBlock(LocalBaseBl
 
         return object;
     }
-    //**********************************************************************************
 }

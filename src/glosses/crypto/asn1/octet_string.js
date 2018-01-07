@@ -10,9 +10,9 @@ const __ = adone.private(asn1);
 
 export default class OctetString extends BaseBlock {
     /**
-	 * Constructor for "OctetString" class
-	 * @param {Object} [parameters={}]
-	 */
+     * Constructor for "OctetString" class
+     * @param {Object} [parameters={}]
+     */
     constructor(parameters = {}) {
         super(parameters, __.LocalOctetStringValueBlock);
 
@@ -21,12 +21,12 @@ export default class OctetString extends BaseBlock {
     }
 
     /**
-	 * Base function for converting block from BER encoded array of bytes
-	 * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-	 * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-	 * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-	 * @returns {number} Offset after least decoded byte
-	 */
+     * Base function for converting block from BER encoded array of bytes
+     * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+     * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+     * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+     * @returns {number} Offset after least decoded byte
+     */
     fromBER(inputBuffer, inputOffset, inputLength) {
         this.valueBlock.isConstructed = this.idBlock.isConstructed;
         this.valueBlock.isIndefiniteForm = this.lenBlock.isIndefiniteForm;
@@ -49,17 +49,17 @@ export default class OctetString extends BaseBlock {
     }
 
     /**
-	 * Aux function, need to get a block name. Need to have it here for inhiritence
-	 * @returns {string}
-	 */
+     * Aux function, need to get a block name. Need to have it here for inhiritence
+     * @returns {string}
+     */
     static blockName() {
         return "OctetString";
     }
 
     /**
-	 * Checking that two OCTETSTRINGs are equal
-	 * @param {OctetString} octetString
-	 */
+     * Checking that two OCTETSTRINGs are equal
+     * @param {OctetString} octetString
+     */
     isEqual(octetString) {
         //region Check input type
         if ((octetString instanceof OctetString) === false) {

@@ -10,9 +10,9 @@ const __ = adone.private(asn1);
 
 export default class UniversalString extends BaseBlock {
     /**
-	 * Constructor for "UniversalString" class
-	 * @param {Object} [parameters={}]
-	 */
+     * Constructor for "UniversalString" class
+     * @param {Object} [parameters={}]
+     */
     constructor(parameters = {}) {
         super(parameters, __.LocalUniversalStringValueBlock);
 
@@ -25,20 +25,20 @@ export default class UniversalString extends BaseBlock {
     }
 
     /**
-	 * Aux function, need to get a block name. Need to have it here for inhiritence
-	 * @returns {string}
-	 */
+     * Aux function, need to get a block name. Need to have it here for inhiritence
+     * @returns {string}
+     */
     static blockName() {
         return "UniversalString";
     }
 
     /**
-	 * Base function for converting block from BER encoded array of bytes
-	 * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-	 * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-	 * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-	 * @returns {number} Offset after least decoded byte
-	 */
+     * Base function for converting block from BER encoded array of bytes
+     * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+     * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+     * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+     * @returns {number} Offset after least decoded byte
+     */
     fromBER(inputBuffer, inputOffset, inputLength) {
         const resultOffset = this.valueBlock.fromBER(inputBuffer, inputOffset, this.lenBlock.isIndefiniteForm === true ? inputLength : this.lenBlock.length);
         if (resultOffset === -1) {
@@ -64,11 +64,10 @@ export default class UniversalString extends BaseBlock {
     }
 
     /**
-	 * Function converting ArrayBuffer into ASN.1 internal string
-	 * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-	 */
+     * Function converting ArrayBuffer into ASN.1 internal string
+     * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+     */
     fromBuffer(inputBuffer) {
-        //noinspection JSCheckFunctionSignatures
         const copyBuffer = inputBuffer.slice(0);
         const valueView = new Uint8Array(copyBuffer);
 
@@ -83,9 +82,9 @@ export default class UniversalString extends BaseBlock {
     }
 
     /**
-	 * Function converting JavaScript string into ASN.1 internal class
-	 * @param {!string} inputString ASN.1 BER encoded array
-	 */
+     * Function converting JavaScript string into ASN.1 internal class
+     * @param {!string} inputString ASN.1 BER encoded array
+     */
     fromString(inputString) {
         const strLength = inputString.length;
 

@@ -10,10 +10,10 @@ const {
 
 export default class LocalOctetStringValueBlock extends LocalHexBlock(LocalConstructedValueBlock) {
     /**
-	 * Constructor for "LocalOctetStringValueBlock" class
-	 * @param {Object} [parameters={}]
-	 * @property {ArrayBuffer} [valueHex]
-	 */
+     * Constructor for "LocalOctetStringValueBlock" class
+     * @param {Object} [parameters={}]
+     * @property {ArrayBuffer} [valueHex]
+     */
     constructor(parameters = {}) {
         super(parameters);
 
@@ -21,12 +21,12 @@ export default class LocalOctetStringValueBlock extends LocalHexBlock(LocalConst
     }
 
     /**
-	 * Base function for converting block from BER encoded array of bytes
-	 * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-	 * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-	 * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-	 * @returns {number} Offset after least decoded byte
-	 */
+     * Base function for converting block from BER encoded array of bytes
+     * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+     * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+     * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+     * @returns {number} Offset after least decoded byte
+     */
     fromBER(inputBuffer, inputOffset, inputLength) {
         let resultOffset = 0;
 
@@ -66,10 +66,10 @@ export default class LocalOctetStringValueBlock extends LocalHexBlock(LocalConst
     }
 
     /**
-	 * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
-	 * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
-	 * @returns {ArrayBuffer}
-	 */
+     * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
+     * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
+     * @returns {ArrayBuffer}
+     */
     toBER(sizeOnly = false) {
         if (this.isConstructed === true) {
             return LocalConstructedValueBlock.prototype.toBER.call(this, sizeOnly);
@@ -91,9 +91,9 @@ export default class LocalOctetStringValueBlock extends LocalHexBlock(LocalConst
     }
 
     /**
-	 * Aux function, need to get a block name. Need to have it here for inhiritence
-	 * @returns {string}
-	 */
+     * Aux function, need to get a block name. Need to have it here for inhiritence
+     * @returns {string}
+     */
     static blockName() {
         return "OctetStringValueBlock";
     }

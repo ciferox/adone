@@ -1,9 +1,9 @@
 const {
-    crypto: { pki }
+    crypto: {
+        pki,
+        pem
+    }
 } = adone;
-
-const forge = require("node-forge");
-const asn1 = forge.asn1;
 
 /**
  * Converts an RSA public key to PEM format (using a SubjectPublicKeyInfo).
@@ -17,7 +17,7 @@ export default function publicKeyToPem(key, maxline) {
     // convert to ASN.1, then DER, then PEM-encode
     const msg = {
         type: "PUBLIC KEY",
-        body: asn1.toDer(pki.publicKeyToAsn1(key)).getBytes()
+        body: Buffer.from(pki.publicKeyToAsn1(key).toBER()).toString("binary")
     };
-    return forge.pem.encode(msg, { maxline });
+    return pem.encode(msg, { maxline });
 }

@@ -10,9 +10,9 @@ const __ = adone.private(asn1);
 
 export default class Boolean extends BaseBlock {
     /**
-	 * Constructor for "Boolean" class
-	 * @param {Object} [parameters={}]
-	 */
+     * Constructor for "Boolean" class
+     * @param {Object} [parameters={}]
+     */
     constructor(parameters = {}) {
         super(parameters, __.LocalBooleanValueBlock);
 
@@ -21,9 +21,9 @@ export default class Boolean extends BaseBlock {
     }
 
     /**
-	 * Aux function, need to get a block name. Need to have it here for inhiritence
-	 * @returns {string}
-	 */
+     * Aux function, need to get a block name. Need to have it here for inhiritence
+     * @returns {string}
+     */
     static blockName() {
         return "Boolean";
     }

@@ -4,9 +4,6 @@ const {
 
 const __ = adone.private(adone.crypto.pki);
 
-const forge = require("node-forge");
-const asn1 = forge.asn1;
-
 /**
  * Converts an RDNSequence of ASN.1 DER-encoded RelativeDistinguishedName
  * sets into an array with objects that have type and value properties.
@@ -16,24 +13,26 @@ const asn1 = forge.asn1;
  */
 export default function RDNAttributesAsArray(rdn, md) {
     const rval = [];
-
     // each value in 'rdn' in is a SET of RelativeDistinguishedName
     let set;
     let attr;
     let obj;
-    for (let si = 0; si < rdn.value.length; ++si) {
+    const value = rdn.valueBlock.value;
+    for (let si = 0; si < value.length; ++si) {
         // get the RelativeDistinguishedName set
-        set = rdn.value[si];
+        set = value[si];
 
         // each value in the SET is an AttributeTypeAndValue sequence
         // containing first a type (an OID) and second a value (defined by
         // the OID)
-        for (let i = 0; i < set.value.length; ++i) {
+        const svalue = set.valueBlock.value;
+        for (let i = 0; i < svalue.length; ++i) {
             obj = {};
-            attr = set.value[i];
-            obj.type = asn1.derToOid(attr.value[0].value);
-            obj.value = attr.value[1].value;
-            obj.valueTagClass = attr.value[1].type;
+            attr = svalue[i];
+            const vblock = attr.valueBlock;
+            obj.type = vblock.value[0].valueBlock.toString();
+            obj.value = vblock.value[1].valueBlock.value;
+            obj.valueTagClass = vblock.value[1].idBlock.tagNumber;
             // if the OID is known, get its name and short name
             if (obj.type in pki.oids) {
                 obj.name = pki.oids[obj.type];

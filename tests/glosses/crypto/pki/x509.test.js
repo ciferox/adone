@@ -196,7 +196,6 @@ describe("x509", () => {
 
     const forge = require("node-forge");
     const UTIL = forge.util;
-    const ASN1 = forge.asn1;
 
     const {
         crypto
@@ -967,8 +966,8 @@ describe("x509", () => {
         // round trip pem -> cert -> asn1 -> der -> asn1 -> cert -> pem
         const inCert = crypto.pki.certificateFromPem(certPem);
         const inAsn1 = crypto.pki.certificateToAsn1(inCert);
-        const inDer = ASN1.toDer(inAsn1);
-        const outAsn1 = ASN1.fromDer(inDer);
+        const inDer = inAsn1.toBER();
+        const outAsn1 = adone.crypto.asn1.fromBER(inDer).result;
         const outCert = crypto.pki.certificateFromAsn1(outAsn1);
         const outPem = crypto.pki.certificateToPem(outCert);
         assert.equal(certPem, outPem);

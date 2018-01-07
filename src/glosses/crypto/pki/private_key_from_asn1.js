@@ -1,9 +1,10 @@
 const {
-    crypto,
+    crypto: {
+        pki,
+        asn1
+    },
     math: { BigNumber }
 } = adone;
-
-const asn1 = crypto.asn1;
 
 // validator for a PrivateKeyInfo structure
 const privateKeyValidator = new asn1.Sequence({
@@ -106,7 +107,7 @@ export default function privateKeyFromAsn1(obj) {
     const qInv = Buffer.from(result.coefficient.valueBlock.valueHex);
 
     // set private key
-    return crypto.pki.rsa.setPrivateKey(
+    return pki.rsa.setPrivateKey(
         BigNumber.fromBuffer(n),
         BigNumber.fromBuffer(e),
         BigNumber.fromBuffer(d),

@@ -10,10 +10,10 @@ const __ = adone.private(asn1);
 
 export default class Utf8String extends BaseBlock {
     /**
-	 * Constructor for "Utf8String" class
-	 * @param {Object} [parameters={}]
-	 * @property {ArrayBuffer} [valueHex]
-	 */
+     * Constructor for "Utf8String" class
+     * @param {Object} [parameters={}]
+     * @property {ArrayBuffer} [valueHex]
+     */
     constructor(parameters = {}) {
         super(parameters, __.LocalUtf8StringValueBlock);
 
@@ -26,20 +26,20 @@ export default class Utf8String extends BaseBlock {
     }
 
     /**
-	 * Aux function, need to get a block name. Need to have it here for inhiritence
-	 * @returns {string}
-	 */
+     * Aux function, need to get a block name. Need to have it here for inhiritence
+     * @returns {string}
+     */
     static blockName() {
         return "Utf8String";
     }
 
     /**
-	 * Base function for converting block from BER encoded array of bytes
-	 * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-	 * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-	 * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-	 * @returns {number} Offset after least decoded byte
-	 */
+     * Base function for converting block from BER encoded array of bytes
+     * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+     * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+     * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+     * @returns {number} Offset after least decoded byte
+     */
     fromBER(inputBuffer, inputOffset, inputLength) {
         const resultOffset = this.valueBlock.fromBER(inputBuffer, inputOffset, this.lenBlock.isIndefiniteForm === true ? inputLength : this.lenBlock.length);
         if (resultOffset === -1) {
@@ -65,14 +65,13 @@ export default class Utf8String extends BaseBlock {
     }
 
     /**
-	 * Function converting ArrayBuffer into ASN.1 internal string
-	 * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-	 */
+     * Function converting ArrayBuffer into ASN.1 internal string
+     * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+     */
     fromBuffer(inputBuffer) {
         this.valueBlock.value = String.fromCharCode.apply(null, new Uint8Array(inputBuffer));
 
         try {
-            //noinspection JSDeprecatedSymbols
             this.valueBlock.value = decodeURIComponent(escape(this.valueBlock.value));
         } catch (ex) {
             this.warnings.push(`Error during "decodeURIComponent": ${ex}, using raw string`);
@@ -80,11 +79,10 @@ export default class Utf8String extends BaseBlock {
     }
 
     /**
-	 * Function converting JavaScript string into ASN.1 internal class
-	 * @param {!string} inputString ASN.1 BER encoded array
-	 */
+     * Function converting JavaScript string into ASN.1 internal class
+     * @param {!string} inputString ASN.1 BER encoded array
+     */
     fromString(inputString) {
-        //noinspection JSDeprecatedSymbols
         const str = unescape(encodeURIComponent(inputString));
         const strLen = str.length;
 

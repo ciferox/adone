@@ -10,9 +10,9 @@ const __ = adone.private(asn1);
 
 export default class BitString extends BaseBlock {
     /**
-	 * Constructor for "BitString" class
-	 * @param {Object} [parameters={}]
-	 */
+     * Constructor for "BitString" class
+     * @param {Object} [parameters={}]
+     */
     constructor(parameters = {}) {
         super(parameters, __.LocalBitStringValueBlock);
 
@@ -21,20 +21,20 @@ export default class BitString extends BaseBlock {
     }
 
     /**
-	 * Aux function, need to get a block name. Need to have it here for inhiritence
-	 * @returns {string}
-	 */
+     * Aux function, need to get a block name. Need to have it here for inhiritence
+     * @returns {string}
+     */
     static blockName() {
         return "BitString";
     }
 
     /**
-	 * Base function for converting block from BER encoded array of bytes
-	 * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-	 * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-	 * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-	 * @returns {number} Offset after least decoded byte
-	 */
+     * Base function for converting block from BER encoded array of bytes
+     * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+     * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+     * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+     * @returns {number} Offset after least decoded byte
+     */
     fromBER(inputBuffer, inputOffset, inputLength) {
         //region Ability to encode empty BitString
         if (inputLength === 0) {
@@ -49,9 +49,9 @@ export default class BitString extends BaseBlock {
     }
 
     /**
-	 * Checking that two BITSTRINGs are equal
-	 * @param {BitString} bitString
-	 */
+     * Checking that two BITSTRINGs are equal
+     * @param {BitString} bitString
+     */
     isEqual(bitString) {
         //region Check input type
         if ((bitString instanceof BitString) === false) {

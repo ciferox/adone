@@ -13,9 +13,9 @@ const {
 
 export default class Integer extends BaseBlock {
     /**
-	 * Constructor for "Integer" class
-	 * @param {Object} [parameters={}]
-	 */
+     * Constructor for "Integer" class
+     * @param {Object} [parameters={}]
+     */
     constructor(parameters = {}) {
         super(parameters, __.LocalIntegerValueBlock);
 
@@ -24,19 +24,20 @@ export default class Integer extends BaseBlock {
     }
 
     /**
-	 * Aux function, need to get a block name. Need to have it here for inhiritence
-	 * @returns {string}
-	 */
+     * Aux function, need to get a block name. Need to have it here for inhiritence
+     * @returns {string}
+     */
     static blockName() {
         return "Integer";
     }
 
-    //noinspection JSUnusedGlobalSymbols
     /**
-	 * Compare two Integer object, or Integer and ArrayBuffer objects
-	 * @param {!Integer|ArrayBuffer} otherValue
-	 * @returns {boolean}
-	 */
+     */
+    /**
+     * Compare two Integer object, or Integer and ArrayBuffer objects
+     * @param {!Integer|ArrayBuffer} otherValue
+     * @returns {boolean}
+     */
     isEqual(otherValue) {
         if (otherValue instanceof Integer) {
             if (this.valueBlock.isHexOnly && otherValue.valueBlock.isHexOnly) {
@@ -59,9 +60,9 @@ export default class Integer extends BaseBlock {
     }
 
     /**
-	 * Convert current Integer value from BER into DER format
-	 * @returns {Integer}
-	 */
+     * Convert current Integer value from BER into DER format
+     * @returns {Integer}
+     */
     convertToDER() {
         const integer = new Integer({ valueHex: this.valueBlock.valueHex });
         integer.valueBlock.toDER();
@@ -70,11 +71,14 @@ export default class Integer extends BaseBlock {
     }
 
     /**
-	 * Convert current Integer value from DER to BER format
-	 * @returns {Integer}
-	 */
+     * Convert current Integer value from DER to BER format
+     * @returns {Integer}
+     */
     convertFromDER() {
-        const expectedLength = this.valueBlock.valueHex.byteLength % 2 ? this.valueBlock.valueHex.byteLength + 1 : this.valueBlock.valueHex.byteLength;
+        const expectedLength = this.valueBlock.valueHex.byteLength % 2
+            ? this.valueBlock.valueHex.byteLength + 1
+            : this.valueBlock.valueHex.byteLength;
+
         const integer = new Integer({ valueHex: this.valueBlock.valueHex });
         integer.valueBlock.fromDER(integer.valueBlock.valueHex, 0, integer.valueBlock.valueHex.byteLength, expectedLength);
 

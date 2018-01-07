@@ -1,12 +1,10 @@
 const {
     is,
     crypto: {
+        asn1,
         pki: { oids }
     }
 } = adone;
-
-const forge = require("node-forge");
-const asn1 = forge.asn1;
 
 /**
  * Convert signature parameters object to ASN.1
@@ -21,39 +19,75 @@ export default function signatureParametersToAsn1(oid, params) {
             const parts = [];
 
             if (!is.undefined(params.hash.algorithmOid)) {
-                parts.push(asn1.create(asn1.Class.CONTEXT_SPECIFIC, 0, true, [
-                    asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-                        asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false,
-                            asn1.oidToDer(params.hash.algorithmOid).getBytes()),
-                        asn1.create(asn1.Class.UNIVERSAL, asn1.Type.NULL, false, "")
-                    ])
-                ]));
+                parts.push(
+                    new asn1.Constructed({
+                        idBlock: {
+                            tagClass: 3, // CONTEXT_SPECIFIC
+                            tagNumber: 0
+                        },
+                        value: [
+                            new asn1.Sequence({
+                                value: [
+                                    new asn1.ObjectIdentifier({
+                                        value: params.hash.algorithmOid
+                                    }),
+                                    new asn1.Null()
+                                ]
+                            })
+                        ]
+                    })
+                );
             }
 
             if (!is.undefined(params.mgf.algorithmOid)) {
-                parts.push(asn1.create(asn1.Class.CONTEXT_SPECIFIC, 1, true, [
-                    asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-                        asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false,
-                            asn1.oidToDer(params.mgf.algorithmOid).getBytes()),
-                        asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-                            asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false,
-                                asn1.oidToDer(params.mgf.hash.algorithmOid).getBytes()),
-                            asn1.create(asn1.Class.UNIVERSAL, asn1.Type.NULL, false, "")
-                        ])
-                    ])
-                ]));
+                parts.push(
+                    new asn1.Constructed({
+                        idBlock: {
+                            tagClass: 3, // CONTEXT_SPECIFIC
+                            tagNumber: 1
+                        },
+                        value: [
+                            new asn1.Sequence({
+                                value: [
+                                    new asn1.ObjectIdentifier({
+                                        value: params.mgf.algorithmOid
+                                    }),
+                                    new asn1.Sequence({
+                                        value: [
+                                            new asn1.ObjectIdentifier({
+                                                value: params.mgf.hash.algorithmOid
+                                            }),
+                                            new asn1.Null()
+                                        ]
+                                    })
+                                ]
+                            })
+                        ]
+                    })
+                );
             }
 
             if (!is.undefined(params.saltLength)) {
-                parts.push(asn1.create(asn1.Class.CONTEXT_SPECIFIC, 2, true, [
-                    asn1.create(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false,
-                        asn1.integerToDer(params.saltLength).getBytes())
-                ]));
+                parts.push(
+                    new asn1.Constructed({
+                        idBlock: {
+                            tagClass: 3, // CONTEXT_SPECIFIC
+                            tagNumber: 2
+                        },
+                        value: [
+                            new asn1.Integer({
+                                value: params.saltLength
+                            })
+                        ]
+                    })
+                );
             }
 
-            return asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, parts);
+            return new asn1.Sequence({
+                value: parts
+            });
         }
         default:
-            return asn1.create(asn1.Class.UNIVERSAL, asn1.Type.NULL, false, "");
+            return new asn1.Null();
     }
 }

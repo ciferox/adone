@@ -1,9 +1,7 @@
 const {
-    is
+    is,
+    crypto: { asn1 }
 } = adone;
-
-const forge = require("node-forge");
-const asn1 = forge.asn1;
 
 /**
  * Converts a single certificate extension to ASN.1.
@@ -14,30 +12,39 @@ const asn1 = forge.asn1;
  */
 export default function certificateExtensionToAsn1(ext) {
     // create a sequence for each extension
-    const extseq = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
-
-    // extnID (OID)
-    extseq.value.push(asn1.create(
-        asn1.Class.UNIVERSAL, asn1.Type.OID, false,
-        asn1.oidToDer(ext.id).getBytes()));
+    const extseq = new asn1.Sequence({
+        value: [
+            // extnID (OID)
+            new asn1.ObjectIdentifier({
+                value: ext.id
+            })
+        ]
+    });
 
     // critical defaults to false
     if (ext.critical) {
         // critical BOOLEAN DEFAULT FALSE
-        extseq.value.push(asn1.create(
-            asn1.Class.UNIVERSAL, asn1.Type.BOOLEAN, false,
-            String.fromCharCode(0xFF)));
+        extseq.valueBlock.value.push(
+            new asn1.Boolean({
+                value: true
+            })
+        );
     }
 
     let value = ext.value;
     if (!is.string(ext.value)) {
         // value is asn.1
-        value = asn1.toDer(value).getBytes();
+        value = value.toBER();
+    } else {
+        value = adone.util.bufferToArrayBuffer(Buffer.from(value, "binary"));
     }
 
     // extnValue (OCTET STRING)
-    extseq.value.push(asn1.create(
-        asn1.Class.UNIVERSAL, asn1.Type.OCTETSTRING, false, value));
+    extseq.valueBlock.value.push(
+        new asn1.OctetString({
+            valueHex: value
+        })
+    );
 
     return extseq;
 }

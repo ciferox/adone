@@ -1,11 +1,11 @@
 const {
-    crypto: { pki }
+    crypto: {
+        pki,
+        asn1
+    }
 } = adone;
 
 const __ = adone.private(pki);
-
-const forge = require("node-forge");
-const asn1 = forge.asn1;
 
 /**
  * Gets the ASN.1 TBSCertificate part of an X.509v3 certificate.
@@ -16,70 +16,92 @@ const asn1 = forge.asn1;
  */
 export default function getTBSCertificate(cert) {
     // TBSCertificate
-    const tbs = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-        // version
-        asn1.create(asn1.Class.CONTEXT_SPECIFIC, 0, true, [
-        // integer
-            asn1.create(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false,
-                asn1.integerToDer(cert.version).getBytes())
-        ]),
-        // serialNumber
-        asn1.create(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false,
-            forge.util.hexToBytes(cert.serialNumber)),
-        // signature
-        asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-        // algorithm
-            asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false,
-                asn1.oidToDer(cert.siginfo.algorithmOid).getBytes()),
-            // parameters
-            __.signatureParametersToAsn1(
-                cert.siginfo.algorithmOid, cert.siginfo.parameters)
-        ]),
-        // issuer
-        __.dnToAsn1(cert.issuer),
-        // validity
-        asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-        // notBefore
-            asn1.create(asn1.Class.UNIVERSAL, asn1.Type.UTCTIME, false,
-                asn1.dateToUtcTime(cert.validity.notBefore)),
-            // notAfter
-            asn1.create(asn1.Class.UNIVERSAL, asn1.Type.UTCTIME, false,
-                asn1.dateToUtcTime(cert.validity.notAfter))
-        ]),
-        // subject
-        __.dnToAsn1(cert.subject),
-        // SubjectPublicKeyInfo
-        pki.publicKeyToAsn1(cert.publicKey)
-    ]);
+    const tbs = new asn1.Sequence({
+        value: [
+            // version
+            new asn1.Constructed({
+                idBlock: {
+                    tagClass: 3, // CONTEXT_SPECIFIC
+                    tagNumber: 0
+                },
+                value: [
+                    new asn1.Integer({
+                        value: cert.version
+                    })
+                ]
+            }),
+            // serialNumber
+            new asn1.Integer({
+                valueHex: adone.util.bufferToArrayBuffer(Buffer.from(cert.serialNumber, "hex"))
+            }),
+            // signature
+            new asn1.Sequence({
+                value: [
+                    // algorithm
+                    new asn1.ObjectIdentifier({
+                        value: cert.siginfo.algorithmOid
+                    }),
+                    __.signatureParametersToAsn1(cert.siginfo.algorithmOid, cert.siginfo.parameters)
+                ]
+            }),
+            // issuer
+            __.dnToAsn1(cert.issuer),
+            // validity
+            new asn1.Sequence({
+                value: [
+                    // notBefore
+                    new asn1.UTCTime({
+                        valueDate: cert.validity.notBefore
+                    }),
+                    // notAfter
+                    new asn1.UTCTime({
+                        valueDate: cert.validity.notAfter
+                    })
+                ]
+            }),
+            // subject
+            __.dnToAsn1(cert.subject),
+            // SubjectPublicKeyInfo
+            pki.publicKeyToAsn1(cert.publicKey)
+        ]
+    });
 
     if (cert.issuer.uniqueId) {
         // issuerUniqueID (optional)
-        tbs.value.push(
-            asn1.create(asn1.Class.CONTEXT_SPECIFIC, 1, true, [
-                asn1.create(asn1.Class.UNIVERSAL, asn1.Type.BITSTRING, false,
-                    // TODO: support arbitrary bit length ids
-                    String.fromCharCode(0x00) +
-            cert.issuer.uniqueId
-                )
-            ])
+        tbs.valueBlock.value.push(
+            new asn1.Constructed({
+                idBlock: {
+                    tagClass: 3, // CONTEXT_SPECIFIC
+                    tagNumber: 1
+                },
+                value: [
+                    new asn1.BitString({
+                        valueHex: adone.util.bufferToArrayBuffer(Buffer.from(cert.issuer.uniqueId, "binary"))
+                    })
+                ]
+            })
         );
     }
     if (cert.subject.uniqueId) {
         // subjectUniqueID (optional)
-        tbs.value.push(
-            asn1.create(asn1.Class.CONTEXT_SPECIFIC, 2, true, [
-                asn1.create(asn1.Class.UNIVERSAL, asn1.Type.BITSTRING, false,
-                    // TODO: support arbitrary bit length ids
-                    String.fromCharCode(0x00) +
-            cert.subject.uniqueId
-                )
-            ])
+        tbs.valueBlock.value.push(
+            new asn1.Constructed({
+                idBlock: {
+                    tagClass: 3, // CONTEXT_SPECIFIC
+                    tagNumber: 2
+                },
+                value: [
+                    new asn1.BitString({
+                        valueHex: adone.util.buffer(Buffer.from(cert.subject.uniqueId, "binary"))
+                    })
+                ]
+            })
         );
     }
 
     if (cert.extensions.length > 0) {
         // extensions (optional)
-        tbs.value.push(pki.certificateExtensionsToAsn1(cert.extensions));
+        tbs.valueBlock.value.push(pki.certificateExtensionsToAsn1(cert.extensions));
     }
 
     return tbs;

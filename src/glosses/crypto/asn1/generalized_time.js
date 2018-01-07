@@ -13,11 +13,11 @@ const {
 
 export default class GeneralizedTime extends VisibleString {
     /**
-	 * Constructor for "GeneralizedTime" class
-	 * @param {Object} [parameters={}]
-	 * @property {string} [value] String representatio of the date
-	 * @property {Date} [valueDate] JavaScript "Date" object
-	 */
+     * Constructor for "GeneralizedTime" class
+     * @param {Object} [parameters={}]
+     * @property {string} [value] String representatio of the date
+     * @property {Date} [valueDate] JavaScript "Date" object
+     */
     constructor(parameters = {}) {
         super(parameters);
 
@@ -53,12 +53,12 @@ export default class GeneralizedTime extends VisibleString {
     }
 
     /**
-	 * Base function for converting block from BER encoded array of bytes
-	 * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-	 * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-	 * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-	 * @returns {number} Offset after least decoded byte
-	 */
+     * Base function for converting block from BER encoded array of bytes
+     * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+     * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+     * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+     * @returns {number} Offset after least decoded byte
+     */
     fromBER(inputBuffer, inputOffset, inputLength) {
         const resultOffset = this.valueBlock.fromBER(inputBuffer, inputOffset, this.lenBlock.isIndefiniteForm === true ? inputLength : this.lenBlock.length);
         if (resultOffset === -1) {
@@ -84,17 +84,17 @@ export default class GeneralizedTime extends VisibleString {
     }
 
     /**
-	 * Function converting ArrayBuffer into ASN.1 internal string
-	 * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-	 */
+     * Function converting ArrayBuffer into ASN.1 internal string
+     * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+     */
     fromBuffer(inputBuffer) {
         this.fromString(String.fromCharCode.apply(null, new Uint8Array(inputBuffer)));
     }
 
     /**
-	 * Function converting ASN.1 internal string into ArrayBuffer
-	 * @returns {ArrayBuffer}
-	 */
+     * Function converting ASN.1 internal string into ArrayBuffer
+     * @returns {ArrayBuffer}
+     */
     toBuffer() {
         const str = this.toString();
 
@@ -109,9 +109,9 @@ export default class GeneralizedTime extends VisibleString {
     }
 
     /**
-	 * Function converting "Date" object into ASN.1 internal string
-	 * @param {!Date} inputDate JavaScript "Date" object
-	 */
+     * Function converting "Date" object into ASN.1 internal string
+     * @param {!Date} inputDate JavaScript "Date" object
+     */
     fromDate(inputDate) {
         this.year = inputDate.getUTCFullYear();
         this.month = inputDate.getUTCMonth() + 1;
@@ -123,17 +123,17 @@ export default class GeneralizedTime extends VisibleString {
     }
 
     /**
-	 * Function converting ASN.1 internal string into "Date" object
-	 * @returns {Date}
-	 */
+     * Function converting ASN.1 internal string into "Date" object
+     * @returns {Date}
+     */
     toDate() {
         return new Date(Date.UTC(this.year, this.month - 1, this.day, this.hour, this.minute, this.second, this.millisecond));
     }
 
     /**
-	 * Function converting JavaScript string into ASN.1 internal class
-	 * @param {!string} inputString ASN.1 BER encoded array
-	 */
+     * Function converting JavaScript string into ASN.1 internal class
+     * @param {!string} inputString ASN.1 BER encoded array
+     */
     fromString(inputString) {
         //region Initial variables
         let isUTC = false;
@@ -157,7 +157,6 @@ export default class GeneralizedTime extends VisibleString {
         //endregion
         //region Convert as local time
         else {
-            //noinspection JSPrimitiveTypeWrapperUsage
             const number = new Number(inputString[inputString.length - 1]);
 
             if (isNaN(number.valueOf())) {
@@ -196,7 +195,6 @@ export default class GeneralizedTime extends VisibleString {
                     throw new Error("Wrong input string for convertion");
                 }
 
-                //noinspection JSPrimitiveTypeWrapperUsage
                 let number = new Number(differenceString.substr(0, 2));
 
                 if (isNaN(number.valueOf())) {
@@ -206,7 +204,6 @@ export default class GeneralizedTime extends VisibleString {
                 hourDifference = multiplier * number;
 
                 if (differenceString.length === 4) {
-                    //noinspection JSPrimitiveTypeWrapperUsage
                     number = new Number(differenceString.substr(2, 2));
 
                     if (isNaN(number.valueOf())) {
@@ -228,7 +225,6 @@ export default class GeneralizedTime extends VisibleString {
 
         //region Get fraction part
         if (fractionPointPosition !== -1) {
-            //noinspection JSPrimitiveTypeWrapperUsage
             const fractionPartCheck = new Number(`0${timeString.substr(fractionPointPosition)}`);
 
             if (isNaN(fractionPartCheck.valueOf())) {
@@ -337,9 +333,9 @@ export default class GeneralizedTime extends VisibleString {
     }
 
     /**
-	 * Function converting ASN.1 internal class into JavaScript string
-	 * @returns {string}
-	 */
+     * Function converting ASN.1 internal class into JavaScript string
+     * @returns {string}
+     */
     toString() {
         const outputArray = [];
 
@@ -359,17 +355,17 @@ export default class GeneralizedTime extends VisibleString {
     }
 
     /**
-	 * Aux function, need to get a block name. Need to have it here for inhiritence
-	 * @returns {string}
-	 */
+     * Aux function, need to get a block name. Need to have it here for inhiritence
+     * @returns {string}
+     */
     static blockName() {
         return "GeneralizedTime";
     }
 
     /**
-	 * Convertion for the block to JSON object
-	 * @returns {Object}
-	 */
+     * Convertion for the block to JSON object
+     * @returns {Object}
+     */
     toJSON() {
         let object = {};
 

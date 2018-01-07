@@ -1,9 +1,9 @@
 const {
-    crypto: { pki }
+    crypto: {
+        pki,
+        pem
+    }
 } = adone;
-
-const forge = require("node-forge");
-const asn1 = forge.asn1;
 
 /**
  * Converts an RSA private key to PEM format.
@@ -17,7 +17,7 @@ export default function privateKeyToPem(key, maxline) {
     // convert to ASN.1, then DER, then PEM-encode
     const msg = {
         type: "RSA PRIVATE KEY",
-        body: asn1.toDer(pki.privateKeyToAsn1(key)).getBytes()
+        body: Buffer.from(pki.privateKeyToAsn1(key).toBER()).toString("binary")
     };
-    return forge.pem.encode(msg, { maxline });
+    return pem.encode(msg, { maxline });
 }

@@ -5,9 +5,6 @@ const {
 
 const __ = adone.private(pki);
 
-const forge = require("node-forge");
-const asn1 = forge.asn1;
-
 /**
  * Fills in missing fields in attributes.
  *
@@ -48,7 +45,7 @@ export default function fillMissingFields(attrs) {
         // convert extensions to value
         if (attr.type === pki.oids.extensionRequest) {
             attr.valueConstructed = true;
-            attr.valueTagClass = asn1.Type.SEQUENCE;
+            attr.valueTagClass = 16; // SEQUENCE
             if (!attr.value && attr.extensions) {
                 attr.value = [];
                 for (let ei = 0; ei < attr.extensions.length; ++ei) {

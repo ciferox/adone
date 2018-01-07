@@ -1,7 +1,5 @@
-const forge = require("node-forge");
-
 /**
- * Converts a positive BigInteger into 2's-complement big-endian bytes.
+ * Converts a positive BigNumber into 2's-complement big-endian bytes.
  *
  * @param b the big integer to convert.
  *
@@ -13,7 +11,10 @@ export default function bnToBytes(b) {
     if (hex[0] >= "8") {
         hex = `00${hex}`;
     }
-    const bytes = forge.util.hexToBytes(hex);
+    if (hex.length % 2 !== 0) {
+        hex = `0${hex}`;
+    }
+    const bytes = Buffer.from(hex, "hex").toString("binary");
 
     // ensure integer is minimally-encoded
     if (bytes.length > 1 &&

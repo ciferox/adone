@@ -9,10 +9,10 @@ const {
 
 export default class LocalLengthBlock extends LocalBaseBlock {
     /**
-	 * Constructor for "LocalLengthBlock" class
-	 * @param {Object} [parameters={}]
-	 * @property {Object} [lenBlock]
-	 */
+     * Constructor for "LocalLengthBlock" class
+     * @param {Object} [parameters={}]
+     * @property {Object} [lenBlock]
+     */
     constructor(parameters = {}) {
         super();
 
@@ -28,23 +28,22 @@ export default class LocalLengthBlock extends LocalBaseBlock {
     }
 
     /**
-	 * Aux function, need to get a block name. Need to have it here for inhiritence
-	 * @returns {string}
-	 */
+     * Aux function, need to get a block name. Need to have it here for inhiritence
+     * @returns {string}
+     */
     static blockName() {
         return "lengthBlock";
     }
 
     /**
-	 * Base function for converting block from BER encoded array of bytes
-	 * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-	 * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-	 * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-	 * @returns {number}
-	 */
+     * Base function for converting block from BER encoded array of bytes
+     * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+     * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+     * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+     * @returns {number}
+     */
     fromBER(inputBuffer, inputOffset, inputLength) {
         //region Basic check for parameters
-        //noinspection JSCheckFunctionSignatures
         if (util.checkBufferParams(this, inputBuffer, inputOffset, inputLength) === false) {
             return -1;
         }
@@ -126,10 +125,10 @@ export default class LocalLengthBlock extends LocalBaseBlock {
     }
 
     /**
-	 * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
-	 * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
-	 * @returns {ArrayBuffer}
-	 */
+     * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
+     * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
+     * @returns {ArrayBuffer}
+     */
     toBER(sizeOnly = false) {
         //region Initial variables
         let retBuf;
@@ -189,9 +188,9 @@ export default class LocalLengthBlock extends LocalBaseBlock {
     }
 
     /**
-	 * Convertion for the block to JSON object
-	 * @returns {{blockName, blockLength, error, warnings, valueBeforeDecode}|{blockName: string, blockLength: number, error: string, warnings: Array.<string>, valueBeforeDecode: string}}
-	 */
+     * Convertion for the block to JSON object
+     * @returns {{blockName, blockLength, error, warnings, valueBeforeDecode}|{blockName: string, blockLength: number, error: string, warnings: Array.<string>, valueBeforeDecode: string}}
+     */
     toJSON() {
         let object = {};
 

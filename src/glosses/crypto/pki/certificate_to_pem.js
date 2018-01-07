@@ -1,9 +1,9 @@
 const {
-    crypto: { pki }
+    crypto: {
+        pki,
+        pem
+    }
 } = adone;
-
-const forge = require("node-forge");
-const asn1 = forge.asn1;
 
 /**
  * Converts an X.509 certificate to PEM format.
@@ -17,7 +17,7 @@ export default function certificateToPem(cert, maxline) {
     // convert to ASN.1, then DER, then PEM-encode
     const msg = {
         type: "CERTIFICATE",
-        body: asn1.toDer(pki.certificateToAsn1(cert)).getBytes()
+        body: Buffer.from(pki.certificateToAsn1(cert).toBER()).toString("binary")
     };
-    return forge.pem.encode(msg, { maxline });
+    return pem.encode(msg, { maxline });
 }

@@ -3,8 +3,6 @@ const {
     crypto: { pki }
 } = adone;
 
-const forge = require("node-forge");
-
 /**
  * Verifies a certificate chain against the given Certificate Authority store
  * with an optional custom verify callback.
@@ -210,7 +208,7 @@ export default function verifyCertificateChain(caStore, chain, verify) {
                 // but none of the parents actually verify ... but the intermediate
                 // is in the CA and it should pass this check; needs investigation
                 let parents = parent;
-                if (!forge.util.isArray(parents)) {
+                if (!is.array(parents)) {
                     parents = [parents];
                 }
 
@@ -233,8 +231,7 @@ export default function verifyCertificateChain(caStore, chain, verify) {
                 }
             }
 
-            if (is.null(error) && (!parent || selfSigned) &&
-          !caStore.hasCertificate(cert)) {
+            if (is.null(error) && (!parent || selfSigned) && !caStore.hasCertificate(cert)) {
                 // no parent issuer and certificate itself is not trusted
                 error = {
                     message: "Certificate is not trusted.",
@@ -269,8 +266,7 @@ export default function verifyCertificateChain(caStore, chain, verify) {
                 const ext = cert.extensions[i];
                 if (ext.critical && !(ext.name in se)) {
                     error = {
-                        message:
-                "Certificate has an unsupported critical extension.",
+                        message: "Certificate has an unsupported critical extension.",
                         error: pki.certificateError.unsupported_certificate
                     };
                 }
@@ -281,7 +277,7 @@ export default function verifyCertificateChain(caStore, chain, verify) {
         // remaining in chain with no parent or is self-signed
         if (is.null(error) &&
         (!first || (chain.length === 0 && (!parent || selfSigned)))) {
-        // first check keyUsage extension and then basic constraints
+            // first check keyUsage extension and then basic constraints
             const bcExt = cert.getExtension("basicConstraints");
             const keyUsageExt = cert.getExtension("keyUsage");
             if (!is.null(keyUsageExt)) {
@@ -290,12 +286,11 @@ export default function verifyCertificateChain(caStore, chain, verify) {
                 if (!keyUsageExt.keyCertSign || is.null(bcExt)) {
                     // bad certificate
                     error = {
-                        message:
-                "Certificate keyUsage or basicConstraints conflict " +
-                "or indicate that the certificate is not a CA. " +
-                "If the certificate is the only one in the chain or " +
-                "isn't the first then the certificate must be a " +
-                "valid CA.",
+                        message: "Certificate keyUsage or basicConstraints conflict "
+                            + "or indicate that the certificate is not a CA. "
+                            + "If the certificate is the only one in the chain or "
+                            + "isn't the first then the certificate must be a "
+                            + "valid CA.",
                         error: pki.certificateError.bad_certificate
                     };
                 }
@@ -304,17 +299,14 @@ export default function verifyCertificateChain(caStore, chain, verify) {
             if (is.null(error) && !is.null(bcExt) && !bcExt.cA) {
                 // bad certificate
                 error = {
-                    message:
-              "Certificate basicConstraints indicates the certificate " +
-              "is not a CA.",
+                    message: "Certificate basicConstraints indicates the certificate is not a CA.",
                     error: pki.certificateError.bad_certificate
                 };
             }
             // if error is not null and keyUsage is available, then we know it
             // has keyCertSign and there is a basic constraints extension too,
             // which means we can check pathLenConstraint (if it exists)
-            if (is.null(error) && !is.null(keyUsageExt) &&
-          "pathLenConstraint" in bcExt) {
+            if (is.null(error) && !is.null(keyUsageExt) && "pathLenConstraint" in bcExt) {
                 // pathLen is the maximum # of intermediate CA certs that can be
                 // found between the current certificate and the end-entity (depth 0)
                 // certificate; this number does not include the end-entity (depth 0,
@@ -323,8 +315,7 @@ export default function verifyCertificateChain(caStore, chain, verify) {
                 if (pathLen > bcExt.pathLenConstraint) {
                     // pathLenConstraint violated, bad certificate
                     error = {
-                        message:
-                "Certificate basicConstraints pathLenConstraint violated.",
+                        message: "Certificate basicConstraints pathLenConstraint violated.",
                         error: pki.certificateError.bad_certificate
                     };
                 }
@@ -335,10 +326,10 @@ export default function verifyCertificateChain(caStore, chain, verify) {
         const vfd = (is.null(error)) ? true : error.error;
         const ret = verify ? verify(vfd, depth, certs) : vfd;
         if (ret === true) {
-        // clear any set error
+            // clear any set error
             error = null;
         } else {
-        // if passed basic tests, set default message and alert
+            // if passed basic tests, set default message and alert
             if (vfd === true) {
                 error = {
                     message: "The application rejected the certificate.",

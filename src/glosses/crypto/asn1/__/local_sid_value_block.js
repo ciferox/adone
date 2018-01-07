@@ -9,15 +9,13 @@ const {
 } = adone.private(asn1);
 
 //region Declaration of ASN.1 ObjectIdentifier type class
-//**************************************************************************************
 export default class LocalSidValueBlock extends LocalHexBlock(LocalBaseBlock) {
-    //**********************************************************************************
     /**
-	 * Constructor for "LocalSidValueBlock" class
-	 * @param {Object} [parameters={}]
-	 * @property {number} [valueDec]
-	 * @property {boolean} [isFirstSid]
-	 */
+     * Constructor for "LocalSidValueBlock" class
+     * @param {Object} [parameters={}]
+     * @property {number} [valueDec]
+     * @property {boolean} [isFirstSid]
+     */
     constructor(parameters = {}) {
         super(parameters);
 
@@ -25,30 +23,27 @@ export default class LocalSidValueBlock extends LocalHexBlock(LocalBaseBlock) {
         this.isFirstSid = util.getParametersValue(parameters, "isFirstSid", false);
     }
 
-    //**********************************************************************************
     /**
-	 * Aux function, need to get a block name. Need to have it here for inhiritence
-	 * @returns {string}
-	 */
+     * Aux function, need to get a block name. Need to have it here for inhiritence
+     * @returns {string}
+     */
     static blockName() {
         return "sidBlock";
     }
 
-    //**********************************************************************************
     /**
-	 * Base function for converting block from BER encoded array of bytes
-	 * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-	 * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-	 * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-	 * @returns {number} Offset after least decoded byte
-	 */
+     * Base function for converting block from BER encoded array of bytes
+     * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+     * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+     * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+     * @returns {number} Offset after least decoded byte
+     */
     fromBER(inputBuffer, inputOffset, inputLength) {
         if (inputLength === 0) {
             return inputOffset;
         }
 
         //region Basic check for parameters
-        //noinspection JSCheckFunctionSignatures
         if (util.checkBufferParams(this, inputBuffer, inputOffset, inputLength) === false) {
             return -1;
         }
@@ -77,7 +72,6 @@ export default class LocalSidValueBlock extends LocalHexBlock(LocalBaseBlock) {
             tempView[i] = view[i];
         }
 
-        //noinspection JSCheckFunctionSignatures
         this.valueHex = tempValueHex.slice(0);
         view = new Uint8Array(this.valueHex);
         //endregion
@@ -101,12 +95,11 @@ export default class LocalSidValueBlock extends LocalHexBlock(LocalBaseBlock) {
         return inputOffset + this.blockLength;
     }
 
-    //**********************************************************************************
     /**
-	 * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
-	 * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
-	 * @returns {ArrayBuffer}
-	 */
+     * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
+     * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
+     * @returns {ArrayBuffer}
+     */
     toBER(sizeOnly = false) {
         //region Initial variables
         let retBuf;
@@ -154,11 +147,10 @@ export default class LocalSidValueBlock extends LocalHexBlock(LocalBaseBlock) {
         return retBuf;
     }
 
-    //**********************************************************************************
     /**
-	 * Create string representation of current SID block
-	 * @returns {string}
-	 */
+     * Create string representation of current SID block
+     * @returns {string}
+     */
     toString() {
         let result = "";
 
@@ -189,12 +181,10 @@ export default class LocalSidValueBlock extends LocalHexBlock(LocalBaseBlock) {
         return result;
     }
 
-    //**********************************************************************************
-    //noinspection JSUnusedGlobalSymbols
     /**
-	 * Convertion for the block to JSON object
-	 * @returns {Object}
-	 */
+     * Convertion for the block to JSON object
+     * @returns {Object}
+     */
     toJSON() {
         let object = {};
 
@@ -211,5 +201,4 @@ export default class LocalSidValueBlock extends LocalHexBlock(LocalBaseBlock) {
 
         return object;
     }
-    //**********************************************************************************
 }

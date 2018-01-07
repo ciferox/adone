@@ -1,188 +1,144 @@
 const {
     is,
-    crypto: { pki }
+    crypto: {
+        pki,
+        asn1
+    }
 } = adone;
 
 const __ = adone.private(pki);
 const forge = require("node-forge");
-const asn1 = forge.asn1;
-
-// validator for an SubjectPublicKeyInfo structure
-// Note: Currently only works with an RSA public key
-const publicKeyValidator = forge.pki.rsa.publicKeyValidator;
 
 // validator for an X.509v3 certificate
-const x509CertificateValidator = {
-    name: "Certificate",
-    tagClass: asn1.Class.UNIVERSAL,
-    type: asn1.Type.SEQUENCE,
-    constructed: true,
-    value: [{
-        name: "Certificate.TBSCertificate",
-        tagClass: asn1.Class.UNIVERSAL,
-        type: asn1.Type.SEQUENCE,
-        constructed: true,
-        captureAsn1: "tbsCertificate",
-        value: [{
-            name: "Certificate.TBSCertificate.version",
-            tagClass: asn1.Class.CONTEXT_SPECIFIC,
-            type: 0,
-            constructed: true,
-            optional: true,
-            value: [{
-                name: "Certificate.TBSCertificate.version.integer",
-                tagClass: asn1.Class.UNIVERSAL,
-                type: asn1.Type.INTEGER,
-                constructed: false,
-                capture: "certVersion"
-            }]
-        }, {
-            name: "Certificate.TBSCertificate.serialNumber",
-            tagClass: asn1.Class.UNIVERSAL,
-            type: asn1.Type.INTEGER,
-            constructed: false,
-            capture: "certSerialNumber"
-        }, {
-            name: "Certificate.TBSCertificate.signature",
-            tagClass: asn1.Class.UNIVERSAL,
-            type: asn1.Type.SEQUENCE,
-            constructed: true,
-            value: [{
-                name: "Certificate.TBSCertificate.signature.algorithm",
-                tagClass: asn1.Class.UNIVERSAL,
-                type: asn1.Type.OID,
-                constructed: false,
-                capture: "certinfoSignatureOid"
-            }, {
-                name: "Certificate.TBSCertificate.signature.parameters",
-                tagClass: asn1.Class.UNIVERSAL,
-                optional: true,
-                captureAsn1: "certinfoSignatureParams"
-            }]
-        }, {
-            name: "Certificate.TBSCertificate.issuer",
-            tagClass: asn1.Class.UNIVERSAL,
-            type: asn1.Type.SEQUENCE,
-            constructed: true,
-            captureAsn1: "certIssuer"
-        }, {
-            name: "Certificate.TBSCertificate.validity",
-            tagClass: asn1.Class.UNIVERSAL,
-            type: asn1.Type.SEQUENCE,
-            constructed: true,
-            // Note: UTC and generalized times may both appear so the capture
-            // names are based on their detected order, the names used below
-            // are only for the common case, which validity time really means
-            // "notBefore" and which means "notAfter" will be determined by order
-            value: [{
-                // notBefore (Time) (UTC time case)
-                name: "Certificate.TBSCertificate.validity.notBefore (utc)",
-                tagClass: asn1.Class.UNIVERSAL,
-                type: asn1.Type.UTCTIME,
-                constructed: false,
-                optional: true,
-                capture: "certValidity1UTCTime"
-            }, {
-                // notBefore (Time) (generalized time case)
-                name: "Certificate.TBSCertificate.validity.notBefore (generalized)",
-                tagClass: asn1.Class.UNIVERSAL,
-                type: asn1.Type.GENERALIZEDTIME,
-                constructed: false,
-                optional: true,
-                capture: "certValidity2GeneralizedTime"
-            }, {
-                // notAfter (Time) (only UTC time is supported)
-                name: "Certificate.TBSCertificate.validity.notAfter (utc)",
-                tagClass: asn1.Class.UNIVERSAL,
-                type: asn1.Type.UTCTIME,
-                constructed: false,
-                optional: true,
-                capture: "certValidity3UTCTime"
-            }, {
-                // notAfter (Time) (only UTC time is supported)
-                name: "Certificate.TBSCertificate.validity.notAfter (generalized)",
-                tagClass: asn1.Class.UNIVERSAL,
-                type: asn1.Type.GENERALIZEDTIME,
-                constructed: false,
-                optional: true,
-                capture: "certValidity4GeneralizedTime"
-            }]
-        }, {
-        // Name (subject) (RDNSequence)
-            name: "Certificate.TBSCertificate.subject",
-            tagClass: asn1.Class.UNIVERSAL,
-            type: asn1.Type.SEQUENCE,
-            constructed: true,
-            captureAsn1: "certSubject"
-        },
-        // SubjectPublicKeyInfo
-        publicKeyValidator,
-        {
-        // issuerUniqueID (optional)
-            name: "Certificate.TBSCertificate.issuerUniqueID",
-            tagClass: asn1.Class.CONTEXT_SPECIFIC,
-            type: 1,
-            constructed: true,
-            optional: true,
-            value: [{
-                name: "Certificate.TBSCertificate.issuerUniqueID.id",
-                tagClass: asn1.Class.UNIVERSAL,
-                type: asn1.Type.BITSTRING,
-                constructed: false,
-                // TODO: support arbitrary bit length ids
-                captureBitStringValue: "certIssuerUniqueId"
-            }]
-        }, {
-        // subjectUniqueID (optional)
-            name: "Certificate.TBSCertificate.subjectUniqueID",
-            tagClass: asn1.Class.CONTEXT_SPECIFIC,
-            type: 2,
-            constructed: true,
-            optional: true,
-            value: [{
-                name: "Certificate.TBSCertificate.subjectUniqueID.id",
-                tagClass: asn1.Class.UNIVERSAL,
-                type: asn1.Type.BITSTRING,
-                constructed: false,
-                // TODO: support arbitrary bit length ids
-                captureBitStringValue: "certSubjectUniqueId"
-            }]
-        }, {
-        // Extensions (optional)
-            name: "Certificate.TBSCertificate.extensions",
-            tagClass: asn1.Class.CONTEXT_SPECIFIC,
-            type: 3,
-            constructed: true,
-            captureAsn1: "certExtensions",
-            optional: true
-        }]
-    }, {
-        // AlgorithmIdentifier (signature algorithm)
-        name: "Certificate.signatureAlgorithm",
-        tagClass: asn1.Class.UNIVERSAL,
-        type: asn1.Type.SEQUENCE,
-        constructed: true,
-        value: [{
-        // algorithm
-            name: "Certificate.signatureAlgorithm.algorithm",
-            tagClass: asn1.Class.UNIVERSAL,
-            type: asn1.Type.OID,
-            constructed: false,
-            capture: "certSignatureOid"
-        }, {
-            name: "Certificate.TBSCertificate.signature.parameters",
-            tagClass: asn1.Class.UNIVERSAL,
-            optional: true,
-            captureAsn1: "certSignatureParams"
-        }]
-    }, {
-        // SignatureValue
-        name: "Certificate.signatureValue",
-        tagClass: asn1.Class.UNIVERSAL,
-        type: asn1.Type.BITSTRING,
-        constructed: false,
-        captureBitStringValue: "certSignature"
-    }]
+const x509CertificateValidator = new asn1.Sequence({
+    value: [
+        new asn1.Sequence({
+            name: "tbsCertificate",
+            value: [
+                new asn1.Constructed({
+                    idBlock: {
+                        tagClass: 3, // CONTEXT_SPECIFIC
+                        tagNumber: 0
+                    },
+                    optional: true,
+                    value: [
+                        new asn1.Integer({
+                            name: "certVersion"
+                        })
+                    ]
+                }),
+                new asn1.Integer({
+                    name: "certSerialNumber"
+                }),
+                new asn1.Sequence({
+                    value: [
+                        new asn1.ObjectIdentifier({
+                            name: "certinfoSignatureOid"
+                        }),
+                        new asn1.Any({
+                            optional: true,
+                            name: "certinfoSignatureParams"
+                        })
+                    ]
+                }),
+                new asn1.Sequence({
+                    name: "certIssuer"
+                }),
+                new asn1.Sequence({
+                    // Note: UTC and generalized times may both appear so the capture
+                    // names are based on their detected order, the names used below
+                    // are only for the common case, which validity time really means
+                    // "notBefore" and which means "notAfter" will be determined by order
+                    value: [
+                        new asn1.UTCTime({
+                            // notBefore (Time) (UTC time case)
+                            optional: true,
+                            name: "certValidity1UTCTime"
+                        }),
+                        new asn1.GeneralizedTime({
+                            // notBefore (Time) (generalized time case)
+                            optional: true,
+                            name: "certValidity2GeneralizedTime"
+                        }),
+                        new asn1.UTCTime({
+                            // notAfter (Time) (only UTC time is supported)
+                            optional: true,
+                            name: "certValidity3UTCTime"
+                        }),
+                        new asn1.GeneralizedTime({
+                            // notAfter (Time) (only UTC time is supported)
+                            optional: true,
+                            name: "certValidity4GeneralizedTime"
+                        })
+                    ]
+                }),
+                new asn1.Sequence({
+                    // Name (subject) (RDNSequence)
+                    name: "certSubject"
+                }),
+                // SubjectPublicKeyInfo
+                __.publicKeyValidator,
+                new asn1.Constructed({
+                    // issuerUniqueID (optional)
+                    idBlock: {
+                        tagClass: 3, // CONTEXT_SPECIFIC
+                        tagNumber: 1
+                    },
+                    optional: true,
+                    value: [
+                        new asn1.BitString({
+                            // TODO: support arbitrary bit length ids
+                            name: "certIssuerUniqueId"
+                        })
+                    ]
+                }),
+                new asn1.Constructed({
+                    // subjectUniqueID (optional)
+                    idBlock: {
+                        tagClass: 3, // CONTEXT_SPECIFIC
+                        tagNumber: 2
+                    },
+                    optional: true,
+                    value: [
+                        new asn1.BitString({
+                            // TODO: support arbitrary bit length ids
+                            name: "certSubjectUniqueId"
+                        })
+                    ]
+                }),
+                new asn1.Constructed({
+                    idBlock: {
+                        tagClass: 3, // CONTEXT_SPECIFIC
+                        tagNumber: 3
+                    },
+                    // Extensions (optional)
+                    optional: true,
+                    name: "certExtensions"
+                })
+            ]
+        }),
+        new asn1.Sequence({
+            // AlgorithmIdentifier (signature algorithm)
+            value: [
+                new asn1.ObjectIdentifier({
+                    // algorithm
+                    name: "certSignatureOid"
+                }),
+                new asn1.Any({
+                    optional: true,
+                    name: "certSignatureParams"
+                })
+            ]
+        }),
+        new asn1.BitString({
+            // SignatureValue
+            name: "certSignature"
+        })
+    ]
+});
+
+const utcTimeToDate = ({ year, month, day, hour, minute, second }) => {
+    return new Date(Date.UTC(year, month - 1, day, hour, minute, second));
 };
 
 /**
@@ -200,62 +156,54 @@ const x509CertificateValidator = {
  */
 export default function certificateFromAsn1(obj, computeHash) {
     // validate certificate and capture data
-    const capture = {};
-    const errors = [];
-    if (!asn1.validate(obj, x509CertificateValidator, capture, errors)) {
-        const error = new Error("Cannot read X.509 certificate. ASN.1 object is not an X509v3 Certificate.");
-        error.errors = errors;
-        throw error;
+    const validation = asn1.compareSchema(obj, obj, x509CertificateValidator);
+    if (!validation.verified) {
+        throw new Error("Cannot read X.509 certificate. ASN.1 object is not an X509v3 Certificate.");
     }
 
+    const { result } = validation;
+
     // get oid
-    const oid = asn1.derToOid(capture.publicKeyOid);
+    const oid = result.publicKeyOid.valueBlock.toString();
+
     if (oid !== pki.oids.rsaEncryption) {
         throw new Error("Cannot read public key. OID is not RSA.");
     }
 
     // create certificate
     const cert = pki.createCertificate();
-    cert.version = capture.certVersion ?
-        capture.certVersion.charCodeAt(0) : 0;
-    const serial = forge.util.createBuffer(capture.certSerialNumber);
-    cert.serialNumber = serial.toHex();
-    cert.signatureOid = forge.asn1.derToOid(capture.certSignatureOid);
-    cert.signatureParameters = __.readSignatureParameters(
-        cert.signatureOid, capture.certSignatureParams, true);
-    cert.siginfo.algorithmOid = forge.asn1.derToOid(capture.certinfoSignatureOid);
-    cert.siginfo.parameters = __.readSignatureParameters(cert.siginfo.algorithmOid,
-        capture.certinfoSignatureParams, false);
-    cert.signature = capture.certSignature;
+    cert.version = result.certVersion.valueBlock.valueDec;
+    cert.serialNumber = Buffer.from(result.certSerialNumber.valueBlock.valueHex).toString("hex");
+    cert.signatureOid = result.certSignatureOid.valueBlock.toString();
+    cert.signatureParameters = __.readSignatureParameters(cert.signatureOid, result.certSignatureParams, true);
+    cert.siginfo.algorithmOid = result.certinfoSignatureOid.valueBlock.toString();
+    cert.siginfo.parameters = __.readSignatureParameters(cert.siginfo.algorithmOid, result.certinfoSignatureParams, false);
+    cert.signature = Buffer.from(result.certSignature.valueBlock.valueHex).toString("binary");
 
     const validity = [];
-    if (!is.undefined(capture.certValidity1UTCTime)) {
-        validity.push(asn1.utcTimeToDate(capture.certValidity1UTCTime));
+    if (result.certValidity1UTCTime) {
+        validity.push(utcTimeToDate(result.certValidity1UTCTime));
     }
-    if (!is.undefined(capture.certValidity2GeneralizedTime)) {
-        validity.push(asn1.generalizedTimeToDate(
-            capture.certValidity2GeneralizedTime));
+    if (result.certValidity2GeneralizedTime) {
+        validity.push(asn1.generalizedTimeToDate(capture.certValidity2GeneralizedTime));
     }
-    if (!is.undefined(capture.certValidity3UTCTime)) {
-        validity.push(asn1.utcTimeToDate(capture.certValidity3UTCTime));
+    if (result.certValidity3UTCTime) {
+        validity.push(utcTimeToDate(result.certValidity3UTCTime));
     }
-    if (!is.undefined(capture.certValidity4GeneralizedTime)) {
-        validity.push(asn1.generalizedTimeToDate(
-            capture.certValidity4GeneralizedTime));
+    if (result.certValidity4GeneralizedTime) {
+        validity.push(asn1.generalizedTimeToDate(capture.certValidity4GeneralizedTime));
     }
     if (validity.length > 2) {
-        throw new Error("Cannot read notBefore/notAfter validity times; more " +
-        "than two times were provided in the certificate.");
+        throw new Error("Cannot read notBefore/notAfter validity times; more than two times were provided in the certificate.");
     }
     if (validity.length < 2) {
-        throw new Error("Cannot read notBefore/notAfter validity times; they " +
-        "were not provided as either UTCTime or GeneralizedTime.");
+        throw new Error("Cannot read notBefore/notAfter validity times; they were not provided as either UTCTime or GeneralizedTime.");
     }
     cert.validity.notBefore = validity[0];
     cert.validity.notAfter = validity[1];
 
     // keep TBSCertificate to preserve signature when exporting
-    cert.tbsCertificate = capture.tbsCertificate;
+    cert.tbsCertificate = result.tbsCertificate;
 
     if (computeHash) {
         // check signature OID for supported signature types
@@ -283,15 +231,14 @@ export default function certificateFromAsn1(obj, computeHash) {
             }
         }
         if (is.null(cert.md)) {
-            const error = new Error("Could not compute certificate digest. " +
-          "Unknown signature OID.");
+            const error = new Error("Could not compute certificate digest. Unknown signature OID.");
             error.signatureOid = cert.signatureOid;
             throw error;
         }
 
         // produce DER formatted TBSCertificate and digest it
-        const bytes = asn1.toDer(cert.tbsCertificate);
-        cert.md.update(bytes.getBytes());
+        const bytes = Buffer.from(cert.tbsCertificate.toBER()).toString("binary");
+        cert.md.update(bytes);
     }
 
     // handle issuer, build issuer message digest
@@ -303,9 +250,9 @@ export default function certificateFromAsn1(obj, computeHash) {
         __.fillMissingFields([attr]);
         cert.issuer.attributes.push(attr);
     };
-    cert.issuer.attributes = pki.RDNAttributesAsArray(capture.certIssuer, imd);
-    if (capture.certIssuerUniqueId) {
-        cert.issuer.uniqueId = capture.certIssuerUniqueId;
+    cert.issuer.attributes = pki.RDNAttributesAsArray(result.certIssuer, imd);
+    if (result.certIssuerUniqueId) {
+        cert.issuer.uniqueId = Buffer.from(result.certIssuerUniqueId.valueBlock.valueHex).toString("binary");
     }
     cert.issuer.hash = imd.digest().toHex();
 
@@ -318,21 +265,21 @@ export default function certificateFromAsn1(obj, computeHash) {
         __.fillMissingFields([attr]);
         cert.subject.attributes.push(attr);
     };
-    cert.subject.attributes = pki.RDNAttributesAsArray(capture.certSubject, smd);
-    if (capture.certSubjectUniqueId) {
-        cert.subject.uniqueId = capture.certSubjectUniqueId;
+    cert.subject.attributes = pki.RDNAttributesAsArray(result.certSubject, smd);
+    if (result.certSubjectUniqueId) {
+        cert.subject.uniqueId = Buffer.from(result.certSubjectUniqueId).toString("binary");
     }
     cert.subject.hash = smd.digest().toHex();
 
     // handle extensions
-    if (capture.certExtensions) {
-        cert.extensions = pki.certificateExtensionsFromAsn1(capture.certExtensions);
+    if (result.certExtensions) {
+        cert.extensions = pki.certificateExtensionsFromAsn1(result.certExtensions);
     } else {
         cert.extensions = [];
     }
 
     // convert RSA public key from ASN.1
-    cert.publicKey = pki.publicKeyFromAsn1(capture.subjectPublicKeyInfo);
+    cert.publicKey = pki.publicKeyFromAsn1(asn1.fromBER(result.subjectPublicKey.valueBlock.valueHex).result);
 
     return cert;
 }

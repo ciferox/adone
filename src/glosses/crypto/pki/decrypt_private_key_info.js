@@ -1,10 +1,11 @@
 const {
-    crypto
+    crypto: {
+        pki,
+        asn1
+    }
 } = adone;
 
 const forge = require("node-forge");
-
-const asn1 = crypto.asn1;
 
 // validator for an EncryptedPrivateKeyInfo structure
 // Note: Currently only works w/algorithm params
@@ -49,7 +50,7 @@ export default function decryptPrivateKeyInfo(obj, password) {
 
     // get cipher
     const oid = result.encryptionOid.valueBlock.toString();
-    const cipher = crypto.pki.pbe.getCipher(oid, result.encryptionParams, password);
+    const cipher = pki.pbe.getCipher(oid, result.encryptionParams, password);
 
     // get encrypted data
     const encrypted = forge.util.createBuffer(Buffer.from(result.encryptedData.valueBlock.valueHex).toString("binary"));

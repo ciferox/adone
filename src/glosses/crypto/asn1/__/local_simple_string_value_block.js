@@ -8,11 +8,10 @@ const {
 } = adone.private(asn1);
 
 export default class LocalSimpleStringValueBlock extends LocalHexBlock(LocalBaseBlock) {
-    //**********************************************************************************
     /**
-	 * Constructor for "LocalSimpleStringValueBlock" class
-	 * @param {Object} [parameters={}]
-	 */
+     * Constructor for "LocalSimpleStringValueBlock" class
+     * @param {Object} [parameters={}]
+     */
     constructor(parameters = {}) {
         super(parameters);
 
@@ -20,21 +19,18 @@ export default class LocalSimpleStringValueBlock extends LocalHexBlock(LocalBase
         this.isHexOnly = true;
     }
 
-    //**********************************************************************************
     /**
-	 * Aux function, need to get a block name. Need to have it here for inhiritence
-	 * @returns {string}
-	 */
+     * Aux function, need to get a block name. Need to have it here for inhiritence
+     * @returns {string}
+     */
     static blockName() {
         return "SimpleStringValueBlock";
     }
 
-    //**********************************************************************************
-    //noinspection JSUnusedGlobalSymbols
     /**
-	 * Convertion for the block to JSON object
-	 * @returns {Object}
-	 */
+     * Convertion for the block to JSON object
+     * @returns {Object}
+     */
     toJSON() {
         let object = {};
 
@@ -50,5 +46,4 @@ export default class LocalSimpleStringValueBlock extends LocalHexBlock(LocalBase
 
         return object;
     }
-    //**********************************************************************************
 }

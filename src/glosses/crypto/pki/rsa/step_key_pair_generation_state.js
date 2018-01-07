@@ -4,8 +4,6 @@ const {
     math: { BigNumber }
 } = adone;
 
-const forge = require("node-forge");
-
 /**
  * Returns the required number of Miller-Rabin tests to generate a
  * prime with an error probability of (1/2)^80.

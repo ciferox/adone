@@ -1,11 +1,11 @@
 const {
-    crypto: { pki }
+    crypto: {
+        pki,
+        asn1
+    }
 } = adone;
 
 const __ = adone.private(pki);
-
-const forge = require("node-forge");
-const asn1 = forge.asn1;
 
 /**
  * Converts an X.509v3 RSA certificate to an ASN.1 object.
@@ -18,20 +18,25 @@ export default function certificateToAsn1(cert) {
     // prefer cached TBSCertificate over generating one
     const tbsCertificate = cert.tbsCertificate || pki.getTBSCertificate(cert);
 
-    // Certificate
-    return asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-        // TBSCertificate
-        tbsCertificate,
-        // AlgorithmIdentifier (signature algorithm)
-        asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-        // algorithm
-            asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false,
-                asn1.oidToDer(cert.signatureOid).getBytes()),
-            // parameters
-            __.signatureParametersToAsn1(cert.signatureOid, cert.signatureParameters)
-        ]),
-        // SignatureValue
-        asn1.create(asn1.Class.UNIVERSAL, asn1.Type.BITSTRING, false,
-            String.fromCharCode(0x00) + cert.signature)
-    ]);
+    return new asn1.Sequence({
+        value: [
+            // TBSCertificate
+            tbsCertificate,
+            // AlgorithmIdentifier (signature algorithm)
+            new asn1.Sequence({
+                value: [
+                    // algorithm
+                    new asn1.ObjectIdentifier({
+                        value: cert.signatureOid
+                    }),
+                    // parameters
+                    __.signatureParametersToAsn1(cert.signatureOid, cert.signatureParameters)
+                ]
+            }),
+            // SignatureValue
+            new asn1.BitString({
+                valueHex: adone.util.bufferToArrayBuffer(Buffer.from(cert.signature, "binary"))
+            })
+        ]
+    });
 }

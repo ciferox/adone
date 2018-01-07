@@ -3,8 +3,6 @@ const {
 } = adone;
 
 const __ = adone.private(pki);
-const forge = require("node-forge");
-const asn1 = forge.asn1;
 
 /**
  * Converts ASN.1 CRIAttributes into an array with objects that have type and
@@ -16,19 +14,22 @@ export default function CRIAttributesAsArray(attributes) {
     const rval = [];
 
     // each value in 'attributes' in is a SEQUENCE with an OID and a SET
+    attributes = attributes.valueBlock.value;
     for (let si = 0; si < attributes.length; ++si) {
         // get the attribute sequence
         const seq = attributes[si];
 
         // each value in the SEQUENCE containing first a type (an OID) and
         // second a set of values (defined by the OID)
-        const type = asn1.derToOid(seq.value[0].value);
-        const values = seq.value[1].value;
-        for (let vi = 0; vi < values.length; ++vi) {
+        const svalue = seq.valueBlock.value;
+        const type = svalue[0].valueBlock.toString();
+
+        const s1value = svalue[1].valueBlock.value;
+        for (let vi = 0; vi < s1value.length; ++vi) {
             const obj = {};
             obj.type = type;
-            obj.value = values[vi].value;
-            obj.valueTagClass = values[vi].type;
+            const value = s1value[vi].valueBlock.value;
+            obj.valueTagClass = s1value[vi].idBlock.tagNumber;
             // if the OID is known, get its name and short name
             if (obj.type in pki.oids) {
                 obj.name = pki.oids[obj.type];
@@ -39,9 +40,11 @@ export default function CRIAttributesAsArray(attributes) {
             // parse extensions
             if (obj.type === pki.oids.extensionRequest) {
                 obj.extensions = [];
-                for (let ei = 0; ei < obj.value.length; ++ei) {
-                    obj.extensions.push(pki.certificateExtensionFromAsn1(obj.value[ei]));
+                for (let ei = 0; ei < value.length; ++ei) {
+                    obj.extensions.push(pki.certificateExtensionFromAsn1(value[ei]));
                 }
+            } else {
+                obj.value = value;
             }
             rval.push(obj);
         }

@@ -1,10 +1,9 @@
 const {
-    crypto: { pki }
+    crypto: {
+        pki,
+        asn1
+    }
 } = adone;
-
-const forge = require("node-forge");
-const asn1 = forge.asn1;
-
 
 /**
  * Wrap digest in DigestInfo object.
@@ -33,17 +32,23 @@ export default function emsaPKCS1v15encode(md) {
         error.algorithm = md.algorithm;
         throw error;
     }
-    const oidBytes = asn1.oidToDer(oid).getBytes();
 
-    // create the digest info
-    const digestInfo = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
-    const digestAlgorithm = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
-    digestAlgorithm.value.push(asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false, oidBytes));
-    digestAlgorithm.value.push(asn1.create( asn1.Class.UNIVERSAL, asn1.Type.NULL, false, ""));
-    const digest = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OCTETSTRING, false, md.digest().getBytes());
-    digestInfo.value.push(digestAlgorithm);
-    digestInfo.value.push(digest);
 
-    // encode digest info
-    return asn1.toDer(digestInfo).getBytes();
+    const digestInfo = new asn1.Sequence({
+        value: [
+            new asn1.Sequence({
+                value: [
+                    new asn1.ObjectIdentifier({
+                        value: oid
+                    }),
+                    new asn1.Null()
+                ]
+            }),
+            new asn1.OctetString({
+                valueHex: adone.util.bufferToArrayBuffer(Buffer.from(md.digest().getBytes(), "binary"))
+            })
+        ]
+    });
+
+    return Buffer.from(digestInfo.toBER()).toString("binary");
 }

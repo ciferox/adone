@@ -10,9 +10,9 @@ const __ = adone.private(asn1);
 
 export default class Constructed extends BaseBlock {
     /**
-	 * Constructor for "Constructed" class
-	 * @param {Object} [parameters={}]
-	 */
+     * Constructor for "Constructed" class
+     * @param {Object} [parameters={}]
+     */
     constructor(parameters = {}) {
         super(parameters, __.LocalConstructedValueBlock);
 
@@ -20,20 +20,20 @@ export default class Constructed extends BaseBlock {
     }
 
     /**
-	 * Aux function, need to get a block name. Need to have it here for inhiritence
-	 * @returns {string}
-	 */
+     * Aux function, need to get a block name. Need to have it here for inhiritence
+     * @returns {string}
+     */
     static blockName() {
         return "CONSTRUCTED";
     }
 
     /**
-	 * Base function for converting block from BER encoded array of bytes
-	 * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-	 * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-	 * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-	 * @returns {number}
-	 */
+     * Base function for converting block from BER encoded array of bytes
+     * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+     * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+     * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+     * @returns {number}
+     */
     fromBER(inputBuffer, inputOffset, inputLength) {
         this.valueBlock.isIndefiniteForm = this.lenBlock.isIndefiniteForm;
 

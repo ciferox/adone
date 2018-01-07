@@ -1,11 +1,15 @@
 const {
-    crypto: { pki }
+    crypto: {
+        asn1,
+        pki
+    }
 } = adone;
 
 const __ = adone.private(pki);
 
-const forge = require("node-forge");
-const asn1 = forge.asn1;
+const tobuf = (bn) => {
+    return adone.util.bufferToArrayBuffer(Buffer.from(__.bnToBytes(bn), "binary"));
+};
 
 /**
  * Converts a private key to an ASN.1 RSAPrivateKey.
@@ -15,26 +19,44 @@ const asn1 = forge.asn1;
  * @return the ASN.1 representation of an RSAPrivateKey.
  */
 export default function privateKeyToAsn1(key) {
-    // RSAPrivateKey
-    return asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-        // version (0 = only 2 primes, 1 multiple primes)
-        asn1.create(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false,
-            asn1.integerToDer(0).getBytes()),
-        // modulus (n)
-        asn1.create(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false, __.bnToBytes(key.n)),
-        // publicExponent (e)
-        asn1.create(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false, __.bnToBytes(key.e)),
-        // privateExponent (d)
-        asn1.create(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false, __.bnToBytes(key.d)),
-        // privateKeyPrime1 (p)
-        asn1.create(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false, __.bnToBytes(key.p)),
-        // privateKeyPrime2 (q)
-        asn1.create(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false, __.bnToBytes(key.q)),
-        // privateKeyExponent1 (dP)
-        asn1.create(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false, __.bnToBytes(key.dP)),
-        // privateKeyExponent2 (dQ)
-        asn1.create(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false, __.bnToBytes(key.dQ)),
-        // coefficient (qInv)
-        asn1.create(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false, __.bnToBytes(key.qInv))
-    ]);
+    return new asn1.Sequence({
+        value: [
+            // version (0 = only 2 primes, 1 multiple primes)
+            new asn1.Integer({
+                value: 0
+            }),
+            // modulus (n)
+            new asn1.Integer({
+                valueHex: tobuf(key.n)
+            }),
+            // publicExponent (e)
+            new asn1.Integer({
+                valueHex: tobuf(key.e)
+            }),
+            // privateExponent (d)
+            new asn1.Integer({
+                valueHex: tobuf(key.d)
+            }),
+            // privateKeyPrime1 (p)
+            new asn1.Integer({
+                valueHex: tobuf(key.p)
+            }),
+            // privateKeyPrime2 (q)
+            new asn1.Integer({
+                valueHex: tobuf(key.q)
+            }),
+            // privateKeyExponent1 (dP)
+            new asn1.Integer({
+                valueHex: tobuf(key.dP)
+            }),
+            // privateKeyExponent2 (dQ)
+            new asn1.Integer({
+                valueHex: tobuf(key.dQ)
+            }),
+            // coefficient (qInv)
+            new asn1.Integer({
+                valueHex: tobuf(key.qInv)
+            })
+        ]
+    });
 }

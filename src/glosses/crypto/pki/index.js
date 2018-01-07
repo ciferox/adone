@@ -65,5 +65,6 @@ adone.lazifyPrivate({
     signatureParametersToAsn1: "./__/signature_parameters_to_asn1",
     CRIAttributesToAsn1: "./__/cri_attributes_to_asn1",
     publicKeyValidator: "./__/public_key_validator",
-    rsaPublicKeyValidator: "./__/rsa_public_key_validator"
+    rsaPublicKeyValidator: "./__/rsa_public_key_validator",
+    encodeUtf8: "./__/encode_utf8"
 }, exports, require);

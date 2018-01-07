@@ -9,9 +9,9 @@ const {
 
 export default class LocalBmpStringValueBlock extends LocalHexBlock(LocalBaseBlock) {
     /**
-	 * Constructor for "LocalBmpStringValueBlock" class
-	 * @param {Object} [parameters={}]
-	 */
+     * Constructor for "LocalBmpStringValueBlock" class
+     * @param {Object} [parameters={}]
+     */
     constructor(parameters = {}) {
         super(parameters);
 
@@ -20,17 +20,17 @@ export default class LocalBmpStringValueBlock extends LocalHexBlock(LocalBaseBlo
     }
 
     /**
-	 * Aux function, need to get a block name. Need to have it here for inhiritence
-	 * @returns {string}
-	 */
+     * Aux function, need to get a block name. Need to have it here for inhiritence
+     * @returns {string}
+     */
     static blockName() {
         return "BmpStringValueBlock";
     }
 
     /**
-	 * Convertion for the block to JSON object
-	 * @returns {Object}
-	 */
+     * Convertion for the block to JSON object
+     * @returns {Object}
+     */
     toJSON() {
         let object = {};
 

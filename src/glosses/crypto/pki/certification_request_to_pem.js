@@ -1,9 +1,9 @@
 const {
-    crypto: { pki }
+    crypto: {
+        pki,
+        pem
+    }
 } = adone;
-
-const forge = require("node-forge");
-const asn1 = forge.asn1;
 
 /**
  * Converts a PKCS#10 certification request (CSR) to PEM format.
@@ -17,7 +17,7 @@ export default function certificationRequestToPem(csr, maxline) {
     // convert to ASN.1, then DER, then PEM-encode
     const msg = {
         type: "CERTIFICATE REQUEST",
-        body: asn1.toDer(pki.certificationRequestToAsn1(csr)).getBytes()
+        body: Buffer.from(pki.certificationRequestToAsn1(csr).toBER()).toString("binary")
     };
-    return forge.pem.encode(msg, { maxline });
+    return pem.encode(msg, { maxline });
 }

@@ -1,5 +1,8 @@
-const forge = require("node-forge");
-const asn1 = forge.asn1;
+const {
+    crypto: {
+        pem
+    }
+} = adone;
 
 /**
  * Converts a EncryptedPrivateKeyInfo to PEM format.
@@ -13,7 +16,7 @@ export default function encryptedPrivateKeyToPem(epki, maxline) {
     // convert to DER, then PEM-encode
     const msg = {
         type: "ENCRYPTED PRIVATE KEY",
-        body: asn1.toDer(epki).getBytes()
+        body: Buffer.from(epki.toBER()).toString("binary")
     };
-    return forge.pem.encode(msg, { maxline });
+    return pem.encode(msg, { maxline });
 }

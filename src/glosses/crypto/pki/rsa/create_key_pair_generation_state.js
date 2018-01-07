@@ -1,9 +1,8 @@
 const {
     is,
+    crypto,
     math: { BigNumber }
 } = adone;
-
-const forge = require("node-forge");
 
 /**
  * Creates an RSA key-pair generation state object. It is used to allow
@@ -30,7 +29,7 @@ export default function createKeyPairGenerationState(bits, e, options) {
 
     // create prng with api that matches BigInteger secure random
     options = options || {};
-    const prng = options.prng || forge.random;
+    const prng = options.prng || crypto.random;
     const rng = {
         // x is an array to fill with bytes
         nextBytes(x) {

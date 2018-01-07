@@ -6,7 +6,6 @@ const {
 const __ = adone.private(pki);
 
 const forge = require("node-forge");
-const asn1 = forge.asn1;
 
 /**
  * Creates an empty X.509v3 RSA certificate.
@@ -138,8 +137,7 @@ export default function createCertificate() {
         cert.md = md || forge.md.sha1.create();
         const algorithmOid = pki.oids[`${cert.md.algorithm}WithRSAEncryption`];
         if (!algorithmOid) {
-            const error = new Error("Could not compute certificate digest. " +
-          "Unknown message digest algorithm OID.");
+            const error = new Error("Could not compute certificate digest. Unknown message digest algorithm OID.");
             error.algorithm = cert.md.algorithm;
             throw error;
         }
@@ -147,10 +145,11 @@ export default function createCertificate() {
 
         // get TBSCertificate, convert to DER
         cert.tbsCertificate = pki.getTBSCertificate(cert);
-        const bytes = asn1.toDer(cert.tbsCertificate);
+
+        const bytes = Buffer.from(cert.tbsCertificate.toBER()).toString("binary");
 
         // digest and sign
-        cert.md.update(bytes.getBytes());
+        cert.md.update(bytes);
         cert.signature = key.sign(cert.md);
     };
 
@@ -176,7 +175,7 @@ export default function createCertificate() {
 
         let md = child.md;
         if (is.null(md)) {
-        // check signature OID for supported signature types
+            // check signature OID for supported signature types
             if (child.signatureOid in pki.oids) {
                 const oid = pki.oids[child.signatureOid];
                 switch (oid) {
@@ -208,8 +207,8 @@ export default function createCertificate() {
 
             // produce DER formatted TBSCertificate and digest it
             const tbsCertificate = child.tbsCertificate || pki.getTBSCertificate(child);
-            const bytes = asn1.toDer(tbsCertificate);
-            md.update(bytes.getBytes());
+            const bytes = Buffer.from(tbsCertificate.toBER()).toString("binary");
+            md.update(bytes);
         }
 
         if (!is.null(md)) {
@@ -321,17 +320,18 @@ export default function createCertificate() {
      * @return the subjectKeyIdentifier for this certificate as byte buffer.
      */
     cert.generateSubjectKeyIdentifier = function () {
-        /* See: 4.2.1.2 section of the the RFC3280, keyIdentifier is either:
-
-        (1) The keyIdentifier is composed of the 160-bit SHA-1 hash of the
-          value of the BIT STRING subjectPublicKey (excluding the tag,
-          length, and number of unused bits).
-
-        (2) The keyIdentifier is composed of a four bit type field with
-          the value 0100 followed by the least significant 60 bits of the
-          SHA-1 hash of the value of the BIT STRING subjectPublicKey
-          (excluding the tag, length, and number of unused bit string bits).
-      */
+        /**
+         * See: 4.2.1.2 section of the the RFC3280, keyIdentifier is either:
+         *
+         * (1) The keyIdentifier is composed of the 160-bit SHA-1 hash of the
+         * value of the BIT STRING subjectPublicKey (excluding the tag,
+         * length, and number of unused bits).
+         *
+         * (2) The keyIdentifier is composed of a four bit type field with
+         * the value 0100 followed by the least significant 60 bits of the
+         * SHA-1 hash of the value of the BIT STRING subjectPublicKey
+         * (excluding the tag, length, and number of unused bit string bits).
+         */
 
         // skipping the tag, length, and number of unused bits is the same
         // as just using the RSAPublicKey (for RSA keys, which are the

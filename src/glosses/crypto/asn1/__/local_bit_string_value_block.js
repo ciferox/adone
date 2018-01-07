@@ -10,10 +10,10 @@ const {
 
 export default class LocalBitStringValueBlock extends LocalHexBlock(LocalConstructedValueBlock) {
     /**
-	 * Constructor for "LocalBitStringValueBlock" class
-	 * @param {Object} [parameters={}]
-	 * @property {ArrayBuffer} [valueHex]
-	 */
+     * Constructor for "LocalBitStringValueBlock" class
+     * @param {Object} [parameters={}]
+     * @property {ArrayBuffer} [valueHex]
+     */
     constructor(parameters = {}) {
         super(parameters);
 
@@ -23,12 +23,12 @@ export default class LocalBitStringValueBlock extends LocalHexBlock(LocalConstru
     }
 
     /**
-	 * Base function for converting block from BER encoded array of bytes
-	 * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-	 * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-	 * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-	 * @returns {number} Offset after least decoded byte
-	 */
+     * Base function for converting block from BER encoded array of bytes
+     * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+     * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+     * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+     * @returns {number} Offset after least decoded byte
+     */
     fromBER(inputBuffer, inputOffset, inputLength) {
         //region Ability to decode zero-length BitString value
         if (inputLength === 0) {
@@ -79,7 +79,6 @@ export default class LocalBitStringValueBlock extends LocalHexBlock(LocalConstru
         //endregion
         //region If the BitString supposed to be a primitive value
         //region Basic check for parameters
-        //noinspection JSCheckFunctionSignatures
         if (util.checkBufferParams(this, inputBuffer, inputOffset, inputLength) === false) {
             return -1;
         }
@@ -108,10 +107,10 @@ export default class LocalBitStringValueBlock extends LocalHexBlock(LocalConstru
     }
 
     /**
-	 * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
-	 * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
-	 * @returns {ArrayBuffer}
-	 */
+     * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
+     * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
+     * @returns {ArrayBuffer}
+     */
     toBER(sizeOnly = false) {
         if (this.isConstructed === true) {
             return LocalConstructedValueBlock.prototype.toBER.call(this, sizeOnly);
@@ -140,17 +139,17 @@ export default class LocalBitStringValueBlock extends LocalHexBlock(LocalConstru
     }
 
     /**
-	 * Aux function, need to get a block name. Need to have it here for inhiritence
-	 * @returns {string}
-	 */
+     * Aux function, need to get a block name. Need to have it here for inhiritence
+     * @returns {string}
+     */
     static blockName() {
         return "BitStringValueBlock";
     }
 
     /**
-	 * Convertion for the block to JSON object
-	 * @returns {{blockName, blockLength, error, warnings, valueBeforeDecode}|{blockName: string, blockLength: number, error: string, warnings: Array.<string>, valueBeforeDecode: string}}
-	 */
+     * Convertion for the block to JSON object
+     * @returns {{blockName, blockLength, error, warnings, valueBeforeDecode}|{blockName: string, blockLength: number, error: string, warnings: Array.<string>, valueBeforeDecode: string}}
+     */
     toJSON() {
         let object = {};
 

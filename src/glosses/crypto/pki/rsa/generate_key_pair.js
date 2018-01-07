@@ -4,8 +4,6 @@ const {
     math: { BigNumber }
 } = adone;
 
-const forge = require("node-forge");
-
 /**
  * Runs the key-generation algorithm asynchronously, either in the background
  * via Web Workers, or using the main thread and setImmediate.

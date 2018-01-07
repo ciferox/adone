@@ -1,35 +1,46 @@
 const {
-    crypto: { pki }
+    crypto: {
+        pki,
+        asn1
+    }
 } = adone;
 
 const __ = adone.private(pki);
 
 const forge = require("node-forge");
-const asn1 = forge.asn1;
 
 const createPbkdf2Params = (salt, countBytes, dkLen, prfAlgorithm) => {
-    const params = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-        // salt
-        asn1.create(
-            asn1.Class.UNIVERSAL, asn1.Type.OCTETSTRING, false, salt),
-        // iteration count
-        asn1.create(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false,
-            countBytes.getBytes())
-    ]);
+    const params = new asn1.Sequence({
+        value: [
+            // salt
+            new asn1.OctetString({
+                valueHex: adone.util.bufferToArrayBuffer(Buffer.from(salt, "binary"))
+            }),
+            // iteration count
+            new asn1.Integer({
+                value: countBytes
+            })
+        ]
+    });
     // when PRF algorithm is not SHA-1 default, add key length and PRF algorithm
     if (prfAlgorithm !== "hmacWithSHA1") {
-        params.value.push(
-        // key length
-            asn1.create(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false,
-                forge.util.hexToBytes(dkLen.toString(16))),
+        params.valueBlock.value.push(
+            // key length
+            new asn1.Integer({
+                value: dkLen
+            }),
             // AlgorithmIdentifier
-            asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-                // algorithm
-                asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false,
-                    asn1.oidToDer(pki.oids[prfAlgorithm]).getBytes()),
-                // parameters (null)
-                asn1.create(asn1.Class.UNIVERSAL, asn1.Type.NULL, false, "")
-            ]));
+            new asn1.Sequence({
+                value: [
+                    // algorithm
+                    new asn1.ObjectIdentifier({
+                        value: pki.oids[prfAlgorithm]
+                    }),
+                    // parameters (null)
+                    new asn1.Null()
+                ]
+            })
+        );
     }
     return params;
 };
@@ -86,7 +97,6 @@ export default function encryptPrivateKeyInfo(obj, password, options) {
     // generate PBE params
     const salt = forge.random.getBytesSync(options.saltSize);
     const count = options.count;
-    const countBytes = asn1.integerToDer(count);
     let dkLen;
     let encryptionAlgorithm;
     let encryptedData;
@@ -136,35 +146,42 @@ export default function encryptPrivateKeyInfo(obj, password, options) {
         const iv = forge.random.getBytesSync(ivLen);
         const cipher = cipherFn(dk);
         cipher.start(iv);
-        cipher.update(asn1.toDer(obj));
+        cipher.update(forge.util.createBuffer(Buffer.from(obj.toBER()).toString("binary")));
         cipher.finish();
         encryptedData = cipher.output.getBytes();
 
-        // get PBKDF2-params
-        const params = createPbkdf2Params(salt, countBytes, dkLen, prfAlgorithm);
-
-        encryptionAlgorithm = asn1.create(
-            asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-                asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false,
-                    asn1.oidToDer(pki.oids.pkcs5PBES2).getBytes()),
-                asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-                    // keyDerivationFunc
-                    asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-                        asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false,
-                            asn1.oidToDer(pki.oids.pkcs5PBKDF2).getBytes()),
-                        // PBKDF2-params
-                        params
-                    ]),
-                    // encryptionScheme
-                    asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-                        asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false,
-                            asn1.oidToDer(encOid).getBytes()),
-                        // iv
-                        asn1.create(
-                            asn1.Class.UNIVERSAL, asn1.Type.OCTETSTRING, false, iv)
-                    ])
-                ])
-            ]);
+        encryptionAlgorithm = new asn1.Sequence({
+            value: [
+                new asn1.ObjectIdentifier({
+                    value: pki.oids.pkcs5PBES2
+                }),
+                new asn1.Sequence({
+                    value: [
+                        // keyDerivationFunc
+                        new asn1.Sequence({
+                            value: [
+                                new asn1.ObjectIdentifier({
+                                    value: pki.oids.pkcs5PBKDF2
+                                }),
+                                createPbkdf2Params(salt, count, dkLen, prfAlgorithm)
+                            ]
+                        }),
+                        // encryptionScheme
+                        new asn1.Sequence({
+                            value: [
+                                new asn1.ObjectIdentifier({
+                                    value: encOid
+                                }),
+                                // iv
+                                new asn1.OctetString({
+                                    valueHex: adone.util.bufferToArrayBuffer(Buffer.from(iv, "binary"))
+                                })
+                            ]
+                        })
+                    ]
+                })
+            ]
+        });
     } else if (options.algorithm === "3des") {
         // Do PKCS12 PBE
         dkLen = 24;
@@ -174,23 +191,30 @@ export default function encryptPrivateKeyInfo(obj, password, options) {
         const iv = pki.pbe.generatePKCS12Key(password, saltBytes, 2, count, dkLen);
         const cipher = forge.des.createEncryptionCipher(dk);
         cipher.start(iv);
-        cipher.update(asn1.toDer(obj));
+        cipher.update(forge.util.createBuffer(Buffer.from(obj.toBER()).toString("binary")));
         cipher.finish();
         encryptedData = cipher.output.getBytes();
 
-        encryptionAlgorithm = asn1.create(
-            asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-                asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false,
-                    asn1.oidToDer(pki.oids["pbeWithSHAAnd3-KeyTripleDES-CBC"]).getBytes()),
+        encryptionAlgorithm = new asn1.Sequence({
+            value: [
+                new asn1.ObjectIdentifier({
+                    value: pki.oids["pbeWithSHAAnd3-KeyTripleDES-CBC"]
+                }),
                 // pkcs-12PbeParams
-                asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-                    // salt
-                    asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OCTETSTRING, false, salt),
-                    // iteration count
-                    asn1.create(asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false,
-                        countBytes.getBytes())
-                ])
-            ]);
+                new asn1.Sequence({
+                    value: [
+                        // salt
+                        new asn1.OctetString({
+                            valueHex: adone.util.bufferToArrayBuffer(Buffer.from(salt, "binary"))
+                        }),
+                        // iteration count
+                        new asn1.Integer({
+                            value: count
+                        })
+                    ]
+                })
+            ]
+        });
     } else {
         const error = new Error("Cannot encrypt private key. Unknown encryption algorithm.");
         error.algorithm = options.algorithm;
@@ -198,12 +222,13 @@ export default function encryptPrivateKeyInfo(obj, password, options) {
     }
 
     // EncryptedPrivateKeyInfo
-    const rval = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, [
-        // encryptionAlgorithm
-        encryptionAlgorithm,
-        // encryptedData
-        asn1.create(
-            asn1.Class.UNIVERSAL, asn1.Type.OCTETSTRING, false, encryptedData)
-    ]);
-    return rval;
+    return new asn1.Sequence({
+        value: [
+            encryptionAlgorithm,
+            // encryptedData
+            new asn1.OctetString({
+                valueHex: adone.util.bufferToArrayBuffer(Buffer.from(encryptedData, "binary"))
+            })
+        ]
+    });
 }

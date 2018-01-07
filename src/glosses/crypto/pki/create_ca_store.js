@@ -1,12 +1,13 @@
 const {
     is,
-    crypto: { pki }
+    crypto
 } = adone;
 
-const __ = adone.private(pki);
+const {
+    pki
+} = crypto;
 
-const forge = require("node-forge");
-const asn1 = forge.asn1;
+const __ = adone.private(pki);
 
 /**
  * Creates a CA store.
@@ -26,7 +27,7 @@ export default function createCaStore(certs) {
     const ensureSubjectHasHash = (subject) => {
         // produce subject hash if it doesn't exist
         if (!subject.hash) {
-            const md = forge.md.sha1.create();
+            const md = crypto.md.sha1.create();
             subject.attributes = pki.RDNAttributesAsArray(__.dnToAsn1(subject), md);
             subject.hash = md.digest().toHex();
         }
@@ -49,13 +50,13 @@ export default function createCaStore(certs) {
         const rval = getBySubject(cert.issuer);
 
         // see if there are multiple matches
-        /*if(forge.util.isArray(rval)) {
+        // if(is.array(rval)) {
         // TODO: resolve multiple matches by checking
         // authorityKey/subjectKey/issuerUniqueID/other identifiers, etc.
         // FIXME: or alternatively do authority key mapping
         // if possible (X.509v1 certs can't work?)
-        throw new Error('Resolving multiple issuer matches not implemented yet.');
-      }*/
+        // throw new Error('Resolving multiple issuer matches not implemented yet.');
+        //}
 
         return rval;
     };
@@ -69,7 +70,7 @@ export default function createCaStore(certs) {
     caStore.addCertificate = function (cert) {
         // convert from pem if necessary
         if (is.string(cert)) {
-            cert = forge.pki.certificateFromPem(cert);
+            cert = pki.certificateFromPem(cert);
         }
 
         ensureSubjectHasHash(cert.subject);
@@ -78,7 +79,7 @@ export default function createCaStore(certs) {
             if (cert.subject.hash in caStore.certs) {
                 // subject hash already exists, append to array
                 let tmp = caStore.certs[cert.subject.hash];
-                if (!forge.util.isArray(tmp)) {
+                if (!is.array(tmp)) {
                     tmp = [tmp];
                 }
                 tmp.push(cert);
@@ -100,20 +101,20 @@ export default function createCaStore(certs) {
     caStore.hasCertificate = function (cert) {
         // convert from pem if necessary
         if (is.string(cert)) {
-            cert = forge.pki.certificateFromPem(cert);
+            cert = pki.certificateFromPem(cert);
         }
 
         let match = getBySubject(cert.subject);
         if (!match) {
             return false;
         }
-        if (!forge.util.isArray(match)) {
+        if (!is.array(match)) {
             match = [match];
         }
         // compare DER-encoding of certificates
-        const der1 = asn1.toDer(pki.certificateToAsn1(cert)).getBytes();
+        const der1 = Buffer.from(pki.certificateToAsn1(cert).toBER()).toString("binary");
         for (let i = 0; i < match.length; ++i) {
-            const der2 = asn1.toDer(pki.certificateToAsn1(match[i])).getBytes();
+            const der2 = Buffer.from(pki.certificateToAsn1(match[i]).toBER()).toString("binary");
             if (der1 === der2) {
                 return true;
             }
@@ -132,7 +133,7 @@ export default function createCaStore(certs) {
         for (const hash in caStore.certs) {
             if (caStore.certs.hasOwnProperty(hash)) {
                 const value = caStore.certs[hash];
-                if (!forge.util.isArray(value)) {
+                if (!is.array(value)) {
                     certList.push(value);
                 } else {
                     for (let i = 0; i < value.length; ++i) {
@@ -159,7 +160,7 @@ export default function createCaStore(certs) {
 
         // convert from pem if necessary
         if (is.string(cert)) {
-            cert = forge.pki.certificateFromPem(cert);
+            cert = pki.certificateFromPem(cert);
         }
         ensureSubjectHasHash(cert.subject);
         if (!caStore.hasCertificate(cert)) {
@@ -168,16 +169,16 @@ export default function createCaStore(certs) {
 
         const match = getBySubject(cert.subject);
 
-        if (!forge.util.isArray(match)) {
+        if (!is.array(match)) {
             result = caStore.certs[cert.subject.hash];
             delete caStore.certs[cert.subject.hash];
             return result;
         }
 
         // compare DER-encoding of certificates
-        const der1 = asn1.toDer(pki.certificateToAsn1(cert)).getBytes();
+        const der1 = Buffer.from(pki.certificateToAsn1(cert).toBER()).toString("binary");
         for (let i = 0; i < match.length; ++i) {
-            const der2 = asn1.toDer(pki.certificateToAsn1(match[i])).getBytes();
+            const der2 = Buffer.from(pki.certificateToAsn1(match[i]).toBER()).toString("binary");
             if (der1 === der2) {
                 result = match[i];
                 match.splice(i, 1);

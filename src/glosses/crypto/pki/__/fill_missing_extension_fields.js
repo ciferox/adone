@@ -1,12 +1,14 @@
 const {
     is,
-    crypto: { pki }
+    crypto: {
+        pki,
+        asn1
+    }
 } = adone;
 
 const __ = adone.private(pki);
 
 const forge = require("node-forge");
-const asn1 = forge.asn1;
 
 /**
  * Fills in missing fields in certificate extensions.
@@ -94,37 +96,49 @@ export default function fillMissingExtensionFields(e, options) {
         } else if (b2 !== 0) {
             value += String.fromCharCode(b2);
         }
-        e.value = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.BITSTRING, false, value);
+        e.value = new asn1.BitString({
+            valueHex: adone.util.bufferToArrayBuffer(Buffer.from(value, "binary"))
+        });
     } else if (e.name === "basicConstraints") {
         // basicConstraints is a SEQUENCE
-        e.value = asn1.create(
-            asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
+        e.value = new asn1.Sequence();
         // cA BOOLEAN flag defaults to false
         if (e.cA) {
-            e.value.value.push(asn1.create(
-                asn1.Class.UNIVERSAL, asn1.Type.BOOLEAN, false,
-                String.fromCharCode(0xFF)));
+            e.value.valueBlock.value.push(
+                new asn1.Boolean({
+                    value: true
+                })
+            );
         }
         if ("pathLenConstraint" in e) {
-            e.value.value.push(asn1.create(
-                asn1.Class.UNIVERSAL, asn1.Type.INTEGER, false,
-                asn1.integerToDer(e.pathLenConstraint).getBytes()));
+            e.value.valueBlock.value.push(
+                new asn1.Integer({
+                    value: e.pathLenConstraint
+                })
+            );
         }
     } else if (e.name === "extKeyUsage") {
         // extKeyUsage is a SEQUENCE of OIDs
-        e.value = asn1.create(
-            asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
-        const seq = e.value.value;
+        e.value = new asn1.Sequence();
+        const seq = e.value.valueBlock.value;
         for (const key in e) {
             if (e[key] !== true) {
                 continue;
             }
             // key is name in OID map
             if (key in pki.oids) {
-                seq.push(asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false, asn1.oidToDer(pki.oids[key]).getBytes()));
-            } else if (key.indexOf(".") !== -1) {
+                seq.push(
+                    new asn1.ObjectIdentifier({
+                        value: pki.oids[key]
+                    })
+                );
+            } else if (key.includes(".")) {
                 // assume key is an OID
-                seq.push(asn1.create(asn1.Class.UNIVERSAL, asn1.Type.OID, false, asn1.oidToDer(key).getBytes()));
+                seq.push(
+                    new asn1.ObjectIdentifier({
+                        value: key
+                    })
+                );
             }
         }
     } else if (e.name === "nsCertType") {
@@ -171,10 +185,12 @@ export default function fillMissingExtensionFields(e, options) {
         if (b2 !== 0) {
             value += String.fromCharCode(b2);
         }
-        e.value = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.BITSTRING, false, value);
+        e.value = new asn1.BitString({
+            valueHex: adone.util.bufferToArrayBuffer(Buffer.from(value, "binary"))
+        });
     } else if (e.name === "subjectAltName" || e.name === "issuerAltName") {
         // SYNTAX SEQUENCE
-        e.value = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
+        e.value = new asn1.Sequence();
 
         let altName;
         for (let n = 0; n < e.altNames.length; ++n) {
@@ -188,61 +204,103 @@ export default function fillMissingExtensionFields(e, options) {
                     error.extension = e;
                     throw error;
                 }
+                value = adone.util.bufferToArrayBuffer(Buffer.from(value, "binary"));
             } else if (altName.type === 8) {
                 // handle OID
                 if (altName.oid) {
-                    value = asn1.oidToDer(asn1.oidToDer(altName.oid));
+                    value = new asn1.ObjectIdentifier({ value: altName.oid }).toBER();
                 } else {
                     // deprecated ... convert value to OID
-                    value = asn1.oidToDer(value);
+                    value = new asn1.ObjectIdentifier({ value }).toBER();
                 }
+            } else {
+                value = adone.util.bufferToArrayBuffer(Buffer.from(value, "binary"));
             }
-            e.value.value.push(asn1.create(asn1.Class.CONTEXT_SPECIFIC, altName.type, false, value));
+
+            e.value.valueBlock.value.push(new asn1.Primitive({
+                idBlock: {
+                    tagClass: 3, // CONTEXT_SPECIFIC
+                    tagNumber: altName.type
+                },
+                valueHex: value
+            }));
         }
     } else if (e.name === "subjectKeyIdentifier" && options.cert) {
         const ski = options.cert.generateSubjectKeyIdentifier();
         e.subjectKeyIdentifier = ski.toHex();
         // OCTETSTRING w/digest
-        e.value = asn1.create(
-            asn1.Class.UNIVERSAL, asn1.Type.OCTETSTRING, false, ski.getBytes());
+        e.value = new asn1.OctetString({
+            valueHex: adone.util.bufferToArrayBuffer(Buffer.from(ski.getBytes(), "binary"))
+        });
     } else if (e.name === "authorityKeyIdentifier" && options.cert) {
         // SYNTAX SEQUENCE
-        e.value = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
-        const seq = e.value.value;
+        e.value = new asn1.Sequence();
+
+        const seq = e.value.valueBlock.value;
 
         if (e.keyIdentifier) {
-            const keyIdentifier = (e.keyIdentifier === true ?
-                options.cert.generateSubjectKeyIdentifier().getBytes() :
-                e.keyIdentifier);
+            const keyIdentifier = e.keyIdentifier === true
+                ? options.cert.generateSubjectKeyIdentifier().getBytes()
+                : e.keyIdentifier;
+
             seq.push(
-                asn1.create(asn1.Class.CONTEXT_SPECIFIC, 0, false, keyIdentifier));
+                new asn1.Primitive({
+                    idBlock: {
+                        tagClass: 3, // CONTEXT_SPECIFIC
+                        tagNumber: 0
+                    },
+                    valueHex: adone.util.bufferToArrayBuffer(Buffer.from(keyIdentifier, "binary"))
+                })
+            );
         }
 
         if (e.authorityCertIssuer) {
-            const authorityCertIssuer = [
-                asn1.create(asn1.Class.CONTEXT_SPECIFIC, 4, true, [
-                    __.dnToAsn1(e.authorityCertIssuer === true ? options.cert.issuer : e.authorityCertIssuer)
-                ])
-            ];
             seq.push(
-                asn1.create(asn1.Class.CONTEXT_SPECIFIC, 1, true, authorityCertIssuer));
+                new asn1.Constructed({
+                    idBlock: {
+                        tagClass: 3, // CONTEXT_SPECIFIC
+                        tagNumber: 1
+                    },
+                    value: [
+                        new asn1.Constructed({
+                            idBlock: {
+                                tagClass: 3, // CONTEXT_SPECIFIC
+                                tagNumber: 4
+                            },
+                            value: [
+                                __.dnToAsn1(e.authorityCertIssuer === true ? options.cert.issuer : e.authorityCertIssuer)
+                            ]
+                        })
+                    ]
+                })
+            );
         }
 
         if (e.serialNumber) {
-            const serialNumber = forge.util.hexToBytes(e.serialNumber === true ?
-                options.cert.serialNumber : e.serialNumber);
+            const serialNumber = forge.util.hexToBytes(e.serialNumber === true ? options.cert.serialNumber : e.serialNumber);
             seq.push(
-                asn1.create(asn1.Class.CONTEXT_SPECIFIC, 2, false, serialNumber));
+                new asn1.Primitive({
+                    idBlock: {
+                        tagClass: 3, // CONTEXT_SPECIFIC
+                        tagNumber: 2
+                    },
+                    valueHex: adone.util.bufferToArrayBuffer(Buffer.from(serialNumber, "binary"))
+                })
+            );
         }
     } else if (e.name === "cRLDistributionPoints") {
-        e.value = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
-        const seq = e.value.value;
+        e.value = new asn1.Sequence();
 
         // Create sub SEQUENCE of DistributionPointName
-        const subSeq = asn1.create(asn1.Class.UNIVERSAL, asn1.Type.SEQUENCE, true, []);
+        const subSeq = new asn1.Sequence();
 
         // Create fullName CHOICE
-        const fullNameGeneralNames = asn1.create(asn1.Class.CONTEXT_SPECIFIC, 0, true, []);
+        const fullNameGeneralNames = new asn1.Constructed({
+            idBlock: {
+                tagClass: 3, // CONTEXT_SPECIFIC
+                tagNumber: 0
+            }
+        });
         let altName;
         for (let n = 0; n < e.altNames.length; ++n) {
             altName = e.altNames[n];
@@ -264,14 +322,28 @@ export default function fillMissingExtensionFields(e, options) {
                     value = asn1.oidToDer(value);
                 }
             }
-            fullNameGeneralNames.value.push(asn1.create(
-                asn1.Class.CONTEXT_SPECIFIC, altName.type, false,
-                value));
+            fullNameGeneralNames.valueBlock.value.push(
+                new asn1.Primitive({
+                    idBlock: {
+                        tagClass: 3, // CONTEXT_SPECIFIC
+                        tagNumber: altName.type
+                    },
+                    valueHex: adone.util.bufferToArrayBuffer(Buffer.from(value, "binary"))
+                })
+            );
         }
 
         // Add to the parent SEQUENCE
-        subSeq.value.push(asn1.create(asn1.Class.CONTEXT_SPECIFIC, 0, true, [fullNameGeneralNames]));
-        seq.push(subSeq);
+        subSeq.valueBlock.value.push(
+            new asn1.Constructed({
+                idBlock: {
+                    tagClass: 3, // CONTEXT_SPECIFIC
+                    tagNumber: 0
+                },
+                value: [fullNameGeneralNames]
+            })
+        );
+        e.value.valueBlock.value.push(subSeq);
     }
 
     // ensure value has been defined by now

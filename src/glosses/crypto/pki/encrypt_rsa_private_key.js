@@ -3,7 +3,6 @@ const {
 } = adone;
 
 const forge = require("node-forge");
-const asn1 = forge.asn1;
 
 /**
  * Encrypts an RSA private key. By default, the key will be wrapped in
@@ -88,7 +87,7 @@ export default function encryptRsaPrivateKey(rsaKey, password, options) {
     const dk = forge.pbe.opensslDeriveBytes(password, iv.substr(0, 8), dkLen);
     const cipher = cipherFn(dk);
     cipher.start(iv);
-    cipher.update(asn1.toDer(pki.privateKeyToAsn1(rsaKey)));
+    cipher.update(forge.util.createBuffer(Buffer.from(pki.privateKeyToAsn1(rsaKey).toBER()).toString("binary")));
     cipher.finish();
 
     const msg = {

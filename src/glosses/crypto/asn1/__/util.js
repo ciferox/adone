@@ -343,7 +343,6 @@ export const LocalFromBER = function (inputBuffer, inputOffset, inputLength) {
         newObject.idBlock = inputObject.idBlock;
         newObject.lenBlock = inputObject.lenBlock;
         newObject.warnings = inputObject.warnings;
-        //noinspection JSCheckFunctionSignatures
         newObject.valueBeforeDecode = inputObject.valueBeforeDecode.slice(0);
 
         return newObject;

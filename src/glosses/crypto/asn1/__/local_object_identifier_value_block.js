@@ -10,10 +10,10 @@ const {
 
 export default class LocalObjectIdentifierValueBlock extends LocalValueBlock {
     /**
-	 * Constructor for "LocalObjectIdentifierValueBlock" class
-	 * @param {Object} [parameters={}]
-	 * @property {ArrayBuffer} [valueHex]
-	 */
+     * Constructor for "LocalObjectIdentifierValueBlock" class
+     * @param {Object} [parameters={}]
+     * @property {ArrayBuffer} [valueHex]
+     */
     constructor(parameters = {}) {
         super(parameters);
 
@@ -21,12 +21,12 @@ export default class LocalObjectIdentifierValueBlock extends LocalValueBlock {
     }
 
     /**
-	 * Base function for converting block from BER encoded array of bytes
-	 * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-	 * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-	 * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-	 * @returns {number} Offset after least decoded byte
-	 */
+     * Base function for converting block from BER encoded array of bytes
+     * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+     * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+     * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+     * @returns {number} Offset after least decoded byte
+     */
     fromBER(inputBuffer, inputOffset, inputLength) {
         let resultOffset = inputOffset;
 
@@ -53,10 +53,10 @@ export default class LocalObjectIdentifierValueBlock extends LocalValueBlock {
     }
 
     /**
-	 * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
-	 * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
-	 * @returns {ArrayBuffer}
-	 */
+     * Encoding of current ASN.1 block into ASN.1 encoded array (BER rules)
+     * @param {boolean} [sizeOnly=false] Flag that we need only a size of encoding, not a real array of bytes
+     * @returns {ArrayBuffer}
+     */
     toBER(sizeOnly = false) {
         let retBuf = new ArrayBuffer(0);
 
@@ -74,10 +74,10 @@ export default class LocalObjectIdentifierValueBlock extends LocalValueBlock {
     }
 
     /**
-	 * Create "LocalObjectIdentifierValueBlock" class from string
-	 * @param {string} string Input string to convert from
-	 * @returns {boolean}
-	 */
+     * Create "LocalObjectIdentifierValueBlock" class from string
+     * @param {string} string Input string to convert from
+     * @returns {boolean}
+     */
     fromString(string) {
         this.value = []; // Clear existing SID values
 
@@ -145,9 +145,9 @@ export default class LocalObjectIdentifierValueBlock extends LocalValueBlock {
     }
 
     /**
-	 * Converts "LocalObjectIdentifierValueBlock" class to string
-	 * @returns {string}
-	 */
+     * Converts "LocalObjectIdentifierValueBlock" class to string
+     * @returns {string}
+     */
     toString() {
         let result = "";
         let isHexOnly = false;
@@ -178,17 +178,17 @@ export default class LocalObjectIdentifierValueBlock extends LocalValueBlock {
     }
 
     /**
-	 * Aux function, need to get a block name. Need to have it here for inhiritence
-	 * @returns {string}
-	 */
+     * Aux function, need to get a block name. Need to have it here for inhiritence
+     * @returns {string}
+     */
     static blockName() {
         return "ObjectIdentifierValueBlock";
     }
 
     /**
-	 * Convertion for the block to JSON object
-	 * @returns {Object}
-	 */
+     * Convertion for the block to JSON object
+     * @returns {Object}
+     */
     toJSON() {
         let object = {};
 

@@ -1,94 +1,81 @@
 const {
-    is,
-    crypto: { pki }
+    crypto: {
+        pki,
+        asn1
+    }
 } = adone;
 
-const forge = require("node-forge");
-const asn1 = forge.asn1;
-
-const rsassaPssParameterValidator = {
+const rsassaPssParameterValidator = new asn1.Sequence({
     name: "rsapss",
-    tagClass: asn1.Class.UNIVERSAL,
-    type: asn1.Type.SEQUENCE,
-    constructed: true,
-    value: [{
-        name: "rsapss.hashAlgorithm",
-        tagClass: asn1.Class.CONTEXT_SPECIFIC,
-        type: 0,
-        constructed: true,
-        value: [{
-            name: "rsapss.hashAlgorithm.AlgorithmIdentifier",
-            tagClass: asn1.Class.UNIVERSAL,
-            type: asn1.Class.SEQUENCE,
-            constructed: true,
+    value: [
+        new asn1.Constructed({
+            name: "hashAlgorithm",
+            idBlock: {
+                tagClass: 3, // CONTEXT_SPECIFIC
+                tagNumber: 0
+            },
+            value: [
+                new asn1.Sequence({
+                    value: [
+                        new asn1.ObjectIdentifier({
+                            name: "hashOid"
+                            /* parameter block omitted, for SHA1 NULL anyhow. */
+                        })
+                    ]
+                })
+            ]
+        }),
+        new asn1.Constructed({
+            name: "maskGenAlgorithm",
+            idBlock: {
+                tagClass: 3, // CONTEXT_SPECIFIC
+                tagNumber: 1
+            },
+            value: [
+                new asn1.Sequence({
+                    optional: true,
+                    value: [
+                        new asn1.ObjectIdentifier({
+                            name: "maskGenOid"
+                        }),
+                        new asn1.Sequence({
+                            value: [
+                                new asn1.ObjectIdentifier({
+                                    name: "maskGenHashOid"
+                                    /* parameter block omitted, for SHA1 NULL anyhow. */
+                                })
+                            ]
+                        })
+                    ]
+                })
+            ]
+        }),
+        new asn1.Constructed({
+            idBlock: {
+                tagClass: 3, // CONTEXT_SPECIFIC
+                tagNumber: 2
+            },
             optional: true,
-            value: [{
-                name: "rsapss.hashAlgorithm.AlgorithmIdentifier.algorithm",
-                tagClass: asn1.Class.UNIVERSAL,
-                type: asn1.Type.OID,
-                constructed: false,
-                capture: "hashOid"
-                /* parameter block omitted, for SHA1 NULL anyhow. */
-            }]
-        }]
-    }, {
-        name: "rsapss.maskGenAlgorithm",
-        tagClass: asn1.Class.CONTEXT_SPECIFIC,
-        type: 1,
-        constructed: true,
-        value: [{
-            name: "rsapss.maskGenAlgorithm.AlgorithmIdentifier",
-            tagClass: asn1.Class.UNIVERSAL,
-            type: asn1.Class.SEQUENCE,
-            constructed: true,
+            value: [
+                new asn1.Integer({
+                    name: "saltLength"
+                })
+            ]
+        }),
+        new asn1.Constructed({
+            idBlock: {
+                tagClass: 3, // CONTEXT_SPECIFIC
+                tagNumber: 3
+            },
             optional: true,
-            value: [{
-                name: "rsapss.maskGenAlgorithm.AlgorithmIdentifier.algorithm",
-                tagClass: asn1.Class.UNIVERSAL,
-                type: asn1.Type.OID,
-                constructed: false,
-                capture: "maskGenOid"
-            }, {
-                name: "rsapss.maskGenAlgorithm.AlgorithmIdentifier.params",
-                tagClass: asn1.Class.UNIVERSAL,
-                type: asn1.Type.SEQUENCE,
-                constructed: true,
-                value: [{
-                    name: "rsapss.maskGenAlgorithm.AlgorithmIdentifier.params.algorithm",
-                    tagClass: asn1.Class.UNIVERSAL,
-                    type: asn1.Type.OID,
-                    constructed: false,
-                    capture: "maskGenHashOid"
-                    /* parameter block omitted, for SHA1 NULL anyhow. */
-                }]
-            }]
-        }]
-    }, {
-        name: "rsapss.saltLength",
-        tagClass: asn1.Class.CONTEXT_SPECIFIC,
-        type: 2,
-        optional: true,
-        value: [{
-            name: "rsapss.saltLength.saltLength",
-            tagClass: asn1.Class.UNIVERSAL,
-            type: asn1.Class.INTEGER,
-            constructed: false,
-            capture: "saltLength"
-        }]
-    }, {
-        name: "rsapss.trailerField",
-        tagClass: asn1.Class.CONTEXT_SPECIFIC,
-        type: 3,
-        optional: true,
-        value: [{
-            name: "rsapss.trailer.trailer",
-            tagClass: asn1.Class.UNIVERSAL,
-            type: asn1.Class.INTEGER,
-            constructed: false,
-            capture: "trailer"
-        }]
-    }]
-};
+            value: [
+                new asn1.Integer({
+                    name: "trailer"
+                })
+            ]
+        })
+    ]
+});
 
 /**
  * Converts signature parameters from ASN.1 structure.
@@ -141,28 +128,27 @@ export default function readSignatureParameters(oid, obj, fillDefaults) {
         };
     }
 
-    const capture = {};
-    const errors = [];
-    if (!asn1.validate(obj, rsassaPssParameterValidator, capture, errors)) {
-        const error = new Error("Cannot read RSASSA-PSS parameter block.");
-        error.errors = errors;
-        throw error;
+    const validation = asn1.compareSchema(obj, obj, rsassaPssParameterValidator);
+    if (!validation.verified) {
+        throw new Error("Cannot read RSASSA-PSS parameter block.");
     }
 
-    if (!is.undefined(capture.hashOid)) {
+    const { result } = validation;
+
+    if (result.hashOid) {
         params.hash = params.hash || {};
-        params.hash.algorithmOid = asn1.derToOid(capture.hashOid);
+        params.hash.algorithmOid = result.hashOid.valueBlock.toString();
     }
 
-    if (!is.undefined(capture.maskGenOid)) {
+    if (result.maskGenOid) {
         params.mgf = params.mgf || {};
-        params.mgf.algorithmOid = asn1.derToOid(capture.maskGenOid);
+        params.mgf.algorithmOid = result.maskGenOid.valueBlock.toString();
         params.mgf.hash = params.mgf.hash || {};
-        params.mgf.hash.algorithmOid = asn1.derToOid(capture.maskGenHashOid);
+        params.mgf.hash.algorithmOid = result.maskGenHashOid.valueBlock.toString();
     }
 
-    if (!is.undefined(capture.saltLength)) {
-        params.saltLength = capture.saltLength.charCodeAt(0);
+    if (result.saltLength) {
+        params.saltLength = result.saltLength.valueBlock.valueDec;
     }
 
     return params;

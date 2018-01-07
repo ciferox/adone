@@ -8,9 +8,9 @@ const {
 
 export default class GraphicString extends LocalSimpleStringBlock {
     /**
-	 * Constructor for "GraphicString" class
-	 * @param {Object} [parameters={}]
-	 */
+     * Constructor for "GraphicString" class
+     * @param {Object} [parameters={}]
+     */
     constructor(parameters = {}) {
         super(parameters);
 
@@ -19,9 +19,9 @@ export default class GraphicString extends LocalSimpleStringBlock {
     }
 
     /**
-	 * Aux function, need to get a block name. Need to have it here for inhiritence
-	 * @returns {string}
-	 */
+     * Aux function, need to get a block name. Need to have it here for inhiritence
+     * @returns {string}
+     */
     static blockName() {
         return "GraphicString";
     }

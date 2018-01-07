@@ -1,3 +1,7 @@
+const {
+    crypto
+} = adone;
+
 const forge = require("node-forge");
 
 /**
@@ -59,7 +63,7 @@ export default function encodePKCS1v1(m, key, bt) {
         // pad with random non-zero values
         while (padNum > 0) {
             let numZeros = 0;
-            const padBytes = forge.random.getBytes(padNum);
+            const padBytes = crypto.random.getBytesSync(padNum).toString("binary");
             for (let i = 0; i < padNum; ++i) {
                 padByte = padBytes.charCodeAt(i);
                 if (padByte === 0) {

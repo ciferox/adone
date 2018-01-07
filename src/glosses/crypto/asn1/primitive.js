@@ -12,10 +12,10 @@ const {
 
 export default class Primitive extends BaseBlock {
     /**
-	 * Constructor for "Primitive" class
-	 * @param {Object} [parameters={}]
-	 * @property {ArrayBuffer} [valueHex]
-	 */
+     * Constructor for "Primitive" class
+     * @param {Object} [parameters={}]
+     * @property {ArrayBuffer} [valueHex]
+     */
     constructor(parameters = {}) {
         super(parameters, LocalPrimitiveValueBlock);
 
@@ -23,9 +23,9 @@ export default class Primitive extends BaseBlock {
     }
 
     /**
-	 * Aux function, need to get a block name. Need to have it here for inhiritence
-	 * @returns {string}
-	 */
+     * Aux function, need to get a block name. Need to have it here for inhiritence
+     * @returns {string}
+     */
     static blockName() {
         return "PRIMITIVE";
     }

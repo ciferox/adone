@@ -13,11 +13,11 @@ const {
 
 export default class UTCTime extends VisibleString {
     /**
-	 * Constructor for "UTCTime" class
-	 * @param {Object} [parameters={}]
-	 * @property {string} [value] String representatio of the date
-	 * @property {Date} [valueDate] JavaScript "Date" object
-	 */
+     * Constructor for "UTCTime" class
+     * @param {Object} [parameters={}]
+     * @property {string} [value] String representatio of the date
+     * @property {Date} [valueDate] JavaScript "Date" object
+     */
     constructor(parameters = {}) {
         super(parameters);
 
@@ -52,12 +52,12 @@ export default class UTCTime extends VisibleString {
     }
 
     /**
-	 * Base function for converting block from BER encoded array of bytes
-	 * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-	 * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
-	 * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
-	 * @returns {number} Offset after least decoded byte
-	 */
+     * Base function for converting block from BER encoded array of bytes
+     * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+     * @param {!number} inputOffset Offset in ASN.1 BER encoded array where decoding should be started
+     * @param {!number} inputLength Maximum length of array of bytes which can be using in this function
+     * @returns {number} Offset after least decoded byte
+     */
     fromBER(inputBuffer, inputOffset, inputLength) {
         const resultOffset = this.valueBlock.fromBER(inputBuffer, inputOffset, this.lenBlock.isIndefiniteForm === true ? inputLength : this.lenBlock.length);
         if (resultOffset === -1) {
@@ -83,17 +83,17 @@ export default class UTCTime extends VisibleString {
     }
 
     /**
-	 * Function converting ArrayBuffer into ASN.1 internal string
-	 * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
-	 */
+     * Function converting ArrayBuffer into ASN.1 internal string
+     * @param {!ArrayBuffer} inputBuffer ASN.1 BER encoded array
+     */
     fromBuffer(inputBuffer) {
         this.fromString(String.fromCharCode.apply(null, new Uint8Array(inputBuffer)));
     }
 
     /**
-	 * Function converting ASN.1 internal string into ArrayBuffer
-	 * @returns {ArrayBuffer}
-	 */
+     * Function converting ASN.1 internal string into ArrayBuffer
+     * @returns {ArrayBuffer}
+     */
     toBuffer() {
         const str = this.toString();
 
@@ -108,9 +108,9 @@ export default class UTCTime extends VisibleString {
     }
 
     /**
-	 * Function converting "Date" object into ASN.1 internal string
-	 * @param {!Date} inputDate JavaScript "Date" object
-	 */
+     * Function converting "Date" object into ASN.1 internal string
+     * @param {!Date} inputDate JavaScript "Date" object
+     */
     fromDate(inputDate) {
         this.year = inputDate.getUTCFullYear();
         this.month = inputDate.getUTCMonth() + 1;
@@ -121,17 +121,17 @@ export default class UTCTime extends VisibleString {
     }
 
     /**
-	 * Function converting ASN.1 internal string into "Date" object
-	 * @returns {Date}
-	 */
+     * Function converting ASN.1 internal string into "Date" object
+     * @returns {Date}
+     */
     toDate() {
         return new Date(Date.UTC(this.year, this.month - 1, this.day, this.hour, this.minute, this.second));
     }
 
     /**
-	 * Function converting JavaScript string into ASN.1 internal class
-	 * @param {!string} inputString ASN.1 BER encoded array
-	 */
+     * Function converting JavaScript string into ASN.1 internal class
+     * @param {!string} inputString ASN.1 BER encoded array
+     */
     fromString(inputString) {
         //region Parse input string
         const parser = /(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})Z/ig;
@@ -159,9 +159,9 @@ export default class UTCTime extends VisibleString {
     }
 
     /**
-	 * Function converting ASN.1 internal class into JavaScript string
-	 * @returns {string}
-	 */
+     * Function converting ASN.1 internal class into JavaScript string
+     * @returns {string}
+     */
     toString() {
         const outputArray = new Array(7);
 
@@ -177,17 +177,17 @@ export default class UTCTime extends VisibleString {
     }
 
     /**
-	 * Aux function, need to get a block name. Need to have it here for inhiritence
-	 * @returns {string}
-	 */
+     * Aux function, need to get a block name. Need to have it here for inhiritence
+     * @returns {string}
+     */
     static blockName() {
         return "UTCTime";
     }
 
     /**
-	 * Convertion for the block to JSON object
-	 * @returns {Object}
-	 */
+     * Convertion for the block to JSON object
+     * @returns {Object}
+     */
     toJSON() {
         let object = {};
 
