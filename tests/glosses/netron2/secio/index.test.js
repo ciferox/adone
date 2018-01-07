@@ -2,36 +2,41 @@ const parallel = require("async/parallel");
 const series = require("async/series");
 
 const {
-    netron2: { multistream, secio, PeerId, crypto },
+    netron2: { Connection, multistream, secio, PeerId },
     stream: { pull }
 } = adone;
 
 const Listener = multistream.Listener;
 const Dialer = multistream.Dialer;
 
-const createSession = function (insecure) {
-    const key = crypto.keys.generateKeyPair("RSA", 2048);
-    const digest = key.public.hash();
-    return secio.encrypt(new PeerId(digest, key), key, insecure);
-};
-
-
 describe("secio", () => {
-    it("exports a tag", () => {
+    let peerA;
+    let peerB;
+    let peerC;
+
+    before(async () => {
+        peerA = await PeerId.createFromJSON(require("./fixtures/peer-a"));
+        peerB = await PeerId.createFromJSON(require("./fixtures/peer-b"));
+        peerC = await PeerId.createFromJSON(require("./fixtures/peer-c"));
+    });
+
+    it("exports a secio multicodec", () => {
         expect(secio.tag).to.equal("/secio/1.0.0");
     });
 
     it("upgrades a connection", (done) => {
         const p = pull.pair.duplex();
-        const local = createSession(p[0]);
-        const remote = createSession(p[1]);
+
+        const aToB = secio.encrypt(peerA, new Connection(p[0]), peerB, (err) => assert.notExists(err));
+        const bToA = secio.encrypt(peerB, new Connection(p[1]), peerA, (err) => assert.notExists(err));
+
         pull(
             pull.values([Buffer.from("hello world")]),
-            local
+            aToB
         );
 
         pull(
-            remote,
+            bToA,
             pull.collect((err, chunks) => {
                 assert.notExists(err);
                 expect(chunks).to.eql([Buffer.from("hello world")]);
@@ -40,7 +45,7 @@ describe("secio", () => {
         );
     });
 
-    it("works over multistream", (done) => {
+    it("works over multistream-select", (done) => {
         const p = pull.pair.duplex();
 
         const listener = new Listener();
@@ -53,28 +58,74 @@ describe("secio", () => {
             ], cb),
             (cb) => {
                 listener.addHandler("/banana/1.0.0", (protocol, conn) => {
-                    const local = createSession(conn);
+                    const bToA = secio.encrypt(peerB, conn, peerA, (err) => assert.notExists(err));
+
                     pull(
-                        local,
+                        bToA,
                         pull.collect((err, chunks) => {
                             assert.notExists(err);
-                            expect(chunks).to.be.eql([Buffer.from("hello world")]);
+                            expect(chunks).to.eql([Buffer.from("hello world")]);
                             done();
                         })
                     );
                 });
+
                 cb();
             },
             (cb) => dialer.select("/banana/1.0.0", (err, conn) => {
                 assert.notExists(err);
 
-                const remote = createSession(conn);
+                const aToB = secio.encrypt(peerA, conn, peerB, (err) => assert.notExists(err));
+
                 pull(
                     pull.values([Buffer.from("hello world")]),
-                    remote
+                    aToB
                 );
                 cb();
             })
-        ], (err) => assert.notExists(err));
+        ]);
+    });
+
+    it("establishes the connection even if the receiver does not know who is dialing", (done) => {
+        const p = pull.pair.duplex();
+
+        const aToB = secio.encrypt(peerA, new Connection(p[0]), peerB, (err) => assert.notExists(err));
+        const bToA = secio.encrypt(peerB, new Connection(p[1]), undefined, (err) => assert.notExists(err));
+
+        pull(
+            pull.values([Buffer.from("hello world")]),
+            aToB
+        );
+
+        pull(
+            bToA,
+            pull.collect((err, chunks) => {
+                assert.notExists(err);
+
+                expect(chunks).to.eql([Buffer.from("hello world")]);
+
+                bToA.getPeerInfo((err, PeerInfo) => {
+                    assert.notExists(err);
+                    expect(PeerInfo.id.toB58String()).to.equal(peerA.toB58String());
+                    done();
+                });
+            })
+        );
+    });
+
+    it("fails if we dialed to the wrong peer", (done) => {
+        const p = pull.pair.duplex();
+        let count = 0;
+
+        const check = function (err) {
+            assert.exists(err);
+            if (++count === 2) {
+                done();
+            }
+        };
+
+        // we are using peerC Id on purpose to fail
+        secio.encrypt(peerA, new Connection(p[0]), peerC, check);
+        secio.encrypt(peerB, new Connection(p[1]), peerA, check);
     });
 });

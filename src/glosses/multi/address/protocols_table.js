@@ -39,7 +39,7 @@ protocols.table = [
     [17, 16, "udp"],
     [33, 16, "dccp"],
     [41, 128, "ip6"],
-    [53, V, "dns", "resolvable"],
+    [53, V, "dnsaddr", "resolvable"],
     [54, V, "dns4", "resolvable"],
     [55, V, "dns6", "resolvable"],
     [132, 16, "sctp"],

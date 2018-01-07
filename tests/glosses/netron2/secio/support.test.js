@@ -11,7 +11,7 @@ describe("support", () => {
                 support.theBest(order, p1, p2)
             ).to.be.eql(
                 "hello"
-                );
+            );
         });
 
         it("returns the first matching element, preferring p2", () => {
@@ -23,7 +23,7 @@ describe("support", () => {
                 support.theBest(order, p1, p2)
             ).to.be.eql(
                 "world"
-                );
+            );
         });
 
         it("returns the first element if the same", () => {
@@ -35,7 +35,7 @@ describe("support", () => {
                 support.theBest(order, p1, p2)
             ).to.be.eql(
                 "hello"
-                );
+            );
         });
 
         it("throws if no matching element was found", () => {
@@ -43,7 +43,7 @@ describe("support", () => {
                 () => support.theBest(1, ["hello"], ["world"])
             ).to.throw(
                 /No algorithms in common/
-                );
+            );
         });
     });
 });

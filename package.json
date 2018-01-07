@@ -169,5 +169,8 @@
   "repository": "https://github.com/ciferox/adone",
   "bin": {
     "adone": "./bin/adone.js"
+  },
+  "dependencies": {
+    "node-forge": "^0.7.1"
   }
 }

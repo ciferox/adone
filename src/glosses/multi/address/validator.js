@@ -3,10 +3,9 @@ const {
     multi: { address }
 } = adone;
 
-/*
+/**
  * Validation funcs
  */
-
 const and = function (...args) {
     const partialMatch = function (a) {
         if (a.length < args.length) {
@@ -117,13 +116,13 @@ const base = function (n) {
     };
 };
 
-/*
+/**
  * Valid combinations
  */
 export const DNS4 = base("dns4");
 export const DNS6 = base("dns6");
 export const _DNS = or(
-    base("dns"),
+    base("dnsaddr"),
     DNS4,
     DNS6
 );

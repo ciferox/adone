@@ -519,7 +519,7 @@ describe("multi", "address", () => {
         describe("resolvable multiaddrs", () => {
             describe(".isName", () => {
                 it("valid name dns", () => {
-                    const str = "/dns/ipfs.io";
+                    const str = "/dnsaddr/ipfs.io";
                     const addr = address.create(str);
                     expect(address.isName(addr)).to.equal(true);
                 });

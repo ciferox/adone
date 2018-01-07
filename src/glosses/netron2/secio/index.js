@@ -1,43 +1,64 @@
+const debug = require("debug");
+const log = debug("libp2p:secio");
+log.error = debug("libp2p:secio:error");
+
 const handshake = require("./handshake");
 const State = require("./state");
 
 const {
-    netron2: { Connection },
-    stream: { pull }
+    assert,
+    is,
+    netron2: { Connection, PeerInfo },
+    stream: { pull },
+    util: { once }
 } = adone;
 
 module.exports = {
     tag: "/secio/1.0.0",
-    encrypt(local, key, insecure, callback) {
-        if (!local) {
-            throw new Error("no local id provided");
+    encrypt(localId, conn, remoteId, callback) {
+        assert(localId, "no local private key provided");
+        assert(conn, "no connection for the handshake  provided");
+
+        if (is.function(remoteId)) {
+            callback = remoteId;
+            remoteId = undefined;
         }
 
-        if (!key) {
-            throw new Error("no local private key provided");
-        }
+        callback = once(callback || ((err) => {
+            if (err) {
+                log.error(err);
+            }
+        }));
 
-        if (!insecure) {
-            throw new Error("no insecure stream provided");
-        }
+        const timeout = 60 * 1000 * 5;
 
-        if (!callback) {
-            callback = (err) => {
-                if (err) {
-                    console.error(err);
+        const state = new State(localId, remoteId, timeout, callback);
+
+        const encryptedConnection = new Connection(undefined, conn);
+
+        const finish = function (err) {
+            if (err) {
+                return callback(err);
+            }
+
+            conn.getPeerInfo((err, peerInfo) => {
+                encryptedConnection.setInnerConn(state.secure);
+
+                if (err) { // no peerInfo yet, means I'm the receiver
+                    encryptedConnection.setPeerInfo(new PeerInfo(state.id.remote));
                 }
-            };
-        }
 
-        const state = new State(local, key, 60 * 1000 * 5, callback);
+                callback();
+            });
+        };
 
         pull(
-            insecure,
-            handshake(state),
-            insecure
+            conn,
+            handshake(state, finish),
+            conn
         );
 
-        return new Connection(state.secure, insecure);
+        return encryptedConnection;
     },
     support: require("./support")
 };
