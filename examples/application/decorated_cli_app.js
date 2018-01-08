@@ -1,29 +1,33 @@
 const {
-    application: { CliApplication }
+    application
 } = adone;
 
 const {
-    Command,
-    MainCommand,
-    CommandsGroup
-} = CliApplication;
+    DCliCommand,
+    DMainCliCommand,
+    DApplication
+} = application;
 
-@CommandsGroup({
-    name: "math",
-    description: "Math"
+@DApplication({
+    commandsGroups: [
+        {
+            name: "math",
+            description: "Math"
+        }, {
+            name: "log",
+            description: "Printers"
+        }
+    ]
 })
-@CommandsGroup({
-    name: "log",
-    description: "Printers"
-})
-class MyApp extends CliApplication {
-    @MainCommand()
+class MyApp extends application.CliApplication {
+    @DMainCliCommand()
     main() {
         console.log("hello");
         return 0;
     }
 
-    @Command({
+    @DCliCommand({
+        name: "mul",
         arguments: [{
             name: "a",
             type: Number
@@ -39,7 +43,8 @@ class MyApp extends CliApplication {
         return 0;
     }
 
-    @Command({
+    @DCliCommand({
+        name: "log",
         arguments: ["a"],
         help: "print the argument",
         group: "log"
@@ -50,4 +55,4 @@ class MyApp extends CliApplication {
     }
 }
 
-adone.application.runCli(MyApp);
+application.runCli(MyApp);

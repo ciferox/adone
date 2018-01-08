@@ -1,14 +1,11 @@
 const {
     x,
-    application: {
-        Subsystem,
-        CliApplication
-    }
+    application
 } = adone;
 
 const {
-    Command
-} = CliApplication;
+    DCliCommand
+} = application;
 
 const parseComplexNumber = (str) => {
     if (!str) {
@@ -35,8 +32,8 @@ const formatComplexNumber = (a, b) => {
     return `${a} + ${b}i`;
 };
 
-export default class Complex extends Subsystem {
-    @Command({
+export default class Complex extends application.Subsystem {
+    @DCliCommand({
         name: "add",
         description: "Adds two complex numbers",
         arguments: [{
@@ -55,7 +52,7 @@ export default class Complex extends Subsystem {
         adone.log(formatComplexNumber(x0 + x1, y0 + y1));
     }
 
-    @Command({
+    @DCliCommand({
         name: "sub",
         description: "Subtracts two complex numbers",
         arguments: [{
@@ -74,7 +71,7 @@ export default class Complex extends Subsystem {
         adone.log(formatComplexNumber(x0 - x1, y0 - y1));
     }
 
-    @Command({
+    @DCliCommand({
         name: "mul",
         description: "Multiplies two complex numbers",
         arguments: [{
@@ -93,7 +90,7 @@ export default class Complex extends Subsystem {
         adone.log(formatComplexNumber(x0 * x1 - y0 * y1, y0 * x1 + x0 * y1));
     }
 
-    @Command({
+    @DCliCommand({
         name: "div",
         description: "Divides two complex numbers",
         arguments: [{

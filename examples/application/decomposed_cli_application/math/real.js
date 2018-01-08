@@ -1,15 +1,12 @@
 const {
     x,
     is,
-    application: {
-        Subsystem,
-        CliApplication
-    }
+    application
 } = adone;
 
 const {
-    Command
-} = CliApplication;
+    DCliCommand
+} = application;
 
 const parseNumber = (str) => {
     if (!is.numeral(str)) {
@@ -18,8 +15,8 @@ const parseNumber = (str) => {
     return Number(str);
 };
 
-export default class Complex extends Subsystem {
-    @Command({
+export default class Complex extends application.Subsystem {
+    @DCliCommand({
         name: "add",
         description: "Adds two real numbers",
         arguments: [{
@@ -36,7 +33,7 @@ export default class Complex extends Subsystem {
         adone.log(args.get("a") + args.get("b"));
     }
 
-    @Command({
+    @DCliCommand({
         name: "sub",
         description: "Subtracts two real numbers",
         arguments: [{
@@ -53,7 +50,7 @@ export default class Complex extends Subsystem {
         adone.log(args.get("a") - args.get("b"));
     }
 
-    @Command({
+    @DCliCommand({
         name: "mul",
         description: "Multiplies two real numbers",
         arguments: [{
@@ -70,7 +67,7 @@ export default class Complex extends Subsystem {
         adone.log(args.get("a") * args.get("b"));
     }
 
-    @Command({
+    @DCliCommand({
         name: "div",
         description: "Divides two real numbers",
         arguments: [{

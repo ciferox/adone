@@ -3,11 +3,11 @@ const {
 } = adone;
 
 const {
-    DCliMainCommand
+    DMainCliCommand
 } = application;
 
 class TestApp extends adone.application.CliApplication {
-    @DCliMainCommand({
+    @DMainCliCommand({
         arguments: ["path"],
         options: [{
             name: "--transpile"

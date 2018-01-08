@@ -1,35 +1,32 @@
 const {
-    application: {
-        Subsystem,
-        CliApplication
-    }
+    application
 } = adone;
 
 const {
-    MainCommand,
-    Command
-} = CliApplication;
+    DMainCliCommand,
+    DCliCommand
+} = application;
 
 
-export default class Info extends Subsystem {
-    @MainCommand()
+export default class Info extends application.Subsystem {
+    @DMainCliCommand()
     main() {
         adone.info(`Node: ${process.version}`);
         adone.info(`v8: ${process.versions.v8}`);
         adone.info(`platform: ${process.platform}`);
     }
 
-    @Command()
+    @DCliCommand()
     node() {
         adone.info(process.version);
     }
 
-    @Command()
+    @DCliCommand()
     v8() {
         adone.info(process.versions.v8);
     }
 
-    @Command()
+    @DCliCommand()
     platform() {
         adone.info(process.platform);
     }

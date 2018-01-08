@@ -12,7 +12,7 @@ const {
 const {
     DApplication,
     DCliCommand,
-    DCliMainCommand
+    DMainCliCommand
 } = application;
 
 const baseSubsystem = (name) => std.path.join(__dirname, "..", "lib", "cli", "subsystems", name);
@@ -67,7 +67,7 @@ class AdoneCLI extends application.CliApplication {
         }
     }
 
-    @DCliMainCommand({
+    @DMainCliCommand({
         blindMode: true,
         arguments: [
             {

@@ -14,9 +14,9 @@ const {
 } = adone;
 
 const {
-    Command,
-    MainCommand
-} = application.CliApplication;
+    DCliCommand,
+    DMainCliCommand
+} = application;
 
 class {{ name }}Application extends application.CliApplication {
     async configure() {
@@ -27,7 +27,7 @@ class {{ name }}Application extends application.CliApplication {
     
     }
 
-    @MainCommand({
+    @DMainCliCommand({
         blindMode: true,
         arguments: [
             {
@@ -44,7 +44,7 @@ class {{ name }}Application extends application.CliApplication {
         return 0;
     }
 
-    @Command({
+    @DCliCommand({
         name: "test",
         help: "Test command",
     })

@@ -2,13 +2,13 @@ const {
     is,
     application: {
         Subsystem,
-        DCliMainCommand
+        DMainCliCommand
     },
     runtime: { term }
 } = adone;
 
 export default class Inspection extends Subsystem {
-    @DCliMainCommand({
+    @DMainCliCommand({
         arguments: [
             {
                 name: "name",

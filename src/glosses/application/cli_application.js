@@ -1516,9 +1516,15 @@ export default class CliApplication extends application.Application {
                 this.defineMainCommand(sysMeta.mainCommand);
             }
 
-            if (is.array(sysMeta.groups)) {
-                for (const group of sysMeta.groups) {
+            if (is.array(sysMeta.commandsGroups)) {
+                for (const group of sysMeta.commandsGroups) {
                     this.defineCommandsGroup(group);
+                }
+            }
+
+            if (is.array(sysMeta.optionsGroups)) {
+                for (const group of sysMeta.optionsGroups) {
+                    this.defineOptionsGroup(group);
                 }
             }
         }

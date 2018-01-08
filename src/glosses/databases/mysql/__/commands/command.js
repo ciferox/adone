@@ -12,7 +12,7 @@ export default class Command extends EventEmitter {
     stateName() {
         const state = this.next;
         for (const i in this) {
-            if (this[i] == state && i !== "next") {
+            if (this[i] === state && i !== "next") {
                 return i;
             }
         }

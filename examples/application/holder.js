@@ -1,13 +1,13 @@
 const {
-    application: { CliApplication, runCli }
+    application
 } = adone;
 
 const {
-    MainCommand
-} = CliApplication;
+    DMainCliCommand
+} = application;
 
-class MyApp extends CliApplication {
-    @MainCommand({
+class MyApp extends application.CliApplication {
+    @DMainCliCommand({
         arguments: [{
             name: "a",
             holder: "A_VAR" // this name will be used in usage/help messages
@@ -31,4 +31,4 @@ class MyApp extends CliApplication {
     main() {}
 }
 
-runCli(MyApp);
+application.runCli(MyApp);

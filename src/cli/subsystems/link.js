@@ -8,8 +8,8 @@ const {
 } = adone;
 
 const {
-    Command
-} = application.CliApplication;
+    DCliCommand
+} = application;
 
 let SCRIPT_TEMPLATE;
 
@@ -35,7 +35,7 @@ export default class LinkManager extends application.Subsystem {
         this.nodeModulesPath = is.windows ? std.path.join(fs.homeDir(), ".node_modules") : "/usr/local/lib/node";
     }
 
-    @Command({
+    @DCliCommand({
         name: "list",
         help: "Show all links"
     })
@@ -75,7 +75,7 @@ export default class LinkManager extends application.Subsystem {
         }
     }
 
-    @Command({
+    @DCliCommand({
         name: "create",
         help: "Create link",
         arguments: [
@@ -156,7 +156,7 @@ export default class LinkManager extends application.Subsystem {
         }
     }
 
-    @Command({
+    @DCliCommand({
         name: "delete",
         help: "Delete link",
         arguments: [

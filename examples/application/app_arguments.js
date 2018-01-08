@@ -1,17 +1,14 @@
 const {
-    application: {
-        CliApplication,
-        runCli
-    }
+    application
 } = adone;
 
 const {
-    MainCommand,
-    Command
-} = CliApplication;
+    DMainCliCommand,
+    DCliCommand
+} = application;
 
-class App extends CliApplication {
-    @MainCommand({
+class App extends application.CliApplication {
+    @DMainCliCommand({
         arguments: [
             { name: "number", default: 4 },
             { name: "boolean-true", default: true },
@@ -61,13 +58,13 @@ class App extends CliApplication {
     })
     main() {}
 
-    @Command({
+    @DCliCommand({
         name: "command-1",
         help: "this is command 1"
     })
     cmd1() {}
 
-    @Command({
+    @DCliCommand({
         name: "command-2",
         help: "{magenta-bg}Help message styling{/}",
         colors: {
@@ -76,18 +73,18 @@ class App extends CliApplication {
     })
     cmd2() {}
 
-    @Command({
+    @DCliCommand({
         name: "command-3"
     })
     cmd3() {}
 
-    @Command({
+    @DCliCommand({
         name: "command-4",
         help: "this is command 4"
     })
     cmd4() {}
 
-    @Command({
+    @DCliCommand({
         name: "command-5", // uses parent colors
         colors: {
             commandName: (x) => adone.terminal.styler.yellow(x) // only for inner commands
@@ -101,7 +98,7 @@ class App extends CliApplication {
     })
     cmd5() {}
 
-    @Command({
+    @DCliCommand({
         name: "command-6",
         help: "uses default colors",
         arguments: ["a1", "a2", "a3"],
@@ -114,7 +111,7 @@ class App extends CliApplication {
     })
     cmd6() {}
 
-    @Command({
+    @DCliCommand({
         name: "command-7",
         help: "inherit parent colors",
         colors: "inherit",
@@ -128,7 +125,7 @@ class App extends CliApplication {
     })
     cmd7() {}
 
-    @Command({
+    @DCliCommand({
         name: "command-8",
         help: "extends default colors",
         colors: {
@@ -144,7 +141,7 @@ class App extends CliApplication {
     })
     cmd8() {}
 
-    @Command({
+    @DCliCommand({
         name: "command-9",
         help: "extends parent colors",
         colors: {
@@ -164,7 +161,7 @@ class App extends CliApplication {
     })
     cmd9() {}
 
-    @Command({
+    @DCliCommand({
         name: "command-10",
         help: "no colors",
         colors: false,
@@ -182,4 +179,4 @@ class App extends CliApplication {
     cmd10() {}
 }
 
-runCli(App);
+application.runCli(App);

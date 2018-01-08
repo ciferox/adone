@@ -1,29 +1,26 @@
 const {
-    application: {
-        runCli,
-        CliApplication
-    }
+    application
 } = adone;
 
 const {
-    Command
-} = CliApplication;
+    DCliCommand
+} = application;
 
-class App extends CliApplication {
+class App extends application.CliApplication {
     configure() {
         this.enableReport({
             directory: adone.std.os.tmpdir()
         });
     }
 
-    @Command()
+    @DCliCommand()
     exception() {
         setTimeout(() => {
             throw new Error("hello");
         }, 500);
     }
 
-    @Command()
+    @DCliCommand()
     loop() {
         adone.log(`kill -12 ${process.pid}`);
         for ( ; ; ) {
@@ -32,4 +29,4 @@ class App extends CliApplication {
     }
 }
 
-runCli(App);
+application.runCli(App);

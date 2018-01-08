@@ -11,7 +11,7 @@
     "ascoltatori": "^3.0.0",
     "asn1.js": "^5.0.0",
     "async": "^2.6.0",
-    "babel-eslint": "^7.2.3",
+    "babel-eslint": "^8.1.2",
     "babel-helper-fixtures": "^6.20.0",
     "babel-plugin-transform-async-to-generator": "^6.8.0",
     "babel-plugin-transform-class-properties": "^6.11.5",

@@ -64,7 +64,7 @@ const SubsystemDecorator = (sysInfo = {}) => (target) => {
 
 export const DSubsystem = SubsystemDecorator;
 export const DApplication = SubsystemDecorator;
-export const DCliMainCommand = (mainCommand = {}) => (target, key, descriptor) => {
+export const DMainCliCommand = (mainCommand = {}) => (target, key, descriptor) => {
     let sysMeta = adone.meta.reflect.getMetadata(SUBSYSTEM_ANNOTATION, target.constructor);
     mainCommand.handler = descriptor.value;
     if (is.undefined(sysMeta)) {
