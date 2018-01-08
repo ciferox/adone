@@ -119,7 +119,7 @@ describe("netron2", "crypto", "keys", "RSA", function () {
 
     describe("openssl interop", () => {
         it("can read a private key", () => {
-            /*
+            /**
              * Generated with
              * openssl genpkey -algorithm RSA
              *   -pkeyopt rsa_keygen_bits:3072
@@ -174,7 +174,7 @@ gnjREs10u7zyqBIZH7KYVgyh27WxLr859ap8cKAH6Fb+UOPtZo3sUeeume60aebn
 
         // AssertionError: expected 'this only supports pkcs5PBES2' to not exist
         it.skip("can read a private encrypted key (v1)", () => {
-            /*
+            /**
              * Generated with
              * openssl genpkey -algorithm RSA
              *   -pkeyopt rsa_keygen_bits:1024
@@ -206,7 +206,7 @@ mBdkD5r+ixWF174naw53L8U9wF8kiK7pIE1N9TR4USEeovLwX6Ni/2MMDZedOfof
 
         // AssertionError: expected 'this only supports TripleDES' to not exist
         it.skip("can read a private encrypted key (v2 aes-256-cbc)", () => {
-            /*
+            /**
              * Generated with
              * openssl genpkey -algorithm RSA
              *   -pkeyopt rsa_keygen_bits:1024
@@ -238,7 +238,7 @@ DQd8
         });
 
         it("can read a private encrypted key (v2 des3)", () => {
-            /*
+            /**
              * Generated with
              * openssl genpkey -algorithm RSA
              *   -pkeyopt rsa_keygen_bits:1024

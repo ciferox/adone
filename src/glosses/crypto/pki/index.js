@@ -5,17 +5,21 @@ const pki = adone.lazify({
 
     privateKeyToPem: "./private_key_to_pem",
     privateKeyToAsn1: "./private_key_to_asn1",
+    privateKeyToJwk: "./private_key_to_jwk",
     privateKeyFromPem: "./private_key_from_pem",
     privateKeyFromAsn1: "./private_key_from_asn1",
     privateKeyToRSAPrivateKey: () => pki.privateKeyToAsn1,
+    privateKeyFromJwk: "./private_key_from_jwk",
     privateKeyInfoToPem: "./private_key_info_to_pem",
     encryptedPrivateKeyToPem: "./encrypted_private_key_to_pem",
     encryptedPrivateKeyFromPem: "./encrypted_private_key_from_pem",
 
     publicKeyToPem: "./public_key_to_pem",
     publicKeyToAsn1: "./public_key_to_asn1",
+    publicKeyToJwk: "./public_key_to_jwk",
     publicKeyFromPem: "./public_key_from_pem",
     publicKeyFromAsn1: "./public_key_from_asn1",
+    publicKeyFromJwk: "./public_key_from_jwk",
     publicKeyToSubjectPublicKeyInfo: () => pki.publicKeyToAsn1,
     publicKeyToRSAPublicKey: "./public_key_to_rsa_public_key",
     publicKeyToRSAPublicKeyPem: "./public_key_to_rsa_public_key_pem",
@@ -50,7 +54,9 @@ const pki = adone.lazify({
 
     distinguishedNameToAsn1: "./distinguished_name_to_asn1",
     CRIAttributesAsArray: "./cri_attributes_as_array",
-    RDNAttributesAsArray: "./rdn_attributes_as_array"
+    RDNAttributesAsArray: "./rdn_attributes_as_array",
+
+    jwkToPem: "./jwk_to_pem"
 }, exports, require);
 
 adone.lazifyPrivate({

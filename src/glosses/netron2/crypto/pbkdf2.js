@@ -1,16 +1,14 @@
-const crypto = require("jsrsasign").CryptoJS;
-
 /**
- * Maps an IPFS hash name to its jsrsasign equivalent.
+ * Maps an IPFS hash name to its adone equivalent.
  *
  * See https://github.com/multiformats/multihash/blob/master/hashtable.csv
  *
  * @private
  */
 const hashName = {
-    sha1: crypto.algo.SHA1,
-    "sha2-256": crypto.algo.SHA256,
-    "sha2-512": crypto.algo.SHA512
+    sha1: "sha1",
+    "sha2-256": "sha256",
+    "sha2-512": "sha512"
 };
 
 /**
@@ -24,16 +22,12 @@ const hashName = {
  * @returns {string} - A new password
  */
 const pbkdf2 = function (password, salt, iterations, keySize, hash) {
-    const opts = {
-        iterations,
-        keySize: keySize / 4, // convert bytes to words (32 bits)
-        hasher: hashName[hash]
-    };
-    if (!opts.hasher) {
+    hash = hashName[hash];
+    if (!hash) {
         throw new Error(`Hash '${hash}' is unknown or not supported`);
     }
-    const words = crypto.PBKDF2(password, salt, opts);
-    return crypto.enc.Base64.stringify(words);
+
+    return adone.crypto.pkcs5.pbkdf2Sync(password, salt, iterations, keySize, hash).toString("base64");
 };
 
 module.exports = pbkdf2;

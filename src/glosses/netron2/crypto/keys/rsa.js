@@ -1,14 +1,12 @@
 const crypto = require("crypto");
-const pemToJwk = require("pem-jwk").pem2jwk;
-const jwkToPem = require("pem-jwk").jwk2pem;
 
 exports.utils = require("./rsa-utils");
 
 exports.generateKey = function (bits) {
     const pair = adone.crypto.pki.rsa.generateKeyPair(bits);
     return {
-        privateKey: pemToJwk(adone.crypto.pki.privateKeyToPem(pair.privateKey)),
-        publicKey: pemToJwk(adone.crypto.pki.publicKeyToPem(pair.publicKey))
+        privateKey: adone.crypto.pki.privateKeyToJwk(pair.privateKey),
+        publicKey: adone.crypto.pki.publicKeyToJwk(pair.publicKey)
     };
 };
 
@@ -35,7 +33,7 @@ exports.hashAndSign = function (key, msg) {
     try {
         const sign = crypto.createSign("RSA-SHA256");
         sign.update(msg);
-        const pem = jwkToPem(key);
+        const pem = adone.crypto.pki.jwkToPem(key);
         return sign.sign(pem);
     } catch (err) {
         throw new Error(`Key or message is invalid!: ${err.message}`);
@@ -46,7 +44,7 @@ exports.hashAndVerify = function (key, sig, msg) {
     try {
         const verify = crypto.createVerify("RSA-SHA256");
         verify.update(msg);
-        const pem = jwkToPem(key);
+        const pem = adone.crypto.pki.jwkToPem(key);
         return verify.verify(pem, sig);
     } catch (err) {
         throw new Error(`Key or message is invalid!:${err.message}`);

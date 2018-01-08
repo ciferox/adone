@@ -20,6 +20,10 @@ const callGc = typeof gc === "undefined" ? adone.noop : gc; // eslint-disable-li
 
 const wrapError = (err) => {
     const result = {};
+    if (!is.error(err)) {
+        result.warning = "not error was thrown! showing json encoded data";
+        result.message = JSON.stringify(err, null, 4);
+    }
     if (err.name) {
         result.name = err.name;
     }
@@ -1998,10 +2002,15 @@ export const consoleReporter = ({
                         log(`    at ${failed.meta.location.path}:${failed.meta.location.line}:${failed.meta.location.column}`);
                         log();
 
+                        if (err.warning) {
+                            log(`{yellow-fg}{escape}${err.warning}{/escape}{/}`);
+                            log();
+                        }
+
                         if (err.name && err.message) {
                             log(`{red-fg}{escape}${err.name}: ${err.message}{/escape}{/}`);
-                        } else {
-                            log(`{red-fg}{escape}${err}{/escape}{/}`);
+                        } else if (err.message) {
+                            log(`{red-fg}{escape}${err.message}{/escape}{/}`);
                         }
 
                         if (err.diff) {
@@ -2261,10 +2270,15 @@ export const minimalReporter = () => {
                         log(`${idx}) {escape}${block.chain} ${symbol.arrowRight}  ${failed.description}{/escape}`);
                         log();
 
+                        if (err.warning) {
+                            log(`{yellow-fg}{escape}${err.warning}{/escape}{/}`);
+                            log();
+                        }
+
                         if (err.name && err.message) {
                             log(`{red-fg}{escape}${err.name}: ${err.message}{/escape}{/}`);
-                        } else {
-                            log(`{red-fg}{escape}${err}{/escape}{/}`);
+                        } else if (err.message) {
+                            log(`{red-fg}{escape}${err.message}{/escape}{/}`);
                         }
 
                         if (err.diff) {
@@ -2503,10 +2517,15 @@ export const simpleReporter = ({
                         log(`    at ${failed.meta.location.path}:${failed.meta.location.line}:${failed.meta.location.column}`);
                         log();
 
+                        if (err.warning) {
+                            log(`{yellow-fg}{escape}${err.warning}{/escape}{/}`);
+                            log();
+                        }
+
                         if (err.name && err.message) {
                             log(`{red-fg}{escape}${err.name}: ${err.message}{/escape}{/}`);
-                        } else {
-                            log(`{red-fg}{escape}${err}{/escape}{/}`);
+                        } else if (err.message) {
+                            log(`{red-fg}{escape}${err.message}{/escape}{/}`);
                         }
 
                         if (err.diff) {

@@ -1,6 +1,3 @@
-const jsrsasign = require("jsrsasign");
-const KEYUTIL = jsrsasign.KEYUTIL;
-
 const {
     is,
     data: { protobuf }
@@ -122,10 +119,7 @@ exports.marshalPrivateKey = (key, type) => {
 
 
 exports.import = (pem, password) => {
-    const key = KEYUTIL.getKey(pem, password);
-    if (key instanceof jsrsasign.RSAKey) {
-        const jwk = KEYUTIL.getJWKFromKey(key);
-        return supportedKeys.rsa.fromJwk(jwk);
-    }
-    throw new Error(`Unknown key type '${key.prototype.toString()}'`);
+    const key = adone.crypto.pki.decryptRsaPrivateKey(pem, password);
+    const jwk = adone.crypto.pki.privateKeyToJwk(key);
+    return supportedKeys.rsa.fromJwk(jwk);
 };

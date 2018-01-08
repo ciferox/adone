@@ -1,5 +1,4 @@
 const crypto = require("./rsa");
-const KEYUTIL = require("jsrsasign").KEYUTIL;
 
 const {
     data: { base58, protobuf },
@@ -42,8 +41,10 @@ class RsaPublicKey {
 }
 
 class RsaPrivateKey {
-    // key       - Object of the jwk format
-    // publicKey - Buffer of the spki format
+    /**
+     * key       - Object of the jwk format
+     * publicKey - Buffer of the spki format
+     */
     constructor(key, publicKey) {
         this._key = key;
         this._publicKey = publicKey;
@@ -117,10 +118,11 @@ class RsaPrivateKey {
             format = "pkcs-8";
         }
 
-        const key = KEYUTIL.getKey(this._key); // _key is a JWK (JSON Web Key)
         if (format === "pkcs-8") {
-            return KEYUTIL.getPEM(key, "PKCS8PRV", password);
+            const key = adone.crypto.pki.privateKeyFromJwk(this._key); // _key is a JWK (JSON Web Key)
+            return adone.crypto.pki.encryptRsaPrivateKey(key, password);
         }
+
         throw new Error(`Unknown export format '${format}'`);
     }
 }

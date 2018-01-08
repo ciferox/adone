@@ -7,7 +7,13 @@ const {
     util
 } = adone;
 
-const bnToBase64 = (bn) => bn.toBuffer().toString("base64");
+const bnToBase64 = (bn) => bn
+    .toBuffer()
+    .toString("base64")
+    .replace(/(=*)$/, "") // Remove any trailing '='
+    .replace(/\+/g, "-") // 62nd char of encoding
+    .replace(/\//g, "_"); // 63rd char of encoding
+
 const base64ToBn = (base64data) => BigNumber.fromBuffer(Buffer.from(base64data, "base64"));
 
 // Convert a PKCS#1 in ASN1 DER format to a JWK key
