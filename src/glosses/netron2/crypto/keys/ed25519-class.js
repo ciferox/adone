@@ -115,12 +115,12 @@ const unmarshalEd25519PublicKey = function (bytes) {
 
 const generateKeyPair = function () {
     const keys = crypto.generateKey();
-    return new Ed25519PrivateKey(keys.secretKey, keys.publicKey);
+    return new Ed25519PrivateKey(keys.privateKey, keys.publicKey);
 };
 
 const generateKeyPairFromSeed = function (seed) {
     const keys = crypto.generateKeyFromSeed(seed);
-    return new Ed25519PrivateKey(keys.secretKey, keys.publicKey);
+    return new Ed25519PrivateKey(keys.privateKey, keys.publicKey);
 };
 
 module.exports = {

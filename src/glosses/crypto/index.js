@@ -16,5 +16,6 @@ adone.lazify({
     md: "./md",
     pkcs1: "./pkcs1",
     pkcs5: "./pkcs5",
-    pem: "./pem"
+    pem: "./pem",
+    ed25519: "./ed25519"
 }, adone.asNamespace(exports), require);

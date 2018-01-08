@@ -6,7 +6,3 @@ adone.lazify({
     randomBytes: "./random-bytes",
     pbkdf2: "./pbkdf2"
 }, exports, require);
-
-adone.lazifyPrivate({
-    util: "./util"
-}, exports, require);

@@ -1,21 +1,15 @@
-const nacl = require("tweetnacl");
+const {
+    crypto: { ed25519 }
+} = adone;
 
-exports.publicKeyLength = nacl.sign.publicKeyLength;
-exports.privateKeyLength = nacl.sign.secretKeyLength;
+exports.publicKeyLength = ed25519.publicKeyLength;
+exports.privateKeyLength = ed25519.privateKeyLength;
 
-exports.generateKey = function () {
-    return nacl.sign.keyPair();
-};
+exports.generateKey = () => ed25519.generateKeyPair(adone.std.crypto.randomBytes(32));
 
 // seed should be a 32 byte uint8array
-exports.generateKeyFromSeed = function (seed) {
-    return nacl.sign.keyPair.fromSeed(seed);
-};
+exports.generateKeyFromSeed = (seed) => ed25519.generateKeyPair(seed);
 
-exports.hashAndSign = function (key, msg) {
-    return Buffer.from(nacl.sign.detached(msg, key));
-};
+exports.hashAndSign = (key, msg) => Buffer.from(ed25519.sign(msg, key));
 
-exports.hashAndVerify = function (key, sig, msg) {
-    return nacl.sign.detached.verify(msg, sig, key);
-};
+exports.hashAndVerify = (key, sig, msg) => ed25519.verify(msg, sig, key);

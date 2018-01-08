@@ -1,6 +1,7 @@
 {
   'variables': {
-    'driver%': 'libusb'
+    'driver%': 'libusb',
+    'node_shared_openssl%': 'true'
   },
   'targets': [
     {
@@ -1239,6 +1240,97 @@
       ],      
     },
     {
+      'target_name': 'ed25519',
+      'sources': [
+        'src/native/ed25519/ed25519/keypair.c',
+        'src/native/ed25519/ed25519/sign.c',
+        'src/native/ed25519/ed25519/open.c',
+        'src/native/ed25519/ed25519/crypto_verify_32.c',
+        'src/native/ed25519/ed25519/ge_double_scalarmult.c',
+        'src/native/ed25519/ed25519/ge_frombytes.c',
+        'src/native/ed25519/ed25519/ge_scalarmult_base.c',
+        'src/native/ed25519/ed25519/ge_precomp_0.c',
+        'src/native/ed25519/ed25519/ge_p2_0.c',
+        'src/native/ed25519/ed25519/ge_p2_dbl.c',
+        'src/native/ed25519/ed25519/ge_p3_0.c',
+        'src/native/ed25519/ed25519/ge_p3_dbl.c',
+        'src/native/ed25519/ed25519/ge_p3_to_p2.c',
+        'src/native/ed25519/ed25519/ge_p3_to_cached.c',
+        'src/native/ed25519/ed25519/ge_p3_tobytes.c',
+        'src/native/ed25519/ed25519/ge_madd.c',
+        'src/native/ed25519/ed25519/ge_add.c',
+        'src/native/ed25519/ed25519/ge_msub.c',
+        'src/native/ed25519/ed25519/ge_sub.c',
+        'src/native/ed25519/ed25519/ge_p1p1_to_p3.c',
+        'src/native/ed25519/ed25519/ge_p1p1_to_p2.c',
+        'src/native/ed25519/ed25519/ge_tobytes.c',
+        'src/native/ed25519/ed25519/fe_0.c',
+        'src/native/ed25519/ed25519/fe_1.c',
+        'src/native/ed25519/ed25519/fe_cmov.c',
+        'src/native/ed25519/ed25519/fe_copy.c',
+        'src/native/ed25519/ed25519/fe_neg.c',
+        'src/native/ed25519/ed25519/fe_add.c',
+        'src/native/ed25519/ed25519/fe_sub.c',
+        'src/native/ed25519/ed25519/fe_mul.c',
+        'src/native/ed25519/ed25519/fe_sq.c',
+        'src/native/ed25519/ed25519/fe_sq2.c',
+        'src/native/ed25519/ed25519/fe_invert.c',
+        'src/native/ed25519/ed25519/fe_tobytes.c',
+        'src/native/ed25519/ed25519/fe_isnegative.c',
+        'src/native/ed25519/ed25519/fe_isnonzero.c',
+        'src/native/ed25519/ed25519/fe_frombytes.c',
+        'src/native/ed25519/ed25519/fe_pow22523.c',
+        'src/native/ed25519/ed25519/sc_reduce.c',
+        'src/native/ed25519/ed25519/sc_muladd.c',
+        'src/native/ed25519/ed25519.cc'
+      ],
+      'conditions': [
+        ['node_shared_openssl=="false"', {
+          # so when "node_shared_openssl" is "false", then OpenSSL has been
+          # bundled into the node executable. So we need to include the same
+          # header files that were used when building node.
+          'include_dirs': [
+            '<(node_root_dir)/deps/openssl/openssl/include'
+          ],
+          "conditions" : [
+            ["target_arch=='ia32'", {
+              "include_dirs": [ "<(node_root_dir)/deps/openssl/config/piii" ]
+            }],
+            ["target_arch=='x64'", {
+              "include_dirs": [ "<(node_root_dir)/deps/openssl/config/k8" ]
+            }],
+            ["target_arch=='arm'", {
+              "include_dirs": [ "<(node_root_dir)/deps/openssl/config/arm" ]
+            }]
+          ]
+        }],
+        # https://github.com/TooTallNate/node-gyp/wiki/Linking-to-OpenSSL
+        ['OS=="win"', {
+          'conditions': [
+          # "openssl_root" is the directory on Windows of the OpenSSL files.
+          # Check the "target_arch" variable to set good default values for
+          # both 64-bit and 32-bit builds of the module.
+          ['target_arch=="x64"', {
+            'variables': {
+            'openssl_root%': 'C:/OpenSSL-Win64'
+            },
+          }, {
+            'variables': {
+            'openssl_root%': 'C:/OpenSSL-Win32'
+            },
+          }],
+          ],
+          'libraries': [ 
+            '-l<(openssl_root)/lib/libeay32.lib',
+          ],
+          'include_dirs': [
+            '<(openssl_root)/include',
+          ],
+        }]
+      ],
+      'include_dirs': [ "nan" ]
+    },
+    {
       "target_name": "copy_modules",
       "variables": {
         "srcpath%": "<(module_root_dir)/build/Release",
@@ -1263,7 +1355,8 @@
         "libvirt",
         "fuse",
         "secp256k1",
-        "utp"
+        "utp",
+        "ed25519"
       ],
       "copies": [
         {
@@ -1287,7 +1380,8 @@
             "<(srcpath)/libvirt.node",
             "<(srcpath)/fuse.node",
             "<(srcpath)/secp256k1.node",
-            "<(srcpath)/utp.node"
+            "<(srcpath)/utp.node",
+            "<(srcpath)/ed25519.node"
           ],
           "destination": "<(module_root_dir)/lib/native"
         }

@@ -31,7 +31,8 @@
             "index": "index.js",
             "src": [
                 "src/**/*.js",
-                "!src/cli/adone.js"
+                "!src/cli/adone.js",
+                "!lib/native/**/*"
             ],
             "dst": "lib",
             "dstClean": [
