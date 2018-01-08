@@ -1,65 +1,36 @@
-const asn1 = require("asn1.js");
-const util = require("../util");
-const toBase64 = util.toBase64;
-const toBn = util.toBn;
+const {
+    x,
+    math: {
+        BigNumber
+    },
+    crypto,
+    util
+} = adone;
 
-const RSAPrivateKey = asn1.define("RSAPrivateKey", function () {
-    this.seq().obj(
-        this.key("version").int(),
-        this.key("modulus").int(),
-        this.key("publicExponent").int(),
-        this.key("privateExponent").int(),
-        this.key("prime1").int(),
-        this.key("prime2").int(),
-        this.key("exponent1").int(),
-        this.key("exponent2").int(),
-        this.key("coefficient").int()
-    );
-});
-
-const AlgorithmIdentifier = asn1.define("AlgorithmIdentifier", function () {
-    this.seq().obj(
-        this.key("algorithm").objid({
-            "1.2.840.113549.1.1.1": "rsa"
-        }),
-        this.key("none").optional().null_(),
-        this.key("curve").optional().objid(),
-        this.key("params").optional().seq().obj(
-            this.key("p").int(),
-            this.key("q").int(),
-            this.key("g").int()
-        )
-    );
-});
-
-const PublicKey = asn1.define("RSAPublicKey", function () {
-    this.seq().obj(
-        this.key("algorithm").use(AlgorithmIdentifier),
-        this.key("subjectPublicKey").bitstr()
-    );
-});
-
-const RSAPublicKey = asn1.define("RSAPublicKey", function () {
-    this.seq().obj(
-        this.key("modulus").int(),
-        this.key("publicExponent").int()
-    );
-});
+const bnToBase64 = (bn) => bn.toBuffer().toString("base64");
+const base64ToBn = (base64data) => BigNumber.fromBuffer(Buffer.from(base64data, "base64"));
 
 // Convert a PKCS#1 in ASN1 DER format to a JWK key
 exports.pkcs1ToJwk = function (bytes) {
-    const asn1 = RSAPrivateKey.decode(bytes, "der");
+    const buf = util.bufferToArrayBuffer(bytes);
+    const { result } = crypto.asn1.fromBER(buf);
+
+    if (result.error) {
+        throw new x.IllegalState(result.error);
+    }
+
+    const key = crypto.pki.privateKeyFromAsn1(result);
 
     return {
         kty: "RSA",
-        n: toBase64(asn1.modulus),
-        e: toBase64(asn1.publicExponent),
-        d: toBase64(asn1.privateExponent),
-        p: toBase64(asn1.prime1),
-        q: toBase64(asn1.prime2),
-        dp: toBase64(asn1.exponent1),
-        dq: toBase64(asn1.exponent2),
-        qi: toBase64(asn1.coefficient),
+        n: bnToBase64(key.n),
+        e: bnToBase64(key.e),
+        d: bnToBase64(key.d),
+        p: bnToBase64(key.p),
+        q: bnToBase64(key.q),
+        dp: bnToBase64(key.dP),
+        dq: bnToBase64(key.dQ),
+        qi: bnToBase64(key.qInv),
         alg: "RS256",
         kid: "2011-04-29"
     };
@@ -67,28 +38,35 @@ exports.pkcs1ToJwk = function (bytes) {
 
 // Convert a JWK key into PKCS#1 in ASN1 DER format
 exports.jwkToPkcs1 = function (jwk) {
-    return RSAPrivateKey.encode({
-        version: 0,
-        modulus: toBn(jwk.n),
-        publicExponent: toBn(jwk.e),
-        privateExponent: toBn(jwk.d),
-        prime1: toBn(jwk.p),
-        prime2: toBn(jwk.q),
-        exponent1: toBn(jwk.dp),
-        exponent2: toBn(jwk.dq),
-        coefficient: toBn(jwk.qi)
-    }, "der");
+    const asn1 = crypto.pki.privateKeyToAsn1({
+        n: base64ToBn(jwk.n),
+        e: base64ToBn(jwk.e),
+        d: base64ToBn(jwk.d),
+        p: base64ToBn(jwk.p),
+        q: base64ToBn(jwk.q),
+        dP: base64ToBn(jwk.dp),
+        dQ: base64ToBn(jwk.dq),
+        qInv: base64ToBn(jwk.qi)
+    });
+
+    return Buffer.from(asn1.toBER());
 };
 
 // Convert a PKCIX in ASN1 DER format to a JWK key
 exports.pkixToJwk = function (bytes) {
-    const ndata = PublicKey.decode(bytes, "der");
-    const asn1 = RSAPublicKey.decode(ndata.subjectPublicKey.data, "der");
+    const buf = util.bufferToArrayBuffer(bytes);
+    const { result } = crypto.asn1.fromBER(buf);
+
+    if (result.error) {
+        throw new x.IllegalState(result.error);
+    }
+
+    const key = crypto.pki.publicKeyFromAsn1(result);
 
     return {
         kty: "RSA",
-        n: toBase64(asn1.modulus),
-        e: toBase64(asn1.publicExponent),
+        n: bnToBase64(key.n),
+        e: bnToBase64(key.e),
         alg: "RS256",
         kid: "2011-04-29"
     };
@@ -96,16 +74,10 @@ exports.pkixToJwk = function (bytes) {
 
 // Convert a JWK key to PKCIX in ASN1 DER format
 exports.jwkToPkix = function (jwk) {
-    return PublicKey.encode({
-        algorithm: {
-            algorithm: "rsa",
-            none: null
-        },
-        subjectPublicKey: {
-            data: RSAPublicKey.encode({
-                modulus: toBn(jwk.n),
-                publicExponent: toBn(jwk.e)
-            }, "der")
-        }
-    }, "der");
+    const asn1 = crypto.pki.publicKeyToAsn1({
+        n: base64ToBn(jwk.n),
+        e: base64ToBn(jwk.e)
+    });
+
+    return Buffer.from(asn1.toBER());
 };
