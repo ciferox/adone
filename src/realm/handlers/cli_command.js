@@ -24,7 +24,8 @@ export default class CliCommandHandler extends realm.TypeHandler {
         const commandInfo = {
             name: adoneConf.raw.name,
             description: adoneConf.raw.description,
-            subsystem: indexPath
+            subsystem: indexPath,
+            group: adoneConf.raw.group || "subsystem"
         };
 
         const cliConfig = await adone.cli.Configuration.load();

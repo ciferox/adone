@@ -541,7 +541,7 @@ class PositionalArgument extends Argument {
         return [this.names[0]];
     }
 
-    getUsageMessage() {
+    getUsageMessage({ required = true } = {}) {
         const uaOpenBracket = this.colors ? this.colors.angleBracket("<") : "<";
         const uaCloseBracket = this.colors ? this.colors.angleBracket(">") : ">";
         const openBracket = this.colors ? this.colors.squareBracket("[") : "[";
@@ -563,6 +563,13 @@ class PositionalArgument extends Argument {
         } else if (is.integer(this.nargs)) {
             msg = usageVariables.map(formatVar).join(" ");
         }
+
+        if (required && !this.required && this.nargs !== "*" && this.nargs !== "?") {
+            const openBrace = this.colors ? this.colors.squareBracket("[") : "[";
+            const closeBrace = this.colors ? this.colors.squareBracket("]") : "]";
+            msg = `${openBrace}${msg}${closeBrace}`;
+        }
+
         return msg;
     }
 
@@ -1331,16 +1338,16 @@ class Command {
                         message: arg.getShortHelpMessage()
                     };
                 }), {
-                    model: [
-                        { id: "left-spacing", width: 4 },
-                        { id: "names", maxWidth: 40, wordwrap: true },
-                        { id: "between-cells", width: 2 },
-                        { id: "message", wordwrap: false }
-                    ],
-                    width: "100%",
-                    borderless: true,
-                    noHeader: true
-                }));
+                        model: [
+                            { id: "left-spacing", width: 4 },
+                            { id: "names", maxWidth: 40, wordwrap: true },
+                            { id: "between-cells", width: 2 },
+                            { id: "message", wordwrap: false }
+                        ],
+                        width: "100%",
+                        borderless: true,
+                        noHeader: true
+                    }));
             }
             if (options.length) {
                 if (this.arguments.length) {
@@ -1369,16 +1376,16 @@ class Command {
                             message: opt.getShortHelpMessage()
                         };
                     }), {
-                        model: [
-                            { id: "left-spacing", width: 4 },
-                            { id: "names", maxWidth: 40, wordwrap: true },
-                            { id: "between-cells", width: 2 },
-                            { id: "message", wordwrap: true }
-                        ],
-                        width: "100%",
-                        borderless: true,
-                        noHeader: true
-                    }));
+                            model: [
+                                { id: "left-spacing", width: 4 },
+                                { id: "names", maxWidth: 40, wordwrap: true },
+                                { id: "between-cells", width: 2 },
+                                { id: "message", wordwrap: true }
+                            ],
+                            width: "100%",
+                            borderless: true,
+                            noHeader: true
+                        }));
                 }
             }
             if (commands.length) {
@@ -1408,16 +1415,16 @@ class Command {
                             message: cmd.getShortHelpMessage()
                         };
                     }), {
-                        model: [
-                            { id: "left-spacing", width: 4 },
-                            { id: "names", maxWidth: 40, wordwrap: true },
-                            { id: "between-cells", width: 2 },
-                            { id: "message", wordwrap: true }
-                        ],
-                        width: "100%",
-                        borderless: true,
-                        noHeader: true
-                    }));
+                            model: [
+                                { id: "left-spacing", width: 4 },
+                                { id: "names", maxWidth: 40, wordwrap: true },
+                                { id: "between-cells", width: 2 },
+                                { id: "message", wordwrap: true }
+                            ],
+                            width: "100%",
+                            borderless: true,
+                            noHeader: true
+                        }));
                 }
             }
         }
@@ -2359,7 +2366,7 @@ export default class CliApplication extends application.Application {
                                         x[y] = arg.set(false, y, 0);
                                         return x;
                                     }, {});
-                                } else if (arg.nargs === "*" || arg.nargs === "?") {
+                                } else if (arg.nargs === "*" || arg.nargs === "?" || !arg.required) {
                                     arg.value = arg.default;
                                 } else if (arg.nargs === "+") {
                                     errors.push(new x.IllegalState(`${arg.names[0]}: has not enough parameters, must have at least 1`));

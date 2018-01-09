@@ -32,7 +32,7 @@
             "src": [
                 "src/**/*.js",
                 "!src/cli/adone.js",
-                "!lib/native/**/*"
+                "!src/native/**/*"
             ],
             "dst": "lib",
             "dstClean": [
