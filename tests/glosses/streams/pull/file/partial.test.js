@@ -1,13 +1,12 @@
+const {
+    stream: { pull },
+    std: { path, fs, crypto }
+} = adone;
+
+const cont = require("cont");
+const osenv = require("osenv");
+
 describe("stream", "pull", "file", "partial", () => {
-    const { stream: { pull } } = adone;
-    const path = require("path");
-
-    const cont = require("cont");
-    const fs = require("fs");
-
-    const crypto = require("crypto");
-    const osenv = require("osenv");
-
     const tmpfile = path.join(osenv.tmpdir(), "test_pull-file_big");
 
     const big = crypto.pseudoRandomBytes(10 * 1024 * 1024);
@@ -31,10 +30,7 @@ describe("stream", "pull", "file", "partial", () => {
                 const _expected = fs.readFileSync(file, opts);
 
                 const expected = _expected
-                    .slice(
-                        start || 0,
-                        end || _expected.length
-                    );
+                    .slice(start || 0, end || _expected.length);
 
                 pull(
                     pull.file(file, opts),

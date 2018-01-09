@@ -1,4 +1,6 @@
-const crypto = require("crypto");
+const {
+    std: { crypto }
+} = adone;
 
 exports.utils = require("./rsa-utils");
 

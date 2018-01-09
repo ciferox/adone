@@ -1,4 +1,3 @@
-const crypto = require("crypto");
 const BN = require("bn.js");
 const EC = require("elliptic").ec;
 const XorShift128Plus = require("xorshift.js").XorShift128Plus;
@@ -8,7 +7,8 @@ const BN_ZERO = new BN(0);
 const BN_ONE = new BN(1);
 
 const {
-    is
+    is,
+    std: { crypto }
 } = adone;
 
 const prngs = { privateKey: null, tweak: null, message: null };

@@ -1,12 +1,12 @@
+const {
+    stream: { pull },
+    std: { path, crypto, fs }
+} = adone;
+const { file } = pull;
+
+const osenv = require("osenv");
+
 describe("stream", "pull", "file", "large file", () => {
-    const { stream: { pull } } = adone;
-    const { file } = pull;
-
-    const path = require("path");
-    const crypto = require("crypto");
-    const osenv = require("osenv");
-    const fs = require("fs");
-
     const tmpfile = path.join(osenv.tmpdir(), "test_pull-file_big");
 
     const hash = (data) => {

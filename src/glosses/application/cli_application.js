@@ -1468,6 +1468,15 @@ export default class CliApplication extends application.Application {
         this.defineMainCommand();
     }
 
+    /**
+     * Returns main command.
+     * 
+     * @returns {Command}
+     */
+    get mainCommand() {
+        return this[MAIN_COMMAND];
+    }
+
     exposeCliInterface(ctxId = "cli") {
         if (adone.runtime.netron.hasContext(ctxId)) {
             return;
@@ -1538,6 +1547,12 @@ export default class CliApplication extends application.Application {
                 }
             }
 
+            if (is.array(sysMeta.options)) {
+                for (const option of sysMeta.options) {
+                    this.defineOption(option);
+                }
+            }
+
             if (is.array(sysMeta.subsystems)) {
                 for (const ss of sysMeta.subsystems) {
                     // eslint-disable-next-line
@@ -1588,6 +1603,7 @@ export default class CliApplication extends application.Application {
             this[ERROR_SCOPE] = true;
             await this._initialize();
 
+            await this.emitParallel("before run", command);
             const code = await command.execute(rest, match);
             this[ERROR_SCOPE] = false;
             if (is.integer(code)) {
@@ -1801,7 +1817,7 @@ export default class CliApplication extends application.Application {
     async defineCommandFromSubsystem({
         name,
         description = "",
-        group = "subsystem",
+        group,
         subsystem,
         configureArgs = [],
         lazily = false,

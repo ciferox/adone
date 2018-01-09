@@ -16,7 +16,7 @@ global.nextPort = function () {
 global.buildOpts = function () {
     return {
         keepalive: 1000,
-        clientId: `mosca_${require("crypto").randomBytes(8).toString("hex")}`,
+        clientId: `mosca_${adone.std.crypto.randomBytes(8).toString("hex")}`,
         protocolId: "MQIsdp",
         protocolVersion: 3
     };

@@ -27,4 +27,21 @@ describe("application", "CliApplication", () => {
         const result = await forkProcess(fixture("no_public_props_and_getters_cli.js"));
         assert.equal(result.stdout, "true");
     });
+
+    describe("before run event", () => {
+        it("main command", async () => {
+            const result = await forkProcess(fixture("before_run_cli.js"));
+            assert.equal(result.stdout, "before run before_run_cli\nmain");
+        });
+
+        it("regular command", async () => {
+            const result = await forkProcess(fixture("before_run_cli.js"), ["regular"]);
+            assert.equal(result.stdout, "before run regular,r\nregular");
+        });
+
+        it("failed command", async () => {
+            const err = await assert.throws(async () => forkProcess(fixture("before_run_cli.js"), ["failed"]));
+            assert.match(err.stderr, /something bad happened/);
+        });
+    });
 });
