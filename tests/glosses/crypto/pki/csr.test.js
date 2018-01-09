@@ -65,7 +65,7 @@ describe("csr", () => {
             extensions: [{
                 name: "subjectAltName",
                 altNames: [{
-                // type 2 is DNS
+                    // type 2 is DNS
                     type: 2,
                     value: "test.domain.com"
                 }, {
@@ -88,13 +88,13 @@ describe("csr", () => {
         assert.deepEqual(csr.getAttribute({ name: "extensionRequest" }).extensions[0].altNames, [{
             // type 2 is DNS
             type: 2,
-            value: "test.domain.com"
+            value: Buffer.from("test.domain.com")
         }, {
             type: 2,
-            value: "other.domain.com"
+            value: Buffer.from("other.domain.com")
         }, {
             type: 2,
-            value: "www.domain.net"
+            value: Buffer.from("www.domain.net")
         }]);
         assert.ok(csr.verify());
     });

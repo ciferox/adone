@@ -36,7 +36,7 @@ export default function certificateExtensionToAsn1(ext) {
         // value is asn.1
         value = value.toBER();
     } else {
-        value = adone.util.bufferToArrayBuffer(Buffer.from(value, "binary"));
+        value = adone.util.buffer.toArrayBuffer(value);
     }
 
     // extnValue (OCTET STRING)

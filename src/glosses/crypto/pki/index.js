@@ -61,7 +61,6 @@ const pki = adone.lazify({
 
 adone.lazifyPrivate({
     bnToBytes: "./__/bn_to_bytes",
-    prfAlgorithmToMessageDigest: "./__/prf_algorithm_to_message_digest",
     shortNames: "./__/short_names",
     fillMissingFields: "./__/fill_missing_fields",
     fillMissingExtensionFields: "./__/fill_missing_extension_fields",
@@ -72,5 +71,6 @@ adone.lazifyPrivate({
     CRIAttributesToAsn1: "./__/cri_attributes_to_asn1",
     publicKeyValidator: "./__/public_key_validator",
     rsaPublicKeyValidator: "./__/rsa_public_key_validator",
-    encodeUtf8: "./__/encode_utf8"
+    bytesFromIP: "./__/bytes_from_ip",
+    bytesToIP: "./__/bytes_to_ip"
 }, exports, require);

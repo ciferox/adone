@@ -16,7 +16,7 @@ export default function encryptedPrivateKeyToPem(epki, maxline) {
     // convert to DER, then PEM-encode
     const msg = {
         type: "ENCRYPTED PRIVATE KEY",
-        body: Buffer.from(epki.toBER()).toString("binary")
+        body: Buffer.from(epki.toBER())
     };
     return pem.encode(msg, { maxline });
 }

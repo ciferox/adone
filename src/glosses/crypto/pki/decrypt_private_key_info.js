@@ -5,8 +5,6 @@ const {
     }
 } = adone;
 
-const forge = require("node-forge");
-
 // validator for an EncryptedPrivateKeyInfo structure
 // Note: Currently only works w/algorithm params
 const encryptedPrivateKeyValidator = new asn1.Sequence({
@@ -33,13 +31,11 @@ const encryptedPrivateKeyValidator = new asn1.Sequence({
  * Decrypts a ASN.1 PrivateKeyInfo object.
  *
  * @param obj the ASN.1 EncryptedPrivateKeyInfo object.
- * @param password the password to decrypt with.
+ * @param {Buffer | string} password the password to decrypt with
  *
  * @return the ASN.1 PrivateKeyInfo on success, null on failure.
  */
 export default function decryptPrivateKeyInfo(obj, password) {
-    let rval = null;
-
     const epkValidation = asn1.compareSchema(obj, obj, encryptedPrivateKeyValidator);
 
     if (!epkValidation.verified) {
@@ -53,14 +49,10 @@ export default function decryptPrivateKeyInfo(obj, password) {
     const cipher = pki.pbe.getCipher(oid, result.encryptionParams, password);
 
     // get encrypted data
-    const encrypted = forge.util.createBuffer(Buffer.from(result.encryptedData.valueBlock.valueHex).toString("binary"));
+    const firstBlock = cipher.update(new Uint8Array(result.encryptedData.valueBlock.valueHex));
+    const secondBlock = cipher.final();
 
-    cipher.update(encrypted);
+    const buf = adone.util.buffer.toArrayBuffer(Buffer.concat([firstBlock, secondBlock]));
 
-    if (cipher.finish()) {
-        const buf = adone.util.bufferToArrayBuffer(Buffer.from(cipher.output.getBytes(), "binary"));
-        rval = asn1.fromBER(buf).result;
-    }
-
-    return rval;
+    return asn1.fromBER(buf).result;
 }

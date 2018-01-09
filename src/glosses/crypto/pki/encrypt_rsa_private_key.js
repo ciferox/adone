@@ -1,8 +1,10 @@
 const {
-    crypto: { pki }
+    crypto: {
+        pki,
+        random,
+        pem
+    }
 } = adone;
-
-const forge = require("node-forge");
 
 /**
  * Encrypts an RSA private key. By default, the key will be wrapped in
@@ -44,37 +46,31 @@ export default function encryptRsaPrivateKey(rsaKey, password, options) {
     let algorithm;
     let iv;
     let dkLen;
-    let cipherFn;
     switch (options.algorithm) {
         case "aes128":
             algorithm = "AES-128-CBC";
             dkLen = 16;
-            iv = forge.random.getBytesSync(16);
-            cipherFn = forge.aes.createEncryptionCipher;
+            iv = random.getBytesSync(16);
             break;
         case "aes192":
             algorithm = "AES-192-CBC";
             dkLen = 24;
-            iv = forge.random.getBytesSync(16);
-            cipherFn = forge.aes.createEncryptionCipher;
+            iv = random.getBytesSync(16);
             break;
         case "aes256":
             algorithm = "AES-256-CBC";
             dkLen = 32;
-            iv = forge.random.getBytesSync(16);
-            cipherFn = forge.aes.createEncryptionCipher;
+            iv = random.getBytesSync(16);
             break;
         case "3des":
             algorithm = "DES-EDE3-CBC";
             dkLen = 24;
-            iv = forge.random.getBytesSync(8);
-            cipherFn = forge.des.createEncryptionCipher;
+            iv = random.getBytesSync(8);
             break;
         case "des":
             algorithm = "DES-CBC";
             dkLen = 8;
-            iv = forge.random.getBytesSync(8);
-            cipherFn = forge.des.createEncryptionCipher;
+            iv = random.getBytesSync(8);
             break;
         default: {
             const error = new Error(`Could not encrypt RSA private key; unsupported encryption algorithm ${options.algorithm}".`);
@@ -84,12 +80,10 @@ export default function encryptRsaPrivateKey(rsaKey, password, options) {
     }
 
     // encrypt private key using OpenSSL legacy key derivation
-    const dk = forge.pbe.opensslDeriveBytes(password, iv.substr(0, 8), dkLen);
-    const cipher = cipherFn(dk);
-    cipher.start(iv);
-    cipher.update(forge.util.createBuffer(Buffer.from(pki.privateKeyToAsn1(rsaKey).toBER()).toString("binary")));
-    cipher.finish();
-
+    const dk = pki.pbe.opensslDeriveBytes(password, iv.slice(0, 8), dkLen);
+    const cipher = adone.std.crypto.createCipheriv(algorithm, dk, iv);
+    const firstBlock = cipher.update(new Uint8Array(pki.privateKeyToAsn1(rsaKey).toBER()));
+    const secondBlock = cipher.final();
     const msg = {
         type: "RSA PRIVATE KEY",
         procType: {
@@ -98,9 +92,9 @@ export default function encryptRsaPrivateKey(rsaKey, password, options) {
         },
         dekInfo: {
             algorithm,
-            parameters: forge.util.bytesToHex(iv).toUpperCase()
+            parameters: iv.toString("hex").toUpperCase()
         },
-        body: cipher.output.getBytes()
+        body: Buffer.concat([firstBlock, secondBlock])
     };
-    return forge.pem.encode(msg);
+    return pem.encode(msg);
 }

@@ -1,13 +1,14 @@
 const {
     is,
-    crypto: {
-        pki,
-        asn1
-    }
+    crypto
 } = adone;
 
+const {
+    pki,
+    asn1
+} = crypto;
+
 const __ = adone.private(pki);
-const forge = require("node-forge");
 
 // validator for an X.509v3 certificate
 const x509CertificateValidator = new asn1.Sequence({
@@ -178,7 +179,7 @@ export default function certificateFromAsn1(obj, computeHash) {
     cert.signatureParameters = __.readSignatureParameters(cert.signatureOid, result.certSignatureParams, true);
     cert.siginfo.algorithmOid = result.certinfoSignatureOid.valueBlock.toString();
     cert.siginfo.parameters = __.readSignatureParameters(cert.siginfo.algorithmOid, result.certinfoSignatureParams, false);
-    cert.signature = Buffer.from(result.certSignature.valueBlock.valueHex).toString("binary");
+    cert.signature = Buffer.from(result.certSignature.valueBlock.valueHex);
 
     const validity = [];
     if (result.certValidity1UTCTime) {
@@ -211,22 +212,22 @@ export default function certificateFromAsn1(obj, computeHash) {
         if (cert.signatureOid in pki.oids) {
             switch (pki.oids[cert.signatureOid]) {
                 case "sha1WithRSAEncryption":
-                    cert.md = forge.md.sha1.create();
+                    cert.md = crypto.md.sha1.create();
                     break;
                 case "md5WithRSAEncryption":
-                    cert.md = forge.md.md5.create();
+                    cert.md = crypto.md.md5.create();
                     break;
                 case "sha256WithRSAEncryption":
-                    cert.md = forge.md.sha256.create();
+                    cert.md = crypto.md.sha256.create();
                     break;
                 case "sha384WithRSAEncryption":
-                    cert.md = forge.md.sha384.create();
+                    cert.md = crypto.md.sha384.create();
                     break;
                 case "sha512WithRSAEncryption":
-                    cert.md = forge.md.sha512.create();
+                    cert.md = crypto.md.sha512.create();
                     break;
                 case "RSASSA-PSS":
-                    cert.md = forge.md.sha256.create();
+                    cert.md = crypto.md.sha256.create();
                     break;
             }
         }
@@ -237,12 +238,12 @@ export default function certificateFromAsn1(obj, computeHash) {
         }
 
         // produce DER formatted TBSCertificate and digest it
-        const bytes = Buffer.from(cert.tbsCertificate.toBER()).toString("binary");
+        const bytes = Buffer.from(cert.tbsCertificate.toBER());
         cert.md.update(bytes);
     }
 
     // handle issuer, build issuer message digest
-    const imd = forge.md.sha1.create();
+    const imd = crypto.md.sha1.create();
     cert.issuer.getField = function (sn) {
         return __.getAttribute(cert.issuer, sn);
     };
@@ -252,12 +253,12 @@ export default function certificateFromAsn1(obj, computeHash) {
     };
     cert.issuer.attributes = pki.RDNAttributesAsArray(result.certIssuer, imd);
     if (result.certIssuerUniqueId) {
-        cert.issuer.uniqueId = Buffer.from(result.certIssuerUniqueId.valueBlock.valueHex).toString("binary");
+        cert.issuer.uniqueId = Buffer.from(result.certIssuerUniqueId.valueBlock.valueHex);
     }
-    cert.issuer.hash = imd.digest().toHex();
+    cert.issuer.hash = imd.digest().toString("hex");
 
     // handle subject, build subject message digest
-    const smd = forge.md.sha1.create();
+    const smd = crypto.md.sha1.create();
     cert.subject.getField = function (sn) {
         return __.getAttribute(cert.subject, sn);
     };
@@ -267,9 +268,9 @@ export default function certificateFromAsn1(obj, computeHash) {
     };
     cert.subject.attributes = pki.RDNAttributesAsArray(result.certSubject, smd);
     if (result.certSubjectUniqueId) {
-        cert.subject.uniqueId = Buffer.from(result.certSubjectUniqueId).toString("binary");
+        cert.subject.uniqueId = Buffer.from(result.certSubjectUniqueId);
     }
-    cert.subject.hash = smd.digest().toHex();
+    cert.subject.hash = smd.digest().toString("hex");
 
     // handle extensions
     if (result.certExtensions) {

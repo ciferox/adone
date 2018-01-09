@@ -1,15 +1,14 @@
 const {
-    is
+    is,
+    x,
+    std
 } = adone;
-
-const forge = require("node-forge");
 
 /**
  * Derives a PKCS#12 key.
  *
- * @param password the password to derive the key material from, null or
- *          undefined for none.
- * @param salt the salt, as a ByteBuffer, to use.
+ * @param {Buffer | null} password the password to derive the key material from, null or undefined for none.
+ * @param {Buffer} salt the salt
  * @param id the PKCS#12 ID byte (1 = key material, 2 = IV, 3 = MAC).
  * @param iter the iteration count.
  * @param n the number of bytes to derive from the password.
@@ -17,43 +16,42 @@ const forge = require("node-forge");
  *
  * @return a ByteBuffer with the bytes derived from the password.
  */
-export default function generatePKCS12Key(password, salt, id, iter, n, md) {
+export default function generatePKCS12Key(utf8password, salt, id, iter, n, md = "sha1") {
     let j;
     let l;
 
-    if (is.nil(md)) {
-        if (!("sha1" in forge.md)) {
-            throw new Error('"sha1" hash algorithm unavailable.');
-        }
-        md = forge.md.sha1.create();
+    const hMeta = adone.crypto.hash.meta(md);
+
+    if (is.null(hMeta)) {
+        throw new x.NotSupported(`"${md}" hash algorithm is not supported`);
     }
 
-    const u = md.digestLength;
-    const v = md.blockLength;
-    const result = new forge.util.ByteBuffer();
+    const createHash = () => std.crypto.createHash(md);
 
-    /**
-     * Convert password to Unicode byte buffer + trailing 0-byte.
-     */
-    const passBuf = new forge.util.ByteBuffer();
-    if (!is.nil(password)) {
-        for (l = 0; l < password.length; l++) {
-            passBuf.putInt16(password.charCodeAt(l));
-        }
-        passBuf.putInt16(0);
+    const u = hMeta.digestLength;
+    const v = hMeta.blockLength;
+
+    // In this specification however, all passwords are created from BMPStrings with a NULL
+    // terminator. This means that each character in the original BMPString is encoded in 2
+    // bytes in big-endian format (most-significant byte first). There are no Unicode byte order
+    // marks. The 2 bytes produced from the last character in the BMPString are followed by
+    // two additional bytes with the value 0x00.
+    const password = Buffer.allocUnsafe(2 * utf8password.length + 2);
+    for (l = 0; l < utf8password.length; ++l) {
+        password.writeUInt16BE(utf8password.charCodeAt(l), 2 * l);
     }
+    password.writeUInt16BE(0, utf8password.length * 2);
 
     /**
      * Length of salt and password in BYTES.
      */
-    const p = passBuf.length();
-    const s = salt.length();
+    const p = password.length;
+    const s = salt.length;
 
     /**
      * 1. Construct a string, D (the "diversifier"), by concatenating
      */
-    const D = new forge.util.ByteBuffer();
-    D.fillWithByte(id, v);
+    const D = Buffer.alloc(v, id);
 
     /**
      * 2. Concatenate copies of the salt together to create a string S of length
@@ -61,9 +59,9 @@ export default function generatePKCS12Key(password, salt, id, iter, n, md) {
      * to create S).
      */
     const Slen = v * Math.ceil(s / v);
-    const S = new forge.util.ByteBuffer();
+    const S = Buffer.allocUnsafe(Slen);
     for (l = 0; l < Slen; l++) {
-        S.putByte(salt.at(l % s));
+        S.writeUInt8(salt[l % s], l);
     }
 
     /**
@@ -72,42 +70,49 @@ export default function generatePKCS12Key(password, salt, id, iter, n, md) {
      * truncated to create P).
      */
     const Plen = v * Math.ceil(p / v);
-    const P = new forge.util.ByteBuffer();
+    const P = Buffer.allocUnsafe(Plen);
     for (l = 0; l < Plen; l++) {
-        P.putByte(passBuf.at(l % p));
+        P.writeUInt8(password[l % p], l);
     }
 
     /**
      * 4. Set I=S||P to be the concatenation of S and P.
      */
-    let I = S;
-    I.putBuffer(P);
+    let I = Buffer.concat([S, P]);
 
     /**
      * 5. Set c=ceil(n / u).
      */
     const c = Math.ceil(n / u);
 
+    const resultBufs = [];
+
     /* 6. For i=1, 2, ..., c, do the following: */
     for (let i = 1; i <= c; i++) {
         /**
          * a) Set Ai=H^r(D||I). (l.e. the rth hash of D||I, H(H(H(...H(D||I))))
          */
-        let buf = new forge.util.ByteBuffer();
-        buf.putBytes(D.bytes());
-        buf.putBytes(I.bytes());
-        for (let round = 0; round < iter; round++) {
-            md.start();
-            md.update(buf.getBytes());
-            buf = md.digest();
+        let Ai;
+        {
+            const H = createHash();
+            H.update(D);
+            H.update(I);
+            Ai = H.digest();
+        }
+
+        for (let round = 1; round < iter; round++) {
+            const H = createHash();
+            H.update(Ai);
+            Ai = H.digest();
         }
 
         /**
-         * b) Concatenate copies of Ai to create a string B of length v bytes (the
+         * b) Concatenate copies of Ai to create a string B of length v bytes
+         * (the final copy of Ai may be truncated to create B).
          */
-        const B = new forge.util.ByteBuffer();
+        const B = Buffer.allocUnsafe(v);
         for (l = 0; l < v; l++) {
-            B.putByte(buf.at(l % u));
+            B.writeUInt8(Ai[l % u], l);
         }
 
         /**
@@ -115,25 +120,26 @@ export default function generatePKCS12Key(password, salt, id, iter, n, md) {
          * where k=ceil(s / v) + ceil(p / v), modify I by setting
          */
         const k = Math.ceil(s / v) + Math.ceil(p / v);
-        const Inew = new forge.util.ByteBuffer();
+        const bufs = [];
         for (j = 0; j < k; j++) {
-            const chunk = new forge.util.ByteBuffer(I.getBytes(v));
+            const chunk = Buffer.from(I);
             let x = 0x1ff;
-            for (l = B.length() - 1; l >= 0; l--) {
+            for (l = B.length - 1; l >= 0; l--) {
                 x = x >> 8;
-                x += B.at(l) + chunk.at(l);
-                chunk.setAt(l, x & 0xff);
+                x += B[l] + chunk[l];
+                chunk[l] = x & 0xFF;
             }
-            Inew.putBuffer(chunk);
+            bufs.push(chunk);
         }
-        I = Inew;
+        I = Buffer.concat(bufs);
 
         /**
          * Add Ai to A.
          */
-        result.putBuffer(buf);
+        resultBufs.push(I);
     }
 
-    result.truncate(result.length() - n);
-    return result;
+    const resultBuf = Buffer.concat(resultBufs);
+
+    return resultBuf.slice(0, n);
 }

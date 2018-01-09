@@ -8,7 +8,7 @@ const {
 const __ = adone.private(pki);
 
 const tobuf = (bn) => {
-    return adone.util.bufferToArrayBuffer(Buffer.from(__.bnToBytes(bn), "binary"));
+    return adone.util.buffer.toArrayBuffer(__.bnToBytes(bn));
 };
 
 /**

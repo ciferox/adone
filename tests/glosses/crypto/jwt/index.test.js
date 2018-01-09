@@ -1023,7 +1023,7 @@ describe("crypto", "jwt", () => {
         it("should properly encode the token (binary)", () => {
             const expected = "José";
             const token = jwt.sign({ name: expected }, "shhhhh", { encoding: "binary" });
-            const decodedName = JSON.parse(adone.data.base64.decode(token.split(".")[1])).name;
+            const decodedName = JSON.parse(adone.data.base64.decode(token.split(".")[1], { encoding: "utf8" })).name;
             expect(decodedName).to.equal(expected);
         });
 

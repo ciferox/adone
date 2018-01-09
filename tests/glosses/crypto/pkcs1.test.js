@@ -1,6 +1,7 @@
 describe("crypto", "pkcs1", () => {
     const {
         crypto,
+        data: { base64 },
         math: { BigNumber }
     } = adone;
 
@@ -9,18 +10,8 @@ describe("crypto", "pkcs1", () => {
         pki
     } = crypto;
 
-    const forge = require("node-forge");
-    const UTIL = forge.util;
-
-    const _bytesToBigInteger = (bytes) => {
-        const buffer = UTIL.createBuffer(bytes);
-        const hex = buffer.toHex();
-        return BigNumber.fromBuffer(Buffer.from(hex, "hex"));
-    };
-
     const _base64ToBn = (s) => {
-        const decoded = UTIL.decode64(s);
-        return _bytesToBigInteger(decoded);
+        return BigNumber.fromBuffer(Buffer.from(s, "base64"));
     };
 
     const decodeBase64PublicKey = (modulus, exponent) => {
@@ -42,32 +33,25 @@ describe("crypto", "pkcs1", () => {
     };
 
     const checkOAEPEncrypt = (publicKey, privateKey, md, message, seed, expected) => {
-        message = UTIL.decode64(message);
-        seed = UTIL.decode64(seed);
+        message = base64.decode(message, { buffer: true });
+        seed = base64.decode(seed, { buffer: true });
 
-        const encoded = pkcs1.encodeRSAOAEP(
-            publicKey, message, { seed, md });
+        const encoded = pkcs1.encodeRSAOAEP(publicKey, message, { seed, md });
         let ciphertext = publicKey.encrypt(encoded, null);
 
-        assert.equal(expected, UTIL.encode64(ciphertext));
+        assert.equal(expected, ciphertext.toString("base64"));
 
         const decrypted = privateKey.decrypt(ciphertext, null);
         let decoded = pkcs1.decodeRSAOAEP(privateKey, decrypted, { md });
-        assert.equal(message, decoded);
+        assert.deepEqual(message, decoded);
 
         // test with higher-level API, default label, and generating a seed
         ciphertext = publicKey.encrypt(message, "RSA-OAEP", { md });
         decoded = privateKey.decrypt(ciphertext, "RSA-OAEP", { md });
-        assert.equal(message, decoded);
+        assert.deepEqual(message, decoded);
     };
 
     const checkOAEPEncryptExamples = (publicKey, privateKey, md, examples) => {
-        if (md === "sha1") {
-            md = crypto.md.sha1.create();
-        } else if (md === "sha256") {
-            md = crypto.md.sha256.create();
-        }
-
         examples.forEach((ex) => {
             it(`should test ${ex.title}`, () => {
                 checkOAEPEncrypt(publicKey, privateKey, md, ex.message, ex.seed, ex.encrypted);
@@ -1035,13 +1019,13 @@ describe("crypto", "pkcs1", () => {
         const keys = makeKey();
 
         // provide the seed to test the same input each time
-        const seed = UTIL.decode64("JRTfRpV1WmeyiOr0kFw27sZv0v0=");
+        const seed = base64.decode("JRTfRpV1WmeyiOr0kFw27sZv0v0=", { buffer: true });
 
         // test decrypting corrupted data: flip every bit (skip first byte to
         // avoid triggering other invalid encryption error) in the message this
         // tests the padding error handling
         const encoded = pkcs1.encodeRSAOAEP(keys.publicKey, "datadatadatadata", { seed });
-        const encrypted = keys.publicKey.encrypt(encoded, null);
+        const encrypted = keys.publicKey.encrypt(encoded, null).toString("binary");
         let bitLength = encrypted.length * 8;
         // FIXME: test it too slow to run all the time -- temporary
         // change only does partial checks, need a longer term fix
@@ -1056,7 +1040,7 @@ describe("crypto", "pkcs1", () => {
             out += encrypted.substring(byteIndex + 1);
 
             try {
-                const decrypted = keys.privateKey.decrypt(out, null);
+                const decrypted = keys.privateKey.decrypt(Buffer.from(out, "binary"), null);
                 pkcs1.decodeRSAOAEP(keys.privateKey, decrypted);
                 throw new Error("Expected an exception");
             } catch (e) {
@@ -1067,12 +1051,12 @@ describe("crypto", "pkcs1", () => {
 
     it("should detect leading zero bytes", () => {
         const keys = makeKey();
-        const message = UTIL.fillString("\x00", 80);
+        const message = Buffer.alloc(80, 0);
         const encoded = pkcs1.encodeRSAOAEP(keys.publicKey, message);
         const ciphertext = keys.publicKey.encrypt(encoded, null);
         const decrypted = keys.privateKey.decrypt(ciphertext, null);
         const decoded = pkcs1.decodeRSAOAEP(keys.privateKey, decrypted);
-        assert.equal(message, decoded);
+        assert.deepEqual(message, decoded);
     });
 
     testOAEP();

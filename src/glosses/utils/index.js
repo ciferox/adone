@@ -34,7 +34,36 @@ adone.lazify({
             return target;
         },
         mask: adone.native.Common.maskBuffer,
-        unmask: adone.native.Common.unmaskBuffer
+        unmask: adone.native.Common.unmaskBuffer,
+        /**
+         * Returns a new buffer which is A ^ B
+         */
+        xor(A, B, length = Math.max(A.length, B.length)) {
+            // TODO: what to do when the lengths are not equal?
+            length = Math.max(0, length);
+            if (length === 0) {
+                return adone.EMPTY_BUFFER;
+            }
+            const buf = Buffer.allocUnsafe(length);
+            for (let i = 0; i < length; ++i) {
+                const a = A.length > i ? A[i] : 0;
+                const b = B.length > i ? B[i] : 0;
+                buf[i] = a ^ b;
+            }
+            return buf;
+        },
+        /**
+         * Transforms the given Buffer to ArrayBuffer
+         *
+         * @param {Buffer} buf
+         * @returns {ArrayBuffer}
+         */
+        toArrayBuffer(buf) {
+            if (buf.byteOffset === 0 && buf.byteLength === buf.buffer.byteLength) {
+                return buf.buffer;
+            }
+            return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+        }
     }),
     shebang: "./shebang",
     reinterval: "./reinterval",
@@ -1041,17 +1070,4 @@ export const signalNameToCode = (sigName) => {
             return 31;
         }
     }
-};
-
-/**
- * Transforms the given Buffer to ArrayBuffer
- *
- * @param {Buffer} buf
- * @returns {ArrayBuffer}
- */
-export const bufferToArrayBuffer = (buf) => {
-    if (buf.byteOffset === 0 && buf.byteLength === buf.buffer.byteLength) {
-        return buf.buffer;
-    }
-    return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
 };

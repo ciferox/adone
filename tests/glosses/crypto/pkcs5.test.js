@@ -1,7 +1,6 @@
 describe("pkcs5", () => {
     const {
-        crypto,
-        std
+        crypto
     } = adone;
 
     const {

@@ -32,7 +32,7 @@ export default function getTBSCertificate(cert) {
             }),
             // serialNumber
             new asn1.Integer({
-                valueHex: adone.util.bufferToArrayBuffer(Buffer.from(cert.serialNumber, "hex"))
+                valueHex: adone.util.buffer.toArrayBuffer(Buffer.from(cert.serialNumber, "hex"))
             }),
             // signature
             new asn1.Sequence({
@@ -76,7 +76,7 @@ export default function getTBSCertificate(cert) {
                 },
                 value: [
                     new asn1.BitString({
-                        valueHex: adone.util.bufferToArrayBuffer(Buffer.from(cert.issuer.uniqueId, "binary"))
+                        valueHex: adone.util.buffer.toArrayBuffer(cert.issuer.uniqueId)
                     })
                 ]
             })
@@ -92,7 +92,7 @@ export default function getTBSCertificate(cert) {
                 },
                 value: [
                     new asn1.BitString({
-                        valueHex: adone.util.buffer(Buffer.from(cert.subject.uniqueId, "binary"))
+                        valueHex: adone.util.buffer.toArrayBuffer(cert.subject.uniqueId)
                     })
                 ]
             })

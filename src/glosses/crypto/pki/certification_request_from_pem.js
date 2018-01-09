@@ -16,12 +16,9 @@ const {
  *
  * @param _pem the PEM-formatted certificate.
  * @param computeHash true to compute the hash for verification.
- * @param strict true to be strict when checking ASN.1 value lengths, false to
- *          allow truncated values (default: true).
- *
  * @return the certification request (CSR).
  */
-export default function certificationRequestFromPem(_pem, computeHash, strict) {
+export default function certificationRequestFromPem(_pem, computeHash) {
     const msg = pem.decode(_pem)[0];
 
     if (msg.type !== "CERTIFICATE REQUEST") {
@@ -34,7 +31,7 @@ export default function certificationRequestFromPem(_pem, computeHash, strict) {
     }
 
     // convert DER to ASN.1 object
-    const buf = adone.util.bufferToArrayBuffer(Buffer.from(msg.body, "binary"));
+    const buf = adone.util.buffer.toArrayBuffer(msg.body);
     const obj = asn1.fromBER(buf).result;
 
     return pki.certificationRequestFromAsn1(obj, computeHash);

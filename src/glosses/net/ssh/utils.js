@@ -30,7 +30,7 @@ const RE_HEADER_RFC4716 = /^([^:]+): (.*)?$/i;
 
 const nullByte = new Uint8Array([0x00]).buffer;
 
-const { util: { bufferToArrayBuffer } } = adone;
+const { util: { buffer: { toArrayBuffer } } } = adone;
 
 export const parseKey = (data) => {
     if (is.buffer(data)) {
@@ -86,7 +86,7 @@ export const parseKey = (data) => {
                 ret.fulltype = `ssh-${keyType}`;
             } else {
                 // ECDSA
-                const asnData = asn1.fromBER(bufferToArrayBuffer(privData)).result;
+                const asnData = asn1.fromBER(toArrayBuffer(privData)).result;
                 const oid = asnData.valueBlock.value[2].valueBlock.value[0].valueBlock.toString()
                 switch (oid) {
                     case "1.2.840.10045.3.1.7":
@@ -397,28 +397,28 @@ export const convertPPKPrivate = (keyInfo) => {
                     value: 0
                 }),
                 new asn1.Integer({
-                    valueHex: bufferToArrayBuffer(n)
+                    valueHex: toArrayBuffer(n)
                 }),
                 new asn1.Integer({
-                    valueHex: bufferToArrayBuffer(e)
+                    valueHex: toArrayBuffer(e)
                 }),
                 new asn1.Integer({
-                    valueHex: bufferToArrayBuffer(d)
+                    valueHex: toArrayBuffer(d)
                 }),
                 new asn1.Integer({
-                    valueHex: bufferToArrayBuffer(p)
+                    valueHex: toArrayBuffer(p)
                 }),
                 new asn1.Integer({
-                    valueHex: bufferToArrayBuffer(q)
+                    valueHex: toArrayBuffer(q)
                 }),
                 new asn1.Integer({
-                    valueHex: bufferToArrayBuffer(dmp1)
+                    valueHex: toArrayBuffer(dmp1)
                 }),
                 new asn1.Integer({
-                    valueHex: bufferToArrayBuffer(dmq1)
+                    valueHex: toArrayBuffer(dmq1)
                 }),
                 new asn1.Integer({
-                    valueHex: bufferToArrayBuffer(iqmp)
+                    valueHex: toArrayBuffer(iqmp)
                 })
             ]
         });
@@ -435,19 +435,19 @@ export const convertPPKPrivate = (keyInfo) => {
                     value: 0
                 }),
                 new asn1.Integer({
-                    valueHex: bufferToArrayBuffer(p)
+                    valueHex: toArrayBuffer(p)
                 }),
                 new asn1.Integer({
-                    valueHex: bufferToArrayBuffer(q)
+                    valueHex: toArrayBuffer(q)
                 }),
                 new asn1.Integer({
-                    valueHex: bufferToArrayBuffer(g)
+                    valueHex: toArrayBuffer(g)
                 }),
                 new asn1.Integer({
-                    valueHex: bufferToArrayBuffer(y)
+                    valueHex: toArrayBuffer(y)
                 }),
                 new asn1.Integer({
-                    valueHex: bufferToArrayBuffer(x)
+                    valueHex: toArrayBuffer(x)
                 })
             ]
         });
@@ -531,7 +531,7 @@ export const DSASigBERToBare = (signature) => {
     // This is a quick and dirty way to get from BER encoded r and s that
     // OpenSSL gives us, to just the bare values back to back (40 bytes
     // total) like OpenSSH (and possibly others) are expecting
-    const asnData = asn1.fromBER(bufferToArrayBuffer(signature)).result;
+    const asnData = asn1.fromBER(toArrayBuffer(signature)).result;
     if (asnData.error) {
         throw new Error(`Invalid signature: ${asnData.error}`);
     }
@@ -591,10 +591,10 @@ export const DSASigBareToBER = (signature) => {
     const asnData = new asn1.Sequence({
         value: [
             new asn1.Integer({
-                valueHex: bufferToArrayBuffer(r)
+                valueHex: toArrayBuffer(r)
             }),
             new asn1.Integer({
-                valueHex: bufferToArrayBuffer(s)
+                valueHex: toArrayBuffer(s)
             })
         ]
     });
@@ -608,7 +608,7 @@ export const ECDSASigASN1ToSSH = (signature) => {
     }
     // Convert SSH signature parameters to ASN.1 BER values for OpenSSL
 
-    const asnData = asn1.fromBER(bufferToArrayBuffer(signature)).result;
+    const asnData = asn1.fromBER(toArrayBuffer(signature)).result;
 
     if (asnData.error) {
         throw new Error(`Invalid signature: ${asnData.error}`);
@@ -639,10 +639,10 @@ export const ECDSASigSSHToASN1 = (signature, self, callback) => {
     const asnData = new asn1.Sequence({
         value: [
             new asn1.Integer({
-                valueHex: bufferToArrayBuffer(r)
+                valueHex: toArrayBuffer(r)
             }),
             new asn1.Integer({
-                valueHex: bufferToArrayBuffer(s)
+                valueHex: toArrayBuffer(s)
             })
         ]
     });
@@ -680,10 +680,10 @@ export const RSAKeySSHToASN1 = (key, self, callback) => {
                     new asn1.Sequence({
                         value: [
                             new asn1.Integer({
-                                valueHex: bufferToArrayBuffer(n)
+                                valueHex: toArrayBuffer(n)
                             }),
                             new asn1.Integer({
-                                valueHex: bufferToArrayBuffer(e)
+                                valueHex: toArrayBuffer(e)
                             })
                         ]
                     })
@@ -724,13 +724,13 @@ export const DSAKeySSHToASN1 = (key, self, callback) => {
                     new asn1.Sequence({
                         value: [
                             new asn1.Integer({
-                                valueHex: bufferToArrayBuffer(p)
+                                valueHex: toArrayBuffer(p)
                             }),
                             new asn1.Integer({
-                                valueHex: bufferToArrayBuffer(q)
+                                valueHex: toArrayBuffer(q)
                             }),
                             new asn1.Integer({
-                                valueHex: bufferToArrayBuffer(g)
+                                valueHex: toArrayBuffer(g)
                             })
                         ]
                     })
@@ -743,7 +743,7 @@ export const DSAKeySSHToASN1 = (key, self, callback) => {
                         data: nullByte
                     }),
                     new asn1.Integer({
-                        valueHex: bufferToArrayBuffer(y)
+                        valueHex: toArrayBuffer(y)
                     })
                 ]
             })
@@ -801,7 +801,7 @@ export const ECDSAKeySSHToASN1 = (key, self, callback) => {
                         data: nullByte
                     }),
                     new asn1.RawData({
-                        data: bufferToArrayBuffer(Q)
+                        data: toArrayBuffer(Q)
                     })
                 ]
             })
@@ -912,7 +912,7 @@ export const decryptKey = (keyInfo, passphrase) => {
     } else {
         // ECDSA
 
-        const asnData = asn1.fromBER(bufferToArrayBuffer(keyInfo.private)).result;
+        const asnData = asn1.fromBER(toArrayBuffer(keyInfo.private)).result;
 
         const oid = asnData.valueBlock.value[2].valueBlock.value[0].valueBlock.toString()
 
@@ -959,7 +959,7 @@ export const genPublicKey = (keyInfo) => {
     if (keyInfo.private) {
         // parsing private key in ASN.1 format in order to generate a public key
         const privKey = keyInfo.private;
-        const asnData = asn1.fromBER(bufferToArrayBuffer(privKey)).result;
+        const asnData = asn1.fromBER(toArrayBuffer(privKey)).result;
         let errMsg;
 
         if (asnData.error) {

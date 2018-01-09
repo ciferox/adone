@@ -88,7 +88,7 @@ export default function createCertificationRequest() {
 
         // get CertificationRequestInfo, convert to DER
         csr.certificationRequestInfo = pki.getCertificationRequestInfo(csr);
-        const bytes = Buffer.from(csr.certificationRequestInfo.toBER()).toString("binary");
+        const bytes = Buffer.from(csr.certificationRequestInfo.toBER());
 
         // digest and sign
         csr.md.update(bytes);
@@ -111,7 +111,7 @@ export default function createCertificationRequest() {
 
         let md = csr.md;
         if (is.null(md)) {
-        // check signature OID for supported signature types
+            // check signature OID for supported signature types
             if (csr.signatureOid in pki.oids) {
                 // TODO: create DRY `OID to md` function
                 const oid = pki.oids[csr.signatureOid];
@@ -144,7 +144,7 @@ export default function createCertificationRequest() {
 
             // produce DER formatted CertificationRequestInfo and digest it
             const cri = csr.certificationRequestInfo || pki.getCertificationRequestInfo(csr);
-            const bytes = Buffer.from(cri.toBER()).toString("binary");
+            const bytes = Buffer.from(cri.toBER());
             md.update(bytes);
         }
 
@@ -160,7 +160,7 @@ export default function createCertificationRequest() {
                      * initialize mgf
                      */
                     let hash = pki.oids[csr.signatureParameters.mgf.hash.algorithmOid];
-                    if (is.undefined(hash) || is.undefined(forge.md[hash])) {
+                    if (is.undefined(hash) || is.undefined(crypto.md[hash])) {
                         const error = new Error("Unsupported MGF hash function.");
                         error.oid = csr.signatureParameters.mgf.hash.algorithmOid;
                         error.name = hash;
@@ -168,33 +168,33 @@ export default function createCertificationRequest() {
                     }
 
                     let mgf = pki.oids[csr.signatureParameters.mgf.algorithmOid];
-                    if (is.undefined(mgf) || is.undefined(forge.mgf[mgf])) {
+                    if (is.undefined(mgf) || is.undefined(crypto.mgf[mgf])) {
                         const error = new Error("Unsupported MGF function.");
                         error.oid = csr.signatureParameters.mgf.algorithmOid;
                         error.name = mgf;
                         throw error;
                     }
 
-                    mgf = forge.mgf[mgf].create(forge.md[hash].create());
+                    mgf = crypto.mgf[mgf].create(crypto.md[hash].create());
 
                     /**
                      * initialize hash function
                      */
                     hash = pki.oids[csr.signatureParameters.hash.algorithmOid];
-                    if (is.undefined(hash) || is.undefined(forge.md[hash])) {
+                    if (is.undefined(hash) || is.undefined(crypto.md[hash])) {
                         const error = new Error("Unsupported RSASSA-PSS hash function.");
                         error.oid = csr.signatureParameters.hash.algorithmOid;
                         error.name = hash;
                         throw error;
                     }
 
-                    scheme = forge.pss.create(forge.md[hash].create(), mgf, csr.signatureParameters.saltLength);
+                    scheme = crypto.pss.create(hash, mgf, csr.signatureParameters.saltLength);
                     break;
                 }
             }
 
             // verify signature on csr using its public key
-            rval = csr.publicKey.verify(md.digest().getBytes(), csr.signature, scheme);
+            rval = csr.publicKey.verify(md.digest(), csr.signature, scheme);
         }
 
         return rval;

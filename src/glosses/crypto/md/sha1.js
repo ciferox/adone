@@ -1,11 +1,10 @@
+const {
+    is
+} = adone;
+
 /**
  * Secure Hash Algorithm with 160-bit digest (SHA-1) implementation.
- *
- * @author Dave Longley
- *
- * Copyright (c) 2010-2015 Digital Bazaar, Inc.
  */
-const forge = require("node-forge");
 
 // sha-1 padding bytes not initialized yet
 let _padding = null;
@@ -16,8 +15,8 @@ let _initialized = false;
  */
 const _init = () => {
     // create padding
-    _padding = String.fromCharCode(128);
-    _padding += forge.util.fillString(String.fromCharCode(0x00), 64);
+    _padding = Buffer.alloc(65, 0);
+    _padding.writeUInt8(128);
 
     // now initialized
     _initialized = true;
@@ -40,7 +39,7 @@ const _update = (s, w, bytes) => {
     let e;
     let f;
     let i;
-    let len = bytes.length();
+    let len = bytes.length;
     while (len >= 64) {
     // the w array will be populated with sixteen 32-bit big-endian words
     // and then extended into 80 32-bit words according to SHA-1 algorithm
@@ -55,7 +54,7 @@ const _update = (s, w, bytes) => {
 
         // round 1
         for (i = 0; i < 16; ++i) {
-            t = bytes.getInt32();
+            t = bytes.readUInt32BE();
             w[i] = t;
             f = d ^ (b & (c ^ d));
             t = ((a << 5) | (a >>> 27)) + f + e + 0x5A827999 + t;
@@ -161,7 +160,7 @@ export const create = function () {
     let _state = null;
 
     // input buffer
-    let _input = forge.util.createBuffer();
+    let _input = new adone.collection.SmartBuffer();
 
     // used for word storage
     const _w = new Array(80);
@@ -194,7 +193,7 @@ export const create = function () {
         for (let i = 0; i < int32s; ++i) {
             md.fullMessageLength.push(0);
         }
-        _input = forge.util.createBuffer();
+        _input = new adone.collection.SmartBuffer();
         _state = {
             h0: 0x67452301,
             h1: 0xEFCDAB89,
@@ -217,9 +216,9 @@ export const create = function () {
      *
      * @return this digest object.
      */
-    md.update = function (msg, encoding) {
-        if (encoding === "utf8") {
-            msg = forge.util.encodeUtf8(msg);
+    md.update = function (msg, encoding = "binary") {
+        if (!is.buffer(msg)) {
+            msg = Buffer.from(msg, encoding);
         }
 
         // update message length
@@ -234,13 +233,13 @@ export const create = function () {
         }
 
         // add bytes to input buffer
-        _input.putBytes(msg);
+        _input.writeBuffer(msg);
 
         // process bytes
         _update(_state, _w, _input);
 
         // compact input buffer every 2K or if empty
-        if (_input.read > 2048 || _input.length() === 0) {
+        if (_input.read > 2048 || _input.length === 0) {
             _input.compact();
         }
 
@@ -275,8 +274,8 @@ export const create = function () {
      * must *always* be present, so if the message length is already
      */
 
-        const finalBlock = forge.util.createBuffer();
-        finalBlock.putBytes(_input.bytes());
+        const finalBlock = new adone.collection.SmartBuffer();
+        finalBlock.writeBuffer(_input.toBuffer());
 
         // compute remaining size to be digested (include message length size)
         const remaining = (
@@ -287,7 +286,7 @@ export const create = function () {
         // _padding starts with 1 byte with first bit is set (byte value 128), then
         // there may be up to (blockSize - 1) other pad bytes
         const overflow = remaining & (md.blockLength - 1);
-        finalBlock.putBytes(_padding.substr(0, md.blockLength - overflow));
+        finalBlock.writeBuffer(_padding.slice(0, md.blockLength - overflow));
 
         // serialize message length in bits in big-endian order; since length
         // is stored in bytes we multiply by 8 and add carry from next int
@@ -298,10 +297,10 @@ export const create = function () {
             next = md.fullMessageLength[i + 1] * 8;
             carry = (next / 0x100000000) >>> 0;
             bits += carry;
-            finalBlock.putInt32(bits >>> 0);
+            finalBlock.writeUInt32BE(bits >>> 0);
             bits = next >>> 0;
         }
-        finalBlock.putInt32(bits);
+        finalBlock.writeUInt32BE(bits);
 
         const s2 = {
             h0: _state.h0,
@@ -311,13 +310,13 @@ export const create = function () {
             h4: _state.h4
         };
         _update(s2, _w, finalBlock);
-        const rval = forge.util.createBuffer();
-        rval.putInt32(s2.h0);
-        rval.putInt32(s2.h1);
-        rval.putInt32(s2.h2);
-        rval.putInt32(s2.h3);
-        rval.putInt32(s2.h4);
-        return rval;
+        const rval = new adone.collection.SmartBuffer();
+        rval.writeUInt32BE(s2.h0 >>> 0);
+        rval.writeUInt32BE(s2.h1 >>> 0);
+        rval.writeUInt32BE(s2.h2 >>> 0);
+        rval.writeUInt32BE(s2.h3 >>> 0);
+        rval.writeUInt32BE(s2.h4 >>> 0);
+        return rval.toBuffer();
     };
 
     return md;

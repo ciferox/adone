@@ -41,7 +41,7 @@ export default function CRIAttributesToAsn1(csr) {
             valueTagClass = attr.valueTagClass;
         }
         if (valueTagClass === 12) { // UTF8
-            value = __.encodeUtf8(value);
+            value = Buffer.from(value, "utf8");
         }
         let valueConstructed = false;
         if ("valueConstructed" in attr) {
@@ -66,7 +66,7 @@ export default function CRIAttributesToAsn1(csr) {
         } else {
             attrValue = new asn1.Primitive({
                 idBlock,
-                valueHex: adone.util.bufferToArrayBuffer(Buffer.from(value, "binary"))
+                valueHex: adone.util.buffer.toArrayBuffer(value)
             });
         }
 

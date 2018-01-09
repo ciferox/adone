@@ -1,5 +1,7 @@
 const {
-    crypto
+    crypto: {
+        pem
+    }
 } = adone;
 
 /**
@@ -14,8 +16,8 @@ export default function PrivateKeyInfoToPem(pki, maxline) {
     // convert to DER, then PEM-encode
     const msg = {
         type: "PRIVATE KEY",
-        body: Buffer.from(pki.toBER()).toString("binary")
+        body: Buffer.from(pki.toBER())
     };
-    return crypto.pem.encode(msg, { maxline });
+    return pem.encode(msg, { maxline });
 }
 

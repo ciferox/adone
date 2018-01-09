@@ -45,10 +45,10 @@ export default function emsaPKCS1v15encode(md) {
                 ]
             }),
             new asn1.OctetString({
-                valueHex: adone.util.bufferToArrayBuffer(Buffer.from(md.digest().getBytes(), "binary"))
+                valueHex: adone.util.buffer.toArrayBuffer(md.digest())
             })
         ]
     });
 
-    return Buffer.from(digestInfo.toBER()).toString("binary");
+    return Buffer.from(digestInfo.toBER());
 }

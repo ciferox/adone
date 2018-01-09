@@ -368,6 +368,25 @@ describe("ByteArray", () => {
             assert.equal(bb2.toString("debug"), "56 78|");
         });
 
+        describe("writeBuffer", () => {
+            it("should prepend a buffer", () => {
+                const b = new ByteArray();
+                b.writeBuffer(Buffer.from("hello"));
+                b.writeBuffer(Buffer.from(" "));
+                b.writeBuffer(Buffer.from("world"));
+                expect(b.flip().toBuffer()).to.be.deep.equal(Buffer.from("hello world"));
+            });
+
+            it("should write at the given offset", () => {
+                const b = new ByteArray();
+                b.writeBuffer(Buffer.alloc(7)); // TODO: WTF, otherways it does not work, because the offset prop is zero
+                b.writeBuffer(Buffer.from("hello"), 0);
+                b.writeBuffer(Buffer.from(" "), 1);
+                b.writeBuffer(Buffer.from("world"), 2);
+                expect(b.flip().toBuffer()).to.be.deep.equal(Buffer.from("h world"));
+            });
+        });
+
         it("prepend", () => {
             const bb = ByteArray.wrap("\x12\x34");
             const bb2 = ByteArray.wrap("\x56\x78");

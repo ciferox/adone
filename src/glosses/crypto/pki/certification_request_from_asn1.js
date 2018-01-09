@@ -106,7 +106,7 @@ export default function certificationRequestFromAsn1(obj, computeHash) {
     csr.signatureParameters = __.readSignatureParameters(csr.signatureOid, result.csrSignatureParams, true);
     csr.siginfo.algorithmOid = result.csrSignatureOid.valueBlock.toString();
     csr.siginfo.parameters = __.readSignatureParameters(csr.siginfo.algorithmOid, result.csrSignatureParams, false);
-    csr.signature = Buffer.from(result.csrSignature.valueBlock.valueHex).toString("binary");
+    csr.signature = Buffer.from(result.csrSignature.valueBlock.valueHex);
 
     // keep CertificationRequestInfo to preserve signature when exporting
     csr.certificationRequestInfo = result.certificationRequestInfo;
@@ -143,7 +143,7 @@ export default function certificationRequestFromAsn1(obj, computeHash) {
         }
 
         // produce DER formatted CertificationRequestInfo and digest it
-        const bytes = Buffer.from(csr.certificationRequestInfo.toBER()).toString("binary");
+        const bytes = Buffer.from(csr.certificationRequestInfo.toBER());
         csr.md.update(bytes);
     }
 
@@ -157,7 +157,7 @@ export default function certificationRequestFromAsn1(obj, computeHash) {
         csr.subject.attributes.push(attr);
     };
     csr.subject.attributes = pki.RDNAttributesAsArray(result.certificationRequestInfoSubject, smd);
-    csr.subject.hash = smd.digest().toHex();
+    csr.subject.hash = smd.digest().toString("hex");
 
     // convert RSA public key from ASN.1
     csr.publicKey = pki.publicKeyFromAsn1(asn1.fromBER(result.subjectPublicKey.valueBlock.valueHex).result);

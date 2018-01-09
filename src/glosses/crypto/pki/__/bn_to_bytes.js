@@ -3,7 +3,7 @@
  *
  * @param b the big integer to convert.
  *
- * @return the bytes.
+ * @return {Buffer} the bytes.
  */
 export default function bnToBytes(b) {
     // prepend 0x00 if first byte >= 0x80
@@ -14,17 +14,20 @@ export default function bnToBytes(b) {
     if (hex.length % 2 !== 0) {
         hex = `0${hex}`;
     }
-    const bytes = Buffer.from(hex, "hex").toString("binary");
+    const bytes = Buffer.from(hex, "hex");
 
     // ensure integer is minimally-encoded
-    if (bytes.length > 1 &&
-      // leading 0x00 for positive integer
-      ((bytes.charCodeAt(0) === 0 &&
-      (bytes.charCodeAt(1) & 0x80) === 0) ||
-      // leading 0xFF for negative integer
-      (bytes.charCodeAt(0) === 0xFF &&
-      (bytes.charCodeAt(1) & 0x80) === 0x80))) {
-        return bytes.substr(1);
+    if (bytes.length > 1
+        &&
+        (
+            // leading 0x00 for positive integer
+            (bytes[0] === 0 && (bytes[1] & 0x80) === 0)
+            ||
+            // leading 0xFF for negative integer
+            (bytes[0] === 0xFF && (bytes[1] & 0x80) === 0x80)
+        )
+    ) {
+        return bytes.slice(1);
     }
     return bytes;
 }

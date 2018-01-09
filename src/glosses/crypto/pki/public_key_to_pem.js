@@ -17,7 +17,7 @@ export default function publicKeyToPem(key, maxline) {
     // convert to ASN.1, then DER, then PEM-encode
     const msg = {
         type: "PUBLIC KEY",
-        body: Buffer.from(pki.publicKeyToAsn1(key).toBER()).toString("binary")
+        body: Buffer.from(pki.publicKeyToAsn1(key).toBER())
     };
     return pem.encode(msg, { maxline });
 }

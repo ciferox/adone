@@ -29,7 +29,7 @@ export default function createCaStore(certs) {
         if (!subject.hash) {
             const md = crypto.md.sha1.create();
             subject.attributes = pki.RDNAttributesAsArray(__.dnToAsn1(subject), md);
-            subject.hash = md.digest().toHex();
+            subject.hash = md.digest().toString("hex");
         }
     };
 
@@ -112,10 +112,10 @@ export default function createCaStore(certs) {
             match = [match];
         }
         // compare DER-encoding of certificates
-        const der1 = Buffer.from(pki.certificateToAsn1(cert).toBER()).toString("binary");
+        const der1 = Buffer.from(pki.certificateToAsn1(cert).toBER());
         for (let i = 0; i < match.length; ++i) {
-            const der2 = Buffer.from(pki.certificateToAsn1(match[i]).toBER()).toString("binary");
-            if (der1 === der2) {
+            const der2 = Buffer.from(pki.certificateToAsn1(match[i]).toBER());
+            if (is.equalArrays(der1, der2)) {
                 return true;
             }
         }
@@ -176,10 +176,10 @@ export default function createCaStore(certs) {
         }
 
         // compare DER-encoding of certificates
-        const der1 = Buffer.from(pki.certificateToAsn1(cert).toBER()).toString("binary");
+        const der1 = Buffer.from(pki.certificateToAsn1(cert).toBER());
         for (let i = 0; i < match.length; ++i) {
-            const der2 = Buffer.from(pki.certificateToAsn1(match[i]).toBER()).toString("binary");
-            if (der1 === der2) {
+            const der2 = Buffer.from(pki.certificateToAsn1(match[i]).toBER());
+            if (is.equalArrays(der1, der2)) {
                 result = match[i];
                 match.splice(i, 1);
             }

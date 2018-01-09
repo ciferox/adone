@@ -27,5 +27,5 @@ export default function encryptedPrivateKeyFromPem(_pem) {
     }
 
     // convert DER to ASN.1 object
-    return asn1.fromBER(adone.util.bufferToArrayBuffer(Buffer.from(msg.body, "binary")));
+    return asn1.fromBER(adone.util.buffer.toArrayBuffer(msg.body));
 }

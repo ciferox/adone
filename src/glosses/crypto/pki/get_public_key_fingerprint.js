@@ -1,8 +1,10 @@
 const {
-    crypto: { pki }
+    crypto
 } = adone;
 
-const forge = require("node-forge");
+const {
+    pki
+} = crypto;
 
 /**
  * Gets a fingerprint for the given public key.
@@ -20,16 +22,16 @@ const forge = require("node-forge");
  */
 export default function getPublicKeyFingerprint(key, options) {
     options = options || {};
-    const md = options.md || forge.md.sha1.create();
+    const md = options.md || crypto.md.sha1.create();
     const type = options.type || "RSAPublicKey";
 
     let bytes;
     switch (type) {
         case "RSAPublicKey":
-            bytes = Buffer.from(pki.publicKeyToRSAPublicKey(key).toBER()).toString("binary");
+            bytes = Buffer.from(pki.publicKeyToRSAPublicKey(key).toBER());
             break;
         case "SubjectPublicKeyInfo":
-            bytes = Buffer.from(pki.publicKeyToAsn1(key).toBER()).toString("binary");
+            bytes = Buffer.from(pki.publicKeyToAsn1(key).toBER());
             break;
         default:
             throw new Error(`Unknown fingerprint type "${options.type}".`);
@@ -40,13 +42,13 @@ export default function getPublicKeyFingerprint(key, options) {
     md.update(bytes);
     const digest = md.digest();
     if (options.encoding === "hex") {
-        const hex = digest.toHex();
+        const hex = digest.toString("hex");
         if (options.delimiter) {
             return hex.match(/.{2}/g).join(options.delimiter);
         }
         return hex;
     } else if (options.encoding === "binary") {
-        return digest.getBytes();
+        return digest.toString("binary");
     } else if (options.encoding) {
         throw new Error(`Unknown encoding "${options.encoding}".`);
     }

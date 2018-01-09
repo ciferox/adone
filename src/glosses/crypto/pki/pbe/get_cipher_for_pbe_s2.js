@@ -1,13 +1,11 @@
 const {
-    crypto: {
-        pki,
-        asn1
-    }
+    crypto
 } = adone;
 
-const __ = adone.private(pki.pbe);
-
-const forge = require("node-forge");
+const {
+    pki,
+    asn1
+} = crypto;
 
 // validator for a PBES2Algorithms structure
 // Note: Currently only works w/PBKDF2 + AES encryption schemes
@@ -103,44 +101,60 @@ export default function getCipherForPBES2(oid, params, password) {
     }
 
     // set PBE params
-    const salt = Buffer.from(result.kdfSalt.valueBlock.valueHex).toString("binary");
+    const salt = Buffer.from(result.kdfSalt.valueBlock.valueHex);
+    const count = result.kdfIterationCount.valueBlock.valueDec;
 
-    let count = forge.util.createBuffer(Buffer.from(result.kdfIterationCount.valueBlock.valueHex));
-
-    count = count.getInt(count.length() << 3);
     let dkLen;
-    let cipherFn;
+    let algorithm;
     switch (pki.oids[oid]) {
         case "aes128-CBC":
             dkLen = 16;
-            cipherFn = forge.aes.createDecryptionCipher;
+            // TODO: normalize it
+            algorithm = "aes-128-cbc";
             break;
         case "aes192-CBC":
             dkLen = 24;
-            cipherFn = forge.aes.createDecryptionCipher;
+            algorithm = "aes-192-cbc";
             break;
         case "aes256-CBC":
             dkLen = 32;
-            cipherFn = forge.aes.createDecryptionCipher;
+            algorithm = "aes-256-cbc";
             break;
         case "des-EDE3-CBC":
             dkLen = 24;
-            cipherFn = forge.des.createDecryptionCipher;
+            algorithm = "des-ede3-cbc";
             break;
         case "desCBC":
             dkLen = 8;
-            cipherFn = forge.des.createDecryptionCipher;
+            algorithm = "des-cbc";
             break;
     }
 
-    // get PRF message digest
-    const md = __.prfOidToMessageDigest(result.prfOid && result.prfOid.valueBlock.toString());
+    let mdAlgo;
+
+    if (result.prfOid) {
+        const prfOid = result.prfOid.valueBlock.toString();
+        const algo = pki.oids[prfOid];
+        if (!algo) {
+            const error = new Error("Unsupported PRF OID.");
+            error.oid = prfOid;
+            error.supported = [
+                "hmacWithSHA1",
+                "hmacWithSHA224",
+                "hmacWithSHA256",
+                "hmacWithSHA384",
+                "hmacWithSHA512"
+            ];
+            throw error;
+        }
+        mdAlgo = algo.slice(8); // TODO: normalize it
+    } else {
+        mdAlgo = "SHA1";
+    }
 
     // decrypt private key using pbe with chosen PRF and AES/DES
-    const dk = forge.pkcs5.pbkdf2(password, salt, count, dkLen, md);
-    const iv = Buffer.from(result.encIv.valueBlock.valueHex).toString("binary");
-    const cipher = cipherFn(dk);
-    cipher.start(iv);
+    const dk = crypto.pkcs5.pbkdf2Sync(password, salt, count, dkLen, mdAlgo);
+    const iv = Buffer.from(result.encIv.valueBlock.valueHex);
 
-    return cipher;
+    return adone.std.crypto.createDecipheriv(algorithm, dk, iv);
 }

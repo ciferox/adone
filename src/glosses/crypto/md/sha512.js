@@ -7,15 +7,7 @@ const {
  *
  * This includes: SHA-512, SHA-384, SHA-512/224, and SHA-512/256. For
  * SHA-256 (block size 512 bits), see sha256.js.
- *
- * See FIPS 180-4 for details.
- *
- * @author Dave Longley
- *
- * Copyright (c) 2014-2015 Digital Bazaar, Inc.
  */
-const forge = require("node-forge");
-
 // sha-512 padding bytes not initialized yet
 let _padding = null;
 let _initialized = false;
@@ -31,8 +23,8 @@ let _states = null;
  */
 const _init = () => {
     // create padding
-    _padding = String.fromCharCode(128);
-    _padding += forge.util.fillString(String.fromCharCode(0x00), 128);
+    _padding = Buffer.alloc(128, 0);
+    _padding.writeUInt8(128);
 
     // create K table for SHA-512
     _k = [
@@ -169,13 +161,13 @@ const _update = (s, w, bytes) => {
     let w7;
     let w15;
     let w16;
-    let len = bytes.length();
+    let len = bytes.length;
     while (len >= 128) {
-    // the w array will be populated with sixteen 64-bit big-endian words
-    // and then extended into 64 64-bit words according to SHA-512
+        // the w array will be populated with sixteen 64-bit big-endian words
+        // and then extended into 64 64-bit words according to SHA-512
         for (i = 0; i < 16; ++i) {
-            w[i][0] = bytes.getInt32() >>> 0;
-            w[i][1] = bytes.getInt32() >>> 0;
+            w[i][0] = bytes.readUInt32BE();
+            w[i][1] = bytes.readUInt32BE();
         }
         for (; i < 80; ++i) {
             // for word 2 words ago: ROTR 19(x) ^ ROTR 61(x) ^ SHR 6(x)
@@ -372,7 +364,7 @@ export const create = function (algorithm) {
     let _h = null;
 
     // input buffer
-    let _input = forge.util.createBuffer();
+    let _input = new adone.collection.SmartBuffer();
 
     // used for 64-bit word storage
     const _w = new Array(80);
@@ -420,12 +412,12 @@ export const create = function (algorithm) {
         // full message length (set md.messageLength128 for backwards-compatibility)
         md.fullMessageLength = md.messageLength128 = [];
         const int32s = md.messageLengthSize / 4;
-        for (var i = 0; i < int32s; ++i) {
+        for (let i = 0; i < int32s; ++i) {
             md.fullMessageLength.push(0);
         }
-        _input = forge.util.createBuffer();
+        _input = new adone.collection.SmartBuffer();
         _h = new Array(_state.length);
-        for (var i = 0; i < _state.length; ++i) {
+        for (let i = 0; i < _state.length; ++i) {
             _h[i] = _state[i].slice(0);
         }
         return md;
@@ -443,9 +435,9 @@ export const create = function (algorithm) {
      *
      * @return this digest object.
      */
-    md.update = function (msg, encoding) {
-        if (encoding === "utf8") {
-            msg = forge.util.encodeUtf8(msg);
+    md.update = function (msg, encoding = "binary") {
+        if (!is.buffer(msg)) {
+            msg = Buffer.from(msg, encoding);
         }
 
         // update message length
@@ -460,13 +452,13 @@ export const create = function (algorithm) {
         }
 
         // add bytes to input buffer
-        _input.putBytes(msg);
+        _input.writeBuffer(msg);
 
         // process bytes
         _update(_h, _w, _input);
 
         // compact input buffer every 2K or if empty
-        if (_input.read > 2048 || _input.length() === 0) {
+        if (_input.read > 2048 || _input.length === 0) {
             _input.compact();
         }
 
@@ -501,8 +493,8 @@ export const create = function (algorithm) {
      * must *always* be present, so if the message length is already
      */
 
-        const finalBlock = forge.util.createBuffer();
-        finalBlock.putBytes(_input.bytes());
+        const finalBlock = new adone.collection.SmartBuffer();
+        finalBlock.writeBuffer(_input.toBuffer());
 
         // compute remaining size to be digested (include message length size)
         const remaining = (
@@ -513,27 +505,28 @@ export const create = function (algorithm) {
         // _padding starts with 1 byte with first bit is set (byte value 128), then
         // there may be up to (blockSize - 1) other pad bytes
         const overflow = remaining & (md.blockLength - 1);
-        finalBlock.putBytes(_padding.substr(0, md.blockLength - overflow));
+        finalBlock.writeBuffer(_padding.slice(0, md.blockLength - overflow));
 
         // serialize message length in bits in big-endian order; since length
         // is stored in bytes we multiply by 8 and add carry from next int
-        let next, carry;
+        let next;
+        let carry;
         let bits = md.fullMessageLength[0] * 8;
-        for (var i = 0; i < md.fullMessageLength.length - 1; ++i) {
+        for (let i = 0; i < md.fullMessageLength.length - 1; ++i) {
             next = md.fullMessageLength[i + 1] * 8;
             carry = (next / 0x100000000) >>> 0;
             bits += carry;
-            finalBlock.putInt32(bits >>> 0);
+            finalBlock.writeUInt32BE(bits >>> 0);
             bits = next >>> 0;
         }
-        finalBlock.putInt32(bits);
+        finalBlock.writeUInt32BE(bits);
 
         const h = new Array(_h.length);
-        for (var i = 0; i < _h.length; ++i) {
+        for (let i = 0; i < _h.length; ++i) {
             h[i] = _h[i].slice(0);
         }
         _update(h, _w, finalBlock);
-        const rval = forge.util.createBuffer();
+        const rval = new adone.collection.SmartBuffer();
         let hlen;
         if (algorithm === "SHA-512") {
             hlen = h.length;
@@ -542,13 +535,13 @@ export const create = function (algorithm) {
         } else {
             hlen = h.length - 4;
         }
-        for (var i = 0; i < hlen; ++i) {
-            rval.putInt32(h[i][0]);
+        for (let i = 0; i < hlen; ++i) {
+            rval.writeUInt32BE(h[i][0]);
             if (i !== hlen - 1 || algorithm !== "SHA-512/224") {
-                rval.putInt32(h[i][1]);
+                rval.writeUInt32BE(h[i][1]);
             }
         }
-        return rval;
+        return rval.toBuffer();
     };
 
     return md;

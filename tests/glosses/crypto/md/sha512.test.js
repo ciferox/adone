@@ -13,7 +13,7 @@ describe("sha512", () => {
     it("should digest the empty string", () => {
         const md = sha512.create();
         assert.equal(
-            md.digest().toHex(),
+            md.digest().toString("hex"),
             "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e");
     });
 
@@ -21,7 +21,7 @@ describe("sha512", () => {
         const md = sha512.create();
         md.update("abc");
         assert.equal(
-            md.digest().toHex(),
+            md.digest().toString("hex"),
             "ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f");
     });
 
@@ -29,7 +29,7 @@ describe("sha512", () => {
         const md = sha512.create();
         md.update("abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu");
         assert.equal(
-            md.digest().toHex(),
+            md.digest().toString("hex"),
             "8e959b75dae313da8cf4f72814fc143f8f7779c6eb9f7fa17299aeadb6889018501d289e4900f7e4331b99dec4b5433ac7d329eeb6dd26545e96e55b874be909");
     });
 
@@ -37,7 +37,7 @@ describe("sha512", () => {
         const md = sha512.create();
         md.update("The quick brown fox jumps over the lazy dog");
         assert.equal(
-            md.digest().toHex(),
+            md.digest().toString("hex"),
             "07e547d9586f6a73f73fbac0435ed76951218fb7d0c8d788a309d785436bbb642e93a252a954f23912547d1e8a3b5ed6e1bfd7097821233fa0538f3db854fee6");
     });
 
@@ -45,7 +45,7 @@ describe("sha512", () => {
         const md = sha512.create();
         md.update("c'\u00e8", "utf8");
         assert.equal(
-            md.digest().toHex(),
+            md.digest().toString("hex"),
             "9afdc0390dd91e81c63f858d1c6fcd9f949f3fc89dbdaed9e4211505bad63d8e8787797e2e9ea651285eb6954e51c4f0299837c3108cb40f1420bca1d237355c");
     });
 
@@ -55,10 +55,10 @@ describe("sha512", () => {
         md.update("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq");
         // do twice to check continuing digest
         assert.equal(
-            md.digest().toHex(),
+            md.digest().toString("hex"),
             "204a8fc6dda82f0a0ced7beb8e08a41657c16ef468b228a8279be331a703c33596fd15c13b1b07f9aa1d3bea57789ca031ad85c7a71dd70354ec631238ca3445");
         assert.equal(
-            md.digest().toHex(),
+            md.digest().toString("hex"),
             "204a8fc6dda82f0a0ced7beb8e08a41657c16ef468b228a8279be331a703c33596fd15c13b1b07f9aa1d3bea57789ca031ad85c7a71dd70354ec631238ca3445");
     });
 
@@ -71,7 +71,7 @@ describe("sha512", () => {
                 md.update("abc");
             }
             assert.equal(
-                md.digest().toHex(),
+                md.digest().toString("hex"),
                 "d046212bac4588e4bf5e33fcac26183e548f7efe8d36df45db885a31c4c23bbb3b9da10225405b4be3491c4d923937f8b5e165ecd4cadc8d0680cadb164c112f");
         }
     });
@@ -88,7 +88,7 @@ describe("sha384", () => {
     it("should digest the empty string", () => {
         const md = sha384.create();
         assert.equal(
-            md.digest().toHex(),
+            md.digest().toString("hex"),
             "38b060a751ac96384cd9327eb1b1e36a21fdb71114be07434c0cc7bf63f6e1da274edebfe76f65fbd51ad2f14898b95b");
     });
 
@@ -96,7 +96,7 @@ describe("sha384", () => {
         const md = sha384.create();
         md.update("abc");
         assert.equal(
-            md.digest().toHex(),
+            md.digest().toString("hex"),
             "cb00753f45a35e8bb5a03d699ac65007272c32ab0eded1631a8b605a43ff5bed8086072ba1e7cc2358baeca134c825a7");
     });
 
@@ -104,7 +104,7 @@ describe("sha384", () => {
         const md = sha384.create();
         md.update("abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu");
         assert.equal(
-            md.digest().toHex(),
+            md.digest().toString("hex"),
             "09330c33f71147e83d192fc782cd1b4753111b173b3b05d22fa08086e3b0f712fcc7c71a557e2db966c3e9fa91746039");
     });
 
@@ -112,7 +112,7 @@ describe("sha384", () => {
         const md = sha384.create();
         md.update("The quick brown fox jumps over the lazy dog");
         assert.equal(
-            md.digest().toHex(),
+            md.digest().toString("hex"),
             "ca737f1014a48f4c0b6dd43cb177b0afd9e5169367544c494011e3317dbf9a509cb1e5dc1e85a941bbee3d7f2afbc9b1");
     });
 
@@ -120,7 +120,7 @@ describe("sha384", () => {
         const md = sha384.create();
         md.update("c'\u00e8", "utf8");
         assert.equal(
-            md.digest().toHex(),
+            md.digest().toString("hex"),
             "382ec8a92d50abf57f7d0f934ff3969d6d354d30c96f1616678a920677867aba49521d2d535c0f285a3c2961c2034ea3");
     });
 
@@ -130,10 +130,10 @@ describe("sha384", () => {
         md.update("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq");
         // do twice to check continuing digest
         assert.equal(
-            md.digest().toHex(),
+            md.digest().toString("hex"),
             "3391fdddfc8dc7393707a65b1b4709397cf8b1d162af05abfe8f450de5f36bc6b0455a8520bc4e6f5fe95b1fe3c8452b");
         assert.equal(
-            md.digest().toHex(),
+            md.digest().toString("hex"),
             "3391fdddfc8dc7393707a65b1b4709397cf8b1d162af05abfe8f450de5f36bc6b0455a8520bc4e6f5fe95b1fe3c8452b");
     });
 
@@ -146,7 +146,7 @@ describe("sha384", () => {
                 md.update("abc");
             }
             assert.equal(
-                md.digest().toHex(),
+                md.digest().toString("hex"),
                 "ade291a33b436cc10ed01090255e612f0d3868a795be7871e1f20183245aa48738d35a26d94ac5d791ef57e94763af6b");
         }
     });
@@ -163,7 +163,7 @@ describe("sha512/256", () => {
     it("should digest the empty string", () => {
         const md = sha256.create();
         assert.equal(
-            md.digest().toHex(),
+            md.digest().toString("hex"),
             "c672b8d1ef56ed28ab87c3622c5114069bdd3ad7b8f9737498d0c01ecef0967a");
     });
 
@@ -171,7 +171,7 @@ describe("sha512/256", () => {
         const md = sha256.create();
         md.update("The quick brown fox jumps over the lazy dog");
         assert.equal(
-            md.digest().toHex(),
+            md.digest().toString("hex"),
             "dd9d67b371519c339ed8dbd25af90e976a1eeefd4ad3d889005e532fc5bef04d");
     });
 });
@@ -188,7 +188,7 @@ describe("sha512/224", () => {
     it("should digest the empty string", () => {
         const md = sha224.create();
         assert.equal(
-            md.digest().toHex(),
+            md.digest().toString("hex"),
             "6ed0dd02806fa89e25de060c19d3ac86cabb87d6a0ddd05c333b84f4");
     });
 
@@ -196,7 +196,7 @@ describe("sha512/224", () => {
         const md = sha224.create();
         md.update("The quick brown fox jumps over the lazy dog");
         assert.equal(
-            md.digest().toHex(),
+            md.digest().toString("hex"),
             "944cd2847fb54558d4775db0485a50003111c8e5daa63fe722c6aa37");
     });
 });

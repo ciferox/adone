@@ -35,7 +35,7 @@ export default function certificateToAsn1(cert) {
             }),
             // SignatureValue
             new asn1.BitString({
-                valueHex: adone.util.bufferToArrayBuffer(Buffer.from(cert.signature, "binary"))
+                valueHex: adone.util.buffer.toArrayBuffer(cert.signature)
             })
         ]
     });

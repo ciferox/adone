@@ -17,7 +17,7 @@ export default function certificationRequestToPem(csr, maxline) {
     // convert to ASN.1, then DER, then PEM-encode
     const msg = {
         type: "CERTIFICATE REQUEST",
-        body: Buffer.from(pki.certificationRequestToAsn1(csr).toBER()).toString("binary")
+        body: Buffer.from(pki.certificationRequestToAsn1(csr).toBER())
     };
     return pem.encode(msg, { maxline });
 }

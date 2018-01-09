@@ -1,20 +1,18 @@
 const {
-    crypto: {
-        pki,
-        asn1
-    }
+    crypto
 } = adone;
 
-const __ = adone.private(pki);
-
-const forge = require("node-forge");
+const {
+    pki,
+    asn1
+} = crypto;
 
 const createPbkdf2Params = (salt, countBytes, dkLen, prfAlgorithm) => {
     const params = new asn1.Sequence({
         value: [
             // salt
             new asn1.OctetString({
-                valueHex: adone.util.bufferToArrayBuffer(Buffer.from(salt, "binary"))
+                valueHex: adone.util.buffer.toArrayBuffer(salt)
             }),
             // iteration count
             new asn1.Integer({
@@ -95,40 +93,41 @@ export default function encryptPrivateKeyInfo(obj, password, options) {
     options.prfAlgorithm = options.prfAlgorithm || "sha1";
 
     // generate PBE params
-    const salt = forge.random.getBytesSync(options.saltSize);
+    const salt = crypto.random.getBytesSync(options.saltSize);
     const count = options.count;
     let dkLen;
     let encryptionAlgorithm;
     let encryptedData;
-    if (options.algorithm.indexOf("aes") === 0 || options.algorithm === "des") {
+    if (options.algorithm.startsWith("aes") || options.algorithm === "des") {
         // do PBES2
         let ivLen;
+        let algorithm;
         let encOid;
-        let cipherFn;
         switch (options.algorithm) {
             case "aes128":
                 dkLen = 16;
                 ivLen = 16;
+                algorithm = "aes-128-cbc";
+                // TODO: normalize names
                 encOid = pki.oids["aes128-CBC"];
-                cipherFn = forge.aes.createEncryptionCipher;
                 break;
             case "aes192":
                 dkLen = 24;
                 ivLen = 16;
+                algorithm = "aes-192-cbc";
                 encOid = pki.oids["aes192-CBC"];
-                cipherFn = forge.aes.createEncryptionCipher;
                 break;
             case "aes256":
                 dkLen = 32;
                 ivLen = 16;
+                algorithm = "aes-256-cbc";
                 encOid = pki.oids["aes256-CBC"];
-                cipherFn = forge.aes.createEncryptionCipher;
                 break;
             case "des":
                 dkLen = 8;
                 ivLen = 8;
+                algorithm = "des-cbc";
                 encOid = pki.oids.desCBC;
-                cipherFn = forge.des.createEncryptionCipher;
                 break;
             default: {
                 const error = new Error("Cannot encrypt private key. Unknown encryption algorithm.");
@@ -139,16 +138,14 @@ export default function encryptPrivateKeyInfo(obj, password, options) {
 
         // get PRF message digest
         const prfAlgorithm = `hmacWith${options.prfAlgorithm.toUpperCase()}`;
-        const md = __.prfAlgorithmToMessageDigest(prfAlgorithm);
 
         // encrypt private key using pbe SHA-1 and AES/DES
-        const dk = forge.pkcs5.pbkdf2(password, salt, count, dkLen, md);
-        const iv = forge.random.getBytesSync(ivLen);
-        const cipher = cipherFn(dk);
-        cipher.start(iv);
-        cipher.update(forge.util.createBuffer(Buffer.from(obj.toBER()).toString("binary")));
-        cipher.finish();
-        encryptedData = cipher.output.getBytes();
+        const dk = crypto.pkcs5.pbkdf2Sync(password, salt, count, dkLen, options.prfAlgorithm.toUpperCase());
+        const iv = crypto.random.getBytesSync(ivLen);
+        const cipher = adone.std.crypto.createCipheriv(algorithm, dk, iv);
+        const firstBlock = cipher.update(new Uint8Array(obj.toBER()));
+        const secondBlock = cipher.final();
+        encryptedData = Buffer.concat([firstBlock, secondBlock]);
 
         encryptionAlgorithm = new asn1.Sequence({
             value: [
@@ -174,7 +171,7 @@ export default function encryptPrivateKeyInfo(obj, password, options) {
                                 }),
                                 // iv
                                 new asn1.OctetString({
-                                    valueHex: adone.util.bufferToArrayBuffer(Buffer.from(iv, "binary"))
+                                    valueHex: adone.util.buffer.toArrayBuffer(iv)
                                 })
                             ]
                         })
@@ -184,16 +181,15 @@ export default function encryptPrivateKeyInfo(obj, password, options) {
         });
     } else if (options.algorithm === "3des") {
         // Do PKCS12 PBE
-        dkLen = 24;
+        const dk = pki.pbe.generatePKCS12Key(password, salt, 1, count, 24);
+        const iv = pki.pbe.generatePKCS12Key(password, salt, 2, count, 8);
 
-        const saltBytes = new forge.util.ByteBuffer(salt);
-        const dk = pki.pbe.generatePKCS12Key(password, saltBytes, 1, count, dkLen);
-        const iv = pki.pbe.generatePKCS12Key(password, saltBytes, 2, count, dkLen);
-        const cipher = forge.des.createEncryptionCipher(dk);
-        cipher.start(iv);
-        cipher.update(forge.util.createBuffer(Buffer.from(obj.toBER()).toString("binary")));
-        cipher.finish();
-        encryptedData = cipher.output.getBytes();
+        const cipher = adone.std.crypto.createCipheriv("des-ede3-cbc", dk, iv);
+
+        const firstBlock = cipher.update(new Uint8Array(obj.toBER()));
+        const secondBlock = cipher.final();
+
+        encryptedData = Buffer.concat([firstBlock, secondBlock]);
 
         encryptionAlgorithm = new asn1.Sequence({
             value: [
@@ -205,7 +201,7 @@ export default function encryptPrivateKeyInfo(obj, password, options) {
                     value: [
                         // salt
                         new asn1.OctetString({
-                            valueHex: adone.util.bufferToArrayBuffer(Buffer.from(salt, "binary"))
+                            valueHex: adone.util.buffer.toArrayBuffer(salt)
                         }),
                         // iteration count
                         new asn1.Integer({
@@ -227,7 +223,7 @@ export default function encryptPrivateKeyInfo(obj, password, options) {
             encryptionAlgorithm,
             // encryptedData
             new asn1.OctetString({
-                valueHex: adone.util.bufferToArrayBuffer(Buffer.from(encryptedData, "binary"))
+                valueHex: adone.util.buffer.toArrayBuffer(encryptedData)
             })
         ]
     });

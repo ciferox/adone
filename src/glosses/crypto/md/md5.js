@@ -1,11 +1,10 @@
+const {
+    is
+} = adone;
+
 /**
  * Message Digest Algorithm 5 with 128-bit digest (MD5) implementation.
- *
- * @author Dave Longley
- *
- * Copyright (c) 2010-2014 Digital Bazaar, Inc.
  */
-const forge = require("node-forge");
 
 // padding, constant tables for calculating md5
 let _padding = null;
@@ -19,8 +18,8 @@ let _initialized = false;
  */
 const _init = () => {
     // create padding
-    _padding = String.fromCharCode(128);
-    _padding += forge.util.fillString(String.fromCharCode(0x00), 64);
+    _padding = Buffer.alloc(65, 0);
+    _padding.writeUInt8(128, 0);
 
     // g values
     _g = [
@@ -51,7 +50,7 @@ const _init = () => {
  *
  * @param s the MD5 state to update.
  * @param w the array to use to store words.
- * @param bytes the byte buffer to update with.
+ * @param {adone.collection.ByteArray} bytes the byte buffer to update with.
  */
 const _update = (s, w, bytes) => {
     // consume 512 bit (64 byte) chunks
@@ -63,9 +62,9 @@ const _update = (s, w, bytes) => {
     let f;
     let r;
     let i;
-    let len = bytes.length();
+    let len = bytes.length;
     while (len >= 64) {
-    // initialize hash value for this chunk
+        // initialize hash value for this chunk
         a = s.h0;
         b = s.h1;
         c = s.h2;
@@ -73,7 +72,7 @@ const _update = (s, w, bytes) => {
 
         // round 1
         for (i = 0; i < 16; ++i) {
-            w[i] = bytes.getInt32Le();
+            w[i] = bytes.readUInt32LE();
             f = d ^ (b & (c ^ d));
             t = (a + f + _k[i] + w[i]);
             r = _r[i];
@@ -123,7 +122,6 @@ const _update = (s, w, bytes) => {
     }
 };
 
-
 /**
  * Creates an MD5 message digest object.
  *
@@ -139,7 +137,7 @@ export const create = function () {
     let _state = null;
 
     // input buffer
-    let _input = forge.util.createBuffer();
+    let _input = new adone.collection.SmartBuffer();
 
     // used for word storage
     const _w = new Array(16);
@@ -163,7 +161,7 @@ export const create = function () {
      * @return this digest object.
      */
     md.start = function () {
-    // up to 56-bit message length for convenience
+        // up to 56-bit message length for convenience
         md.messageLength = 0;
 
         // full message length (set md.messageLength64 for backwards-compatibility)
@@ -172,7 +170,7 @@ export const create = function () {
         for (let i = 0; i < int32s; ++i) {
             md.fullMessageLength.push(0);
         }
-        _input = forge.util.createBuffer();
+        _input = new adone.collection.SmartBuffer();
         _state = {
             h0: 0x67452301,
             h1: 0xEFCDAB89,
@@ -194,9 +192,9 @@ export const create = function () {
      *
      * @return this digest object.
      */
-    md.update = function (msg, encoding) {
-        if (encoding === "utf8") {
-            msg = forge.util.encodeUtf8(msg);
+    md.update = function (msg, encoding = "binary") {
+        if (!is.buffer(msg)) {
+            msg = Buffer.from(msg, encoding);
         }
 
         // update message length
@@ -211,13 +209,13 @@ export const create = function () {
         }
 
         // add bytes to input buffer
-        _input.putBytes(msg);
+        _input.writeBuffer(msg);
 
         // process bytes
         _update(_state, _w, _input);
 
         // compact input buffer every 2K or if empty
-        if (_input.read > 2048 || _input.length() === 0) {
+        if (_input.read > 2048 || _input.length === 0) {
             _input.compact();
         }
 
@@ -252,8 +250,8 @@ export const create = function () {
      * must *always* be present, so if the message length is already
      */
 
-        const finalBlock = forge.util.createBuffer();
-        finalBlock.putBytes(_input.bytes());
+        const finalBlock = new adone.collection.SmartBuffer();
+        finalBlock.writeBuffer(_input.toBuffer());
 
         // compute remaining size to be digested (include message length size)
         const remaining = (
@@ -264,7 +262,7 @@ export const create = function () {
         // _padding starts with 1 byte with first bit is set (byte value 128), then
         // there may be up to (blockSize - 1) other pad bytes
         const overflow = remaining & (md.blockLength - 1);
-        finalBlock.putBytes(_padding.substr(0, md.blockLength - overflow));
+        finalBlock.writeBuffer(_padding.slice(0, md.blockLength - overflow));
 
         // serialize message length in bits in little-endian order; since length
         // is stored in bytes we multiply by 8 and add carry
@@ -273,7 +271,7 @@ export const create = function () {
         for (let i = md.fullMessageLength.length - 1; i >= 0; --i) {
             bits = md.fullMessageLength[i] * 8 + carry;
             carry = (bits / 0x100000000) >>> 0;
-            finalBlock.putInt32Le(bits >>> 0);
+            finalBlock.writeUInt32LE(bits >>> 0);
         }
 
         const s2 = {
@@ -283,11 +281,11 @@ export const create = function () {
             h3: _state.h3
         };
         _update(s2, _w, finalBlock);
-        const rval = forge.util.createBuffer();
-        rval.putInt32Le(s2.h0);
-        rval.putInt32Le(s2.h1);
-        rval.putInt32Le(s2.h2);
-        rval.putInt32Le(s2.h3);
+        const rval = Buffer.allocUnsafe(16);
+        rval.writeUInt32LE(s2.h0 >>> 0, 0);
+        rval.writeUInt32LE(s2.h1 >>> 0, 4);
+        rval.writeUInt32LE(s2.h2 >>> 0, 8);
+        rval.writeUInt32LE(s2.h3 >>> 0, 12);
         return rval;
     };
 

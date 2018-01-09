@@ -699,6 +699,34 @@ export default class ByteArray {
     }
 
     /**
+     * Writes a buffer at the given offset
+     *
+     * @param {Buffer} buf buffer to write
+     * @param {number} [offset] offset to write at
+     * @returns {this}
+     */
+    writeBuffer(buf, offset) {
+        if (buf.length === 0) {
+            return this;
+        }
+        const relative = is.undefined(offset);
+        if (relative) {
+            offset = this.offset;
+        }
+        const targetEnd = offset + buf.length;
+        let capacity = this.buffer.length;
+        if (targetEnd > capacity) {
+            capacity *= 2;
+            this.resize(capacity > targetEnd ? capacity : targetEnd);
+        }
+        buf.copy(this.buffer, offset);
+        if (relative) {
+            this.offset = targetEnd;
+        }
+        return this;
+    }
+
+    /**
      * Writes an 8bit signed integer
      *
      * @param {number} value

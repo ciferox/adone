@@ -17,5 +17,6 @@ adone.lazify({
     MapCache: "./map_cache",
     NSCache: "./ns_cache",
     RefcountedCache: "./refcounted_cache",
-    Heap: "./heap"
+    Heap: "./heap",
+    SmartBuffer: "./smart_buffer"
 }, adone.asNamespace(exports), require);

@@ -11,5 +11,6 @@ for (const algo of nodeHashes) {
 adone.lazify({
     sha3: "./sha3",
     murmur3: "./murmur3",
-    blake: "./blake"
+    blake: "./blake",
+    meta: "./meta"
 }, exports, require);

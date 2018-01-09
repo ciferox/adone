@@ -4,8 +4,6 @@ const {
 
 const __ = adone.private(adone.crypto.pki.rsa);
 
-const forge = require("node-forge");
-
 /**
  * NOTE: THIS METHOD IS DEPRECATED, use 'decrypt' on a private key object or
  * 'verify' on a public key object instead.
@@ -17,12 +15,12 @@ const forge = require("node-forge");
  * (in order to handle e.g. EMSA-PSS later on) and simply pass back
  * the RSA encryption block.
  *
- * @param ed the encrypted data to decrypt in as a byte string.
+ * @param {Buffer} ed the encrypted data to decrypt in as a byte string.
  * @param key the RSA key to use.
  * @param pub true for a public key operation, false for private.
  * @param ml the message length, if known, false to disable padding.
  *
- * @return the decrypted message as a byte string.
+ * @return {Buffer} the decrypted message
  */
 export default function decrypt(ed, key, pub, ml) {
     // get the length of the modulus in bytes
@@ -38,7 +36,7 @@ export default function decrypt(ed, key, pub, ml) {
 
     // convert encrypted data into a big integer
     // FIXME: hex conversion inefficient, get BigInteger w/byte strings
-    const y = BigNumber.fromBuffer(Buffer.from(forge.util.createBuffer(ed).toHex(), "hex"));
+    const y = BigNumber.fromBuffer(ed);
 
     // y must be less than the modulus or it wasn't the result of
     // a previous mod operation (encryption) using that modulus
@@ -52,21 +50,22 @@ export default function decrypt(ed, key, pub, ml) {
     // create the encryption block, if x is shorter in bytes than k, then
     // prepend zero bytes to fill up eb
     // FIXME: hex conversion inefficient, get BigInteger w/byte strings
-    const xhex = x.toString(16);
-    const eb = forge.util.createBuffer();
-    let zeros = k - Math.ceil(xhex.length / 2);
+    const eb = new adone.collection.ByteArray();
+    let zeros = k - Math.ceil(x.bitLength() / 8);
     while (zeros > 0) {
-        eb.putByte(0x00);
+        eb.writeUInt8(0x00);
         --zeros;
     }
-    eb.putBytes(forge.util.hexToBytes(xhex));
+    eb.writeBuffer(x.toBuffer());
+
+    const res = eb.flip().toBuffer();
 
     if (ml !== false) {
         // legacy, default to PKCS#1 v1.5 padding
-        return __.decodePKCSv15(eb.getBytes(), key, pub);
+        return __.decodePKCSv15(res, key, pub);
     }
 
     // return message
-    return eb.getBytes();
+    return res;
 }
 

@@ -13,8 +13,7 @@ export default function privateKeyFromPem(pem) {
     const msg = crypto.pem.decode(pem)[0];
 
     if (msg.type !== "PRIVATE KEY" && msg.type !== "RSA PRIVATE KEY") {
-        const error = new Error("Could not convert private key from PEM; PEM " +
-        'header type is not "PRIVATE KEY" or "RSA PRIVATE KEY".');
+        const error = new Error('Could not convert private key from PEM; PEM header type is not "PRIVATE KEY" or "RSA PRIVATE KEY".');
         error.headerType = msg.type;
         throw error;
     }
@@ -23,9 +22,7 @@ export default function privateKeyFromPem(pem) {
     }
 
     // convert DER to ASN.1 object
-    // const obj = asn1.fromDer(msg.body);
-
-    const ar = adone.util.bufferToArrayBuffer(Buffer.from(msg.body, "binary"));
+    const ar = adone.util.buffer.toArrayBuffer(msg.body);
     const obj = adone.crypto.asn1.fromBER(ar);
 
     return crypto.pki.privateKeyFromAsn1(obj.result);

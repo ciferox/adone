@@ -194,9 +194,6 @@ describe("x509", () => {
         "-----END CERTIFICATE-----\r\n"
     ];
 
-    const forge = require("node-forge");
-    const UTIL = forge.util;
-
     const {
         crypto
     } = adone;
@@ -357,12 +354,14 @@ describe("x509", () => {
         assert.ok(index !== -1);
         const ext = cert.extensions[index];
         assert.equal(ext.name, "authorityKeyIdentifier");
-        assert.equal(ext.value, UTIL.hexToBytes(
-            "3081888014f57563e0c75d6e9b03fafdb2fd72349f23030300a16da46b30693114" +
-        "30120603550403130b6578616d706c652e6f7267310b3009060355040613025553" +
-        "3111300f0603550408130856697267696e6961311330110603550407130a426c61" +
-        "636b7362757267310d300b060355040a130454657374310d300b060355040b1304" +
-        "54657374820101"));
+        assert.deepEqual(ext.value, Buffer.from(
+            "3081888014f57563e0c75d6e9b03fafdb2fd72349f23030300a16da46b30693114"
+            + "30120603550403130b6578616d706c652e6f7267310b3009060355040613025553"
+            + "3111300f0603550408130856697267696e6961311330110603550407130a426c61"
+            + "636b7362757267310d300b060355040a130454657374310d300b060355040b1304"
+            + "54657374820101",
+            "hex"
+        ));
 
         // verify certificate chain
         const caStore = crypto.pki.createCaStore();
@@ -423,10 +422,12 @@ describe("x509", () => {
         assert.ok(index !== -1);
         const ext = cert.extensions[index];
         assert.equal(ext.name, "cRLDistributionPoints");
-        assert.equal(ext.value, UTIL.hexToBytes(
-            "30583056a054a052865068747470733a2f2f746573742d6f7267616e6973617469" +
-        "6f6e2e636f6d2f746573742d6f7267616e69736174696f6e2f63726c2f74657374" +
-        "5f6f7267616e69736174696f6e5f63612e63726c2e646572"));
+        assert.deepEqual(ext.value, Buffer.from(
+            "30583056a054a052865068747470733a2f2f746573742d6f7267616e6973617469"
+            + "6f6e2e636f6d2f746573742d6f7267616e69736174696f6e2f63726c2f74657374"
+            + "5f6f7267616e69736174696f6e5f63612e63726c2e646572",
+            "hex"
+        ));
 
         // verify certificate chain
         const caStore = crypto.pki.createCaStore();
@@ -977,14 +978,13 @@ describe("x509", () => {
         it("should get a SHA-1 RSAPublicKey fingerprint", () => {
             const publicKey = crypto.pki.publicKeyFromPem(_pem.publicKey);
             const fp = crypto.pki.getPublicKeyFingerprint(publicKey, { type: "RSAPublicKey" });
-            assert.equal(fp.toHex(), "f57563e0c75d6e9b03fafdb2fd72349f23030300");
+            assert.equal(fp.toString("hex"), "f57563e0c75d6e9b03fafdb2fd72349f23030300");
         });
 
         it("should get a SHA-1 SubjectPublicKeyInfo fingerprint", () => {
             const publicKey = crypto.pki.publicKeyFromPem(_pem.publicKey);
-            const fp = crypto.pki.getPublicKeyFingerprint(
-                publicKey, { type: "SubjectPublicKeyInfo" });
-            assert.equal(fp.toHex(), "984724bc548bbc2c8acbac044bd8d518abd26dd8");
+            const fp = crypto.pki.getPublicKeyFingerprint(publicKey, { type: "SubjectPublicKeyInfo" });
+            assert.equal(fp.toString("hex"), "984724bc548bbc2c8acbac044bd8d518abd26dd8");
         });
 
         it("should get a hex SHA-1 RSAPublicKey fingerprint", () => {
@@ -1016,16 +1016,15 @@ describe("x509", () => {
 
         it("should get an MD5 RSAPublicKey fingerprint", () => {
             const publicKey = crypto.pki.publicKeyFromPem(_pem.publicKey);
-            const fp = crypto.pki.getPublicKeyFingerprint(
-                publicKey, { md: crypto.md.md5.create(), type: "RSAPublicKey" });
-            assert.equal(fp.toHex(), "c7da180cc48d31a071d31a78bc43d9d7");
+            const fp = crypto.pki.getPublicKeyFingerprint(publicKey, { md: crypto.md.md5.create(), type: "RSAPublicKey" });
+            assert.equal(fp.toString("hex"), "c7da180cc48d31a071d31a78bc43d9d7");
         });
 
         it("should get an MD5 SubjectPublicKeyInfo fingerprint", () => {
             const publicKey = crypto.pki.publicKeyFromPem(_pem.publicKey);
             const fp = crypto.pki.getPublicKeyFingerprint(
                 publicKey, { md: crypto.md.md5.create(), type: "SubjectPublicKeyInfo" });
-            assert.equal(fp.toHex(), "e5c5ba577fe24fb8a678d8d58f539cd7");
+            assert.equal(fp.toString("hex"), "e5c5ba577fe24fb8a678d8d58f539cd7");
         });
 
         it("should get a hex MD5 RSAPublicKey fingerprint", () => {

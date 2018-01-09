@@ -1,9 +1,5 @@
 /**
  * Object IDs for ASN.1.
- *
- * @author Dave Longley
- *
- * Copyright (c) 2010-2013 Digital Bazaar, Inc.
  */
 const oids = {};
 

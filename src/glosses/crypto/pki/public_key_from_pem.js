@@ -27,7 +27,7 @@ export default function publicKeyFromPem(_pem) {
     }
 
     // convert DER to ASN.1 object
-    const buf = adone.util.bufferToArrayBuffer(Buffer.from(msg.body, "binary"));
+    const buf = adone.util.buffer.toArrayBuffer(msg.body);
     const obj = asn1.fromBER(buf).result;
 
     return pki.publicKeyFromAsn1(obj);

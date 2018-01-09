@@ -30,30 +30,6 @@ if (semver.gte(process.version, "5.2.0")) {
 let opensshVer;
 const DEBUG_MODE = false;
 
-skip(() => {
-    return new Promise((resolve) => {
-        exec("ssh -V", (err, stdout, stderr) => {
-            if (err) {
-                // console.log("OpenSSH client is required for these tests");
-                resolve(true);
-                return;
-            }
-            const re = /^OpenSSH_([\d\.]+)/;
-            let m = re.exec(stdout.toString());
-            if (!m || !m[1]) {
-                m = re.exec(stderr.toString());
-                if (!m || !m[1]) {
-                    // console.log("OpenSSH client is required for these tests");
-                    resolve(true);
-                    return;
-                }
-            }
-            opensshVer = m[1];
-            resolve(false);
-        });
-    });
-});
-
 // Fix file modes to avoid OpenSSH client complaints about keys" permissions
 fs.readdirSync(fixturesdir).forEach((file) => {
     fs.chmodSync(join(fixturesdir, file), "0600");
@@ -161,7 +137,31 @@ const setup = (self, clientcfg, servercfg, done) => {
     return server;
 };
 
-describe("net", "ssh", "OpenSSH", () => {
+describe("net", "ssh", "OpenSSH", {
+    skip: () => {
+        return new Promise((resolve) => {
+            exec("ssh -V", (err, stdout, stderr) => {
+                if (err) {
+                    // console.log("OpenSSH client is required for these tests");
+                    resolve(true);
+                    return;
+                }
+                const re = /^OpenSSH_([\d\.]+)/;
+                let m = re.exec(stdout.toString());
+                if (!m || !m[1]) {
+                    m = re.exec(stderr.toString());
+                    if (!m || !m[1]) {
+                        // console.log("OpenSSH client is required for these tests");
+                        resolve(true);
+                        return;
+                    }
+                }
+                opensshVer = m[1];
+                resolve(false);
+            });
+        });
+    }
+}, () => {
     it("Authenticate with an RSA key", function (done) {
         const server = setup(
             this, {

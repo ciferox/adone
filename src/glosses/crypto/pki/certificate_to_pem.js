@@ -17,7 +17,7 @@ export default function certificateToPem(cert, maxline) {
     // convert to ASN.1, then DER, then PEM-encode
     const msg = {
         type: "CERTIFICATE",
-        body: Buffer.from(pki.certificateToAsn1(cert).toBER()).toString("binary")
+        body: Buffer.from(pki.certificateToAsn1(cert).toBER())
     };
     return pem.encode(msg, { maxline });
 }

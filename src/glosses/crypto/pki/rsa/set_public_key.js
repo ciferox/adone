@@ -28,7 +28,7 @@ export default function setPublicKey(n, e) {
      * should use the 'RSA-OAEP' decryption scheme, 'RSAES-PKCS1-V1_5' is for
      * legacy applications.
      *
-     * @param data the byte string to encrypt.
+     * @param {Buffer} data data to encrypt.
      * @param scheme the encryption scheme to use:
      *          'RSAES-PKCS1-V1_5' (default),
      *          'RSA-OAEP',
@@ -50,7 +50,7 @@ export default function setPublicKey(n, e) {
         if (scheme === "RSAES-PKCS1-V1_5") {
             scheme = {
                 encode(m, key, pub) {
-                    return __.encodePKCS1v15(m, key, 0x02).getBytes();
+                    return __.encodePKCS1v15(m, key, 0x02);
                 }
             };
         } else if (scheme === "RSA-OAEP" || scheme === "RSAES-OAEP") {
@@ -60,9 +60,11 @@ export default function setPublicKey(n, e) {
                 }
             };
         } else if (["RAW", "NONE", "NULL", null].includes(scheme)) {
-            scheme = { encode(e) {
-                return e;
-            } };
+            scheme = {
+                encode(e) {
+                    return e;
+                }
+            };
         } else if (is.string(scheme)) {
             throw new Error(`Unsupported encryption scheme: "${scheme}".`);
         }
@@ -92,9 +94,8 @@ export default function setPublicKey(n, e) {
      * To perform PSS signature verification, provide an instance
      * of Forge PSS object as the scheme parameter.
      *
-     * @param digest the message digest hash to compare against the signature,
-     *          as a binary-encoded string.
-     * @param signature the signature to verify, as a binary-encoded string.
+     * @param {Buffer} digest the message digest hash to compare against the signature
+     * @param {Buffer} signature the signature to verify, as a binary-encoded string.
      * @param scheme signature verification scheme to use:
      *          'RSASSA-PKCS1-V1_5' or undefined for RSASSA PKCS#1 v1.5,
      *          a Forge PSS object for RSASSA-PSS,
@@ -116,13 +117,13 @@ export default function setPublicKey(n, e) {
                     // remove padding
                     d = __.decodePKCS1v15(d, key, true);
                     // d is ASN.1 BER-encoded DigestInfo
-                    const buf = adone.util.bufferToArrayBuffer(Buffer.from(d, "binary"));
+                    const buf = adone.util.buffer.toArrayBuffer(d);
                     const { result } = asn1.fromBER(buf);
                     if (result.error) {
                         return false;
                     }
                     // compare the given digest to the decrypted one
-                    return digest === Buffer.from(result.valueBlock.value[1].valueBlock.valueHex).toString("binary");
+                    return is.equalArrays(digest, Buffer.from(result.valueBlock.value[1].valueBlock.valueHex));
                 }
             };
         } else if (scheme === "NONE" || scheme === "NULL" || is.null(scheme)) {
@@ -130,7 +131,7 @@ export default function setPublicKey(n, e) {
                 verify(digest, d) {
                     // remove padding
                     d = __.decodePKCS1v15(d, key, true);
-                    return digest === d;
+                    return is.equalArrays(digest, d);
                 }
             };
         }

@@ -1,7 +1,6 @@
 const {
     crypto: {
-        pki,
-        pem
+        pki
     }
 } = adone;
 

@@ -3,7 +3,6 @@
  *
  * See: RFC 1421.
  */
-const forge = require("node-forge");
 
 const foldHeader = (header) => {
     let rval = `${header.name}: `;
@@ -28,8 +27,7 @@ const foldHeader = (header) => {
                 ++candidate;
                 rval = `${rval.substr(0, candidate)}\r\n ${rval.substr(candidate)}`;
             } else {
-                rval = `${rval.substr(0, candidate)
-                }\r\n${insert}${rval.substr(candidate + 1)}`;
+                rval = `${rval.substr(0, candidate)}\r\n${insert}${rval.substr(candidate + 1)}`;
             }
             length = (i - candidate - 1);
             candidate = -1;
@@ -92,8 +90,17 @@ export const encode = function (msg, options) {
         rval += "\r\n";
     }
 
+    const body = msg.body.toString("base64");
+    const maxline = options.maxline || 64;
+    const lines = [];
+    let i = 0;
+    for (; i + maxline < body.length; i += maxline) {
+        lines.push(body.slice(i, i + maxline));
+    }
+    lines.push(body.slice(i));
+
     // add body
-    rval += `${forge.util.encode64(msg.body, options.maxline || 64)}\r\n`;
+    rval += `${lines.join("\r\n")}\r\n`;
 
     rval += `-----END ${msg.type}-----\r\n`;
     return rval;
@@ -126,7 +133,7 @@ export const decode = function (str) {
             contentDomain: null,
             dekInfo: null,
             headers: [],
-            body: forge.util.decode64(match[3])
+            body: Buffer.from(match[3], "base64")
         };
         rval.push(msg);
 

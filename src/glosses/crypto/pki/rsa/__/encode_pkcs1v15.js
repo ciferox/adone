@@ -1,22 +1,17 @@
 const {
-    crypto
+    crypto,
+    collection
 } = adone;
-
-const forge = require("node-forge");
 
 /**
  * Encodes a message using PKCS#1 v1.5 padding.
  *
- * @param m the message to encode.
+ * @param {Buffer} m the message to encode.
  * @param key the RSA key to use.
- * @param bt the block type to use, i.e. either 0x01 (for signing) or 0x02
- *          (for encryption).
- *
+ * @param {number} bt the block type to use, i.e. either 0x01 (for signing) or 0x02 (for encryption).
  * @return the padded byte buffer.
  */
 export default function encodePKCS1v1(m, key, bt) {
-    const eb = forge.util.createBuffer();
-
     // get the length of the modulus in bytes
     const k = Math.ceil(key.n.bitLength() / 8);
 
@@ -45,9 +40,11 @@ export default function encodePKCS1v1(m, key, bt) {
      * pseudorandomly generated and nonzero. This makes the length of the
      */
 
+    const eb = new collection.ByteArray();
+
     // build the encryption block
-    eb.putByte(0x00);
-    eb.putByte(bt);
+    eb.writeUInt8(0x00);
+    eb.writeUInt8(bt);
 
     // create the padding
     let padNum = k - 3 - m.length;
@@ -56,20 +53,20 @@ export default function encodePKCS1v1(m, key, bt) {
     if (bt === 0x00 || bt === 0x01) {
         padByte = (bt === 0x00) ? 0x00 : 0xFF;
         for (let i = 0; i < padNum; ++i) {
-            eb.putByte(padByte);
+            eb.writeUInt8(padByte);
         }
     } else {
         // public key op
         // pad with random non-zero values
         while (padNum > 0) {
             let numZeros = 0;
-            const padBytes = crypto.random.getBytesSync(padNum).toString("binary");
+            const padBytes = crypto.random.getBytesSync(padNum);
             for (let i = 0; i < padNum; ++i) {
-                padByte = padBytes.charCodeAt(i);
+                padByte = padBytes[i];
                 if (padByte === 0) {
                     ++numZeros;
                 } else {
-                    eb.putByte(padByte);
+                    eb.writeUInt8(padByte);
                 }
             }
             padNum = numZeros;
@@ -77,8 +74,8 @@ export default function encodePKCS1v1(m, key, bt) {
     }
 
     // zero followed by message
-    eb.putByte(0x00);
-    eb.putBytes(m);
+    eb.writeUInt8(0x00);
+    eb.writeBuffer(m);
 
-    return eb;
+    return eb.flip().toBuffer();
 }

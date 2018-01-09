@@ -18,7 +18,7 @@ const base64ToBn = (base64data) => BigNumber.fromBuffer(Buffer.from(base64data, 
 
 // Convert a PKCS#1 in ASN1 DER format to a JWK key
 exports.pkcs1ToJwk = function (bytes) {
-    const buf = util.bufferToArrayBuffer(bytes);
+    const buf = util.buffer.toArrayBuffer(bytes);
     const { result } = crypto.asn1.fromBER(buf);
 
     if (result.error) {
@@ -60,7 +60,7 @@ exports.jwkToPkcs1 = function (jwk) {
 
 // Convert a PKCIX in ASN1 DER format to a JWK key
 exports.pkixToJwk = function (bytes) {
-    const buf = util.bufferToArrayBuffer(bytes);
+    const buf = util.buffer.toArrayBuffer(bytes);
     const { result } = crypto.asn1.fromBER(buf);
 
     if (result.error) {

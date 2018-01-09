@@ -8,8 +8,6 @@ const {
 
 const __ = adone.private(pki);
 
-const forge = require("node-forge");
-
 /**
  * Fills in missing fields in certificate extensions.
  *
@@ -97,7 +95,7 @@ export default function fillMissingExtensionFields(e, options) {
             value += String.fromCharCode(b2);
         }
         e.value = new asn1.BitString({
-            valueHex: adone.util.bufferToArrayBuffer(Buffer.from(value, "binary"))
+            valueHex: adone.util.buffer.toArrayBuffer(Buffer.from(value, "binary"))
         });
     } else if (e.name === "basicConstraints") {
         // basicConstraints is a SEQUENCE
@@ -186,7 +184,7 @@ export default function fillMissingExtensionFields(e, options) {
             value += String.fromCharCode(b2);
         }
         e.value = new asn1.BitString({
-            valueHex: adone.util.bufferToArrayBuffer(Buffer.from(value, "binary"))
+            valueHex: adone.util.buffer.toArrayBuffer(Buffer.from(value, "binary"))
         });
     } else if (e.name === "subjectAltName" || e.name === "issuerAltName") {
         // SYNTAX SEQUENCE
@@ -198,13 +196,13 @@ export default function fillMissingExtensionFields(e, options) {
             let value = altName.value;
             // handle IP
             if (altName.type === 7 && altName.ip) {
-                value = forge.util.bytesFromIP(altName.ip);
+                value = __.bytesFromIP(altName.ip);
                 if (is.null(value)) {
                     const error = new Error('Extension "ip" value is not a valid IPv4 or IPv6 address.');
                     error.extension = e;
                     throw error;
                 }
-                value = adone.util.bufferToArrayBuffer(Buffer.from(value, "binary"));
+                value = adone.util.buffer.toArrayBuffer(value);
             } else if (altName.type === 8) {
                 // handle OID
                 if (altName.oid) {
@@ -214,7 +212,10 @@ export default function fillMissingExtensionFields(e, options) {
                     value = new asn1.ObjectIdentifier({ value }).toBER();
                 }
             } else {
-                value = adone.util.bufferToArrayBuffer(Buffer.from(value, "binary"));
+                if (!is.buffer(value)) {
+                    value = Buffer.from(value);
+                }
+                value = adone.util.buffer.toArrayBuffer(value);
             }
 
             e.value.valueBlock.value.push(new asn1.Primitive({
@@ -227,10 +228,10 @@ export default function fillMissingExtensionFields(e, options) {
         }
     } else if (e.name === "subjectKeyIdentifier" && options.cert) {
         const ski = options.cert.generateSubjectKeyIdentifier();
-        e.subjectKeyIdentifier = ski.toHex();
+        e.subjectKeyIdentifier = ski.toString("hex");
         // OCTETSTRING w/digest
         e.value = new asn1.OctetString({
-            valueHex: adone.util.bufferToArrayBuffer(Buffer.from(ski.getBytes(), "binary"))
+            valueHex: adone.util.buffer.toArrayBuffer(ski)
         });
     } else if (e.name === "authorityKeyIdentifier" && options.cert) {
         // SYNTAX SEQUENCE
@@ -240,7 +241,7 @@ export default function fillMissingExtensionFields(e, options) {
 
         if (e.keyIdentifier) {
             const keyIdentifier = e.keyIdentifier === true
-                ? options.cert.generateSubjectKeyIdentifier().getBytes()
+                ? options.cert.generateSubjectKeyIdentifier()
                 : e.keyIdentifier;
 
             seq.push(
@@ -249,7 +250,7 @@ export default function fillMissingExtensionFields(e, options) {
                         tagClass: 3, // CONTEXT_SPECIFIC
                         tagNumber: 0
                     },
-                    valueHex: adone.util.bufferToArrayBuffer(Buffer.from(keyIdentifier, "binary"))
+                    valueHex: adone.util.buffer.toArrayBuffer(keyIdentifier)
                 })
             );
         }
@@ -277,14 +278,14 @@ export default function fillMissingExtensionFields(e, options) {
         }
 
         if (e.serialNumber) {
-            const serialNumber = forge.util.hexToBytes(e.serialNumber === true ? options.cert.serialNumber : e.serialNumber);
+            const serialNumber = Buffer.from(e.serialNumber === true ? options.cert.serialNumber : e.serialNumber, "hex");
             seq.push(
                 new asn1.Primitive({
                     idBlock: {
                         tagClass: 3, // CONTEXT_SPECIFIC
                         tagNumber: 2
                     },
-                    valueHex: adone.util.bufferToArrayBuffer(Buffer.from(serialNumber, "binary"))
+                    valueHex: adone.util.buffer.toArrayBuffer(serialNumber)
                 })
             );
         }
@@ -307,7 +308,7 @@ export default function fillMissingExtensionFields(e, options) {
             let value = altName.value;
             // handle IP
             if (altName.type === 7 && altName.ip) {
-                value = forge.util.bytesFromIP(altName.ip);
+                value = adone.util.buffer.toArrayBuffer(__.bytesFromIP(altName.ip));
                 if (is.null(value)) {
                     const error = new Error('Extension "ip" value is not a valid IPv4 or IPv6 address.');
                     error.extension = e;
@@ -316,11 +317,16 @@ export default function fillMissingExtensionFields(e, options) {
             } else if (altName.type === 8) {
                 // handle OID
                 if (altName.oid) {
-                    value = asn1.oidToDer(asn1.oidToDer(altName.oid));
+                    value = new asn1.ObjectIdentifier({ value: altName.oid }).toBER();
                 } else {
                     // deprecated ... convert value to OID
-                    value = asn1.oidToDer(value);
+                    value = new asn1.ObjectIdentifier({ value }).toBER();
                 }
+            } else {
+                if (!is.buffer(value)) {
+                    value = Buffer.from(value);
+                }
+                value = adone.util.buffer.toArrayBuffer(value);
             }
             fullNameGeneralNames.valueBlock.value.push(
                 new asn1.Primitive({
@@ -328,7 +334,7 @@ export default function fillMissingExtensionFields(e, options) {
                         tagClass: 3, // CONTEXT_SPECIFIC
                         tagNumber: altName.type
                     },
-                    valueHex: adone.util.bufferToArrayBuffer(Buffer.from(value, "binary"))
+                    valueHex: value
                 })
             );
         }

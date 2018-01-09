@@ -1,13 +1,13 @@
 describe("encryption", () => {
     const {
-        crypto
+        crypto,
+        data: {
+            base64
+        }
     } = adone;
 
-    const forge = require("node-forge");
-    const UTIL = forge.util;
-    const PSS = forge.pss;
-    const MGF = forge.mgf;
-    const RANDOM = forge.random;
+    const PSS = crypto.pss;
+    const MGF = crypto.mgf;
 
     const tests = [{
         keySize: 1024,
@@ -157,7 +157,7 @@ describe("encryption", () => {
         const keySize = params.keySize;
 
         it(`should rsa encrypt using a ${keySize}-bit key`, () => {
-            const message = "it need's to be about 20% cooler"; // it need's better grammar too
+            const message = Buffer.from("it need's to be about 20% cooler"); // it need's better grammar too
 
             /**
              * First step, do public key encryption
@@ -172,11 +172,11 @@ describe("encryption", () => {
              * routine to work, which is tested seperately against an externally
              */
             key = crypto.pki.privateKeyFromPem(params.privateKeyPem);
-            assert.equal(key.decrypt(data), message);
+            assert.deepEqual(key.decrypt(data), message);
         });
 
         it(`should rsa decrypt using a ${keySize}-bit key`, () => {
-            const data = UTIL.decode64(params.encrypted);
+            const data = base64.decode(params.encrypted, { buffer: true });
             const key = crypto.pki.privateKeyFromPem(params.privateKeyPem);
             assert.equal(key.decrypt(data), "too many secrets\n");
         });
@@ -188,19 +188,19 @@ describe("encryption", () => {
             md.start();
             md.update("just testing");
 
-            const signature = UTIL.decode64(params.signature);
-            assert.equal(key.sign(md), signature);
+            const signature = base64.decode(params.signature, { buffer: true });
+            assert.deepEqual(key.sign(md), signature);
         });
 
         it(`should verify an rsa signature using a ${keySize}-bit key and PKCS#1 v1.5 padding`, () => {
-            const signature = UTIL.decode64(params.signature);
+            const signature = base64.decode(params.signature, { buffer: true });
             const key = crypto.pki.publicKeyFromPem(params.publicKeyPem);
 
             const md = crypto.md.sha1.create();
             md.start();
             md.update("just testing");
 
-            assert.equal(key.verify(md.digest().getBytes(), signature), true);
+            assert.equal(key.verify(md.digest(), signature), true);
         });
 
         /**
@@ -217,29 +217,31 @@ describe("encryption", () => {
             md.update("just testing");
 
             // create signature
-            const pss = PSS.create(
-                crypto.md.sha1.create(), MGF.mgf1.create(crypto.md.sha1.create()), 20);
+            const pss = PSS.create("sha1", MGF.mgf1.create("sha1"), 20);
             const signature = privateKey.sign(md, pss);
 
             // verify signature
             md.start();
             md.update("just testing");
             assert.equal(
-                publicKey.verify(md.digest().getBytes(), signature, pss), true);
+                publicKey.verify(md.digest(), signature, pss),
+                true
+            );
         });
 
         it(`should verify an rsa signature using a ${keySize}-bit key and PSS padding`, () => {
-            const signature = UTIL.decode64(params.signaturePss);
+            const signature = base64.decode(params.signaturePss, { buffer: true });
             const key = crypto.pki.publicKeyFromPem(params.publicKeyPem);
 
             const md = crypto.md.sha1.create();
             md.start();
             md.update("just testing");
 
-            const pss = PSS.create(
-                crypto.md.sha1.create(), MGF.mgf1.create(crypto.md.sha1.create()), 20);
+            const pss = PSS.create("sha1", MGF.mgf1.create("sha1"), 20);
             assert.equal(
-                key.verify(md.digest().getBytes(), signature, pss), true);
+                key.verify(md.digest(), signature, pss),
+                true
+            );
         });
 
         it(`should rsa sign using a ${keySize}-bit key and PSS padding using pss named-param API`, () => {
@@ -252,8 +254,8 @@ describe("encryption", () => {
 
             // create signature
             const pss = PSS.create({
-                md: crypto.md.sha1.create(),
-                mgf: MGF.mgf1.create(crypto.md.sha1.create()),
+                md: "sha1",
+                mgf: MGF.mgf1.create("sha1"),
                 saltLength: 20
             });
             const signature = privateKey.sign(md, pss);
@@ -262,11 +264,13 @@ describe("encryption", () => {
             md.start();
             md.update("just testing");
             assert.equal(
-                publicKey.verify(md.digest().getBytes(), signature, pss), true);
+                publicKey.verify(md.digest(), signature, pss),
+                true
+            );
         });
 
         it(`should verify an rsa signature using a ${keySize}-bit key and PSS padding using pss named-param API`, () => {
-            const signature = UTIL.decode64(params.signaturePss);
+            const signature = base64.decode(params.signaturePss, { buffer: true });
             const key = crypto.pki.publicKeyFromPem(params.publicKeyPem);
 
             const md = crypto.md.sha1.create();
@@ -274,12 +278,11 @@ describe("encryption", () => {
             md.update("just testing");
 
             const pss = PSS.create({
-                md: crypto.md.sha1.create(),
-                mgf: MGF.mgf1.create(crypto.md.sha1.create()),
+                md: "sha1",
+                mgf: MGF.mgf1.create("sha1"),
                 saltLength: 20
             });
-            assert.equal(
-                key.verify(md.digest().getBytes(), signature, pss), true);
+            assert.equal(key.verify(md.digest(), signature, pss), true);
         });
 
         it(`should rsa sign using a ${keySize}-bit key and PSS padding using salt "abc"`, () => {
@@ -291,17 +294,17 @@ describe("encryption", () => {
 
             // create signature
             const pss = PSS.create({
-                md: crypto.md.sha1.create(),
-                mgf: MGF.mgf1.create(crypto.md.sha1.create()),
-                salt: UTIL.createBuffer("abc")
+                md: "sha1",
+                mgf: MGF.mgf1.create("sha1"),
+                salt: Buffer.from("abc")
             });
             const signature = privateKey.sign(md, pss);
-            const b64 = UTIL.encode64(signature);
+            const b64 = base64.encode(signature, { buffer: false });
             assert.equal(b64, params.signatureWithAbcSalt);
         });
 
         it(`should verify an rsa signature using a ${keySize}-bit key and PSS padding using salt "abc"`, () => {
-            const signature = UTIL.decode64(params.signatureWithAbcSalt);
+            const signature = base64.decode(params.signatureWithAbcSalt, { buffer: true });
             const key = crypto.pki.publicKeyFromPem(params.publicKeyPem);
 
             const md = crypto.md.sha1.create();
@@ -309,15 +312,15 @@ describe("encryption", () => {
             md.update("just testing");
 
             const pss = PSS.create({
-                md: crypto.md.sha1.create(),
-                mgf: MGF.mgf1.create(crypto.md.sha1.create()),
+                md: "sha1",
+                mgf: MGF.mgf1.create("sha1"),
                 saltLength: 3
             });
             assert.equal(
-                key.verify(md.digest().getBytes(), signature, pss), true);
+                key.verify(md.digest(), signature, pss), true);
         });
 
-        it(`should rsa sign using a ${keySize}-bit key and PSS padding using custom PRNG`, () => {
+        it.todo(`should rsa sign using a ${keySize}-bit key and PSS padding using custom PRNG`, () => {
             const prng = RANDOM.createInstance();
             prng.seedFileSync = function (needed) {
                 return UTIL.fillString("a", needed);
@@ -330,17 +333,17 @@ describe("encryption", () => {
 
             // create signature
             const pss = PSS.create({
-                md: crypto.md.sha1.create(),
-                mgf: MGF.mgf1.create(crypto.md.sha1.create()),
+                md: "sha1",
+                mgf: MGF.mgf1.create("sha1"),
                 saltLength: 20,
                 prng
             });
             const signature = privateKey.sign(md, pss);
-            const b64 = UTIL.encode64(signature);
+            const b64 = base64.encode(signature, { buffer: false });
             assert.equal(b64, params.signatureWithCustomPrng);
         });
 
-        it(`should verify an rsa signature using a ${keySize}-bit key and PSS padding using custom PRNG`, () => {
+        it.todo(`should verify an rsa signature using a ${keySize}-bit key and PSS padding using custom PRNG`, () => {
             const prng = RANDOM.createInstance();
             prng.seedFileSync = function (needed) {
                 return UTIL.fillString("a", needed);
@@ -353,13 +356,12 @@ describe("encryption", () => {
             md.update("just testing");
 
             const pss = PSS.create({
-                md: crypto.md.sha1.create(),
-                mgf: MGF.mgf1.create(crypto.md.sha1.create()),
+                md: "sha1",
+                mgf: MGF.mgf1.create("sha1"),
                 saltLength: 20,
                 prng
             });
-            assert.equal(
-                key.verify(md.digest().getBytes(), signature, pss), true);
+            assert.equal(key.verify(md.digest(), signature, pss), true);
         });
     };
 
@@ -375,17 +377,17 @@ describe("encryption", () => {
          * bytes.Together with the 11 extra bytes the encryption block needs to be
          */
         const key = crypto.pki.publicKeyFromPem(tests[0].publicKeyPem);
-        const message = UTIL.createBuffer().fillWithByte(0, 118);
+        const message = Buffer.alloc(118, 0x00);
         assert.throws(() => {
-            key.encrypt(message.getBytes());
-        });
+            key.encrypt(message);
+        }, "Message is too long for PKCS#1 v1.5 padding");
     });
 
     it("should ensure maximum message length for a 1025-bit key is not exceeded", () => {
         const key = crypto.pki.publicKeyFromPem(tests[1].publicKeyPem);
-        const message = UTIL.createBuffer().fillWithByte(0, 118);
+        const message = Buffer.alloc(118, 0x00);
         assert.doesNotThrow(() => {
-            key.encrypt(message.getBytes());
+            key.encrypt(message);
         });
     });
 });

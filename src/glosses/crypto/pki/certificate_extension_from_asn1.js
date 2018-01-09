@@ -5,7 +5,7 @@ const {
     }
 } = adone;
 
-const forge = require("node-forge");
+const __ = adone.private(pki);
 
 /**
  * Parses a single certificate extension from ASN.1.
@@ -25,9 +25,9 @@ export default function certificateExtensionFromAsn1(ext) {
     e.critical = false;
     if (vblock.value[1].idBlock.tagNumber === 1) { // BOOLEAN
         e.critical = vblock.value[1].valueBlock.value;
-        e.value = Buffer.from(vblock.value[2].valueBlock.valueHex).toString("binary");
+        e.value = Buffer.from(vblock.value[2].valueBlock.valueHex);
     } else {
-        e.value = Buffer.from(vblock.value[1].valueBlock.valueHex).toString("binary");
+        e.value = Buffer.from(vblock.value[1].valueBlock.valueHex);
     }
     // if the oid is known, get its name
     if (e.id in pki.oids) {
@@ -36,7 +36,7 @@ export default function certificateExtensionFromAsn1(ext) {
         // handle key usage
         if (e.name === "keyUsage") {
             // get value as BIT STRING
-            const ev = asn1.fromBER(adone.util.bufferToArrayBuffer(Buffer.from(e.value, "binary"))).result;
+            const ev = asn1.fromBER(adone.util.buffer.toArrayBuffer(e.value)).result;
             let b2 = 0x00;
             let b3 = 0x00;
             if (ev.valueBlock.valueHex.length > 1) {
@@ -60,7 +60,7 @@ export default function certificateExtensionFromAsn1(ext) {
         } else if (e.name === "basicConstraints") {
             // handle basic constraints
             // get value as SEQUENCE
-            const ev = asn1.fromBER(adone.util.bufferToArrayBuffer(Buffer.from(e.value, "binary"))).result;
+            const ev = asn1.fromBER(adone.util.buffer.toArrayBuffer(e.value)).result;
 
             // get cA BOOLEAN flag (defaults to false)
             if (ev.valueBlock.value.length > 0 && ev.valueBlock.value[0].idBlock.tagNumber === 1) { // BOOLEAN
@@ -79,7 +79,7 @@ export default function certificateExtensionFromAsn1(ext) {
         } else if (e.name === "extKeyUsage") {
             // handle extKeyUsage
             // value is a SEQUENCE of OIDs
-            const ev = asn1.fromBER(adone.util.bufferToArrayBuffer(Buffer.from(e.value, "binary"))).result;
+            const ev = asn1.fromBER(adone.util.buffer.toArrayBuffer(e.value)).result;
             for (let vi = 0; vi < ev.valueBlock.value.length; ++vi) {
                 const oid = ev.valueBlock.value[vi].valueBlock.toString();
                 if (oid in pki.oids) {
@@ -91,7 +91,7 @@ export default function certificateExtensionFromAsn1(ext) {
         } else if (e.name === "nsCertType") {
             // handle nsCertType
             // get value as BIT STRING
-            const ev = asn1.fromBER(adone.util.bufferToArrayBuffer(Buffer.from(e.value, "binary"))).result;
+            const ev = asn1.fromBER(adone.util.buffer.toArrayBuffer(e.value)).result;
             let b2 = 0x00;
             if (ev.valueBlock.valueHex.length > 1) {
                 // skip first byte, just indicates unused bits which
@@ -115,14 +115,14 @@ export default function certificateExtensionFromAsn1(ext) {
 
             // ev is a SYNTAX SEQUENCE
             let gn;
-            const ev = asn1.fromBER(adone.util.bufferToArrayBuffer(Buffer.from(e.value, "binary"))).result;
+            const ev = asn1.fromBER(adone.util.buffer.toArrayBuffer(e.value)).result;
             for (let n = 0; n < ev.valueBlock.value.length; ++n) {
                 // get GeneralName
                 gn = ev.valueBlock.value[n];
 
                 const altName = {
                     type: gn.idBlock.tagNumber,
-                    value: Buffer.from(gn.valueBlock.valueHex).toString("binary")
+                    value: Buffer.from(gn.valueBlock.valueHex)
                 };
                 e.altNames.push(altName);
 
@@ -138,7 +138,7 @@ export default function certificateExtensionFromAsn1(ext) {
                         // IPAddress
                     case 7:
                         // convert to IPv4/IPv6 string representation
-                        altName.ip = forge.util.bytesToIP(Buffer.from(gn.valueBlock.valueHex).toString("binary"));
+                        altName.ip = __.bytesToIP(Buffer.from(gn.valueBlock.valueHex).toString("binary"));
                         break;
                         // registeredID
                     case 8:
@@ -151,8 +151,8 @@ export default function certificateExtensionFromAsn1(ext) {
         } else if (e.name === "subjectKeyIdentifier") {
             // value is an OCTETSTRING w/the hash of the key-type specific
             // public key structure (eg: RSAPublicKey)
-            const ev = asn1.fromBER(adone.util.bufferToArrayBuffer(Buffer.from(e.value, "binary"))).result;
-            e.subjectKeyIdentifier = forge.util.bytesToHex(ev.valueBlock.valueHex);
+            const ev = asn1.fromBER(adone.util.buffer.toArrayBuffer(e.value)).result;
+            e.subjectKeyIdentifier = Buffer.from(ev.valueBlock.valueHex).toString("hex");
         }
     }
     return e;

@@ -1,11 +1,13 @@
 const {
     is,
-    crypto: { pki }
+    crypto
 } = adone;
 
-const __ = adone.private(pki);
+const {
+    pki
+} = crypto;
 
-const forge = require("node-forge");
+const __ = adone.private(pki);
 
 /**
  * Creates an empty X.509v3 RSA certificate.
@@ -134,7 +136,7 @@ export default function createCertificate() {
      */
     cert.sign = function (key, md) {
         // TODO: get signature OID from private key
-        cert.md = md || forge.md.sha1.create();
+        cert.md = md || crypto.md.sha1.create();
         const algorithmOid = pki.oids[`${cert.md.algorithm}WithRSAEncryption`];
         if (!algorithmOid) {
             const error = new Error("Could not compute certificate digest. Unknown message digest algorithm OID.");
@@ -146,7 +148,7 @@ export default function createCertificate() {
         // get TBSCertificate, convert to DER
         cert.tbsCertificate = pki.getTBSCertificate(cert);
 
-        const bytes = Buffer.from(cert.tbsCertificate.toBER()).toString("binary");
+        const bytes = Buffer.from(cert.tbsCertificate.toBER());
 
         // digest and sign
         cert.md.update(bytes);
@@ -180,22 +182,22 @@ export default function createCertificate() {
                 const oid = pki.oids[child.signatureOid];
                 switch (oid) {
                     case "sha1WithRSAEncryption":
-                        md = forge.md.sha1.create();
+                        md = crypto.md.sha1.create();
                         break;
                     case "md5WithRSAEncryption":
-                        md = forge.md.md5.create();
+                        md = crypto.md.md5.create();
                         break;
                     case "sha256WithRSAEncryption":
-                        md = forge.md.sha256.create();
+                        md = crypto.md.sha256.create();
                         break;
                     case "sha384WithRSAEncryption":
-                        md = forge.md.sha384.create();
+                        md = crypto.md.sha384.create();
                         break;
                     case "sha512WithRSAEncryption":
-                        md = forge.md.sha512.create();
+                        md = crypto.md.sha512.create();
                         break;
                     case "RSASSA-PSS":
-                        md = forge.md.sha256.create();
+                        md = crypto.md.sha256.create();
                         break;
                 }
             }
@@ -207,7 +209,7 @@ export default function createCertificate() {
 
             // produce DER formatted TBSCertificate and digest it
             const tbsCertificate = child.tbsCertificate || pki.getTBSCertificate(child);
-            const bytes = Buffer.from(tbsCertificate.toBER()).toString("binary");
+            const bytes = Buffer.from(tbsCertificate.toBER());
             md.update(bytes);
         }
 
@@ -223,7 +225,7 @@ export default function createCertificate() {
                      * initialize mgf
                      */
                     let hash = pki.oids[child.signatureParameters.mgf.hash.algorithmOid];
-                    if (is.undefined(hash) || is.undefined(forge.md[hash])) {
+                    if (is.undefined(hash) || is.undefined(crypto.md[hash])) {
                         const error = new Error("Unsupported MGF hash function.");
                         error.oid = child.signatureParameters.mgf.hash.algorithmOid;
                         error.name = hash;
@@ -231,35 +233,33 @@ export default function createCertificate() {
                     }
 
                     let mgf = pki.oids[child.signatureParameters.mgf.algorithmOid];
-                    if (is.undefined(mgf) || is.undefined(forge.mgf[mgf])) {
+                    if (is.undefined(mgf) || is.undefined(crypto.mgf[mgf])) {
                         const error = new Error("Unsupported MGF function.");
                         error.oid = child.signatureParameters.mgf.algorithmOid;
                         error.name = mgf;
                         throw error;
                     }
 
-                    mgf = forge.mgf[mgf].create(forge.md[hash].create());
+                    mgf = crypto.mgf[mgf].create(hash);
 
                     /**
                      * initialize hash function
                      */
                     hash = pki.oids[child.signatureParameters.hash.algorithmOid];
-                    if (is.undefined(hash) || is.undefined(forge.md[hash])) {
+                    if (is.undefined(hash) || is.undefined(crypto.md[hash])) {
                         const error = new Error("Unsupported RSASSA-PSS hash function.");
                         error.oid = child.signatureParameters.hash.algorithmOid;
                         error.name = hash;
                         throw error;
                     }
 
-                    scheme = forge.pss.create(forge.md[hash].create(), mgf,
-                        child.signatureParameters.saltLength);
+                    scheme = crypto.pss.create(hash, mgf, child.signatureParameters.saltLength);
                     break;
                 }
             }
 
             // verify signature on cert using public key
-            rval = cert.publicKey.verify(
-                md.digest().getBytes(), child.signature, scheme);
+            rval = cert.publicKey.verify(md.digest(), child.signature, scheme);
         }
 
         return rval;
@@ -351,8 +351,8 @@ export default function createCertificate() {
         for (let i = 0; i < cert.extensions.length; ++i) {
             const ext = cert.extensions[i];
             if (ext.id === oid) {
-                const ski = cert.generateSubjectKeyIdentifier().getBytes();
-                return (forge.util.hexToBytes(ext.subjectKeyIdentifier) === ski);
+                const ski = cert.generateSubjectKeyIdentifier();
+                return adone.is.equalArrays(Buffer.from(ext.subjectKeyIdentifier, "hex"), ski);
             }
         }
         return false;

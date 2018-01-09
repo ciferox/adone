@@ -17,7 +17,7 @@ export default function publicKeyToRSAPublicKeyPem(key, maxline) {
     // convert to ASN.1, then DER, then PEM-encode
     const msg = {
         type: "RSA PUBLIC KEY",
-        body: Buffer.from(pki.publicKeyToRSAPublicKey(key).toBER()).toString("binary")
+        body: Buffer.from(pki.publicKeyToRSAPublicKey(key).toBER())
     };
     return pem.encode(msg, { maxline });
 }

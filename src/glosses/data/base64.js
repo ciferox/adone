@@ -135,15 +135,15 @@ export const encode = (str, { buffer = true } = {}) => {
     if (!buffer) {
         return str.toString("base64");
     }
-    return Buffer.from(str.toString("base64"));
+    return Buffer.from(str.toString("base64"), "binary");
 };
 
-export const decode = (str, { buffer = false } = {}) => {
+export const decode = (str, { buffer = false, encoding = "binary" } = {}) => {
     const b = Buffer.from(str, "base64");
     if (buffer) {
         return b;
     }
-    return b.toString();
+    return b.toString(encoding);
 };
 
 export const any = false;

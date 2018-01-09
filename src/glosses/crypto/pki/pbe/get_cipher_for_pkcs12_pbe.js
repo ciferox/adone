@@ -5,10 +5,6 @@ const {
     }
 } = adone;
 
-const __ = adone.private(pki.pbe);
-
-const forge = require("node-forge");
-
 const pkcs12PbeParamsValidator = new asn1.Sequence({
     value: [
         new asn1.OctetString({
@@ -28,7 +24,7 @@ const pkcs12PbeParamsValidator = new asn1.Sequence({
  *
  * @param oid The PKCS#12 PBE OID (in string notation).
  * @param params The ASN.1 PKCS#12 PBE-params object.
- * @param password The password to decrypt with.
+ * @param {Buffer | string} password The password to decrypt with.
  *
  * @return the new cipher object instance.
  */
@@ -41,29 +37,23 @@ export default function getCipherForPKCS12PBE(oid, params, password) {
 
     const { result } = validation;
 
-    const salt = forge.util.createBuffer(Buffer.from(result.salt.valueBlock.valueHex).toString("binary"));
-    let count = forge.util.createBuffer(Buffer.from(result.iterations.valueBlock.valueHex).toString("binary"));
-
-    count = count.getInt(count.length() << 3);
+    const salt = Buffer.from(result.salt.valueBlock.valueHex);
+    const count = result.iterations.valueBlock.valueDec;
 
     let dkLen;
     let dIvLen;
-    let cipherFn;
+    let algorithm;
     switch (oid) {
         case pki.oids["pbeWithSHAAnd3-KeyTripleDES-CBC"]:
             dkLen = 24;
             dIvLen = 8;
-            cipherFn = forge.des.startDecrypting;
+            algorithm = "des-ede3-cbc";
             break;
 
         case pki.oids["pbewithSHAAnd40BitRC2-CBC"]:
             dkLen = 5;
             dIvLen = 8;
-            cipherFn = function (key, iv) {
-                const cipher = forge.rc2.createDecryptionCipher(key, 40);
-                cipher.start(iv, null);
-                return cipher;
-            };
+            algorithm = "rc2-40-cbc";
             break;
 
         default: {
@@ -74,10 +64,8 @@ export default function getCipherForPKCS12PBE(oid, params, password) {
     }
 
     // get PRF message digest
-    const md = __.prfOidToMessageDigest();
-    const key = pki.pbe.generatePKCS12Key(password, salt, 1, count, dkLen, md);
-    md.start();
-    const iv = pki.pbe.generatePKCS12Key(password, salt, 2, count, dIvLen, md);
+    const key = pki.pbe.generatePKCS12Key(password, salt, 1, count, dkLen);
+    const iv = pki.pbe.generatePKCS12Key(password, salt, 2, count, dIvLen);
 
-    return cipherFn(key, iv);
+    return adone.std.crypto.createDecipheriv(algorithm, key, iv);
 }

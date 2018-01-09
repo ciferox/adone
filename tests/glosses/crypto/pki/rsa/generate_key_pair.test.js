@@ -4,10 +4,10 @@ describe("generateKeyPair", () => {
         crypto
     } = adone;
 
-    const forge = require("node-forge");
+    // const forge = require("node-forge");
 
-    const RANDOM = forge.random;
-    const UTIL = forge.util;
+    // const RANDOM = forge.random;
+    // const UTIL = forge.util;
 
     // check a pair
     const _pairCheck = (pair) => {
@@ -18,7 +18,7 @@ describe("generateKeyPair", () => {
         const md = crypto.md.sha1.create();
         md.update("0123456789abcdef");
         const signature = pair.privateKey.sign(md);
-        assert.ok(pair.publicKey.verify(md.digest().getBytes(), signature));
+        assert.ok(pair.publicKey.verify(md.digest(), signature));
     };
 
     // compare pairs

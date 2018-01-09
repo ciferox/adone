@@ -39,7 +39,7 @@ export default function setPrivateKey(n, e, d, p, q, dP, dQ, qInv) {
      * Decrypts the given data with this private key. The decryption scheme
      * must match the one used to encrypt the data.
      *
-     * @param data the byte string to decrypt.
+     * @param {Buffer} data data to decrypt.
      * @param scheme the decryption scheme to use:
      *          'RSAES-PKCS1-V1_5' (default),
      *          'RSA-OAEP',
@@ -59,7 +59,11 @@ export default function setPrivateKey(n, e, d, p, q, dP, dQ, qInv) {
         const d = pki.rsa.decrypt(data, key, false, false);
 
         if (scheme === "RSAES-PKCS1-V1_5") {
-            scheme = { decode: __.decodePKCS1v15 };
+            scheme = {
+                decode: (d, key, pub) => {
+                    return __.decodePKCS1v15(d, key, pub);
+                }
+            };
         } else if (scheme === "RSA-OAEP" || scheme === "RSAES-OAEP") {
             scheme = {
                 decode(d, key) {
@@ -67,9 +71,11 @@ export default function setPrivateKey(n, e, d, p, q, dP, dQ, qInv) {
                 }
             };
         } else if (["RAW", "NONE", "NULL", null].includes(scheme)) {
-            scheme = { decode(d) {
-                return d;
-            } };
+            scheme = {
+                decode(d) {
+                    return d;
+                }
+            };
         } else {
             throw new Error(`Unsupported encryption scheme: "${scheme}".`);
         }
@@ -112,12 +118,18 @@ export default function setPrivateKey(n, e, d, p, q, dP, dQ, qInv) {
         }
 
         if (is.undefined(scheme) || scheme === "RSASSA-PKCS1-V1_5") {
-            scheme = { encode: __.emsaPKCS1v15encode };
+            scheme = {
+                encode: (md) => {
+                    return __.emsaPKCS1v15encode(md);
+                }
+            };
             bt = 0x01;
         } else if (scheme === "NONE" || scheme === "NULL" || is.null(scheme)) {
-            scheme = { encode() {
-                return md;
-            } };
+            scheme = {
+                encode() {
+                    return md;
+                }
+            };
             bt = 0x01;
         }
 
