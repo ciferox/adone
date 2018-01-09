@@ -1,3 +1,7 @@
+const {
+    is
+} = adone;
+
 export default class InterceptorManager {
     constructor() {
         this.handlers = [];
@@ -16,7 +20,7 @@ export default class InterceptorManager {
 
     forEach(fn) {
         for (const h of this.handlers) {
-            if (h !== null) {
+            if (!is.null(h)) {
                 fn(h);
             }
         }

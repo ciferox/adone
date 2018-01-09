@@ -1,12 +1,11 @@
-const { is } = adone;
+const {
+    is,
+    net: {
+        http
+    }
+} = adone;
 
-const imports = adone.lazify({
-    createError: "./create_error",
-    enhanceError: "./enhance_error",
-    followRedirects: "./follow_redirects",
-    settle: "./settle"
-}, null, require);
-
+const __ = adone.private(http.client);
 
 /**
  * Build a URL by appending params to the end
@@ -53,7 +52,7 @@ export default function adapter(config) {
             } else if (is.string(data)) {
                 data = Buffer.from(data, "utf-8");
             } else {
-                return reject(imports.createError("Data after transformation must be a string, an ArrayBuffer, a Buffer, or a Stream'", config));
+                return reject(__.createError("Data after transformation must be a string, an ArrayBuffer, a Buffer, or a Stream'", config));
             }
 
             // Add Content-Length header if data exists
@@ -140,7 +139,7 @@ export default function adapter(config) {
             transport = isHttps ? adone.std.https : adone.std.http;
         } else {
             nodeOptions.maxRedirects = config.maxRedirects;
-            transport = isHttps ? imports.followRedirects.https : imports.followRedirects.http;
+            transport = isHttps ? http.followRedirects.https : http.followRedirects.http;
         }
 
         const req = transport.request(nodeOptions, (res) => {
@@ -155,7 +154,6 @@ export default function adapter(config) {
             // uncompress the response body transparently if required
             let stream = res;
             switch (res.headers["content-encoding"]) {
-                /*eslint default-case:0*/
                 case "gzip":
                 case "compress":
                 case "deflate":
@@ -180,7 +178,7 @@ export default function adapter(config) {
 
             if (config.responseType === "stream") {
                 response.data = stream;
-                imports.settle(resolve, reject, response);
+                __.settle(resolve, reject, response);
             } else {
                 const responseBuffer = [];
                 stream.on("data", function handleStreamData(chunk) {
@@ -188,7 +186,7 @@ export default function adapter(config) {
 
                     // make sure the content length is not over the maxContentLength if specified
                     if (config.maxContentLength > -1 && Buffer.concat(responseBuffer).length > config.maxContentLength) {
-                        reject(imports.createError(`maxContentLength size of ${config.maxContentLength} exceeded`, config, null, lastRequest));
+                        reject(__.createError(`maxContentLength size of ${config.maxContentLength} exceeded`, config, null, lastRequest));
                     }
                 });
 
@@ -196,7 +194,7 @@ export default function adapter(config) {
                     if (req.aborted) {
                         return;
                     }
-                    reject(imports.enhanceError(err, config, null, lastRequest));
+                    reject(__.enhanceError(err, config, null, lastRequest));
                 });
 
                 stream.on("end", function handleStreamEnd() {
@@ -206,21 +204,21 @@ export default function adapter(config) {
                     }
 
                     response.data = responseData;
-                    imports.settle(resolve, reject, response);
+                    __.settle(resolve, reject, response);
                 });
             }
         });
 
         req.on("error", (err) => {
             if (!req.aborted) {
-                reject(imports.enhanceError(err, config, null, req));
+                reject(__.enhanceError(err, config, null, req));
             }
         });
 
         if (config.timeout && !timer) {
             timer = setTimeout(() => {
                 req.abort();
-                reject(imports.createError(`timeout of ${config.timeout}ms exceeded`, config, "ECONNABORTED", req));
+                reject(__.createError(`timeout of ${config.timeout}ms exceeded`, config, "ECONNABORTED", req));
             }, config.timeout);
         }
 
@@ -232,10 +230,6 @@ export default function adapter(config) {
                 }
             });
         }
-
-        // if (typeof config.onDownloadProgress === "function") {
-        //     request.addEventListener("progress", config.onDownloadProgress);
-        // }
 
         let uploadProgress;
         if (is.function(config.onUploadProgress)) {

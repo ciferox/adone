@@ -1,6 +1,4 @@
-const imports = adone.lazify({
-    createError: "./create_error"
-}, null, require);
+const __ = adone.private(adone.net.http.client);
 
 /**
  * Resolve or reject a Promise based on response status.
@@ -15,7 +13,7 @@ export default function settle(resolve, reject, response) {
     if (!response.status || !validateStatus || validateStatus(response.status)) {
         resolve(response);
     } else {
-        reject(imports.createError(
+        reject(__.createError(
             `Request failed with status code ${response.status}`,
             response.config,
             null,

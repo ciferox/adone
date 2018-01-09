@@ -1,8 +1,8 @@
-const { lazify } = adone;
-
-lazify({
+adone.lazify({
     server: "./server",
     client: "./client",
     x: "./x",
-    Downloader: "./downloader"
+    Downloader: "./downloader",
+    followRedirects: "./follow_redirects",
+    FormData: "./form_data"
 }, exports, require);

@@ -1,4 +1,18 @@
-const { is, util, vendor: { lodash } } = adone;
+const {
+    is,
+    util,
+    vendor: {
+        lodash
+    }
+} = adone;
+
+const __ = adone.lazifyPrivate({
+    InterceptorManager: "./interceptor_manager",
+    nodeAdapter: "./node_adapter",
+    createError: "./create_error",
+    enhanceError: "./enhance_error",
+    settle: "./settle"
+}, exports, require);
 
 /**
  * A `Cancel` is an object that is thrown when an operation is canceled.
@@ -64,13 +78,6 @@ export class CancelToken {
 
 export const isCancel = (value) => Boolean(value && value[Symbol.for("adone:request:cancel")]);
 
-const imports = adone.lazify({
-    InterceptorManager: "./interceptor_manager",
-    adapter: "./adapter"
-}, null, require);
-
-
-
 /**
  * Transform the data for a request or a response
  *
@@ -91,6 +98,7 @@ export const transformData = (data, headers, fns) => {
 };
 
 export const defaults = {
+    adapter: __.nodeAdapter,
     transformRequest: [(data, headers = {}) => {
         // Normalize headers
         const normalizedName = "Content-Type";
@@ -163,7 +171,7 @@ const throwIfCancellationRequested = (options) => {
     }
 };
 
-const isAbsoluteURL = (url) => /^([a-z][a-z\d\+\-\.]*:)?\/\//i.test(url);
+const isAbsoluteURL = (url) => /^([a-z][a-z\d+\-.]*:)?\/\//i.test(url);
 const combineURLs = (baseURL, relativeURL) => {
     if (relativeURL) {
         return `${baseURL.replace(/\/+$/, "")}/${relativeURL.replace(/^\/+/, "")}`;
@@ -175,8 +183,8 @@ export class Client {
     constructor(options) {
         this.config = options;
         this.interceptors = {
-            request: new imports.InterceptorManager(),
-            response: new imports.InterceptorManager()
+            request: new __.InterceptorManager(),
+            response: new __.InterceptorManager()
         };
     }
 
@@ -220,7 +228,9 @@ export class Client {
                     delete options.headers[method];
                 }
 
-                return imports.adapter(options).then((response) => {
+                const adapter = config.adapter || defaults.adapter;
+
+                return adapter(options).then((response) => {
                     throwIfCancellationRequested(options);
                     response.data = transformData(response.data, response.headers, options.transformResponse);
                     return response;

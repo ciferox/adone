@@ -1,8 +1,4 @@
-
-
-const imports = adone.lazify({
-    enhanceError: "./enhance_error"
-}, null, require);
+const __ = adone.private(adone.net.http.client);
 
 /**
  * Create an Error with the specified message, config, error code, and response.
@@ -16,5 +12,5 @@ const imports = adone.lazify({
  */
 export default function createError(message, config, code, request, response) {
     const error = new Error(message);
-    return imports.enhanceError(error, config, code, request, response);
+    return __.enhanceError(error, config, code, request, response);
 }
