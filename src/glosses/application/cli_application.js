@@ -68,8 +68,8 @@ const VERSION = Symbol();
 const escape = (x) => x.replace(/%/g, "%%");
 
 class Argument {
-    constructor(options = {}) {
-        options = Argument.normalize(options);
+    constructor(options = {}, command) {
+        options = Argument.normalize(options, command, this);
 
         this.names = options.name;
         this.action = options.action;
@@ -91,6 +91,7 @@ class Argument {
         this._verify = options.verify;
         this.set = options.set;
         this.enabled = options.enabled;
+        this.setCommand(command);
     }
 
     setCommand(command) {
@@ -222,21 +223,27 @@ class Argument {
         throw new x.NotImplemented();
     }
 
-    static normalize(options) {
+    static normalize(options, cmd, arg) {
         if (is.string(options)) {
             options = { name: options };
         } else {
             options = adone.o(options);
         }
         if (!options.name || options.name.length === 0) {
-            throw new x.IllegalState("An argument should have a name");
+            const type = arg.positional ? "a positional" : "an optional";
+            throw new x.IllegalState(`${cmd.getCommandChain()}: you are trying to define ${type} argument with no name`);
         }
         options.name = util.arrify(options.name);
 
         const [name] = options.name;
+
+        const invalid = (msg) => {
+            const t = arg.positional ? "argument" : "option";
+            return new x.InvalidArgument(`${cmd.getCommandChain()} / "${name}" ${t}: ${msg}`);
+        };
         if (options.action) {
             if (!["store", "store_const", "store_true", "store_false", "append", "count", "set"].includes(options.action)) {
-                throw new x.InvalidArgument(`${name}: action should be one of [store, store_const, store_true, store_false, append, append_const, count]`);
+                throw invalid(`action should be one of [store, store_const, store_true, store_false, append, append_const, count] but got ${options.action}`);
             }
             switch (options.action) {
                 case "store_true":
@@ -244,20 +251,20 @@ class Argument {
                 case "store_const":
                 case "count":
                     if (options.choices) {
-                        throw new x.InvalidArgument(`${name}: cannot use choices with action ${options.action}`);
+                        throw invalid(`cannot use choices with action ${options.action}`);
                     }
                     if ("nargs" in options && options.nargs !== 0) {
-                        throw new x.InvalidArgument(`${name}: nargs should be 0 for ${options.action}`);
+                        throw invalid(`nargs should be 0 for ${options.action}`);
                     } else {
                         options.nargs = 0;
                     }
                     break;
                 case "set": {
                     if (!options.choices) {
-                        throw new x.InvalidArgument(`${name}: cannot use 'set' action without choices`);
+                        throw invalid("cannot use 'set' action without choices");
                     }
                     if ("nargs" in options) {
-                        throw new x.InvalidArgument(`${name}: cannot use nargs with 'set' action`);
+                        throw invalid("cannot use nargs with 'set' action");
                     }
                     switch (options.set) {
                         case "defaultTrue":
@@ -289,7 +296,7 @@ class Argument {
                             break;
                         default: {
                             if (!is.function(options.set)) {
-                                throw new x.InvalidArgument(`${name}: 'set' must be a function or one of: defaultTrue, defaultFalse, defaultUndefined, trueOnEmpty, falseOnEmpty, undefinedOnEmpty`);
+                                throw invalid("'set' must be a function or one of: defaultTrue, defaultFalse, defaultUndefined, trueOnEmpty, falseOnEmpty, undefinedOnEmpty");
                             }
                         }
                     }
@@ -301,10 +308,10 @@ class Argument {
                     if ("nargs" in options) {
                         if (is.integer(options.nargs)) {
                             if (options.nargs < 1) {
-                                throw new x.InvalidArgument(`${name}: nargs should be a positive integer for ${options.action}`);
+                                throw invalid(`nargs should be a positive integer for ${options.action}`);
                             }
                         } else if (!["*", "+", "?"].includes(options.nargs)) {
-                            throw new x.InvalidArgument(`${name}: nargs should be a positive integer or one of [+, *, ?]`);
+                            throw invalid("nargs should be a positive integer or one of [+, *, ?]");
                         }
                     } else {
                         options.nargs = 1;
@@ -313,7 +320,7 @@ class Argument {
             }
         } else if (options.nargs) {
             if ((is.integer(options.nargs) && options.nargs < 1) || (!is.integer(options.nargs) && !["+", "*", "?"].includes(options.nargs))) {
-                throw new x.InvalidArgument(`${name}: nargs should be a positive integer or one of [+, *, ?]`);
+                throw invalid("nargs should be a positive integer or one of [+, *, ?]");
             }
             options.action = "store";
         } else {
@@ -325,16 +332,16 @@ class Argument {
             options.type = String;
         } else if (is.array(options.type)) {
             if (options.nargs === "*" || options.nargs === "+") {
-                throw new x.InvalidArgument(`${name}: Using the variadic nargs with a list of types is ambiguous`);
+                throw invalid("using the variadic nargs with a list of types is ambiguous");
             }
             if (is.integer(options.nargs) && options.nargs !== options.type.length) {
-                throw new x.IllegalState(`${name}: The number of types must be equal to the number of arguments`);
+                throw invalid("the number of types must be equal to the number of arguments");
             }
         }
 
         if (options.verify) {
             if (!is.function(options.verify)) {
-                throw new x.InvalidArgument(`${name}: verify must be a function`);
+                throw invalid("verify must be a function");
             }
         } else {
             options.verify = null;
@@ -362,17 +369,17 @@ class Argument {
             const checkHolder = (holder, i) => {
                 const index = is.integer(i) ? `[${i}]` : "";
                 if (!is.string(holder)) {
-                    throw new x.IllegalState(`${name}${index}: holder must be a string`);
+                    throw invalid(`${index} holder must be a string`);
                 }
                 if (/\s/.test(holder)) {
-                    throw new x.IllegalState(`${name}${index}: holder cannot have space characters: ${options.holder}`);
+                    throw invalid(`${index} holder cannot have space characters: ${options.holder}`);
                 }
             };
             if (!is.integer(options.nargs) || options.nargs === 1) {
                 checkHolder(options.holder);
             } else {
                 if (!is.array(options.holder)) {
-                    throw new x.IllegalState(`${name}: you must specify a holder for each argument`);
+                    throw invalid("you must specify a holder for each argument");
                 }
                 for (let i = 0; i < options.nargs; ++i) {
                     checkHolder(options.holder[i], i);
@@ -385,7 +392,7 @@ class Argument {
 
         if (options.format) {
             if (!is.function(options.format)) {
-                throw new x.InvalidArgument(`${name}: format must be a function`);
+                throw invalid("format must be a function");
             }
         } else {
             options.format = null;
@@ -960,7 +967,7 @@ class Command {
 
     addArgument(newArgument) {
         if (!(newArgument instanceof PositionalArgument)) {
-            newArgument = new PositionalArgument(newArgument);
+            newArgument = new PositionalArgument(newArgument, this); // is this ok to pass the command here???
         }
         if (!newArgument.enabled) {
             return;
@@ -975,7 +982,7 @@ class Command {
                 throw new x.IllegalState(`${this.names[0]}: non-default agrument must not follow default argument: ${last.names[0]} -> ${newArgument.names[0]}`);
             }
         }
-        newArgument.setCommand(this);
+        // newArgument.setCommand(this);
         this.arguments.push(newArgument);
     }
 
@@ -990,7 +997,7 @@ class Command {
 
     addOption(newOption) {
         if (!(newOption instanceof OptionalArgument)) {
-            newOption = new OptionalArgument(newOption);
+            newOption = new OptionalArgument(newOption, this); // is this ok to pass the command here???
         }
         if (!newOption.enabled) {
             return;
@@ -1004,7 +1011,7 @@ class Command {
         for (const group of this.optionsGroups) {
             if (group.name === newOption.group) {
                 group.add(newOption);
-                newOption.setCommand(this);
+                // newOption.setCommand(this);
                 return;
             }
         }
@@ -1338,16 +1345,16 @@ class Command {
                         message: arg.getShortHelpMessage()
                     };
                 }), {
-                        model: [
-                            { id: "left-spacing", width: 4 },
-                            { id: "names", maxWidth: 40, wordwrap: true },
-                            { id: "between-cells", width: 2 },
-                            { id: "message", wordwrap: false }
-                        ],
-                        width: "100%",
-                        borderless: true,
-                        noHeader: true
-                    }));
+                    model: [
+                        { id: "left-spacing", width: 4 },
+                        { id: "names", maxWidth: 40, wordwrap: true },
+                        { id: "between-cells", width: 2 },
+                        { id: "message", wordwrap: false }
+                    ],
+                    width: "100%",
+                    borderless: true,
+                    noHeader: true
+                }));
             }
             if (options.length) {
                 if (this.arguments.length) {
@@ -1376,16 +1383,16 @@ class Command {
                             message: opt.getShortHelpMessage()
                         };
                     }), {
-                            model: [
-                                { id: "left-spacing", width: 4 },
-                                { id: "names", maxWidth: 40, wordwrap: true },
-                                { id: "between-cells", width: 2 },
-                                { id: "message", wordwrap: true }
-                            ],
-                            width: "100%",
-                            borderless: true,
-                            noHeader: true
-                        }));
+                        model: [
+                            { id: "left-spacing", width: 4 },
+                            { id: "names", maxWidth: 40, wordwrap: true },
+                            { id: "between-cells", width: 2 },
+                            { id: "message", wordwrap: true }
+                        ],
+                        width: "100%",
+                        borderless: true,
+                        noHeader: true
+                    }));
                 }
             }
             if (commands.length) {
@@ -1415,16 +1422,16 @@ class Command {
                             message: cmd.getShortHelpMessage()
                         };
                     }), {
-                            model: [
-                                { id: "left-spacing", width: 4 },
-                                { id: "names", maxWidth: 40, wordwrap: true },
-                                { id: "between-cells", width: 2 },
-                                { id: "message", wordwrap: true }
-                            ],
-                            width: "100%",
-                            borderless: true,
-                            noHeader: true
-                        }));
+                        model: [
+                            { id: "left-spacing", width: 4 },
+                            { id: "names", maxWidth: 40, wordwrap: true },
+                            { id: "between-cells", width: 2 },
+                            { id: "message", wordwrap: true }
+                        ],
+                        width: "100%",
+                        borderless: true,
+                        noHeader: true
+                    }));
                 }
             }
         }
@@ -1477,7 +1484,7 @@ export default class CliApplication extends application.Application {
 
     /**
      * Returns main command.
-     * 
+     *
      * @returns {Command}
      */
     get mainCommand() {
@@ -1794,19 +1801,20 @@ export default class CliApplication extends application.Application {
         this.defineMainCommand(options);
     }
 
-    defineCommand(...args) {
-        if (args.length < 1) {
-            throw new x.InvalidArgument("The options are required");
-        }
-        const cmdParams = args.pop();
-        const commandsChain = args;
-        if (!is.object(cmdParams)) {
-            throw new x.InvalidArgument("The options should be an object");
+    defineCommand(subsystem, cmdParams) {
+        // defineCommand(subsustem, opts)
+        // or
+        // defineCommand(opts)
+        if (!is.subsystem(subsystem)) {
+            cmdParams = subsystem;
+            subsystem = null;
         }
 
-        let subsystem;
-        if (is.subsystem(commandsChain[0])) {
-            subsystem = commandsChain.shift();
+        if (!is.object(cmdParams)) {
+            throw new x.InvalidArgument("The options must be an object");
+        }
+
+        if (subsystem) {
             const command = subsystem[COMMAND];
             if (command instanceof Command) {
                 this._initCommand(command, cmdParams, { addHelp: false, initialized: false });
@@ -1815,8 +1823,7 @@ export default class CliApplication extends application.Application {
             }
         }
 
-        const cmd = this._getCommand(commandsChain, true);
-        const newCommand = this._createCommand(cmdParams, cmd);
+        const newCommand = this._createCommand(cmdParams, this.mainCommand);
         newCommand._subsystem = subsystem;
         return newCommand;
     }
@@ -1881,66 +1888,26 @@ export default class CliApplication extends application.Application {
         });
     }
 
-    defineOption(...args) {
-        if (args.length < 1) {
-            throw new x.InvalidArgument("The options are required");
-        }
-        const optParams = args.pop();
-        const commandsChain = args;
-        if (!is.object(optParams)) {
-            throw new x.InvalidArgument("The options should be an object");
-        }
-        const option = new OptionalArgument(optParams);
-
+    defineOption(optParams) {
+        const cmd = this.mainCommand;
+        const option = new OptionalArgument(optParams, cmd); // weird
         if (!option.enabled) {
             return;
-        }
-
-        let cmd;
-        try {
-            cmd = this._getCommand(commandsChain);
-        } catch (err) {
-            if (err instanceof x.NotExists) {
-                err = new x.NotExists(`${option.names[0]}: Cannot define the option; ${err.message}`);
-            }
-            throw err;
         }
         cmd.addOption(option);
     }
 
-    defineOptionsGroup(...args) {
-        const groupParams = args.pop();
-        const commandsChain = args;
-        let cmd;
-        try {
-            cmd = this._getCommand(commandsChain);
-        } catch (err) {
-            if (err instanceof x.NotExists) {
-                err = new x.NotExists(`Cannot define a new options group; ${err.message}`);
-            }
-            throw err;
-        }
-        cmd.addOptionsGroup(groupParams);
+    defineOptionsGroup(groupParams) {
+        this.mainCommand.addOptionsGroup(groupParams);
     }
 
-    defineCommandsGroup(...args) {
-        const groupParams = args.pop();
-        const commandsChain = args;
-        let cmd;
-        try {
-            cmd = this._getCommand(commandsChain);
-        } catch (err) {
-            if (err instanceof x.NotExists) {
-                err = new x.NotExists(`Cannot define a new commands group; ${err.message}`);
-            }
-            throw err;
-        }
-        cmd.addCommandsGroup(groupParams);
+    defineCommandsGroup(groupParams) {
+        this.mainCommand.addCommandsGroup(groupParams);
     }
 
     /**
      * get an option of a particular command
-     * path shouls be a dot splitted string
+     * path must be a dot splitted string
      */
     option(path, { value = true } = {}) {
         const parts = path.split(".");
