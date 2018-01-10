@@ -1,5 +1,5 @@
 const timers = require("timers");
-const utp = adone.bind("utp");
+const utp = adone.nativeAddon("utp");
 
 const {
     is,

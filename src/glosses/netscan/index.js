@@ -2,7 +2,7 @@ export class MasscanScanner extends adone.event.EventEmitter {
     constructor(options) {
         super();
         this.options = options;
-        this.native = adone.bind("masscan.node");
+        this.native = adone.nativeAddon("masscan.node");
     }
 
     initialize() {

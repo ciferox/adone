@@ -1,5 +1,5 @@
 const { is } = adone;
-const native = adone.bind("snappy.node");
+const native = adone.nativeAddon("snappy.node");
 
 export const compress = (input) => {
     if (!is.string(input) && !is.buffer(input)) {

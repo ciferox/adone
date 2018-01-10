@@ -1,5 +1,5 @@
 const { is } = adone;
-const native = adone.bind("rpigpio.node");
+const native = adone.nativeAddon("rpigpio.node");
 
 let initialized = false;
 

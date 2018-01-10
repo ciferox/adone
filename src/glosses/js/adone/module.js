@@ -127,7 +127,7 @@ export default class XModule extends adone.js.adone.Base {
                         const declrNode = node.declarations[0];
                         if (!is.null(declrNode.init) && declrNode.init.type === "CallExpression" && declrNode.init.callee.type === "MemberExpression") {
                             const exprName = this._getMemberExpressionName(declrNode.init.callee);
-                            if (exprName === "adone.bind") {
+                            if (exprName === "adone.nativeAddon") {
                                 shouldSkip = true;
                                 if (declrNode.id.type === "Identifier") {
                                     const name = declrNode.id.name;

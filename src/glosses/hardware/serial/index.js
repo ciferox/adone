@@ -315,7 +315,7 @@ export class Port extends adone.std.stream.Duplex {
 
 adone.lazify({
     __: () => adone.lazify({
-        native: () => adone.bind("serial.node"),
+        native: () => adone.nativeAddon("serial.node"),
         readUnix: "./__/unix_read",
         BaseBinding: "./__/base"
     }, null, require),

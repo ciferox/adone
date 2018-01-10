@@ -1,4 +1,4 @@
-const native = adone.bind("git.node");
+const native = adone.nativeAddon("git.node");
 
 // force load in case of indirect instantiation
 const {

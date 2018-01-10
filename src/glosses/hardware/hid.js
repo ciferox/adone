@@ -1,4 +1,4 @@
-const binding = adone.bind("hid.node");
+const binding = adone.nativeAddon("hid.node");
 
 export class Device extends adone.event.EventEmitter {
     constructor(...args) {

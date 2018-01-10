@@ -1,5 +1,5 @@
 const { is } = adone;
-const { BigNumber, setJSConditioner } = adone.bind("bignumber.node");
+const { BigNumber, setJSConditioner } = adone.nativeAddon("bignumber.node");
 
 export default BigNumber;
 

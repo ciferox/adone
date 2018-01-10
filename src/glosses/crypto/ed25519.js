@@ -1,4 +1,4 @@
-const native = adone.bind("ed25519.node");
+const native = adone.nativeAddon("ed25519.node");
 
 const {
     is

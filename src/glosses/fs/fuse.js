@@ -8,7 +8,7 @@ const {
     }
 } = adone;
 
-const native = adone.bind("fuse");
+const native = adone.nativeAddon("fuse");
 
 
 export const EPERM = -1;

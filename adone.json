@@ -140,7 +140,8 @@
                             "dst": "lib/glosses/data/bson",
                             "namespace": "bson",
                             "native": {
-                                "src": "glosses/data/bson/native/**/*"
+                                "src": "src/glosses/data/bson/native",
+                                "dst": "lib/glosses/data/bson/native"
                             }
                         },
                         "json": {
@@ -263,10 +264,13 @@
                 "gyp": {
                     "description": "Node.js native addon build tool",
                     "index": "glosses/gyp/index.js",
+                    "namespace": "gyp",
                     "task": "adoneTranspile",
-                    "src": "src/glosses/gyp/**/*.js",
-                    "dst": "lib/glosses/gyp",
-                    "namespace": "gyp"
+                    "src": [
+                        "src/glosses/gyp/**/*.js",
+                        "!src/glosses/gyp/gyp/**/*"
+                    ],
+                    "dst": "lib/glosses/gyp"
                 },
                 "hardware": {
                     "description": "Hardware stuff",

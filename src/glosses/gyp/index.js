@@ -1,10 +1,9 @@
 const log = require("npmlog");
-const child_process = require("child_process");
 const osenv = require("osenv");
-const path = require("path");
 
 const {
-    is
+    is,
+    std: { fs, path, child_process }
 } = adone;
 
 adone.lazify({
@@ -74,7 +73,6 @@ export class Gyp extends adone.event.EventEmitter {
 
         const dir = this.opts.directory;
         if (dir) {
-            const fs = require("fs");
             try {
                 const stat = fs.statSync(dir);
                 if (stat.isDirectory()) {

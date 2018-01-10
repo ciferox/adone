@@ -1,5 +1,5 @@
 const { is } = adone;
-const i2c = adone.bind("i2c.node");
+const i2c = adone.nativeAddon("i2c.node");
 
 // In this context:
 // peripheral = i2c device object (https://msdn.microsoft.com/en-us/library/windows.devices.i2c.i2cdevice.aspx)

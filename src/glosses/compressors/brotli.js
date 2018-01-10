@@ -1,6 +1,6 @@
 const { is, std: { stream: { Transform } } } = adone;
 
-const { StreamEncode, StreamDecode } = adone.bind("brotli.node");
+const { StreamEncode, StreamDecode } = adone.nativeAddon("brotli.node");
 
 class TransformStreamEncode extends Transform {
     constructor(params = {}, sync = false) {

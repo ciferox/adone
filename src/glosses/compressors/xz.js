@@ -1,6 +1,6 @@
 const { is, assert, std: { stream } } = adone;
 
-const native = adone.bind("lzma.node");
+const native = adone.nativeAddon("lzma.node");
 
 const { Stream } = native;
 

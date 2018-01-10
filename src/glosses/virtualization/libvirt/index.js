@@ -1,4 +1,4 @@
-const native = adone.bind("libvirt");
+const native = adone.nativeAddon("libvirt");
 
 const {
     promise: { promisifyAll },

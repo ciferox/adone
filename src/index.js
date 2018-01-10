@@ -149,7 +149,10 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         private: (obj) => obj[privateSymbol],
         asNamespace,
         tag,
-        bind: (libName) => require(adone.std.path.resolve(__dirname, "./native", libName)),
+        // TODO: allow only absolute path
+        nativeAddon: (path) => {
+            return require(adone.std.path.isAbsolute(path) ? path : adone.std.path.resolve(__dirname, "./native", path));
+        },
         getAssetAbsolutePath: (relPath) => adone.std.path.resolve(__dirname, "..", "etc", adone.std.path.normalize(relPath)),
         loadAsset: (relPath) => {
             const extName = adone.std.path.extname(relPath);
@@ -301,7 +304,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             perf_hooks: "perf_hooks"
         })),
 
-        native: () => adone.bind("common.node"),
+        native: () => adone.nativeAddon("common.node"),
 
         // glosses
         assertion: "./glosses/assertion",

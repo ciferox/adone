@@ -1,2 +1,2 @@
-const native = adone.bind("secp256k1.node");
+const native = adone.nativeAddon("secp256k1.node");
 export default native;

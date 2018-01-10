@@ -1,4 +1,4 @@
-const api = adone.bind("report");
+const api = adone.nativeAddon("report");
 
 export const triggerReport = api.triggerReport;
 export const getReport = api.getReport;

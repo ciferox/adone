@@ -3,7 +3,7 @@ const {
     database: { level: { AbstractBackend } }
 } = adone;
 
-const native = adone.bind("leveldown.node").leveldown;
+const native = adone.nativeAddon("leveldown.node").leveldown;
 
 const imports = adone.lazify({
     ChainedBatch: "./chained-batch",

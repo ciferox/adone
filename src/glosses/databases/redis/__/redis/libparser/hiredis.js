@@ -1,11 +1,11 @@
 const {
     is,
     lazify,
-    bind
+    nativeAddon
 } = adone;
 
 const lazy = lazify({
-    hiredis: () => bind("hiredis.node")
+    hiredis: () => nativeAddon("hiredis.node")
 });
 
 export default class HiredisReplyParser {
