@@ -1,5 +1,7 @@
 const { std: { zlib } } = adone;
 
+adone.asNamespace(exports);
+
 export const compress = (buf, options) => new Promise((resolve, reject) => {
     zlib.deflate(buf, options, (err, data) => {
         err ? reject(err) : resolve(data);

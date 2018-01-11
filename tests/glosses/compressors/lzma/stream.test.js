@@ -207,6 +207,6 @@ describe("compressor", "lzma", "stream", () => {
 
     after("should not have any open async streams", async () => {
         await adone.promise.delay(100);
-        assert.equal(adone.nativeAddon("lzma.node").Stream.curAsyncStreamsCount, 0);
+        assert.equal(adone.compressor.xz.native.Stream.curAsyncStreamsCount, 0);
     });
 });

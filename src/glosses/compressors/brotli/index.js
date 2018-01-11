@@ -1,6 +1,9 @@
-const { is, std: { stream: { Transform } } } = adone;
+const {
+    is,
+    std: { stream: { Transform } }
+} = adone;
 
-const { StreamEncode, StreamDecode } = adone.nativeAddon("brotli.node");
+const { StreamEncode, StreamDecode } = adone.nativeAddon(adone.std.path.join(__dirname, "native", "brotli.node"));
 
 class TransformStreamEncode extends Transform {
     constructor(params = {}, sync = false) {
@@ -108,6 +111,8 @@ class TransformStreamDecode extends Transform {
         }
     }
 }
+
+adone.asNamespace(exports);
 
 export const compress = (buf, options = {}) => new Promise((resolve, reject) => {
     if (is.string(buf)) {

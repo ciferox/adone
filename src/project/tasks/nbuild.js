@@ -23,6 +23,6 @@ export default class NBuildTask extends adone.project.task.Base {
             produceFiles: true
         });
 
-        await tmp.unlink();
+        // await tmp.unlink();
     }
 }

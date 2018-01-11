@@ -52,14 +52,14 @@ const lzma = {
     MODE_NORMAL: xz.MODE_NORMAL,
 
     STREAM_HEADER_SIZE: xz.STREAM_HEADER_SIZE,
- 
+
     compress: (buf, options = {}) => {
         return xz.singleStringCoding(lzma.compressStream(options), buf);
     },
     compressStream: (options = {}) => {
         return xz.createStream("aloneEncoder", options);
     },
-    compressSync: (buf, options = {}) => {
+    compressSync: (/*buf, options = {}*/) => {
         throw new adone.x.NotImplemented();
     },
     decompress: (buf, options = {}) => {
@@ -68,9 +68,9 @@ const lzma = {
     decompressStream: (options = {}) => {
         return xz.createStream("aloneDecoder", options);
     },
-    decompressSync: (buf, options = {}) => {
+    decompressSync: (/*buf, options = {}*/) => {
         throw new adone.x.NotImplemented();
     }
 };
 
-export default lzma;
+export default adone.asNamespace(lzma);

@@ -1,4 +1,4 @@
-#include "../../adone.h"
+#include <adone.h>
 #include <stddef.h>
 #include <stdint.h>
 #include "brotli.h"

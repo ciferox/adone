@@ -1,5 +1,4 @@
-    #include "../../adone.h"
-
+#include <adone.h>
 #include <node_buffer.h>
 #include <node_version.h>
 #include <snappy.h>

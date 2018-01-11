@@ -308,49 +308,6 @@
       ]
     },
     {
-      "target_name": "brotli",
-      "sources": [
-        "src/native/compressors/brotli/deps/common/dictionary.c",
-        "src/native/compressors/brotli/deps/enc/backward_references.c",
-        "src/native/compressors/brotli/deps/enc/backward_references_hq.c",
-        "src/native/compressors/brotli/deps/enc/bit_cost.c",
-        "src/native/compressors/brotli/deps/enc/block_splitter.c",
-        "src/native/compressors/brotli/deps/enc/brotli_bit_stream.c",
-        "src/native/compressors/brotli/deps/enc/cluster.c",
-        "src/native/compressors/brotli/deps/enc/compress_fragment.c",
-        "src/native/compressors/brotli/deps/enc/compress_fragment_two_pass.c",
-        "src/native/compressors/brotli/deps/enc/dictionary_hash.c",
-        "src/native/compressors/brotli/deps/enc/encode.c",
-        "src/native/compressors/brotli/deps/enc/entropy_encode.c",
-        "src/native/compressors/brotli/deps/enc/histogram.c",
-        "src/native/compressors/brotli/deps/enc/literal_cost.c",
-        "src/native/compressors/brotli/deps/enc/memory.c",
-        "src/native/compressors/brotli/deps/enc/metablock.c",
-        "src/native/compressors/brotli/deps/enc/static_dict.c",
-        "src/native/compressors/brotli/deps/enc/utf8_util.c",
-        "src/native/compressors/brotli/deps/dec/bit_reader.c",
-        "src/native/compressors/brotli/deps/dec/decode.c",
-        "src/native/compressors/brotli/deps/dec/huffman.c",
-        "src/native/compressors/brotli/deps/dec/state.c",
-        "src/native/compressors/brotli/brotli.cc",
-      ],
-      "include_dirs": [
-        "nan",
-        "src/native/compressors/brotli/deps/include"
-      ],
-      "defines": ["NOMINMAX"],
-      "cflags" : ["-O2"],
-      "xcode_settings": {
-        "OTHER_CFLAGS" : ["-O2"]
-      }
-    },
-    {
-      'target_name': 'snappy',
-      'include_dirs': [ "nan" ],
-      'dependencies': [ 'src/native/compressors/snappy/deps/snappy.gyp:libsnappy' ],
-      'sources': [ 'src/native/compressors/snappy/snappy.cc' ]
-    },
-    {
         "target_name": "metrics",
         "include_dirs": [ "nan" ],
         "sources": [
@@ -437,107 +394,6 @@
             "src/native/leveldown/leveldown.cc",
             "src/native/leveldown/leveldown_async.cc"
         ]
-    },
-    {
-      "target_name": "lzma",
-      "sources": [
-        "src/native/compressors/lzma/util.cpp",
-        "src/native/compressors/lzma/liblzma-functions.cpp",
-        "src/native/compressors/lzma/filter-array.cpp",
-        "src/native/compressors/lzma/lzma-stream.cpp",
-        "src/native/compressors/lzma/module.cpp",
-        "src/native/compressors/lzma/mt-options.cpp",
-        "src/native/compressors/lzma/index-parser.cpp"
-      ],
-      "include_dirs" : [ "nan" ],
-      "dependencies" : [ "liblzma" ],
-      "conditions" : [
-        [ 'OS!="win"' , {
-          "include_dirs" : [ "<(module_root_dir)/build/liblzma/build/include" ],
-          "libraries" : [ "<(module_root_dir)/build/liblzma/build/lib/liblzma.a" ],
-        }, {
-          "include_dirs" : [ "<(module_root_dir)\\src\\native\\compressors\\lzma\\deps\\win\\include" ],
-          "link_settings": {
-            "libraries" : [ "-lliblzma" ],
-            "conditions": [
-              [ 'target_arch=="x64"', {
-                "library_dirs" : [ "<(module_root_dir)\\build\\Release" ]
-              }, {
-                "library_dirs" : [ "<(module_root_dir)\\src\\native\\compressors\\lzma\\deps\\win\\bin_i686" ]
-              } ]
-            ]
-          }
-        } ],
-      ],
-    },
-    {
-      "target_name" : "liblzma",
-      "type" : "none",
-      "conditions" : [
-        [ 'OS!="win"' , {
-          "actions" : [
-            {
-              "action_name" : "build",
-              'inputs': ['<!@(sh src/native/compressors/lzma/deps/unix/config.sh "<(module_root_dir)/build" "<(module_root_dir)/src/native/compressors/lzma/deps/unix/xz-5.2.3.tar.bz2")'],
-              'outputs': [''],
-              'action': [
-                'sh', '<(module_root_dir)/src/native/compressors/lzma/deps/unix/build.sh', '<(module_root_dir)/build'
-              ]
-            }
-          ]
-        }, {
-          "conditions" : [
-            [ 'target_arch=="x64"', {
-              'variables': {
-                "arch_lib_path" : 'bin_x86-64',
-                "arch_lib_code" : 'x64'
-              }
-            }, {
-              'variables': {
-                "arch_lib_path" : 'bin_i686',
-                "arch_lib_code" : 'ix86'
-              }
-            } ]
-          ],
-          "actions": [
-            {
-              "msvs_quote_cmd": 0,
-              "action_name" : "build",
-              'inputs': ['src/native/compressors/lzma/deps/win/liblzma.def'],
-              'outputs': [''],
-              'action': ['mkdir <(module_root_dir)/build/Release > nul 2>&1 & lib -def:"<(module_root_dir)/src/native/compressors/lzma/deps/win/liblzma.def" -out:"<(module_root_dir)/build/Release/liblzma.lib" -machine:<(arch_lib_code)']
-            },
-            {
-              "msvs_quote_cmd": 0,
-              "action_name" : "deploy",
-              'inputs': ['src/native/compressors/lzma/deps/win/<(arch_lib_path)/liblzma.dll'],
-              'outputs': ['build/Release/liblzma.dll'],
-              'action': ['copy "<(module_root_dir)/src/native/compressors/lzma/deps/win/<(arch_lib_path)/liblzma.dll" "<(module_root_dir)/build/Release/liblzma.dll"']
-            }
-          ]
-        } ],
-      ]
-    },
-    {
-      "target_name": "copy_liblzma",
-      "dependencies" : [ "lzma" ],
-      "conditions": [
-        [ 'OS=="win"', {
-          "copies": [
-            {
-              "conditions": [
-                [ 'target_arch=="x64"', {
-                    "files": [ "<(module_root_dir)\\src\\native\\compressors\\lzma\\deps\\win\\bin_x86-64\\liblzma.dll" ]
-                  }, 'OS=="win"', {
-                    "files": ["<(module_root_dir)\\src\\native\\compressors\\lzma\\deps\\win\\bin_i686\\liblzma.dll" ]
-                  }
-                ]
-              ],
-              "destination": "<(module_root_dir)/lib/native"
-            }
-          ]
-        }]
-      ]
     },
     {
 		"target_name": "libmasscan",
@@ -1283,12 +1139,9 @@
       },
       "dependencies" : [
         "bignumber",
-        "brotli",
-        "lzma",
         "hiredis",
         "common",
         "metrics",
-        "snappy",
         "leveldown",
         "masscan",
         "hid",
@@ -1306,13 +1159,10 @@
         {
           "files": [
             "<(srcpath)/bignumber.node",
-            "<(srcpath)/brotli.node",
             "<(srcpath)/hiredis.node",
             "<(srcpath)/common.node",
             "<(srcpath)/metrics.node",
-            "<(srcpath)/snappy.node",
             "<(srcpath)/leveldown.node",
-            "<(srcpath)/lzma.node",
             "<(srcpath)/masscan.node",
             "<(srcpath)/hid.node",
             "<(srcpath)/serial.node",

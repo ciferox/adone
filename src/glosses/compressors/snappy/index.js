@@ -1,5 +1,7 @@
 const { is } = adone;
-const native = adone.nativeAddon("snappy.node");
+const native = adone.nativeAddon(adone.std.path.join(__dirname, "native", "snappy.node"));
+
+adone.asNamespace(exports);
 
 export const compress = (input) => {
     if (!is.string(input) && !is.buffer(input)) {

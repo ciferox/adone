@@ -304,6 +304,9 @@ const configure = function (gyp, argv) {
                 argv.push("-Dvisibility=default");
                 argv.push(`-Dnode_root_dir=${nodeDir}`);
                 argv.push(`-Dadone_root_dir=${adone.rootPath}`);
+                if (is.string(gyp.opts.binding)) {
+                    argv.push(`-Daddon_root_dir=${gyp.opts.binding}`);
+                }
                 if (process.platform === "aix" || process.platform === "os390") {
                     argv.push(`-Dnode_exp_file=${nodeExpFile}`);
                 }

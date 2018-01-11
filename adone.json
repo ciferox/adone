@@ -70,6 +70,7 @@
                     "namespace": "application",
                     "struct": {
                         "report": {
+                            "description": "Delivers a human-readable diagnostic summary, written to file",
                             "namespace": "report",
                             "src": [
                                 "src/glosses/application/report/**/*.js",
@@ -107,10 +108,72 @@
                 },
                 "compressor": {
                     "description": "Compressors",
-                    "src": "src/glosses/compressors/**/*.js",
-                    "dst": "lib/glosses/compressors",
-                    "task": "adoneTranspile",
-                    "namespace": "compressor"
+                    "namespace": "compressor",
+                    "struct": {
+                        "brotli": {
+                            "description": "Brotli compression format",
+                            "namespace": "brotli",
+                            "src": [
+                                "src/glosses/compressors/brotli/**/*.js",
+                                "!src/glosses/compressors/brotli/native/**/*"
+                            ],
+                            "dst": "lib/glosses/compressors/brotli",
+                            "task": "transpile",
+                            "native": {
+                                "src": "src/glosses/compressors/brotli/native",
+                                "dst": "lib/glosses/compressors/brotli/native"
+                            }
+                        },
+                        "deflate": {
+                            "description": "Deflate compressor/decompressor",
+                            "namespace": "deflate",
+                            "task": "transpile",
+                            "src": "src/glosses/compressors/deflate.js",
+                            "dst": "lib/glosses/compressors"
+                        },
+                        "gz": {
+                            "description": "Gzip compressor/decompressor",
+                            "namespace": "gz",
+                            "task": "transpile",
+                            "src": "src/glosses/compressors/gzip.js",
+                            "dst": "lib/glosses/compressors"
+                        },
+                        "lzma": {
+                            "description": "LZMA compressor/decompressor",
+                            "namespace": "lzma",
+                            "task": "transpile",
+                            "src": "src/glosses/compressors/lzma.js",
+                            "dst": "lib/glosses/compressors"
+                        },
+                        "snappy": {
+                            "description": "Snappy, a fast compressor/decompressor",
+                            "namespace": "snappy",
+                            "task": "transpile",
+                            "src": [
+                                "src/glosses/compressors/snappy/**/*.js",
+                                "!src/glosses/compressors/snappy/native/**/*"
+                            ],
+                            "dst": "lib/glosses/compressors/snappy",
+                            "native": {
+                                "src": "src/glosses/compressors/snappy/native",
+                                "dst": "lib/glosses/compressors/snappy/native"
+                            }
+                        },
+                        "xz": {
+                            "description": "XZ compressor/decompressor",
+                            "namespace": "xz",
+                            "task": "transpile",
+                            "src": [
+                                "src/glosses/compressors/xz/**/*.js",
+                                "!src/glosses/compressors/xz/native/**/*"
+                            ],
+                            "dst": "lib/glosses/compressors/xz",
+                            "native": {
+                                "src": "src/glosses/compressors/xz/native",
+                                "dst": "lib/glosses/compressors/xz/native"
+                            }
+                        }
+                    }
                 },
                 "configuration": {
                     "description": "Configurations",

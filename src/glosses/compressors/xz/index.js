@@ -1,6 +1,10 @@
-const { is, assert, std: { stream } } = adone;
+const {
+    is,
+    assert,
+    std: { stream }
+} = adone;
 
-const native = adone.nativeAddon("lzma.node");
+const native = adone.nativeAddon(adone.std.path.join(__dirname, "native", "lzma.node"));
 
 const { Stream } = native;
 
@@ -283,6 +287,7 @@ Stream.prototype.aloneDecoder = function (options) {
 };
 
 const xz = {
+    native,
     asyncCodeAvailable: native.asyncCodeAvailable,
     versionNumber: native.versionNumber,
     versionString: native.versionString,
@@ -432,4 +437,4 @@ const xz = {
     }
 };
 
-export default xz;
+export default adone.asNamespace(xz);

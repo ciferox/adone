@@ -1,4 +1,6 @@
-const { std: { zlib }, util } = adone;
+const { std: { zlib } } = adone;
+
+adone.asNamespace(exports);
 
 export const compress = (buf, options) => new Promise((resolve, reject) => {
     zlib.gzip(buf, options, (err, data) => {
