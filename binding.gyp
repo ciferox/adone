@@ -912,103 +912,6 @@
         }
     },
     {
-      "target_name": "secp256k1",
-      "variables": {
-        "conditions": [
-          [
-            "OS=='win'", {
-              "with_gmp%": "false"
-            }, {
-              "with_gmp%": "<!(src/native/secp256k1/has_lib.sh gmpxx && src/native/secp256k1/has_lib.sh gmp)"
-            }
-          ]
-        ]
-      },
-      "sources": [
-        "src/native/secp256k1/addon.cc",
-        "src/native/secp256k1/privatekey.cc",
-        "src/native/secp256k1/publickey.cc",
-        "src/native/secp256k1/signature.cc",
-        "src/native/secp256k1/ecdsa.cc",
-        "src/native/secp256k1/ecdh.cc",
-        "src/native/secp256k1/secp256k1-src/src/secp256k1.c",
-        "src/native/secp256k1/secp256k1-src/contrib/lax_der_parsing.c",
-        "src/native/secp256k1/secp256k1-src/contrib/lax_der_privatekey_parsing.c"
-      ],
-      "include_dirs": [
-        "/usr/local/include",
-        "src/native/secp256k1/secp256k1-src",
-        "src/native/secp256k1/secp256k1-src/contrib",
-        "src/native/secp256k1/secp256k1-src/include",
-        "src/native/secp256k1/secp256k1-src/src",
-        "<!(node -e \"require('nan')\")"
-      ],
-      "defines": [
-        "ENABLE_MODULE_RECOVERY=1"
-      ],
-      "cflags": [
-        "-Wall",
-        "-Wno-maybe-uninitialized",
-        "-Wno-uninitialized",
-        "-Wno-unused-function",
-        "-Wextra"
-      ],
-      "cflags_cc+": [
-        "-std=c++0x"
-      ],
-      "conditions": [
-        [
-          "with_gmp=='true'", {
-            "defines": [
-              "HAVE_LIBGMP=1",
-              "USE_NUM_GMP=1",
-              "USE_FIELD_INV_NUM=1",
-              "USE_SCALAR_INV_NUM=1"
-            ],
-            "libraries": [
-              "-lgmpxx",
-              "-lgmp"
-            ]
-          }, {
-            "defines": [
-              "USE_NUM_NONE=1",
-              "USE_FIELD_INV_BUILTIN=1",
-              "USE_SCALAR_INV_BUILTIN=1"
-            ]
-          }
-        ],
-        [
-          "target_arch=='x64' and OS!='win'", {
-            "defines": [
-              "HAVE___INT128=1",
-              "USE_ASM_X86_64=1",
-              "USE_FIELD_5X52=1",
-              "USE_FIELD_5X52_INT128=1",
-              "USE_SCALAR_4X64=1"
-            ]
-          }, {
-            "defines": [
-              "USE_FIELD_10X26=1",
-              "USE_SCALAR_8X32=1"
-            ]
-          }
-        ],
-        [
-          "OS=='mac'", {
-            "libraries": [
-              "-L/usr/local/lib"
-            ],
-            "xcode_settings": {
-              "MACOSX_DEPLOYMENT_TARGET": "10.7",
-              "OTHER_CPLUSPLUSFLAGS": [
-                "-stdlib=libc++"
-              ]
-            }
-          }
-        ]
-      ]
-    },
-    {
       'target_name': 'utp',
       'dependencies': [
         'src/native/utp/libutp/libutp.gyp:libutp',
@@ -1042,97 +945,6 @@
       ],      
     },
     {
-      'target_name': 'ed25519',
-      'sources': [
-        'src/native/ed25519/ed25519/keypair.c',
-        'src/native/ed25519/ed25519/sign.c',
-        'src/native/ed25519/ed25519/open.c',
-        'src/native/ed25519/ed25519/crypto_verify_32.c',
-        'src/native/ed25519/ed25519/ge_double_scalarmult.c',
-        'src/native/ed25519/ed25519/ge_frombytes.c',
-        'src/native/ed25519/ed25519/ge_scalarmult_base.c',
-        'src/native/ed25519/ed25519/ge_precomp_0.c',
-        'src/native/ed25519/ed25519/ge_p2_0.c',
-        'src/native/ed25519/ed25519/ge_p2_dbl.c',
-        'src/native/ed25519/ed25519/ge_p3_0.c',
-        'src/native/ed25519/ed25519/ge_p3_dbl.c',
-        'src/native/ed25519/ed25519/ge_p3_to_p2.c',
-        'src/native/ed25519/ed25519/ge_p3_to_cached.c',
-        'src/native/ed25519/ed25519/ge_p3_tobytes.c',
-        'src/native/ed25519/ed25519/ge_madd.c',
-        'src/native/ed25519/ed25519/ge_add.c',
-        'src/native/ed25519/ed25519/ge_msub.c',
-        'src/native/ed25519/ed25519/ge_sub.c',
-        'src/native/ed25519/ed25519/ge_p1p1_to_p3.c',
-        'src/native/ed25519/ed25519/ge_p1p1_to_p2.c',
-        'src/native/ed25519/ed25519/ge_tobytes.c',
-        'src/native/ed25519/ed25519/fe_0.c',
-        'src/native/ed25519/ed25519/fe_1.c',
-        'src/native/ed25519/ed25519/fe_cmov.c',
-        'src/native/ed25519/ed25519/fe_copy.c',
-        'src/native/ed25519/ed25519/fe_neg.c',
-        'src/native/ed25519/ed25519/fe_add.c',
-        'src/native/ed25519/ed25519/fe_sub.c',
-        'src/native/ed25519/ed25519/fe_mul.c',
-        'src/native/ed25519/ed25519/fe_sq.c',
-        'src/native/ed25519/ed25519/fe_sq2.c',
-        'src/native/ed25519/ed25519/fe_invert.c',
-        'src/native/ed25519/ed25519/fe_tobytes.c',
-        'src/native/ed25519/ed25519/fe_isnegative.c',
-        'src/native/ed25519/ed25519/fe_isnonzero.c',
-        'src/native/ed25519/ed25519/fe_frombytes.c',
-        'src/native/ed25519/ed25519/fe_pow22523.c',
-        'src/native/ed25519/ed25519/sc_reduce.c',
-        'src/native/ed25519/ed25519/sc_muladd.c',
-        'src/native/ed25519/ed25519.cc'
-      ],
-      'conditions': [
-        ['node_shared_openssl=="false"', {
-          # so when "node_shared_openssl" is "false", then OpenSSL has been
-          # bundled into the node executable. So we need to include the same
-          # header files that were used when building node.
-          'include_dirs': [
-            '<(node_root_dir)/deps/openssl/openssl/include'
-          ],
-          "conditions" : [
-            ["target_arch=='ia32'", {
-              "include_dirs": [ "<(node_root_dir)/deps/openssl/config/piii" ]
-            }],
-            ["target_arch=='x64'", {
-              "include_dirs": [ "<(node_root_dir)/deps/openssl/config/k8" ]
-            }],
-            ["target_arch=='arm'", {
-              "include_dirs": [ "<(node_root_dir)/deps/openssl/config/arm" ]
-            }]
-          ]
-        }],
-        # https://github.com/TooTallNate/node-gyp/wiki/Linking-to-OpenSSL
-        ['OS=="win"', {
-          'conditions': [
-          # "openssl_root" is the directory on Windows of the OpenSSL files.
-          # Check the "target_arch" variable to set good default values for
-          # both 64-bit and 32-bit builds of the module.
-          ['target_arch=="x64"', {
-            'variables': {
-            'openssl_root%': 'C:/OpenSSL-Win64'
-            },
-          }, {
-            'variables': {
-            'openssl_root%': 'C:/OpenSSL-Win32'
-            },
-          }],
-          ],
-          'libraries': [ 
-            '-l<(openssl_root)/lib/libeay32.lib',
-          ],
-          'include_dirs': [
-            '<(openssl_root)/include',
-          ],
-        }]
-      ],
-      'include_dirs': [ "nan" ]
-    },
-    {
       "target_name": "copy_modules",
       "variables": {
         "srcpath%": "<(module_root_dir)/build/Release",
@@ -1151,9 +963,7 @@
         "git",
         "libvirt",
         "fuse",
-        "secp256k1",
-        "utp",
-        "ed25519"
+        "utp"
       ],
       "copies": [
         {
@@ -1171,9 +981,7 @@
             "<(srcpath)/git.node",
             "<(srcpath)/libvirt.node",
             "<(srcpath)/fuse.node",
-            "<(srcpath)/secp256k1.node",
-            "<(srcpath)/utp.node",
-            "<(srcpath)/ed25519.node"
+            "<(srcpath)/utp.node"
           ],
           "destination": "<(module_root_dir)/lib/native"
         }

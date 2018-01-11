@@ -1,2 +1,1 @@
-const native = adone.nativeAddon("secp256k1.node");
-export default native;
+export default adone.asNamespace(adone.nativeAddon(adone.std.path.join(__dirname, "native", "secp256k1.node")));

@@ -1,8 +1,10 @@
-const native = adone.nativeAddon("ed25519.node");
-
 const {
     is
 } = adone;
+
+const native = adone.nativeAddon(adone.std.path.join(__dirname, "native", "ed25519.node"));
+
+adone.asNamespace(exports);
 
 export const sign = native.Sign;
 export const verify = (msg, sig, key) => {

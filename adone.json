@@ -109,6 +109,8 @@
                 "compressor": {
                     "description": "Compressors",
                     "namespace": "compressor",
+                    "src": "src/glosses/compressors/index.js",
+                    "dst": "lib/glosses/compressors",
                     "struct": {
                         "brotli": {
                             "description": "Brotli compression format",
@@ -186,8 +188,32 @@
                     "description": "Common cryptographic utilites",
                     "src": "src/glosses/crypto/**/*.js",
                     "dst": "lib/glosses/crypto",
-                    "task": "adoneTranspile",
-                    "namespace": "crypto"
+                    "task": "transpile",
+                    "namespace": "crypto",
+                    "struct": {
+                        "ed25519": {
+                            "description": "Implementation of ed25519 signatures",
+                            "namespace": "ed25519",
+                            "src": "src/glosses/crypto/ed25519/**/*.js",
+                            "dst": "lib/glosses/crypto/ed25519",
+                            "task": "transpile",
+                            "native": {
+                                "src": "src/glosses/crypto/ed25519/native",
+                                "dst": "lib/glosses/crypto/ed25519/native"
+                            }
+                        },
+                        "secp256k1": {
+                            "description": "Optimized implementation for EC operations on curve secp256k1",
+                            "namespace": "secp256k1",
+                            "src": "src/glosses/crypto/secp256k1/**/*.js",
+                            "dst": "lib/glosses/crypto/secp256k1",
+                            "task": "transpile",
+                            "native": {
+                                "src": "src/glosses/crypto/secp256k1/native",
+                                "dst": "lib/glosses/crypto/secp256k1/native"
+                            }
+                        }
+                    }
                 },
                 "data": {
                     "description": "Data generic manipulation utilites and serializers",
