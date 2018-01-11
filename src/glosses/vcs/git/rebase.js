@@ -1,8 +1,6 @@
-const native = adone.nativeAddon("git.node");
-
 const {
     promise: { promisifyAll },
-    vcs: { git: { Checkout, RebaseOptions, CheckoutOptions, MergeOptions, Utils: { normalizeOptions, shallowClone } } }
+    vcs: { git: { native, Checkout, RebaseOptions, CheckoutOptions, MergeOptions, Utils: { normalizeOptions, shallowClone } } }
 } = adone;
 
 const Rebase = native.Rebase;

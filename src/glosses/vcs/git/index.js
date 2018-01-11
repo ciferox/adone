@@ -1,4 +1,4 @@
-const native = adone.nativeAddon("git.node");
+export const native = adone.nativeAddon(adone.std.path.join(__dirname, "native", "git.node"));
 
 export const Time = native.Time;
 export const Treebuilder = native.Treebuilder;
@@ -288,7 +288,7 @@ adone.lazify({
         shallowClone: "./utils/shallow_clone",
         normalizeFetchOptions: "./utils/normalize_fetch_options"
     }, null, require)
-}, exports, require);
+}, adone.asNamespace(exports), require);
 
 // For disccussion on why `cloneDeep` is required, see:
 // https://github.com/facebook/jest/issues/3552

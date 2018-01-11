@@ -1,8 +1,6 @@
-const native = adone.nativeAddon("git.node");
-
 const {
     promise: { promisifyAll },
-    vcs: { git: { Utils: { lookupWrapper } } }
+    vcs: { git: { native, Utils: { lookupWrapper } } }
 } = adone;
 
 const Tag = native.Tag;

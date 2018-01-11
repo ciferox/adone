@@ -1,4 +1,6 @@
-const native = adone.nativeAddon("git.node");
+const {
+    vcs: { git: { native } }
+} = adone;
 
 const DiffLine = native.DiffLine;
 

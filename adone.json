@@ -766,10 +766,23 @@
                 },
                 "vcs": {
                     "description": "Version control systems",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/vcs/**/*.js",
                     "dst": "lib/glosses/vcs",
-                    "namespace": "vcs"
+                    "namespace": "vcs",
+                    "struct": {
+                        "git": {
+                            "description": "Git",
+                            "task": "transpile",
+                            "src": "src/glosses/vcs/git/**/*.js",
+                            "dst": "lib/glosses/vcs/git",
+                            "namespace": "git",
+                            "native": {
+                                "src": "src/glosses/vcs/git/native",
+                                "dst": "lib/glosses/vcs/git/native"
+                            }
+                        }
+                    }
                 },
                 "virtualization": {
                     "description": "Some stuff for virtualization",

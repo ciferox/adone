@@ -1,10 +1,8 @@
-const native = adone.nativeAddon("git.node");
-
 const {
     is,
     promise: { promisifyAll },
     std: { path, events },
-    vcs: { git: { Diff, TreeBuilder, Utils: { lookupWrapper } } }
+    vcs: { git: { native, Diff, TreeBuilder, Utils: { lookupWrapper } } }
 } = adone;
 
 const Tree = native.Tree;
@@ -26,13 +24,13 @@ Tree.lookup = promisifyAll(Tree.lookup);
 Tree.lookupPrefix = promisifyAll(Tree.lookupPrefix);
 
 /**
-* Retrieves the tree pointed to by the oid
-* @async
-* @param {Repository} repo The repo that the tree lives in
-* @param {String|Oid|Tree} id The tree to lookup
-* @param {Function} callback
-* @return {Tree}
-*/
+ * Retrieves the tree pointed to by the oid
+ * @async
+ * @param {Repository} repo The repo that the tree lives in
+ * @param {String|Oid|Tree} id The tree to lookup
+ * @param {Function} callback
+ * @return {Tree}
+ */
 Tree.lookup = lookupWrapper(Tree);
 
 /**

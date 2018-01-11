@@ -1,10 +1,8 @@
-const native = adone.nativeAddon("git.node");
-
 const {
     is,
     std: { path },
     // force load in case of indirect instantiation
-    vcs: { git: { Object: Obj } }
+    vcs: { git: { native, Object: Obj } }
 } = adone;
 
 const TreeEntry = native.TreeEntry;

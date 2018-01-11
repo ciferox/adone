@@ -1,8 +1,6 @@
-const native = adone.nativeAddon("git.node");
-
 const {
     promise: { promisifyAll },
-    vcs: { git: { CherrypickOptions, MergeOptions, CheckoutOptions, Utils: { shallowClone, normalizeOptions } } }
+    vcs: { git: { native, CherrypickOptions, MergeOptions, CheckoutOptions, Utils: { shallowClone, normalizeOptions } } }
 } = adone;
 
 const Cherrypick = native.Cherrypick;
@@ -14,14 +12,14 @@ const _cherrypick = Cherrypick.cherrypick;
 const _commit = Cherrypick.commit;
 
 /**
-* Cherrypick a commit and, changing the index and working directory
-*
-* @async
-* @param {Repository}         repo      The repo to checkout head
-* @param {Commit}             commit    The commit to cherrypick
-* @param {CherrypickOptions}  [options] Options for the cherrypick
-* @return {int} 0 on success, -1 on failure
-*/
+ * Cherrypick a commit and, changing the index and working directory
+ *
+ * @async
+ * @param {Repository}         repo      The repo to checkout head
+ * @param {Commit}             commit    The commit to cherrypick
+ * @param {CherrypickOptions}  [options] Options for the cherrypick
+ * @return {int} 0 on success, -1 on failure
+ */
 Cherrypick.cherrypick = function (repo, commit, options) {
     let mergeOpts;
     let checkoutOpts;
@@ -48,18 +46,18 @@ Cherrypick.cherrypick = function (repo, commit, options) {
 };
 
 /**
-* Cherrypicks the given commit against "our" commit, producing an index that
-* reflects the result of the cherrypick. The index is not backed by a repo.
-*
-* @async
-* @param {Repository}   repo              The repo to cherrypick commits
-* @param {Commit}       cherrypick_commit The commit to cherrypick
-* @param {Commit}       our_commit        The commit to revert against
-* @param {int}          mainline          The parent of the revert commit (1 or
-*                                         2) if it's a merge, 0 otherwise
-* @param {MergeOptions} [merge_options]   Merge options for the cherrypick
-* @return {int}   0 on success, -1 on failure
-*/
+ * Cherrypicks the given commit against "our" commit, producing an index that
+ * reflects the result of the cherrypick. The index is not backed by a repo.
+ *
+ * @async
+ * @param {Repository}   repo              The repo to cherrypick commits
+ * @param {Commit}       cherrypick_commit The commit to cherrypick
+ * @param {Commit}       our_commit        The commit to revert against
+ * @param {int}          mainline          The parent of the revert commit (1 or
+ *                                         2) if it's a merge, 0 otherwise
+ * @param {MergeOptions} [merge_options]   Merge options for the cherrypick
+ * @return {int}   0 on success, -1 on failure
+ */
 Cherrypick.commit = function (repo, cherrypickCommit, ourCommit, mainline, mergeOptions) {
     mergeOptions = normalizeOptions(mergeOptions, MergeOptions);
 

@@ -1,7 +1,6 @@
-const native = adone.nativeAddon("git.node");
 const {
     promise: { promisifyAll },
-    vcs: { git: { Branch, Utils: { lookupWrapper } } }
+    vcs: { git: { native, Branch, Utils: { lookupWrapper } } }
 } = adone;
 
 const Reference = native.Reference;

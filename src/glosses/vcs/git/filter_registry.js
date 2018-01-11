@@ -1,9 +1,10 @@
-const native = adone.nativeAddon("git.node");
 const {
     is,
     promise: { promisifyAll },
     vcs: { git }
 } = adone;
+
+const { native } = git;
 
 const FilterRegistry = native.FilterRegistry;
 

@@ -1,8 +1,8 @@
-const native = adone.nativeAddon("git.node");
 const {
     is,
     promise: { promisifyAll },
     vcs: { git: {
+        native,
         OdbObject // force load in case of indirect instantiation
     } }
 } = adone;

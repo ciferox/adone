@@ -1,12 +1,8 @@
-const native = adone.nativeAddon("git.node");
-
 const {
     is,
     promise: { promisifyAll },
     std: { events },
-    vcs: { git: {
-        Oid,
-        Utils: { lookupWrapper } } }
+    vcs: { git: { native, Oid, Utils: { lookupWrapper } } }
 } = adone;
 
 const Commit = native.Commit;

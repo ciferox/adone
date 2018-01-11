@@ -1,8 +1,6 @@
-const native = adone.nativeAddon("git.node");
-
 const {
     promise: { promisifyAll },
-    vcs: { git: { TreeEntry, Utils: { lookupWrapper } } }
+    vcs: { git: { native, TreeEntry, Utils: { lookupWrapper } } }
 } = adone;
 
 const Blob = native.Blob;
@@ -18,12 +16,12 @@ Blob.lookup = promisifyAll(Blob.lookup);
 Blob.lookupPrefix = promisifyAll(Blob.lookupPrefix);
 
 /**
-* Retrieves the blob pointed to by the oid
-* @async
-* @param {Repository} repo The repo that the blob lives in
-* @param {String|Oid|Blob} id The blob to lookup
-* @return {Blob}
-*/
+ * Retrieves the blob pointed to by the oid
+ * @async
+ * @param {Repository} repo The repo that the blob lives in
+ * @param {String|Oid|Blob} id The blob to lookup
+ * @return {Blob}
+ */
 Blob.lookup = lookupWrapper(Blob);
 
 /**

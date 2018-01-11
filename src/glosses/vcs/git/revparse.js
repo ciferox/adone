@@ -1,8 +1,6 @@
-const native = adone.nativeAddon("git.node");
-
 // force load in case of indirect instantiation
 const {
-    vcs: { git: { Object: Obj } }
+    vcs: { git: { native, Object: Obj } }
 } = adone;
 
 const Revparse = native.Revparse;

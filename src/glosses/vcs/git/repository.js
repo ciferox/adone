@@ -1,10 +1,9 @@
-const native = adone.nativeAddon("git.node");
-
 const {
     is,
     promise: { promisifyAll },
     std: { path },
     vcs: { git: {
+        native,
         Error, // force load in case of indirect instantiation
         Index, // force load in case of indirect instantiation
         ConvenientPatch, // force load in case of indirect instantiation

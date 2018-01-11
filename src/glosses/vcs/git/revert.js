@@ -1,9 +1,7 @@
-const native = adone.nativeAddon("git.node");
-
 const {
     is,
     promise: { promisifyAll },
-    vcs: { git: { MergeOptions, Utils: { normalizeOptions, shallowClone } } }
+    vcs: { git: { native, MergeOptions, Utils: { normalizeOptions, shallowClone } } }
 } = adone;
 
 const Revert = native.Revert;
