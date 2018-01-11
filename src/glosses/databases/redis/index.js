@@ -7,7 +7,7 @@ const redis = lazify({
     x: "./x",
     Cluster: "./cluster",
     Redis: "./redis"
-}, exports, require);
+}, adone.asNamespace(exports), require);
 
 lazifyPrivate({
     commands: "./__/commands",

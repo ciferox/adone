@@ -5,7 +5,7 @@ const {
 } = adone;
 
 const lazy = lazify({
-    hiredis: () => nativeAddon("hiredis.node")
+    hiredis: () => nativeAddon(adone.std.path.join(__dirname, "native", "hiredis.node"))
 });
 
 export default class HiredisReplyParser {

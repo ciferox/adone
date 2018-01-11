@@ -293,8 +293,44 @@
                     "description": "Databases",
                     "src": "src/glosses/databases/**/*.js",
                     "dst": "lib/glosses/databases",
-                    "task": "adoneTranspile",
-                    "namespace": "database"
+                    "task": "transpile",
+                    "namespace": "database",
+                    "struct": {
+                        "level": {
+                            "description": "Level is a key/value database",
+                            "namespace": "level",
+                            "task": "transpile",
+                            "src": "src/glosses/databases/level/**/*.js",
+                            "dst": "src/glosses/databases/level",
+                            "struct": {
+                                "backend": {
+                                    "description": "Level's backends",
+                                    "namespace": "backend",
+                                    "task": "transpile",
+                                    "src": [
+                                        "src/glosses/databases/level/backends/**/*.js",
+                                        "!src/glosses/databases/level/backends/leveldb/native/**/*"
+                                    ],
+                                    "dst": "src/glosses/databases/level/backends",
+                                    "native": {
+                                        "src": "src/glosses/databases/level/backends/leveldb/native",
+                                        "dst": "lib/glosses/databases/level/backends/leveldb/native"
+                                    }
+                                }
+                            }
+                        },
+                        "redis": {
+                            "description": "Redis is a key/value database",
+                            "namespace": "redis",
+                            "task": "transpile",
+                            "src": "src/glosses/databases/redis/**/*.js",
+                            "dst": "src/glosses/databases/redis",
+                            "native": {
+                                "src": "src/glosses/databases/redis/__/redis/libparser/native",
+                                "dst": "lib/glosses/databases/redis/__/redis/libparser/native"
+                            }
+                        }
+                    }
                 },
                 "datastore": {
                     "description": "Datastores",

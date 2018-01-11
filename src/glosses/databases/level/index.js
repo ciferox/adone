@@ -4,10 +4,6 @@ adone.lazify({
     AbstractBackend: ["./abstract", (mod) => mod.AbstractBackend],
     Batch: "./batch",
     Codec: "./codec",
-    DB: "./db"
+    DB: "./db",
+    backend: "./backends"
 }, adone.asNamespace(exports), require);
-
-export const backend = adone.lazify({
-    LevelDB: "./backends/leveldb",
-    Memory: "./backends/memory"
-}, null, require);

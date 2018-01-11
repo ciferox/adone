@@ -328,74 +328,6 @@
         ]
     },
     {
-      'target_name': 'hiredis',
-      'sources': [
-          'src/native/hiredis/hiredis.cc'
-        , 'src/native/hiredis/reader.cc'
-      ],
-      'include_dirs': ["nan"],
-      'dependencies': [
-        'src/native/hiredis/libhiredis/hiredis.gyp:hiredis-c'
-      ],
-      'defines': [
-          '_GNU_SOURCE'
-      ],
-      'cflags': [
-          '-Wall',
-          '-O3'
-      ]
-    },
-    {
-      "target_name": "leveldown",
-        "conditions": [
-          ["OS == 'win'", {
-              "defines": [
-                  "_HAS_EXCEPTIONS=0"
-              ],
-              "msvs_settings": {
-                  "VCCLCompilerTool": {
-                      "RuntimeTypeInfo": "false",
-                      "EnableFunctionLevelLinking": "true",
-                      "ExceptionHandling": "2",
-                      "DisableSpecificWarnings": [ "4355", "4530" ,"4267", "4244", "4506" ]
-                  }
-              }
-          }],
-          ['OS == "linux"', {
-              'cflags': [
-              ],
-              'cflags!': [ '-fno-tree-vrp' ]
-          }], ['OS == "android"', {
-              'cflags': [ '-fPIC' ]
-            , 'ldflags': [ '-fPIC' ]
-            , 'cflags!': [
-                  '-fno-tree-vrp'
-                , '-fno-exceptions'
-                , '-mfloat-abi=hard'
-                , '-fPIE'
-              ]
-            , 'cflags_cc!': [ '-fno-exceptions' ]
-            , 'ldflags!': [ '-fPIE' ]
-          }], ['target_arch == "arm"', {
-              'cflags': [ '-mfloat-abi=hard' ]
-          }]
-        ],
-        "dependencies": [
-            "src/native/leveldown/leveldb/leveldb.gyp:leveldb"
-        ],
-        "include_dirs": ["nan"],
-        "sources": [
-            "src/native/leveldown/batch.cc",
-            "src/native/leveldown/batch_async.cc",
-            "src/native/leveldown/database.cc",
-            "src/native/leveldown/database_async.cc",
-            "src/native/leveldown/iterator.cc",
-            "src/native/leveldown/iterator_async.cc",
-            "src/native/leveldown/leveldown.cc",
-            "src/native/leveldown/leveldown_async.cc"
-        ]
-    },
-    {
 		"target_name": "libmasscan",
 		"type": "shared_library",
     "variables": {
@@ -888,10 +820,8 @@
       },
       "dependencies" : [
         "bignumber",
-        "hiredis",
         "common",
         "metrics",
-        "leveldown",
         "masscan",
         "hid",
         "serial",
@@ -905,10 +835,8 @@
         {
           "files": [
             "<(srcpath)/bignumber.node",
-            "<(srcpath)/hiredis.node",
             "<(srcpath)/common.node",
             "<(srcpath)/metrics.node",
-            "<(srcpath)/leveldown.node",
             "<(srcpath)/masscan.node",
             "<(srcpath)/hid.node",
             "<(srcpath)/serial.node",
