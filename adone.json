@@ -39,6 +39,10 @@
                 "lib/**/*.map"
             ],
             "namespace": "adone",
+            "native": {
+                "src": "src/native",
+                "dst": "lib/native"
+            },
             "struct": {
                 "dev": {
                     "namespace": "dev"
@@ -506,10 +510,17 @@
                 },
                 "math": {
                     "description": "Implementation of common math classes and primitives",
-                    "task": "adoneTranspile",
-                    "src": "src/glosses/math/**/*.js",
+                    "task": "transpile",
+                    "src": [
+                        "src/glosses/math/**/*.js",
+                        "!src/glosses/math/bignumber/native/**/*"
+                    ],
                     "dst": "lib/glosses/math",
-                    "namespace": "math"
+                    "namespace": "math",
+                    "native": {
+                        "src": "src/glosses/math/bignumber/native",
+                        "dst": "lib/glosses/math/bignumber/native"
+                    }
                 },
                 "meta": {
                     "description": "Meta utilites and implementation of adone-specific inspection",
@@ -520,10 +531,17 @@
                 },
                 "metrics": {
                     "description": "Different metrics",
-                    "task": "adoneTranspile",
-                    "src": "src/glosses/metrics/**/*.js",
+                    "task": "transpile",
+                    "src": [
+                        "src/glosses/metrics/**/*.js",
+                        "!src/glosses/metrics/native/**/*"
+                    ],
                     "dst": "lib/glosses/metrics",
-                    "namespace": "metrics"
+                    "namespace": "metrics",
+                    "native": {
+                        "src": "src/glosses/metrics/native",
+                        "dst": "lib/glosses/metrics/native"
+                    }
                 },
                 "multi": {
                     "description": "Multiformats",
@@ -571,7 +589,7 @@
                             "task": "transpile",
                             "src": [
                                 "src/glosses/net/utp/**/*.js",
-                                "src/glosses/net/utp/native/**/*"
+                                "!src/glosses/net/utp/native/**/*"
                             ],
                             "dst": "lib/glosses/net/utp",
                             "namespace": "utp",

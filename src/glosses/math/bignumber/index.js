@@ -1,5 +1,5 @@
 const { is } = adone;
-const { BigNumber, setJSConditioner } = adone.nativeAddon("bignumber.node");
+const { BigNumber, setJSConditioner } = adone.nativeAddon(adone.std.path.join(__dirname, "native", "bignumber.node"));
 
 export default BigNumber;
 

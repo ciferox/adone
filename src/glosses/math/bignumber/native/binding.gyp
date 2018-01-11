@@ -1,18 +1,12 @@
 {
   'targets': [
     {
-      'target_name': 'common',
-      'sources': [
-        'src/native/common.cc'
-      ],
-      'cflags!': [ '-O3' ],
-      'cflags': [ '-O2' ],
-      'include_dirs' : [ "nan" ]
-    },
-    {
       'target_name': 'bignumber',
-      'sources': [ 'src/native/bignumber.cc' ],
-      'include_dirs': [ "nan" ],
+      'sources': [ 'src/bignumber.cc' ],
+      'include_dirs': [
+        "<(adone_root_dir)/nan",
+        "<(adone_root_dir)/src/native"
+      ],
       'conditions': [
         # For Windows, require either a 32-bit or 64-bit
         # separately-compiled OpenSSL library.
@@ -85,47 +79,6 @@
             ]
           }
         ]
-      ]
-    },
-    {
-        "target_name": "metrics",
-        "include_dirs": [ "nan" ],
-        "sources": [
-            "src/native/metrics/system.cc"
-        ],
-        'conditions': [
-          ['OS=="win"', {
-            "sources": [
-              "src/native/metrics/win32/wmi.cc"
-            ],
-            "include_dirs": ["src/native/metrics"]
-         }],
-          ['OS=="freebsd"', {
-            "libraries": [
-              "/usr/lib/libprocstat.so"
-            ]
-         }]
-        ]
-    },
-    {
-      "target_name": "copy_modules",
-      "variables": {
-        "srcpath%": "<(module_root_dir)/build/Release",
-      },
-      "dependencies" : [
-        "bignumber",
-        "common",
-        "metrics"
-      ],
-      "copies": [
-        {
-          "files": [
-            "<(srcpath)/bignumber.node",
-            "<(srcpath)/common.node",
-            "<(srcpath)/metrics.node"
-          ],
-          "destination": "<(module_root_dir)/lib/native"
-        }
       ]
     }
   ]

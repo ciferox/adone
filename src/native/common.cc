@@ -1,4 +1,4 @@
-#include "adone.h"
+#include <adone.h>
 #include <sys/types.h>
 
 #if ADONE_OS_WINDOWS == 0

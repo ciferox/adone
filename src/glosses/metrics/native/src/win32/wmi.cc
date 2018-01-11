@@ -1,4 +1,4 @@
-#include "../../adone.h"
+#include <adone.h>
 #include "wmi.h"
 
 #include <wbemdisp.h>

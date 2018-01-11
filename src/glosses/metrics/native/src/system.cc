@@ -1,4 +1,4 @@
-#include "../adone.h"
+#include <adone.h>
 
 #if ADONE_OS_WINDOWS
 
