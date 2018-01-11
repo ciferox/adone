@@ -10,8 +10,6 @@ const {
 
 const native = adone.nativeAddon(path.join(__dirname, "native", "fuse.node"));
 
-adone.asNamespace(exports);
-
 export const EPERM = -1;
 export const ENOENT = -2;
 export const ESRCH = -3;
@@ -157,7 +155,8 @@ export const context = function () {
 
 export const unmount = (mnt) => new Promise((resolve, reject) => {
     native.unmount(path.resolve(mnt), (err) => {
-        err ? reject(err) : resolve();
+        // ignore errors ?
+        resolve();
     });
 });
 
@@ -165,11 +164,7 @@ export const errno = function (code) {
     return (code && exports[code.toUpperCase()]) || -1;
 };
 
-export const mount = async (mnt, ops, opts) => {
-    if (is.function(opts)) {
-        return mount(mnt, ops, null, opts);
-    }
-
+export const mount = async (mnt, ops = {}, opts = {}) => {
     Object.assign(ops, opts);
     if (/\*|(^,)fuse-bindings(,$)/.test(process.env.DEBUG)) {
         ops.options = ["debug"].concat(ops.options || []);
