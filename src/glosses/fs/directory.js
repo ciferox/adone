@@ -1,4 +1,8 @@
-const { std: { path: spath }, is, fs } = adone;
+const {
+    std: { path: spath },
+    is,
+    fs
+} = adone;
 
 export default class Directory {
     constructor(...path) {
@@ -191,7 +195,10 @@ export default class Directory {
         }
     }
 
-    unlink({ retries = 10, delay = 100 } = {}) {
+    unlink({ relPath, retries = 10, delay = 100 } = {}) {
+        if (is.string(relPath) && !spath.isAbsolute(relPath)) {
+            return fs.rm(spath.join(this._path, relPath), { maxBusyTries: retries, emfileWait: delay });
+        }
         return fs.rm(this._path, { maxBusyTries: retries, emfileWait: delay });
     }
 

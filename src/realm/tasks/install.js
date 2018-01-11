@@ -194,7 +194,7 @@ export default class InstallTask extends task.Task {
 
                 if (is.string(info.dst)) {
                     srcPath = util.globize(info.dst, {
-                        recursively: true
+                        recursive: true
                     });
                     dstDir = info.dst;
                 } else {

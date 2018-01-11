@@ -19,7 +19,7 @@ const adoneConf = adone.configuration.Adone.loadSync({
     cwd: adone.rootPath
 });
 
-const metaNamespace = adoneConf.getNamespaceTopology();
+const metaNamespace = adoneConf.getNamespace();
 
 // Add global namespace
 metaNamespace.global = metaNamespace.adone.namespace.global = {

@@ -70,17 +70,11 @@ export default class Configuration extends adone.configuration.Generic {
     async load() {
         await super.load(Configuration.configName);
         await this._loadSubConfigs("", this.raw.struct);
-
-        // validate
-        this.getNamespaceTopology();
     }
 
     async loadSync() {
         super.loadSync(Configuration.configName);
         // await this._loadSubConfigs("", this.raw.struct);
-
-        // validate
-        this.getNamespaceTopology();
     }
 
     /**
@@ -124,7 +118,7 @@ export default class Configuration extends adone.configuration.Generic {
         return !is.nil(path) ? result.filter(validator) : result;
     }
 
-    getNamespaceTopology() {
+    getNamespace() {
         const topo = {};
 
         if (is.plainObject(this.raw.struct)) {
@@ -207,7 +201,11 @@ export default class Configuration extends adone.configuration.Generic {
 
                 const src = normalizeValue(dirName, null, val, "src");
                 if (src) {
-                    unit.src = src;
+                    if (is.string(src) && (src.endsWith("/") || src.endsWith("\\"))) {
+                        unit.src = adone.util.globize(src, { recursive: true });
+                    } else {
+                        unit.src = src;
+                    }
                     srcs.push(src);
                 }
 
@@ -223,7 +221,7 @@ export default class Configuration extends adone.configuration.Generic {
 
                 if (is.plainObject(val.struct)) {
                     const childSrcs = this._parseStructure(fullKey, dirName, val, val.struct, units);
-                    if (childSrcs.length > 0) {
+                    if (is.exist(unit.src) && childSrcs.length > 0) {
                         const excludes = [];
                         for (const src of childSrcs) {
                             if (is.string(src)) {
@@ -249,9 +247,25 @@ export default class Configuration extends adone.configuration.Generic {
                             unit.src = adone.util.arrify(unit.src).concat(excludes.map((x) => `!${x}`));
                         } else {
                             const srcGlob = excludes.map((x) => `!${x}`);
-                            srcGlob.unshift(adone.util.globize(prefix, { recursively: true }));
+                            srcGlob.unshift(adone.util.globize(prefix, { recursive: true }));
                             unit.src = srcGlob;
                         }
+                    }
+                }
+
+                if (is.string(unit.task)) {
+                    if (!is.exist(unit.src)) {
+                        throw new adone.x.NotValid(`No 'src' property needed by 'task' in '${fullKey}'`);
+                    }
+
+                    if (!is.exist(unit.dst)) {
+                        unit.dst = ".";
+                    }
+                }
+
+                if (is.string(unit.namespace)) {
+                    if (!is.string(unit.index) && (is.exist(unit.src) || is.plainObject(val.struct))) {
+                        unit.index = "index.js";
                     }
                 }
             }

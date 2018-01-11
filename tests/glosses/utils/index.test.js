@@ -942,45 +942,45 @@ describe("util", () => {
         });
 
         it("should return empty array if not arguments", () => {
-            assert.deepEqual(functionParams(function () {}), []);
+            assert.deepEqual(functionParams(function () { }), []);
         });
 
         it("should work when using comments", () => {
-            assert.deepEqual(functionParams(function /* something */ (
+            assert.deepEqual(functionParams(function /* something */(
                 // go,
                 go,
                 /* wrong, */
                 here
                 // (when, using, comments) {}
-            ) {}), ["go", "here"]);
+            ) { }), ["go", "here"]);
         });
 
         it("should get array with arguments names from regular function", () => {
-            assert.deepEqual(functionParams(function (a, b, c) {}), ["a", "b", "c"]);
-            assert.deepEqual(functionParams(function named (a, b, c) {}), ["a", "b", "c"]);
-            assert.deepEqual(functionParams(function named2(a, b, c) {}), ["a", "b", "c"]);
+            assert.deepEqual(functionParams(function (a, b, c) { }), ["a", "b", "c"]);
+            assert.deepEqual(functionParams(function named(a, b, c) { }), ["a", "b", "c"]);
+            assert.deepEqual(functionParams(function named2(a, b, c) { }), ["a", "b", "c"]);
         });
 
         it("should get arguments of an arrow and generator functions", () => {
-            assert.deepEqual(functionParams(a => {}), ["a"]); // eslint-disable-line arrow-parens
-            assert.deepEqual(functionParams((a, b) => {}), ["a", "b"]);
-            assert.deepEqual(functionParams(function * (a, b, c) {}), ["a", "b", "c"]);
-            assert.deepEqual(functionParams(function * named (a, b, c) {}), ["a", "b", "c"]);
-            assert.deepEqual(functionParams(function * named2(a, b, c) {}), ["a", "b", "c"]);
+            assert.deepEqual(functionParams(a => { }), ["a"]); // eslint-disable-line arrow-parens
+            assert.deepEqual(functionParams((a, b) => { }), ["a", "b"]);
+            assert.deepEqual(functionParams(function* (a, b, c) { }), ["a", "b", "c"]);
+            assert.deepEqual(functionParams(function* named(a, b, c) { }), ["a", "b", "c"]);
+            assert.deepEqual(functionParams(function* named2(a, b, c) { }), ["a", "b", "c"]);
         });
 
         it("should work with async functions", () => {
-            assert.deepEqual(functionParams(async function () {}), []);
-            assert.deepEqual(functionParams(async function (a) {}), ["a"]);
-            assert.deepEqual(functionParams(async function (a, b) {}), ["a", "b"]);
-            assert.deepEqual(functionParams(async function named (a, b) {}), ["a", "b"]);
-            assert.deepEqual(functionParams(async function named2(a, b) {}), ["a", "b"]);
+            assert.deepEqual(functionParams(async function () { }), []);
+            assert.deepEqual(functionParams(async function (a) { }), ["a"]);
+            assert.deepEqual(functionParams(async function (a, b) { }), ["a", "b"]);
+            assert.deepEqual(functionParams(async function named(a, b) { }), ["a", "b"]);
+            assert.deepEqual(functionParams(async function named2(a, b) { }), ["a", "b"]);
         });
 
         it("should work with arrow async functions", () => {
-            assert.deepEqual(functionParams(async () => {}), []);
-            assert.deepEqual(functionParams(async (a) => {}), ["a"]);
-            assert.deepEqual(functionParams(async (a, b) => {}), ["a", "b"]);
+            assert.deepEqual(functionParams(async () => { }), []);
+            assert.deepEqual(functionParams(async (a) => { }), ["a"]);
+            assert.deepEqual(functionParams(async (a, b) => { }), ["a", "b"]);
         });
 
         it.todo("it should correctly handle default params", () => {

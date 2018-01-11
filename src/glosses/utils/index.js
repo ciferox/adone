@@ -91,7 +91,8 @@ adone.lazify({
     terraformer: "./terraformer",
     inflection: "./inflection",
     globals: "./globals",
-    xorDistance: "./xor_distance"
+    xorDistance: "./xor_distance",
+    globize: "./globize"
 }, adone.asNamespace(exports), require);
 
 const irregularPlurals = {
@@ -599,16 +600,6 @@ export const sortKeys = (object, { deep = false, compare } = {}) => {
         obj[key] = deep && is.object(obj[key]) ? sortKeys(object[key]) : object[key];
     }
     return obj;
-};
-
-export const globize = (path, { exts = "", recursively = false } = {}) => {
-    const stars = recursively ? `**${std.path.sep}*${exts}` : `*${exts}`;
-    if (path.endsWith("/") || path.endsWith("\\")) {
-        path += stars;
-    } else {
-        path += `${std.path.sep}${stars}`;
-    }
-    return path;
 };
 
 export const unique = (array, projection = null) => {

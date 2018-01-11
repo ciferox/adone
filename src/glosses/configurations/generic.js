@@ -100,7 +100,7 @@ export default class Generic extends adone.configuration.Base {
     async load(confPath, name, options) {
         const conf = await this._checkPath(confPath, true);
         if (conf.st.isDirectory()) {
-            conf.path = adone.util.globize(conf.path, { exts: `{${Object.keys(this[SERIALIZER]).join(",")}}` });
+            conf.path = adone.util.globize(conf.path, { ext: Object.keys(this[SERIALIZER]) });
             await fs.glob(conf.path).map(async (p) => this.load(p, name, options));
         } else if (conf.st.isFile()) {
             let confObj = {};

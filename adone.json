@@ -28,7 +28,6 @@
         },
         "lib": {
             "description": "Glosses and components",
-            "index": "index.js",
             "src": [
                 "src/**/*.js",
                 "!src/cli/adone.js",
@@ -46,7 +45,6 @@
                 },
                 "cli": {
                     "description": "Adone CLI stuff",
-                    "index": "cli/index.js",
                     "src": [
                         "src/cli/**/*",
                         "!src/cli/adone.js"
@@ -57,14 +55,12 @@
                 },
                 "index": {
                     "description": "Main index file",
-                    "index": "index.js",
                     "src": "src/index.js",
                     "dst": "lib",
                     "task": "transpile"
                 },
                 "application": {
                     "description": "Application framework",
-                    "index": "glosses/application/index.js",
                     "src": "src/glosses/application/**/*.js",
                     "dst": "lib/glosses/application",
                     "task": "adoneTranspile",
@@ -72,7 +68,6 @@
                 },
                 "archives": {
                     "description": "Archivers",
-                    "index": "glosses/archives/index.js",
                     "src": "src/glosses/archives/**/*.js",
                     "dst": "lib/glosses/archives",
                     "task": "adoneTranspile",
@@ -80,7 +75,6 @@
                 },
                 "assertion": {
                     "description": "Assertion utilites",
-                    "index": "glosses/assertion/index.js",
                     "src": "src/glosses/assertion/**/*.js",
                     "dst": "lib/glosses/assertion",
                     "task": "adoneTranspile",
@@ -88,7 +82,6 @@
                 },
                 "collection": {
                     "description": "Implementations of common collections",
-                    "index": "glosses/collections/index.js",
                     "src": "src/glosses/collections/**/*.js",
                     "dst": "lib/glosses/collections",
                     "task": "adoneTranspile",
@@ -96,7 +89,6 @@
                 },
                 "compressor": {
                     "description": "Compressors",
-                    "index": "glosses/compressors/index.js",
                     "src": "src/glosses/compressors/**/*.js",
                     "dst": "lib/glosses/compressors",
                     "task": "adoneTranspile",
@@ -104,7 +96,6 @@
                 },
                 "configuration": {
                     "description": "Configurations",
-                    "index": "glosses/configurations/index.js",
                     "src": "src/glosses/configurations/**/*.js",
                     "dst": "lib/glosses/configurations",
                     "task": "adoneTranspile",
@@ -112,7 +103,6 @@
                 },
                 "crypto": {
                     "description": "Common cryptographic utilites",
-                    "index": "glosses/crypto/index.js",
                     "src": "src/glosses/crypto/**/*.js",
                     "dst": "lib/glosses/crypto",
                     "task": "adoneTranspile",
@@ -120,7 +110,6 @@
                 },
                 "data": {
                     "description": "Data generic manipulation utilites and serializers",
-                    "index": "glosses/data/index.js",
                     "src": "src/glosses/data/**/*.js",
                     "dst": "lib/glosses/data",
                     "dstClean": "lib/glosses/data/**/*",
@@ -135,7 +124,6 @@
                         },
                         "bson": {
                             "description": "Implementation of BSON serializer",
-                            "index": "glosses/data/bson/index.js",
                             "src": "src/glosses/data/bson/**/*.js",
                             "dst": "lib/glosses/data/bson",
                             "namespace": "bson",
@@ -146,7 +134,6 @@
                         },
                         "json": {
                             "description": "Implementation of JSON serializers",
-                            "index": "glosses/data/json/index.js",
                             "src": "src/glosses/data/json/**/*.js",
                             "dst": "lib/glosses/data/json",
                             "namespace": "json"
@@ -165,7 +152,6 @@
                         },
                         "yaml": {
                             "description": "Implementation of YAML serializer",
-                            "index": "glosses/data/yaml/index.js",
                             "src": "src/glosses/data/yaml/**/*.js",
                             "dst": "lib/glosses/data/yaml",
                             "namespace": "yaml"
@@ -190,7 +176,6 @@
                         },
                         "protobuf": {
                             "description": "Implementation of Protocol Buffers",
-                            "index": "glosses/data/protobuf/index.js",
                             "src": "src/glosses/data/protobuf/**/*.js",
                             "dst": "lib/glosses/data/protobuf",
                             "namespace": "protobuf"
@@ -199,7 +184,6 @@
                 },
                 "database": {
                     "description": "Databases",
-                    "index": "glosses/databases/index.js",
                     "src": "src/glosses/databases/**/*.js",
                     "dst": "lib/glosses/databases",
                     "task": "adoneTranspile",
@@ -207,7 +191,6 @@
                 },
                 "datastore": {
                     "description": "Datastores",
-                    "index": "glosses/datastores/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/datastores/**/*.js",
                     "dst": "lib/glosses/datastores",
@@ -215,7 +198,6 @@
                 },
                 "datetime": {
                     "description": "Datetime utilites",
-                    "index": "glosses/datetime/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/datetime/**/*.js",
                     "dst": "lib/glosses/datetime",
@@ -223,7 +205,6 @@
                 },
                 "diff": {
                     "description": "Text differencing",
-                    "index": "glosses/diff/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/diff/**/*.js",
                     "dst": "lib/glosses/diff",
@@ -231,7 +212,6 @@
                 },
                 "event": {
                     "description": "Event emitters and other event utilites",
-                    "index": "glosses/events/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/events/**/*.js",
                     "dst": "lib/glosses/events",
@@ -239,7 +219,6 @@
                 },
                 "x": {
                     "description": "Exceptions and helpers",
-                    "index": "glosses/exceptions/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/exceptions/**/*.js",
                     "dst": "lib/glosses/exceptions",
@@ -247,7 +226,6 @@
                 },
                 "fs": {
                     "description": "Filesystem utilites",
-                    "index": "glosses/fs/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/fs/**/*.js",
                     "dst": "lib/glosses/fs",
@@ -255,7 +233,6 @@
                 },
                 "geoip": {
                     "description": "Geolocation utilites",
-                    "index": "glosses/geoip/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/geoip/**/*.js",
                     "dst": "lib/glosses/geoip",
@@ -263,18 +240,25 @@
                 },
                 "gyp": {
                     "description": "Node.js native addon build tool",
-                    "index": "glosses/gyp/index.js",
                     "namespace": "gyp",
-                    "task": "adoneTranspile",
-                    "src": [
-                        "src/glosses/gyp/**/*.js",
-                        "!src/glosses/gyp/gyp/**/*"
-                    ],
-                    "dst": "lib/glosses/gyp"
+                    "index": "js:index.js",
+                    "struct": {
+                        "js": {
+                            "task": "transpile",
+                            "src": [
+                                "src/glosses/gyp/**/*.js",
+                                "!src/glosses/gyp/gyp/**/*"
+                            ],
+                            "dst": "lib/glosses/gyp"
+                        },
+                        "native-gyp": {
+                            "src": "src/glosses/gyp/gyp/**/*",
+                            "dst": "lib/glosses/gyp/gyp"
+                        }
+                    }
                 },
                 "hardware": {
                     "description": "Hardware stuff",
-                    "index": "glosses/hardware/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/hardware/**/*.js",
                     "dst": "lib/glosses/hardware",
@@ -282,7 +266,6 @@
                 },
                 "is": {
                     "description": "Implementation of common predicates",
-                    "index": "glosses/is/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/is/**/*.js",
                     "dst": "lib/glosses/is",
@@ -290,7 +273,6 @@
                 },
                 "js": {
                     "description": "JavaScript language stuff",
-                    "index": "glosses/js/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/js/**/*.js",
                     "dst": "lib/glosses/js",
@@ -298,7 +280,6 @@
                 },
                 "math": {
                     "description": "Implementation of common math classes and primitives",
-                    "index": "glosses/math/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/math/**/*.js",
                     "dst": "lib/glosses/math",
@@ -306,7 +287,6 @@
                 },
                 "meta": {
                     "description": "Meta utilites and implementation of adone-specific inspection",
-                    "index": "glosses/meta/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/meta/**/*.js",
                     "dst": "lib/glosses/meta",
@@ -314,7 +294,6 @@
                 },
                 "metrics": {
                     "description": "Different metrics",
-                    "index": "glosses/metrics/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/metrics/**/*.js",
                     "dst": "lib/glosses/metrics",
@@ -322,7 +301,6 @@
                 },
                 "multi": {
                     "description": "Multiformats",
-                    "index": "glosses/multi/index.js",
                     "task": "transpile",
                     "src": "src/glosses/multi/**/*.js",
                     "dst": "lib/glosses/multi",
@@ -357,7 +335,6 @@
                 },
                 "net": {
                     "description": "Implementation of different network abstractions, protocols and associated stuff",
-                    "index": "glosses/net/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/net/**/*.js",
                     "dst": "lib/glosses/net",
@@ -365,7 +342,6 @@
                 },
                 "netron": {
                     "description": "Implementation of Netron",
-                    "index": "glosses/netron/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/netron/**/*.js",
                     "dst": "lib/glosses/netron",
@@ -373,7 +349,6 @@
                 },
                 "netron2": {
                     "description": "Implementation of Netron 2",
-                    "index": "glosses/netron2/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/netron2/**/*.js",
                     "dst": "lib/glosses/netron2",
@@ -381,7 +356,6 @@
                 },
                 "netscan": {
                     "description": "Network scanning utilites",
-                    "index": "glosses/netscan/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/netscan/**/*.js",
                     "dst": "lib/glosses/netscan",
@@ -389,7 +363,6 @@
                 },
                 "notifier": {
                     "description": "Implementation of system notifier",
-                    "index": "glosses/notifier/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/notifier/**/*.js",
                     "dst": "lib/glosses/notifier",
@@ -397,7 +370,6 @@
                 },
                 "odm": {
                     "description": "Object document mapper",
-                    "index": "glosses/odm/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/odm/**/*.js",
                     "dst": "lib/glosses/odm",
@@ -405,7 +377,6 @@
                 },
                 "orm": {
                     "description": "ORM implementation",
-                    "index": "glosses/odm/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/orm/**/*.js",
                     "dst": "lib/glosses/orm",
@@ -413,7 +384,6 @@
                 },
                 "promise": {
                     "description": "Promise utilites",
-                    "index": "glosses/promise/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/promise/**/*.js",
                     "dst": "lib/glosses/promise",
@@ -421,7 +391,6 @@
                 },
                 "punycode": {
                     "description": "Implementation of punycode",
-                    "index": "glosses/punycode/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/punycode/**/*.js",
                     "dst": "lib/glosses/punycode",
@@ -429,7 +398,6 @@
                 },
                 "regex": {
                     "description": "Regular expression utiliter and common regular expressions",
-                    "index": "glosses/regex/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/regex/**/*.js",
                     "dst": "lib/glosses/regex",
@@ -437,7 +405,6 @@
                 },
                 "schema": {
                     "description": "Schema validators",
-                    "index": "glosses/schema/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/schema/**/*.js",
                     "dst": "lib/glosses/schema",
@@ -452,7 +419,6 @@
                 },
                 "semver": {
                     "description": "Semantic version parser",
-                    "index": "glosses/semver/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/semver/**/*.js",
                     "dst": "lib/glosses/semver",
@@ -466,7 +432,6 @@
                 },
                 "sourcemap": {
                     "description": "Sourcemaps",
-                    "index": "glosses/sourcemap/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/sourcemap/**/*.js",
                     "dst": "lib/glosses/sourcemap",
@@ -474,7 +439,6 @@
                 },
                 "stream": {
                     "description": "Different streams and stream utilites",
-                    "index": "glosses/streams/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/streams/**/*.js",
                     "dst": "lib/glosses/streams",
@@ -482,7 +446,6 @@
                 },
                 "system": {
                     "description": "System utilites",
-                    "index": "glosses/system/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/system/**/*.js",
                     "dst": "lib/glosses/system",
@@ -490,7 +453,6 @@
                 },
                 "task": {
                     "description": "Tasks management",
-                    "index": "glosses/tasks/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/tasks/**/*.js",
                     "dst": "lib/glosses/tasks",
@@ -498,7 +460,6 @@
                 },
                 "templating": {
                     "description": "Template engines",
-                    "index": "glosses/templating/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/templating/**/*.js",
                     "dst": "lib/glosses/templating",
@@ -521,7 +482,6 @@
                 },
                 "terminal": {
                     "description": "Terminal stuff",
-                    "index": "glosses/terminal/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/terminal/**/*.js",
                     "dst": "lib/glosses/terminal",
@@ -529,7 +489,6 @@
                 },
                 "text": {
                     "description": "Text utilites",
-                    "index": "glosses/text/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/text/**/*.js",
                     "dst": "lib/glosses/text",
@@ -537,7 +496,6 @@
                 },
                 "uri": {
                     "description": "URI manipulation",
-                    "index": "glosses/uri/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/uri/**/*.js",
                     "dst": "lib/glosses/uri",
@@ -545,7 +503,6 @@
                 },
                 "util": {
                     "description": "Utilites",
-                    "index": "glosses/utils/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/utils/**/*.js",
                     "dst": "lib/glosses/utils",
@@ -553,7 +510,6 @@
                 },
                 "vault": {
                     "description": "Vault implementation on top of leveldb",
-                    "index": "glosses/vault/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/vault/**/*.js",
                     "dst": "lib/glosses/vault",
@@ -561,7 +517,6 @@
                 },
                 "vcs": {
                     "description": "Version control systems",
-                    "index": "glosses/vcs/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/vcs/**/*.js",
                     "dst": "lib/glosses/vcs",
@@ -569,7 +524,6 @@
                 },
                 "virtualization": {
                     "description": "Some stuff for virtualization",
-                    "index": "glosses/virtualization/index.js",
                     "task": "adoneTranspile",
                     "src": "src/glosses/virtualization/**/*.js",
                     "dst": "lib/glosses/virtualization",
@@ -577,21 +531,18 @@
                 },
                 "vendor": {
                     "description": "Vendor virtual namespace",
-                    "index": "vendor/index.js",
                     "src": "src/vendor/**/*.js",
                     "dst": "lib/vendor",
                     "namespace": "vendor"
                 },
                 "npm": {
                     "description": "Adone based npm packages",
-                    "index": "npm/index.js",
                     "src": "src/npm/**/*.js",
                     "dst": "lib/npm",
                     "namespace": "npm"
                 },
                 "fast": {
                     "description": "File automation streaming templates/transforms",
-                    "index": "fast/index.js",
                     "task": "transpile",
                     "src": "src/fast/**/*.js",
                     "dst": "lib/fast",
@@ -621,7 +572,6 @@
                 },
                 "project": {
                     "description": "Tasks management",
-                    "index": "glosses/tasks/index.js",
                     "task": "transpile",
                     "src": "src/project/**/*.js",
                     "dst": "lib/project",
@@ -629,7 +579,6 @@
                 },
                 "shani": {
                     "description": "Testing framework",
-                    "index": "shani/index.js",
                     "task": "transpile",
                     "src": "src/shani/**/*.js",
                     "dst": "lib/shani",
@@ -637,7 +586,6 @@
                 },
                 "specter": {
                     "description": "",
-                    "index": "specter/index.js",
                     "task": "transpile",
                     "src": "src/specter/**/*.js",
                     "dst": "lib/specter",
