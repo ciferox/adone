@@ -1,4 +1,4 @@
-const native = adone.nativeAddon("libvirt");
+const native = adone.nativeAddon(adone.std.path.join(__dirname, "native", "libvirt.node"));
 
 const {
     promise: { promisifyAll },
@@ -43,7 +43,7 @@ libvirt.Secret.prototype = promisifyAll(native.Secret.prototype, promisifyOption
 libvirt.StoragePool.prototype = promisifyAll(native.StoragePool.prototype, promisifyOptions);
 libvirt.StorageVolume.prototype = promisifyAll(native.StorageVolume.prototype, promisifyOptions);
 
-/*
+/**
  * A helper method returning an 'all domains' promise.
  */
 libvirt.Hypervisor.prototype.getAllDomains = function () {
@@ -71,4 +71,4 @@ libvirt.createHypervisor = function (uri, options) {
 
 libvirt.LibvirtError = LibvirtError;
 
-export default libvirt;
+export default adone.asNamespace(libvirt);

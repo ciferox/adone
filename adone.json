@@ -786,10 +786,33 @@
                 },
                 "virtualization": {
                     "description": "Some stuff for virtualization",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/virtualization/**/*.js",
                     "dst": "lib/glosses/virtualization",
-                    "namespace": "virtualization"
+                    "namespace": "virtualization",
+                    "struct": {
+                        "libvirt": {
+                            "description": "libvirt",
+                            "namespace": "libvirt",
+                            "task": "transpile",
+                            "src": [
+                                "src/glosses/virtualization/libvirt/**/*.js",
+                                "!src/glosses/virtualization/libvirt/native/**/*"
+                            ],
+                            "dst": "lib/glosses/virtualization/libvirt",
+                            "native": {
+                                "src": "src/glosses/virtualization/libvirt/native",
+                                "dst": "lib/glosses/virtualization/libvirt/native"
+                            }
+                        },
+                        "virtualbox": {
+                            "description": "VirtualBox",
+                            "namespace": "virtualbox",
+                            "task": "transpile",
+                            "src": "src/glosses/virtualization/virtualbox/**/*.js",
+                            "dst": "lib/glosses/virtualization/virtualbox"
+                        }
+                    }
                 },
                 "vendor": {
                     "description": "Vendor virtual namespace",

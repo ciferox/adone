@@ -311,4 +311,4 @@ const vbox = new VirtualBox();
 
 vbox.scanCodes = scanCodes;
 
-export default vbox;
+export default adone.asNamespace(vbox);
