@@ -686,24 +686,6 @@
         ],
       }]
     ],
-    }, {
-        "target_name": "report",
-        "sources": [ "src/native/report/report.cc", "src/native/report/module.cc", "src/native/report/utilities.cc" ],
-        "include_dirs": [ 'nan' ],
-        "conditions": [
-        ["OS=='linux'", {
-            "defines": [ "_GNU_SOURCE" ],
-            "cflags": [ "-g", "-O2", "-std=c++11", ],
-        }],
-        ["OS=='win'", {
-            "libraries": [ "dbghelp.lib", "Netapi32.lib", "PsApi.lib", "Ws2_32.lib" ],
-            "dll_files": [ "dbghelp.dll", "Netapi32.dll", "PsApi.dll", "Ws2_32.dll" ],
-        }],
-        ],
-        "defines": [
-        'NODEREPORT_VERSION="<!(node -p \"require(\'./package.json\').version\")"'
-        ],
-    },
     {
         "target_name": "rpigpio",
         "conditions": [
@@ -1311,7 +1293,6 @@
         "masscan",
         "hid",
         "serial",
-        "report",
         "rpigpio",
         "i2c",
         "git",
@@ -1335,7 +1316,6 @@
             "<(srcpath)/masscan.node",
             "<(srcpath)/hid.node",
             "<(srcpath)/serial.node",
-            "<(srcpath)/report.node",
             "<(srcpath)/rpigpio.node",
             "<(srcpath)/i2c.node",
             "<(srcpath)/git.node",

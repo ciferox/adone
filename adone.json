@@ -61,10 +61,28 @@
                 },
                 "application": {
                     "description": "Application framework",
-                    "src": "src/glosses/application/**/*.js",
+                    "src": [
+                        "src/glosses/application/**/*.js",
+                        "!src/glosses/application/report/native/**/*"
+                    ],
                     "dst": "lib/glosses/application",
-                    "task": "adoneTranspile",
-                    "namespace": "application"
+                    "task": "transpile",
+                    "namespace": "application",
+                    "struct": {
+                        "report": {
+                            "namespace": "report",
+                            "src": [
+                                "src/glosses/application/report/**/*.js",
+                                "!src/glosses/application/report/native/**/*"
+                            ],
+                            "dst": "lib/glosses/application/report",
+                            "task": "transpile",
+                            "native": {
+                                "src": "src/glosses/application/report/native",
+                                "dst": "lib/glosses/application/report/native"
+                            }
+                        }
+                    }
                 },
                 "archives": {
                     "description": "Archivers",
