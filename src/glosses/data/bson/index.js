@@ -1,5 +1,5 @@
 const bson = adone.lazify({
-    native: () => adone.nativeAddon("bson.node").BSON,
+    native: () => adone.nativeAddon(adone.std.path.join(__dirname, "native", "bson.node")).BSON,
     serializer: () => new bson.BSON(),
     Binary: "./binary",
     Code: "./code",

@@ -6,7 +6,7 @@
       'sources': [ 'src/bson.cc' ],
       'cflags!': [ '-fno-exceptions' ],
       'cflags_cc!': [ '-fno-exceptions' ],
-      'include_dirs': [ "nan" ],
+      'include_dirs': [ "<(adone_root_dir)/nan" ],
       'conditions': [
         ['OS=="mac"', {
           'xcode_settings': {
