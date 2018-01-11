@@ -1,4 +1,4 @@
-#include "../../adone.h"
+#include <adone.h>
 #include <iostream>
 #include <iomanip>
 #include <sstream>

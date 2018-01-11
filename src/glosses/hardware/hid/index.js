@@ -1,17 +1,20 @@
-const binding = adone.nativeAddon("hid.node");
+const binding = adone.nativeAddon(adone.std.path.join(__dirname, "native", "hid.node"));
+
+adone.asNamespace(exports);
 
 export class Device extends adone.event.EventEmitter {
     constructor(...args) {
         super();
 
-        /* We also want to inherit from `binding.HID`, but unfortunately,
-            it's not so easy for native Objects. For example, the
-            following won't work since `new` keyword isn't used:
-
-            `binding.HID.apply(this, arguments);`
-
-            So... we do this craziness instead...
-        */
+        /**
+         * We also want to inherit from `binding.HID`, but unfortunately,
+         * it's not so easy for native Objects. For example, the
+         * following won't work since `new` keyword isn't used:
+         *
+         * `binding.HID.apply(this, arguments);`
+         *
+         * So... we do this craziness instead...
+         */
         const thisPlusArgs = new Array(arguments.length + 1);
         thisPlusArgs[0] = null;
         for (let i = 0; i < arguments.length; i++) {
@@ -30,11 +33,12 @@ export class Device extends adone.event.EventEmitter {
             }
         }
 
-        /* We are now done inheriting from `binding.HID` and EventEmitter.
-
-            Now upon adding a new listener for "data" events, we start
-            polling the HID device using `read(...)`
-            See `resume()` for more details. */
+        /**
+         * We are now done inheriting from `binding.HID` and EventEmitter.
+         *
+         * Now upon adding a new listener for "data" events, we start
+         * polling the HID device using `read(...)`
+         */
         this._paused = true;
         const self = this;
         self.on("newListener", (eventName, listener) => {

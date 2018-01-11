@@ -169,5 +169,8 @@
   "bin": {
     "adone": "./bin/adone.js"
   },
-  "dependencies": {}
+  "dependencies": {
+    "ease-component": "^1.0.0",
+    "nanotimer": "^0.3.15"
+  }
 }

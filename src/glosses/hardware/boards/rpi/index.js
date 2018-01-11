@@ -63,7 +63,7 @@ adone.lazify({
     led: "./led",
     pwm: "./pwm",
     softPwm: "./soft_pwm"
-}, exports, require);
+}, adone.asNamespace(exports), require);
 
 export class IO extends adone.event.EventEmitter {
     constructor({ includePins, excludePins, enableSerial, enableSoftPwm = false } = {}) {

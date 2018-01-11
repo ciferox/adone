@@ -81,7 +81,5 @@ adone.lazify({
     Sensors: () => adone.hardware.Sensor.Collection,
     Servos: () => adone.hardware.Servo.Collection,
     Switches: () => adone.hardware.Switch.Collection,
-    board: () => adone.lazify({
-        rpi: "./boards/rpi"
-    }, null, require)
+    board: "./boards"
 }, adone.asNamespace(exports), require);

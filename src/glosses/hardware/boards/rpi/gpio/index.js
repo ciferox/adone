@@ -1,5 +1,5 @@
 const { is } = adone;
-const native = adone.nativeAddon("rpigpio.node");
+const native = adone.nativeAddon(adone.std.path.join(__dirname, "native", "rpigpio.node"));
 
 let initialized = false;
 

@@ -1,5 +1,5 @@
 const { is, std: { fs } } = adone;
-const i2c = adone.nativeAddon("i2c.node");
+const i2c = adone.nativeAddon(adone.std.path.join(__dirname, "native", "i2c.node"));
 
 const DEVICE_PREFIX = "/dev/i2c-";
 const FIRST_SCAN_ADDR = 0x03;

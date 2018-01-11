@@ -1,5 +1,7 @@
 const { is } = adone;
 
+adone.asNamespace(exports);
+
 const runtime = adone.lazify({
     Bus: () => {
         if (is.windows) {

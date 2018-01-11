@@ -421,7 +421,74 @@
                     "task": "adoneTranspile",
                     "src": "src/glosses/hardware/**/*.js",
                     "dst": "lib/glosses/hardware",
-                    "namespace": "hardware"
+                    "namespace": "hardware",
+                    "struct": {
+                        "board": {
+                            "description": "Development boards",
+                            "namespace": "board",
+                            "task": "transpile",
+                            "src": "src/glosses/hardware/boards/**/*.js",
+                            "dst": "lib/glosses/hardware/boards",
+                            "struct": {
+                                "rpi": {
+                                    "description": "SaspberryPI board",
+                                    "namespace": "rpi",
+                                    "task": "transpile",
+                                    "src": [
+                                        "src/glosses/hardware/boards/rpi/**/*.js",
+                                        "!src/glosses/hardware/boards/rpi/gpio/native/**/*"
+                                    ],
+                                    "dst": "lib/glosses/hardware/boards/rpi",
+                                    "native": {
+                                        "src": "src/glosses/hardware/boards/rpi/gpio/native",
+                                        "dst": "lib/glosses/hardware/boards/rpi/gpio/native"
+                                    }
+                                }
+                            }
+                        },
+                        "hid": {
+                            "description": "HID bus",
+                            "namespace": "hid",
+                            "task": "transpile",
+                            "src": [
+                                "src/glosses/hardware/hid/**/*.js",
+                                "!src/glosses/hardware/hid/native/**/*"
+                            ],
+                            "dst": "lib/glosses/hardware/hid",
+                            "native": {
+                                "src": "src/glosses/hardware/hid/native",
+                                "dst": "lib/glosses/hardware/hid/native"
+                            }
+                        },
+                        "i2c": {
+                            "description": "I2C bus",
+                            "namespace": "i2c",
+                            "task": "transpile",
+                            "src": [
+                                "src/glosses/hardware/i2c/**/*.js",
+                                "!src/glosses/hardware/i2c/native/**/*"
+                            ],
+                            "dst": "lib/glosses/hardware/i2c",
+                            "native": {
+                                "src": "src/glosses/hardware/i2c/native",
+                                "dst": "lib/glosses/hardware/i2c/native"
+                            }
+                        },
+                        "serial": {
+                            "description": "Serial bus",
+                            "namespace": "serial",
+                            "task": "transpile",
+                            "src": [
+                                "src/glosses/hardware/serial/**/*.js",
+                                "!src/glosses/hardware/serial/native/**/*"
+                            ],
+                            "dst": "lib/glosses/hardware/serial",
+                            "native": {
+                                "src": "src/glosses/hardware/serial/native",
+                                "dst": "lib/glosses/hardware/serial/native"
+                            }
+                        }
+                    }
                 },
                 "is": {
                     "description": "Implementation of common predicates",
