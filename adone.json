@@ -333,10 +333,26 @@
                 },
                 "fs": {
                     "description": "Filesystem utilites",
-                    "task": "adoneTranspile",
-                    "src": "src/glosses/fs/**/*.js",
+                    "task": "transpile",
+                    "src": [
+                        "src/glosses/fs/**/*.js",
+                        "!src/glosses/fs/fuse/native/**/*"
+                    ],
                     "dst": "lib/glosses/fs",
-                    "namespace": "fs"
+                    "namespace": "fs",
+                    "struct": {
+                        "fuse": {
+                            "description": "FUSE binding",
+                            "namespace": "fuse",
+                            "task": "transpile",
+                            "src": "src/glosses/fs/fuse/**/*.js",
+                            "dst": "lib/glosses/fs/fuse",
+                            "native": {
+                                "src": "src/glosses/fs/fuse/native",
+                                "dst": "lib/glosses/fs/fuse/native"
+                            }
+                        }
+                    }
                 },
                 "geoip": {
                     "description": "Geolocation utilites",

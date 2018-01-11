@@ -8,8 +8,9 @@ const {
     }
 } = adone;
 
-const native = adone.nativeAddon("fuse");
+const native = adone.nativeAddon(path.join(__dirname, "native", "fuse.node"));
 
+adone.asNamespace(exports);
 
 export const EPERM = -1;
 export const ENOENT = -2;
