@@ -108,7 +108,7 @@ export class Gyp extends adone.event.EventEmitter {
             log.error("node-gyp -v", `v${adone.package.version}`);
         };
 
-        const run = () => {
+        const run = async () => {
             const command = this.todo.shift();
             if (!command) {
                 // done!
@@ -117,30 +117,30 @@ export class Gyp extends adone.event.EventEmitter {
                 return;
             }
 
-            adone.gyp.command[command.name](this, command.args, function (err) {
-                if (err) {
-                    log.error(`${command.name} error`);
-                    log.error("stack", err.stack);
-                    errorMessage();
-                    log.error("not ok");
-                    return adone.runtime.app.exit(1);
-                }
-                if (command.name === "list") {
-                    const versions = arguments[1];
-                    if (versions.length > 0) {
-                        versions.forEach((version) => {
-                            console.log(version);
-                        });
-                    } else {
-                        console.log("No node development files installed. Use `node-gyp install` to install a version.");
-                    }
-                } else if (arguments.length >= 2) {
-                    console.log.apply(console, [].slice.call(arguments, 1));
-                }
+            try {
+                await adone.gyp.command[command.name](this, command.args);
+                // if (command.name === "list") {
+                //     const versions = arguments[1];
+                //     if (versions.length > 0) {
+                //         versions.forEach((version) => {
+                //             console.log(version);
+                //         });
+                //     } else {
+                //         console.log("No node development files installed. Use `node-gyp install` to install a version.");
+                //     }
+                // } else if (arguments.length >= 2) {
+                //     console.log.apply(console, [].slice.call(arguments, 1));
+                // }
 
                 // now run the next command in the queue
-                process.nextTick(run);
-            });
+                return run();
+            } catch (err) {
+                log.error(`${command.name} error`);
+                log.error("stack", err.stack);
+                errorMessage();
+                log.error("not ok");
+                throw err;
+            }
         };
 
         const issueMessage = function () {
@@ -167,7 +167,7 @@ export class Gyp extends adone.event.EventEmitter {
         });
 
         // start running the given commands!
-        run();
+        return run();
     }
 
     /**

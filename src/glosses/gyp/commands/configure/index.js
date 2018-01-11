@@ -1,24 +1,20 @@
-const fs = require("graceful-fs");
-const path = require("path");
 const log = require("npmlog");
 const osenv = require("osenv");
 const which = require("which");
-const semver = require("semver");
 const mkdirp = require("mkdirp");
-const cp = require("child_process");
-const extend = require("util")._extend;
 const processRelease = require("../../process-release");
-const win = process.platform === "win32";
 const findNodeDirectory = require("./find-node-directory");
-const msgFormat = require("util").format;
 let findVS2017;
-if (win) {
-    findVS2017 = require("../find-vs2017");
-}
 
 const {
-    is
+    is,
+    semver,
+    std: { fs, path, child_process: cp, util: { format: msgFormat, _extend: extend } }
 } = adone;
+
+if (is.windows) {
+    findVS2017 = require("../find-vs2017");
+}
 
 const PythonFinder = function (python, callback) {
     this.callback = callback;
@@ -33,7 +29,7 @@ PythonFinder.prototype = {
     resolve: path.win32 && path.win32.resolve || path.resolve,
     stat: fs.stat,
     which,
-    win,
+    win: is.windows,
 
     checkPython: function checkPython() {
         this.log.verbose("check python",
@@ -114,7 +110,7 @@ PythonFinder.prototype = {
                 this.log.silly('stripping "rc" identifier from version');
                 version = version.replace(/rc(.*)$/ig, "");
             }
-            const range = semver.Range(">=2.5.0 <3.0.0");
+            const range = new semver.Range(">=2.5.0 <3.0.0");
             let valid = false;
             try {
                 valid = range.test(version);
@@ -201,343 +197,345 @@ const findAccessibleSync = function (logprefix, dir, candidates) {
     return undefined;
 };
 
-const configure = function (gyp, argv, callback) {
-    let python = gyp.opts.python || process.env.PYTHON || "python2";
-    const buildDir = path.resolve("build");
-    const configNames = ["config.gypi", "common.gypi"];
-    const configs = [];
-    let nodeDir;
-    const release = processRelease(argv, gyp, process.version, process.release);
+const configure = function (gyp, argv) {
+    return new Promise((resolve, reject) => {
+        let python = gyp.opts.python || process.env.PYTHON || "python2";
+        const buildDir = path.resolve("build");
+        const configNames = ["config.gypi", "common.gypi"];
+        const configs = [];
+        let nodeDir;
+        const release = processRelease(argv, gyp, process.version, process.release);
 
-    /**
-     * Called when the `gyp` child process exits.
-     */
+        /**
+         * Called when the `gyp` child process exits.
+         */
 
-    const onCpExit = function (code, signal) {
-        if (code !== 0) {
-            return callback(new Error(`\`gyp\` failed with exit code: ${code}`));
-        }
-        // we're done
-        callback();
-    };
-
-    const runGyp = function (err) {
-        if (err) {
-            return callback(err);
-        }
-
-        if (!~argv.indexOf("-f") && !~argv.indexOf("--format")) {
-            if (win) {
-                log.verbose("gyp", 'gyp format was not specified; forcing "msvs"');
-                // force the 'make' target for non-Windows
-                argv.push("-f", "msvs");
-            } else {
-                log.verbose("gyp", 'gyp format was not specified; forcing "make"');
-                // force the 'make' target for non-Windows
-                argv.push("-f", "make");
+        const onCpExit = function (code, signal) {
+            if (code !== 0) {
+                return reject(new Error(`\`gyp\` failed with exit code: ${code}`));
             }
-        }
-
-        const hasMsvsVersion = function () {
-            return argv.some((arg) => {
-                return arg.indexOf("msvs_version") === 0;
-            });
+            // we're done
+            resolve();
         };
 
-        if (win && !hasMsvsVersion()) {
-            if ("msvs_version" in gyp.opts) {
-                argv.push("-G", `msvs_version=${gyp.opts.msvs_version}`);
-            } else {
-                argv.push("-G", "msvs_version=auto");
-            }
-        }
-
-        // include all the ".gypi" files that were found
-        configs.forEach((config) => {
-            argv.push("-I", config);
-        });
-
-        // for AIX we need to set up the path to the exp file
-        // which contains the symbols needed for linking.
-        // The file will either be in one of the following
-        // depending on whether it is an installed or
-        // development environment:
-        //  - the include/node directory
-        //  - the out/Release directory
-        //  - the out/Debug directory
-        //  - the root directory
-        let nodeExpFile = undefined;
-        if (process.platform === "aix" || process.platform === "os390") {
-            const ext = process.platform === "aix" ? "exp" : "x";
-            const nodeRootDir = findNodeDirectory();
-            const candidates = ["include/node/node", "out/Release/node", "out/Debug/node", "node"].map((file) => `${file}.${ext}`);
-            const logprefix = "find exports file";
-            nodeExpFile = findAccessibleSync(logprefix, nodeRootDir, candidates);
-            if (!is.undefined(nodeExpFile)) {
-                log.verbose(logprefix, "Found exports file: %s", nodeExpFile);
-            } else {
-                const msg = msgFormat("Could not find node.%s file in %s", ext, nodeRootDir);
-                log.error(logprefix, "Could not find exports file");
-                return callback(new Error(msg));
-            }
-        }
-
-        // this logic ported from the old `gyp_addon` python file
-        const gypScript = path.resolve(__dirname, "..", "..", "native", "gyp", "gyp_main.py");
-        const addonGypi = path.resolve(__dirname, "..", "..", "native", "addon.gypi");
-        let commonGypi = path.resolve(nodeDir, "include/node/common.gypi");
-        fs.stat(commonGypi, (err, stat) => {
+        const runGyp = function (err) {
             if (err) {
-                commonGypi = path.resolve(nodeDir, "common.gypi");
+                return reject(err);
             }
 
-            let outputDir = "build";
-            if (win) {
-                // Windows expects an absolute path
-                outputDir = buildDir;
-            }
-            const nodeGypDir = path.resolve(__dirname, "..");
-            const nodeLibFile = path.join(nodeDir,
-                !gyp.opts.nodedir ? "<(target_arch)" : "$(Configuration)",
-                `${release.name}.lib`);
-
-            argv.push("-I", addonGypi);
-            argv.push("-I", commonGypi);
-            argv.push("-Dlibrary=shared_library");
-            argv.push("-Dvisibility=default");
-            argv.push(`-Dnode_root_dir=${nodeDir}`);
-            if (process.platform === "aix" || process.platform === "os390") {
-                argv.push(`-Dnode_exp_file=${nodeExpFile}`);
-            }
-            argv.push(`-Dnode_gyp_dir=${nodeGypDir}`);
-            argv.push(`-Dnode_lib_file=${nodeLibFile}`);
-            argv.push(`-Dmodule_root_dir=${process.cwd()}`);
-            argv.push(`-Dnode_engine=${
-                gyp.opts.node_engine || process.jsEngine || "v8"}`);
-            argv.push("--depth=.");
-            argv.push("--no-parallel");
-
-            // tell gyp to write the Makefile/Solution files into output_dir
-            argv.push("--generator-output", outputDir);
-
-            // tell make to write its output into the same dir
-            argv.push("-Goutput_dir=.");
-
-            // enforce use of the "binding.gyp" file
-            argv.unshift("binding.gyp");
-
-            // execute `gyp` from the current target nodedir
-            argv.unshift(gypScript);
-
-            // make sure python uses files that came with this particular node package
-            const pypath = [path.join(__dirname, "..", "..", "native", "gyp", "pylib")];
-            if (process.env.PYTHONPATH) {
-                pypath.push(process.env.PYTHONPATH);
-            }
-            process.env.PYTHONPATH = pypath.join(win ? ";" : ":");
-
-            const cp = gyp.spawn(python, argv);
-            cp.on("exit", onCpExit);
-        });
-    };
-
-    const findConfigs = function (err) {
-        if (err) {
-            return callback(err);
-        }
-        const name = configNames.shift();
-        if (!name) {
-            return runGyp();
-        }
-        const fullPath = path.resolve(name);
-        log.verbose(name, "checking for gypi file: %s", fullPath);
-        fs.stat(fullPath, (err, stat) => {
-            if (err) {
-                if (err.code === "ENOENT") {
-                    findConfigs(); // check next gypi filename
+            if (!~argv.indexOf("-f") && !~argv.indexOf("--format")) {
+                if (is.windows) {
+                    log.verbose("gyp", 'gyp format was not specified; forcing "msvs"');
+                    // force the 'make' target for non-Windows
+                    argv.push("-f", "msvs");
                 } else {
-                    callback(err);
+                    log.verbose("gyp", 'gyp format was not specified; forcing "make"');
+                    // force the 'make' target for non-Windows
+                    argv.push("-f", "make");
                 }
-            } else {
-                log.verbose(name, "found gypi file");
-                configs.push(fullPath);
-                findConfigs();
             }
-        });
-    };
 
-    const createConfigFile = function (err, vsSetup) {
-        if (err) {
-            return callback(err);
-        }
+            const hasMsvsVersion = function () {
+                return argv.some((arg) => {
+                    return arg.indexOf("msvs_version") === 0;
+                });
+            };
 
-        const configFilename = "config.gypi";
-        const configPath = path.resolve(buildDir, configFilename);
-
-        log.verbose(`build/${configFilename}`, "creating config file");
-
-        const config = process.config || {};
-        let defaults = config.target_defaults;
-        let variables = config.variables;
-
-        // default "config.variables"
-        if (!variables) {
-            variables = config.variables = {};
-        }
-
-        // default "config.defaults"
-        if (!defaults) {
-            defaults = config.target_defaults = {};
-        }
-
-        // don't inherit the "defaults" from node's `process.config` object.
-        // doing so could cause problems in cases where the `node` executable was
-        // compiled on a different machine (with different lib/include paths) than
-        // the machine where the addon is being built to
-        defaults.cflags = [];
-        defaults.defines = [];
-        defaults.include_dirs = [];
-        defaults.libraries = [];
-
-        // set the default_configuration prop
-        if ("debug" in gyp.opts) {
-            defaults.default_configuration = gyp.opts.debug ? "Debug" : "Release";
-        }
-        if (!defaults.default_configuration) {
-            defaults.default_configuration = "Release";
-        }
-
-        // set the target_arch variable
-        variables.target_arch = gyp.opts.arch || process.arch || "ia32";
-
-        // set the node development directory
-        variables.nodedir = nodeDir;
-
-        // disable -T "thin" static archives by default
-        variables.standalone_static_library = gyp.opts.thin ? 0 : 1;
-
-        if (vsSetup) {
-            // GYP doesn't (yet) have support for VS2017, so we force it to VS2015
-            // to avoid pulling a floating patch that has not landed upstream.
-            // Ref: https://chromium-review.googlesource.com/#/c/433540/
-            gyp.opts.msvs_version = "2015";
-            process.env.GYP_MSVS_VERSION = 2015;
-            process.env.GYP_MSVS_OVERRIDE_PATH = vsSetup.path;
-            defaults.msbuild_toolset = "v141";
-            defaults.msvs_windows_target_platform_version = vsSetup.sdk;
-            variables.msbuild_path = path.join(vsSetup.path, "MSBuild", "15.0",
-                "Bin", "MSBuild.exe");
-        }
-
-        // loop through the rest of the opts and add the unknown ones as variables.
-        // this allows for module-specific configure flags like:
-        //
-        //   $ node-gyp configure --shared-libxml2
-        Object.keys(gyp.opts).forEach((opt) => {
-            if (opt === "argv") {
-                return;
+            if (is.windows && !hasMsvsVersion()) {
+                if ("msvs_version" in gyp.opts) {
+                    argv.push("-G", `msvs_version=${gyp.opts.msvs_version}`);
+                } else {
+                    argv.push("-G", "msvs_version=auto");
+                }
             }
-            if (opt in gyp.configDefs) {
-                return;
-            }
-            variables[opt.replace(/-/g, "_")] = gyp.opts[opt];
-        });
 
-        // ensures that any boolean values from `process.config` get stringified
-        const boolsToString = function (k, v) {
-            if (is.boolean(v)) {
-                return String(v);
+            // include all the ".gypi" files that were found
+            configs.forEach((config) => {
+                argv.push("-I", config);
+            });
+
+            // for AIX we need to set up the path to the exp file
+            // which contains the symbols needed for linking.
+            // The file will either be in one of the following
+            // depending on whether it is an installed or
+            // development environment:
+            //  - the include/node directory
+            //  - the out/Release directory
+            //  - the out/Debug directory
+            //  - the root directory
+            let nodeExpFile = undefined;
+            if (process.platform === "aix" || process.platform === "os390") {
+                const ext = process.platform === "aix" ? "exp" : "x";
+                const nodeRootDir = findNodeDirectory();
+                const candidates = ["include/node/node", "out/Release/node", "out/Debug/node", "node"].map((file) => `${file}.${ext}`);
+                const logprefix = "find exports file";
+                nodeExpFile = findAccessibleSync(logprefix, nodeRootDir, candidates);
+                if (!is.undefined(nodeExpFile)) {
+                    log.verbose(logprefix, "Found exports file: %s", nodeExpFile);
+                } else {
+                    const msg = msgFormat("Could not find node.%s file in %s", ext, nodeRootDir);
+                    log.error(logprefix, "Could not find exports file");
+                    return reject(new Error(msg));
+                }
             }
-            return v;
+
+            // this logic ported from the old `gyp_addon` python file
+            const gypScript = path.resolve(__dirname, "..", "..", "gyp", "gyp", "gyp_main.py");
+            const addonGypi = path.resolve(__dirname, "..", "..", "gyp", "addon.gypi");
+            let commonGypi = path.resolve(nodeDir, "include/node/common.gypi");
+            fs.stat(commonGypi, (err, stat) => {
+                if (err) {
+                    commonGypi = path.resolve(nodeDir, "common.gypi");
+                }
+
+                let outputDir = "build";
+                if (is.windows) {
+                    // Windows expects an absolute path
+                    outputDir = buildDir;
+                }
+                const nodeGypDir = path.resolve(__dirname, "..");
+                const nodeLibFile = path.join(nodeDir,
+                    !gyp.opts.nodedir ? "<(target_arch)" : "$(Configuration)",
+                    `${release.name}.lib`);
+
+                argv.push("-I", addonGypi);
+                argv.push("-I", commonGypi);
+                argv.push("-Dlibrary=shared_library");
+                argv.push("-Dvisibility=default");
+                argv.push(`-Dnode_root_dir=${nodeDir}`);
+                argv.push(`-Dadone_root_dir=${adone.rootPath}`);
+                if (process.platform === "aix" || process.platform === "os390") {
+                    argv.push(`-Dnode_exp_file=${nodeExpFile}`);
+                }
+                argv.push(`-Dnode_gyp_dir=${nodeGypDir}`);
+                argv.push(`-Dnode_lib_file=${nodeLibFile}`);
+                argv.push(`-Dmodule_root_dir=${process.cwd()}`);
+                argv.push(`-Dnode_engine=${gyp.opts.node_engine || process.jsEngine || "v8"}`);
+                argv.push("--depth=.");
+                argv.push("--no-parallel");
+
+                // tell gyp to write the Makefile/Solution files into output_dir
+                argv.push("--generator-output", outputDir);
+
+                // tell make to write its output into the same dir
+                argv.push("-Goutput_dir=.");
+
+                // enforce use of the "binding.gyp" file
+                argv.unshift(path.join(is.string(gyp.opts.binding) ? gyp.opts.binding : process.cwd(), "binding.gyp"));
+
+                // execute `gyp` from the current target nodedir
+                argv.unshift(gypScript);
+
+                // make sure python uses files that came with this particular node package
+                const pypath = [path.join(__dirname, "..", "..", "gyp", "gyp", "pylib")];
+                if (process.env.PYTHONPATH) {
+                    pypath.push(process.env.PYTHONPATH);
+                }
+                process.env.PYTHONPATH = pypath.join(is.windows ? ";" : ":");
+
+                const cp = gyp.spawn(python, argv);
+                cp.on("exit", onCpExit);
+            });
         };
 
-        log.silly(`build/${configFilename}`, config);
-
-        // now write out the config.gypi file to the build/ dir
-        const prefix = '# Do not edit. File was generated by node-gyp\'s "configure" step';
-        const json = JSON.stringify(config, boolsToString, 2);
-        log.verbose(`build/${configFilename}`, "writing out config file: %s", configPath);
-        configs.push(configPath);
-        fs.writeFile(configPath, [prefix, json, ""].join("\n"), findConfigs);
-    };
-
-    const createBuildDir = function () {
-        log.verbose("build dir", 'attempting to create "build" dir: %s', buildDir);
-        mkdirp(buildDir, (err, isNew) => {
+        const findConfigs = function (err) {
             if (err) {
-                return callback(err);
+                return reject(err);
             }
-            log.verbose("build dir", '"build" dir needed to be created?', isNew);
-            if (win && (!gyp.opts.msvs_version || gyp.opts.msvs_version === "2017")) {
-                findVS2017((err, vsSetup) => {
-                    if (err) {
-                        log.verbose("Not using VS2017:", err.message);
-                        createConfigFile();
+            const name = configNames.shift();
+            if (!name) {
+                return runGyp();
+            }
+            const fullPath = path.resolve(name);
+            log.verbose(name, "checking for gypi file: %s", fullPath);
+            fs.stat(fullPath, (err, stat) => {
+                if (err) {
+                    if (err.code === "ENOENT") {
+                        findConfigs(); // check next gypi filename
                     } else {
-                        createConfigFile(null, vsSetup);
+                        reject(err);
                     }
-                });
+                } else {
+                    log.verbose(name, "found gypi file");
+                    configs.push(fullPath);
+                    findConfigs();
+                }
+            });
+        };
+
+        const createConfigFile = function (err, vsSetup) {
+            if (err) {
+                return reject(err);
+            }
+
+            const configFilename = "config.gypi";
+            const configPath = path.resolve(buildDir, configFilename);
+
+            log.verbose(`build/${configFilename}`, "creating config file");
+
+            const config = process.config || {};
+            let defaults = config.target_defaults;
+            let variables = config.variables;
+
+            // default "config.variables"
+            if (!variables) {
+                variables = config.variables = {};
+            }
+
+            // default "config.defaults"
+            if (!defaults) {
+                defaults = config.target_defaults = {};
+            }
+
+            // don't inherit the "defaults" from node's `process.config` object.
+            // doing so could cause problems in cases where the `node` executable was
+            // compiled on a different machine (with different lib/include paths) than
+            // the machine where the addon is being built to
+            defaults.cflags = [];
+            defaults.defines = [];
+            defaults.include_dirs = [];
+            defaults.libraries = [];
+
+            // set the default_configuration prop
+            if ("debug" in gyp.opts) {
+                defaults.default_configuration = gyp.opts.debug ? "Debug" : "Release";
+            }
+            if (!defaults.default_configuration) {
+                defaults.default_configuration = "Release";
+            }
+
+            // set the target_arch variable
+            variables.target_arch = gyp.opts.arch || process.arch || "ia32";
+
+            // set the node development directory
+            variables.nodedir = nodeDir;
+
+            // disable -T "thin" static archives by default
+            variables.standalone_static_library = gyp.opts.thin ? 0 : 1;
+
+            if (vsSetup) {
+                // GYP doesn't (yet) have support for VS2017, so we force it to VS2015
+                // to avoid pulling a floating patch that has not landed upstream.
+                // Ref: https://chromium-review.googlesource.com/#/c/433540/
+                gyp.opts.msvs_version = "2015";
+                process.env.GYP_MSVS_VERSION = 2015;
+                process.env.GYP_MSVS_OVERRIDE_PATH = vsSetup.path;
+                defaults.msbuild_toolset = "v141";
+                defaults.msvs_windows_target_platform_version = vsSetup.sdk;
+                variables.msbuild_path = path.join(vsSetup.path, "MSBuild", "15.0",
+                    "Bin", "MSBuild.exe");
+            }
+
+            // loop through the rest of the opts and add the unknown ones as variables.
+            // this allows for module-specific configure flags like:
+            //
+            //   $ node-gyp configure --shared-libxml2
+            Object.keys(gyp.opts).forEach((opt) => {
+                if (opt === "argv") {
+                    return;
+                }
+                if (opt in gyp.configDefs) {
+                    return;
+                }
+                variables[opt.replace(/-/g, "_")] = gyp.opts[opt];
+            });
+
+            // ensures that any boolean values from `process.config` get stringified
+            const boolsToString = function (k, v) {
+                if (is.boolean(v)) {
+                    return String(v);
+                }
+                return v;
+            };
+
+            log.silly(`build/${configFilename}`, config);
+
+            // now write out the config.gypi file to the build/ dir
+            const prefix = '# Do not edit. File was generated by node-gyp\'s "configure" step';
+            const json = JSON.stringify(config, boolsToString, 2);
+            log.verbose(`build/${configFilename}`, "writing out config file: %s", configPath);
+            configs.push(configPath);
+            fs.writeFile(configPath, [prefix, json, ""].join("\n"), findConfigs);
+        };
+
+        const createBuildDir = function () {
+            log.verbose("build dir", 'attempting to create "build" dir: %s', buildDir);
+            mkdirp(buildDir, (err, isNew) => {
+                if (err) {
+                    return reject(err);
+                }
+                log.verbose("build dir", '"build" dir needed to be created?', isNew);
+                if (is.windows && (!gyp.opts.msvs_version || gyp.opts.msvs_version === "2017")) {
+                    findVS2017((err, vsSetup) => {
+                        if (err) {
+                            log.verbose("Not using VS2017:", err.message);
+                            createConfigFile();
+                        } else {
+                            createConfigFile(null, vsSetup);
+                        }
+                    });
+                } else {
+                    createConfigFile();
+                }
+            });
+        };
+
+        const getNodeDir = function () {
+
+            // 'python' should be set by now
+            process.env.PYTHON = python;
+
+            if (gyp.opts.nodedir) {
+                // --nodedir was specified. use that for the dev files
+                nodeDir = gyp.opts.nodedir.replace(/^~/, osenv.home());
+
+                log.verbose("get node dir", "compiling against specified --nodedir dev files: %s", nodeDir);
+                createBuildDir();
+
             } else {
-                createConfigFile();
+                // if no --nodedir specified, ensure node dependencies are installed
+                if (`v${release.version}` !== process.version) {
+                    // if --target was given, then determine a target version to compile for
+                    log.verbose("get node dir", "compiling against --target node version: %s", release.version);
+                } else {
+                    // if no --target was specified then use the current host node version
+                    log.verbose("get node dir", "no --target version specified, falling back to host node version: %s", release.version);
+                }
+
+                if (!release.semver) {
+                    // could not parse the version string with semver
+                    return reject(new Error(`Invalid version number: ${release.version}`));
+                }
+
+                // If the tarball option is set, always remove and reinstall the headers
+                // into devdir. Otherwise only install if they're not already there.
+                gyp.opts.ensure = gyp.opts.tarball ? false : true;
+
+                adone.gyp.command.install(gyp, [release.version], (err, version) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    log.verbose("get node dir", "target node version installed:", release.versionDir);
+                    nodeDir = path.resolve(gyp.devDir, release.versionDir);
+                    createBuildDir();
+                });
+            }
+        };
+
+        findPython(python, (err, found) => {
+            if (err) {
+                reject(err);
+            } else {
+                python = found;
+                getNodeDir();
             }
         });
-    };
-
-    const getNodeDir = function () {
-
-        // 'python' should be set by now
-        process.env.PYTHON = python;
-
-        if (gyp.opts.nodedir) {
-            // --nodedir was specified. use that for the dev files
-            nodeDir = gyp.opts.nodedir.replace(/^~/, osenv.home());
-
-            log.verbose("get node dir", "compiling against specified --nodedir dev files: %s", nodeDir);
-            createBuildDir();
-
-        } else {
-            // if no --nodedir specified, ensure node dependencies are installed
-            if (`v${release.version}` !== process.version) {
-                // if --target was given, then determine a target version to compile for
-                log.verbose("get node dir", "compiling against --target node version: %s", release.version);
-            } else {
-                // if no --target was specified then use the current host node version
-                log.verbose("get node dir", "no --target version specified, falling back to host node version: %s", release.version);
-            }
-
-            if (!release.semver) {
-                // could not parse the version string with semver
-                return callback(new Error(`Invalid version number: ${release.version}`));
-            }
-
-            // If the tarball option is set, always remove and reinstall the headers
-            // into devdir. Otherwise only install if they're not already there.
-            gyp.opts.ensure = gyp.opts.tarball ? false : true;
-
-            adone.gyp.command.install(gyp, [release.version], (err, version) => {
-                if (err) {
-                    return callback(err);
-                }
-                log.verbose("get node dir", "target node version installed:", release.versionDir);
-                nodeDir = path.resolve(gyp.devDir, release.versionDir);
-                createBuildDir();
-            });
-        }
-    };
-
-    findPython(python, (err, found) => {
-        if (err) {
-            callback(err);
-        } else {
-            python = found;
-            getNodeDir();
-        }
     });
 };
 
 module.exports = exports = configure;
 
-exports.usage = `Generates ${win ? "MSVC project files" : "a Makefile"} for the current module`;
+exports.usage = `Generates ${is.windows ? "MSVC project files" : "a Makefile"} for the current module`;
 
 exports.test = {
     findNodeDirectory,

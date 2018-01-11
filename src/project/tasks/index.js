@@ -7,5 +7,6 @@ adone.lazify({
     TranspileExe: "./transpile_exe",
     Watch: "./watch",
     IncreaseVersion: "./increase_version",
-    BuildNative: "./build_native"
+    NBuild: "./nbuild",
+    NClean: "./nclean"
 }, adone.asNamespace(exports), require);

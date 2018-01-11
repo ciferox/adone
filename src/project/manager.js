@@ -59,7 +59,8 @@ export default class ProjectManager extends task.Manager {
         await this.addTask("transpileExe", project.task.TranspileExe);
         await this.addTask("watch", project.task.Watch);
         await this.addTask("incver", project.task.IncreaseVersion);
-        await this.addTask("buildNative", project.task.BuildNative);
+        await this.addTask("nbuild", project.task.NBuild);
+        await this.addTask("nclean", project.task.NClean);
 
         // Load custom tasks
         const tasksPath = std.path.join(this.cwd, ".adone", "tasks.js");
@@ -99,8 +100,21 @@ export default class ProjectManager extends task.Manager {
         return generator.createFile(input);
     }
 
-    getProjectEntries({ path }) {
-        return this.config.getEntries(path);
+    getProjectEntries({ path, onlyNative = false } = {}) {
+        const entries = this.config.getEntries(path);
+
+        if (onlyNative) {
+            const result = [];
+            for (const entry of entries) {
+                if (is.plainObject(entry.native)) {
+                    result.push(entry);
+                }
+            }
+
+            return result;
+        }
+
+        return entries;
     }
 
     clean(path) {
@@ -118,6 +132,42 @@ export default class ProjectManager extends task.Manager {
         this._checkLoaded();
         return this.runInParallel(this._getEntries(path).map((entry) => ({
             task: entry.task,
+            args: entry
+        })));
+    }
+
+    nbuild(path) {
+        this._checkLoaded();
+
+        const entries = this.getProjectEntries({
+            path,
+            onlyNative: true
+        });
+
+        if (entries.length === 0) {
+            return null;
+        }
+
+        return this.runInParallel(entries.map((entry) => ({
+            task: "nbuild",
+            args: entry
+        })));
+    }
+
+    nclean(path) {
+        this._checkLoaded();
+
+        const entries = this.getProjectEntries({
+            path,
+            onlyNative: true
+        });
+
+        if (entries.length === 0) {
+            return null;
+        }
+
+        return this.runInParallel(entries.map((entry) => ({
+            task: "nclean",
             args: entry
         })));
     }
@@ -147,11 +197,6 @@ export default class ProjectManager extends task.Manager {
     async incVersion(options) {
         this._checkLoaded();
         return this.run("incver", options);
-    }
-
-    buildNative(options) {
-        this._checkLoaded();
-        return this.run("buildNative", options);
     }
 
     _getEntries(path) {
