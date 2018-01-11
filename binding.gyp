@@ -383,39 +383,6 @@
       ]
     },
     {
-      'target_name': 'utp',
-      'dependencies': [
-        'src/native/utp/libutp/libutp.gyp:libutp',
-      ],
-      'include_dirs' : [
-        "<!(node -e \"require('nan')\")",
-        'src/native/utp/libutp/libutp',
-      ],
-      'sources': [
-        'src/native/utp/utp_uv.cc',
-        'src/native/utp/socket_wrap.cc',
-        'src/native/utp/utp_wrap.cc',
-        'src/native/utp/binding.cc',
-      ],
-      'xcode_settings': {
-        'OTHER_CFLAGS': [
-          '-O3',
-        ]
-      },
-      'cflags': [
-        '-O3',
-      ],
-      'conditions': [
-        ['OS=="win"', {
-          'link_settings': {
-            'libraries': [
-              '-lws2_32.lib'
-            ]
-          }
-        }]
-      ],      
-    },
-    {
       "target_name": "copy_modules",
       "variables": {
         "srcpath%": "<(module_root_dir)/build/Release",
@@ -425,8 +392,7 @@
         "common",
         "metrics",
         "git",
-        "libvirt",
-        "utp"
+        "libvirt"
       ],
       "copies": [
         {
@@ -435,8 +401,7 @@
             "<(srcpath)/common.node",
             "<(srcpath)/metrics.node",
             "<(srcpath)/git.node",
-            "<(srcpath)/libvirt.node",
-            "<(srcpath)/utp.node"
+            "<(srcpath)/libvirt.node"
           ],
           "destination": "<(module_root_dir)/lib/native"
         }

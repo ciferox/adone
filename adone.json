@@ -301,7 +301,7 @@
                             "namespace": "level",
                             "task": "transpile",
                             "src": "src/glosses/databases/level/**/*.js",
-                            "dst": "src/glosses/databases/level",
+                            "dst": "lib/glosses/databases/level",
                             "struct": {
                                 "backend": {
                                     "description": "Level's backends",
@@ -311,7 +311,7 @@
                                         "src/glosses/databases/level/backends/**/*.js",
                                         "!src/glosses/databases/level/backends/leveldb/native/**/*"
                                     ],
-                                    "dst": "src/glosses/databases/level/backends",
+                                    "dst": "lib/glosses/databases/level/backends",
                                     "native": {
                                         "src": "src/glosses/databases/level/backends/leveldb/native",
                                         "dst": "lib/glosses/databases/level/backends/leveldb/native"
@@ -324,7 +324,7 @@
                             "namespace": "redis",
                             "task": "transpile",
                             "src": "src/glosses/databases/redis/**/*.js",
-                            "dst": "src/glosses/databases/redis",
+                            "dst": "lib/glosses/databases/redis",
                             "native": {
                                 "src": "src/glosses/databases/redis/__/redis/libparser/native",
                                 "dst": "lib/glosses/databases/redis/__/redis/libparser/native"
@@ -561,10 +561,26 @@
                 },
                 "net": {
                     "description": "Implementation of different network abstractions, protocols and associated stuff",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/net/**/*.js",
                     "dst": "lib/glosses/net",
-                    "namespace": "net"
+                    "namespace": "net",
+                    "struct": {
+                        "utp": {
+                            "description": "UTP protocol/transport",
+                            "task": "transpile",
+                            "src": [
+                                "src/glosses/net/utp/**/*.js",
+                                "src/glosses/net/utp/native/**/*"
+                            ],
+                            "dst": "lib/glosses/net/utp",
+                            "namespace": "utp",
+                            "native": {
+                                "src": "src/glosses/net/utp/native",
+                                "dst": "lib/glosses/net/utp/native"
+                            }
+                        }
+                    }
                 },
                 "netron": {
                     "description": "Implementation of Netron",
