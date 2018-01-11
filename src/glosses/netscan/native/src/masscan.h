@@ -1,7 +1,7 @@
 #ifndef __ADONE_MASSSCAN_H_
 #define __ADONE_MASSSCAN_H_
 
-#include "../../adone.h"
+#include <adone.h>
 #include <uv.h>
 #include <ctype.h>
 #include <limits.h>

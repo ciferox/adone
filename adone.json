@@ -581,11 +581,18 @@
                     "namespace": "netron2"
                 },
                 "netscan": {
-                    "description": "Network scanning utilites",
-                    "task": "adoneTranspile",
-                    "src": "src/glosses/netscan/**/*.js",
+                    "description": "Network scanning tool",
+                    "task": "transpile",
+                    "src": [
+                        "src/glosses/netscan/**/*.js",
+                        "!src/glosses/netscan/native/**/*"
+                    ],
                     "dst": "lib/glosses/netscan",
-                    "namespace": "netscan"
+                    "namespace": "netscan",
+                    "native": {
+                        "src": "src/glosses/netscan/native",
+                        "dst": "lib/glosses/netscan/native"
+                    }
                 },
                 "notifier": {
                     "description": "Implementation of system notifier",
