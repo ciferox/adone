@@ -2015,6 +2015,9 @@ export const consoleReporter = ({
 
                         if (err.diff) {
                             log();
+                            log("  {red-fg}-{/} must not be");
+                            log("  {green-fg}+{/} must be");
+                            log();
                             log(adone.text.indent(err.diff, 2));
                         }
                         log();
@@ -2283,6 +2286,9 @@ export const minimalReporter = () => {
 
                         if (err.diff) {
                             log();
+                            log("  {red-fg}- : must not be{/}");
+                            log("  {red-fg}+ : must be{/}");
+                            log();
                             log(adone.text.indent(err.diff, 2));
                         }
                         log();
@@ -2529,6 +2535,9 @@ export const simpleReporter = ({
                         }
 
                         if (err.diff) {
+                            log();
+                            log("  {red-fg}- : must not be{/}");
+                            log("  {red-fg}+ : must be{/}");
                             log();
                             log(adone.text.indent(err.diff, 2));
                         }

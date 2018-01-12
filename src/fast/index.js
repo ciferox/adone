@@ -42,15 +42,9 @@ fast.plugin = lazify({
     replace: "./plugins/replace",
     revisionHash: "./plugins/revision_hash",
     revisionHashReplace: "./plugins/revision_hash_replace",
-    useref: "./plugins/useref",
-    sass: "./plugins/sass",
-    angularFilesort: "./plugins/angular/file_sort",
-    angularTemplateCache: "./plugins/angular/template_cache",
-    inject: "./plugins/inject",
     chmod: "./plugins/chmod",
     notify: "./plugins/notify",
-    notifyError: "./plugins/notify",
-    wiredep: "./plugins/wiredep"
+    notifyError: "./plugins/notify"
 }, null, require, {
     mapper: (key, mod) => mod
 });
