@@ -1,5 +1,14 @@
 const {
-    net: { http: { server: { helper: { isFinished } } } }
+    net: {
+        http: {
+            server: {
+                helper: {
+                    isFinished
+                }
+            }
+        }
+    },
+    is
 } = adone;
 
 const attachFinishedListener = (msg, callback) => {
@@ -7,6 +16,10 @@ const attachFinishedListener = (msg, callback) => {
     let socket = null;
 
     const onFinish = (error) => {
+        if (is.boolean(error)) {
+            // socket close returns boolean
+            error = undefined;
+        }
         msg.removeListener("end", onFinish);
         msg.removeListener("finish", onFinish);
 

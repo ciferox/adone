@@ -27,7 +27,7 @@ const readStream = (stream, encoding, length, limit) => new Promise((resolve, re
         complete = true;
 
         if (set) {
-            cleanup();  // eslint-disable-line no-use-before-define
+            cleanup(); // eslint-disable-line no-use-before-define
         }
 
         if (err) {

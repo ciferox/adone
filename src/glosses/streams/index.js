@@ -24,5 +24,7 @@ adone.lazify({
     AssertByteCountStream: "./assert_byte_count",
     pull: "./pull",
     Multiplex: "./multiplex",
-    pump: "./pump"
+    pump: "./pump",
+    CombinedStream: "./combined_stream",
+    DelayedStream: "./delayed_stream"
 }, adone.asNamespace(exports), require);
