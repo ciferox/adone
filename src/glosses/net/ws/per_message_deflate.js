@@ -1,8 +1,9 @@
 const {
     is,
+    net: { ws },
+    promise,
     std: { zlib },
-    util: { throttle },
-    promise
+    util: { throttle }
 } = adone;
 
 const TRAILER = Buffer.from([0x00, 0x00, 0xff, 0xff]);
@@ -16,6 +17,14 @@ const kBuffers = Symbol("buffers");
 const kError = Symbol("error");
 const kOwner = Symbol("owner");
 
+//
+// We limit zlib concurrency, which prevents severe memory fragmentation
+// as documented in https://github.com/nodejs/node/issues/8871#issuecomment-250915913
+// and https://github.com/websockets/ws/issues/1202
+//
+// Intentionally global; it's the global thread pool that's an issue.
+//
+let zlibLimiter;
 
 /**
  * The listener of the `zlib.DeflateRaw` stream `'data'` event.
@@ -45,7 +54,7 @@ const inflateOnData = function (chunk) {
         return;
     }
 
-    this[kError] = new Error("Max payload size exceeded");
+    this[kError] = new RangeError("Max payload size exceeded");
     this[kError].closeCode = 1009;
     this.removeListener("data", inflateOnData);
     this.reset();
@@ -66,15 +75,6 @@ const inflateOnError = function (err) {
     this[kCallback](err);
 };
 
-
-//
-// We limit zlib concurrency, which prevents severe memory fragmentation
-// as documented in https://github.com/nodejs/node/issues/8871#issuecomment-250915913
-// and https://github.com/websockets/ws/issues/1202
-//
-// Intentionally global; it's the global thread pool that's an issue.
-//
-let zlibLimiter;
 
 /**
  * permessage-deflate implementation.
@@ -130,7 +130,7 @@ export default class PerMessageDeflate {
     }
 
     /**
-     * Create extension parameters offer.
+     * Create an extension negotiation offer.
      *
      * @return {Object} Extension parameters
      * @public
@@ -157,15 +157,19 @@ export default class PerMessageDeflate {
     }
 
     /**
-     * Accept extension offer.
+     * Accept an extension negotiation offer/response.
      *
-     * @param {Array} paramsList Extension parameters
+     * @param {Array} configurations The extension negotiation offers/reponse
      * @return {Object} Accepted configuration
      * @public
      */
-    accept(paramsList) {
-        paramsList = this.normalizeParams(paramsList);
-        this.params = this._isServer ? this.acceptAsServer(paramsList) : this.acceptAsClient(paramsList);
+    accept(configurations) {
+        configurations = this.normalizeParams(configurations);
+
+        this.params = this._isServer
+            ? this.acceptAsServer(configurations)
+            : this.acceptAsClient(configurations);
+
         return this.params;
     }
 
@@ -194,15 +198,15 @@ export default class PerMessageDeflate {
     }
 
     /**
-     * Accept extension offer from client.
+     *  Accept an extension negotiation offer.
      *
-     * @param {Array} paramsList Extension parameters
+     * @param {Array} offers The extension negotiation offers
      * @return {Object} Accepted configuration
      * @private
      */
-    acceptAsServer(paramsList) {
+    acceptAsServer(offers) {
         const opts = this._options;
-        const accepted = paramsList.find((params) => {
+        const accepted = offers.find((params) => {
             if (
                 (opts.serverNoContextTakeover === false &&
                     params.server_no_context_takeover) ||
@@ -220,7 +224,7 @@ export default class PerMessageDeflate {
         });
 
         if (!accepted) {
-            throw new Error("Doesn't support the offered configuration");
+            throw new Error("None of the extension offers can be accepted");
         }
 
         if (opts.serverNoContextTakeover) {
@@ -245,20 +249,20 @@ export default class PerMessageDeflate {
     }
 
     /**
-     * Accept extension response from server.
+     * Accept the extension negotiation response.
      *
-     * @param {Array} paramsList Extension parameters
+     * @param {Array} response The extension negotiation response
      * @return {Object} Accepted configuration
      * @private
      */
-    acceptAsClient(paramsList) {
-        const params = paramsList[0];
+    acceptAsClient(response) {
+        const params = response[0];
 
         if (
             this._options.clientNoContextTakeover === false &&
             params.client_no_context_takeover
         ) {
-            throw new Error('Invalid value for "client_no_context_takeover"');
+            throw new Error('Unexpected parameter "client_no_context_takeover"');
         }
 
         if (!params.client_max_window_bits) {
@@ -270,60 +274,72 @@ export default class PerMessageDeflate {
             (is.number(this._options.clientMaxWindowBits) &&
                 params.client_max_window_bits > this._options.clientMaxWindowBits)
         ) {
-            throw new Error('Invalid value for "client_max_window_bits"');
+            throw new Error(
+                'Unexpected or invalid parameter "client_max_window_bits"'
+            );
         }
 
         return params;
     }
 
     /**
-     * Normalize extensions parameters.
+     * Normalize parameters.
      *
-     * @param {Array} paramsList Extension parameters
-     * @return {Array} Normalized extensions parameters
+     * @param {Array} configurations The extension negotiation offers/reponse
+     * @return {Array} The offers/response with normalized parameters
      * @private
      */
-    normalizeParams(paramsList) {
-        paramsList.forEach((params) => {
+    normalizeParams(configurations) {
+        configurations.forEach((params) => {
             Object.keys(params).forEach((key) => {
                 let value = params[key];
 
                 if (value.length > 1) {
-                    throw new Error(`Multiple extension parameters for ${key}`);
+                    throw new Error(`Parameter "${key}" must have only a single value`);
                 }
 
                 value = value[0];
 
                 if (key === "client_max_window_bits") {
                     if (value !== true) {
-                        value = Number(value);
-                        if (!is.integer(value) || value < 8 || value > 15) {
-                            throw new Error(`Invalid extension parameter value for ${key} (${value})`);
+                        const num = Number(value);
+                        if (!is.integer(num) || num < 8 || num > 15) {
+                            throw new TypeError(
+                                `Invalid value for parameter "${key}": ${value}`
+                            );
                         }
+                        value = num;
                     } else if (!this._isServer) {
-                        throw new Error(`Missing extension parameter value for ${key}`);
+                        throw new TypeError(
+                            `Invalid value for parameter "${key}": ${value}`
+                        );
                     }
                 } else if (key === "server_max_window_bits") {
-                    value = Number(value);
-                    if (!is.integer(value) || value < 8 || value > 15) {
-                        throw new Error(`Invalid extension parameter value for ${key} (${value})`);
+                    const num = Number(value);
+                    if (!is.integer(num) || num < 8 || num > 15) {
+                        throw new TypeError(
+                            `Invalid value for parameter "${key}": ${value}`
+                        );
                     }
+                    value = num;
                 } else if (
                     key === "client_no_context_takeover" ||
                     key === "server_no_context_takeover"
                 ) {
                     if (value !== true) {
-                        throw new Error(`Invalid extension parameter value for ${key} (${value})`);
+                        throw new TypeError(
+                            `Invalid value for parameter "${key}": ${value}`
+                        );
                     }
                 } else {
-                    throw new Error(`Not defined extension parameter (${key})`);
+                    throw new Error(`Unknown parameter "${key}"`);
                 }
 
                 params[key] = value;
             });
         });
 
-        return paramsList;
+        return configurations;
     }
 
     /**
@@ -339,6 +355,18 @@ export default class PerMessageDeflate {
     }
 
     /**
+     * Compress data. Concurrency limited by async-limiter.
+     *
+     * @param {Buffer} data Data to compress
+     * @param {Boolean} fin Specifies whether or not this is the last fragment
+     * @param {Function} callback Callback
+     * @public
+     */
+    compress(data, fin, callback) {
+        promise.nodeify(zlibLimiter(() => this._compress(data, fin)), callback);
+    }
+
+    /**
      * Decompress data.
      *
      * @param {Buffer} data Compressed data
@@ -346,13 +374,15 @@ export default class PerMessageDeflate {
      * @param {Function} callback Callback
      * @private
      */
-    _decompress(data, fin) {
+    _decompress(data, fin, ) {
         return new Promise((resolve, reject) => {
             const endpoint = this._isServer ? "client" : "server";
 
             if (!this._inflate) {
                 const key = `${endpoint}_max_window_bits`;
-                const windowBits = !is.number(this.params[key]) ? zlib.Z_DEFAULT_WINDOWBITS : this.params[key];
+                const windowBits = !is.number(this.params[key])
+                    ? zlib.Z_DEFAULT_WINDOWBITS
+                    : this.params[key];
 
                 this._inflate = zlib.createInflateRaw({ windowBits });
                 this._inflate[kTotalLength] = 0;
@@ -362,7 +392,7 @@ export default class PerMessageDeflate {
                 this._inflate.on("data", inflateOnData);
             }
 
-            this._inflate[kCallback] = reject;
+            this._inflate[kCallback] = reject; // why only reject ???
             this._inflate[kWriteInProgress] = true;
 
             this._inflate.write(data);
@@ -380,7 +410,7 @@ export default class PerMessageDeflate {
                     return;
                 }
 
-                const data = adone.util.buffer.concat(
+                const data = ws.util.concat(
                     this._inflate[kBuffers],
                     this._inflate[kTotalLength]
                 );
@@ -400,18 +430,6 @@ export default class PerMessageDeflate {
                 resolve(data);
             });
         });
-    }
-
-    /**
-     * Compress data. Concurrency limited by async-limiter.
-     *
-     * @param {Buffer} data Data to compress
-     * @param {Boolean} fin Specifies whether or not this is the last fragment
-     * @param {Function} callback Callback
-     * @public
-     */
-    compress(data, fin, callback) {
-        promise.nodeify(zlibLimiter(() => this._compress(data, fin)), callback);
     }
 
     /**
@@ -459,7 +477,7 @@ export default class PerMessageDeflate {
 
             this._deflate.write(data);
             this._deflate.flush(zlib.Z_SYNC_FLUSH, () => {
-                let data = adone.util.buffer.concat(
+                let data = ws.util.concat(
                     this._deflate[kBuffers],
                     this._deflate[kTotalLength]
                 );

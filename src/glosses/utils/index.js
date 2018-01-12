@@ -21,20 +21,6 @@ adone.lazify({
     Editor: "./editor",
     binarySearch: "./binary_search",
     buffer: () => ({
-        concat: (list, totalLength) => {
-            const target = Buffer.allocUnsafe(totalLength);
-            let offset = 0;
-
-            for (let i = 0; i < list.length; i++) {
-                const buf = list[i];
-                buf.copy(target, offset);
-                offset += buf.length;
-            }
-
-            return target;
-        },
-        mask: adone.native.Common.maskBuffer,
-        unmask: adone.native.Common.unmaskBuffer,
         /**
          * Returns a new buffer which is A ^ B
          */

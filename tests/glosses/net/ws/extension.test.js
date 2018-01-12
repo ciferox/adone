@@ -1,20 +1,22 @@
-const { net: { ws: { exts } } } = adone;
+const {
+    net: { ws: { extension } }
+} = adone;
 
-describe("net", "ws", "Extensions", () => {
+describe("net", "ws", "extension", () => {
     describe("parse", () => {
-        it("returns an empty object if the argument is undefined", () => {
-            assert.deepStrictEqual(exts.parse(), {});
-            assert.deepStrictEqual(exts.parse(""), {});
+        it("returns an empty object if the argument is `undefined`", () => {
+            assert.deepStrictEqual(extension.parse(), {});
+            assert.deepStrictEqual(extension.parse(""), {});
         });
 
         it("parses a single extension", () => {
-            const extensions = exts.parse("foo");
+            const extensions = extension.parse("foo");
 
             assert.deepStrictEqual(extensions, { foo: [{}] });
         });
 
         it("parses params", () => {
-            const extensions = exts.parse("foo;bar;baz=1;bar=2");
+            const extensions = extension.parse("foo;bar;baz=1;bar=2");
 
             assert.deepStrictEqual(extensions, {
                 foo: [{ bar: [true, "2"], baz: ["1"] }]
@@ -22,7 +24,7 @@ describe("net", "ws", "Extensions", () => {
         });
 
         it("parses multiple extensions", () => {
-            const extensions = exts.parse("foo,bar;baz,foo;baz");
+            const extensions = extension.parse("foo,bar;baz,foo;baz");
 
             assert.deepStrictEqual(extensions, {
                 foo: [{}, { baz: [true] }],
@@ -31,30 +33,30 @@ describe("net", "ws", "Extensions", () => {
         });
 
         it("parses quoted params", () => {
-            assert.deepStrictEqual(exts.parse('foo;bar="hi"'), {
+            assert.deepStrictEqual(extension.parse('foo;bar="hi"'), {
                 foo: [{ bar: ["hi"] }]
             });
-            assert.deepStrictEqual(exts.parse('foo;bar="\\0"'), {
+            assert.deepStrictEqual(extension.parse('foo;bar="\\0"'), {
                 foo: [{ bar: ["0"] }]
             });
-            assert.deepStrictEqual(exts.parse('foo;bar="b\\a\\z"'), {
+            assert.deepStrictEqual(extension.parse('foo;bar="b\\a\\z"'), {
                 foo: [{ bar: ["baz"] }]
             });
-            assert.deepStrictEqual(exts.parse('foo;bar="b\\az";bar'), {
+            assert.deepStrictEqual(extension.parse('foo;bar="b\\az";bar'), {
                 foo: [{ bar: ["baz", true] }]
             });
             assert.throws(
-                () => exts.parse('foo;bar="baz"qux'),
-                /^unexpected character at index 13$/
+                () => extension.parse('foo;bar="baz"qux'),
+                /^Unexpected character at index 13$/
             );
             assert.throws(
-                () => exts.parse('foo;bar="baz" qux'),
-                /^unexpected character at index 14$/
+                () => extension.parse('foo;bar="baz" qux'),
+                /^Unexpected character at index 14$/
             );
         });
 
-        it("works with names that match Object.prototype property names", () => {
-            const parse = exts.parse;
+        it("works with names that match `Object.prototype` property names", () => {
+            const parse = extension.parse;
 
             assert.deepStrictEqual(parse("hasOwnProperty, toString"), {
                 hasOwnProperty: [{}],
@@ -68,7 +70,7 @@ describe("net", "ws", "Extensions", () => {
         it("ignores the optional white spaces", () => {
             const header = 'foo; bar\t; \tbaz=1\t ;  bar="1"\t\t, \tqux\t ;norf ';
 
-            assert.deepStrictEqual(exts.parse(header), {
+            assert.deepStrictEqual(extension.parse(header), {
                 foo: [{ bar: [true, "1"], baz: ["1"] }],
                 qux: [{ norf: [true] }]
             });
@@ -87,8 +89,8 @@ describe("net", "ws", "Extensions", () => {
                 ['foo;bar=""', 9]
             ].forEach((element) => {
                 assert.throws(
-                    () => exts.parse(element[0]),
-                    new RegExp(`^unexpected character at index ${element[1]}$`)
+                    () => extension.parse(element[0]),
+                    new RegExp(`^Unexpected character at index ${element[1]}$`)
                 );
             });
         });
@@ -101,8 +103,8 @@ describe("net", "ws", "Extensions", () => {
                 ["foo;bar= ", 8]
             ].forEach((element) => {
                 assert.throws(
-                    () => exts.parse(element[0]),
-                    new RegExp(`^unexpected character at index ${element[1]}$`)
+                    () => extension.parse(element[0]),
+                    new RegExp(`^Unexpected character at index ${element[1]}$`)
                 );
             });
         });
@@ -125,8 +127,8 @@ describe("net", "ws", "Extensions", () => {
                 ['foo;bar="\\\\"', 10]
             ].forEach((element) => {
                 assert.throws(
-                    () => exts.parse(element[0]),
-                    new RegExp(`^unexpected character at index ${element[1]}$`)
+                    () => extension.parse(element[0]),
+                    new RegExp(`^Unexpected character at index ${element[1]}$`)
                 );
             });
         });
@@ -142,8 +144,8 @@ describe("net", "ws", "Extensions", () => {
                 'foo;bar="1\\'
             ].forEach((header) => {
                 assert.throws(
-                    () => exts.parse(header),
-                    /^unexpected end of input$/
+                    () => extension.parse(header),
+                    /^Unexpected end of input$/
                 );
             });
         });
@@ -151,19 +153,19 @@ describe("net", "ws", "Extensions", () => {
 
     describe("format", () => {
         it("formats a single extension", () => {
-            const extensions = exts.format({ foo: {} });
+            const extensions = extension.format({ foo: {} });
 
             assert.strictEqual(extensions, "foo");
         });
 
         it("formats params", () => {
-            const extensions = exts.format({ foo: { bar: [true, 2], baz: 1 } });
+            const extensions = extension.format({ foo: { bar: [true, 2], baz: 1 } });
 
             assert.strictEqual(extensions, "foo; bar; bar=2; baz=1");
         });
 
         it("formats multiple extensions", () => {
-            const extensions = exts.format({
+            const extensions = extension.format({
                 foo: [{}, { baz: true }],
                 bar: { baz: true }
             });

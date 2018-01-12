@@ -1,4 +1,8 @@
-const { is, net: { ws: { Sender, Receiver, PerMessageDeflate } }, std: { crypto } } = adone;
+const {
+    is,
+    net: { ws: { PerMessageDeflate, Sender, Receiver } },
+    std: { crypto }
+} = adone;
 
 describe("net", "ws", "Receiver", () => {
     it("can parse unmasked text message", (done) => {
@@ -16,7 +20,7 @@ describe("net", "ws", "Receiver", () => {
         const p = new Receiver();
 
         p.onclose = function (code, data) {
-            assert.strictEqual(code, 1000);
+            assert.strictEqual(code, 1005);
             assert.strictEqual(data, "");
             done();
         };
@@ -441,12 +445,28 @@ describe("net", "ws", "Receiver", () => {
         assert.deepStrictEqual(data, ["", "Hello"]);
     });
 
+    it("ignores data received after a close frame", () => {
+        const results = [];
+        const push = results.push.bind(results);
+        const p = new Receiver();
+
+        p.onclose = p.onmessage = push;
+
+        p.add(Buffer.from("8800", "hex"));
+        p.add(Buffer.from("8100", "hex"));
+
+        assert.deepStrictEqual(results, [1005, ""]);
+    });
+
     it("raises an error when RSV1 is on and permessage-deflate is disabled", (done) => {
         const p = new Receiver();
 
         p.onerror = function (err, code) {
-            assert.ok(err instanceof Error);
-            assert.strictEqual(err.message, "RSV1 must be clear");
+            assert.ok(err instanceof RangeError);
+            assert.strictEqual(
+                err.message,
+                "Invalid WebSocket frame: RSV1 must be clear"
+            );
             assert.strictEqual(code, 1002);
             done();
         };
@@ -461,8 +481,11 @@ describe("net", "ws", "Receiver", () => {
         const p = new Receiver({ "permessage-deflate": perMessageDeflate });
 
         p.onerror = function (err, code) {
-            assert.ok(err instanceof Error);
-            assert.strictEqual(err.message, "RSV1 must be clear");
+            assert.ok(err instanceof RangeError);
+            assert.strictEqual(
+                err.message,
+                "Invalid WebSocket frame: RSV1 must be clear"
+            );
             assert.strictEqual(code, 1002);
             done();
         };
@@ -474,8 +497,11 @@ describe("net", "ws", "Receiver", () => {
         const p = new Receiver();
 
         p.onerror = function (err, code) {
-            assert.ok(err instanceof Error);
-            assert.strictEqual(err.message, "RSV2 and RSV3 must be clear");
+            assert.ok(err instanceof RangeError);
+            assert.strictEqual(
+                err.message,
+                "Invalid WebSocket frame: RSV2 and RSV3 must be clear"
+            );
             assert.strictEqual(code, 1002);
             done();
         };
@@ -487,8 +513,11 @@ describe("net", "ws", "Receiver", () => {
         const p = new Receiver();
 
         p.onerror = function (err, code) {
-            assert.ok(err instanceof Error);
-            assert.strictEqual(err.message, "RSV2 and RSV3 must be clear");
+            assert.ok(err instanceof RangeError);
+            assert.strictEqual(
+                err.message,
+                "Invalid WebSocket frame: RSV2 and RSV3 must be clear"
+            );
             assert.strictEqual(code, 1002);
             done();
         };
@@ -500,8 +529,11 @@ describe("net", "ws", "Receiver", () => {
         const p = new Receiver();
 
         p.onerror = function (err, code) {
-            assert.ok(err instanceof Error);
-            assert.strictEqual(err.message, "Invalid opcode: 0");
+            assert.ok(err instanceof RangeError);
+            assert.strictEqual(
+                err.message,
+                "Invalid WebSocket frame: invalid opcode 0"
+            );
             assert.strictEqual(code, 1002);
             done();
         };
@@ -513,8 +545,11 @@ describe("net", "ws", "Receiver", () => {
         const p = new Receiver();
 
         p.onerror = function (err, code) {
-            assert.ok(err instanceof Error);
-            assert.strictEqual(err.message, "Invalid opcode: 1");
+            assert.ok(err instanceof RangeError);
+            assert.strictEqual(
+                err.message,
+                "Invalid WebSocket frame: invalid opcode 1"
+            );
             assert.strictEqual(code, 1002);
             done();
         };
@@ -527,8 +562,11 @@ describe("net", "ws", "Receiver", () => {
         const p = new Receiver();
 
         p.onerror = function (err, code) {
-            assert.ok(err instanceof Error);
-            assert.strictEqual(err.message, "Invalid opcode: 2");
+            assert.ok(err instanceof RangeError);
+            assert.strictEqual(
+                err.message,
+                "Invalid WebSocket frame: invalid opcode 2"
+            );
             assert.strictEqual(code, 1002);
             done();
         };
@@ -541,8 +579,11 @@ describe("net", "ws", "Receiver", () => {
         const p = new Receiver();
 
         p.onerror = function (err, code) {
-            assert.ok(err instanceof Error);
-            assert.strictEqual(err.message, "FIN must be set");
+            assert.ok(err instanceof RangeError);
+            assert.strictEqual(
+                err.message,
+                "Invalid WebSocket frame: FIN must be set"
+            );
             assert.strictEqual(code, 1002);
             done();
         };
@@ -557,8 +598,11 @@ describe("net", "ws", "Receiver", () => {
         const p = new Receiver({ "permessage-deflate": perMessageDeflate });
 
         p.onerror = function (err, code) {
-            assert.ok(err instanceof Error);
-            assert.strictEqual(err.message, "RSV1 must be clear");
+            assert.ok(err instanceof RangeError);
+            assert.strictEqual(
+                err.message,
+                "Invalid WebSocket frame: RSV1 must be clear"
+            );
             assert.strictEqual(code, 1002);
             done();
         };
@@ -570,8 +614,11 @@ describe("net", "ws", "Receiver", () => {
         const p = new Receiver();
 
         p.onerror = function (err, code) {
-            assert.ok(err instanceof Error);
-            assert.strictEqual(err.message, "FIN must be set");
+            assert.ok(err instanceof RangeError);
+            assert.strictEqual(
+                err.message,
+                "Invalid WebSocket frame: FIN must be set"
+            );
             assert.strictEqual(code, 1002);
             done();
         };
@@ -583,8 +630,11 @@ describe("net", "ws", "Receiver", () => {
         const p = new Receiver();
 
         p.onerror = function (err, code) {
-            assert.ok(err instanceof Error);
-            assert.strictEqual(err.message, "Invalid payload length");
+            assert.ok(err instanceof RangeError);
+            assert.strictEqual(
+                err.message,
+                "Invalid WebSocket frame: invalid payload length 126"
+            );
             assert.strictEqual(code, 1002);
             done();
         };
@@ -596,8 +646,11 @@ describe("net", "ws", "Receiver", () => {
         const p = new Receiver();
 
         p.onerror = function (err, code) {
-            assert.ok(err instanceof Error);
-            assert.strictEqual(err.message, "Max payload size exceeded");
+            assert.ok(err instanceof RangeError);
+            assert.strictEqual(
+                err.message,
+                "Unsupported WebSocket frame: payload length > 2^53 - 1"
+            );
             assert.strictEqual(code, 1009);
             done();
         };
@@ -614,7 +667,10 @@ describe("net", "ws", "Receiver", () => {
 
         p.onerror = function (err, code) {
             assert.ok(err instanceof Error);
-            assert.strictEqual(err.message, "Invalid utf8 sequence");
+            assert.strictEqual(
+                err.message,
+                "Invalid WebSocket frame: invalid UTF-8 sequence"
+            );
             assert.strictEqual(code, 1007);
             done();
         };
@@ -626,8 +682,11 @@ describe("net", "ws", "Receiver", () => {
         const p = new Receiver();
 
         p.onerror = function (err, code) {
-            assert.ok(err instanceof Error);
-            assert.strictEqual(err.message, "Invalid payload length");
+            assert.ok(err instanceof RangeError);
+            assert.strictEqual(
+                err.message,
+                "Invalid WebSocket frame: invalid payload length 1"
+            );
             assert.strictEqual(code, 1002);
             done();
         };
@@ -639,8 +698,11 @@ describe("net", "ws", "Receiver", () => {
         const p = new Receiver();
 
         p.onerror = function (err, code) {
-            assert.ok(err instanceof Error);
-            assert.strictEqual(err.message, "Invalid status code: 0");
+            assert.ok(err instanceof RangeError);
+            assert.strictEqual(
+                err.message,
+                "Invalid WebSocket frame: invalid status code 0"
+            );
             assert.strictEqual(code, 1002);
             done();
         };
@@ -653,7 +715,10 @@ describe("net", "ws", "Receiver", () => {
 
         p.onerror = function (err, code) {
             assert.ok(err instanceof Error);
-            assert.strictEqual(err.message, "Invalid utf8 sequence");
+            assert.strictEqual(
+                err.message,
+                "Invalid WebSocket frame: invalid UTF-8 sequence"
+            );
             assert.strictEqual(code, 1007);
             done();
         };
@@ -676,7 +741,7 @@ describe("net", "ws", "Receiver", () => {
         const frame = Buffer.concat(list);
 
         p.onerror = function (err, code) {
-            assert.ok(err instanceof Error);
+            assert.ok(err instanceof RangeError);
             assert.strictEqual(err.message, "Max payload size exceeded");
             assert.strictEqual(code, 1009);
             done();
@@ -700,7 +765,7 @@ describe("net", "ws", "Receiver", () => {
         const frame = Buffer.concat(list);
 
         p.onerror = function (err, code) {
-            assert.ok(err instanceof Error);
+            assert.ok(err instanceof RangeError);
             assert.strictEqual(err.message, "Max payload size exceeded");
             assert.strictEqual(code, 1009);
             done();
@@ -717,7 +782,7 @@ describe("net", "ws", "Receiver", () => {
         const buf = Buffer.from("A".repeat(50));
 
         p.onerror = function (err, code) {
-            assert.ok(err instanceof Error);
+            assert.ok(err instanceof RangeError);
             assert.strictEqual(err.message, "Max payload size exceeded");
             assert.strictEqual(code, 1009);
             done();
@@ -741,7 +806,7 @@ describe("net", "ws", "Receiver", () => {
         const buf = Buffer.from("A".repeat(15));
 
         p.onerror = function (err, code) {
-            assert.ok(err instanceof Error);
+            assert.ok(err instanceof RangeError);
             assert.strictEqual(err.message, "Max payload size exceeded");
             assert.strictEqual(code, 1009);
             done();
@@ -764,26 +829,6 @@ describe("net", "ws", "Receiver", () => {
                 p.add(fragment2);
             });
         });
-    });
-
-    it("doesn't crash if data is received after `maxPayload` is exceeded", (done) => {
-        const p = new Receiver({}, 5);
-        const buf = crypto.randomBytes(10);
-
-        let gotError = false;
-
-        p.onerror = function (reason, code) {
-            gotError = true;
-            assert.strictEqual(code, 1009);
-        };
-
-        p.add(Buffer.from([0x82, buf.length]));
-
-        assert.ok(gotError);
-        assert.strictEqual(p.onerror, null);
-
-        p.add(buf);
-        done();
     });
 
     it("consumes all data before calling `cleanup` callback (1/4)", (done) => {
@@ -844,7 +889,7 @@ describe("net", "ws", "Receiver", () => {
             assert.strictEqual(p._bufferedBytes, textFrame.length + closeFrame.length);
 
             p.cleanup(() => {
-                assert.deepStrictEqual(results, ["Hello", "Hello", 1000, ""]);
+                assert.deepStrictEqual(results, ["Hello", "Hello", 1005, ""]);
                 assert.strictEqual(p.onmessage, null);
                 done();
             });
@@ -881,7 +926,7 @@ describe("net", "ws", "Receiver", () => {
                 assert.deepStrictEqual(results, [
                     "Hello",
                     "Hello",
-                    "RSV2 and RSV3 must be clear",
+                    "Invalid WebSocket frame: RSV2 and RSV3 must be clear",
                     1002
                 ]);
                 assert.strictEqual(p.onmessage, null);
@@ -931,7 +976,7 @@ describe("net", "ws", "Receiver", () => {
             crypto.randomBytes(3)
         ];
 
-        p._binaryType = "nodebuffer";
+        p.binaryType = "nodebuffer";
         p.onmessage = (data) => {
             assert.ok(is.buffer(data));
             assert.ok(data.equals(Buffer.concat(frags)));

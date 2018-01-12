@@ -1,5 +1,5 @@
 const {
-    net: { ws: { Sender, PerMessageDeflate } }
+    net: { ws: { PerMessageDeflate, Sender } }
 } = adone;
 
 describe("net", "ws", "Sender", () => {
@@ -38,8 +38,8 @@ describe("net", "ws", "Sender", () => {
             const sender = new Sender({
                 write: (data) => {
                     assert.strictEqual(data[0] & 0x40, 0x40);
-                    if (++count === 3) {
-                        done();
+                    if (++count === 3) { 
+                        done(); 
                     }
                 }
             }, {
@@ -79,7 +79,7 @@ describe("net", "ws", "Sender", () => {
                 write: (data) => {
                     fragments.push(data);
                     if (fragments.length !== 2) {
-                        return;
+                        return; 
                     }
 
                     assert.strictEqual(fragments[0][0] & 0x40, 0x40);
@@ -104,8 +104,8 @@ describe("net", "ws", "Sender", () => {
             const sender = new Sender({
                 write: (data) => {
                     fragments.push(data);
-                    if (fragments.length !== 2) {
-                        return;
+                    if (fragments.length !== 2) { 
+                        return; 
                     }
 
                     assert.strictEqual(fragments[0][0] & 0x40, 0x00);
@@ -130,7 +130,7 @@ describe("net", "ws", "Sender", () => {
             const sender = new Sender({
                 write: (data) => {
                     fragments.push(data);
-                    if (fragments.length !== 2) {
+                    if (fragments.length !== 2) { 
                         return;
                     }
 
@@ -156,8 +156,8 @@ describe("net", "ws", "Sender", () => {
             const sender = new Sender({
                 write: (data) => {
                     fragments.push(data);
-                    if (fragments.length !== 2) {
-                        return;
+                    if (fragments.length !== 2) { 
+                        return; 
                     }
 
                     assert.strictEqual(fragments[0][0] & 0x40, 0x40);
@@ -181,8 +181,8 @@ describe("net", "ws", "Sender", () => {
             const perMessageDeflate = new PerMessageDeflate();
             const sender = new Sender({
                 write: () => {
-                    if (++count > 1e4) {
-                        done();
+                    if (++count > 1e4) { 
+                        done(); 
                     }
                 }
             }, {
@@ -208,11 +208,11 @@ describe("net", "ws", "Sender", () => {
             const sender = new Sender({
                 write: (data) => {
                     if (++count === 1) {
-                        return;
+                        return; 
                     }
 
                     assert.ok(data.equals(Buffer.from([0x89, 0x02, 0x68, 0x69])));
-                    if (count === 4) {
+                    if (count === 4) { 
                         done();
                     }
                 }
@@ -237,13 +237,13 @@ describe("net", "ws", "Sender", () => {
             let count = 0;
             const sender = new Sender({
                 write: (data) => {
-                    if (++count === 1) {
-                        return;
+                    if (++count === 1) { 
+                        return; 
                     }
 
                     assert.ok(data.equals(Buffer.from([0x8a, 0x02, 0x68, 0x69])));
-                    if (count === 4) {
-                        done();
+                    if (count === 4) { 
+                        done(); 
                     }
                 }
             }, {
@@ -269,8 +269,8 @@ describe("net", "ws", "Sender", () => {
             const sender = new Sender({
                 write: (data, cb) => {
                     count++;
-                    if (cb) {
-                        cb();
+                    if (cb) { 
+                        cb(); 
                     }
                 }
             }, {

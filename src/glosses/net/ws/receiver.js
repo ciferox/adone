@@ -1,6 +1,7 @@
 const {
-    net: { ws: { constants, errorCodes, PerMessageDeflate } }
+    net: { ws: { util, constants, PerMessageDeflate } }
 } = adone;
+
 
 const GET_INFO = 0;
 const GET_PAYLOAD_LENGTH_16 = 1;
@@ -22,7 +23,7 @@ const toBuffer = function (fragments, messageLength) {
         return fragments[0];
     }
     if (fragments.length > 1) {
-        return adone.util.buffer.concat(fragments, messageLength);
+        return util.concat(fragments, messageLength);
     }
     return adone.EMPTY_BUFFER;
 };
@@ -154,6 +155,7 @@ export default class Receiver {
     /**
      * Adds new data to the parser.
      *
+     * @param {Buffer} data A chunk of data
      * @public
      */
     add(data) {
@@ -210,14 +212,20 @@ export default class Receiver {
         const buf = this.readBuffer(2);
 
         if ((buf[0] & 0x30) !== 0x00) {
-            this.error(new Error("RSV2 and RSV3 must be clear"), 1002);
+            this.error(
+                new RangeError("Invalid WebSocket frame: RSV2 and RSV3 must be clear"),
+                1002
+            );
             return;
         }
 
         const compressed = (buf[0] & 0x40) === 0x40;
 
         if (compressed && !this._extensions[PerMessageDeflate.extensionName]) {
-            this.error(new Error("RSV1 must be clear"), 1002);
+            this.error(
+                new RangeError("Invalid WebSocket frame: RSV1 must be clear"),
+                1002
+            );
             return;
         }
 
@@ -227,40 +235,68 @@ export default class Receiver {
 
         if (this._opcode === 0x00) {
             if (compressed) {
-                this.error(new Error("RSV1 must be clear"), 1002);
+                this.error(
+                    new RangeError("Invalid WebSocket frame: RSV1 must be clear"),
+                    1002
+                );
                 return;
             }
 
             if (!this._fragmented) {
-                this.error(new Error(`Invalid opcode: ${this._opcode}`), 1002);
+                this.error(
+                    new RangeError("Invalid WebSocket frame: invalid opcode 0"),
+                    1002
+                );
                 return;
             }
             this._opcode = this._fragmented;
 
         } else if (this._opcode === 0x01 || this._opcode === 0x02) {
             if (this._fragmented) {
-                this.error(new Error(`Invalid opcode: ${this._opcode}`), 1002);
+                this.error(
+                    new RangeError(
+                        `Invalid WebSocket frame: invalid opcode ${this._opcode}`
+                    ),
+                    1002
+                );
                 return;
             }
 
             this._compressed = compressed;
         } else if (this._opcode > 0x07 && this._opcode < 0x0b) {
             if (!this._fin) {
-                this.error(new Error("FIN must be set"), 1002);
+                this.error(
+                    new RangeError("Invalid WebSocket frame: FIN must be set"),
+                    1002
+                );
                 return;
             }
 
             if (compressed) {
-                this.error(new Error("RSV1 must be clear"), 1002);
+                this.error(
+                    new RangeError("Invalid WebSocket frame: RSV1 must be clear"),
+                    1002
+                );
                 return;
             }
 
             if (this._payloadLength > 0x7d) {
-                this.error(new Error("Invalid payload length"), 1002);
+                this.error(
+                    new RangeError(
+                        "Invalid WebSocket frame: invalid payload length " +
+                        `${this._payloadLength}`
+                    ),
+                    1002
+                );
                 return;
             }
         } else {
-            this.error(new Error(`Invalid opcode: ${this._opcode}`), 1002);
+            this.error(
+                new RangeError(
+                    `Invalid WebSocket frame: invalid opcode ${this._opcode}`
+                ),
+                1002
+            );
             return;
         }
 
@@ -311,11 +347,16 @@ export default class Receiver {
         // if payload length is greater than this number.
         //
         if (num > Math.pow(2, 53 - 32) - 1) {
-            this.error(new Error("Max payload size exceeded"), 1009);
+            this.error(
+                new RangeError(
+                    "Unsupported WebSocket frame: payload length > 2^53 - 1"
+                ),
+                1009
+            );
             return;
         }
 
-        this._payloadLength = (num * Math.pow(2, 32)) + buf.readUInt32BE(4, true);
+        this._payloadLength = num * Math.pow(2, 32) + buf.readUInt32BE(4, true);
         this.haveLength();
     }
 
@@ -365,7 +406,7 @@ export default class Receiver {
 
             data = this.readBuffer(this._payloadLength);
             if (this._masked) {
-                adone.util.buffer.unmask(data, this._mask);
+                util.unmask(data, this._mask);
             }
         }
 
@@ -431,8 +472,11 @@ export default class Receiver {
             } else {
                 const buf = toBuffer(fragments, messageLength);
 
-                if (!adone.is.validUTF8(buf)) {
-                    this.error(new Error("Invalid utf8 sequence"), 1007);
+                if (!util.isValidUTF8(buf)) {
+                    this.error(
+                        new Error("Invalid WebSocket frame: invalid UTF-8 sequence"),
+                        1007
+                    );
                     return;
                 }
 
@@ -452,23 +496,34 @@ export default class Receiver {
     controlMessage(data) {
         if (this._opcode === 0x08) {
             if (data.length === 0) {
-                this.onclose(1000, "");
+                this.onclose(1005, "");
                 this._loop = false;
                 this.cleanup(this._cleanupCallback);
             } else if (data.length === 1) {
-                this.error(new Error("Invalid payload length"), 1002);
+                this.error(
+                    new RangeError("Invalid WebSocket frame: invalid payload length 1"),
+                    1002
+                );
             } else {
                 const code = data.readUInt16BE(0, true);
 
-                if (!errorCodes.isValidErrorCode(code)) {
-                    this.error(new Error(`Invalid status code: ${code}`), 1002);
+                if (!util.isValidStatusCode(code)) {
+                    this.error(
+                        new RangeError(
+                            `Invalid WebSocket frame: invalid status code ${code}`
+                        ),
+                        1002
+                    );
                     return;
                 }
 
                 const buf = data.slice(2);
 
-                if (!adone.is.validUTF8(buf)) {
-                    this.error(new Error("Invalid utf8 sequence"), 1007);
+                if (!util.isValidUTF8(buf)) {
+                    this.error(
+                        new Error("Invalid WebSocket frame: invalid UTF-8 sequence"),
+                        1007
+                    );
                     return;
                 }
 
@@ -521,7 +576,7 @@ export default class Receiver {
             return false;
         }
 
-        this.error(new Error("Max payload size exceeded"), 1009);
+        this.error(new RangeError("Max payload size exceeded"), 1009);
         return true;
     }
 
@@ -546,7 +601,7 @@ export default class Receiver {
             return true;
         }
 
-        this.error(new Error("Max payload size exceeded"), 1009);
+        this.error(new RangeError("Max payload size exceeded"), 1009);
         return false;
     }
 

@@ -1,8 +1,9 @@
 const {
     is,
-    net: { ws: { errorCodes, PerMessageDeflate } },
+    net: { ws: { util, PerMessageDeflate } },
     std: { crypto }
 } = adone;
+
 /**
  * Converts an `ArrayBuffer` view into a buffer.
  *
@@ -19,6 +20,7 @@ const viewToBuffer = function (view) {
 
     return buf;
 };
+
 
 /**
  * HyBi Sender implementation.
@@ -101,11 +103,11 @@ export default class Sender {
         target[offset - 1] = mask[3];
 
         if (merge) {
-            adone.util.buffer.mask(data, mask, target, offset, data.length);
+            util.mask(data, mask, target, offset, data.length);
             return [target];
         }
 
-        adone.util.buffer.mask(data, mask, data, 0, data.length);
+        util.mask(data, mask, data, 0, data.length);
         return [target, data];
     }
 
@@ -122,18 +124,12 @@ export default class Sender {
         let buf;
 
         if (is.undefined(code)) {
-            code = 1000;
-        } else if (!is.number(code) || !errorCodes.isValidErrorCode(code)) {
-            throw new Error("First argument must be a valid error code number");
-        }
-
-        if (is.undefined(data) || data === "") {
-            if (code === 1000) {
-                buf = adone.EMPTY_BUFFER;
-            } else {
-                buf = Buffer.allocUnsafe(2);
-                buf.writeUInt16BE(code, 0, true);
-            }
+            buf = adone.EMPTY_BUFFER;
+        } else if (!is.number(code) || !util.isValidStatusCode(code)) {
+            throw new TypeError("First argument must be a valid error code number");
+        } else if (is.undefined(data) || data === "") {
+            buf = Buffer.allocUnsafe(2);
+            buf.writeUInt16BE(code, 0, true);
         } else {
             buf = Buffer.allocUnsafe(2 + Buffer.byteLength(data));
             buf.writeUInt16BE(code, 0, true);
@@ -170,9 +166,10 @@ export default class Sender {
      *
      * @param {*} data The message to send
      * @param {Boolean} mask Specifies whether or not to mask `data`
+     * @param {Function} cb Callback
      * @public
      */
-    ping(data, mask) {
+    ping(data, mask, cb) {
         let readOnly = true;
 
         if (!is.buffer(data)) {
@@ -187,9 +184,9 @@ export default class Sender {
         }
 
         if (this._deflating) {
-            this.enqueue([this.doPing, data, mask, readOnly]);
+            this.enqueue([this.doPing, data, mask, readOnly, cb]);
         } else {
-            this.doPing(data, mask, readOnly);
+            this.doPing(data, mask, readOnly, cb);
         }
     }
 
@@ -199,16 +196,17 @@ export default class Sender {
      * @param {*} data The message to send
      * @param {Boolean} mask Specifies whether or not to mask `data`
      * @param {Boolean} readOnly Specifies whether `data` can be modified
+     * @param {Function} cb Callback
      * @private
      */
-    doPing(data, mask, readOnly) {
+    doPing(data, mask, readOnly, cb) {
         this.sendFrame(Sender.frame(data, {
             fin: true,
             rsv1: false,
             opcode: 0x09,
             mask,
             readOnly
-        }));
+        }), cb);
     }
 
     /**
@@ -216,9 +214,10 @@ export default class Sender {
      *
      * @param {*} data The message to send
      * @param {Boolean} mask Specifies whether or not to mask `data`
+     * @param {Function} cb Callback
      * @public
      */
-    pong(data, mask) {
+    pong(data, mask, cb) {
         let readOnly = true;
 
         if (!is.buffer(data)) {
@@ -233,9 +232,9 @@ export default class Sender {
         }
 
         if (this._deflating) {
-            this.enqueue([this.doPong, data, mask, readOnly]);
+            this.enqueue([this.doPong, data, mask, readOnly, cb]);
         } else {
-            this.doPong(data, mask, readOnly);
+            this.doPong(data, mask, readOnly, cb);
         }
     }
 
@@ -245,16 +244,17 @@ export default class Sender {
      * @param {*} data The message to send
      * @param {Boolean} mask Specifies whether or not to mask `data`
      * @param {Boolean} readOnly Specifies whether `data` can be modified
+     * @param {Function} cb Callback
      * @private
      */
-    doPong(data, mask, readOnly) {
+    doPong(data, mask, readOnly, cb) {
         this.sendFrame(Sender.frame(data, {
             fin: true,
             rsv1: false,
             opcode: 0x0a,
             mask,
             readOnly
-        }));
+        }), cb);
     }
 
     /**

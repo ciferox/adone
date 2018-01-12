@@ -993,11 +993,11 @@ describe("util", () => {
 
     describe("buffer", () => {
         describe("toArrayBuffer", () => {
-            const { bufferToArrayBuffer } = util;
+            const { toArrayBuffer } = util.buffer;
 
             it("should convert bufer to array buffer", () => {
                 const buf = Buffer.from("hello");
-                const arr = bufferToArrayBuffer(buf);
+                const arr = toArrayBuffer(buf);
                 expect(arr).to.be.an("ArrayBuffer");
                 const view = new Uint8Array(arr);
                 expect([...view]).to.be.deep.equal([...buf]);
@@ -1005,7 +1005,7 @@ describe("util", () => {
 
             it("should copy it", () => {
                 const buf = Buffer.from("hello");
-                const arr = bufferToArrayBuffer(buf);
+                const arr = toArrayBuffer(buf);
                 buf.writeUInt8(0, 0);
                 const view = new Uint8Array(arr);
                 expect(view[0]).not.to.be.equal(0);

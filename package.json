@@ -170,7 +170,9 @@
     "adone": "./bin/adone.js"
   },
   "dependencies": {
+    "async-limiter": "^1.0.0",
     "ease-component": "^1.0.0",
-    "nanotimer": "^0.3.15"
+    "nanotimer": "^0.3.15",
+    "utf-8-validate": "^4.0.0"
   }
 }

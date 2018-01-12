@@ -1006,7 +1006,6 @@ export const after = (str, date = String(new Date())) => {
 };
 
 adone.lazify({
-    validUTF8: () => adone.native.Common.isValidUTF8,
     fqdn: "./fqdn",
     url: "./url",
     email: "./email"

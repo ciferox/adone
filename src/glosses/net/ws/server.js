@@ -1,7 +1,8 @@
 const {
     is,
-    net: { ws: { Client, PerMessageDeflate, exts, constants } },
-    std: { crypto, http, url }
+    event: { EventEmitter },
+    net: { ws: { constants, extension, Client, PerMessageDeflate } },
+    std: { url, http, crypto }
 } = adone;
 
 
@@ -44,9 +45,9 @@ const abortConnection = function (socket, code, message) {
  *
  * @extends EventEmitter
  */
-export default class Server extends adone.event.EventEmitter {
+export default class WebSocketServer extends EventEmitter {
     /**
-     * Create a `Server` instance.
+     * Create a `WebSocketServer` instance.
      *
      * @param {Object} options Configuration options
      * @param {String} options.host The hostname where to bind the server
@@ -79,7 +80,9 @@ export default class Server extends adone.event.EventEmitter {
         }, options);
 
         if (is.nil(options.port) && !options.server && !options.noServer) {
-            throw new TypeError("Missing or invalid options");
+            throw new TypeError(
+                'One of the "port", "server", or "noServer" options must be specified'
+            );
         }
 
         if (!is.nil(options.port)) {
@@ -204,7 +207,7 @@ export default class Server extends adone.event.EventEmitter {
             );
 
             try {
-                const offers = exts.parse(
+                const offers = extension.parse(
                     req.headers["sec-websocket-extensions"]
                 );
 
@@ -247,15 +250,7 @@ export default class Server extends adone.event.EventEmitter {
                         return abortConnection(socket, code || 401, message);
                     }
 
-                    this.completeUpgrade(
-                        protocol,
-                        extensions,
-                        version,
-                        req,
-                        socket,
-                        head,
-                        cb
-                    );
+                    this.completeUpgrade(protocol, extensions, req, socket, head, cb);
                 });
                 return;
             }
@@ -265,22 +260,21 @@ export default class Server extends adone.event.EventEmitter {
             }
         }
 
-        this.completeUpgrade(protocol, extensions, version, req, socket, head, cb);
+        this.completeUpgrade(protocol, extensions, req, socket, head, cb);
     }
 
     /**
-     * Upgrade the connection to WebSocket.
+     * Upgrade the connection to SebSocket client.
      *
      * @param {String} protocol The chosen subprotocol
      * @param {Object} extensions The accepted extensions
-     * @param {Number} version The WebSocket protocol version
      * @param {http.IncomingMessage} req The request object
      * @param {net.Socket} socket The network socket between the server and client
      * @param {Buffer} head The first packet of the upgraded stream
      * @param {Function} cb Callback
      * @private
      */
-    completeUpgrade(protocol, extensions, version, req, socket, head, cb) {
+    completeUpgrade(protocol, extensions, req, socket, head, cb) {
         //
         // Destroy the socket if the client has already sent a FIN packet.
         //
@@ -299,15 +293,19 @@ export default class Server extends adone.event.EventEmitter {
             `Sec-WebSocket-Accept: ${key}`
         ];
 
+        const ws = new Client(null);
+
         if (protocol) {
             headers.push(`Sec-WebSocket-Protocol: ${protocol}`);
+            ws.protocol = protocol;
         }
         if (extensions[PerMessageDeflate.extensionName]) {
             const params = extensions[PerMessageDeflate.extensionName].params;
-            const value = exts.format({
+            const value = extension.format({
                 [PerMessageDeflate.extensionName]: [params]
             });
             headers.push(`Sec-WebSocket-Extensions: ${value}`);
+            ws._extensions = extensions;
         }
 
         //
@@ -316,20 +314,15 @@ export default class Server extends adone.event.EventEmitter {
         this.emit("headers", headers, req);
 
         socket.write(headers.concat("\r\n").join("\r\n"));
+        socket.removeListener("error", socketError);
 
-        const client = new Client([socket, head], null, {
-            maxPayload: this.options.maxPayload,
-            protocolVersion: version,
-            extensions,
-            protocol
-        });
+        ws.setSocket(socket, head, this.options.maxPayload);
 
         if (this.clients) {
-            this.clients.add(client);
-            client.on("close", () => this.clients.delete(client));
+            this.clients.add(ws);
+            ws.on("close", () => this.clients.delete(ws));
         }
 
-        socket.removeListener("error", socketError);
-        cb(client);
+        cb(ws);
     }
 }

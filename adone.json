@@ -597,6 +597,20 @@
                                 "src": "src/glosses/net/utp/native",
                                 "dst": "lib/glosses/net/utp/native"
                             }
+                        },
+                        "ws": {
+                            "description": "WebSocket client/server implementation",
+                            "task": "transpile",
+                            "src": [
+                                "src/glosses/net/ws/**/*.js",
+                                "!src/glosses/net/ws/native/**/*"
+                            ],
+                            "dst": "lib/glosses/net/ws",
+                            "namespace": "ws",
+                            "native": {
+                                "src": "src/glosses/net/ws/native",
+                                "dst": "lib/glosses/net/ws/native"
+                            }
                         }
                     }
                 },

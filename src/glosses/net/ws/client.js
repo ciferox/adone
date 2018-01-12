@@ -1,17 +1,41 @@
 const {
     is,
-    net: { ws: { Receiver, Sender, constants, PerMessageDeflate } },
-    std: { url, crypto, http, https }
+    event: { EventEmitter },
+    net: { ws: { constants, extension, Receiver, Sender, PerMessageDeflate } },
+    std: { crypto, http, https, url }
 } = adone;
 
+/**
+ * Class representing an event.
+ *
+ * @private
+ */
 class Event {
+    /**
+     * Create a new `Event`.
+     *
+     * @param {String} type The name of the event
+     * @param {Object} target A reference to the target to which the event was dispatched
+     */
     constructor(type, target) {
         this.target = target;
         this.type = type;
     }
 }
 
+/**
+ * Class representing a message event.
+ *
+ * @extends Event
+ * @private
+ */
 class MessageEvent extends Event {
+    /**
+     * Create a new `MessageEvent`.
+     *
+     * @param {(String|Buffer|ArrayBuffer|Buffer[])} data The received data
+     * @param {WebSocket} target A reference to the target to which the event was dispatched
+     */
     constructor(data, target) {
         super("message", target);
 
@@ -19,7 +43,20 @@ class MessageEvent extends Event {
     }
 }
 
+/**
+ * Class representing a close event.
+ *
+ * @extends Event
+ * @private
+ */
 class CloseEvent extends Event {
+    /**
+     * Create a new `CloseEvent`.
+     *
+     * @param {Number} code The status code explaining why the connection is being closed
+     * @param {String} reason A human-readable string explaining why the connection is closing
+     * @param {WebSocket} target A reference to the target to which the event was dispatched
+     */
     constructor(code, reason, target) {
         super("close", target);
 
@@ -29,33 +66,76 @@ class CloseEvent extends Event {
     }
 }
 
+/**
+ * Class representing an open event.
+ *
+ * @extends Event
+ * @private
+ */
 class OpenEvent extends Event {
+    /**
+     * Create a new `OpenEvent`.
+     *
+     * @param {WebSocket} target A reference to the target to which the event was dispatched
+     */
     constructor(target) {
         super("open", target);
     }
 }
 
+/**
+ * Class representing an error event.
+ *
+ * @extends Event
+ * @private
+ */
+class ErrorEvent extends Event {
+    /**
+     * Create a new `ErrorEvent`.
+     *
+     * @param {Object} error The error that generated this event
+     * @param {WebSocket} target A reference to the target to which the event was dispatched
+     */
+    constructor(error, target) {
+        super("error", target);
+
+        this.message = error.message;
+        this.error = error;
+    }
+}
+
+/**
+ * This provides methods for emulating the `EventTarget` interface. It's not
+ * meant to be used directly.
+ *
+ * @mixin
+ */
 const EventTarget = {
+    /**
+     * Register an event listener.
+     *
+     * @param {String} method A string representing the event type to listen for
+     * @param {Function} listener The listener to add
+     * @public
+     */
     addEventListener(method, listener) {
         if (!is.function(listener)) {
-            return;
+            return; 
         }
 
-        const onMessage = (data) => {
+        const onMessage = function (data) {
             listener.call(this, new MessageEvent(data, this));
         };
 
-        const onClose = (code, message) => {
+        const onClose = function (code, message) {
             listener.call(this, new CloseEvent(code, message, this));
         };
 
-        const onError = (event) => {
-            event.type = "error";
-            event.target = this;
-            listener.call(this, event);
+        const onError = function (error) {
+            listener.call(this, new ErrorEvent(error, this));
         };
 
-        const onOpen = () => {
+        const onOpen = function () {
             listener.call(this, new OpenEvent(this));
         };
 
@@ -76,6 +156,13 @@ const EventTarget = {
         }
     },
 
+    /**
+     * Remove an event listener.
+     *
+     * @param {String} method A string representing the event type to remove
+     * @param {Function} listener The listener to remove
+     * @public
+     */
     removeEventListener(method, listener) {
         const listeners = this.listeners(method);
 
@@ -87,11 +174,12 @@ const EventTarget = {
     }
 };
 
+const readyStates = ["CONNECTING", "OPEN", "CLOSING", "CLOSED"];
 const protocolVersions = [8, 13];
 const closeTimeout = 30 * 1000; // Allow 30 seconds to terminate the connection cleanly.
 
 /**
- * Initialize a Client client.
+ * Initialize a WebSocket client.
  *
  * @param {String} address The URL to which to connect
  * @param {String[]} protocols The list of subprotocols
@@ -144,11 +232,13 @@ const initAsClient = function (address, protocols, options) {
         ca: null
     }, options);
 
-    if (!protocolVersions.includes(options.protocolVersion)) {
-        throw new Error(`Unsupported protocol version: ${options.protocolVersion} (supported versions: ${protocolVersions.join(", ")})`);
+    if (protocolVersions.indexOf(options.protocolVersion) === -1) {
+        throw new RangeError(
+            `Unsupported protocol version: ${options.protocolVersion} ` +
+            `(supported versions: ${protocolVersions.join(", ")})`
+        );
     }
 
-    this.protocolVersion = options.protocolVersion;
     this._isServer = false;
     this.url = address;
 
@@ -156,7 +246,7 @@ const initAsClient = function (address, protocols, options) {
     const isUnixSocket = serverUrl.protocol === "ws+unix:";
 
     if (!serverUrl.host && (!isUnixSocket || !serverUrl.path)) {
-        throw new Error("Invalid url");
+        throw new Error(`Invalid URL: ${address}`);
     }
 
     const isSecure = serverUrl.protocol === "wss:" || serverUrl.protocol === "https:";
@@ -184,7 +274,7 @@ const initAsClient = function (address, protocols, options) {
             options.perMessageDeflate !== true ? options.perMessageDeflate : {},
             false
         );
-        requestOptions.headers["Sec-WebSocket-Extensions"] = adone.net.ws.exts.format({
+        requestOptions.headers["Sec-WebSocket-Extensions"] = extension.format({
             [PerMessageDeflate.extensionName]: perMessageDeflate.offer()
         });
     }
@@ -302,18 +392,18 @@ const initAsClient = function (address, protocols, options) {
     this._req.on("response", (res) => {
         if (!this.emit("unexpected-response", this._req, res)) {
             this._req.abort();
-            this.finalize(new Error(`Unexpected server response (${res.statusCode})`));
+            this.finalize(new Error(`Unexpected server response: ${res.statusCode}`));
         }
     });
 
     this._req.on("upgrade", (res, socket, head) => {
-        this.emit("headers", res.headers, res);
+        this.emit("upgrade", res);
 
         //
-        // The user may have closed the connection from a listener of the `headers`
+        // The user may have closed the connection from a listener of the `upgrade`
         // event.
         //
-        if (this.readyState !== Client.CONNECTING) {
+        if (this.readyState !== WebSocket.CONNECTING) {
             return;
         }
 
@@ -325,7 +415,7 @@ const initAsClient = function (address, protocols, options) {
 
         if (res.headers["sec-websocket-accept"] !== digest) {
             socket.destroy();
-            return this.finalize(new Error("Invalid server key"));
+            return this.finalize(new Error("Invalid Sec-WebSocket-Accept header"));
         }
 
         const serverProt = res.headers["sec-websocket-protocol"];
@@ -333,11 +423,11 @@ const initAsClient = function (address, protocols, options) {
         let protError;
 
         if (!options.protocol && serverProt) {
-            protError = "Server sent a subprotocol even though none requested";
+            protError = "Server sent a subprotocol but none was requested";
         } else if (options.protocol && !serverProt) {
-            protError = "Server sent no subprotocol even though requested";
-        } else if (serverProt && !protList.includes(serverProt)) {
-            protError = "Server responded with an invalid protocol";
+            protError = "Server sent no subprotocol";
+        } else if (serverProt && protList.indexOf(serverProt) === -1) {
+            protError = "Server sent an invalid subprotocol";
         }
 
         if (protError) {
@@ -351,15 +441,15 @@ const initAsClient = function (address, protocols, options) {
 
         if (perMessageDeflate) {
             try {
-                const serverExtensions = adone.net.ws.exts.parse(
+                const extensions = extension.parse(
                     res.headers["sec-websocket-extensions"]
                 );
 
-                if (serverExtensions[PerMessageDeflate.extensionName]) {
+                if (extensions[PerMessageDeflate.extensionName]) {
                     perMessageDeflate.accept(
-                        serverExtensions[PerMessageDeflate.extensionName]
+                        extensions[PerMessageDeflate.extensionName]
                     );
-                    this.extensions[PerMessageDeflate.extensionName] = perMessageDeflate;
+                    this._extensions[PerMessageDeflate.extensionName] = perMessageDeflate;
                 }
             } catch (err) {
                 socket.destroy();
@@ -368,42 +458,18 @@ const initAsClient = function (address, protocols, options) {
             }
         }
 
-        this.setSocket(socket, head);
+        this.setSocket(socket, head, 0);
     });
 };
 
 /**
- * Initialize a Client server client.
- *
- * @param {http.IncomingMessage} req The request object
- * @param {net.Socket} socket The network socket between the server and client
- * @param {Buffer} head The first packet of the upgraded stream
- * @param {Object} options Client attributes
- * @param {Number} options.protocolVersion The Client protocol version
- * @param {Object} options.extensions The negotiated extensions
- * @param {Number} options.maxPayload The maximum allowed message size
- * @param {String} options.protocol The chosen subprotocol
- * @private
- */
-const initAsServerClient = function (socket, head, options) {
-    this.protocolVersion = options.protocolVersion;
-    this._maxPayload = options.maxPayload;
-    this.extensions = options.extensions;
-    this.protocol = options.protocol;
-
-    this._isServer = true;
-
-    this.setSocket(socket, head);
-};
-
-/**
- * Class representing a Client.
+ * Class representing a WebSocket.
  *
  * @extends EventEmitter
  */
-export default class Client extends adone.event.EventEmitter {
+export default class WebSocket extends EventEmitter {
     /**
-     * Create a new `Client`.
+     * Create a new `WebSocket`.
      *
      * @param {String} address The URL to which to connect
      * @param {(String|String[])} protocols The subprotocols
@@ -412,18 +478,7 @@ export default class Client extends adone.event.EventEmitter {
     constructor(address, protocols, options) {
         super();
 
-        if (!protocols) {
-            protocols = [];
-        } else if (is.string(protocols)) {
-            protocols = [protocols];
-        } else if (!is.array(protocols)) {
-            options = protocols;
-            protocols = [];
-        }
-
-        this.readyState = Client.CONNECTING;
-        this.bytesReceived = 0;
-        this.extensions = {};
+        this.readyState = WebSocket.CONNECTING;
         this.protocol = "";
 
         this._binaryType = constants.BINARY_TYPES[0];
@@ -434,31 +489,65 @@ export default class Client extends adone.event.EventEmitter {
         this._closeTimer = null;
         this._finalized = false;
         this._closeCode = 1006;
+        this._extensions = {};
+        this._isServer = true;
         this._receiver = null;
         this._sender = null;
         this._socket = null;
 
-        if (is.array(address)) {
-            initAsServerClient.call(this, address[0], address[1], options);
-        } else {
+        if (!is.null(address)) {
+            if (!protocols) {
+                protocols = [];
+            } else if (is.string(protocols)) {
+                protocols = [protocols];
+            } else if (!is.array(protocols)) {
+                options = protocols;
+                protocols = [];
+            }
+
             initAsClient.call(this, address, protocols, options);
         }
     }
 
     get CONNECTING() {
-        return Client.CONNECTING;
+        return WebSocket.CONNECTING;
     }
 
     get CLOSING() {
-        return Client.CLOSING;
+        return WebSocket.CLOSING;
     }
 
     get CLOSED() {
-        return Client.CLOSED;
+        return WebSocket.CLOSED;
     }
 
     get OPEN() {
-        return Client.OPEN;
+        return WebSocket.OPEN;
+    }
+
+    /**
+     * This deviates from the WHATWG interface since ws doesn't support the required
+     * default "blob" type (instead we define a custom "nodebuffer" type).
+     *
+     * @type {String}
+     */
+    get binaryType() {
+        return this._binaryType;
+    }
+
+    set binaryType(type) {
+        if (constants.BINARY_TYPES.indexOf(type) < 0) {
+            return;
+        }
+
+        this._binaryType = type;
+
+        //
+        // Allow to change `binaryType` on the fly.
+        //
+        if (this._receiver) {
+            this._receiver._binaryType = type;
+        }
     }
 
     /**
@@ -474,28 +563,10 @@ export default class Client extends adone.event.EventEmitter {
     }
 
     /**
-     * This deviates from the WHATWG interface since ws doesn't support the required
-     * default "blob" type (instead we define a custom "nodebuffer" type).
-     *
      * @type {String}
      */
-    get binaryType() {
-        return this._binaryType;
-    }
-
-    set binaryType(type) {
-        if (!constants.BINARY_TYPES.includes(type)) {
-            return;
-        }
-
-        this._binaryType = type;
-
-        //
-        // Allow to change `binaryType` on the fly.
-        //
-        if (this._receiver) {
-            this._receiver._binaryType = type;
-        }
+    get extensions() {
+        return Object.keys(this._extensions).join();
     }
 
     /**
@@ -503,17 +574,17 @@ export default class Client extends adone.event.EventEmitter {
      *
      * @param {net.Socket} socket The network socket between the server and client
      * @param {Buffer} head The first packet of the upgraded stream
+     * @param {Number} maxPayload The maximum allowed message size
      * @private
      */
-    setSocket(socket, head) {
+    setSocket(socket, head, maxPayload) {
         socket.setTimeout(0);
         socket.setNoDelay();
 
-        this._receiver = new Receiver(this.extensions, this._maxPayload, this.binaryType);
-        this._sender = new Sender(socket, this.extensions);
+        this._receiver = new Receiver(this._extensions, maxPayload, this.binaryType);
+        this._sender = new Sender(socket, this._extensions);
         this._socket = socket;
 
-        // socket cleanup handlers
         socket.on("close", this._finalize);
         socket.on("error", this._finalize);
         socket.on("end", this._finalize);
@@ -523,13 +594,13 @@ export default class Client extends adone.event.EventEmitter {
         }
 
         socket.on("data", (data) => {
-            this.bytesReceived += data.length;
+            // this.bytesReceived += data.length;
             this._receiver.add(data);
         });
 
         this._receiver.onmessage = (data) => this.emit("message", data);
         this._receiver.onping = (data) => {
-            this.pong(data, !this._isServer, true);
+            this.pong(data, !this._isServer, adone.noop);
             this.emit("ping", data);
         };
         this._receiver.onpong = (data) => this.emit("pong", data);
@@ -537,7 +608,14 @@ export default class Client extends adone.event.EventEmitter {
             this._closeFrameReceived = true;
             this._closeMessage = reason;
             this._closeCode = code;
-            if (!this._finalized) {
+
+            if (this._finalized) {
+                return;
+            }
+
+            if (code === 1005) {
+                this.close();
+            } else {
                 this.close(code, reason);
             }
         };
@@ -546,15 +624,15 @@ export default class Client extends adone.event.EventEmitter {
             this._closeCode = code;
 
             //
-            // Ensure that the error is emitted even if `Client#finalize()` has
+            // Ensure that the error is emitted even if `WebSocket#finalize()` has
             // already been called.
             //
-            this.readyState = Client.CLOSING;
+            this.readyState = WebSocket.CLOSING;
             this.emit("error", error);
             this.finalize(true);
         };
 
-        this.readyState = Client.OPEN;
+        this.readyState = WebSocket.OPEN;
         this.emit("open");
     }
 
@@ -569,7 +647,7 @@ export default class Client extends adone.event.EventEmitter {
             return;
         }
 
-        this.readyState = Client.CLOSING;
+        this.readyState = WebSocket.CLOSING;
         this._finalized = true;
 
         if (typeof error === "object") {
@@ -606,43 +684,15 @@ export default class Client extends adone.event.EventEmitter {
      * @private
      */
     emitClose() {
-        this.readyState = Client.CLOSED;
+        this.readyState = WebSocket.CLOSED;
 
         this.emit("close", this._closeCode, this._closeMessage);
 
-        if (this.extensions[PerMessageDeflate.extensionName]) {
-            this.extensions[PerMessageDeflate.extensionName].cleanup();
+        if (this._extensions[PerMessageDeflate.extensionName]) {
+            this._extensions[PerMessageDeflate.extensionName].cleanup();
         }
-
-        this.extensions = null;
 
         this.removeAllListeners();
-    }
-
-    /**
-     * Pause the socket stream.
-     *
-     * @public
-     */
-    pause() {
-        if (this.readyState !== Client.OPEN) {
-            throw new Error("Not opened");
-        }
-
-        this._socket.pause();
-    }
-
-    /**
-     * Resume the socket stream
-     *
-     * @public
-     */
-    resume() {
-        if (this.readyState !== Client.OPEN) {
-            throw new Error("Not opened");
-        }
-
-        this._socket.resume();
     }
 
     /**
@@ -669,23 +719,25 @@ export default class Client extends adone.event.EventEmitter {
      * @public
      */
     close(code, data) {
-        if (this.readyState === Client.CLOSED) {
+        if (this.readyState === WebSocket.CLOSED) {
             return;
         }
-        if (this.readyState === Client.CONNECTING) {
+        if (this.readyState === WebSocket.CONNECTING) {
             this._req.abort();
-            this.finalize(new Error("Closed before the connection is established"));
+            this.finalize(
+                new Error("WebSocket was closed before the connection was established")
+            );
             return;
         }
 
-        if (this.readyState === Client.CLOSING) {
+        if (this.readyState === WebSocket.CLOSING) {
             if (this._closeFrameSent && this._closeFrameReceived) {
                 this._socket.end();
             }
             return;
         }
 
-        this.readyState = Client.CLOSING;
+        this.readyState = WebSocket.CLOSING;
         this._sender.close(code, data, !this._isServer, (err) => {
             //
             // This error is handled by the `'error'` listener on the socket. We only
@@ -712,19 +764,32 @@ export default class Client extends adone.event.EventEmitter {
     }
 
     /**
-     * Send a ping message.
+     * Send a ping.
      *
-     * @param {*} data The message to send
+     * @param {*} data The data to send
      * @param {Boolean} mask Indicates whether or not to mask `data`
-     * @param {Boolean} failSilently Indicates whether or not to throw if `readyState` isn't `OPEN`
+     * @param {Function} cb Callback which is executed when the ping is sent
      * @public
      */
-    ping(data, mask, failSilently) {
-        if (this.readyState !== Client.OPEN) {
-            if (failSilently) {
-                return;
+    ping(data, mask, cb) {
+        if (is.function(data)) {
+            cb = data;
+            data = mask = undefined;
+        } else if (is.function(mask)) {
+            cb = mask;
+            mask = undefined;
+        }
+
+        if (this.readyState !== WebSocket.OPEN) {
+            const err = new Error(
+                `WebSocket is not open: readyState ${this.readyState} ` +
+                `(${readyStates[this.readyState]})`
+            );
+
+            if (cb) {
+                return cb(err);
             }
-            throw new Error("Not opened");
+            throw err;
         }
 
         if (is.number(data)) {
@@ -733,23 +798,36 @@ export default class Client extends adone.event.EventEmitter {
         if (is.undefined(mask)) {
             mask = !this._isServer;
         }
-        this._sender.ping(data || adone.EMPTY_BUFFER, mask);
+        this._sender.ping(data || adone.EMPTY_BUFFER, mask, cb);
     }
 
     /**
-     * Send a pong message.
+     * Send a pong.
      *
-     * @param {*} data The message to send
+     * @param {*} data The data to send
      * @param {Boolean} mask Indicates whether or not to mask `data`
-     * @param {Boolean} failSilently Indicates whether or not to throw if `readyState` isn't `OPEN`
+     * @param {Function} cb Callback which is executed when the pong is sent
      * @public
      */
-    pong(data, mask, failSilently) {
-        if (this.readyState !== Client.OPEN) {
-            if (failSilently) {
-                return;
+    pong(data, mask, cb) {
+        if (is.function(data)) {
+            cb = data;
+            data = mask = undefined;
+        } else if (is.function(mask)) {
+            cb = mask;
+            mask = undefined;
+        }
+
+        if (this.readyState !== WebSocket.OPEN) {
+            const err = new Error(
+                `WebSocket is not open: readyState ${this.readyState} ` +
+                `(${readyStates[this.readyState]})`
+            );
+
+            if (cb) {
+                return cb(err);
             }
-            throw new Error("Not opened");
+            throw err;
         }
 
         if (is.number(data)) {
@@ -758,7 +836,7 @@ export default class Client extends adone.event.EventEmitter {
         if (is.undefined(mask)) {
             mask = !this._isServer;
         }
-        this._sender.pong(data || adone.EMPTY_BUFFER, mask);
+        this._sender.pong(data || adone.EMPTY_BUFFER, mask, cb);
     }
 
     /**
@@ -779,11 +857,16 @@ export default class Client extends adone.event.EventEmitter {
             options = {};
         }
 
-        if (this.readyState !== Client.OPEN) {
+        if (this.readyState !== WebSocket.OPEN) {
+            const err = new Error(
+                `WebSocket is not open: readyState ${this.readyState} ` +
+                `(${readyStates[this.readyState]})`
+            );
+
             if (cb) {
-                return cb(new Error("Not opened"));
+                return cb(err);
             }
-            throw new Error("Not opened");
+            throw err;
         }
 
         if (is.number(data)) {
@@ -797,7 +880,7 @@ export default class Client extends adone.event.EventEmitter {
             fin: true
         }, options);
 
-        if (!this.extensions[PerMessageDeflate.extensionName]) {
+        if (!this._extensions[PerMessageDeflate.extensionName]) {
             opts.compress = false;
         }
 
@@ -810,12 +893,14 @@ export default class Client extends adone.event.EventEmitter {
      * @public
      */
     terminate() {
-        if (this.readyState === Client.CLOSED) {
+        if (this.readyState === WebSocket.CLOSED) {
             return;
         }
-        if (this.readyState === Client.CONNECTING) {
+        if (this.readyState === WebSocket.CONNECTING) {
             this._req.abort();
-            this.finalize(new Error("Closed before the connection is established"));
+            this.finalize(
+                new Error("WebSocket was closed before the connection was established")
+            );
             return;
         }
 
@@ -823,17 +908,16 @@ export default class Client extends adone.event.EventEmitter {
     }
 }
 
-Client.CONNECTING = 0;
-Client.OPEN = 1;
-Client.CLOSING = 2;
-Client.CLOSED = 3;
+readyStates.forEach((readyState, i) => {
+    WebSocket[readyStates[i]] = i;
+});
 
 //
 // Add the `onopen`, `onerror`, `onclose`, and `onmessage` attributes.
 // See https://html.spec.whatwg.org/multipage/comms.html#the-websocket-interface
 //
 ["open", "error", "close", "message"].forEach((method) => {
-    Object.defineProperty(Client.prototype, `on${method}`, {
+    Object.defineProperty(WebSocket.prototype, `on${method}`, {
         /**
          * Return the listener of the event.
          *
@@ -869,5 +953,5 @@ Client.CLOSED = 3;
     });
 });
 
-Client.prototype.addEventListener = EventTarget.addEventListener;
-Client.prototype.removeEventListener = EventTarget.removeEventListener;
+WebSocket.prototype.addEventListener = EventTarget.addEventListener;
+WebSocket.prototype.removeEventListener = EventTarget.removeEventListener;

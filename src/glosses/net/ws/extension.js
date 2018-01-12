@@ -1,4 +1,6 @@
-const { is } = adone;
+const {
+    is
+} = adone;
 
 //
 // Allowed token characters:
@@ -32,7 +34,7 @@ const tokenChars = [
  *     parameter value
  * @private
  */
-const push = (dest, name, elem) => {
+const push = function (dest, name, elem) {
     if (Object.prototype.hasOwnProperty.call(dest, name)) {
         dest[name].push(elem);
     } else {
@@ -47,7 +49,7 @@ const push = (dest, name, elem) => {
  * @return {Object} The parsed object
  * @public
  */
-export const parse = (header) => {
+export const parse = function (header) {
     const offers = {};
 
     if (is.undefined(header) || header === "") {
@@ -63,6 +65,7 @@ export const parse = (header) => {
     let start = -1;
     let end = -1;
     let i;
+
     for (i = 0; i < header.length; i++) {
         const code = header.charCodeAt(i);
 
@@ -77,7 +80,7 @@ export const parse = (header) => {
                 }
             } else if (code === 0x3b/* ';' */ || code === 0x2c/* ',' */) {
                 if (start === -1) {
-                    throw new Error(`unexpected character at index ${i}`);
+                    throw new SyntaxError(`Unexpected character at index ${i}`);
                 }
 
                 if (end === -1) {
@@ -93,7 +96,7 @@ export const parse = (header) => {
 
                 start = end = -1;
             } else {
-                throw new Error(`unexpected character at index ${i}`);
+                throw new SyntaxError(`Unexpected character at index ${i}`);
             }
         } else if (is.undefined(paramName)) {
             if (end === -1 && tokenChars[code] === 1) {
@@ -106,7 +109,7 @@ export const parse = (header) => {
                 }
             } else if (code === 0x3b || code === 0x2c) {
                 if (start === -1) {
-                    throw new Error(`unexpected character at index ${i}`);
+                    throw new SyntaxError(`Unexpected character at index ${i}`);
                 }
 
                 if (end === -1) {
@@ -124,7 +127,7 @@ export const parse = (header) => {
                 paramName = header.slice(start, i);
                 start = end = -1;
             } else {
-                throw new Error(`unexpected character at index ${i}`);
+                throw new SyntaxError(`Unexpected character at index ${i}`);
             }
         } else {
             //
@@ -134,7 +137,7 @@ export const parse = (header) => {
             //
             if (isEscaping) {
                 if (tokenChars[code] !== 1) {
-                    throw new Error(`unexpected character at index ${i}`);
+                    throw new SyntaxError(`Unexpected character at index ${i}`);
                 }
                 if (start === -1) {
                     start = i;
@@ -153,7 +156,7 @@ export const parse = (header) => {
                 } else if (code === 0x5c/* '\' */) {
                     isEscaping = true;
                 } else {
-                    throw new Error(`unexpected character at index ${i}`);
+                    throw new SyntaxError(`Unexpected character at index ${i}`);
                 }
             } else if (code === 0x22 && header.charCodeAt(i - 1) === 0x3d) {
                 inQuotes = true;
@@ -167,7 +170,7 @@ export const parse = (header) => {
                 }
             } else if (code === 0x3b || code === 0x2c) {
                 if (start === -1) {
-                    throw new Error(`unexpected character at index ${i}`);
+                    throw new SyntaxError(`Unexpected character at index ${i}`);
                 }
 
                 if (end === -1) {
@@ -188,13 +191,13 @@ export const parse = (header) => {
                 paramName = undefined;
                 start = end = -1;
             } else {
-                throw new Error(`unexpected character at index ${i}`);
+                throw new SyntaxError(`Unexpected character at index ${i}`);
             }
         }
     }
 
     if (start === -1 || inQuotes) {
-        throw new Error("unexpected end of input");
+        throw new SyntaxError("Unexpected end of input");
     }
 
     if (end === -1) {
@@ -218,25 +221,25 @@ export const parse = (header) => {
 };
 
 /**
- * Serializes a parsed `Sec-WebSocket-Extensions` header to a string.
+ * Builds the `Sec-WebSocket-Extensions` header field value.
  *
- * @param {Object} value The object to format
- * @return {String} A string representing the given value
+ * @param {Object} extensions The map of extensions and parameters to format
+ * @return {String} A string representing the given object
  * @public
  */
-export const format = (value) => {
-    return Object.keys(value).map((token) => {
-        let paramsList = value[token];
-        if (!is.array(paramsList)) {
-            paramsList = [paramsList];
+export const format = function (extensions) {
+    return Object.keys(extensions).map((extension) => {
+        let configurations = extensions[extension];
+        if (!is.array(configurations)) {
+            configurations = [configurations];
         }
-        return paramsList.map((params) => {
-            return [token].concat(Object.keys(params).map((k) => {
-                let p = params[k];
-                if (!is.array(p)) {
-                    p = [p];
+        return configurations.map((params) => {
+            return [extension].concat(Object.keys(params).map((k) => {
+                let values = params[k];
+                if (!is.array(values)) {
+                    values = [values];
                 }
-                return p.map((v) => v === true ? k : `${k}=${v}`).join("; ");
+                return values.map((v) => v === true ? k : `${k}=${v}`).join("; ");
             })).join("; ");
         }).join(", ");
     }).join(", ");
