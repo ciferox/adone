@@ -1,3 +1,5 @@
+import structs from "./fixtures/structs";
+
 const {
     is,
     configuration,
@@ -6,16 +8,16 @@ const {
 
 describe("configuration", "Adone", () => {
     const fixture = (name = "") => std.path.join(__dirname, "fixtures", name);
-    const fictureDir = new adone.fs.Directory(fixture());
+    const fixtureDir = new adone.fs.Directory(fixture());
 
     afterEach(async () => {
-        await fictureDir.unlink({
+        await fixtureDir.unlink({
             relPath: "proj"
         });
     });
 
     it("minimum possible configuration", async () => {
-        await FS.createStructure(fictureDir, [
+        await FS.createStructure(fixtureDir, [
             ["proj", [
                 ["adone.json", "{}"]
             ]]
@@ -29,176 +31,17 @@ describe("configuration", "Adone", () => {
     });
 
     describe("structure", () => {
-        it("no entries in empty configuration", async () => {
-            await FS.createStructure(fictureDir, [
-                ["proj", [
-                    ["adone.json", "{}"]
-                ]]
-            ]);
+        for (const s of structs) {
+            it(s.name, () => {
+                const conf = new configuration.Adone();
+                conf.raw = s.config;
 
-            const conf = await configuration.Adone.load({
-                cwd: fixture("proj")
+                assert.sameDeepMembers(conf.getEntries(s.query), s.expectedEntries);
             });
-            assert.deepEqual(conf.raw, {});
-            assert.lengthOf(conf.getEntries(), 0);
-        });
-
-        it("no entries in configuration with empty struct", async () => {
-            await FS.createStructure(fictureDir, [
-                ["proj", [
-                    ["adone.json", JSON.stringify({
-                        struct: {}
-                    })]
-                ]]
-            ]);
-
-            const conf = await configuration.Adone.load({
-                cwd: fixture("proj")
-            });
-
-            assert.deepEqual(conf.raw, {
-                struct: {}
-            });
-            assert.lengthOf(conf.getEntries(), 0);
-        });
-
-        it("entry with relative path in 'src'", async () => {
-            await FS.createStructure(fictureDir, [
-                ["proj", [
-                    ["adone.json", JSON.stringify({
-                        struct: {
-                            lib: {
-                                src: "src/"
-                            }
-                        }
-                    })]
-                ]]
-            ]);
-
-            const conf = await configuration.Adone.load({
-                cwd: fixture("proj")
-            });
-
-            assert.deepEqual(conf.raw, {
-                struct: {
-                    lib: {
-                        src: "src/"
-                    }
-                }
-            });
-
-            assert.sameDeepMembers(conf.getEntries(), [
-                {
-                    id: "lib",
-                    src: "src/**/*"
-                }
-            ]);
-        });
-
-        it("entry with glob path in 'src'", async () => {
-            await FS.createStructure(fictureDir, [
-                ["proj", [
-                    ["adone.json", JSON.stringify({
-                        struct: {
-                            lib: {
-                                src: "src/**/*.js"
-                            }
-                        }
-                    })]
-                ]]
-            ]);
-
-            const conf = await configuration.Adone.load({
-                cwd: fixture("proj")
-            });
-
-            assert.deepEqual(conf.raw, {
-                struct: {
-                    lib: {
-                        src: "src/**/*.js"
-                    }
-                }
-            });
-
-            assert.sameDeepMembers(conf.getEntries(), [
-                {
-                    id: "lib",
-                    src: "src/**/*.js"
-                }
-            ]);
-        });
-
-        it("entry with 'src' contains filename", async () => {
-            await FS.createStructure(fictureDir, [
-                ["proj", [
-                    ["adone.json", JSON.stringify({
-                        struct: {
-                            lib: {
-                                src: "src/index.js"
-                            }
-                        }
-                    })]
-                ]]
-            ]);
-
-            const conf = await configuration.Adone.load({
-                cwd: fixture("proj")
-            });
-
-            assert.deepEqual(conf.raw, {
-                struct: {
-                    lib: {
-                        src: "src/index.js"
-                    }
-                }
-            });
-
-            assert.sameDeepMembers(conf.getEntries(), [
-                {
-                    id: "lib",
-                    src: "src/index.js"
-                }
-            ]);
-        });
-
-        it("entry with 'src' and 'dst'", async () => {
-            await FS.createStructure(fictureDir, [
-                ["proj", [
-                    ["adone.json", JSON.stringify({
-                        struct: {
-                            lib: {
-                                src: "src/**/*.js",
-                                dst: "lib"
-                            }
-                        }
-                    })]
-                ]]
-            ]);
-
-            const conf = await configuration.Adone.load({
-                cwd: fixture("proj")
-            });
-
-            assert.deepEqual(conf.raw, {
-                struct: {
-                    lib: {
-                        src: "src/**/*.js",
-                        dst: "lib"
-                    }
-                }
-            });
-
-            assert.sameDeepMembers(conf.getEntries(), [
-                {
-                    id: "lib",
-                    src: "src/**/*.js",
-                    dst: "lib"
-                }
-            ]);
-        });
+        }
 
         it("entry with only 'task' should have thrown", async () => {
-            await FS.createStructure(fictureDir, [
+            await FS.createStructure(fixtureDir, [
                 ["proj", [
                     ["adone.json", JSON.stringify({
                         struct: {
@@ -215,300 +58,6 @@ describe("configuration", "Adone", () => {
             });
 
             await assert.throws(async () => conf.getEntries(), adone.x.NotValid);
-        });
-
-        it("entry with 'src' and 'task' and default 'dst'", async () => {
-            await FS.createStructure(fictureDir, [
-                ["proj", [
-                    ["adone.json", JSON.stringify({
-                        struct: {
-                            lib: {
-                                src: "src/*.js",
-                                task: "copy"
-                            }
-                        }
-                    })]
-                ]]
-            ]);
-
-            const conf = await configuration.Adone.load({
-                cwd: fixture("proj")
-            });
-
-            assert.deepEqual(conf.raw, {
-                struct: {
-                    lib: {
-                        src: "src/*.js",
-                        task: "copy"
-                    }
-                }
-            });
-
-            assert.sameDeepMembers(conf.getEntries(), [
-                {
-                    id: "lib",
-                    src: "src/*.js",
-                    dst: ".",
-                    task: "copy"
-                }
-            ]);
-        });
-
-        it("entry with only 'namespace'", async () => {
-            await FS.createStructure(fictureDir, [
-                ["proj", [
-                    ["adone.json", JSON.stringify({
-                        struct: {
-                            lib: {
-                                namespace: "adone"
-                            }
-                        }
-                    })]
-                ]]
-            ]);
-
-            const conf = await configuration.Adone.load({
-                cwd: fixture("proj")
-            });
-
-            assert.deepEqual(conf.raw, {
-                struct: {
-                    lib: {
-                        namespace: "adone"
-                    }
-                }
-            });
-
-            assert.sameDeepMembers(conf.getEntries(), [
-                {
-                    id: "lib",
-                    namespace: "adone"
-                }
-            ]);
-        });
-
-        it("entry with 'src' and 'namespace'", async () => {
-            await FS.createStructure(fictureDir, [
-                ["proj", [
-                    ["adone.json", JSON.stringify({
-                        struct: {
-                            lib: {
-                                src: "src/**/*.js",
-                                namespace: "adone"
-                            }
-                        }
-                    })]
-                ]]
-            ]);
-
-            const conf = await configuration.Adone.load({
-                cwd: fixture("proj")
-            });
-
-            assert.deepEqual(conf.raw, {
-                struct: {
-                    lib: {
-                        src: "src/**/*.js",
-                        namespace: "adone"
-                    }
-                }
-            });
-
-            assert.sameDeepMembers(conf.getEntries(), [
-                {
-                    id: "lib",
-                    src: "src/**/*.js",
-                    namespace: "adone",
-                    index: "index.js"
-                }
-            ]);
-        });
-
-        it("entry with 'src', 'namespace' and 'index'", async () => {
-            await FS.createStructure(fictureDir, [
-                ["proj", [
-                    ["adone.json", JSON.stringify({
-                        struct: {
-                            lib: {
-                                src: "src/**/*.js",
-                                index: "adone.js",
-                                namespace: "adone"
-                            }
-                        }
-                    })]
-                ]]
-            ]);
-
-            const conf = await configuration.Adone.load({
-                cwd: fixture("proj")
-            });
-
-            assert.deepEqual(conf.raw, {
-                struct: {
-                    lib: {
-                        src: "src/**/*.js",
-                        index: "adone.js",
-                        namespace: "adone"
-                    }
-                }
-            });
-
-            assert.sameDeepMembers(conf.getEntries(), [
-                {
-                    id: "lib",
-                    src: "src/**/*.js",
-                    namespace: "adone",
-                    index: "adone.js"
-                }
-            ]);
-        });
-
-        it("complex entry with sub structure", async () => {
-            await FS.createStructure(fictureDir, [
-                ["proj", [
-                    ["adone.json", JSON.stringify({
-                        struct: {
-                            lib: {
-                                namespace: "adone",
-                                index: "code:index.js",
-                                struct: {
-                                    code: {
-                                        task: "transpile",
-                                        src: [
-                                            "src/**/*.js",
-                                            "!src/assets/**/*"
-                                        ],
-                                        dst: "lib"
-                                    },
-                                    assets: {
-                                        src: "src/assets/**/*",
-                                        dst: "lib/assets"
-                                    }
-                                }
-                            }
-                        }
-                    })]
-                ]]
-            ]);
-
-            const conf = await configuration.Adone.load({
-                cwd: fixture("proj")
-            });
-
-            assert.deepEqual(conf.raw, {
-                struct: {
-                    lib: {
-                        namespace: "adone",
-                        index: "code:index.js",
-                        struct: {
-                            code: {
-                                task: "transpile",
-                                src: [
-                                    "src/**/*.js",
-                                    "!src/assets/**/*"
-                                ],
-                                dst: "lib"
-                            },
-                            assets: {
-                                src: "src/assets/**/*",
-                                dst: "lib/assets"
-                            }
-                        }
-                    }
-                }
-            });
-
-            assert.sameDeepMembers(conf.getEntries(), [
-                {
-                    id: "lib",
-                    namespace: "adone",
-                    index: "code:index.js"
-                },
-                {
-                    id: "lib.code",
-                    task: "transpile",
-                    src: [
-                        "src/**/*.js",
-                        "!src/assets/**/*"
-                    ],
-                    dst: "lib"
-                },
-                {
-                    id: "lib.assets",
-                    src: "src/assets/**/*",
-                    dst: "lib/assets"
-                }
-            ]);
-        });
-
-        it("complex entry with sub partial structure", async () => {
-            await FS.createStructure(fictureDir, [
-                ["proj", [
-                    ["adone.json", JSON.stringify({
-                        struct: {
-                            lib: {
-                                namespace: "adone",
-                                src: "src/**/*",
-                                dst: "lib",
-                                struct: {
-                                    js: {
-                                        task: "transpile",
-                                        src: [
-                                            "src/**/*.js",
-                                            "!src/assets/**/*"
-                                        ]
-                                    }
-                                }
-                            }
-                        }
-                    })]
-                ]]
-            ]);
-
-            const conf = await configuration.Adone.load({
-                cwd: fixture("proj")
-            });
-
-            assert.deepEqual(conf.raw, {
-                struct: {
-                    lib: {
-                        namespace: "adone",
-                        src: "src/**/*",
-                        dst: "lib",
-                        struct: {
-                            js: {
-                                task: "transpile",
-                                src: [
-                                    "src/**/*.js",
-                                    "!src/assets/**/*"
-                                ]
-                            }
-                        }
-                    }
-                }
-            });
-
-            assert.sameDeepMembers(conf.getEntries(), [
-                {
-                    id: "lib",
-                    namespace: "adone",
-                    index: "index.js",
-                    src: [
-                        "src/**/*",
-                        "!src/**/*.js"
-                    ],
-                    dst: "lib"
-                },
-                {
-                    id: "lib.js",
-                    task: "transpile",
-                    src: [
-                        "src/**/*.js",
-                        "!src/assets/**/*"
-                    ],
-                    dst: "lib"
-                }
-            ]);
         });
 
         it("multiple root namespaces is not allowed", async () => {
@@ -651,7 +200,7 @@ describe("configuration", "Adone", () => {
                         "lib/**/*",
                         "!lib/**/*.js",
                         "!lib/**/*.map",
-                        "!lib/native/**/*"
+                        "!lib/**/*.node"
                     ]
                 },
                 {
@@ -661,6 +210,7 @@ describe("configuration", "Adone", () => {
                         "src/glosses/data/**/*.js",
                         "!src/glosses/data/base64.js",
                         "!src/glosses/data/bson/**/*.js",
+                        "!src/glosses/data/bson/native/**/*",
                         "!src/glosses/data/json/**/*.js",
                         "!src/glosses/data/json5.js",
                         "!src/glosses/data/mpak.js",
@@ -668,7 +218,7 @@ describe("configuration", "Adone", () => {
                         "!src/glosses/data/base58.js",
                         "!src/glosses/data/varint.js",
                         "!src/glosses/data/varint_signed.js",
-                        "!src/glosses/data/protobuf/**/*.js",
+                        "!src/glosses/data/protobuf/**/*.js"
                     ],
                     dst: "lib/glosses/data",
                     dstClean: "lib/glosses/data/**/*",

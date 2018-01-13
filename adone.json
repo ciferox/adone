@@ -17,7 +17,7 @@
                 "lib/**/*",
                 "!lib/**/*.js",
                 "!lib/**/*.map",
-                "!lib/native/**/*"
+                "!lib/**/*.node"
             ]
         },
         "bin": {
@@ -65,10 +65,7 @@
                 },
                 "application": {
                     "description": "Application framework",
-                    "src": [
-                        "src/glosses/application/**/*.js",
-                        "!src/glosses/application/report/native/**/*"
-                    ],
+                    "src": "src/glosses/application/**/*.js",
                     "dst": "lib/glosses/application",
                     "task": "transpile",
                     "namespace": "application",
@@ -76,10 +73,7 @@
                         "report": {
                             "description": "Delivers a human-readable diagnostic summary, written to file",
                             "namespace": "report",
-                            "src": [
-                                "src/glosses/application/report/**/*.js",
-                                "!src/glosses/application/report/native/**/*"
-                            ],
+                            "src": "src/glosses/application/report/**/*.js",
                             "dst": "lib/glosses/application/report",
                             "task": "transpile",
                             "native": {
@@ -113,16 +107,14 @@
                 "compressor": {
                     "description": "Compressors",
                     "namespace": "compressor",
+                    "task": "transpile",
                     "src": "src/glosses/compressors/index.js",
                     "dst": "lib/glosses/compressors",
                     "struct": {
                         "brotli": {
                             "description": "Brotli compression format",
                             "namespace": "brotli",
-                            "src": [
-                                "src/glosses/compressors/brotli/**/*.js",
-                                "!src/glosses/compressors/brotli/native/**/*"
-                            ],
+                            "src": "src/glosses/compressors/brotli/**/*.js",
                             "dst": "lib/glosses/compressors/brotli",
                             "task": "transpile",
                             "native": {
@@ -155,10 +147,7 @@
                             "description": "Snappy, a fast compressor/decompressor",
                             "namespace": "snappy",
                             "task": "transpile",
-                            "src": [
-                                "src/glosses/compressors/snappy/**/*.js",
-                                "!src/glosses/compressors/snappy/native/**/*"
-                            ],
+                            "src": "src/glosses/compressors/snappy/**/*.js",
                             "dst": "lib/glosses/compressors/snappy",
                             "native": {
                                 "src": "src/glosses/compressors/snappy/native",
@@ -169,10 +158,7 @@
                             "description": "XZ compressor/decompressor",
                             "namespace": "xz",
                             "task": "transpile",
-                            "src": [
-                                "src/glosses/compressors/xz/**/*.js",
-                                "!src/glosses/compressors/xz/native/**/*"
-                            ],
+                            "src": "src/glosses/compressors/xz/**/*.js",
                             "dst": "lib/glosses/compressors/xz",
                             "native": {
                                 "src": "src/glosses/compressors/xz/native",
@@ -311,10 +297,7 @@
                                     "description": "Level's backends",
                                     "namespace": "backend",
                                     "task": "transpile",
-                                    "src": [
-                                        "src/glosses/databases/level/backends/**/*.js",
-                                        "!src/glosses/databases/level/backends/leveldb/native/**/*"
-                                    ],
+                                    "src": "src/glosses/databases/level/backends/**/*.js",
                                     "dst": "lib/glosses/databases/level/backends",
                                     "native": {
                                         "src": "src/glosses/databases/level/backends/leveldb/native",
@@ -374,10 +357,7 @@
                 "fs": {
                     "description": "Filesystem utilites",
                     "task": "transpile",
-                    "src": [
-                        "src/glosses/fs/**/*.js",
-                        "!src/glosses/fs/fuse/native/**/*"
-                    ],
+                    "src": "src/glosses/fs/**/*.js",
                     "dst": "lib/glosses/fs",
                     "namespace": "fs",
                     "struct": {
@@ -438,10 +418,7 @@
                                     "description": "SaspberryPI board",
                                     "namespace": "rpi",
                                     "task": "transpile",
-                                    "src": [
-                                        "src/glosses/hardware/boards/rpi/**/*.js",
-                                        "!src/glosses/hardware/boards/rpi/gpio/native/**/*"
-                                    ],
+                                    "src": "src/glosses/hardware/boards/rpi/**/*.js",
                                     "dst": "lib/glosses/hardware/boards/rpi",
                                     "native": {
                                         "src": "src/glosses/hardware/boards/rpi/gpio/native",
@@ -454,10 +431,7 @@
                             "description": "HID bus",
                             "namespace": "hid",
                             "task": "transpile",
-                            "src": [
-                                "src/glosses/hardware/hid/**/*.js",
-                                "!src/glosses/hardware/hid/native/**/*"
-                            ],
+                            "src": "src/glosses/hardware/hid/**/*.js",
                             "dst": "lib/glosses/hardware/hid",
                             "native": {
                                 "src": "src/glosses/hardware/hid/native",
@@ -468,10 +442,7 @@
                             "description": "I2C bus",
                             "namespace": "i2c",
                             "task": "transpile",
-                            "src": [
-                                "src/glosses/hardware/i2c/**/*.js",
-                                "!src/glosses/hardware/i2c/native/**/*"
-                            ],
+                            "src": "src/glosses/hardware/i2c/**/*.js",
                             "dst": "lib/glosses/hardware/i2c",
                             "native": {
                                 "src": "src/glosses/hardware/i2c/native",
@@ -482,10 +453,7 @@
                             "description": "Serial bus",
                             "namespace": "serial",
                             "task": "transpile",
-                            "src": [
-                                "src/glosses/hardware/serial/**/*.js",
-                                "!src/glosses/hardware/serial/native/**/*"
-                            ],
+                            "src": "src/glosses/hardware/serial/**/*.js",
                             "dst": "lib/glosses/hardware/serial",
                             "native": {
                                 "src": "src/glosses/hardware/serial/native",
@@ -511,10 +479,7 @@
                 "math": {
                     "description": "Implementation of common math classes and primitives",
                     "task": "transpile",
-                    "src": [
-                        "src/glosses/math/**/*.js",
-                        "!src/glosses/math/bignumber/native/**/*"
-                    ],
+                    "src": "src/glosses/math/**/*.js",
                     "dst": "lib/glosses/math",
                     "namespace": "math",
                     "native": {
@@ -532,10 +497,7 @@
                 "metrics": {
                     "description": "Different metrics",
                     "task": "transpile",
-                    "src": [
-                        "src/glosses/metrics/**/*.js",
-                        "!src/glosses/metrics/native/**/*"
-                    ],
+                    "src": "src/glosses/metrics/**/*.js",
                     "dst": "lib/glosses/metrics",
                     "namespace": "metrics",
                     "native": {
@@ -587,10 +549,7 @@
                         "utp": {
                             "description": "UTP protocol/transport",
                             "task": "transpile",
-                            "src": [
-                                "src/glosses/net/utp/**/*.js",
-                                "!src/glosses/net/utp/native/**/*"
-                            ],
+                            "src": "src/glosses/net/utp/**/*.js",
                             "dst": "lib/glosses/net/utp",
                             "namespace": "utp",
                             "native": {
@@ -601,10 +560,7 @@
                         "ws": {
                             "description": "WebSocket client/server implementation",
                             "task": "transpile",
-                            "src": [
-                                "src/glosses/net/ws/**/*.js",
-                                "!src/glosses/net/ws/native/**/*"
-                            ],
+                            "src": "src/glosses/net/ws/**/*.js",
                             "dst": "lib/glosses/net/ws",
                             "namespace": "ws",
                             "native": {
@@ -631,10 +587,7 @@
                 "netscan": {
                     "description": "Network scanning tool",
                     "task": "transpile",
-                    "src": [
-                        "src/glosses/netscan/**/*.js",
-                        "!src/glosses/netscan/native/**/*"
-                    ],
+                    "src": "src/glosses/netscan/**/*.js",
                     "dst": "lib/glosses/netscan",
                     "namespace": "netscan",
                     "native": {
@@ -827,10 +780,7 @@
                             "description": "libvirt",
                             "namespace": "libvirt",
                             "task": "transpile",
-                            "src": [
-                                "src/glosses/virtualization/libvirt/**/*.js",
-                                "!src/glosses/virtualization/libvirt/native/**/*"
-                            ],
+                            "src": "src/glosses/virtualization/libvirt/**/*.js",
                             "dst": "lib/glosses/virtualization/libvirt",
                             "native": {
                                 "src": "src/glosses/virtualization/libvirt/native",

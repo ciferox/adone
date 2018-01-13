@@ -27,6 +27,16 @@ const normalizeValue = (dirName, parent, item, name) => {
     return val;
 };
 
+const addIfNotIncluded = (arr, item) => {
+    if (is.array(item)) {
+        for (const i of item) {
+            addIfNotIncluded(arr, i);
+        }
+    } else if (!arr.includes(item)) {
+        arr.push(item);
+    }
+};
+
 export default class Configuration extends adone.configuration.Generic {
     constructor({ cwd } = {}) {
         super({ cwd });
@@ -206,7 +216,7 @@ export default class Configuration extends adone.configuration.Generic {
                     } else {
                         unit.src = src;
                     }
-                    srcs.push(src);
+                    addIfNotIncluded(srcs, src);
                 }
 
                 const dst = normalizeValue(dirName, parent, val, "dst");
@@ -219,36 +229,63 @@ export default class Configuration extends adone.configuration.Generic {
                     unit.task = task;
                 }
 
+                if (is.exist(val.native)) {
+                    const nativeGlob = adone.util.globize(val.native.src, { recursive: true });
+                    addIfNotIncluded(srcs, nativeGlob);
+
+                    if (is.string(unit.src)) {
+                        unit.src = [unit.src];
+                    }
+                    if (is.array(unit.src)) {
+                        addIfNotIncluded(unit.src, `!${nativeGlob}`);
+                    }
+                }
+
                 if (is.plainObject(val.struct)) {
                     const childSrcs = this._parseStructure(fullKey, dirName, val, val.struct, units);
-                    if (is.exist(unit.src) && childSrcs.length > 0) {
-                        const excludes = [];
-                        for (const src of childSrcs) {
-                            if (is.string(src)) {
-                                if (!src.startsWith("!")) {
-                                    excludes.push(src);
-                                }
-                            } else { // array
-                                for (const s of src) {
-                                    if (!s.startsWith("!")) {
-                                        excludes.push(s);
-                                    }
+                    // adone.log(unit.src);
+                    // adone.log(childSrcs);
+                    if (childSrcs.length > 0) {
+                        addIfNotIncluded(srcs, childSrcs);
+
+                        let isParentGlob = true;
+
+                        if (is.string(unit.src) && !is.glob(unit.src)) {
+                            isParentGlob = false;
+                        } else if (is.array(unit.src)) {
+                            isParentGlob = false;
+                            for (const s of unit.src) {
+                                if (is.glob(s)) {
+                                    isParentGlob = true;
+                                    break;
                                 }
                             }
                         }
 
-                        const parents = excludes.map((x) => adone.util.globParent(x));
-                        const prefix = adone.text.longestCommonPrefix(parents);
-                        if (prefix === "") {
-                            throw new adone.x.NotValid(`No common glob prefix in '${fullKey}' block`);
-                        }
+                        if (is.exist(unit.src) && isParentGlob) {
+                            const excludes = [];
+                            for (const src of childSrcs) {
+                                if (is.string(src)) {
+                                    if (!src.startsWith("!")) {
+                                        excludes.push(src);
+                                    }
+                                } else { // array
+                                    for (const s of src) {
+                                        if (!s.startsWith("!")) {
+                                            excludes.push(s);
+                                        }
+                                    }
+                                }
+                            }
 
-                        if (is.exist(unit.src)) {
-                            unit.src = adone.util.arrify(unit.src).concat(excludes.map((x) => `!${x}`));
-                        } else {
-                            const srcGlob = excludes.map((x) => `!${x}`);
-                            srcGlob.unshift(adone.util.globize(prefix, { recursive: true }));
-                            unit.src = srcGlob;
+                            const parents = excludes.map((x) => adone.util.globParent(x));
+                            const prefix = adone.text.longestCommonPrefix(parents);
+                            if (prefix === "") {
+                                throw new adone.x.NotValid(`No common glob prefix in '${fullKey}' block`);
+                            }
+
+                            unit.src = adone.util.arrify(unit.src);
+                            addIfNotIncluded(unit.src, excludes.map((x) => `!${x}`));
                         }
                     }
                 }
