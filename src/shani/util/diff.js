@@ -221,8 +221,6 @@ class Differ extends adone.event.EventEmitter {
 export const getDiff = (actual, expected) => {
     const differ = new Differ();
 
-    const stack = new adone.collection.Stack();
-
     const styler = adone.terminal.styler;
 
     const colorizer = (obj, type) => {
@@ -529,9 +527,16 @@ export const getDiff = (actual, expected) => {
 
     const indent = () => "    ".repeat(level);
 
+    const stack = new adone.collection.Stack();
+
+    stack.push({
+        type: "imaginary",
+        firstElement: true
+    });
+
     differ.on("enter", (type, key) => {
         const state = { type };
-        if (!stack.empty) {
+        if (stack.length > 1) {
             if (!stack.top.firstElement) {
                 result += ",";
             }
@@ -593,14 +598,19 @@ export const getDiff = (actual, expected) => {
         }
         stack.pop();
     }).on("element", (type, val, key, mask) => {
-        if (!stack.empty) {
-            if (stack.top.firstElement) {
-                stack.top.firstElement = false;
-            } else {
+        if (stack.length === 1) {
+            // only imaginary
+            if (!stack.top.firstElement) {
+                result += "\n";
+            }
+        } else {
+            // inside some object
+            if (!stack.top.firstElement) {
                 result += ",";
             }
+            result += "\n";
         }
-        result += "\n";
+        stack.top.firstElement = false;
         let marker;
 
         switch (type) {

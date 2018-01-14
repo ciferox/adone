@@ -4,7 +4,7 @@ import Binding from "./binding";
 import { scope as scopeCache } from "../cache";
 
 const {
-  js: { compiler: { types: t } },
+  js: { compiler: { types: t, traverse } },
   vendor: { lodash: { includes, repeat, defaults } }
 } = adone;
 
