@@ -243,8 +243,6 @@ export default class Configuration extends adone.configuration.Generic {
 
                 if (is.plainObject(val.struct)) {
                     const childSrcs = this._parseStructure(fullKey, dirName, val, val.struct, units);
-                    // adone.log(unit.src);
-                    // adone.log(childSrcs);
                     if (childSrcs.length > 0) {
                         addIfNotIncluded(srcs, childSrcs);
 

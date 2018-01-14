@@ -133,10 +133,10 @@ describe("configuration", "Adone", () => {
 
             assert.sameDeepMembers(subConfig1.getEntries(), [
                 {
-                    id: "js",
-                    task: "transpile",
                     src: "src/*",
-                    dst: "dst"
+                    dst: "dst",
+                    id: "js",
+                    task: "transpile"
                 }
             ]);
 

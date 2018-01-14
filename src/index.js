@@ -357,6 +357,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         odm: "./glosses/odm",
         orm: "./glosses/orm",
         gyp: "./glosses/gyp",
+        cmake: "./glosses/cmake",
 
         // components
         project: "./project",

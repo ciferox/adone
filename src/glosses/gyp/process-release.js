@@ -1,7 +1,9 @@
-const semver = require("semver");
-const url = require("url");
-const path = require("path");
 const log = require("npmlog");
+
+const {
+    semver,
+    std: { path, url }
+} = adone;
 
 // versions where -headers.tar.gz started shipping
 const headersTarballRange = ">= 3.0.0 || ~0.12.10 || ~0.10.42";

@@ -41,7 +41,8 @@
             "namespace": "adone",
             "native": {
                 "src": "src/native",
-                "dst": "lib/native"
+                "dst": "lib/native",
+                "type": "gyp"
             },
             "struct": {
                 "dev": {
@@ -78,7 +79,8 @@
                             "task": "transpile",
                             "native": {
                                 "src": "src/glosses/application/report/native",
-                                "dst": "lib/glosses/application/report/native"
+                                "dst": "lib/glosses/application/report/native",
+                                "type": "gyp"
                             }
                         }
                     }
@@ -96,6 +98,13 @@
                     "dst": "lib/glosses/assertion",
                     "task": "adoneTranspile",
                     "namespace": "assertion"
+                },
+                "cmake": {
+                    "description": "Node.js native addon build tool",
+                    "src": "src/glosses/cmake/**/*.js",
+                    "dst": "lib/glosses/cmake",
+                    "task": "transpile",
+                    "namespace": "cmake"
                 },
                 "collection": {
                     "description": "Implementations of common collections",
@@ -119,7 +128,8 @@
                             "task": "transpile",
                             "native": {
                                 "src": "src/glosses/compressors/brotli/native",
-                                "dst": "lib/glosses/compressors/brotli/native"
+                                "dst": "lib/glosses/compressors/brotli/native",
+                                "type": "gyp"
                             }
                         },
                         "deflate": {
@@ -151,7 +161,8 @@
                             "dst": "lib/glosses/compressors/snappy",
                             "native": {
                                 "src": "src/glosses/compressors/snappy/native",
-                                "dst": "lib/glosses/compressors/snappy/native"
+                                "dst": "lib/glosses/compressors/snappy/native",
+                                "type": "gyp"
                             }
                         },
                         "xz": {
@@ -162,7 +173,8 @@
                             "dst": "lib/glosses/compressors/xz",
                             "native": {
                                 "src": "src/glosses/compressors/xz/native",
-                                "dst": "lib/glosses/compressors/xz/native"
+                                "dst": "lib/glosses/compressors/xz/native",
+                                "type": "gyp"
                             }
                         }
                     }
@@ -189,7 +201,8 @@
                             "task": "transpile",
                             "native": {
                                 "src": "src/glosses/crypto/ed25519/native",
-                                "dst": "lib/glosses/crypto/ed25519/native"
+                                "dst": "lib/glosses/crypto/ed25519/native",
+                                "type": "gyp"
                             }
                         },
                         "secp256k1": {
@@ -200,7 +213,8 @@
                             "task": "transpile",
                             "native": {
                                 "src": "src/glosses/crypto/secp256k1/native",
-                                "dst": "lib/glosses/crypto/secp256k1/native"
+                                "dst": "lib/glosses/crypto/secp256k1/native",
+                                "type": "gyp"
                             }
                         }
                     }
@@ -301,7 +315,8 @@
                                     "dst": "lib/glosses/databases/level/backends",
                                     "native": {
                                         "src": "src/glosses/databases/level/backends/leveldb/native",
-                                        "dst": "lib/glosses/databases/level/backends/leveldb/native"
+                                        "dst": "lib/glosses/databases/level/backends/leveldb/native",
+                                        "type": "gyp"
                                     }
                                 }
                             }
@@ -314,7 +329,8 @@
                             "dst": "lib/glosses/databases/redis",
                             "native": {
                                 "src": "src/glosses/databases/redis/__/redis/libparser/native",
-                                "dst": "lib/glosses/databases/redis/__/redis/libparser/native"
+                                "dst": "lib/glosses/databases/redis/__/redis/libparser/native",
+                                "type": "gyp"
                             }
                         }
                     }
@@ -369,7 +385,8 @@
                             "dst": "lib/glosses/fs/fuse",
                             "native": {
                                 "src": "src/glosses/fs/fuse/native",
-                                "dst": "lib/glosses/fs/fuse/native"
+                                "dst": "lib/glosses/fs/fuse/native",
+                                "type": "gyp"
                             }
                         }
                     }
@@ -422,7 +439,8 @@
                                     "dst": "lib/glosses/hardware/boards/rpi",
                                     "native": {
                                         "src": "src/glosses/hardware/boards/rpi/gpio/native",
-                                        "dst": "lib/glosses/hardware/boards/rpi/gpio/native"
+                                        "dst": "lib/glosses/hardware/boards/rpi/gpio/native",
+                                        "type": "gyp"
                                     }
                                 }
                             }
@@ -435,7 +453,8 @@
                             "dst": "lib/glosses/hardware/hid",
                             "native": {
                                 "src": "src/glosses/hardware/hid/native",
-                                "dst": "lib/glosses/hardware/hid/native"
+                                "dst": "lib/glosses/hardware/hid/native",
+                                "type": "gyp"
                             }
                         },
                         "i2c": {
@@ -446,7 +465,8 @@
                             "dst": "lib/glosses/hardware/i2c",
                             "native": {
                                 "src": "src/glosses/hardware/i2c/native",
-                                "dst": "lib/glosses/hardware/i2c/native"
+                                "dst": "lib/glosses/hardware/i2c/native",
+                                "type": "gyp"
                             }
                         },
                         "serial": {
@@ -457,7 +477,8 @@
                             "dst": "lib/glosses/hardware/serial",
                             "native": {
                                 "src": "src/glosses/hardware/serial/native",
-                                "dst": "lib/glosses/hardware/serial/native"
+                                "dst": "lib/glosses/hardware/serial/native",
+                                "type": "gyp"
                             }
                         }
                     }
@@ -484,7 +505,8 @@
                     "namespace": "math",
                     "native": {
                         "src": "src/glosses/math/bignumber/native",
-                        "dst": "lib/glosses/math/bignumber/native"
+                        "dst": "lib/glosses/math/bignumber/native",
+                        "type": "gyp"
                     }
                 },
                 "meta": {
@@ -502,7 +524,8 @@
                     "namespace": "metrics",
                     "native": {
                         "src": "src/glosses/metrics/native",
-                        "dst": "lib/glosses/metrics/native"
+                        "dst": "lib/glosses/metrics/native",
+                        "type": "gyp"
                     }
                 },
                 "multi": {
@@ -554,7 +577,8 @@
                             "namespace": "utp",
                             "native": {
                                 "src": "src/glosses/net/utp/native",
-                                "dst": "lib/glosses/net/utp/native"
+                                "dst": "lib/glosses/net/utp/native",
+                                "type": "gyp"
                             }
                         },
                         "ws": {
@@ -565,7 +589,8 @@
                             "namespace": "ws",
                             "native": {
                                 "src": "src/glosses/net/ws/native",
-                                "dst": "lib/glosses/net/ws/native"
+                                "dst": "lib/glosses/net/ws/native",
+                                "type": "gyp"
                             }
                         }
                     }
@@ -592,7 +617,8 @@
                     "namespace": "netscan",
                     "native": {
                         "src": "src/glosses/netscan/native",
-                        "dst": "lib/glosses/netscan/native"
+                        "dst": "lib/glosses/netscan/native",
+                        "type": "gyp"
                     }
                 },
                 "notifier": {
@@ -680,10 +706,26 @@
                 },
                 "system": {
                     "description": "System utilites",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/system/**/*.js",
                     "dst": "lib/glosses/system",
-                    "namespace": "system"
+                    "namespace": "system",
+                    "struct": {
+                        "env": {
+                            "description": "Some useful environment variables",
+                            "namespace": "env",
+                            "task": "transpile",
+                            "src": "src/glosses/system/env.js",
+                            "dst": "src/glosses/system"
+                        },
+                        "process": {
+                            "description": "Process utilites",
+                            "namespace": "process",
+                            "task": "transpile",
+                            "src": "src/glosses/system/process/**/*.js",
+                            "dst": "src/glosses/system/process"
+                        }
+                    }
                 },
                 "task": {
                     "description": "Tasks management",
@@ -764,7 +806,8 @@
                             "namespace": "git",
                             "native": {
                                 "src": "src/glosses/vcs/git/native",
-                                "dst": "lib/glosses/vcs/git/native"
+                                "dst": "lib/glosses/vcs/git/native",
+                                "type": "gyp"
                             }
                         }
                     }
@@ -784,7 +827,8 @@
                             "dst": "lib/glosses/virtualization/libvirt",
                             "native": {
                                 "src": "src/glosses/virtualization/libvirt/native",
-                                "dst": "lib/glosses/virtualization/libvirt/native"
+                                "dst": "lib/glosses/virtualization/libvirt/native",
+                                "type": "gyp"
                             }
                         },
                         "virtualbox": {
