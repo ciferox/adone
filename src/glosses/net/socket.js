@@ -83,8 +83,7 @@ export default class Socket extends adone.event.EventEmitter {
                 let lpsz = null;
                 this.nodeSocket.on("data", (x) => {
                     const buffer = this._buf;
-                    buffer.write(x, buffer.limit);
-                    buffer.limit += x.length;
+                    buffer.write(x);
 
                     for (; ;) {
                         if (buffer.remaining() <= 4) {
@@ -93,11 +92,11 @@ export default class Socket extends adone.event.EventEmitter {
                         let packetSize = lpsz;
                         if (is.null(packetSize)) {
                             lpsz = packetSize = buffer.readUInt32BE();
-                            buffer.compact();
                         }
                         if (buffer.remaining() < packetSize) {
                             break;
                         }
+
                         const result = adone.data.mpak.tryDecode(buffer);
                         if (result) {
                             if (packetSize !== result.bytesConsumed) {
@@ -105,7 +104,6 @@ export default class Socket extends adone.event.EventEmitter {
                                 adone.error("invalid packet");
                                 break;
                             }
-                            buffer.compact();
                             handler.call(this._handlerThisArg, this._packetOwner, result.value);
                             lpsz = null;
                         }
@@ -194,8 +192,8 @@ export default class Socket extends adone.event.EventEmitter {
         return new Promise((resolve, reject) => {
             const nodeSocket = this.nodeSocket;
             if (!is.null(nodeSocket) && nodeSocket.writable) {
-                const buf = new adone.collection.ByteArray().skip(4);
-                const encoded = adone.data.mpak.serializer.encode(data, buf).flip();
+                const buf = new adone.collection.ByteArray().skipWrite(4);
+                const encoded = adone.data.mpak.serializer.encode(data, buf);
                 encoded.writeUInt32BE(encoded.remaining() - 4, 0);
                 nodeSocket.write(encoded.toBuffer(), resolve);
             } else {

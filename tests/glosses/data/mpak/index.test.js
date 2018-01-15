@@ -10,17 +10,16 @@ describe("data", "mpak", "Serializer", () => {
     it("encode/decode booleans", () => {
         let input = true;
         let encoded = serializer.encode(input);
-        let output = serializer.decode(encoded.flip());
+        let output = serializer.decode(encoded);
         assert.strictEqual(input, output);
 
         input = false;
         encoded = serializer.encode(input);
-        output = serializer.decode(encoded.flip());
+        output = serializer.decode(encoded);
         assert.strictEqual(input, output);
     });
 
     describe("1-byte-length-buffers", () => {
-
         const build = function (size) {
             const buf = Buffer.allocUnsafe(size);
             buf.fill("a");
@@ -40,7 +39,7 @@ describe("data", "mpak", "Serializer", () => {
                 it(`mirror test a buffer of length ${orig.length}`, () => {
                     const input = orig;
                     const encoded = serializer.encode(input);
-                    const output = serializer.decode(encoded.flip());
+                    const output = serializer.decode(encoded);
                     assert.equal(Buffer.compare(output, input), 0);
                     // assert.equal(serializer.decode(serializer.encode(orig)).toString(), orig.toString(), 'must stay the same')
                 });
@@ -55,7 +54,7 @@ describe("data", "mpak", "Serializer", () => {
             orig.copy(buf, 2);
             buf = ByteArray.wrap(buf);
             const origLength = buf.length;
-            assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
+            assert.throws(() => serializer.decode(buf), IncompleteBufferError);
             assert.equal(buf.length, origLength, "must not consume any byte");
         });
 
@@ -64,14 +63,12 @@ describe("data", "mpak", "Serializer", () => {
             buf[0] = 0xc4;
             buf = ByteArray.wrap(buf);
             const origLength = buf.length;
-            assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
+            assert.throws(() => serializer.decode(buf), IncompleteBufferError);
             assert.equal(buf.length, origLength, "must not consume any byte");
         });
-
     });
 
     describe("1-byte-length-exts", () => {
-
         const serializer = new Serializer();
 
         const MyType = function (size, value) {
@@ -124,7 +121,7 @@ describe("data", "mpak", "Serializer", () => {
 
             all.forEach((orig) => {
                 const encoded = serializer.encode(orig);
-                const output = serializer.decode(encoded.flip());
+                const output = serializer.decode(encoded);
                 assert.deepEqual(output, orig, `custom obj of length ${orig.size} must stay the same`);
             });
         });
@@ -137,14 +134,14 @@ describe("data", "mpak", "Serializer", () => {
             buf.writeUInt8(length + 2, 1); // set bigger size
             obj.buffer.copy(buf, 2, 2, length);
             buf = ByteArray.wrap(buf);
-            assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
+            assert.throws(() => serializer.decode(buf), IncompleteBufferError);
         });
 
         it("decoding an incomplete header of variable ext data up to 0xff", () => {
             let buf = Buffer.allocUnsafe(2);
             buf[0] = 0xc7;
             buf = new ByteArray().write(buf);
-            assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
+            assert.throws(() => serializer.decode(buf), IncompleteBufferError);
         });
     });
 
@@ -163,7 +160,7 @@ describe("data", "mpak", "Serializer", () => {
             }
 
             all.forEach((str) => {
-                assert.equal(serializer.decode(serializer.encode(str).flip()), str, `string of length ${str.length}`);
+                assert.equal(serializer.decode(serializer.encode(str)), str, `string of length ${str.length}`);
             });
         });
 
@@ -177,14 +174,14 @@ describe("data", "mpak", "Serializer", () => {
             buf[1] = Buffer.byteLength(str) + 10; // set bigger size
             buf.write(str, 2);
             buf = ByteArray.wrap(buf);
-            assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
+            assert.throws(() => serializer.decode(buf), IncompleteBufferError);
         });
 
         it("decoding an incomplete header of a string", () => {
             let buf = Buffer.allocUnsafe(1);
             buf[0] = 0xd9;
             buf = new ByteArray().write(buf);
-            assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
+            assert.throws(() => serializer.decode(buf), IncompleteBufferError);
         });
     });
 
@@ -213,13 +210,13 @@ describe("data", "mpak", "Serializer", () => {
             all.push(build(0xffff));
 
             all.forEach((array) => {
-                assert.deepEqual(serializer.decode(serializer.encode(array).flip()), array, `array of length ${array.length}`);
+                assert.deepEqual(serializer.decode(serializer.encode(array)), array, `array of length ${array.length}`);
             });
         });
 
         it("decoding an incomplete array", () => {
             const array = build(0xffff / 2);
-            let buf = Buffer.allocUnsafe(3 + array.length);
+            let buf = Buffer.alloc(3 + array.length);
             buf[0] = 0xdc;
             buf.writeUInt16BE(array.length + 10, 1); // set bigger size
             let pos = 3;
@@ -229,14 +226,14 @@ describe("data", "mpak", "Serializer", () => {
                 pos += obj.length;
             }
             buf = ByteArray.wrap(buf);
-            assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
+            assert.throws(() => serializer.decode(buf), IncompleteBufferError);
         });
 
         it("decoding an incomplete header", () => {
-            let buf = Buffer.allocUnsafe(2);
+            let buf = Buffer.alloc(2);
             buf[0] = 0xdc;
             buf = ByteArray.wrap(buf);
-            assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
+            assert.throws(() => serializer.decode(buf), IncompleteBufferError);
         });
     });
 
@@ -275,13 +272,12 @@ describe("data", "mpak", "Serializer", () => {
             all.push(new MyType(0xffff, "a"));
 
             all.forEach((orig) => {
-                assert.deepEqual(serializer.decode(serializer.encode(orig).flip()), orig, `custom obj of length ${orig.size}`);
+                assert.deepEqual(serializer.decode(serializer.encode(orig)), orig, `custom obj of length ${orig.size}`);
             });
         });
     });
 
     describe("2-bytes-length-strings", () => {
-
         it("encode/decode 2^8 <-> (2^16-1) bytes strings", () => {
             const all = [];
             let str;
@@ -303,7 +299,7 @@ describe("data", "mpak", "Serializer", () => {
             all.push(str.toString());
 
             all.forEach((str) => {
-                assert.equal(serializer.decode(serializer.encode(str).flip()), str, `string of length ${str.length}`);
+                assert.equal(serializer.decode(serializer.encode(str)), str, `string of length ${str.length}`);
             });
         });
 
@@ -317,19 +313,18 @@ describe("data", "mpak", "Serializer", () => {
             buf.writeUInt16BE(Buffer.byteLength(str) + 10, 1); // set bigger size
             buf.write(str, 3);
             buf = ByteArray.wrap(buf);
-            assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
+            assert.throws(() => serializer.decode(buf), IncompleteBufferError);
         });
 
         it("decoding an incomplete header of a string", () => {
             let buf = Buffer.allocUnsafe(2);
             buf[0] = 0xda;
             buf = ByteArray.wrap(buf);
-            assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
+            assert.throws(() => serializer.decode(buf), IncompleteBufferError);
         });
     });
 
     describe("2-bytes-length-buffers", () => {
-
         const build = function (size) {
             const buf = Buffer.allocUnsafe(size);
             buf.fill("a");
@@ -346,7 +341,7 @@ describe("data", "mpak", "Serializer", () => {
             all.push(build(Math.pow(2, 16) - 1));
 
             all.forEach((orig) => {
-                assert.equal(serializer.decode(serializer.encode(orig).flip()).toString(), orig.toString(), `buffer of length ${orig.length}`);
+                assert.equal(serializer.decode(serializer.encode(orig)).toString(), orig.toString(), `buffer of length ${orig.length}`);
             });
         });
 
@@ -357,14 +352,14 @@ describe("data", "mpak", "Serializer", () => {
             buf[1] = Math.pow(2, 16) - 1; // set bigger size
             orig.copy(buf, 3);
             buf = ByteArray.wrap(buf);
-            assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
+            assert.throws(() => serializer.decode(buf), IncompleteBufferError);
         });
 
         it("decoding an incomplete header of 2^16-1 bytes buffer", () => {
             let buf = Buffer.allocUnsafe(2);
             buf[0] = 0xc5;
             buf = ByteArray.wrap(buf);
-            assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
+            assert.throws(() => serializer.decode(buf), IncompleteBufferError);
         });
     });
 
@@ -386,7 +381,7 @@ describe("data", "mpak", "Serializer", () => {
                 const map = build(length, 42);
                 const buf = serializer.encode(map);
 
-                assert.deepEqual(serializer.decode(buf.flip()), map, `map of length ${length} with ${map[base]}`);
+                assert.deepEqual(serializer.decode(buf), map, `map of length ${length} with ${map[base]}`);
             };
 
             doTest(Math.pow(2, 8));
@@ -402,7 +397,7 @@ describe("data", "mpak", "Serializer", () => {
             buf.writeUInt8(0xde);
             buf.writeUInt16BE(Math.pow(2, 16) - 1); // set bigger size
             buf.write(map.slice(3));
-            assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
+            assert.throws(() => serializer.decode(buf), IncompleteBufferError);
         });
 
         it("decoding an incomplete header of a map", () => {
@@ -426,7 +421,7 @@ describe("data", "mpak", "Serializer", () => {
 
         it("encode/decode arrays up to 0xffffffff elements", () => {
             const doTest = function (array) {
-                assert.deepEqual(serializer.decode(serializer.encode(array).flip()), array, `array of length ${array.length}`);
+                assert.deepEqual(serializer.decode(serializer.encode(array)), array, `array of length ${array.length}`);
             };
 
             doTest(build(0xffff + 1));
@@ -444,15 +439,14 @@ describe("data", "mpak", "Serializer", () => {
                 const obj = serializer.encode(array[i]);
                 buf.write(obj);
             }
-            buf.flip();
-            assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
+            assert.throws(() => serializer.decode(buf), IncompleteBufferError);
         });
 
         it("decoding an incomplete header", () => {
             let buf = Buffer.allocUnsafe(4);
             buf[0] = 0xdd;
             buf = ByteArray.wrap(buf);
-            assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
+            assert.throws(() => serializer.decode(buf), IncompleteBufferError);
         });
     });
 
@@ -473,7 +467,7 @@ describe("data", "mpak", "Serializer", () => {
 
             all.forEach((orig) => {
                 const encoded = serializer.encode(orig);
-                assert.equal(serializer.decode(encoded.flip()).toString(), orig.toString(), `buffer of length ${orig.length}`);
+                assert.equal(serializer.decode(encoded).toString(), orig.toString(), `buffer of length ${orig.length}`);
             });
         });
 
@@ -484,19 +478,18 @@ describe("data", "mpak", "Serializer", () => {
             buf[1] = Math.pow(2, 32) - 1; // set bigger size
             orig.copy(buf, 5);
             buf = ByteArray.wrap(buf);
-            assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
+            assert.throws(() => serializer.decode(buf), IncompleteBufferError);
         });
 
         it("decoding an incomplete header of 2^32-1 bytes buffer", () => {
             let buf = Buffer.allocUnsafe(4);
             buf[0] = 0xc6;
             buf = ByteArray.wrap(buf);
-            assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
+            assert.throws(() => serializer.decode(buf), IncompleteBufferError);
         });
     });
 
     describe("4-bytes-length-exts", () => {
-
         const serializer = new Serializer();
 
         it("encode/decode variable ext data up between 0x10000 and 0xffffffff", () => {
@@ -532,13 +525,12 @@ describe("data", "mpak", "Serializer", () => {
             all.push(new MyType(0xffffff, "a"));
 
             all.forEach((orig) => {
-                assert.deepEqual(serializer.decode(serializer.encode(orig).flip()), orig, `custom obj of length ${orig.size}`);
+                assert.deepEqual(serializer.decode(serializer.encode(orig)), orig, `custom obj of length ${orig.size}`);
             });
         });
     });
 
     describe("4-bytes-length-strings", () => {
-
         it("encode/decode 2^16 <-> (2^32 - 1) bytes strings", () => {
             const all = [];
             let str;
@@ -556,7 +548,7 @@ describe("data", "mpak", "Serializer", () => {
             all.push(str.toString());
 
             all.forEach((str) => {
-                assert.equal(serializer.decode(serializer.encode(str).flip()), str, `string of length ${str.length}`);
+                assert.equal(serializer.decode(serializer.encode(str)), str, `string of length ${str.length}`);
             });
         });
 
@@ -570,14 +562,14 @@ describe("data", "mpak", "Serializer", () => {
             buf.writeUInt32BE(Buffer.byteLength(str) + 10, 1); // set bigger size
             buf.write(str, 5);
             buf = ByteArray.wrap(buf);
-            assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
+            assert.throws(() => serializer.decode(buf), IncompleteBufferError);
         });
 
         it("decoding an incomplete header of a string", () => {
             let buf = Buffer.allocUnsafe(4);
             buf[0] = 0xdb;
             buf = ByteArray.wrap(buf);
-            assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
+            assert.throws(() => serializer.decode(buf), IncompleteBufferError);
         });
     });
 
@@ -589,7 +581,7 @@ describe("data", "mpak", "Serializer", () => {
         }
 
         allNum.forEach((num) => {
-            assert.equal(serializer.decode(serializer.encode(num).flip()), num, `Number ${num}`);
+            assert.equal(serializer.decode(serializer.encode(num)), num, `Number ${num}`);
         });
     });
 
@@ -601,12 +593,11 @@ describe("data", "mpak", "Serializer", () => {
         }
 
         allNum.forEach((num) => {
-            assert.equal(serializer.decode(serializer.encode(num).flip()), num, `Number ${num}`);
+            assert.equal(serializer.decode(serializer.encode(num)), num, `Number ${num}`);
         });
     });
 
     describe("8-bits-positive-integers", () => {
-
         it("encoding/decoding 8-bits integers", () => {
             const allNum = [];
 
@@ -615,7 +606,7 @@ describe("data", "mpak", "Serializer", () => {
             }
 
             allNum.forEach((num) => {
-                assert.equal(serializer.decode(serializer.encode(num).flip()), num, `Number ${num}`);
+                assert.equal(serializer.decode(serializer.encode(num)), num, `Number ${num}`);
             });
         });
 
@@ -623,12 +614,11 @@ describe("data", "mpak", "Serializer", () => {
             let buf = Buffer.allocUnsafe(1);
             buf[0] = 0xcc;
             buf = ByteArray.wrap(buf);
-            assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
+            assert.throws(() => serializer.decode(buf), IncompleteBufferError);
         });
     });
 
     describe("8-bits-signed-integers", () => {
-
         it("encoding/decoding 8-bits big-endian signed integers", () => {
             const allNum = [];
 
@@ -637,7 +627,7 @@ describe("data", "mpak", "Serializer", () => {
             }
 
             allNum.forEach((num) => {
-                assert.equal(serializer.decode(serializer.encode(num).flip()), num, `${num}`);
+                assert.equal(serializer.decode(serializer.encode(num)), num, `${num}`);
             });
         });
 
@@ -674,7 +664,7 @@ describe("data", "mpak", "Serializer", () => {
             }
 
             all.forEach((array) => {
-                assert.deepEqual(serializer.decode(serializer.encode(array).flip()), array, `array of length ${array.length} with ${array[0]}`);
+                assert.deepEqual(serializer.decode(serializer.encode(array)), array, `array of length ${array.length} with ${array[0]}`);
             });
         });
 
@@ -687,8 +677,7 @@ describe("data", "mpak", "Serializer", () => {
                 const obj = serializer.encode(array[i]);
                 buf.write(obj);
             }
-            buf.flip();
-            assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
+            assert.throws(() => serializer.decode(buf), IncompleteBufferError);
         });
     });
 
@@ -718,7 +707,7 @@ describe("data", "mpak", "Serializer", () => {
 
             all.forEach((map) => {
                 const length = Object.keys(map).length;
-                assert.deepEqual(serializer.decode(serializer.encode(map).flip()), map, `map of length ${length} with ${map[100]}`);
+                assert.deepEqual(serializer.decode(serializer.encode(map)), map, `map of length ${length} with ${map[100]}`);
             });
         });
 
@@ -727,7 +716,7 @@ describe("data", "mpak", "Serializer", () => {
             const toEncode = { a: undefined, hello: "world" };
             const buf = serializer.encode(toEncode);
 
-            assert.deepEqual(expected, serializer.decode(buf.flip()));
+            assert.deepEqual(expected, serializer.decode(buf));
         });
 
         it("encode/decode map with buf, ints and strings", () => {
@@ -739,7 +728,7 @@ describe("data", "mpak", "Serializer", () => {
                 ttl: 1416309270167
             };
 
-            const decodedMap = serializer.decode(serializer.encode(map).flip());
+            const decodedMap = serializer.decode(serializer.encode(map));
 
             assert.equal(map.topic, decodedMap.topic);
             assert.equal(map.qos, decodedMap.qos);
@@ -749,12 +738,11 @@ describe("data", "mpak", "Serializer", () => {
         });
 
         it("decoding a chopped map", () => {
-            const map = serializer.encode({ a: "b", c: "d", e: "f" });
+            const map = serializer.encode({ a: "b", c: "d", e: "f" }).toBuffer();
             const buf = new ByteArray(map.length);
             buf.writeUInt8(0x80 | 5); // set bigger size
             buf.write(map.slice(1));
-            buf.flip();
-            assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
+            assert.throws(() => serializer.decode(buf), IncompleteBufferError);
         });
     });
 
@@ -770,7 +758,7 @@ describe("data", "mpak", "Serializer", () => {
             allNum.push(-32768);
 
             allNum.forEach((num) => {
-                assert.equal(serializer.decode(serializer.encode(num).flip()), num, `${num}`);
+                assert.equal(serializer.decode(serializer.encode(num)), num, `${num}`);
             });
         });
 
@@ -778,7 +766,7 @@ describe("data", "mpak", "Serializer", () => {
             let buf = Buffer.allocUnsafe(2);
             buf[0] = 0xd1;
             buf = ByteArray.wrap(buf);
-            assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
+            assert.throws(() => serializer.decode(buf), IncompleteBufferError);
         });
     });
 
@@ -795,7 +783,7 @@ describe("data", "mpak", "Serializer", () => {
             allNum.push(65535);
 
             allNum.forEach((num) => {
-                assert.equal(serializer.decode(serializer.encode(num).flip()), num, `${num}`);
+                assert.equal(serializer.decode(serializer.encode(num)), num, `${num}`);
             });
         });
 
@@ -803,7 +791,7 @@ describe("data", "mpak", "Serializer", () => {
             let buf = Buffer.allocUnsafe(2);
             buf[0] = 0xcd;
             buf = ByteArray.wrap(buf);
-            assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
+            assert.throws(() => serializer.decode(buf), IncompleteBufferError);
         });
     });
 
@@ -818,7 +806,7 @@ describe("data", "mpak", "Serializer", () => {
             allNum.push(-214748364);
 
             allNum.forEach((num) => {
-                assert.equal(serializer.decode(serializer.encode(num).flip()), num, `${num}`);
+                assert.equal(serializer.decode(serializer.encode(num)), num, `${num}`);
             });
         });
 
@@ -826,7 +814,7 @@ describe("data", "mpak", "Serializer", () => {
             let buf = Buffer.allocUnsafe(4);
             buf[0] = 0xd2;
             buf = ByteArray.wrap(buf);
-            assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
+            assert.throws(() => serializer.decode(buf), IncompleteBufferError);
         });
     });
 
@@ -843,7 +831,7 @@ describe("data", "mpak", "Serializer", () => {
             allNum.push(0xffffffff);
 
             allNum.forEach((num) => {
-                assert.equal(serializer.decode(serializer.encode(num).flip()), num, `${num}`);
+                assert.equal(serializer.decode(serializer.encode(num)), num, `${num}`);
             });
         });
 
@@ -851,7 +839,7 @@ describe("data", "mpak", "Serializer", () => {
             let buf = Buffer.allocUnsafe(4);
             buf[0] = 0xce;
             buf = ByteArray.wrap(buf);
-            assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
+            assert.throws(() => serializer.decode(buf), IncompleteBufferError);
         });
     });
 
@@ -863,7 +851,7 @@ describe("data", "mpak", "Serializer", () => {
         }
 
         all.forEach((str) => {
-            assert.equal(serializer.decode(serializer.encode(str).flip()), str, `string of length ${str.length}`);
+            assert.equal(serializer.decode(serializer.encode(str)), str, `string of length ${str.length}`);
         });
     });
 
@@ -879,7 +867,7 @@ describe("data", "mpak", "Serializer", () => {
             ];
 
             table.forEach((testCase) => {
-                assert.equal(serializer.decode(serializer.encode(testCase.num).flip()), testCase.num, `${testCase.num}`);
+                assert.equal(serializer.decode(serializer.encode(testCase.num)), testCase.num, `${testCase.num}`);
             });
         });
 
@@ -887,7 +875,7 @@ describe("data", "mpak", "Serializer", () => {
             let buf = Buffer.allocUnsafe(8);
             buf[0] = 0xd3;
             buf = ByteArray.wrap(buf);
-            assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
+            assert.throws(() => serializer.decode(buf), IncompleteBufferError);
         });
     });
 
@@ -900,7 +888,7 @@ describe("data", "mpak", "Serializer", () => {
             allNum.push(0xffffffffeeeee);
 
             allNum.forEach((num) => {
-                assert.equal(serializer.decode(serializer.encode(num).flip()), num, `${num}`);
+                assert.equal(serializer.decode(serializer.encode(num)), num, `${num}`);
             });
         });
 
@@ -908,7 +896,7 @@ describe("data", "mpak", "Serializer", () => {
             let buf = Buffer.allocUnsafe(8);
             buf[0] = 0xcf;
             buf = ByteArray.wrap(buf);
-            assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
+            assert.throws(() => serializer.decode(buf), IncompleteBufferError);
         });
     });
 
@@ -923,7 +911,7 @@ describe("data", "mpak", "Serializer", () => {
             allNum.push(-9007199254740992);
 
             allNum.forEach((num) => {
-                const dec = serializer.decode(serializer.encode(num).flip());
+                const dec = serializer.decode(serializer.encode(num));
                 assert.ok(Math.abs(dec - num) < 0.1, "must decode correctly");
             });
         });
@@ -932,7 +920,7 @@ describe("data", "mpak", "Serializer", () => {
             let buf = Buffer.allocUnsafe(8);
             buf[0] = 0xcb;
             buf = ByteArray.wrap(buf);
-            assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
+            assert.throws(() => serializer.decode(buf), IncompleteBufferError);
         });
     });
 
@@ -961,7 +949,7 @@ describe("data", "mpak", "Serializer", () => {
 
             all.forEach((orig) => {
                 const encoded = serializer.encode(orig);
-                const decoded = serializer.decode(encoded.flip());
+                const decoded = serializer.decode(encoded);
                 assert.deepEqual(decoded, orig, `custom obj containing ${orig.data}`);
             });
         });
@@ -990,7 +978,7 @@ describe("data", "mpak", "Serializer", () => {
             all.push(new MyType(42));
 
             all.forEach((orig) => {
-                assert.deepEqual(serializer.decode(serializer.encode(orig).flip()), orig, `custom obj containing ${orig.data}`);
+                assert.deepEqual(serializer.decode(serializer.encode(orig)), orig, `custom obj containing ${orig.data}`);
             });
         });
 
@@ -1017,7 +1005,7 @@ describe("data", "mpak", "Serializer", () => {
             all.push(new MyType(42));
 
             all.forEach((orig) => {
-                assert.deepEqual(serializer.decode(serializer.encode(orig).flip()), orig, `custom obj containing ${orig.data}`);
+                assert.deepEqual(serializer.decode(serializer.encode(orig)), orig, `custom obj containing ${orig.data}`);
             });
         });
 
@@ -1045,7 +1033,7 @@ describe("data", "mpak", "Serializer", () => {
             all.push(new MyType(42));
 
             all.forEach((orig) => {
-                assert.deepEqual(serializer.decode(serializer.encode(orig).flip()), orig, `custom obj containing ${orig.data}`);
+                assert.deepEqual(serializer.decode(serializer.encode(orig)), orig, `custom obj containing ${orig.data}`);
             });
         });
 
@@ -1075,7 +1063,7 @@ describe("data", "mpak", "Serializer", () => {
             all.push(new MyType(44));
 
             all.forEach((orig) => {
-                assert.deepEqual(serializer.decode(serializer.encode(orig).flip()), orig, `custom obj containing ${orig.data}`);
+                assert.deepEqual(serializer.decode(serializer.encode(orig)), orig, `custom obj containing ${orig.data}`);
             });
         });
 
@@ -1107,7 +1095,7 @@ describe("data", "mpak", "Serializer", () => {
 
             all.forEach((orig) => {
                 const encoded = serializer.encode(orig);
-                assert.deepEqual(serializer.decode(encoded.flip()), orig, "custom obj inside a map");
+                assert.deepEqual(serializer.decode(encoded), orig, "custom obj inside a map");
             });
         });
 
@@ -1135,7 +1123,7 @@ describe("data", "mpak", "Serializer", () => {
             all.push(new MyType(42));
 
             all.forEach((orig) => {
-                assert.deepEqual(serializer.decode(serializer.encode(orig).flip()), orig, `custom obj containing ${orig.data}`);
+                assert.deepEqual(serializer.decode(serializer.encode(orig)), orig, `custom obj containing ${orig.data}`);
             });
         });
 
@@ -1165,7 +1153,7 @@ describe("data", "mpak", "Serializer", () => {
             all.push(new MyType(44));
 
             all.forEach((orig) => {
-                assert.deepEqual(serializer.decode(serializer.encode(orig).flip()), orig, `custom obj containing ${orig.data}`);
+                assert.deepEqual(serializer.decode(serializer.encode(orig)), orig, `custom obj containing ${orig.data}`);
             });
         });
     });
@@ -1180,7 +1168,7 @@ describe("data", "mpak", "Serializer", () => {
             allNum.push(2.2);
 
             allNum.forEach((num) => {
-                const dec = serializer.decode(serializer.encode(num).flip());
+                const dec = serializer.decode(serializer.encode(num));
                 assert.ok(Math.abs(dec - num) < 0.1, `Float ${num}`);
             });
         });
@@ -1189,7 +1177,7 @@ describe("data", "mpak", "Serializer", () => {
             let buf = Buffer.allocUnsafe(4);
             buf[0] = 0xca;
             buf = ByteArray.wrap(buf);
-            assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
+            assert.throws(() => serializer.decode(buf), IncompleteBufferError);
         });
     });
 
@@ -1201,15 +1189,15 @@ describe("data", "mpak", "Serializer", () => {
             func: noop
         };
 
-        assert.throws(() => serializer.decode(serializer.encode(toEncode).flip()), adone.x.NotSupported);
+        assert.throws(() => serializer.decode(serializer.encode(toEncode)), adone.x.NotSupported);
     });
 
     it("encode/decode undefined", () => {
-        assert.equal(serializer.decode(serializer.encode(undefined).flip()), undefined, "mirror test undefined");
+        assert.equal(serializer.decode(serializer.encode(undefined)), undefined, "mirror test undefined");
     });
 
     it("encode/decode null", () => {
-        assert.equal(serializer.decode(serializer.encode(null).flip()), null, "mirror test null");
+        assert.equal(serializer.decode(serializer.encode(null)), null, "mirror test null");
     });
 
     it("custom type registeration assertions", () => {
@@ -1243,7 +1231,7 @@ describe("data", "mpak", "Serializer", () => {
         const encoded = serializer.encode(new Type0("hi"));
         let decoded;
         assert.equal(encoded.readUInt8(1), 0x0, "must use the custom type assigned");
-        assert.doesNotThrow(() => decoded = serializer.decode(encoded.flip()), undefined, undefined, "decoding custom 0 type should not throw");
+        assert.doesNotThrow(() => decoded = serializer.decode(encoded), undefined, undefined, "decoding custom 0 type should not throw");
         assert.equal(decoded instanceof Type0, true, "must decode to custom type instance");
     });
 
@@ -1265,7 +1253,7 @@ describe("data", "mpak", "Serializer", () => {
                 second: build(0xffff + 42)
             };
 
-            assert.deepEqual(serializer.decode(serializer.encode(map).flip()), map);
+            assert.deepEqual(serializer.decode(serializer.encode(map)), map);
         });
 
         it("decoding a map with multiple big arrays. First one is incomplete", () => {
@@ -1276,11 +1264,11 @@ describe("data", "mpak", "Serializer", () => {
             };
 
             const buf = serializer.encode(map);
+            
             // 1 (fixmap's header 0x82) + first key's length + 1 (first array's 0xdd)
-            const sizePosOfFirstArray = 1 + serializer.encode("first").length + 1;
+            const sizePosOfFirstArray = 1 + serializer.encode("first").remaining() + 1;
             buf.writeUInt32BE(array.length + 10, sizePosOfFirstArray); // set first array's size bigger than its actual size
-            buf.flip();
-            assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
+            assert.throws(() => serializer.decode(buf), IncompleteBufferError);
         });
 
         it("decoding a map with multiple big arrays. Second one is incomplete", () => {
@@ -1292,10 +1280,9 @@ describe("data", "mpak", "Serializer", () => {
 
             const buf = serializer.encode(map);
             // 1 (fixmap's header 0x82) + first key-value pair's length + second key's length + 1 (second array's 0xdd)
-            const sizePosOfSecondArray = 1 + serializer.encode("first").length + serializer.encode(array).length + serializer.encode("second").length + 1;
+            const sizePosOfSecondArray = 1 + serializer.encode("first").remaining() + serializer.encode(array).remaining() + serializer.encode("second").remaining() + 1;
             buf.writeUInt32BE(array.length + 10, sizePosOfSecondArray); // set second array's size bigger than its actual size
-            buf.flip();
-            assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
+            assert.throws(() => serializer.decode(buf), IncompleteBufferError);
         });
     });
 
@@ -1308,7 +1295,7 @@ describe("data", "mpak", "Serializer", () => {
                 third: Buffer.from("third")
             };
 
-            const decodedMap = serializer.decode(serializer.encode(map).flip());
+            const decodedMap = serializer.decode(serializer.encode(map));
             assert.equal(Buffer.compare(decodedMap.first, map.first), 0);
             assert.equal(Buffer.compare(decodedMap.second, map.second), 0);
             assert.equal(Buffer.compare(decodedMap.third, map.third), 0);
@@ -1328,7 +1315,7 @@ describe("data", "mpak", "Serializer", () => {
                 map[name] = Buffer.from(buff);
             }
 
-            const decodedMap = serializer.decode(serializer.encode(map).flip());
+            const decodedMap = serializer.decode(serializer.encode(map));
 
             for (const [name, buff] of adone.util.entries(map)) {
                 assert.equal(Buffer.compare(buff, decodedMap[name]), 0);
@@ -1345,7 +1332,7 @@ describe("data", "mpak", "Serializer", () => {
                 third: "third"
             };
 
-            assert.deepEqual(serializer.decode(serializer.encode(map).flip()), map);
+            assert.deepEqual(serializer.decode(serializer.encode(map)), map);
         });
 
         it("encode/decode map with all files in this directory", () => {
@@ -1358,7 +1345,7 @@ describe("data", "mpak", "Serializer", () => {
                 return acc;
             }, {});
 
-            assert.deepEqual(serializer.decode(serializer.encode(map).flip()), map);
+            assert.deepEqual(serializer.decode(serializer.encode(map)), map);
         });
     });
 
@@ -1366,19 +1353,19 @@ describe("data", "mpak", "Serializer", () => {
         it("encode/decode Long mirror test", () => {
             let orig = Long.fromString("1152921504606912512", true); // 2**60 + 2**16
             let encoded = serializer.encode(orig);
-            let output = serializer.decode(encoded.flip());
+            let output = serializer.decode(encoded);
             assert.ok(output.equals(orig), "must stay the same");
 
             orig = Long.fromString("-1152921504606912512"); // -2**60 - 2**16
             encoded = serializer.encode(orig);
-            output = serializer.decode(encoded.flip());
+            output = serializer.decode(encoded);
             assert.ok(output.equals(orig), "must stay the same");
         });
 
         it("encode/decode Date", () => {
             const val = new Date();
             const encoded = serializer.encode(val);
-            const decodedVal = serializer.decode(encoded.flip());
+            const decodedVal = serializer.decode(encoded);
             assert.deepEqual(decodedVal, val, "must stay the same");
         });
 
@@ -1388,7 +1375,7 @@ describe("data", "mpak", "Serializer", () => {
             val.set(888, "adone");
             val.set("state", true);
             const encoded = serializer.encode(val);
-            const decodedVal = serializer.decode(encoded.flip());
+            const decodedVal = serializer.decode(encoded);
             assert.deepEqual([...decodedVal.entries()], [...val.entries()], "must stay the same");
         });
 
@@ -1398,7 +1385,7 @@ describe("data", "mpak", "Serializer", () => {
             val.add("good");
             val.add("stuff");
             const encoded = serializer.encode(val);
-            const decodedVal = serializer.decode(encoded.flip());
+            const decodedVal = serializer.decode(encoded);
             assert.deepEqual([...decodedVal.entries()], [...val.entries()], "must stay the same");
         });
     });

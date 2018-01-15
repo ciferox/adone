@@ -19,7 +19,7 @@ export class Encoder {
         switch (type) {
             case "undefined": {
                 buf.writeUInt32BE(0xD4000000); // fixext special type/value
-                buf.offset--;
+                buf.wOffset--;
                 break;
             }
             case "boolean": {
@@ -121,7 +121,6 @@ export class Encoder {
                         if (encTypes[i].check(x)) {
                             const extType = encTypes[i];
                             const encoded = extType.encode(x);
-                            encoded.flip();
 
                             const length = encoded.remaining();
                             if (length === 1) {
@@ -138,7 +137,7 @@ export class Encoder {
                                 buf.writeUInt16BE(0xC700 | length);
                             } else if (length < 0x10000) {
                                 buf.writeUInt32BE(0xC8000000 | (length << 8));
-                                buf.offset -= 1;
+                                buf.wOffset -= 1;
                             } else {
                                 buf.writeUInt8(0xC9);
                                 buf.writeUInt32BE(length);
@@ -217,7 +216,7 @@ export class Decoder {
         this._decodingTypes = decodingTypes;
     }
 
-    decode(buf) { // needFlip option ?
+    decode(buf) {
         if (!is.byteArray(buf)) {
             buf = ByteArray.wrap(buf, undefined, true);
         }
@@ -297,8 +296,8 @@ export class Decoder {
                 if (!isValidDataSize(length, bufLength, 2)) {
                     return null;
                 }
-                result = buf.toString("utf8", buf.offset, buf.offset + length);
-                buf.skip(length);
+                result = buf.toString("utf8", buf.rOffset, buf.rOffset + length);
+                buf.skipRead(length);
                 return buildDecodeResult(result, 2 + length);
             case 0xda:
                 // strings up to 2^16 - 2 bytes
@@ -306,8 +305,8 @@ export class Decoder {
                 if (!isValidDataSize(length, bufLength, 3)) {
                     return null;
                 }
-                result = buf.toString("utf8", buf.offset, buf.offset + length);
-                buf.skip(length);
+                result = buf.toString("utf8", buf.rOffset, buf.rOffset + length);
+                buf.skipRead(length);
                 return buildDecodeResult(result, 3 + length);
             case 0xdb:
                 // strings up to 2^32 - 4 bytes
@@ -315,8 +314,8 @@ export class Decoder {
                 if (!isValidDataSize(length, bufLength, 5)) {
                     return null;
                 }
-                result = buf.toString("utf8", buf.offset, buf.offset + length);
-                buf.skip(length);
+                result = buf.toString("utf8", buf.rOffset, buf.rOffset + length);
+                buf.skipRead(length);
                 return buildDecodeResult(result, 5 + length);
             case 0xc4:
                 // buffers up to 2^8 - 1 bytes
@@ -324,8 +323,8 @@ export class Decoder {
                 if (!isValidDataSize(length, bufLength, 2)) {
                     return null;
                 }
-                result = buf.slice(buf.offset, buf.offset + length).buffer;
-                buf.skip(length);
+                result = buf.slice(buf.rOffset, buf.rOffset + length).buffer;
+                buf.skipRead(length);
                 return buildDecodeResult(result, 2 + length);
             case 0xc5:
                 // buffers up to 2^16 - 1 bytes
@@ -333,8 +332,8 @@ export class Decoder {
                 if (!isValidDataSize(length, bufLength, 3)) {
                     return null;
                 }
-                result = buf.slice(buf.offset, buf.offset + length).buffer;
-                buf.skip(length);
+                result = buf.slice(buf.rOffset, buf.rOffset + length).buffer;
+                buf.skipRead(length);
                 return buildDecodeResult(result, 3 + length);
             case 0xc6:
                 // buffers up to 2^32 - 1 bytes
@@ -342,8 +341,8 @@ export class Decoder {
                 if (!isValidDataSize(length, bufLength, 5)) {
                     return null;
                 }
-                result = buf.slice(buf.offset, buf.offset + length).buffer;
-                buf.skip(length);
+                result = buf.slice(buf.rOffset, buf.rOffset + length).buffer;
+                buf.skipRead(length);
                 return buildDecodeResult(result, 5 + length);
             case 0xdc:
                 // array up to 2^16 elements - 2 bytes
@@ -415,8 +414,8 @@ export class Decoder {
             // fixstr up to 31 bytes
             length = first & 0x1f;
             if (isValidDataSize(length, bufLength, 1)) {
-                result = buf.toString("utf8", buf.offset, buf.offset + length);
-                buf.skip(length);
+                result = buf.toString("utf8", buf.rOffset, buf.rOffset + length);
+                buf.skipRead(length);
                 return buildDecodeResult(result, length + 1);
             }
             return null;
@@ -429,7 +428,7 @@ export class Decoder {
             // 7-bits positive ints
             return buildDecodeResult(first, 1);
         }
-        throw new Error("not implemented yet");
+        throw new Error("Not implemented yet");
     }
 
     _decodeMap(buf, length, headerLength) {
@@ -480,8 +479,8 @@ export class Decoder {
         const decTypes = this._decodingTypes;
         for (let i = 0; i < decTypes.length; ++i) {
             if (type === decTypes[i].type) {
-                const value = decTypes[i].decode(buf.slice(buf.offset, buf.offset + size));
-                buf.skip(size);
+                const value = decTypes[i].decode(buf.slice(buf.rOffset, buf.rOffset + size));
+                buf.skipRead(size);
                 return buildDecodeResult(value, headerSize + size);
             }
         }
@@ -491,12 +490,13 @@ export class Decoder {
                 return buildDecodeResult(undefined, headerSize + size);
             }
         }
-        throw new Error(`unable to find ext type ${type}`);
+        throw new Error(`Unable to find ext type ${type}`);
     }
 }
 
 export class Serializer {
-    constructor() {
+    constructor(initialCapacity = 64) {
+        this._initialCapacity = initialCapacity;
         this._encodingTypes = [];
         this._decodingTypes = [];
         this._encoder = null;
@@ -520,7 +520,7 @@ export class Serializer {
         this.registerEncoder(type, (obj) => {
             return (obj instanceof constructor);
         }, (obj) => {
-            const extBuf = new ByteArray(1024, true);
+            const extBuf = new ByteArray(this._initialCapacity, true);
             encode(obj, extBuf);
             return extBuf;
         });
@@ -530,14 +530,14 @@ export class Serializer {
     }
 
     get encoder() {
-        if (adone.is.null(this._encoder)) {
+        if (is.null(this._encoder)) {
             this._encoder = new adone.data.mpak.Encoder(this._encodingTypes);
         }
         return this._encoder;
     }
 
     get decoder() {
-        if (adone.is.null(this._decoder)) {
+        if (is.null(this._decoder)) {
             this._decoder = new adone.data.mpak.Decoder(this._decodingTypes);
         }
         return this._decoder;
@@ -547,8 +547,8 @@ export class Serializer {
         return this.encoder.encode(x, buf);
     }
 
-    decode(buf, needFlip = true) {
-        return this.decoder.decode(buf, needFlip);
+    decode(buf) {
+        return this.decoder.decode(buf);
     }
 }
 
@@ -659,7 +659,7 @@ adone.lazify({
     }
 }, adone.asNamespace(exports), require);
 
-export const encode = (obj) => adone.data.mpak.serializer.encode(obj).flip().toBuffer();
+export const encode = (obj) => adone.data.mpak.serializer.encode(obj).toBuffer();
 export const decode = (buf) => adone.data.mpak.serializer.decode(buf);
 export const tryDecode = (buf) => adone.data.mpak.serializer.decoder.tryDecode(buf);
 export const any = true;

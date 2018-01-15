@@ -30,7 +30,6 @@ export default class Peer extends GenesisPeer {
                     this.emit("disconnect");
                 };
                 ws.onerror = (errEvent) => {
-                    adone.log(errEvent)
                     this.emit("error", new x.Network(errEvent.data));
                 };
                 ws.onmessage = (msgEvent) => {
@@ -51,8 +50,8 @@ export default class Peer extends GenesisPeer {
 
     write(data) {
         return new Promise((resolve, reject) => {
-            const buf = new ByteArray().skip(4);
-            const encoded = adone.data.mpak.serializer.encode(data, buf).flip();
+            const buf = new ByteArray().skipWrite(4);
+            const encoded = adone.data.mpak.serializer.encode(data, buf);
             encoded.writeUInt32BE(encoded.remaining() - 4, 0);
             const ws = this._ws;
             if (!is.null(ws) && ws.readyState === net.ws.Client.OPEN) {
@@ -98,7 +97,7 @@ export default class Peer extends GenesisPeer {
     _onMessage(data) {
         const buffer = ByteArray.wrap(data);
         const packetSize = buffer.readUInt32BE();
-        buffer.compact();
+        // buffer.compact();
         const result = adone.data.mpak.tryDecode(buffer);
         if (result) {
             if (packetSize === result.bytesConsumed) {

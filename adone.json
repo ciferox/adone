@@ -716,14 +716,14 @@
                             "namespace": "env",
                             "task": "transpile",
                             "src": "src/glosses/system/env.js",
-                            "dst": "src/glosses/system"
+                            "dst": "lib/glosses/system"
                         },
                         "process": {
                             "description": "Process utilites",
                             "namespace": "process",
                             "task": "transpile",
                             "src": "src/glosses/system/process/**/*.js",
-                            "dst": "src/glosses/system/process"
+                            "dst": "lib/glosses/system/process"
                         }
                     }
                 },
