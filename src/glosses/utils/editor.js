@@ -12,7 +12,7 @@ export default class Editor {
             path += ext;
         }
         this.ext = ext;
-        const ed = editor || adone.system.env.editor;
+        const ed = editor || adone.system.env.editor();
         const args = ed.split(/\s+/);
         this.bin = args.shift();
         this.args = args;
