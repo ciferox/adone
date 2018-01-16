@@ -165,7 +165,7 @@ export const create = function () {
     let _state = null;
 
     // input buffer
-    let _input = new adone.collection.SmartBuffer();
+    let _input = new adone.collection.ByteArray();
 
     // used for word storage
     const _w = new Array(64);
@@ -198,7 +198,7 @@ export const create = function () {
         for (let i = 0; i < int32s; ++i) {
             md.fullMessageLength.push(0);
         }
-        _input = new adone.collection.SmartBuffer();
+        _input = new adone.collection.ByteArray();
         _state = {
             h0: 0x6A09E667,
             h1: 0xBB67AE85,
@@ -282,7 +282,7 @@ export const create = function () {
      * must *always* be present, so if the message length is already
      */
 
-        const finalBlock = new adone.collection.SmartBuffer();
+        const finalBlock = new adone.collection.ByteArray();
         finalBlock.writeBuffer(_input.toBuffer());
 
         // compute remaining size to be digested (include message length size)
@@ -321,7 +321,7 @@ export const create = function () {
             h7: _state.h7
         };
         _update(s2, _w, finalBlock);
-        const rval = new adone.collection.SmartBuffer();
+        const rval = new adone.collection.ByteArray();
         rval.writeUInt32BE(s2.h0 >>> 0);
         rval.writeUInt32BE(s2.h1 >>> 0);
         rval.writeUInt32BE(s2.h2 >>> 0);

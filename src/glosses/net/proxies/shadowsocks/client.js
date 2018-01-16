@@ -231,7 +231,7 @@ export class Client extends EventEmitter {
             }
         }
         header.writeUInt16BE(this._dstport);
-        cipher.write(header.flip().toBuffer());
+        cipher.write(header.toBuffer());
         this._ready = true;
         const sssocket = new SSocket(socket, cipher);
         this.emit("connect", sssocket);

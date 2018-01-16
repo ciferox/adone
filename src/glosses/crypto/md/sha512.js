@@ -364,7 +364,7 @@ export const create = function (algorithm) {
     let _h = null;
 
     // input buffer
-    let _input = new adone.collection.SmartBuffer();
+    let _input = new adone.collection.ByteArray();
 
     // used for 64-bit word storage
     const _w = new Array(80);
@@ -415,7 +415,7 @@ export const create = function (algorithm) {
         for (let i = 0; i < int32s; ++i) {
             md.fullMessageLength.push(0);
         }
-        _input = new adone.collection.SmartBuffer();
+        _input = new adone.collection.ByteArray();
         _h = new Array(_state.length);
         for (let i = 0; i < _state.length; ++i) {
             _h[i] = _state[i].slice(0);
@@ -493,7 +493,7 @@ export const create = function (algorithm) {
      * must *always* be present, so if the message length is already
      */
 
-        const finalBlock = new adone.collection.SmartBuffer();
+        const finalBlock = new adone.collection.ByteArray();
         finalBlock.writeBuffer(_input.toBuffer());
 
         // compute remaining size to be digested (include message length size)
@@ -526,7 +526,7 @@ export const create = function (algorithm) {
             h[i] = _h[i].slice(0);
         }
         _update(h, _w, finalBlock);
-        const rval = new adone.collection.SmartBuffer();
+        const rval = new adone.collection.ByteArray();
         let hlen;
         if (algorithm === "SHA-512") {
             hlen = h.length;

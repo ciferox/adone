@@ -61,5 +61,5 @@ export default function encrypt(m, key, bt) {
     }
     ed.writeBuffer(y.toBuffer());
 
-    return ed.flip().toBuffer();
+    return ed.toBuffer();
 }

@@ -234,7 +234,7 @@ export default class Generator {
                 }
             }
         }
-        return buf.flip().toBuffer();
+        return buf.toBuffer();
     }
 
     genUInt32(int) {
@@ -309,7 +309,7 @@ export default class Generator {
             buf.write(this.genData(i));
         }
         return {
-            buf: buf.flip().toBuffer(),
+            buf: buf.toBuffer(),
             type: "array",
             length: array.length
         };
@@ -324,7 +324,7 @@ export default class Generator {
             ++length;
         }
         return {
-            buf: buf.flip().toBuffer(),
+            buf: buf.toBuffer(),
             type: "map",
             length
         };
@@ -391,7 +391,7 @@ export default class Generator {
         const dataBuf = new ByteArray();
         const dataRef = [];
         for (const i of data) {
-            dataRef.push(dataBuf.offset);
+            dataRef.push(dataBuf.wOffset);
             dataBuf.write(this.genData(i));
         }
 
@@ -456,11 +456,11 @@ export default class Generator {
         /* eslint-enable */
 
         return Buffer.concat([
-            treeBuf.flip().toBuffer(),
+            treeBuf.toBuffer(),
             TREE_DATA_SEPARATOR,
-            dataBuf.flip().toBuffer(),
+            dataBuf.toBuffer(),
             DATA_METADATA_SEPARATOR,
-            metadataBuf.flip().toBuffer()
+            metadataBuf.toBuffer()
         ]);
     }
 }

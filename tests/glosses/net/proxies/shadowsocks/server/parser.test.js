@@ -348,7 +348,7 @@ describe("net", "proxy", "shadowsocks", "server", "parser", () => {
                 header.write("\x08".repeat(4));
                 header.writeUInt16BE(31337);
                 stream.write(IV);
-                stream.write(header.flip().toBuffer());
+                stream.write(header.toBuffer());
                 await adone.promise.delay(10);
                 expect(onRequest).to.have.been.calledOnce;
                 const { args: [{ dstAddr, dstPort }] } = onRequest.getCall(0);
@@ -369,7 +369,7 @@ describe("net", "proxy", "shadowsocks", "server", "parser", () => {
                 header.write("\x08".repeat(16));
                 header.writeUInt16BE(31337);
                 stream.write(IV);
-                stream.write(header.flip().toBuffer());
+                stream.write(header.toBuffer());
                 await adone.promise.delay(10);
                 expect(onRequest).to.have.been.calledOnce;
                 const { args: [{ dstAddr, dstPort }] } = onRequest.getCall(0);
@@ -392,7 +392,7 @@ describe("net", "proxy", "shadowsocks", "server", "parser", () => {
                 header.write(address);
                 header.writeUInt16BE(31337);
                 stream.write(IV);
-                stream.write(header.flip().toBuffer());
+                stream.write(header.toBuffer());
                 await adone.promise.delay(10);
                 expect(onRequest).to.have.been.calledOnce;
                 const { args: [{ dstAddr, dstPort }] } = onRequest.getCall(0);
@@ -416,7 +416,7 @@ describe("net", "proxy", "shadowsocks", "server", "parser", () => {
                 header.writeUInt16BE(31337);
                 header.write("some data");
                 stream.write(IV);
-                stream.write(header.flip().toBuffer());
+                stream.write(header.toBuffer());
                 await adone.promise.delay(10);
                 expect(onRequest).to.have.been.calledOnce;
                 const { args: [{ dstAddr, dstPort }, head] } = onRequest.getCall(0);

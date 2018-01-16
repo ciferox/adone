@@ -45,7 +45,7 @@ const _update = (s, w, bytes) => {
     // and then extended into 80 32-bit words according to SHA-1 algorithm
     // and for 32-79 using Max Locktyukhin's optimization
 
-    // initialize hash value for this chunk
+        // initialize hash value for this chunk
         a = s.h0;
         b = s.h1;
         c = s.h2;
@@ -160,7 +160,7 @@ export const create = function () {
     let _state = null;
 
     // input buffer
-    let _input = new adone.collection.SmartBuffer();
+    let _input = new adone.collection.ByteArray();
 
     // used for word storage
     const _w = new Array(80);
@@ -193,7 +193,7 @@ export const create = function () {
         for (let i = 0; i < int32s; ++i) {
             md.fullMessageLength.push(0);
         }
-        _input = new adone.collection.SmartBuffer();
+        _input = new adone.collection.ByteArray();
         _state = {
             h0: 0x67452301,
             h1: 0xEFCDAB89,
@@ -274,7 +274,7 @@ export const create = function () {
      * must *always* be present, so if the message length is already
      */
 
-        const finalBlock = new adone.collection.SmartBuffer();
+        const finalBlock = new adone.collection.ByteArray();
         finalBlock.writeBuffer(_input.toBuffer());
 
         // compute remaining size to be digested (include message length size)
@@ -310,7 +310,7 @@ export const create = function () {
             h4: _state.h4
         };
         _update(s2, _w, finalBlock);
-        const rval = new adone.collection.SmartBuffer();
+        const rval = new adone.collection.ByteArray();
         rval.writeUInt32BE(s2.h0 >>> 0);
         rval.writeUInt32BE(s2.h1 >>> 0);
         rval.writeUInt32BE(s2.h2 >>> 0);

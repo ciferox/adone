@@ -95,7 +95,7 @@ export default class Command {
         let result;
         const commandStr = `*${this.args.length + 1}\r\n$${this.name.length}\r\n${this.name}\r\n`;
         if (bufferMode) {
-            const resultBuffer = new ByteArray(0);
+            const resultBuffer = new ByteArray();
             resultBuffer.write(commandStr);
             for (let i = 0; i < this.args.length; ++i) {
                 const arg = this.args[i];
@@ -111,7 +111,7 @@ export default class Command {
                     resultBuffer.write(`$${Buffer.byteLength(arg)}\r\n${arg}\r\n`);
                 }
             }
-            result = resultBuffer.flip().toBuffer();
+            result = resultBuffer.toBuffer();
         } else {
             result = commandStr;
             for (let i = 0; i < this.args.length; ++i) {

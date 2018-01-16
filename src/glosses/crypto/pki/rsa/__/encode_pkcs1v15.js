@@ -77,5 +77,5 @@ export default function encodePKCS1v1(m, key, bt) {
     eb.writeUInt8(0x00);
     eb.writeBuffer(m);
 
-    return eb.flip().toBuffer();
+    return eb.toBuffer();
 }

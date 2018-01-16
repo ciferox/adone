@@ -20,7 +20,7 @@ const bytesFromIPv4 = (ip) => {
         }
         b.writeUInt8(num);
     }
-    return b.flip().toBuffer();
+    return b.toBuffer();
 };
 
 /**
@@ -53,7 +53,7 @@ const bytesFromIPv6 = (ip) => {
         }
         b.writeBuffer(bytes);
     }
-    return b.flip().toBuffer();
+    return b.toBuffer();
 };
 
 /**

@@ -263,7 +263,7 @@ export default class Pipeline extends __.Commander {
                     }
                     if (bufferMode) {
                         if (is.string(data)) {
-                            const flexBuffer = new ByteArray(0);
+                            const flexBuffer = new ByteArray();
                             flexBuffer.write(data);
                             data = flexBuffer;
                         }
@@ -273,7 +273,7 @@ export default class Pipeline extends __.Commander {
                     }
                     if (!--writePending) {
                         if (bufferMode) {
-                            data = data.flip().toBuffer();
+                            data = data.toBuffer();
                         }
                         if (this.isCluster) {
                             node.redis.stream.write(data);

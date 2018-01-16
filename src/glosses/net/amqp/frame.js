@@ -38,7 +38,6 @@ export const makeBodyFrame = (channel, payload) => {
     buf.writeUInt32BE(payload.length);
     buf.write(payload);
     buf.writeUInt8(FRAME_END);
-    buf.flip();
     return buf.toBuffer();
 };
 
@@ -88,7 +87,7 @@ export const decodeFrame = (frame) => {
             // class:16 | _weight:16 | size:64 | flagsAndfields/binary
             const buf = adone.collection.ByteArray.wrap(payload);
             const id = buf.readUInt16BE();
-            buf.skip(2); // _weight
+            buf.skipRead(2); // _weight
             const size = buf.readUInt64BE().toNumber(); // safe?
             const flagsAndfields = buf.toBuffer();
             const fields = decode(id, flagsAndfields);

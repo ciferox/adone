@@ -58,7 +58,7 @@ export default function decrypt(ed, key, pub, ml) {
     }
     eb.writeBuffer(x.toBuffer());
 
-    const res = eb.flip().toBuffer();
+    const res = eb.toBuffer();
 
     if (ml !== false) {
         // legacy, default to PKCS#1 v1.5 padding
