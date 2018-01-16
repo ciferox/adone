@@ -52,7 +52,7 @@ export default class Peer extends GenesisPeer {
         return new Promise((resolve, reject) => {
             const buf = new ByteArray().skipWrite(4);
             const encoded = adone.data.mpak.serializer.encode(data, buf);
-            encoded.writeUInt32BE(encoded.remaining() - 4, 0);
+            encoded.writeUInt32BE(encoded.length - 4, 0);
             const ws = this._ws;
             if (!is.null(ws) && ws.readyState === net.ws.Client.OPEN) {
                 ws.send(encoded.toBuffer(), { binary: true, compress: false }, resolve);

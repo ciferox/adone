@@ -395,7 +395,6 @@ describe("Streams", function () {
 
             await p1;
 
-            buff.flip();
             assert.deepEqual(bs.getContents(), buff.toBuffer());
         });
     }

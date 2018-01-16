@@ -14,12 +14,11 @@ describe("collection", "ByteArray", () => {
             let bb = new ByteArray();
             assert.strictEqual(bb.rOffset, 0);
             assert.strictEqual(bb.wOffset, 0);
-            assert.strictEqual(bb.limit, ByteArray.DEFAULT_CAPACITY);
             assert.strictEqual(bb.noAssert, ByteArray.DEFAULT_NOASSERT);
-            assert.strictEqual(bb.buffer.length, bb.capacity());
-            assert.strictEqual(bb.capacity(), ByteArray.DEFAULT_CAPACITY);
-            bb = ByteArray.allocate(undefined, !ByteArray.DEFAULT_NOASSERT);
-            assert.strictEqual(bb.capacity(), ByteArray.DEFAULT_CAPACITY);
+            assert.strictEqual(bb.buffer.length, bb.capacity);
+            assert.strictEqual(bb.capacity, ByteArray.DEFAULT_CAPACITY);
+            bb = ByteArray.alloc(undefined, !ByteArray.DEFAULT_NOASSERT);
+            assert.strictEqual(bb.capacity, ByteArray.DEFAULT_CAPACITY);
             assert.strictEqual(bb.noAssert, !ByteArray.DEFAULT_NOASSERT);
 
             // Fixed set of properties
@@ -36,7 +35,6 @@ describe("collection", "ByteArray", () => {
             assert.strictEqual(bb.buffer, bb2.buffer);
             assert.equal(bb.rOffset, bb2.rOffset);
             assert.equal(bb.wOffset, bb2.wOffset);
-            assert.equal(bb.limit, bb2.limit);
             assert.equal(bb.markedOffset, bb2.markedOffset);
             assert.equal(bb.littleEndian, bb2.littleEndian);
             assert.equal(bb.noAssert, bb2.noAssert);
@@ -58,7 +56,7 @@ describe("collection", "ByteArray", () => {
             const buf = Buffer.alloc(1);
             buf[0] = 0x01;
             const bb = ByteArray.wrap(buf);
-            assert.strictEqual(bb.capacity(), 1);
+            assert.strictEqual(bb.capacity, 1);
             assert.equal(Buffer.compare(bb.buffer, buf), 0);
             assert.strictEqual(bb.toDebug(), "<01]");
         });
@@ -66,11 +64,10 @@ describe("collection", "ByteArray", () => {
         it("ArrayBuffer", () => {
             const buf = new ArrayBuffer(1);
             const bb = ByteArray.wrap(buf);
-            assert.strictEqual(bb.capacity(), 1);
+            assert.strictEqual(bb.capacity, 1);
             assert.ok(bb.buffer instanceof Buffer);
             assert.equal(bb.rOffset, 0);
             assert.equal(bb.wOffset, 1);
-            assert.equal(bb.limit, 1);
         });
 
         it("Uint8Array", () => {
@@ -78,7 +75,7 @@ describe("collection", "ByteArray", () => {
             const buf = new Uint8Array(1);
             buf[0] = 0x01;
             const bb = ByteArray.wrap(buf);
-            assert.strictEqual(bb.capacity(), 1);
+            assert.strictEqual(bb.capacity, 1);
             assert.ok(bb.buffer instanceof Buffer);
             assert.strictEqual(bb.toDebug(), "<01]");
         });
@@ -86,7 +83,7 @@ describe("collection", "ByteArray", () => {
         it("Array", () => {
             const arr = [1, 255, -1];
             const bb = ByteArray.wrap(arr);
-            assert.strictEqual(bb.capacity(), 3);
+            assert.strictEqual(bb.capacity, 3);
             assert.strictEqual(bb.toDebug(), "<01 FF FF]");
         });
 
@@ -96,8 +93,7 @@ describe("collection", "ByteArray", () => {
             const bb = ByteArray.wrap(bb2);
             assert.strictEqual(bb2.rOffset, bb.rOffset);
             assert.strictEqual(bb2.wOffset, bb.wOffset);
-            assert.strictEqual(bb2.limit, bb.limit);
-            assert.strictEqual(bb2.capacity(), bb.capacity());
+            assert.strictEqual(bb2.capacity, bb.capacity);
             assert.strictEqual(bb2.toString("debug"), bb.toString("debug"));
         });
 
@@ -114,14 +110,14 @@ describe("collection", "ByteArray", () => {
                 assert.strictEqual(bb.toUTF8(), str);
                 if (str.length > 2) {
                     bb.rOffset = 1;
-                    bb.wOffset = bb.capacity() - 1;
+                    bb.wOffset = bb.capacity - 1;
                     assert.strictEqual(bb.toUTF8(), str.substring(1, str.length - 1));
                 }
             });
         });
 
         it("debug", () => {
-            ["60<61 62>63*", "<60 61 62 63]", "|", "|61", "^61*", "12|"].forEach((str) => {
+            ["60<61 62>63*", "<60 61 62 63]", "|", "^61*", "12|"].forEach((str) => {
                 const bb = ByteArray.wrap(str, "debug"); // Calls ByteArray#fromDebug
                 assert.equal(bb.toDebug(), str);
             });
@@ -133,7 +129,7 @@ describe("collection", "ByteArray", () => {
                 assert.strictEqual(bb.toBinary(), str);
                 if (str.length > 2) {
                     bb.rOffset = 1;
-                    bb.wOffset = bb.capacity() - 1;
+                    bb.wOffset = bb.capacity - 1;
                     assert.strictEqual(bb.toBinary(), str.substring(1, str.length - 1));
                 }
             });
@@ -145,7 +141,7 @@ describe("collection", "ByteArray", () => {
                 assert.strictEqual(bb.toHex(), str);
                 if (str.length > 2) {
                     bb.rOffset = 1;
-                    bb.wOffset = bb.capacity() - 1;
+                    bb.wOffset = bb.capacity - 1;
                     assert.strictEqual(bb.toHex(), str.substring(2, str.length - 2));
                 }
             });
@@ -188,17 +184,17 @@ describe("collection", "ByteArray", () => {
             bb.rOffset = bb.wOffset = 1;
             bb.resize(2);
             bb.fill(0, 0, 2);
-            assert.equal(bb.capacity(), 2);
-            assert.equal(bb.toDebug(), "00|00");
+            assert.equal(bb.capacity, 2);
+            assert.equal(bb.toDebug(), "00^00*");
         });
 
         it("ensureCapacity", () => {
             const bb = new ByteArray(5);
-            assert.equal(bb.capacity(), 5);
+            assert.equal(bb.capacity, 5);
             bb.ensureCapacity(6); // Doubles
-            assert.equal(bb.capacity(), 10);
+            assert.equal(bb.capacity, 10);
             bb.ensureCapacity(21); // Uses 21
-            assert.equal(bb.capacity(), 21);
+            assert.equal(bb.capacity, 21);
         });
 
         it("slice", () => {
@@ -208,28 +204,15 @@ describe("collection", "ByteArray", () => {
             assert.equal(Buffer.compare(b2.buffer, b3.buffer), 0);
         });
 
-        it("flip", () => {
-            const bb = ByteArray.wrap("\x12\x34\x56\x78");
-            assert.equal(bb.rOffset, 0);
-            assert.equal(bb.wOffset, 4);
-            assert.equal(bb.limit, 4);
-            bb.flip();
-            assert.equal(bb.rOffset, 0);
-            assert.equal(bb.wOffset, 4);
-            assert.equal(bb.limit, 4);
-        });
-
         it("reset", () => {
             const bb = ByteArray.wrap("\x12\x34\x56\x78");
             bb.reset();
             assert.equal(bb.rOffset, 0);
-            assert.equal(bb.limit, 4);
             bb.rOffset = 1;
             bb.wOffset = 2;
             bb.reset(true);
             assert.equal(bb.rOffset, 0);
             assert.equal(bb.wOffset, 0);
-            assert.equal(bb.limit, 4);
         });
 
         it("copy", () => {
@@ -239,7 +222,6 @@ describe("collection", "ByteArray", () => {
             assert.notStrictEqual(bb, bb2);
             assert.notStrictEqual(bb.buffer, bb2.buffer);
             assert.equal(bb2.rOffset, bb.rOffset);
-            assert.equal(bb2.limit, bb.limit);
             assert.equal(bb2.markedOffset, bb.markedOffset);
             assert.equal(bb2.littleEndian, bb.littleEndian);
             assert.equal(bb2.noAssert, bb.noAssert);
@@ -262,7 +244,7 @@ describe("collection", "ByteArray", () => {
             assert.equal(bb.toDebug(), "01|"); // Read 1 byte
             assert.equal(bb2.toDebug(), "<01 01]"); // Written 1 byte at 2
             bb.reset();
-            bb2.clear().fill(0);
+            bb2.reset(true).fill(0);
             // Modifies source offsets only
             bb.copyTo(bb2, 0 /* source offsets omitted */);
             assert.equal(bb.toDebug(), "01|"); // Read 1 byte
@@ -270,30 +252,26 @@ describe("collection", "ByteArray", () => {
             // Modifies no offsets at all
             bb.reset();
             bb2.reset(true).fill(0);
-            bb.copyTo(bb2, 1, 0, bb.capacity() /* no offsets omitted */);
+            bb.copyTo(bb2, 1, 0, bb.capacity /* no offsets omitted */);
             assert.equal(bb.toDebug(), "<01]"); // Read 1 byte (no change)
             assert.equal(bb2.toDebug(), "<00 01]"); // Written 1 byte (no change)
         });
 
         it("compact", () => {
             const bb = ByteArray.wrap("\x01\x02");
-            bb.limit = 1;
             let prevBuffer = bb.buffer;
             bb.compact();
-            assert.notStrictEqual(bb.buffer, prevBuffer);
-            assert.equal(bb.capacity(), 1);
+            assert.strictEqual(bb.buffer, prevBuffer);
+            assert.equal(bb.capacity, 2);
             assert.equal(bb.rOffset, 0);
-            assert.equal(bb.limit, 1);
 
             // Empty region
             bb.rOffset = 1;
             prevBuffer = bb.buffer;
             bb.compact();
             assert.notStrictEqual(bb.buffer, prevBuffer);
-            assert.strictEqual(bb.buffer, new ByteArray(0).buffer); // EMPTY_BUFFER
-            assert.equal(bb.capacity(), 0);
+            assert.equal(bb.capacity, 1);
             assert.equal(bb.rOffset, 0);
-            assert.equal(bb.limit, 0);
         });
 
         it("reverse", () => {
@@ -306,7 +284,7 @@ describe("collection", "ByteArray", () => {
             bb.wOffset = 3;
             bb.reverse();
             assert.equal(bb.toString("debug"), "78<56 34>12*");
-            bb.reverse(0, 4).clear();
+            bb.reverse(0, 4).reset(true);
             assert.equal(bb.toString("debug"), "^12 34 56 78*");
         });
 
@@ -315,11 +293,11 @@ describe("collection", "ByteArray", () => {
             const bb2 = ByteArray.wrap("\x56\x78");
             bb.rOffset = 2;
             bb.write(bb2); // Modifies offsets of both
-            assert.equal(bb.toString("debug"), "12 34[56 78>");
+            assert.equal(bb.toString("debug"), "12 34<56 78]");
             assert.equal(bb2.toString("debug"), "56 78|");
             bb2.reset();
             bb.write(bb2, 1); // Modifies offsets of bb2 only
-            assert.equal(bb.toString("debug"), "12 56[78 78>");
+            assert.equal(bb.toString("debug"), "12 56<78 78]");
             assert.equal(bb2.toString("debug"), "56 78|");
         });
 
@@ -329,7 +307,7 @@ describe("collection", "ByteArray", () => {
                 b.writeBuffer(Buffer.from("hello"));
                 b.writeBuffer(Buffer.from(" "));
                 b.writeBuffer(Buffer.from("world"));
-                expect(b.flip().toBuffer()).to.be.deep.equal(Buffer.from("hello world"));
+                expect(b.toBuffer()).to.be.deep.equal(Buffer.from("hello world"));
             });
 
             it("should write at the given offset", () => {
@@ -338,7 +316,7 @@ describe("collection", "ByteArray", () => {
                 b.writeBuffer(Buffer.from("hello"), 0);
                 b.writeBuffer(Buffer.from(" "), 1);
                 b.writeBuffer(Buffer.from("world"), 2);
-                expect(b.flip().toBuffer()).to.be.deep.equal(Buffer.from("h world"));
+                expect(b.toBuffer()).to.be.deep.equal(Buffer.from("h world"));
             });
         });
 
@@ -374,13 +352,13 @@ describe("collection", "ByteArray", () => {
             assert.equal(bb2.toDebug(), "56 78|");
         });
 
-        it("remaining", () => {
+        it("length", () => {
             const bb = ByteArray.wrap("\x12\x34");
-            assert.strictEqual(bb.remaining(), 2);
+            assert.strictEqual(bb.length, 2);
             bb.rOffset = 2;
-            assert.strictEqual(bb.remaining(), 0);
+            assert.strictEqual(bb.length, 0);
             bb.rOffset = 3;
-            assert.strictEqual(bb.remaining(), -1);
+            assert.strictEqual(bb.length, -1);
         });
 
         it("skipRead", () => {
@@ -430,11 +408,11 @@ describe("collection", "ByteArray", () => {
             const bb = new ByteArray(2);
             // assert.strictEqual(bb.littleEndian, false);
             bb.writeInt32BE(0x12345678);
-            bb.flip();
+            bb.reset();
             assert.strictEqual(bb.toHex(), "12345678");
-            bb.clear();
+            bb.reset(true);
             bb.writeInt32LE(0x12345678);
-            bb.flip();
+            bb.reset();
             assert.strictEqual(bb.toHex(), "78563412");
         });
     });
@@ -514,15 +492,15 @@ describe("collection", "ByteArray", () => {
                     assert.strictEqual(bb.toHex(), le);
                 }
                 assert.throws(() => { // OOB
-                    bb.rOffset = bb.capacity() - size + 1;
+                    bb.rOffset = bb.capacity - size + 1;
                     bb[readLE](input);
                 });
                 assert.doesNotThrow(() => { // OOB, automatic resizing * 2
                     bb[writeLE](input);
                 });
-                assert.strictEqual(bb.capacity(), size * 2);
+                assert.strictEqual(bb.capacity, size * 2);
                 // Absolute
-                bb.clear();
+                bb.reset(true);
                 if (!varint) {
                     assert.strictEqual(bb[writeLE](input, 1), bb);
                 } else {
@@ -645,7 +623,7 @@ describe("collection", "ByteArray", () => {
                 const dec = bb.readVarint32ZigZag(0);
                 assert.equal(dec.value, values[i]);
                 assert.equal(encLen, dec.length);
-                bb.clear();
+                bb.reset(true);
             }
 
             // 64 bit ZZ
@@ -675,61 +653,42 @@ describe("collection", "ByteArray", () => {
             let str2;
             // Writing
             assert.strictEqual(bb.writeString(str), bb);
-            bb.flip();
+            bb.reset();
             // Reading
             str2 = bb.readString(ByteArray.calculateUTF8Chars(str), ByteArray.METRICS_CHARS);
             assert.strictEqual(str2.length, str.length);
             assert.strictEqual(str2, str);
             bb.reset();
-            str2 = bb.readString(bb.limit, ByteArray.METRICS_BYTES);
+            str2 = bb.readString(bb.capacity, ByteArray.METRICS_BYTES);
             assert.strictEqual(str2, str);
-        });
-
-        it.skip("istring", () => {
-            const bb = new ByteArray(2);
-            assert.strictEqual(bb.writeIString("ab"), bb); // resizes to 4+2=6
-            assert.strictEqual(bb.capacity(), 6);
-            assert.strictEqual(bb.offset, 6);
-            assert.strictEqual(bb.limit, 2);
-            bb.flip();
-            assert.equal(bb.toString("debug"), "<00 00 00 02 61 62>");
-            assert.deepEqual(bb.readIString(0), { string: "ab", length: 6 });
-            assert.strictEqual(bb.readIString(), "ab");
-            bb.reset();
-            assert.equal(bb.toString("debug"), "<00 00 00 02 61 62>");
-            assert.strictEqual(bb.readIString(), "ab");
-            assert.equal(bb.toString("debug"), "00 00 00 02 61 62|");
         });
 
         it("vstring", () => {
             const bb = new ByteArray(2);
             bb.writeVString("ab"); // resizes to 2*2=4
-            assert.strictEqual(bb.capacity(), 4);
+            assert.strictEqual(bb.capacity, 4);
             assert.strictEqual(bb.wOffset, 3);
-            assert.strictEqual(bb.limit, 2);
-            assert.equal(bb.toString("debug").substr(0, 10), "<02 61*62>");
+            assert.equal(bb.toString("debug").substr(0, 10), "<02 61 62>");
             assert.deepEqual(bb.readVString(0), { string: "ab", length: 3 });
-            assert.equal(bb.toString("debug").substr(0, 10), "<02 61*62>");
+            assert.equal(bb.toString("debug").substr(0, 10), "<02 61 62>");
             assert.equal(bb.readVString(), "ab");
-            assert.equal(bb.toString("debug").substr(0, 9), "02 61*62^");
+            assert.equal(bb.toString("debug").substr(0, 9), "02 61 62^");
         });
 
         it("cstring", () => {
             const bb = new ByteArray(2);
             bb.writeCString("a");
-            assert.equal(bb.capacity(), 2);
+            assert.equal(bb.capacity, 2);
             assert.equal(bb.wOffset, 2);
-            assert.equal(bb.limit, 2);
             bb.wOffset = 1;
             bb.writeCString("b"); // resizes to 4
-            assert.equal(bb.capacity(), 4);
+            assert.equal(bb.capacity, 4);
             assert.equal(bb.wOffset, 3);
-            assert.equal(bb.limit, 2);
-            assert.equal(bb.toString("debug").substr(0, 10), "<61 62*00>");
+            assert.equal(bb.toString("debug").substr(0, 10), "<61 62 00>");
             assert.deepEqual(bb.readCString(0), { string: "ab", length: 3 });
-            assert.equal(bb.toString("debug").substr(0, 10), "<61 62*00>");
+            assert.equal(bb.toString("debug").substr(0, 10), "<61 62 00>");
             assert.equal(bb.readCString(), "ab");
-            assert.equal(bb.toString("debug").substr(0, 9), "61 62*00^");
+            assert.equal(bb.toString("debug").substr(0, 9), "61 62 00^");
         });
     });
 
@@ -779,7 +738,7 @@ describe("collection", "ByteArray", () => {
             assert.equal(bb.toString("base64"), "YWI=");
             assert.equal(bb.toString("utf8"), "ab");
             assert.equal(bb.toString("debug").substr(0, 7), "<61 62>");
-            assert.equal(bb.toString(), "ByteArrayNB(rOffset=0,wOffset=2,limit=3,capacity=3)");
+            assert.equal(bb.toString(), "ByteArrayNB(rOffset=0,wOffset=2,capacity=3)");
             assert.strictEqual(bb.rOffset, 0);
             assert.strictEqual(bb.wOffset, 2);
         });
@@ -821,8 +780,8 @@ describe("collection", "ByteArray", () => {
             bb.writeVarint64(Long.fromString("1368057600000"));
             bb.writeVarint32(40);
             bb.writeVarint64(Long.fromString("1235455123"));
-            bb.flip();
-            assert.equal(bb.toString("debug").substr(0, 52), "<10 02 18 00 20 80 B0 D9 B4 E8 27 28 93 99 8E CD 04]");
+            bb.reset();
+            assert.equal(bb.toString("debug").substr(0, 52), "<10 02 18 00 20 80 B0 D9 B4 E8 27 28 93 99 8E CD 04>");
         });
 
         it("NaN", () => {

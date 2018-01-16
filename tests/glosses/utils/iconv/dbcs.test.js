@@ -127,7 +127,7 @@ describe("util", "iconv", "Full DBCS encoding tests", function () {
                     const iconvCannotDecodeChars = iconvCannotDecode[enc] || {};
                     const errors = [];
                     const buffer = ByteArray.wrap(await expectedFile.contents("buffer"));
-                    while (buffer.remaining() > 0) {
+                    while (buffer.length > 0) {
                         const valid = buffer.readUInt8();
                         const inpLength = buffer.readUInt8();
                         const inp = buffer.read(inpLength).toBuffer();

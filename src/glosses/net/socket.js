@@ -86,14 +86,14 @@ export default class Socket extends adone.event.EventEmitter {
                     buffer.write(x);
 
                     for (; ;) {
-                        if (buffer.remaining() <= 4) {
+                        if (buffer.length <= 4) {
                             break;
                         }
                         let packetSize = lpsz;
                         if (is.null(packetSize)) {
                             lpsz = packetSize = buffer.readUInt32BE();
                         }
-                        if (buffer.remaining() < packetSize) {
+                        if (buffer.length < packetSize) {
                             break;
                         }
 
@@ -194,7 +194,7 @@ export default class Socket extends adone.event.EventEmitter {
             if (!is.null(nodeSocket) && nodeSocket.writable) {
                 const buf = new adone.collection.ByteArray().skipWrite(4);
                 const encoded = adone.data.mpak.serializer.encode(data, buf);
-                encoded.writeUInt32BE(encoded.remaining() - 4, 0);
+                encoded.writeUInt32BE(encoded.length - 4, 0);
                 nodeSocket.write(encoded.toBuffer(), resolve);
             } else {
                 reject(new adone.x.IllegalState("Socket is not writable"));

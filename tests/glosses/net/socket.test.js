@@ -38,6 +38,7 @@ class ClientSocket extends adone.net.Socket {
             this.customHandler(socket, packet);
         };
     }
+
     defaults() {
         this.setCustomHandler(null);
     }

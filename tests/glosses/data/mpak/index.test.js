@@ -55,7 +55,7 @@ describe("data", "mpak", "Serializer", () => {
             buf = ByteArray.wrap(buf);
             const origLength = buf.length;
             assert.throws(() => serializer.decode(buf), IncompleteBufferError);
-            assert.equal(buf.length, origLength, "must not consume any byte");
+            assert.equal(buf.length, origLength - 2, "should consume two bytes");
         });
 
         it("decoding an incomplete header of 2^8-1 bytes buffer", () => {
@@ -64,7 +64,7 @@ describe("data", "mpak", "Serializer", () => {
             buf = ByteArray.wrap(buf);
             const origLength = buf.length;
             assert.throws(() => serializer.decode(buf), IncompleteBufferError);
-            assert.equal(buf.length, origLength, "must not consume any byte");
+            assert.equal(buf.length, origLength - 1, "should consume one byte");
         });
     });
 
@@ -83,7 +83,7 @@ describe("data", "mpak", "Serializer", () => {
         };
 
         const mytypeDecode = function (buf) {
-            const result = new MyType(buf.remaining(), buf.toString("utf8", 0, 1));
+            const result = new MyType(buf.length, buf.toString("utf8", 0, 1));
 
             for (let i = 0; i < buf.length; i++) {
                 if (buf.readUInt8(0) !== buf.readUInt8(i)) {
@@ -254,7 +254,7 @@ describe("data", "mpak", "Serializer", () => {
             };
 
             const mytypeDecode = function (buf) {
-                const result = new MyType(buf.remaining(), buf.toString("utf8", 0, 1));
+                const result = new MyType(buf.length, buf.toString("utf8", 0, 1));
 
                 for (let i = 0; i < buf.length; i++) {
                     if (buf.readUInt8(0) !== buf.readUInt8(i)) {
@@ -507,7 +507,7 @@ describe("data", "mpak", "Serializer", () => {
             };
 
             const mytypeDecode = function (buf) {
-                const result = new MyType(buf.remaining(), buf.toString("utf8", 0, 1));
+                const result = new MyType(buf.length, buf.toString("utf8", 0, 1));
 
                 for (let i = 0; i < buf.length; i++) {
                     if (buf.readUInt8(0) !== buf.readUInt8(i)) {
@@ -1266,7 +1266,7 @@ describe("data", "mpak", "Serializer", () => {
             const buf = serializer.encode(map);
             
             // 1 (fixmap's header 0x82) + first key's length + 1 (first array's 0xdd)
-            const sizePosOfFirstArray = 1 + serializer.encode("first").remaining() + 1;
+            const sizePosOfFirstArray = 1 + serializer.encode("first").length + 1;
             buf.writeUInt32BE(array.length + 10, sizePosOfFirstArray); // set first array's size bigger than its actual size
             assert.throws(() => serializer.decode(buf), IncompleteBufferError);
         });
@@ -1280,7 +1280,7 @@ describe("data", "mpak", "Serializer", () => {
 
             const buf = serializer.encode(map);
             // 1 (fixmap's header 0x82) + first key-value pair's length + second key's length + 1 (second array's 0xdd)
-            const sizePosOfSecondArray = 1 + serializer.encode("first").remaining() + serializer.encode(array).remaining() + serializer.encode("second").remaining() + 1;
+            const sizePosOfSecondArray = 1 + serializer.encode("first").length + serializer.encode(array).length + serializer.encode("second").length + 1;
             buf.writeUInt32BE(array.length + 10, sizePosOfSecondArray); // set second array's size bigger than its actual size
             assert.throws(() => serializer.decode(buf), IncompleteBufferError);
         });

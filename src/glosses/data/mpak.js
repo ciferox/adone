@@ -122,7 +122,7 @@ export class Encoder {
                             const extType = encTypes[i];
                             const encoded = extType.encode(x);
 
-                            const length = encoded.remaining();
+                            const length = encoded.length;
                             if (length === 1) {
                                 buf.writeUInt8(0xD4);
                             } else if (length === 2) {
@@ -229,7 +229,7 @@ export class Decoder {
     }
 
     tryDecode(buf) {
-        const bufLength = buf.remaining();
+        const bufLength = buf.length;
         if (bufLength <= 0) {
             return null;
         }
