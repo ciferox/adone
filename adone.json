@@ -39,11 +39,6 @@
                 "lib/**/*.map"
             ],
             "namespace": "adone",
-            "native": {
-                "src": "src/native",
-                "dst": "lib/native",
-                "type": "gyp"
-            },
             "struct": {
                 "dev": {
                     "namespace": "dev"
@@ -724,6 +719,17 @@
                             "task": "transpile",
                             "src": "src/glosses/system/process/**/*.js",
                             "dst": "lib/glosses/system/process"
+                        },
+                        "user": {
+                            "description": "Utilites for lookup uid and gid information",
+                            "namespace": "user",
+                            "task": "transpile",
+                            "src": "src/glosses/system/user/index.js",
+                            "dst": "lib/glosses/system/user",
+                            "native": {
+                                "src": "src/glosses/system/user/native",
+                                "dst": "lib/glosses/system/user/native"
+                            }
                         }
                     }
                 },
@@ -779,10 +785,23 @@
                 },
                 "util": {
                     "description": "Utilites",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/utils/**/*.js",
                     "dst": "lib/glosses/utils",
-                    "namespace": "util"
+                    "namespace": "util",
+                    "struct": {
+                        "memcpy": {
+                            "description": "Memory copy utilites with native performance",
+                            "namespace": "memcpy",
+                            "task": "transpile",
+                            "src": "src/glosses/utils/memcpy/index.js",
+                            "dst": "lib/glosses/utils/memcpy",
+                            "native": {
+                                "src": "src/glosses/utils/memcpy/native",
+                                "dst": "lib/glosses/utils/memcpy/native"
+                            }
+                        }
+                    }
                 },
                 "vault": {
                     "description": "Vault implementation on top of leveldb",

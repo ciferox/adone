@@ -28,8 +28,8 @@
         "src/brotli.cc",
       ],
       "include_dirs": [
-        "<(adone_root_dir)/nan",
-        "<(adone_root_dir)/src/native",
+        "<(adone_native_dir)/nan",
+        "<(adone_native_dir)/adone",
         "src/deps/include"
       ],
       "defines": ["NOMINMAX"],

@@ -12,7 +12,7 @@ export default class Editor {
             path += ext;
         }
         this.ext = ext;
-        const ed = editor || Editor.DEFAULT;
+        const ed = editor || adone.system.env.editor;
         const args = ed.split(/\s+/);
         this.bin = args.shift();
         this.args = args;
@@ -48,6 +48,4 @@ export default class Editor {
         await editor.cleanup();
         return response;
     }
-
-    static DEFAULT = process.env.VISUAL || process.env.EDITOR || (/^win/.test(process.platform) ? "notepad" : "vim");
 }

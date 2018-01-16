@@ -10,7 +10,7 @@
           }]
         ],
         "include_dirs" : [
-          "<(adone_root_dir)/nan"
+          "<(adone_native_dir)/nan"
         ],
         "conditions": [
         ["OS == 'linux'", {

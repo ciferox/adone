@@ -3,7 +3,7 @@
     {
       'target_name': 'utils',
       'include_dirs': [
-        "<(adone_root_dir)/nan"
+        "<(adone_native_dir)/nan"
       ],
       'sources': [ 'src/utils.cc' ],
       'xcode_settings': {

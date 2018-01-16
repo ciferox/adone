@@ -7,7 +7,7 @@
         , 'src/reader.cc'
       ],
       'include_dirs': [
-        "<(adone_root_dir)/nan"
+        "<(adone_native_dir)/nan"
       ],
       'dependencies': [
         'src/libhiredis/hiredis.gyp:hiredis-c'

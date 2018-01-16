@@ -4,7 +4,7 @@
       "target_name": "fuse",
         "sources": ["src/bindings.cc", "src/abstractions.cc"],
         "include_dirs": [
-          "<(adone_root_dir)/nan"
+          "<(adone_native_dir)/nan"
         ],
         "conditions": [
             ['OS!="win"', {

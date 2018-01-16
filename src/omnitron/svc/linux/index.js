@@ -32,7 +32,7 @@ export default class Service {
     constructor(config = {}) {
         this.config = Object.assign({
             mode: "sysv",
-            user: adone.util.userid.username()
+            user: adone.system.user.username()
         }, config);
 
         if (!((this.config.mode === "sysd" && (fs.existsSync("/bin/systemctl") || fs.existsSync("/usr/bin/systemctl"))) ||
@@ -94,7 +94,7 @@ export default class Service {
                 context.execPath = process.execPath;
 
                 let pathPrefix;
-                if (adone.util.userid.uid(context.user) === 0) {
+                if (adone.system.user.uid(context.user) === 0) {
                     pathPrefix = "/root";
                 } else {
                     pathPrefix = adone.std.path.join("/home", context.user);

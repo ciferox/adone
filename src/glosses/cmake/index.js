@@ -7,8 +7,5 @@ adone.lazify({
     CMake: "./cmake",
     Downloader: "./downloader",
     Toolset: "./toolset",
-    // processHelpers: "./processHelpers",
-    locateNAN: () => {
-        return adone.std.path.join(adone.rootPath, "nan");
-    }
+    // processHelpers: "./processHelpers"
 }, adone.asNamespace(exports), require);

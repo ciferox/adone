@@ -25,7 +25,7 @@
             '-std=c++11',
           ],
           'include_dirs' : [
-            "<(adone_root_dir)/nan"
+            "<(adone_native_dir)/nan"
           ],
           'conditions': [
             ['OS!="win"', {

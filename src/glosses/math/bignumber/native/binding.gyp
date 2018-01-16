@@ -4,8 +4,8 @@
       'target_name': 'bignumber',
       'sources': [ 'src/bignumber.cc' ],
       'include_dirs': [
-        "<(adone_root_dir)/nan",
-        "<(adone_root_dir)/src/native"
+        "<(adone_native_dir)/nan",
+        "<(adone_native_dir)/adone"
       ],
       'conditions': [
         # For Windows, require either a 32-bit or 64-bit

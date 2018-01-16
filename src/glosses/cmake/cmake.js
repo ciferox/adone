@@ -1,7 +1,6 @@
 const which = require("which");
 const processHelpers = require("./processHelpers");
 const npmconf = adone.promise.promisifyAll(require("npmconf"));
-import locateNAN from "./locate_nan";
 
 const {
     is,
@@ -103,10 +102,10 @@ export default class CMake {
         }
 
         // NAN
-        const nanH = await locateNAN(this.projectRoot);
-        if (nanH) {
-            incPaths.push(nanH);
-        }
+        incPaths.push(path.join(adone.rootPath, "src", "native", "nan"));
+
+        // ADONE
+        incPaths.push(path.join(adone.rootPath, "src", "native", "adone"));
 
         // Includes:
         D.push({ CMAKE_JS_INC: incPaths.join(";") });

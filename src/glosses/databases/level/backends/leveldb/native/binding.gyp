@@ -39,7 +39,7 @@
             "src/leveldb/leveldb.gyp:leveldb"
         ],
         "include_dirs": [
-          "<(adone_root_dir)/nan"
+          "<(adone_native_dir)/nan"
         ],
         "sources": [
             "src/batch.cc",

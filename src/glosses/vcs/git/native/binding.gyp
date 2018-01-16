@@ -158,7 +158,7 @@
         "src/deps/libv8-convert",
         "src/deps/libssh2/include",
         "src/deps/openssl/openssl/include",
-        "<(adone_root_dir)/nan"
+        "<(adone_native_dir)/nan"
       ],
       "cflags": [
         "-Wall"

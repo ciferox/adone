@@ -3,7 +3,7 @@
     {
       "target_name": "report",
       "sources": [ "src/report.cc", "src/module.cc", "src/utilities.cc" ],
-      "include_dirs": [ "<(adone_root_dir)/nan" ],
+      "include_dirs": [ "<(adone_native_dir)/nan" ],
       "conditions": [
         ["OS=='linux'", {
             "defines": [ "_GNU_SOURCE" ],

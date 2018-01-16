@@ -40,8 +40,8 @@
       'direct_dependent_settings': {
         'include_dirs': [
           'src/deps/hidapi',
-          "<(adone_root_dir)/nan",
-          "<(adone_root_dir)/src/native"
+          "<(adone_native_dir)/nan",
+          "<(adone_native_dir)/adone"
         ]
       },
       'include_dirs': [

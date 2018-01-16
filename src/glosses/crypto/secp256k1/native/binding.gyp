@@ -30,7 +30,7 @@
         "src/secp256k1-src/contrib",
         "src/secp256k1-src/include",
         "src/secp256k1-src/src",
-        "<(adone_root_dir)/nan"
+        "<(adone_native_dir)/nan"
       ],
       "defines": [
         "ENABLE_MODULE_RECOVERY=1"
