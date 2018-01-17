@@ -52,6 +52,14 @@ const collectNamespace = (namespaceMap, prefix) => {
 collectNamespace(metaNamespace, null);
 
 
+export const getNamespaceInfo = (nsName) => {
+    const namespace = namespaces.find((ns) => ns.name === nsName);
+    if (is.undefined(namespace)) {
+        throw new adone.x.Unknown(`Unknown namespace: ${nsName}`);
+    }
+    return namespace;
+};
+
 export const parseName = (name) => {
     let namespace = name;
     while (namespace.length > 0 && !adone.meta.nsNames.includes(namespace)) {
@@ -65,18 +73,30 @@ export const parseName = (name) => {
         objectName = name.substring(namespace.length + 1);
     }
 
+    const nsInfo = getNamespaceInfo(namespace);
+    if (nsInfo.virtual === true) {
+        namespace = namespace.substring("adone".length + 1);
+
+        const parts = objectName.split(".");
+        let i;
+        for (i = 0; i < parts.length; i++) {
+            const part = parts[i];
+            const subPath = `${namespace}.${part}`;
+            const obj = adone.vendor.lodash.get(adone, subPath);
+            if (!is.namespace(obj)) {
+                break;
+            }
+            namespace = subPath;
+        }
+
+        namespace = `adone.${namespace}`;
+        objectName = parts.slice(i).join(".");
+    }
+
     return {
         namespace,
         objectName
     };
-};
-
-export const getNamespaceInfo = (nsName) => {
-    const namespace = namespaces.find((ns) => ns.name === nsName);
-    if (is.undefined(namespace)) {
-        throw new adone.x.Unknown(`Unknown namespace: ${nsName}`);
-    }
-    return namespace;
 };
 
 export const listNamespaces = (keyword = "", { threshold = 0.3 } = {}) => {

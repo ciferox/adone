@@ -145,32 +145,76 @@ export default class Configuration extends adone.configuration.Generic {
             if (count > 1) {
                 throw new adone.x.NotAllowed("It is not allowed to expose multiple root namespaces");
             } else if (count === 1) {
-                const iterateDeep = (struct, nsTopo) => {
-                    if (!is.plainObject(struct)) {
-                        return;
-                    }
-                    const namespaces = {};
-                    for (const item of Object.values(struct)) {
-                        if (is.string(item.namespace)) {
-                            const ns = {
-                                ...adone.util.pick(item, ["index", "description"])
-                            };
+                const constructPath = (glob, index) => {
+                    let result;
+                    
+                    if (is.string(glob)) {
+                        let prefix;
+                        if (is.glob(glob)) {
+                            prefix = adone.util.globParent(glob);
+                        } else {
+                            prefix = glob;
+                        }
+                        result = std.path.join(prefix, index);
+                    } else if (is.array(glob)) {
+                        const globs = glob.filter((x) => x[0] !== "!");
+                        if (globs.length !== 1) {
+                            throw new adone.x.NotValid(`Invalid glob: ${glob}`);
+                        }
 
-                            if (is.plainObject(item.struct)) {
-                                iterateDeep(item.struct, ns);
+                        result = constructPath(globs[0], index);
+                    }
+                    
+                    return result;
+                };
+
+                const processEntry = (entry) => {
+                    const ns = {
+                        ...adone.util.pick(entry, ["author", "description", "virtual"])
+                    };
+
+                    let index = entry.index;
+                    if (is.undefined(index)) {
+                        index = "index.js";
+                    }
+
+                    let indexSrc;
+                    let indexDst;
+                    if (index.includes(":")) {
+                        //
+                    } else {
+                        indexSrc = constructPath(entry.src, index);
+                        indexDst = constructPath(entry.dst, index);
+                    }
+
+                    ns.index = {
+                        src: indexSrc,
+                        dst: indexDst
+                    };
+
+                    return ns;
+                };
+
+                const iterateDeep = (struct, nsTopo) => {
+                    if (is.plainObject(struct)) {
+                        const namespaces = {};
+                        for (const entry of Object.values(struct)) {
+                            if (is.string(entry.namespace)) {
+                                const ns = processEntry(entry);
+                                if (is.plainObject(entry.struct)) {
+                                    iterateDeep(entry.struct, ns);
+                                }
+                                namespaces[entry.namespace] = ns;
                             }
-                            namespaces[item.namespace] = ns;
+                        }
+
+                        if (Object.keys(namespaces).length > 0) {
+                            nsTopo.namespace = namespaces;
                         }
                     }
-
-                    if (Object.keys(namespaces).length > 0) {
-                        nsTopo.namespace = namespaces;
-                    }
                 };
 
-                topo[exposedNode.namespace] = {
-                    ...adone.util.pick(exposedNode, ["index", "description"])
-                };
+                topo[exposedNode.namespace] = processEntry(exposedNode);
 
                 iterateDeep(exposedNode.struct, topo[exposedNode.namespace]);
             }

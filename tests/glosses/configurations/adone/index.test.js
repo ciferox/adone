@@ -1,4 +1,5 @@
 import structs from "./fixtures/structs";
+import namespaces from "./fixtures/namespaces";
 
 const {
     is,
@@ -274,5 +275,16 @@ describe("configuration", "Adone", () => {
                 }
             ]);
         });
+    });
+
+    describe.only("#getNamespace()", () => {
+        for (const ns of namespaces) {
+            it(ns.name, () => {
+                const conf = new configuration.Adone();
+                conf.raw = ns.config;
+
+                assert.deepEqual(conf.getNamespace(), ns.expected);
+            });
+        }
     });
 });
