@@ -17,17 +17,21 @@ export default class XNamespace {
         const mapExportsToNamespace = (ns, nsModule) => Object.assign(ns.exports, adone.js.adone.Module.lazyExports(nsModule));
 
         const info = adone.meta.getNamespaceInfo(name);
+
         const ns = new XNamespace(info);
 
-        const indexPath = std.path.join(pathPrefix, adone.vendor.lodash.get(adone.js.adone.namespaceMap, info.name).index);
-        const relIndexPath = adone.std.path.normalize("/adone/src/index.js");
-        let sourceModule;
-        if (indexPath.endsWith(relIndexPath)) {
-            sourceModule = new adone.js.adone.AdoneModule({ nsName: name, indexPath });
-        } else {
-            sourceModule = new adone.js.adone.Module({ nsName: name, indexPath });
-        }
+        const indexPath = std.path.join(pathPrefix, info.index.src);
+
+        // const relIndexPath = adone.std.path.normalize("/adone/src/index.js");
+        // let sourceModule;
+        // if (indexPath.endsWith(relIndexPath)) {
+        //     sourceModule = new adone.js.adone.AdoneModule({ nsName: name, filePath });
+        // } else {
+        //     sourceModule = new adone.js.adone.Module({ nsName: name, filePath });
+        // }
+        const sourceModule = new adone.js.adone.Module({ nsName: name, filePath: indexPath });
         await sourceModule.load();
+
         ns.modules.push({
             path: indexPath,
             module: sourceModule

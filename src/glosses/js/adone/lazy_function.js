@@ -8,7 +8,7 @@ export default class XLazyFunction extends adone.js.adone.Base {
         if (!is.null(this.ast) && this.ast.id) {
             this.name = this.ast.id.name;
         } else {
-            this.name = null;            
+            this.name = null;
         }
     }
 
@@ -17,4 +17,4 @@ export default class XLazyFunction extends adone.js.adone.Base {
     }
 }
 adone.tag.define("CODEMOD_LAZYFUNCTION");
-adone.tag.set(XLazyFunction, adone.tag.CODEMOD_LAZYFUNCTION);
+adone.tag.add(XLazyFunction, "CODEMOD_LAZYFUNCTION");

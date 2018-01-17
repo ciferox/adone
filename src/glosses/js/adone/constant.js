@@ -4,4 +4,4 @@ export default class XConstant extends adone.js.adone.Base {
     }
 }
 adone.tag.define("CODEMOD_CONST");
-adone.tag.set(XConstant, adone.tag.CODEMOD_CONST);
+adone.tag.add(XConstant, "CODEMOD_CONST");

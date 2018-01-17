@@ -1,11 +1,314 @@
 const {
+    x,
     is,
     fs,
-    js: { compiler: { traverse } }
+    js: { compiler: { traverse } },
+    std: {
+        assert
+    }
 } = adone;
 
+/**
+ * The task is to collect all usages of adone from a file
+ *
+ * The strategy for bindings is to rename all of them and encapsulate into the name which adone object each of them represents
+ * For direct adone usages (adone.is.number(1)) we can just take member expressions
+ */
+class AdoneDependencyCollector {
+    constructor(dependencies = new Map()) {
+        this.dependencies = dependencies;
+    }
+
+    /**
+     * Generates a variable name to adone path
+     *
+     * Private objects are encoded with # prefix
+     * adone.database.#redis.commands means adone.private(adone.database.redis).commands
+     */
+    adonePathToId(p, scope, isPrivate) {
+        // TODO: collisions???
+        if (isPrivate) {
+            // preprend # to the last part, which means that we use the private part of p
+            const i = p.lastIndexOf(".");
+            if (i === -1) {
+                p = `#${p}`;
+            } else {
+                p = `${p.slice(0, i + 1)}#${p.slice(i + 1)}`;
+            }
+        }
+        const id = `$ADONE$${adone.data.base58.encode(Buffer.from(p))}$`;
+        const node = scope.generateUidIdentifier(id);
+        return node.name;
+    }
+
+    /**
+     * Decodes a variable name from the above function to an adone path
+     */
+    decodeAdonePath(name) {
+        let i = 0;
+        while (name[i] === "_") { // prefixed _
+            ++i;
+        }
+        if (name.slice(i, i + 7) !== "$ADONE$") {
+            return null;
+        }
+        const j = name.lastIndexOf("$");
+        const encoded = name.slice(i + 7, j);
+        return adone.data.base58.decode(encoded).toString();
+    }
+
+    /**
+     * Constructs a string from MemberExpression, also handles encoded adone vars
+     */
+    compactMemberExpression(node) {
+        if (node.object.type === "Identifier") {
+            const name = this.decodeAdonePath(node.object.name) || node.object.name;
+            if (node.computed) {
+                return {
+                    value: name,
+                    hasComputedValue: true
+                };
+            }
+            assert.equal(node.property.type, "Identifier");
+            return {
+                value: `${name}.${node.property.name}`,
+                hasComputedValue: false
+            };
+        }
+
+        if (node.object.type !== "MemberExpression") {
+            return null;
+        }
+
+        const nested = this.compactMemberExpression(node.object);
+
+        if (is.null(nested)) {
+            return null;
+        }
+
+        if (nested.hasComputedValue || node.computed) {
+            return {
+                value: nested.value,
+                hasComputedValue: true
+            };
+        }
+
+        assert.equal(node.property.type, "Identifier");
+
+        return {
+            value: `${nested.value}.${node.property.name}`,
+            hasComputedValue: false
+        };
+    }
+
+    /**
+     * Convers a node to adone path
+     * Works with identifiers and member expressions, handles encoded adone vars
+     */
+    nodeToAdonePath(node) {
+        switch (node.type) {
+            case "Identifier": {
+                const { name } = node;
+
+                if (name === "adone") {
+                    return {
+                        value: "adone",
+                        hasComputedValue: false
+                    };
+                }
+
+                // handle mapped adone identifier
+                const v = this.decodeAdonePath(name);
+
+                if (is.null(v)) {
+                    return null;
+                }
+
+                return {
+                    value: v,
+                    hasComputedValue: false
+                };
+            }
+            case "MemberExpression": {
+                const v = this.compactMemberExpression(node);
+                if (is.null(v)) {
+                    return null;
+                }
+                if (v.value.startsWith("adone")) {
+                    return {
+                        value: v.value,
+                        hasComputedValue: v.hasComputedValue
+                    };
+                }
+                return null;
+            }
+            default:
+                return null;
+        }
+    }
+
+    collectValuesFromObjectPattern(node, prefix, vals = []) {
+        for (const prop of node.properties) {
+            const { value, key } = prop;
+
+            if (prop.computed) {
+                throw new x.IllegalState("Expected object pattern not to have computed values");
+            }
+
+            if (key.type !== "Identifier") {
+                throw new x.IllegalState(`Expected object pattern key type to be Identifier but got: ${key.type}`);
+            }
+
+            const p = `${prefix}.${key.name}`;
+
+            switch (value.type) {
+                case "Identifier": {
+                    /**
+                     * const { is } = adone;
+                     * const { is: is2 } = adone.smth;
+                     */
+                    vals.push({
+                        path: p,
+                        binding: value.name
+                    });
+                    break;
+                }
+                case "ObjectPattern": {
+                    /**
+                     * const { a: { b } } = adone;
+                     */
+                    this.collectValuesFromObjectPattern(value, p, vals);
+                }
+                // TODO: ArrayPattern ???
+            }
+        }
+        return vals;
+    }
+
+    /**
+     * Adds a new dependency to the map
+     */
+    mergeDep(p) {
+        if (!this.dependencies.has(p.value)) {
+            this.dependencies.set(p.value, {
+                hasComputedValue: p.hasComputedValue
+            });
+        } else if (p.hasComputedValue) {
+            this.dependencies.get(p.value).hasComputedValue = true;
+        }
+    }
+
+    handle(ast) {
+        // have to clone the ast beacuse we are going to modify it..
+        ast = adone.util.clone(ast, { nonPlainObjects: true });
+        // rename all adone bindings to track them easely
+        adone.js.compiler.traverse(ast, {
+            VariableDeclarator: (path) => {
+                const { node } = path;
+
+                if (is.null(node.init)) {
+                    return;
+                }
+
+                const p = this.nodeToAdonePath(node.init);
+
+                if (is.null(p)) {
+                    return;
+                }
+
+                if (p.hasComputedValue) {
+                    // throw new x.IllegalState("Expected adone vars not to have computed properties");
+                }
+
+                switch (node.id.type) {
+                    case "Identifier": {
+                        /**
+                         * 1. Simple case like
+                         *
+                         * const is = adone.is;
+                         */
+                        path.scope.rename(node.id.name, this.adonePathToId(p.value, path.scope));
+                        break;
+                    }
+                    case "ObjectPattern": {
+                        /**
+                         * 2. More complex case
+                         *
+                         * const { is } = adone;
+                         * const { http } = adone.net;
+                         * const { net: { http, ws: _ws } } = adone;
+                         */
+                        const vals = this.collectValuesFromObjectPattern(node.id, p.value);
+                        for (const val of vals) {
+                            path.scope.rename(val.binding, this.adonePathToId(val.path, path.scope));
+                        }
+                    }
+                }
+                path.skip();
+            }
+        });
+
+        // handle private bindings
+        // after all renamings
+        adone.js.compiler.traverse(ast, {
+            VariableDeclarator: (path) => {
+                const { node } = path;
+
+                if (is.null(node.init)) {
+                    return;
+                }
+
+                // adone.private call
+                if (node.init.type !== "CallExpression") {
+                    return;
+                }
+                const p = this.nodeToAdonePath(node.init.callee);
+                if (is.null(p)) {
+                    return;
+                }
+                switch (p.value) {
+                    case "adone.private": {
+                        const target = this.nodeToAdonePath(node.init.arguments[0]);
+                        if (is.null(target)) {
+                            return; // wtf?
+                        }
+                        path.scope.rename(node.id.name, this.adonePathToId(target.value, path.scope, true));
+                        break;
+                    }
+                }
+            }
+        });
+
+        // then collect identifiers with member expressions
+
+        const collect = (path) => {
+            const { node } = path;
+            const p = this.nodeToAdonePath(node);
+            path.skip();
+            if (is.null(p)) {
+                return;
+            }
+
+            // TODO: bad things happen when some namespace is returned from a function
+            // const f = () => adone.is;
+            // here we lose tracking
+            // we have to avoid such things in the source code
+            this.mergeDep(p);
+        };
+
+        adone.js.compiler.traverse(ast, {
+            Identifier: collect,
+            MemberExpression: collect
+        });
+    }
+}
+
 export default class XModule extends adone.js.adone.Base {
-    constructor({ nsName = "global", code = null, filePath = "index.js" } = {}) {
+    constructor({
+        nsName = "global",
+        code = null,
+        filePath = "index.js"
+    } = {}) {
         super({ code, type: "module" });
         this.nsName = nsName;
         this.xModule = this;
@@ -31,26 +334,118 @@ export default class XModule extends adone.js.adone.Base {
     }
 
     async load() {
-        this.code = await fs.readFile(this.filePath, { check: true, encoding: "utf8" });
+        try {
+            this.code = await fs.readFile(this.filePath, { check: true, encoding: "utf8" });
+        } catch (err) {
+            throw new x.IllegalState(`Could not load the module: ${err.message}`);
+        }
         this.init();
 
         const lazies = [];
+        const imports = [];
+        const basePath = adone.std.path.dirname(this.filePath);
+
+
+        traverse(this.ast, {
+            ImportDeclaration(path) {
+                const { node } = path;
+                imports.push({
+                    path: adone.std.path.join(basePath, node.source.value),
+                    names: node.specifiers.map((x) => {
+                        if (x.type === "ImportDefaultSpecifier") {
+                            return {
+                                local: x.local.name,
+                                isDefault: true
+                            };
+                        }
+                        if (x.type === "ImportNamespaceSpecifier") {
+                            return {
+                                local: x.local.name,
+                                isNamespace: true
+                            };
+                        }
+                        return {
+                            imported: x.imported.name,
+                            local: x.local.name
+                        };
+                    })
+                });
+            }
+        });
+
+        for (const { names, path } of imports) {
+            const filePath = await fs.lookup(path);
+            const importedModule = new adone.js.adone.Module({ nsName: this.nsName, filePath });
+            await importedModule.load();
+
+            const exports = importedModule.exports();
+            for (const name of names) {
+                if (name.isNamespace) {
+                    continue;
+                }
+                const obj = name.isDefault ? exports.default : exports[name.imported];
+                // here we have to clone obj or decorate it somehow
+                // TODO: better impl
+                this.addToScope(new Proxy(obj, {
+                    get(target, key) {
+                        if (key === "name") {
+                            return name.exported;
+                        }
+                        return target[key];
+                    }
+                }));
+                // this._addGlobal(name, null, node.kind, false);
+            }
+        }
 
         traverse(this.ast, {
             enter: (path) => {
                 const nodeType = path.node.type;
                 if (nodeType === "Program") {
                     return;
-                } else if (nodeType === "ExpressionStatement" && this._isLazifier(path.node.expression)) {
+                } else if (
+                    (
+                        nodeType === "ExpressionStatement"
+                        && this._isLazifier(path.node.expression))
+                    || (
+                        nodeType === "VariableDeclaration"
+                        && this._isLazifier(path.node.declarations[0].init)
+                    )
+                ) {
                     // Process adone lazyfier
-                    const callExpr = path.node.expression;
-                    const targetInfo = adone.js.adone.nodeInfo(callExpr.arguments[1]);
-                    if (adone.js.adone.nodeInfo(callExpr.arguments[0]) === "ObjectExpression" &&
-                        targetInfo.startsWith("Identifier:") &&
-                        adone.js.adone.nodeInfo(callExpr.arguments[2]) === "Identifier:require") {
+                    const callExpr = nodeType === "ExpressionStatement"
+                        ? path.node.expression
+                        : path.node.declarations[0].init;
+
+                    let targetInfo = adone.js.adone.nodeInfo(callExpr.arguments[1]);
+
+                    if (targetInfo === "CallExpression") {
+                        // adone.lazify({}, adone.asNamespace(exports), require);
+                        const {
+                            callee: target,
+                            arguments: args
+                        } = callExpr.arguments[1];
+                        if (
+                            target.type === "MemberExpression"
+                            && target.object.type === "Identifier"
+                            && target.property.type === "Identifier"
+                            && args.length === 1
+                            && args[0].type === "Identifier"
+                            && target.object.name === "adone"
+                            && target.property.name === "asNamespace"
+                            && args[0].name === "exports"
+                        ) {
+                            // TODO: it can be done better
+                            targetInfo = "Identifier:exports"; // just reassign
+                        }
+                    }
+                    if (
+                        adone.js.adone.nodeInfo(callExpr.arguments[0]) === "ObjectExpression"
+                        && targetInfo.startsWith("Identifier:")
+                        && adone.js.adone.nodeInfo(callExpr.arguments[2]) === "Identifier:require"
+                    ) {
 
                         const props = callExpr.arguments[0].properties;
-                        const basePath = adone.std.path.dirname(this.filePath);
 
                         if (targetInfo === "Identifier:exports") {
                             for (const prop of props) {
@@ -62,26 +457,31 @@ export default class XModule extends adone.js.adone.Base {
                                         lazies.push({ name: objectName, path: adone.std.path.join(basePath, prop.value.value) });
                                     } else if (prop.value.type === "ArrowFunctionExpression") {
                                         const lazyPath = this.getPathFor(path, prop.value);
-                                        this.lazies.set(objectName, new adone.js.adone.LazyFunction({ parent: this, ast: prop.value, path: lazyPath, xModule: this }));
+                                        this.lazies.set(objectName, new adone.js.adone.LazyFunction({
+                                            parent: this,
+                                            ast: prop.value,
+                                            path: lazyPath,
+                                            xModule: this
+                                        }));
                                     }
                                 }
                             }
                         } else {
                             const xObj = this.lookupInGlobalScope(targetInfo.split(":")[1]);
-                            if (!adone.js.adone.is.object(xObj.value)) {
-                                throw new adone.x.NotValid(`Not valid attempt to lazify non-object: ${xObj.value.ast.type}`);
-                            }
-
-                            for (const prop of props) {
-                                const name = prop.key.name;
-                                if (prop.value.type === "StringLiteral") {
-                                    throw new adone.x.NotImplemented("Not implemented yet");
-                                    // lazies.push({ name: objectName, path: adone.std.path.join(basePath, prop.value.value) });
-                                } else if (prop.value.type === "ArrowFunctionExpression") {
-                                    const lazyPath = this.getPathFor(path, prop.value);
-                                    xObj.value.set(name, new adone.js.adone.LazyFunction({ parent: this, ast: prop.value, path: lazyPath, xModule: this }));
+                            if (adone.js.adone.is.object(xObj)) {
+                                for (const prop of props) {
+                                    const name = prop.key.name;
+                                    if (prop.value.type === "StringLiteral") {
+                                        throw new adone.x.NotImplemented("Not implemented yet");
+                                        // lazies.push({ name: objectName, path: adone.std.path.join(basePath, prop.value.value) });
+                                    } else if (prop.value.type === "ArrowFunctionExpression") {
+                                        const lazyPath = this.getPathFor(path, prop.value);
+                                        xObj.value.set(name, new adone.js.adone.LazyFunction({ parent: this, ast: prop.value, path: lazyPath, xModule: this }));
+                                    }
                                 }
                             }
+                            // TODO
+                            // throw new adone.x.NotValid(`Not valid attempt to lazify non-object: ${xObj.ast.type}`);
                         }
                         path.skip();
                         return;
@@ -103,12 +503,24 @@ export default class XModule extends adone.js.adone.Base {
                                 xObj = this.lookupInGlobalScope(specifier.local.name);
                                 if (is.null(xObj)) {
                                     throw new adone.x.NotFound(`Variable '${specifier.local.name}' not found in global scope`);
-                                } else if (specifier.local.name !== specifier.exported.name) {
-                                    throw new adone.x.NotValid("Local name of export-specifier should be same as exported name");
-                                } else {
-                                    // Is should always be VariableDeclarator
-                                    this._addExport(xObj.value, isDefault, xObj.ast);
                                 }
+                                if (specifier.local.name !== specifier.exported.name) {
+                                    switch (specifier.exported.name) {
+                                        // we cannot use reserved words as a variable name
+                                        // we use "export { null_ as null }" for example
+                                        case "null":
+                                        case "undefined":
+                                        case "function":
+                                        case "class":
+                                        case "finally":
+                                            break;
+                                        default:
+                                            throw new adone.x.NotValid(`Local name of export-specifier should be same as exported name: "${specifier.local.name}" != ${specifier.exported.name}`);
+                                    }
+                                }
+                                // It should always be VariableDeclarator (ClassDeclarations???)
+                                // assert.equal(xObj.ast.type, "VariableDeclarator");
+                                this._addExport(xObj.value, false, xObj.ast, specifier.exported.name);
                             }
                         } else {
                             let subPath;
@@ -162,6 +574,7 @@ export default class XModule extends adone.js.adone.Base {
                 };
 
                 const realPath = expandDeclaration(path);
+
                 if (!shouldSkip) {
                     const node = realPath.node;
 
@@ -174,17 +587,20 @@ export default class XModule extends adone.js.adone.Base {
                         if (nodeType === "VariableDeclaration") {
                             xObjData.kind = path.node.kind;
                         }
-
                         xObj = this.createXObject(xObjData);
-                        // Add to scope only declarations. 
+                        // Add to scope only declarations.
                         if (node.type !== "Identifier") {
-                            if (node.type.endsWith("Declarator") || ["VariableDeclaration", "ClassDeclaration", "FunctionDeclaration"].includes(node.type)) {
+                            if (
+                                node.type.endsWith("Declarator")
+                                || ["VariableDeclaration", "ClassDeclaration", "FunctionDeclaration"].includes(node.type)
+                            ) {
                                 this.addToScope(xObj);
                             }
                         }
                     }
-
                     if (!is.undefined(isDefault)) {
+                        // export default adone.asNamespace(identifier);
+                        // TODO
                         this._addExport(xObj, isDefault, node);
                     }
                 }
@@ -231,6 +647,46 @@ export default class XModule extends adone.js.adone.Base {
 
     numberOfExports() {
         return Object.keys(this.exports()).length;
+    }
+
+    /**
+     * Populates the collector with self ast
+     */
+    _getSelfAdoneDependencies(collector) {
+        collector.handle(this.ast);
+    }
+
+    /**
+     * Returns a map of adone dependencies related only to this file
+     */
+    getSelfAdoneDependencies() {
+        // TODO: do not return self in deps??
+        const collector = new AdoneDependencyCollector();
+        this._getSelfAdoneDependencies(collector);
+        return collector.dependencies;
+    }
+
+    /**
+     * Populates the collector with self and lazy/imported/required ast
+     */
+    _getAdoneDependencies(collector) {
+        this._getSelfAdoneDependencies(collector);
+        for (const v of this.lazies.values()) {
+            if (v.getType() !== "Module") {
+                continue;
+            }
+            v._getAdoneDependencies(collector);
+        }
+    }
+
+    /**
+     * Returna a map of adone dependencies related to this file and all the lazy loaded/required/imported modules
+     */
+    getAdoneDependencies() {
+        // TODO: do not return self in deps??
+        const collector = new AdoneDependencyCollector();
+        this._getAdoneDependencies(collector);
+        return collector.dependencies;
     }
 
     lookupInExportsByDeclaration(name) {
@@ -349,28 +805,39 @@ export default class XModule extends adone.js.adone.Base {
         }
     }
 
-    _addExport(xObj, isDefault, node) {
+    _addExport(xObj, isDefault, node, exportedName) {
         node = node || xObj.ast;
-        switch (node.type) {
-            case "ClassDeclaration": {
-                if (is.null(node.id)) {
-                    throw new adone.x.NotValid("Anonymous class");
+        let name;
+        if (!isDefault) {
+            switch (node.type) {
+                case "ClassDeclaration": {
+                    if (is.null(node.id)) {
+                        throw new adone.x.NotValid("Anonymous class");
+                    }
+                    name = node.id.name;
+                    break;
                 }
-                this._exports[isDefault ? "default" : node.id.name] = xObj;
-                break;
+                case "FunctionDeclaration":
+                case "VariableDeclarator": {
+                    name = xObj.name;
+                    break;
+                }
+                case "Identifier": {
+                    name = node.name;
+                    break;
+                }
+                default:
+                    throw new adone.x.NotSupported(`Unsupported export type: ${node.type}`);
             }
-            case "FunctionDeclaration":
-            case "VariableDeclarator": {
-                this._exports[isDefault ? "default" : xObj.name] = xObj;
-                break;
+            if (exportedName) {
+                // export { a as null }
+                name = exportedName;
             }
-            case "Identifier": {
-                this._exports[isDefault ? "default" : node.name] = xObj;
-                break;
-            }
-            default:
-                throw new adone.x.NotSupported(`Unsupported export type: ${node.type}`);
+        } else {
+            name = "default";
         }
+
+        this._exports[name] = xObj;
     }
 
     static lazyExports(xModule) {
@@ -393,4 +860,4 @@ export default class XModule extends adone.js.adone.Base {
     }
 }
 adone.tag.define("CODEMOD_MODULE");
-adone.tag.set(XModule, adone.tag.CODEMOD_MODULE);
+adone.tag.add(XModule, "CODEMOD_MODULE");

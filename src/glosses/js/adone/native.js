@@ -11,4 +11,4 @@ export default class XNative extends adone.js.adone.Base {
     }
 }
 adone.tag.define("CODEMOD_NATIVE");
-adone.tag.set(XNative, adone.tag.CODEMOD_NATIVE);
+adone.tag.add(XNative, "CODEMOD_NATIVE");

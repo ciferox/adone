@@ -9,4 +9,4 @@ export default class XObjectProperty extends adone.js.adone.Base {
     }
 }
 adone.tag.define("CODEMOD_OBJECT_PROPERTY");
-adone.tag.set(XObjectProperty, adone.tag.CODEMOD_OBJECT_PROPERTY);
+adone.tag.add(XObjectProperty, "CODEMOD_OBJECT_PROPERTY");

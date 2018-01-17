@@ -4,4 +4,4 @@ export default class XArrowFunction extends adone.js.adone.Base {
     }
 }
 adone.tag.define("CODEMOD_ARROWFUNCTION");
-adone.tag.set(XArrowFunction, adone.tag.CODEMOD_ARROWFUNCTION);
+adone.tag.add(XArrowFunction, "CODEMOD_ARROWFUNCTION");

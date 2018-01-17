@@ -5,7 +5,7 @@ const {
 
 export class Inspector {
     constructor() {
-        this.path = std.path.join(adone.rootPath, "src");
+        this.path = adone.rootPath;
         this.namespaces = new Map();
     }
 
@@ -81,16 +81,16 @@ adone.lazify({
     },
     is: () => ({
         functionLike: (x) => (adone.js.adone.is.function(x) || adone.js.adone.is.arrowFunction(x) || adone.js.adone.is.class(x)),
-        module: (x) => adone.tag.has(x, adone.tag.CODEMOD_MODULE),
-        class: (x) => adone.tag.has(x, adone.tag.CODEMOD_CLASS),
-        variable: (x) => adone.tag.has(x, adone.tag.CODEMOD_VAR),
-        function: (x) => adone.tag.has(x, adone.tag.CODEMOD_FUNCTION),
-        arrowFunction: (x) => adone.tag.has(x, adone.tag.CODEMOD_ARROWFUNCTION),
-        lazyFunction: (x) => adone.tag.has(x, adone.tag.CODEMOD_LAZYFUNCTION),
-        object: (x) => adone.tag.has(x, adone.tag.CODEMOD_OBJECT),
-        expression: (x) => adone.tag.has(x, adone.tag.CODEMOD_EXPRESSION),
-        constant: (x) => adone.tag.has(x, adone.tag.CODEMOD_CONST),
-        statement: (x) => adone.tag.has(x, adone.tag.CODEMOD_STATEMENT),
-        native: (x) => adone.tag.has(x, adone.tag.CODEMOD_NATIVE)
+        module: (x) => adone.tag.has(x, "CODEMOD_MODULE"),
+        class: (x) => adone.tag.has(x, "CODEMOD_CLASS"),
+        variable: (x) => adone.tag.has(x, "CODEMOD_VAR"),
+        function: (x) => adone.tag.has(x, "CODEMOD_FUNCTION"),
+        arrowFunction: (x) => adone.tag.has(x, "CODEMOD_ARROWFUNCTION"),
+        lazyFunction: (x) => adone.tag.has(x, "CODEMOD_LAZYFUNCTION"),
+        object: (x) => adone.tag.has(x, "CODEMOD_OBJECT"),
+        expression: (x) => adone.tag.has(x, "CODEMOD_EXPRESSION"),
+        constant: (x) => adone.tag.has(x, "CODEMOD_CONST"),
+        statement: (x) => adone.tag.has(x, "CODEMOD_STATEMENT"),
+        native: (x) => adone.tag.has(x, "CODEMOD_NATIVE")
     })
 }, exports, require);

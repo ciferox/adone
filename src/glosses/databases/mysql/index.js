@@ -4,9 +4,7 @@ const mysql = lazify({
     c: "./constants",
     auth: "./auth",
     Connection: "./connection",
-    PromiseConnection: "./promise_connection",
     Pool: "./pool",
-    PromisePool: "./promise_pool",
     PoolCluster: "./pool_cluster",
     Server: "./server",
     enableCompression: "./compressed_protocol"

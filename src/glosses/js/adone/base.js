@@ -6,10 +6,17 @@ const {
 const jsNatives = ["Error", "EvalError", "RangeError", "ReferenceError", "SyntaxError", "TypeError", "URIError"];
 
 export default class XBase {
-    constructor({ xModule = null, parent = null, code = null, ast = null, path = null, type = "script" } = {}) {
-        if (is.nil(xModule) && !adone.js.adone.is.module(this)) {
-            throw new adone.x.NotValid("XModule cannot be null");
-        }
+    constructor({
+        xModule = this, // ??
+        parent = null,
+        code = null,
+        ast = null,
+        path = null,
+        type = "script"
+    } = {}) {
+        // if (is.nil(xModule) && !adone.js.adone.is.module(this)) {
+        //     throw new adone.x.NotValid("XModule cannot be null");
+        // }
         this.xModule = xModule;
         this.parent = parent;
         this.code = code;
@@ -143,6 +150,7 @@ export default class XBase {
             case "ConditionalExpression":
             case "CallExpression":
             case "LogicalExpression":
+            case "UnaryExpression":
             case "UpdateExpression": xObj = new adone.js.adone.Expression({ parent, ast, path, xModule }); break;
             case "StringLiteral":
             case "NumericLiteral":
@@ -194,6 +202,7 @@ export default class XBase {
                 }
                 break;
             }
+            case "ImportDeclaration": xObj = new adone.js.adone.ImportDeclaration({ parent, ast, path, xModule }); break;
             default:
                 throw new adone.x.Unknown(`Unknown type: ${ast.type}`);
         }

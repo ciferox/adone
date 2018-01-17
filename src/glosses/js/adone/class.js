@@ -29,7 +29,7 @@ export default class XClass extends adone.js.adone.Base {
                 }
             }
         } else {
-            this.name = null;            
+            this.name = null;
         }
     }
 
@@ -46,4 +46,4 @@ export default class XClass extends adone.js.adone.Base {
     }
 }
 adone.tag.define("CODEMOD_CLASS");
-adone.tag.set(XClass, adone.tag.CODEMOD_CLASS);
+adone.tag.add(XClass, "CODEMOD_CLASS");

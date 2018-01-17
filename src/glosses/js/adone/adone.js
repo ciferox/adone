@@ -4,4 +4,4 @@ export default class XAdone extends adone.js.adone.Base {
     }
 }
 adone.tag.define("CODEMOD_ADONE");
-adone.tag.set(XAdone, adone.tag.CODEMOD_ADONE);
+adone.tag.add(XAdone, "CODEMOD_ADONE");

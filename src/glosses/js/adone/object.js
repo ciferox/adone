@@ -5,6 +5,11 @@ export default class XObject extends adone.js.adone.Base {
         this._entries = new Map();
 
         for (const prop of this.ast.properties) {
+            // TODO: how to handle spread?
+            // { ...adone.std.fs.constants, hello: "world" }
+            if (prop.type === "SpreadElement") {
+                continue;
+            }
             this.set(prop.key.name, this.createXObject({ ast: prop, xModule: this.xModule }));
         }
     }
@@ -30,4 +35,4 @@ export default class XObject extends adone.js.adone.Base {
     }
 }
 adone.tag.define("CODEMOD_OBJECT");
-adone.tag.set(XObject, adone.tag.CODEMOD_OBJECT);
+adone.tag.add(XObject, "CODEMOD_OBJECT");
