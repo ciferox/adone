@@ -40,8 +40,17 @@
             ],
             "namespace": "adone",
             "struct": {
+                "global": {
+                    "namespace": "global",
+                    "virtual": true
+                },
+                "std": {
+                    "namespace": "std",
+                    "virtual": true
+                },
                 "dev": {
-                    "namespace": "dev"
+                    "namespace": "dev",
+                    "virtual": true
                 },
                 "cli": {
                     "description": "Adone CLI stuff",
@@ -536,6 +545,12 @@
                             "src": "src/glosses/multi/address/**/*.js",
                             "dst": "lib/glosses/multi/address",
                             "namespace": "address"
+                        },
+                        "addr": {
+                            "description": "Multi address format implementation",
+                            "src": "src/glosses/multi/addr/**/*.js",
+                            "dst": "lib/glosses/multi/addr",
+                            "namespace": "addr"
                         },
                         "base": {
                             "description": "Multibase implementation",

@@ -3,79 +3,15 @@ const series = require("async/series");
 const wrtc = require("wrtc");
 const waterfall = require("async/waterfall");
 
+import TestNode from "./node";
+
 const {
     is,
     multi,
     stream: { pull },
-    netron2: { rendezvous, CID, circuit: { Circuit }, Node, secio, multiplex, MulticastDNS, PeerInfo, PeerId, spdy, dht: { KadDHT }, Railing, transport: { TCP, WS, WebRTCStar, WSStar } },
+    netron2: { rendezvous, CID, circuit: { Circuit }, PeerInfo, PeerId, transport: { WebRTCStar, WSStar } },
     vendor: { lodash: { times: _times } }
 } = adone;
-
-const mapMuxers = function (list) {
-    return list.map((pref) => {
-        if (!is.string(pref)) {
-            return pref;
-        }
-        switch (pref.trim().toLowerCase()) {
-            case "spdy": return spdy;
-            case "multiplex": return multiplex;
-            default:
-                throw new Error(`${pref} muxer not available`);
-        }
-    });
-};
-
-const getMuxers = function (muxers) {
-    const muxerPrefs = process.env.LIBP2P_MUXER;
-    if (muxerPrefs && !muxers) {
-        return mapMuxers(muxerPrefs.split(","));
-    } else if (muxers) {
-        return mapMuxers(muxers);
-    }
-    return [multiplex, spdy];
-};
-
-class TestNode extends Node {
-    constructor(peerInfo, peerBook, options) {
-        options = options || {};
-
-        const modules = {
-            transport: [
-                new TCP(),
-                new WS()
-            ],
-            connection: {
-                muxer: getMuxers(options.muxer),
-                crypto: [secio]
-            },
-            discovery: []
-        };
-
-        if (options.dht) {
-            modules.DHT = KadDHT;
-        }
-
-        if (options.mdns) {
-            const mdns = new MulticastDNS(peerInfo, "ipfs.local");
-            modules.discovery.push(mdns);
-        }
-
-        if (options.bootstrap) {
-            const r = new Railing(options.bootstrap);
-            modules.discovery.push(r);
-        }
-
-        if (options.modules && options.modules.transport) {
-            options.modules.transport.forEach((t) => modules.transport.push(t));
-        }
-
-        if (options.modules && options.modules.discovery) {
-            options.modules.discovery.forEach((d) => modules.discovery.push(d));
-        }
-
-        super(modules, peerInfo, peerBook, options);
-    }
-}
 
 const createNode = function (multiaddrs, options) {
     options = options || {};
@@ -609,11 +545,11 @@ describe("netron2", () => {
                         const wstar = new WSStar();
                         nodeAll = createNode(["/ip4/0.0.0.0/tcp/0", "/ip4/127.0.0.1/tcp/25011/ws", "/ip4/127.0.0.1/tcp/24642/ws/p2p-websocket-star"
                         ], {
-                                modules: {
-                                    transport: [wstar],
-                                    discovery: [wstar.discovery]
-                                }
-                            });
+                            modules: {
+                                transport: [wstar],
+                                discovery: [wstar.discovery]
+                            }
+                        });
                         wstar.lazySetId(nodeAll.peerInfo.id);
                         nodeAll.handle("/echo/1.0.0", echo);
                         nodeAll.start(cb);
@@ -1187,79 +1123,79 @@ describe("netron2", () => {
                     "/ip4/0.0.0.0/tcp/0/ws",
                     "/ip4/0.0.0.0/tcp/0"
                 ], {
-                        relay: {
+                    relay: {
+                        enabled: true,
+                        hop: {
                             enabled: true,
-                            hop: {
-                                enabled: true,
-                                active: false // passive relay
-                            }
+                            active: false // passive relay
                         }
-                    }, (node) => {
-                        relayNode1 = node;
-                        cb();
-                    }),
+                    }
+                }, (node) => {
+                    relayNode1 = node;
+                    cb();
+                }),
                 // setup active relay
                 (cb) => setupNode([
                     "/ip4/0.0.0.0/tcp/0/ws",
                     "/ip4/0.0.0.0/tcp/0"
                 ], {
-                        relay: {
+                    relay: {
+                        enabled: true,
+                        hop: {
                             enabled: true,
-                            hop: {
-                                enabled: true,
-                                active: false // passive relay
-                            }
+                            active: false // passive relay
                         }
-                    }, (node) => {
-                        relayNode2 = node;
-                        cb();
-                    }),
+                    }
+                }, (node) => {
+                    relayNode2 = node;
+                    cb();
+                }),
                 // setup node with WS
                 (cb) => setupNode([
                     "/ip4/0.0.0.0/tcp/0/ws"
                 ], {
-                        relay: {
-                            enabled: true
-                        }
-                    }, (node) => {
-                        nodeWS1 = node;
-                        cb();
-                    }),
+                    relay: {
+                        enabled: true
+                    }
+                }, (node) => {
+                    nodeWS1 = node;
+                    cb();
+                }),
                 // setup node with WS
                 (cb) => setupNode([
                     "/ip4/0.0.0.0/tcp/0/ws"
                 ], {
-                        relay: {
-                            enabled: true
-                        }
-                    }, (node) => {
-                        nodeWS2 = node;
-                        cb();
-                    }),
+                    relay: {
+                        enabled: true
+                    }
+                }, (node) => {
+                    nodeWS2 = node;
+                    cb();
+                }),
                 // set up node with TCP and listening on relay1
                 (cb) => setupNode([
                     "/ip4/0.0.0.0/tcp/0",
                     `/ipfs/${relayNode1.peerInfo.id.toB58String()}/p2p-circuit`
                 ], {
-                        relay: {
-                            enabled: true
-                        }
-                    }, (node) => {
-                        nodeTCP1 = node;
-                        cb();
-                    }),
+                    relay: {
+                        enabled: true
+                    }
+                }, (node) => {
+                    nodeTCP1 = node;
+                    cb();
+                }),
                 // set up node with TCP and listening on relay2 over TCP transport
                 (cb) => setupNode([
                     "/ip4/0.0.0.0/tcp/0",
                     `/ip4/0.0.0.0/tcp/0/ipfs/${relayNode2.peerInfo.id.toB58String()}/p2p-circuit`
                 ], {
-                        relay: {
-                            enabled: true
-                        }
-                    }, (node) => {
-                        nodeTCP2 = node;
-                        cb();
-                    })
+                    relay: {
+                        enabled: true
+                    }
+                }, (node) => {
+                    nodeTCP2 = node;
+                    cb();
+                })
             ], (err) => {
                 assert.notExists(err);
 

@@ -338,7 +338,7 @@ describe("netron2", "trasnport", "ws", () => {
     describe("valid Connection", () => {
         const ma = multi.address.create("/ip4/127.0.0.1/tcp/9092/ws");
 
-        it("get observed addrs", (done) => {
+        it.todo("get observed addrs", (done) => {
             let dialerObsAddrs;
             let listenerObsAddrs;
 
@@ -366,7 +366,7 @@ describe("netron2", "trasnport", "ws", () => {
                         const onClose = function () {
                             expect(listenerObsAddrs[0]).to.deep.equal(ma);
                             expect(dialerObsAddrs.length).to.equal(0);
-                            done();
+                            done();                            
                         };
 
                         listener.close(onClose);

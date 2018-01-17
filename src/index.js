@@ -279,6 +279,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             net: "net",
             http: "http",
             https: "https",
+            http2: "http2",
             child_process: "child_process", // eslint-disable-line
             os: "os",
             cluster: "cluster",

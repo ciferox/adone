@@ -122,7 +122,7 @@ const base = function (n) {
 export const DNS4 = base("dns4");
 export const DNS6 = base("dns6");
 export const _DNS = or(
-    base("dnsaddr"),
+    base("dns"),
     DNS4,
     DNS6
 );
