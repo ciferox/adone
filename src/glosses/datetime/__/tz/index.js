@@ -464,7 +464,7 @@ export const needsOffset = (m) => {
 };
 
 export const reload = () => {
-    loadData(require(adone.std.path.join(adone.etcPath, "glosses", "datetime", "tz", "latest.json")));
+    loadData(require("./latest.json"));
 };
 
 reload();

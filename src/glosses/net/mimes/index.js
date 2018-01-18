@@ -1,6 +1,10 @@
-const { is, std: { path: { extname } }, util } = adone;
+const {
+    is,
+    std: { path: { extname } },
+    util
+} = adone;
 
-const db = new Map(util.entries(adone.loadAsset("glosses/net/mimes.json")));
+const db = new Map(util.entries(require("./db.json")));
 
 const EXTRACT_TYPE_REGEXP = /^\s*([^;\s]*)(?:;|\s|$)/;
 const TEXT_TYPE_REGEXP = /^text\//i;

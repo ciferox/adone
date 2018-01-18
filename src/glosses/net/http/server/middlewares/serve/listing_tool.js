@@ -5,16 +5,7 @@ const {
     collection, util, fs, identity
 } = adone;
 
-const iconsPath = resolve(
-    adone.etcPath,
-    "glosses",
-    "net",
-    "http",
-    "server",
-    "middlewares",
-    "serve",
-    "icons"
-);
+const iconsPath = resolve(__dirname, "icons");
 const iconsMap = new Map([
     // base icons
     ["default", "page_white"],
@@ -293,7 +284,7 @@ export default class ListingTool {
                 path: `${crumb.slice(0, i + 1).join("/")}/`
             };
         });
-        crumb.shift();  // empty value
+        crumb.shift(); // empty value
         if (crumb.length === 0 || crumb[0].path !== "/") {
             crumb.unshift({ value: "~", path: "/" });
         }

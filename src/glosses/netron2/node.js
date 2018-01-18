@@ -132,7 +132,7 @@ export default class Node extends EventEmitter {
         };
     }
 
-    /*
+    /**
      * Start the libp2p node
      *   - create listeners on the multiaddrs the Peer wants to listen
      */
@@ -213,7 +213,7 @@ export default class Node extends EventEmitter {
         ], callback);
     }
 
-    /*
+    /**
      * Stop the libp2p node by closing its listeners and open connections
      */
     stop(callback) {
@@ -299,7 +299,7 @@ export default class Node extends EventEmitter {
         this.swarm.unhandle(protocol);
     }
 
-    /*
+    /**
      * Helper method to check the data type of peer and convert it to PeerInfo
      */
     _getPeerInfo(peer, callback) {

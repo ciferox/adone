@@ -6,16 +6,7 @@ export const _ = adone.lazify({
     PartialParser: "./partial_parser"
 }, null, require);
 
-const defaultFile = path.join(
-    adone.etcPath,
-    "glosses",
-    "net",
-    "http",
-    "server",
-    "utils",
-    "user_agent",
-    "regexes.yml"
-);
+const defaultFile = path.join(__dirname, "regexes.yml");
 
 class Parser {
     constructor() {

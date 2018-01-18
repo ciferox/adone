@@ -354,6 +354,9 @@ Module.transforms = {
                 // a source map exists, assume it has been transpiled
                 return content;
             }
+            if (!filename.endsWith(".js")) { // ??? without this it's impossible to transpile files with extensions other than '.js'.
+                filename = `${filename}.js`;
+            }
             options = Object.assign(options, { filename, sourceMaps: "both" });
             const { code, map } = adone.js.compiler.core.transform(content, options);
             if (map) {

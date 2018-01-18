@@ -31,13 +31,7 @@ const {
 } = adone;
 
 const lazy = lazify({
-    notifier: () => path.resolve(
-        adone.etcPath,
-        "glosses",
-        "notifier",
-        "notifu",
-        "notifu"
-    )
+    notifier: () => path.resolve(__dirname, "exe", "notifu", "notifu")
 });
 
 const fromErrorCodeToAction = (errorCode) => {

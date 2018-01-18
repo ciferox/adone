@@ -7,7 +7,7 @@ const {
 } = adone;
 
 const lazy = lazify({
-    notifier: () => path.resolve(adone.etcPath, "glosses", "notifier", "snoreToast", "SnoreToast.exe")
+    notifier: () => path.resolve(__dirname, "exe", "snoreToast", "SnoreToast.exe")
 });
 
 const timeoutMessage = "the toast has timed out";

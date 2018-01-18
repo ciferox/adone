@@ -6,9 +6,9 @@ const {
 
 export default class EslintTask extends project.generator.task.Base {
     async run(input, context) {
-        const eslintrcPath = std.path.join(adone.etcPath, "project", ".eslintrc.js");
+        const eslintrcPath = std.path.join(__dirname, "eslintrc.js_");
 
-        await fs.copyTo(eslintrcPath, input.cwd);
+        await fs.copy(eslintrcPath, std.path.join(input.cwd, ".eslintrc.js"));
         const eslintConfig = adone.require(eslintrcPath);
 
         await this.runTask("npm", {

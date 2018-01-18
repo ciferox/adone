@@ -11,12 +11,7 @@ const FAILSAFE_TIMEOUT = 30 * 1000;
 const errorMessageOsX = "You need Mac OS X 10.8 or above to use NotificationCenter, or use Growl fallback with constructor option {withFallback: true}.";
 
 const lazy = lazify({
-    notifier: () => path.resolve(
-        adone.etcPath,
-        "glosses",
-        "notifier",
-        "terminal-notifier"
-    )
+    notifier: () => path.resolve(__dirname, "exe", "terminal-notifier")
 });
 
 let activeId;

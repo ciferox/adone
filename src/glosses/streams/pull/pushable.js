@@ -84,10 +84,8 @@ export default function pushable(separated, onClose) {
             callback(abort, data);
             return;
         }
-        // otherwise push data and
-        // attempt to drain
+        // otherwise buffer data
         buffer.push(data);
-        drain();
     };
 
     // Return functions separated from source { push, end, source }
