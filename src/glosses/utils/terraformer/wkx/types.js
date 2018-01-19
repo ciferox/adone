@@ -1,4 +1,4 @@
-module.exports = {
+export default {
     wkt: {
         Point: "POINT",
         LineString: "LINESTRING",

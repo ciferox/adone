@@ -10,11 +10,11 @@ const fbind = (fn, ctx) => (...args) => fn.apply(ctx, args);
  * Basically a promise mashed in with a timeout
  * @private
  */
-class ResourceRequest extends Deferred {
+export default class ResourceRequest extends Deferred {
     /**
-   * [constructor description]
-   * @param  {Number} ttl     timeout
-   */
+     * [constructor description]
+     * @param  {Number} ttl     timeout
+     */
     constructor(ttl, Promise) {
         super(Promise);
         this._creationTimestamp = Date.now();
@@ -68,5 +68,3 @@ class ResourceRequest extends Deferred {
         super.resolve(value);
     }
 }
-
-module.exports = ResourceRequest;

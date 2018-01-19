@@ -6,4 +6,4 @@ const PooledResourceStateEnum = {
     VALIDATION: "VALIDATION" // Currently being tested
 };
 
-module.exports = PooledResourceStateEnum;
+export default PooledResourceStateEnum;

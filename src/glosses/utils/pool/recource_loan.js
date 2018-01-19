@@ -5,7 +5,7 @@ import Deferred from "./deferred";
  * and other fun stuff!
  */
 
-class ResourceLoan extends Deferred {
+export default class ResourceLoan extends Deferred {
     /**
      *
      * @param  {PooledResource} pooledResource the PooledResource this loan belongs to
@@ -23,5 +23,3 @@ class ResourceLoan extends Deferred {
          */
     }
 }
-
-module.exports = ResourceLoan;

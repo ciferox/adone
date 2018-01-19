@@ -1,12 +1,15 @@
-exports.Types = require("./types");
-exports.Geometry = require("./geometry");
-exports.Point = require("./point");
-exports.LineString = require("./line_string");
-exports.Polygon = require("./polygon");
-exports.MultiPoint = require("./multi_point");
-exports.MultiLineString = require("./multi_line_string");
-exports.MultiPolygon = require("./multi_polygon");
-exports.GeometryCollection = require("./geometry_collection");
-exports.BinaryReader = require("./binary_reader");
-exports.BinaryWriter = require("./binary_writer");
-exports.ZigZag = require("./zig_zag");
+adone.lazify({
+    Types: "./types",
+    Geometry: "./geometry",
+    Point: "./point",
+    LineString: "./line_string",
+    Polygon: "./polygon",
+    MultiPoint: "./multi_point",
+    MultiLineString: "./multi_line_string",
+    MultiPolygon: "./multi_polygon",
+    GeometryCollection: "./geometry_collection",
+    BinaryReader: "./binary_reader",
+    BinaryWriter: "./binary_writer",
+    ZigZag: "./zig_zag",
+    WktParser: "./wkt_parser"
+}, exports, require);

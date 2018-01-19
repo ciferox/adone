@@ -1,190 +1,188 @@
-module.exports = LineString;
+const {
+    util: {
+        terraformer: {
+            WKX
+        }
+    }
+} = adone;
 
-const util = require("util");
+export default class LineString extends WKX.Geometry {
+    constructor(points) {
+        super();
+        this.points = points || [];
 
-const Geometry = require("./geometry");
-const Types = require("./types");
-const Point = require("./point");
-const BinaryWriter = require("./binary_writer");
+        if (this.points.length > 0) {
+            this.hasZ = this.points[0].hasZ;
+            this.hasM = this.points[0].hasM;
+        }
+    }
 
-function LineString(points) {
-    Geometry.call(this);
+    static Z(points) {
+        const lineString = new LineString(points);
+        lineString.hasZ = true;
+        return lineString;
+    }
 
-    this.points = points || [];
+    static M(points) {
+        const lineString = new LineString(points);
+        lineString.hasM = true;
+        return lineString;
+    }
 
-    if (this.points.length > 0) {
-        this.hasZ = this.points[0].hasZ;
-        this.hasM = this.points[0].hasM;
+    static ZM(points) {
+        const lineString = new LineString(points);
+        lineString.hasZ = true;
+        lineString.hasM = true;
+        return lineString;
+    }
+
+    static _parseWkt(value, options) {
+        const lineString = new LineString();
+        lineString.srid = options.srid;
+        lineString.hasZ = options.hasZ;
+        lineString.hasM = options.hasM;
+
+        if (value.isMatch(["EMPTY"])) {
+            return lineString;
+        }
+
+        value.expectGroupStart();
+        lineString.points.push.apply(lineString.points, value.matchCoordinates(options));
+        value.expectGroupEnd();
+
+        return lineString;
+    }
+
+    static _parseWkb(value, options) {
+        const lineString = new LineString();
+        lineString.srid = options.srid;
+        lineString.hasZ = options.hasZ;
+        lineString.hasM = options.hasM;
+
+        const pointCount = value.readUInt32();
+
+        for (let i = 0; i < pointCount; i++) {
+            lineString.points.push(WKX.Point._readWkbPoint(value, options));
+        }
+
+        return lineString;
+    }
+
+    static _parseTwkb(value, options) {
+        const lineString = new LineString();
+        lineString.hasZ = options.hasZ;
+        lineString.hasM = options.hasM;
+
+        if (options.isEmpty) {
+            return lineString;
+        }
+
+        const previousPoint = new WKX.Point(0, 0, options.hasZ ? 0 : undefined, options.hasM ? 0 : undefined);
+        const pointCount = value.readVarInt();
+
+        for (let i = 0; i < pointCount; i++) {
+            lineString.points.push(WKX.Point._readTwkbPoint(value, options, previousPoint));
+        }
+
+        return lineString;
+    }
+
+    static _parseGeoJSON(value) {
+        const lineString = new LineString();
+
+        if (value.coordinates.length > 0) {
+            lineString.hasZ = value.coordinates[0].length > 2;
+        }
+
+        for (let i = 0; i < value.coordinates.length; i++) {
+            lineString.points.push(WKX.Point._readGeoJSONPoint(value.coordinates[i]));
+        }
+
+        return lineString;
+    }
+
+    toWkt() {
+        if (this.points.length === 0) {
+            return this._getWktType(WKX.Types.wkt.LineString, true);
+        }
+
+        return this._getWktType(WKX.Types.wkt.LineString, false) + this._toInnerWkt();
+    }
+
+    _toInnerWkt() {
+        let innerWkt = "(";
+
+        for (let i = 0; i < this.points.length; i++) {
+            innerWkt += `${this._getWktCoordinate(this.points[i])},`;
+        }
+
+        innerWkt = innerWkt.slice(0, -1);
+        innerWkt += ")";
+
+        return innerWkt;
+    }
+
+    toWkb(parentOptions) {
+        const wkb = new WKX.BinaryWriter(this._getWkbSize());
+
+        wkb.writeInt8(1);
+
+        this._writeWkbType(wkb, WKX.Types.wkb.LineString, parentOptions);
+        wkb.writeUInt32LE(this.points.length);
+
+        for (let i = 0; i < this.points.length; i++) {
+            this.points[i]._writeWkbPoint(wkb);
+        }
+
+        return wkb.buffer;
+    }
+
+    toTwkb() {
+        const twkb = new WKX.BinaryWriter(0, true);
+
+        const precision = WKX.Geometry.getTwkbPrecision(5, 0, 0);
+        const isEmpty = this.points.length === 0;
+
+        this._writeTwkbHeader(twkb, WKX.Types.wkb.LineString, precision, isEmpty);
+
+        if (this.points.length > 0) {
+            twkb.writeVarInt(this.points.length);
+
+            const previousPoint = new WKX.Point(0, 0, 0, 0);
+            for (let i = 0; i < this.points.length; i++) {
+                this.points[i]._writeTwkbPoint(twkb, precision, previousPoint);
+            }
+        }
+
+        return twkb.buffer;
+    }
+
+    _getWkbSize() {
+        let coordinateSize = 16;
+
+        if (this.hasZ) {
+            coordinateSize += 8;
+        }
+        if (this.hasM) {
+            coordinateSize += 8;
+        }
+
+        return 1 + 4 + 4 + (this.points.length * coordinateSize);
+    }
+
+    toGeoJSON(options) {
+        const geoJSON = WKX.Geometry.prototype.toGeoJSON.call(this, options);
+        geoJSON.type = WKX.Types.geoJSON.LineString;
+        geoJSON.coordinates = [];
+
+        for (let i = 0; i < this.points.length; i++) {
+            if (this.hasZ) {
+                geoJSON.coordinates.push([this.points[i].x, this.points[i].y, this.points[i].z]);
+            } else {
+                geoJSON.coordinates.push([this.points[i].x, this.points[i].y]);
+            }
+        }
+
+        return geoJSON;
     }
 }
-
-util.inherits(LineString, Geometry);
-
-LineString.Z = function (points) {
-    const lineString = new LineString(points);
-    lineString.hasZ = true;
-    return lineString;
-};
-
-LineString.M = function (points) {
-    const lineString = new LineString(points);
-    lineString.hasM = true;
-    return lineString;
-};
-
-LineString.ZM = function (points) {
-    const lineString = new LineString(points);
-    lineString.hasZ = true;
-    lineString.hasM = true;
-    return lineString;
-};
-
-LineString._parseWkt = function (value, options) {
-    const lineString = new LineString();
-    lineString.srid = options.srid;
-    lineString.hasZ = options.hasZ;
-    lineString.hasM = options.hasM;
-
-    if (value.isMatch(["EMPTY"])) {
-        return lineString;
-    }
-
-    value.expectGroupStart();
-    lineString.points.push.apply(lineString.points, value.matchCoordinates(options));
-    value.expectGroupEnd();
-
-    return lineString;
-};
-
-LineString._parseWkb = function (value, options) {
-    const lineString = new LineString();
-    lineString.srid = options.srid;
-    lineString.hasZ = options.hasZ;
-    lineString.hasM = options.hasM;
-
-    const pointCount = value.readUInt32();
-
-    for (let i = 0; i < pointCount; i++) {
-        lineString.points.push(Point._readWkbPoint(value, options));
-    }
-
-    return lineString;
-};
-
-LineString._parseTwkb = function (value, options) {
-    const lineString = new LineString();
-    lineString.hasZ = options.hasZ;
-    lineString.hasM = options.hasM;
-
-    if (options.isEmpty) {
-        return lineString;
-    }
-
-    const previousPoint = new Point(0, 0, options.hasZ ? 0 : undefined, options.hasM ? 0 : undefined);
-    const pointCount = value.readVarInt();
-
-    for (let i = 0; i < pointCount; i++) {
-        lineString.points.push(Point._readTwkbPoint(value, options, previousPoint));
-    }
-
-    return lineString;
-};
-
-LineString._parseGeoJSON = function (value) {
-    const lineString = new LineString();
-
-    if (value.coordinates.length > 0) {
-        lineString.hasZ = value.coordinates[0].length > 2;
-    }
-
-    for (let i = 0; i < value.coordinates.length; i++) {
-        lineString.points.push(Point._readGeoJSONPoint(value.coordinates[i]));
-    }
-
-    return lineString;
-};
-
-LineString.prototype.toWkt = function () {
-    if (this.points.length === 0) {
-        return this._getWktType(Types.wkt.LineString, true);
-    }
-
-    return this._getWktType(Types.wkt.LineString, false) + this._toInnerWkt();
-};
-
-LineString.prototype._toInnerWkt = function () {
-    let innerWkt = "(";
-
-    for (let i = 0; i < this.points.length; i++) {
-        innerWkt += `${this._getWktCoordinate(this.points[i])},`;
-    }
-
-    innerWkt = innerWkt.slice(0, -1);
-    innerWkt += ")";
-
-    return innerWkt;
-};
-
-LineString.prototype.toWkb = function (parentOptions) {
-    const wkb = new BinaryWriter(this._getWkbSize());
-
-    wkb.writeInt8(1);
-
-    this._writeWkbType(wkb, Types.wkb.LineString, parentOptions);
-    wkb.writeUInt32LE(this.points.length);
-
-    for (let i = 0; i < this.points.length; i++) {
-        this.points[i]._writeWkbPoint(wkb);
-    }
-
-    return wkb.buffer;
-};
-
-LineString.prototype.toTwkb = function () {
-    const twkb = new BinaryWriter(0, true);
-
-    const precision = Geometry.getTwkbPrecision(5, 0, 0);
-    const isEmpty = this.points.length === 0;
-
-    this._writeTwkbHeader(twkb, Types.wkb.LineString, precision, isEmpty);
-
-    if (this.points.length > 0) {
-        twkb.writeVarInt(this.points.length);
-
-        const previousPoint = new Point(0, 0, 0, 0);
-        for (let i = 0; i < this.points.length; i++) {
-            this.points[i]._writeTwkbPoint(twkb, precision, previousPoint);
-        }
-    }
-
-    return twkb.buffer;
-};
-
-LineString.prototype._getWkbSize = function () {
-    let coordinateSize = 16;
-
-    if (this.hasZ) {
-        coordinateSize += 8;
-    }
-    if (this.hasM) {
-        coordinateSize += 8;
-    }
-
-    return 1 + 4 + 4 + (this.points.length * coordinateSize);
-};
-
-LineString.prototype.toGeoJSON = function (options) {
-    const geoJSON = Geometry.prototype.toGeoJSON.call(this, options);
-    geoJSON.type = Types.geoJSON.LineString;
-    geoJSON.coordinates = [];
-
-    for (let i = 0; i < this.points.length; i++) {
-        if (this.hasZ) {
-            geoJSON.coordinates.push([this.points[i].x, this.points[i].y, this.points[i].z]);
-        } else {
-            geoJSON.coordinates.push([this.points[i].x, this.points[i].y]);
-        }
-    }
-
-    return geoJSON;
-};

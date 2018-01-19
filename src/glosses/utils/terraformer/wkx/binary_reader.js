@@ -1,12 +1,29 @@
-module.exports = BinaryReader;
+export default class BinaryReader {
+    constructor(buffer, isBigEndian) {
+        this.buffer = buffer;
+        this.position = 0;
+        this.isBigEndian = isBigEndian || false;
+    }
 
-function BinaryReader(buffer, isBigEndian) {
-    this.buffer = buffer;
-    this.position = 0;
-    this.isBigEndian = isBigEndian || false;
+    readVarInt() {
+        let nextByte;
+        let result = 0;
+        let bytesRead = 0;
+
+        do {
+            nextByte = this.buffer[this.position + bytesRead];
+            result += (nextByte & 0x7F) << (7 * bytesRead);
+            bytesRead++;
+        } while (nextByte >= 0x80);
+
+        this.position += bytesRead;
+
+        return result;
+    }
 }
 
-function _read(readLE, readBE, size) {
+
+const _read = (readLE, readBE, size) => {
     return function () {
         let value;
 
@@ -20,7 +37,7 @@ function _read(readLE, readBE, size) {
 
         return value;
     };
-}
+};
 
 BinaryReader.prototype.readUInt8 = _read(Buffer.prototype.readUInt8, Buffer.prototype.readUInt8, 1);
 BinaryReader.prototype.readUInt16 = _read(Buffer.prototype.readUInt16LE, Buffer.prototype.readUInt16BE, 2);
@@ -30,19 +47,3 @@ BinaryReader.prototype.readInt16 = _read(Buffer.prototype.readInt16LE, Buffer.pr
 BinaryReader.prototype.readInt32 = _read(Buffer.prototype.readInt32LE, Buffer.prototype.readInt32BE, 4);
 BinaryReader.prototype.readFloat = _read(Buffer.prototype.readFloatLE, Buffer.prototype.readFloatBE, 4);
 BinaryReader.prototype.readDouble = _read(Buffer.prototype.readDoubleLE, Buffer.prototype.readDoubleBE, 8);
-
-BinaryReader.prototype.readVarInt = function () {
-    let nextByte,
-        result = 0,
-        bytesRead = 0;
-
-    do {
-        nextByte = this.buffer[this.position + bytesRead];
-        result += (nextByte & 0x7F) << (7 * bytesRead);
-        bytesRead++;
-    } while (nextByte >= 0x80);
-
-    this.position += bytesRead;
-
-    return result;
-};

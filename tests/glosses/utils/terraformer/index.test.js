@@ -13,54 +13,54 @@ const Terraformer = adone.util.terraformer;
 
 describe("Primitives", () => {
     it("should create a Point from GeoJSON", () => {
-        const point = new Terraformer.Primitive(GeoJSON.points[1]);
+        const point = Terraformer.fromGeoJSON(GeoJSON.points[1]);
 
         expect(point).to.be.instanceof(Terraformer.Point);
         expect(point.coordinates).to.be.equal(GeoJSON.points[1].coordinates);
     });
 
     it("should create a MultiPoint from GeoJSON", () => {
-        const multiPoint = new Terraformer.Primitive(GeoJSON.multiPoints[1]);
+        const multiPoint = Terraformer.fromGeoJSON(GeoJSON.multiPoints[1]);
 
         expect(multiPoint).to.be.instanceof(Terraformer.MultiPoint);
         expect(multiPoint.coordinates).to.be.equal(GeoJSON.multiPoints[1].coordinates);
     });
 
     it("should create a LineString from GeoJSON", () => {
-        const lineString = new Terraformer.Primitive(GeoJSON.lineStrings[3]);
+        const lineString = Terraformer.fromGeoJSON(GeoJSON.lineStrings[3]);
 
         expect(lineString).to.be.instanceof(Terraformer.LineString);
         expect(lineString.coordinates).to.be.equal(GeoJSON.lineStrings[3].coordinates);
     });
 
     it("should create a MultiLineString from GeoJSON", () => {
-        const multiLineString = new Terraformer.Primitive(GeoJSON.multiLineStrings[1]);
+        const multiLineString = Terraformer.fromGeoJSON(GeoJSON.multiLineStrings[1]);
 
         expect(multiLineString).to.be.instanceof(Terraformer.MultiLineString);
         expect(multiLineString.coordinates).to.be.equal(GeoJSON.multiLineStrings[1].coordinates);
     });
 
     it("should create a Polygon from GeoJSON", () => {
-        const polygon = new Terraformer.Primitive(GeoJSON.polygons[2]);
+        const polygon = Terraformer.fromGeoJSON(GeoJSON.polygons[2]);
         expect(polygon).to.be.instanceof(Terraformer.Polygon);
         expect(polygon.coordinates).to.be.equal(GeoJSON.polygons[2].coordinates);
     });
 
     it("should create a MultiPolygon from GeoJSON", () => {
-        const multiPolygon = new Terraformer.Primitive(GeoJSON.multiPolygons[1]);
+        const multiPolygon = Terraformer.fromGeoJSON(GeoJSON.multiPolygons[1]);
         expect(multiPolygon).to.be.instanceof(Terraformer.MultiPolygon);
         expect(multiPolygon.coordinates).to.be.equal(GeoJSON.multiPolygons[1].coordinates);
     });
 
     it("should create a Feature from GeoJSON", () => {
-        const feature = new Terraformer.Primitive(GeoJSON.features[0]);
+        const feature = Terraformer.fromGeoJSON(GeoJSON.features[0]);
         expect(feature).to.be.instanceof(Terraformer.Feature);
         expect(feature.geometry.coordinates).to.be.equal(GeoJSON.features[0].geometry.coordinates);
         expect(feature.geometry.type).to.be.equal("Polygon");
     });
 
     it("should create a Feature from GeoJSON with null geometry and properties", () => {
-        const feature = new Terraformer.Primitive({
+        const feature = Terraformer.fromGeoJSON({
             type: "Feature",
             geometry: null,
             properties: null
@@ -73,7 +73,7 @@ describe("Primitives", () => {
     });
 
     it("should create a FeatureCollection from GeoJSON", () => {
-        const featureCollection = new Terraformer.Primitive(GeoJSON.featureCollections[0]);
+        const featureCollection = Terraformer.fromGeoJSON(GeoJSON.featureCollections[0]);
 
         expect(featureCollection).to.be.instanceof(Terraformer.FeatureCollection);
         expect(featureCollection.features[0].geometry.coordinates).to.be.equal(featureCollection.features[0].geometry.coordinates);
@@ -81,7 +81,7 @@ describe("Primitives", () => {
     });
 
     it("should create a GeometryCollection from GeoJSON", () => {
-        const geometryCollection = new Terraformer.Primitive(GeoJSON.geometryCollections[0]);
+        const geometryCollection = Terraformer.fromGeoJSON(GeoJSON.geometryCollections[0]);
 
         expect(geometryCollection).to.be.instanceof(Terraformer.GeometryCollection);
         expect(geometryCollection.geometries.length).to.be.equal(2);
@@ -89,7 +89,7 @@ describe("Primitives", () => {
 
     describe("Helper Methods", () => {
         it("should convert a Primitive to Web Mercator", () => {
-            const point = new Terraformer.Primitive(GeoJSON.points[2]);
+            const point = Terraformer.fromGeoJSON(GeoJSON.points[2]);
 
             const mercator = point.toMercator();
 
@@ -98,7 +98,7 @@ describe("Primitives", () => {
         });
 
         it("should convert a Primitive to Geographic coordinates", () => {
-            const point = new Terraformer.Primitive({
+            const point = Terraformer.fromGeoJSON({
                 type: "Point",
                 coordinates: [11354588.06, 222684.20]
             });
@@ -110,7 +110,7 @@ describe("Primitives", () => {
         });
 
         it("should convert a Primitive to JSON", () => {
-            const geometryCollection = new Terraformer.Primitive(GeoJSON.geometryCollections[0]);
+            const geometryCollection = Terraformer.fromGeoJSON(GeoJSON.geometryCollections[0]);
             const json = geometryCollection.toJSON();
             expect(json.bbox).to.be.ok();
             expect(json.type).to.be.ok();
@@ -1095,7 +1095,7 @@ describe("Intersection", () => {
 
         it("should throw an error for an unknow type in Primitive", () => {
             expect(() => {
-                const f = new Terraformer.Primitive({ type: "foobar" });
+                const f = Terraformer.fromGeoJSON({ type: "foobar" });
             }).to.throw("Unknown type: foobar");
         });
 

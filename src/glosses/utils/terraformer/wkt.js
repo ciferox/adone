@@ -545,7 +545,7 @@ function parse(element) {
         throw Error(`Unable to parse: ${err}`);
     }
 
-    return Terraformer.Primitive(res);
+    return Terraformer.fromGeoJSON(res);
 }
 
 function arrayToRing(arr) {
