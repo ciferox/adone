@@ -1,8 +1,8 @@
 const {
-    netron2: { PeerId, PeerInfo, transport: { TCP }, spdy, secio, Node: LibNode }
+    netron2: { PeerId, PeerInfo, transport: { TCP }, spdy, secio, NetCore }
 } = adone;
 
-class Node extends LibNode {
+class TestNetCore extends NetCore {
     constructor(peerInfo, peerBook, options) {
         options = options || {};
 
@@ -24,10 +24,11 @@ exports.expectSet = (set, subs) => {
     expect(Array.from(set.values())).to.eql(subs);
 };
 
-exports.createNode = (maddr, callback) => {
+exports.createNetCore = async (maddr) => {
     const id = PeerId.create({ bits: 1024 });
     const peer = PeerInfo.create(id);
     peer.multiaddrs.add(maddr);
-    const node = new Node(peer);
-    node.start((err) => callback(err, node));
+    const node = new TestNetCore(peer);
+    await node.start();
+    return node;
 };

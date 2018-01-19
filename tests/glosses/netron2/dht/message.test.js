@@ -1,5 +1,3 @@
-const map = require("async/map");
-
 const {
     is,
     netron2: { PeerInfo, dht, PeerId, record: { Record } },

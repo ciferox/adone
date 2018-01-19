@@ -580,16 +580,11 @@
                     "namespace": "net",
                     "struct": {
                         "mimes": {
-                            "description": "UTP protocol/transport",
+                            "description": "Media Type Database",
                             "task": "transpile",
                             "src": "src/glosses/net/mimes/index.js",
                             "dst": "lib/glosses/net/mimes",
-                            "namespace": "mimes",
-                            "native": {
-                                "src": "src/glosses/net/utp/native",
-                                "dst": "lib/glosses/net/utp/native",
-                                "type": "gyp"
-                            }
+                            "namespace": "mimes"
                         },
                         "utp": {
                             "description": "UTP protocol/transport",

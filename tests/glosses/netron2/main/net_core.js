@@ -1,6 +1,6 @@
 const {
     is,
-    netron2: { Node, secio, multiplex, MulticastDNS, spdy, dht: { KadDHT }, Railing, transport: { TCP, WS } }
+    netron2: { NetCore, secio, multiplex, MulticastDNS, spdy, dht: { KadDHT }, Railing, transport: { TCP, WS } }
 } = adone;
 
 const mapMuxers = function (list) {
@@ -27,7 +27,7 @@ const getMuxers = function (muxers) {
     return [multiplex, spdy];
 };
 
-export default class TestNode extends Node {
+export default class TestNetCore extends NetCore {
     constructor(peerInfo, peerBook, options) {
         options = options || {};
 

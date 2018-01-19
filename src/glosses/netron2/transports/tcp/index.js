@@ -53,7 +53,7 @@ export default class TCP {
             options = {};
         }
 
-        handler = handler || (() => { });
+        handler = handler || adone.noop;
 
         return createListener(handler);
     }

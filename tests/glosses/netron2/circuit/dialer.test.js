@@ -1,5 +1,4 @@
 const nodes = require("./fixtures/nodes");
-const waterfall = require("async/waterfall");
 
 const {
     multi,

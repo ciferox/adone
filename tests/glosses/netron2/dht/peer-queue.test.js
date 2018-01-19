@@ -1,5 +1,3 @@
-const series = require("async/series");
-
 const {
     netron2: { dht, PeerId }
 } = adone;

@@ -76,7 +76,7 @@ const validate = function (def, data) {
 };
 
 const Protocol = function (log) {
-    log = log || function noop() { };
+    log = log || adone.noop;
 
     this.requests = {};
     this.addRequest = (name, def, handle) => {

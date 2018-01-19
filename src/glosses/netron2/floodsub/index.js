@@ -59,12 +59,12 @@ export class FloodSub extends EventEmitter {
     _addPeer(peer) {
         const id = peer.info.id.toB58String();
 
-        /*
-          Always use an existing peer.
-
-          What is happening here is: "If the other peer has already dialed to me, we already have
-          an establish link between the two, what might be missing is a
-          Connection specifically between me and that Peer"
+        /**
+         * Always use an existing peer.
+         *
+         * What is happening here is: "If the other peer has already dialed to me, we already have
+         * an establish link between the two, what might be missing is a
+         * Connection specifically between me and that Peer"
          */
         let existing = this.peers.get(id);
         if (!existing) {
@@ -92,8 +92,8 @@ export class FloodSub extends EventEmitter {
         return peer;
     }
 
-    _dialPeer(peerInfo, callback) {
-        callback = callback || function noop() { };
+    async _dialPeer(peerInfo, callback) {
+        callback = callback || adone.noop;
         const idB58Str = peerInfo.id.toB58String();
 
         // If already have a PubSub conn, ignore
@@ -103,14 +103,13 @@ export class FloodSub extends EventEmitter {
         }
 
         log("dialing %s", idB58Str);
-        this.libp2p.dial(peerInfo, multicodec, (err, conn) => {
-            if (err) {
-                log.err(err);
-                return callback();
-            }
-
+        try {
+            const conn = await this.libp2p.connect(peerInfo, multicodec);
             this._onDial(peerInfo, conn, callback);
-        });
+        } catch (err) {
+            log.err(err);
+            callback();
+        }
     }
 
     _onDial(peerInfo, conn, callback) {

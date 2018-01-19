@@ -9,12 +9,12 @@ const {
     netron2: { PeerId, PeerInfo, PeerBook, Ping, swarm: { Swarm } }
 } = adone;
 
-const NOT_STARTED_ERROR_MESSAGE = "The libp2p node is not started yet";
+const NOT_STARTED_ERROR_MESSAGE = "The netcore is not started yet";
 
-export default class Node extends EventEmitter {
+export default class NetCore extends EventEmitter {
     constructor(_modules, _peerInfo, _peerBook, _options) {
         super();
-        assert(_modules, "requires modules to equip libp2p with features");
+        assert(_modules, "requires modules to equip netcore with features");
         assert(_peerInfo, "requires a PeerInfo instance");
 
         this.modules = _modules;
@@ -26,37 +26,39 @@ export default class Node extends EventEmitter {
 
         this.swarm = new Swarm(this.peerInfo, this.peerBook);
 
-        // Attach stream multiplexers
-        if (this.modules.connection && this.modules.connection.muxer) {
-            let muxers = this.modules.connection.muxer;
-            muxers = is.array(muxers) ? muxers : [muxers];
-            muxers.forEach((muxer) => this.swarm.connection.addStreamMuxer(muxer));
+        if (this.modules.connection) {
+            // Attach stream multiplexers
+            if (this.modules.connection.muxer) {
+                let muxers = this.modules.connection.muxer;
+                muxers = adone.util.arrify(muxers);
+                muxers.forEach((muxer) => this.swarm.connection.addStreamMuxer(muxer));
 
-            // If muxer exists, we can use Identify
-            this.swarm.connection.reuse();
+                // If muxer exists, we can use Identify
+                this.swarm.connection.reuse();
 
-            // If muxer exists, we can use Relay for listening/dialing
-            this.swarm.connection.enableCircuitRelay(_options.relay);
+                // If muxer exists, we can use Relay for listening/dialing
+                this.swarm.connection.enableCircuitRelay(_options.relay);
 
-            // Received incommind dial and muxer upgrade happened,
-            // reuse this muxed connection
-            this.swarm.on("peer-mux-established", (peerInfo) => {
-                this.emit("peer:connect", peerInfo);
-                this.peerBook.put(peerInfo);
-            });
+                // Received incommind dial and muxer upgrade happened,
+                // reuse this muxed connection
+                this.swarm.on("peer-mux-established", (peerInfo) => {
+                    this.emit("peer:connect", peerInfo);
+                    this.peerBook.put(peerInfo);
+                });
 
-            this.swarm.on("peer-mux-closed", (peerInfo) => {
-                this.emit("peer:disconnect", peerInfo);
-            });
-        }
+                this.swarm.on("peer-mux-closed", (peerInfo) => {
+                    this.emit("peer:disconnect", peerInfo);
+                });
+            }
 
-        // Attach crypto channels
-        if (this.modules.connection && this.modules.connection.crypto) {
-            let cryptos = this.modules.connection.crypto;
-            cryptos = is.array(cryptos) ? cryptos : [cryptos];
-            cryptos.forEach((crypto) => {
-                this.swarm.connection.crypto(crypto.tag, crypto.encrypt);
-            });
+            // Attach crypto channels
+            if (this.modules.connection.crypto) {
+                let cryptos = this.modules.connection.crypto;
+                cryptos = adone.util.arrify(cryptos);
+                cryptos.forEach((crypto) => {
+                    this.swarm.connection.crypto(crypto.tag, crypto.encrypt);
+                });
+            }
         }
 
         // Attach discovery mechanisms
@@ -133,12 +135,11 @@ export default class Node extends EventEmitter {
     }
 
     /**
-     * Start the libp2p node
-     *   - create listeners on the multiaddrs the Peer wants to listen
+     * Start the net core: create listeners on the multiaddrs the Peer wants to listen
      */
-    start(callback) {
+    async start() {
         if (!this.modules.transport) {
-            return callback(new Error("no transports were present"));
+            throw new Error("no transports were present");
         }
 
         let ws;
@@ -170,74 +171,86 @@ export default class Node extends EventEmitter {
             }
         });
 
-        series([
-            (cb) => this.swarm.listen(cb),
-            (cb) => {
-                if (ws) {
-                    // always add dialing on websockets
-                    this.swarm.transport.add(ws.tag || ws.constructor.name, ws);
-                }
+        return new Promise((resolve, reject) => {
+            series([
+                (cb) => this.swarm.listen(cb),
+                (cb) => {
+                    if (ws) {
+                        // always add dialing on websockets
+                        this.swarm.transport.add(ws.tag || ws.constructor.name, ws);
+                    }
 
-                // all transports need to be setup before discover starts
-                if (this.modules.discovery) {
-                    return each(this.modules.discovery, (d, cb) => d.start(cb), cb);
-                }
-                cb();
-            },
-            (cb) => {
-                // TODO: chicken-and-egg problem:
-                // have to set started here because DHT requires libp2p is already started
-                this._isStarted = true;
-                if (this._dht) {
-                    return this._dht.start(cb);
-                }
-                cb();
-            },
-            (cb) => {
-                // detect which multiaddrs we don't have a transport for and remove them
-                const multiaddrs = this.peerInfo.multiaddrs.toArray();
-                transports.forEach((transport) => {
-                    multiaddrs.forEach((multiaddr) => {
-                        if (!multiaddr.toString().match(/\/p2p-circuit($|\/)/) &&
-                            !transports.find((transport) => transport.filter(multiaddr).length > 0)) {
-                            this.peerInfo.multiaddrs.delete(multiaddr);
-                        }
+                    // all transports need to be setup before discover starts
+                    if (this.modules.discovery) {
+                        return each(this.modules.discovery, (d, cb) => d.start(cb), cb);
+                    }
+                    cb();
+                },
+                (cb) => {
+                    // TODO: chicken-and-egg problem:
+                    // have to set started here because DHT requires libp2p is already started
+                    this._isStarted = true;
+                    if (this._dht) {
+                        return this._dht.start(cb);
+                    }
+                    cb();
+                },
+                (cb) => {
+                    // detect which multiaddrs we don't have a transport for and remove them
+                    const multiaddrs = this.peerInfo.multiaddrs.toArray();
+                    transports.forEach((transport) => {
+                        multiaddrs.forEach((multiaddr) => {
+                            if (!multiaddr.toString().match(/\/p2p-circuit($|\/)/) &&
+                                !transports.find((transport) => transport.filter(multiaddr).length > 0)) {
+                                this.peerInfo.multiaddrs.delete(multiaddr);
+                            }
+                        });
                     });
-                });
-                cb();
-            },
-            (cb) => {
-                this.emit("start");
-                cb();
-            }
-        ], callback);
+                    cb();
+                },
+                (cb) => {
+                    this.emit("start");
+                    cb();
+                }
+            ], (err) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve();
+            });
+        });
     }
 
     /**
-     * Stop the libp2p node by closing its listeners and open connections
+     * Stop the net core by closing its listeners and open connections
      */
-    stop(callback) {
+    stop() {
         if (this.modules.discovery) {
             this.modules.discovery.forEach((discovery) => {
                 setImmediate(() => discovery.stop(() => { }));
             });
         }
 
-        series([
-            (cb) => {
-                if (this._dht) {
-                    return this._dht.stop(cb);
+        return new Promise((resolve, reject) => {
+            series([
+                (cb) => {
+                    if (this._dht) {
+                        return this._dht.stop(cb);
+                    }
+                    cb();
+                },
+                (cb) => this.swarm.close(cb),
+                (cb) => {
+                    this.emit("stop");
+                    cb();
                 }
-                cb();
-            },
-            (cb) => this.swarm.close(cb),
-            (cb) => {
-                this.emit("stop");
-                cb();
-            }
-        ], (err) => {
-            this._isStarted = false;
-            callback(err);
+            ], (err) => {
+                this._isStarted = false;
+                if (err) {
+                    return reject(err);
+                }
+                resolve();
+            });
         });
     }
 
@@ -245,49 +258,38 @@ export default class Node extends EventEmitter {
         return this._isStarted;
     }
 
-    ping(peer, callback) {
+    async ping(peer) {
         assert(this.isStarted(), NOT_STARTED_ERROR_MESSAGE);
-        this._getPeerInfo(peer, (err, peerInfo) => {
-            if (err) {
-                return callback(err);
-            }
-
-            callback(null, new Ping(this.swarm, peerInfo));
-        });
+        const peerInfo = await this._getPeerInfo(peer);
+        return new Ping(this.swarm, peerInfo);
     }
 
-    dial(peer, protocol, callback) {
+    async connect(peer, protocol) {
         assert(this.isStarted(), NOT_STARTED_ERROR_MESSAGE);
 
-        if (is.function(protocol)) {
-            callback = protocol;
-            protocol = undefined;
-        }
-
-        this._getPeerInfo(peer, (err, peerInfo) => {
-            if (err) {
-                return callback(err);
-            }
-
+        const peerInfo = await this._getPeerInfo(peer);
+        return new Promise((resolve, reject) => {
             this.swarm.dial(peerInfo, protocol, (err, conn) => {
                 if (err) {
-                    return callback(err);
+                    return reject(err);
                 }
                 this.peerBook.put(peerInfo);
-                callback(null, conn);
+                resolve(conn);
             });
         });
     }
 
-    hangUp(peer, callback) {
+    async disconnect(peer) {
         assert(this.isStarted(), NOT_STARTED_ERROR_MESSAGE);
 
-        this._getPeerInfo(peer, (err, peerInfo) => {
-            if (err) {
-                return callback(err);
-            }
-
-            this.swarm.hangUp(peerInfo, callback);
+        const peerInfo = await this._getPeerInfo(peer);
+        return new Promise((resolve, reject) => {
+            this.swarm.hangUp(peerInfo, (err) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve();
+            });
         });
     }
 
@@ -302,7 +304,7 @@ export default class Node extends EventEmitter {
     /**
      * Helper method to check the data type of peer and convert it to PeerInfo
      */
-    _getPeerInfo(peer, callback) {
+    _getPeerInfo(peer) {
         let p;
         // PeerInfo
         if (PeerInfo.isPeerInfo(peer)) {
@@ -326,12 +328,19 @@ export default class Node extends EventEmitter {
             try {
                 p = this.peerBook.get(peerIdB58Str);
             } catch (err) {
-                return this.peerRouting.findPeer(peer, callback);
+                return new Promise((resolve, reject) => {
+                    return this.peerRouting.findPeer(peer, (err, result) => {
+                        if (err) {
+                            return reject(err);
+                        }
+                        resolve(result);
+                    });
+                });
             }
         } else {
-            return setImmediate(() => callback(new Error("peer type not recognized")));
+            throw new Error("peer type not recognized");
         }
 
-        setImmediate(() => callback(null, p));
+        return p;
     }
 }

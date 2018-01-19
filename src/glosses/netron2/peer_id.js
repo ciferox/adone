@@ -1,5 +1,3 @@
-const waterfall = require("async/waterfall");
-
 const {
     is,
     netron2: { crypto }
@@ -109,7 +107,7 @@ export default class PeerId {
 
     }
 
-    /*
+    /**
      * Check if this PeerId instance is valid (privKey -> pubKey -> Id)
      */
     isValid() {

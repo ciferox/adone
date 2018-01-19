@@ -6,7 +6,7 @@ const {
     stream: { pull }
 } = adone;
 
-import TestNode from "./node";
+import TestNetCore from "./net_core";
 
 let wrtcRendezvous;
 let wsRendezvous;
@@ -23,7 +23,7 @@ export default async (ctx) => {
                     if (err) {
                         return cb(err);
                     }
-                    
+
                     wrtcRendezvous = server;
                     cb();
                 });
@@ -38,7 +38,7 @@ export default async (ctx) => {
                     if (err) {
                         return cb(err);
                     }
-                    
+
                     wsRendezvous = _server;
                     cb();
                 });
@@ -50,20 +50,25 @@ export default async (ctx) => {
 
                     peer.multiaddrs.add("/ip4/127.0.0.1/tcp/9200/ws");
 
-                    node = new TestNode(peer);
+                    node = new TestNetCore(peer);
                     node.handle("/echo/1.0.0", (protocol, conn) => pull(conn, conn));
-                    node.start(cb);
+                    node.start().then(cb);
+                    // cb();
                 } catch (err) {
+                    adone.error(err);
                     cb(err);
                 }
             }
         ], done);
     });
 
-    ctx.after((done) => {
-        setTimeout(() => parallel(
-            [node, wrtcRendezvous, wsRendezvous].map((s) => {
+    ctx.after(async (done) => {
+        await adone.promise.delay(2000);
+        await node.stop();
+        parallel(
+            [wrtcRendezvous, wsRendezvous].map((s) => {
                 return (cb) => s.stop(cb);
-            }), done), 2000);
+            }),
+            done);
     });
 };
