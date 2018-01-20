@@ -2,7 +2,7 @@ const {
     is,
     x,
     net: { amqp },
-    event: { EventEmitter },
+    event,
     std: {
         assert,
         util: { format: fmt }
@@ -118,7 +118,7 @@ export const acceptMessage = function (continuation) {
     return headers;
 };
 
-export class Channel extends EventEmitter {
+export class Channel extends event.Emitter {
     constructor(connection) {
         super();
         this.connection = connection;

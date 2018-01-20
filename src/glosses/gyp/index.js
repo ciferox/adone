@@ -25,7 +25,7 @@ adone.lazifyPrivate({
 // differentiate node-gyp's logs from npm's
 log.heading = "gyp";
 
-export class Gyp extends adone.event.EventEmitter {
+export class Gyp extends adone.event.Emitter {
     constructor() {
         super();
 

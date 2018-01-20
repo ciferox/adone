@@ -1,4 +1,4 @@
 adone.lazify({
-    EventEmitter: "./event_emitter",
+    Emitter: "./emitter",
     AsyncEmitter: "./async_emitter"
 }, adone.asNamespace(exports), require);

@@ -1,6 +1,5 @@
 const Board = require("./board");
 const Expander = require("./expander");
-const Emitter = require("events").EventEmitter;
 const util = require("util");
 const Fn = require("./fn");
 
@@ -1150,7 +1149,7 @@ function Accelerometer(opts) {
     });
 }
 
-util.inherits(Accelerometer, Emitter);
+util.inherits(Accelerometer, adone.event.Emitter);
 
 /* istanbul ignore else */
 if (process.env.IS_TEST_MODE) {

@@ -4,7 +4,7 @@ const utp = adone.nativeAddon(adone.std.path.join(__dirname, "native", "utp.node
 const {
     is,
     noop,
-    event: { EventEmitter },
+    event,
     std: { net, dns }
 } = adone;
 
@@ -275,7 +275,7 @@ const emit = (self, name, arg) => {
 };
 
 
-export class UTP extends EventEmitter {
+export class UTP extends event.Emitter {
     constructor() {
         super();
 

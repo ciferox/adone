@@ -15,7 +15,7 @@ const {
     netron2: { Connection, circuit: { Circuit }, multistream }
 } = adone;
 
-export class Swarm extends adone.event.EventEmitter {
+export class Swarm extends adone.event.Emitter {
     constructor(peerInfo, peerBook) {
         super();
 

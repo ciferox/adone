@@ -45,7 +45,7 @@ describe("shani", "util", "nock", "intercept", () => {
 
     nock.enableNetConnect();
 
-    class Dest extends adone.event.EventEmitter {
+    class Dest extends adone.event.Emitter {
         constructor() {
             super();
             this.buffer = Buffer.allocUnsafe(0);

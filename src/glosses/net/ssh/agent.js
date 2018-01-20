@@ -242,7 +242,7 @@ module.exports = (sockPath, key, keyType, data, cb) => {
             ERROR[RET_ERR_BINSTDOUT] = new Error("pagent.exe could not set mode for stdout");
             ERROR[RET_ERR_BADLEN] = new Error("pagent.exe did not get expected input payload");
 
-            class PageantSock extends adone.event.EventEmitter {
+            class PageantSock extends adone.event.Emitter {
                 constructor() {
                     super();
                     this.proc = undefined;

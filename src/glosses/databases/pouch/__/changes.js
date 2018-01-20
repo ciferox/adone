@@ -1,6 +1,6 @@
 const {
     is,
-    event: { EventEmitter },
+    event,
     util,
     database: { pouch }
 } = adone;
@@ -50,7 +50,7 @@ const processChange = (doc, metadata, opts) => {
     return change;
 };
 
-export default class Changes extends EventEmitter {
+export default class Changes extends event.Emitter {
     constructor(db, opts, callback) {
         super();
         this.db = db;

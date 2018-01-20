@@ -1,7 +1,7 @@
 const {
     is,
     util,
-    event: { EventEmitter },
+    event,
     database: { pouch }
 } = adone;
 
@@ -98,10 +98,10 @@ DB.preferredAdapters = [];
 
 DB.prefix = "_pouch_";
 
-const eventEmitter = new EventEmitter();
+const eventEmitter = new event.Emitter();
 
 const setUpEventEmitter = (Pouch) => {
-    for (const [k, v] of util.entries(EventEmitter.prototype, { all: true })) {
+    for (const [k, v] of util.entries(event.Emitter.prototype, { all: true })) {
         if (is.function(v)) {
             Pouch[k] = v.bind(eventEmitter);
         }

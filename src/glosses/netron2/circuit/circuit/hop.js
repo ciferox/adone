@@ -11,7 +11,7 @@ const {
 
 const __ = adone.private(adone.netron2.circuit);
 
-export default class Hop extends adone.event.EventEmitter {
+export default class Hop extends adone.event.Emitter {
     /**
      * Construct a Circuit object
      *

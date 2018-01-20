@@ -3,7 +3,7 @@ const {
     net
 } = adone;
 
-export default class Socket extends adone.event.EventEmitter {
+export default class Socket extends adone.event.Emitter {
     constructor(options = {}) {
         super();
         this.options = Object.assign({

@@ -1,5 +1,5 @@
 const {
-    event: { EventEmitter },
+    event,
     is,
     x,
     util,
@@ -24,7 +24,7 @@ const {
 let _connectionId = 0;
 let convertNamedPlaceholders = null;
 
-export default class Connection extends EventEmitter {
+export default class Connection extends event.Emitter {
     constructor(opts) {
         super();
         this.config = opts.config;
@@ -258,6 +258,7 @@ export default class Connection extends EventEmitter {
         this.sequenceId += numPackets;
         this.sequenceId %= 256;
     }
+
     writePacket(packet) {
         const MAX_PACKET_LENGTH = 16777215;
         const length = packet.length();
@@ -438,6 +439,7 @@ export default class Connection extends EventEmitter {
     escapeId(value) {
         return util.sqlstring.escapeId(value, false);
     }
+
     _resolveNamedPlaceholders(options) {
         let unnamed;
         if (this.config.namedPlaceholders || options.namedPlaceholders) {
@@ -724,7 +726,7 @@ export default class Connection extends EventEmitter {
     end(callback) {
         if (this.config.isServer) {
             this._closing = true;
-            const quitCmd = new EventEmitter();
+            const quitCmd = new event.Emitter();
             setImmediate(() => {
                 this.stream.end();
                 quitCmd.emit("end");

@@ -3,7 +3,7 @@ const series = require("async/series");
 
 const {
     assert,
-    event: { EventEmitter },
+    event,
     is,
     multi,
     netron2: { PeerId, PeerInfo, PeerBook, Ping, swarm: { Swarm } }
@@ -11,7 +11,7 @@ const {
 
 const NOT_STARTED_ERROR_MESSAGE = "The netcore is not started yet";
 
-export default class NetCore extends EventEmitter {
+export default class NetCore extends event.Emitter {
     constructor(_modules, _peerInfo, _peerBook, _options) {
         super();
         assert(_modules, "requires modules to equip netcore with features");

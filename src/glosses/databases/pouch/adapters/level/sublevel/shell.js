@@ -2,13 +2,13 @@ import NotFoundError from "./NotFoundError";
 
 const {
     is,
-    event: { EventEmitter }
+    event
 } = adone;
 
 const NOT_FOUND_ERROR = new NotFoundError();
 
 export default function sublevel(nut, prefix, createStream, options) {
-    const emitter = new EventEmitter();
+    const emitter = new event.Emitter();
     emitter.sublevels = {};
     emitter.options = options;
 

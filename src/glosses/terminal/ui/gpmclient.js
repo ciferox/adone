@@ -8,7 +8,7 @@
 
 const {
     std: { net, fs },
-    event: { EventEmitter }
+    event
 } = adone;
 
 const GPM_USE_MAGIC = false;
@@ -95,7 +95,7 @@ function parseEvent(raw) {
     return evnt;
 }
 
-export default class GpmClient extends EventEmitter {
+export default class GpmClient extends event.Emitter {
     constructor() {
         super();
         const pid = process.pid;

@@ -1,9 +1,9 @@
-const { is, event: { EventEmitter }, util, fs, std, x, compressor, noop } = adone;
+const { is, event, util, fs, std, x, compressor, noop } = adone;
 
 /**
  * Represents a log file rotator.
  */
-export default class LogRotator extends EventEmitter {
+export default class LogRotator extends event.Emitter {
     /**
      * @param {string | number} target filepath
      * @param {number} checkInterval rotator reads file's stats with this delay

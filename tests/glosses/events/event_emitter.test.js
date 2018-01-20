@@ -1,11 +1,11 @@
 const {
-    event: { EventEmitter }
+    event: { Emitter }
 } = adone;
 
-describe("event", "EventEmitter", () => {
+describe("event", "Emitter", () => {
     describe("addListeners", () => {
         it("should add and call an \"on\" listener", () => {
-            const ee = new EventEmitter();
+            const ee = new Emitter();
             const events = [];
             const listeners = [];
 
@@ -44,14 +44,14 @@ describe("event", "EventEmitter", () => {
         });
 
         it("setMaxListeners(0) shouldn't throw", () => {
-            const f = new EventEmitter();
+            const f = new Emitter();
             f.setMaxListeners(0);
         });
 
         it("should correctly return listeners", () => {
             const listen1 = function listen1() { };
             const listen2 = function listen2() { };
-            const ee = new EventEmitter();
+            const ee = new Emitter();
 
             ee.once("newListener", () => {
                 expect(ee.listeners("hello")).to.be.empty();
@@ -67,7 +67,7 @@ describe("event", "EventEmitter", () => {
         });
 
         it("should throw if the listener is not a function", () => {
-            const ee = new EventEmitter();
+            const ee = new Emitter();
             expect(() => {
                 ee.on("foo", null);
             }).to.throw(adone.x.InvalidArgument, "\"listener\" argument must be a function");
@@ -76,14 +76,14 @@ describe("event", "EventEmitter", () => {
 
     describe("errors", () => {
         it("should throw", () => {
-            const EE = new EventEmitter();
+            const EE = new Emitter();
             expect(() => {
                 EE.emit("error", "Accepts a string");
             }).to.throw(adone.x.Exception, /Accepts a string/);
         });
 
         it("should throw", () => {
-            const EE = new EventEmitter();
+            const EE = new Emitter();
             expect(() => {
                 EE.emit("error", { message: "Error!" });
             }).to.throw(adone.x.Exception, /object Object/);
@@ -92,18 +92,18 @@ describe("event", "EventEmitter", () => {
 
     describe("getMaxListeners", () => {
         it("should be equal to the defaultMaxListeners by default", () => {
-            const emitter = new EventEmitter();
-            expect(emitter.getMaxListeners()).to.be.equal(EventEmitter.defaultMaxListeners);
+            const emitter = new Emitter();
+            expect(emitter.getMaxListeners()).to.be.equal(Emitter.defaultMaxListeners);
         });
 
         it("should set 0", () => {
-            const emitter = new EventEmitter();
+            const emitter = new Emitter();
             emitter.setMaxListeners(0);
             expect(emitter.getMaxListeners()).to.be.equal(0);
         });
 
         it("should be equal 3", () => {
-            const emitter = new EventEmitter();
+            const emitter = new Emitter();
             emitter.setMaxListeners(3);
             expect(emitter.getMaxListeners()).to.be.equal(3);
         });
@@ -111,7 +111,7 @@ describe("event", "EventEmitter", () => {
 
     describe("setMaxListeners", () => {
         it("should throw for invalid values", () => {
-            const e = new EventEmitter();
+            const e = new Emitter();
 
             const throwsObjs = [NaN, -1, "and even this"];
             const maxError = /^"n" argument must be a positive number$/;
@@ -119,14 +119,14 @@ describe("event", "EventEmitter", () => {
 
             for (const obj of throwsObjs) {
                 assert.throws(() => e.setMaxListeners(obj), maxError);
-                assert.throws(() => EventEmitter.defaultMaxListeners = obj, defError);
+                assert.throws(() => Emitter.defaultMaxListeners = obj, defError);
             }
         });
     });
 
     describe("listenerCount", () => {
         it("should be equal 2", () => {
-            const emitter = new EventEmitter();
+            const emitter = new Emitter();
             emitter.on("foo", adone.noop);
             emitter.on("foo", adone.noop);
 
@@ -134,27 +134,27 @@ describe("event", "EventEmitter", () => {
         });
 
         it("should be equal 1", () => {
-            const emitter = new EventEmitter();
+            const emitter = new Emitter();
             emitter.on("baz", adone.noop);
             expect(emitter.listenerCount("baz")).to.be.equal(1);
         });
 
         it("should be zero", () => {
-            const emitter = new EventEmitter();
+            const emitter = new Emitter();
             expect(emitter.listenerCount("bar")).to.be.equal(0);
         });
 
         it("should support any type", () => {
-            const emitter = new EventEmitter();
+            const emitter = new Emitter();
             emitter.on(123, adone.noop);
             expect(emitter.listenerCount(123)).to.be.equal(1);
         });
 
         it("should work using the static method", () => {
-            const emitter = new EventEmitter();
+            const emitter = new Emitter();
             emitter.on("foo", adone.noop);
             emitter.on("foo", adone.noop);
-            expect(EventEmitter.listenerCount(emitter, "foo")).to.be.equal(2);
+            expect(Emitter.listenerCount(emitter, "foo")).to.be.equal(2);
         });
     });
 
@@ -163,13 +163,13 @@ describe("event", "EventEmitter", () => {
         const listener2 = adone.noop;
 
         it("should return listeners", () => {
-            const ee = new EventEmitter();
+            const ee = new Emitter();
             ee.on("foo", listener);
             expect(ee.listeners("foo")).to.be.deep.equal([listener]);
         });
 
         it("should not modify the list", () => {
-            const ee = new EventEmitter();
+            const ee = new Emitter();
             ee.on("foo", listener);
             const fooListeners = ee.listeners("foo");
             ee.removeAllListeners("foo");
@@ -178,7 +178,7 @@ describe("event", "EventEmitter", () => {
         });
 
         it("listener list modifying shouldn't affect the listeners", () => {
-            const ee = new EventEmitter();
+            const ee = new Emitter();
             ee.on("foo", listener);
             const eeListenersCopy = ee.listeners("foo");
             expect(eeListenersCopy).to.be.deep.equal([listener]);
@@ -188,7 +188,7 @@ describe("event", "EventEmitter", () => {
         });
 
         it("adding a new listener shouldn't modify the previous list", () => {
-            const ee = new EventEmitter();
+            const ee = new Emitter();
             ee.on("foo", listener);
             const eeListenersCopy = ee.listeners("foo");
             ee.on("foo", listener2);
@@ -197,13 +197,13 @@ describe("event", "EventEmitter", () => {
         });
 
         it("should work using once subscriprions", () => {
-            const ee = new EventEmitter();
+            const ee = new Emitter();
             ee.once("foo", listener);
             expect(ee.listeners("foo")).to.be.deep.equal([listener]);
         });
 
         it("should return on and once listeners", () => {
-            const ee = new EventEmitter();
+            const ee = new Emitter();
             ee.on("foo", listener);
             ee.once("foo", listener2);
             expect(ee.listeners("foo")).to.be.deep.equal([listener, listener2]);
@@ -212,34 +212,34 @@ describe("event", "EventEmitter", () => {
 
     describe("maxListeners", () => {
         it("should throw if the argument is NaN", () => {
-            const ee = new EventEmitter();
+            const ee = new Emitter();
             expect(() => {
                 ee.setMaxListeners(NaN);
             }).to.throw(adone.x.InvalidArgument, "\"n\" argument must be a positive number");
         });
 
         it("should throw if the argument is a negative number", () => {
-            const ee = new EventEmitter();
+            const ee = new Emitter();
             expect(() => {
                 ee.setMaxListeners(-1);
             }).to.throw(adone.x.InvalidArgument, "\"n\" argument must be a positive number");
         });
 
         it("should throw if the argument is not a number", () => {
-            const ee = new EventEmitter();
+            const ee = new Emitter();
             expect(() => {
                 ee.setMaxListeners("hello");
             }).to.throw(adone.x.InvalidArgument, "\"n\" argument must be a positive number");
         });
 
         it("should set the value", () => {
-            const ee = new EventEmitter();
+            const ee = new Emitter();
             ee.setMaxListeners(42);
             expect(ee.getMaxListeners()).to.be.equal(42);
         });
 
         it("shouldn't affect the maxListeners queue", () => {
-            const ee = new EventEmitter();
+            const ee = new Emitter();
             const maxListeners = spy();
             ee.on("maxListeners", maxListeners);
             try {
@@ -258,7 +258,7 @@ describe("event", "EventEmitter", () => {
         });
 
         it("should emit a warning message", async () => {
-            const e = new EventEmitter();
+            const e = new Emitter();
             e.setMaxListeners(1);
             const s = spy();
             process.once("warning", s);
@@ -278,7 +278,7 @@ describe("event", "EventEmitter", () => {
         });
 
         it("should emit a warning message for 'null' event", (done) => {
-            const e = new EventEmitter();
+            const e = new Emitter();
             e.setMaxListeners(1);
 
             process.once("warning", (warning) => {
@@ -298,7 +298,7 @@ describe("event", "EventEmitter", () => {
         it("should emit a warning message for a symbol", (done) => {
             const symbol = Symbol("symbol");
 
-            const e = new EventEmitter();
+            const e = new Emitter();
             e.setMaxListeners(1);
 
             process.once("warning", (warning) => {
@@ -319,7 +319,7 @@ describe("event", "EventEmitter", () => {
     it("should correctly handle modifying in emit", () => {
         let called = [];
 
-        const e = new EventEmitter();
+        const e = new Emitter();
 
         const callback1 = () => {
             called.push("callback1");
@@ -372,7 +372,7 @@ describe("event", "EventEmitter", () => {
     });
 
     it("should handle multiple args", () => {
-        const e = new EventEmitter();
+        const e = new Emitter();
         const emitted = [];
 
         e.on("numArgs", function () {
@@ -391,7 +391,7 @@ describe("event", "EventEmitter", () => {
 
     describe("once", () => {
         it("should be called only once", () => {
-            const e = new EventEmitter();
+            const e = new Emitter();
 
             const hello = spy();
             e.once("hello", hello);
@@ -406,7 +406,7 @@ describe("event", "EventEmitter", () => {
         });
 
         it("should not emit after removing", () => {
-            const e = new EventEmitter();
+            const e = new Emitter();
             const remove = spy();
             e.once("foo", remove);
             e.removeListener("foo", remove);
@@ -415,7 +415,7 @@ describe("event", "EventEmitter", () => {
         });
 
         it("should correctly handle emitting while handling", () => {
-            const e = new EventEmitter();
+            const e = new Emitter();
             const hello = spy();
             e.once("hello", (a) => {
                 hello(a);
@@ -429,7 +429,7 @@ describe("event", "EventEmitter", () => {
         });
 
         it("should throw if the listener is not a function", () => {
-            const e = new EventEmitter();
+            const e = new Emitter();
             expect(() => {
                 e.once("foo", null);
             }).to.throw(adone.x.InvalidArgument, "\"listener\" argument must be a function");
@@ -439,7 +439,7 @@ describe("event", "EventEmitter", () => {
             const maxArgs = 4;
 
             for (let i = 0; i <= maxArgs; ++i) {
-                const ee = new EventEmitter();
+                const ee = new Emitter();
                 const args = ["foo"];
 
                 for (let j = 0; j < i; ++j) {
@@ -447,7 +447,7 @@ describe("event", "EventEmitter", () => {
                 }
                 const s = spy();
                 ee.once("foo", s);
-                EventEmitter.prototype.emit.apply(ee, args);
+                Emitter.prototype.emit.apply(ee, args);
                 expect(s).to.have.been.calledOnce;
                 expect(s).to.have.been.calledWithExactly(...args.slice(1));
             }
@@ -456,7 +456,7 @@ describe("event", "EventEmitter", () => {
 
     describe("prepend", () => {
         it("should prepend an \"on\" listener", () => {
-            const e = new EventEmitter();
+            const e = new Emitter();
             let m = 0;
 
             e.on("foo", () => {
@@ -475,7 +475,7 @@ describe("event", "EventEmitter", () => {
         });
 
         it("should throw if the listener is not a function", () => {
-            const e = new EventEmitter();
+            const e = new Emitter();
             expect(() => {
                 e.prependListener("foo", null);
             }).to.throw(adone.x.InvalidArgument, "\"listener\" argument must be a function");
@@ -486,7 +486,7 @@ describe("event", "EventEmitter", () => {
         const listener = adone.noop;
 
         it("should remove all listeners for an event", () => {
-            const ee = new EventEmitter();
+            const ee = new Emitter();
             ee.on("foo", listener);
             ee.on("bar", listener);
             ee.on("baz", listener);
@@ -499,7 +499,7 @@ describe("event", "EventEmitter", () => {
         });
 
         it("should emit appropriate events", () => {
-            const ee = new EventEmitter();
+            const ee = new Emitter();
             ee.on("foo", listener);
             ee.on("bar", listener);
             ee.on("baz", listener);
@@ -515,7 +515,7 @@ describe("event", "EventEmitter", () => {
         });
 
         it("shouldn't change the previous list", () => {
-            const ee = new EventEmitter();
+            const ee = new Emitter();
             ee.on("foo", listener);
             ee.on("bar", listener);
             ee.on("baz", listener);
@@ -531,7 +531,7 @@ describe("event", "EventEmitter", () => {
         });
 
         it("should remove all the listeners", () => {
-            const ee = new EventEmitter();
+            const ee = new Emitter();
             ee.on("foo", listener);
             ee.on("bar", listener);
             const remove1 = spy();
@@ -551,7 +551,7 @@ describe("event", "EventEmitter", () => {
         });
 
         it("should be fluent", () => {
-            const ee = new EventEmitter();
+            const ee = new Emitter();
             expect(ee.removeAllListeners()).to.be.equal(ee);
         });
     });
@@ -562,7 +562,7 @@ describe("event", "EventEmitter", () => {
         const listener2 = () => { };
 
         it("it should remove a listener", () => {
-            const ee = new EventEmitter();
+            const ee = new Emitter();
             ee.on("hello", listener1);
             const remove = spy();
             ee.on("removeListener", remove);
@@ -573,7 +573,7 @@ describe("event", "EventEmitter", () => {
         });
 
         it("should not remove any listener if provided one is actually not a listener", () => {
-            const ee = new EventEmitter();
+            const ee = new Emitter();
             ee.on("hello", listener1);
             const remove = spy();
             ee.on("removeListener", remove);
@@ -583,7 +583,7 @@ describe("event", "EventEmitter", () => {
         });
 
         it("remove remove listeners", () => {
-            const ee = new EventEmitter();
+            const ee = new Emitter();
             ee.on("hello", listener1);
             ee.on("hello", listener2);
 
@@ -603,7 +603,7 @@ describe("event", "EventEmitter", () => {
         });
 
         it("shouldn't emit after removing", () => {
-            const ee = new EventEmitter();
+            const ee = new Emitter();
             const remove1 = () => {
                 throw new Error("shouldnt be called");
             };
@@ -627,7 +627,7 @@ describe("event", "EventEmitter", () => {
         });
 
         it("should handle removing while removing", () => {
-            const ee = new EventEmitter();
+            const ee = new Emitter();
             ee.on("hello", listener1);
             ee.on("hello", listener2);
             let c = 0;
@@ -651,7 +651,7 @@ describe("event", "EventEmitter", () => {
         });
 
         it("should continue invoking listeners if one deletes another", () => {
-            const ee = new EventEmitter();
+            const ee = new Emitter();
             const calls = [];
             const listener3 = () => {
                 calls.push(3);
@@ -675,7 +675,7 @@ describe("event", "EventEmitter", () => {
         });
 
         it("should remove an \"once\" listener", () => {
-            const ee = new EventEmitter();
+            const ee = new Emitter();
 
             ee.once("hello", listener1);
             const remove = spy();
@@ -686,20 +686,20 @@ describe("event", "EventEmitter", () => {
         });
 
         it("should throw if the listener is not a function", () => {
-            const ee = new EventEmitter();
+            const ee = new Emitter();
             expect(() => {
                 ee.removeListener("foo", null);
             }).to.throw(adone.x.InvalidArgument, "\"listener\" argument must be a function");
         });
 
         it("should be fluent", () => {
-            const ee = new EventEmitter();
+            const ee = new Emitter();
 
             expect(ee.removeListener("foo", () => { })).to.be.equal(ee);
         });
 
         it("should work fine", () => {
-            const ee = new EventEmitter();
+            const ee = new Emitter();
 
             ee.on("foo", listener1);
             ee.on("foo", listener2);
@@ -717,7 +717,7 @@ describe("event", "EventEmitter", () => {
     });
 
     it("should correctly handle special event names", () => {
-        const ee = new EventEmitter();
+        const ee = new Emitter();
         const handler = adone.noop;
 
         ee.on("__proto__", handler);
@@ -738,7 +738,7 @@ describe("event", "EventEmitter", () => {
 
     describe("events list", () => {
         it("should return event names", () => {
-            const EE = new EventEmitter();
+            const EE = new Emitter();
 
             expect(EE.eventNames()).to.be.empty();
 
@@ -764,8 +764,8 @@ describe("event", "EventEmitter", () => {
     describe("propagateEvents", () => {
         const test = (propagator) => {
             it("propagates events", () => {
-                const ee1 = new EventEmitter();
-                const ee2 = new EventEmitter();
+                const ee1 = new Emitter();
+                const ee2 = new Emitter();
 
                 propagator(ee1, ee2);
 
@@ -795,8 +795,8 @@ describe("event", "EventEmitter", () => {
             });
 
             it("propagates can end", () => {
-                const ee1 = new EventEmitter();
-                const ee2 = new EventEmitter();
+                const ee1 = new Emitter();
+                const ee2 = new Emitter();
 
                 const prop = propagator(ee1, ee2);
 
@@ -813,8 +813,8 @@ describe("event", "EventEmitter", () => {
             });
 
             it("after propagation old one still emits", () => {
-                const ee1 = new EventEmitter();
-                const ee2 = new EventEmitter();
+                const ee1 = new Emitter();
+                const ee2 = new Emitter();
                 const prop = propagator(ee1, ee2);
 
                 const e = stub().callsFake(() => {
@@ -830,8 +830,8 @@ describe("event", "EventEmitter", () => {
             });
 
             it("emit on source before destination", () => {
-                const source = new EventEmitter();
-                const dest = new EventEmitter();
+                const source = new Emitter();
+                const dest = new Emitter();
 
                 propagator(source, dest);
                 const sevent = spy();
@@ -845,8 +845,8 @@ describe("event", "EventEmitter", () => {
             });
 
             it("is able to propagate only certain events", () => {
-                const ee1 = new EventEmitter();
-                const ee2 = new EventEmitter();
+                const ee1 = new Emitter();
+                const ee2 = new Emitter();
                 // propagate only event-1 and event-2, leaving out
                 const p = propagator(ee1, ee2, ["event-1", "event-2"]);
 
@@ -881,8 +881,8 @@ describe("event", "EventEmitter", () => {
             });
 
             it("is able to propagate and map certain events", () => {
-                const ee1 = new EventEmitter();
-                const ee2 = new EventEmitter();
+                const ee1 = new Emitter();
+                const ee2 = new Emitter();
                 // propagate only event-1 and event-2, leaving out
                 const p = propagator(ee1, ee2, {
                     "event-1": "other-event-1",
@@ -924,7 +924,7 @@ describe("event", "EventEmitter", () => {
 
         // test static method
         describe("static", () => {
-            test((src, dst, events) => EventEmitter.propagateEvents(src, dst, events));
+            test((src, dst, events) => Emitter.propagateEvents(src, dst, events));
         });
     });
 });

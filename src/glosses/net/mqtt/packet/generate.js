@@ -3,7 +3,7 @@ import writeToStream from "./writeToStream";
 const { is } = adone;
 
 
-class Accumulator extends adone.event.EventEmitter {
+class Accumulator extends adone.event.Emitter {
     constructor() {
         super();
         this._array = new Array(20);

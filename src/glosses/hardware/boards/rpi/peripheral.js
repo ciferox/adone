@@ -1,6 +1,6 @@
 const {
     is,
-    event: { EventEmitter }
+    event
 } = adone;
 
 if (!is.plainObject(global.raspiPinUsage)) {
@@ -8,7 +8,7 @@ if (!is.plainObject(global.raspiPinUsage)) {
 }
 const registeredPins = global.raspiPinUsage;
 
-export default class Peripheral extends EventEmitter {
+export default class Peripheral extends event.Emitter {
     constructor(pins) {
         super();
         this.alive = true;

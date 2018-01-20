@@ -1,4 +1,3 @@
-const Emitter = require("events").EventEmitter;
 const util = require("util");
 
 const Board = require("./board");
@@ -201,7 +200,7 @@ function Barometer(opts) {
     }, freq);
 }
 
-util.inherits(Barometer, Emitter);
+util.inherits(Barometer, adone.event.Emitter);
 
 /* istanbul ignore else */
 if (process.env.IS_TEST_MODE) {

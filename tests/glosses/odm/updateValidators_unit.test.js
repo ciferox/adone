@@ -1,5 +1,4 @@
 const updateValidators = adone.odm.updateValidators;
-const emitter = require("events").EventEmitter;
 
 describe("updateValidators", () => {
     let schema;
@@ -16,7 +15,7 @@ describe("updateValidators", () => {
             schema.doValidate.emitter.emit("called", { v, cb });
         };
         schema.doValidate.calls = [];
-        schema.doValidate.emitter = new emitter();
+        schema.doValidate.emitter = new adone.event.Emitter();
     });
 
     describe("validators", () => {

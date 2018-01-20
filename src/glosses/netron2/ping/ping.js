@@ -2,8 +2,8 @@ const constants = require("./constants");
 
 const {
     stream: { pull },
-    event: { EventEmitter },
-    netron2: { crypto },
+    event,
+    netron2: { crypto }
 } = adone;
 
 const PROTOCOL = constants.PROTOCOL;
@@ -17,7 +17,7 @@ const rnd = (length) => {
 };
 
 
-class Ping extends EventEmitter {
+class Ping extends event.Emitter {
     constructor(swarm, peer) {
         super();
 

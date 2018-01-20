@@ -6,7 +6,7 @@ const {
 
 const __ = adone.private(adone.netron2.circuit);
 
-export default class Stop extends adone.std.events.EventEmitter {
+export default class Stop extends adone.event.Emitter {
     constructor(swarm) {
         super();
         this.swarm = swarm;

@@ -1,7 +1,7 @@
 const {
     is,
     database: { mongo },
-    event: { EventEmitter }
+    event
 } = adone;
 const {
     ReadPreference,
@@ -255,7 +255,7 @@ const auth = async (options, db) => {
     throw new Error(`Could not authenticate user ${options.auth[0]}`);
 };
 
-export default class MongoClient extends EventEmitter {
+export default class MongoClient extends event.Emitter {
     constructor({ relayEvents = true } = {}) {
         super();
         this.relayEvents = relayEvents;

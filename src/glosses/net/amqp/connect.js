@@ -2,7 +2,7 @@ const {
     is,
     x,
     net: { amqp },
-    event: { EventEmitter },
+    event,
     std: {
         util: { format: fmt },
         stream: {
@@ -302,7 +302,7 @@ const wrapStream = (s) => {
     return ws;
 };
 
-export class Connection extends EventEmitter {
+export class Connection extends event.Emitter {
     constructor(underlying) {
         super();
         const stream = this.stream = wrapStream(underlying);
@@ -332,28 +332,28 @@ export class Connection extends EventEmitter {
     }
 
 
-    /*
-      The frighteningly complicated opening protocol (spec section 2.2.4):
-
-         Client -> Server
-
-           protocol header ->
-             <- start
-           start-ok ->
-         .. next two zero or more times ..
-             <- secure
-           secure-ok ->
-             <- tune
-           tune-ok ->
-           open ->
-             <- open-ok
-
-    If I'm only supporting SASL's PLAIN mechanism (which I am for the time
-    being), it gets a bit easier since the server won't in general send
-    back a `secure`, it'll just send `tune` after the `start-ok`.
-    (SASL PLAIN: http://tools.ietf.org/html/rfc4616)
-
-    */
+    /**
+     * The frighteningly complicated opening protocol (spec section 2.2.4):
+     *
+     * Client -> Server
+     *
+     * protocol header ->
+     * <- start
+     * start-ok ->
+     * .. next two zero or more times ..
+     * <- secure
+     * secure-ok ->
+     * <- tune
+     * tune-ok ->
+     * open ->
+     * <- open-ok
+     *
+     * If I'm only supporting SASL's PLAIN mechanism (which I am for the time
+     * being), it gets a bit easier since the server won't in general send
+     * back a `secure`, it'll just send `tune` after the `start-ok`.
+     * (SASL PLAIN: http://tools.ietf.org/html/rfc4616)
+     *
+     */
     open(allFields, openCallback0) {
         const openCallback = openCallback0 || function () { };
 

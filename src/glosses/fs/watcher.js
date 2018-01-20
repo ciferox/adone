@@ -617,7 +617,7 @@ const setFsWatchFileListener = (path, fullPath, options, handlers) => {
 const normalizePath = is.windows ? util.normalizePath : adone.identity;
 const unnormalizePath = is.windows ? (x) => x.replace(/\//g, "\\") : adone.identity;
 
-export default class Watcher extends event.EventEmitter {
+export default class Watcher extends event.Emitter {
     constructor({
         persistent = true,
         ignoreInitial = false,

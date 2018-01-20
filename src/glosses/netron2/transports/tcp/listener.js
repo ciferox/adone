@@ -45,7 +45,7 @@ const trackSocket = (server, socket) => {
 
 
 export default (handler) => {
-    const listener = new adone.event.EventEmitter();
+    const listener = new adone.event.Emitter();
 
     const server = net.createServer((socket) => {
         // Avoid uncaught errors cause by unstable connections

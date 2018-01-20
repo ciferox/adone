@@ -1,9 +1,9 @@
 const {
     is,
-    event: { EventEmitter }
+    event
 } = adone;
 
-export default class Agent extends EventEmitter {
+export default class Agent extends event.Emitter {
     constructor(options, secure, rejectUnauthorized) {
         super();
         this.options = options;

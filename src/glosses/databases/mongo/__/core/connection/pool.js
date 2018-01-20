@@ -1,6 +1,6 @@
 const {
     database: { mongo },
-    event: { EventEmitter },
+    event,
     is,
     x,
     lazify
@@ -733,7 +733,7 @@ const _createConnection = (self) => {
     connection.connect();
 };
 
-export default class Pool extends EventEmitter {
+export default class Pool extends event.Emitter {
     constructor(options) {
         super();
         // Add the options

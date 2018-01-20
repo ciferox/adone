@@ -1,8 +1,11 @@
 require("../.."); // adone
-const EventEmitter = require("events");
-const path = require("path");
 
-const { is, shani: { Engine } } = adone;
+const {
+    is,
+    event,
+    shani: { Engine },
+    std: { path }
+} = adone;
 
 // a minimal engine
 
@@ -97,7 +100,7 @@ const removeNonInclusive = (block) => {
 };
 
 const run = () => {
-    const emitter = new EventEmitter();
+    const emitter = new event.Emitter();
 
     const runner = async (block, level = 0) => {
         if (hasInclusive(block)) {

@@ -45,7 +45,7 @@
 // Exported so that we can mess with it in tests
 export const UNITS_TO_MS = 1000;
 
-export class Heart extends adone.event.EventEmitter {
+export class Heart extends adone.event.Emitter {
     constructor(interval, checkSend, checkRecv) {
         super();
         this.interval = interval;

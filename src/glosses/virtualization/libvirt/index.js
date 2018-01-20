@@ -3,7 +3,7 @@ const native = adone.nativeAddon(adone.std.path.join(__dirname, "native", "libvi
 const {
     promise: { promisifyAll },
     std: { util },
-    event: { EventEmitter }
+    event
 } = adone;
 
 class LibvirtError extends Error {
@@ -31,7 +31,7 @@ const promisifyOptions = {
 
 const libvirt = native;
 
-util.inherits(libvirt.Domain, EventEmitter);
+util.inherits(libvirt.Domain, event.Emitter);
 
 libvirt.Hypervisor.prototype = promisifyAll(native.Hypervisor.prototype, promisifyOptions);
 libvirt.Domain.prototype = promisifyAll(native.Domain.prototype, promisifyOptions);

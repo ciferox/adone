@@ -1,30 +1,30 @@
 /**
  * Wrapper for the notifu 1.6 (http://www.paralint.com/projects/notifu/)
-
-Usage
-/t <value>      The type of message to display values are:
-                    info      The message is an informational message
-                    warn      The message is an warning message
-                    error     The message is an error message
-/d <value>      The number of milliseconds to display (omit or 0 for infinit)
-/p <value>      The title (or prompt) of the ballon
-/m <value>      The message text
-/i <value>      Specify an icon to use ("parent" uses the icon of the parent process)
-/e              Enable ballon tips in the registry (for this user only)
-/q              Do not play a sound when the tooltip is displayed
-/w              Show the tooltip even if the user is in the quiet period that follows his very first login (Windows 7 and up)
-/xp             Use IUserNotification interface event when IUserNotification2 is available
-
-// Kill codes:
-  2 = Timeout
-  3 = Clicked
-  4 = Closed or faded out
+ *
+ * Usage
+ * /t <value>      The type of message to display values are:
+ * info      The message is an informational message
+ * warn      The message is an warning message
+ * error     The message is an error message
+ * /d <value>      The number of milliseconds to display (omit or 0 for infinit)
+ * /p <value>      The title (or prompt) of the ballon
+ * /m <value>      The message text
+ * /i <value>      Specify an icon to use ("parent" uses the icon of the parent process)
+ * /e              Enable ballon tips in the registry (for this user only)
+ * /q              Do not play a sound when the tooltip is displayed
+ * /w              Show the tooltip even if the user is in the quiet period that follows his very first login (Windows 7 and up)
+ * /xp             Use IUserNotification interface event when IUserNotification2 is available
+ *
+ * // Kill codes:
+ * 2 = Timeout
+ * 3 = Clicked
+ * 4 = Closed or faded out
  */
 
 const {
     is,
     x,
-    event: { EventEmitter },
+    event,
     lazify,
     std: { path, os },
     notifier: { __ }
@@ -92,7 +92,7 @@ const doNotification = async (options, notifierOptions) => {
 
 let hasGrowl = false;
 
-export default class WindowsBalloon extends EventEmitter {
+export default class WindowsBalloon extends event.Emitter {
     constructor(options = {}) {
         super();
         this.options = adone.util.clone(options);

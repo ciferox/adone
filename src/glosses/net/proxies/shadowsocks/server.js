@@ -1,12 +1,12 @@
 const {
-    event: { EventEmitter },
+    event,
     util: { memcpy },
     x,
     is,
     net: { proxy: { shadowsocks } }
 } = adone;
 
-export class Parser extends EventEmitter {
+export class Parser extends event.Emitter {
     constructor(stream, { ivLength, getDecipher }) {
         super();
         this._stream = stream;
@@ -166,7 +166,7 @@ Parser.STATE_HEADER_PORT = 3;
 Parser.STATE_DONE = 4;
 Parser.STATE_ERROR = 10;
 
-export class Server extends EventEmitter {
+export class Server extends event.Emitter {
     constructor(options, callback) {
         super();
         if (is.function(options)) {

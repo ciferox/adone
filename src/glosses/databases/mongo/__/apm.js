@@ -1,6 +1,6 @@
 const {
     is,
-    event: { EventEmitter },
+    event,
     database: { mongo }
 } = adone;
 const { GridStore } = mongo;
@@ -37,7 +37,7 @@ const senstiveCommands = [
     "copydb"
 ];
 
-class Instrumentation extends EventEmitter {
+class Instrumentation extends event.Emitter {
     constructor(core, options, callback) {
         super();
         options = options || {};

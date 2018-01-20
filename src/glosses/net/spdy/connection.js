@@ -1,20 +1,19 @@
-const util = require("util");
-
 const debug = {
     server: require("debug")("spdy:connection:server"),
     client: require("debug")("spdy:connection:client")
 };
-const EventEmitter = require("events").EventEmitter;
 
 const {
     is,
-    net: { spdy: transport }
+    event,
+    net: { spdy: transport },
+    std: { util }
 } = adone;
 
 const Stream = transport.Stream;
 
 function Connection(socket, options) {
-    EventEmitter.call(this);
+    event.Emitter.call(this);
 
     const state = {};
     this._spdyState = state;
@@ -141,7 +140,7 @@ function Connection(socket, options) {
 
     this._init();
 }
-util.inherits(Connection, EventEmitter);
+util.inherits(Connection, event.Emitter);
 exports.Connection = Connection;
 
 Connection.create = function create(socket, options) {

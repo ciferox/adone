@@ -1,6 +1,5 @@
 const Board = require("./board");
 const Fn = require("./fn");
-const Emitter = require("events").EventEmitter;
 const util = require("util");
 
 const Controllers = {
@@ -191,7 +190,7 @@ function Altimeter(opts) {
     }, freq);
 }
 
-util.inherits(Altimeter, Emitter);
+util.inherits(Altimeter, adone.event.Emitter);
 
 /* istanbul ignore else */
 if (process.env.IS_TEST_MODE) {

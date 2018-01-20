@@ -1,6 +1,6 @@
 const {
     database: { redis },
-    event: { EventEmitter },
+    event,
     noop,
     util,
     is,
@@ -16,7 +16,7 @@ const setKey = (node = {}) => {
     return node;
 };
 
-export default class ConnectionPool extends EventEmitter {
+export default class ConnectionPool extends event.Emitter {
     constructor(redisOptions) {
         super();
         this.redisOptions = redisOptions;

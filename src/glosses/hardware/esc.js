@@ -3,7 +3,6 @@ const Expander = require("./expander");
 const Pins = Board.Pins;
 const Collection = require("./mixins/collection");
 const Fn = require("./fn");
-const Emitter = require("events").EventEmitter;
 const util = require("util");
 
 const priv = new Map();
@@ -238,7 +237,7 @@ function ESC(opts) {
     }
 }
 
-util.inherits(ESC, Emitter);
+util.inherits(ESC, adone.event.Emitter);
 
 /**
  * speed

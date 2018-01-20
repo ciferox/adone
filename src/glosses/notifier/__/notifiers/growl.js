@@ -1,6 +1,6 @@
 const {
     is,
-    event: { EventEmitter },
+    event,
     notifier: { __ },
     std: { net, crypto, fs, util: { format } }
 } = adone;
@@ -216,7 +216,7 @@ const errorMessageNotFound = "Couldn't connect to growl (might be used as a fall
 
 let hasGrowl = void 0;
 
-export default class Growl extends EventEmitter {
+export default class Growl extends event.Emitter {
     constructor(options = {}) {
         super();
         options = adone.util.clone(options);

@@ -1,6 +1,6 @@
 const {
     database: { mongo },
-    event: { EventEmitter },
+    event,
     data: { bson },
     is, util, lazify
 } = adone;
@@ -694,7 +694,7 @@ const executeWriteOperation = (self, op, ns, ops, options, callback) => {
     self.s.replicaSetState.primary[op](ns, ops, options, callback);
 };
 
-export default class ReplSet extends EventEmitter {
+export default class ReplSet extends event.Emitter {
     constructor(seedlist, options = {}) {
         // Validate seedlist
         if (!is.array(seedlist)) {

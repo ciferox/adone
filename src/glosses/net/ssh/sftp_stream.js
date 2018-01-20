@@ -8,7 +8,7 @@ const WritableStream = adone.std.stream.Writable;
 const constants = adone.std.fs.constants || process.binding("constants");
 const util = adone.std.util;
 const isDate = util.isDate;
-const listenerCount = adone.std.events.EventEmitter.listenerCount;
+const listenerCount = adone.event.Emitter.listenerCount;
 const fs = adone.std.fs;
 
 const ATTR = {

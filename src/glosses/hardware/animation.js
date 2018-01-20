@@ -4,7 +4,6 @@
 
 // Create jquery FX like queue
 
-const Emitter = require("events").EventEmitter;
 const util = require("util");
 const ease = require("ease-component");
 const Fn = require("./fn");
@@ -94,7 +93,7 @@ function Animation(target) {
     this.defaultTarget = target;
 }
 
-util.inherits(Animation, Emitter);
+util.inherits(Animation, adone.event.Emitter);
 
 /**
  * Animation.Segment()

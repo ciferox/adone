@@ -1,8 +1,4 @@
-const {
-    event: { EventEmitter }
-} = adone;
-
-export default class Command extends EventEmitter {
+export default class Command extends adone.event.Emitter {
     constructor() {
         super();
         this.next = null;

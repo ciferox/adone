@@ -1,6 +1,6 @@
 const query = require("./query");
 
-export default class MulticastDNS extends adone.event.EventEmitter {
+export default class MulticastDNS extends adone.event.Emitter {
     constructor(peerInfo, options) {
         super();
         options = options || {};

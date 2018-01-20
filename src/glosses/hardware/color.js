@@ -1,6 +1,5 @@
 const Board = require("./board");
 const EVS = require("./evshield");
-const Emitter = require("events").EventEmitter;
 const util = require("util");
 const Fn = require("./fn");
 const priv = new Map();
@@ -304,7 +303,7 @@ function Color(opts) {
     }, freq);
 }
 
-util.inherits(Color, Emitter);
+util.inherits(Color, adone.event.Emitter);
 
 Color.hexCode = function (rgb) {
     if (rgb.red === undefined || rgb.green === undefined || rgb.blue === undefined) {

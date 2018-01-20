@@ -13,7 +13,7 @@ const cleanMultiaddr = utils.cleanMultiaddr;
 const noop = once(() => { });
 
 const {
-    event: { EventEmitter },
+    event,
     is,
     multi,
     netron2: { PeerId, PeerInfo, Connection }
@@ -39,7 +39,7 @@ class WebRTCStar {
             this.wrtc = options.wrtc;
         }
 
-        this.discovery = new EventEmitter();
+        this.discovery = new event.Emitter();
         this.discovery.start = (callback) => {
             setImmediate(callback);
         };
@@ -126,7 +126,7 @@ class WebRTCStar {
             options = {};
         }
 
-        const listener = new EventEmitter();
+        const listener = new event.Emitter();
 
         listener.listen = (ma, callback) => {
             callback = callback ? once(callback) : noop;

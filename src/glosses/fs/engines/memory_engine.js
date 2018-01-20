@@ -223,7 +223,7 @@ class OpenedFile {
 
 let inode = 1;
 
-class AbstractFile extends event.EventEmitter {
+class AbstractFile extends event.Emitter {
     constructor({
         mtime = new Date(),
         ctime = new Date(),
@@ -554,7 +554,7 @@ class Directory extends AbstractFile {
     }
 }
 
-class FSWatcher extends event.EventEmitter {
+class FSWatcher extends event.Emitter {
     constructor(filename, parentNode, node, options) {
         super();
         this.options = options;

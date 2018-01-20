@@ -10,7 +10,7 @@ const {
 /**
  * Download helper
  */
-export default class Downlader extends adone.event.EventEmitter {
+export default class Downlader extends adone.event.Emitter {
     constructor({
         url,
         dest

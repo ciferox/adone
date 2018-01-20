@@ -43,7 +43,7 @@ const getTokenType = (match) => {
     return token.type;
 };
 
-class Differ extends adone.event.EventEmitter {
+class Differ extends adone.event.Emitter {
     diff(actual, expected, key) {
         if (actual === expected) {
             this.emit("element", "old", actual, key);

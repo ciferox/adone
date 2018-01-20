@@ -1,6 +1,6 @@
 const {
     database: { mongo },
-    event: { EventEmitter },
+    event,
     data: { bson },
     is,
     x,
@@ -317,7 +317,7 @@ const basicReadValidations = (self, options) => {
 
 const listeners = ["close", "error", "timeout", "parseError", "connect"];
 
-export default class Server extends EventEmitter {
+export default class Server extends event.Emitter {
     constructor(options = {}) {
         super();
         // Server instance id

@@ -1,7 +1,7 @@
 const {
     is,
     util,
-    event: { EventEmitter },
+    event,
     database: { pouch }
 } = adone;
 
@@ -15,7 +15,7 @@ const {
     }
 } = adone.private(pouch);
 
-class Sync extends EventEmitter {
+class Sync extends event.Emitter {
     constructor(src, target, opts, callback) {
         super();
         const self = this;

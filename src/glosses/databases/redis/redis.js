@@ -1,6 +1,6 @@
 const {
     database: { redis },
-    event: { EventEmitter },
+    event,
     collection,
     noop,
     is,
@@ -12,7 +12,7 @@ const {
 
 const __ = adone.private(redis);
 
-export default class Redis extends __.Commander.mixin(EventEmitter) {
+export default class Redis extends __.Commander.mixin(event.Emitter) {
     constructor(port, host, options) {
         super();
         this.parseOptions(port, host, options);

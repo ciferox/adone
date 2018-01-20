@@ -1,6 +1,6 @@
 const {
     netron2: { Connection },
-    event: { EventEmitter },
+    event,
     stream: { pull, Multiplex, pump }
 } = adone;
 
@@ -23,7 +23,7 @@ const catchError = function (stream) {
 };
 
 
-class Muxer extends EventEmitter {
+class Muxer extends event.Emitter {
     constructor(conn, multiplex) {
         super();
         this.multiplex = multiplex;

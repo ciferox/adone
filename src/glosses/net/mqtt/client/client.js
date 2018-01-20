@@ -34,7 +34,7 @@ const storeAndSend = (client, packet, cb) => {
     });
 };
 
-export default class MqttClient extends adone.event.EventEmitter {
+export default class MqttClient extends adone.event.Emitter {
     constructor(streamBuilder, options = {}) {
         super();
         this.options = options;

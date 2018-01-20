@@ -1,7 +1,7 @@
 const {
     is,
     net: { mail: { __ } },
-    event: { EventEmitter }
+    event
 } = adone;
 
 /**
@@ -15,7 +15,7 @@ const {
  * @constructor
  * @param {Object} optional config parameter for the AWS Sendmail service
  */
-export default class SESTransport extends EventEmitter {
+export default class SESTransport extends event.Emitter {
     constructor(options) {
         super();
         options = options || {};

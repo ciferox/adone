@@ -1,6 +1,6 @@
 const {
     is,
-    event: { EventEmitter },
+    event,
     net: { amqp }
 } = adone;
 
@@ -263,7 +263,7 @@ class ConfirmChannel extends Channel {
 }
 
 
-export default class ChannelModel extends EventEmitter {
+export default class ChannelModel extends event.Emitter {
     constructor(connection) {
         super();
         this.connection = connection;

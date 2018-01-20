@@ -1,10 +1,6 @@
-const {
-    event: { EventEmitter }
-} = adone;
-
 // We create a basic promise so the caller can cancel the replication possibly
 // before we have actually started listening to changes etc
-export default class Replication extends EventEmitter {
+export default class Replication extends adone.event.Emitter {
     constructor() {
         super();
         this.cancelled = false;

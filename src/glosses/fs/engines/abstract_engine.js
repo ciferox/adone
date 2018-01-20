@@ -442,7 +442,7 @@ const statEqual = (prev, curr) => {
         && prev.mtimeMs === curr.mtimeMs;
 };
 
-class StatWatcher extends event.EventEmitter {
+class StatWatcher extends event.Emitter {
     constructor() {
         super();
         this.stopped = false;
@@ -491,7 +491,7 @@ class StatWatcher extends event.EventEmitter {
     }
 }
 
-class FSWatcher extends event.EventEmitter {
+class FSWatcher extends event.Emitter {
     constructor() {
         super();
         this.engine = false;

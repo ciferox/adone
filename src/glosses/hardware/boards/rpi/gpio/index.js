@@ -11,7 +11,7 @@ const initializePigpio = () => {
 };
 
 
-export class Gpio extends adone.event.EventEmitter {
+export class Gpio extends adone.event.Emitter {
     constructor(gpio, options) {
         super();
         initializePigpio();

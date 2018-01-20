@@ -24,7 +24,7 @@ const wrap = (type, fn) => function plugin(...args) {
 export default class Compiler {
     constructor(options, state) {
         this.options = { source: "string", ...options };
-        this.emitter = new event.EventEmitter();
+        this.emitter = new event.Emitter();
         this.on = this.emitter.on.bind(this.emitter);
         this.isCompiler = true;
         this.state = state || {};

@@ -4,7 +4,7 @@ let hasNotifier = void 0;
 const {
     is,
     x,
-    event: { EventEmitter },
+    event,
     notifier: { __ },
     std: { os }
 } = adone;
@@ -29,7 +29,7 @@ const doNotification = (options) => {
 };
 
 
-export default class NotifySend extends EventEmitter {
+export default class NotifySend extends event.Emitter {
     constructor(options) {
         super();
         this.options = adone.util.clone(options);

@@ -1,6 +1,6 @@
 const {
     is,
-    event: { EventEmitter },
+    event,
     net: { ws: { constants, extension, Client, PerMessageDeflate } },
     std: { url, http, crypto }
 } = adone;
@@ -43,9 +43,9 @@ const abortConnection = function (socket, code, message) {
 /**
  * Class representing a WebSocket server.
  *
- * @extends EventEmitter
+ * @extends event.Emitter
  */
-export default class WebSocketServer extends EventEmitter {
+export default class WebSocketServer extends event.Emitter {
     /**
      * Create a `WebSocketServer` instance.
      *

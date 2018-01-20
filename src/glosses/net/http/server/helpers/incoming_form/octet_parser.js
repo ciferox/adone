@@ -1,6 +1,4 @@
-const { event: { EventEmitter } } = adone;
-
-export default class OctetParser extends EventEmitter {
+export default class OctetParser extends adone.event.Emitter {
     write(buffer) {
         this.emit("data", buffer);
         return buffer.length;

@@ -6,7 +6,7 @@ const {
 const ONCE_MAPPING = Symbol.for("asyncEmitter:onceMapping");
 const MANAGER = Symbol();
 
-export default class AsyncEmitter extends adone.event.EventEmitter {
+export default class AsyncEmitter extends adone.event.Emitter {
     constructor(concurrency = null) {
         super();
         if (concurrency >= 1) {

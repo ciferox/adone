@@ -8,10 +8,10 @@ const {
     x,
     util,
     text,
-    event: { EventEmitter }
+    event
 } = adone;
 
-export default class Datastore extends EventEmitter {
+export default class Datastore extends event.Emitter {
     constructor(options) {
         super();
 

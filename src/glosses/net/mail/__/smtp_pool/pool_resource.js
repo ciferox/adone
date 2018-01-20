@@ -1,6 +1,6 @@
 const {
     x,
-    event: { EventEmitter },
+    event,
     util,
     net: { mail: { __ } }
 } = adone;
@@ -11,7 +11,7 @@ const {
  * @constructor
  * @param {Object} options SMTPPool instance
  */
-export default class PoolResource extends EventEmitter {
+export default class PoolResource extends event.Emitter {
     constructor(pool) {
         super();
 

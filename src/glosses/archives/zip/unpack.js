@@ -3,7 +3,7 @@ const {
     x,
     fs,
     compressor: { deflate },
-    event: { EventEmitter },
+    event,
     stream
 } = adone;
 
@@ -292,7 +292,7 @@ export const validateFileName = (fileName) => {
     return null;
 };
 
-class ZipFile extends EventEmitter {
+class ZipFile extends event.Emitter {
     constructor(
         reader,
         centralDirectoryOffset,

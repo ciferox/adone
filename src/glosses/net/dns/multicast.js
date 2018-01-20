@@ -86,7 +86,7 @@ module.exports = function (opts) {
         opts = {};
     }
 
-    const that = new event.EventEmitter();
+    const that = new event.Emitter();
     let port = is.number(opts.port) ? opts.port : 5353;
     const type = opts.type || "udp4";
     const ip = opts.ip || opts.host || (type === "udp4" ? "224.0.0.251" : null);

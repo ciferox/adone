@@ -53,7 +53,7 @@ const _addListener = (target, type, listener, prepend) => {
             const m = target.getMaxListeners();
             if (m && m > 0 && existing.length > m) {
                 existing.warned = true;
-                const w = new x.Exception(`Possible EventEmitter memory leak detected. ${existing.length} ${String(type)} listeners added. Use emitter.setMaxListeners() to increase limit`);
+                const w = new x.Exception(`Possible Emitter memory leak detected. ${existing.length} ${String(type)} listeners added. Use emitter.setMaxListeners() to increase limit`);
                 w.name = "MaxListenersExceededWarning";
                 w.emitter = target;
                 w.type = type;
@@ -221,11 +221,11 @@ const explicitPropagate = (events, source, dest) => {
 };
 
 
-export default class EventEmitter {
+export default class Emitter {
     constructor() {
         this[$events] = Object.create(null);
         this[$eventsCount] = 0;
-        this[$maxListeners] = EventEmitter.defaultMaxListeners;
+        this[$maxListeners] = Emitter.defaultMaxListeners;
     }
 
     getMaxListeners() {
@@ -504,4 +504,4 @@ export default class EventEmitter {
     }
 }
 
-EventEmitter.prototype.on = EventEmitter.prototype.addListener;
+Emitter.prototype.on = Emitter.prototype.addListener;

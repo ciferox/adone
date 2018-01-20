@@ -35,7 +35,7 @@ const wrap = (type, fn) => function plugin(...args) {
  * @param {string} `input`
  * @param {object} `options`
  */
-export default class Parser extends event.EventEmitter {
+export default class Parser extends event.Emitter {
     constructor(options) {
         super();
         this.options = { source: "string", ...options };

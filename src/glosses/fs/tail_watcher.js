@@ -1,6 +1,12 @@
-const { event: { EventEmitter }, std, fs, is, collection } = adone;
+const {
+    event,
+    std,
+    fs,
+    is,
+    collection
+} = adone;
 
-export default class Tail extends EventEmitter {
+export default class Tail extends event.Emitter {
     constructor(filename, {
         separator = /[\r]?\n/,
         fsWatchOptions = {},
@@ -20,7 +26,7 @@ export default class Tail extends EventEmitter {
         this.encoding = encoding;
 
         this.buffer = "";
-        this.internalDispatcher = new EventEmitter();
+        this.internalDispatcher = new event.Emitter();
         this.queue = new collection.LinkedList();
         this.isWatching = false;
 

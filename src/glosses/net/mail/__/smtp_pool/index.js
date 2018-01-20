@@ -1,7 +1,7 @@
 const {
     is,
     x,
-    event: { EventEmitter },
+    event,
     net: { mail: { __ } }
 } = adone;
 
@@ -11,7 +11,7 @@ const {
  * @constructor
  * @param {Object} options SMTP Connection options
  */
-export default class SMTPPool extends EventEmitter {
+export default class SMTPPool extends event.Emitter {
     constructor(options) {
         super();
 

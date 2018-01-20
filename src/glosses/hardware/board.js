@@ -1,5 +1,4 @@
 let IS_TEST_MODE = Boolean(process.env.IS_TEST_MODE);
-const Emitter = require("events").EventEmitter;
 const util = require("util");
 const chalk = require("chalk");
 const Collection = require("./mixins/collection");
@@ -453,7 +452,7 @@ function finalizeAndBroadcast(data, type, io) {
 }
 
 // Inherit event api
-util.inherits(Board, Emitter);
+util.inherits(Board, adone.event.Emitter);
 
 
 
@@ -1206,7 +1205,7 @@ function Boards(opts) {
     });
 }
 
-util.inherits(Boards, Emitter);
+util.inherits(Boards, adone.event.Emitter);
 
 Object.assign(Boards.prototype, Collection.prototype);
 

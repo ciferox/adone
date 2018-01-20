@@ -1,10 +1,10 @@
 const {
-    event: { EventEmitter },
+    event,
     std: { path, fs },
     is
 } = adone;
 
-export class Loader extends EventEmitter {
+export class Loader extends event.Emitter {
     resolve(from, to) {
         return path.resolve(path.dirname(from), to);
     }

@@ -1,6 +1,6 @@
 const {
     is,
-    event: { EventEmitter },
+    event,
     lazify,
     notifier: { __ },
     std: { path }
@@ -16,7 +16,7 @@ const lazy = lazify({
 
 let activeId;
 
-export default class NotificationCenter extends EventEmitter {
+export default class NotificationCenter extends event.Emitter {
     constructor(options = {}) {
         super();
         this.options = adone.util.clone(options);

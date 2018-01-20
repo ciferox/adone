@@ -3,7 +3,7 @@ const {
     crypto: { crc32 },
     compressor: { deflate },
     std: { stream: { Transform, PassThrough } },
-    event: { EventEmitter }
+    event
 } = adone;
 
 const writeToOutputStream = (self, buffer) => {
@@ -558,7 +558,7 @@ const validateMetadataPath = (metadataPath, isDirectory) => {
     return metadataPath;
 };
 
-export class ZipFile extends EventEmitter {
+export class ZipFile extends event.Emitter {
     constructor() {
         super();
         this.outputStream = new PassThrough();

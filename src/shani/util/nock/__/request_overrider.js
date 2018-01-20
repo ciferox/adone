@@ -2,7 +2,6 @@ const {
     is,
     event,
     std: {
-        events: { EventEmitter },
         stream
     },
     compressor: {
@@ -89,7 +88,7 @@ const setRequestHeaders = (req, options, interceptor) => {
 export default function requestOverrider(req, options, interceptors, remove, cb) {
     let response;
     if (IncomingMessage) {
-        response = new IncomingMessage(new EventEmitter());
+        response = new IncomingMessage(new event.Emitter());
     } else {
         response = new stream.Readable();
         response._read = function () { };
@@ -123,7 +122,7 @@ export default function requestOverrider(req, options, interceptors, remove, cb)
     }
 
     if (!req.connection) {
-        req.connection = new EventEmitter();
+        req.connection = new event.Emitter();
     }
 
     req.path = options.path;
@@ -181,7 +180,7 @@ export default function requestOverrider(req, options, interceptors, remove, cb)
             if (interceptor && req instanceof ClientRequest) {
                 if (interceptor.options.allowUnmocked) {
                     const newReq = new ClientRequest(options, cb);
-                    event.EventEmitter.propagateEvents(newReq, req, [
+                    event.Emitter.propagateEvents(newReq, req, [
                         "abort",
                         "connect",
                         "continue",
@@ -528,7 +527,7 @@ export default function requestOverrider(req, options, interceptors, remove, cb)
             req.socket.emit("secureConnect", req.socket);
         }
 
-        EventEmitter.prototype.on.call(this, event, listener);
+        event.Emitter.prototype.on.call(this, event, listener);
         return this;
     };
     req.once = req.on = function (event, listener) {
@@ -539,7 +538,7 @@ export default function requestOverrider(req, options, interceptors, remove, cb)
             req.socket.emit("secureConnect", req.socket);
         }
 
-        EventEmitter.prototype.on.call(this, event, listener);
+        event.Emitter.prototype.on.call(this, event, listener);
         return this;
     };
 

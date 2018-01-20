@@ -2,7 +2,7 @@
 // pre-v0.4 ssh2. If it weren"t for `read()` and `write()` being used by the
 // streams2/3 API, we could just pass the SFTPStream directly to the end user...
 
-export default class SFTPWrapper extends adone.std.events.EventEmitter {
+export default class SFTPWrapper extends adone.event.Emitter {
     constructor(stream) {
         super();
 

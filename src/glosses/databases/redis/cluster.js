@@ -6,14 +6,14 @@ const {
     collection,
     promise,
     util,
-    event: { EventEmitter }
+    event
 } = adone;
 
 const __ = adone.private(redis);
 
 const isRejectOverwritten = Symbol("is reject overwritten");
 
-export default class Cluster extends __.Commander.mixin(EventEmitter) {
+export default class Cluster extends __.Commander.mixin(event.Emitter) {
     constructor(startupNodes, options) {
         super();
         this.options = { ...Cluster.defaultOptions, ...options };

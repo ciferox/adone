@@ -1,6 +1,6 @@
 const {
     is,
-    event: { EventEmitter },
+    event,
     net: { ws: { constants, extension, Receiver, Sender, PerMessageDeflate } },
     std: { crypto, http, https, url }
 } = adone;
@@ -465,9 +465,9 @@ const initAsClient = function (address, protocols, options) {
 /**
  * Class representing a WebSocket.
  *
- * @extends EventEmitter
+ * @extends event.Emitter
  */
-export default class WebSocket extends EventEmitter {
+export default class WebSocket extends event.Emitter {
     /**
      * Create a new `WebSocket`.
      *

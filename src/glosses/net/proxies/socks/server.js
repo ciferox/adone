@@ -27,7 +27,7 @@ const BUF_REP_INTR_SUCCESS = Buffer.from([
 const BUF_REP_DISALLOW = Buffer.from([0x05, REP.DISALLOW]);
 const BUF_REP_CMDUNSUPP = Buffer.from([0x05, REP.CMDUNSUPP]);
 
-export class Parser extends adone.event.EventEmitter {
+export class Parser extends adone.event.Emitter {
     constructor(stream) {
         super();
 
@@ -334,7 +334,7 @@ const proxySocket = (socket, req) => {
     });
 };
 
-export default class Server extends adone.event.EventEmitter {
+export default class Server extends adone.event.Emitter {
     constructor(options = {}, listener) {
         super();
         if (is.function(options)) {

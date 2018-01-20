@@ -1,5 +1,5 @@
 const {
-    event: { EventEmitter },
+    event,
     std: { net },
     database: { mysql }
 } = adone;
@@ -7,7 +7,7 @@ const {
 const __ = adone.private(mysql);
 
 // TODO: inherit Server from net.Server
-export default class Server extends EventEmitter {
+export default class Server extends event.Emitter {
     constructor() {
         super();
         this.connections = [];

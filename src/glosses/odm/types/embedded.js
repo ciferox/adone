@@ -3,7 +3,7 @@ const PromiseProvider = require("../promise_provider");
 
 const {
     is,
-    std: { events: { EventEmitter } }
+    event
 } = adone;
 
 /**
@@ -39,8 +39,8 @@ class EmbeddedDocument extends Document {
     }
 }
 
-for (const i in EventEmitter.prototype) {
-    EmbeddedDocument[i] = EventEmitter.prototype[i];
+for (const i in event.Emitter.prototype) {
+    EmbeddedDocument[i] = event.Emitter.prototype[i];
 }
 
 EmbeddedDocument.prototype.toBSON = function () {
@@ -83,7 +83,8 @@ EmbeddedDocument.prototype.markModified = function (path) {
     }
 };
 
-/*!
+/**
+ * !
  * ignore
  */
 
@@ -113,7 +114,8 @@ EmbeddedDocument.prototype.save = function (fn) {
     }));
 };
 
-/*!
+/**
+ * !
  * Registers remove event listeners for triggering
  * on subdocuments.
  *
@@ -121,20 +123,20 @@ EmbeddedDocument.prototype.save = function (fn) {
  * @api private
  */
 
-function registerRemoveListener(sub) {
+const registerRemoveListener = function (sub) {
     let owner = sub.ownerDocument();
 
-    function emitRemove() {
+    const emitRemove = function () {
         owner.removeListener("save", emitRemove);
         owner.removeListener("remove", emitRemove);
         sub.emit("remove", sub);
         sub.constructor.emit("remove", sub);
         owner = sub = null;
-    }
+    };
 
     owner.on("save", emitRemove);
     owner.on("remove", emitRemove);
-}
+};
 
 /**
  * Removes the subdocument from its parent array.
@@ -354,7 +356,8 @@ EmbeddedDocument.prototype.parentArray = function () {
     return this.__parentArray;
 };
 
-/*!
+/**
+ * !
  * Module exports.
  */
 

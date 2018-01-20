@@ -1,7 +1,3 @@
-const {
-    event: { EventEmitter }
-} = adone;
-
 const makeDoneCb = (resolve, reject) => (err, rows, columns) => {
     if (err) {
         reject(err);
@@ -76,7 +72,7 @@ class PromisePreparedStatementInfo {
 // create facade functions for prototype functions on "Connection" that are not yet
 // implemented with PromiseConnection
 
-export default class PromiseConnection extends EventEmitter {
+export default class PromiseConnection extends adone.event.Emitter {
     constructor(connection, connectParams) {
         super();
         this.connection = connection;

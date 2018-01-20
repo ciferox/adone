@@ -1,6 +1,6 @@
 const {
     database: { mongo },
-    event: { EventEmitter },
+    event,
     is,
     util,
     lazify
@@ -574,7 +574,7 @@ const executeWriteOperation = (self, op, ns, ops, options, callback) => {
     server[op](ns, ops, options, callback);
 };
 
-export default class Mongos extends EventEmitter {
+export default class Mongos extends event.Emitter {
     constructor(seedlist, options = {}) {
         super();
         // Get replSet Id

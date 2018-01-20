@@ -1,5 +1,5 @@
 const {
-    event: { EventEmitter },
+    event,
     database: { mysql }
 } = adone;
 
@@ -31,7 +31,7 @@ class PromisePoolConnection extends __.PromiseConnection {
     }
 }
 
-export default class PromisePool extends EventEmitter {
+export default class PromisePool extends event.Emitter {
     constructor(pool) {
         super();
         this.pool = pool;

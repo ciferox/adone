@@ -1,5 +1,4 @@
 const Board = require("./board");
-const Emitter = require("events").EventEmitter;
 const util = require("util");
 const Fn = require("./fn");
 const int16 = Fn.int16;
@@ -596,7 +595,7 @@ function Compass(opts) {
 }
 
 
-util.inherits(Compass, Emitter);
+util.inherits(Compass, adone.event.Emitter);
 
 function ToHeading(x, y) {
     /**

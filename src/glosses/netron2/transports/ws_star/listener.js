@@ -10,7 +10,7 @@ const cleanUrlSIO = utils.cleanUrlSIO;
 
 const {
     is,
-    event: { EventEmitter },
+    event,
     multi,
     netron2: { crypto, Connection }
 } = adone;
@@ -23,13 +23,13 @@ const sioOptions = {
 };
 
 /**
-  * Listener for signalling server
-  * @class
-  * @param {Object} options - Options for the listener
-  * @param {PeerId} options.id - Id for the crypto challenge
-  * @param {function} options.handler - Incomming connection handler
-  */
-class Listener extends EventEmitter {
+ * Listener for signalling server
+ * @class
+ * @param {Object} options - Options for the listener
+ * @param {PeerId} options.id - Id for the crypto challenge
+ * @param {function} options.handler - Incomming connection handler
+ */
+class Listener extends event.Emitter {
     constructor(options) {
         super();
         this.id = options.id;
@@ -42,11 +42,11 @@ class Listener extends EventEmitter {
 
     // "private" functions
     /**
-      * Connects to the signalling server
-      * @param {function} cb - callback
-      * @returns {undefined}
-      * @private
-      */
+     * Connects to the signalling server
+     * @param {function} cb - callback
+     * @returns {undefined}
+     * @private
+     */
     _up(cb) {
         cb = cb ? once(cb) : noop;
         if (this.io) {
@@ -70,10 +70,10 @@ class Listener extends EventEmitter {
     }
 
     /**
-      * Disconnects from signalling server
-      * @returns {undefined}
-      * @private
-      */
+     * Disconnects from signalling server
+     * @returns {undefined}
+     * @private
+     */
     _down() {
         if (!this.io) {
             return;
@@ -85,11 +85,11 @@ class Listener extends EventEmitter {
     }
 
     /**
-      * Performs a cryptoChallenge
-      * @param {function} callback - callback
-      * @returns {undefined}
-      * @private
-      */
+     * Performs a cryptoChallenge
+     * @param {function} callback - callback
+     * @returns {undefined}
+     * @private
+     */
     _cryptoChallenge(callback) {
         if (!this.io) {
             return callback(new Error("Not connected"));
@@ -131,11 +131,11 @@ class Listener extends EventEmitter {
     }
 
     /**
-      * Performs a cryptoChallenge when no signature is found
-      * @param {function} cb - callback
-      * @returns {undefined}
-      * @private
-      */
+     * Performs a cryptoChallenge when no signature is found
+     * @param {function} cb - callback
+     * @returns {undefined}
+     * @private
+     */
     _crypto(cb) {
         cb = cb ? once(cb) : noop;
 
@@ -158,26 +158,26 @@ class Listener extends EventEmitter {
     }
 
     /**
-      * Emits ss-join with the multiaddr and signature
-      *
-      * @param {function} cb - callback
-      * @returns {undefined}
-      * @private
-      */
+     * Emits ss-join with the multiaddr and signature
+     *
+     * @param {function} cb - callback
+     * @returns {undefined}
+     * @private
+     */
     _join(cb) {
         this.io.emit("ss-join", this.ma.toString(), this.signature, cb);
     }
 
     /**
-      * Handles incomming dials
-      * @listens ss-incomming
-      * @param {socket.io_client} socket
-      * @param {string} dialId - Unique id for this dial
-      * @param {string} dialFrom - Multiaddr as string
-      * @param {function} cb - callback
-      * @returns {undefined}
-      * @private
-      */
+     * Handles incomming dials
+     * @listens ss-incomming
+     * @param {socket.io_client} socket
+     * @param {string} dialId - Unique id for this dial
+     * @param {string} dialFrom - Multiaddr as string
+     * @param {function} cb - callback
+     * @returns {undefined}
+     * @private
+     */
     _incommingDial(socket, dialId, dialFrom, cb) {
         this.log(`dial#${dialId} incomming from`, dialFrom);
         const ma = multi.address.create(dialFrom);
@@ -200,11 +200,11 @@ class Listener extends EventEmitter {
 
     // public functions
     /**
-      * Listens on a multiaddr
-      * @param {Multiaddr} ma
-      * @param {function} callback
-      * @returns {undefined}
-      */
+     * Listens on a multiaddr
+     * @param {Multiaddr} ma
+     * @param {function} callback
+     * @returns {undefined}
+     */
     listen(ma, callback) {
         this.ma = ma;
         this.server = cleanUrlSIO(ma);
@@ -246,10 +246,10 @@ class Listener extends EventEmitter {
     }
 
     /**
-      * Gets the addresses the listener listens on
-      * @param {function} callback
-      * @returns {undefined}
-      */
+     * Gets the addresses the listener listens on
+     * @param {function} callback
+     * @returns {undefined}
+     */
     getAddrs(callback) {
         setImmediate(() => callback(null, this.ma ? [this.ma] : []));
     }
@@ -264,12 +264,12 @@ class Listener extends EventEmitter {
 
     // called from transport
     /**
-      * Dials a peer
-      * @param {Multiaddr} ma - Multiaddr to dial to
-      * @param {Object} options
-      * @param {function} callback
-      * @returns {undefined}
-      */
+     * Dials a peer
+     * @param {Multiaddr} ma - Multiaddr to dial to
+     * @param {Object} options
+     * @param {function} callback
+     * @returns {undefined}
+     */
     dial(ma, options, callback) {
         if (is.function(options)) {
             callback = options;

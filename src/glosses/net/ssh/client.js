@@ -403,7 +403,7 @@ const trySign = (sig, key) => {
     }
 };
 
-export default class Client extends adone.event.EventEmitter {
+export default class Client extends adone.event.Emitter {
     constructor() {
         super();
 

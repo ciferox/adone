@@ -21,7 +21,7 @@ ERRORS[REP.TTLEXPIRED] = ["ttl expired", "ETTLEXPIRED"];
 ERRORS[REP.CMDUNSUPP] = ["command not supported", "ECMDNOSUPPORT"];
 ERRORS[REP.ATYPUNSUPP] = ["address type not supported", "EATYPNOSUPPORT"];
 
-export class Parser extends adone.event.EventEmitter {
+export class Parser extends adone.event.Emitter {
     constructor(stream) {
         super();
         this._stream = stream;
@@ -233,7 +233,7 @@ export class Parser extends adone.event.EventEmitter {
     }
 }
 
-export default class Client extends adone.event.EventEmitter {
+export default class Client extends adone.event.Emitter {
     constructor(options = {}) {
         super();
 

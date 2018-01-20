@@ -2,7 +2,7 @@ const {
     is,
     x,
     util,
-    event: { EventEmitter },
+    event,
     database: { mysql }
 } = adone;
 
@@ -67,7 +67,7 @@ class PoolNamespace {
     }
 }
 
-export default class PoolCluster extends EventEmitter {
+export default class PoolCluster extends event.Emitter {
     constructor(config = {}) {
         super();
         this._canRetry = is.undefined(config.canRetry) ? true : config.canRetry;

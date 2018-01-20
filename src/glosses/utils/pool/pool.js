@@ -6,7 +6,7 @@ import PooledResource from "./pooled_resource";
 
 const {
     is,
-    event: { EventEmitter },
+    event,
     noop
 } = adone;
 
@@ -25,7 +25,7 @@ const FACTORY_DESTROY_ERROR = "factoryDestroyError";
 const reflector = (promise) => promise.then(noop, noop);
 
 
-export default class Pool extends EventEmitter {
+export default class Pool extends event.Emitter {
     /**
      * Generate an Object pool with a specified `factory` and `config`.
      *

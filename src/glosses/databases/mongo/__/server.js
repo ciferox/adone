@@ -1,6 +1,6 @@
 const {
     is,
-    event: { EventEmitter },
+    event,
     database: { mongo },
     std: { os }
 } = adone;
@@ -62,7 +62,7 @@ const legalOptionNames = [
     "promoteBuffers"
 ];
 
-export default class Server extends EventEmitter {
+export default class Server extends event.Emitter {
     constructor(host, port, options = {}) {
         super();
         options = filterOptions(options, legalOptionNames);

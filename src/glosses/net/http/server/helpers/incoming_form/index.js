@@ -1,6 +1,6 @@
 const {
     std: { string_decoder: { StringDecoder }, stream: { Stream }, os, path, crypto },
-    event: { EventEmitter },
+    event,
     is,
     x
 } = adone;
@@ -15,7 +15,7 @@ const dummyParser = (self) => {
     };
 };
 
-export default class IncomingForm extends EventEmitter {
+export default class IncomingForm extends event.Emitter {
     constructor(opts = {}) {
         super();
 

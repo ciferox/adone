@@ -6,7 +6,7 @@ const {
     collection,
     is,
     util,
-    event: { EventEmitter },
+    event,
     stream: {
         core: { Stream: CoreStream }
     },
@@ -828,7 +828,7 @@ const normalizedAbsoluteGetter = (entry) => entry.normalizedAbsolute;
 const normalizedRelativeGetter = (entry) => entry.normalizedRelative;
 const defaultRoot = is.windows ? resolve("/").slice(0, -1) : resolve("/");
 
-class Glob extends EventEmitter {
+class Glob extends event.Emitter {
     constructor(patterns, {
         cwd = process.cwd(),
         stat = false,

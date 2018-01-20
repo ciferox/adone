@@ -1,6 +1,6 @@
 const {
     is,
-    event: { EventEmitter },
+    event,
     notifier: { __ },
     lazify,
     std: { path }
@@ -13,7 +13,7 @@ const lazy = lazify({
 const timeoutMessage = "the toast has timed out";
 const successMessage = "user clicked on the toast";
 
-export default class WindowsToaster extends EventEmitter {
+export default class WindowsToaster extends event.Emitter {
     constructor(options = {}) {
         super();
         this.options = adone.util.clone(options);

@@ -2,7 +2,7 @@ const {
     netron2: { PeerId, PeerInfo }
 } = adone;
 
-export default class Railing extends adone.event.EventEmitter {
+export default class Railing extends adone.event.Emitter {
     constructor(bootstrapers) {
         super();
         this.bootstrapers = bootstrapers;

@@ -2,7 +2,7 @@ const {
     is,
     vendor: { lodash: _ },
     terminal,
-    event: { EventEmitter }
+    event
 } = adone;
 
 const {
@@ -27,7 +27,7 @@ const breakLines = (lines, width) => {
 
 const forceLineReturn = (content, width) => _.flatten(breakLines(content.split("\n"), width)).join("\n");
 
-class Observer extends EventEmitter {
+class Observer extends event.Emitter {
     constructor(term) {
         super();
         this.readline = term.readline;

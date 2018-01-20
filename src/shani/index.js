@@ -868,7 +868,7 @@ class ExternalRunner {
 
     start() {
         this.send("start");
-        const emitter = new adone.event.EventEmitter();
+        const emitter = new adone.event.Emitter();
 
         this.proc.on("message", ({ event, args }) => {
             emitter.emit(event, ...args);
@@ -1067,7 +1067,7 @@ export class Engine {
         };
 
         const start = () => {
-            const emitter = new adone.event.EventEmitter();
+            const emitter = new adone.event.Emitter();
             let stopped = false;
 
             emitter.stop = () => {
@@ -1474,7 +1474,7 @@ export class Engine {
     }
 
     start() {
-        const emitter = new adone.event.EventEmitter();
+        const emitter = new adone.event.Emitter();
 
         let executing = null;
         let stopped = false;

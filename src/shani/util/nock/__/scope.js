@@ -1,9 +1,9 @@
 const {
     is,
     x,
+    event,
     std: {
-        url,
-        events: { EventEmitter }
+        url
     },
     shani: {
         util: { nock }
@@ -16,7 +16,7 @@ const {
     util: _util
 } = __;
 
-export default class Scope extends EventEmitter {
+export default class Scope extends event.Emitter {
     constructor(basePath, options) {
         super();
         this.keyedInterceptors = {};

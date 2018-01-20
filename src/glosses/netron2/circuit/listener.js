@@ -5,7 +5,7 @@ const {
 const __ = adone.private(adone.netron2.circuit);
 
 module.exports = (swarm, options, connHandler) => {
-    const listener = new adone.event.EventEmitter();
+    const listener = new adone.event.Emitter();
     const utils = __.utils(swarm);
 
     listener.stopHandler = new __.Stop(swarm);

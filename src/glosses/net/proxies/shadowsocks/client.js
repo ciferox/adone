@@ -1,7 +1,7 @@
 const {
     is,
     x,
-    event: { EventEmitter },
+    event,
     net: { proxy: { shadowsocks } },
     util: { memcpy },
     std: { stream }
@@ -107,7 +107,7 @@ class SSocket extends stream.Duplex {
     }
 }
 
-export class Parser extends EventEmitter {
+export class Parser extends event.Emitter {
     constructor(stream, { ivLength }) {
         super();
         this._stream = stream;
@@ -150,7 +150,7 @@ export class Parser extends EventEmitter {
     }
 }
 
-export class Client extends EventEmitter {
+export class Client extends event.Emitter {
     constructor({
         proxyHost = "localhost",
         proxyPort = 8388,

@@ -1,6 +1,6 @@
 const {
     is,
-    event: { EventEmitter },
+    event,
     stream: { pull },
     std: {
         http,
@@ -15,7 +15,7 @@ const {
 } = pull;
 
 export default function (opts, onConnection) {
-    const emitter = new EventEmitter();
+    const emitter = new event.Emitter();
     if (is.function(opts)) {
         onConnection = opts;
         opts = null;

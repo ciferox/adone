@@ -1,9 +1,9 @@
 const {
-    event: { EventEmitter },
+    event,
     util
 } = adone;
 
-export default class ChangesHandler extends EventEmitter {
+export default class ChangesHandler extends event.Emitter {
     constructor() {
         super();
         this._listeners = {};
@@ -57,7 +57,7 @@ export default class ChangesHandler extends EventEmitter {
         if (!(id in this._listeners)) {
             return;
         }
-        EventEmitter.prototype.removeListener.call(this, dbName,
+        event.Emitter.prototype.removeListener.call(this, dbName,
             this._listeners[id]);
         delete this._listeners[id];
     }

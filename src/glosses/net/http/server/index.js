@@ -2,7 +2,7 @@ const {
     is,
     x,
     std,
-    event: { EventEmitter },
+    event,
     net: { http }, lazify
 } = adone;
 
@@ -49,7 +49,7 @@ lazify({
     }, null, require)
 }, exports, require);
 
-export class Server extends EventEmitter {
+export class Server extends event.Emitter {
     constructor() {
         super();
 

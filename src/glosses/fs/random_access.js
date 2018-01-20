@@ -10,11 +10,11 @@ const {
         }
     },
     x,
-    event: { EventEmitter },
+    event,
     stream
 } = adone;
 
-export class RandomAccessFile extends adone.event.EventEmitter {
+export class RandomAccessFile extends event.Emitter {
     constructor(filename, options) {
         super();
 
@@ -189,7 +189,7 @@ class RefUnrefFilter extends PassThrough {
     }
 }
 
-export class AbstractRandomAccessReader extends EventEmitter {
+export class AbstractRandomAccessReader extends event.Emitter {
     constructor() {
         super();
         this.refCount = 0;

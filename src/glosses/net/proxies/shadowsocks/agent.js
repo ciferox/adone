@@ -1,9 +1,9 @@
 const {
-    event: { EventEmitter },
+    event,
     util
 } = adone;
 
-export default class Agent extends EventEmitter {
+export default class Agent extends event.Emitter {
     constructor({
         proxyHost = "localhost",
         proxyPort = 8388,

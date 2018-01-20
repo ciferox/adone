@@ -2,7 +2,7 @@ const {
     is,
     util,
     database: { pouch },
-    event: { EventEmitter }
+    event
 } = adone;
 
 const {
@@ -29,10 +29,9 @@ const {
     }
 } = adone.private(pouch);
 
-/*
+/**
  * A generic pouch adapter
  */
-
 const compare = (left, right) => {
     return left < right ? -1 : left > right ? 1 : 0;
 };
@@ -202,7 +201,7 @@ const adapterFun = (target, key, descriptor) => {
     });
 };
 
-export default class AbstractPouchDB extends EventEmitter {
+export default class AbstractPouchDB extends event.Emitter {
     @adapterFun
     post(doc, opts, callback) {
         if (is.function(opts)) {
@@ -532,8 +531,9 @@ export default class AbstractPouchDB extends EventEmitter {
     }
 
 
-    /* Begin api wrappers. Specific functionality to storage belongs in the
-       _[method] */
+    /**
+     * Begin api wrappers. Specific functionality to storage belongs in the
+     */
     @adapterFun
     get(id, opts, cb) {
         if (is.function(opts)) {
@@ -968,7 +968,9 @@ export default class AbstractPouchDB extends EventEmitter {
             const PouchDB = this.constructor;
             const deletedMap = Object.keys(dependentDbs).map((name) => {
                 // use_prefix is only false in the browser
-                /* istanbul ignore next */
+                /**
+                 * istanbul ignore next
+                 */
                 const trueName = usePrefix ?
                     name.replace(new RegExp(`^${PouchDB.prefix}`), "") : name;
                 return new PouchDB(trueName, this.__opts).destroy();

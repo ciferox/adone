@@ -1,7 +1,7 @@
 describe("net", "mail", "Sendmail Transport Tests", () => {
     const {
         net: { mail: { __: { SendmailTransport } } },
-        event: { EventEmitter },
+        event,
         std: { stream: { PassThrough } }
     } = adone;
 
@@ -50,7 +50,7 @@ describe("net", "mail", "Sendmail Transport Tests", () => {
     it("Should send message", (done) => {
         const client = new SendmailTransport();
 
-        const stubbedSpawn = new EventEmitter();
+        const stubbedSpawn = new event.Emitter();
         stubbedSpawn.stdin = new PassThrough();
         stubbedSpawn.stdout = new PassThrough();
 
@@ -84,7 +84,7 @@ describe("net", "mail", "Sendmail Transport Tests", () => {
     it("Should return an error", (done) => {
         const client = new SendmailTransport();
 
-        const stubbedSpawn = new EventEmitter();
+        const stubbedSpawn = new event.Emitter();
         stubbedSpawn.stdin = new PassThrough();
         stubbedSpawn.stdout = new PassThrough();
 

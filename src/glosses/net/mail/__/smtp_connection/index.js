@@ -1,7 +1,7 @@
 const {
     is,
     x,
-    event: { EventEmitter },
+    event,
     util,
     std: { net, tls, os, crypto, stream: { PassThrough } },
     net: { mail: { __: { shared, DataStream } } }
@@ -38,7 +38,7 @@ const GREETING_TIMEOUT = 30 * 1000; // how much to wait after connection is esta
  * @namespace SMTP Client module
  * @param {Object} [options] Option properties
  */
-export default class SMTPConnection extends EventEmitter {
+export default class SMTPConnection extends event.Emitter {
     constructor(options) {
         super(options);
 

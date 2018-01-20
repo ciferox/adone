@@ -1,16 +1,16 @@
-const util = require("util");
-const EventEmitter = require("events").EventEmitter;
 const debug = {
     server: require("debug")("spdy:window:server"),
     client: require("debug")("spdy:window:client")
 };
 
 const {
-    is
+    is,
+    event,
+    std: { util }
 } = adone;
 
 function Side(window, name, options) {
-    EventEmitter.call(this);
+    event.Emitter.call(this);
 
     this.name = name;
     this.window = window;
@@ -24,7 +24,7 @@ function Side(window, name, options) {
     this._refilling = false;
     this._refillQueue = [];
 }
-util.inherits(Side, EventEmitter);
+util.inherits(Side, event.Emitter);
 
 Side.prototype.setMax = function setMax(max) {
     this.window.debug("id=%d side=%s setMax=%d",
@@ -98,7 +98,7 @@ Side.prototype.update = function update(size, callback) {
     this._processRefillQueue();
 
     if (callback) {
-        process.nextTick(callback); 
+        process.nextTick(callback);
     }
 };
 

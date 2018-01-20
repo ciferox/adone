@@ -1,7 +1,7 @@
 const {
     is,
     x,
-    event: { EventEmitter },
+    event,
     net: { mail: { __ } },
     std: { util, url: urllib, net, dns, crypto }
 } = adone;
@@ -9,7 +9,7 @@ const {
 /**
  * Creates an object for exposing the Mail API
  */
-export default class Mail extends EventEmitter {
+export default class Mail extends event.Emitter {
     constructor(transporter, options = {}, defaults = {}) {
         super();
 

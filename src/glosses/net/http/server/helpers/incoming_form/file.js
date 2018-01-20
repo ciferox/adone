@@ -1,10 +1,10 @@
 const {
     std: { crypto, fs },
-    event: { EventEmitter },
+    event,
     is
 } = adone;
 
-export default class File extends EventEmitter {
+export default class File extends event.Emitter {
     constructor(properties) {
         super();
         this.size = 0;

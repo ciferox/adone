@@ -1,6 +1,6 @@
 const {
     database: { mongo },
-    event: { EventEmitter },
+    event,
     is, util
 } = adone;
 const {
@@ -273,7 +273,7 @@ const emitTopologyDescriptionChanged = (self) => {
     }
 };
 
-export default class ReplSetState extends EventEmitter {
+export default class ReplSetState extends event.Emitter {
     constructor(options = {}) {
         super();
         // Topology state

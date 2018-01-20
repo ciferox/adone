@@ -1,6 +1,6 @@
 const {
     is,
-    event: { EventEmitter },
+    event,
     database: { mongo },
     std: { os }
 } = adone;
@@ -83,7 +83,7 @@ const translateReadPreference = function (options) {
     return options;
 };
 
-export default class ReplSet extends EventEmitter {
+export default class ReplSet extends event.Emitter {
     constructor(servers, options) {
         super();
         options = options || {};

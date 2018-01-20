@@ -3,7 +3,6 @@ const Collection = require("./mixins/collection");
 const EVS = require("./evshield");
 const Pins = Board.Pins;
 const Fn = require("./fn");
-const Emitter = require("events").EventEmitter;
 const util = require("util");
 
 // Button instance private data
@@ -322,7 +321,7 @@ function Button(opts) {
     }
 }
 
-util.inherits(Button, Emitter);
+util.inherits(Button, adone.event.Emitter);
 
 
 /**

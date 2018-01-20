@@ -23,7 +23,7 @@ const util = require("util");
 const utils = require("./utils");
 
 const {
-    event: { EventEmitter },
+    event,
     is,
     vendor: { lodash: { get } }
 } = adone;
@@ -32,7 +32,8 @@ const VERSION_WHERE = 1;
 const VERSION_INC = 2;
 const VERSION_ALL = VERSION_WHERE | VERSION_INC;
 
-/*!
+/**
+ * !
  * Determines whether versioning should be skipped for the given path
  *
  * @param {Document} self
@@ -51,7 +52,8 @@ const shouldSkipVersioning = function (self, path) {
     return skipVersioning[path];
 };
 
-/*!
+/**
+ * !
  * Apply the operation to the delta (update) clause as
  * well as track versioning for our where clause.
  *
@@ -121,7 +123,8 @@ const operand = function (self, where, delta, data, val, op) {
     }
 };
 
-/*!
+/**
+ * !
  * Compiles an update and where clause for a `val` with _atomics.
  *
  * @param {Document} self
@@ -195,7 +198,8 @@ const handleAtomics = function (self, where, delta, data, value) {
     }
 };
 
-/*!
+/**
+ * !
  * Determine if array was populated with some form of filter and is now
  * being updated in a manner which could overwrite data unintentionally.
  *
@@ -368,13 +372,15 @@ const _update = function (model, op, conditions, doc, options, callback) {
 };
 
 
-/*!
+/**
+ * !
  * Populates `docs`
  */
 const excludeIdReg = /\s?-_id\s?/;
 const excludeIdRegGlobal = /\s?-_id\s?/g;
 
-/*!
+/**
+ * !
  * Retrieve the _id of `val` if a Document or Array of Documents.
  *
  * @param {Array|Document|Any} val
@@ -599,7 +605,8 @@ const getModelsMapForPopulate = function (model, docs, options) {
     return map;
 };
 
-/*!
+/**
+ * !
  * Assign `vals` returned by mongo query to the `rawIds`
  * structure returned from utils.getVals() honoring
  * query sort order if specified by user.
@@ -681,7 +688,8 @@ const assignRawDocsToIdStructure = function (rawIds, resultDocs, resultOrder, op
     }
 };
 
-/*!
+/**
+ * !
  * Determine if `doc` is a document returned
  * by a populate query.
  */
@@ -711,7 +719,8 @@ const isDoc = function (doc) {
     return true;
 };
 
-/*!
+/**
+ * !
  * Remove _id from `subdoc` if user specified "lean" query option
  */
 
@@ -725,7 +734,8 @@ const maybeRemoveId = function (subdoc, assignmentOpts) {
     }
 };
 
-/*!
+/**
+ * !
  * 1) Apply backwards compatible find/findOne behavior to sub documents
  *
  *    find logic:
@@ -780,7 +790,8 @@ const valueFilter = function (val, assignmentOpts) {
     return null;
 };
 
-/*!
+/**
+ * !
  * Assigns documents returned from a population query back
  * to the original document path.
  */
@@ -1048,7 +1059,8 @@ const populate = function (model, docs, options, callback) {
     }
 };
 
-/*!
+/**
+ * !
  * Populate helper
  *
  * @param {Model} model the model to use
@@ -1083,7 +1095,8 @@ const _populate = function (model, docs, paths, cache, callback) {
     }
 };
 
-/*!
+/**
+ * !
  * Register custom query methods for this model
  *
  * @param {Model} model
@@ -3784,15 +3797,16 @@ export default class Model extends Document {
         return this.schema._getSchema(path);
     }
 
-    /*!
-    * Compiler utility.
-    *
-    * @param {String|Function} name model name or class extending Model
-    * @param {Schema} schema
-    * @param {String} collectionName
-    * @param {Connection} connection
-    * @param {Mongoose} base mongoose instance
-    */
+    /**
+     * !
+     * Compiler utility.
+     *
+     * @param {String|Function} name model name or class extending Model
+     * @param {Schema} schema
+     * @param {String} collectionName
+     * @param {Connection} connection
+     * @param {Mongoose} base mongoose instance
+     */
     static compile(name, schema, collectionName, connection, base) {
         const versioningEnabled = schema.options.versionKey !== false;
 
@@ -3898,14 +3912,15 @@ export default class Model extends Document {
         return model;
     }
 
-    /*!
-    * Subclass this model with `conn`, `schema`, and `collection` settings.
-    *
-    * @param {Connection} conn
-    * @param {Schema} [schema]
-    * @param {String} [collection]
-    * @return {Model}
-    */
+    /**
+     * !
+     * Subclass this model with `conn`, `schema`, and `collection` settings.
+     *
+     * @param {Connection} conn
+     * @param {Schema} [schema]
+     * @param {String} [collection]
+     * @return {Model}
+     */
     static __subclass(conn, schema, collection) {
         // subclass model using this connection and collection name
         const _this = this;
@@ -4009,8 +4024,8 @@ Model.prototype.baseModelName;
  * Give the constructor the ability to emit events.
  */
 
-for (const i of adone.util.keys(EventEmitter.prototype, { all: true })) {
-    Model[i] = EventEmitter.prototype[i];
+for (const i of adone.util.keys(event.Emitter.prototype, { all: true })) {
+    Model[i] = event.Emitter.prototype[i];
 }
 
 /**
@@ -4023,7 +4038,8 @@ for (const i of adone.util.keys(EventEmitter.prototype, { all: true })) {
 
 Model.schema;
 
-/*!
+/**
+ * !
  * Connection instance the model uses.
  *
  * @property db
@@ -4033,7 +4049,8 @@ Model.schema;
 
 Model.db;
 
-/*!
+/**
+ * !
  * Collection the model uses.
  *
  * @property collection

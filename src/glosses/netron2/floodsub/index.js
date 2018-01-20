@@ -11,7 +11,7 @@ const multicodec = config.multicodec;
 const ensureArray = utils.ensureArray;
 
 const {
-    event: { EventEmitter },
+    event,
     stream: { pull },
     vendor: { lodash: { values } }
 } = adone;
@@ -21,7 +21,7 @@ const {
  * delivering an API for Publish/Subscribe, but with no CastTree Forming
  * (it just floods the network).
  */
-export class FloodSub extends EventEmitter {
+export class FloodSub extends event.Emitter {
     /**
      * @param {Object} libp2p
      * @returns {FloodSub}

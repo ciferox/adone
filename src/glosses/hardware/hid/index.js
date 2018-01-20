@@ -2,7 +2,7 @@ const binding = adone.nativeAddon(adone.std.path.join(__dirname, "native", "hid.
 
 adone.asNamespace(exports);
 
-export class Device extends adone.event.EventEmitter {
+export class Device extends adone.event.Emitter {
     constructor(...args) {
         super();
 

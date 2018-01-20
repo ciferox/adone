@@ -1,6 +1,6 @@
 const {
     is,
-    event: { EventEmitter },
+    event,
     database: { mongo },
     std: { crypto }
 } = adone;
@@ -219,7 +219,7 @@ const createListener = (self, e, object) => {
     return listener;
 };
 
-export default class Db extends EventEmitter {
+export default class Db extends event.Emitter {
     constructor(databaseName, topology, options = {}) {
         super();
 

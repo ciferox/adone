@@ -1,5 +1,5 @@
 const {
-    event: { EventEmitter },
+    event,
     is
 } = adone;
 
@@ -32,7 +32,7 @@ const createNode = () => {
  * emit a `ping` event that contains `numberOfNodesToPing` nodes that have
  * not been contacted the longest.
  */
-export default class KBucket extends EventEmitter {
+export default class KBucket extends event.Emitter {
     constructor(options) {
         super();
         options = options || {};

@@ -1,6 +1,9 @@
-const { net: { proxy: { socks: { createServer, createConnection, auth, ClientParser: Parser } } } } = adone;
+const {
+    is,
+    net: { proxy: { socks: { createServer, createConnection, auth, ClientParser: Parser } } }
+} = adone;
 
-class FakeStream extends adone.event.EventEmitter {
+class FakeStream extends adone.event.Emitter {
     pause() {
 
     }
@@ -14,7 +17,7 @@ const PROXY_RESPONSE = "hello from the node.js proxy server!";
 
 const bufferStream = (stream, encoding, cb) => {
     let buf;
-    if (typeof encoding === "function") {
+    if (is.function(encoding)) {
         cb = encoding;
         encoding = undefined;
     }

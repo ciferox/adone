@@ -1,7 +1,7 @@
 const {
     is,
     x,
-    event: { EventEmitter },
+    event,
     database: { mysql },
     collection
 } = adone;
@@ -23,7 +23,7 @@ const spliceConnection = (queue, connection) => {
     } while (node);
 };
 
-export default class Pool extends EventEmitter {
+export default class Pool extends event.Emitter {
     constructor(options) {
         super();
         this.config = options.config;

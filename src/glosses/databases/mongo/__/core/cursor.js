@@ -2,7 +2,7 @@ const {
     is,
     x,
     database: { mongo },
-    event: { EventEmitter },
+    event,
     data
 } = adone;
 const {
@@ -85,7 +85,7 @@ const setCursorNotified = (self, callback) => {
     handleCallback(callback, null, null);
 };
 
-export default class Cursor extends EventEmitter {
+export default class Cursor extends event.Emitter {
     constructor(bson, ns, cmd, options = {}, topology, topologyOptions) {
         super();
         // Cursor pool

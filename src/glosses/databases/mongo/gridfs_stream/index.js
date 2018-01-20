@@ -1,6 +1,6 @@
 const {
     is,
-    event: { EventEmitter },
+    event,
     database: { mongo },
     lazify
 } = adone;
@@ -21,7 +21,7 @@ const DEFAULT_GRIDFS_BUCKET_OPTIONS = {
     chunkSizeBytes: 255 * 1024
 };
 
-export default class GridFSBucket extends EventEmitter {
+export default class GridFSBucket extends event.Emitter {
     constructor(db, options) {
         super();
         this.setMaxListeners(0);

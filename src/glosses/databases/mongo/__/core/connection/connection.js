@@ -2,7 +2,7 @@ const {
     is, x,
     database: { mongo },
     std: { crypto, tls, net },
-    event: { EventEmitter }
+    event
 } = adone;
 const {
     core: {
@@ -260,7 +260,7 @@ const merge = (options1, options2) => {
     }
 };
 
-export default class Connection extends EventEmitter {
+export default class Connection extends event.Emitter {
     constructor(messageHandler, options = {}) {
         super();
         // Set empty if no options passed

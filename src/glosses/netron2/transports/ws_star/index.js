@@ -5,7 +5,7 @@ const Listener = require("./listener");
 const cleanUrlSIO = utils.cleanUrlSIO;
 
 const {
-    event: { EventEmitter },
+    event,
     is,
     multi,
     netron2: { PeerId, PeerInfo, Connection }
@@ -13,18 +13,18 @@ const {
 
 class WebsocketStar {
     /**
-      * WebsocketStar Transport
-      * @class
-      * @param {Object} options - Options for the listener
-      * @param {PeerId} options.id - Id for the crypto challenge
-      */
+     * WebsocketStar Transport
+     * @class
+     * @param {Object} options - Options for the listener
+     * @param {PeerId} options.id - Id for the crypto challenge
+     */
     constructor(options) {
         options = options || {};
 
         this.id = options.id;
         this.flag = options.allowJoinWithDisabledChallenge; // let's just refer to it as "flag"
 
-        this.discovery = new EventEmitter();
+        this.discovery = new event.Emitter();
         this.discovery.start = (callback) => {
             setImmediate(callback);
         };
@@ -37,10 +37,10 @@ class WebsocketStar {
     }
 
     /**
-      * Sets the id after transport creation (aka the lazy way)
-      * @param {PeerId} id
-      * @returns {undefined}
-      */
+     * Sets the id after transport creation (aka the lazy way)
+     * @param {PeerId} id
+     * @returns {undefined}
+     */
     lazySetId(id) {
         if (!id) {
             return;
@@ -50,12 +50,12 @@ class WebsocketStar {
     }
 
     /**
-      * Dials a peer
-      * @param {Multiaddr} ma - Multiaddr to dial to
-      * @param {Object} options
-      * @param {function} callback
-      * @returns {Connection}
-      */
+     * Dials a peer
+     * @param {Multiaddr} ma - Multiaddr to dial to
+     * @param {Object} options
+     * @param {function} callback
+     * @returns {Connection}
+     */
     dial(ma, options, callback) {
         if (is.function(options)) {
             callback = options;
@@ -77,11 +77,11 @@ class WebsocketStar {
     }
 
     /**
-      * Creates a listener
-      * @param {Object} options
-      * @param {function} handler
-      * @returns {Listener}
-      */
+     * Creates a listener
+     * @param {Object} options
+     * @param {function} handler
+     * @returns {Listener}
+     */
     createListener(options, handler) {
         if (is.function(options)) {
             handler = options;
@@ -101,10 +101,10 @@ class WebsocketStar {
     }
 
     /**
-      * Filters multiaddrs
-      * @param {Multiaddr[]} multiaddrs
-      * @returns {boolean}
-      */
+     * Filters multiaddrs
+     * @param {Multiaddr[]} multiaddrs
+     * @returns {boolean}
+     */
     filter(multiaddrs) {
         if (!is.array(multiaddrs)) {
             multiaddrs = [multiaddrs];
@@ -114,12 +114,12 @@ class WebsocketStar {
     }
 
     /**
-      * Used to fire peer events on the discovery part
-      * @param {Multiaddr} maStr
-      * @fires Discovery#peer
-      * @returns {undefined}
-      * @private
-      */
+     * Used to fire peer events on the discovery part
+     * @param {Multiaddr} maStr
+     * @fires Discovery#peer
+     * @returns {undefined}
+     * @private
+     */
     _peerDiscovered(maStr) {
         log("Peer Discovered:", maStr);
         const peerIdStr = maStr.split("/ipfs/").pop();

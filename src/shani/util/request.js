@@ -5,12 +5,12 @@ const {
     is,
     x,
     compressor,
-    event: { EventEmitter },
+    event,
     text,
     data
 } = adone;
 
-class Request extends EventEmitter {
+class Request extends event.Emitter {
     constructor(server) {
         super();
         this.server = server;

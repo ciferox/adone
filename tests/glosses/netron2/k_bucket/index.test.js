@@ -1,6 +1,6 @@
 const {
     is,
-    event: { EventEmitter },
+    event,
     netron2: { KBucket }
 } = adone;
 
@@ -278,9 +278,9 @@ describe("netron2", "KBucket", () => {
             assert.deepEqual(kBucket.root, { contacts: [], dontSplit: false, left: null, right: null });
         });
 
-        it("inherits from EventEmitter", () => {
+        it("inherits from event.Emitter", () => {
             const kBucket = new KBucket();
-            assert.true(kBucket instanceof EventEmitter);
+            assert.true(kBucket instanceof event.Emitter);
         });
     });
 

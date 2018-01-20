@@ -2,13 +2,13 @@ import enableDestroy from "./server_destroy";
 const {
     is,
     std: { net },
-    event: { EventEmitter },
+    event,
     database: { redis }
 } = adone;
 
 const { util, parser: { createParser } } = adone.private(redis);
 
-export default class MockServer extends EventEmitter {
+export default class MockServer extends event.Emitter {
     constructor(port, handler) {
         super();
         this.port = port;

@@ -2,8 +2,7 @@ const {
     noop,
     is,
     x,
-    event: { EventEmitter },
-    util,
+    event,
     std,
     collection
 } = adone;
@@ -66,7 +65,7 @@ const STASHES = Symbol("stashes");
 /**
  * Represents a chain of transform streams
  */
-export class Stream extends EventEmitter {
+export class Stream extends event.Emitter {
     constructor(source, options) {
         super();
         this._chain = [this._createFirstStream(options)];

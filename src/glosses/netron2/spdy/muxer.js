@@ -1,5 +1,5 @@
 const {
-    event: { EventEmitter },
+    event,
     netron2: { Connection },
     noop,
     stream: { pull }
@@ -7,7 +7,7 @@ const {
 
 const SPDY_CODEC = require("./spdy-codec");
 
-module.exports = class Muxer extends EventEmitter {
+module.exports = class Muxer extends event.Emitter {
     constructor(conn, spdy) {
         super();
 

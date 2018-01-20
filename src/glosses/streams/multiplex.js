@@ -1,5 +1,5 @@
 const {
-    event: { EventEmitter },
+    event,
     data: { varint },
     is,
     stream: { Duplexify }
@@ -81,7 +81,7 @@ class Channel extends adone.std.stream.Duplex {
 
         this.destroyed = true;
 
-        const hasErrorListeners = EventEmitter.listenerCount(this, "error") > 0;
+        const hasErrorListeners = event.Emitter.listenerCount(this, "error") > 0;
 
         if (err && (!local || hasErrorListeners)) {
             this.emit("error", err);

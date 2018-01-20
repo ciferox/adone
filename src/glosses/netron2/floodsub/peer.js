@@ -1,14 +1,14 @@
 const rpc = require("./message").rpc.RPC;
 
 const {
-    event: { EventEmitter },
+    event,
     stream: { pull }
 } = adone;
 
 /**
  * The known state of a connected peer.
  */
-class Peer extends EventEmitter {
+class Peer extends event.Emitter {
     /**
      * @param {PeerInfo} info
      */
