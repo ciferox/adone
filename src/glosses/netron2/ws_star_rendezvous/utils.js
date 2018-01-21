@@ -103,7 +103,7 @@ const Protocol = function (log) {
 
 const getIdAndValidate = function (pub, id) {
     const _id = PeerId.createFromPubKey(Buffer.from(pub, "hex"));
-    if (_id.toB58String() !== id) {
+    if (_id.asBase58() !== id) {
         throw new Error("Id is not matching");
     }
 

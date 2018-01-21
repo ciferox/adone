@@ -12,7 +12,7 @@ describe("netron2", "crypto", "keys", "RSA", function () {
     let key;
 
     before(() => {
-        key = crypto.keys.generateKeyPair("RSA", 2048);
+        key = crypto.keys.generateKeyPair("rsa", 2048);
     });
 
     it("generates a valid key", () => {
@@ -57,7 +57,7 @@ describe("netron2", "crypto", "keys", "RSA", function () {
         });
 
         it("not equals other key", () => {
-            const key2 = crypto.keys.generateKeyPair("RSA", 2048);
+            const key2 = crypto.keys.generateKeyPair("rsa", 2048);
 
             expect(key.equals(key2)).to.eql(false);
             expect(key2.equals(key)).to.eql(false);

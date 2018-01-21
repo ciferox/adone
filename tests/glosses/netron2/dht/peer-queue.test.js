@@ -29,9 +29,9 @@ describe("PeerQueue", () => {
             pq.dequeue(),
             pq.dequeue(),
             pq.dequeue()
-        ].map((m) => m.toB58String())).to.be.eql([
+        ].map((m) => m.asBase58())).to.be.eql([
             p1, p1, p1, p4, p3, p2
-        ].map((m) => m.toB58String()));
+        ].map((m) => m.asBase58()));
 
         expect(pq.length).to.be.eql(0);
         done();

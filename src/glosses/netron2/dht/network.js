@@ -135,7 +135,7 @@ class Network {
 
         this.dht.swarm.dial(peer, c.PROTOCOL_DHT, (err, conn) => {
             if (err) {
-                return this._log("%s does not support protocol: %s", peer.id.toB58String(), c.PROTOCOL_DHT);
+                return this._log("%s does not support protocol: %s", peer.id.asBase58(), c.PROTOCOL_DHT);
             }
 
             // TODO: conn.close()
@@ -143,7 +143,7 @@ class Network {
 
             try {
                 this.dht._add(peer);
-                this._log("added to the routing table: %s", peer.id.toB58String());
+                this._log("added to the routing table: %s", peer.id.asBase58());
 
             } catch (err) {
                 return this._log.error("Failed to add to the routing table", err);
@@ -165,7 +165,7 @@ class Network {
             return callback(new Error("Network is offline"));
         }
 
-        this._log("sending to: %s", to.toB58String());
+        this._log("sending to: %s", to.asBase58());
         this.dht.swarm.dial(to, c.PROTOCOL_DHT, (err, conn) => {
             if (err) {
                 return callback(err);
@@ -188,7 +188,7 @@ class Network {
             return setImmediate(() => callback(new Error("Network is offline")));
         }
 
-        this._log("sending to: %s", to.toB58String());
+        this._log("sending to: %s", to.asBase58());
 
         this.dht.swarm.dial(to, c.PROTOCOL_DHT, (err, conn) => {
             if (err) {

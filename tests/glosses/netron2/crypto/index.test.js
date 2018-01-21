@@ -9,7 +9,7 @@ describe("netron2", "crypto", function () {
     let key;
     before(function() {
         this.timeout(20000);
-        key = crypto.keys.generateKeyPair("RSA", 2048);
+        key = crypto.keys.generateKeyPair("rsa", 2048);
     });
 
     it("marshalPublicKey and unmarshalPublicKey", () => {

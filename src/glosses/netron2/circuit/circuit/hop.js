@@ -57,11 +57,11 @@ export default class Hop extends adone.event.Emitter {
 
         // This is a relay request - validate and create a circuit
         const srcPeerId = PeerId.createFromBytes(message.dstPeer.id);
-        if (srcPeerId.toB58String() === this.peerInfo.id.toB58String()) {
+        if (srcPeerId.asBase58() === this.peerInfo.id.asBase58()) {
             return this.utils.writeResponse(streamHandler, __.protocol.CircuitRelay.Status.HOP_CANT_RELAY_TO_SELF);
         }
 
-        const dstPeerId = PeerId.createFromBytes(message.dstPeer.id).toB58String();
+        const dstPeerId = PeerId.createFromBytes(message.dstPeer.id).asBase58();
         if (!message.dstPeer.addrs.length) {
             // TODO: use encapsulate here
             const addr = multi.address.create(`/p2p-circuit/ipfs/${dstPeerId}`).buffer;

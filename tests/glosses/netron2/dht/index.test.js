@@ -95,9 +95,9 @@ const waitForWellFormedTables = function (dhts, minPeers, avgPeers, maxTimeout, 
 
 const countDiffPeers = function (a, b) {
     const s = new Set();
-    a.forEach((p) => s.add(p.toB58String()));
+    a.forEach((p) => s.add(p.asBase58()));
 
-    return b.filter((p) => !s.has(p.toB58String())).length;
+    return b.filter((p) => !s.has(p.asBase58())).length;
 };
 
 
@@ -301,7 +301,7 @@ describe("KadDHT", () => {
 
                     const rtableSet = {};
                     rtablePeers.forEach((p) => {
-                        rtableSet[p.toB58String()] = true;
+                        rtableSet[p.asBase58()] = true;
                     });
 
                     series([
@@ -312,7 +312,7 @@ describe("KadDHT", () => {
                         const out = res[0];
                         const actualClosest = res[1];
 
-                        expect(out.filter((p) => !rtableSet[p.toB58String()]))
+                        expect(out.filter((p) => !rtableSet[p.asBase58()]))
                             .to.not.be.empty();
 
                         expect(out).to.have.length(20);

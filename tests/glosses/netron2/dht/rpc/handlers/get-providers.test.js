@@ -52,8 +52,8 @@ describe("rpc - handlers - GetProviders", () => {
 
             expect(response.key).to.be.eql(v.cid.buffer);
             expect(response.providerPeers).to.have.length(1);
-            expect(response.providerPeers[0].id.toB58String())
-                .to.eql(dht.peerInfo.id.toB58String());
+            expect(response.providerPeers[0].id.asBase58())
+                .to.eql(dht.peerInfo.id.asBase58());
 
             done();
         });
@@ -75,12 +75,12 @@ describe("rpc - handlers - GetProviders", () => {
 
             expect(response.key).to.be.eql(v.cid.buffer);
             expect(response.providerPeers).to.have.length(1);
-            expect(response.providerPeers[0].id.toB58String())
-                .to.eql(prov.toB58String());
+            expect(response.providerPeers[0].id.asBase58())
+                .to.eql(prov.asBase58());
 
             expect(response.closerPeers).to.have.length(1);
-            expect(response.closerPeers[0].id.toB58String())
-                .to.eql(closer.id.toB58String());
+            expect(response.closerPeers[0].id.asBase58())
+                .to.eql(closer.id.asBase58());
             done();
         });
     });

@@ -91,7 +91,7 @@ module.exports = (swarm, options, connHandler) => {
         // get all the explicit relay addrs excluding self
         const p2pAddrs = addrs.filter((addr) => {
             return multi.address.validator.Circuit.matches(addr) &&
-                !addr.toString().includes(swarm._peerInfo.id.toB58String());
+                !addr.toString().includes(swarm._peerInfo.id.asBase58());
         });
 
         // use the explicit relays instead of any relay
@@ -101,7 +101,7 @@ module.exports = (swarm, options, connHandler) => {
 
         const listenAddrs = [];
         addrs.forEach((addr) => {
-            const peerMa = `/p2p-circuit/ipfs/${swarm._peerInfo.id.toB58String()}`;
+            const peerMa = `/p2p-circuit/ipfs/${swarm._peerInfo.id.asBase58()}`;
             if (addr.toString() === peerMa) {
                 listenAddrs.push(multi.address.create(peerMa));
                 return;
@@ -112,10 +112,10 @@ module.exports = (swarm, options, connHandler) => {
                     // by default we're reachable over any relay
                     listenAddrs.push(multi.address.create("/p2p-circuit").encapsulate(addr));
                 } else {
-                    listenAddrs.push(multi.address.create("/p2p-circuit").encapsulate(`${addr}/ipfs/${swarm._peerInfo.id.toB58String()}`));
+                    listenAddrs.push(multi.address.create("/p2p-circuit").encapsulate(`${addr}/ipfs/${swarm._peerInfo.id.asBase58()}`));
                 }
             } else {
-                listenAddrs.push(addr.encapsulate(`/ipfs/${swarm._peerInfo.id.toB58String()}`));
+                listenAddrs.push(addr.encapsulate(`/ipfs/${swarm._peerInfo.id.asBase58()}`));
             }
         });
 

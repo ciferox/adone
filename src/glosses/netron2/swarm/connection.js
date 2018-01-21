@@ -50,7 +50,7 @@ module.exports = function connection(swarm) {
                         if (err) {
                             return adone.log("Identify not successful");
                         }
-                        const b58Str = peerInfo.id.toB58String();
+                        const b58Str = peerInfo.id.asBase58();
 
                         swarm.muxedConns[b58Str] = { muxer: muxedConn };
 

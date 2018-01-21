@@ -55,7 +55,7 @@ module.exports = (dht) => {
                 return;
             }
 
-            log("from: %s", peer.id.toB58String());
+            log("from: %s", peer.id.asBase58());
 
             pull(
                 conn,

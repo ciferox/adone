@@ -509,11 +509,11 @@ describe("netron2", "swarm", () => {
         it("warm up from A to B on tcp to tcp+ws", (done) => {
             parallel([
                 (cb) => swarmB.once("peer-mux-established", (peerInfo) => {
-                    expect(peerInfo.id.toB58String()).to.equal(peerA.id.toB58String());
+                    expect(peerInfo.id.asBase58()).to.equal(peerA.id.asBase58());
                     cb();
                 }),
                 (cb) => swarmA.once("peer-mux-established", (peerInfo) => {
-                    expect(peerInfo.id.toB58String()).to.equal(peerB.id.toB58String());
+                    expect(peerInfo.id.asBase58()).to.equal(peerB.id.asBase58());
                     cb();
                 }),
                 (cb) => swarmA.dial(peerB, (err) => {
@@ -1092,7 +1092,7 @@ describe("netron2", "swarm", () => {
             swarmA.handle("/banana/1.0.0", (protocol, conn) => {
                 conn.getPeerInfo((err, peerInfoC) => {
                     assert.notExists(err);
-                    expect(peerInfoC.id.toB58String()).to.equal(peerC.id.toB58String());
+                    expect(peerInfoC.id.asBase58()).to.equal(peerC.id.asBase58());
                 });
 
                 pull(conn, conn);
@@ -1105,7 +1105,7 @@ describe("netron2", "swarm", () => {
                     expect(Object.keys(swarmA.muxedConns).length).to.equal(2);
                     conn.getPeerInfo((err, peerInfoA) => {
                         assert.notExists(err);
-                        expect(peerInfoA.id.toB58String()).to.equal(peerA.id.toB58String());
+                        expect(peerInfoA.id.asBase58()).to.equal(peerA.id.asBase58());
                         pull(pull.empty(), conn, pull.onEnd(done));
                     });
                 }, 500);
@@ -1133,7 +1133,7 @@ describe("netron2", "swarm", () => {
 
                 pull(
                     pull.empty(),
-                    swarmD.muxedConns[peerA.id.toB58String()].conn
+                    swarmD.muxedConns[peerA.id.asBase58()].conn
                 );
                 pull(conn, pull.onEnd(destroyed));
             });
@@ -1187,7 +1187,7 @@ describe("netron2", "swarm", () => {
 
                     pull(
                         pull.empty(),
-                        swarmF.muxedConns[peerE.id.toB58String()].conn
+                        swarmF.muxedConns[peerE.id.asBase58()].conn
                     );
                 });
             };

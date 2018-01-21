@@ -3,30 +3,27 @@ const {
     data: { protobuf }
 } = adone;
 
-const keysPBM = protobuf.create(require("./keys.proto"));
+export const keysPBM = protobuf.create(require("./keys.proto"));
 
-exports = module.exports;
-
-const supportedKeys = {
-    rsa: require("./rsa-class"),
-    ed25519: require("./ed25519-class"),
-    secp256k1: adone.netron2.crypto.secp256k1(keysPBM, require("../random-bytes"))
-};
-
-exports.supportedKeys = supportedKeys;
-exports.keysPBM = keysPBM;
+export const supportedKeys = adone.lazify({
+    rsa: "./rsa",
+    ed25519: "./ed25519",
+    secp256k1: () => adone.netron2.crypto.secp256k1(keysPBM)
+}, null, require);
 
 const isValidKeyType = (keyType) => {
-    const key = supportedKeys[keyType.toLowerCase()];
+    const key = supportedKeys[keyType];
     return !is.undefined(key);
 };
 
-exports.keyStretcher = require("./key-stretcher");
-exports.generateEphemeralKeyPair = require("./ephemeral-keys");
+adone.lazify({
+    keyStretcher: "./key_stretcher",
+    generateEphemeralKeyPair: "./ephemeral_keys"
+}, exports, require);
 
 // Generates a keypair of the given type and bitsize
-exports.generateKeyPair = (type, bits) => {
-    const key = supportedKeys[type.toLowerCase()];
+export const generateKeyPair = (type, bits) => {
+    const key = supportedKeys[type];
 
     if (!key) {
         throw new Error("invalid or unsupported key type");
@@ -37,12 +34,12 @@ exports.generateKeyPair = (type, bits) => {
 
 // Generates a keypair of the given type and bitsize
 // seed is a 32 byte uint8array
-exports.generateKeyPairFromSeed = (type, seed, bits) => {
-    const key = supportedKeys[type.toLowerCase()];
+export const generateKeyPairFromSeed = (type, seed, bits) => {
+    const key = supportedKeys[type];
     if (!key) {
-        throw new Error("invalid or unsupported key type");
+        throw new Error("Invalid or unsupported key type");
     }
-    if (type.toLowerCase() !== "ed25519") {
+    if (type !== "ed25519") {
         throw new Error("Seed key derivation is unimplemented for RSA or secp256k1");
     }
     return key.generateKeyPairFromSeed(seed, bits);
@@ -50,7 +47,7 @@ exports.generateKeyPairFromSeed = (type, seed, bits) => {
 
 // Converts a protobuf serialized public key into its
 // representative object
-exports.unmarshalPublicKey = (buf) => {
+export const unmarshalPublicKey = (buf) => {
     const decoded = keysPBM.PublicKey.decode(buf);
     const data = decoded.Data;
 
@@ -70,7 +67,7 @@ exports.unmarshalPublicKey = (buf) => {
 };
 
 // Converts a public key object into a protobuf serialized public key
-exports.marshalPublicKey = (key, type) => {
+export const marshalPublicKey = (key, type) => {
     type = (type || "rsa").toLowerCase();
     if (!isValidKeyType(type)) {
         throw new Error("invalid or unsupported key type");
@@ -81,7 +78,7 @@ exports.marshalPublicKey = (key, type) => {
 
 // Converts a protobuf serialized private key into its
 // representative object
-exports.unmarshalPrivateKey = (buf, callback) => {
+export const unmarshalPrivateKey = (buf, callback) => {
     let decoded;
     try {
         decoded = keysPBM.PrivateKey.decode(buf);
@@ -108,7 +105,7 @@ exports.unmarshalPrivateKey = (buf, callback) => {
 };
 
 // Converts a private key object into a protobuf serialized private key
-exports.marshalPrivateKey = (key, type) => {
+export const marshalPrivateKey = (key, type) => {
     type = (type || "rsa").toLowerCase();
     if (!isValidKeyType(type)) {
         throw new Error("invalid or unsupported key type");
@@ -116,7 +113,6 @@ exports.marshalPrivateKey = (key, type) => {
 
     return key.bytes;
 };
-
 
 exports.import = (pem, password) => {
     const key = adone.crypto.pki.decryptRsaPrivateKey(pem, password);

@@ -140,7 +140,7 @@ export class Swarm extends adone.event.Emitter {
 
         const proxyConn = new Connection();
 
-        const b58Id = pi.id.toB58String();
+        const b58Id = pi.id.asBase58();
         adone.log("dialing %s", b58Id);
 
         const protocolHandshake = (conn, protocol, cb) => {
@@ -190,7 +190,7 @@ export class Swarm extends adone.event.Emitter {
                     // should not be needed anymore - swarm.muxedConns[b58Id].conn = conn
 
                     muxedConn.once("close", () => {
-                        const b58Str = pi.id.toB58String();
+                        const b58Str = pi.id.asBase58();
                         delete this.muxedConns[b58Str];
                         pi.disconnect();
                         this._peerBook.get(b58Str).disconnect();
@@ -274,7 +274,7 @@ export class Swarm extends adone.event.Emitter {
                     }
 
                     adone.log("Falling back to dialing over circuit");
-                    pi.multiaddrs.add(`/p2p-circuit/ipfs/${pi.id.toB58String()}`);
+                    pi.multiaddrs.add(`/p2p-circuit/ipfs/${pi.id.asBase58()}`);
                     circuitTried = true;
                     transport = Circuit.tag;
                 }
@@ -342,7 +342,7 @@ export class Swarm extends adone.event.Emitter {
 
     hangUp(peer, callback) {
         const peerInfo = getPeerInfo(peer, this.peerBook);
-        const key = peerInfo.id.toB58String();
+        const key = peerInfo.id.asBase58();
         if (this.muxedConns[key]) {
             const muxer = this.muxedConns[key].muxer;
             muxer.once("close", () => {

@@ -11,7 +11,7 @@ describe("netron2", "crypto", "keys", "ed25519", function () {
     this.timeout(20 * 1000);
     let key;
     before(() => {
-        key = crypto.keys.generateKeyPair("Ed25519", 512);
+        key = crypto.keys.generateKeyPair("ed25519", 512);
     });
 
     it("generates a valid key", () => {
@@ -22,8 +22,8 @@ describe("netron2", "crypto", "keys", "ed25519", function () {
     });
 
     it("generates a valid key from seed", () => {
-        const seed = crypto.randomBytes(32);
-        const seededkey = crypto.keys.generateKeyPairFromSeed("Ed25519", seed, 512);
+        const seed = adone.std.crypto.randomBytes(32);
+        const seededkey = crypto.keys.generateKeyPairFromSeed("ed25519", seed, 512);
         expect(seededkey).to.be.an.instanceof(ed25519.Ed25519PrivateKey);
 
         const digest = seededkey.hash();
@@ -31,24 +31,24 @@ describe("netron2", "crypto", "keys", "ed25519", function () {
     });
 
     it("generates the same key from the same seed", () => {
-        const seed = crypto.randomBytes(32);
-        const seededkey1 = crypto.keys.generateKeyPairFromSeed("Ed25519", seed, 512);
-        const seededkey2 = crypto.keys.generateKeyPairFromSeed("Ed25519", seed, 512);
+        const seed = adone.std.crypto.randomBytes(32);
+        const seededkey1 = crypto.keys.generateKeyPairFromSeed("ed25519", seed, 512);
+        const seededkey2 = crypto.keys.generateKeyPairFromSeed("ed25519", seed, 512);
         expect(seededkey1.equals(seededkey2)).to.eql(true);
         expect(seededkey1.public.equals(seededkey2.public)).to.eql(true);
     });
 
     it("generates different keys for different seeds", () => {
-        const seed1 = crypto.randomBytes(32);
-        const seededkey1 = crypto.keys.generateKeyPairFromSeed("Ed25519", seed1, 512);
-        const seed2 = crypto.randomBytes(32);
-        const seededkey2 = crypto.keys.generateKeyPairFromSeed("Ed25519", seed2, 512);
+        const seed1 = adone.std.crypto.randomBytes(32);
+        const seededkey1 = crypto.keys.generateKeyPairFromSeed("ed25519", seed1, 512);
+        const seed2 = adone.std.crypto.randomBytes(32);
+        const seededkey2 = crypto.keys.generateKeyPairFromSeed("ed25519", seed2, 512);
         expect(seededkey1.equals(seededkey2)).to.eql(false);
         expect(seededkey1.public.equals(seededkey2.public)).to.eql(false);
     });
 
     it("signs", () => {
-        const text = crypto.randomBytes(512);
+        const text = adone.std.crypto.randomBytes(512);
         const sig = key.sign(text);
         const res = key.public.verify(text, sig);
         expect(res).to.be.eql(true);
@@ -82,7 +82,7 @@ describe("netron2", "crypto", "keys", "ed25519", function () {
         });
 
         it("not equals other key", () => {
-            const key2 = crypto.keys.generateKeyPair("Ed25519", 512);
+            const key2 = crypto.keys.generateKeyPair("ed25519", 512);
             expect(key.equals(key2)).to.eql(false);
             expect(key2.equals(key)).to.eql(false);
             expect(key.public.equals(key2.public)).to.eql(false);

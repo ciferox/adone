@@ -18,7 +18,7 @@ module.exports = (dht) => {
         const record = msg.record;
 
         if (!record) {
-            log.error("Got empty record from: %s", peer.id.toB58String());
+            log.error("Got empty record from: %s", peer.id.asBase58());
             return callback(new Error("Empty record"));
         }
         try {

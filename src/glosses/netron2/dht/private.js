@@ -158,7 +158,7 @@ module.exports = (dht) => ({
             }
 
             if (!info || !info.id.pubKey) {
-                throw new Error(`Missing public key for: ${peer.toB58String()}`);
+                throw new Error(`Missing public key for: ${peer.asBase58()}`);
             }
 
             record.verifySignature(info.id.pubKey);
@@ -177,7 +177,7 @@ module.exports = (dht) => ({
      * @private
      */
     _closerPeersSingle(key, peer, callback) {
-        dht._log("_closerPeersSingle %s from %s", key, peer.toB58String());
+        dht._log("_closerPeersSingle %s from %s", key, peer.asBase58());
         dht._findPeerSingle(peer, new PeerId(key), (err, msg) => {
             if (err) {
                 return callback(err);
@@ -212,7 +212,7 @@ module.exports = (dht) => ({
      * @private
      */
     _findPeerSingle(peer, target, callback) {
-        dht._log("_findPeerSingle %s", peer.toB58String());
+        dht._log("_findPeerSingle %s", peer.asBase58());
         const msg = new Message(Message.TYPES.FIND_NODE, target.id, 0);
         dht.network.sendRequest(peer, msg, callback);
     },
@@ -450,7 +450,7 @@ module.exports = (dht) => ({
             (cb) => dht._getValueSingle(peer, pkKey, cb),
             (msg, cb) => {
                 if (!msg.record || !msg.record.value) {
-                    return cb(new Error(`Node not responding with its public key: ${peer.toB58String()}`));
+                    return cb(new Error(`Node not responding with its public key: ${peer.asBase58()}`));
                 }
 
                 cb(null, PeerId.createFromPubKey(msg.record.value));
@@ -505,7 +505,7 @@ module.exports = (dht) => ({
                     (cb) => dht._findProvidersSingle(peer, key, cb),
                     (msg, cb) => {
                         const provs = msg.providerPeers;
-                        dht._log("(%s) found %s provider entries", dht.peerInfo.id.toB58String(), provs.length);
+                        dht._log("(%s) found %s provider entries", dht.peerInfo.id.asBase58(), provs.length);
 
                         provs.forEach((prov) => {
                             out.push(dht.peerBook.put(prov));
@@ -587,7 +587,7 @@ module.exports = (dht) => ({
      * @private
      */
     _bootstrapQuery(id, callback) {
-        dht._log("bootstrap:query:%s", id.toB58String());
+        dht._log("bootstrap:query:%s", id.asBase58());
         this.findPeer(id, (err, peer) => {
             if (err instanceof errors.NotFoundError) {
                 // expected case, we asked for random stuff after all
@@ -598,7 +598,7 @@ module.exports = (dht) => ({
             }
             dht._log("bootstrap:query:found", err, peer);
             // wait what, there was something found?
-            callback(new Error(`Bootstrap peer: ACTUALLY FOUND PEER: ${peer}, ${id.toB58String()}`));
+            callback(new Error(`Bootstrap peer: ACTUALLY FOUND PEER: ${peer}, ${id.asBase58()}`));
         });
     },
     /**

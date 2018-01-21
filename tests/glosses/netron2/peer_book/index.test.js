@@ -58,14 +58,14 @@ describe("netron2", "PeerBook", () => {
     });
 
     it(".get by B58String ", () => {
-        const b58Str = p1.id.toB58String();
+        const b58Str = p1.id.asBase58();
         const peer = pb.get(b58Str);
         expect(peer).to.eql(p1);
     });
 
     it(".get by B58String non existent", (done) => {
         try {
-            pb.get(p4.id.toB58String());
+            pb.get(p4.id.asBase58());
         } catch (err) {
             assert.exists(err);
             done();
@@ -88,7 +88,7 @@ describe("netron2", "PeerBook", () => {
     });
 
     it(".remove by B58String", () => {
-        const b58Str = p1.id.toB58String();
+        const b58Str = p1.id.asBase58();
 
         pb.remove(b58Str);
         expect(pb.has(b58Str)).to.equal(false);
@@ -116,7 +116,7 @@ describe("netron2", "PeerBook", () => {
         peer3A.multiaddrs.add(new multi.address.Multiaddr("/ip4/188.0.0.1/tcp/5001"));
 
         pb.put(peer3A, true);
-        const peer3B = pb.get(p3.id.toB58String());
+        const peer3B = pb.get(p3.id.asBase58());
         expect(peer3A.multiaddrs.toArray()).to.eql(peer3B.multiaddrs.toArray());
     });
 

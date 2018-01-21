@@ -123,7 +123,7 @@ class WebsocketStar {
     _peerDiscovered(maStr) {
         log("Peer Discovered:", maStr);
         const peerIdStr = maStr.split("/ipfs/").pop();
-        const peerId = PeerId.createFromB58String(peerIdStr);
+        const peerId = PeerId.createFromBase58(peerIdStr);
         const peerInfo = new PeerInfo(peerId);
 
         peerInfo.multiaddrs.add(multi.address.create(maStr));

@@ -34,11 +34,19 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         return this[NAME_SYMBOL];
     }
 
+    set name(val) {
+        throw new x.NotAllowed("Subsystem name is immutable");
+    }
+
     /**
      * Returns root subsystem. In most cases, the root subsystem is the application.
      */
     get root() {
         return this[ROOT_SYMBOL];
+    }
+
+    set root(val) {
+        throw new x.NotAllowed("Subsystem root is immutable");
     }
 
     /**
@@ -57,6 +65,10 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         return this[PARENT_SYMBOL];
     }
 
+    set parent(val) {
+        throw new x.NotAllowed("Subsytem parent is immutable");
+    }
+
     /**
      * Returns current state
      */
@@ -64,12 +76,16 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         return this[STATE_SYMBOL];
     }
 
+    set state(val) {
+        throw new x.NotAllowed("Subsystem state is immutable");
+    }
+
     get isOwned() {
         return this[OWNED_SYMBOL];
     }
 
     /**
-     * Sets new state (im most cases it's not a good idea to change state unless the common logic is redifined).
+     * Sets new state (im most cases it's not a good idea to change state unless the common logic is redefined).
      * @param {*} newState new state
      */
     setState(newState) {
@@ -94,7 +110,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
             if (is.number(timeout) && timeout > 0) {
                 setTimeout(() => {
                     this.removeListener("state", awaiter);
-                    reject(new adone.x.Timeout(`Timeout occured while waiting for state: ${expectedState}`));
+                    reject(new x.Timeout(`Timeout occured while waiting for state: ${expectedState}`));
                 }, timeout);
             }
         });
@@ -288,7 +304,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         const instance = this.instantiateSubsystem(subsystem, { transpile });
 
         if (instance[OWNED_SYMBOL] === true) {
-            throw new adone.x.NotAllowed("Subsystem already owned by other subsystem");
+            throw new x.NotAllowed("Subsystem already owned by other subsystem");
         }
 
         if (is.string(subsystem) && useFilename) {
@@ -323,7 +339,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
 
         if (is.string(bind)) {
             if (this[bind]) {
-                throw new adone.x.NotAllowed(`Property with name '${bind}' is already exist`);
+                throw new x.NotAllowed(`Property with name '${bind}' is already exist`);
             }
             this[bind] = instance;
             sysInfo.property = bind;
@@ -465,7 +481,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         if (sysInfo.instance[STATE_SYMBOL] === STATE.INITIAL) {
             await sysInfo.instance._configure(...sysInfo.configureArgs);
         } else if (sysInfo.instance[STATE_SYMBOL] !== STATE.CONFIGURED) {
-            throw new adone.x.IllegalState(`Illegal state of '${sysInfo.name}' subsystem for configure: ${humanizeState(sysInfo.instance[STATE_SYMBOL])}`);
+            throw new x.IllegalState(`Illegal state of '${sysInfo.name}' subsystem for configure: ${humanizeState(sysInfo.instance[STATE_SYMBOL])}`);
         }
     }
 
@@ -473,7 +489,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         if (sysInfo.instance[STATE_SYMBOL] === STATE.CONFIGURED) {
             await sysInfo.instance._initialize();
         } else if (sysInfo.instance[STATE_SYMBOL] !== STATE.INITIALIZED) {
-            throw new adone.x.IllegalState(`Illegal state of '${sysInfo.name}' subsystem for initialize: ${humanizeState(sysInfo.instance[STATE_SYMBOL])}`);
+            throw new x.IllegalState(`Illegal state of '${sysInfo.name}' subsystem for initialize: ${humanizeState(sysInfo.instance[STATE_SYMBOL])}`);
         }
     }
 
@@ -481,7 +497,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         if (sysInfo.instance[STATE_SYMBOL] === STATE.INITIALIZED) {
             await sysInfo.instance._uninitialize();
         } else if (sysInfo.instance[STATE_SYMBOL] !== STATE.UNINITIALIZED) {
-            throw new adone.x.IllegalState(`Illegal state of '${sysInfo.name}' subsystem for uninitialize: ${humanizeState(sysInfo.instance[STATE_SYMBOL])}`);
+            throw new x.IllegalState(`Illegal state of '${sysInfo.name}' subsystem for uninitialize: ${humanizeState(sysInfo.instance[STATE_SYMBOL])}`);
         }
     }
 
@@ -489,7 +505,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         if (sysInfo.instance[STATE_SYMBOL] === STATE.INITIALIZED) {
             await sysInfo.instance._reinitialize();
         } else {
-            throw new adone.x.IllegalState(`Illegal state of '${sysInfo.name}' subsystem for reinitialize: ${humanizeState(sysInfo.instance[STATE_SYMBOL])}`);
+            throw new x.IllegalState(`Illegal state of '${sysInfo.name}' subsystem for reinitialize: ${humanizeState(sysInfo.instance[STATE_SYMBOL])}`);
         }
     }
 

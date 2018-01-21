@@ -19,7 +19,7 @@ export default class Railing extends adone.event.Emitter {
             this.bootstrapers.forEach((candidate) => {
                 const ma = adone.multi.address.create(candidate);
 
-                const peerId = PeerId.createFromB58String(ma.getPeerId());
+                const peerId = PeerId.createFromBase58(ma.getPeerId());
 
                 try {
                     const peerInfo = PeerInfo.create(peerId);

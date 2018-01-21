@@ -69,7 +69,7 @@ class PeerQueue {
      */
     dequeue() {
         const el = this.heap.pop();
-        adone.log("dequeue %s", el.id.toB58String());
+        adone.log("dequeue %s", el.id.asBase58());
         return el.id;
     }
 

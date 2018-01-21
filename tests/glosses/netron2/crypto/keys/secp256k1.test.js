@@ -28,7 +28,8 @@ describe("netron2", "crypto", "keys", "secp256k1", () => {
         }
     };
 
-    describe("without secp256k1 module present", () => {
+    // No needed in adone
+    describe.skip("without secp256k1 module present", () => {
         crypto.keys.supportedKeys.secp256k1 = undefined;
 
         it("fails to generate a secp256k1 key", () => {

@@ -11,7 +11,7 @@ const getPeerInfo = function (peer, peerBook) {
     let p;
 
     // PeerInfo
-    if (PeerInfo.isPeerInfo(peer)) {
+    if (is.peerInfo(peer)) {
         p = peer;
         // Multiaddr instance (not string)
     } else if (adone.multi.address.isMultiaddr(peer) || is.string(peer)) {
@@ -22,13 +22,13 @@ const getPeerInfo = function (peer, peerBook) {
         try {
             p = peerBook.get(peerIdB58Str);
         } catch (err) {
-            p = new PeerInfo(PeerId.createFromB58String(peerIdB58Str));
+            p = new PeerInfo(PeerId.createFromBase58(peerIdB58Str));
         }
         p.multiaddrs.add(peer);
 
         // PeerId
-    } else if (PeerId.isPeerId(peer)) {
-        const peerIdB58Str = peer.toB58String();
+    } else if (is.peerId(peer)) {
+        const peerIdB58Str = peer.asBase58();
         try {
             p = peerBook.get(peerIdB58Str);
         } catch (err) {

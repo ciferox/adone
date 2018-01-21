@@ -56,13 +56,13 @@ module.exports = {
 
         // TODO Create multiaddrs from AAAA (IPv6) records as well
 
-        if (peerInfo.id.toB58String() === b58Id) {
+        if (peerInfo.id.asBase58() === b58Id) {
             return; // replied to myself, ignore
         }
 
         adone.log("peer found -", b58Id);
 
-        const peerId = PeerId.createFromB58String(b58Id);
+        const peerId = PeerId.createFromBase58(b58Id);
 
         try {
             const peerFound = PeerInfo.create(peerId);    
@@ -93,14 +93,14 @@ module.exports = {
                 type: "PTR",
                 class: 1,
                 ttl: 120,
-                data: `${peerInfo.id.toB58String()}.${serviceTag}`
+                data: `${peerInfo.id.asBase58()}.${serviceTag}`
             });
 
             // Only announce TCP multiaddrs for now
             const port = multiaddrs[0].toString().split("/")[4];
 
             answers.push({
-                name: `${peerInfo.id.toB58String()}.${serviceTag}`,
+                name: `${peerInfo.id.asBase58()}.${serviceTag}`,
                 type: "SRV",
                 class: 1,
                 ttl: 120,
@@ -113,11 +113,11 @@ module.exports = {
             });
 
             answers.push({
-                name: `${peerInfo.id.toB58String()}.${serviceTag}`,
+                name: `${peerInfo.id.asBase58()}.${serviceTag}`,
                 type: "TXT",
                 class: 1,
                 ttl: 120,
-                data: peerInfo.id.toB58String()
+                data: peerInfo.id.asBase58()
             });
 
             multiaddrs.forEach((ma) => {

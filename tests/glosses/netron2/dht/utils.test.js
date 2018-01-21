@@ -53,14 +53,12 @@ describe("utils", () => {
             waterfall([
                 (cb) => utils.sortClosestPeers(input, id, cb),
                 (out, cb) => {
-                    expect(
-                        out.map((m) => m.toB58String())
-                    ).to.be.eql([
+                    expect(out.map((m) => m.asBase58())).to.be.eql([
                         ids[0],
                         ids[3],
                         ids[2],
                         ids[1]
-                    ].map((m) => m.toB58String()));
+                    ].map((m) => m.asBase58()));
                     cb();
                 }
             ], done);

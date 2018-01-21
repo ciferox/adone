@@ -350,7 +350,7 @@ export class KadDHT {
      * @returns {void}
      */
     getPublicKey(peer, callback) {
-        this._log("getPublicKey %s", peer.toB58String());
+        this._log("getPublicKey %s", peer.asBase58());
         // local check
         let info;
         if (this.peerBook.has(peer)) {
@@ -408,7 +408,7 @@ export class KadDHT {
                 msg.providerPeers = peers.map((p) => new PeerInfo(p));
 
                 each(peers, (peer, cb) => {
-                    this._log("putProvider %s to %s", key.toBaseEncodedString(), peer.toB58String());
+                    this._log("putProvider %s to %s", key.toBaseEncodedString(), peer.asBase58());
                     this.network.sendMessage(peer, msg, cb);
                 }, cb);
             }
@@ -446,7 +446,7 @@ export class KadDHT {
             maxTimeout = c.minute;
         }
 
-        this._log("findPeer %s", id.toB58String());
+        this._log("findPeer %s", id.asBase58());
 
         try {
             const pi = this.findPeerLocal(id);
@@ -500,7 +500,7 @@ export class KadDHT {
                     }, maxTimeout)(cb);
                 },
                 (result, cb) => {
-                    this._log("findPeer %s: %s", id.toB58String(), result.success);
+                    this._log("findPeer %s: %s", id.asBase58(), result.success);
                     if (!result.peer) {
                         return cb(new errors.NotFoundError());
                     }
@@ -521,7 +521,7 @@ export class KadDHT {
      * @returns {void}
      */
     findPeerLocal(peer) {
-        this._log("findPeerLocal %s", peer.toB58String());
+        this._log("findPeerLocal %s", peer.asBase58());
         const p = this.routingTable.find(peer);
         if (p && this.peerBook.has(p)) {
             return this.peerBook.get(p);

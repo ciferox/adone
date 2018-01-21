@@ -70,7 +70,7 @@ export default class LimitDialer {
      * @returns {void}
      */
     dialSingle(peer, transport, addr, token, callback) {
-        const ps = peer.toB58String();
+        const ps = peer.asBase58();
         adone.log("dialSingle: %s:%s", ps, addr.toString());
         let q;
         if (this.queues.has(ps)) {

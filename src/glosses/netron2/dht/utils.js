@@ -160,7 +160,7 @@ exports.logger = (id, subsystem) => {
         name.push(subsystem);
     }
     if (id) {
-        name.push(`${id.toB58String().slice(0, 8)}`);
+        name.push(`${id.asBase58().slice(0, 8)}`);
     }
     const logger = debug(name.join(":"));
     logger.error = debug(name.concat(["error"]).join(":"));

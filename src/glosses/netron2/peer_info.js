@@ -109,7 +109,7 @@ class MultiaddrSet {
 export default class PeerInfo {
     constructor(peerId) {
         if (!peerId) {
-            throw new adone.x.InvalidArgument("Missing peerId. Use Peer.create(cb) to create one");
+            throw new adone.x.InvalidArgument("Missing peerId. Use Peer.create() to create one");
         }
 
         this.id = peerId;
@@ -121,7 +121,7 @@ export default class PeerInfo {
     // only stores the current multiaddr being used
     connect(ma) {
         ma = ensureMultiaddr(ma);
-        if (!this.multiaddrs.has(ma) && ma.toString() !== `/ipfs/${this.id.toB58String()}`) {
+        if (!this.multiaddrs.has(ma) && ma.toString() !== `/ipfs/${this.id.asBase58()}`) {
             throw new Error("can't be connected to missing multiaddr from set");
         }
         this._connectedMultiaddr = ma;
@@ -135,20 +135,22 @@ export default class PeerInfo {
         return this._connectedMultiaddr;
     }
 
-    static create(peerId) {
-        if (!peerId) {
+    toString() {
+        return this.id.toString();
+    }
+
+    static create(val) {
+        if (!val) {
             const id = PeerId.create();
             return new PeerInfo(id);
+        } else if (is.peerId(val)) {
+            return new PeerInfo(val);
+        } else if (is.peerInfo(val)) {
+            return val;
+        } else if (is.plainObject(val)) {
+            return new PeerInfo(PeerId.createFromJSON(val));
         }
-
-        // Already a PeerId instance
-        if (is.function(peerId.toJSON)) {
-            return new PeerInfo(peerId);
-        }
-        return new PeerInfo(PeerId.createFromJSON(peerId));
-    }
-
-    static isPeerInfo(peerInfo) {
-        return Boolean(typeof peerInfo === "object" && peerInfo.id && peerInfo.multiaddrs);
+        throw new adone.x.NotValid(`Invalid type of input for PeerInfo: ${adone.util.typeOf(val)}`);
     }
 }
+adone.tag.add(PeerInfo, "PEER_INFO");

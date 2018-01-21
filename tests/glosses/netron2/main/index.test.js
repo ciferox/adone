@@ -768,7 +768,7 @@ describe("netron2", () => {
                 this.timeout(15 * 1000);
 
                 netCoreA.once("peer:discovery", (peerInfo) => {
-                    expect(netCoreB.peerInfo.id.toB58String()).to.eql(peerInfo.id.toB58String());
+                    expect(netCoreB.peerInfo.id.asBase58()).to.eql(peerInfo.id.asBase58());
                     done();
                 });
             });
@@ -781,8 +781,8 @@ describe("netron2", () => {
             it("find a peer", function (done) {
                 this.timeout(15 * 1000);
                 netCoreA.once("peer:discovery", (peerInfo) => {
-                    expect(netCoreB.peerInfo.id.toB58String())
-                        .to.eql(peerInfo.id.toB58String());
+                    expect(netCoreB.peerInfo.id.asBase58())
+                        .to.eql(peerInfo.id.asBase58());
                     done();
                 });
             });
@@ -797,8 +797,8 @@ describe("netron2", () => {
             it("find a peer", function (done) {
                 this.timeout(15 * 1000);
                 netCoreA.once("peer:discovery", (peerInfo) => {
-                    expect(netCoreB.peerInfo.id.toB58String())
-                        .to.eql(peerInfo.id.toB58String());
+                    expect(netCoreB.peerInfo.id.asBase58())
+                        .to.eql(peerInfo.id.asBase58());
                     done();
                 });
             });
@@ -869,7 +869,7 @@ describe("netron2", () => {
             it("netCoreB.peerRouting.findPeer(netCoreE.peerInfo.id)", (done) => {
                 netCoreB.peerRouting.findPeer(netCoreE.peerInfo.id, (err, peerInfo) => {
                     assert.notExists(err);
-                    expect(netCoreE.peerInfo.id.toB58String()).to.equal(peerInfo.id.toB58String());
+                    expect(netCoreE.peerInfo.id.asBase58()).to.equal(peerInfo.id.asBase58());
                     done();
                 });
             });
@@ -1020,7 +1020,7 @@ describe("netron2", () => {
             // set up netCore with TCP and listening on relay1
             netCoreTCP1 = await setupNetCore([
                 "/ip4/0.0.0.0/tcp/0",
-                `/ipfs/${relayNode1.peerInfo.id.toB58String()}/p2p-circuit`
+                `/ipfs/${relayNode1.peerInfo.id.asBase58()}/p2p-circuit`
             ], {
                 relay: {
                     enabled: true
@@ -1029,7 +1029,7 @@ describe("netron2", () => {
             // set up netCore with TCP and listening on relay2 over TCP transport
             netCoreTCP2 = await setupNetCore([
                 "/ip4/0.0.0.0/tcp/0",
-                `/ip4/0.0.0.0/tcp/0/ipfs/${relayNode2.peerInfo.id.toB58String()}/p2p-circuit`
+                `/ip4/0.0.0.0/tcp/0/ipfs/${relayNode2.peerInfo.id.asBase58()}/p2p-circuit`
             ], {
                 relay: {
                     enabled: true
@@ -1088,7 +1088,7 @@ describe("netron2", () => {
                         expect(result[0].toString()).to.equal("hello");
 
                         const addr = multi.address.create(handlerSpies[0].args[2][0].dstPeer.addrs[0]).toString();
-                        expect(addr).to.equal(`/ipfs/${netCoreTCP1.peerInfo.id.toB58String()}`);
+                        expect(addr).to.equal(`/ipfs/${netCoreTCP1.peerInfo.id.asBase58()}`);
                         done();
                     })
                 );
@@ -1104,7 +1104,7 @@ describe("netron2", () => {
                         expect(result[0].toString()).to.equal("hello");
 
                         const addr = multi.address.create(handlerSpies[1].args[2][0].dstPeer.addrs[0]).toString();
-                        expect(addr).to.equal(`/ipfs/${netCoreTCP2.peerInfo.id.toB58String()}`);
+                        expect(addr).to.equal(`/ipfs/${netCoreTCP2.peerInfo.id.asBase58()}`);
                         done();
                     })
                 );

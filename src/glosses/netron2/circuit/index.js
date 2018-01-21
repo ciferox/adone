@@ -40,14 +40,14 @@ export class Circuit {
         if (this.relays.length === 0) {
             this.peerInfo
                 .multiaddrs
-                .add(`/p2p-circuit/ipfs/${this.peerInfo.id.toB58String()}`);
+                .add(`/p2p-circuit/ipfs/${this.peerInfo.id.asBase58()}`);
         }
 
         this.dialer = new __.CircuitDialer(swarm, options);
 
         this.swarm.on("peer-mux-established", this.dialer.canHop.bind(this.dialer));
         this.swarm.on("peer-mux-closed", (peerInfo) => {
-            this.dialer.relayPeers.delete(peerInfo.id.toB58String());
+            this.dialer.relayPeers.delete(peerInfo.id.asBase58());
         });
     }
 

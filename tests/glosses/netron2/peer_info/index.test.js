@@ -1,6 +1,7 @@
 const peerIdJSON = require("./peer-test.json");
 
 const {
+    is,
     multi,
     netron2: { PeerId, PeerInfo }
 } = adone;
@@ -28,9 +29,9 @@ describe("netron2", "PeerInfo", () => {
     });
 
     it("isPeerInfo", () => {
-        expect(PeerInfo.isPeerInfo(pi)).to.equal(true);
-        expect(PeerInfo.isPeerInfo(pi.id)).to.equal(false);
-        expect(PeerInfo.isPeerInfo("bananas")).to.equal(false);
+        expect(is.peerInfo(pi)).to.equal(true);
+        expect(is.peerInfo(pi.id)).to.equal(false);
+        expect(is.peerInfo("bananas")).to.equal(false);
     });
 
     it(".create", function () {

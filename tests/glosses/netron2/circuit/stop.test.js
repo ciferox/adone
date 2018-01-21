@@ -19,7 +19,7 @@ describe("stop", () => {
         beforeEach(() => {
             stream = pull.handshake({ timeout: 1000 * 60 });
             conn = new Connection(stream);
-            conn.setPeerInfo(new PeerInfo(PeerId.createFromB58String("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE")));
+            conn.setPeerInfo(new PeerInfo(PeerId.createFromBase58("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE")));
 
             const peerId = PeerId.createFromJSON(nodes.node4);
             const peer = PeerInfo.create(peerId);

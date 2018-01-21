@@ -19,15 +19,15 @@ describe("relay", () => {
             stream = pull.handshake({ timeout: 1000 * 60 });
             shake = stream.handshake;
             fromConn = new Connection(stream);
-            fromConn.setPeerInfo(new PeerInfo(PeerId.createFromB58String("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA")));
+            fromConn.setPeerInfo(new PeerInfo(PeerId.createFromBase58("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA")));
 
             const peers = {
                 QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE:
-                    new PeerInfo(PeerId.createFromB58String("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE")),
+                    new PeerInfo(PeerId.createFromBase58("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE")),
                 QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA:
-                    new PeerInfo(PeerId.createFromB58String("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA")),
+                    new PeerInfo(PeerId.createFromBase58("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA")),
                 QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy:
-                    new PeerInfo(PeerId.createFromB58String("QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy"))
+                    new PeerInfo(PeerId.createFromBase58("QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy"))
             };
 
             Object.keys(peers).forEach((key) => {
@@ -68,11 +68,11 @@ describe("relay", () => {
             const relayMsg = {
                 type: protocol.CircuitRelay.Type.HOP,
                 srcPeer: {
-                    id: PeerId.createFromB58String("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE").id,
+                    id: PeerId.createFromBase58("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE").id,
                     addrs: [multi.address.create("/ipfs/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE").buffer]
                 },
                 dstPeer: {
-                    id: PeerId.createFromB58String("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").id,
+                    id: PeerId.createFromBase58("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").id,
                     addrs: [multi.address.create("/ipfs/QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").buffer]
                 }
             };
@@ -89,11 +89,11 @@ describe("relay", () => {
             const relayMsg = {
                 type: protocol.CircuitRelay.Type.HOP,
                 srcPeer: {
-                    id: PeerId.createFromB58String("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").id,
+                    id: PeerId.createFromBase58("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").id,
                     addrs: [multi.address.create("/ipfs/QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").buffer]
                 },
                 dstPeer: {
-                    id: PeerId.createFromB58String("QmYJjAri5soV8RbeQcHaYYcTAYTET17QTvcoFMyKvRDTXe").id,
+                    id: PeerId.createFromBase58("QmYJjAri5soV8RbeQcHaYYcTAYTET17QTvcoFMyKvRDTXe").id,
                     addrs: [multi.address.create("/ipfs/QmYJjAri5soV8RbeQcHaYYcTAYTET17QTvcoFMyKvRDTXe").buffer]
                 }
             };
@@ -115,11 +115,11 @@ describe("relay", () => {
             const relayMsg = {
                 type: protocol.CircuitRelay.Type.HOP,
                 srcPeer: {
-                    id: PeerId.createFromB58String("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").id,
+                    id: PeerId.createFromBase58("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").id,
                     addrs: [multi.address.create("/ipfs/QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").buffer]
                 },
                 dstPeer: {
-                    id: PeerId.createFromB58String("QmYJjAri5soV8RbeQcHaYYcTAYTET17QTvcoFMyKvRDTXe").id,
+                    id: PeerId.createFromBase58("QmYJjAri5soV8RbeQcHaYYcTAYTET17QTvcoFMyKvRDTXe").id,
                     addrs: [multi.address.create("/ipfs/QmYJjAri5soV8RbeQcHaYYcTAYTET17QTvcoFMyKvRDTXe").buffer]
                 }
             };
@@ -141,11 +141,11 @@ describe("relay", () => {
             const relayMsg = {
                 type: protocol.CircuitRelay.Type.HOP,
                 srcPeer: {
-                    id: PeerId.createFromB58String("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE").id,
+                    id: PeerId.createFromBase58("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE").id,
                     addrs: [multi.address.create("/ipfs/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE").buffer]
                 },
                 dstPeer: {
-                    id: PeerId.createFromB58String("QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy").id,
+                    id: PeerId.createFromBase58("QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy").id,
                     addrs: [multi.address.create("/ipfs/QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy").buffer]
                 }
             };
@@ -170,7 +170,7 @@ describe("relay", () => {
                     addrs: ["sdfkjsdnfkjdsb"]
                 },
                 dstPeer: {
-                    id: PeerId.createFromB58String("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").id,
+                    id: PeerId.createFromBase58("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").id,
                     addrs: [multi.address.create("/ipfs/QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").buffer]
                 }
             };
@@ -191,11 +191,11 @@ describe("relay", () => {
             const relayMsg = {
                 type: protocol.CircuitRelay.Type.HOP,
                 srcPeer: {
-                    id: PeerId.createFromB58String("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").id,
+                    id: PeerId.createFromBase58("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").id,
                     addrs: [multi.address.create("/ipfs/QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").buffer]
                 },
                 dstPeer: {
-                    id: PeerId.createFromB58String("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE").id,
+                    id: PeerId.createFromBase58("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE").id,
                     addrs: ["sdfkjsdnfkjdsb"]
                 }
             };

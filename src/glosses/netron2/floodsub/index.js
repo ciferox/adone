@@ -57,7 +57,7 @@ export class FloodSub extends event.Emitter {
     }
 
     _addPeer(peer) {
-        const id = peer.info.id.toB58String();
+        const id = peer.info.id.asBase58();
 
         /**
          * Always use an existing peer.
@@ -80,7 +80,7 @@ export class FloodSub extends event.Emitter {
     }
 
     _removePeer(peer) {
-        const id = peer.info.id.toB58String();
+        const id = peer.info.id.asBase58();
 
         log("remove", id, peer._references);
         // Only delete when no one else is referencing this peer.
@@ -94,7 +94,7 @@ export class FloodSub extends event.Emitter {
 
     async _dialPeer(peerInfo, callback) {
         callback = callback || adone.noop;
-        const idB58Str = peerInfo.id.toB58String();
+        const idB58Str = peerInfo.id.asBase58();
 
         // If already have a PubSub conn, ignore
         const peer = this.peers.get(idB58Str);
@@ -113,7 +113,7 @@ export class FloodSub extends event.Emitter {
     }
 
     _onDial(peerInfo, conn, callback) {
-        const idB58Str = peerInfo.id.toB58String();
+        const idB58Str = peerInfo.id.asBase58();
         log("connected", idB58Str);
 
         const peer = this._addPeer(new Peer(peerInfo));
@@ -131,7 +131,7 @@ export class FloodSub extends event.Emitter {
                 return pull(pull.empty(), conn);
             }
 
-            const idB58Str = peerInfo.id.toB58String();
+            const idB58Str = peerInfo.id.asBase58();
             const peer = this._addPeer(new Peer(peerInfo));
 
             this._processConnection(idB58Str, conn, peer);
@@ -219,7 +219,7 @@ export class FloodSub extends event.Emitter {
 
             peer.sendMessages(utils.normalizeOutRpcMessages(messages));
 
-            log("publish msgs on topics", topics, peer.info.id.toB58String());
+            log("publish msgs on topics", topics, peer.info.id.asBase58());
         });
     }
 
@@ -299,7 +299,7 @@ export class FloodSub extends event.Emitter {
         topics = ensureArray(topics);
         messages = ensureArray(messages);
 
-        const from = this.libp2p.peerInfo.id.toB58String();
+        const from = this.libp2p.peerInfo.id.asBase58();
 
         const buildMessage = (msg) => {
             const seqno = utils.randomSeqno();

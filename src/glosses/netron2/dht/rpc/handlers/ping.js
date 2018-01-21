@@ -12,7 +12,7 @@ module.exports = (dht) => {
      * @returns {undefined}
      */
     return function ping(peer, msg, callback) {
-        log("from %s", peer.id.toB58String());
+        log("from %s", peer.id.asBase58());
         callback(null, msg);
     };
 };

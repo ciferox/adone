@@ -1,6 +1,7 @@
 const proto = require("../protocol");
 
 const {
+    is,
     netron2: { PeerInfo, PeerId },
     multi
 } = adone;
@@ -17,8 +18,8 @@ module.exports = function (swarm) {
         if (multi.address.isMultiaddr(peer)) {
             const relayMa = multi.address.create(peer);
             b58Id = relayMa.getPeerId();
-        } else if (PeerInfo.isPeerInfo(peer)) {
-            b58Id = peer.id.toB58String();
+        } else if (is.peerInfo(peer)) {
+            b58Id = peer.id.asBase58();
         }
 
         return b58Id;
@@ -36,7 +37,7 @@ module.exports = function (swarm) {
     const peerInfoFromMa = function (peer) {
         let p;
         // PeerInfo
-        if (PeerInfo.isPeerInfo(peer)) {
+        if (is.peerInfo(peer)) {
             p = peer;
             // Multiaddr instance (not string)
         } else if (multi.address.isMultiaddr(peer)) {
@@ -44,12 +45,12 @@ module.exports = function (swarm) {
             try {
                 p = swarm._peerBook.get(peerIdB58Str);
             } catch (err) {
-                p = new PeerInfo(PeerId.createFromB58String(peerIdB58Str));
+                p = new PeerInfo(PeerId.createFromBase58(peerIdB58Str));
             }
             p.multiaddrs.add(peer);
             // PeerId
-        } else if (PeerId.isPeerId(peer)) {
-            const peerIdB58Str = peer.toB58String();
+        } else if (is.peerId(peer)) {
+            const peerIdB58Str = peer.asBase58();
             p = swarm._peerBook.has(peerIdB58Str) ? swarm._peerBook.get(peerIdB58Str) : peer;
         }
 

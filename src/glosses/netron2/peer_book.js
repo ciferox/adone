@@ -1,7 +1,6 @@
 const {
     is,
-    data: { base58 },
-    netron2: { PeerId, PeerInfo }
+    data: { base58 }
 } = adone;
 
 const getB58Str = (peer) => {
@@ -11,10 +10,10 @@ const getB58Str = (peer) => {
         b58Str = peer;
     } else if (is.buffer(peer)) {
         b58Str = base58.encode(peer).toString();
-    } else if (PeerId.isPeerId(peer)) {
-        b58Str = peer.toB58String();
-    } else if (PeerInfo.isPeerInfo(peer)) {
-        b58Str = peer.id.toB58String();
+    } else if (is.peerId(peer)) {
+        b58Str = peer.asBase58();
+    } else if (is.peerInfo(peer)) {
+        b58Str = peer.id.asBase58();
     } else {
         throw new Error("not valid PeerId or PeerInfo, or B58Str");
     }
@@ -42,11 +41,11 @@ export default class PeerBook {
      * @returns {PeerInfo}
      */
     put(peerInfo, replace) {
-        const localPeerInfo = this._peers[peerInfo.id.toB58String()];
+        const localPeerInfo = this._peers[peerInfo.id.asBase58()];
 
         // insert if doesn't exist or replace if replace flag is true
         if (!localPeerInfo || replace) {
-            this._peers[peerInfo.id.toB58String()] = peerInfo;
+            this._peers[peerInfo.id.asBase58()] = peerInfo;
             return peerInfo;
         }
 

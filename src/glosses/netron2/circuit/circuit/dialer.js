@@ -187,7 +187,7 @@ export default class Dialer {
                             addrs: srcMas.map((addr) => addr.buffer)
                         },
                         dstPeer: {
-                            id: PeerId.createFromB58String(dstMa.getPeerId()).id,
+                            id: PeerId.createFromBase58(dstMa.getPeerId()).id,
                             addrs: [dstMa.buffer]
                         }
                     }), cb);

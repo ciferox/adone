@@ -1,11 +1,12 @@
-const parallel = require("async/parallel");
 const testId = require("./fixtures/sample-id");
 const goId = require("./fixtures/go-private-key");
 
 const {
+    is,
     multi,
     netron2: { PeerId, crypto },
-    std: { util }
+    std: { util },
+    x
 } = adone;
 
 const testIdHex = testId.id;
@@ -19,29 +20,29 @@ const testOpts = {
 };
 
 describe("netron2", "PeerId", () => {
-    it("create an id without 'new'", () => {
-        assert.throws(() => new PeerId(), Error);
+    it("create an instance without id", () => {
+        assert.throws(() => new PeerId(), x.NotValid);
     });
 
     it("create a new id", () => {
         const id = PeerId.create(testOpts);
-        expect(id.toB58String().length).to.equal(46);
+        expect(id.asBase58().length).to.equal(46);
     });
 
     it("isPeerId", () => {
         const id = PeerId.create(testOpts);
-        expect(PeerId.isPeerId(id)).to.equal(true);
-        expect(PeerId.isPeerId("aaa")).to.equal(false);
-        expect(PeerId.isPeerId(Buffer.from("batatas"))).to.equal(false);
+        expect(is.peerId(id)).to.equal(true);
+        expect(is.peerId("aaa")).to.equal(false);
+        expect(is.peerId(Buffer.from("batatas"))).to.equal(false);
     });
 
     it("throws on changing the id", function () {
         this.timeout(10000);
         const id = PeerId.create(testOpts);
-        expect(id.toB58String().length).to.equal(46);
+        expect(id.asBase58().length).to.equal(46);
         assert.throws(() => {
             id.id = Buffer.from("hello");
-        }, /immutable/);
+        }, adone.x.NotAllowed);
     });
 
     it("recreate an Id from Hex string", () => {
@@ -55,22 +56,22 @@ describe("netron2", "PeerId", () => {
     });
 
     it("Recreate a B58 String", () => {
-        const id = PeerId.createFromB58String(testIdB58String);
-        expect(testIdB58String).to.equal(id.toB58String());
+        const id = PeerId.createFromBase58(testIdB58String);
+        expect(testIdB58String).to.equal(id.asBase58());
     });
 
     it("Recreate from a Public Key", () => {
         const id = PeerId.createFromPubKey(testId.pubKey);
-        expect(testIdB58String).to.equal(id.toB58String());
+        expect(testIdB58String).to.equal(id.asBase58());
     });
 
     it("Recreate from a Private Key", () => {
         const id = PeerId.createFromPrivKey(testId.privKey);
-        expect(testIdB58String).to.equal(id.toB58String());
+        expect(testIdB58String).to.equal(id.asBase58());
 
         const encoded = Buffer.from(testId.privKey, "base64");
         const id2 = PeerId.createFromPrivKey(encoded);
-        expect(testIdB58String).to.equal(id2.toB58String());
+        expect(testIdB58String).to.equal(id2.asBase58());
         expect(id.marshalPubKey()).to.deep.equal(id2.marshalPubKey());
     });
 
@@ -83,7 +84,7 @@ describe("netron2", "PeerId", () => {
     it("Works with default options", function () {
         this.timeout(10000);
         const id = PeerId.create();
-        expect(id.toB58String().length).to.equal(46);
+        expect(id.asBase58().length).to.equal(46);
     });
 
     it("Non-default # of bits", function () {
@@ -95,8 +96,8 @@ describe("netron2", "PeerId", () => {
 
     it("Pretty printing", () => {
         const id1 = PeerId.create(testOpts);
-        const id2 = PeerId.createFromPrivKey(id1.toPrint().privKey);
-        expect(id1.toPrint()).to.be.eql(id2.toPrint());
+        const id2 = PeerId.createFromPrivKey(id1.toJSON().privKey);
+        expect(id1.toJSON()).to.be.eql(id2.toJSON());
     });
 
     it("toBytes", () => {
@@ -117,20 +118,20 @@ describe("netron2", "PeerId", () => {
         it("full node", () => {
             const id = PeerId.create(testOpts);
             const other = PeerId.createFromJSON(id.toJSON());
-            expect(id.toB58String()).to.equal(other.toB58String());
+            expect(id.asBase58()).to.equal(other.asBase58());
             expect(id.privKey.bytes).to.eql(other.privKey.bytes);
             expect(id.pubKey.bytes).to.eql(other.pubKey.bytes);
         });
 
         it("only id", () => {
-            const key = crypto.keys.generateKeyPair("RSA", 1024);
+            const key = crypto.keys.generateKeyPair("rsa", 1024);
             const digest = key.public.hash();
             const id = PeerId.createFromBytes(digest);
             assert.notExists(id.privKey);
             assert.notExists(id.pubKey);
 
             const other = PeerId.createFromJSON(id.toJSON());
-            expect(id.toB58String()).to.equal(other.toB58String());
+            expect(id.asBase58()).to.equal(other.asBase58());
         });
 
         it("go interop", () => {
@@ -184,9 +185,9 @@ describe("netron2", "PeerId", () => {
         let k3;
 
         before(() => {
-            k1 = crypto.keys.generateKeyPair("RSA", 512);
-            k2 = crypto.keys.generateKeyPair("RSA", 512);
-            k3 = crypto.keys.generateKeyPair("RSA", 512);
+            k1 = crypto.keys.generateKeyPair("rsa", 512);
+            k2 = crypto.keys.generateKeyPair("rsa", 512);
+            k3 = crypto.keys.generateKeyPair("rsa", 512);
         });
 
         it("missmatch private - public key", () => {

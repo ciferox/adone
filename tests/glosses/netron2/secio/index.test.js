@@ -106,7 +106,7 @@ describe("secio", () => {
 
                 bToA.getPeerInfo((err, PeerInfo) => {
                     assert.notExists(err);
-                    expect(PeerInfo.id.toB58String()).to.equal(peerA.toB58String());
+                    expect(PeerInfo.id.asBase58()).to.equal(peerA.asBase58());
                     done();
                 });
             })

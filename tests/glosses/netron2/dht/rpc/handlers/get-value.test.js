@@ -65,8 +65,8 @@ describe("rpc - handlers - GetValue", () => {
             assert.notExists(err);
             expect(response.closerPeers).to.have.length(1);
             expect(
-                response.closerPeers[0].id.toB58String()
-            ).to.be.eql(other.id.toB58String());
+                response.closerPeers[0].id.asBase58()
+            ).to.be.eql(other.id.asBase58());
             done();
         });
     });

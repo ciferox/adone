@@ -25,7 +25,7 @@ class Ping extends event.Emitter {
         this._shake;
         const self = this;
 
-        adone.log("dialing %s to %s", PROTOCOL, peer.id.toB58String());
+        adone.log("dialing %s to %s", PROTOCOL, peer.id.asBase58());
 
         swarm.dial(peer, PROTOCOL, (err, conn) => {
             if (err) {

@@ -153,7 +153,7 @@ export default class NetCore extends event.Emitter {
         this.peerInfo.multiaddrs.toArray().forEach((ma) => {
             if (!ma.getPeerId()) {
                 maOld.push(ma);
-                maNew.push(ma.encapsulate(`/ipfs/${this.peerInfo.id.toB58String()}`));
+                maNew.push(ma.encapsulate(`/ipfs/${this.peerInfo.id.asBase58()}`));
             }
         });
         this.peerInfo.multiaddrs.replace(maOld, maNew);
@@ -307,7 +307,7 @@ export default class NetCore extends event.Emitter {
     _getPeerInfo(peer) {
         let p;
         // PeerInfo
-        if (PeerInfo.isPeerInfo(peer)) {
+        if (is.peerInfo(peer)) {
             p = peer;
             // Multiaddr instance or Multiaddr String
         } else if (multi.address.isMultiaddr(peer) || is.string(peer)) {
@@ -318,13 +318,13 @@ export default class NetCore extends event.Emitter {
             try {
                 p = this.peerBook.get(peerIdB58Str);
             } catch (err) {
-                p = new PeerInfo(PeerId.createFromB58String(peerIdB58Str));
+                p = new PeerInfo(PeerId.createFromBase58(peerIdB58Str));
             }
             p.multiaddrs.add(peer);
 
             // PeerId
-        } else if (PeerId.isPeerId(peer)) {
-            const peerIdB58Str = peer.toB58String();
+        } else if (is.peerId(peer)) {
+            const peerIdB58Str = peer.asBase58();
             try {
                 p = this.peerBook.get(peerIdB58Str);
             } catch (err) {

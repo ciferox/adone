@@ -1,6 +1,7 @@
 const {
     is,
-    netron2: { crypto }
+    netron2: { crypto },
+    x
 } = adone;
 
 const toB64Opt = (val) => {
@@ -20,7 +21,7 @@ export default class PeerId {
         }
 
         this._id = id;
-        this._idB58String = adone.multi.hash.toB58String(this.id);
+        this._idBase58 = adone.multi.hash.toB58String(id);
         this._privKey = privKey;
         this._pubKey = pubKey;
     }
@@ -30,7 +31,11 @@ export default class PeerId {
     }
 
     set id(val) {
-        throw new Error("Id is immutable");
+        throw new x.NotAllowed("Id is immutable");
+    }
+
+    asBase58() {
+        return this._idBase58;
     }
 
     get privKey() {
@@ -69,16 +74,11 @@ export default class PeerId {
         }
     }
 
-    // pretty print
-    toPrint() {
-        return this.toJSON();
-    }
-
     // return the jsonified version of the key, matching the formatting
     // of go-ipfs for its config file
     toJSON() {
         return {
-            id: this.toB58String(),
+            id: this.asBase58(),
             privKey: toB64Opt(this.marshalPrivKey()),
             pubKey: toB64Opt(this.marshalPubKey())
         };
@@ -93,8 +93,8 @@ export default class PeerId {
         return this.id;
     }
 
-    toB58String() {
-        return this._idB58String;
+    toString() {
+        return this._idBase58;
     }
 
     isEqual(id) {
@@ -118,10 +118,8 @@ export default class PeerId {
     }
 
     // generation
-    static create(opts = {}) {
-        opts.bits = opts.bits || 2048;
-
-        const privKey = crypto.keys.generateKeyPair("RSA", opts.bits);
+    static create({ bits = 2048 } = {}) {
+        const privKey = crypto.keys.generateKeyPair("rsa", bits);
         const digest = privKey.public.hash();
         return new PeerId(digest, privKey);
     }
@@ -134,7 +132,7 @@ export default class PeerId {
         return new PeerId(buf);
     }
 
-    static createFromB58String(str) {
+    static createFromBase58(str) {
         return new PeerId(adone.multi.hash.fromB58String(str));
     }
 
@@ -198,8 +196,5 @@ export default class PeerId {
         }
         return new PeerId(id, null, pub);
     }
-
-    static isPeerId(peerId) {
-        return Boolean(typeof peerId === "object" && peerId._id && peerId._idB58String);
-    }
 }
+adone.tag.add(PeerId, "PEER_ID");

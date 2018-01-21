@@ -237,7 +237,7 @@ class WebRTCStar {
 
         const split = maStr.split("/ipfs/");
         const peerIdStr = split[split.length - 1];
-        const peerId = PeerId.createFromB58String(peerIdStr);
+        const peerId = PeerId.createFromBase58(peerIdStr);
         const peerInfo = new PeerInfo(peerId);
         peerInfo.multiaddrs.add(multi.address.create(maStr));
         this.discovery.emit("peer", peerInfo);

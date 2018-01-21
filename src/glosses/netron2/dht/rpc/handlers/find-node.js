@@ -32,7 +32,7 @@ module.exports = (dht) => {
                 if (closer.length > 0) {
                     response.closerPeers = closer;
                 } else {
-                    log("handle FindNode %s: could not find anything", peer.id.toB58String());
+                    log("handle FindNode %s: could not find anything", peer.id.asBase58());
                 }
 
                 cb(null, response);

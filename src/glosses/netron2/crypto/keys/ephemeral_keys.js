@@ -8,7 +8,7 @@ const curves = {
     "P-521": "secp521r1"
 };
 
-exports.generateEphmeralKeyPair = function (curve) {
+const generateEphmeralKeyPair = function (curve) {
     if (!curves[curve]) {
         throw new Error(`Unkown curve: ${curve}`);
     }
@@ -26,3 +26,10 @@ exports.generateEphmeralKeyPair = function (curve) {
         }
     };
 };
+
+
+// Generates an ephemeral public key and returns a function that will compute
+// the shared secret key.
+//
+// Focuses only on ECDH now, but can be made more general in the future.
+module.exports = (curve) => generateEphmeralKeyPair(curve);

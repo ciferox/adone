@@ -62,7 +62,7 @@ class Peer extends event.Emitter {
      */
     write(msg) {
         if (!this.isWritable) {
-            const id = this.info.id.toB58String();
+            const id = this.info.id.asBase58();
             throw new Error(`No writable connection to ${id}`);
         }
 

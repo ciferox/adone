@@ -64,7 +64,7 @@ describe("netron", "circuit", "dialer", () => {
         let stream = null;
         let shake = null;
         let fromConn = null;
-        const peer = new PeerInfo(PeerId.createFromB58String("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA"));
+        const peer = new PeerInfo(PeerId.createFromBase58("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA"));
 
         beforeEach(() => {
             stream = pull.handshake({ timeout: 1000 * 60 });
@@ -98,7 +98,7 @@ describe("netron", "circuit", "dialer", () => {
 
             dialer.canHop(peer, (err) => {
                 assert.notExists(err);
-                assert.ok(dialer.relayPeers.has(peer.id.toB58String()));
+                assert.ok(dialer.relayPeers.has(peer.id.asBase58()));
             });
         });
 
@@ -120,7 +120,7 @@ describe("netron", "circuit", "dialer", () => {
 
             dialer.canHop(peer, (err) => {
                 assert.notExists(err);
-                assert.notOk(dialer.relayPeers.has(peer.id.toB58String()));
+                assert.notOk(dialer.relayPeers.has(peer.id.asBase58()));
             });
         });
     });
@@ -194,7 +194,7 @@ describe("netron", "circuit", "dialer", () => {
             stream = pull.handshake({ timeout: 1000 * 60 });
             shake = stream.handshake;
             conn = new Connection();
-            conn.setPeerInfo(new PeerInfo(PeerId.createFromB58String("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE")));
+            conn.setPeerInfo(new PeerInfo(PeerId.createFromBase58("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE")));
             conn.setInnerConn(stream);
             dialer._negotiateRelay(conn, dstMa, callback);
         });

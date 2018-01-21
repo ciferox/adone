@@ -2,8 +2,8 @@ const {
     multi
 } = adone;
 
-export default (keysProtobuf, randomBytes, crypto) => {
-    crypto = crypto || require("./crypto")(randomBytes);
+export default (keysProtobuf, crypto) => {
+    crypto = crypto || require("./crypto");
 
     class Secp256k1PublicKey {
         constructor(key) {

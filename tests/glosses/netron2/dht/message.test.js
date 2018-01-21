@@ -95,12 +95,12 @@ describe("Message", () => {
             expect(msg.clusterLevel).to.gte(0);
             if (msg.record) {
                 expect(is.buffer(msg.record.key)).to.eql(true);
-                expect(PeerId.isPeerId(msg.record.author)).to.eql(true);
+                expect(is.peerId(msg.record.author)).to.eql(true);
             }
 
             if (msg.providerPeers.length > 0) {
                 msg.providerPeers.forEach((p) => {
-                    expect(PeerInfo.isPeerInfo(p)).to.eql(true);
+                    expect(is.peerInfo(p)).to.eql(true);
                 });
             }
         });

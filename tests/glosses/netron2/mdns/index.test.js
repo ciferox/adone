@@ -40,7 +40,7 @@ describe("MulticastDNS", () => {
             (cb) => mdnsB.start(cb)
         ], () => {
             mdnsA.once("peer", (peerInfo) => {
-                expect(pB.id.toB58String()).to.eql(peerInfo.id.toB58String());
+                expect(pB.id.asBase58()).to.eql(peerInfo.id.asBase58());
                 done();
             });
 
@@ -64,7 +64,7 @@ describe("MulticastDNS", () => {
 
         ], () => {
             mdnsA.once("peer", (peerInfo) => {
-                expect(pC.id.toB58String()).to.eql(peerInfo.id.toB58String());
+                expect(pC.id.asBase58()).to.eql(peerInfo.id.asBase58());
                 expect(peerInfo.multiaddrs.size).to.equal(1);
                 done();
             });
