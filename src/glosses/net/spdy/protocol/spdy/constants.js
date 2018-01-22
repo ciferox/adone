@@ -1,19 +1,17 @@
 const {
-    net: { spdy: transport }
+    net: { spdy: { protocol: { base } } }
 } = adone;
 
-const base = transport.protocol.base;
+export const FRAME_HEADER_SIZE = 8;
 
-exports.FRAME_HEADER_SIZE = 8;
+export const PING_OPAQUE_SIZE = 4;
 
-exports.PING_OPAQUE_SIZE = 4;
+export const MAX_CONCURRENT_STREAMS = Infinity;
+export const DEFAULT_MAX_HEADER_LIST_SIZE = Infinity;
 
-exports.MAX_CONCURRENT_STREAMS = Infinity;
-exports.DEFAULT_MAX_HEADER_LIST_SIZE = Infinity;
+export const DEFAULT_WEIGHT = 16;
 
-exports.DEFAULT_WEIGHT = 16;
-
-exports.frameType = {
+export const frameType = {
     SYN_STREAM: 1,
     SYN_REPLY: 2,
     RST_STREAM: 3,
@@ -27,13 +25,13 @@ exports.frameType = {
     X_FORWARDED_FOR: 0xf000
 };
 
-exports.flags = {
+export const flags = {
     FLAG_FIN: 0x01,
     FLAG_COMPRESSED: 0x02,
     FLAG_UNIDIRECTIONAL: 0x02
 };
 
-exports.error = {
+export const error = {
     PROTOCOL_ERROR: 1,
     INVALID_STREAM: 2,
     REFUSED_STREAM: 3,
@@ -47,9 +45,9 @@ exports.error = {
     INVALID_CREDENTIALS: 10,
     FRAME_TOO_LARGE: 11
 };
-exports.errorByCode = base.utils.reverse(exports.error);
+export const errorByCode = base.utils.reverse(error);
 
-exports.settings = {
+export const settings = {
     FLAG_SETTINGS_PERSIST_VALUE: 1,
     FLAG_SETTINGS_PERSISTED: 2,
 
@@ -63,7 +61,7 @@ exports.settings = {
     SETTINGS_CLIENT_CERTIFICATE_VECTOR_SIZE: 8
 };
 
-exports.settingsIndex = [
+export const settingsIndex = [
     null,
 
     "upload_bandwidth",
@@ -76,17 +74,17 @@ exports.settingsIndex = [
     "client_certificate_vector_size"
 ];
 
-exports.DEFAULT_WINDOW = 64 * 1024;
-exports.MAX_INITIAL_WINDOW_SIZE = 2147483647;
+export const DEFAULT_WINDOW = 64 * 1024;
+export const MAX_INITIAL_WINDOW_SIZE = 2147483647;
 
-exports.goaway = {
+export const goaway = {
     OK: 0,
     PROTOCOL_ERROR: 1,
     INTERNAL_ERROR: 2
 };
-exports.goawayByCode = base.utils.reverse(exports.goaway);
+export const goawayByCode = base.utils.reverse(goaway);
 
-exports.statusReason = {
+export const statusReason = {
     100: "Continue",
     101: "Switching Protocols",
     102: "Processing", // RFC 2518, obsoleted by RFC 4918

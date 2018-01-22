@@ -5,22 +5,16 @@ const wrtc = require("wrtc");
 import TestNetCore from "./net_core";
 
 const {
-    is,
     multi,
     stream: { pull },
-    netron2: { rendezvous, CID, circuit: { Circuit }, PeerInfo, PeerId, transport: { WebRTCStar, WSStar } }
+    netron2: { rendezvous, CID, circuit: { Circuit }, PeerInfo, PeerId, transport: { WebRTCStar, WSStar } },
+    util
 } = adone;
 
-const createNetCore = function (multiaddrs, options) {
-    options = options || {};
-
-    if (!is.array(multiaddrs)) {
-        multiaddrs = [multiaddrs];
-    }
-
+const createNetCore = function (multiaddrs, options = {}) {
     const peerId = PeerId.create({ bits: 1024 });
     const peerInfo = PeerInfo.create(peerId);
-    multiaddrs.map((ma) => peerInfo.multiaddrs.add(ma));
+    util.arrify(multiaddrs).map((ma) => peerInfo.multiaddrs.add(ma));
     return new TestNetCore(peerInfo, undefined, options);
 };
 
@@ -482,11 +476,11 @@ describe("netron2", () => {
                 const wstar = new WSStar();
                 netCoreAll = createNetCore(["/ip4/0.0.0.0/tcp/0", "/ip4/127.0.0.1/tcp/25011/ws", "/ip4/127.0.0.1/tcp/24642/ws/p2p-websocket-star"
                 ], {
-                    modules: {
-                        transport: [wstar],
-                        discovery: [wstar.discovery]
-                    }
-                });
+                        modules: {
+                            transport: [wstar],
+                            discovery: [wstar.discovery]
+                        }
+                    });
                 wstar.lazySetId(netCoreAll.peerInfo.id);
                 netCoreAll.handle("/echo/1.0.0", echo);
                 await netCoreAll.start();
@@ -977,64 +971,64 @@ describe("netron2", () => {
                 "/ip4/0.0.0.0/tcp/0/ws",
                 "/ip4/0.0.0.0/tcp/0"
             ], {
-                relay: {
-                    enabled: true,
-                    hop: {
+                    relay: {
                         enabled: true,
-                        active: false // passive relay
+                        hop: {
+                            enabled: true,
+                            active: false // passive relay
+                        }
                     }
-                }
-            });
+                });
 
             // setup active relay
             relayNode2 = await setupNetCore([
                 "/ip4/0.0.0.0/tcp/0/ws",
                 "/ip4/0.0.0.0/tcp/0"
             ], {
-                relay: {
-                    enabled: true,
-                    hop: {
+                    relay: {
                         enabled: true,
-                        active: false // passive relay
+                        hop: {
+                            enabled: true,
+                            active: false // passive relay
+                        }
                     }
-                }
-            });
+                });
 
             // setup netCore with WS
             netCoreWS1 = await setupNetCore([
                 "/ip4/0.0.0.0/tcp/0/ws"
             ], {
-                relay: {
-                    enabled: true
-                }
-            });
+                    relay: {
+                        enabled: true
+                    }
+                });
 
             // setup netCore with WS
             netCoreWS2 = await setupNetCore([
                 "/ip4/0.0.0.0/tcp/0/ws"
             ], {
-                relay: {
-                    enabled: true
-                }
-            });
+                    relay: {
+                        enabled: true
+                    }
+                });
             // set up netCore with TCP and listening on relay1
             netCoreTCP1 = await setupNetCore([
                 "/ip4/0.0.0.0/tcp/0",
                 `/ipfs/${relayNode1.peerInfo.id.asBase58()}/p2p-circuit`
             ], {
-                relay: {
-                    enabled: true
-                }
-            });
+                    relay: {
+                        enabled: true
+                    }
+                });
             // set up netCore with TCP and listening on relay2 over TCP transport
             netCoreTCP2 = await setupNetCore([
                 "/ip4/0.0.0.0/tcp/0",
                 `/ip4/0.0.0.0/tcp/0/ipfs/${relayNode2.peerInfo.id.asBase58()}/p2p-circuit`
             ], {
-                relay: {
-                    enabled: true
-                }
-            });
+                    relay: {
+                        enabled: true
+                    }
+                });
 
             await netCoreWS1.connect(relayNode1.peerInfo);
             await netCoreWS1.connect(relayNode2.peerInfo);

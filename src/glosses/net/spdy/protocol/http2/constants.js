@@ -4,24 +4,24 @@ const {
 
 const base = transport.protocol.base;
 
-exports.PREFACE_SIZE = 24;
-exports.PREFACE = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n";
-exports.PREFACE_BUFFER = Buffer.from(exports.PREFACE);
+export const PREFACE_SIZE = 24;
+export const PREFACE = "PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n";
+export const PREFACE_BUFFER = Buffer.from(PREFACE);
 
-exports.PING_OPAQUE_SIZE = 8;
+export const PING_OPAQUE_SIZE = 8;
 
-exports.FRAME_HEADER_SIZE = 9;
-exports.INITIAL_MAX_FRAME_SIZE = 16384;
-exports.ABSOLUTE_MAX_FRAME_SIZE = 16777215;
-exports.HEADER_TABLE_SIZE = 4096;
-exports.DEFAULT_MAX_HEADER_LIST_SIZE = 80 * 1024; // as in http_parser
-exports.MAX_INITIAL_WINDOW_SIZE = 2147483647;
+export const FRAME_HEADER_SIZE = 9;
+export const INITIAL_MAX_FRAME_SIZE = 16384;
+export const ABSOLUTE_MAX_FRAME_SIZE = 16777215;
+export const HEADER_TABLE_SIZE = 4096;
+export const DEFAULT_MAX_HEADER_LIST_SIZE = 80 * 1024; // as in http_parser
+export const MAX_INITIAL_WINDOW_SIZE = 2147483647;
 
-exports.DEFAULT_WEIGHT = 16;
+export const DEFAULT_WEIGHT = 16;
 
-exports.MAX_CONCURRENT_STREAMS = Infinity;
+export const MAX_CONCURRENT_STREAMS = Infinity;
 
-exports.frameType = {
+export const frameType = {
     DATA: 0,
     HEADERS: 1,
     PRIORITY: 2,
@@ -37,7 +37,7 @@ exports.frameType = {
     X_FORWARDED_FOR: 0xde
 };
 
-exports.flags = {
+export const flags = {
     ACK: 0x01, // SETTINGS-only
     END_STREAM: 0x01,
     END_HEADERS: 0x04,
@@ -45,7 +45,7 @@ exports.flags = {
     PRIORITY: 0x20
 };
 
-exports.settings = {
+export const settings = {
     SETTINGS_HEADER_TABLE_SIZE: 0x01,
     SETTINGS_ENABLE_PUSH: 0x02,
     SETTINGS_MAX_CONCURRENT_STREAMS: 0x03,
@@ -54,7 +54,7 @@ exports.settings = {
     SETTINGS_MAX_HEADER_LIST_SIZE: 0x06
 };
 
-exports.settingsIndex = [
+export const settingsIndex = [
     null,
     "header_table_size",
     "enable_push",
@@ -64,7 +64,7 @@ exports.settingsIndex = [
     "max_header_list_size"
 ];
 
-exports.error = {
+export const error = {
     OK: 0,
     NO_ERROR: 0,
 
@@ -85,10 +85,10 @@ exports.error = {
     INADEQUATE_SECURITY: 12,
     HTTP_1_1_REQUIRED: 13
 };
-exports.errorByCode = base.utils.reverse(exports.error);
+export const errorByCode = base.utils.reverse(error);
 
-exports.DEFAULT_WINDOW = 64 * 1024 - 1;
+export const DEFAULT_WINDOW = 64 * 1024 - 1;
 
-exports.goaway = exports.error;
-exports.goawayByCode = Object.assign({}, exports.errorByCode);
-exports.goawayByCode[0] = "OK";
+export const goaway = error;
+export const goawayByCode = Object.assign({}, errorByCode);
+goawayByCode[0] = "OK";

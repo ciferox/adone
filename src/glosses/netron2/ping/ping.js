@@ -3,7 +3,7 @@ const constants = require("./constants");
 const {
     stream: { pull },
     event,
-    netron2: { crypto }
+    std
 } = adone;
 
 const PROTOCOL = constants.PROTOCOL;
@@ -13,7 +13,7 @@ const rnd = (length) => {
     if (!length) {
         length = constants.PING_LENGTH;
     }
-    return crypto.randomBytes(length);
+    return std.crypto.randomBytes(length);
 };
 
 

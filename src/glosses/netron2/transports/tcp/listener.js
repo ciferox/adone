@@ -52,7 +52,6 @@ export default (handler) => {
         socket.on("error", adone.noop);
 
         const addr = getMultiaddr(socket);
-        adone.log("new connection", addr.toString());
 
         const s = pull.fromStream.duplex(socket);
 
@@ -93,9 +92,8 @@ export default (handler) => {
                 return;
             }
 
-            adone.log("unable to close graciously, destroying conns");
+            // unable to close graciously, destroying conns
             Object.keys(server.__connections).forEach((key) => {
-                adone.log("destroying %s", key);
                 server.__connections[key].destroy();
             });
         }, options.timeout || CLOSE_TIMEOUT);
@@ -112,7 +110,6 @@ export default (handler) => {
         }
 
         const lOpts = listeningAddr.toOptions();
-        adone.log("Listening on %s %s", lOpts.port, lOpts.host);
         return server.listen(lOpts.port, lOpts.host, callback);
     };
 

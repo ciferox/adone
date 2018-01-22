@@ -11,14 +11,14 @@ describe("SPDY Transport", () => {
     beforeEach(() => {
         const pair = streamPair.create();
 
-        server = transport.connection.create(pair, {
+        server = transport.Connection.create(pair, {
             protocol: "spdy",
             windowSize: 256,
             isServer: true,
             autoSpdy31: true
         });
 
-        client = transport.connection.create(pair.other, {
+        client = transport.Connection.create(pair.other, {
             protocol: "spdy",
             windowSize: 256,
             isServer: false,

@@ -1,7 +1,8 @@
 const {
     is,
     vendor: { lodash: { uniqBy } },
-    netron2: { PeerId }
+    netron2: { PeerId },
+    util
 } = adone;
 
 const ensureMultiaddr = (ma) => {
@@ -79,14 +80,8 @@ class MultiaddrSet {
 
     // replaces selected existing multiaddrs with new ones
     replace(existing, fresh) {
-        if (!is.array(existing)) {
-            existing = [existing];
-        }
-        if (!is.array(fresh)) {
-            fresh = [fresh];
-        }
-        existing.forEach((m) => this.delete(m));
-        fresh.forEach((m) => this.add(m));
+        util.arrify(existing).forEach((m) => this.delete(m));
+        util.arrify(fresh).forEach((m) => this.add(m));
     }
 
     clear() {
@@ -141,8 +136,7 @@ export default class PeerInfo {
 
     static create(val) {
         if (!val) {
-            const id = PeerId.create();
-            return new PeerInfo(id);
+            return new PeerInfo(PeerId.create());
         } else if (is.peerId(val)) {
             return new PeerInfo(val);
         } else if (is.peerInfo(val)) {
@@ -150,7 +144,7 @@ export default class PeerInfo {
         } else if (is.plainObject(val)) {
             return new PeerInfo(PeerId.createFromJSON(val));
         }
-        throw new adone.x.NotValid(`Invalid type of input for PeerInfo: ${adone.util.typeOf(val)}`);
+        throw new adone.x.NotValid(`Invalid type of input for PeerInfo: ${util.typeOf(val)}`);
     }
 }
 adone.tag.add(PeerInfo, "PEER_INFO");

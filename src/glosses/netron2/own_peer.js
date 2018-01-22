@@ -1,10 +1,10 @@
 const {
     is,
-    netron2: { BasePeer },
+    netron2: { AbstractPeer },
     x
 } = adone;
 
-export default class OwnPeer extends BasePeer {
+export default class OwnPeer extends AbstractPeer {
     isConnected() {
         return true; // always connected
     }
@@ -73,16 +73,18 @@ export default class OwnPeer extends BasePeer {
         return stub.definition;
     }
 
-    getInterface(ctxId) {
-        return this.netron.getInterfaceByName(ctxId);
+    getInterfaceById(defId) {
+        const stub = this.netron.getStubById(defId);
+        return this.netron._createInterface(stub.definition, this.info);
     }
 
     getInterfaceByName(ctxId) {
-        return this.netron.getInterfaceByName(ctxId);
+        const def = this.getDefinitionByName(ctxId);
+        return this.getInterfaceById(def.id);
     }
 
-    getInterfaceById(defId) {
-        return this.netron.getInterfaceById(defId);
-    }
+    getInterface(ctxId) {
+        return this.getInterfaceByName(ctxId);
+    }    
 }
-adone.tag.add(OwnPeer, "NETRON2_OWNTPEER");
+adone.tag.add(OwnPeer, "NETRON2_OWNPEER");

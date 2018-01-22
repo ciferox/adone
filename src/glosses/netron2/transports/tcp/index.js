@@ -20,12 +20,10 @@ export default class TCP {
 
         callback = once(callback);
         const cOpts = ma.toOptions();
-        adone.log("Connecting to %s %s", cOpts.port, cOpts.host);
 
         const rawSocket = net.connect(cOpts);
 
         rawSocket.once("timeout", () => {
-            adone.log("timeout");
             rawSocket.emit("error", new Error("Timeout"));
         });
 

@@ -2,27 +2,40 @@ const {
     is,
     x,
     util,
-    // net,
     event,
-    netron2: { PeerInfo, Interface, Reference, Definitions, Reflection, Stub, SequenceId, OwnPeer }
+    netron2: { PeerInfo, Reference, Definitions, Reflection, Stub, SequenceId, OwnPeer },
     // netron: {
-    //     DEFAULT_PORT,
     //     ACTION,
     //     PEER_STATUS,
-    //     Packet
     // }
+    tag
 } = adone;
+
+
+const I_DEFINITION_SYMBOL = Symbol();
+const I_PEERID_SYMBOL = Symbol();
+
+/**
+ * Class represented netron interface.
+ * 
+ * For checking object is netron interface use is.netron2Interface() predicate.
+ */
+class Interface {
+    constructor(def, peerId) {
+        this[I_DEFINITION_SYMBOL] = def;
+        this[I_PEERID_SYMBOL] = peerId;
+    }
+}
+tag.add(Interface, "NETRON2_INTERFACE");
 
 export default class Netron extends event.AsyncEmitter {
     constructor(peerInfo) {
         super();
 
         this.peerInfo = PeerInfo.create(peerInfo);
-        this.peer = new OwnPeer(peerInfo, this);
-        // this.uid = util.uuid.v4();
+        this.peer = new OwnPeer(this.peerInfo, this);
+
         // this.options = Object.assign({
-        //     protocol: "netron:",
-        //     defaultPort: DEFAULT_PORT,
         //     responseTimeout: 60000 * 3,
         //     isSuper: false,
         //     acceptTwins: true,
@@ -34,13 +47,7 @@ export default class Netron extends event.AsyncEmitter {
         //     }
         // }, options);
 
-        // this.options.connect = Object.assign({
-        //     retries: 3,
-        //     minTimeout: 300,
-        //     maxTimeout: 3000
-        // }, options ? options.connect : null);
 
-        // this._ownPeer = null;
         // this._svrNetronAddrs = new Map();
         this.contexts = new Map();
         this.peers = new Map();
@@ -52,21 +59,85 @@ export default class Netron extends event.AsyncEmitter {
 
         this._stubs = new Map();
         this._peerStubs = new Map();
-        this._interfaces = new Map();
+        this.interfaces = new Map();
         this.uniqueDefId = new SequenceId();
         // this._localTwins = new Map();
 
         this.setMaxListeners(Infinity);
     }
 
-    // getOwnPeer() {
-    //     if (is.null(this._ownPeer)) {
-    //         this._ownPeer = new adone.netron.OwnPeer({
-    //             netron: this
-    //         });
-    //     }
-    //     return this._ownPeer;
-    // }
+    // NetCores management
+
+    /**
+     * Creates new netcore instance and own it.
+     * 
+     * @param {string} id netcore identification name
+     */
+    createNetCore(id) {
+
+    }
+
+    /**
+     * Deletes early created netcore.
+     * 
+     * If netcore is used, it will be stopped.
+     * 
+     * @param {string} id netcore identification name
+     */
+    deleteNetCore(id) {
+
+    }
+
+    /**
+     * Returns netcore instance by id.
+     * @param {string} id netcore identification name
+     */
+    getNetCore(id) {
+
+    }
+
+    /**
+     * Returns list of all netcores.
+     */
+    getNetCores() {
+
+    }
+
+    /**
+     * Connects to peer using netcore identified by 'netCoreId'.
+     * @param {string} netCoreId 
+     * @param {*} peer 
+     */
+    connect(netCoreId, peer) {
+
+    }
+
+    /**
+     * Disconnects from peer useing netcore identified by netCoreId.
+     * 
+     * @param {string} netCoreId 
+     * @param {*} peer 
+     */
+    disconnect(netCoreId, peer) {
+
+    }
+
+    /**
+     * Starts netcore.
+     * 
+     * @param {string} netCoreId netcore identification name 
+     */
+    start(netcoreId) {
+
+    }
+
+    /**
+     * Stops netcore.
+     * @param {string} netCoreId netcore identification name
+     */
+    stop(name) {
+
+    }
 
     // connect(options = {}) {
     //     if (is.null(options)) {
@@ -171,19 +242,8 @@ export default class Netron extends event.AsyncEmitter {
     //     }
     // }
 
-    // releaseInterface(iObj) {
-    //     if (!is.netronInterface(iObj)) {
-    //         throw new x.InvalidArgument("Argument is not an interface");
-    //     }
-    //     for (const [hash, i] of this._interfaces.entries()) {
-    //         if (i.$def.id === iObj.$def.id && i.$uid === iObj.$uid) {
-    //             this._interfaces.delete(hash);
-    //             break;
-    //         }
-    //     }
-    // }
-
     attachContext(instance, ctxId = null) {
+        // Call this first because it validate instance.
         const r = Reflection.from(instance);
 
         if (is.null(ctxId)) {
@@ -208,40 +268,6 @@ export default class Netron extends event.AsyncEmitter {
         this._stubs.delete(defId);
         // this._emitContextEvent("context detach", { id: ctxId, defId });
         return defId;
-    }
-
-    hasContext(ctxId) {
-        return this.contexts.has(ctxId);
-    }
-
-    getContextNames() {
-        const names = [];
-        for (const k of this.contexts.keys()) {
-            names.push(k);
-        }
-        return names;
-    }
-
-    getDefinitionByName(ctxId, peerInfo) {
-        return this.getPeer(peerInfo).getDefinitionByName(ctxId);
-    }
-
-    /**
-     * Returns interface for context by its ctxId.
-     * 
-     * @param {string|nil} ctxId 
-     * @param {*} uid 
-     */
-    getInterfaceByName(ctxId, peerInfo) {
-        if (is.nil(peerInfo)) {
-            const def = this.getDefinitionByName(ctxId);
-            return this.getInterfaceById(def.id);
-        }
-        // return this.getPeer(peerInfo).getInterfaceByName(ctxId);
-    }
-
-    getInterface(ctxId, peerInfo) {
-        return this.getInterfaceByName(ctxId, peerInfo);
     }
 
     // async attachContextRemote(uid, instance, ctxId = null) {
@@ -282,6 +308,69 @@ export default class Netron extends event.AsyncEmitter {
     //         this.send(peer, 1, peer.streamId.next(), 1, ACTION.CONTEXT_DETACH, ctxId, resolve).catch(reject);
     //     });
     // }
+
+
+    hasContexts() {
+        return this.contexts.size > 0;
+    }
+
+    hasContext(ctxId) {
+        return this.contexts.has(ctxId);
+    }
+
+    getContextNames() {
+        const names = [];
+        for (const k of this.contexts.keys()) {
+            names.push(k);
+        }
+        return names;
+    }
+
+    getStubById(defId) {
+        const stub = this._stubs.get(defId);
+        if (is.undefined(stub)) {
+            throw new adone.x.NotExists(`Context with definition id = ${defId} is not exist`);
+        }
+        return stub;
+    }
+
+    getDefinitionByName(ctxId, peerInfo) {
+        return this.getPeer(peerInfo).getDefinitionByName(ctxId);
+    }
+
+    /**
+     * Returns interface for context by definition id.
+     * 
+     * @param {number} defId 
+     * @param {string|PeerId|PeerInfo|Peer|nil} peerInfo 
+     */
+    getInterfaceById(defId, peerInfo) {
+        return this.getPeer(peerInfo).getInterfaceById(defId);
+    }
+
+    /**
+     * Returns interface for context by context id.
+     * 
+     * @param {string|nil} ctxId 
+     * @param {string|PeerId|PeerInfo|Peer|nil} peerInfo 
+     */
+    getInterfaceByName(ctxId, peerInfo) {
+        return this.getPeer(peerInfo).getInterfaceByName(ctxId);
+    }
+
+    /**
+     * Returns interface for context by context id.
+     * 
+     * @param {string|nil} ctxId 
+     * @param {string|PeerId|PeerInfo|Peer|nil} peerInfo 
+     */
+    getInterface(ctxId, peerInfo) {
+        return this.getInterfaceByName(ctxId, peerInfo);
+    }
+
+    getInterfacesForPeer(peerId) {
+        return this.getPeer(peerId).interfaces;
+    }
 
     // setInterfaceTwin(ctxClassName, TwinClass) {
     //     if (!is.class(TwinClass)) {
@@ -353,51 +442,48 @@ export default class Netron extends event.AsyncEmitter {
         return this.getPeer(peerInfo).ping();
     }
 
-    getPeer(peerInfo) {
-        let peer;
-        if (is.nil(peerInfo)) {
-            peer = this.peer;
-        } else if (is.peerInfo(peerInfo)) {
-            peer = this.peers.get(peerInfo.id.asBase58());
-        } else if (is.peerId(peerInfo)) {
-            peer = this.peers.get(peerInfo.asBase58());
-        } else if (is.string(peerInfo)) { // base58
-            peer = this.peers.get(peerInfo);
-        } else {
-            throw new x.NotValid(`Invalid type of peer identity: ${adone.util.typeOf(peerInfo)}`);
+    getPeer(peerId) {
+        if (is.nil(peerId)) {
+            return this.peer;
         }
 
+        let base58;
+        if (is.netron2Peer(peerId)) {
+            base58 = peerId.info.id.asBase58();
+            if (this.peers.has(base58)) {
+                return peerId;
+            }
+        } else if (is.peerInfo(peerId)) {
+            base58 = peerId.id.asBase58();
+        } else if (is.peerId(peerId)) {
+            base58 = peerId.asBase58();
+        } else if (is.string(peerId)) { // base58
+            base58 = peerId;
+        } else {
+            throw new x.NotValid(`Invalid type of peer identity: ${adone.util.typeOf(peerId)}`);
+        }
+
+        const peer = this.peers.get(base58);
         if (is.undefined(peer)) {
-            throw new x.Unknown(`Unknown peer: '${peerInfo.toString()}'`);
+            if (this.peer.info.id.asBase58() === base58) {
+                return this.peer;
+            }
+            throw new x.Unknown(`Unknown peer: '${peerId.toString()}'`);
         }
         return peer;
     }
 
-    // getPeerForInterface(int) {
-    //     if (!is.netronInterface(int)) {
-    //         throw new x.InvalidArgument("Object is not a netron interface");
-    //     } else {
-    //         return this.getPeer(int.$uid);
-    //     }
-    // }
+    getPeerForInterface(iInstance) {
+        if (!is.netron2Interface(iInstance)) {
+            throw new x.NotValid("Object is not a netron interface");
+        }
+
+        return this.getPeer(iInstance[I_PEERID_SYMBOL]);
+    }
 
     // getPeers() {
     //     return this.peers;
     // }
-
-    // getStubById(defId) {
-    //     return this._stubs.get(defId);
-    // }
-
-    getInterfaceById(defId, peerInfo) {
-        if (is.nil(peerInfo)) {
-            if (!this._stubs.has(defId)) {
-                throw new x.Unknown(`Unknown definition '${defId}'`);
-            }
-            return this._createInterface(this._stubs.get(defId).definition);
-        }
-        // return this.getPeer(peerInfo).getInterfaceById(defId);
-    }
 
     // async onRemote(uid, eventName, handler) {
     //     if (is.nil(uid)) {
@@ -498,9 +584,9 @@ export default class Netron extends event.AsyncEmitter {
     //     }
 
     //     // Release interfaces obtained from peer
-    //     for (const [hash, i] of this._interfaces.entries()) {
+    //     for (const [hash, i] of this.interfaces.entries()) {
     //         if (i.$uid === peer.uid) {
-    //             this._interfaces.delete(hash);
+    //             this.interfaces.delete(hash);
     //         }
     //     }
 
@@ -806,9 +892,9 @@ export default class Netron extends event.AsyncEmitter {
     _createInterface(def, peerInfo) {
         const defId = def.id;
         const hash = `${peerInfo.id.asBase58()}:${defId}`;
-        let anInterface = this._interfaces.get(hash);
-        if (!is.undefined(anInterface)) {
-            return anInterface;
+        let iInstance = this.interfaces.get(hash);
+        if (!is.undefined(iInstance)) {
+            return iInstance;
         }
 
         // Заготовка под создаваемый интерфейс.
@@ -843,7 +929,7 @@ export default class Netron extends event.AsyncEmitter {
             }
         }
 
-        anInterface = new XInterface(def, peerInfo.id.asBase58());
+        iInstance = new XInterface(def, peerInfo.id.asBase58());
 
         // if (!is.undefined(def.twin)) {
         //     let twinCode;
@@ -878,7 +964,7 @@ export default class Netron extends event.AsyncEmitter {
 
         //             const twinInterface = new XTwin();
         //             twinInterface.$twin = anInterface;
-        //             this._interfaces.set(hash, twinInterface);
+        //             this.interfaces.set(hash, twinInterface);
         //             return twinInterface;
         //         }
         //     }
@@ -896,13 +982,33 @@ export default class Netron extends event.AsyncEmitter {
 
         //         const twinInterface = new XTwin();
         //         twinInterface.$twin = anInterface;
-        //         this._interfaces.set(hash, twinInterface);
+        //         this.interfaces.set(hash, twinInterface);
         //         return twinInterface;
         //     }
         // }
 
-        this._interfaces.set(hash, anInterface);
-        return anInterface;
+        this.interfaces.set(hash, iInstance);
+        this.getPeer(peerInfo).interfaces.push(iInstance);
+        return iInstance;
+    }
+
+    /**
+     * Removes interface from internal collections.
+     * 
+     * @param {Interface} iInstance 
+     */
+    releaseInterface(iInstance) {
+        if (!is.netron2Interface(iInstance)) {
+            throw new x.NotValid("Object is not a netron interface");
+        }
+        for (const [hash, i] of this.interfaces.entries()) {
+            if (i[I_DEFINITION_SYMBOL].id === iInstance[I_DEFINITION_SYMBOL].id && i[I_PEERID_SYMBOL] === iInstance[I_PEERID_SYMBOL]) {
+                const peer = this.getPeer(iInstance[I_PEERID_SYMBOL]);
+                peer.interfaces.splice(peer.interfaces.indexOf(iInstance), 1);
+                this.interfaces.delete(hash);
+                break;
+            }
+        }
     }
 
     _processArgs(peerInfo, args, isMethod) {
@@ -917,7 +1023,7 @@ export default class Netron extends event.AsyncEmitter {
 
     _processObject(peerInfo, obj) {
         if (is.netronInterface(obj)) {
-            return new Reference(obj.$def.id);
+            return new Reference(obj[I_DEFINITION_SYMBOL].id);
         } else if (is.netronContext(obj)) {
             const def = this.refContext(peerInfo, obj);
             def.uid = peerInfo.id.asBase58(); // definition owner
@@ -998,4 +1104,4 @@ export default class Netron extends event.AsyncEmitter {
     //     }
     // }
 }
-adone.tag.add(Netron, "NETRON2");
+tag.add(Netron, "NETRON2");

@@ -82,14 +82,6 @@ export class Reference {
 }
 tag.add(Reference, "NETRON2_REFERENCE");
 
-export class Interface {
-    constructor(def, uid) {
-        this.$def = def;
-        this.$uid = uid;
-    }
-}
-tag.add(Interface, "NETRON2_INTERFACE");
-
 export class Definitions {
     constructor(...args) {
         this._defs = [...args];
@@ -206,7 +198,7 @@ adone.lazify({
     CONTEXT_ANNOTATION: ["./reflection", (mod) => mod.CONTEXT_ANNOTATION],
     Stub: "./stub",
     Netron: "./netron",
-    BasePeer: "./base_peer",
+    AbstractPeer: "./abstract_peer",
     OwnPeer: "./own_peer",
-    Peer: "./peer"
+    RemotePeer: "./remote_peer"
 }, adone.asNamespace(exports), require);

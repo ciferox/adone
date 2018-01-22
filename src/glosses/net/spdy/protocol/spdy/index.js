@@ -1,7 +1,9 @@
-exports.name = "spdy";
+export const name = "spdy";
 
-exports.dictionary = require("./dictionary");
-exports.constants = require("./constants");
-exports.parser = require("./parser");
-exports.framer = require("./framer");
-exports.compressionPool = require("./zlib-pool");
+adone.lazify({
+    dictionary: "./dictionary",
+    constants: "./constants",
+    Parser: "./parser",
+    Framer: "./framer",
+    CompressionPool: "./zlib_pool"
+}, exports, require);

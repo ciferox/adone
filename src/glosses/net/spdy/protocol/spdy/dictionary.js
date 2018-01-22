@@ -1,5 +1,5 @@
 const dictionary = {};
-module.exports = dictionary;
+export default dictionary;
 
 dictionary[2] = Buffer.from([
     "optionsgetheadpostputdeletetraceacceptaccept-charsetaccept-encodingaccept-",

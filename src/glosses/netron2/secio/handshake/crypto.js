@@ -2,7 +2,8 @@ const support = require("../support");
 
 const {
     data: { protobuf },
-    netron2: { PeerId, crypto }
+    netron2: { PeerId, crypto },
+    std
 } = adone;
 
 const pbm = protobuf.create(require("./secio.proto"));
@@ -12,7 +13,7 @@ const nonceSize = 16;
 
 exports.createProposal = (state) => {
     state.proposal.out = {
-        rand: crypto.randomBytes(nonceSize),
+        rand: std.crypto.randomBytes(nonceSize),
         pubkey: state.key.local.public.bytes,
         exchanges: support.exchanges.join(","),
         ciphers: support.ciphers.join(","),

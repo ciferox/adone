@@ -1,4 +1,4 @@
-exports.DEFAULT_METHOD = "GET";
-exports.DEFAULT_HOST = "localhost";
-exports.MAX_PRIORITY_STREAMS = 100;
-exports.DEFAULT_MAX_CHUNK = 8 * 1024;
+export const DEFAULT_METHOD = "GET";
+export const DEFAULT_HOST = "localhost";
+export const MAX_PRIORITY_STREAMS = 100;
+export const DEFAULT_MAX_CHUNK = 8 * 1024;

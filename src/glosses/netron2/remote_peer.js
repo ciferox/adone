@@ -1,10 +1,10 @@
 const {
     is,
-    netron2: { ACTION, BasePeer, Packet },
+    netron2: { ACTION, AbstractPeer, Packet },
     x
 } = adone;
 
-export default class RemotePeer extends BasePeer {
+export default class RemotePeer extends AbstractPeer {
     connect(/*options*/) {
         throw new x.NotImplemented("Method connect() is not implemented");
     }
@@ -83,6 +83,14 @@ export default class RemotePeer extends BasePeer {
 
     hasContext(ctxId) {
         return this._ctxidDefs.has(ctxId);
+    }
+
+    getInterfaceById(defId) {
+        const def = this._defs.get(defId);
+        if (is.undefined(def)) {
+            throw new x.Unknown(`Unknown definition '${defId}'`);
+        }
+        return this.netron._createInterface(def, this.info);
     }
 
     getDefinitionByName(ctxId) {

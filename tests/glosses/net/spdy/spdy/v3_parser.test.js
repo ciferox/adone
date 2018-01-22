@@ -3,7 +3,7 @@ const {
     net: { spdy: transport }
 } = adone;
 
-const spdy = transport.protocol.spdy;
+const { spdy } = transport.protocol;
 
 describe("SPDY Parser (v3)", () => {
     let parser;
@@ -17,8 +17,8 @@ describe("SPDY Parser (v3)", () => {
             send: { size: 1024 * 1024 }
         });
 
-        const pool = spdy.compressionPool.create();
-        parser = spdy.parser.create({ window });
+        const pool = spdy.CompressionPool.create();
+        parser = spdy.Parser.create({ window });
         const comp = pool.get("3.1");
         parser.setCompression(comp);
         parser.skipPreface();

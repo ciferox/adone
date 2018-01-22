@@ -141,7 +141,6 @@ export class Swarm extends adone.event.Emitter {
         const proxyConn = new Connection();
 
         const b58Id = pi.id.asBase58();
-        adone.log("dialing %s", b58Id);
 
         const protocolHandshake = (conn, protocol, cb) => {
             const ms = new multistream.Dialer();
@@ -173,7 +172,6 @@ export class Swarm extends adone.event.Emitter {
             const ms = new multistream.Dialer();
 
             const nextMuxer = (key) => {
-                adone.log("selecting %s", key);
                 ms.select(key, (err, conn) => {
                     if (err) {
                         if (muxers.length === 0) {
@@ -259,6 +257,7 @@ export class Swarm extends adone.event.Emitter {
             }
 
             const tKeys = this.availableTransports(pi);
+            adone.log(tKeys);
 
             let circuitTried = false;
 
@@ -273,13 +272,12 @@ export class Swarm extends adone.event.Emitter {
                         return cb(new Error("Circuit not enabled!"));
                     }
 
-                    adone.log("Falling back to dialing over circuit");
+                    // Falling back to dialing over circuit
                     pi.multiaddrs.add(`/p2p-circuit/ipfs/${pi.id.asBase58()}`);
                     circuitTried = true;
                     transport = Circuit.tag;
                 }
 
-                adone.log(`dialing transport ${transport}`);
                 this.transport.dial(transport, pi, (err, conn) => {
                     if (err) {
                         adone.log(err);
@@ -294,7 +292,6 @@ export class Swarm extends adone.event.Emitter {
                             }
 
                             const myId = this._peerInfo.id;
-                            adone.log("selecting crypto: %s", this.crypto.tag);
                             ms.select(this.crypto.tag, (err, conn) => {
                                 if (err) {
                                     return cb(err);

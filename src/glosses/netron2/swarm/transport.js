@@ -29,7 +29,6 @@ module.exports = function (swarm) {
 
             callback = callback || adone.noop;
 
-            adone.log("adding %s", key);
             if (swarm.transports[key]) {
                 throw new Error("There is already a transport with this key");
             }
@@ -41,6 +40,10 @@ module.exports = function (swarm) {
             callback();
         },
 
+        has(key) {
+            return Boolean(swarm.transports[key]);
+        },
+
         dial(key, pi, callback) {
             const t = swarm.transports[key];
             let multiaddrs = pi.multiaddrs.toArray();
@@ -50,7 +53,6 @@ module.exports = function (swarm) {
             }
             // filter the multiaddrs that are actually valid for this transport (use a func from the transport itself) (maybe even make the transport do that)
             multiaddrs = dialables(t, multiaddrs);
-            adone.log("dialing %s", key, multiaddrs.map((m) => m.toString()));
 
             dialer.dialMany(pi.id, t, multiaddrs, (err, success) => {
                 if (err) {

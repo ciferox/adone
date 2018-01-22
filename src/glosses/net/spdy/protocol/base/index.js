@@ -1,5 +1,8 @@
-exports.utils = require("./utils");
-exports.constants = require("./constants");
-exports.Scheduler = require("./scheduler");
-exports.Parser = require("./parser");
-exports.Framer = require("./framer");
+adone.lazify({
+    utils: "./utils",
+    constants: "./constants",
+    Scheduler: "./scheduler",
+    Parser: "./parser",
+    Framer: "./framer"
+}, exports, require);
+

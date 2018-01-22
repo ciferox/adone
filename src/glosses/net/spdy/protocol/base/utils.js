@@ -2,22 +2,19 @@ const {
     is
 } = adone;
 
-const utils = exports;
-
-const util = require("util");
-
-function ProtocolError(code, message) {
-    this.code = code;
-    this.message = message;
+export class ProtocolError extends Error {
+    constructor(code, message) {
+        super();
+        this.code = code;
+        this.message = message;
+    }
 }
-util.inherits(ProtocolError, Error);
-utils.ProtocolError = ProtocolError;
 
-utils.error = function error(code, message) {
+export const error = function (code, message) {
     return new ProtocolError(code, message);
 };
 
-utils.reverse = function reverse(object) {
+export const reverse = function (object) {
     const result = [];
 
     Object.keys(object).forEach((key) => {
@@ -29,16 +26,16 @@ utils.reverse = function reverse(object) {
 
 // weight [1, 36] <=> priority [0, 7]
 // This way weight=16 is preserved and has priority=3
-utils.weightToPriority = function weightToPriority(weight) {
+export const weightToPriority = function (weight) {
     return ((Math.min(35, (weight - 1)) / 35) * 7) | 0;
 };
 
-utils.priorityToWeight = function priorityToWeight(priority) {
+export const priorityToWeight = function (priority) {
     return (((priority / 7) * 35) | 0) + 1;
 };
 
 // Copy-Paste from node
-exports.addHeaderLine = function addHeaderLine(field, value, dest) {
+export const addHeaderLine = function (field, value, dest) {
     field = field.toLowerCase();
     if (/^:/.test(field)) {
         dest[field] = value;
@@ -79,7 +76,7 @@ exports.addHeaderLine = function addHeaderLine(field, value, dest) {
         case "cookie":
             // make semicolon-separated list
             if (!is.undefined(dest[field])) {
-                dest[field] += `; ${  value}`;
+                dest[field] += `; ${value}`;
             } else {
                 dest[field] = value;
             }
@@ -88,7 +85,7 @@ exports.addHeaderLine = function addHeaderLine(field, value, dest) {
         default:
             // make comma-separated list
             if (!is.undefined(dest[field])) {
-                dest[field] += `, ${  value}`;
+                dest[field] += `, ${value}`;
             } else {
                 dest[field] = value;
             }

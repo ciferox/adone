@@ -7,13 +7,13 @@ describe("Framer", () => {
     let framer;
     let parser;
 
-    function protocol(name, version, body) {
+    const protocol = function (name, version, body) {
         describe(`${name} (v${version})`, () => {
             beforeEach(() => {
                 const proto = transport.protocol[name];
 
-                const pool = proto.compressionPool.create();
-                framer = proto.framer.create({
+                const pool = proto.CompressionPool.create();
+                framer = proto.Framer.create({
                     window: new transport.Window({
                         id: 0,
                         isServer: false,
@@ -21,7 +21,7 @@ describe("Framer", () => {
                         send: { size: 1024 * 1024 }
                     })
                 });
-                parser = proto.parser.create({
+                parser = proto.Parser.create({
                     isServer: true,
                     window: new transport.Window({
                         id: 0,
@@ -45,16 +45,16 @@ describe("Framer", () => {
 
             body(name, version);
         });
-    }
+    };
 
-    function everyProtocol(body) {
+    const everyProtocol = function (body) {
         protocol("http2", 4, body);
         protocol("spdy", 2, body);
         protocol("spdy", 3, body);
         protocol("spdy", 3.1, body);
-    }
+    };
 
-    function expect(expected, done) {
+    const expect = function (expected, done) {
         const acc = [];
         if (!is.array(expected)) {
             expected = [expected];
@@ -69,7 +69,7 @@ describe("Framer", () => {
             assert.deepEqual(acc, expected);
             done();
         });
-    }
+    };
 
     everyProtocol((name, version) => {
         describe("SETTINGS", () => {

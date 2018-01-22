@@ -18,7 +18,7 @@ const create = function (rawConn, isListener) {
         conn.destroy();
     });
 
-    const spdyMuxer = spdy.connection.create(conn, {
+    const spdyMuxer = spdy.Connection.create(conn, {
         protocol: "spdy",
         isServer: isListener
     });

@@ -6,7 +6,8 @@ const {
     event,
     is,
     multi,
-    netron2: { PeerId, PeerInfo, PeerBook, Ping, swarm: { Swarm } }
+    netron2: { PeerId, PeerInfo, PeerBook, Ping, swarm: { Swarm } },
+    util
 } = adone;
 
 const NOT_STARTED_ERROR_MESSAGE = "The netcore is not started yet";
@@ -30,7 +31,7 @@ export default class NetCore extends event.Emitter {
             // Attach stream multiplexers
             if (this.modules.connection.muxer) {
                 let muxers = this.modules.connection.muxer;
-                muxers = adone.util.arrify(muxers);
+                muxers = util.arrify(muxers);
                 muxers.forEach((muxer) => this.swarm.connection.addStreamMuxer(muxer));
 
                 // If muxer exists, we can use Identify
@@ -54,7 +55,7 @@ export default class NetCore extends event.Emitter {
             // Attach crypto channels
             if (this.modules.connection.crypto) {
                 let cryptos = this.modules.connection.crypto;
-                cryptos = adone.util.arrify(cryptos);
+                cryptos = util.arrify(cryptos);
                 cryptos.forEach((crypto) => {
                     this.swarm.connection.crypto(crypto.tag, crypto.encrypt);
                 });
@@ -64,7 +65,7 @@ export default class NetCore extends event.Emitter {
         // Attach discovery mechanisms
         if (this.modules.discovery) {
             let discoveries = this.modules.discovery;
-            discoveries = is.array(discoveries) ? discoveries : [discoveries];
+            discoveries = util.arrify(discoveries);
 
             discoveries.forEach((discovery) => {
                 discovery.on("peer", (peerInfo) => this.emit("peer:discovery", peerInfo));
@@ -132,20 +133,13 @@ export default class NetCore extends event.Emitter {
                 this._dht.getMany(key, nVals, callback);
             }
         };
-    }
 
-    /**
-     * Start the net core: create listeners on the multiaddrs the Peer wants to listen
-     */
-    async start() {
         if (!this.modules.transport) {
             throw new Error("no transports were present");
         }
 
-        let ws;
-        let transports = this.modules.transport;
-
-        transports = is.array(transports) ? transports : [transports];
+        this.modules.transport = util.arrify(this.modules.transport);
+        const transports = this.modules.transport;
 
         // so that we can have webrtc-star addrs without adding manually the id
         const maOld = [];
@@ -161,12 +155,20 @@ export default class NetCore extends event.Emitter {
         const multiaddrs = this.peerInfo.multiaddrs.toArray();
         transports.forEach((transport) => {
             if (transport.filter(multiaddrs).length > 0) {
-                this.swarm.transport.add(
-                    transport.tag || transport.constructor.name, transport);
-            } else if (transport.constructor &&
-                transport.constructor.name === "WebSockets") {
-                // TODO find a cleaner way to signal that a transport is always
-                // used for dialing, even if no listener
+                this.swarm.transport.add(transport.tag || transport.constructor.name, transport);
+            }
+        });
+    }
+
+    /**
+     * Start the net core: create listeners on the multiaddrs the Peer wants to listen
+     */
+    async start() {
+        const transports = this.modules.transport;
+        let ws;
+        transports.forEach((transport) => {
+            if (transport.constructor && transport.constructor.name === "WebSockets") {
+                // TODO find a cleaner way to signal that a transport is always used for dialing, even if no listener
                 ws = transport;
             }
         });
@@ -175,7 +177,7 @@ export default class NetCore extends event.Emitter {
             series([
                 (cb) => this.swarm.listen(cb),
                 (cb) => {
-                    if (ws) {
+                    if (ws && !this.swarm.transport.has(ws.tag || ws.constructor.name)) {
                         // always add dialing on websockets
                         this.swarm.transport.add(ws.tag || ws.constructor.name, ws);
                     }
@@ -265,7 +267,7 @@ export default class NetCore extends event.Emitter {
     }
 
     async connect(peer, protocol) {
-        assert(this.isStarted(), NOT_STARTED_ERROR_MESSAGE);
+        // assert(this.isStarted(), NOT_STARTED_ERROR_MESSAGE);
 
         const peerInfo = await this._getPeerInfo(peer);
         return new Promise((resolve, reject) => {
@@ -280,7 +282,7 @@ export default class NetCore extends event.Emitter {
     }
 
     async disconnect(peer) {
-        assert(this.isStarted(), NOT_STARTED_ERROR_MESSAGE);
+        // assert(this.isStarted(), NOT_STARTED_ERROR_MESSAGE);
 
         const peerInfo = await this._getPeerInfo(peer);
         return new Promise((resolve, reject) => {

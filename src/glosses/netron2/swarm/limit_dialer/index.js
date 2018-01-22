@@ -16,7 +16,6 @@ export default class LimitDialer {
      * @param {number} dialTimeout
      */
     constructor(perPeerLimit, dialTimeout) {
-        adone.log("create: %s peer limit, %s dial timeout", perPeerLimit, dialTimeout);
         this.perPeerLimit = perPeerLimit;
         this.dialTimeout = dialTimeout;
         this.queues = new Map();
@@ -32,7 +31,6 @@ export default class LimitDialer {
      * @returns {void}
      */
     dialMany(peer, transport, addrs, callback) {
-        adone.log("dialMany:start");
         // we use a token to track if we want to cancel following dials
         const token = { cancel: false };
         callback = once(callback); // only call callback once
@@ -46,11 +44,9 @@ export default class LimitDialer {
 
             const success = results.filter((res) => res.conn);
             if (success.length > 0) {
-                adone.log("dialMany:success");
                 return callback(null, success[0]);
             }
 
-            adone.log("dialMany:error");
             const error = new Error("Failed to dial any provided address");
             error.errors = results
                 .filter((res) => res.error)
@@ -71,7 +67,6 @@ export default class LimitDialer {
      */
     dialSingle(peer, transport, addr, token, callback) {
         const ps = peer.asBase58();
-        adone.log("dialSingle: %s:%s", ps, addr.toString());
         let q;
         if (this.queues.has(ps)) {
             q = this.queues.get(ps);

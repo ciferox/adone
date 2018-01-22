@@ -3,7 +3,8 @@ const series = require("async/series");
 
 const {
     multi,
-    netron2: { CID, PeerId, crypto, multiplex, dht, swarm: { Swarm }, PeerInfo, PeerBook, transport: { TCP } }
+    netron2: { CID, PeerId, multiplex, dht, swarm: { Swarm }, PeerInfo, PeerBook, transport: { TCP } },
+    std
 } = adone;
 const { KadDHT } = dht;
 
@@ -72,7 +73,7 @@ exports.teardown = (callback) => {
 exports.makeValues = (n) => {
     const values = [];
     for (let i = 0; i < n; i++) {
-        const bytes = crypto.randomBytes(32);
+        const bytes = std.crypto.randomBytes(32);
         const h = multi.hash.create(bytes, "sha2-256");
         values.push({ cid: new CID(h), value: bytes });
     }

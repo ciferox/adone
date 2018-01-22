@@ -1,7 +1,7 @@
 const {
     is,
     data: { base58 },
-    netron2: { crypto }
+    std
 } = adone;
 
 exports = module.exports;
@@ -13,7 +13,7 @@ exports = module.exports;
  * @private
  */
 exports.randomSeqno = () => {
-    return crypto.randomBytes(20).toString("hex");
+    return std.crypto.randomBytes(20).toString("hex");
 };
 
 /**

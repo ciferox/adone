@@ -1,132 +1,127 @@
-const util = require("util");
-const isNode = require("detect-node");
-
 const {
     is
 } = adone;
 
-// Node.js 0.8, 0.10 and 0.12 support
-Object.assign = (process.versions.modules >= 46 || !isNode)
-    ? Object.assign // eslint-disable-next-line
-    : util._extend
-
-function QueueItem() {
-    this.prev = null;
-    this.next = null;
+export class QueueItem {
+    constructor() {
+        this.prev = null;
+        this.next = null;
+    }
 }
-exports.QueueItem = QueueItem;
 
-function Queue() {
-    QueueItem.call(this);
+export class Queue extends QueueItem {
+    constructor() {
+        super();
 
-    this.prev = this;
-    this.next = this;
-}
-util.inherits(Queue, QueueItem);
-exports.Queue = Queue;
-
-Queue.prototype.insertTail = function insertTail(item) {
-    item.prev = this.prev;
-    item.next = this;
-    item.prev.next = item;
-    item.next.prev = item;
-};
-
-Queue.prototype.remove = function remove(item) {
-    const next = item.next;
-    const prev = item.prev;
-
-    item.next = item;
-    item.prev = item;
-    next.prev = prev;
-    prev.next = next;
-};
-
-Queue.prototype.head = function head() {
-    return this.next;
-};
-
-Queue.prototype.tail = function tail() {
-    return this.prev;
-};
-
-Queue.prototype.isEmpty = function isEmpty() {
-    return this.next === this;
-};
-
-Queue.prototype.isRoot = function isRoot(item) {
-    return this === item;
-};
-
-function LockStream(stream) {
-    this.locked = false;
-    this.queue = [];
-    this.stream = stream;
-}
-exports.LockStream = LockStream;
-
-LockStream.prototype.write = function write(chunks, callback) {
-    const self = this;
-
-    // Do not let it interleave
-    if (this.locked) {
-        this.queue.push(() => {
-            return self.write(chunks, callback);
-        });
-        return;
+        this.prev = this;
+        this.next = this;
     }
 
-    this.locked = true;
-
-    function done(err, chunks) {
-        self.stream.removeListener("error", done);
-
-        self.locked = false;
-        if (self.queue.length > 0) {
-            self.queue.shift()(); 
-        }
-        callback(err, chunks);
+    insertTail(item) {
+        item.prev = this.prev;
+        item.next = this;
+        item.prev.next = item;
+        item.next.prev = item;
     }
 
-    this.stream.on("error", done);
+    remove(item) {
+        const next = item.next;
+        const prev = item.prev;
 
-    // Accumulate all output data
-    const output = [];
-    function onData(chunk) {
-        output.push(chunk);
+        item.next = item;
+        item.prev = item;
+        next.prev = prev;
+        prev.next = next;
     }
-    this.stream.on("data", onData);
 
-    function next(err) {
-        self.stream.removeListener("data", onData);
-        if (err) {
-            return done(err);
+    head() {
+        return this.next;
+    }
+
+    tail() {
+        return this.prev;
+    }
+
+    isEmpty() {
+        return this.next === this;
+    }
+
+    isRoot(item) {
+        return this === item;
+    }
+}
+
+export class LockStream {
+    constructor(stream) {
+        this.locked = false;
+        this.queue = [];
+        this.stream = stream;
+    }
+
+    write(chunks, callback) {
+        const self = this;
+
+        // Do not let it interleave
+        if (this.locked) {
+            this.queue.push(() => {
+                return self.write(chunks, callback);
+            });
+            return;
         }
 
-        done(null, output);
-    }
+        this.locked = true;
 
-    for (var i = 0; i < chunks.length - 1; i++) {
-        this.stream.write(chunks[i]); 
-    }
+        const done = function (err, chunks) {
+            self.stream.removeListener("error", done);
 
-    if (chunks.length > 0) {
-        this.stream.write(chunks[i], next);
-    } else {
-        process.nextTick(next); 
-    }
+            self.locked = false;
+            if (self.queue.length > 0) {
+                self.queue.shift()();
+            }
+            callback(err, chunks);
+        };
 
-    if (this.stream.execute) {
-        this.stream.execute((err) => {
+        this.stream.on("error", done);
+
+        // Accumulate all output data
+        const output = [];
+        const onData = function (chunk) {
+            output.push(chunk);
+        };
+        this.stream.on("data", onData);
+
+        const next = function (err) {
+            self.stream.removeListener("data", onData);
             if (err) {
- return done(err); 
-}
-        });
+                return done(err);
+            }
+
+            done(null, output);
+        };
+
+        let i;
+        for (i = 0; i < chunks.length - 1; i++) {
+            this.stream.write(chunks[i]);
+        }
+
+        if (chunks.length > 0) {
+            this.stream.write(chunks[i], next);
+        } else {
+            process.nextTick(next);
+        }
+
+        if (this.stream.execute) {
+            this.stream.execute((err) => {
+                if (err) {
+                    return done(err);
+                }
+            });
+        }
     }
-};
+}
 
 // Just finds the place in array to insert
-function binaryLookup(list, item, compare) {
+export const binaryLookup = function (list, item, compare) {
     let start = 0;
     let end = list.length;
 
@@ -146,17 +141,15 @@ function binaryLookup(list, item, compare) {
     }
 
     return start;
-}
-exports.binaryLookup = binaryLookup;
+};
 
-function binaryInsert(list, item, compare) {
+export const binaryInsert = function (list, item, compare) {
     const index = binaryLookup(list, item, compare);
 
     list.splice(index, 0, item);
-}
-exports.binaryInsert = binaryInsert;
+};
 
-function binarySearch(list, item, compare) {
+export const binarySearch = function (list, item, compare) {
     const index = binaryLookup(list, item, compare);
 
     if (index >= list.length) {
@@ -168,43 +161,43 @@ function binarySearch(list, item, compare) {
     }
 
     return -1;
-}
-exports.binarySearch = binarySearch;
-
-function Timeout(object) {
-    this.delay = 0;
-    this.timer = null;
-    this.object = object;
-}
-exports.Timeout = Timeout;
-
-Timeout.prototype.set = function set(delay, callback) {
-    this.delay = delay;
-    this.reset();
-    if (!callback) {
-        return; 
-    }
-
-    if (this.delay === 0) {
-        this.object.removeListener("timeout", callback);
-    } else {
-        this.object.once("timeout", callback);
-    }
 };
 
-Timeout.prototype.reset = function reset() {
-    if (!is.null(this.timer)) {
-        clearTimeout(this.timer);
+export class Timeout {
+    constructor(object) {
+        this.delay = 0;
         this.timer = null;
+        this.object = object;
     }
 
-    if (this.delay === 0) {
-        return; 
+    set(delay, callback) {
+        this.delay = delay;
+        this.reset();
+        if (!callback) {
+            return;
+        }
+
+        if (this.delay === 0) {
+            this.object.removeListener("timeout", callback);
+        } else {
+            this.object.once("timeout", callback);
+        }
     }
 
-    const self = this;
-    this.timer = setTimeout(() => {
-        self.timer = null;
-        self.object.emit("timeout");
-    }, this.delay);
-};
+    reset() {
+        if (!is.null(this.timer)) {
+            clearTimeout(this.timer);
+            this.timer = null;
+        }
+
+        if (this.delay === 0) {
+            return;
+        }
+
+        const self = this;
+        this.timer = setTimeout(() => {
+            self.timer = null;
+            self.object.emit("timeout");
+        }, this.delay);
+    }
+}

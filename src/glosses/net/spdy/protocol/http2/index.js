@@ -1,6 +1,8 @@
-exports.name = "h2";
+export const name = "h2";
 
-exports.constants = require("./constants");
-exports.parser = require("./parser");
-exports.framer = require("./framer");
-exports.compressionPool = require("./hpack-pool");
+adone.lazify({
+    constants: "./constants",
+    Parser: "./parser",
+    Framer: "./framer",
+    CompressionPool: "./hpack_pool"
+}, exports, require);

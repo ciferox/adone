@@ -2,7 +2,7 @@ const {
     net: { spdy: transport }
 } = adone;
 
-const http2 = transport.protocol.http2;
+const { http2 } = transport.protocol;
 
 describe("HTTP2 Parser", () => {
     let parser;
@@ -16,8 +16,8 @@ describe("HTTP2 Parser", () => {
             send: { size: 1024 * 1024 }
         });
 
-        const pool = http2.compressionPool.create();
-        parser = http2.parser.create({
+        const pool = http2.CompressionPool.create();
+        parser = http2.Parser.create({
             window
         });
         const comp = pool.get();

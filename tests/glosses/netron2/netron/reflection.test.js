@@ -9,7 +9,7 @@ const {
     }
 } = adone;
 
-describe("netron", "Reflection", () => {
+describe("netron2", "Reflection", () => {
     describe("#from()", () => {
         @DContext()
         class A {

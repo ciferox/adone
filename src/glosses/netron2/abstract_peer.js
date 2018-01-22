@@ -10,8 +10,10 @@ const {
 export default class AbstractPeer extends AsyncEmitter {
     constructor(info, netron) {
         super();
+
         this.info = info;
         this.netron = netron;
+        this.interfaces = [];
 
         // this.options = Object.assign({}, options);
 
@@ -33,11 +35,11 @@ export default class AbstractPeer extends AsyncEmitter {
         return this._status;
     }
 
-    set(defId, name, data) {
+    set(/*defId, name, data*/) {
         throw new adone.x.NotImplemented("Method set() is not implemented");
     }
 
-    get(defId, name, defaultData) {
+    get(/*defId, name, defaultData*/) {
         throw new adone.x.NotImplemented("Method get() is not implemented");
     }
 
@@ -91,12 +93,8 @@ export default class AbstractPeer extends AsyncEmitter {
         return this.getInterfaceById(def.id);
     }
 
-    getInterfaceById(defId) {
-        const def = this._defs.get(defId);
-        if (is.undefined(def)) {
-            throw new x.Unknown(`Unknown definition '${defId}'`);
-        }
-        return this.netron._createInterface(def, this.uid);
+    getInterfaceById(/*defId*/) {
+        throw new adone.x.NotImplemented("Method getInterfaceById() is not implemented");
     }
 
     getNumberOfAwaiters() {

@@ -367,7 +367,7 @@ describe("Transport/Connection", () => {
         it("should handle SETTINGS.initial_window_size=0", (done) => {
             const pair = streamPair.create();
 
-            const client = transport.connection.create(pair.other, {
+            const client = transport.Connection.create(pair.other, {
                 protocol: name,
                 windowSize: 256,
                 isServer: false
@@ -376,7 +376,7 @@ describe("Transport/Connection", () => {
 
             const proto = transport.protocol[name];
 
-            const framer = proto.framer.create({
+            const framer = proto.Framer.create({
                 window: new transport.Window({
                     id: 0,
                     isServer: false,
@@ -384,7 +384,7 @@ describe("Transport/Connection", () => {
                     send: { size: 1024 * 1024 }
                 })
             });
-            const parser = proto.parser.create({
+            const parser = proto.Parser.create({
                 window: new transport.Window({
                     id: 0,
                     isServer: false,
@@ -396,7 +396,7 @@ describe("Transport/Connection", () => {
             framer.setVersion(version);
             parser.setVersion(version);
 
-            const pool = proto.compressionPool.create();
+            const pool = proto.CompressionPool.create();
             const comp = pool.get(version);
             framer.setCompression(comp);
             parser.setCompression(comp);
