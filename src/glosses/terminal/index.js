@@ -4396,8 +4396,8 @@ export class Terminal extends adone.event.Emitter {
         }
 
         const esc = adone.terminal.esc;
-        const color = adone.terminal.color;
-        const bgColor = adone.terminal.bgColor;
+        const color = esc.color;
+        const bgColor = esc.bgColor;
 
         switch (param) {
             // attributes
@@ -6727,9 +6727,7 @@ adone.lazify({
     Paginator: "./prompt/paginator",
     Choices: "./prompt/choices",
     Progress: "./progress",
-    esc: ["./styles.js", (x) => x.esc],
-    color: ["./styles.js", (x) => x.color],
-    bgColor: ["./styles.js", (x) => x.bgColor],
-    styler: ["./styles.js", (x) => x.styler],
-    ui: "./ui"    
+    esc: "./esc",
+    styler: "./styler",
+    ui: "./ui"
 }, adone.asNamespace(exports), require);

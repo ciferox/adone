@@ -77,7 +77,8 @@ adone.lazify({
     inflection: "./inflection",
     globals: "./globals",
     xorDistance: "./xor_distance",
-    globize: "./globize"
+    globize: "./globize",
+    color: "./color"
 }, adone.asNamespace(exports), require);
 
 const irregularPlurals = {

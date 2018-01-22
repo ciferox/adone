@@ -1,167 +1,19 @@
 const {
-    is
+    is,
+    util: {
+        color: {
+            name
+        }
+    }
 } = adone;
-
-const cssKeywords = {
-    aliceblue: [240, 248, 255],
-    antiquewhite: [250, 235, 215],
-    aqua: [0, 255, 255],
-    aquamarine: [127, 255, 212],
-    azure: [240, 255, 255],
-    beige: [245, 245, 220],
-    bisque: [255, 228, 196],
-    black: [0, 0, 0],
-    blanchedalmond: [255, 235, 205],
-    blue: [0, 0, 255],
-    blueviolet: [138, 43, 226],
-    brown: [165, 42, 42],
-    burlywood: [222, 184, 135],
-    cadetblue: [95, 158, 160],
-    chartreuse: [127, 255, 0],
-    chocolate: [210, 105, 30],
-    coral: [255, 127, 80],
-    cornflowerblue: [100, 149, 237],
-    cornsilk: [255, 248, 220],
-    crimson: [220, 20, 60],
-    cyan: [0, 255, 255],
-    darkblue: [0, 0, 139],
-    darkcyan: [0, 139, 139],
-    darkgoldenrod: [184, 134, 11],
-    darkgray: [169, 169, 169],
-    darkgreen: [0, 100, 0],
-    darkgrey: [169, 169, 169],
-    darkkhaki: [189, 183, 107],
-    darkmagenta: [139, 0, 139],
-    darkolivegreen: [85, 107, 47],
-    darkorange: [255, 140, 0],
-    darkorchid: [153, 50, 204],
-    darkred: [139, 0, 0],
-    darksalmon: [233, 150, 122],
-    darkseagreen: [143, 188, 143],
-    darkslateblue: [72, 61, 139],
-    darkslategray: [47, 79, 79],
-    darkslategrey: [47, 79, 79],
-    darkturquoise: [0, 206, 209],
-    darkviolet: [148, 0, 211],
-    deeppink: [255, 20, 147],
-    deepskyblue: [0, 191, 255],
-    dimgray: [105, 105, 105],
-    dimgrey: [105, 105, 105],
-    dodgerblue: [30, 144, 255],
-    firebrick: [178, 34, 34],
-    floralwhite: [255, 250, 240],
-    forestgreen: [34, 139, 34],
-    fuchsia: [255, 0, 255],
-    gainsboro: [220, 220, 220],
-    ghostwhite: [248, 248, 255],
-    gold: [255, 215, 0],
-    goldenrod: [218, 165, 32],
-    gray: [128, 128, 128],
-    green: [0, 128, 0],
-    greenyellow: [173, 255, 47],
-    grey: [128, 128, 128],
-    honeydew: [240, 255, 240],
-    hotpink: [255, 105, 180],
-    indianred: [205, 92, 92],
-    indigo: [75, 0, 130],
-    ivory: [255, 255, 240],
-    khaki: [240, 230, 140],
-    lavender: [230, 230, 250],
-    lavenderblush: [255, 240, 245],
-    lawngreen: [124, 252, 0],
-    lemonchiffon: [255, 250, 205],
-    lightblue: [173, 216, 230],
-    lightcoral: [240, 128, 128],
-    lightcyan: [224, 255, 255],
-    lightgoldenrodyellow: [250, 250, 210],
-    lightgray: [211, 211, 211],
-    lightgreen: [144, 238, 144],
-    lightgrey: [211, 211, 211],
-    lightpink: [255, 182, 193],
-    lightsalmon: [255, 160, 122],
-    lightseagreen: [32, 178, 170],
-    lightskyblue: [135, 206, 250],
-    lightslategray: [119, 136, 153],
-    lightslategrey: [119, 136, 153],
-    lightsteelblue: [176, 196, 222],
-    lightyellow: [255, 255, 224],
-    lime: [0, 255, 0],
-    limegreen: [50, 205, 50],
-    linen: [250, 240, 230],
-    magenta: [255, 0, 255],
-    maroon: [128, 0, 0],
-    mediumaquamarine: [102, 205, 170],
-    mediumblue: [0, 0, 205],
-    mediumorchid: [186, 85, 211],
-    mediumpurple: [147, 112, 219],
-    mediumseagreen: [60, 179, 113],
-    mediumslateblue: [123, 104, 238],
-    mediumspringgreen: [0, 250, 154],
-    mediumturquoise: [72, 209, 204],
-    mediumvioletred: [199, 21, 133],
-    midnightblue: [25, 25, 112],
-    mintcream: [245, 255, 250],
-    mistyrose: [255, 228, 225],
-    moccasin: [255, 228, 181],
-    navajowhite: [255, 222, 173],
-    navy: [0, 0, 128],
-    oldlace: [253, 245, 230],
-    olive: [128, 128, 0],
-    olivedrab: [107, 142, 35],
-    orange: [255, 165, 0],
-    orangered: [255, 69, 0],
-    orchid: [218, 112, 214],
-    palegoldenrod: [238, 232, 170],
-    palegreen: [152, 251, 152],
-    paleturquoise: [175, 238, 238],
-    palevioletred: [219, 112, 147],
-    papayawhip: [255, 239, 213],
-    peachpuff: [255, 218, 185],
-    peru: [205, 133, 63],
-    pink: [255, 192, 203],
-    plum: [221, 160, 221],
-    powderblue: [176, 224, 230],
-    purple: [128, 0, 128],
-    rebeccapurple: [102, 51, 153],
-    red: [255, 0, 0],
-    rosybrown: [188, 143, 143],
-    royalblue: [65, 105, 225],
-    saddlebrown: [139, 69, 19],
-    salmon: [250, 128, 114],
-    sandybrown: [244, 164, 96],
-    seagreen: [46, 139, 87],
-    seashell: [255, 245, 238],
-    sienna: [160, 82, 45],
-    silver: [192, 192, 192],
-    skyblue: [135, 206, 235],
-    slateblue: [106, 90, 205],
-    slategray: [112, 128, 144],
-    slategrey: [112, 128, 144],
-    snow: [255, 250, 250],
-    springgreen: [0, 255, 127],
-    steelblue: [70, 130, 180],
-    tan: [210, 180, 140],
-    teal: [0, 128, 128],
-    thistle: [216, 191, 216],
-    tomato: [255, 99, 71],
-    turquoise: [64, 224, 208],
-    violet: [238, 130, 238],
-    wheat: [245, 222, 179],
-    white: [255, 255, 255],
-    whitesmoke: [245, 245, 245],
-    yellow: [255, 255, 0],
-    yellowgreen: [154, 205, 50]
-};
 
 // NOTE: conversions should only return primitive values (i.e. arrays, or
 //       values that give correct `typeof` results).
 //       do not use box values types (i.e. Number(), String(), etc.)
 
 const reverseKeywords = {};
-for (const key in cssKeywords) {
-    if (cssKeywords.hasOwnProperty(key)) {
-        reverseKeywords[cssKeywords[key]] = key;
-    }
+for (const key of Object.keys(name)) {
+    reverseKeywords[name[key]] = key;
 }
 
 const conversions = {
@@ -310,7 +162,13 @@ conversions.rgb.cmyk = function (rgb) {
 /**
  * See https://en.m.wikipedia.org/wiki/Euclidean_distance#Squared_Euclidean_distance
  * */
-const comparativeDistance = (x, y) => (Math.pow(x[0] - y[0], 2) + Math.pow(x[1] - y[1], 2) + Math.pow(x[2] - y[2], 2));
+const comparativeDistance = (x, y) => {
+    return (
+        Math.pow(x[0] - y[0], 2) +
+		Math.pow(x[1] - y[1], 2) +
+		Math.pow(x[2] - y[2], 2)
+    );
+};
 
 conversions.rgb.keyword = function (rgb) {
     const reversed = reverseKeywords[rgb];
@@ -321,9 +179,9 @@ conversions.rgb.keyword = function (rgb) {
     let currentClosestDistance = Infinity;
     let currentClosestKeyword;
 
-    for (const keyword in cssKeywords) {
-        if (cssKeywords.hasOwnProperty(keyword)) {
-            const value = cssKeywords[keyword];
+    for (const keyword in name) {
+        if (name.hasOwnProperty(keyword)) {
+            const value = name[keyword];
 
             // Compute comparative distance
             const distance = comparativeDistance(rgb, value);
@@ -340,7 +198,7 @@ conversions.rgb.keyword = function (rgb) {
 };
 
 conversions.keyword.rgb = function (keyword) {
-    return cssKeywords[keyword];
+    return name[keyword];
 };
 
 conversions.rgb.xyz = function (rgb) {
@@ -536,6 +394,7 @@ conversions.cmyk.rgb = function (cmyk) {
     const m = cmyk[1] / 100;
     const y = cmyk[2] / 100;
     const k = cmyk[3] / 100;
+
     const r = 1 - Math.min(1, c * (1 - k) + k);
     const g = 1 - Math.min(1, m * (1 - k) + k);
     const b = 1 - Math.min(1, y * (1 - k) + k);
@@ -643,6 +502,7 @@ conversions.lch.lab = function (lch) {
     const l = lch[0];
     const c = lch[1];
     const h = lch[2];
+
     const hr = h / 360 * 2 * Math.PI;
     const a = c * Math.cos(hr);
     const b = c * Math.sin(hr);
@@ -650,11 +510,11 @@ conversions.lch.lab = function (lch) {
     return [l, a, b];
 };
 
-conversions.rgb.ansi16 = function (args) {
+conversions.rgb.ansi16 = function (args, value = adone.null) {
     const r = args[0];
     const g = args[1];
     const b = args[2];
-    let value = 1 in arguments ? arguments[1] : conversions.rgb.hsv(args)[2]; // hsv -> ansi16 optimization
+    value = value !== adone.null ? value : conversions.rgb.hsv(args)[2]; // hsv -> ansi16 optimization
 
     value = Math.round(value / 50);
 
@@ -662,7 +522,10 @@ conversions.rgb.ansi16 = function (args) {
         return 30;
     }
 
-    let ansi = 30 + ((Math.round(b / 255) << 2) | (Math.round(g / 255) << 1) | Math.round(r / 255));
+    let ansi = 30
+		+ ((Math.round(b / 255) << 2)
+		| (Math.round(g / 255) << 1)
+		| Math.round(r / 255));
 
     if (value === 2) {
         ansi += 60;
@@ -697,9 +560,9 @@ conversions.rgb.ansi256 = function (args) {
     }
 
     const ansi = 16
-        + (36 * Math.round(r / 255 * 5))
-        + (6 * Math.round(g / 255 * 5))
-        + Math.round(b / 255 * 5);
+		+ (36 * Math.round(r / 255 * 5))
+		+ (6 * Math.round(g / 255 * 5))
+		+ Math.round(b / 255 * 5);
 
     return ansi;
 };
@@ -745,8 +608,8 @@ conversions.ansi256.rgb = function (args) {
 
 conversions.rgb.hex = function (args) {
     const integer = ((Math.round(args[0]) & 0xFF) << 16)
-        + ((Math.round(args[1]) & 0xFF) << 8)
-        + (Math.round(args[2]) & 0xFF);
+		+ ((Math.round(args[1]) & 0xFF) << 8)
+		+ (Math.round(args[2]) & 0xFF);
 
     const string = integer.toString(16).toUpperCase();
     return "000000".substring(string.length) + string;
@@ -792,9 +655,11 @@ conversions.rgb.hcg = function (rgb) {
 
     if (chroma <= 0) {
         hue = 0;
-    } else if (max === r) {
+    } else
+    if (max === r) {
         hue = ((g - b) / chroma) % 6;
-    } else if (max === g) {
+    } else
+    if (max === g) {
         hue = 2 + (b - r) / chroma;
     } else {
         hue = 4 + (r - g) / chroma + 4;
@@ -901,7 +766,8 @@ conversions.hcg.hsl = function (hcg) {
 
     if (l > 0.0 && l < 0.5) {
         s = c / (2 * l);
-    } else if (l >= 0.5 && l < 1.0) {
+    } else
+    if (l >= 0.5 && l < 1.0) {
         s = c / (2 * (1 - l));
     }
 
@@ -970,22 +836,21 @@ conversions.rgb.gray = function (rgb) {
     return [val / 255 * 100];
 };
 
-/*
-	this function routes a model to all other models.
+// TODO: move it to a separate graph utils??
 
-	all functions that are routed have a property `.conversion` attached
-	to the returned synthetic function. This property is an array
-	of strings, each with the steps in between the 'from' and 'to'
-	color models (inclusive).
-
-	conversions that are not possible simply are not included.
-*/
-
-// https://jsperf.com/object-keys-vs-for-in-with-closure/3
-let models = Object.keys(conversions);
+/**
+ * this function routes a model to all other models.
+ * all functions that are routed have a property `.conversion` attached
+ * to the returned synthetic function. This property is an array
+ * of strings, each with the steps in between the 'from' and 'to'
+ * color models (inclusive).
+ * conversions that are not possible simply are not included.
+ */
 
 const buildGraph = () => {
     const graph = {};
+    // https://jsperf.com/object-keys-vs-for-in-with-closure/3
+    const models = Object.keys(conversions);
 
     for (let len = models.length, i = 0; i < len; i++) {
         graph[models[i]] = {
@@ -1046,7 +911,7 @@ const wrapConversion = (toModel, graph) => {
     return fn;
 };
 
-const route = (fromModel) => {
+const route = function (fromModel) {
     const graph = deriveBFS(fromModel);
     const conversion = {};
 
@@ -1066,18 +931,18 @@ const route = (fromModel) => {
     return conversion;
 };
 
-const colorConvert = {};
+const convert = {};
 
-models = Object.keys(conversions);
+const models = Object.keys(conversions);
 
 const wrapRaw = (fn) => {
-    const wrappedFn = function (args) {
-        if (is.nil(args)) {
-            return args;
+    const wrappedFn = function (...args) {
+        if (args.length === 0) {
+            return;
         }
 
-        if (arguments.length > 1) {
-            args = Array.prototype.slice.call(arguments);
+        if (args.length === 1 && is.array(args[0])) {
+            args = args[0];
         }
 
         return fn(args);
@@ -1092,13 +957,13 @@ const wrapRaw = (fn) => {
 };
 
 const wrapRounded = (fn) => {
-    const wrappedFn = function (args) {
-        if (is.nil(args)) {
-            return args;
+    const wrappedFn = function (...args) {
+        if (args.length === 0) {
+            return;
         }
 
-        if (arguments.length > 1) {
-            args = Array.prototype.slice.call(arguments);
+        if (args.length === 1 && is.array(args[0])) {
+            args = args[0];
         }
 
         const result = fn(args);
@@ -1106,7 +971,7 @@ const wrapRounded = (fn) => {
         // we're assuming the result is an array here.
         // see notice in conversions.js; don't use box types
         // in conversion functions.
-        if (typeof result === "object") {
+        if (is.array(result)) {
             for (let len = result.length, i = 0; i < len; i++) {
                 result[i] = Math.round(result[i]);
             }
@@ -1124,10 +989,10 @@ const wrapRounded = (fn) => {
 };
 
 models.forEach((fromModel) => {
-    colorConvert[fromModel] = {};
+    convert[fromModel] = {};
 
-    Object.defineProperty(colorConvert[fromModel], "channels", { value: conversions[fromModel].channels });
-    Object.defineProperty(colorConvert[fromModel], "labels", { value: conversions[fromModel].labels });
+    Object.defineProperty(convert[fromModel], "channels", { value: conversions[fromModel].channels });
+    Object.defineProperty(convert[fromModel], "labels", { value: conversions[fromModel].labels });
 
     const routes = route(fromModel);
     const routeModels = Object.keys(routes);
@@ -1135,234 +1000,9 @@ models.forEach((fromModel) => {
     routeModels.forEach((toModel) => {
         const fn = routes[toModel];
 
-        colorConvert[fromModel][toModel] = wrapRounded(fn);
-        colorConvert[fromModel][toModel].raw = wrapRaw(fn);
+        convert[fromModel][toModel] = wrapRounded(fn);
+        convert[fromModel][toModel].raw = wrapRaw(fn);
     });
 });
 
-const wrapAnsi16 = (fn, offset) => function (...args) {
-    const code = fn.apply(colorConvert, args);
-    return `\x1b[${code + offset}m`;
-};
-
-const wrapAnsi256 = (fn, offset) => function (...args) {
-    const code = fn.apply(colorConvert, args);
-    return `\x1b[${38 + offset};5;${code}m`;
-};
-
-const wrapAnsi16m = (fn, offset) => function (...args) {
-    const rgb = fn.apply(colorConvert, args);
-    return `\x1b[${38 + offset};2;${rgb[0]};${rgb[1]};${rgb[2]}m`;
-};
-
-const escapes = {
-    // Modifiers
-    reset: [0, 0],
-    normal: ["", ""],
-    // 21 isn't widely supported and 22 does the same thing
-    bold: [1, 22],
-    dim: [2, 22],
-    italic: [3, 23],
-    underline: [4, 24],
-    inverse: [7, 27],
-    hidden: [8, 28],
-    strikethrough: [9, 29],
-    // Colors
-    black: [30, 39],
-    red: [31, 39],
-    green: [32, 39],
-    yellow: [33, 39],
-    blue: [34, 39],
-    magenta: [35, 39],
-    cyan: [36, 39],
-    white: [37, 39],
-    gray: [90, 39],
-    brightRed: [91, 39],
-    brightGreen: [92, 39],
-    brightYellow: [93, 39],
-    brightBlue: [94, 39],
-    brightMagenta: [95, 39],
-    brightCyan: [96, 39],
-    brightWhite: [97, 39],
-    // Background colors
-    bgBlack: [40, 49],
-    bgRed: [41, 49],
-    bgGreen: [42, 49],
-    bgYellow: [43, 49],
-    bgBlue: [44, 49],
-    bgMagenta: [45, 49],
-    bgCyan: [46, 49],
-    bgWhite: [47, 49],
-    bgGray: [100, 49],
-    bgBrightRed: [101, 49],
-    bgBrightGreen: [102, 49],
-    bgBrightYellow: [103, 49],
-    bgBrightBlue: [104, 49],
-    bgBrightMagenta: [105, 49],
-    bgBrightCyan: [106, 49],
-    bgBrightWhite: [107, 49]
-};
-escapes.grey = escapes.gray;
-
-export const esc = {};
-
-Object.keys(escapes).forEach((styleName) => {
-    const style = escapes[styleName];
-
-    esc[styleName] = {
-        open: `\x1b[${style[0]}m`,
-        close: `\x1b[${style[1]}m`
-    };
-});
-
-const rgb2rgb = (r, g, b) => [r, g, b];
-
-esc.color = {
-    close: "\x1b[39m"
-};
-esc.bgColor = {
-    close: "\x1b[49m"
-};
-
-export const color = {
-    ansi: {},
-    ansi256: {},
-    ansi16m: {
-        rgb: wrapAnsi16m(rgb2rgb, 0)
-    }
-};
-
-export const bgColor = {
-    ansi: {},
-    ansi256: {},
-    ansi16m: {
-        rgb: wrapAnsi16m(rgb2rgb, 10)
-    }
-};
-
-for (const key of Object.keys(colorConvert)) {
-    if (typeof colorConvert[key] !== "object") {
-        continue;
-    }
-
-    const suite = colorConvert[key];
-
-    if ("ansi16" in suite) {
-        color.ansi[key] = wrapAnsi16(suite.ansi16, 0);
-        bgColor.ansi[key] = wrapAnsi16(suite.ansi16, 10);
-    }
-
-    if ("ansi256" in suite) {
-        color.ansi256[key] = wrapAnsi256(suite.ansi256, 0);
-        bgColor.ansi256[key] = wrapAnsi256(suite.ansi256, 10);
-    }
-
-    if ("rgb" in suite) {
-        color.ansi16m[key] = wrapAnsi16m(suite.rgb, 0);
-        bgColor.ansi16m[key] = wrapAnsi16m(suite.rgb, 10);
-    }
-}
-
-
-// -------
-const defineProps = Object.defineProperties;
-const isSimpleWindowsTerm = is.windows && !/^xterm/i.test(process.env.TERM);
-
-
-// use bright blue on Windows as the normal blue color is illegible
-if (isSimpleWindowsTerm) {
-    esc.blue.open = "\x1b[94m";
-}
-
-export const styler_ = {};
-
-const applyStyle = function (...args) {
-    // support varags, but simply cast to string in case there's only one arg
-    const argsLen = args.length;
-    let str = argsLen !== 0 && String(args[0]);
-
-    if (argsLen > 1) {
-        // don't slice `arguments`, it prevents v8 optimizations
-        for (let a = 1; a < argsLen; a++) {
-            str += ` ${args[a]}`;
-        }
-    }
-
-    if (!str) {
-        return str;
-    }
-
-    const nestedStyles = this._styles;
-    let i = nestedStyles.length;
-
-    // Turns out that on Windows dimmed gray text becomes invisible in cmd.exe,
-    // see https://github.com/chalk/chalk/issues/58
-    // If we're on Windows and we're dealing with a gray color, temporarily make 'dim' a noop.
-    const originalDim = esc.dim.open;
-    if (isSimpleWindowsTerm && (nestedStyles.includes("gray") || nestedStyles.includes("grey"))) {
-        esc.dim.open = "";
-    }
-
-    while (i--) {
-        const code = esc[nestedStyles[i]];
-
-        // Replace any instances already present with a re-opening code
-        // otherwise only the part of the string until said closing code
-        // will be colored, and the rest will simply be 'plain'.
-        str = code.open + str.replace(code.closeRe, code.open) + code.close;
-
-        // Close the styling before a linebreak and reopen
-        // after next line to fix a bleed issue on macOS
-        // https://github.com/chalk/chalk/pull/92
-        str = str.replace(/\r?\n/g, `${code.close}$&${code.open}`);
-    }
-
-    // Reset the original 'dim' if we changed it to work around the Windows dimmed gray issue.
-    esc.dim.open = originalDim;
-
-    return str;
-};
-
-let proto = null;
-
-Object.keys(esc).forEach((key) => {
-    esc[key].closeRe = new RegExp(adone.text.escapeStringRegexp(esc[key].close), "g");
-
-    styler_[key] = {
-        get() {
-            const _styles = this._styles ? this._styles.concat(key) : [key];
-            const builder = function (...args) {
-                return applyStyle.apply(builder, args);
-            };
-
-            const self = this;
-
-            builder._styles = _styles;
-
-            Object.defineProperty(builder, "enabled", {
-                enumerable: true,
-                get() {
-                    return self.enabled;
-                },
-                set(v) {
-                    self.enabled = v;
-                }
-            });
-
-            // __proto__ is used because we must return a function, but there is
-            // no way to create a function with a different prototype.
-            builder.__proto__ = proto;
-
-            return builder;
-        }
-    };
-});
-
-proto = defineProps(function styler() { }, styler_);
-
-class Styler {
-}
-
-defineProps(Styler.prototype, styler_);
-
-export const styler = new Styler();
+export default convert;
