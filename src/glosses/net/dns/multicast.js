@@ -2,9 +2,9 @@ const {
     is,
     event,
     net: { dns: { packet } },
-    std: { os, dgram }
+    std: { os, dgram },
+    noop
 } = adone;
-
 
 // inlined from util so this works in the browser
 const isError = (err) => Object.prototype.toString.call(err) === "[object Error]";
@@ -61,27 +61,44 @@ const thunky = function (fn) {
     return thunk;
 };
 
-
-const allInterfaces = () => {
+const defaultInterface = function () {
     const networks = os.networkInterfaces();
+    const names = Object.keys(networks);
+
+    for (let i = 0; i < names.length; i++) {
+        const net = networks[names[i]];
+        for (let j = 0; j < net.length; j++) {
+            const iface = net[j];
+            if (iface.family === "IPv4" && !iface.internal) {
+                return iface.address;
+            }
+        }
+    }
+
+    return "127.0.0.1";
+};
+
+const allInterfaces = function () {
+    const networks = os.networkInterfaces();
+    const names = Object.keys(networks);
     const res = [];
 
-    Object.keys(networks).forEach((k) => {
-        for (let i = 0; i < networks[k].length; i++) {
-            const iface = networks[k][i];
+    for (let i = 0; i < names.length; i++) {
+        const net = networks[names[i]];
+        for (let j = 0; j < net.length; j++) {
+            const iface = net[j];
             if (iface.family === "IPv4") {
                 res.push(iface.address);
                 // could only addMembership once per interface (https://nodejs.org/api/dgram.html#dgram_socket_addmembership_multicastaddress_multicastinterface)
                 break;
             }
         }
-    });
+    }
 
     return res;
 };
 
-
-module.exports = function (opts) {
+export default function (opts) {
     if (!opts) {
         opts = {};
     }
@@ -91,7 +108,9 @@ module.exports = function (opts) {
     const type = opts.type || "udp4";
     const ip = opts.ip || opts.host || (type === "udp4" ? "224.0.0.251" : null);
     const me = { address: ip, port };
+    const memberships = {};
     let destroyed = false;
+    let interval = null;
 
     if (type === "udp6" && (!ip || !opts.interface)) {
         throw new Error("For IPv6 multicast you must specify `ip` and `interface`");
@@ -136,16 +155,8 @@ module.exports = function (opts) {
             port = me.port = socket.address().port;
         }
         if (opts.multicast !== false) {
-            const ifaces = opts.interface ? [].concat(opts.interface) : allInterfaces();
-
-            for (let i = 0; i < ifaces.length; i++) {
-                try {
-                    socket.addMembership(ip, ifaces[i]);
-                } catch (err) {
-                    that.emit("error", err);
-                }
-            }
-
+            that.update();
+            interval = setInterval(that.update, 5000);
             socket.setMulticastTTL(opts.ttl || 255);
             socket.setMulticastLoopback(opts.loopback !== false);
         }
@@ -174,7 +185,7 @@ module.exports = function (opts) {
             return that.send(value, null, rinfo);
         }
         if (!cb) {
-            cb = adone.noop;
+            cb = noop;
         }
         if (!rinfo) {
             rinfo = me;
@@ -188,17 +199,7 @@ module.exports = function (opts) {
                 return cb(err);
             }
             const message = packet.encode(value);
-            socket.send(message, 0, message.length, rinfo.port, rinfo.address || rinfo.host, onsend);
-        };
-
-        const onsend = function (err) {
-            if (err && err.code === "ENETUNREACH" && rinfo.address !== "127.0.0.1") {
-                rinfo = { port: me.port, address: "127.0.0.1" };
-                onbind(null);
-                return;
-            }
-
-            cb(err);
+            socket.send(message, 0, message.length, rinfo.port, rinfo.address || rinfo.host, cb);
         };
 
         bind(onbind);
@@ -225,7 +226,7 @@ module.exports = function (opts) {
             return that.query(q, type, null, rinfo);
         }
         if (!cb) {
-            cb = adone.noop;
+            cb = noop;
         }
 
         if (is.string(q)) {
@@ -241,15 +242,42 @@ module.exports = function (opts) {
 
     that.destroy = function (cb) {
         if (!cb) {
-            cb = adone.noop;
+            cb = noop;
         }
         if (destroyed) {
             return process.nextTick(cb);
         }
         destroyed = true;
+        clearInterval(interval);
         socket.once("close", cb);
         socket.close();
     };
 
+    that.update = function () {
+        const ifaces = opts.interface ? [].concat(opts.interface) : allInterfaces();
+        let updated = false;
+
+        for (let i = 0; i < ifaces.length; i++) {
+            const addr = ifaces[i];
+
+            if (memberships[addr]) {
+                continue;
+            }
+            memberships[addr] = true;
+            updated = true;
+
+            try {
+                socket.addMembership(ip, addr);
+            } catch (err) {
+                that.emit("warning", err);
+            }
+        }
+
+        if (!updated || !socket.setMulticastInterface) {
+            return;
+        }
+        socket.setMulticastInterface(opts.interface || defaultInterface());
+    };
+
     return that;
-};
+}

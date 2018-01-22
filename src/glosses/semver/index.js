@@ -9,6 +9,10 @@ export const SEMVER_SPEC_VERSION = "2.0.0";
 const MAX_LENGTH = 256;
 const MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER || 9007199254740991;
 
+// Max safe segment length for coercion.
+const MAX_SAFE_COMPONENT_LENGTH = 16;
+
+// The actual regexps go on re
 export const re = [];
 export const src = [];
 let R = 0;
@@ -119,6 +123,15 @@ const XRANGE = R++;
 src[XRANGE] = `^${src[GTLT]}\\s*${src[XRANGEPLAIN]}$`;
 const XRANGELOOSE = R++;
 src[XRANGELOOSE] = `^${src[GTLT]}\\s*${src[XRANGEPLAINLOOSE]}$`;
+
+// Coercion.
+// Extract anything that could conceivably be a part of a valid semver
+const COERCE = R++;
+src[COERCE] = `${"(?:^|[^\\d])" +
+              "(\\d{1,"}${MAX_SAFE_COMPONENT_LENGTH}})` +
+              `(?:\\.(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}}))?` +
+              `(?:\\.(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}}))?` +
+              "(?:$|[^\\d])";
 
 // Tilde ranges.
 // Meaning is "reasonably at or greater than"
@@ -1200,4 +1213,22 @@ export const intersects = (r1, r2, loose) => {
     r1 = new Range(r1, loose);
     r2 = new Range(r2, loose);
     return r1.intersects(r2);
+};
+
+export const coerce = (version) => {
+    if (version instanceof SemVer) {
+        return version;
+    }
+
+    if (!is.string(version)) { 
+        return null; 
+    }
+
+    const match = version.match(re[COERCE]);
+
+    if (is.nil(match)) { 
+        return null;
+    }
+
+    return parse(`${match[1] || "0"}.${match[2] || "0"}.${match[3] || "0"}`);
 };

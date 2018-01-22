@@ -7,7 +7,11 @@ const {
 // import noopProcess from "noop-process";
 
 // Ensure the noop process has time to exit
-const noopProcessExitDelay = 10;
+const noopProcessKilled = async (pid) => {
+    // Ensure the noop process has time to exit
+    await promise.delay(100);
+    assert.false(await exists(pid));
+};
 
 const cleanupPids = new Set();
 const exitPids = new Set();
@@ -63,8 +67,7 @@ describe("system", "process", () => {
     it("pid", async () => {
         const pid = await noopProcess();
         await kill(pid, { force: true });
-        await promise.delay(noopProcessExitDelay);
-        assert.false(await exists(pid));
+        await noopProcessKilled(pid);
     });
 
     if (is.windows) {
@@ -76,6 +79,14 @@ describe("system", "process", () => {
 
             assert.false(await exists(pid));
         });
+
+        it("win default ignore case", async () => {
+            const title = "notepad.exe";
+            const pid = childProcess.spawn(title).pid;
+
+            await kill("NOTEPAD.EXE", { force: true });
+            assert.false(await exists(pid));
+        });
     } else {
         it("title", async () => {
             const title = "kill-test";
@@ -83,8 +94,14 @@ describe("system", "process", () => {
 
             await kill(title);
 
-            await promise.delay(noopProcessExitDelay);
-            assert.false(await exists(pid));
+            await noopProcessKilled(pid);
+        });
+
+        it("ignore case", async () => {
+            const pid = await noopProcess({ title: "Capitalized" });
+            await kill("capitalized", { ignoreCase: true });
+
+            await noopProcessKilled(pid);
         });
     }
 
@@ -105,9 +122,16 @@ describe("system", "process", () => {
 
         await kill(process.pid);
 
-        await promise.delay(noopProcessExitDelay);
+        await promise.delay(100);
         assert.true(await exists(pid));
         Object.defineProperty(process, "pid", { value: originalFkillPid });
+    });
+
+    it("ignore ignore-case for pid", async () => {
+        const pid = await noopProcess();
+        await kill(pid, { force: true, ignoreCase: true });
+
+        await noopProcessKilled(pid);
     });
 
     describe("tree", () => {

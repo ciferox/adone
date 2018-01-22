@@ -1,36 +1,32 @@
+// Metadata Proposal
+// https://rbuckton.github.io/reflect-metadata/
+
 const {
     is
 } = adone;
 
-adone.asNamespace(exports);
-
-// feature test for Symbol support
-const toPrimitiveSymbol = !is.undefined(Symbol.toPrimitive) ? Symbol.toPrimitive : "@@toPrimitive";
-const iteratorSymbol = !is.undefined(Symbol.iterator) ? Symbol.iterator : "@@iterator";
-// Load global or shim versions of Map, Set, and WeakMap
-const functionPrototype = Object.getPrototypeOf(Function);
 // [[Metadata]] internal slot
 // https://rbuckton.github.io/reflect-metadata/#ordinary-object-internal-methods-and-internal-slots
 const Metadata = new WeakMap();
 
-const decorateConstructor = (decorators, target) => {
-    for (let i = decorators.length - 1; i >= 0; --i) {
-        const decorator = decorators[i];
-        const decorated = decorator(target);
-        if (!is.nil(decorated)) {
-            if (!is.function(decorated)) {
-                throw new TypeError();
-            }
-            target = decorated;
-        }
-    }
-    return target;
-};
+// Load global or shim versions of Map, Set, and WeakMap
+const functionPrototype = Object.getPrototypeOf(Function);
 
+// 6.1.7 The Object typeOf
+// https://tc39.github.io/ecma262/#sec-object-type
+const isObject = (x) => typeof x === "object" ? !is.null(x) : is.function(x);
+
+// 7.1.2 ToBoolean(argument)
+// https://tc39.github.io/ecma262/2016/#sec-toboolean
+const toBoolean = (argument) => Boolean(argument);
+
+// 7.1.12 ToString(argument)
+// https://tc39.github.io/ecma262/#sec-tostring
+const toString = (argument) => `${argument}`;
 
 // 6 ECMAScript Data Typ0es and Values
 // https://tc39.github.io/ecma262/#sec-ecmascript-data-types-and-values
-const getType = (x) => {
+const typeOf = (x) => {
     if (is.null(x)) {
         return 1;
     }
@@ -45,64 +41,9 @@ const getType = (x) => {
     }
 };
 
-// 7.1.1.1 ordinaryToPrimitive(O, hint)
-// https://tc39.github.io/ecma262/#sec-ordinarytoprimitive
-const ordinaryToPrimitive = (obj, hint) => {
-    if (hint === "string") {
-        const toString = obj.toString;
-        if (is.function(toString)) {
-            const result = toString.call(obj);
-            if (!is.object(result)) {
-                return result;
-            }
-        }
-        const valueOf = obj.valueOf;
-        if (is.function(valueOf)) {
-            const result = valueOf.call(obj);
-            if (!is.object(result)) {
-                return result;
-            }
-        }
-    } else {
-        const valueOf = obj.valueOf;
-        if (is.function(valueOf)) {
-            const result = valueOf.call(obj);
-            if (!is.object(result)) {
-                return result;
-            }
-        }
-        const toString = obj.toString;
-        if (is.function(toString)) {
-            const result = toString.call(obj);
-            if (!is.object(result)) {
-                return result;
-            }
-        }
-    }
-    throw new TypeError();
-};
-
-// 7.1.2 toBoolean(argument)
-// https://tc39.github.io/ecma262/2016/#sec-toboolean
-const toBoolean = (argument) => Boolean(argument);
-
-// 7.1.12 toString(argument)
-// https://tc39.github.io/ecma262/#sec-tostring
-const toString = (argument) => String(argument);
-
-// 7.2.7 isPropertyKey(argument)
-// https://tc39.github.io/ecma262/#sec-ispropertykey
-const isPropertyKey = (argument) => {
-    switch (getType(argument)) {
-        case 3 /* String */: return true;
-        case 4 /* Symbol */: return true;
-        default: return false;
-    }
-};
-
 // 7.3 Operations on Objects
 // https://tc39.github.io/ecma262/#sec-operations-on-objects
-// 7.3.9 getMethod(V, P)
+// 7.3.9 GetMethod(V, P)
 // https://tc39.github.io/ecma262/#sec-getmethod
 const getMethod = (V, P) => {
     const func = V[P];
@@ -115,12 +56,49 @@ const getMethod = (V, P) => {
     return func;
 };
 
-// 7.1 Type Conversion
+// 7.1.1.1 OrdinaryToPrimitive(O, hint)
+// https://tc39.github.io/ecma262/#sec-ordinarytoprimitive
+const ordinaryToPrimitive = (O, hint) => {
+    if (hint === "string") {
+        const toString1 = O.toString;
+        if (is.function(toString1)) {
+            const result = toString1.call(O);
+            if (!isObject(result)) {
+                return result;
+            }
+        }
+        const valueOf = O.valueOf;
+        if (is.function(valueOf)) {
+            const result = valueOf.call(O);
+            if (!isObject(result)) {
+                return result;
+            }
+        }
+    } else {
+        const valueOf = O.valueOf;
+        if (is.function(valueOf)) {
+            const result = valueOf.call(O);
+            if (!isObject(result)) {
+                return result;
+            }
+        }
+        const toString2 = O.toString;
+        if (is.function(toString2)) {
+            const result = toString2.call(O);
+            if (!isObject(result)) {
+                return result;
+            }
+        }
+    }
+    throw new TypeError();
+};
+
+// 7.1 typeOf Conversion
 // https://tc39.github.io/ecma262/#sec-type-conversion
 // 7.1.1 toPrimitive(input [, PreferredType])
 // https://tc39.github.io/ecma262/#sec-toprimitive
 const toPrimitive = (input, PreferredType) => {
-    switch (getType(input)) {
+    switch (typeOf(input)) {
         case 0 /* Undefined */: return input;
         case 1 /* Null */: return input;
         case 2 /* Boolean */: return input;
@@ -129,10 +107,10 @@ const toPrimitive = (input, PreferredType) => {
         case 5 /* Number */: return input;
     }
     const hint = PreferredType === 3 /* String */ ? "string" : PreferredType === 5 /* Number */ ? "number" : "default";
-    const exoticToPrim = getMethod(input, toPrimitiveSymbol);
+    const exoticToPrim = getMethod(input, Symbol.toPrimitive);
     if (!is.undefined(exoticToPrim)) {
         const result = exoticToPrim.call(input, hint);
-        if (is.object(result)) {
+        if (isObject(result)) {
             throw new TypeError();
         }
         return result;
@@ -150,18 +128,43 @@ const toPropertyKey = (argument) => {
     return toString(key);
 };
 
+
 const decorateProperty = (decorators, target, propertyKey, descriptor) => {
     for (let i = decorators.length - 1; i >= 0; --i) {
         const decorator = decorators[i];
         const decorated = decorator(target, propertyKey, descriptor);
         if (!is.nil(decorated)) {
-            if (!is.object(decorated)) {
+            if (!isObject(decorated)) {
                 throw new TypeError();
             }
             descriptor = decorated;
         }
     }
     return descriptor;
+};
+
+const decorateConstructor = (decorators, target) => {
+    for (let i = decorators.length - 1; i >= 0; --i) {
+        const decorator = decorators[i];
+        const decorated = decorator(target);
+        if (!is.nil(decorated)) {
+            if (!is.function(decorated)) {
+                throw new TypeError();
+            }
+            target = decorated;
+        }
+    }
+    return target;
+};
+
+// 7.2.7 IsPropertyKey(argument)
+// https://tc39.github.io/ecma262/#sec-ispropertykey
+const isPropertyKey = (argument) => {
+    switch (typeOf(argument)) {
+        case 3 /* String */: return true;
+        case 4 /* Symbol */: return true;
+        default: return false;
+    }
 };
 
 const getOrCreateMetadataMap = (O, P, Create) => {
@@ -184,6 +187,13 @@ const getOrCreateMetadataMap = (O, P, Create) => {
     return metadataMap;
 };
 
+// 3.1.5.1 OrdinaryDefineOwnMetadata(MetadataKey, MetadataValue, O, P)
+// https://rbuckton.github.io/reflect-metadata/#ordinarydefineownmetadata
+const ordinaryDefineOwnMetadata = (MetadataKey, MetadataValue, O, P) => {
+    const metadataMap = getOrCreateMetadataMap(O, P, /*Create*/ true);
+    metadataMap.set(MetadataKey, MetadataValue);
+};
+
 // 3.1.2.1 OrdinaryHasOwnMetadata(MetadataKey, O, P)
 // https://rbuckton.github.io/reflect-metadata/#ordinaryhasownmetadata
 const ordinaryHasOwnMetadata = (MetadataKey, O, P) => {
@@ -196,7 +206,7 @@ const ordinaryHasOwnMetadata = (MetadataKey, O, P) => {
 
 // 9.1 Ordinary Object Internal Methods and Internal Slots
 // https://tc39.github.io/ecma262/#sec-ordinary-object-internal-methods-and-internal-slots
-// 9.1.1.1 ordinaryGetPrototypeOf(O)
+// 9.1.1.1 OrdinaryGetPrototypeOf(O)
 // https://tc39.github.io/ecma262/#sec-ordinarygetprototypeof
 const ordinaryGetPrototypeOf = (O) => {
     const proto = Object.getPrototypeOf(O);
@@ -232,8 +242,7 @@ const ordinaryGetPrototypeOf = (O) => {
     return constructor;
 };
 
-
-// 3.1.1.1 ordinaryHasMetadata(MetadataKey, O, P)
+// 3.1.1.1 OrdinaryHasMetadata(MetadataKey, O, P)
 // https://rbuckton.github.io/reflect-metadata/#ordinaryhasmetadata
 const ordinaryHasMetadata = (MetadataKey, O, P) => {
     const hasOwn = ordinaryHasOwnMetadata(MetadataKey, O, P);
@@ -247,7 +256,7 @@ const ordinaryHasMetadata = (MetadataKey, O, P) => {
     return false;
 };
 
-// 3.1.4.1 ordinaryGetOwnMetadata(MetadataKey, O, P)
+// 3.1.4.1 OrdinaryGetOwnMetadata(MetadataKey, O, P)
 // https://rbuckton.github.io/reflect-metadata/#ordinarygetownmetadata
 const ordinaryGetOwnMetadata = (MetadataKey, O, P) => {
     const metadataMap = getOrCreateMetadataMap(O, P, /*Create*/ false);
@@ -257,8 +266,7 @@ const ordinaryGetOwnMetadata = (MetadataKey, O, P) => {
     return metadataMap.get(MetadataKey);
 };
 
-
-// 3.1.3.1 ordinaryGetMetadata(MetadataKey, O, P)
+// 3.1.3.1 OrdinaryGetMetadata(MetadataKey, O, P)
 // https://rbuckton.github.io/reflect-metadata/#ordinarygetmetadata
 const ordinaryGetMetadata = (MetadataKey, O, P) => {
     const hasOwn = ordinaryHasOwnMetadata(MetadataKey, O, P);
@@ -272,26 +280,23 @@ const ordinaryGetMetadata = (MetadataKey, O, P) => {
     return undefined;
 };
 
-// 3.1.5.1 OrdinaryDefineOwnMetadata(MetadataKey, MetadataValue, O, P)
-// https://rbuckton.github.io/reflect-metadata/#ordinarydefineownmetadata
-const ordinaryDefineOwnMetadata = (MetadataKey, MetadataValue, O, P) => {
-    const metadataMap = getOrCreateMetadataMap(O, P, /*Create*/ true);
-    metadataMap.set(MetadataKey, MetadataValue);
-};
-
 // 7.4 Operations on Iterator Objects
 // https://tc39.github.io/ecma262/#sec-operations-on-iterator-objects
 const getIterator = (obj) => {
-    const method = getMethod(obj, iteratorSymbol);
+    const method = getMethod(obj, Symbol.iterator);
     if (!is.function(method)) {
         throw new TypeError();
     } // from Call
     const iterator = method.call(obj);
-    if (!is.object(iterator)) {
+    if (!isObject(iterator)) {
         throw new TypeError();
     }
     return iterator;
 };
+
+// 7.4.4 IteratorValue(iterResult)
+// https://tc39.github.io/ecma262/2016/#sec-iteratorvalue
+const iteratorValue = (iterResult) => iterResult.value;
 
 // 7.4.5 iteratorStep(iterator)
 // https://tc39.github.io/ecma262/#sec-iteratorstep
@@ -300,11 +305,7 @@ const iteratorStep = (iterator) => {
     return result.done ? false : result;
 };
 
-// 7.4.4 iteratorValue(iterResult)
-// https://tc39.github.io/ecma262/2016/#sec-iteratorvalue
-const iteratorValue = (iterResult) => iterResult.value;
-
-// 7.4.6 iteratorClose(iterator, completion)
+// 7.4.6 IteratorClose(iterator, completion)
 // https://tc39.github.io/ecma262/#sec-iteratorclose
 const iteratorClose = (iterator) => {
     const f = iterator.return;
@@ -313,7 +314,8 @@ const iteratorClose = (iterator) => {
     }
 };
 
-// 3.1.7.1 ordinaryOwnMetadataKeys(O, P)
+
+// 3.1.7.1 OrdinaryOwnMetadataKeys(O, P)
 // https://rbuckton.github.io/reflect-metadata/#ordinaryownmetadatakeys
 const ordinaryOwnMetadataKeys = (O, P) => {
     const keys = [];
@@ -344,7 +346,7 @@ const ordinaryOwnMetadataKeys = (O, P) => {
     }
 };
 
-// 3.1.6.1 ordinaryMetadataKeys(O, P)
+// 3.1.6.1 OrdinaryMetadataKeys(O, P)
 // https://rbuckton.github.io/reflect-metadata/#ordinarymetadatakeys
 const ordinaryMetadataKeys = (O, P) => {
     const ownKeys = ordinaryOwnMetadataKeys(O, P);
@@ -361,16 +363,16 @@ const ordinaryMetadataKeys = (O, P) => {
     }
     const set = new Set();
     const keys = [];
-    for (let i = 0, ownKeys1 = ownKeys; i < ownKeys1.length; i++) {
-        const key = ownKeys1[i];
+    for (let _i = 0, ownKeys1 = ownKeys; _i < ownKeys1.length; _i++) {
+        const key = ownKeys1[_i];
         const hasKey = set.has(key);
         if (!hasKey) {
             set.add(key);
             keys.push(key);
         }
     }
-    for (let a = 0, parentKeys1 = parentKeys; a < parentKeys1.length; a++) {
-        const key = parentKeys1[a];
+    for (let _a = 0, parentKeys1 = parentKeys; _a < parentKeys1.length; _a++) {
+        const key = parentKeys1[_a];
         const hasKey = set.has(key);
         if (!hasKey) {
             set.add(key);
@@ -380,8 +382,9 @@ const ordinaryMetadataKeys = (O, P) => {
     return keys;
 };
 
-
 /**
+ *
+ *
  * Applies a set of decorators to a property of a target object.
  * @param decorators An array of decorators.
  * @param target The target object.
@@ -425,10 +428,10 @@ export const decorate = (decorators, target, propertyKey, attributes) => {
         if (!is.array(decorators)) {
             throw new TypeError();
         }
-        if (!is.object(target)) {
+        if (!isObject(target)) {
             throw new TypeError();
         }
-        if (!is.object(attributes) && !is.undefined(attributes) && !is.null(attributes)) {
+        if (!isObject(attributes) && !is.undefined(attributes) && !is.null(attributes)) {
             throw new TypeError();
         }
         if (is.null(attributes)) {
@@ -436,7 +439,8 @@ export const decorate = (decorators, target, propertyKey, attributes) => {
         }
         propertyKey = toPropertyKey(propertyKey);
         return decorateProperty(decorators, target, propertyKey, attributes);
-    } 
+    }
+
     if (!is.array(decorators)) {
         throw new TypeError();
     }
@@ -444,12 +448,13 @@ export const decorate = (decorators, target, propertyKey, attributes) => {
         throw new TypeError();
     }
     return decorateConstructor(decorators, target);
-    
 };
 
 // 4.1.2 Reflect.metadata(metadataKey, metadataValue)
 // https://rbuckton.github.io/reflect-metadata/#reflect.metadata
 /**
+ *
+ *
  * A default metadata decorator factory that can be used on a class, class member, or parameter.
  * @param metadataKey The key for the metadata entry.
  * @param metadataValue The value for the metadata entry.
@@ -490,8 +495,8 @@ export const decorate = (decorators, target, propertyKey, attributes) => {
  *
  */
 export const metadata = (metadataKey, metadataValue) => {
-    return function decorator(target, propertyKey) {
-        if (!is.object(target)) {
+    const decorator = function (target, propertyKey) {
+        if (!isObject(target)) {
             throw new TypeError();
         }
         if (!is.undefined(propertyKey) && !isPropertyKey(propertyKey)) {
@@ -499,9 +504,12 @@ export const metadata = (metadataKey, metadataValue) => {
         }
         ordinaryDefineOwnMetadata(metadataKey, metadataValue, target, propertyKey);
     };
+    return decorator;
 };
 
 /**
+ *
+ *
  * Define a unique metadata entry on the target.
  * @param metadataKey A key used to store and retrieve metadata.
  * @param metadataValue A value that contains attached metadata.
@@ -541,7 +549,7 @@ export const metadata = (metadataKey, metadataValue) => {
  *
  */
 export const defineMetadata = (metadataKey, metadataValue, target, propertyKey) => {
-    if (!is.object(target)) {
+    if (!isObject(target)) {
         throw new TypeError();
     }
     if (!is.undefined(propertyKey)) {
@@ -551,6 +559,8 @@ export const defineMetadata = (metadataKey, metadataValue, target, propertyKey) 
 };
 
 /**
+ *
+ *
  * Gets a value indicating whether the target object or its prototype chain has the provided metadata key defined.
  * @param metadataKey A key used to store and retrieve metadata.
  * @param target The target object on which the metadata is defined.
@@ -585,7 +595,7 @@ export const defineMetadata = (metadataKey, metadataValue, target, propertyKey) 
  *
  */
 export const hasMetadata = (metadataKey, target, propertyKey) => {
-    if (!is.object(target)) {
+    if (!isObject(target)) {
         throw new TypeError();
     }
     if (!is.undefined(propertyKey)) {
@@ -595,6 +605,8 @@ export const hasMetadata = (metadataKey, target, propertyKey) => {
 };
 
 /**
+ *
+ *
  * Gets a value indicating whether the target object has the provided metadata key defined.
  * @param metadataKey A key used to store and retrieve metadata.
  * @param target The target object on which the metadata is defined.
@@ -629,7 +641,7 @@ export const hasMetadata = (metadataKey, target, propertyKey) => {
  *
  */
 export const hasOwnMetadata = (metadataKey, target, propertyKey) => {
-    if (!is.object(target)) {
+    if (!isObject(target)) {
         throw new TypeError();
     }
     if (!is.undefined(propertyKey)) {
@@ -639,6 +651,8 @@ export const hasOwnMetadata = (metadataKey, target, propertyKey) => {
 };
 
 /**
+ *
+ *
  * Gets the metadata value for the provided metadata key on the target object or its prototype chain.
  * @param metadataKey A key used to store and retrieve metadata.
  * @param target The target object on which the metadata is defined.
@@ -657,8 +671,7 @@ export const hasOwnMetadata = (metadataKey, target, propertyKey) => {
  *     }
  *
  *     // constructor
- *   
- *   result = Reflect.getMetadata("custom:annotation", Example);
+ *     result = Reflect.getMetadata("custom:annotation", Example);
  *
  *     // property (on constructor)
  *     result = Reflect.getMetadata("custom:annotation", Example, "staticProperty");
@@ -674,7 +687,7 @@ export const hasOwnMetadata = (metadataKey, target, propertyKey) => {
  *
  */
 export const getMetadata = (metadataKey, target, propertyKey) => {
-    if (!is.object(target)) {
+    if (!isObject(target)) {
         throw new TypeError();
     }
     if (!is.undefined(propertyKey)) {
@@ -684,6 +697,8 @@ export const getMetadata = (metadataKey, target, propertyKey) => {
 };
 
 /**
+ *
+ *
  * Gets the metadata value for the provided metadata key on the target object.
  * @param metadataKey A key used to store and retrieve metadata.
  * @param target The target object on which the metadata is defined.
@@ -718,7 +733,7 @@ export const getMetadata = (metadataKey, target, propertyKey) => {
  *
  */
 export const getOwnMetadata = (metadataKey, target, propertyKey) => {
-    if (!is.object(target)) {
+    if (!isObject(target)) {
         throw new TypeError();
     }
     if (!is.undefined(propertyKey)) {
@@ -728,6 +743,8 @@ export const getOwnMetadata = (metadataKey, target, propertyKey) => {
 };
 
 /**
+ *
+ *
  * Gets the metadata keys defined on the target object or its prototype chain.
  * @param target The target object on which the metadata is defined.
  * @param propertyKey (Optional) The property key for the target.
@@ -761,7 +778,7 @@ export const getOwnMetadata = (metadataKey, target, propertyKey) => {
  *
  */
 export const getMetadataKeys = (target, propertyKey) => {
-    if (!is.object(target)) {
+    if (!isObject(target)) {
         throw new TypeError();
     }
     if (!is.undefined(propertyKey)) {
@@ -771,6 +788,8 @@ export const getMetadataKeys = (target, propertyKey) => {
 };
 
 /**
+ *
+ *
  * Gets the unique metadata keys defined on the target object.
  * @param target The target object on which the metadata is defined.
  * @param propertyKey (Optional) The property key for the target.
@@ -804,7 +823,7 @@ export const getMetadataKeys = (target, propertyKey) => {
  *
  */
 export const getOwnMetadataKeys = (target, propertyKey) => {
-    if (!is.object(target)) {
+    if (!isObject(target)) {
         throw new TypeError();
     }
     if (!is.undefined(propertyKey)) {
@@ -814,6 +833,8 @@ export const getOwnMetadataKeys = (target, propertyKey) => {
 };
 
 /**
+ *
+ *
  * Deletes the metadata entry from the target object with the provided key.
  * @param metadataKey A key used to store and retrieve metadata.
  * @param target The target object on which the metadata is defined.
@@ -848,7 +869,7 @@ export const getOwnMetadataKeys = (target, propertyKey) => {
  *
  */
 export const deleteMetadata = (metadataKey, target, propertyKey) => {
-    if (!is.object(target)) {
+    if (!isObject(target)) {
         throw new TypeError();
     }
     if (!is.undefined(propertyKey)) {

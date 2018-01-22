@@ -792,7 +792,7 @@ export const getChildPids = async (pid) => {
     return childPids;
 };
 
-export const kill = (input, { force = false, tree = true, windows } = {}) => {
+export const kill = (input, { force = false, ignoreCase = false, tree = true, windows } = {}) => {
     const fn = is.windows ? (input) => {
         const args = [];
 
@@ -818,23 +818,36 @@ export const kill = (input, { force = false, tree = true, windows } = {}) => {
 
         return exec("taskkill", args);
     } : (input) => {
-        const cmd = is.numeral(input) ? "kill" : "killall";
+        let cmd;
+        const args = [input];
+
+        const isNumeral = is.numeral(input);
+        if (is.darwin) {
+            cmd = isNumeral ? "kill" : "pkill";
+
+            if (!isNumeral && ignoreCase) {
+                args.unshift("-i");
+            }
+        } else {
+            cmd = isNumeral ? "kill" : "killall";
+
+            if (!isNumeral && ignoreCase) {
+                args.unshift("-I");
+            }
+        }
+
+        if (force) {
+            args.unshift("-9");
+        }
 
         if (tree && is.numeral(input)) {
             return getChildPids(input).then((children) => {
                 const pids = children.map((child) => child.pid);
-                pids.push(input);
-                if (force) {
-                    pids.unshift("-9");
-                }
-                return exec(cmd, pids);
+                return exec(cmd, [...pids, ...args]);
             });
         }
 
-        if (force) {
-            return exec(cmd, ["-9", input]);
-        }
-        return exec(cmd, [input]);
+        return exec(cmd, args);
     };
     const errors = [];
 

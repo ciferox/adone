@@ -17,7 +17,7 @@ const onuncork = function (self, fn) {
 const destroyer = function (self, end) {
     return function (err) {
         if (err) {
-            self.destroy(err.message === "premature close" ? null : err);
+            self._destroyInterval(err);
         } else if (end && !self._ended) {
             self.end();
         }
@@ -57,6 +57,8 @@ export default class Duplexify extends stream.Duplex {
         this._unwrite = null;
         this._unread = null;
         this._ended = false;
+        this._error = null;
+        this._preferError = false;
 
         this.destroyed = false;
 
@@ -193,15 +195,29 @@ export default class Duplexify extends stream.Duplex {
     }
 
     destroy(err) {
+        if (this._preferError && !this._error && err) {
+            this._error = err;
+        }
+
         if (this.destroyed) {
             return;
         }
         this.destroyed = true;
 
-        const self = this;
         process.nextTick(() => {
-            self._destroy(err);
+            this._destroy(this._preferError ? this._error : err);
         });
+    }
+
+    _destroyInterval(err) {
+        if (this.destroyed) {
+            return;
+        }
+        if (err.message !== "premature close") {
+            return this.destroy(err);
+        }
+        this._preferError = true;
+        this.destroy(null);
     }
 
     _destroy(err) {
