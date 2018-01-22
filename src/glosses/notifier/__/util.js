@@ -274,6 +274,7 @@ export const constructArgumentList = (options, extra = {}) => {
         if (!noEscape) {
             arg = escapeQuotes(arg);
         }
+        arg = arg.replace(/\0/g, ""); // remove null chars that break sh
         if (is.string(arg) && !keepNewlines) {
             arg = removeNewLines(arg);
         }
@@ -300,18 +301,18 @@ export const constructArgumentList = (options, extra = {}) => {
     return args;
 };
 
-/*
----- Options ----
-[-t] <title string>     | Displayed on the first line of the toast.
-[-m] <message string>   | Displayed on the remaining lines, wrapped.
-[-p] <image URI>        | Display toast with an image, local files only.
-[-w]                    | Wait for toast to expire or activate.
-[-id] <id>              | sets the id for a notification to be able to close it later.
-[-s] <sound URI>        | Sets the sound of the notifications, for possible values see http://msdn.microsoft.com/en-us/library/windows/apps/hh761492.aspx.
-[-silent]               | Don't play a sound file when showing the notifications.
-[-appID] <App.ID>       | Don't create a shortcut but use the provided app id.
--close <id>             | Closes a currently displayed notification, in order to be able to close a notification the parameter -w must be used to create the notification.
-*/
+/**
+ * ---- Options ----
+ * [-t] <title string>     | Displayed on the first line of the toast.
+ * [-m] <message string>   | Displayed on the remaining lines, wrapped.
+ * [-p] <image URI>        | Display toast with an image, local files only.
+ * [-w]                    | Wait for toast to expire or activate.
+ * [-id] <id>              | sets the id for a notification to be able to close it later.
+ * [-s] <sound URI>        | Sets the sound of the notifications, for possible values see http://msdn.microsoft.com/en-us/library/windows/apps/hh761492.aspx.
+ * [-silent]               | Don't play a sound file when showing the notifications.
+ * [-appID] <App.ID>       | Don't create a shortcut but use the provided app id.
+ * -close <id>             | Closes a currently displayed notification, in order to be able to close a notification the parameter -w must be used to create the notification.
+ */
 const allowedToasterFlags = [
     "t",
     "m",
