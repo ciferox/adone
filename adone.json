@@ -515,10 +515,19 @@
                 },
                 "meta": {
                     "description": "Meta utilites and implementation of adone-specific inspection",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/meta/**/*.js",
                     "dst": "lib/glosses/meta",
-                    "namespace": "meta"
+                    "namespace": "meta",
+                    "struct": {
+                        "reflect": {
+                            "description": "Prototype for a Metadata Reflection API for ECMAScript",
+                            "task": "transpile",
+                            "src": "src/glosses/meta/reflect.js",
+                            "dst": "lib/glosses/meta",
+                            "namespace": "reflect"
+                        }
+                    }
                 },
                 "metrics": {
                     "description": "Different metrics",

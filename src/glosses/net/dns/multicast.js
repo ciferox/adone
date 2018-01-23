@@ -205,15 +205,14 @@ export default function (opts) {
         bind(onbind);
     };
 
-    that.response =
-        that.respond = function (res, rinfo, cb) {
-            if (is.array(res)) {
-                res = { answers: res };
-            }
+    that.response = that.respond = function (res, rinfo, cb) {
+        if (is.array(res)) {
+            res = { answers: res };
+        }
 
-            res.type = "response";
-            that.send(res, rinfo, cb);
-        };
+        res.type = "response";
+        that.send(res, rinfo, cb);
+    };
 
     that.query = function (q, type, rinfo, cb) {
         if (is.function(type)) {
@@ -233,7 +232,7 @@ export default function (opts) {
             q = [{ name: q, type: type || "ANY" }];
         }
         if (is.array(q)) {
-            q = { type: "query", questions: q };
+            q = { questions: q };
         }
 
         q.type = "query";

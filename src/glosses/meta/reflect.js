@@ -5,6 +5,8 @@ const {
     is
 } = adone;
 
+adone.asNamespace(exports);
+
 // [[Metadata]] internal slot
 // https://rbuckton.github.io/reflect-metadata/#ordinary-object-internal-methods-and-internal-slots
 const Metadata = new WeakMap();

@@ -5,7 +5,7 @@ const {
     netron2: { MulticastDNS, PeerInfo }
 } = adone;
 
-describe("MulticastDNS", () => {
+describe("netron2", "MulticastDNS", () => {
     let pA;
     let pB;
     let pC;
