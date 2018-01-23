@@ -1,5 +1,3 @@
-const async = require("async");
-
 const {
     is,
     multi,
@@ -37,95 +35,85 @@ describe("netron2", "PeerBook", () => {
         assert.exists(pb);
     });
 
-    it(".put", () => {
-        expect(pb.put(p1)).to.eql(p1);
-        expect(pb.put(p2)).to.eql(p2);
-        expect(pb.put(p3)).to.eql(p3);
+    it("set()", () => {
+        expect(pb.set(p1)).to.eql(p1);
+        expect(pb.set(p2)).to.eql(p2);
+        expect(pb.set(p3)).to.eql(p3);
     });
 
-    it(".getAll", () => {
+    it("getAll()", () => {
         const peers = pb.getAll();
-        expect(Object.keys(peers).length).to.equal(3);
+        expect(peers.size).to.equal(3);
     });
 
-    it(".getAllArray", () => {
-        expect(pb.getAllArray()).to.have.length(3);
+    it("getAllAsArray()", () => {
+        expect(pb.getAllAsArray()).to.have.length(3);
     });
 
-    it(".get by PeerId", () => {
+    it("get() by PeerId", () => {
         const peer = pb.get(p1.id);
         expect(peer).to.eql(p1);
     });
 
-    it(".get by B58String ", () => {
+    it("get() by base58 string ", () => {
         const b58Str = p1.id.asBase58();
         const peer = pb.get(b58Str);
         expect(peer).to.eql(p1);
     });
 
-    it(".get by B58String non existent", (done) => {
-        try {
-            pb.get(p4.id.asBase58());
-        } catch (err) {
-            assert.exists(err);
-            done();
-        }
+    it("get() by base58 string non existent", () => {
+        assert.throws(() => pb.get(p4.id.asBase58()));
     });
 
-    it(".get by Multihash", () => {
+    it("get() by Multihash", () => {
         const mh = p1.id.toBytes();
         const peer = pb.get(mh);
         expect(peer).to.eql(p1);
     });
 
-    it(".get by Multihash non existent", (done) => {
-        try {
-            pb.getByMultihash(p4.id.toBytes());
-        } catch (err) {
-            assert.exists(err);
-            done();
-        }
+    it("get() by Multihash non existent", () => {
+        assert.throws(() => pb.getByMultihash(p4.id.toBytes()));
     });
 
-    it(".remove by B58String", () => {
+    it("delete() by base58 string", () => {
         const b58Str = p1.id.asBase58();
 
-        pb.remove(b58Str);
+        pb.delete(b58Str);
         expect(pb.has(b58Str)).to.equal(false);
     });
 
-    it(".remove by Multihash", () => {
+    it("delete() by Multihash", () => {
         const mh = p1.id.toBytes();
 
-        pb.remove(mh);
+        pb.delete(mh);
         expect(pb.has(mh)).to.equal(false);
     });
 
-    it(".put repeated Id, merge info", () => {
+    it("set() peerInfo and merge info", () => {
         const peer3A = new PeerInfo(p3.id);
         peer3A.multiaddrs.add(new multi.address.Multiaddr("/ip4/127.0.0.1/tcp/4001"));
 
-        pb.put(peer3A);
+        pb.set(peer3A);
         const peer3B = pb.get(p3.id.toBytes());
 
         expect(peer3B.multiaddrs.toArray()).to.have.length(3);
     });
 
-    it(".put repeated Id, replace info", () => {
+    it("set() peerInfo and replace info", () => {
         const peer3A = new PeerInfo(p3.id);
         peer3A.multiaddrs.add(new multi.address.Multiaddr("/ip4/188.0.0.1/tcp/5001"));
 
-        pb.put(peer3A, true);
+        pb.set(peer3A, true);
         const peer3B = pb.get(p3.id.asBase58());
         expect(peer3A.multiaddrs.toArray()).to.eql(peer3B.multiaddrs.toArray());
     });
 
-    it(".getMultiaddrs", () => {
+    it("getMultiaddrs()", () => {
         const pb = new PeerBook();
         const peer = new PeerInfo(p3.id);
         peer.multiaddrs.add(new multi.address.Multiaddr("/ip4/127.0.0.1/tcp/1234"));
 
-        pb.put(peer);
+        pb.set(peer);
         expect(pb.getMultiaddrs(p3.id)).to.be.eql(peer.multiaddrs.toArray());
     });
 });

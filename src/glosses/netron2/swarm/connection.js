@@ -65,12 +65,12 @@ module.exports = function connection(swarm) {
                             // no addr, use just their IPFS id
                             peerInfo.connect(`/ipfs/${b58Str}`);
                         }
-                        peerInfo = swarm._peerBook.put(peerInfo);
+                        peerInfo = swarm._peerBook.set(peerInfo);
 
                         muxedConn.on("close", () => {
                             delete swarm.muxedConns[b58Str];
                             peerInfo.disconnect();
-                            peerInfo = swarm._peerBook.put(peerInfo);
+                            peerInfo = swarm._peerBook.set(peerInfo);
                             setImmediate(() => swarm.emit("peer-mux-closed", peerInfo));
                         });
 

@@ -43,7 +43,7 @@ module.exports = (dht) => {
             log("received provider %s for %s (addrs %s)", peer.id.asBase58(), cid.toBaseEncodedString(), pi.multiaddrs.toArray().map((m) => m.toString()));
 
             if (!dht._isSelf(pi.id)) {
-                dht.peerBook.put(pi);
+                dht.peerBook.set(pi);
             }
         });
 

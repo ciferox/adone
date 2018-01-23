@@ -54,7 +54,7 @@ module.exports = (dht) => {
                     return dht.peerBook.get(p);
                 }
 
-                return dht.peerBook.put(new PeerInfo(p));
+                return dht.peerBook.set(new PeerInfo(p));
             });
 
             if (has) {

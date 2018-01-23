@@ -187,11 +187,12 @@ export class Swarm extends adone.event.Emitter {
                     this.muxedConns[b58Id].muxer = muxedConn;
                     // should not be needed anymore - swarm.muxedConns[b58Id].conn = conn
 
+                    this._peerBook.set(pi);
+
                     muxedConn.once("close", () => {
                         const b58Str = pi.id.asBase58();
                         delete this.muxedConns[b58Str];
                         pi.disconnect();
-                        this._peerBook.get(b58Str).disconnect();
                         setImmediate(() => this.emit("peer-mux-closed", pi));
                     });
 
@@ -338,7 +339,7 @@ export class Swarm extends adone.event.Emitter {
     }
 
     hangUp(peer, callback) {
-        const peerInfo = getPeerInfo(peer, this.peerBook);
+        const peerInfo = getPeerInfo(peer, this._peerBook);
         const key = peerInfo.id.asBase58();
         if (this.muxedConns[key]) {
             const muxer = this.muxedConns[key].muxer;

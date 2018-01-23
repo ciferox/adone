@@ -12,8 +12,7 @@ const ensureArray = utils.ensureArray;
 
 const {
     event,
-    stream: { pull },
-    vendor: { lodash: { values } }
+    stream: { pull }
 } = adone;
 
 /**
@@ -242,7 +241,7 @@ export class FloodSub extends event.Emitter {
         this.libp2p.on("peer:connect", this._dialPeer);
 
         // Dial already connected peers
-        const peerInfos = values(this.libp2p.peerBook.getAll());
+        const peerInfos = this.libp2p.peerBook.getAllAsArray();
 
         asyncEach(peerInfos, (peer, cb) => this._dialPeer(peer, cb), (err) => {
             setImmediate(() => {

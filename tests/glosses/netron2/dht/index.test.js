@@ -260,8 +260,8 @@ describe("KadDHT", () => {
 
             const peerA = dhtA.peerInfo;
             const peerB = dhtB.peerInfo;
-            dhtA.peerBook.put(peerB);
-            dhtB.peerBook.put(peerA);
+            dhtA.peerBook.set(peerB);
+            dhtB.peerBook.set(peerA);
 
             parallel([
                 (cb) => dhtA.swarm.dial(peerB.id, cb),
@@ -296,7 +296,7 @@ describe("KadDHT", () => {
                     const rtablePeers = guy.routingTable.closestPeers(rtval, c.ALPHA);
                     expect(rtablePeers).to.have.length(3);
 
-                    const netPeers = guy.peerBook.getAllArray().filter((p) => p.isConnected());
+                    const netPeers = guy.peerBook.getAllAsArray().filter((p) => p.isConnected());
                     expect(netPeers).to.have.length(20);
 
                     const rtableSet = {};
@@ -357,7 +357,7 @@ describe("KadDHT", () => {
 
             setupDHTs(2, (err, dhts, addrs, ids) => {
                 assert.notExists(err);
-                dhts[0].peerBook.put(dhts[1].peerInfo);
+                dhts[0].peerBook.set(dhts[1].peerInfo);
                 dhts[0].getPublicKey(ids[1], (err, key) => {
                     assert.notExists(err);
                     expect(key).to.be.eql(dhts[1].peerInfo.id.pubKey);
@@ -378,7 +378,7 @@ describe("KadDHT", () => {
                         // remove the pub key to be sure it is fetched
                         const p = dhts[0].peerBook.get(ids[1]);
                         p.id._pubKey = null;
-                        dhts[0].peerBook.put(p, true);
+                        dhts[0].peerBook.set(p, true);
                         dhts[0].getPublicKey(ids[1], cb);
                     },
                     (key, cb) => {
@@ -397,7 +397,7 @@ describe("KadDHT", () => {
         swarm.connection.reuse();
         const dht = new KadDHT(swarm);
 
-        dht.peerBook.put(peerInfos[1]);
+        dht.peerBook.set(peerInfos[1]);
         dht._add(peerInfos[1]);
         const res = dht._nearestPeersToQuery({ key: "hello" });
         expect(res).to.be.eql([peerInfos[1]]);
@@ -410,8 +410,8 @@ describe("KadDHT", () => {
         swarm.connection.reuse();
         const dht = new KadDHT(swarm);
 
-        dht.peerBook.put(peerInfos[1]);
-        dht.peerBook.put(peerInfos[2]);
+        dht.peerBook.set(peerInfos[1]);
+        dht.peerBook.set(peerInfos[2]);
 
         dht._add(peerInfos[1]);
         dht._add(peerInfos[2]);
@@ -429,7 +429,7 @@ describe("KadDHT", () => {
             const dht = new KadDHT(swarm);
 
             // Not putting the peer info into the peerbook
-            // dht.peerBook.put(peerInfos[1])
+            // dht.peerBook.set(peerInfos[1])
 
             const record = new Record(
                 Buffer.from("hello"),
@@ -448,7 +448,7 @@ describe("KadDHT", () => {
             swarm.connection.reuse();
             const dht = new KadDHT(swarm);
 
-            dht.peerBook.put(peerInfos[1]);
+            dht.peerBook.set(peerInfos[1]);
 
             const record = new Record(
                 Buffer.from("hello"),
@@ -467,7 +467,7 @@ describe("KadDHT", () => {
             swarm.connection.reuse();
             const dht = new KadDHT(swarm);
 
-            dht.peerBook.put(peerInfos[1]);
+            dht.peerBook.set(peerInfos[1]);
 
             const record = new Record(
                 Buffer.from("hello"),

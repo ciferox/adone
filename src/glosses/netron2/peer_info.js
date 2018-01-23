@@ -1,16 +1,17 @@
 const {
     is,
     vendor: { lodash: { uniqBy } },
+    multi,
     netron2: { PeerId },
     util
 } = adone;
 
 const ensureMultiaddr = (ma) => {
-    if (adone.multi.address.isMultiaddr(ma)) {
+    if (multi.address.isMultiaddr(ma)) {
         return ma;
     }
 
-    return adone.multi.address.create(ma);
+    return multi.address.create(ma);
 };
 
 // Because JavaScript doesn't let you overload the compare in Set()..

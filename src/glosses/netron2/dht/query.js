@@ -46,7 +46,7 @@ const execQuery = function (next, query, run, callback) {
                 if (query.dht._isSelf(closer.id)) {
                     return cb();
                 }
-                closer = query.dht.peerBook.put(closer);
+                closer = query.dht.peerBook.set(closer);
                 addPeerToQuery(closer.id, query.dht, run);
                 cb();
             }, callback);

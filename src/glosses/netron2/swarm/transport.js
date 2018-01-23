@@ -60,7 +60,7 @@ module.exports = function (swarm) {
                 }
 
                 pi.connect(success.multiaddr);
-                swarm._peerBook.put(pi);
+                swarm._peerBook.set(pi);
                 callback(null, success.conn);
             });
         },

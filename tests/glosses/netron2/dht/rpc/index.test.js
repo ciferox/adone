@@ -38,7 +38,7 @@ describe("rpc", () => {
             swarm.connection.reuse();
             const dht = new KadDHT(swarm, { kBucketSize: 5 });
 
-            dht.peerBook.put(peerInfos[1]);
+            dht.peerBook.set(peerInfos[1]);
 
             const msg = new Message(Message.TYPES.GET_VALUE, Buffer.from("hello"), 5);
 

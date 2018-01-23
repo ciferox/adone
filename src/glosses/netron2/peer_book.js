@@ -23,29 +23,30 @@ const getB58Str = (peer) => {
 
 export default class PeerBook {
     constructor() {
-        this._peers = {};
-    }
-
-    // checks if peer exists
-    // peer can be PeerId, b58String or PeerInfo
-    has(peer) {
-        const b58Str = getB58Str(peer);
-        return Boolean(this._peers[b58Str]);
+        this._peers = new Map();
     }
 
     /**
-     * Stores a peerInfo, if already exist, merges the new into the old.
+     * Checks if peer exists.
+     * 
+     * @param {AbstractPeer|PeerId|PeerInfo|String|Buffer} peer
+     */
+    has(peer) {
+        return this._peers.has(getB58Str(peer));
+    }
+
+    /**
+     * Stores a peerInfo, if already exist, throws adone.x.Exists exception.
      *
      * @param {PeerInfo} peerInfo
-     * @param {Boolean} replace
-     * @returns {PeerInfo}
      */
-    put(peerInfo, replace) {
-        const localPeerInfo = this._peers[peerInfo.id.asBase58()];
+    set(peerInfo, replace) {
+        const base58Str = peerInfo.id.asBase58();
+        const localPeerInfo = this._peers.get(base58Str);
 
         // insert if doesn't exist or replace if replace flag is true
         if (!localPeerInfo || replace) {
-            this._peers[peerInfo.id.asBase58()] = peerInfo;
+            this._peers.set(base58Str, peerInfo);
             return peerInfo;
         }
 
@@ -79,22 +80,21 @@ export default class PeerBook {
      * @returns {PeerInfo}
      */
     get(peer) {
-        const b58Str = getB58Str(peer);
-
-        const peerInfo = this._peers[b58Str];
-
-        if (peerInfo) {
-            return peerInfo;
+        const base58 = getB58Str(peer);
+        const peerInfo = this._peers.get(base58);
+        if (is.undefined(peerInfo)) {
+            throw new Error(`PeerInfo '${base58}' not found`);
         }
-        throw new Error("PeerInfo not found");
+
+        return peerInfo;
     }
 
     getAll() {
         return this._peers;
     }
 
-    getAllArray() {
-        return Object.keys(this._peers).map((b58Str) => this._peers[b58Str]);
+    getAllAsArray() {
+        return [...this._peers.values()];
     }
 
     getMultiaddrs(peer) {
@@ -102,11 +102,7 @@ export default class PeerBook {
         return info.multiaddrs.toArray();
     }
 
-    remove(peer) {
-        const b58Str = getB58Str(peer);
-
-        if (this._peers[b58Str]) {
-            delete this._peers[b58Str];
-        }
+    delete(peer) {
+        this._peers.delete(getB58Str(peer));
     }
 }

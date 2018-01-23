@@ -49,10 +49,7 @@ export class KadDHT {
      * @param {Swarm} swarm
      * @param {object} options // {kBucketSize=20, datastore=MemoryDatastore}
      */
-    constructor(swarm, options) {
-        // assert(swarm, "KadDHT requires a instance of swarmt a");
-        options = options || {};
-
+    constructor(swarm, { kBucketSize = 20, ncp = 6, datastore } = {}) {
         /**
          * Local reference to swarm.
          *
@@ -65,14 +62,14 @@ export class KadDHT {
          *
          * @type {number}
          */
-        this.kBucketSize = options.kBucketSize || 20;
+        this.kBucketSize = kBucketSize;
 
         /**
          * Number of closest peers to return on kBucket search, default 6
          *
          * @type {number}
          */
-        this.ncp = options.ncp || 6;
+        this.ncp = ncp;
 
         /**
          * The routing table.
@@ -86,7 +83,7 @@ export class KadDHT {
          *
          * @type {Datastore}
          */
-        this.datastore = options.datastore || new MemoryStore();
+        this.datastore = datastore || new MemoryStore();
 
         /**
          * Provider management
@@ -361,13 +358,13 @@ export class KadDHT {
                 return callback(null, info.id.pubKey);
             }
         } else {
-            info = this.peerBook.put(new PeerInfo(peer));
+            info = this.peerBook.set(new PeerInfo(peer));
         }
         // try the node directly
         this._getPublicKeyFromNode(peer, (err, pk) => {
             if (!err) {
                 info.id = new PeerId(peer.id, null, pk);
-                this.peerBook.put(info);
+                this.peerBook.set(info);
 
                 return callback(null, pk);
             }
@@ -381,7 +378,7 @@ export class KadDHT {
 
                 const pk = crypto.unmarshalPublicKey(value);
                 info.id = new PeerId(peer, null, pk);
-                this.peerBook.put(info);
+                this.peerBook.set(info);
 
                 callback(null, pk);
             });

@@ -32,8 +32,7 @@ export default class Netron extends event.AsyncEmitter {
     constructor(peerInfo) {
         super();
 
-        this.peerInfo = PeerInfo.create(peerInfo);
-        this.peer = new OwnPeer(this.peerInfo, this);
+        this.peer = new OwnPeer(PeerInfo.create(peerInfo), this);
 
         // this.options = Object.assign({
         //     responseTimeout: 60000 * 3,
@@ -71,10 +70,24 @@ export default class Netron extends event.AsyncEmitter {
     /**
      * Creates new netcore instance and own it.
      * 
-     * @param {string} id netcore identification name
+     * @param {string} netId network name
      */
-    createNetCore(id) {
+    createNetCore(netId, config = {}) {
+        if (this.netCores.has(netId)) {
+            throw new adone.x.Exists(`NetCore '${netId}' is already exist`);
+        }
 
+        if (!config.transport) {
+            // Set TCP as default transport
+            config.transport = "tcp";
+        }
+
+        const netCore = new adone.netron2.NetCore({
+            ...config,
+            peer: this.peer.info
+        });
+
+        this.netCores.set(netId, netCore);
     }
 
     /**
@@ -82,61 +95,98 @@ export default class Netron extends event.AsyncEmitter {
      * 
      * If netcore is used, it will be stopped.
      * 
-     * @param {string} id netcore identification name
+     * @param {string} netId network name
      */
-    deleteNetCore(id) {
-
+    deleteNetCore(netId) {
+        const netCore = this.getNetCore(netId);
+        if (netCore.started) {
+            throw new adone.x.NotAllowed("It is not allow to delete active netcore");
+        }
+        this.netCores.delete(netId);
     }
 
     /**
      * Returns netcore instance by id.
-     * @param {string} id netcore identification name
+     * @param {string} netId network name
      */
-    getNetCore(id) {
+    getNetCore(netId) {
+        const netCore = this.netCores.get(netId);
+        if (is.undefined(netCore)) {
+            throw new adone.x.Unknown(`Unknown network name: ${netId}`);
+        }
 
-    }
-
-    /**
-     * Returns list of all netcores.
-     */
-    getNetCores() {
-
+        return netCore;
     }
 
     /**
      * Connects to peer using netcore identified by 'netCoreId'.
-     * @param {string} netCoreId 
+     * @param {string} netId network name
      * @param {*} peer 
      */
-    connect(netCoreId, peer) {
-
+    connect(netId, peer) {
+        return this.getNetCore(netId).connect(peer);
     }
 
     /**
      * Disconnects from peer useing netcore identified by netCoreId.
      * 
-     * @param {string} netCoreId 
+     * @param {string} netId network name
      * @param {*} peer 
      */
-    disconnect(netCoreId, peer) {
+    disconnect(netId, peer) {
 
     }
 
     /**
-     * Starts netcore.
+     * Starts netcore with specified id or all created netcores if 'netId' is undefined.
      * 
-     * @param {string} netCoreId netcore identification name 
+     * @param {string} netId network name
      */
-    start(netcoreId) {
+    async start(netId) {
+        if (!is.string(netId)) {
+            const promises = [];
+            for (const id of this.netCores.keys()) {
+                promises.push(this.start(id));
+            }
+            return Promise.all(promises);
+        }
 
+        const netCore = this.getNetCore(netId);
+        if (!netCore.started) {
+            await netCore.start();
+            // netCore.swarm.on("peer-mux-established", (peerInfo) => {
+            //     const remotePeer = new adone.netron2.RemotePeer(peerInfo);
+            //     // this.peers.
+            // });
+
+            // netCore.swarm.on("peer-mux-closed", (peerInfo) => {
+
+            // });
+
+            // netCore.handle("/netron/1.0.0", (protocol, conn) => {
+                
+            // });
+        }
     }
 
     /**
      * Stops netcore.
      * @param {string} netCoreId netcore identification name
      */
-    stop(name) {
+    async stop(netId) {
+        if (!is.string(netId)) {
+            const promises = [];
+            for (const id of this.netCores.keys()) {
+                promises.push(this.stop(id));
+            }
+            return Promise.all(promises);
+        }
 
+        const netCore = this.getNetCore(netId);
+        if (netCore.started) {
+
+            await netCore.stop();
+        }
     }
 
     // connect(options = {}) {

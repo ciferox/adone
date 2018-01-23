@@ -2,11 +2,9 @@ const parallel = require("async/parallel");
 const rawPeer = require("./test-peer.json");
 
 const {
-    netron2: { rendezvous, PeerInfo, PeerId, transport: { WebRTCStar } },
+    netron2: { NetCore, rendezvous, PeerInfo, PeerId, transport: { WebRTCStar } },
     stream: { pull }
 } = adone;
-
-import TestNetCore from "./net_core";
 
 let wrtcRendezvous;
 let wsRendezvous;
@@ -50,7 +48,10 @@ export default async (ctx) => {
 
                     peer.multiaddrs.add("/ip4/127.0.0.1/tcp/9200/ws");
 
-                    node = new TestNetCore(peer);
+                    node = new NetCore({
+                        peer,
+                        transport: ["tcp", "ws"]
+                    });
                     node.handle("/echo/1.0.0", (protocol, conn) => pull(conn, conn));
                     node.start().then(cb);
                     // cb();

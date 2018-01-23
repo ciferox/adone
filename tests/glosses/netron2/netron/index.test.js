@@ -1,6 +1,6 @@
 const {
     is,
-    netron2: { PeerId, Netron, DContext, DPublic }
+    netron2: { PeerId, PeerInfo, Netron, DContext, DPublic }
 } = adone;
 
 describe("netron2", "Netron", () => {
@@ -23,13 +23,12 @@ describe("netron2", "Netron", () => {
             const n = new Netron();
 
             assert.true(is.netron2(n));
-            assert.true(is.peerInfo(n.peerInfo));
             assert.true(is.peerInfo(n.peer.info));
         });
 
         it("with precreated PeerId", () => {
             const n = new Netron(peerId);
-            assert.deepEqual(peerId, n.peerInfo.id);
+            assert.deepEqual(peerId, n.peer.info.id);
         });
 
         it("no netcores", () => {
@@ -665,121 +664,66 @@ describe("netron2", "Netron", () => {
         });
     });
 
-    describe.only("netcore", () => {
+    describe("networks", () => {
         let idServer;
         let idClient;
-        let netCoreS;
-        let netCoreC;
-
-        const {
-            is,
-            netron2: { PeerInfo, NetCore, MulticastDNS, Railing, KadDHT, secio, transport: { TCP, WS } }
-        } = adone;
-
-        const mapMuxers = function (list) {
-            return list.map((pref) => {
-                if (!is.string(pref)) {
-                    return pref;
-                }
-                switch (pref.trim().toLowerCase()) {
-                    case "spdy": return adone.netron2.spdy;
-                    case "multiplex": return adone.netron2.multiplex;
-                    default:
-                        throw new Error(`${pref} muxer not available`);
-                }
-            });
-        };
-
-        const getMuxers = function (muxers) {
-            const muxerPrefs = process.env.netron2_MUXER;
-            if (muxerPrefs && !muxers) {
-                return mapMuxers(muxerPrefs.split(","));
-            } else if (muxers) {
-                return mapMuxers(muxers);
-            }
-            return [adone.netron2.multiplex, adone.netron2.spdy];
-        };
-
-        class TestNetCore extends NetCore {
-            constructor(peerInfo, peerBook, options) {
-                options = options || {};
-
-                const modules = {
-                    transport: [
-                        new TCP(),
-                        new WS()
-                    ],
-                    connection: {
-                        muxer: getMuxers(options.muxer),
-                        // crypto: [secio]
-                    },
-                    discovery: []
-                };
-
-                if (options.dht) {
-                    modules.DHT = KadDHT;
-                }
-
-                if (options.mdns) {
-                    const mdns = new MulticastDNS(peerInfo, "ipfs.local");
-                    modules.discovery.push(mdns);
-                }
-
-                if (options.bootstrap) {
-                    const r = new Railing(options.bootstrap);
-                    modules.discovery.push(r);
-                }
-
-                if (options.modules) {
-                    if (options.modules.transport) {
-                        options.modules.transport.forEach((t) => modules.transport.push(t));
-                    }
-
-                    if (options.modules.discovery) {
-                        options.modules.discovery.forEach((d) => modules.discovery.push(d));
-                    }
-                }
-
-                super(modules, peerInfo, peerBook, options);
-            }
-        }
+        let peerS;
+        let peerC;
+        let netronS;
+        let netronC;
 
         before(() => {
             idServer = PeerId.create();
             idClient = PeerId.create();
         });
 
-        let peerS;
-        let peerC;
-        let netronS;
-        let netronC;
-
         beforeEach(async () => {
             peerS = new PeerInfo(idServer);
             peerS.multiaddrs.add("/ip4/0.0.0.0/tcp/0");
-            netCoreS = new TestNetCore(peerS);
             netronS = new Netron(peerS);
-            netronS.addNetCore(netCoreS);
+            netronS.createNetCore("default");
+
+            adone.log("Server peer:", peerS.id.asBase58());
 
             peerC = new PeerInfo(idClient);
             peerC.multiaddrs.add("/ip4/0.0.0.0/tcp/0");
-            netCoreC = new TestNetCore(peerC);
             netronC = new Netron(peerC);
-            netronC.addNetCore(netCoreC);
+            netronC.createNetCore("default");
+
+            adone.log("Client peer:", peerC.id.asBase58());
         });
 
         afterEach(async () => {
-            await netCoreS.stop();
-            await netCoreC.stop();
+            await netronS.stop("default");
         });
 
-        it("connect one net", async () => {
-            await netCoreS.start();
-            // await netCoreC.start();
-            await netCoreC.connect(peerS);
-            // adone.log(conn);
+        it("should be only one created network", () => {
+            assert.equal(netronS.netCores.size, 1);
+            const netCore = netronS.getNetCore("default");
+            assert.ok(netCore);
+        });
 
+        it("delete netcore", async () => {
+            netronC.deleteNetCore("default");
+            assert.equal(netronC.netCores.size, 0);
+        });
 
+        it("delete active netcore is not allowed", async () => {
+            await netronS.start("default");
+            assert.throws(() => netronS.deleteNetCore("default"), adone.x.NotAllowed);
+        });
+
+        it("start one of netron netcore", async () => {
+            assert.false(netronS.getNetCore("default").started);
+            await netronS.start("default");
+            assert.true(netronS.getNetCore("default").started);
+        });
+
+        it("connect one netcore to another", async () => {
+            await netronS.start("default");
+            assert.true(netronS.getNetCore("default").started);
+            await netronC.connect("default", peerS);
+            assert.false(netronC.getNetCore("default").started);
         });
     });
 });

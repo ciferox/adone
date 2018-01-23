@@ -2,20 +2,51 @@ const parallel = require("async/parallel");
 const series = require("async/series");
 const wrtc = require("wrtc");
 
-import TestNetCore from "./net_core";
-
 const {
     multi,
     stream: { pull },
-    netron2: { rendezvous, CID, circuit: { Circuit }, PeerInfo, PeerId, transport: { WebRTCStar, WSStar } },
+    netron2: { NetCore, secio, MulticastDNS, Railing, transport: { TCP, WS }, rendezvous, CID, circuit: { Circuit }, PeerInfo, PeerId, transport: { WebRTCStar, WSStar } },
     util
 } = adone;
 
+
 const createNetCore = function (multiaddrs, options = {}) {
     const peerId = PeerId.create({ bits: 1024 });
-    const peerInfo = PeerInfo.create(peerId);
-    util.arrify(multiaddrs).map((ma) => peerInfo.multiaddrs.add(ma));
-    return new TestNetCore(peerInfo, undefined, options);
+    const peer = PeerInfo.create(peerId);
+    util.arrify(multiaddrs).map((ma) => peer.multiaddrs.add(ma));
+
+    const config = {
+        peer,
+        transport: [
+            new TCP(),
+            new WS()
+        ],
+        muxer: options.muxer,
+        crypto: [secio],
+        discovery: [],
+        dht: options.dht,
+        relay: options.relay
+    };
+
+    if (options.mdns) {
+        const mdns = new MulticastDNS(peer, "ipfs.local");
+        config.discovery.push(mdns);
+    }
+
+    if (options.bootstrap) {
+        const r = new Railing(options.bootstrap);
+        config.discovery.push(r);
+    }
+
+    if (options.transport) {
+        options.transport.forEach((t) => config.transport.push(t));
+    }
+
+    if (options.discovery) {
+        options.discovery.forEach((d) => config.discovery.push(d));
+    }
+
+    return new NetCore(config);
 };
 
 const echo = function (protocol, conn) {
@@ -50,12 +81,12 @@ describe("netron2", () => {
                     parallel([
                         (cb) => {
                             const peers = netCoreA.peerBook.getAll();
-                            expect(Object.keys(peers)).to.have.length(1);
+                            assert.equal(peers.size, 1);
                             cb();
                         },
                         (cb) => {
                             const peers = netCoreB.peerBook.getAll();
-                            expect(Object.keys(peers)).to.have.length(1);
+                            assert.equal(peers.size, 1);
                             cb();
                         }
                     ], done);
@@ -86,13 +117,13 @@ describe("netron2", () => {
                     parallel([
                         (cb) => {
                             const peers = netCoreA.peerBook.getAll();
-                            expect(Object.keys(peers)).to.have.length(1);
+                            assert.equal(peers.size, 1);
                             expect(Object.keys(netCoreA.swarm.muxedConns)).to.have.length(0);
                             cb();
                         },
                         (cb) => {
                             const peers = netCoreB.peerBook.getAll();
-                            expect(Object.keys(peers)).to.have.length(1);
+                            assert.equal(peers.size, 1);
 
                             expect(Object.keys(netCoreB.swarm.muxedConns)).to.have.length(0);
                             cb();
@@ -109,14 +140,14 @@ describe("netron2", () => {
                     series([
                         (cb) => {
                             const peers = netCoreA.peerBook.getAll();
-                            expect(Object.keys(peers)).to.have.length(1);
+                            assert.equal(peers.size, 1);
 
                             expect(Object.keys(netCoreA.swarm.muxedConns)).to.have.length(1);
                             cb();
                         },
                         (cb) => {
                             const peers = netCoreB.peerBook.getAll();
-                            expect(Object.keys(peers)).to.have.length(1);
+                            assert.equal(peers.size, 1);
 
                             expect(Object.keys(netCoreA.swarm.muxedConns)).to.have.length(1);
                             cb();
@@ -145,14 +176,14 @@ describe("netron2", () => {
                     parallel([
                         (cb) => {
                             const peers = netCoreA.peerBook.getAll();
-                            expect(Object.keys(peers)).to.have.length(1);
+                            assert.equal(peers.size, 1);
 
                             expect(Object.keys(netCoreA.swarm.muxedConns)).to.have.length(0);
                             cb();
                         },
                         (cb) => {
                             const peers = netCoreB.peerBook.getAll();
-                            expect(Object.keys(peers)).to.have.length(1);
+                            assert.equal(peers.size, 1);
 
                             expect(Object.keys(netCoreB.swarm.muxedConns)).to.have.length(0);
                             cb();
@@ -171,13 +202,13 @@ describe("netron2", () => {
                     series([
                         (cb) => {
                             const peers = netCoreA.peerBook.getAll();
-                            expect(Object.keys(peers)).to.have.length(1);
+                            assert.equal(peers.size, 1);
                             expect(Object.keys(netCoreA.swarm.muxedConns)).to.have.length(1);
                             cb();
                         },
                         (cb) => {
                             const peers = netCoreB.peerBook.getAll();
-                            expect(Object.keys(peers)).to.have.length(1);
+                            assert.equal(peers.size, 1);
                             expect(Object.keys(netCoreA.swarm.muxedConns)).to.have.length(1);
                             cb();
                         }
@@ -204,13 +235,13 @@ describe("netron2", () => {
                     parallel([
                         (cb) => {
                             const peers = netCoreA.peerBook.getAll();
-                            expect(Object.keys(peers)).to.have.length(1);
+                            assert.equal(peers.size, 1);
                             expect(Object.keys(netCoreA.swarm.muxedConns)).to.have.length(0);
                             cb();
                         },
                         (cb) => {
                             const peers = netCoreB.peerBook.getAll();
-                            expect(Object.keys(peers)).to.have.length(1);
+                            assert.equal(peers.size, 1);
                             expect(Object.keys(netCoreB.swarm.muxedConns)).to.have.length(0);
                             cb();
                         }
@@ -250,13 +281,13 @@ describe("netron2", () => {
                     parallel([
                         (cb) => {
                             const peers = netCoreTCP.peerBook.getAll();
-                            expect(Object.keys(peers)).to.have.length(1);
+                            assert.equal(peers.size, 1);
                             expect(Object.keys(netCoreTCP.swarm.muxedConns)).to.have.length(1);
                             cb();
                         },
                         (cb) => {
                             const peers = netCoreTCPnWS.peerBook.getAll();
-                            expect(Object.keys(peers)).to.have.length(1);
+                            assert.equal(peers.size, 1);
                             expect(Object.keys(netCoreTCPnWS.swarm.muxedConns)).to.have.length(1);
                             cb();
                         }
@@ -274,14 +305,14 @@ describe("netron2", () => {
                     parallel([
                         (cb) => {
                             const peers = netCoreTCP.peerBook.getAll();
-                            expect(Object.keys(peers)).to.have.length(1);
+                            assert.equal(peers.size, 1);
                             expect(Object.keys(netCoreTCP.swarm.muxedConns)).to.have.length(0);
 
                             cb();
                         },
                         (cb) => {
                             const peers = netCoreTCPnWS.peerBook.getAll();
-                            expect(Object.keys(peers)).to.have.length(1);
+                            assert.equal(peers.size, 1);
                             expect(Object.keys(netCoreTCPnWS.swarm.muxedConns)).to.have.length(0);
                             cb();
                         }
@@ -297,13 +328,13 @@ describe("netron2", () => {
                     parallel([
                         (cb) => {
                             const peers = netCoreTCPnWS.peerBook.getAll();
-                            expect(Object.keys(peers)).to.have.length(2);
+                            assert.equal(peers.size, 2);
                             expect(Object.keys(netCoreTCPnWS.swarm.muxedConns)).to.have.length(1);
                             cb();
                         },
                         (cb) => {
                             const peers = netCoreWS.peerBook.getAll();
-                            expect(Object.keys(peers)).to.have.length(1);
+                            assert.equal(peers.size, 1);
                             expect(Object.keys(netCoreWS.swarm.muxedConns)).to.have.length(1);
                             cb();
                         }
@@ -321,14 +352,14 @@ describe("netron2", () => {
                     parallel([
                         (cb) => {
                             const peers = netCoreTCPnWS.peerBook.getAll();
-                            expect(Object.keys(peers)).to.have.length(2);
+                            assert.equal(peers.size, 2);
                             expect(Object.keys(netCoreTCPnWS.swarm.muxedConns)).to.have.length(0);
 
                             cb();
                         },
                         (cb) => {
                             const peers = netCoreWS.peerBook.getAll();
-                            expect(Object.keys(peers)).to.have.length(1);
+                            assert.equal(peers.size, 1);
                             expect(Object.keys(netCoreWS.swarm.muxedConns)).to.have.length(0);
                             cb();
                         }
@@ -368,10 +399,8 @@ describe("netron2", () => {
 
                 const wstar = new WebRTCStar({ wrtc });
                 netCoreAll = createNetCore(["/ip4/0.0.0.0/tcp/0", "/ip4/127.0.0.1/tcp/25011/ws", "/ip4/127.0.0.1/tcp/24642/ws/p2p-webrtc-star"], {
-                    modules: {
-                        transport: [wstar],
-                        discovery: [wstar.discovery]
-                    }
+                    transport: [wstar],
+                    discovery: [wstar.discovery]
                 });
                 netCoreAll.handle("/echo/1.0.0", echo);
                 await netCoreAll.start();
@@ -387,10 +416,8 @@ describe("netron2", () => {
                 const wstar2 = new WebRTCStar({ wrtc });
 
                 netCoreWStar = createNetCore(["/ip4/127.0.0.1/tcp/24642/ws/p2p-webrtc-star"], {
-                    modules: {
-                        transport: [wstar2],
-                        discovery: [wstar2.discovery]
-                    }
+                    transport: [wstar2],
+                    discovery: [wstar2.discovery]
                 });
 
                 netCoreWStar.handle("/echo/1.0.0", echo);
@@ -410,7 +437,7 @@ describe("netron2", () => {
             const check = function (otherNode, muxed, peers, callback) {
                 let i = 1;
                 [netCoreAll, otherNode].forEach((netCore) => {
-                    expect(Object.keys(netCore.peerBook.getAll())).to.have.length(i-- ? peers : 1);
+                    assert.equal(netCore.peerBook.getAll().size, i-- ? peers : 1);
                     expect(Object.keys(netCore.swarm.muxedConns)).to.have.length(muxed);
                 });
                 callback();
@@ -474,12 +501,13 @@ describe("netron2", () => {
                 });
 
                 const wstar = new WSStar();
-                netCoreAll = createNetCore(["/ip4/0.0.0.0/tcp/0", "/ip4/127.0.0.1/tcp/25011/ws", "/ip4/127.0.0.1/tcp/24642/ws/p2p-websocket-star"
+                netCoreAll = createNetCore([
+                    "/ip4/0.0.0.0/tcp/0",
+                    "/ip4/127.0.0.1/tcp/25011/ws",
+                    "/ip4/127.0.0.1/tcp/24642/ws/p2p-websocket-star"
                 ], {
-                        modules: {
-                            transport: [wstar],
-                            discovery: [wstar.discovery]
-                        }
+                        transport: [wstar],
+                        discovery: [wstar.discovery]
                     });
                 wstar.lazySetId(netCoreAll.peerInfo.id);
                 netCoreAll.handle("/echo/1.0.0", echo);
@@ -496,10 +524,8 @@ describe("netron2", () => {
                 const wstar2 = new WSStar({});
 
                 netCoreWStar = createNetCore(["/ip4/127.0.0.1/tcp/24642/ws/p2p-websocket-star"], {
-                    modules: {
-                        transport: [wstar2],
-                        discovery: [wstar2.discovery]
-                    }
+                    transport: [wstar2],
+                    discovery: [wstar2.discovery]
                 });
                 wstar.lazySetId(netCoreWStar.peerInfo.id);
                 netCoreWStar.handle("/echo/1.0.0", echo);
@@ -519,7 +545,7 @@ describe("netron2", () => {
             const check = function (otherNode, muxed, peers, done) {
                 let i = 1;
                 [netCoreAll, otherNode].forEach((netCore) => {
-                    expect(Object.keys(netCore.peerBook.getAll())).to.have.length(i-- ? peers : 1);
+                    assert.equal(netCore.peerBook.getAll().size, i-- ? peers : 1);
                     expect(Object.keys(netCore.swarm.muxedConns)).to.have.length(muxed);
                 });
                 done();

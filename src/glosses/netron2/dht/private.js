@@ -34,7 +34,7 @@ module.exports = (dht) => ({
             if (dht.peerBook.has(p)) {
                 return dht.peerBook.get(p);
             }
-            return dht.peerBook.put(new PeerInfo(p));
+            return dht.peerBook.set(new PeerInfo(p));
         });
     },
     /**
@@ -136,7 +136,7 @@ module.exports = (dht) => ({
      * @private
      */
     _add(peer) {
-        peer = dht.peerBook.put(peer);
+        peer = dht.peerBook.set(peer);
         dht.routingTable.add(peer.id);
     },
     /**
@@ -185,7 +185,7 @@ module.exports = (dht) => ({
 
             const out = msg.closerPeers
                 .filter((pInfo) => !dht._isSelf(pInfo.id))
-                .map((pInfo) => dht.peerBook.put(pInfo));
+                .map((pInfo) => dht.peerBook.set(pInfo));
 
             callback(null, out);
         });
@@ -489,7 +489,7 @@ module.exports = (dht) => ({
                 if (dht.peerBook.has(id)) {
                     info = dht.peerBook.get(id);
                 } else {
-                    info = dht.peerBook.put(new PeerInfo(id));
+                    info = dht.peerBook.set(new PeerInfo(id));
                 }
                 out.push(info);
             });
@@ -508,7 +508,7 @@ module.exports = (dht) => ({
                         dht._log("(%s) found %s provider entries", dht.peerInfo.id.asBase58(), provs.length);
 
                         provs.forEach((prov) => {
-                            out.push(dht.peerBook.put(prov));
+                            out.push(dht.peerBook.set(prov));
                         });
 
                         // hooray we have all that we want

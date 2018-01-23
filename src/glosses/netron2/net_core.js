@@ -12,63 +12,101 @@ const {
 
 const NOT_STARTED_ERROR_MESSAGE = "The netcore is not started yet";
 
-export default class NetCore extends event.Emitter {
-    constructor(_modules, _peerInfo, _peerBook, _options) {
-        super();
-        assert(_modules, "requires modules to equip netcore with features");
-        assert(_peerInfo, "requires a PeerInfo instance");
+const getMuxers = (muxers) => {
+    if (!muxers) {
+        return [adone.netron2.multiplex, adone.netron2.spdy];
+    }
 
-        this.modules = _modules;
-        this.peerInfo = _peerInfo;
-        this.peerBook = _peerBook || new PeerBook();
-        _options = _options || {};
-
-        this._isStarted = false;
-
-        this.swarm = new Swarm(this.peerInfo, this.peerBook);
-
-        if (this.modules.connection) {
-            // Attach stream multiplexers
-            if (this.modules.connection.muxer) {
-                let muxers = this.modules.connection.muxer;
-                muxers = util.arrify(muxers);
-                muxers.forEach((muxer) => this.swarm.connection.addStreamMuxer(muxer));
-
-                // If muxer exists, we can use Identify
-                this.swarm.connection.reuse();
-
-                // If muxer exists, we can use Relay for listening/dialing
-                this.swarm.connection.enableCircuitRelay(_options.relay);
-
-                // Received incommind dial and muxer upgrade happened,
-                // reuse this muxed connection
-                this.swarm.on("peer-mux-established", (peerInfo) => {
-                    this.emit("peer:connect", peerInfo);
-                    this.peerBook.put(peerInfo);
-                });
-
-                this.swarm.on("peer-mux-closed", (peerInfo) => {
-                    this.emit("peer:disconnect", peerInfo);
-                });
-            }
-
-            // Attach crypto channels
-            if (this.modules.connection.crypto) {
-                let cryptos = this.modules.connection.crypto;
-                cryptos = util.arrify(cryptos);
-                cryptos.forEach((crypto) => {
-                    this.swarm.connection.crypto(crypto.tag, crypto.encrypt);
-                });
+    return util.arrify(muxers).map((muxer) => {
+        if (is.string(muxer)) {
+            switch (muxer.trim().toLowerCase()) {
+                case "spdy": return adone.netron2.spdy;
+                case "multiplex": return adone.netron2.multiplex;
+                default:
+                    throw new Error(`${muxer} muxer not available`);
             }
         }
 
+        return muxer;
+    });
+};
+
+const getTransports = (transports) => {
+    if (!transports) {
+        return [new adone.netron2.transport.TCP()];
+    }
+
+    return util.arrify(transports).map((transport) => {
+        if (is.string(transport)) {
+            switch (transport.trim().toLowerCase()) {
+                case "tcp": return new adone.netron2.transport.TCP();
+                case "ws": return new adone.netron2.transport.WS();
+                default:
+                    throw new Error(`${transport} muxer not available`);
+            }
+        }
+
+        return transport;
+    });
+};
+
+export default class NetCore extends event.Emitter {
+    constructor({ peer, transport, muxer, crypto, discovery, dht, relay } = {}) {
+        super();
+
+        if (!is.peerInfo(peer)) {
+            throw new adone.x.NotValid("PeerInfo instance is not valid");
+        }
+
+        if (!transport) {
+            throw new Error("No transports were present");
+        }
+
+        this.peerInfo = peer;
+        this.transports = getTransports(transport);
+        this.muxers = getMuxers(muxer);
+        this.cryptos = util.arrify(crypto);
+        this.discovery = discovery;
+        this.peerBook = new PeerBook();
+
+        this.started = false;
+
+        this.swarm = new Swarm(this.peerInfo, this.peerBook);
+
+        // Attach stream multiplexers
+        if (this.muxers) {
+            this.muxers.forEach((muxer) => this.swarm.connection.addStreamMuxer(muxer));
+
+            // If muxer exists, we can use Identify
+            this.swarm.connection.reuse();
+
+            // If muxer exists, we can use Relay for listening/dialing
+            this.swarm.connection.enableCircuitRelay(relay);
+
+            // Received incommind dial and muxer upgrade happened,
+            // reuse this muxed connection
+            this.swarm.on("peer-mux-established", (peerInfo) => {
+                this.emit("peer:connect", peerInfo);
+            });
+
+            this.swarm.on("peer-mux-closed", (peerInfo) => {
+                this.emit("peer:disconnect", peerInfo);
+                // this.peerBook.delete(peerInfo);
+            });
+        }
+
+        // Attach crypto channels
+        this.cryptos.forEach((crypto) => {
+            this.swarm.connection.crypto(crypto.tag, crypto.encrypt);
+        });
+
         // Attach discovery mechanisms
-        if (this.modules.discovery) {
-            let discoveries = this.modules.discovery;
+        if (discovery) {
+            let discoveries = discovery;
             discoveries = util.arrify(discoveries);
 
-            discoveries.forEach((discovery) => {
-                discovery.on("peer", (peerInfo) => this.emit("peer:discovery", peerInfo));
+            discoveries.forEach((d) => {
+                d.on("peer", (peerInfo) => this.emit("peer:discovery", peerInfo));
             });
         }
 
@@ -76,11 +114,8 @@ export default class NetCore extends event.Emitter {
         Ping.mount(this.swarm);
 
         // dht provided components (peerRouting, contentRouting, dht)
-        if (_modules.DHT) {
-            this._dht = new this.modules.DHT(this.swarm, {
-                kBucketSize: 20,
-                datastore: _options.DHT && _options.DHT.datastore
-            });
+        if (dht) {
+            this._dht = new adone.netron2.dht.KadDHT(this.swarm, is.plainObject(dht) ? dht : {});
         }
 
         this.peerRouting = {
@@ -134,13 +169,6 @@ export default class NetCore extends event.Emitter {
             }
         };
 
-        if (!this.modules.transport) {
-            throw new Error("no transports were present");
-        }
-
-        this.modules.transport = util.arrify(this.modules.transport);
-        const transports = this.modules.transport;
-
         // so that we can have webrtc-star addrs without adding manually the id
         const maOld = [];
         const maNew = [];
@@ -153,7 +181,7 @@ export default class NetCore extends event.Emitter {
         this.peerInfo.multiaddrs.replace(maOld, maNew);
 
         const multiaddrs = this.peerInfo.multiaddrs.toArray();
-        transports.forEach((transport) => {
+        this.transports.forEach((transport) => {
             if (transport.filter(multiaddrs).length > 0) {
                 this.swarm.transport.add(transport.tag || transport.constructor.name, transport);
             }
@@ -164,100 +192,100 @@ export default class NetCore extends event.Emitter {
      * Start the net core: create listeners on the multiaddrs the Peer wants to listen
      */
     async start() {
-        const transports = this.modules.transport;
-        let ws;
-        transports.forEach((transport) => {
-            if (transport.constructor && transport.constructor.name === "WebSockets") {
-                // TODO find a cleaner way to signal that a transport is always used for dialing, even if no listener
-                ws = transport;
-            }
-        });
-
-        return new Promise((resolve, reject) => {
-            series([
-                (cb) => this.swarm.listen(cb),
-                (cb) => {
-                    if (ws && !this.swarm.transport.has(ws.tag || ws.constructor.name)) {
-                        // always add dialing on websockets
-                        this.swarm.transport.add(ws.tag || ws.constructor.name, ws);
-                    }
-
-                    // all transports need to be setup before discover starts
-                    if (this.modules.discovery) {
-                        return each(this.modules.discovery, (d, cb) => d.start(cb), cb);
-                    }
-                    cb();
-                },
-                (cb) => {
-                    // TODO: chicken-and-egg problem:
-                    // have to set started here because DHT requires libp2p is already started
-                    this._isStarted = true;
-                    if (this._dht) {
-                        return this._dht.start(cb);
-                    }
-                    cb();
-                },
-                (cb) => {
-                    // detect which multiaddrs we don't have a transport for and remove them
-                    const multiaddrs = this.peerInfo.multiaddrs.toArray();
-                    transports.forEach((transport) => {
-                        multiaddrs.forEach((multiaddr) => {
-                            if (!multiaddr.toString().match(/\/p2p-circuit($|\/)/) &&
-                                !transports.find((transport) => transport.filter(multiaddr).length > 0)) {
-                                this.peerInfo.multiaddrs.delete(multiaddr);
-                            }
-                        });
-                    });
-                    cb();
-                },
-                (cb) => {
-                    this.emit("start");
-                    cb();
+        if (!this.started) {
+            const transports = this.transports;
+            let ws;
+            transports.forEach((transport) => {
+                if (transport.constructor && transport.constructor.name === "WebSockets") {
+                    // TODO find a cleaner way to signal that a transport is always used for dialing, even if no listener
+                    ws = transport;
                 }
-            ], (err) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve();
             });
-        });
+
+            return new Promise((resolve, reject) => {
+                series([
+                    (cb) => this.swarm.listen(cb),
+                    (cb) => {
+                        if (ws && !this.swarm.transport.has(ws.tag || ws.constructor.name)) {
+                            // always add dialing on websockets
+                            this.swarm.transport.add(ws.tag || ws.constructor.name, ws);
+                        }
+
+                        // all transports need to be setup before discover starts
+                        if (this.discovery) {
+                            return each(this.discovery, (d, cb) => d.start(cb), cb);
+                        }
+                        cb();
+                    },
+                    (cb) => {
+                        // TODO: chicken-and-egg problem:
+                        // have to set started here because DHT requires libp2p is already started
+                        this.started = true;
+                        if (this._dht) {
+                            return this._dht.start(cb);
+                        }
+                        cb();
+                    },
+                    (cb) => {
+                        // detect which multiaddrs we don't have a transport for and remove them
+                        const multiaddrs = this.peerInfo.multiaddrs.toArray();
+                        transports.forEach((transport) => {
+                            multiaddrs.forEach((multiaddr) => {
+                                if (!multiaddr.toString().match(/\/p2p-circuit($|\/)/) &&
+                                    !transports.find((transport) => transport.filter(multiaddr).length > 0)) {
+                                    this.peerInfo.multiaddrs.delete(multiaddr);
+                                }
+                            });
+                        });
+                        cb();
+                    },
+                    (cb) => {
+                        this.emit("start");
+                        cb();
+                    }
+                ], (err) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    resolve();
+                });
+            });
+        }
     }
 
     /**
-     * Stop the net core by closing its listeners and open connections
+     * Stop the netcore if it already started by closing its listeners and open connections.
      */
     stop() {
-        if (this.modules.discovery) {
-            this.modules.discovery.forEach((discovery) => {
-                setImmediate(() => discovery.stop(() => { }));
+        if (this.started) {
+            if (this.discovery) {
+                this.discovery.forEach((d) => {
+                    setImmediate(() => d.stop(() => { }));
+                });
+            }
+
+            return new Promise((resolve, reject) => {
+                series([
+                    (cb) => {
+                        if (this._dht) {
+                            return this._dht.stop(cb);
+                        }
+                        cb();
+                    },
+                    (cb) => this.swarm.close(cb),
+                    (cb) => {
+                        this.emit("stop");
+                        cb();
+                    }
+                ], (err) => {
+                    this.started = false;
+                    if (err) {
+                        return reject(err);
+                    }
+                    resolve();
+                });
             });
         }
-
-        return new Promise((resolve, reject) => {
-            series([
-                (cb) => {
-                    if (this._dht) {
-                        return this._dht.stop(cb);
-                    }
-                    cb();
-                },
-                (cb) => this.swarm.close(cb),
-                (cb) => {
-                    this.emit("stop");
-                    cb();
-                }
-            ], (err) => {
-                this._isStarted = false;
-                if (err) {
-                    return reject(err);
-                }
-                resolve();
-            });
-        });
-    }
-
-    isStarted() {
-        return this._isStarted;
     }
 
     async ping(peer) {
@@ -267,15 +295,12 @@ export default class NetCore extends event.Emitter {
     }
 
     async connect(peer, protocol) {
-        // assert(this.isStarted(), NOT_STARTED_ERROR_MESSAGE);
-
         const peerInfo = await this._getPeerInfo(peer);
         return new Promise((resolve, reject) => {
             this.swarm.dial(peerInfo, protocol, (err, conn) => {
                 if (err) {
                     return reject(err);
                 }
-                this.peerBook.put(peerInfo);
                 resolve(conn);
             });
         });
