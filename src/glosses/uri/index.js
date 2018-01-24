@@ -625,7 +625,7 @@ export const parse = function (string, parts) {
         pos = string.indexOf(":");
         if (pos > -1) {
             parts.protocol = string.substring(0, pos) || null;
-            if (parts.protocol && !parts.protocol.match(adone.regex.protocol)) {
+            if (parts.protocol && !parts.protocol.match(adone.regex.protocol())) {
                 // : may be within the path
                 parts.protocol = undefined;
             } else if (string.substring(pos + 1, pos + 3) === "//") {
@@ -735,7 +735,7 @@ export const buildHost = function (parts) {
 
     if (!parts.hostname) {
         return "";
-    } else if (adone.regex.ip6.test(parts.hostname)) {
+    } else if (adone.regex.ip6().test(parts.hostname)) {
         t += `[${parts.hostname}]`;
     } else {
         t += parts.hostname;
@@ -1107,7 +1107,7 @@ export class URI {
             // accept trailing ://
             v = v.replace(/:(\/\/)?$/, "");
 
-            if (!v.match(adone.regex.protocol)) {
+            if (!v.match(adone.regex.protocol())) {
                 throw new TypeError(`Protocol "${v}" contains characters other than [A-Z0-9.+-] or doesn't start with [A-Z]`);
             }
         }
@@ -1332,13 +1332,13 @@ export class URI {
 
         if (this._parts.hostname) {
             relative = false;
-            ip4 = adone.regex.ip4.test(this._parts.hostname);
-            ip6 = adone.regex.ip6.test(this._parts.hostname);
+            ip4 = adone.regex.ip4().test(this._parts.hostname);
+            ip6 = adone.regex.ip6().test(this._parts.hostname);
             ip = ip4 || ip6;
             name = !ip;
             sld = name && SLD && SLD.has(this._parts.hostname);
-            idn = name && adone.regex.idn.test(this._parts.hostname);
-            punycode = name && adone.regex.punycode.test(this._parts.hostname);
+            idn = name && adone.regex.idn().test(this._parts.hostname);
+            punycode = name && adone.regex.punycode().test(this._parts.hostname);
         }
 
         switch (what.toLowerCase()) {

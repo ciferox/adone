@@ -925,9 +925,9 @@ const binaryExtensions = new Set([
 export const binaryExtension = (x) => binaryExtensions.has(x);
 export const binaryPath = (x) => binaryExtensions.has(adone.std.path.extname(x).slice(1).toLowerCase());
 
-export const ip4 = (ip) => adone.regex.ip4.test(ip);
+export const ip4 = (ip) => adone.regex.ip4().test(ip);
 
-export const ip6 = (ip) => adone.regex.ip6.test(ip);
+export const ip6 = (ip) => adone.regex.ip6().test(ip);
 
 export const ip = (ip, version = adone.null) => {
     if (version === adone.null) {

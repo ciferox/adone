@@ -20,11 +20,11 @@ describe("regex", () => {
         ];
 
         for (let i = 0; i < invalids.length; i++) {
-            assert.true(regex.filename.test(valids[i]));
+            assert.true(regex.filename().test(valids[i]));
         }
 
         for (let i = 0; i < invalids.length; i++) {
-            assert.false(regex.filename.test(invalids[i]));
+            assert.false(regex.filename().test(invalids[i]));
         }
     });
 });

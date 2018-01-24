@@ -1,6 +1,6 @@
 adone.asNamespace(exports);
 
-export const filename = /^[\w\-. ]+$/;
+export const filename = () => /^[\w\-. ]+$/;
 
 const v4 = "(?:25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]\\d|\\d)(?:\\.(?:25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]\\d|\\d)){3}";
 const v6seg = "[0-9a-fA-F]{1,4}";
@@ -17,17 +17,17 @@ const v6 = `
 )(%[0-9a-zA-Z]{1,})?                                           // %eth0            %1
 `.replace(/\s*\/\/.*$/gm, "").replace(/\n/g, "").trim();
 
-export const ip4 = new RegExp(`^${v4}$`);
-export const ip6 = new RegExp(`^${v6}$`);
-export const protocol = /^[a-z][a-z0-9.+-]*$/i;
-export const idn = /[^a-z0-9\._-]/i;
-export const punycode = /(xn--)/i;
+export const ip4 = () => new RegExp(`^${v4}$`);
+export const ip6 = () => new RegExp(`^${v6}$`);
+export const protocol = () => /^[a-z][a-z0-9.+-]*$/i;
+export const idn = () => /[^a-z0-9\._-]/i;
+export const punycode = () => /(xn--)/i;
 
 // http://mathiasbynens.be/demo/url-regex
 // http://rodneyrehm.de/t/url-regex.html
-export const uri = /\b((?:[a-z][\w-]+:(?:\/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}\/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))/ig;
+export const uri = () => /\b((?:[a-z][\w-]+:(?:\/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}\/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'".,<>?«»“”‘’]))/ig;
 
-export const uuid4 = /^[0-9a-f]{8}-[0-9a-f]{4}-[4][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-export const uuid5 = /^[0-9a-f]{8}-[0-9a-f]{4}-[5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+export const uuid4 = () => /^[0-9a-f]{8}-[0-9a-f]{4}-[4][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+export const uuid5 = () => /^[0-9a-f]{8}-[0-9a-f]{4}-[5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export const ansi = () => /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-PRZcf-nqry=><]/g;

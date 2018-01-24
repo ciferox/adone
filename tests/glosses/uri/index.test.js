@@ -23,19 +23,19 @@ describe("uri", () => {
         });
         it("new URI(string)", () => {
             const u = new URI("http://example.org/");
-            assert.ok instanceof URI, "instanceof URI");
-            assert.okis.undefined(u._parts.hostname), "host undefined");
+            assert.ok(u instanceof URI, "instanceof URI");
+            assert.ok(!is.undefined(u._parts.hostname), "host undefined");
         });
         it("new URI(object)", () => {
             const u = new URI({ protocol: "http", hostname: "example.org" });
-            assert.ok instanceof URI, "instanceof URI");
-            assert.okis.undefined(u._parts.hostname), "host undefined");
+            assert.ok(u instanceof URI, "instanceof URI");
+            assert.ok(!is.undefined(u._parts.hostname), "host undefined");
         });
 
         it("new URI(URI)", () => {
             const u = new URI(new URI({ protocol: "http", hostname: "example.org" }));
-            assert.ok instanceof URI, "instanceof URI");
-            assert.okis.undefined(u._parts.hostname), "host undefined");
+            assert.ok(u instanceof URI, "instanceof URI");
+            assert.ok(!is.undefined(u._parts.hostname), "host undefined");
         });
         it("new URI(new Date())", () => {
             assert.throws(() => {
@@ -49,8 +49,8 @@ describe("uri", () => {
         });
         it("function URI(string)", () => {
             const u = new URI("http://example.org/");
-            assert.ok instanceof URI, "instanceof URI");
-            assert.okis.undefined(u._parts.hostname), "host undefined");
+            assert.ok(u instanceof URI, "instanceof URI");
+            assert.ok(!is.undefined(u._parts.hostname), "host undefined");
         });
         it('function URI(string) with invalid port "port" throws', () => {
             assert.throws(() => {
@@ -137,7 +137,7 @@ describe("uri", () => {
 
             try {
                 u.protocol("f:t");
-                assert.okalse, "do not accept invalid protocol");
+                assert.ok(false, "do not accept invalid protocol");
             } catch (e) {
                 //
             }
@@ -435,9 +435,13 @@ describe("uri", () => {
             assert.equal(u.hash(), "", "href removed hash");
             assert.equal(u.href(), "../path/index.html", "href removed url");
 
-            /*jshint -W053 */
+            /**
+             * jshint -W053
+             */
             u.href(new String("/narf"));
-            /*jshint +W053 */
+            /**
+             * jshint +W053
+             */
             assert.equal(u.pathname(), "/narf", "href from String instance");
         });
         it("resource", () => {
@@ -917,15 +921,15 @@ describe("uri", () => {
 
             u = new URI("?bar=1&bar=1&bar=1");
             u.duplicateQueryParameters(true);
-            assert.ok._parts.duplicateQueryParameters, "duplicateQueryParameters enabled");
+            assert.ok(u._parts.duplicateQueryParameters, "duplicateQueryParameters enabled");
             u.normalizeQuery();
             assert.equal(u.toString(), "?bar=1&bar=1&bar=1", "parameters NOT de-duplicated");
-            assert.ok._parts.duplicateQueryParameters, "duplicateQueryParameters still enabled after normalizeQuery()");
+            assert.ok(u._parts.duplicateQueryParameters, "duplicateQueryParameters still enabled after normalizeQuery()");
 
             u.duplicateQueryParameters(false);
             u.normalizeQuery();
             assert.equal(u.toString(), "?bar=1", "parameters de-duplicated again");
-            assert.oku._parts.duplicateQueryParameters, "duplicateQueryParameters still disabled after normalizeQuery()");
+            assert.ok(!u._parts.duplicateQueryParameters, "duplicateQueryParameters still disabled after normalizeQuery()");
 
             URI.duplicateQueryParameters = true;
             u = new URI("?bar=1&bar=1&bar=1");
@@ -937,7 +941,7 @@ describe("uri", () => {
             // test cloning
             u = new URI("?bar=1&bar=1&bar=1");
             u = u.duplicateQueryParameters(true).clone();
-            assert.ok._parts.duplicateQueryParameters, "duplicateQueryParameters still enabled after clone()");
+            assert.ok(u._parts.duplicateQueryParameters, "duplicateQueryParameters still enabled after clone()");
             u.normalizeQuery();
             assert.equal(u.toString(), "?bar=1&bar=1&bar=1", "parameters NOT de-duplicated");
 
@@ -1341,9 +1345,9 @@ describe("uri", () => {
             }
             ];
 
-            for (var i = 0, t; (t = tests[i]); i++) {
-                let u = new URI(t.url),
-                    r = u.absoluteTo(t.base);
+            for (let i = 0, t; (t = tests[i]); i++) {
+                const u = new URI(t.url);
+                const r = u.absoluteTo(t.base);
 
                 assert.equal(`${r}`, t.result, t.name);
             }
@@ -1382,8 +1386,8 @@ describe("uri", () => {
             };
 
             for (const key in map) {
-                let u = new URI(key),
-                    r = u.absoluteTo(base);
+                const u = new URI(key);
+                const r = u.absoluteTo(base);
 
                 assert.equal(String(r), map[key], `resolution "${key}"`);
             }
@@ -1540,10 +1544,12 @@ describe("uri", () => {
                 }
 
                 if (t.throws) {
-                    /*jshint sub:false */
-                    assert.okaught, `${t.name} should throw exception`);
+                    /**
+                     * jshint sub:false
+                     */
+                    assert.ok(caught, `${t.name} should throw exception`);
                 } else {
-                    assert.okcaught, `${t.name} should not throw exception`);
+                    assert.ok(!caught, `${t.name} should not throw exception`);
                     assert.equal(String(r), t.result, t.name);
 
                     const a = r.absoluteTo(t.base);
@@ -1571,7 +1577,9 @@ describe("uri", () => {
 
     describe("static helpers", () => {
         it("withinString", () => {
-            /*jshint laxbreak: true */
+            /**
+             * jshint laxbreak: true
+             */
             const source = "Hello www.example.com,\n"
                 + "http://google.com is a search engine, like http://www.bing.com\n"
                 + "http://exämple.org/foo.html?baz=la#bumm is an IDN URL,\n"
@@ -1588,7 +1596,9 @@ describe("uri", () => {
                 + "yet <a>https://example.com/with_(balanced_parentheses)</a> and <a>https://example.com/with_(balanced_parentheses).txt</a> contain the closing parens, but "
                 + "<a>https://example.com/with_unbalanced_parentheses</a>) does not.\n"
                 + "Note that www. is not a URL and neither is http://.";
-            /*jshint laxbreak: false */
+            /**
+             * jshint laxbreak: false
+             */
             const result = uri.withinString(source, (url) => {
                 return `<a>${url}</a>`;
             });
@@ -1599,12 +1609,16 @@ describe("uri", () => {
             const decorate = function (url) {
                 return `<a>${url}</a>`;
             };
-            /*jshint laxbreak: true */
+            /**
+             * jshint laxbreak: true
+             */
             const source = "Hello www.example.com,\n"
                 + "proto://example.org/foo.html?baz=la#bumm is an URL.\n";
             const expected = "Hello <a>www.example.com</a>,\n"
                 + "proto://example.org/foo.html?baz=la#bumm is an URL.\n";
-            /*jshint laxbreak: false */
+            /**
+             * jshint laxbreak: false
+             */
             const result = uri.withinString(source, decorate, { ignore: /^proto:/i });
 
             assert.equal(result, expected, "filtered in string URI identification");
@@ -1613,7 +1627,9 @@ describe("uri", () => {
             const decorate = function (url) {
                 return `<a>${url}</a>`;
             };
-            /*jshint laxbreak: true */
+            /**
+             * jshint laxbreak: true
+             */
             const source = "Hello www.example.com,\n"
                 + "<a href=http://example.org/foo.html?baz=la#bumm is an URL</a>.\n"
                 + '<a href="http://example.org/foo.html?baz=la#bumm> is an URL</a>.\n'
@@ -1622,13 +1638,17 @@ describe("uri", () => {
                 + "<a href=http://example.org/foo.html?baz=la#bumm is an URL</a>.\n"
                 + '<a href="http://example.org/foo.html?baz=la#bumm> is an URL</a>.\n'
                 + "<a href='http://example.org/foo.html?baz=la#bumm'> is an URL</a>.\n";
-            /*jshint laxbreak: false */
+            /**
+             * jshint laxbreak: false
+             */
             const result = uri.withinString(source, decorate, { ignoreHtml: true });
 
             assert.equal(result, expected, "filtered in string URI identification");
         });
         it("withinString - capture only", () => {
-            /*jshint laxbreak: true */
+            /**
+             * jshint laxbreak: true
+             */
             const source = "Hello www.example.com,\n"
                 + "http://google.com is a search engine, like http://www.bing.com\n"
                 + "http://exämple.org/foo.html?baz=la#bumm is an IDN URL,\n"
@@ -1645,7 +1665,9 @@ describe("uri", () => {
                 "http://example.org"
             ];
 
-            /*jshint laxbreak: false */
+            /**
+             * jshint laxbreak: false
+             */
             const links = [];
             const result = uri.withinString(source, (url) => {
                 links.push(url);
@@ -1832,14 +1854,14 @@ describe("uri", () => {
         it("decode malformed URI", () => {
             try {
                 decodeURIComponent("%%20");
-                assert.okalse, "decodeURIComponent() must throw URIError: URI malformed");
+                assert.ok(false, "decodeURIComponent() must throw URIError: URI malformed");
             } catch (e) {
                 //
             }
 
             try {
                 uri.decode("%%20");
-                assert.okalse, "uri.decode() must throw URIError: URI malformed");
+                assert.ok(false, "uri.decode() must throw URIError: URI malformed");
             } catch (e) {
                 //
             }
@@ -1921,10 +1943,10 @@ describe("uri", () => {
             // furi.pathname('/hello.html');
             // uri.toString() === 'http://example.org/#!/hello.html'
 
-            assert.ok.fragment(true) instanceof URI, "URI instance for missing fragment");
+            assert.ok(u.fragment(true) instanceof URI, "URI instance for missing fragment");
 
             u = new URI("http://example.org/#");
-            assert.ok.fragment(true) instanceof URI, "URI instance for empty fragment");
+            assert.ok(u.fragment(true) instanceof URI, "URI instance for empty fragment");
 
             u = new URI("http://example.org/#!/foo/bar/baz.html");
             const f = u.fragment(true);
@@ -1943,22 +1965,22 @@ describe("uri", () => {
 
             u.fragment("#!/foo/bar/baz.html");
             assert.equal(u.fragment(), "!/foo/bar/baz.html", "unparsed ?");
-            assert.ok.fragment(true) instanceof URI, "parsing ? prefix - is URI");
+            assert.ok(u.fragment(true) instanceof URI, "parsing ? prefix - is URI");
             assert.equal(u.fragment(true).toString(), "", "parsing ? prefix - result");
 
             u.fragment("#?/foo/bar/baz.html");
             assert.equal(u.fragment(), "?/foo/bar/baz.html", "unparsed ?");
-            assert.ok.fragment(true) instanceof URI, "parsing ? prefix - is URI");
+            assert.ok(u.fragment(true) instanceof URI, "parsing ? prefix - is URI");
             assert.equal(u.fragment(true).toString(), "/foo/bar/baz.html", "parsing ? prefix - result");
 
             u.fragmentPrefix("§");
             assert.equal(u.fragment(), "?/foo/bar/baz.html", "unparsed §");
-            assert.ok.fragment(true) instanceof URI, "parsing § prefix - is URI");
+            assert.ok(u.fragment(true) instanceof URI, "parsing § prefix - is URI");
             assert.equal(u.fragment(true).toString(), "", "parsing § prefix - result");
 
             u.fragment("#§/foo/bar/baz.html");
             assert.equal(u.fragment(), "§/foo/bar/baz.html", "unparsed §");
-            assert.ok.fragment(true) instanceof URI, "parsing § prefix - is URI");
+            assert.ok(u.fragment(true) instanceof URI, "parsing § prefix - is URI");
             assert.equal(u.fragment(true).toString(), "/foo/bar/baz.html", "parsing § prefix - result");
 
             URI.fragmentPrefix = "!";
