@@ -72,7 +72,7 @@ export default class ExTable extends adone.terminal.ui.widget.Element {
             let str = "";
             d.forEach((r, i) => {
                 const colsize = self.options.columnWidth[i];
-                const strip = adone.text.ansi.stripEscapeCodes(r.toString());
+                const strip = adone.text.stripAnsi(r.toString());
                 const ansiLen = r.toString().length - strip.length;
                 r = r.toString().substring(0, colsize + ansiLen); //compensate for ansi len
                 let spaceLength = colsize - strip.length + self.options.columnSpacing;

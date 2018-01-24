@@ -1,7 +1,7 @@
 {
   "type": "File",
   "start": 0,
-  "end": 16,
+  "end": 0,
   "loc": {
     "start": {
       "line": 1,
@@ -9,13 +9,13 @@
     },
     "end": {
       "line": 1,
-      "column": 16
+      "column": 0
     }
   },
   "program": {
     "type": "Program",
     "start": 0,
-    "end": 16,
+    "end": 0,
     "loc": {
       "start": {
         "line": 1,
@@ -23,97 +23,11 @@
       },
       "end": {
         "line": 1,
-        "column": 16
+        "column": 0
       }
     },
     "sourceType": "script",
-    "body": [
-      {
-        "type": "ExpressionStatement",
-        "start": 0,
-        "end": 16,
-        "loc": {
-          "start": {
-            "line": 1,
-            "column": 0
-          },
-          "end": {
-            "line": 1,
-            "column": 16
-          }
-        },
-        "expression": {
-          "type": "TaggedTemplateExpression",
-          "start": 0,
-          "end": 16,
-          "loc": {
-            "start": {
-              "line": 1,
-              "column": 0
-            },
-            "end": {
-              "line": 1,
-              "column": 16
-            }
-          },
-          "tag": {
-            "type": "Identifier",
-            "start": 0,
-            "end": 9,
-            "loc": {
-              "start": {
-                "line": 1,
-                "column": 0
-              },
-              "end": {
-                "line": 1,
-                "column": 9
-              },
-              "identifierName": "sampleTag"
-            },
-            "name": "sampleTag"
-          },
-          "quasi": {
-            "type": "TemplateLiteral",
-            "start": 9,
-            "end": 16,
-            "loc": {
-              "start": {
-                "line": 1,
-                "column": 9
-              },
-              "end": {
-                "line": 1,
-                "column": 16
-              }
-            },
-            "expressions": [],
-            "quasis": [
-              {
-                "type": "TemplateElement",
-                "start": 10,
-                "end": 15,
-                "loc": {
-                  "start": {
-                    "line": 1,
-                    "column": 10
-                  },
-                  "end": {
-                    "line": 1,
-                    "column": 15
-                  }
-                },
-                "value": {
-                  "raw": "\\u{\\`",
-                  "cooked": null
-                },
-                "tail": true
-              }
-            ]
-          }
-        }
-      }
-    ],
+    "body": [],
     "directives": []
   }
 }

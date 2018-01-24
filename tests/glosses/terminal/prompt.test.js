@@ -35,7 +35,7 @@ describe("terminal", "prompt", () => {
         }
 
         data() {
-            return adone.text.ansi.stripEscapeCodes(this.chunks.reduce((x, y) => x + y));
+            return adone.text.stripAnsi(this.chunks.reduce((x, y) => x + y));
         }
     }
 
@@ -2036,21 +2036,21 @@ describe("terminal", "prompt", () => {
         describe("Separator", () => {
             const { Separator } = terminal;
 
-            const { stripEscapeCodes } = adone.text.ansi;
+            const { stripAnsi } = adone.text;
 
             it("should set a default", () => {
                 const sep = new Separator(term);
-                expect(stripEscapeCodes(sep.toString())).to.equal("──────────────");
+                expect(stripAnsi(sep.toString())).to.equal("──────────────");
             });
 
             it("should set user input as separator", () => {
                 const sep = new Separator(term, "foo bar");
-                expect(stripEscapeCodes(sep.toString())).to.equal("foo bar");
+                expect(stripAnsi(sep.toString())).to.equal("foo bar");
             });
 
             it("instances should be stringified when appended to a string", () => {
                 const sep = new Separator(term, "foo bar");
-                expect(stripEscapeCodes(String(sep))).to.equal("foo bar");
+                expect(stripAnsi(String(sep))).to.equal("foo bar");
             });
 
             it("should expose a helper function to check for separator", () => {

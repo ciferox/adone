@@ -1,7 +1,7 @@
 {
   "type": "File",
   "start": 0,
-  "end": 9,
+  "end": 0,
   "loc": {
     "start": {
       "line": 1,
@@ -9,13 +9,13 @@
     },
     "end": {
       "line": 1,
-      "column": 9
+      "column": 0
     }
   },
   "program": {
     "type": "Program",
     "start": 0,
-    "end": 9,
+    "end": 0,
     "loc": {
       "start": {
         "line": 1,
@@ -23,81 +23,11 @@
       },
       "end": {
         "line": 1,
-        "column": 9
+        "column": 0
       }
     },
     "sourceType": "script",
-    "body": [
-      {
-        "type": "BlockStatement",
-        "start": 0,
-        "end": 9,
-        "loc": {
-          "start": {
-            "line": 1,
-            "column": 0
-          },
-          "end": {
-            "line": 1,
-            "column": 9
-          }
-        },
-        "body": [
-          {
-            "type": "VariableDeclaration",
-            "start": 2,
-            "end": 7,
-            "loc": {
-              "start": {
-                "line": 1,
-                "column": 2
-              },
-              "end": {
-                "line": 1,
-                "column": 7
-              }
-            },
-            "declarations": [
-              {
-                "type": "VariableDeclarator",
-                "start": 6,
-                "end": 7,
-                "loc": {
-                  "start": {
-                    "line": 1,
-                    "column": 6
-                  },
-                  "end": {
-                    "line": 1,
-                    "column": 7
-                  }
-                },
-                "id": {
-                  "type": "Identifier",
-                  "start": 6,
-                  "end": 7,
-                  "loc": {
-                    "start": {
-                      "line": 1,
-                      "column": 6
-                    },
-                    "end": {
-                      "line": 1,
-                      "column": 7
-                    },
-                    "identifierName": "x"
-                  },
-                  "name": "x"
-                },
-                "init": null
-              }
-            ],
-            "kind": "let"
-          }
-        ],
-        "directives": []
-      }
-    ],
+    "body": [],
     "directives": []
   }
 }

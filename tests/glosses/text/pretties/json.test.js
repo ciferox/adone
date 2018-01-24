@@ -1,4 +1,7 @@
-const { text: { pretty }, terminal } = adone;
+const {
+    text: { pretty },
+    terminal: { styler }
+} = adone;
 
 describe("text", "pretty", "json", () => {
     it("should output a string exactly equal as the input", () => {
@@ -27,8 +30,8 @@ describe("text", "pretty", "json", () => {
         const output = pretty.json(input);
 
         assert.equal(output, [
-            terminal.green("- ") + input[0],
-            terminal.green("- ") + input[1]
+            styler.green("- ") + input[0],
+            styler.green("- ") + input[1]
         ].join("\n"));
     });
 
@@ -39,8 +42,8 @@ describe("text", "pretty", "json", () => {
         const output = pretty.json(input);
 
         assert.equal(output, [
-            terminal.green("- ") + input[0],
-            `${terminal.green("- ")}function() {}`
+            styler.green("- ") + input[0],
+            `${styler.green("- ")}function() {}`
         ].join("\n"));
     });
 
@@ -49,11 +52,11 @@ describe("text", "pretty", "json", () => {
         const output = pretty.json(input);
 
         assert.equal(output, [
-            terminal.green("- ") + input[0],
-            terminal.green("- "),
-            `  ${terminal.green("- ")}${input[1][0]}`,
-            `  ${terminal.green("- ")}${input[1][1]}`,
-            terminal.green("- ") + input[2]
+            styler.green("- ") + input[0],
+            styler.green("- "),
+            `  ${styler.green("- ")}${input[1][0]}`,
+            `  ${styler.green("- ")}${input[1][1]}`,
+            styler.green("- ") + input[2]
         ].join("\n"));
     });
 
@@ -62,8 +65,8 @@ describe("text", "pretty", "json", () => {
         const output = pretty.json(input);
 
         assert.equal(output, [
-            `${terminal.green("param1: ")}first string`,
-            `${terminal.green("param2: ")}second string`
+            `${styler.green("param1: ")}first string`,
+            `${styler.green("param2: ")}second string`
         ].join("\n"));
     });
 
@@ -75,10 +78,10 @@ describe("text", "pretty", "json", () => {
         const output = pretty.json(input);
 
         assert.equal(output, [
-            terminal.green("firstParam: "),
-            `  ${terminal.green("subparam: ")} first string`,
-            `  ${terminal.green("subparam2: ")}another string`,
-            `${terminal.green("secondParam: ")}second string`
+            styler.green("firstParam: "),
+            `  ${styler.green("subparam: ")} first string`,
+            `  ${styler.green("subparam2: ")}another string`,
+            `${styler.green("secondParam: ")}second string`
         ].join("\n"));
     });
 
@@ -87,8 +90,8 @@ describe("text", "pretty", "json", () => {
         const output = pretty.json(input);
 
         assert.equal(output, [
-            `${terminal.green("veryLargeParam: ")}first string`,
-            `${terminal.green("param: ")}         second string`
+            `${styler.green("veryLargeParam: ")}first string`,
+            `${styler.green("param: ")}         second string`
         ].join("\n"));
     });
 
@@ -97,8 +100,8 @@ describe("text", "pretty", "json", () => {
         const output = pretty.json(input, { noAlign: true });
 
         assert.equal(output, [
-            `${terminal.green("veryLargeParam: ")}first string`,
-            `${terminal.green("param: ")}second string`
+            `${styler.green("veryLargeParam: ")}first string`,
+            `${styler.green("param: ")}second string`
         ].join("\n"));
     });
 
@@ -120,19 +123,19 @@ describe("text", "pretty", "json", () => {
         const output = pretty.json(input);
 
         assert.equal(output, [
-            terminal.green("firstParam: "),
-            `  ${terminal.green("subparam: ")} first string`,
-            `  ${terminal.green("subparam2: ")}another string`,
-            `  ${terminal.green("subparam3: ")}`,
-            `    ${terminal.green("- ")}different`,
-            `    ${terminal.green("- ")}values`,
-            `    ${terminal.green("- ")}in an array`,
-            `${terminal.green("secondParam: ")}second string`,
-            terminal.green("anArray: "),
-            `  ${terminal.green("- ")}`,
-            `    ${terminal.green("param3: ")} value`,
-            `    ${terminal.green("param10: ")}other value`,
-            terminal.green("emptyArray: "),
+            styler.green("firstParam: "),
+            `  ${styler.green("subparam: ")} first string`,
+            `  ${styler.green("subparam2: ")}another string`,
+            `  ${styler.green("subparam3: ")}`,
+            `    ${styler.green("- ")}different`,
+            `    ${styler.green("- ")}values`,
+            `    ${styler.green("- ")}in an array`,
+            `${styler.green("secondParam: ")}second string`,
+            styler.green("anArray: "),
+            `  ${styler.green("- ")}`,
+            `    ${styler.green("param3: ")} value`,
+            `    ${styler.green("param10: ")}other value`,
+            styler.green("emptyArray: "),
             "  (empty array)"
         ].join("\n"));
     });
@@ -142,8 +145,8 @@ describe("text", "pretty", "json", () => {
         const output = pretty.json(input, { keysColor: "blue" });
 
         assert.equal(output, [
-            `${terminal.blue("param1: ")}first string`,
-            `${terminal.blue("param2: ")}second string`
+            `${styler.blue("param1: ")}first string`,
+            `${styler.blue("param2: ")}second string`
         ].join("\n"));
     });
 
@@ -152,8 +155,8 @@ describe("text", "pretty", "json", () => {
         const output = pretty.json(input, { numberColor: "red" });
 
         assert.equal(output, [
-            terminal.green("param1: ") + terminal.red("17"),
-            terminal.green("param2: ") + terminal.red("22.3")
+            styler.green("param1: ") + styler.red("17"),
+            styler.green("param2: ") + styler.red("22.3")
         ].join("\n"));
     });
 
@@ -162,9 +165,9 @@ describe("text", "pretty", "json", () => {
         const output = pretty.json(input, { defaultIndentation: 4 });
 
         assert.equal(output, [
-            terminal.green("param: "),
-            `    ${terminal.green("- ")}first string`,
-            `    ${terminal.green("- ")}second string`
+            styler.green("param: "),
+            `    ${styler.green("- ")}first string`,
+            `    ${styler.green("- ")}second string`
         ].join("\n"));
     });
 
@@ -185,8 +188,8 @@ describe("text", "pretty", "json", () => {
         );
 
         assert.equal(output, [
-            terminal.blue("param1: ") + terminal.red("first string"),
-            terminal.blue("param2: ") + terminal.red("second string")
+            styler.blue("param1: ") + styler.red("first string"),
+            styler.blue("param2: ") + styler.red("second string")
         ].join("\n"));
     });
 
@@ -205,15 +208,15 @@ describe("text", "pretty", "json", () => {
         let input = { installs: ["first string", "second string", false, 13] };
         let output = pretty.json(input, { inlineArrays: true });
 
-        assert.equal(output, `${terminal.green("installs: ")}first string, second string, false, 13`);
+        assert.equal(output, `${styler.green("installs: ")}first string, second string, false, 13`);
 
         input = { installs: [["first string", "second string"], "third string"] };
         output = pretty.json(input, { inlineArrays: true });
 
         assert.equal(output, [
-            terminal.green("installs: "),
-            `  ${terminal.green("- ")}first string, second string`,
-            `  ${terminal.green("- ")}third string`
+            styler.green("installs: "),
+            `  ${styler.green("- ")}first string, second string`,
+            `  ${styler.green("- ")}third string`
         ].join("\n"));
     });
 
@@ -227,8 +230,8 @@ describe("text", "pretty", "json", () => {
         const output = pretty.json(new Input());
 
         assert.equal(output, [
-            `${terminal.green("param1: ")}first string`,
-            `${terminal.green("param2: ")}second string`
+            `${styler.green("param1: ")}first string`,
+            `${styler.green("param2: ")}second string`
         ].join("\n"));
     });
 
@@ -237,26 +240,26 @@ describe("text", "pretty", "json", () => {
             const input = 12345;
             const output = pretty.json(input, {}, 4);
 
-            assert.equal(output, `    ${terminal.blue("12345")}`);
+            assert.equal(output, `    ${styler.blue("12345")}`);
         });
 
         it("should print booleans correctly ", () => {
             let input = true;
             let output = pretty.json(input, {}, 4);
 
-            assert.equal(output, `    ${terminal.green("true")}`);
+            assert.equal(output, `    ${styler.green("true")}`);
 
             input = false;
             output = pretty.json(input, {}, 4);
 
-            assert.equal(output, `    ${terminal.red("false")}`);
+            assert.equal(output, `    ${styler.red("false")}`);
         });
 
         it("should print a null object correctly ", () => {
             const input = null;
             const output = pretty.json(input, {}, 4);
 
-            assert.equal(output, `    ${terminal.grey("null")}`);
+            assert.equal(output, `    ${styler.grey("null")}`);
         });
 
         it("should print an Error correctly ", () => {
@@ -266,10 +269,10 @@ describe("text", "pretty", "json", () => {
             const output = pretty.json(input, {}, 4);
 
             assert.equal(output, [
-                `    ${terminal.green("message: ")}foo`,
-                `    ${terminal.green("stack: ")}`,
-                `      ${terminal.green("- ")}${stack[0]}`,
-                `      ${terminal.green("- ")}${stack[1]}`
+                `    ${styler.green("message: ")}foo`,
+                `    ${styler.green("stack: ")}`,
+                `      ${styler.green("- ")}${stack[0]}`,
+                `      ${styler.green("- ")}${stack[1]}`
             ].join("\n"));
         });
 
@@ -278,12 +281,12 @@ describe("text", "pretty", "json", () => {
             const output = pretty.json(["a", 3, null, true, false, dt]);
 
             assert.equal(output, [
-                `${terminal.green("- ")}a`,
-                terminal.green("- ") + terminal.blue("3"),
-                terminal.green("- ") + terminal.grey("null"),
-                terminal.green("- ") + terminal.green("true"),
-                terminal.green("- ") + terminal.red("false"),
-                terminal.green("- ") + dt
+                `${styler.green("- ")}a`,
+                styler.green("- ") + styler.blue("3"),
+                styler.green("- ") + styler.grey("null"),
+                styler.green("- ") + styler.green("true"),
+                styler.green("- ") + styler.red("false"),
+                styler.green("- ") + dt
             ].join("\n"));
         });
 
@@ -307,8 +310,8 @@ describe("text", "pretty", "json", () => {
             const output = pretty.json(input, {}, 4);
 
             assert.equal(output, [
-                `    ${terminal.green("dt1: ")}${dt1.toString()}`,
-                `    ${terminal.green("dt2: ")}${dt2.toString()}`
+                `    ${styler.green("dt1: ")}${dt1.toString()}`,
+                `    ${styler.green("dt2: ")}${dt2.toString()}`
             ].join("\n"));
         });
     });

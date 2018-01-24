@@ -1,7 +1,7 @@
 {
   "type": "File",
   "start": 0,
-  "end": 11,
+  "end": 0,
   "loc": {
     "start": {
       "line": 1,
@@ -9,13 +9,13 @@
     },
     "end": {
       "line": 1,
-      "column": 11
+      "column": 0
     }
   },
   "program": {
     "type": "Program",
     "start": 0,
-    "end": 11,
+    "end": 0,
     "loc": {
       "start": {
         "line": 1,
@@ -23,77 +23,11 @@
       },
       "end": {
         "line": 1,
-        "column": 11
+        "column": 0
       }
     },
     "sourceType": "script",
-    "body": [
-      {
-        "type": "ThrowStatement",
-        "start": 0,
-        "end": 11,
-        "loc": {
-          "start": {
-            "line": 1,
-            "column": 0
-          },
-          "end": {
-            "line": 1,
-            "column": 11
-          }
-        },
-        "argument": {
-          "type": "BinaryExpression",
-          "start": 6,
-          "end": 11,
-          "loc": {
-            "start": {
-              "line": 1,
-              "column": 6
-            },
-            "end": {
-              "line": 1,
-              "column": 11
-            }
-          },
-          "left": {
-            "type": "Identifier",
-            "start": 6,
-            "end": 7,
-            "loc": {
-              "start": {
-                "line": 1,
-                "column": 6
-              },
-              "end": {
-                "line": 1,
-                "column": 7
-              },
-              "identifierName": "x"
-            },
-            "name": "x"
-          },
-          "operator": "*",
-          "right": {
-            "type": "Identifier",
-            "start": 10,
-            "end": 11,
-            "loc": {
-              "start": {
-                "line": 1,
-                "column": 10
-              },
-              "end": {
-                "line": 1,
-                "column": 11
-              },
-              "identifierName": "y"
-            },
-            "name": "y"
-          }
-        }
-      }
-    ],
+    "body": [],
     "directives": []
   }
 }

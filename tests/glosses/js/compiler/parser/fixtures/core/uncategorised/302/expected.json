@@ -1,7 +1,7 @@
 {
   "type": "File",
   "start": 0,
-  "end": 20,
+  "end": 0,
   "loc": {
     "start": {
       "line": 1,
@@ -9,13 +9,13 @@
     },
     "end": {
       "line": 1,
-      "column": 20
+      "column": 0
     }
   },
   "program": {
     "type": "Program",
     "start": 0,
-    "end": 20,
+    "end": 0,
     "loc": {
       "start": {
         "line": 1,
@@ -23,101 +23,11 @@
       },
       "end": {
         "line": 1,
-        "column": 20
+        "column": 0
       }
     },
     "sourceType": "script",
-    "body": [
-      {
-        "type": "VariableDeclaration",
-        "start": 0,
-        "end": 20,
-        "loc": {
-          "start": {
-            "line": 1,
-            "column": 0
-          },
-          "end": {
-            "line": 1,
-            "column": 20
-          }
-        },
-        "declarations": [
-          {
-            "type": "VariableDeclarator",
-            "start": 4,
-            "end": 5,
-            "loc": {
-              "start": {
-                "line": 1,
-                "column": 4
-              },
-              "end": {
-                "line": 1,
-                "column": 5
-              }
-            },
-            "id": {
-              "type": "Identifier",
-              "start": 4,
-              "end": 5,
-              "loc": {
-                "start": {
-                  "line": 1,
-                  "column": 4
-                },
-                "end": {
-                  "line": 1,
-                  "column": 5
-                },
-                "identifierName": "x"
-              },
-              "name": "x",
-              "leadingComments": null,
-              "trailingComments": null
-            },
-            "init": null,
-            "trailingComments": [
-              {
-                "type": "CommentBlock",
-                "value": " comment ",
-                "start": 6,
-                "end": 19,
-                "loc": {
-                  "start": {
-                    "line": 1,
-                    "column": 6
-                  },
-                  "end": {
-                    "line": 1,
-                    "column": 19
-                  }
-                }
-              }
-            ]
-          }
-        ],
-        "kind": "var"
-      }
-    ],
+    "body": [],
     "directives": []
-  },
-  "comments": [
-    {
-      "type": "CommentBlock",
-      "value": " comment ",
-      "start": 6,
-      "end": 19,
-      "loc": {
-        "start": {
-          "line": 1,
-          "column": 6
-        },
-        "end": {
-          "line": 1,
-          "column": 19
-        }
-      }
-    }
-  ]
+  }
 }

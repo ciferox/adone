@@ -49,9 +49,9 @@ describe("realm", () => {
     it("lock/unlock", async () => {
         const lockPath = std.path.join(realm.config.runtimePath, "realm");
         await realmManager.lock();
-        assert.true(await adone.application.locking.check(lockPath));
+        assert.true(await adone.application.lockfile.check(lockPath));
         await realmManager.unlock();
-        assert.false(await adone.application.locking.check(lockPath));
+        assert.false(await adone.application.lockfile.check(lockPath));
     });
 
     describe("cli commands", () => {

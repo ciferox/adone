@@ -33,7 +33,8 @@ const getDefs = () => {
         comment: styler.grey,
         invalid: styler.white.bgRed.bold,
         gutter: styler.grey,
-        marker: styler.red.bold
+        marker: styler.red.bold,
+        message: styler.red.bold
     };
 };
 
@@ -53,7 +54,7 @@ const JSX_TAG = /^[a-z][\w-]*$/i;
  * RegExp to test for the three types of brackets.
  */
 
-const BRACKET = /^[()\[\]{}]$/;
+const BRACKET = /^[()[\]{}]$/;
 
 /**
  * Get the type of token, specifying punctuator type.
@@ -106,7 +107,6 @@ const highlight = (defs: Object, text: string) => {
             return args[0].split(NEWLINE).map((str) => colorize(str)).join("\n");
         }
         return args[0];
-
     });
 };
 
@@ -188,16 +188,18 @@ export const codeFrameColumns = (rawLines: string, loc: NodeLocation, opts: Obje
 
     const lines = rawLines.split(NEWLINE);
     const { start, end, markerLines } = getMarkerLines(loc, lines, opts);
+    const hasColumns = loc.start && is.number(loc.start.column);
 
     const numberMaxWidth = String(end).length;
 
-    const frame = lines
+    let frame = lines
         .slice(start, end)
         .map((line, index) => {
             const number = start + 1 + index;
             const paddedNumber = ` ${number}`.slice(-numberMaxWidth);
             const gutter = ` ${paddedNumber} | `;
             const hasMarker = markerLines[number];
+            const lastMarkerLine = !markerLines[number + 1];
             if (hasMarker) {
                 let markerLine = "";
                 if (is.array(hasMarker)) {
@@ -212,6 +214,10 @@ export const codeFrameColumns = (rawLines: string, loc: NodeLocation, opts: Obje
                         markerSpacing,
                         maybeHighlight(defs.marker, "^").repeat(numberOfMarkers)
                     ].join("");
+
+                    if (lastMarkerLine && opts.message) {
+                        markerLine += ` ${maybeHighlight(defs.message, opts.message)}`;
+                    }
                 }
                 return [
                     maybeHighlight(defs.marker, ">"),
@@ -224,6 +230,10 @@ export const codeFrameColumns = (rawLines: string, loc: NodeLocation, opts: Obje
 
         })
         .join("\n");
+
+    if (opts.message && !hasColumns) {
+        frame = `${" ".repeat(numberMaxWidth + 1)}${opts.message}\n${frame}`;
+    }
 
     if (highlighted) {
         return styler.reset(frame);
@@ -240,7 +250,7 @@ export const codeFrame = (rawLines: string, lineNumber: number, colNumber: ?numb
         deprecationWarningShown = true;
 
         const deprecationError = new Error(
-            "Passing lineNumber and colNumber is deprecated to babel-code-frame. Please use `codeFrameColumns`.",
+            "Passing lineNumber and colNumber is deprecated. Please use `codeFrameColumns`.",
         );
         deprecationError.name = "DeprecationWarning";
 

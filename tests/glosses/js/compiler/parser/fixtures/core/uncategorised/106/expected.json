@@ -1,7 +1,7 @@
 {
   "type": "File",
   "start": 0,
-  "end": 18,
+  "end": 0,
   "loc": {
     "start": {
       "line": 1,
@@ -9,13 +9,13 @@
     },
     "end": {
       "line": 1,
-      "column": 18
+      "column": 0
     }
   },
   "program": {
     "type": "Program",
     "start": 0,
-    "end": 18,
+    "end": 0,
     "loc": {
       "start": {
         "line": 1,
@@ -23,82 +23,11 @@
       },
       "end": {
         "line": 1,
-        "column": 18
+        "column": 0
       }
     },
     "sourceType": "script",
-    "body": [
-      {
-        "type": "VariableDeclaration",
-        "start": 0,
-        "end": 18,
-        "loc": {
-          "start": {
-            "line": 1,
-            "column": 0
-          },
-          "end": {
-            "line": 1,
-            "column": 18
-          }
-        },
-        "declarations": [
-          {
-            "type": "VariableDeclarator",
-            "start": 4,
-            "end": 18,
-            "loc": {
-              "start": {
-                "line": 1,
-                "column": 4
-              },
-              "end": {
-                "line": 1,
-                "column": 18
-              }
-            },
-            "id": {
-              "type": "Identifier",
-              "start": 4,
-              "end": 5,
-              "loc": {
-                "start": {
-                  "line": 1,
-                  "column": 4
-                },
-                "end": {
-                  "line": 1,
-                  "column": 5
-                },
-                "identifierName": "x"
-              },
-              "name": "x"
-            },
-            "init": {
-              "type": "RegExpLiteral",
-              "start": 8,
-              "end": 18,
-              "loc": {
-                "start": {
-                  "line": 1,
-                  "column": 8
-                },
-                "end": {
-                  "line": 1,
-                  "column": 18
-                }
-              },
-              "extra": {
-                "raw": "/foo\\/bar/"
-              },
-              "pattern": "foo\\/bar",
-              "flags": ""
-            }
-          }
-        ],
-        "kind": "var"
-      }
-    ],
+    "body": [],
     "directives": []
   }
 }

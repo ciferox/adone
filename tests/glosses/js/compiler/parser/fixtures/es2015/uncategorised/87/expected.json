@@ -1,7 +1,7 @@
 {
   "type": "File",
   "start": 0,
-  "end": 27,
+  "end": 0,
   "loc": {
     "start": {
       "line": 1,
@@ -9,13 +9,13 @@
     },
     "end": {
       "line": 1,
-      "column": 27
+      "column": 0
     }
   },
   "program": {
     "type": "Program",
     "start": 0,
-    "end": 27,
+    "end": 0,
     "loc": {
       "start": {
         "line": 1,
@@ -23,129 +23,11 @@
       },
       "end": {
         "line": 1,
-        "column": 27
+        "column": 0
       }
     },
     "sourceType": "module",
-    "body": [
-      {
-        "type": "ExportNamedDeclaration",
-        "start": 0,
-        "end": 27,
-        "loc": {
-          "start": {
-            "line": 1,
-            "column": 0
-          },
-          "end": {
-            "line": 1,
-            "column": 27
-          }
-        },
-        "declaration": null,
-        "specifiers": [
-          {
-            "type": "ExportSpecifier",
-            "start": 9,
-            "end": 16,
-            "loc": {
-              "start": {
-                "line": 1,
-                "column": 9
-              },
-              "end": {
-                "line": 1,
-                "column": 16
-              }
-            },
-            "local": {
-              "type": "Identifier",
-              "start": 9,
-              "end": 16,
-              "loc": {
-                "start": {
-                  "line": 1,
-                  "column": 9
-                },
-                "end": {
-                  "line": 1,
-                  "column": 16
-                },
-                "identifierName": "encrypt"
-              },
-              "name": "encrypt"
-            },
-            "exported": {
-              "type": "Identifier",
-              "start": 9,
-              "end": 16,
-              "loc": {
-                "start": {
-                  "line": 1,
-                  "column": 9
-                },
-                "end": {
-                  "line": 1,
-                  "column": 16
-                },
-                "identifierName": "encrypt"
-              },
-              "name": "encrypt"
-            }
-          },
-          {
-            "type": "ExportSpecifier",
-            "start": 18,
-            "end": 25,
-            "loc": {
-              "start": {
-                "line": 1,
-                "column": 18
-              },
-              "end": {
-                "line": 1,
-                "column": 25
-              }
-            },
-            "local": {
-              "type": "Identifier",
-              "start": 18,
-              "end": 25,
-              "loc": {
-                "start": {
-                  "line": 1,
-                  "column": 18
-                },
-                "end": {
-                  "line": 1,
-                  "column": 25
-                },
-                "identifierName": "decrypt"
-              },
-              "name": "decrypt"
-            },
-            "exported": {
-              "type": "Identifier",
-              "start": 18,
-              "end": 25,
-              "loc": {
-                "start": {
-                  "line": 1,
-                  "column": 18
-                },
-                "end": {
-                  "line": 1,
-                  "column": 25
-                },
-                "identifierName": "decrypt"
-              },
-              "name": "decrypt"
-            }
-          }
-        ],
-        "source": null
-      }
-    ],
+    "body": [],
     "directives": []
   }
 }

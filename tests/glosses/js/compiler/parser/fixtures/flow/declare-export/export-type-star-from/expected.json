@@ -1,7 +1,7 @@
 {
   "type": "File",
   "start": 0,
-  "end": 58,
+  "end": 0,
   "loc": {
     "start": {
       "line": 1,
@@ -9,13 +9,13 @@
     },
     "end": {
       "line": 1,
-      "column": 58
+      "column": 0
     }
   },
   "program": {
     "type": "Program",
     "start": 0,
-    "end": 58,
+    "end": 0,
     "loc": {
       "start": {
         "line": 1,
@@ -23,101 +23,11 @@
       },
       "end": {
         "line": 1,
-        "column": 58
+        "column": 0
       }
     },
     "sourceType": "module",
-    "body": [
-      {
-        "type": "DeclareModule",
-        "start": 0,
-        "end": 58,
-        "loc": {
-          "start": {
-            "line": 1,
-            "column": 0
-          },
-          "end": {
-            "line": 1,
-            "column": 58
-          }
-        },
-        "id": {
-          "type": "StringLiteral",
-          "start": 15,
-          "end": 20,
-          "loc": {
-            "start": {
-              "line": 1,
-              "column": 15
-            },
-            "end": {
-              "line": 1,
-              "column": 20
-            }
-          },
-          "extra": {
-            "rawValue": "foo",
-            "raw": "\"foo\""
-          },
-          "value": "foo"
-        },
-        "body": {
-          "type": "BlockStatement",
-          "start": 21,
-          "end": 58,
-          "loc": {
-            "start": {
-              "line": 1,
-              "column": 21
-            },
-            "end": {
-              "line": 1,
-              "column": 58
-            }
-          },
-          "body": [
-            {
-              "type": "DeclareExportAllDeclaration",
-              "start": 23,
-              "end": 56,
-              "loc": {
-                "start": {
-                  "line": 1,
-                  "column": 23
-                },
-                "end": {
-                  "line": 1,
-                  "column": 56
-                }
-              },
-              "exportKind": "type",
-              "source": {
-                "type": "StringLiteral",
-                "start": 50,
-                "end": 55,
-                "loc": {
-                  "start": {
-                    "line": 1,
-                    "column": 50
-                  },
-                  "end": {
-                    "line": 1,
-                    "column": 55
-                  }
-                },
-                "extra": {
-                  "rawValue": "bar",
-                  "raw": "\"bar\""
-                },
-                "value": "bar"
-              }
-            }
-          ]
-        },
-        "kind": "ES"
-      }
-    ],
+    "body": [],
     "directives": []
   }
 }

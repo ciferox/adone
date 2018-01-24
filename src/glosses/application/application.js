@@ -220,7 +220,7 @@ export default class Application extends application.Subsystem {
         const lockFiles = Object.keys(locks);
         for (const file of lockFiles) {
             try {
-                await locks[file].options.fs.rm(application.locking.getLockFile(file)); // eslint-disable-line
+                await locks[file].options.fs.rm(application.lockfile.getLockFile(file)); // eslint-disable-line
             } catch (e) {
                 //
             }

@@ -1,7 +1,7 @@
 {
   "type": "File",
   "start": 0,
-  "end": 22,
+  "end": 0,
   "loc": {
     "start": {
       "line": 1,
@@ -9,13 +9,13 @@
     },
     "end": {
       "line": 1,
-      "column": 22
+      "column": 0
     }
   },
   "program": {
     "type": "Program",
     "start": 0,
-    "end": 22,
+    "end": 0,
     "loc": {
       "start": {
         "line": 1,
@@ -23,47 +23,11 @@
       },
       "end": {
         "line": 1,
-        "column": 22
+        "column": 0
       }
     },
     "sourceType": "script",
     "body": [],
-    "directives": [
-      {
-        "type": "Directive",
-        "start": 0,
-        "end": 22,
-        "loc": {
-          "start": {
-            "line": 1,
-            "column": 0
-          },
-          "end": {
-            "line": 1,
-            "column": 22
-          }
-        },
-        "value": {
-          "type": "DirectiveLiteral",
-          "start": 0,
-          "end": 22,
-          "loc": {
-            "start": {
-              "line": 1,
-              "column": 0
-            },
-            "end": {
-              "line": 1,
-              "column": 22
-            }
-          },
-          "value": "\\n\\r\\t\\v\\b\\f\\\\\\'\\\"\\0",
-          "extra": {
-            "raw": "\"\\n\\r\\t\\v\\b\\f\\\\\\'\\\"\\0\"",
-            "rawValue": "\\n\\r\\t\\v\\b\\f\\\\\\'\\\"\\0"
-          }
-        }
-      }
-    ]
+    "directives": []
   }
 }

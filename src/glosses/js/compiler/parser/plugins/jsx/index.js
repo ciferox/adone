@@ -11,7 +11,7 @@ import { isNewLine } from "../../util/whitespace";
 
 const {
   text: { charcode: charCodes }
-} = adone;
+} = adone
 
 const HEX_NUMBER = /^[\da-fA-F]+$/;
 const DECIMAL_NUMBER = /^\d+$/;

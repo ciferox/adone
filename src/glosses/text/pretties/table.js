@@ -111,7 +111,7 @@ export default function prettyTable(data, {
 
         const colWidth = data.reduce((x, y) => {
             const v = y[m.id];
-            const l = is.nil(v) ? 0 : (countAnsiEscapeCodes ? v.toString() : adone.text.ansi.stripEscapeCodes(v.toString())).length + padLeft + padRight;
+            const l = is.nil(v) ? 0 : (countAnsiEscapeCodes ? v.toString() : adone.text.stripAnsi(v.toString())).length + padLeft + padRight;
             return Math.max(x, l);
         }, 0);
 

@@ -111,11 +111,11 @@ adone.lazify({
     CliApplication: "./cli_application",
     Logger: "./logger",
     report: "./report",
-    locking: "./locking"
+    lockfile: "./lockfile"
 }, adone.asNamespace(exports), require);
 
 adone.definePrivate({
-    locks: {} // used by adone.application.locking
+    locks: {} // used by adone.application.lockfile
 }, exports);
 
 export const run = async (App) => {

@@ -1,5 +1,5 @@
 const {
-    application: { locking },
+    application: { lockfile },
     is,
     std,
     task,
@@ -94,12 +94,12 @@ export default class RealmManager extends task.Manager {
     async lock() {
         // Force create runtime directory.
         await adone.realm.createDirs();
-        return locking.create(adone.realm.config.lockFilePath);
+        return lockfile.create(adone.realm.config.lockFilePath);
     }
 
     async unlock() {
-        if (await locking.check(adone.realm.config.lockFilePath)) {
-            return locking.release(adone.realm.config.lockFilePath);
+        if (await lockfile.check(adone.realm.config.lockFilePath)) {
+            return lockfile.release(adone.realm.config.lockFilePath);
         }
     }
 

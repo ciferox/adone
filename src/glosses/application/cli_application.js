@@ -16,7 +16,7 @@ const {
     STATE
 } = application;
 
-const noStyleLength = (x) => text.ansi.stripEscapeCodes(x).length;
+const noStyleLength = (x) => text.stripAnsi(x).length;
 
 const hasColorsSupport = Boolean(process.stdout.isTTY);
 
@@ -1287,7 +1287,7 @@ class Command {
         }
         const message = `${heading}\n${table.toString()}`;
         if (!hasColorsSupport) {
-            return text.ansi.stripEscapeCodes(message);
+            return text.stripAnsi(message);
         }
         return message;
     }
@@ -1437,7 +1437,7 @@ class Command {
         }
         const message = helpMessage.join("\n");
         if (!hasColorsSupport) {
-            return text.ansi.stripEscapeCodes(message);
+            return text.stripAnsi(message);
         }
         return message;
     }

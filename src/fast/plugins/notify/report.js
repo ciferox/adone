@@ -47,7 +47,7 @@ const stripAnsi = (obj) => {
             case "open":
             case "subtitle":
             case "title":
-                obj[k] = text.ansi.stripEscapeCodes(v);
+                obj[k] = text.stripAnsi(v);
                 break;
         }
     }

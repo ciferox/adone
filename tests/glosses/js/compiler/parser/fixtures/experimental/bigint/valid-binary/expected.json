@@ -1,7 +1,7 @@
 {
   "type": "File",
   "start": 0,
-  "end": 12,
+  "end": 0,
   "loc": {
     "start": {
       "line": 1,
@@ -9,13 +9,13 @@
     },
     "end": {
       "line": 1,
-      "column": 12
+      "column": 0
     }
   },
   "program": {
     "type": "Program",
     "start": 0,
-    "end": 12,
+    "end": 0,
     "loc": {
       "start": {
         "line": 1,
@@ -23,47 +23,11 @@
       },
       "end": {
         "line": 1,
-        "column": 12
+        "column": 0
       }
     },
     "sourceType": "script",
-    "body": [
-      {
-        "type": "ExpressionStatement",
-        "start": 0,
-        "end": 12,
-        "loc": {
-          "start": {
-            "line": 1,
-            "column": 0
-          },
-          "end": {
-            "line": 1,
-            "column": 12
-          }
-        },
-        "expression": {
-          "type": "BigIntLiteral",
-          "start": 0,
-          "end": 12,
-          "loc": {
-            "start": {
-              "line": 1,
-              "column": 0
-            },
-            "end": {
-              "line": 1,
-              "column": 12
-            }
-          },
-          "extra": {
-            "rawValue": "0b101011101",
-            "raw": "0b101011101n"
-          },
-          "value": "0b101011101"
-        }
-      }
-    ],
+    "body": [],
     "directives": []
   }
 }

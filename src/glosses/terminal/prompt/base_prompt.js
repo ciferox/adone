@@ -95,7 +95,7 @@ class ScreenManager {
          */
 
         const promptLine = lastLine(content);
-        const rawPromptLine = adone.text.ansi.stripEscapeCodes(promptLine);
+        const rawPromptLine = adone.text.stripAnsi(promptLine);
 
         // Remove the rl.line from our prompt. We can't rely on the content of
         // rl.line (mainly because of the password prompt), so just rely on it's

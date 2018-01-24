@@ -75,6 +75,13 @@
                     "task": "transpile",
                     "namespace": "application",
                     "struct": {
+                        "lockfile": {
+                            "description": "Inter-process file locking implementation",
+                            "src": "src/glosses/application/lockfile.js",
+                            "dst": "lib/glosses/application",
+                            "task": "transpile",
+                            "namespace": "lockfile"
+                        },
                         "report": {
                             "description": "Delivers a human-readable diagnostic summary, written to file",
                             "namespace": "report",

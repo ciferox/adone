@@ -42,10 +42,6 @@ export const regexp = {
     }
 };
 
-export const ansi = {
-    escapeCodesRegexp: () => /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-PRZcf-nqry=><]/g,
-    stripEscapeCodes: (str) => (is.string(str) ? str.replace(ansi.escapeCodesRegexp(), "") : str)
-};
 export const escapeStringRegexp = (str) => {
     if (!is.string(str)) {
         throw new TypeError("Expected a string");
@@ -155,6 +151,10 @@ export const regExpLastIndexOf = (str, regex, index) => {
     return offset;
 };
 
+export const stripAnsi = (str) => (is.string(str) ? str.replace(adone.regex.ansi(), "") : str);
+const testAnsiRE = new RegExp(adone.regex.ansi().source);
+export const hasAnsi = (str) => testAnsiRE.test(str);
+
 /**
  * Return a random alphanumerical string of length len
  * There is a very small probability (less than 1/1,000,000) for the length to be less than len
@@ -205,8 +205,8 @@ export const wordwrap = (str, stop, { join = true, mode = "soft", countAnsiEscap
             const chunk = rawChunk.replace(/\t/g, "    ");
             const i = lines.length - 1;
 
-            const lineLength = countAnsiEscapeCodes ? lines[i].length : ansi.stripEscapeCodes(lines[i]).length;
-            const chunkLength = countAnsiEscapeCodes ? chunk.length : ansi.stripEscapeCodes(chunk).length;
+            const lineLength = countAnsiEscapeCodes ? lines[i].length : stripAnsi(lines[i]).length;
+            const chunkLength = countAnsiEscapeCodes ? chunk.length : stripAnsi(chunk).length;
 
             if (lineLength + chunkLength > stop) {
                 lines[i] = lines[i].replace(/\s+$/, "");
@@ -271,7 +271,7 @@ export const width = (str) => {
 
     let width = 0;
 
-    str = ansi.stripEscapeCodes(str);
+    str = stripAnsi(str);
 
     for (let i = 0; i < str.length; i++) {
         const code = str.codePointAt(i);

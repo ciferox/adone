@@ -1,8 +1,7 @@
-import chalk from "chalk";
-import stripAnsi from "strip-ansi";
-
 const {
-    js: { compiler: { codeFrame, codeFrameColumns } }
+    js: { compiler: { codeFrame, codeFrameColumns } },
+    terminal: { styler },
+    text: { stripAnsi }
 } = adone;
 
 describe("js", "compiler", "codeFrame", () => {
@@ -187,8 +186,8 @@ describe("js", "compiler", "codeFrame", () => {
     });
 
     it("opts.forceColor", () => {
-        const marker = chalk.red.bold;
-        const gutter = chalk.grey;
+        const marker = styler.red.bold;
+        const gutter = styler.grey;
 
         const rawLines = ["", "", "", ""].join("\n");
         assert.equal(
@@ -197,7 +196,7 @@ describe("js", "compiler", "codeFrame", () => {
                 linesBelow: 1,
                 forceColor: true
             }),
-            chalk.reset(
+            styler.reset(
                 [
                     ` ${gutter(" 2 | ")}`,
                     marker(">") + gutter(" 3 | "),
@@ -293,6 +292,103 @@ describe("js", "compiler", "codeFrame", () => {
         assert.equal(
             codeFrameColumns(rawLines, { start: { line: 2 }, end: { line: 4 } }),
             [
+                "  1 | class Foo {",
+                "> 2 |   constructor() {",
+                "> 3 |     console.log(arguments);",
+                "> 4 |   }",
+                "  5 | };"
+            ].join("\n"),
+        );
+    });
+
+    it("opts.message", () => {
+        const rawLines = ["class Foo {", "  constructor()", "};"].join("\n");
+        assert.equal(
+            codeFrameColumns(
+                rawLines,
+                { start: { line: 2, column: 16 } },
+                {
+                    message: "Missing {"
+                },
+            ),
+            [
+                "  1 | class Foo {",
+                "> 2 |   constructor()",
+                "    |                ^ Missing {",
+                "  3 | };"
+            ].join("\n"),
+        );
+    });
+
+    it("opts.message without column", () => {
+        const rawLines = ["class Foo {", "  constructor()", "};"].join("\n");
+        assert.equal(
+            codeFrameColumns(
+                rawLines,
+                { start: { line: 2 } },
+                {
+                    message: "Missing {"
+                },
+            ),
+            [
+                "  Missing {",
+                "  1 | class Foo {",
+                "> 2 |   constructor()",
+                "  3 | };"
+            ].join("\n"),
+        );
+    });
+
+    it("opts.message with multiple lines", () => {
+        const rawLines = [
+            "class Foo {",
+            "  constructor() {",
+            "    console.log(arguments);",
+            "  }",
+            "};"
+        ].join("\n");
+        assert.equal(
+            codeFrameColumns(
+                rawLines,
+                {
+                    start: { line: 2, column: 17 },
+                    end: { line: 4, column: 3 }
+                },
+                {
+                    message: "something about the constructor body"
+                },
+            ),
+            [
+                "  1 | class Foo {",
+                "> 2 |   constructor() {",
+                "    |                 ^",
+                "> 3 |     console.log(arguments);",
+                "    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+                "> 4 |   }",
+                "    | ^^^ something about the constructor body",
+                "  5 | };"
+            ].join("\n"),
+        );
+    });
+
+    it("opts.message with multiple lines without columns", () => {
+        const rawLines = [
+            "class Foo {",
+            "  constructor() {",
+            "    console.log(arguments);",
+            "  }",
+            "};"
+        ].join("\n");
+        assert.equal(
+            codeFrameColumns(
+                rawLines,
+                { start: { line: 2 }, end: { line: 4 } },
+                {
+                    message: "something about the constructor body"
+                },
+            ),
+            [
+                "  something about the constructor body",
                 "  1 | class Foo {",
                 "> 2 |   constructor() {",
                 "> 3 |     console.log(arguments);",
