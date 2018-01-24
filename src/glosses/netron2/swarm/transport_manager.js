@@ -7,10 +7,8 @@ const {
 } = adone;
 
 const __ = adone.private(adone.netron2.swarm);
-adone.log(Object.keys(__));
 
 const dialables = (tp, multiaddrs) => tp.filter(multiaddrs);
-
 
 export default class TransportManager {
     /**
@@ -62,6 +60,8 @@ export default class TransportManager {
         const multiaddrs = dialables(this.transports[key], this.swarm._peerInfo.multiaddrs.distinct());
         const transport = this.transports[key];
         let freshMultiaddrs = [];
+
+        transport.listeners = arrify(transport.listeners);
 
         // if no handler is passed, we pass conns to protocolMuxer
         if (!handler) {

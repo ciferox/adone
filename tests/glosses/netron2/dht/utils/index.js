@@ -29,7 +29,7 @@ exports.setupDHT = (callback) => {
         p.multiaddrs.add("/ip4/0.0.0.0/tcp/0");
 
         const swarm = new Swarm(p, new PeerBook());
-        swarm.transport.add("tcp", new TCP());
+        swarm.tm.add("tcp", new TCP());
         swarm.connection.addStreamMuxer(multiplex);
         swarm.connection.reuse();
 

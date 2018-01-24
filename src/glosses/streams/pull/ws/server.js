@@ -14,59 +14,52 @@ const {
     }
 } = pull;
 
-export default function (opts, onConnection) {
-    const emitter = new event.Emitter();
-    if (is.function(opts)) {
-        onConnection = opts;
-        opts = null;
-    }
-    opts = opts || {};
+export class Server extends event.Emitter {
+    constructor(opts, onConnection) {
+        super();
 
-    if (onConnection) {
-        emitter.on("connection", onConnection);
-
-    }
-
-    const proxy = (server, event) => {
-        return server.on(event, (...args) => {
-            args.unshift(event);
-            emitter.emit.apply(emitter, args);
-        });
-    };
-
-    const server = opts.server || (opts.key && opts.cert ? https.createServer(opts) : http.createServer());
-
-    const wsServer = new adone.net.ws.Server({
-        server,
-        perMessageDeflate: false,
-        verifyClient: opts.verifyClient
-    });
-
-    proxy(server, "listening");
-    proxy(server, "request");
-    proxy(server, "close");
-
-    wsServer.on("connection", (socket, req) => {
-        const stream = duplex(socket);
-        stream.remoteAddress = req.socket.remoteAddress;
-        emitter.emit("connection", stream);
-    });
-
-    emitter.listen = function (addr, onListening) {
-        if (onListening) {
-            emitter.once("listening", onListening);
-
+        if (is.function(opts)) {
+            onConnection = opts;
+            opts = null;
         }
-        server.listen(addr.port || addr);
-        return emitter;
-    };
+        opts = opts || {};
 
-    emitter.close = function (onClose) {
-        server.close(onClose);
-        wsServer.close();
-        return emitter;
-    };
+        is.function(onConnection) && this.on("connection", onConnection);
 
-    emitter.address = server.address.bind(server);
-    return emitter;
+        this.server = opts.server || (opts.key && opts.cert ? https.createServer(opts) : http.createServer());
+
+        this.wsServer = new adone.net.ws.Server({
+            server: this.server,
+            perMessageDeflate: false,
+            verifyClient: opts.verifyClient
+        });
+
+        this.server.on("listening", () => this.emit("listening"));
+        this.server.on("request", (...args) => this.emit("error", ...args));
+        this.server.on("close", () => this.emit("close"));
+
+        this.wsServer.on("connection", (socket, req) => {
+            const stream = duplex(socket);
+            stream.remoteAddress = req.socket.remoteAddress;
+            this.emit("connection", stream);
+        });
+    }
+
+    listen(addr, callback) {
+        is.function(callback) && this.once("listening", callback);
+        this.server.listen(addr.port || addr);
+        return this;
+    }
+
+    close(onClose) {
+        this.server.close(onClose);
+        this.wsServer.close();
+        return this;
+    }
+
+    address() {
+        return this.server.address();
+    }
 }
+
+export const createServer = (opts, onConnection) => new Server(opts, onConnection);

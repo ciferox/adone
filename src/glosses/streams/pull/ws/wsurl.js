@@ -7,20 +7,20 @@ const {
 
 const relativeUrl = function (url, location, protocolMap, defaultProtocol) {
     protocolMap = protocolMap || {};
-    /*
-        https://nodejs.org/dist/latest-v6.x/docs/api/url.html#url_url_parse_urlstr_parsequerystring_slashesdenotehost
-        I didn't know this, but url.parse takes a 3rd
-        argument which interprets "//foo.com" as the hostname,
-        but without the protocol. by default, // is interpreted
-        as the path.
-        that lets us do what the wsurl module does.
-        https://www.npmjs.com/package/wsurl
-        but most of the time, I want to write js
-        that will work on localhost, and will work
-        on a server...
-        so I want to just do createWebSocket('/')
-        and get "ws://mydomain.com/"
-    */
+    /**
+     * https://nodejs.org/dist/latest-v6.x/docs/api/url.html#url_url_parse_urlstr_parsequerystring_slashesdenotehost
+     * I didn't know this, but url.parse takes a 3rd
+     * argument which interprets "//foo.com" as the hostname,
+     * but without the protocol. by default, // is interpreted
+     * as the path.
+     * that lets us do what the wsurl module does.
+     * https://www.npmjs.com/package/wsurl
+     * but most of the time, I want to write js
+     * that will work on localhost, and will work
+     * on a server...
+     * so I want to just do createWebSocket('/')
+     * and get "ws://mydomain.com/"
+     */
 
     url = URL.parse(url, false, true);
 

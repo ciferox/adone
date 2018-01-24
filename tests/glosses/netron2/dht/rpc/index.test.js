@@ -33,7 +33,7 @@ describe("rpc", () => {
     describe("protocolHandler", () => {
         it("calls back with the response", (done) => {
             const swarm = new Swarm(peerInfos[0], new PeerBook());
-            swarm.transport.add("tcp", new TCP());
+            swarm.tm.add("tcp", new TCP());
             swarm.connection.addStreamMuxer(multiplex);
             swarm.connection.reuse();
             const dht = new KadDHT(swarm, { kBucketSize: 5 });

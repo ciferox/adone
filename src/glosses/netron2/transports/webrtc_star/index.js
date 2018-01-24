@@ -120,12 +120,7 @@ class WebRTCStar {
         return conn;
     }
 
-    createListener(options, handler) {
-        if (is.function(options)) {
-            handler = options;
-            options = {};
-        }
-
+    createListener(handler) {
         const listener = new event.Emitter();
 
         listener.listen = (ma, callback) => {

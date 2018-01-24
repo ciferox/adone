@@ -307,7 +307,7 @@ export default (common) => {
                 });
 
                 tcpListener.listen(mh, () => {
-                    const dialerConn = tcp.dial(mh, tcpListener.close);
+                    const dialerConn = tcp.dial(mh, () => tcpListener.close());
 
                     const dialerMuxer = muxer.dialer(dialerConn);
                     const s1 = dialerMuxer.newStream(() => {

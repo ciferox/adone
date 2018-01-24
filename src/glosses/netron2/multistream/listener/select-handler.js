@@ -10,25 +10,22 @@ const matcher = function (protocol, handlers, callback) {
     const supportedProtocols = Object.keys(handlers);
     let supportedProtocol = false;
 
-    some(supportedProtocols,
-        (sp, cb) => {
-            handlers[sp].matchFunc(sp, protocol, (err, result) => {
-                if (err) {
-                    return cb(err);
-                }
-                if (result) {
-                    supportedProtocol = sp;
-                }
-                cb();
-            });
-        },
-        (err) => {
+    some(supportedProtocols, (sp, cb) => {
+        handlers[sp].matchFunc(sp, protocol, (err, result) => {
             if (err) {
-                return callback(err);
+                return cb(err);
             }
-            callback(null, supportedProtocol);
+            if (result) {
+                supportedProtocol = sp;
+            }
+            cb();
+        });
+    }, (err) => {
+        if (err) {
+            return callback(err);
         }
-    );
+        callback(null, supportedProtocol);
+    });
 };
 
 const selectHandler = function (rawConn, handlersMap, log) {

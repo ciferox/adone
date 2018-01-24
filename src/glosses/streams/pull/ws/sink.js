@@ -41,7 +41,7 @@ export default function (socket, opts) {
             // socket ready?
             ready(socket, (end) => {
                 if (end) {
-                    return read(end, () => {});
+                    return read(end, () => { });
                 }
                 socket.send(data);
                 setImmediate(() => {

@@ -16,7 +16,7 @@ describe("Network", () => {
         this.timeout(10 * 1000);
         peerInfos = makePeers(3);
         const swarm = new Swarm(peerInfos[0], new PeerBook());
-        swarm.transport.add("tcp", new TCP());
+        swarm.tm.add("tcp", new TCP());
         swarm.connection.addStreamMuxer(multiplex);
         swarm.connection.reuse();
         dht = new KadDHT(swarm);

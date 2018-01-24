@@ -1,6 +1,6 @@
 const debug = require("debug");
 const log = debug("libp2p:websockets:dialer");
-const createListener = require("./listener");
+import Listener from "./listener";
 
 const {
     is,
@@ -40,7 +40,7 @@ const maToUrl = function (ma) {
     return url;
 };
 
-export default class WebSockets {
+export default class WS {
     dial(ma, options, callback) {
         if (is.function(options)) {
             callback = options;
@@ -65,13 +65,8 @@ export default class WebSockets {
         return conn;
     }
 
-    createListener(options, handler) {
-        if (is.function(options)) {
-            handler = options;
-            options = {};
-        }
-
-        return createListener(options, handler);
+    createListener(handler) {
+        return new Listener(handler);
     }
 
     filter(multiaddrs) {
@@ -93,4 +88,4 @@ export default class WebSockets {
     }
 }
 
-WebSockets.maToUrl = maToUrl;
+WS.maToUrl = maToUrl;

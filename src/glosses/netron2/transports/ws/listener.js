@@ -7,50 +7,49 @@ const {
     vendor: { lodash: { includes } }
 } = adone;
 
-module.exports = (options, handler) => {
-    const listener = pull.ws.createServer((socket) => {
-        socket.getObservedAddrs = (callback) => {
-            // TODO research if we can reuse the address in anyway
-            return callback(null, []);
-        };
+export default class Listener extends pull.ws.Server {
+    constructor(handler) {
+        super((socket) => {
+            socket.getObservedAddrs = (callback) => {
+                // TODO research if we can reuse the address in anyway
+                return callback(null, []);
+            };
 
-        handler(new Connection(socket));
-    });
+            handler(new Connection(socket));
+        });
+    }
 
-    let listeningMultiaddr;
-
-    listener._listen = listener.listen;
-    listener.listen = (ma, callback) => {
+    listen(ma, callback) {
         callback = callback || noop;
-        listeningMultiaddr = ma;
+        this.listeningAddr = ma;
 
         if (includes(ma.protoNames(), "ipfs")) {
             ma = ma.decapsulate("ipfs");
         }
 
-        listener._listen(ma.toOptions(), callback);
-    };
+        super.listen(ma.toOptions(), callback);
+    }
 
-    listener.getAddrs = (callback) => {
+    getAddrs(callback) {
         const multiaddrs = [];
-        const address = listener.address();
+        const address = this.address();
 
         if (!address) {
             return callback(new Error("Listener is not ready yet"));
         }
 
-        const ipfsId = listeningMultiaddr.getPeerId();
+        const ipfsId = this.listeningAddr.getPeerId();
 
         // Because TCP will only return the IPv6 version
         // we need to capture from the passed multiaddr
-        if (listeningMultiaddr.toString().indexOf("ip4") !== -1) {
-            let m = listeningMultiaddr.decapsulate("tcp");
+        if (this.listeningAddr.toString().includes("ip4")) {
+            let m = this.listeningAddr.decapsulate("tcp");
             m = m.encapsulate(`/tcp/${address.port}/ws`);
-            if (listeningMultiaddr.getPeerId()) {
+            if (this.listeningAddr.getPeerId()) {
                 m = m.encapsulate(`/ipfs/${ipfsId}`);
             }
 
-            if (m.toString().indexOf("0.0.0.0") !== -1) {
+            if (m.toString().includes("0.0.0.0")) {
                 const netInterfaces = os.networkInterfaces();
                 Object.keys(netInterfaces).forEach((niKey) => {
                     netInterfaces[niKey].forEach((ni) => {
@@ -65,7 +64,5 @@ module.exports = (options, handler) => {
         }
 
         callback(null, multiaddrs);
-    };
-
-    return listener;
-};
+    }
+}

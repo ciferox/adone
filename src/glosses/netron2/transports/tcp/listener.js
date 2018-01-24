@@ -43,37 +43,38 @@ const trackSocket = (server, socket) => {
     });
 };
 
+export default class Listener extends adone.event.Emitter {
+    constructor(handler) {
+        super();
 
-export default (handler) => {
-    const listener = new adone.event.Emitter();
+        this.server = net.createServer((socket) => {
+            // Avoid uncaught errors cause by unstable connections
+            socket.on("error", adone.noop);
 
-    const server = net.createServer((socket) => {
-        // Avoid uncaught errors cause by unstable connections
-        socket.on("error", adone.noop);
+            const addr = getMultiaddr(socket);
 
-        const addr = getMultiaddr(socket);
+            const s = pull.fromStream.duplex(socket);
 
-        const s = pull.fromStream.duplex(socket);
+            s.getObservedAddrs = (cb) => {
+                cb(null, [addr]);
+            };
 
-        s.getObservedAddrs = (cb) => {
-            cb(null, [addr]);
-        };
+            trackSocket(this.server, socket);
 
-        trackSocket(server, socket);
+            const conn = new Connection(s);
+            is.function(handler) && handler(conn);
+            this.emit("connection", conn);
+        });
 
-        const conn = new Connection(s);
-        handler(conn);
-        listener.emit("connection", conn);
-    });
+        this.server.on("listening", () => this.emit("listening"));
+        this.server.on("error", (err) => this.emit("error", err));
+        this.server.on("close", () => this.emit("close"));
 
-    server.on("listening", () => listener.emit("listening"));
-    server.on("error", (err) => listener.emit("error", err));
-    server.on("close", () => listener.emit("close"));
+        // Keep track of open connections to destroy in case of timeout
+        this.server.__connections = {};
+    }
 
-    // Keep track of open connections to destroy in case of timeout
-    server.__connections = {};
-
-    listener.close = (options, callback) => {
+    close(options, callback) {
         if (is.function(options)) {
             callback = options;
             options = {};
@@ -82,9 +83,9 @@ export default (handler) => {
         options = options || {};
 
         let closed = false;
-        server.close(callback);
+        this.server.close(callback);
 
-        server.once("close", () => {
+        this.server.once("close", () => {
             closed = true;
         });
         setTimeout(() => {
@@ -93,29 +94,26 @@ export default (handler) => {
             }
 
             // unable to close graciously, destroying conns
-            Object.keys(server.__connections).forEach((key) => {
-                server.__connections[key].destroy();
+            Object.keys(this.server.__connections).forEach((key) => {
+                this.server.__connections[key].destroy();
             });
         }, options.timeout || CLOSE_TIMEOUT);
-    };
+    }
 
-    let ipfsId;
-    let listeningAddr;
-
-    listener.listen = (ma, callback) => {
-        listeningAddr = ma;
+    listen(ma, callback) {
+        this.listeningAddr = ma;
         if (ma.protoNames().includes("ipfs")) {
-            ipfsId = getIpfsId(ma);
-            listeningAddr = ma.decapsulate("ipfs");
+            this.ipfsId = getIpfsId(ma);
+            this.listeningAddr = ma.decapsulate("ipfs");
         }
 
-        const lOpts = listeningAddr.toOptions();
-        return server.listen(lOpts.port, lOpts.host, callback);
-    };
+        const lOpts = this.listeningAddr.toOptions();
+        return this.server.listen(lOpts.port, lOpts.host, callback);
+    }
 
-    listener.getAddrs = (callback) => {
+    getAddrs(callback) {
         const multiaddrs = [];
-        const address = server.address();
+        const address = this.server.address();
 
         if (!address) {
             return callback(new Error("Listener is not ready yet"));
@@ -123,14 +121,14 @@ export default (handler) => {
 
         // Because TCP will only return the IPv6 version
         // we need to capture from the passed multiaddr
-        if (listeningAddr.toString().indexOf("ip4") !== -1) {
-            let m = listeningAddr.decapsulate("tcp");
+        if (this.listeningAddr.toString().includes("ip4")) {
+            let m = this.listeningAddr.decapsulate("tcp");
             m = m.encapsulate(`/tcp/${address.port}`);
-            if (ipfsId) {
-                m = m.encapsulate(`/ipfs/${ipfsId}`);
+            if (this.ipfsId) {
+                m = m.encapsulate(`/ipfs/${this.ipfsId}`);
             }
 
-            if (m.toString().indexOf("0.0.0.0") !== -1) {
+            if (m.toString().includes("0.0.0.0")) {
                 const netInterfaces = os.networkInterfaces();
                 Object.keys(netInterfaces).forEach((niKey) => {
                     netInterfaces[niKey].forEach((ni) => {
@@ -146,15 +144,13 @@ export default (handler) => {
 
         if (address.family === "IPv6") {
             let ma = multi.address.create(`/ip6/${address.address}/tcp/${address.port}`);
-            if (ipfsId) {
-                ma = ma.encapsulate(`/ipfs/${ipfsId}`);
+            if (this.ipfsId) {
+                ma = ma.encapsulate(`/ipfs/${this.ipfsId}`);
             }
 
             multiaddrs.push(ma);
         }
 
         callback(null, multiaddrs);
-    };
-
-    return listener;
-};
+    }
+}

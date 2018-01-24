@@ -6,7 +6,7 @@ const {
     stream: { pull }
 } = adone;
 
-const { protocol, createListener, multicodec } = adone.private(adone.netron2.circuit);
+const { protocol, Listener, multicodec } = adone.private(adone.netron2.circuit);
 
 describe("listener", () => {
     describe("listen", () => {
@@ -35,7 +35,7 @@ describe("listener", () => {
                 }
             };
 
-            listener = createListener(swarm, {}, () => { });
+            listener = new Listener(swarm, {}, () => { });
             listener.listen();
         });
 
@@ -199,7 +199,7 @@ describe("listener", () => {
             };
 
             peerInfo = peer;
-            listener = createListener(swarm, {}, () => { });
+            listener = new Listener(swarm, {}, () => { });
         });
 
         afterEach(() => {

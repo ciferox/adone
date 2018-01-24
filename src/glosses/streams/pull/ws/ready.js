@@ -35,4 +35,3 @@ export default function (socket, callback) {
     socket.addEventListener("open", handleOpen);
     socket.addEventListener("error", handleErr);
 }
-

@@ -1,4 +1,4 @@
-import createListener from "./listener";
+import Listener from "./listener";
 
 const {
     is,
@@ -45,15 +45,8 @@ export default class TCP {
         return conn;
     }
 
-    createListener(options, handler) {
-        if (is.function(options)) {
-            handler = options;
-            options = {};
-        }
-
-        handler = handler || adone.noop;
-
-        return createListener(handler);
+    createListener(handler) {
+        return new Listener(handler);
     }
 
     filter(multiaddrs) {

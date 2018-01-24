@@ -4,12 +4,19 @@ const {
 
 const __ = adone.private(adone.netron2.circuit);
 
-module.exports = (swarm, options, connHandler) => {
-    const listener = new adone.event.Emitter();
-    const utils = __.utils(swarm);
+export default class Listener extends adone.event.Emitter {
+    constructor(swarm, connHandler, options) {
+        super();
 
-    listener.stopHandler = new __.Stop(swarm);
-    listener.hopHandler = new __.Hop(swarm, options.hop);
+        this.swarm = swarm;
+        this.options = options;
+        this.connHandler = connHandler;
+
+        this.utils = __.utils(swarm);
+
+        this.stopHandler = new __.Stop(swarm);
+        this.hopHandler = new __.Hop(swarm, options.hop);
+    }
 
     /**
      * Add swarm handler and listen for incoming connections
@@ -18,10 +25,10 @@ module.exports = (swarm, options, connHandler) => {
      * @param {Function} callback
      * @return {void}
      */
-    listener.listen = (ma, callback) => {
+    listen(ma, callback) {
         callback = callback || (() => { });
 
-        swarm.handle(__.multicodec.relay, (relayProto, conn) => {
+        this.swarm.handle(__.multicodec.relay, (relayProto, conn) => {
             const streamHandler = new __.StreamHandler(conn);
 
             streamHandler.read((err, msg) => {
@@ -34,29 +41,29 @@ module.exports = (swarm, options, connHandler) => {
                 try {
                     request = __.protocol.CircuitRelay.decode(msg);
                 } catch (err) {
-                    return utils.writeResponse(streamHandler, __.protocol.CircuitRelay.Status.MALFORMED_MESSAGE);
+                    return this.utils.writeResponse(streamHandler, __.protocol.CircuitRelay.Status.MALFORMED_MESSAGE);
                 }
 
                 switch (request.type) {
                     case __.protocol.CircuitRelay.Type.CAN_HOP:
                     case __.protocol.CircuitRelay.Type.HOP: {
-                        return listener.hopHandler.handle(request, streamHandler);
+                        return this.hopHandler.handle(request, streamHandler);
                     }
 
                     case __.protocol.CircuitRelay.Type.STOP: {
-                        return listener.stopHandler.handle(request, streamHandler, connHandler);
+                        return this.stopHandler.handle(request, streamHandler, this.connHandler);
                     }
 
                     default: {
-                        return utils.writeResponse(streamHandler, __.protocol.CircuitRelay.Status.INVALID_MSG_TYPE);
+                        return this.utils.writeResponse(streamHandler, __.protocol.CircuitRelay.Status.INVALID_MSG_TYPE);
                     }
                 }
             });
         });
 
-        setImmediate(() => listener.emit("listen"));
+        setImmediate(() => this.emit("listen"));
         callback();
-    };
+    }
 
     /**
      * Remove swarm listener
@@ -64,11 +71,11 @@ module.exports = (swarm, options, connHandler) => {
      * @param {Function} cb
      * @return {void}
      */
-    listener.close = (cb) => {
-        swarm.unhandle(__.multicodec.stop);
-        setImmediate(() => listener.emit("close"));
+    close(cb) {
+        this.swarm.unhandle(__.multicodec.stop);
+        setImmediate(() => this.emit("close"));
         cb();
-    };
+    }
 
     /**
      * Get fixed up multiaddrs
@@ -85,13 +92,13 @@ module.exports = (swarm, options, connHandler) => {
      * @param {Function} callback
      * @return {void}
      */
-    listener.getAddrs = (callback) => {
-        let addrs = swarm._peerInfo.multiaddrs.toArray();
+    getAddrs(callback) {
+        let addrs = this.swarm._peerInfo.multiaddrs.toArray();
 
         // get all the explicit relay addrs excluding self
         const p2pAddrs = addrs.filter((addr) => {
             return multi.address.validator.Circuit.matches(addr) &&
-                !addr.toString().includes(swarm._peerInfo.id.asBase58());
+                !addr.toString().includes(this.swarm._peerInfo.id.asBase58());
         });
 
         // use the explicit relays instead of any relay
@@ -101,7 +108,7 @@ module.exports = (swarm, options, connHandler) => {
 
         const listenAddrs = [];
         addrs.forEach((addr) => {
-            const peerMa = `/p2p-circuit/ipfs/${swarm._peerInfo.id.asBase58()}`;
+            const peerMa = `/p2p-circuit/ipfs/${this.swarm._peerInfo.id.asBase58()}`;
             if (addr.toString() === peerMa) {
                 listenAddrs.push(multi.address.create(peerMa));
                 return;
@@ -112,15 +119,13 @@ module.exports = (swarm, options, connHandler) => {
                     // by default we're reachable over any relay
                     listenAddrs.push(multi.address.create("/p2p-circuit").encapsulate(addr));
                 } else {
-                    listenAddrs.push(multi.address.create("/p2p-circuit").encapsulate(`${addr}/ipfs/${swarm._peerInfo.id.asBase58()}`));
+                    listenAddrs.push(multi.address.create("/p2p-circuit").encapsulate(`${addr}/ipfs/${this.swarm._peerInfo.id.asBase58()}`));
                 }
             } else {
-                listenAddrs.push(addr.encapsulate(`/ipfs/${swarm._peerInfo.id.asBase58()}`));
+                listenAddrs.push(addr.encapsulate(`/ipfs/${this.swarm._peerInfo.id.asBase58()}`));
             }
         });
 
         callback(null, listenAddrs);
-    };
-
-    return listener;
-};
+    }
+}

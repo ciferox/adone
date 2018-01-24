@@ -11,7 +11,7 @@ const __ = adone.lazifyPrivate({
     protocol: "./protocol",
     utils: "./circuit/utils",
     multicodec: "./multicodec",
-    createListener: "./listener"
+    Listener: "./listener"
 }, exports, require);
 
 export class Circuit {
@@ -92,13 +92,8 @@ export class Circuit {
      * @param {Function} handler
      * @return {listener}
      */
-    createListener(options, handler) {
-        if (is.function(options)) {
-            handler = options;
-            options = this.options || {};
-        }
-
-        const listener = __.createListener(this.swarm, options, handler);
+    createListener(handler, options = {}) {
+        const listener = new __.Listener(this.swarm, handler, options);
         listener.on("listen", this._dialSwarmRelays.bind(this));
         return listener;
     }

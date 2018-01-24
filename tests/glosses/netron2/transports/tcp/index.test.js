@@ -5,12 +5,9 @@ const {
     std: { net }
 } = adone;
 
-describe("netron2", "transports", "tcp", () => {
-    describe("instantiate the transport", () => {
-        it("create", () => {
-            const tcp = new TCP();
-            assert.exists(tcp);
-        });
+describe("netron2", "transport", "tcp", () => {
+    it("instantiate the transport", () => {
+        new TCP();
     });
 
     describe("listen", () => {

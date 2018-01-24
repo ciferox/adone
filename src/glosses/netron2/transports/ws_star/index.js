@@ -82,12 +82,7 @@ class WebsocketStar {
      * @param {function} handler
      * @returns {Listener}
      */
-    createListener(options, handler) {
-        if (is.function(options)) {
-            handler = options;
-            options = {};
-        }
-
+    createListener(handler) {
         const listener = new Listener({
             id: this.id,
             handler,

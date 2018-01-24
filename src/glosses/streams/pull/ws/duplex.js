@@ -28,4 +28,3 @@ export default function duplex(ws, opts) {
         method: req.method
     };
 }
-
