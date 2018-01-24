@@ -34,114 +34,149 @@ const buildURL = (url, params, paramsSerializer) => {
 };
 
 
-export default function adapter(config) {
-    return new Promise((resolve, reject) => {
-        let data = config.data;
-        const headers = config.headers;
-        let timer;
+export default async function adapter(config) {
+    let data = config.data;
+    const headers = config.headers;
+    let timer;
 
-        if (!is.string(headers["User-Agent"]) && !is.string(headers["user-agent"])) {
-            headers["User-Agent"] = `Adone/${adone.package.version}`;
-        }
+    if (!is.string(headers["User-Agent"]) && !is.string(headers["user-agent"])) {
+        headers["User-Agent"] = `Adone/${adone.package.version}`;
+    }
 
-        if (data && !is.stream(data)) {
-            if (is.buffer(data)) {
-                // Nothing to do...
-            } else if (is.arrayBuffer(data)) {
-                data = Buffer.from(new Uint8Array(data));
-            } else if (is.string(data)) {
-                data = Buffer.from(data, "utf-8");
+    if (config.formData) {
+        const form = new require("form-data")();
+        const appendFormValue = function (key, value) {
+            if (value && value.hasOwnProperty("value") && value.hasOwnProperty("options")) {
+                form.append(key, value.value, value.options);
             } else {
-                return reject(__.createError("Data after transformation must be a string, an ArrayBuffer, a Buffer, or a Stream'", config));
+                form.append(key, value);
             }
-
-            // Add Content-Length header if data exists
-            headers["Content-Length"] = data.length;
-        } else if (is.nil(data)) {
-            delete headers["Content-Type"];
-        }
-
-        // HTTP basic authentication
-        let auth = undefined;
-        if (config.auth) {
-            auth = `${config.auth.username || ""}:${config.auth.password || ""}`;
-        }
-
-        // Parse url
-        const parsedUrl = adone.std.url.parse(config.url);
-        const protocol = parsedUrl.protocol || "http:";
-
-        if (!auth && parsedUrl.auth) {
-            const urlAuth = parsedUrl.auth.split(":");
-            auth = `${urlAuth[0] || ""}:${urlAuth[1] || ""}`;
-        }
-
-        if (auth) {
-            delete headers.Authorization;
-        }
-
-        const isHttps = protocol === "https:";
-        const agent = isHttps ? config.httpsAgent : config.httpAgent;
-
-        const nodeOptions = {
-            hostname: parsedUrl.hostname,
-            port: parsedUrl.port,
-            path: buildURL(parsedUrl.path, config.params, config.paramsSerializer).replace(/^\?/, ""),
-            method: config.method.toUpperCase(),
-            headers,
-            agent,
-            auth
         };
-
-        if (isHttps) {
-            nodeOptions.rejectUnauthorized = is.boolean(config.rejectUnauthorized) ? config.rejectUnauthorized : true;
-        }
-
-        let proxy = config.proxy;
-        if (!proxy && proxy !== false) {
-            const proxyEnv = `${protocol.slice(0, -1)}_proxy`;
-            const proxyUrl = process.env[proxyEnv] || process.env[proxyEnv.toUpperCase()];
-            if (is.string(proxyUrl)) {
-                const parsedProxyUrl = adone.std.url.parse(proxyUrl);
-                proxy = {
-                    host: parsedProxyUrl.hostname,
-                    port: parsedProxyUrl.port
-                };
-
-                if (parsedProxyUrl.auth) {
-                    const proxyUrlAuth = parsedProxyUrl.auth.split(":");
-                    proxy.auth = {
-                        username: proxyUrlAuth[0],
-                        password: proxyUrlAuth[1]
-                    };
+        for (const formKey in config.formData) {
+            if (config.formData.hasOwnProperty(formKey)) {
+                const formValue = config.formData[formKey];
+                if (is.array(formValue)) {
+                    for (let j = 0; j < formValue.length; j++) {
+                        appendFormValue(formKey, formValue[j]);
+                    }
+                } else {
+                    appendFormValue(formKey, formValue);
                 }
             }
         }
+        // replace the data stream???
+        data = form;
 
-        if (proxy) {
-            nodeOptions.hostname = proxy.host;
-            nodeOptions.host = proxy.host;
-            nodeOptions.headers.host = parsedUrl.hostname + (parsedUrl.port ? `:${parsedUrl.port}` : "");
-            nodeOptions.port = proxy.port;
-            nodeOptions.path = `${protocol}//${parsedUrl.hostname}${parsedUrl.port ? `:${parsedUrl.port}` : ""}${nodeOptions.path}`;
+        headers["Content-Type"] = `multipart/form-data; boundary=${form.getBoundary()}`;
 
-            // Basic proxy authorization
-            if (proxy.auth) {
-                const base64 = Buffer.from(`${proxy.auth.username}:${proxy.auth.password}`, "utf8").toString("base64");
-                nodeOptions.headers["Proxy-Authorization"] = `Basic ${base64}`;
+        const contentLength = await new Promise((resolve, reject) => {
+            form.getLength((err, len) => {
+                err ? reject(err) : resolve(len);
+            });
+        });
+
+        headers["Content-Length"] = contentLength;
+    }
+
+    if (data && !is.stream(data)) {
+        if (is.buffer(data)) {
+            // Nothing to do...
+        } else if (is.arrayBuffer(data)) {
+            data = Buffer.from(new Uint8Array(data));
+        } else if (is.string(data)) {
+            data = Buffer.from(data, "utf-8");
+        } else {
+            throw __.createError("Data after transformation must be a string, an ArrayBuffer, a Buffer, or a Stream'", config);
+        }
+
+        // Add Content-Length header if data exists
+        headers["Content-Length"] = data.length;
+    } else if (is.nil(data)) {
+        delete headers["Content-Type"];
+    }
+
+    // HTTP basic authentication
+    let auth = undefined;
+    if (config.auth) {
+        auth = `${config.auth.username || ""}:${config.auth.password || ""}`;
+    }
+
+    // Parse url
+    const parsedUrl = adone.std.url.parse(config.url);
+    const protocol = parsedUrl.protocol || "http:";
+
+    if (!auth && parsedUrl.auth) {
+        const urlAuth = parsedUrl.auth.split(":");
+        auth = `${urlAuth[0] || ""}:${urlAuth[1] || ""}`;
+    }
+
+    if (auth) {
+        delete headers.Authorization;
+    }
+
+    const isHttps = protocol === "https:";
+    const agent = isHttps ? config.httpsAgent : config.httpAgent;
+
+    const nodeOptions = {
+        hostname: parsedUrl.hostname,
+        port: parsedUrl.port,
+        path: buildURL(parsedUrl.path, config.params, config.paramsSerializer).replace(/^\?/, ""),
+        method: config.method.toUpperCase(),
+        headers,
+        agent,
+        auth
+    };
+
+    if (isHttps) {
+        nodeOptions.rejectUnauthorized = is.boolean(config.rejectUnauthorized) ? config.rejectUnauthorized : true;
+    }
+
+    let proxy = config.proxy;
+    if (!proxy && proxy !== false) {
+        const proxyEnv = `${protocol.slice(0, -1)}_proxy`;
+        const proxyUrl = process.env[proxyEnv] || process.env[proxyEnv.toUpperCase()];
+        if (is.string(proxyUrl)) {
+            const parsedProxyUrl = adone.std.url.parse(proxyUrl);
+            proxy = {
+                host: parsedProxyUrl.hostname,
+                port: parsedProxyUrl.port
+            };
+
+            if (parsedProxyUrl.auth) {
+                const proxyUrlAuth = parsedProxyUrl.auth.split(":");
+                proxy.auth = {
+                    username: proxyUrlAuth[0],
+                    password: proxyUrlAuth[1]
+                };
             }
         }
+    }
 
-        let transport;
-        if (config.transport) {
-            transport = config.transport;
-        } else if (config.maxRedirects === 0) {
-            transport = isHttps ? adone.std.https : adone.std.http;
-        } else {
-            nodeOptions.maxRedirects = config.maxRedirects;
-            transport = isHttps ? http.followRedirects.https : http.followRedirects.http;
+    if (proxy) {
+        nodeOptions.hostname = proxy.host;
+        nodeOptions.host = proxy.host;
+        nodeOptions.headers.host = parsedUrl.hostname + (parsedUrl.port ? `:${parsedUrl.port}` : "");
+        nodeOptions.port = proxy.port;
+        nodeOptions.path = `${protocol}//${parsedUrl.hostname}${parsedUrl.port ? `:${parsedUrl.port}` : ""}${nodeOptions.path}`;
+
+        // Basic proxy authorization
+        if (proxy.auth) {
+            const base64 = Buffer.from(`${proxy.auth.username}:${proxy.auth.password}`, "utf8").toString("base64");
+            nodeOptions.headers["Proxy-Authorization"] = `Basic ${base64}`;
         }
+    }
 
+    let transport;
+    if (config.transport) {
+        transport = config.transport;
+    } else if (config.maxRedirects === 0) {
+        transport = isHttps ? adone.std.https : adone.std.http;
+    } else {
+        nodeOptions.maxRedirects = config.maxRedirects;
+        transport = isHttps ? http.followRedirects.https : http.followRedirects.http;
+    }
+
+    return new Promise((resolve, reject) => {
         const req = transport.request(nodeOptions, (res) => {
             if (req.aborted) {
                 return;
@@ -270,6 +305,8 @@ export default function adapter(config) {
             eventData.loaded = counter.count;
             uploadProgress(eventData);
         });
+
+        counter.pause(); // on("data") resumes the stream, we dont want it
 
         data.pipe(counter).pipe(req);
     });

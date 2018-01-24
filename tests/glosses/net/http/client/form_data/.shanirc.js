@@ -3,14 +3,14 @@ const {
 } = adone;
 
 export default (ctx) => {
-    ctx.prefix("net", "http", "FormData");
+    ctx.prefix("net", "http", "client", "FormData");
 
     ctx.runtime.fixtures = new adone.fs.Directory(__dirname, "fixtures");
     ctx.runtime.httpsOpts = {
         cert: ctx.runtime.fixtures.getFile("cert.pem").contentsSync(),
         key: ctx.runtime.fixtures.getFile("key.pem").contentsSync()
     };
-    ctx.runtime.FormData = adone.net.http.FormData;
+    ctx.runtime.FormData = adone.net.http.client.FormData;
     ctx.runtime.defaultTypeValue = () => Buffer.from([1, 2, 3]);
     ctx.runtime.getUrl = (app, opts) => {
         return Object.assign(adone.std.url.parse(`http://localhost:${app.address().port}/`), opts);

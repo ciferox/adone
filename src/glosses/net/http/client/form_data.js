@@ -2,18 +2,27 @@ const {
     is,
     stream: {
         CombinedStream
+    },
+    net: {
+        http: {
+            server: {
+                helper: {
+                    parseURL: parseUrl // TODO: it mustnt be inside "server"
+                }
+            }
+        },
+        mime
+    },
+    std: {
+        util,
+        http,
+        https,
+        path,
+        fs
     }
 } = adone;
 
-const util = require("util");
-const path = require("path");
-const http = require("http");
-const https = require("https");
-const parseUrl = require("url").parse;
-const fs = require("fs");
-const mime = require("mime-types");
-const asynckit = require("asynckit");
-const populate = function (dst, src) {
+const populate = (dst, src) => {
     // populates missing values
 
     Object.keys(src).forEach((prop) => {
@@ -96,9 +105,7 @@ export default class FormData extends CombinedStream {
         this._valueLength += valueLength;
 
         // @check why add CRLF? does this account for custom/multiple CRLFs?
-        this._overheadLength +=
-    Buffer.byteLength(header) +
-    FormData.LINE_BREAK.length;
+        this._overheadLength += Buffer.byteLength(header) + FormData.LINE_BREAK.length;
 
         // empty or either doesn't have path or not an http response
         if (!value || ( !value.path && !(value.readable && value.hasOwnProperty("httpVersion")) )) {
@@ -164,9 +171,9 @@ export default class FormData extends CombinedStream {
     }
 
     _multiPartHeader(field, value, options) {
-    // custom header specified (as string)?
-    // it becomes responsible for boundary
-    // (e.g. to handle extra CRLFs on .NET servers)
+        // custom header specified (as string)?
+        // it becomes responsible for boundary
+        // (e.g. to handle extra CRLFs on .NET servers)
         if (is.string(options.header)) {
             return options.header;
         }
@@ -238,7 +245,7 @@ export default class FormData extends CombinedStream {
 
     _getContentType(value, options) {
 
-    // use custom content-type above all
+        // use custom content-type above all
         let contentType = options.contentType;
 
         // or try `name` from formidable, browser
@@ -368,18 +375,21 @@ export default class FormData extends CombinedStream {
             return;
         }
 
-        asynckit.parallel(this._valuesToMeasure, this._lengthRetriever, (err, values) => {
-            if (err) {
-                cb(err);
-                return;
+        let i = 0;
+        let err = null;
+        const _cb = (_err, len) => {
+            err = err || _err;
+            knownLength += len;
+            if (++i === this._valuesToMeasure.length) {
+                if (err) {
+                    cb(err);
+                } else {
+                    cb(null, knownLength);
+                }
             }
+        };
 
-            values.forEach((length) => {
-                knownLength += length;
-            });
-
-            cb(null, knownLength);
-        });
+        this._valuesToMeasure.forEach((x) => this._lengthRetriever(x, _cb));
     }
 
     submit(params, cb) {
@@ -390,7 +400,7 @@ export default class FormData extends CombinedStream {
         // parse provided url if it's string
         // or treat it as options object
         if (is.string(params)) {
-            params = parseUrl(params);
+            params = parseUrl({ url: params });
             options = populate({
                 port: params.port,
                 path: params.pathname,

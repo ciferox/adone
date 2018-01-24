@@ -263,17 +263,22 @@ describe("text", "pretty", "json", () => {
         });
 
         it("should print an Error correctly ", () => {
+            const orig = Error.stackTraceLimit;
             Error.stackTraceLimit = 1;
-            const input = new Error("foo");
-            const stack = input.stack.split("\n");
-            const output = pretty.json(input, {}, 4);
+            try {
+                const input = new Error("foo");
+                const stack = input.stack.split("\n");
+                const output = pretty.json(input, {}, 4);
 
-            assert.equal(output, [
-                `    ${styler.green("message: ")}foo`,
-                `    ${styler.green("stack: ")}`,
-                `      ${styler.green("- ")}${stack[0]}`,
-                `      ${styler.green("- ")}${stack[1]}`
-            ].join("\n"));
+                assert.equal(output, [
+                    `    ${styler.green("message: ")}foo`,
+                    `    ${styler.green("stack: ")}`,
+                    `      ${styler.green("- ")}${stack[0]}`,
+                    `      ${styler.green("- ")}${stack[1]}`
+                ].join("\n"));
+            } finally {
+                Error.stackTraceLimit = orig;
+            }
         });
 
         it("should print serializable items in an array inline", () => {

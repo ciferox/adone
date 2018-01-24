@@ -6,6 +6,10 @@ const {
     }
 } = adone;
 
+adone.lazify({
+    FormData: "./form_data"
+}, exports, require);
+
 const __ = adone.lazifyPrivate({
     InterceptorManager: "./interceptor_manager",
     nodeAdapter: "./node_adapter",

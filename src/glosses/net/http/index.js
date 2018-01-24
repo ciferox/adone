@@ -3,6 +3,5 @@ adone.lazify({
     client: "./client",
     x: "./x",
     Downloader: "./downloader",
-    followRedirects: "./follow_redirects",
-    FormData: "./form_data"
+    followRedirects: "./follow_redirects"
 }, exports, require);
