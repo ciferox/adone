@@ -1,5 +1,5 @@
 const {
-    cmake: { BuildSystem },
+    cmake,
     fast,
     is,
     fs,
@@ -8,7 +8,7 @@ const {
 
 export default class NBuildTask extends adone.project.task.Base {
     async main(params) {
-        if (is.string(params.native.type) && params.native.type == "gyp") {
+        if (is.string(params.native.type) && params.native.type === "gyp") {
             const tmp = new fs.Directory(await fs.tmpName({
                 prefix: "nbuild-"
             }));
@@ -31,7 +31,7 @@ export default class NBuildTask extends adone.project.task.Base {
             const cwd = process.cwd();
             const nativePath = std.path.join(this.manager.cwd, params.native.src);
             process.chdir(nativePath);
-            const buildSystem = new BuildSystem();
+            const buildSystem = new cmake.BuildSystem();
             try {
                 await buildSystem.build();
             } finally {

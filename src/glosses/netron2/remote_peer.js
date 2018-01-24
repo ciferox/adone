@@ -5,6 +5,13 @@ const {
 } = adone;
 
 export default class RemotePeer extends AbstractPeer {
+    constructor(info, netron) {
+        super(info, netron);
+
+        this.connection = null;
+        this.protocol = adone.netron2.NETRON_PROTOCOL;
+    }
+
     connect(/*options*/) {
         throw new x.NotImplemented("Method connect() is not implemented");
     }

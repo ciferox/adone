@@ -1,11 +1,5 @@
-adone.lazifyPrivate({
-    LimitDialer: "./limit_dialer"
-}, exports, require);
-
 const each = require("async/each");
 const series = require("async/series");
-const transport = require("./transport");
-const connection = require("./connection");
 const getPeerInfo = require("./get_peer_info");
 const protocolMuxer = require("./protocol_muxer");
 const plaintext = require("./plaintext");
@@ -14,6 +8,12 @@ const {
     is,
     netron2: { Connection, circuit: { Circuit }, multistream }
 } = adone;
+
+const __ = adone.lazifyPrivate({
+    LimitDialer: "./limit_dialer",
+    TransportManager: "./transport_manager",
+    ConnectionManager: "./connection_manager"
+}, exports, require);
 
 export class Swarm extends adone.event.Emitter {
     constructor(peerInfo, peerBook) {
@@ -29,11 +29,6 @@ export class Swarm extends adone.event.Emitter {
 
         this._peerInfo = peerInfo;
         this._peerBook = peerBook;
-
-        this.setMaxListeners(Infinity);
-        // transports --
-        // { key: transport }; e.g { tcp: <tcp> }
-        this.transports = {};
 
         // connections --
         // { peerIdB58: { conn: <conn> }}
@@ -59,27 +54,29 @@ export class Swarm extends adone.event.Emitter {
         // Crypto details
         this.crypto = plaintext;
 
-        this.transport = transport(this);
-        this.connection = connection(this);
+        this.tm = new __.TransportManager(this);
+        this.connection = new __.ConnectionManager(this);
 
         this.handle(this.crypto.tag, (protocol, conn) => {
             const peerId = this._peerInfo.id;
             const wrapped = this.crypto.encrypt(peerId, conn, undefined, () => { });
             return protocolMuxer(this.protocols, wrapped);
         });
+
+        this.setMaxListeners(Infinity);
     }
 
     hasTransports() {
-        const transports = Object.keys(this.transports).filter((t) => t !== "Circuit");
+        const transports = Object.keys(this.tm.transports).filter((t) => t !== "Circuit");
         return transports && transports.length > 0;
     }
 
     availableTransports(pi) {
         const myAddrs = pi.multiaddrs.toArray();
-        const myTransports = Object.keys(this.transports);
+        const myTransports = Object.keys(this.tm.transports);
 
         // Only listen on transports we actually have addresses for
-        return myTransports.filter((ts) => this.transports[ts].filter(myAddrs).length > 0)
+        return myTransports.filter((ts) => this.tm.transports[ts].filter(myAddrs).length > 0)
             // push Circuit to be the last proto to be dialed
             .sort((a) => a === "Circuit" ? 1 : 0);
     }
@@ -88,7 +85,7 @@ export class Swarm extends adone.event.Emitter {
     listen(callback) {
         each(this.availableTransports(this._peerInfo), (ts, cb) => {
             // Listen on the given transport
-            this.transport.listen(ts, {}, null, cb);
+            this.tm.listen(ts, {}, null, cb);
         }, callback);
     }
 
@@ -120,7 +117,7 @@ export class Swarm extends adone.event.Emitter {
                 });
             }, cb),
             (cb) => {
-                each(this.transports, (transport, cb) => {
+                each(this.tm.transports, (transport, cb) => {
                     each(transport.listeners, (listener, cb) => {
                         listener.close(cb);
                     }, cb);
@@ -269,7 +266,7 @@ export class Swarm extends adone.event.Emitter {
                         return cb(new Error("Circuit already tried!"));
                     }
 
-                    if (!this.transports[Circuit.tag]) {
+                    if (!this.tm.transports[Circuit.tag]) {
                         return cb(new Error("Circuit not enabled!"));
                     }
 
@@ -279,7 +276,7 @@ export class Swarm extends adone.event.Emitter {
                     transport = Circuit.tag;
                 }
 
-                this.transport.dial(transport, pi, (err, conn) => {
+                this.tm.dial(transport, pi, (err, conn) => {
                     if (err) {
                         adone.log(err);
                         return nextTransport(tKeys.shift());

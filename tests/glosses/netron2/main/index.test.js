@@ -985,7 +985,7 @@ describe("netron2", () => {
             const netCore = createNetCore(addrs, options);
             netCore.handle("/echo/1.0.0", echo);
             await netCore.start();
-            handlerSpies.push(spy(netCore.swarm.transports[Circuit.tag].listeners[0].hopHandler, "handle"));
+            handlerSpies.push(spy(netCore.swarm.tm.transports[Circuit.tag].listeners[0].hopHandler, "handle"));
             return netCore;
         };
 

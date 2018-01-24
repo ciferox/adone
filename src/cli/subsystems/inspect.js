@@ -71,7 +71,7 @@ export default class Inspection extends Subsystem {
                 };
 
                 const list = [];
-                for (let [key, value] of util.entries(ns, { all: opts.has("all") })) {
+                for (let [key, value] of util.entries(ns, { onlyEnumerable: false, all: opts.has("all") })) {
                     const origType = util.typeOf(value);
                     let type = origType;
 

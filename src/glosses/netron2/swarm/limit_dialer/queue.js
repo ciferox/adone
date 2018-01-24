@@ -9,7 +9,7 @@ const {
 /**
  * Queue up the amount of dials to a given peer.
  */
-class DialQueue {
+export default class DialQueue {
     /**
      * Create a new dial queue.
      *
@@ -97,5 +97,3 @@ class DialQueue {
         this.queue.push({ transport, addr, token }, callback);
     }
 }
-
-module.exports = DialQueue;

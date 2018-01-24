@@ -11,7 +11,6 @@ const {
     tag
 } = adone;
 
-
 const I_DEFINITION_SYMBOL = Symbol();
 const I_PEERID_SYMBOL = Symbol();
 
@@ -123,8 +122,11 @@ export default class Netron extends event.AsyncEmitter {
      * @param {string} netId network name
      * @param {*} peer 
      */
-    connect(netId, peer) {
-        return this.getNetCore(netId).connect(peer);
+    async connect(netId, peer) {
+        const conn = await this.getNetCore(netId).connect(peer, adone.netron2.NETRON_PROTOCOL);
+        const remotePeer = new adone.netron2.RemotePeer(PeerInfo.create(peer));
+        remotePeer.connection = conn;
+        return remotePeer;
     }
 
     /**
@@ -154,18 +156,27 @@ export default class Netron extends event.AsyncEmitter {
         const netCore = this.getNetCore(netId);
         if (!netCore.started) {
             await netCore.start();
-            // netCore.swarm.on("peer-mux-established", (peerInfo) => {
-            //     const remotePeer = new adone.netron2.RemotePeer(peerInfo);
-            //     // this.peers.
-            // });
+            netCore.swarm.on("peer-mux-established", (peerInfo) => {
+                const remotePeer = new adone.netron2.RemotePeer(peerInfo);
+                this.peers.set(peerInfo.id.asBase58(), remotePeer);
+            });
 
-            // netCore.swarm.on("peer-mux-closed", (peerInfo) => {
+            netCore.swarm.on("peer-mux-closed", (peerInfo) => {
+                this.peers.delete(peerInfo.id.asBase58());
+            });
 
-            // });
+            netCore.handle(adone.netron2.NETRON_PROTOCOL, async (protocol, conn) => {
+                adone.log("connected with protocol:", protocol);
+                // conn.getPeerInfo((peerInfo) => {
+                //     adone.log("connected peer:", peerInfo.id.asBase58());
+                // });
+                // adone.log(conn);
+                // adone.log("connection from", conn.peerInfo.id.asBase58());
+                // const remotePeer = this.peers.get(conn.peerInfo.id.asBase58());
 
-            // netCore.handle("/netron/1.0.0", (protocol, conn) => {
-                
-            // });
+                // remotePeer.protocol = protocol;
+                // remotePeer.connection = conn;
+            });
         }
     }
 

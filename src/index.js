@@ -3,11 +3,11 @@ Object.defineProperty(exports, "__esModule", {
 });
 
 if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
-    const namespaceSymbol = Symbol.for("adone:namespace");
-    const privateSymbol = Symbol.for("adone:private");
+    const NAMESPACE_SYMBOL = Symbol.for("adone:namespace");
+    const PRIVATE_SYMBOL = Symbol.for("adone:private");
 
     const asNamespace = (obj) => {
-        obj[namespaceSymbol] = true;
+        obj[NAMESPACE_SYMBOL] = true;
         return obj;
     };
 
@@ -19,7 +19,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         has(obj, tagName) {
             return obj != null && typeof obj === "object" && obj[this[tagName]] === TAG_MARKER;
         },
-        define(tagName, predicate) {
+        define(tagName) {
             this[tagName] = Symbol();
         },
 
@@ -36,7 +36,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
     };
 
     const adone = Object.create({
-        [namespaceSymbol]: true,
+        [NAMESPACE_SYMBOL]: true,
         null: Symbol.for("adone::null"),
         noop: () => { },
         identity: (x) => x,
@@ -111,18 +111,18 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             return obj;
         },
         lazifyPrivate: (modules, obj, _require = require, options) => {
-            if (adone.is.plainObject(obj[privateSymbol])) {
-                return adone.lazify(modules, obj[privateSymbol], _require, options);
+            if (adone.is.plainObject(obj[PRIVATE_SYMBOL])) {
+                return adone.lazify(modules, obj[PRIVATE_SYMBOL], _require, options);
             }
 
-            obj[privateSymbol] = adone.lazify(modules, null, _require, options);
-            return obj[privateSymbol];
+            obj[PRIVATE_SYMBOL] = adone.lazify(modules, null, _require, options);
+            return obj[PRIVATE_SYMBOL];
         },
         definePrivate: (modules, obj) => {
-            if (adone.is.plainObject(obj[privateSymbol])) {
-                Object.assign(obj[privateSymbol], modules);
+            if (adone.is.plainObject(obj[PRIVATE_SYMBOL])) {
+                Object.assign(obj[PRIVATE_SYMBOL], modules);
             } else {
-                obj[privateSymbol] = modules;
+                obj[PRIVATE_SYMBOL] = modules;
             }
 
             return obj;
@@ -146,7 +146,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
                 value
             });
         },
-        private: (obj) => obj[privateSymbol],
+        private: (obj) => obj[PRIVATE_SYMBOL],
         asNamespace,
         tag,
         // TODO: allow only absolute path

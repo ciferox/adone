@@ -1,5 +1,5 @@
 const {
-    cmake: { BuildSystem },
+    cmake,
     fs,
     is,
     std
@@ -27,7 +27,7 @@ export default class NCleanTask extends adone.project.task.Base {
             const cwd = process.cwd();
             const nativePath = std.path.join(this.manager.cwd, params.native.src);
             process.chdir(nativePath);
-            const buildSystem = new BuildSystem();
+            const buildSystem = new cmake.BuildSystem();
             try {
                 await buildSystem.clean();
             } finally {

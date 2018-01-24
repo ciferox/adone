@@ -17,14 +17,16 @@ export default class WatchTask extends adone.project.task.Transform {
 
     initialize(params) {
         this.targetTask = this.manager.getTaskInstance(params.task);
-        const watcherOptions = {};
-        if (!is.glob(params.src)) {
-            watcherOptions.usePolling = true;
-            watcherOptions.interval = 250;
-        }
+        // const watcherOptions = {};
+
+        // uses a lot of processor time...
+        // if (!is.glob(params.src)) {
+        //     watcherOptions.usePolling = true;
+        //     watcherOptions.interval = 250;
+        // }
         this.stream = fast.watch(params.src, {
             ...this.streamOptions(),
-            ...watcherOptions
+            // ...watcherOptions
         });
 
         return super.initialize(params);

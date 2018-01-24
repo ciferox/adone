@@ -183,7 +183,7 @@ export default class NetCore extends event.Emitter {
         const multiaddrs = this.peerInfo.multiaddrs.toArray();
         this.transports.forEach((transport) => {
             if (transport.filter(multiaddrs).length > 0) {
-                this.swarm.transport.add(transport.tag || transport.constructor.name, transport);
+                this.swarm.tm.add(transport.tag || transport.constructor.name, transport);
             }
         });
     }
@@ -206,9 +206,9 @@ export default class NetCore extends event.Emitter {
                 series([
                     (cb) => this.swarm.listen(cb),
                     (cb) => {
-                        if (ws && !this.swarm.transport.has(ws.tag || ws.constructor.name)) {
+                        if (ws && !this.swarm.tm.has(ws.tag || ws.constructor.name)) {
                             // always add dialing on websockets
-                            this.swarm.transport.add(ws.tag || ws.constructor.name, ws);
+                            this.swarm.tm.add(ws.tag || ws.constructor.name, ws);
                         }
 
                         // all transports need to be setup before discover starts

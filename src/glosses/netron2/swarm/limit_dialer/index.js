@@ -1,5 +1,5 @@
 const map = require("async/map");
-const DialQueue = require("./queue");
+import DialQueue from "./queue";
 
 const {
     util: { once }

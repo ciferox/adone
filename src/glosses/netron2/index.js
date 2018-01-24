@@ -5,6 +5,8 @@ const {
     tag
 } = adone;
 
+export const NETRON_PROTOCOL = "/netron/1.0.0";
+
 export const ACTION = {
     // Common actions
     GET: 0x00,

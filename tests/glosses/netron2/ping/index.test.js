@@ -21,8 +21,8 @@ describe("netron2", "ping", function () {
         peerB.multiaddrs.add("/ip4/127.0.0.1/tcp/0");
         swarmA = new Swarm(peerA, new PeerBook());
         swarmB = new Swarm(peerB, new PeerBook());
-        swarmA.transport.add("tcp", new TCP());
-        swarmB.transport.add("tcp", new TCP());
+        swarmA.tm.add("tcp", new TCP());
+        swarmB.tm.add("tcp", new TCP());
 
         series([
             (cb) => swarmA.listen(cb),
