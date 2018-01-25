@@ -20,6 +20,12 @@ const baseSubsystem = (name) => std.path.join(__dirname, "..", "lib", "cli", "su
 @DApplication({
     subsystems: [
         {
+            name: "run",
+            group: "cli",
+            description: "Run application/script/code",
+            subsystem: baseSubsystem("run")
+        },
+        {
             name: "link",
             group: "cli",
             description: "Adone cli link management",
@@ -64,60 +70,6 @@ class AdoneCLI extends application.CliApplication {
                 ...ss,
                 lazily: true
             });
-        }
-    }
-
-    @DMainCliCommand({
-        blindMode: true,
-        arguments: [
-            {
-                name: "path",
-                default: "index.js",
-                help: "Run [es6] script or adone application"
-            }
-        ],
-        options: [
-            {
-                name: "--sourcemaps",
-                help: "Force enable sourcemaps support"
-            },
-            {
-                name: ["-e", "--exec"],
-                help: "Execute code"
-            }
-        ]
-    })
-    async main(args, opts, { rest }) {
-        if (opts.has("exec")) {
-            const m = new adone.js.Module(process.cwd(), {
-                transform: adone.js.Module.transforms.transpile(adone.require.options)
-            });
-
-            m._compile(args.get("path"), "index.js");
-            let result = m.exports;
-            if (result.__esModule) {
-                result = result.default;
-            }
-            if (is.asyncFunction(result)) {
-                await result();
-            } else if (is.function(result)) {
-                result();
-            } else if (!is.nil(result)) {
-                adone.log(result);
-            }
-        } else {
-            let scriptPath = args.get("path");
-            if (!std.path.isAbsolute(scriptPath)) {
-                scriptPath = std.path.resolve(process.cwd(), scriptPath);
-            }
-
-            adone.__argv__ = [process.argv[0], scriptPath, ...rest];
-
-            if (opts.get("sourcemaps")) {
-                adone.sourcemap.support(Error).install();
-            }
-
-            adone.require(scriptPath);
         }
     }
 

@@ -246,12 +246,7 @@ const fs = adone.lazify({
     fuse: "./fuse"
 }, adone.asNamespace(exports), require);
 
-const expandReadOptions = (options = {}) => {
-    if (is.string(options)) {
-        return { encoding: options };
-    }
-    return options;
-};
+const expandReadOptions = (options = {}) => is.string(options) ? { encoding: options } : options;
 
 export const readFile = async (filepath, options) => {
     const {
@@ -259,19 +254,10 @@ export const readFile = async (filepath, options) => {
         encoding = null,
         flags = "r"
     } = expandReadOptions(options);
-    if (check) {
-        if (!await adone.fs.is.file(filepath)) {
-            return null;
-        }
+    if (check && !await adone.fs.is.file(filepath)) {
+        return null;
     }
-    return new Promise((resolve, reject) => {
-        return std.fs.readFile(filepath, { encoding, flags }, (err, data) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(data);
-        });
-    });
+    return new Promise((resolve, reject) => std.fs.readFile(filepath, { encoding, flags }, (err, data) => err ? reject(err) : resolve(data)));
 };
 
 export const readFileSync = (filepath, options) => {
