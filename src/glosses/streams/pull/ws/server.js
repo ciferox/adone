@@ -14,7 +14,7 @@ const {
     }
 } = pull;
 
-export class Server extends event.Emitter {
+export default class Server extends event.Emitter {
     constructor(opts, onConnection) {
         super();
 
@@ -28,15 +28,15 @@ export class Server extends event.Emitter {
 
         this.server = opts.server || (opts.key && opts.cert ? https.createServer(opts) : http.createServer());
 
+        this.server.on("listening", () => this.emit("listening"));
+        this.server.on("request", (req, res) => this.emit("request", req, res));
+        this.server.on("close", () => this.emit("close"));
+
         this.wsServer = new adone.net.ws.Server({
             server: this.server,
             perMessageDeflate: false,
             verifyClient: opts.verifyClient
         });
-
-        this.server.on("listening", () => this.emit("listening"));
-        this.server.on("request", (...args) => this.emit("error", ...args));
-        this.server.on("close", () => this.emit("close"));
 
         this.wsServer.on("connection", (socket, req) => {
             const stream = duplex(socket);
@@ -52,8 +52,9 @@ export class Server extends event.Emitter {
     }
 
     close(onClose) {
-        this.server.close(onClose);
-        this.wsServer.close();
+        this.wsServer.close(() => {
+            this.server.close(onClose);
+        });
         return this;
     }
 
@@ -61,5 +62,3 @@ export class Server extends event.Emitter {
         return this.server.address();
     }
 }
-
-export const createServer = (opts, onConnection) => new Server(opts, onConnection);

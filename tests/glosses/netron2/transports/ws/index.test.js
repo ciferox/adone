@@ -145,7 +145,7 @@ describe("netron2", "trasnport", "ws", () => {
         });
     });
 
-    describe("dial", () => {
+    describe("connect", () => {
         let ws;
         let listener;
         const ma = multi.address.create("/ip4/127.0.0.1/tcp/9596/ws");
@@ -162,8 +162,8 @@ describe("netron2", "trasnport", "ws", () => {
             listener.close(done);
         });
 
-        it("dial on IPv4", (done) => {
-            const conn = ws.dial(ma);
+        it("connect on IPv4", (done) => {
+            const conn = ws.connect(ma);
 
             const s = pull.goodbye({
                 source: pull.values(["hey"]),
@@ -178,13 +178,13 @@ describe("netron2", "trasnport", "ws", () => {
             pull(s, conn, s);
         });
 
-        it.skip("dial on IPv6", (done) => {
+        it.skip("connect on IPv6", (done) => {
             // TODO IPv6 not supported yet
         });
 
-        it("dial on IPv4 with IPFS Id", (done) => {
+        it("connect on IPv4 with IPFS Id", (done) => {
             const ma = multi.address.create("/ip4/127.0.0.1/tcp/9596/ws/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
-            const conn = ws.dial(ma);
+            const conn = ws.connect(ma);
 
             const s = pull.goodbye({
                 source: pull.values(["hey"]),
@@ -338,7 +338,7 @@ describe("netron2", "trasnport", "ws", () => {
     describe("valid Connection", () => {
         const ma = multi.address.create("/ip4/127.0.0.1/tcp/9092/ws");
 
-        it.todo("get observed addrs", (done) => {
+        it("get observed addrs", (done) => {
             let dialerObsAddrs;
             let listenerObsAddrs;
 
@@ -356,28 +356,28 @@ describe("netron2", "trasnport", "ws", () => {
             });
 
             listener.listen(ma, () => {
-                const conn = ws.dial(ma);
-
-                const onEnd = function () {
-                    conn.getObservedAddrs((err, addrs) => {
-                        assert.notExists(err);
-                        listenerObsAddrs = addrs;
-
-                        const onClose = function () {
-                            expect(listenerObsAddrs[0]).to.deep.equal(ma);
-                            expect(dialerObsAddrs.length).to.equal(0);
-                            done();                            
-                        };
-
-                        listener.close(onClose);
-                    });
-                };
-
-                pull(
-                    pull.empty(),
-                    conn,
-                    pull.onEnd(onEnd)
-                );
+                const conn = ws.connect(ma, () => {
+                    const onEnd = function () {
+                        conn.getObservedAddrs((err, addrs) => {
+                            assert.notExists(err);
+                            listenerObsAddrs = addrs;
+    
+                            const onClose = function () {
+                                expect(listenerObsAddrs[0]).to.deep.equal(ma);
+                                expect(dialerObsAddrs.length).to.equal(0);
+                                done();                            
+                            };
+    
+                            listener.close(onClose);
+                        });
+                    };
+    
+                    pull(
+                        pull.empty(),
+                        conn,
+                        pull.onEnd(onEnd)
+                    );
+                });
             });
         });
 
@@ -395,7 +395,7 @@ describe("netron2", "trasnport", "ws", () => {
             });
 
             listener.listen(ma, () => {
-                const conn = ws.dial(ma);
+                const conn = ws.connect(ma);
 
                 const onEnd = function () {
                     conn.getPeerInfo((err, peerInfo) => {
@@ -428,7 +428,7 @@ describe("netron2", "trasnport", "ws", () => {
             });
 
             const onListen = function () {
-                const conn = ws.dial(ma);
+                const conn = ws.connect(ma);
                 conn.setPeerInfo("b");
 
                 const onEnd = function () {

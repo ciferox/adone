@@ -51,12 +51,12 @@ class WebsocketStar {
 
     /**
      * Dials a peer
-     * @param {Multiaddr} ma - Multiaddr to dial to
+     * @param {Multiaddr} ma - Multiaddr to connect to
      * @param {Object} options
      * @param {function} callback
      * @returns {Connection}
      */
-    dial(ma, options, callback) {
+    connect(ma, options, callback) {
         if (is.function(options)) {
             callback = options;
             options = {};
@@ -73,7 +73,7 @@ class WebsocketStar {
             callback(new Error("No listener for this server"));
             return new Connection();
         }
-        return listener.dial(ma, options, callback);
+        return listener.connect(ma, options, callback);
     }
 
     /**

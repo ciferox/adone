@@ -3,7 +3,7 @@ const {
 } = adone;
 
 
-export const dial = function (multiaddr, options) {
+export const connect = function (multiaddr, options) {
     options.ready = options.ready || adone.noop;
     const opts = multiaddr.toOptions();
     const client = utp.connect(opts.port, opts.host);

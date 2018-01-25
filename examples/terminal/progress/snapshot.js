@@ -21,7 +21,7 @@ adone.application.run({
         });
 
         const bar2 = adone.runtime.term.progress({
-            schema: "    {white-fg}[{/}{brightgreen-fg}:filled{/}{brightyellow-fg}:blank{/}{white-fg}]{/} {red-fg}:current{/}/{gray-fg}:total{/} {green-fg}:percent{/} :elapsed :eta",
+            schema: "    {white-fg}[{/}{greenbright-fg}:filled{/}{yellowbright-fg}:blank{/}{white-fg}]{/} {red-fg}:current{/}/{gray-fg}:total{/} {green-fg}:percent{/} :elapsed :eta",
             width: 70,
             current: 20
         });

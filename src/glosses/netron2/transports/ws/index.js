@@ -1,5 +1,3 @@
-const debug = require("debug");
-const log = debug("libp2p:websockets:dialer");
 import Listener from "./listener";
 
 const {
@@ -18,7 +16,6 @@ const maToUrl = function (ma) {
             return proto === "ws" || proto === "wss";
         })[0];
     } catch (e) {
-        log(e);
         throw new Error("Not a valid websocket address", e);
     }
 
@@ -32,7 +29,7 @@ const maToUrl = function (ma) {
             }
         })[0][1];
     } catch (e) {
-        log("No port, skipping");
+        //
     }
 
     const url = `${proto}://${maStrSplit[2]}${(port && (port !== 80 || port !== 443) ? `:${port}` : "")}`;
@@ -41,16 +38,15 @@ const maToUrl = function (ma) {
 };
 
 export default class WS {
-    dial(ma, options, callback) {
+    connect(ma, options, callback) {
         if (is.function(options)) {
             callback = options;
             options = {};
         }
 
-        callback = callback || function () { };
+        callback = callback || adone.noop;
 
         const url = maToUrl(ma);
-        log("dialing %s", url);
         const socket = pull.ws.connect(url, {
             binary: true,
             onConnect: (err) => {

@@ -83,7 +83,8 @@ export class Swarm extends adone.event.Emitter {
 
     // Start listening on all available transports
     listen(callback) {
-        each(this.availableTransports(this._peerInfo), (ts, cb) => {
+        const transports = this.availableTransports(this._peerInfo);
+        each(transports, (ts, cb) => {
             // Listen on the given transport
             this.tm.listen(ts, {}, null, cb);
         }, callback);
@@ -126,7 +127,7 @@ export class Swarm extends adone.event.Emitter {
         ], callback);
     }
 
-    dial(peer, protocol, callback) {
+    connect(peer, protocol, callback) {
         if (is.function(protocol)) {
             callback = protocol;
             protocol = null;
@@ -249,77 +250,67 @@ export class Swarm extends adone.event.Emitter {
             });
         };
 
-        const attemptDial = (pi, cb) => {
-            if (!this.hasTransports()) {
-                return cb(new Error("No transports registered, dial not possible"));
-            }
-
-            const tKeys = this.availableTransports(pi);
-            adone.log(tKeys);
-
-            let circuitTried = false;
-
-            const nextTransport = (key) => {
-                let transport = key;
-                if (!transport) {
-                    if (circuitTried) {
-                        return cb(new Error("Circuit already tried!"));
-                    }
-
-                    if (!this.tm.transports[Circuit.tag]) {
-                        return cb(new Error("Circuit not enabled!"));
-                    }
-
-                    // Falling back to dialing over circuit
-                    pi.multiaddrs.add(`/p2p-circuit/ipfs/${pi.id.asBase58()}`);
-                    circuitTried = true;
-                    transport = Circuit.tag;
-                }
-
-                this.tm.dial(transport, pi, (err, conn) => {
-                    if (err) {
-                        adone.log(err);
-                        return nextTransport(tKeys.shift());
-                    }
-
-                    const cryptoDial = () => {
-                        const ms = new multistream.Dialer();
-                        ms.handle(conn, (err) => {
-                            if (err) {
-                                return cb(err);
-                            }
-
-                            const myId = this._peerInfo.id;
-                            ms.select(this.crypto.tag, (err, conn) => {
-                                if (err) {
-                                    return cb(err);
-                                }
-
-                                const wrapped = this.crypto.encrypt(myId, conn, pi.id, (err) => {
-                                    if (err) {
-                                        return cb(err);
-                                    }
-                                    cb(null, wrapped);
-                                });
-                            });
-                        });
-                    };
-
-                    cryptoDial();
-                });
-            };
-
-            nextTransport(tKeys.shift());
-        };
-
         if (!this.muxedConns[b58Id]) {
             if (!this.conns[b58Id]) {
-                attemptDial(pi, (err, conn) => {
-                    if (err) {
-                        return callback(err);
+                if (!this.hasTransports()) {
+                    return callback(new Error("No transports registered, connect not possible"));
+                }
+    
+                const tKeys = this.availableTransports(pi);
+    
+                let circuitTried = false;
+    
+                const nextTransport = (key) => {
+                    let transport = key;
+                    if (!transport) {
+                        if (circuitTried) {
+                            return callback(new Error("Circuit already tried!"));
+                        }
+    
+                        if (!this.tm.transports[Circuit.tag]) {
+                            return callback(new Error("Circuit not enabled!"));
+                        }
+    
+                        // Falling back to dialing over circuit
+                        pi.multiaddrs.add(`/p2p-circuit/ipfs/${pi.id.asBase58()}`);
+                        circuitTried = true;
+                        transport = Circuit.tag;
                     }
-                    gotWarmedUpConn(conn);
-                });
+    
+                    this.tm.connect(transport, pi, (err, conn) => {
+                        if (err) {
+                            adone.log(err);
+                            return nextTransport(tKeys.shift());
+                        }
+    
+                        const cryptoDial = () => {
+                            const ms = new multistream.Dialer();
+                            ms.handle(conn, (err) => {
+                                if (err) {
+                                    return callback(err);
+                                }
+    
+                                const myId = this._peerInfo.id;
+                                ms.select(this.crypto.tag, (err, conn) => {
+                                    if (err) {
+                                        return callback(err);
+                                    }
+    
+                                    const wrapped = this.crypto.encrypt(myId, conn, pi.id, (err) => {
+                                        if (err) {
+                                            return callback(err);
+                                        }
+                                        gotWarmedUpConn(wrapped);
+                                    });
+                                });
+                            });
+                        };
+    
+                        cryptoDial();
+                    });
+                };
+    
+                nextTransport(tKeys.shift());
             } else {
                 const conn = this.conns[b58Id];
                 this.conns[b58Id] = undefined;

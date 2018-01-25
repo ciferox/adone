@@ -51,7 +51,7 @@ class WebRTCStar {
         this._peerDiscovered = this._peerDiscovered.bind(this);
     }
 
-    dial(ma, options, callback) {
+    connect(ma, options, callback) {
         if (is.function(options)) {
             callback = options;
             options = {};

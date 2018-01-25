@@ -9,14 +9,14 @@ const {
 const { CircuitDialer, StreamHandler, protocol, utils } = adone.private(adone.netron2.circuit);
 
 describe("netron", "circuit", "dialer", () => {
-    describe(".dial", () => {
+    describe(".connect", () => {
         const dialer = stub.createStubInstance(CircuitDialer);
 
         beforeEach(() => {
             dialer.relayPeers = new Map();
             dialer.relayPeers.set(nodes.node2.id, new Connection());
             dialer.relayPeers.set(nodes.node3.id, new Connection());
-            dialer.dial.callThrough();
+            dialer.connect.callThrough();
         });
 
         afterEach(() => {
@@ -25,32 +25,32 @@ describe("netron", "circuit", "dialer", () => {
 
         it("fail on non circuit addr", () => {
             const dstMa = multi.address.create(`/ipfs/${nodes.node4.id}`);
-            expect(() => dialer.dial(dstMa, (err) => {
+            expect(() => dialer.connect(dstMa, (err) => {
                 err.to.match(/invalid circuit address/);
             }));
         });
 
-        it("dial a peer", (done) => {
+        it("connect a peer", (done) => {
             const dstMa = multi.address.create(`/p2p-circuit/ipfs/${nodes.node3.id}`);
             dialer._dialPeer.callsFake((dstMa, relay, callback) => {
                 return callback(null, dialer.relayPeers.get(nodes.node3.id));
             });
 
-            dialer.dial(dstMa, (err, conn) => {
+            dialer.connect(dstMa, (err, conn) => {
                 assert.notExists(err);
                 assert.instanceOf(conn, Connection);
                 done();
             });
         });
 
-        it("dial a peer over the specified relay", (done) => {
+        it("connect a peer over the specified relay", (done) => {
             const dstMa = multi.address.create(`/ipfs/${nodes.node3.id}/p2p-circuit/ipfs/${nodes.node4.id}`);
             dialer._dialPeer.callsFake((dstMa, relay, callback) => {
                 expect(relay.toString()).to.equal(`/ipfs/${nodes.node3.id}`);
                 return callback(null, new Connection());
             });
 
-            dialer.dial(dstMa, (err, conn) => {
+            dialer.connect(dstMa, (err, conn) => {
                 assert.notExists(err);
                 assert.instanceOf(conn, Connection);
                 done();
@@ -140,7 +140,7 @@ describe("netron", "circuit", "dialer", () => {
             dialer._negotiateRelay.reset();
         });
 
-        it("should dial a peer over any relay", (done) => {
+        it("should connect a peer over any relay", (done) => {
             const dstMa = multi.address.create(`/ipfs/${nodes.node4.id}`);
             dialer._negotiateRelay.callsFake((conn, dstMa, callback) => {
                 if (conn === dialer.relayPeers.get(nodes.node3.id)) {
@@ -167,7 +167,7 @@ describe("netron", "circuit", "dialer", () => {
             dialer._dialPeer(dstMa, (err, conn) => {
                 assert.undefined(conn);
                 assert.notNull(err);
-                expect(err).to.equal("no relay peers were found or all relays failed to dial");
+                expect(err).to.equal("no relay peers were found or all relays failed to connect");
                 done();
             });
         });
@@ -219,7 +219,7 @@ describe("netron", "circuit", "dialer", () => {
             callback.callsFake((err, msg) => {
                 assert.notNull(err);
                 expect(err).to.be.an.instanceOf(Error);
-                expect(err.message).to.be.equal("Got 400 error code trying to dial over relay");
+                expect(err.message).to.be.equal("Got 400 error code trying to connect over relay");
                 assert.ok(callback.calledOnce);
                 done();
             });

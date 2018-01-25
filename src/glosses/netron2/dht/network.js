@@ -133,7 +133,7 @@ class Network {
             return this._log.error("Network is offline");
         }
 
-        this.dht.swarm.dial(peer, c.PROTOCOL_DHT, (err, conn) => {
+        this.dht.swarm.connect(peer, c.PROTOCOL_DHT, (err, conn) => {
             if (err) {
                 return this._log("%s does not support protocol: %s", peer.id.asBase58(), c.PROTOCOL_DHT);
             }
@@ -166,7 +166,7 @@ class Network {
         }
 
         this._log("sending to: %s", to.asBase58());
-        this.dht.swarm.dial(to, c.PROTOCOL_DHT, (err, conn) => {
+        this.dht.swarm.connect(to, c.PROTOCOL_DHT, (err, conn) => {
             if (err) {
                 return callback(err);
             }
@@ -190,7 +190,7 @@ class Network {
 
         this._log("sending to: %s", to.asBase58());
 
-        this.dht.swarm.dial(to, c.PROTOCOL_DHT, (err, conn) => {
+        this.dht.swarm.connect(to, c.PROTOCOL_DHT, (err, conn) => {
             if (err) {
                 return callback(err);
             }

@@ -58,7 +58,7 @@ export class Circuit {
      * @return {void}
      */
     _dialSwarmRelays() {
-        // if we have relay addresses in swarm config, then dial those relays
+        // if we have relay addresses in swarm config, then connect those relays
         this.relays.forEach((relay) => {
             const relaySegments = relay
                 .toString()
@@ -74,15 +74,15 @@ export class Circuit {
     /**
      * Dial a peer over a relay
      *
-     * @param {multiaddr} ma - the multiaddr of the peer to dial
-     * @param {Object} options - dial options
+     * @param {multiaddr} ma - the multiaddr of the peer to connect
+     * @param {Object} options - connect options
      * @param {Function} cb - a callback called once dialed
      * @returns {Connection} - the connection
      *
      * @memberOf Dialer
      */
-    dial(ma, options, cb) {
-        return this.dialer.dial(ma, options, cb);
+    connect(ma, options, cb) {
+        return this.dialer.connect(ma, options, cb);
     }
 
     /**
@@ -100,7 +100,7 @@ export class Circuit {
 
     /**
      * Filter check for all multiaddresses
-     * that this transport can dial on
+     * that this transport can connect on
      *
      * @param {any} multiaddrs
      * @returns {Array<multiaddr>}

@@ -4,7 +4,7 @@ const {
 
 export default (common) => {
     describe("transport interface", () => {
-        describe("dial", () => {
+        describe("connect", () => {
             let addrs;
             let transport;
             let listener;
@@ -49,14 +49,14 @@ export default (common) => {
 
                 pull(
                     s,
-                    transport.dial(addrs[0]),
+                    transport.connect(addrs[0]),
                     s
                 );
             });
 
             it("to non existent listener", (done) => {
                 pull(
-                    transport.dial(addrs[1]),
+                    transport.connect(addrs[1]),
                     pull.onEnd((err) => {
                         assert.exists(err);
                         done();
@@ -112,12 +112,12 @@ export default (common) => {
                 });
 
                 listener.listen(addrs[0], () => {
-                    const socket1 = transport.dial(addrs[0], () => {
+                    const socket1 = transport.connect(addrs[0], () => {
                         listener.close(finish);
                     });
 
                     pull(
-                        transport.dial(addrs[0]),
+                        transport.connect(addrs[0]),
                         pull.onEnd(() => {
                             finish();
                         })
@@ -146,7 +146,7 @@ export default (common) => {
                     });
 
                     listener.listen(addrs[0], () => {
-                        transport.dial(addrs[0], () => {
+                        transport.connect(addrs[0], () => {
                             listener.close(finish);
                         });
                     });

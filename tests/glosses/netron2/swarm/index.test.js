@@ -66,9 +66,9 @@ describe("netron2", "swarm", () => {
             swarmB.tm.listen("tcp", {}, (conn) => pull(conn, conn), ready);
         });
 
-        it(".tm.dial to a multiaddr", (done) => {
+        it(".tm.connect to a multiaddr", (done) => {
             dialPeers[0].multiaddrs.add("/ip4/127.0.0.1/tcp/9999");
-            const conn = swarmA.tm.dial("tcp", dialPeers[0], (err, conn) => {
+            const conn = swarmA.tm.connect("tcp", dialPeers[0], (err, conn) => {
                 assert.notExists(err);
             });
 
@@ -79,7 +79,7 @@ describe("netron2", "swarm", () => {
             );
         });
 
-        it(".tm.dial to set of multiaddr, only one is available", (done) => {
+        it(".tm.connect to set of multiaddr, only one is available", (done) => {
             dialPeers[1].multiaddrs.add("/ip4/127.0.0.1/tcp/9910/ws"); // not valid on purpose
             dialPeers[1].multiaddrs.add("/ip4/127.0.0.1/tcp/9359");
             dialPeers[1].multiaddrs.add("/ip4/127.0.0.1/tcp/9329");
@@ -87,7 +87,7 @@ describe("netron2", "swarm", () => {
             dialPeers[1].multiaddrs.add("/ip4/127.0.0.1/tcp/9999");
             dialPeers[1].multiaddrs.add("/ip4/127.0.0.1/tcp/9309");
 
-            const conn = swarmA.tm.dial("tcp", dialPeers[1], (err, conn) => {
+            const conn = swarmA.tm.connect("tcp", dialPeers[1], (err, conn) => {
                 assert.notExists(err);
             });
 
@@ -98,12 +98,12 @@ describe("netron2", "swarm", () => {
             );
         });
 
-        it(".tm.dial to set of multiaddr, none is available", (done) => {
+        it(".tm.connect to set of multiaddr, none is available", (done) => {
             dialPeers[2].multiaddrs.add("/ip4/127.0.0.1/tcp/9910/ws"); // not valid on purpose
             dialPeers[2].multiaddrs.add("/ip4/127.0.0.1/tcp/9359");
             dialPeers[2].multiaddrs.add("/ip4/127.0.0.1/tcp/9329");
 
-            swarmA.tm.dial("tcp", dialPeers[2], (err, conn) => {
+            swarmA.tm.connect("tcp", dialPeers[2], (err, conn) => {
                 assert.exists(err);
                 expect(err.errors).to.have.length(2);
                 assert.notExists(conn);
@@ -244,9 +244,9 @@ describe("netron2", "swarm", () => {
             });
         });
 
-        it("dial", (done) => {
+        it("connect", (done) => {
             dialPeers[0].multiaddrs.add(multi.address.create("/ip4/127.0.0.1/tcp/9999/ws"));
-            const conn = swarmA.tm.dial("ws", dialPeers[0], (err, conn) => {
+            const conn = swarmA.tm.connect("ws", dialPeers[0], (err, conn) => {
                 assert.notExists(err);
             });
 
@@ -261,10 +261,10 @@ describe("netron2", "swarm", () => {
             pull(s, conn, s);
         });
 
-        it("dial (conn from callback)", (done) => {
+        it("connect (conn from callback)", (done) => {
             dialPeers[1].multiaddrs.add("/ip4/127.0.0.1/tcp/9999/ws");
 
-            swarmA.tm.dial("ws", dialPeers[1], (err, conn) => {
+            swarmA.tm.connect("ws", dialPeers[1], (err, conn) => {
                 assert.notExists(err);
 
                 const s = pull.goodbye({
@@ -279,11 +279,11 @@ describe("netron2", "swarm", () => {
             });
         });
 
-        it("dial to set of multiaddr, none is available", (done) => {
+        it("connect to set of multiaddr, none is available", (done) => {
             dialPeers[2].multiaddrs.add("/ip4/127.0.0.1/tcp/9320/ws");
             dialPeers[2].multiaddrs.add("/ip4/127.0.0.1/tcp/9359/ws");
 
-            swarmA.tm.dial("ws", dialPeers[2], (err, conn) => {
+            swarmA.tm.connect("ws", dialPeers[2], (err, conn) => {
                 assert.exists(err);
                 expect(err.errors).to.have.length(2);
                 assert.notExists(conn);
@@ -326,7 +326,7 @@ describe("netron2", "swarm", () => {
 
             swarmB.tm.add("WebSockets", new WS());
 
-            dialSpyA = spy(swarmA.tm, "dial");
+            dialSpyA = spy(swarmA.tm, "connect");
         });
 
         after((done) => {
@@ -365,10 +365,10 @@ describe("netron2", "swarm", () => {
             });
         });
 
-        it("should dial circuit ony once", (done) => {
+        it("should connect circuit ony once", (done) => {
             peerA.multiaddrs.clear();
             peerA.multiaddrs.add("/dns4/wrtc-star.discovery.libp2p.io/tcp/443/wss/p2p-webrtc-star");
-            swarmA.dial(peerC, (err, conn) => {
+            swarmA.connect(peerC, (err, conn) => {
                 assert.exists(err);
                 expect(err).to.match(/Circuit already tried!/);
                 assert.notExists(conn);
@@ -377,12 +377,12 @@ describe("netron2", "swarm", () => {
             });
         });
 
-        it("should dial circuit last", (done) => {
+        it("should connect circuit last", (done) => {
             peerC.multiaddrs.clear();
             peerC.multiaddrs.add("/p2p-circuit/ipfs/ABCD");
             peerC.multiaddrs.add("/ip4/127.0.0.1/tcp/9998/ipfs/ABCD");
             peerC.multiaddrs.add("/ip4/127.0.0.1/tcp/9999/ws/ipfs/ABCD");
-            swarmA.dial(peerC, (err, conn) => {
+            swarmA.connect(peerC, (err, conn) => {
                 assert.exists(err);
                 assert.notExists(conn);
                 expect(dialSpyA.lastCall.args[0]).to.be.eql("Circuit");
@@ -391,17 +391,17 @@ describe("netron2", "swarm", () => {
         });
 
         it("should not try circuit if no transports enabled", (done) => {
-            swarmC.dial(peerA, (err, conn) => {
+            swarmC.connect(peerA, (err, conn) => {
                 assert.exists(err);
                 assert.notExists(conn);
 
-                expect(err).to.match(/No transports registered, dial not possible/);
+                expect(err).to.match(/No transports registered, connect not possible/);
                 done();
             });
         });
 
-        it("should not dial circuit if other transport succeed", (done) => {
-            swarmA.dial(peerB, (err) => {
+        it("should not connect circuit if other transport succeed", (done) => {
+            swarmA.connect(peerB, (err) => {
                 assert.notExists(err);
                 expect(dialSpyA.lastCall.args[0]).to.not.be.eql("Circuit");
                 done();
@@ -512,7 +512,7 @@ describe("netron2", "swarm", () => {
                     expect(peerInfo.id.asBase58()).to.equal(peerB.id.asBase58());
                     cb();
                 }),
-                (cb) => swarmA.dial(peerB, (err) => {
+                (cb) => swarmA.connect(peerB, (err) => {
                     assert.notExists(err);
                     expect(Object.keys(swarmA.muxedConns).length).to.equal(1);
                     cb();
@@ -521,17 +521,17 @@ describe("netron2", "swarm", () => {
         });
 
         it("warm up a warmed up, from B to A", (done) => {
-            swarmB.dial(peerA, (err) => {
+            swarmB.connect(peerA, (err) => {
                 assert.notExists(err);
                 expect(Object.keys(swarmA.muxedConns).length).to.equal(1);
                 done();
             });
         });
 
-        it("dial from tcp to tcp+ws, on protocol", (done) => {
+        it("connect from tcp to tcp+ws, on protocol", (done) => {
             swarmB.handle("/anona/1.0.0", (protocol, conn) => pull(conn, conn));
 
-            swarmA.dial(peerB, "/anona/1.0.0", (err, conn) => {
+            swarmA.connect(peerB, "/anona/1.0.0", (err, conn) => {
                 assert.notExists(err);
                 expect(Object.keys(swarmA.muxedConns).length).to.equal(1);
                 pull(
@@ -542,18 +542,18 @@ describe("netron2", "swarm", () => {
             });
         });
 
-        it("dial from ws to ws no proto", (done) => {
-            swarmD.dial(peerE, (err) => {
+        it("connect from ws to ws no proto", (done) => {
+            swarmD.connect(peerE, (err) => {
                 assert.notExists(err);
                 expect(Object.keys(swarmD.muxedConns).length).to.equal(1);
                 done();
             });
         });
 
-        it("dial from ws to ws", (done) => {
+        it("connect from ws to ws", (done) => {
             swarmE.handle("/abacaxi/1.0.0", (protocol, conn) => pull(conn, conn));
 
-            swarmD.dial(peerE, "/abacaxi/1.0.0", (err, conn) => {
+            swarmD.connect(peerE, "/abacaxi/1.0.0", (err, conn) => {
                 assert.notExists(err);
                 expect(Object.keys(swarmD.muxedConns).length).to.equal(1);
 
@@ -571,10 +571,10 @@ describe("netron2", "swarm", () => {
             });
         });
 
-        it("dial from tcp to tcp+ws (returned conn)", (done) => {
+        it("connect from tcp to tcp+ws (returned conn)", (done) => {
             swarmB.handle("/grapes/1.0.0", (protocol, conn) => pull(conn, conn));
 
-            const conn = swarmA.dial(peerB, "/grapes/1.0.0", (err, conn) => {
+            const conn = swarmA.connect(peerB, "/grapes/1.0.0", (err, conn) => {
                 assert.notExists(err);
                 expect(Object.keys(swarmA.muxedConns).length).to.equal(1);
             });
@@ -586,7 +586,7 @@ describe("netron2", "swarm", () => {
             );
         });
 
-        it("dial from tcp+ws to tcp+ws", (done) => {
+        it("connect from tcp+ws to tcp+ws", (done) => {
             let i = 0;
 
             const check = function (err) {
@@ -609,7 +609,7 @@ describe("netron2", "swarm", () => {
                 pull(conn, conn);
             });
 
-            swarmA.dial(peerC, "/mamao/1.0.0", (err, conn) => {
+            swarmA.connect(peerC, "/mamao/1.0.0", (err, conn) => {
                 assert.notExists(err);
 
                 conn.getPeerInfo((err, peerInfo) => {
@@ -701,10 +701,10 @@ describe("netron2", "swarm", () => {
             done();
         });
 
-        it("dial on protocol", (done) => {
+        it("connect on protocol", (done) => {
             swarmB.handle("/pineapple/1.0.0", (protocol, conn) => pull(conn, conn));
 
-            swarmA.dial(peerB, "/pineapple/1.0.0", (err, conn) => {
+            swarmA.connect(peerB, "/pineapple/1.0.0", (err, conn) => {
                 assert.notExists(err);
                 pull(
                     pull.empty(),
@@ -714,10 +714,10 @@ describe("netron2", "swarm", () => {
             });
         });
 
-        it("dial on protocol (returned conn)", (done) => {
+        it("connect on protocol (returned conn)", (done) => {
             swarmB.handle("/apples/1.0.0", (protocol, conn) => pull(conn, conn));
 
-            const conn = swarmA.dial(peerB, "/apples/1.0.0", (err) => {
+            const conn = swarmA.connect(peerB, "/apples/1.0.0", (err) => {
                 assert.notExists(err);
             });
 
@@ -728,12 +728,12 @@ describe("netron2", "swarm", () => {
             );
         });
 
-        it("dial to warm a conn", (done) => {
-            swarmA.dial(peerB, done);
+        it("connect to warm a conn", (done) => {
+            swarmA.connect(peerB, done);
         });
 
-        it("dial on protocol, reuse warmed conn", (done) => {
-            swarmA.dial(peerB, "/bananas/1.0.0", (err, conn) => {
+        it("connect on protocol, reuse warmed conn", (done) => {
+            swarmA.connect(peerB, "/bananas/1.0.0", (err, conn) => {
                 assert.notExists(err);
                 pull(
                     pull.empty(),
@@ -798,12 +798,12 @@ describe("netron2", "swarm", () => {
             done();
         });
 
-        it("handle + dial on protocol", (done) => {
+        it("handle + connect on protocol", (done) => {
             swarmB.handle("/abacaxi/1.0.0", (protocol, conn) => {
                 pull(conn, conn);
             });
 
-            swarmA.dial(peerB, "/abacaxi/1.0.0", (err, conn) => {
+            swarmA.connect(peerB, "/abacaxi/1.0.0", (err, conn) => {
                 assert.notExists(err);
                 expect(Object.keys(swarmA.muxedConns).length).to.equal(1);
                 pull(
@@ -814,8 +814,8 @@ describe("netron2", "swarm", () => {
             });
         });
 
-        it("dial to warm conn", (done) => {
-            swarmB.dial(peerA, (err) => {
+        it("connect to warm conn", (done) => {
+            swarmB.connect(peerA, (err) => {
                 assert.notExists(err);
                 expect(Object.keys(swarmB.conns).length).to.equal(0);
                 expect(Object.keys(swarmB.muxedConns).length).to.equal(1);
@@ -823,12 +823,12 @@ describe("netron2", "swarm", () => {
             });
         });
 
-        it("dial on protocol, reuse warmed conn", (done) => {
+        it("connect on protocol, reuse warmed conn", (done) => {
             swarmA.handle("/papaia/1.0.0", (protocol, conn) => {
                 pull(conn, conn);
             });
 
-            swarmB.dial(peerA, "/papaia/1.0.0", (err, conn) => {
+            swarmB.connect(peerA, "/papaia/1.0.0", (err, conn) => {
                 assert.notExists(err);
                 expect(Object.keys(swarmB.conns).length).to.equal(0);
                 expect(Object.keys(swarmB.muxedConns).length).to.equal(1);
@@ -844,7 +844,7 @@ describe("netron2", "swarm", () => {
             swarmA.connection.reuse();
             swarmC.connection.reuse();
 
-            swarmC.dial(peerA, (err) => {
+            swarmC.connect(peerA, (err) => {
                 assert.notExists(err);
                 setTimeout(() => {
                     expect(Object.keys(swarmC.muxedConns).length).to.equal(1);
@@ -917,10 +917,10 @@ describe("netron2", "swarm", () => {
             swarmC.connection.addStreamMuxer(multiplex);
         });
 
-        it("handle + dial on protocol", (done) => {
+        it("handle + connect on protocol", (done) => {
             swarmB.handle("/abacaxi/1.0.0", (protocol, conn) => pull(conn, conn));
 
-            swarmA.dial(peerB, "/abacaxi/1.0.0", (err, conn) => {
+            swarmA.connect(peerB, "/abacaxi/1.0.0", (err, conn) => {
                 assert.notExists(err);
                 expect(Object.keys(swarmA.muxedConns).length).to.equal(1);
                 pull(
@@ -931,8 +931,8 @@ describe("netron2", "swarm", () => {
             });
         });
 
-        it("dial to warm conn", (done) => {
-            swarmB.dial(peerA, (err) => {
+        it("connect to warm conn", (done) => {
+            swarmB.connect(peerA, (err) => {
                 assert.notExists(err);
                 expect(Object.keys(swarmB.conns).length).to.equal(0);
                 expect(Object.keys(swarmB.muxedConns).length).to.equal(1);
@@ -940,10 +940,10 @@ describe("netron2", "swarm", () => {
             });
         });
 
-        it("dial on protocol, reuse warmed conn", (done) => {
+        it("connect on protocol, reuse warmed conn", (done) => {
             swarmA.handle("/papaia/1.0.0", (protocol, conn) => pull(conn, conn));
 
-            swarmB.dial(peerA, "/papaia/1.0.0", (err, conn) => {
+            swarmB.connect(peerA, "/papaia/1.0.0", (err, conn) => {
                 assert.notExists(err);
                 expect(Object.keys(swarmB.conns).length).to.equal(0);
                 expect(Object.keys(swarmB.muxedConns).length).to.equal(1);
@@ -959,7 +959,7 @@ describe("netron2", "swarm", () => {
             swarmA.connection.reuse();
             swarmC.connection.reuse();
 
-            swarmC.dial(peerA, (err) => {
+            swarmC.connect(peerA, (err) => {
                 assert.notExists(err);
                 setTimeout(() => {
                     expect(Object.keys(swarmC.muxedConns).length).to.equal(1);
@@ -1032,20 +1032,20 @@ describe("netron2", "swarm", () => {
             swarmD.connection.addStreamMuxer(spdy);
         });
 
-        it("handle + dial on protocol", (done) => {
+        it("handle + connect on protocol", (done) => {
             swarmB.handle("/abacaxi/1.0.0", (protocol, conn) => {
                 pull(conn, conn);
             });
 
-            swarmA.dial(peerB, "/abacaxi/1.0.0", (err, conn) => {
+            swarmA.connect(peerB, "/abacaxi/1.0.0", (err, conn) => {
                 assert.notExists(err);
                 expect(Object.keys(swarmA.muxedConns).length).to.equal(1);
                 pull(pull.empty(), conn, pull.onEnd(done));
             });
         });
 
-        it("dial to warm conn", (done) => {
-            swarmB.dial(peerA, (err) => {
+        it("connect to warm conn", (done) => {
+            swarmB.connect(peerA, (err) => {
                 assert.notExists(err);
                 expect(Object.keys(swarmB.conns).length).to.equal(0);
                 expect(Object.keys(swarmB.muxedConns).length).to.equal(1);
@@ -1053,12 +1053,12 @@ describe("netron2", "swarm", () => {
             });
         });
 
-        it("dial on protocol, reuse warmed conn", (done) => {
+        it("connect on protocol, reuse warmed conn", (done) => {
             swarmA.handle("/papaia/1.0.0", (protocol, conn) => {
                 pull(conn, conn);
             });
 
-            swarmB.dial(peerA, "/papaia/1.0.0", (err, conn) => {
+            swarmB.connect(peerA, "/papaia/1.0.0", (err, conn) => {
                 assert.notExists(err);
                 expect(Object.keys(swarmB.conns).length).to.equal(0);
                 expect(Object.keys(swarmB.muxedConns).length).to.equal(1);
@@ -1074,7 +1074,7 @@ describe("netron2", "swarm", () => {
             swarmA.connection.reuse();
             swarmC.connection.reuse();
 
-            swarmC.dial(peerA, (err) => {
+            swarmC.connect(peerA, (err) => {
                 assert.notExists(err);
                 setTimeout(() => {
                     expect(Object.keys(swarmC.muxedConns).length).to.equal(1);
@@ -1094,7 +1094,7 @@ describe("netron2", "swarm", () => {
                 pull(conn, conn);
             });
 
-            swarmC.dial(peerA, "/banana/1.0.0", (err, conn) => {
+            swarmC.connect(peerA, "/banana/1.0.0", (err, conn) => {
                 assert.notExists(err);
                 setTimeout(() => {
                     expect(Object.keys(swarmC.muxedConns).length).to.equal(1);
@@ -1124,7 +1124,7 @@ describe("netron2", "swarm", () => {
                 );
             });
 
-            swarmA.dial(peerD, "/banana/1.0.0", (err, conn) => {
+            swarmA.connect(peerD, "/banana/1.0.0", (err, conn) => {
                 assert.notExists(err);
 
                 pull(
@@ -1174,7 +1174,7 @@ describe("netron2", "swarm", () => {
                     );
                 });
 
-                swarmF.dial(peerE, "/avocado/1.0.0", (err, conn) => {
+                swarmF.connect(peerE, "/avocado/1.0.0", (err, conn) => {
                     assert.notExists(err);
                     pull(
                         conn,
@@ -1224,7 +1224,7 @@ describe("netron2", "swarm", () => {
 
             // mock transport
             const t1 = {
-                dial(addr, cb) {
+                connect(addr, cb) {
                     setTimeout(() => cb(new Error("fail")), 1);
                     return {};
                 }
@@ -1244,7 +1244,7 @@ describe("netron2", "swarm", () => {
 
             // mock transport
             const t1 = {
-                dial(addr, cb) {
+                connect(addr, cb) {
                     const as = addr.toString();
                     if (as.match(/191/)) {
                         setImmediate(() => cb(new Error("fail")));
@@ -1287,7 +1287,7 @@ describe("netron2", "swarm", () => {
         });
         it.skip("add", (done) => { });
         it.skip("listen", (done) => { });
-        it.skip("dial", (done) => { });
+        it.skip("connect", (done) => { });
         it.skip("close", (done) => { });
     });
 });

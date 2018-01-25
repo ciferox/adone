@@ -177,7 +177,7 @@ export default class Hop extends adone.event.Emitter {
     _dialPeer(dstPeer, callback) {
         const peerInfo = new PeerInfo(PeerId.createFromBytes(dstPeer.id));
         dstPeer.addrs.forEach((a) => peerInfo.multiaddrs.add(a));
-        this.swarm.dial(peerInfo, multicodec.relay, once((err, conn) => {
+        this.swarm.connect(peerInfo, multicodec.relay, once((err, conn) => {
             if (err) {
                 adone.error(err);
                 return callback(err);

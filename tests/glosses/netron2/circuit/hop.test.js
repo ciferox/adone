@@ -137,7 +137,7 @@ describe("relay", () => {
             relay.handle(relayMsg, new StreamHandler(fromConn));
         });
 
-        it("not dial to self", (done) => {
+        it("not connect to self", (done) => {
             const relayMsg = {
                 type: protocol.CircuitRelay.Type.HOP,
                 srcPeer: {

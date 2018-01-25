@@ -119,15 +119,14 @@ export default class Listener extends adone.event.Emitter {
             return callback(new Error("Listener is not ready yet"));
         }
 
-        // Because TCP will only return the IPv6 version
-        // we need to capture from the passed multiaddr
+        // Because TCP will only return the IPv6 version we need to capture from the passed multiaddr
         if (this.listeningAddr.toString().includes("ip4")) {
             let m = this.listeningAddr.decapsulate("tcp");
             m = m.encapsulate(`/tcp/${address.port}`);
             if (this.ipfsId) {
                 m = m.encapsulate(`/ipfs/${this.ipfsId}`);
             }
-
+            
             if (m.toString().includes("0.0.0.0")) {
                 const netInterfaces = os.networkInterfaces();
                 Object.keys(netInterfaces).forEach((niKey) => {

@@ -80,13 +80,13 @@ export default class FileManager extends adone.terminal.ui.widget.List {
                 if ((stat && stat.isDirectory()) || name === "..") {
                     dirs.push({
                         name,
-                        text: `{brightblue-fg}${name}{/brightblue-fg}/`,
+                        text: `{bluebright-fg}${name}{/bluebright-fg}/`,
                         dir: true
                     });
                 } else if (stat && stat.isSymbolicLink()) {
                     files.push({
                         name,
-                        text: `{brightcyan-fg}${name}{/brightcyan-fg}@`,
+                        text: `{cyanbright-fg}${name}{/cyanbright-fg}@`,
                         dir: false
                     });
                 } else {

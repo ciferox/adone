@@ -172,14 +172,14 @@ class Listener extends event.Emitter {
      * Handles incomming dials
      * @listens ss-incomming
      * @param {socket.io_client} socket
-     * @param {string} dialId - Unique id for this dial
+     * @param {string} dialId - Unique id for this connect
      * @param {string} dialFrom - Multiaddr as string
      * @param {function} cb - callback
      * @returns {undefined}
      * @private
      */
     _incommingDial(socket, dialId, dialFrom, cb) {
-        this.log(`dial#${dialId} incomming from`, dialFrom);
+        this.log(`connect#${dialId} incomming from`, dialFrom);
         const ma = multi.address.create(dialFrom);
         const source = this.io.createSource(`${dialId}.dialer`);
         const sink = this.io.createSink(`${dialId}.listener`);
@@ -265,12 +265,12 @@ class Listener extends event.Emitter {
     // called from transport
     /**
      * Dials a peer
-     * @param {Multiaddr} ma - Multiaddr to dial to
+     * @param {Multiaddr} ma - Multiaddr to connect to
      * @param {Object} options
      * @param {function} callback
      * @returns {undefined}
      */
-    dial(ma, options, callback) {
+    connect(ma, options, callback) {
         if (is.function(options)) {
             callback = options;
             options = {};
@@ -281,7 +281,7 @@ class Listener extends event.Emitter {
         const conn = new Connection(null);
 
         const dialId = uuid();
-        const dlog = this.log.bind(log, `dial#${dialId}`);
+        const dlog = this.log.bind(log, `connect#${dialId}`);
 
         callback = callback ? once(callback) : noop;
 
@@ -296,7 +296,7 @@ class Listener extends event.Emitter {
         dlog("dialing", ma.toString());
 
         // "multiaddr", "multiaddr", "string", "function" - dialFrom, dialTo, dialId, cb
-        io.emit("ss-dial", this.ma.toString(), ma.toString(), dialId, (err) => {
+        io.emit("ss-connect", this.ma.toString(), ma.toString(), dialId, (err) => {
             if (err) {
                 return callback(err instanceof Error ? err : new Error(err));
             }

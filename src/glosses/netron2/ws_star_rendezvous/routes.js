@@ -191,7 +191,7 @@ module.exports = (config, http) => {
         });
     };
 
-    const dial = function (socket, from, to, dialId, cb) {
+    const connect = function (socket, from, to, dialId, cb) {
         const log = socket.log;
         const s = socket.addrs.filter((a) => a === from)[0];
 
@@ -227,7 +227,7 @@ module.exports = (config, http) => {
     proto.addRequest("ss-join", ["multiaddr", "string", "function"], join);
     proto.addRequest("ss-leave", ["multiaddr"], leave);
     proto.addRequest("disconnect", [], disconnect);
-    proto.addRequest("ss-dial", ["multiaddr", "multiaddr", "string", "function"], dial); // dialFrom, dialTo, dialId, cb
+    proto.addRequest("ss-connect", ["multiaddr", "multiaddr", "string", "function"], connect); // dialFrom, dialTo, dialId, cb
     io.on("connection", handle);
 
     log("create new server", config);

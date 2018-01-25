@@ -47,7 +47,7 @@ describe("Network", () => {
             const msg = new Message(Message.TYPES.PING, Buffer.from("hello"), 0);
 
             // mock it
-            dht.swarm.dial = (peer, protocol, callback) => {
+            dht.swarm.connect = (peer, protocol, callback) => {
                 expect(protocol).to.eql("/ipfs/kad/1.0.0");
                 const msg = new Message(Message.TYPES.FIND_NODE, Buffer.from("world"), 0);
 
@@ -88,7 +88,7 @@ describe("Network", () => {
             const msg = new Message(Message.TYPES.PING, Buffer.from("hello"), 0);
 
             // mock it
-            dht.swarm.dial = (peer, protocol, callback) => {
+            dht.swarm.connect = (peer, protocol, callback) => {
                 expect(protocol).to.eql("/ipfs/kad/1.0.0");
                 const rawConn = {
                     // hanging

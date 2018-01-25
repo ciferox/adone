@@ -10,7 +10,7 @@ const {
 } = adone;
 
 export default class TCP {
-    dial(ma, options, callback) {
+    connect(ma, options, callback) {
         if (is.function(options)) {
             callback = options;
             options = {};
@@ -37,10 +37,7 @@ export default class TCP {
         const socket = pull.fromStream.duplex(rawSocket);
 
         const conn = new Connection(socket);
-
-        conn.getObservedAddrs = (callback) => {
-            return callback(null, [ma]);
-        };
+        conn.getObservedAddrs = (cb) => cb(null, [ma]);
 
         return conn;
     }

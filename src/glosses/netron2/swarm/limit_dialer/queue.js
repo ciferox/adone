@@ -11,7 +11,7 @@ const {
  */
 export default class DialQueue {
     /**
-     * Create a new dial queue.
+     * Create a new connect queue.
      *
      * @param {number} limit
      * @param {number} dialTimeout
@@ -74,7 +74,7 @@ export default class DialQueue {
      */
     _dialWithTimeout(transport, addr, callback) {
         timeout((cb) => {
-            const conn = transport.dial(addr, (err) => {
+            const conn = transport.connect(addr, (err) => {
                 if (err) {
                     return cb(err);
                 }

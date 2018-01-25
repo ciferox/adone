@@ -28,13 +28,13 @@ export default class Dialer {
     /**
      * Dial a peer over a relay
      *
-     * @param {multiaddr} ma - the multiaddr of the peer to dial
+     * @param {multiaddr} ma - the multiaddr of the peer to connect
      * @param {Function} cb - a callback called once dialed
      * @returns {Connection} - the connection
      *
      * @memberOf Dialer
      */
-    dial(ma, cb) {
+    connect(ma, cb) {
         cb = cb || (() => { });
         const strMa = ma.toString();
         if (!strMa.includes("/p2p-circuit")) {
@@ -86,10 +86,11 @@ export default class Dialer {
                     const response = __.protocol.CircuitRelay.decode(msg);
 
                     if (response.code !== __.protocol.CircuitRelay.Status.SUCCESS) {
-                        return adone.log(`HOP not supported, skipping - ${this.utils.getB58String(peer)}`);
+                        // HOP not supported, skipping
+                        return;
                     }
 
-                    adone.log(`HOP supported adding as relay - ${this.utils.getB58String(peer)}`);
+                    // HOP supported adding as relay
                     this.relayPeers.set(this.utils.getB58String(peer), peer);
                     wCb(null);
                 }
@@ -119,12 +120,12 @@ export default class Dialer {
         }
 
         dstMa = multi.address.create(dstMa);
-        // if no relay provided, dial on all available relays until one succeeds
+        // if no relay provided, connect on all available relays until one succeeds
         if (!relay) {
             const relays = Array.from(this.relayPeers.values());
             const next = (nextRelay) => {
                 if (!nextRelay) {
-                    const err = "no relay peers were found or all relays failed to dial";
+                    const err = "no relay peers were found or all relays failed to connect";
                     adone.error(err);
                     return cb(err);
                 }
@@ -178,7 +179,7 @@ export default class Dialer {
                 cb(null);
             },
             (cb) => {
-                adone.log(`negotiating relay for peer ${dstMa.getPeerId()}`);
+                // negotiating relay for peer dstMa
                 streamHandler.write(
                     __.protocol.CircuitRelay.encode({
                         type: __.protocol.CircuitRelay.Type.HOP,
@@ -201,7 +202,7 @@ export default class Dialer {
                 }
 
                 if (message.code !== __.protocol.CircuitRelay.Status.SUCCESS) {
-                    return cb(new Error(`Got ${message.code} error code trying to dial over relay`));
+                    return cb(new Error(`Got ${message.code} error code trying to connect over relay`));
                 }
 
                 cb(null, new Connection(streamHandler.rest()));
@@ -220,7 +221,7 @@ export default class Dialer {
     _dialRelay(peer, cb) {
         cb = once(cb || (() => { }));
 
-        this.swarm.dial(peer, multicodec.relay, once((err, conn) => {
+        this.swarm.connect(peer, multicodec.relay, once((err, conn) => {
             if (err) {
                 adone.error(err);
                 return cb(err);

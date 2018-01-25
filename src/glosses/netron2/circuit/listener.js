@@ -87,7 +87,7 @@ export default class Listener extends adone.event.Emitter {
      *    address to `/ip4/0.0.0.0/tcp/0/ipfs/QmRelay/p2p-circuit/ipfs/QmPeer` where
      *    `QmPeer` is this peers id
      * b) If it's not a /p2p-circuit address, it will encapsulate the address as a /p2p-circuit
-     *    addr such that dials a relay uses that address to dial this peer
+     *    addr such that dials a relay uses that address to connect this peer
      *
      * @param {Function} callback
      * @return {void}

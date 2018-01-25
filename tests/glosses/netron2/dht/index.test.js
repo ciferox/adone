@@ -33,7 +33,7 @@ const connectNoSync = function (a, b, callback) {
     const target = _.cloneDeep(b.peerInfo);
     target.id._pubKey = target.id.pubKey;
     target.id._privKey = null;
-    a.swarm.dial(target, callback);
+    a.swarm.connect(target, callback);
 };
 
 const find = function (a, b, cb) {
@@ -264,8 +264,8 @@ describe("KadDHT", () => {
             dhtB.peerBook.set(peerA);
 
             parallel([
-                (cb) => dhtA.swarm.dial(peerB.id, cb),
-                (cb) => dhtB.swarm.dial(peerA.id, cb)
+                (cb) => dhtA.swarm.connect(peerB.id, cb),
+                (cb) => dhtB.swarm.connect(peerA.id, cb)
             ], done);
         });
     });

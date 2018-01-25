@@ -86,7 +86,7 @@ describe("netron2", "muxer", "spdy", () => {
             });
 
             listener.listen(ma);
-            dConn = dtcp.dial(ma);
+            dConn = dtcp.connect(ma);
             dMuxer = spdy.dialer(dConn);
         });
 
@@ -243,7 +243,7 @@ describe("netron2", "muxer", "spdy", () => {
         });
 
         it("attach to a tcp socket, as dialer", (done) => {
-            const socket = tcp.dial(mh);
+            const socket = tcp.connect(mh);
             assert.exists(socket);
             dialer = spdy.dialer(socket);
             assert.exists(dialer);
@@ -351,7 +351,7 @@ describe("netron2", "muxer", "spdy", () => {
                 finish();
             });
 
-            const socket = ws.dial(mh);
+            const socket = ws.connect(mh);
 
             wsListener.listen(mh, () => {
                 dialer = spdy.dialer(socket);

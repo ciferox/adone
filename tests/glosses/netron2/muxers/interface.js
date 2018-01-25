@@ -307,7 +307,7 @@ export default (common) => {
                 });
 
                 tcpListener.listen(mh, () => {
-                    const dialerConn = tcp.dial(mh, () => tcpListener.close());
+                    const dialerConn = tcp.connect(mh, () => tcpListener.close());
 
                     const dialerMuxer = muxer.dialer(dialerConn);
                     const s1 = dialerMuxer.newStream(() => {
@@ -375,7 +375,7 @@ export default (common) => {
 
             it.skip("closing on spdy doesn't close until all the streams that are being muxed are closed", (done) => {
                 const p = pull.pair.duplex();
-                const dialer = muxer.dial(p[0]);
+                const dialer = muxer.connect(p[0]);
                 const listener = muxer.listen(p[1]);
 
                 let counter = 0;

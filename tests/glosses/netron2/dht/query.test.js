@@ -23,8 +23,8 @@ describe("Query", () => {
     it("simple run", (done) => {
         const peer = peerInfos[0];
 
-        // mock this so we can dial non existing peers
-        dht.swarm.dial = (peer, callback) => callback();
+        // mock this so we can connect non existing peers
+        dht.swarm.connect = (peer, callback) => callback();
 
         let i = 0;
         const query = (p, cb) => {
@@ -55,8 +55,8 @@ describe("Query", () => {
     it("returns an error if all queries error", (done) => {
         const peer = peerInfos[0];
 
-        // mock this so we can dial non existing peers
-        dht.swarm.dial = (peer, callback) => callback();
+        // mock this so we can connect non existing peers
+        dht.swarm.connect = (peer, callback) => callback();
 
         const query = (p, cb) => cb(new Error("fail"));
 
@@ -71,8 +71,8 @@ describe("Query", () => {
     it("only closerPeers", (done) => {
         const peer = peerInfos[0];
 
-        // mock this so we can dial non existing peers
-        dht.swarm.dial = (peer, callback) => callback();
+        // mock this so we can connect non existing peers
+        dht.swarm.connect = (peer, callback) => callback();
 
         const query = (p, cb) => {
             cb(null, {

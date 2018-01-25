@@ -1,10 +1,11 @@
-adone.lazify({
+const __ = adone.lazify({
     duplex: "./duplex",
     source: "./source",
     sink: "./sink",
-    Server: ["./server", (x) => x.Server],
-    createServer: ["./server", (x) => x.createServer],
+    Server: "./server",
     connect: "./client",
     wsurl: "./wsurl",
     ready: "./ready"
 }, exports, require);
+
+export const createServer = (opts, onConnection) => new __.Server(opts, onConnection);

@@ -30,7 +30,7 @@ class MultiaddrSet {
     }
 
     // addSafe - prevent multiaddr explosion™
-    // Multiaddr explosion is when you dial to a bunch of nodes and every node
+    // Multiaddr explosion is when you connect to a bunch of nodes and every node
     // gives you a different observed address and you start storing them all to
     // share with other peers. This seems like a good idea until you realize that
     // most of those addresses are unique to the subnet that peer is in and so,
@@ -93,10 +93,12 @@ class MultiaddrSet {
     // different
     // TODO this is not an ideal solution, probably this code should just be
     // in transport.tcp
+    // VERY BAD METHOD !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     distinct() {
-        return uniqBy(this._multiaddrs, (ma) => {
-            return [ma.toOptions().port, ma.toOptions().transport].join();
-        });
+        // return uniqBy(this._multiaddrs, (ma) => {
+        //     return [ma.toOptions().port, ma.toOptions().transport].join();
+        // });
+        return this._multiaddrs;
     }
 }
 

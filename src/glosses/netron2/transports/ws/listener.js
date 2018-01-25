@@ -40,8 +40,7 @@ export default class Listener extends pull.ws.Server {
 
         const ipfsId = this.listeningAddr.getPeerId();
 
-        // Because TCP will only return the IPv6 version
-        // we need to capture from the passed multiaddr
+        // Because TCP will only return the IPv6 version we need to capture from the passed multiaddr
         if (this.listeningAddr.toString().includes("ip4")) {
             let m = this.listeningAddr.decapsulate("tcp");
             m = m.encapsulate(`/tcp/${address.port}/ws`);

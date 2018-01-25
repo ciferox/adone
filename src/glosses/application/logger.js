@@ -314,7 +314,7 @@ Logger.defaultSinks = [
             {
                 format: "%s",
                 style: {
-                    5: "{cyan-fg}",
+                    5: "{greenbright-fg}",
                     4: "{grey-fg}",
                     3: "{white-fg}",
                     2: "{yellow-fg}"

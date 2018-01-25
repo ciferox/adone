@@ -14,7 +14,7 @@ export default class TransportManager {
     /**
      * 
      * @param {Swarm} swarm  instance os Swarm
-     * @param {integer} options.dialTimeout  the amount of time a single dial has to succeed
+     * @param {integer} options.dialTimeout  the amount of time a single connect has to succeed
      * @param {integer} options.perPeerRateLimit  number of concurrent outbound dials to make per peer
      */
     constructor(swarm, { dialTimeout = 30 * 1000, perPeerRateLimit = 8 } = {}) {
@@ -35,7 +35,7 @@ export default class TransportManager {
         return Boolean(this.transports[key]);
     }
 
-    dial(key, pi, callback) {
+    connect(key, pi, callback) {
         const t = this.transports[key];
         let multiaddrs = pi.multiaddrs.toArray();
 
@@ -60,7 +60,6 @@ export default class TransportManager {
         const multiaddrs = dialables(this.transports[key], this.swarm._peerInfo.multiaddrs.distinct());
         const transport = this.transports[key];
         let freshMultiaddrs = [];
-
         transport.listeners = arrify(transport.listeners);
 
         // if no handler is passed, we pass conns to protocolMuxer

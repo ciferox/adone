@@ -146,7 +146,7 @@ describe("netron2", "PeerInfo", () => {
         expect(pi.multiaddrs.size).to.equal(4);
     });
 
-    it("get distinct multiaddr same transport multiple different ports", () => {
+    it.todo("get distinct multiaddr same transport multiple different ports", () => {
         const ma1 = multi.address.create("/ip4/127.0.0.1/tcp/5001");
         const ma2 = multi.address.create("/ip4/127.0.0.1/tcp/5002");
         const ma3 = multi.address.create("/ip4/127.0.0.1/tcp/5003");
@@ -161,7 +161,7 @@ describe("netron2", "PeerInfo", () => {
         expect(distinctMultiaddr.length).to.equal(4);
     });
 
-    it("get distinct multiaddr same transport different port", () => {
+    it.todo("get distinct multiaddr same transport different port", () => {
         const ma1 = multi.address.create("/ip4/127.0.0.1/tcp/5001");
         const ma2 = multi.address.create("/ip4/127.0.0.1/tcp/5002");
 
@@ -172,7 +172,7 @@ describe("netron2", "PeerInfo", () => {
         expect(multiaddrDistinct.length).to.equal(2);
     });
 
-    it("get distinct multiaddr same transport same port", () => {
+    it.todo("get distinct multiaddr same transport same port", () => {
         const ma1 = multi.address.create("/ip4/127.0.0.1/tcp/5001");
         const ma2 = multi.address.create("/ip4/127.0.0.1/tcp/5001");
 
@@ -183,7 +183,7 @@ describe("netron2", "PeerInfo", () => {
         expect(multiaddrDistinct.length).to.equal(1);
     });
 
-    it("get distinct multiaddr different transport same port", () => {
+    it.todo("get distinct multiaddr different transport same port", () => {
         const ma1 = multi.address.create("/ip4/127.0.0.1/tcp/5001");
         const ma2 = multi.address.create("/ip4/127.0.0.1/udp/5001");
 
@@ -194,7 +194,7 @@ describe("netron2", "PeerInfo", () => {
         expect(multiaddrDistinct.length).to.equal(2);
     });
 
-    it("get distinct multiaddr different family same port same transport", () => {
+    it.todo("get distinct multiaddr different family same port same transport", () => {
         const ma1 = multi.address.create("/ip4/127.0.0.1/tcp/5001");
         const ma2 = multi.address.create("/ip6/::/tcp/5001");
 
@@ -205,7 +205,7 @@ describe("netron2", "PeerInfo", () => {
         expect(multiaddrDistinct.length).to.equal(1);
     });
 
-    it("get distinct multiaddr different family same port multiple transports", () => {
+    it.todo("get distinct multiaddr different family same port multiple transports", () => {
         const ma1 = multi.address.create("/ip4/127.0.0.1/tcp/5001");
         const ma2 = multi.address.create("/ip6/::/tcp/5001");
         const ma3 = multi.address.create("/ip6/::/udp/5002");

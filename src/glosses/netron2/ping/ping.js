@@ -27,7 +27,7 @@ class Ping extends event.Emitter {
 
         adone.log("dialing %s to %s", PROTOCOL, peer.id.asBase58());
 
-        swarm.dial(peer, PROTOCOL, (err, conn) => {
+        swarm.connect(peer, PROTOCOL, (err, conn) => {
             if (err) {
                 return this.emit("error", err);
             }

@@ -126,7 +126,7 @@ describe("netron2", "transport", "tcp", () => {
         });
     });
 
-    describe("dial", () => {
+    describe("connect", () => {
         let tcp;
         let listener;
         const ma = multi.address.create("/ip4/127.0.0.1/tcp/9191");
@@ -147,10 +147,10 @@ describe("netron2", "transport", "tcp", () => {
             listener.close(done);
         });
 
-        it("dial on IPv4", (done) => {
+        it("connect on IPv4", (done) => {
             pull(
                 pull.values(["hey"]),
-                tcp.dial(ma),
+                tcp.connect(ma),
                 pull.collect((err, values) => {
                     assert.notExists(err);
                     expect(values).to.eql([Buffer.from("hey!")]);
@@ -159,10 +159,10 @@ describe("netron2", "transport", "tcp", () => {
             );
         });
 
-        it("dial to non existent listener", (done) => {
+        it("connect to non existent listener", (done) => {
             const ma = multi.address.create("/ip4/127.0.0.1/tcp/8989");
             pull(
-                tcp.dial(ma),
+                tcp.connect(ma),
                 pull.onEnd((err) => {
                     assert.exists(err);
                     done();
@@ -170,7 +170,7 @@ describe("netron2", "transport", "tcp", () => {
             );
         });
 
-        it("dial on IPv6", (done) => {
+        it("connect on IPv6", (done) => {
             const ma = multi.address.create("/ip6/::/tcp/9066");
             const listener = tcp.createListener((conn) => {
                 pull(conn, conn);
@@ -178,7 +178,7 @@ describe("netron2", "transport", "tcp", () => {
             listener.listen(ma, () => {
                 pull(
                     pull.values(["hey"]),
-                    tcp.dial(ma),
+                    tcp.connect(ma),
                     pull.collect((err, values) => {
                         assert.notExists(err);
 
@@ -190,7 +190,7 @@ describe("netron2", "transport", "tcp", () => {
             });
         });
 
-        it.skip("dial and destroy on listener", (done) => {
+        it.skip("connect and destroy on listener", (done) => {
             // TODO: why is this failing
             let count = 0;
             let listener = null;
@@ -211,11 +211,11 @@ describe("netron2", "transport", "tcp", () => {
             });
 
             listener.listen(ma, () => {
-                pull(tcp.dial(ma), pull.onEnd(closed));
+                pull(tcp.connect(ma), pull.onEnd(closed));
             });
         });
 
-        it("dial and destroy on dialer", (done) => {
+        it("connect and destroy on dialer", (done) => {
             let count = 0;
             let listener = null;
 
@@ -233,15 +233,15 @@ describe("netron2", "transport", "tcp", () => {
             listener.listen(ma, () => {
                 pull(
                     pull.empty(),
-                    tcp.dial(ma),
+                    tcp.connect(ma),
                     pull.onEnd(destroyed)
                 );
             });
         });
 
-        it("dial on IPv4 with IPFS Id", (done) => {
+        it("connect on IPv4 with IPFS Id", (done) => {
             const ma = multi.address.create("/ip4/127.0.0.1/tcp/9191/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
-            const conn = tcp.dial(ma);
+            const conn = tcp.connect(ma);
 
             pull(
                 pull.values(["hey"]),
@@ -308,7 +308,7 @@ describe("netron2", "transport", "tcp", () => {
             });
 
             listener.listen(ma, () => {
-                const conn = tcp.dial(ma);
+                const conn = tcp.connect(ma);
 
                 const closeAndAssert = function (listener, addrs) {
                     listener.close(() => {
@@ -344,7 +344,7 @@ describe("netron2", "transport", "tcp", () => {
             });
 
             listener.listen(ma, () => {
-                const conn = tcp.dial(ma);
+                const conn = tcp.connect(ma);
 
                 const endHandler = function () {
                     conn.getPeerInfo((err, peerInfo) => {
@@ -371,7 +371,7 @@ describe("netron2", "transport", "tcp", () => {
             });
 
             listener.listen(ma, () => {
-                const conn = tcp.dial(ma);
+                const conn = tcp.connect(ma);
 
                 const endHandler = function () {
                     conn.setPeerInfo("arroz");
@@ -412,7 +412,7 @@ describe("netron2", "transport", "tcp", () => {
         });
 
         it("simple wrap", (done) => {
-            const conn = tcp.dial(ma);
+            const conn = tcp.connect(ma);
             conn.setPeerInfo("peerInfo");
             const connWrap = new Connection(conn);
             pull(
@@ -432,7 +432,7 @@ describe("netron2", "transport", "tcp", () => {
         });
 
         it("buffer wrap", (done) => {
-            const conn = tcp.dial(ma);
+            const conn = tcp.connect(ma);
             const connWrap = new Connection();
             pull(
                 pull.values(["hey"]),
@@ -448,7 +448,7 @@ describe("netron2", "transport", "tcp", () => {
         });
 
         it("overload wrap", (done) => {
-            const conn = tcp.dial(ma);
+            const conn = tcp.connect(ma);
             const connWrap = new Connection(conn);
             connWrap.getPeerInfo = (callback) => {
                 callback(null, "none");
@@ -471,15 +471,15 @@ describe("netron2", "transport", "tcp", () => {
             );
         });
 
-        it("dial error", (done) => {
-            tcp.dial(multi.address.create("/ip4/999.0.0.1/tcp/1234"), (err) => {
+        it("connect error", (done) => {
+            tcp.connect(multi.address.create("/ip4/999.0.0.1/tcp/1234"), (err) => {
                 assert.exists(err);
                 done();
             });
         });
 
         it("matryoshka wrap", (done) => {
-            const conn = tcp.dial(ma);
+            const conn = tcp.connect(ma);
             const connWrap1 = new Connection(conn);
             const connWrap2 = new Connection(connWrap1);
             const connWrap3 = new Connection(connWrap2);

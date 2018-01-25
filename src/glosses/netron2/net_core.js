@@ -83,7 +83,7 @@ export default class NetCore extends event.Emitter {
             // If muxer exists, we can use Relay for listening/dialing
             this.swarm.connection.enableCircuitRelay(relay);
 
-            // Received incommind dial and muxer upgrade happened,
+            // Received incommind connect and muxer upgrade happened,
             // reuse this muxed connection
             this.swarm.on("peer-mux-established", (peerInfo) => {
                 this.emit("peer:connect", peerInfo);
@@ -297,7 +297,7 @@ export default class NetCore extends event.Emitter {
     async connect(peer, protocol) {
         const peerInfo = await this._getPeerInfo(peer);
         return new Promise((resolve, reject) => {
-            this.swarm.dial(peerInfo, protocol, (err, conn) => {
+            this.swarm.connect(peerInfo, protocol, (err, conn) => {
                 if (err) {
                     return reject(err);
                 }
@@ -307,8 +307,6 @@ export default class NetCore extends event.Emitter {
     }
 
     async disconnect(peer) {
-        // assert(this.isStarted(), NOT_STARTED_ERROR_MESSAGE);
-
         const peerInfo = await this._getPeerInfo(peer);
         return new Promise((resolve, reject) => {
             this.swarm.hangUp(peerInfo, (err) => {

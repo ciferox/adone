@@ -48,7 +48,7 @@ const defaultInspectStyle = {
 const inspectStyle = {
     none: defaultInspectStyle,
     color: adone.o(defaultInspectStyle, {
-        limit: (str) => (esc.bold.open + esc.brightRed.open + str + esc.reset.open),
+        limit: (str) => (esc.bold.open + esc.redBright.open + str + esc.reset.open),
         type: (str) => (esc.italic.open + esc.gray.open + str + esc.reset.open),
         constant: (str) => (esc.cyan.open + str + esc.reset.open),
         funcName: (str) => (esc.italic.open + esc.magenta.open + str + esc.reset.open),
@@ -62,9 +62,9 @@ const inspectStyle = {
         errorType: (str) => (esc.red.open + esc.bold.open + str + esc.reset.open),
         errorMessage: (str) => (esc.red.open + esc.italic.open + str + esc.reset.open),
         errorStack: (str) => (esc.gray.open + str + esc.reset.open),
-        errorStackMethod: (str) => (esc.brightYellow.open + str + esc.reset.open),
+        errorStackMethod: (str) => (esc.yellowBright.open + str + esc.reset.open),
         errorStackMethodAs: (str) => (esc.yellow.open + str + esc.reset.open),
-        errorStackFile: (str) => (esc.brightCyan.open + str + esc.reset.open),
+        errorStackFile: (str) => (esc.cyanBright.open + str + esc.reset.open),
         errorStackLine: (str) => (esc.blue.open + str + esc.reset.open),
         errorStackColumn: (str) => (esc.magenta.open + str + esc.reset.open)
     })

@@ -47,7 +47,7 @@ export default class LimitDialer {
                 return callback(null, success[0]);
             }
 
-            const error = new Error("Failed to dial any provided address");
+            const error = new Error("Failed to connect any provided address");
             error.errors = results
                 .filter((res) => res.error)
                 .map((res) => res.error);

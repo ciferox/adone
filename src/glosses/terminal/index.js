@@ -4465,40 +4465,40 @@ export class Terminal extends adone.event.Emitter {
             case "grey fg":
             case "gray fg":
                 return val === false ? esc.gray.close : esc.gray.open;
-            case "brightred fg":
-                return val === false ? esc.brightRed.close : esc.brightRed.open;
-            case "brightgreen fg":
-                return val === false ? esc.brightGreen.close : esc.brightGreen.open;
-            case "brightyellow fg":
-                return val === false ? esc.brightYellow.close : esc.brightYellow.open;
-            case "brightblue fg":
-                return val === false ? esc.brightBlue.close : esc.brightBlue.open;
-            case "brightmagenta fg":
-                return val === false ? esc.brightMagenta.close : esc.brightMagenta.open;
-            case "brightcyan fg":
-                return val === false ? esc.brightCyan.close : esc.brightCyan.open;
-            case "brightwhite fg":
-                return val === false ? esc.brightWhite.close : esc.brightWhite.open;
+            case "redbright fg":
+                return val === false ? esc.redBright.close : esc.redBright.open;
+            case "greenbright fg":
+                return val === false ? esc.greenBright.close : esc.greenBright.open;
+            case "yellowbright fg":
+                return val === false ? esc.yellowBright.close : esc.yellowBright.open;
+            case "bluebright fg":
+                return val === false ? esc.blueBright.close : esc.blueBright.open;
+            case "magentabright fg":
+                return val === false ? esc.magentaBright.close : esc.magentaBright.open;
+            case "cyanbright fg":
+                return val === false ? esc.cyanBright.close : esc.cyanBright.open;
+            case "whitebright fg":
+                return val === false ? esc.whiteBright.close : esc.whiteBright.open;
 
             // 16-color background
             case "brightblack bg":
             case "grey bg":
             case "gray bg":
                 return val === false ? esc.bgGray.close : esc.bgGray.open;
-            case "brightred bg":
-                return val === false ? esc.bgBrightRed.close : esc.bgBrightRed.open;
-            case "brightgreen bg":
-                return val === false ? esc.bgBrightGreen.close : esc.bgBrightGreen.open;
-            case "brightyellow bg":
-                return val === false ? esc.bgBrightYellow.close : esc.bgBrightYellow.open;
-            case "brightblue bg":
-                return val === false ? esc.bgBrightBlue.close : esc.bgBrightBlue.open;
-            case "brightmagenta bg":
-                return val === false ? esc.bgBrightMagenta.close : esc.bgBrightMagenta.open;
-            case "brightcyan bg":
-                return val === false ? esc.bgBrightCyan.close : esc.bgBrightCyan.open;
-            case "brightwhite bg":
-                return val === false ? esc.bgBrightWhite.close : esc.bgBrightWhite.open;
+            case "redbright bg":
+                return val === false ? esc.bgRedBright.close : esc.bgRedBright.open;
+            case "greenbright bg":
+                return val === false ? esc.bgGreenBright.close : esc.bgGreenBright.open;
+            case "yellowbright bg":
+                return val === false ? esc.bgYellowBright.close : esc.bgYellowBright.open;
+            case "bluebright bg":
+                return val === false ? esc.bgBlueBright.close : esc.bgBlueBright.open;
+            case "magentabright bg":
+                return val === false ? esc.bgMagentaBright.close : esc.bgMagentaBright.open;
+            case "cyanbright bg":
+                return val === false ? esc.bgCyanBright.close : esc.bgCyanBright.open;
+            case "whitebright bg":
+                return val === false ? esc.bgWhiteBright.close : esc.bgWhiteBright.open;
             // non-16-color rxvt default fg and bg
             case "default fg bg":
                 if (val === false) {
