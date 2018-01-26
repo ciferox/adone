@@ -1,9 +1,8 @@
 const {
-    noop,
-    event
+    noop
 } = adone;
 
-export default class Socket extends event.Emitter {
+export default class Socket extends adone.std.events.EventEmitter { // must be a native one
     constructor(options) {
         super();
         options = options || {};

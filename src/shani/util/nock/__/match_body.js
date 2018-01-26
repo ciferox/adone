@@ -1,6 +1,6 @@
 const {
     is,
-    std: { querystring: qs }
+    util: { querystring: qs }
 } = adone;
 
 const deepEqualExtended = (spec, body) => {

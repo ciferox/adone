@@ -1,6 +1,5 @@
 const {
     is,
-    event,
     std: {
         stream
     },
@@ -88,7 +87,7 @@ const setRequestHeaders = (req, options, interceptor) => {
 export default function requestOverrider(req, options, interceptors, remove, cb) {
     let response;
     if (IncomingMessage) {
-        response = new IncomingMessage(new event.Emitter());
+        response = new IncomingMessage(new adone.std.events.EventEmitter());
     } else {
         response = new stream.Readable();
         response._read = function () { };
@@ -122,7 +121,7 @@ export default function requestOverrider(req, options, interceptors, remove, cb)
     }
 
     if (!req.connection) {
-        req.connection = new event.Emitter();
+        req.connection = new adone.std.events.EventEmitter();
     }
 
     req.path = options.path;
@@ -162,6 +161,9 @@ export default function requestOverrider(req, options, interceptors, remove, cb)
         /// like to change request.path in mid-flight.
         options.path = req.path;
 
+        // fixes #976
+        options.protocol = `${options.proto}:`;
+
         interceptors.forEach((interceptor) => {
             //  For correct matching we need to have correct request headers - if these were specified.
             setRequestHeaders(req, options, interceptor);
@@ -180,7 +182,7 @@ export default function requestOverrider(req, options, interceptors, remove, cb)
             if (interceptor && req instanceof ClientRequest) {
                 if (interceptor.options.allowUnmocked) {
                     const newReq = new ClientRequest(options, cb);
-                    event.Emitter.propagateEvents(newReq, req, [
+                    adone.event.Emitter.propagateEvents(newReq, req, [
                         "abort",
                         "connect",
                         "continue",
@@ -454,14 +456,18 @@ export default function requestOverrider(req, options, interceptors, remove, cb)
         return continueWithResponseBody(null, responseBody);
     };
 
-    req.write = function (buffer, encoding) {
-        if (buffer && !aborted) {
-            if (!is.buffer(buffer)) {
-                buffer = Buffer.from(buffer, encoding);
+    req.write = function (buffer, encoding, callback) {
+        if (!aborted) {
+            if (buffer) {
+                if (!is.buffer(buffer)) {
+                    buffer = Buffer.from(buffer, encoding);
+                }
+                requestBodyBuffers.push(buffer);
             }
-            requestBodyBuffers.push(buffer);
-        }
-        if (aborted) {
+            if (is.function(callback)) {
+                callback();
+            }
+        } else {
             emitError(new Error("Request aborted"));
         }
 
@@ -472,12 +478,16 @@ export default function requestOverrider(req, options, interceptors, remove, cb)
         return false;
     };
 
-    req.end = function (buffer, encoding) {
+    req.end = function (buffer, encoding, callback) {
         if (!aborted && !ended) {
-            req.write(buffer, encoding);
-            end(cb);
-            req.emit("finish");
-            req.emit("end");
+            req.write(buffer, encoding, () => {
+                if (is.function(callback)) {
+                    callback();
+                }
+                end(cb);
+                req.emit("finish");
+                req.emit("end");
+            });
         }
         if (aborted) {
             emitError(new Error("Request aborted"));
@@ -527,7 +537,7 @@ export default function requestOverrider(req, options, interceptors, remove, cb)
             req.socket.emit("secureConnect", req.socket);
         }
 
-        event.Emitter.prototype.on.call(this, event, listener);
+        adone.std.events.EventEmitter.prototype.on.call(this, event, listener);
         return this;
     };
     req.once = req.on = function (event, listener) {
@@ -538,7 +548,7 @@ export default function requestOverrider(req, options, interceptors, remove, cb)
             req.socket.emit("secureConnect", req.socket);
         }
 
-        event.Emitter.prototype.on.call(this, event, listener);
+        adone.std.events.EventEmitter.prototype.on.call(this, event, listener);
         return this;
     };
 

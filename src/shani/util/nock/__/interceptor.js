@@ -393,6 +393,7 @@ export default class Interceptor {
         // Allow all query strings to match this route
         if (queries === true) {
             this.queries = queries;
+            return this;
         }
 
         if (is.function(queries)) {
@@ -400,11 +401,15 @@ export default class Interceptor {
             return this;
         }
 
-        for (const q in queries) {
-            if (is.undefined(this.queries[q])) {
-                const value = queries[q];
-                const formatedPair = _util.formatQueryValue(q, value, this.scope.scopeOptions);
-                this.queries[formatedPair[0]] = formatedPair[1];
+        let stringFormattingFn;
+        if (this.scope.scopeOptions.encodedQueryParams) {
+            stringFormattingFn = _util.percentDecode;
+        }
+
+        for (const key in queries) {
+            if (is.undefined(this.queries[key])) {
+                const formattedPair = _util.formatQueryValue(key, queries[key], stringFormattingFn);
+                this.queries[formattedPair[0]] = formattedPair[1];
             }
         }
 

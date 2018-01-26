@@ -22,6 +22,8 @@ describe("shani", "util", "nock", "http allowUnmocked", () => {
         nock.restore();
     });
 
+    nock.enableNetConnect();
+
     const fixtures = new adone.fs.Directory(__dirname, "fixtures");
     const privateKey = fixtures.getFile("key", "private.key");
     const certificate = fixtures.getFile("key", "certificate.crt");
@@ -40,7 +42,6 @@ describe("shani", "util", "nock", "http allowUnmocked", () => {
             ctx.body = "heeey";
         });
 
-        nock.enableNetConnect();
         nock(`https://localhost:${port}/`, { allowUnmocked: true })
             .get("/pathneverhit")
             .reply(200, { foo: "bar" });
@@ -53,5 +54,17 @@ describe("shani", "util", "nock", "http allowUnmocked", () => {
             expect(resp.data).to.be.deep.equal({ foo: "bar" });
         }
         await serv.unbind();
+    });
+
+    it.todo("allowUnmocked for https with query test miss", async () => {
+        nock("https://www.google.com", { allowUnmocked: true })
+            .get("/search")
+            .query(() => {
+                return false;
+            })
+            .reply(500);
+
+        const resp = await request.get("https://www.google.com/search");
+        assert(resp.data.length > 0);
     });
 });

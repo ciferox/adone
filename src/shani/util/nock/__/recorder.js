@@ -117,6 +117,12 @@ const generateRequestAndResponse = (req, bodyChunks, options, res, dataChunks) =
         const queryStr = req.path.slice(queryIndex + 1);
         queryObj = qs.parse(queryStr);
     }
+    // Always encoding the query parameters when recording.
+    const encodedQueryObj = {};
+    for (const key in queryObj) {
+        const formattedPair = _util.formatQueryValue(key, queryObj[key], _util.percentEncode);
+        encodedQueryObj[formattedPair[0]] = formattedPair[1];
+    }
 
     const ret = [];
     ret.push("\nnock('");
@@ -142,7 +148,7 @@ const generateRequestAndResponse = (req, bodyChunks, options, res, dataChunks) =
 
     if (queryIndex !== -1) {
         ret.push("  .query(");
-        ret.push(JSON.stringify(queryObj));
+        ret.push(JSON.stringify(encodedQueryObj));
         ret.push(")\n");
     }
 

@@ -1871,7 +1871,10 @@ describe("shani", "util", "nock", "intercept", () => {
         // This listener is intentionally after the end call so make sure that
         // listeners added after the end will catch the error
         req.on("error", (err) => {
-            assert.equal(err.message.trim(), `Nock: No match for request ${JSON.stringify({ method: "GET", url: "https://google.com/abcdef892932" }, null, 2)}`);
+            const headerOptions = JSON.stringify({ method: "GET", url: "https://google.com/abcdef892932" }, null, 2);
+            const expectedError = `Nock: No match for request ${headerOptions}`;
+
+            assert.equal(err.message.trim(), expectedError);
             done();
         });
     });
@@ -3066,6 +3069,65 @@ describe("shani", "util", "nock", "intercept", () => {
         req.once("error", (err) => {
             assert.equal(err.message, "this is an error message");
             done();
+        });
+    });
+
+    it("write callback called", (done) => {
+        const scope = nock("http://www.filterboddiezregexp.com")
+            .filteringRequestBody(/mia/, "nostra")
+            .post("/", "mamma nostra")
+            .reply(200, "Hello World!");
+
+        let callbackCalled = false;
+        const req = http.request({
+            host: "www.filterboddiezregexp.com",
+            method: "POST",
+            path: "/",
+            port: 80
+        }, (res) => {
+            assert.equal(callbackCalled, true);
+            assert.equal(res.statusCode, 200);
+            res.on("end", () => {
+                scope.done();
+                done();
+            });
+            // Streams start in 'paused' mode and must be started.
+            // See https://nodejs.org/api/stream.html#stream_class_stream_readable
+            res.resume();
+        });
+
+        req.write("mamma mia", null, () => {
+            callbackCalled = true;
+            req.end();
+        });
+    });
+
+    it("end callback called", (done) => {
+        const scope = nock("http://www.filterboddiezregexp.com")
+            .filteringRequestBody(/mia/, "nostra")
+            .post("/", "mamma nostra")
+            .reply(200, "Hello World!");
+
+        let callbackCalled = false;
+        const req = http.request({
+            host: "www.filterboddiezregexp.com",
+            method: "POST",
+            path: "/",
+            port: 80
+        }, (res) => {
+            assert.equal(callbackCalled, true);
+            assert.equal(res.statusCode, 200);
+            res.on("end", () => {
+                scope.done();
+                done();
+            });
+            // Streams start in 'paused' mode and must be started.
+            // See https://nodejs.org/api/stream.html#stream_class_stream_readable
+            res.resume();
+        });
+
+        req.end("mamma mia", null, () => {
+            callbackCalled = true;
         });
     });
 

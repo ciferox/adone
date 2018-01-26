@@ -79,7 +79,7 @@ const isEnabledForNetConnect = (options) => {
  * @param {String|RegExp} matcher=RegExp.new('.*') Expression to match
  * @example
  * nock.disableNetConnect();
-*/
+ */
 add.disableNetConnect = () => {
     allowNetConnect = undefined;
 };
@@ -219,14 +219,16 @@ add.removeInterceptor = (options) => {
 //  (which might or might not be node's original http.ClientRequest)
 let originalClientRequest;
 
-class ErroringClientRequest extends ClientRequest {
-    constructor(error) {
-        super();
-        process.nextTick(() => {
-            this.emit("error", error);
-        });
+const ErroringClientRequest = function (error) {
+    if (http.OutgoingMessage) {
+        http.OutgoingMessage.call(this);
     }
-}
+    process.nextTick(() => {
+        this.emit("error", error);
+    });
+};
+
+inherits(ErroringClientRequest, http.ClientRequest);
 
 add.overrideClientRequest = () => {
     if (originalClientRequest) {

@@ -1,7 +1,6 @@
 const {
     is,
     x,
-    event,
     std: {
         url
     },
@@ -16,7 +15,7 @@ const {
     util: _util
 } = __;
 
-export default class Scope extends event.Emitter {
+export default class Scope extends adone.std.events.EventEmitter {
     constructor(basePath, options) {
         super();
         this.keyedInterceptors = {};

@@ -542,6 +542,34 @@ describe("shani", "util", "nock", "recorder", () => {
         assert.notExists(ret.reqheaders["user-agent"]);
     });
 
+    it("encodes the query parameters when not outputing objects", async () => {
+        nock.restore();
+        nock.recorder.clear();
+        assert.equal(nock.recorder.play().length, 0);
+
+        nock.recorder.rec({
+            dont_print: true,
+            output_objects: false,
+            logging: adone.noop
+        });
+
+        const serv = await createHttpServer()
+            .use((ctx) => {
+                ctx.body = "hello";
+            })
+            .bind();
+        const { port } = serv.address();
+
+        await request.get(`http://localhost:${port}`, {
+            params: { q: "test search++" }
+        });
+
+        nock.restore();
+        const recording = nock.recorder.play();
+        assert.true(recording.length >= 1);
+        assert.true(recording[0].indexOf("test%20search%2B%2B") !== -1);
+    });
+
     it("works with clients listening for readable", (done) => {
         nock.restore();
         nock.recorder.clear();
@@ -558,9 +586,7 @@ describe("shani", "util", "nock", "recorder", () => {
                 host: "localhost",
                 port: testServer.address().port,
                 path: "/"
-            }
-                ;
-
+            };
             const recOptions = {
                 dontPrint: true,
                 outputObjects: true
@@ -663,7 +689,7 @@ describe("shani", "util", "nock", "recorder", () => {
         assert.equal(ret[0].substring(0, match.length), match);
     });
 
-    it("removes query params from from that path and puts them in query()", (done) => {
+    it("removes query params from that path and puts them in query()", (done) => {
         nock.restore();
         nock.recorder.clear();
         assert.equal(nock.recorder.play().length, 0);

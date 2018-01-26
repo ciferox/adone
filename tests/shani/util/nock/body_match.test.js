@@ -43,7 +43,7 @@ describe("shani", "util", "nock", "body match", () => {
             auth: {
                 passwd: "abc"
             }
-        })
+        });
         expect(resp.status).to.be.equal(200);
     });
 
@@ -72,6 +72,20 @@ describe("shani", "util", "nock", "body match", () => {
         });
 
         expect(resp.status).to.be.equal(200);
+    });
+
+    it("match body with nested object inside", async () => {
+        nock("http://encodingsareus.com")
+            .post("/", /x/)
+            .reply(200);
+
+        const resp = await request.post("http://encodingsareus.com/", {
+            obj: {
+                x: 1
+            }
+        });
+
+        assert.equal(resp.status, 200);
     });
 
     it("doesn't match body with mismatching keys", async () => {

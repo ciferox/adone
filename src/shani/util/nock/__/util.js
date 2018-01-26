@@ -314,7 +314,7 @@ export const matchStringOrRegexp = (target, pattern) => {
 };
 
 // return [newKey, newValue]
-export const formatQueryValue = (key, value, options) => {
+export const formatQueryValue = (key, value, stringFormattingFn) => {
     switch (util.typeOf(value)) {
         case "number":
         case "boolean": {
@@ -327,15 +327,15 @@ export const formatQueryValue = (key, value, options) => {
             break;
         }
         case "string": {
-            if (options.encodedQueryParams) {
-                value = percentDecode(value);
+            if (stringFormattingFn) {
+                value = stringFormattingFn(value);
             }
             break;
         }
         case "Array": {
             const tmpArray = new Array(value.length);
             for (let i = 0; i < value.length; ++i) {
-                tmpArray[i] = formatQueryValue(i, value[i], options)[1];
+                tmpArray[i] = formatQueryValue(i, value[i], stringFormattingFn)[1];
             }
             value = tmpArray;
             break;
@@ -343,7 +343,7 @@ export const formatQueryValue = (key, value, options) => {
         case "Object": {
             const tmpObj = {};
             for (const [subKey, subVal] of Object.entries(value)) {
-                const subPair = formatQueryValue(subKey, subVal, options);
+                const subPair = formatQueryValue(subKey, subVal, stringFormattingFn);
                 tmpObj[subPair[0]] = subPair[1];
             }
             value = tmpObj;
@@ -351,8 +351,8 @@ export const formatQueryValue = (key, value, options) => {
         }
     }
 
-    if (options.encodedQueryParams) {
-        key = percentDecode(key);
+    if (stringFormattingFn) {
+        key = stringFormattingFn(key);
     }
     return [key, value];
 };

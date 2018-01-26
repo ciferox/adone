@@ -1,1 +1,1 @@
-export default new adone.event.Emitter();
+export default new adone.std.events.EventEmitter();
