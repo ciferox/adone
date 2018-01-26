@@ -4232,8 +4232,11 @@ export class Terminal extends adone.event.Emitter {
             };
 
             this.input.once("data", (data) => {
+                // Pull data from input stream internal buffer, thus, after the application is completed, this data will not be flushed to terminal.
+                this.input.read(data.length);
                 this.emit("data", data);
             });
+            
             if (is.function(this.input.setRawMode) && !this.input.isRaw) {
                 this.input.setRawMode(true);
             }

@@ -92,7 +92,7 @@ export class Circuit {
      * @param {Function} handler
      * @return {listener}
      */
-    createListener(handler, options = {}) {
+    createListener(handler, options = this.options) {
         const listener = new __.Listener(this.swarm, handler, options);
         listener.on("listen", this._dialSwarmRelays.bind(this));
         return listener;

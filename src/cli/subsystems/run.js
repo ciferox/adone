@@ -42,7 +42,8 @@ export default class Run extends Subsystem {
         let shouldTranspile = true;
 
         let path = std.path.resolve(process.cwd(), args.get("path"));
-        if (await adone.fs.is.directory(path)) {
+
+        if (await adone.fs.exists(path) && await adone.fs.is.directory(path)) {
             // adone application
             const conf = await adone.configuration.Adone.load({
                 cwd: path
@@ -54,6 +55,8 @@ export default class Run extends Subsystem {
 
             path = std.path.join(path, conf.raw.bin);
             shouldTranspile = false;
+        } else if (!path.endsWith(".js")) {
+            path = `${path}.js`;
         }
 
         if (opts.has("inspect")) {
