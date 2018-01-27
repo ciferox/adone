@@ -6,11 +6,10 @@ const {
 
 describe("netron2", "muxer", "spdy", "interface", () => {
     testInterface({
-        setup(cb) {
-            cb(null, spdy);
+        setup() {
+            return spdy;
         },
-        teardown(cb) {
-            cb();
+        teardown() {
         }
     });
 });

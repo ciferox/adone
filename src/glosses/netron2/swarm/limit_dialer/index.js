@@ -27,32 +27,26 @@ export default class LimitDialer {
      * @param {PeerId} peer
      * @param {SwarmTransport} transport
      * @param {Array<Multiaddr>} addrs
-     * @param {function(Error, Connection)} callback
      * @returns {void}
      */
-    dialMany(peer, transport, addrs, callback) {
+    async dialMany(peer, transport, addrs) {
         // we use a token to track if we want to cancel following dials
         const token = { cancel: false };
-        callback = once(callback); // only call callback once
 
-        map(addrs, (m, cb) => {
-            this.dialSingle(peer, transport, m, token, cb);
-        }, (err, results) => {
-            if (err) {
-                return callback(err);
-            }
+        const promises = [];
+        for (const m of addrs) {
+            promises.push(this.dialSingle(peer, transport, m, token));
+        }
 
-            const success = results.filter((res) => res.conn);
-            if (success.length > 0) {
-                return callback(null, success[0]);
-            }
+        const results = await Promise.all(promises);
+        const success = results.filter((res) => res.conn);
+        if (success.length > 0) {
+            return success[0];
+        }
 
-            const error = new Error("Failed to connect any provided address");
-            error.errors = results
-                .filter((res) => res.error)
-                .map((res) => res.error);
-            return callback(error);
-        });
+        const error = new Error("Failed to connect any provided address");
+        error.errors = results.filter((res) => res.error).map((res) => res.error);
+        throw error;
     }
 
     /**
@@ -62,10 +56,8 @@ export default class LimitDialer {
      * @param {SwarmTransport} transport
      * @param {Multiaddr} addr
      * @param {CancelToken} token
-     * @param {function(Error, Connection)} callback
-     * @returns {void}
      */
-    dialSingle(peer, transport, addr, token, callback) {
+    dialSingle(peer, transport, addr, token) {
         const ps = peer.asBase58();
         let q;
         if (this.queues.has(ps)) {
@@ -75,6 +67,8 @@ export default class LimitDialer {
             this.queues.set(ps, q);
         }
 
-        q.push(transport, addr, token, callback);
+        return new Promise((resolve, reject) => {
+            q.push(transport, addr, token, (err, result) => err ? reject(err) : resolve(result));
+        });
     }
 }

@@ -1,5 +1,5 @@
 const waterfall = require("async/waterfall");
-const util = require("../../utils");
+import { makePeers, teardown, setupDHT } from "../../utils";
 
 const {
     netron2: { dht }
@@ -8,22 +8,18 @@ const { utils, rpcHandler: { getValue }, Message } = adone.private(dht);
 
 const T = Message.TYPES.GET_VALUE;
 
-describe("rpc - handlers - GetValue", () => {
+describe("netron2", "dht", "KadDHT", "rpc - handlers - GetValue", () => {
     let peers;
     let dht;
 
     before(() => {
-        peers = util.makePeers(2);
+        peers = makePeers(2);
     });
 
-    afterEach((done) => util.teardown(done));
+    afterEach(() => teardown());
 
-    beforeEach((done) => {
-        util.setupDHT((err, res) => {
-            assert.notExists(err);
-            dht = res;
-            done();
-        });
+    beforeEach(async () => {
+        dht = await setupDHT();
     });
 
     it("errors when missing key", (done) => {

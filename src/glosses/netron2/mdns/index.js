@@ -59,8 +59,6 @@ const gotResponse = (rsp, peerInfo, serviceTag, callback) => {
         return; // replied to myself, ignore
     }
 
-    adone.log("peer found -", b58Id);
-
     const peerId = PeerId.createFromBase58(b58Id);
 
     try {

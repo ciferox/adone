@@ -3,181 +3,156 @@ const {
 } = adone;
 
 export default (common) => {
-    describe("transport interface", () => {
-        describe("connect", () => {
-            let addrs;
-            let transport;
-            let listener;
+    describe("connect", () => {
+        let addrs;
+        let transport;
+        let listener;
 
-            before((done) => {
-                common.setup((err, _transport, _addrs) => {
-                    if (err) {
-                        return done(err);
-                    }
-                    transport = _transport;
-                    addrs = _addrs;
-                    done();
-                });
-            });
-
-            after((done) => {
-                common.teardown(done);
-            });
-
-            beforeEach((done) => {
-                listener = transport.createListener((conn) => {
-                    pull(conn, conn);
-                });
-                listener.listen(addrs[0], done);
-            });
-
-            afterEach((done) => {
-                listener.close(done);
-            });
-
-            it("simple", (done) => {
-                const s = pull.serializer(pull.goodbye({
-                    source: pull.values(["hey"]),
-                    sink: pull.collect((err, values) => {
-                        assert.notExists(err);
-                        expect(
-                            values
-                        ).to.be.eql(["hey"]);
-                        done();
-                    })
-                }));
-
-                pull(
-                    s,
-                    transport.connect(addrs[0]),
-                    s
-                );
-            });
-
-            it("to non existent listener", (done) => {
-                pull(
-                    transport.connect(addrs[1]),
-                    pull.onEnd((err) => {
-                        assert.exists(err);
-                        done();
-                    })
-                );
-            });
+        before(async () => {
+            [transport, addrs] = await common.setup();
         });
 
-        describe("listen", () => {
-            let addrs;
-            let transport;
+        after(async () => {
+            await common.teardown();
+        });
 
-            const plan = function (n, done) {
-                let i = 0;
-                return (err) => {
-                    if (err) {
-                        return done(err);
-                    }
-                    i++;
+        beforeEach(async () => {
+            listener = transport.createListener((conn) => {
+                pull(conn, conn);
+            });
+            await listener.listen(addrs[0]);
+        });
 
-                    if (i === n) {
-                        done();
-                    }
-                };
-            };
+        afterEach(async () => {
+            await listener.close();
+        });
 
-            before((done) => {
-                common.setup((err, _transport, _addrs) => {
-                    if (err) {
-                        return done(err);
-                    }
-                    transport = _transport;
-                    addrs = _addrs;
+        it("simple", async (done) => {
+            const s = pull.serializer(pull.goodbye({
+                source: pull.values(["hey"]),
+                sink: pull.collect((err, values) => {
+                    assert.notExists(err);
+                    expect(
+                        values
+                    ).to.be.eql(["hey"]);
                     done();
+                })
+            }));
+
+            const conn = await transport.connect(addrs[0]);
+            pull(
+                s,
+                conn,
+                s
+            );
+        });
+
+        it("to non existent listener", async () => {
+            await assert.throws(async () => transport.connect(addrs[1]));
+        });
+    });
+
+    describe("listen", () => {
+        let addrs;
+        let transport;
+
+        const plan = function (n, done) {
+            let i = 0;
+            return (err) => {
+                if (err) {
+                    return done(err);
+                }
+                i++;
+
+                if (i === n) {
+                    done();
+                }
+            };
+        };
+
+        before(async () => {
+            [transport, addrs] = await common.setup();
+        });
+
+        after(async () => {
+            await common.teardown();
+        });
+
+        it("simple", async () => {
+            const listener = transport.createListener();
+            await listener.listen(addrs[0]);
+            await listener.close();
+        });
+
+        it("close listener with connections, through timeout", async (done) => {
+            const finish = plan(3, done);
+            const listener = transport.createListener((conn) => {
+                pull(conn, conn);
+            });
+
+            await listener.listen(addrs[0]);
+            const socket1 = await transport.connect(addrs[0]);
+            
+
+            const conn = await transport.connect(addrs[0]);
+            pull(
+                conn,
+                pull.onEnd(() => {
+                    finish();
+                })
+            );
+
+            pull(
+                pull.values([Buffer.from("Some data that is never handled")]),
+                socket1,
+                pull.onEnd(() => {
+                    finish();
+                })
+            );
+
+            listener.close().then(finish);
+        });
+
+        describe("events", () => {
+            it("connection", async (done) => {
+                const finish = plan(2, done);
+
+                const listener = transport.createListener();
+
+                listener.on("connection", (conn) => {
+                    assert.exists(conn);
+                    finish();
                 });
+
+                await listener.listen(addrs[0]);
+                await transport.connect(addrs[0]);
+                listener.close().then(finish);
             });
 
-            after((done) => {
-                common.teardown(done);
+            it("listening", (done) => {
+                const listener = transport.createListener();
+                listener.on("listening", () => {
+                    listener.close().then(done);
+                });
+                listener.listen(addrs[0]);
             });
 
-            it("simple", (done) => {
-                const listener = transport.createListener((conn) => { });
-                listener.listen(addrs[0], () => {
+            // TODO: how to get the listener to emit an error?
+            it.todo("error", (done) => {
+                const listener = transport.createListener();
+                listener.on("error", (err) => {
+                    assert.exists(err);
                     listener.close(done);
                 });
             });
 
-            it("close listener with connections, through timeout", (done) => {
-                const finish = plan(3, done);
-                const listener = transport.createListener((conn) => {
-                    pull(conn, conn);
-                });
+            it("close", async (done) => {
+                const finish = plan(2, done);
+                const listener = transport.createListener();
+                listener.on("close", finish);
 
-                listener.listen(addrs[0], () => {
-                    const socket1 = transport.connect(addrs[0], () => {
-                        listener.close(finish);
-                    });
-
-                    pull(
-                        transport.connect(addrs[0]),
-                        pull.onEnd(() => {
-                            finish();
-                        })
-                    );
-
-                    pull(
-                        pull.values([Buffer("Some data that is never handled")]),
-                        socket1,
-                        pull.onEnd(() => {
-                            finish();
-                        })
-                    );
-                });
-            });
-
-            describe("events", () => {
-                // TODO: figure out why it fails in the full test suite
-                it.skip("connection", (done) => {
-                    const finish = plan(2, done);
-
-                    const listener = transport.createListener();
-
-                    listener.on("connection", (conn) => {
-                        assert.exists(conn);
-                        finish();
-                    });
-
-                    listener.listen(addrs[0], () => {
-                        transport.connect(addrs[0], () => {
-                            listener.close(finish);
-                        });
-                    });
-                });
-
-                it("listening", (done) => {
-                    const listener = transport.createListener();
-                    listener.on("listening", () => {
-                        listener.close(done);
-                    });
-                    listener.listen(addrs[0]);
-                });
-
-                // TODO: how to get the listener to emit an error?
-                it.skip("error", (done) => {
-                    const listener = transport.createListener();
-                    listener.on("error", (err) => {
-                        assert.exists(err);
-                        listener.close(done);
-                    });
-                });
-
-                it("close", (done) => {
-                    const finish = plan(2, done);
-                    const listener = transport.createListener();
-                    listener.on("close", finish);
-
-                    listener.listen(addrs[0], () => {
-                        listener.close(finish);
-                    });
-                });
+                await listener.listen(addrs[0]);
+                listener.close().then(finish);
             });
         });
     });

@@ -22,18 +22,13 @@ export default class Listener extends adone.event.Emitter {
      * Add swarm handler and listen for incoming connections
      *
      * @param {Multiaddr} ma
-     * @param {Function} callback
-     * @return {void}
      */
-    listen(ma, callback) {
-        callback = callback || (() => { });
-
+    listen(ma) {
         this.swarm.handle(__.multicodec.relay, (relayProto, conn) => {
             const streamHandler = new __.StreamHandler(conn);
 
             streamHandler.read((err, msg) => {
                 if (err) {
-                    adone.error(err);
                     return;
                 }
 
@@ -62,19 +57,14 @@ export default class Listener extends adone.event.Emitter {
         });
 
         setImmediate(() => this.emit("listen"));
-        callback();
     }
 
     /**
      * Remove swarm listener
-     *
-     * @param {Function} cb
-     * @return {void}
      */
-    close(cb) {
+    close() {
         this.swarm.unhandle(__.multicodec.stop);
         setImmediate(() => this.emit("close"));
-        cb();
     }
 
     /**
@@ -89,10 +79,8 @@ export default class Listener extends adone.event.Emitter {
      * b) If it's not a /p2p-circuit address, it will encapsulate the address as a /p2p-circuit
      *    addr such that dials a relay uses that address to connect this peer
      *
-     * @param {Function} callback
-     * @return {void}
      */
-    getAddrs(callback) {
+    getAddrs() {
         let addrs = this.swarm._peerInfo.multiaddrs.toArray();
 
         // get all the explicit relay addrs excluding self
@@ -126,6 +114,6 @@ export default class Listener extends adone.event.Emitter {
             }
         });
 
-        callback(null, listenAddrs);
+        return listenAddrs;
     }
 }

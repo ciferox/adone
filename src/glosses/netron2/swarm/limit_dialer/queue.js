@@ -34,16 +34,11 @@ export default class DialQueue {
      * @returns {void}
      * @private
      */
-    _doWork(transport, addr, token, callback) {
-        adone.log("work");
-        this._dialWithTimeout(transport, addr, (err, conn) => {
-            if (err) {
-                adone.log("work:error");
-                return callback(null, { error: err });
-            }
-
+    async _doWork(transport, addr, token, callback) {
+        try {
+            const p = transport.connect(addr);
+            const conn = await adone.promise.timeout(p, this.dialTimeout);
             if (token.cancel) {
-                adone.log("work:cancel");
                 // clean up already done dials
                 pull(pull.empty(), conn);
                 // TODO: proper cleanup once the connection interface supports it
@@ -54,34 +49,12 @@ export default class DialQueue {
             // one is enough
             token.cancel = true;
 
-            adone.log("work:success");
-
             const proxyConn = new Connection();
             proxyConn.setInnerConn(conn);
             callback(null, { multiaddr: addr, conn });
-        });
-    }
-
-    /**
-     * Dial the given transport, timing out with the set timeout.
-     *
-     * @param {SwarmTransport} transport
-     * @param {Multiaddr} addr
-     * @param {function(Error, Connection)} callback
-     * @returns {void}
-     *
-     * @private
-     */
-    _dialWithTimeout(transport, addr, callback) {
-        timeout((cb) => {
-            const conn = transport.connect(addr, (err) => {
-                if (err) {
-                    return cb(err);
-                }
-
-                cb(null, conn);
-            });
-        }, this.dialTimeout)(callback);
+        } catch (err) {
+            return callback(null, { error: err });
+        }
     }
 
     /**

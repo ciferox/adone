@@ -6,60 +6,52 @@ const {
     stream: { pull }
 } = adone;
 
-const { CircuitDialer, StreamHandler, protocol, utils } = adone.private(adone.netron2.circuit);
+const { Connector, StreamHandler, protocol, utils } = adone.private(adone.netron2.circuit);
 
-describe("netron", "circuit", "dialer", () => {
-    describe(".connect", () => {
-        const dialer = stub.createStubInstance(CircuitDialer);
+describe("netron2", "circuit", "Connector", () => {
+    describe("connect()", () => {
+        const connector = stub.createStubInstance(Connector);
 
         beforeEach(() => {
-            dialer.relayPeers = new Map();
-            dialer.relayPeers.set(nodes.node2.id, new Connection());
-            dialer.relayPeers.set(nodes.node3.id, new Connection());
-            dialer.connect.callThrough();
+            connector.relayPeers = new Map();
+            connector.relayPeers.set(nodes.node2.id, new Connection());
+            connector.relayPeers.set(nodes.node3.id, new Connection());
+            connector.connect.callThrough();
         });
 
         afterEach(() => {
-            dialer._dialPeer.reset();
+            connector._dialPeer.reset();
         });
 
-        it("fail on non circuit addr", () => {
+        it("fail on non circuit addr", async () => {
             const dstMa = multi.address.create(`/ipfs/${nodes.node4.id}`);
-            expect(() => dialer.connect(dstMa, (err) => {
-                err.to.match(/invalid circuit address/);
-            }));
+            await assert.throws(async () => connector.connect(dstMa), /invalid circuit address/);
         });
 
-        it("connect a peer", (done) => {
+        it("connect a peer", async () => {
             const dstMa = multi.address.create(`/p2p-circuit/ipfs/${nodes.node3.id}`);
-            dialer._dialPeer.callsFake((dstMa, relay, callback) => {
-                return callback(null, dialer.relayPeers.get(nodes.node3.id));
+            connector._dialPeer.callsFake((dstMa, relay, callback) => {
+                return callback(null, connector.relayPeers.get(nodes.node3.id));
             });
 
-            dialer.connect(dstMa, (err, conn) => {
-                assert.notExists(err);
-                assert.instanceOf(conn, Connection);
-                done();
-            });
+            const conn = await connector.connect(dstMa);
+            assert.instanceOf(conn, Connection);
         });
 
-        it("connect a peer over the specified relay", (done) => {
+        it("connect a peer over the specified relay", async () => {
             const dstMa = multi.address.create(`/ipfs/${nodes.node3.id}/p2p-circuit/ipfs/${nodes.node4.id}`);
-            dialer._dialPeer.callsFake((dstMa, relay, callback) => {
+            connector._dialPeer.callsFake((dstMa, relay, callback) => {
                 expect(relay.toString()).to.equal(`/ipfs/${nodes.node3.id}`);
                 return callback(null, new Connection());
             });
 
-            dialer.connect(dstMa, (err, conn) => {
-                assert.notExists(err);
-                assert.instanceOf(conn, Connection);
-                done();
-            });
+            const conn = await connector.connect(dstMa);
+            assert.instanceOf(conn, Connection);
         });
     });
 
-    describe(".canHop", () => {
-        const dialer = stub.createStubInstance(CircuitDialer);
+    describe("canHop()", () => {
+        const dialer = stub.createStubInstance(Connector);
 
         let stream = null;
         let shake = null;
@@ -125,8 +117,8 @@ describe("netron", "circuit", "dialer", () => {
         });
     });
 
-    describe("._dialPeer", () => {
-        const dialer = stub.createStubInstance(CircuitDialer);
+    describe("_dialPeer()", () => {
+        const dialer = stub.createStubInstance(Connector);
 
         beforeEach(() => {
             dialer.relayPeers = new Map();
@@ -173,8 +165,8 @@ describe("netron", "circuit", "dialer", () => {
         });
     });
 
-    describe("._negotiateRelay", () => {
-        const dialer = stub.createStubInstance(CircuitDialer);
+    describe("_negotiateRelay()", () => {
+        const dialer = stub.createStubInstance(Connector);
         const dstMa = multi.address.create(`/ipfs/${nodes.node4.id}`);
 
         let conn;

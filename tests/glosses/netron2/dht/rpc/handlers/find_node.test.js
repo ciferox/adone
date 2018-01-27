@@ -1,5 +1,5 @@
 const waterfall = require("async/waterfall");
-const util = require("../../utils");
+import { makePeers, setupDHT, teardown } from "../../utils";
 
 const {
     netron2: { dht }
@@ -8,22 +8,18 @@ const { rpcHandler: { findNode }, Message } = adone.private(dht);
 
 const T = Message.TYPES.FIND_NODE;
 
-describe("rpc - handlers - FindNode", () => {
+describe("netron2", "dht", "KadDHT", "rpc - handlers - FindNode", () => {
     let peers;
     let myDht;
 
     before(() => {
-        peers = util.makePeers(3);
+        peers = makePeers(3);
     });
 
-    afterEach((done) => util.teardown(done));
+    afterEach(() => teardown());
 
-    beforeEach((done) => {
-        util.setupDHT((err, res) => {
-            assert.notExists(err);
-            myDht = res;
-            done();
-        });
+    beforeEach(async () => {
+        myDht = await setupDHT();
     });
 
     it("returns self, if asked for self", (done) => {

@@ -46,8 +46,6 @@ exports.createExchange = (state) => {
 };
 
 exports.identify = (state, msg) => {
-    adone.log("1.1 identify");
-
     state.proposalEncoded.in = msg;
     state.proposal.in = pbm.Propose.decode(msg);
     const pubkey = state.proposal.in.pubkey;
@@ -62,13 +60,9 @@ exports.identify = (state, msg) => {
     } else {
         state.id.remote = remoteId;
     }
-
-    adone.log("1.1 identify - %s - identified remote peer as %s", state.id.local.asBase58(), state.id.remote.asBase58());
 };
 
 exports.selectProtocols = (state) => {
-    adone.log("1.2 selection");
-
     const local = {
         pubKeyBytes: state.key.local.public.bytes,
         exchanges: support.exchanges,
@@ -104,8 +98,6 @@ exports.selectProtocols = (state) => {
 };
 
 exports.verify = (state, msg) => {
-    adone.log("2.1. verify");
-
     state.exchange.in = pbm.Exchange.decode(msg);
     state.ephemeralKey.remote = state.exchange.in.epubkey;
 
@@ -119,13 +111,9 @@ exports.verify = (state, msg) => {
     if (!sigOk) {
         throw new Error("Bad signature");
     }
-
-    adone.log("2.1. verify - signature verified");
 };
 
 exports.generateKeys = (state) => {
-    adone.log("2.2. keys");
-
     const secret = state.shared.generate(state.exchange.in.epubkey);
     state.shared.secret = secret;
 
@@ -142,8 +130,6 @@ exports.generateKeys = (state) => {
         // we should've bailed before state. but if not, bail here.
         throw new Error("you are trying to talk to yourself");
     }
-
-    adone.log("2.3. mac + cipher");
 
     return [
         support.makeMacAndCipher(state.protocols.local),

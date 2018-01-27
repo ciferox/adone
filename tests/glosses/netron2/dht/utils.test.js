@@ -8,7 +8,7 @@ const {
 } = adone;
 const { utils } = adone.private(dht);
 
-describe("utils", () => {
+describe("netron2", "dht", "KadDHT", "utils", () => {
     describe("bufferToKey", () => {
         it("returns the base32 encoded key of the buffer", () => {
             const buf = Buffer.from("hello world");

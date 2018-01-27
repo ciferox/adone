@@ -1,5 +1,5 @@
 const waterfall = require("async/waterfall");
-const util = require("../../utils");
+import { setupDHT, makePeers, makeValues, teardown } from "../../utils";
 
 const {
     netron2: { dht },
@@ -7,24 +7,20 @@ const {
 } = adone;
 const { rpcHandler: { addProvider }, Message } = adone.private(dht);
 
-describe("rpc - handlers - AddProvider", () => {
+describe("netron2", "dht", "KadDHT", "rpc - handlers - AddProvider", () => {
     let peers;
     let values;
     let dht;
 
     before(() => {
-        peers = util.makePeers(3);
-        values = util.makeValues(2);
+        peers = makePeers(3);
+        values = makeValues(2);
     });
 
-    afterEach((done) => util.teardown(done));
+    afterEach(() => teardown());
 
-    beforeEach((done) => {
-        util.setupDHT((err, res) => {
-            assert.notExists(err);
-            dht = res;
-            done();
-        });
+    beforeEach(async () => {
+        dht = await setupDHT();
     });
 
     describe("invalid messages", () => {

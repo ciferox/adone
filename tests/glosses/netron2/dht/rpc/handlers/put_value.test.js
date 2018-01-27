@@ -1,4 +1,4 @@
-const util = require("../../utils");
+import { makePeers, teardown, setupDHT } from "../../utils";
 
 const {
     netron2: { dht, record: { Record } }
@@ -7,22 +7,18 @@ const { utils, rpcHandler: { putValue }, Message } = adone.private(dht);
 
 const T = Message.TYPES.PUT_VALUE;
 
-describe("rpc - handlers - PutValue", () => {
+describe("netron2", "dht", "KadDHT", "rpc - handlers - PutValue", () => {
     let peers;
     let dht;
 
     before(() => {
-        peers = util.makePeers(2);
+        peers = makePeers(2);
     });
 
-    afterEach((done) => util.teardown(done));
+    afterEach(() => teardown());
 
-    beforeEach((done) => {
-        util.setupDHT((err, res) => {
-            assert.notExists(err);
-            dht = res;
-            done();
-        });
+    beforeEach(async () => {
+        dht = await setupDHT();
     });
 
     it("errors on missing record", (done) => {

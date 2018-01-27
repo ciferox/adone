@@ -31,8 +31,8 @@ adone.lazifyPrivate({
     constants: "./constants",
     Message: "./message",
     LimitedPeerList: "./limited-peer-list",
-    PeerList: "./peer-list",
-    PeerQueue: "./peer-queue",
+    PeerList: "./peer_list",
+    PeerQueue: "./peer_queue",
     Providers: "./providers",
     Query: "./query",
     RoutingTable: "./routing"
@@ -161,7 +161,6 @@ export class KadDHT {
      */
     getClosestPeers(key, callback) {
         try {
-            this._log("getClosestPeers to %s", key.toString());
             const id = utils.convertBuffer(key);
 
             const tablePeers = this.routingTable.closestPeers(id, c.ALPHA);

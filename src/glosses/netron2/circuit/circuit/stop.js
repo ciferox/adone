@@ -22,7 +22,7 @@ export default class Stop extends adone.event.Emitter {
         ], (err) => {
             if (err) {
                 callback(); // we don't return the error here, since multistream select don't expect one
-                return adone.error(err);
+                return;
             }
 
             const peerInfo = new PeerInfo(message.srcPeer.id);

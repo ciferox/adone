@@ -8,7 +8,7 @@ const {
 const { Stop, StreamHandler, protocol } = adone.private(adone.netron2.circuit);
 
 
-describe("stop", () => {
+describe("netron2", "circuit", "stop", () => {
     describe("handle relayed connections", () => {
         let stopHandler;
 

@@ -2,7 +2,7 @@ const { makePeers } = require("./utils");
 
 const { PeerList } = adone.private(adone.netron2.dht);
 
-describe("PeerList", () => {
+describe("netron2", "dht", "KadDHT", "PeerList", () => {
     let peers;
 
     before(() => {

@@ -38,27 +38,24 @@ const maToUrl = function (ma) {
 };
 
 export default class WS {
-    connect(ma, options, callback) {
-        if (is.function(options)) {
-            callback = options;
-            options = {};
-        }
+    connect(ma) {
+        return new Promise((resolve, reject) => {
+            const url = maToUrl(ma);
+            const socket = pull.ws.connect(url, {
+                binary: true,
+                onConnect: (err) => {
+                    if (err) {
+                        return reject(err);
+                    }
 
-        callback = callback || adone.noop;
+                    const conn = new Connection(socket);
+                    conn.getObservedAddrs = (cb) => cb(null, [ma]);
+                    conn.close = (cb) => socket.close(cb);
 
-        const url = maToUrl(ma);
-        const socket = pull.ws.connect(url, {
-            binary: true,
-            onConnect: (err) => {
-                callback(err);
-            }
+                    resolve(conn);
+                }
+            });
         });
-
-        const conn = new Connection(socket);
-        conn.getObservedAddrs = (cb) => cb(null, [ma]);
-        conn.close = (cb) => socket.close(cb);
-
-        return conn;
     }
 
     createListener(handler) {

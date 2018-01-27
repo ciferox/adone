@@ -9,7 +9,7 @@ const {
 } = adone;
 
 describe("netron2", "floodsub", () => {
-    describe.only("basics between 2 nodes", () => {
+    describe("basics between 2 nodes", () => {
         const shouldNotHappen = function (msg) {
             assert.fail();
         };
@@ -43,11 +43,11 @@ describe("netron2", "floodsub", () => {
                 }, 50);
             });
 
-            it("start both FloodSubs", (done) => {
-                parallel([
-                    (cb) => fsA.start(cb),
-                    (cb) => fsB.start(cb)
-                ], done);
+            it("start both FloodSubs", async () => {
+                await Promise.all([
+                    fsA.start(),
+                    fsB.start()
+                ]);
             });
 
             it("Dial from nodeA to nodeB", async () => {
@@ -109,7 +109,7 @@ describe("netron2", "floodsub", () => {
 
                 const receivedMsg = function (msg) {
                     expect(msg.data.toString()).to.equal("banana");
-                    expect(msg.from).to.be.eql(fsB.libp2p.peerInfo.id.asBase58());
+                    expect(msg.from).to.be.eql(fsB.netCore.peerInfo.id.asBase58());
                     assert.true(is.buffer(msg.seqno));
                     expect(msg.topicIDs).to.be.eql(["Z"]);
 
@@ -131,7 +131,7 @@ describe("netron2", "floodsub", () => {
 
                 const receivedMsg = function (msg) {
                     expect(msg.data.toString()).to.equal("banana");
-                    expect(msg.from).to.be.eql(fsB.libp2p.peerInfo.id.asBase58());
+                    expect(msg.from).to.be.eql(fsB.netCore.peerInfo.id.asBase58());
                     assert.true(is.buffer(msg.seqno));
                     expect(msg.topicIDs).to.be.eql(["Z"]);
 
@@ -174,11 +174,11 @@ describe("netron2", "floodsub", () => {
                 fsA.publish("Z", Buffer.from("banana"));
             });
 
-            it("stop both FloodSubs", (done) => {
-                parallel([
-                    (cb) => fsA.stop(cb),
-                    (cb) => fsB.stop(cb)
-                ], done);
+            it("stop both FloodSubs", async () => {
+                await Promise.all([
+                    fsA.stop(),
+                    fsB.stop()
+                ]);
             });
         });
 
@@ -188,28 +188,26 @@ describe("netron2", "floodsub", () => {
             let fsA;
             let fsB;
 
-            before(async (done) => {
+            before(async () => {
                 nodeA = await createNetCore("/ip4/127.0.0.1/tcp/0");
                 nodeB = await createNetCore("/ip4/127.0.0.1/tcp/0");
 
                 fsA = new FloodSub(nodeA);
                 fsB = new FloodSub(nodeB);
 
-                const next = function () {
-                    fsA.subscribe("Za");
-                    fsB.subscribe("Zb");
+                await Promise.all([
+                    fsA.start(),
+                    fsB.start()
+                ]);
 
-                    expect(fsA.peers.size).to.equal(0);
-                    expectSet(fsA.subscriptions, ["Za"]);
-                    expect(fsB.peers.size).to.equal(0);
-                    expectSet(fsB.subscriptions, ["Zb"]);
-                    done();
-                };
+                fsA.subscribe("Za");
+                fsB.subscribe("Zb");
 
-                parallel([
-                    (cb) => fsA.start(cb),
-                    (cb) => fsB.start(cb)
-                ], next);
+                expect(fsA.peers.size).to.equal(0);
+                expectSet(fsA.subscriptions, ["Za"]);
+                expect(fsB.peers.size).to.equal(0);
+                expectSet(fsB.subscriptions, ["Zb"]);
+
             });
 
             after(async () => {
@@ -232,11 +230,11 @@ describe("netron2", "floodsub", () => {
                 expectSet(first(fsA.peers).topics, ["Zb"]);
             });
 
-            it("stop both FloodSubs", (done) => {
-                parallel([
-                    (cb) => fsA.stop(cb),
-                    (cb) => fsB.stop(cb)
-                ], done);
+            it("stop both FloodSubs", async () => {
+                await Promise.all([
+                    fsA.stop(),
+                    fsB.stop()
+                ]);
             });
         });
 
@@ -246,40 +244,37 @@ describe("netron2", "floodsub", () => {
             let fsA;
             let fsB;
 
-            before(async (done) => {
+            before(async () => {
                 nodeA = await createNetCore("/ip4/127.0.0.1/tcp/0");
                 nodeB = await createNetCore("/ip4/127.0.0.1/tcp/0");
 
                 fsA = new FloodSub(nodeA);
                 fsB = new FloodSub(nodeB);
 
-                const next = function () {
-                    fsA.subscribe("Za");
-                    fsB.subscribe("Zb");
+                await Promise.all([
+                    fsA.start(),
+                    fsB.start()
+                ]);
 
-                    expect(fsA.peers.size).to.equal(0);
-                    expectSet(fsA.subscriptions, ["Za"]);
-                    expect(fsB.peers.size).to.equal(0);
-                    expectSet(fsB.subscriptions, ["Zb"]);
-                    done();
-                };
+                fsA.subscribe("Za");
+                fsB.subscribe("Zb");
 
-                parallel([
-                    (cb) => fsA.start(cb),
-                    (cb) => fsB.start(cb)
-                ], next);
+                expect(fsA.peers.size).to.equal(0);
+                expectSet(fsA.subscriptions, ["Za"]);
+                expect(fsB.peers.size).to.equal(0);
+                expectSet(fsB.subscriptions, ["Zb"]);
+
             });
 
-            it("peer is removed from the state when connection ends", async (done) => {
+            it("peer is removed from the state when connection ends", async () => {
                 await nodeA.connect(nodeB.peerInfo);
                 await adone.promise.delay(1000);
                 expect(first(fsA.peers)._references).to.equal(2);
                 expect(first(fsB.peers)._references).to.equal(2);
 
-                fsA.stop(() => setTimeout(() => {
-                    expect(first(fsB.peers)._references).to.equal(1);
-                    done();
-                }, 1000));
+                await fsA.stop();
+                await adone.promise.delay(1000);
+                expect(first(fsB.peers)._references).to.equal(1);
             });
 
             it("stop one node", async () => {
@@ -314,44 +309,37 @@ describe("netron2", "floodsub", () => {
                 await nodeB.stop();
             });
 
-            it("connect on floodsub on mount", (done) => {
+            it("connect on floodsub on mount", async () => {
                 fsA = new FloodSub(nodeA);
                 fsB = new FloodSub(nodeB);
 
-                const next = function () {
-                    expect(fsA.peers.size).to.equal(1);
-                    expect(fsB.peers.size).to.equal(1);
-                    done();
-                };
+                await Promise.all([
+                    fsA.start(),
+                    fsB.start()
+                ]);
 
-                parallel([
-                    (cb) => fsA.start(cb),
-                    (cb) => fsB.start(cb)
-                ], next);
+                expect(fsA.peers.size).to.equal(1);
+                expect(fsB.peers.size).to.equal(1);
             });
 
-            it("stop both FloodSubs", (done) => {
-                parallel([
-                    (cb) => fsA.stop(cb),
-                    (cb) => fsB.stop(cb)
-                ], done);
+            it("stop both FloodSubs", async () => {
+                await Promise.all([
+                    fsA.stop(),
+                    fsB.stop()
+                ]);
             });
         });
     });
 
     describe("multiple nodes (more than 2)", () => {
-        const spawnPubSubNode = async (callback) => {
-            const node = await createNetCore("/ip4/127.0.0.1/tcp/0");
-            const ps = new FloodSub(node);
-            ps.start((err) => {
-                if (err) {
-                    return callback(err);
-                }
-                callback(null, {
-                    libp2p: node,
-                    ps
-                });
-            });
+        const spawnPubSubNode = async () => {
+            const netCore = await createNetCore("/ip4/127.0.0.1/tcp/0");
+            const ps = new FloodSub(netCore);
+            await ps.start();
+            return {
+                netCore,
+                ps
+            };
         };
 
         describe("every peer subscribes to the topic", () => {
@@ -363,85 +351,71 @@ describe("netron2", "floodsub", () => {
                 let b;
                 let c;
 
-                before((done) => {
-                    parallel([
-                        (cb) => spawnPubSubNode(cb),
-                        (cb) => spawnPubSubNode(cb),
-                        (cb) => spawnPubSubNode(cb)
-                    ], (err, nodes) => {
-                        if (err) {
-                            return done(err);
-                        }
-                        a = nodes[0];
-                        b = nodes[1];
-                        c = nodes[2];
+                before(async () => {
+                    const nodes = await Promise.all([
+                        spawnPubSubNode(),
+                        spawnPubSubNode(),
+                        spawnPubSubNode()
+                    ]);
 
-                        done();
-                    });
+                    a = nodes[0];
+                    b = nodes[1];
+                    c = nodes[2];
                 });
 
                 after(async () => {
                     // note: setTimeout to avoid the tests finishing
                     // before swarm does its connects
                     await adone.promise.delay(1000);
-                    await a.libp2p.stop();
-                    await b.libp2p.stop();
-                    await c.libp2p.stop();
+                    await a.netCore.stop();
+                    await b.netCore.stop();
+                    await c.netCore.stop();
                 });
 
                 it("establish the connections", async () => {
-                    await a.libp2p.connect(b.libp2p.peerInfo);
-                    await b.libp2p.connect(c.libp2p.peerInfo);
+                    await a.netCore.connect(b.netCore.peerInfo);
+                    await b.netCore.connect(c.netCore.peerInfo);
                     // wait for the pubsub pipes to be established
-                    await adone.promise.delay(200);
+                    await adone.promise.delay(2000);
                 });
 
-                it("subscribe to the topic on node a", (done) => {
+                it("subscribe to the topic on node a", async () => {
                     a.ps.subscribe("Z");
                     expectSet(a.ps.subscriptions, ["Z"]);
 
-                    setTimeout(() => {
-                        expect(b.ps.peers.size).to.equal(2);
-                        const topics = Array.from(b.ps.peers.values())[1].topics;
-                        expectSet(topics, ["Z"]);
+                    await adone.promise.delay(2000);
+                    expect(b.ps.peers.size).to.equal(2);
+                    const topics = [...b.ps.peers.values()][1].topics;
+                    expectSet(topics, ["Z"]);
 
-                        expect(c.ps.peers.size).to.equal(1);
-                        expectSet(first(c.ps.peers).topics, []);
-
-                        done();
-                    }, 200);
+                    expect(c.ps.peers.size).to.equal(1);
+                    expectSet(first(c.ps.peers).topics, []);
                 });
 
-                it("subscribe to the topic on node b", (done) => {
+                it("subscribe to the topic on node b", async () => {
                     b.ps.subscribe("Z");
                     expectSet(b.ps.subscriptions, ["Z"]);
 
-                    setTimeout(() => {
-                        expect(a.ps.peers.size).to.equal(1);
-                        expectSet(first(a.ps.peers).topics, ["Z"]);
+                    await adone.promise.delay(200);
+                    expect(a.ps.peers.size).to.equal(1);
+                    expectSet(first(a.ps.peers).topics, ["Z"]);
 
-                        expect(c.ps.peers.size).to.equal(1);
-                        expectSet(first(c.ps.peers).topics, ["Z"]);
-
-                        done();
-                    }, 200);
+                    expect(c.ps.peers.size).to.equal(1);
+                    expectSet(first(c.ps.peers).topics, ["Z"]);
                 });
 
-                it("subscribe to the topic on node c", (done) => {
+                it("subscribe to the topic on node c", async () => {
                     c.ps.subscribe("Z");
                     expectSet(c.ps.subscriptions, ["Z"]);
 
-                    setTimeout(() => {
-                        expect(a.ps.peers.size).to.equal(1);
-                        expectSet(first(a.ps.peers).topics, ["Z"]);
+                    await adone.promise.delay(200);
+                    expect(a.ps.peers.size).to.equal(1);
+                    expectSet(first(a.ps.peers).topics, ["Z"]);
 
-                        expect(b.ps.peers.size).to.equal(2);
-                        b.ps.peers.forEach((peer) => {
-                            expectSet(peer.topics, ["Z"]);
-                        });
-
-                        done();
-                    }, 200);
+                    expect(b.ps.peers.size).to.equal(2);
+                    b.ps.peers.forEach((peer) => {
+                        expectSet(peer.topics, ["Z"]);
+                    });
                 });
 
                 it("publish on node a", (done) => {
@@ -545,43 +519,37 @@ describe("netron2", "floodsub", () => {
                 let d;
                 let e;
 
-                before((done) => {
-                    parallel([
-                        (cb) => spawnPubSubNode(cb),
-                        (cb) => spawnPubSubNode(cb),
-                        (cb) => spawnPubSubNode(cb),
-                        (cb) => spawnPubSubNode(cb),
-                        (cb) => spawnPubSubNode(cb)
-                    ], (err, nodes) => {
-                        if (err) {
-                            return done(err);
-                        }
-                        a = nodes[0];
-                        b = nodes[1];
-                        c = nodes[2];
-                        d = nodes[3];
-                        e = nodes[4];
-
-                        done();
-                    });
+                before(async () => {
+                    const nodes = await Promise.all([
+                        spawnPubSubNode(),
+                        spawnPubSubNode(),
+                        spawnPubSubNode(),
+                        spawnPubSubNode(),
+                        spawnPubSubNode()
+                    ]);
+                    a = nodes[0];
+                    b = nodes[1];
+                    c = nodes[2];
+                    d = nodes[3];
+                    e = nodes[4];
                 });
 
                 after(async () => {
                     // note: setTimeout to avoid the tests finishing
                     // before swarm does its connects
                     await adone.promise.delay(1000);
-                    await a.libp2p.stop();
-                    await b.libp2p.stop();
-                    await c.libp2p.stop();
-                    await d.libp2p.stop();
-                    await e.libp2p.stop();
+                    await a.netCore.stop();
+                    await b.netCore.stop();
+                    await c.netCore.stop();
+                    await d.netCore.stop();
+                    await e.netCore.stop();
                 });
 
                 it("establish the connections", async () => {
-                    await a.libp2p.connect(b.libp2p.peerInfo);
-                    await b.libp2p.connect(c.libp2p.peerInfo);
-                    await c.libp2p.connect(d.libp2p.peerInfo);
-                    await d.libp2p.connect(e.libp2p.peerInfo);
+                    await a.netCore.connect(b.netCore.peerInfo);
+                    await b.netCore.connect(c.netCore.peerInfo);
+                    await c.netCore.connect(d.netCore.peerInfo);
+                    await d.netCore.connect(e.netCore.peerInfo);
                     // wait for the pubsub pipes to be established
                     await adone.promise.delay(2000);
                 });
@@ -669,7 +637,7 @@ describe("netron2", "floodsub", () => {
         });
     });
 
-    describe.skip("utils", () => {
+    describe("utils", () => {
         it("randomSeqno", () => {
             const first = floodUtils.randomSeqno();
             const second = floodUtils.randomSeqno();
@@ -692,11 +660,9 @@ describe("netron2", "floodsub", () => {
                 [[], [], false],
                 [[1], [2], false]
             ].forEach((test) => {
-                expect(floodUtils.anyMatch(new Set(test[0]), new Set(test[1])))
-                    .to.eql(test[2]);
+                expect(floodUtils.anyMatch(new Set(test[0]), new Set(test[1]))).to.eql(test[2]);
 
-                expect(floodUtils.anyMatch(new Set(test[0]), test[1]))
-                    .to.eql(test[2]);
+                expect(floodUtils.anyMatch(new Set(test[0]), test[1])).to.eql(test[2]);
             });
         });
 

@@ -6,7 +6,7 @@ const {
 const { KadDHT } = dht;
 const { Query } = adone.private(dht);
 
-describe("Query", () => {
+describe("netron2", "dht", "KadDHT", "Query", () => {
     let peerInfos;
     let dht;
 
@@ -24,7 +24,7 @@ describe("Query", () => {
         const peer = peerInfos[0];
 
         // mock this so we can connect non existing peers
-        dht.swarm.connect = (peer, callback) => callback();
+        dht.swarm.connect = (peer) => {};
 
         let i = 0;
         const query = (p, cb) => {
@@ -56,7 +56,7 @@ describe("Query", () => {
         const peer = peerInfos[0];
 
         // mock this so we can connect non existing peers
-        dht.swarm.connect = (peer, callback) => callback();
+        dht.swarm.connect = (peer) => {};
 
         const query = (p, cb) => cb(new Error("fail"));
 
@@ -72,7 +72,7 @@ describe("Query", () => {
         const peer = peerInfos[0];
 
         // mock this so we can connect non existing peers
-        dht.swarm.connect = (peer, callback) => callback();
+        dht.swarm.connect = (peer) => {};
 
         const query = (p, cb) => {
             cb(null, {

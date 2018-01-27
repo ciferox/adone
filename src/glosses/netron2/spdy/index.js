@@ -6,7 +6,7 @@ const {
 const Muxer = require("./muxer");
 const SPDY_CODEC = require("./spdy-codec");
 
-const create = function (rawConn, isListener) {
+const create = function (rawConn, isServer) {
     const conn = pull.toStream(rawConn);
     // Let it flow, let it flooow
     conn.resume();
@@ -20,7 +20,7 @@ const create = function (rawConn, isListener) {
 
     const spdyMuxer = spdy.Connection.create(conn, {
         protocol: "spdy",
-        isServer: isListener
+        isServer
     });
 
     return new Muxer(rawConn, spdyMuxer);

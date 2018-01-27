@@ -6,7 +6,7 @@ const {
     netron2: { rendezvous }
 } = adone;
 
-describe("rendezvous", () => {
+describe.todo("rendezvous", () => {
     const sioOptions = {
         transports: ["websocket"],
         "force new connection": true

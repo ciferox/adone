@@ -70,7 +70,7 @@ export default class Hop extends adone.event.Emitter {
 
         this.utils.validateAddrs(message, streamHandler, __.protocol.CircuitRelay.Type.HOP, (err) => {
             if (err) {
-                return adone.error(err);
+                return;
             }
 
             let dstPeer;
@@ -81,7 +81,6 @@ export default class Hop extends adone.event.Emitter {
                 }
             } catch (err) {
                 if (!this.active) {
-                    adone.error(err);
                     setImmediate(() => this.emit("circuit:error", err));
                     return this.utils.writeResponse(streamHandler, __.protocol.CircuitRelay.Status.HOP_NO_CONN_TO_DST);
                 }
@@ -89,7 +88,6 @@ export default class Hop extends adone.event.Emitter {
 
             return this._circuit(streamHandler.rest(), message, (err) => {
                 if (err) {
-                    adone.error(err);
                     setImmediate(() => this.emit("circuit:error", err));
                 }
                 setImmediate(() => this.emit("circuit:success"));
@@ -112,13 +110,11 @@ export default class Hop extends adone.event.Emitter {
             if (err) {
                 this.utils.writeResponse(srcStreamHandler, __.protocol.CircuitRelay.Status.HOP_CANT_DIAL_DST);
                 pull(pull.empty(), srcStreamHandler.rest());
-                adone.error(err);
                 return cb(err);
             }
 
             return this.utils.writeResponse(srcStreamHandler, __.protocol.CircuitRelay.Status.SUCCESS, (err) => {
                 if (err) {
-                    adone.error(err);
                     return cb(err);
                 }
 
@@ -132,13 +128,11 @@ export default class Hop extends adone.event.Emitter {
                         this.utils.writeResponse(errStreamHandler, __.protocol.CircuitRelay.Status.HOP_CANT_OPEN_DST_STREAM);
                         pull(pull.empty(), errStreamHandler.rest());
 
-                        adone.error(err);
                         return cb(err);
                     }
 
                     streamHandler.read((err, msg) => {
                         if (err) {
-                            adone.error(err);
                             return cb(err);
                         }
 
@@ -177,13 +171,6 @@ export default class Hop extends adone.event.Emitter {
     _dialPeer(dstPeer, callback) {
         const peerInfo = new PeerInfo(PeerId.createFromBytes(dstPeer.id));
         dstPeer.addrs.forEach((a) => peerInfo.multiaddrs.add(a));
-        this.swarm.connect(peerInfo, multicodec.relay, once((err, conn) => {
-            if (err) {
-                adone.error(err);
-                return callback(err);
-            }
-
-            callback(null, conn);
-        }));
+        this.swarm.connect(peerInfo, multicodec.relay).catch(callback).then((conn) => callback(null, conn));
     }
 }

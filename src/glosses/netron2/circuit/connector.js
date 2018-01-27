@@ -1,5 +1,5 @@
 const waterfall = require("async/waterfall");
-const multicodec = require("../multicodec");
+const multicodec = require("./multicodec");
 
 const {
     is,
@@ -29,35 +29,31 @@ export default class Dialer {
      * Dial a peer over a relay
      *
      * @param {multiaddr} ma - the multiaddr of the peer to connect
-     * @param {Function} cb - a callback called once dialed
-     * @returns {Connection} - the connection
+     * @returns {Promise<Connection>} - the connection
      *
      * @memberOf Dialer
      */
-    connect(ma, cb) {
-        cb = cb || (() => { });
+    connect(ma) {
         const strMa = ma.toString();
         if (!strMa.includes("/p2p-circuit")) {
-            adone.error("invalid circuit address");
-            return cb(new Error("invalid circuit address"));
+            throw new Error("invalid circuit address");
         }
 
         const addr = strMa.split("p2p-circuit"); // extract relay address if any
         const relay = addr[0] === "/" ? null : multi.address.create(addr[0]);
         const peer = multi.address.create(addr[1] || addr[0]);
 
-        const dstConn = new Connection();
-        setImmediate(this._dialPeer.bind(this), peer, relay, (err, conn) => {
-            if (err) {
-                adone.error(err);
-                return cb(err);
-            }
+        return new Promise((resolve, reject) => {
+            this._dialPeer(peer, relay, (err, conn) => {
+                if (err) {
+                    return reject(err);
+                }
 
-            dstConn.setInnerConn(conn);
-            cb(null, dstConn);
+                const dstConn = new Connection();
+                dstConn.setInnerConn(conn);
+                resolve(dstConn);
+            });
         });
-
-        return dstConn;
     }
 
     /**
@@ -126,13 +122,11 @@ export default class Dialer {
             const next = (nextRelay) => {
                 if (!nextRelay) {
                     const err = "no relay peers were found or all relays failed to connect";
-                    adone.error(err);
                     return cb(err);
                 }
 
                 return this._negotiateRelay(nextRelay, dstMa, (err, conn) => {
                     if (err) {
-                        adone.error(err);
                         return next(relays.shift());
                     }
                     cb(null, conn);
@@ -142,7 +136,6 @@ export default class Dialer {
         } else {
             return this._negotiateRelay(relay, dstMa, (err, conn) => {
                 if (err) {
-                    adone.error("An error has occurred negotiating the relay connection", err);
                     return cb(err);
                 }
 
@@ -221,12 +214,6 @@ export default class Dialer {
     _dialRelay(peer, cb) {
         cb = once(cb || (() => { }));
 
-        this.swarm.connect(peer, multicodec.relay, once((err, conn) => {
-            if (err) {
-                adone.error(err);
-                return cb(err);
-            }
-            cb(null, new __.StreamHandler(conn));
-        }));
+        this.swarm.connect(peer, multicodec.relay).catch(cb).then((conn) => cb(null, new __.StreamHandler(conn)));
     }
 }

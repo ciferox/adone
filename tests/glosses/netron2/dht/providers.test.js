@@ -16,7 +16,7 @@ const {
 const { Providers } = adone.private(dht);
 
 
-describe("Providers", function () {
+describe("netron2", "dht", "KadDHT", "Providers", function () {
     this.timeout(300 * 1000);
 
     let infos;
@@ -114,26 +114,19 @@ describe("Providers", function () {
         const store = new LevelStore(p);
         const providers = new Providers(store, infos[2].id, 10);
 
-        console.log("starting");
         const peers = util.makePeers(600);
         const values = util.makeValues(100);
-        console.log("got values and peers");
-        const total = Date.now();
         eachSeries(values, (v, cb) => {
             eachSeries(peers, (p, cb) => {
                 providers.addProvider(v.cid, p.id, cb);
             }, cb);
         }, (err) => {
-            console.log("addProvider %s peers %s cids in %sms", peers.length, values.length, Date.now() - total);
             assert.notExists(err);
-            console.log("starting profile with %s peers and %s cids", peers.length, values.length);
             timesSeries(3, (i, cb) => {
-                const start = Date.now();
                 each(values, (v, cb) => {
                     providers.getProviders(v.cid, cb);
                 }, (err) => {
                     assert.notExists(err);
-                    console.log("query %sms", (Date.now() - start));
                     cb();
                 });
             }, () => {

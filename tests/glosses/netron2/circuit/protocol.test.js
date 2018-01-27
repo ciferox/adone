@@ -3,7 +3,7 @@ const {
 } = adone;
 const { protocol } = adone.private(adone.netron2.circuit);
 
-describe("protocol", () => {
+describe("netron2", "circuit", "protocol", () => {
     let msgObject = null;
     let message = null;
 

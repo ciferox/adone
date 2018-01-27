@@ -8,8 +8,6 @@ const {
 // step 3. Finish
 // -- send expected message to verify encryption works (send local nonce)
 module.exports = function finish(state, cb) {
-    adone.log("3. finish - start");
-
     const proto = state.protocols;
     const stream = state.shake.rest();
     const shake = pull.handshake({ timeout: state.timeout }, (err) => {
@@ -47,8 +45,6 @@ module.exports = function finish(state, cb) {
         } catch (err) {
             return fail(err);
         }
-
-        adone.log("3. finish - finish");
 
         // Awesome that's all folks.
         state.secure.resolve(shake.handshake.rest());

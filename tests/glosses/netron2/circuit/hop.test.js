@@ -7,7 +7,7 @@ const {
 } = adone;
 const { StreamHandler, Hop, protocol } = adone.private(adone.netron2.circuit);
 
-describe("relay", () => {
+describe("netron2", "circuit", "relay", () => {
     describe("should handle circuit requests", () => {
         let relay;
         let swarm;

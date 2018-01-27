@@ -1,6 +1,6 @@
 const {
+    is,
     multi,
-    noop,
     netron2: { Connection },
     std: { os },
     stream: { pull },
@@ -15,27 +15,36 @@ export default class Listener extends pull.ws.Server {
                 return callback(null, []);
             };
 
-            handler(new Connection(socket));
+            is.function(handler) && handler(new Connection(socket));
         });
     }
 
-    listen(ma, callback) {
-        callback = callback || noop;
+    listen(ma) {
         this.listeningAddr = ma;
 
         if (includes(ma.protoNames(), "ipfs")) {
             ma = ma.decapsulate("ipfs");
         }
 
-        super.listen(ma.toOptions(), callback);
+        return new Promise((resolve, reject) => {
+            super.listen(ma.toOptions(), (err) => {
+                err ? reject(err) : resolve();
+            });
+        });
     }
 
-    getAddrs(callback) {
+    close() {
+        return new Promise((resolve, reject) => {
+            super.close(resolve);
+        });
+    }
+
+    getAddrs() {
         const multiaddrs = [];
         const address = this.address();
 
         if (!address) {
-            return callback(new Error("Listener is not ready yet"));
+            throw new Error("Listener is not ready yet");
         }
 
         const ipfsId = this.listeningAddr.getPeerId();
@@ -62,6 +71,6 @@ export default class Listener extends pull.ws.Server {
             }
         }
 
-        callback(null, multiaddrs);
+        return multiaddrs;
     }
 }

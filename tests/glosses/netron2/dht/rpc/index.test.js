@@ -7,7 +7,7 @@ const {
 const { KadDHT } = dht;
 const { rpc, Message } = adone.private(dht);
 
-describe("rpc", () => {
+describe("netron2", "dht", "KadDHT", "rpc", () => {
     let peerInfos;
 
     const makeConnection = function (msg, info, callback) {

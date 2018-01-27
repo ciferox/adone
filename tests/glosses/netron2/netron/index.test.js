@@ -719,7 +719,7 @@ describe("netron2", "Netron", () => {
             assert.true(netronS.getNetCore("default").started);
         });
 
-        it.only("connect one netron to another", async () => {
+        it("connect one netron to another", async () => {
             await netronS.start("default");
             assert.true(netronS.getNetCore("default").started);
             await netronC.connect("default", peerS);

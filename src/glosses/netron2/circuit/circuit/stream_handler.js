@@ -46,7 +46,6 @@ export default class StreamHandler {
 
         pull.lengthPrefixed.decodeFromReader(this.shake, { maxLength: this.maxLength }, (err, msg) => {
             if (err) {
-                adone.error(err);
                 // this.shake.abort(err)
                 return cb(err);
             }
@@ -74,7 +73,6 @@ export default class StreamHandler {
             pull.lengthPrefixed.encode(),
             pull.collect((err, encoded) => {
                 if (err) {
-                    adone.error(err);
                     this.shake.abort(err);
                     return cb(err);
                 }

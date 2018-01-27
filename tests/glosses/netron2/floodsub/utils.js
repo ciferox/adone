@@ -1,5 +1,5 @@
 const {
-    netron2: { PeerId, PeerInfo, transport: { TCP }, spdy, secio, NetCore }
+    netron2: { PeerId, PeerInfo, secio, NetCore }
 } = adone;
 
 exports.first = (map) => map.values().next().value;
@@ -14,8 +14,8 @@ exports.createNetCore = async (maddr) => {
     peer.multiaddrs.add(maddr);
     const node = new NetCore({
         peer,
-        transport: new TCP(),
-        muxer: spdy,
+        transport: "tcp",
+        muxer: "spdy",
         crypto: [secio]
     });
     await node.start();

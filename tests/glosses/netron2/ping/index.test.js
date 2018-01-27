@@ -1,6 +1,3 @@
-const series = require("async/series");
-const parallel = require("async/parallel");
-
 const {
     netron2: { swarm: { Swarm }, transport: { TCP }, PeerInfo, PeerBook, Ping }
 } = adone;
@@ -13,7 +10,7 @@ describe("netron2", "ping", function () {
 
     this.timeout(25000);
 
-    before(function (done) {
+    before(async function () {
         this.timeout(25000);
         peerA = PeerInfo.create();
         peerA.multiaddrs.add("/ip4/127.0.0.1/tcp/0");
@@ -24,22 +21,17 @@ describe("netron2", "ping", function () {
         swarmA.tm.add("tcp", new TCP());
         swarmB.tm.add("tcp", new TCP());
 
-        series([
-            (cb) => swarmA.listen(cb),
-            (cb) => swarmB.listen(cb),
-            (cb) => {
-                Ping.mount(swarmA);
-                Ping.mount(swarmB);
-                cb();
-            }
-        ], done);
+        await swarmA.listen();
+        await swarmB.listen();
+        Ping.mount(swarmA);
+        Ping.mount(swarmB);
     });
 
-    after((done) => {
-        parallel([
-            (cb) => swarmA.close(cb),
-            (cb) => swarmB.close(cb)
-        ], done);
+    after(async () => {
+        await Promise.all([
+            swarmA.close(),
+            swarmB.close()
+        ]);
     });
 
     it("ping once from peerA to peerB", (done) => {

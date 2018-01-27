@@ -6,11 +6,10 @@ const {
 
 describe("netron2", "muxer", "multiplex", "compliance", () => {
     testInterface({
-        setup(cb) {
-            cb(null, multiplex);
+        setup() {
+            return multiplex;
         },
-        teardown(cb) {
-            cb();
+        teardown() {
         }
     });
 });

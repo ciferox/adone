@@ -21,14 +21,10 @@ const {
  * (it just floods the network).
  */
 export class FloodSub extends event.Emitter {
-    /**
-     * @param {Object} libp2p
-     * @returns {FloodSub}
-     */
-    constructor(libp2p) {
+    constructor(netCore) {
         super();
 
-        this.libp2p = libp2p;
+        this.netCore = netCore;
         this.started = false;
 
         /**
@@ -91,27 +87,24 @@ export class FloodSub extends event.Emitter {
         return peer;
     }
 
-    async _dialPeer(peerInfo, callback) {
-        callback = callback || adone.noop;
+    async _dialPeer(peerInfo) {
         const idB58Str = peerInfo.id.asBase58();
 
         // If already have a PubSub conn, ignore
         const peer = this.peers.get(idB58Str);
         if (peer && peer.isConnected) {
-            return setImmediate(() => callback());
+            return;
         }
 
-        log("dialing %s", idB58Str);
         try {
-            const conn = await this.libp2p.connect(peerInfo, multicodec);
-            this._onDial(peerInfo, conn, callback);
+            const conn = await this.netCore.connect(peerInfo, multicodec);
+            this._onDial(peerInfo, conn);
         } catch (err) {
-            log.err(err);
-            callback();
+            //
         }
     }
 
-    _onDial(peerInfo, conn, callback) {
+    _onDial(peerInfo, conn) {
         const idB58Str = peerInfo.id.asBase58();
         log("connected", idB58Str);
 
@@ -120,7 +113,6 @@ export class FloodSub extends event.Emitter {
 
         // Immediately send my own subscriptions to the newly established conn
         peer.sendSubscriptions(this.subscriptions);
-        setImmediate(() => callback());
     }
 
     _onConnection(protocol, conn) {
@@ -223,61 +215,44 @@ export class FloodSub extends event.Emitter {
     }
 
     /**
-     * Mounts the floodsub protocol onto the libp2p node and sends our
+     * Mounts the floodsub protocol onto the netCore node and sends our
      * subscriptions to every peer conneceted
-     *
-     * @param {Function} callback
-     * @returns {undefined}
-     *
      */
-    start(callback) {
+    async start() {
         if (this.started) {
-            return setImmediate(() => callback(new Error("already started")));
+            throw new Error("already started");
         }
 
-        this.libp2p.handle(multicodec, this._onConnection);
+        this.netCore.handle(multicodec, this._onConnection);
 
         // Speed up any new peer that comes in my way
-        this.libp2p.on("peer:connect", this._dialPeer);
+        this.netCore.on("peer:connect", (peer) => {
+            this._dialPeer(peer);
+        });
 
         // Dial already connected peers
-        const peerInfos = this.libp2p.peerBook.getAllAsArray();
+        const peerInfos = this.netCore.peerBook.getAllAsArray();
 
-        asyncEach(peerInfos, (peer, cb) => this._dialPeer(peer, cb), (err) => {
-            setImmediate(() => {
-                this.started = true;
-                callback(err);
-            });
-        });
+        await Promise.all(peerInfos.map((peer) => this._dialPeer(peer)));
+        this.started = true;
     }
 
     /**
      * Unmounts the floodsub protocol and shuts down every connection
-     *
-     * @param {Function} callback
-     * @returns {undefined}
-     *
      */
-    stop(callback) {
+    async stop() {
         if (!this.started) {
-            return setImmediate(() => callback(new Error("not started yet")));
+            throw new Error("not started yet");
         }
 
-        this.libp2p.unhandle(multicodec);
-        this.libp2p.removeListener("peer:connect", this._dialPeer);
+        this.netCore.unhandle(multicodec);
+        this.netCore.removeListener("peer:connect", this._dialPeer);
 
-        log("stopping");
-        asyncEach(this.peers.values(), (peer, cb) => peer.close(cb), (err) => {
-            if (err) {
-                return callback(err);
-            }
+        await Promise.all([...this.peers.values()].map((peer) => peer.close()));
 
-            log("stopped");
-            this.peers = new Map();
-            this.subscriptions = new Set();
-            this.started = false;
-            callback();
-        });
+        this.peers = new Map();
+        this.subscriptions = new Set();
+        this.started = false;
     }
 
     /**
@@ -298,7 +273,7 @@ export class FloodSub extends event.Emitter {
         topics = ensureArray(topics);
         messages = ensureArray(messages);
 
-        const from = this.libp2p.peerInfo.id.asBase58();
+        const from = this.netCore.peerInfo.id.asBase58();
 
         const buildMessage = (msg) => {
             const seqno = utils.randomSeqno();

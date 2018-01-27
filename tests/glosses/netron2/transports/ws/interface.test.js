@@ -7,7 +7,7 @@ const {
 
 describe("netron2", "transport", "ws", "interface", () => {
     testInterface({
-        setup(callback) {
+        setup() {
             const ws = new WS();
             const addrs = [
                 multi.address.create("/ip4/127.0.0.1/tcp/9391/ws"),
@@ -15,10 +15,9 @@ describe("netron2", "transport", "ws", "interface", () => {
                 multi.address.create("/dns4/ipfs.io/tcp/9392/ws"),
                 multi.address.create("/dns4/ipfs.io/tcp/9392/wss")
             ];
-            callback(null, ws, addrs);
+            return [ws, addrs];
         },
-        teardown(callback) {
-            callback();
+        teardown() {
         }
     });
 });

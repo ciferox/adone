@@ -39,7 +39,6 @@ class PeerQueue {
      * @param {Buffer} from - The sha2-256 encoded peer id
      */
     constructor(from) {
-        adone.log("create: %s", from.toString("hex"));
         this.from = from;
         this.heap = new Heap(utils.xorCompare);
     }
@@ -52,7 +51,6 @@ class PeerQueue {
      * @returns {void}
      */
     enqueue(id) {
-        adone.log("enqueue %s", id.id.toString("hex"));
         const key = utils.convertPeerId(id);
         const el = {
             id,
@@ -69,7 +67,6 @@ class PeerQueue {
      */
     dequeue() {
         const el = this.heap.pop();
-        adone.log("dequeue %s", el.id.asBase58());
         return el.id;
     }
 

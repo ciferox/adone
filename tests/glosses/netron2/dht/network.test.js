@@ -1,4 +1,3 @@
-const series = require("async/series");
 const { makePeers } = require("./utils");
 
 const {
@@ -8,11 +7,11 @@ const {
 const { KadDHT } = dht;
 const { Message } = adone.private(dht);
 
-describe("Network", () => {
+describe("netron2", "dht", "KadDHT", "Network", () => {
     let dht;
     let peerInfos;
 
-    before(function (done) {
+    before(async function () {
         this.timeout(10 * 1000);
         peerInfos = makePeers(3);
         const swarm = new Swarm(peerInfos[0], new PeerBook());
@@ -21,18 +20,15 @@ describe("Network", () => {
         swarm.connection.reuse();
         dht = new KadDHT(swarm);
 
-        series([
-            (cb) => swarm.listen(cb),
-            (cb) => dht.start(cb)
-        ], done);
+        await swarm.listen();
+        await new Promise((resolve) => dht.start(resolve));
     });
 
-    after(function (done) {
+    after(async function () {
         this.timeout(10 * 1000);
-        series([
-            (cb) => dht.stop(cb),
-            (cb) => dht.swarm.close(cb)
-        ], done);
+
+        await new Promise((resolve) => dht.stop(resolve));
+        await dht.swarm.close();
     });
 
     describe("sendRequest", () => {
@@ -47,7 +43,7 @@ describe("Network", () => {
             const msg = new Message(Message.TYPES.PING, Buffer.from("hello"), 0);
 
             // mock it
-            dht.swarm.connect = (peer, protocol, callback) => {
+            dht.swarm.connect = (peer, protocol) => {
                 expect(protocol).to.eql("/ipfs/kad/1.0.0");
                 const msg = new Message(Message.TYPES.FIND_NODE, Buffer.from("world"), 0);
 
@@ -65,8 +61,7 @@ describe("Network", () => {
                         })
                     )
                 };
-                const conn = new Connection(rawConn);
-                callback(null, conn);
+                return Promise.resolve(new Connection(rawConn));
             };
 
             dht.network.sendRequest(peerInfos[0].id, msg, (err, response) => {
@@ -88,7 +83,7 @@ describe("Network", () => {
             const msg = new Message(Message.TYPES.PING, Buffer.from("hello"), 0);
 
             // mock it
-            dht.swarm.connect = (peer, protocol, callback) => {
+            dht.swarm.connect = (peer, protocol) => {
                 expect(protocol).to.eql("/ipfs/kad/1.0.0");
                 const rawConn = {
                     // hanging
@@ -102,8 +97,7 @@ describe("Network", () => {
                         })
                     )
                 };
-                const conn = new Connection(rawConn);
-                callback(null, conn);
+                return Promise.resolve(new Connection(rawConn));
             };
 
             dht.network.readMessageTimeout = 100;

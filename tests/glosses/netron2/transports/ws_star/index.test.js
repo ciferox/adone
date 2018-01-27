@@ -6,7 +6,7 @@ const {
 
 require("./reconnect.node");
 
-describe("functional tests", () => {
+describe.todo("functional tests", () => {
     let _r = [];
     let f = true; // first run. used so metric gets only enabled once otherwise it crashes
 

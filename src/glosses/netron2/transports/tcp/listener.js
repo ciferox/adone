@@ -74,33 +74,7 @@ export default class Listener extends adone.event.Emitter {
         this.server.__connections = {};
     }
 
-    close(options, callback) {
-        if (is.function(options)) {
-            callback = options;
-            options = {};
-        }
-        callback = callback || adone.noop;
-        options = options || {};
-
-        let closed = false;
-        this.server.close(callback);
-
-        this.server.once("close", () => {
-            closed = true;
-        });
-        setTimeout(() => {
-            if (closed) {
-                return;
-            }
-
-            // unable to close graciously, destroying conns
-            Object.keys(this.server.__connections).forEach((key) => {
-                this.server.__connections[key].destroy();
-            });
-        }, options.timeout || CLOSE_TIMEOUT);
-    }
-
-    listen(ma, callback) {
+    listen(ma) {
         this.listeningAddr = ma;
         if (ma.protoNames().includes("ipfs")) {
             this.ipfsId = getIpfsId(ma);
@@ -108,15 +82,53 @@ export default class Listener extends adone.event.Emitter {
         }
 
         const lOpts = this.listeningAddr.toOptions();
-        return this.server.listen(lOpts.port, lOpts.host, callback);
+        return new Promise((resolve, reject) => {
+            this.on("error", reject);
+            this.server.listen(lOpts.port, lOpts.host, () => {
+                this.removeListener("error", reject);
+                resolve();
+            });
+        });
     }
 
-    getAddrs(callback) {
+    close(options = {}) {
+        if (!this.server.listening) {
+            return;
+        }
+
+        let closed = false;
+        return new Promise((resolve, reject) => {
+            let timer;
+            this.server.close((err) => {
+                if (err) {
+                    return reject(err);
+                }
+
+                closed = true;
+                timer && clearTimeout(timer);
+                resolve();
+            });
+
+            timer = setTimeout(() => {
+                timer = undefined;
+                if (closed) {
+                    return;
+                }
+
+                // unable to close graciously, destroying conns
+                for (const key of Object.keys(this.server.__connections)) {
+                    this.server.__connections[key].destroy();
+                }
+            }, options.timeout || CLOSE_TIMEOUT);
+        });
+    }
+
+    getAddrs() {
         const multiaddrs = [];
         const address = this.server.address();
 
         if (!address) {
-            return callback(new Error("Listener is not ready yet"));
+            throw new Error("Listener is not ready yet");
         }
 
         // Because TCP will only return the IPv6 version we need to capture from the passed multiaddr
@@ -126,7 +138,7 @@ export default class Listener extends adone.event.Emitter {
             if (this.ipfsId) {
                 m = m.encapsulate(`/ipfs/${this.ipfsId}`);
             }
-            
+
             if (m.toString().includes("0.0.0.0")) {
                 const netInterfaces = os.networkInterfaces();
                 Object.keys(netInterfaces).forEach((niKey) => {
@@ -150,6 +162,6 @@ export default class Listener extends adone.event.Emitter {
             multiaddrs.push(ma);
         }
 
-        callback(null, multiaddrs);
+        return multiaddrs;
     }
 }

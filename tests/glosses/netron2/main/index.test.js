@@ -506,9 +506,9 @@ describe("netron2", () => {
                     "/ip4/127.0.0.1/tcp/25011/ws",
                     "/ip4/127.0.0.1/tcp/24642/ws/p2p-websocket-star"
                 ], {
-                    transport: [wstar],
-                    discovery: [wstar.discovery]
-                });
+                        transport: [wstar],
+                        discovery: [wstar.discovery]
+                    });
                 wstar.lazySetId(netCoreAll.peerInfo.id);
                 netCoreAll.handle("/echo/1.0.0", echo);
                 await netCoreAll.start();
@@ -997,66 +997,66 @@ describe("netron2", () => {
                 "/ip4/0.0.0.0/tcp/0/ws",
                 "/ip4/0.0.0.0/tcp/0"
             ], {
-                relay: {
-                    enabled: true,
-                    hop: {
+                    relay: {
                         enabled: true,
-                        active: false // passive relay
+                        hop: {
+                            enabled: true,
+                            active: false // passive relay
+                        }
                     }
-                }
-            });
+                });
 
             // setup active relay
             relayNode2 = await setupNetCore([
                 "/ip4/0.0.0.0/tcp/0/ws",
                 "/ip4/0.0.0.0/tcp/0"
             ], {
-                relay: {
-                    enabled: true,
-                    hop: {
+                    relay: {
                         enabled: true,
-                        active: false // passive relay
+                        hop: {
+                            enabled: true,
+                            active: false // passive relay
+                        }
                     }
-                }
-            });
+                });
 
             // setup netCore with WS
             netCoreWS1 = await setupNetCore([
                 "/ip4/0.0.0.0/tcp/0/ws"
             ], {
-                relay: {
-                    enabled: true
-                }
-            });
+                    relay: {
+                        enabled: true
+                    }
+                });
 
             // setup netCore with WS
             netCoreWS2 = await setupNetCore([
                 "/ip4/0.0.0.0/tcp/0/ws"
             ], {
-                relay: {
-                    enabled: true
-                }
-            });
+                    relay: {
+                        enabled: true
+                    }
+                });
 
             // set up netCore with TCP and listening on relay1
             netCoreTCP1 = await setupNetCore([
                 "/ip4/0.0.0.0/tcp/0",
                 `/ipfs/${relayNode1.peerInfo.id.asBase58()}/p2p-circuit`
             ], {
-                relay: {
-                    enabled: true
-                }
-            });
+                    relay: {
+                        enabled: true
+                    }
+                });
 
             // set up netCore with TCP and listening on relay2 over TCP transport
             netCoreTCP2 = await setupNetCore([
                 "/ip4/0.0.0.0/tcp/0",
                 `/ip4/0.0.0.0/tcp/0/ipfs/${relayNode2.peerInfo.id.asBase58()}/p2p-circuit`
             ], {
-                relay: {
-                    enabled: true
-                }
-            });
+                    relay: {
+                        enabled: true
+                    }
+                });
 
             await netCoreWS1.connect(relayNode1.peerInfo);
             await netCoreWS1.connect(relayNode2.peerInfo);
@@ -1067,13 +1067,44 @@ describe("netron2", () => {
         });
 
         after(async () => {
+            // const nodes = [
+            //     {
+            //         name: "relayNode1",
+            //         n: relayNode1
+            //     },
+            //     {
+            //         name: "relayNode2",
+            //         n: relayNode2
+            //     },
+            //     {
+            //         name: "netCoreTCP1",
+            //         n: netCoreTCP1
+            //     },
+            //     {
+            //         name: "netCoreTCP2",
+            //         n: netCoreTCP2
+            //     },
+            //     {
+            //         name: "netCoreWS1",
+            //         n: netCoreWS1
+            //     },
+            //     {
+            //         name: "netCoreWS2",
+            //         n: netCoreWS2
+            //     }];
+
+            // for (const n of nodes) {
+            //     adone.log(n.name, n.n.peerInfo.multiaddrs.toArray().map((x) => x.toString()));
+            // }
+
+            /// NEED INVESTIGATE
             await Promise.all([
                 relayNode1.stop(),
                 relayNode2.stop(),
-                netCoreWS1.stop(),
+                // netCoreWS1.stop(),
                 netCoreWS2.stop(),
-                netCoreTCP1.stop(),
-                netCoreTCP2.stop()
+                // netCoreTCP1.stop(),
+                // netCoreTCP2.stop()
             ]);
         });
 

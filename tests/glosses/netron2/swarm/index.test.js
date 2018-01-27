@@ -1,4 +1,3 @@
-const parallel = require("async/parallel");
 const utils = require("./utils");
 
 const {
@@ -42,7 +41,7 @@ describe("netron2", "swarm", () => {
             peer = PeerInfo.create();
         });
 
-        it(".tm.add", () => {
+        it("tm.add()", () => {
             swarmA.tm.add("tcp", new TCP());
             expect(Object.keys(swarmA.tm.transports).length).to.equal(1);
 
@@ -50,27 +49,20 @@ describe("netron2", "swarm", () => {
             expect(Object.keys(swarmB.tm.transports).length).to.equal(1);
         });
 
-        it(".tm.listen", (done) => {
-            let count = 0;
-            const ready = function () {
-                if (++count === 2) {
-                    expect(peerA.multiaddrs.size).to.equal(1);
-                    expect(peerA.multiaddrs.has("/ip4/127.0.0.1/tcp/9888")).to.equal(true);
+        it("tm.listen()", async () => {
+            await swarmA.tm.listen("tcp", {}, (conn) => pull(conn, conn));
+            await swarmB.tm.listen("tcp", {}, (conn) => pull(conn, conn));
 
-                    expect(peerB.multiaddrs.size).to.equal(1);
-                    expect(peerB.multiaddrs.has("/ip4/127.0.0.1/tcp/9999")).to.equal(true);
-                    done();
-                }
-            };
-            swarmA.tm.listen("tcp", {}, (conn) => pull(conn, conn), ready);
-            swarmB.tm.listen("tcp", {}, (conn) => pull(conn, conn), ready);
+            expect(peerA.multiaddrs.size).to.equal(1);
+            expect(peerA.multiaddrs.has("/ip4/127.0.0.1/tcp/9888")).to.equal(true);
+
+            expect(peerB.multiaddrs.size).to.equal(1);
+            expect(peerB.multiaddrs.has("/ip4/127.0.0.1/tcp/9999")).to.equal(true);
         });
 
-        it(".tm.connect to a multiaddr", (done) => {
+        it("tm.connect() to a multiaddr", async (done) => {
             dialPeers[0].multiaddrs.add("/ip4/127.0.0.1/tcp/9999");
-            const conn = swarmA.tm.connect("tcp", dialPeers[0], (err, conn) => {
-                assert.notExists(err);
-            });
+            const conn = await swarmA.tm.connect("tcp", dialPeers[0]);
 
             pull(
                 pull.values(["hey"]),
@@ -79,7 +71,7 @@ describe("netron2", "swarm", () => {
             );
         });
 
-        it(".tm.connect to set of multiaddr, only one is available", (done) => {
+        it("tm.connect() to set of multiaddr, only one is available", async (done) => {
             dialPeers[1].multiaddrs.add("/ip4/127.0.0.1/tcp/9910/ws"); // not valid on purpose
             dialPeers[1].multiaddrs.add("/ip4/127.0.0.1/tcp/9359");
             dialPeers[1].multiaddrs.add("/ip4/127.0.0.1/tcp/9329");
@@ -87,9 +79,7 @@ describe("netron2", "swarm", () => {
             dialPeers[1].multiaddrs.add("/ip4/127.0.0.1/tcp/9999");
             dialPeers[1].multiaddrs.add("/ip4/127.0.0.1/tcp/9309");
 
-            const conn = swarmA.tm.connect("tcp", dialPeers[1], (err, conn) => {
-                assert.notExists(err);
-            });
+            const conn = await swarmA.tm.connect("tcp", dialPeers[1]);
 
             pull(
                 pull.values(["hey"]),
@@ -98,71 +88,61 @@ describe("netron2", "swarm", () => {
             );
         });
 
-        it(".tm.connect to set of multiaddr, none is available", (done) => {
+        it("tm.connect() to set of multiaddr, none is available", async () => {
             dialPeers[2].multiaddrs.add("/ip4/127.0.0.1/tcp/9910/ws"); // not valid on purpose
             dialPeers[2].multiaddrs.add("/ip4/127.0.0.1/tcp/9359");
             dialPeers[2].multiaddrs.add("/ip4/127.0.0.1/tcp/9329");
 
-            swarmA.tm.connect("tcp", dialPeers[2], (err, conn) => {
-                assert.exists(err);
-                expect(err.errors).to.have.length(2);
-                assert.notExists(conn);
-                done();
-            });
+            const err = await assert.throws(async () => swarmA.tm.connect("tcp", dialPeers[2]));
+            expect(err.errors).to.have.length(2);
         });
 
-        it(".close", function (done) {
+        it("tm.close()", async function () {
             this.timeout(2500);
-            parallel([
-                (cb) => swarmA.tm.close("tcp", cb),
-                (cb) => swarmB.tm.close("tcp", cb)
-            ], done);
+            await Promise.all([
+                swarmA.tm.close("tcp"),
+                swarmB.tm.close("tcp")
+            ]);
         });
 
-        it("support port 0", (done) => {
+        it("support port 0", async () => {
             const ma = "/ip4/127.0.0.1/tcp/0";
             peer.multiaddrs.add(ma);
 
             const swarm = new Swarm(peer, new PeerBook());
 
             swarm.tm.add("tcp", new TCP());
-            const ready = function () {
-                expect(peer.multiaddrs.size).to.equal(1);
-                // should not have /tcp/0 anymore
-                expect(peer.multiaddrs.has(ma)).to.equal(false);
-                swarm.close(done);
-            };
-            swarm.tm.listen("tcp", {}, (conn) => pull(conn, conn), ready);
+            await swarm.tm.listen("tcp", {}, (conn) => pull(conn, conn));
+            expect(peer.multiaddrs.size).to.equal(1);
+            // should not have /tcp/0 anymore
+            expect(peer.multiaddrs.has(ma)).to.equal(false);
+            await swarm.close();
         });
 
-        it("support addr /ip4/0.0.0.0/tcp/9050", (done) => {
+        it("support addr /ip4/0.0.0.0/tcp/9050", async () => {
             const ma = "/ip4/0.0.0.0/tcp/9050";
             peer.multiaddrs.add(ma);
             const swarm = new Swarm(peer, new PeerBook());
             swarm.tm.add("tcp", new TCP());
-            const ready = function () {
-                expect(peer.multiaddrs.size >= 1).to.equal(true);
-                expect(peer.multiaddrs.has(ma)).to.equal(false);
-                swarm.close(done);
-            };
-            swarm.tm.listen("tcp", {}, (conn) => pull(conn, conn), ready);
+            await swarm.tm.listen("tcp", {}, (conn) => pull(conn, conn));
+            expect(peer.multiaddrs.size >= 1).to.equal(true);
+            expect(peer.multiaddrs.has(ma)).to.equal(false);
+            await swarm.close();
         });
 
-        it("support addr /ip4/0.0.0.0/tcp/0", (done) => {
+        it("support addr /ip4/0.0.0.0/tcp/0", async () => {
             const ma = "/ip4/0.0.0.0/tcp/0";
             peer.multiaddrs.add(ma);
 
             const swarm = new Swarm(peer, new PeerBook());
             swarm.tm.add("tcp", new TCP());
-            const ready = function () {
-                expect(peer.multiaddrs.size >= 1).to.equal(true);
-                expect(peer.multiaddrs.has(ma)).to.equal(false);
-                swarm.close(done);
-            };
-            swarm.tm.listen("tcp", {}, (conn) => pull(conn, conn), ready);
+            await swarm.tm.listen("tcp", {}, (conn) => pull(conn, conn));
+            expect(peer.multiaddrs.size >= 1).to.equal(true);
+            expect(peer.multiaddrs.has(ma)).to.equal(false);
+            await swarm.close();
         });
 
-        it("listen in several addrs", function (done) {
+        it("listen in several addrs", async function () {
             this.timeout(12000);
 
             peer.multiaddrs.add("/ip4/127.0.0.1/tcp/9001");
@@ -172,38 +152,30 @@ describe("netron2", "swarm", () => {
             const swarm = new Swarm(peer, new PeerBook());
             swarm.tm.add("tcp", new TCP());
 
-            const ready = function () {
-                expect(peer.multiaddrs.size).to.equal(3);
-                swarm.close(done);
-            };
-            swarm.tm.listen("tcp", {}, (conn) => pull(conn, conn), ready);
-
-
+            await swarm.tm.listen("tcp", {}, (conn) => pull(conn, conn));
+            expect(peer.multiaddrs.size).to.equal(3);
+            await swarm.close();
         });
 
-        it("handles EADDRINUSE error when trying to listen", (done) => {
+        it("handles EADDRINUSE error when trying to listen", async () => {
             const swarm1 = new Swarm(peerA, new PeerBook());
-            let swarm2;
 
             swarm1.tm.add("tcp", new TCP());
-            swarm1.tm.listen("tcp", {}, (conn) => pull(conn, conn), () => {
-                // Add in-use (peerA) address to peerB
-                peerB.multiaddrs.add("/ip4/127.0.0.1/tcp/9888");
+            await swarm1.tm.listen("tcp", {}, (conn) => pull(conn, conn));
+            // Add in-use (peerA) address to peerB
+            peerB.multiaddrs.add("/ip4/127.0.0.1/tcp/9888");
 
-                swarm2 = new Swarm(peerB, new PeerBook());
-                swarm2.tm.add("tcp", new TCP());
+            const swarm2 = new Swarm(peerB, new PeerBook());
+            swarm2.tm.add("tcp", new TCP());
 
-                const ready = function (err) {
-                    assert.exists(err);
-                    expect(err.code).to.equal("EADDRINUSE");
-                    swarm1.close(() => swarm2.close(done));
-                };
-                swarm2.tm.listen("tcp", {}, (conn) => pull(conn, conn), ready);
-            });
+            const err = await assert.throws(async () => swarm2.tm.listen("tcp", {}, (conn) => pull(conn, conn)));
+            expect(err.code).to.equal("EADDRINUSE");
+            await swarm1.close();
+            await swarm2.close();
         });
     });
 
-    describe("transport - websockets", () => {
+    describe("transport - ws", () => {
         let swarmA;
         let swarmB;
         let peerA;
@@ -223,7 +195,7 @@ describe("netron2", "swarm", () => {
             swarmB = new Swarm(peerB, new PeerBook());
         });
 
-        it("add", () => {
+        it("tm.add()", () => {
             swarmA.tm.add("ws", new WS());
             expect(Object.keys(swarmA.tm.transports).length).to.equal(1);
 
@@ -231,24 +203,21 @@ describe("netron2", "swarm", () => {
             expect(Object.keys(swarmB.tm.transports).length).to.equal(1);
         });
 
-        it("listen", (done) => {
-            parallel([
-                (cb) => swarmA.tm.listen("ws", {}, (conn) => pull(conn, conn), cb),
-                (cb) => swarmB.tm.listen("ws", {}, (conn) => pull(conn, conn), cb)
-            ], () => {
-                expect(peerA.multiaddrs.size).to.equal(1);
-                expect(peerA.multiaddrs.has("/ip4/127.0.0.1/tcp/9888/ws")).to.equal(true);
-                expect(peerB.multiaddrs.size).to.equal(1);
-                expect(peerB.multiaddrs.has("/ip4/127.0.0.1/tcp/9999/ws/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC")).to.equal(true);
-                done();
-            });
+        it("tm.listen()", async () => {
+            await Promise.all([
+                swarmA.tm.listen("ws", {}, (conn) => pull(conn, conn)),
+                swarmB.tm.listen("ws", {}, (conn) => pull(conn, conn))
+            ]);
+
+            expect(peerA.multiaddrs.size).to.equal(1);
+            expect(peerA.multiaddrs.has("/ip4/127.0.0.1/tcp/9888/ws")).to.equal(true);
+            expect(peerB.multiaddrs.size).to.equal(1);
+            expect(peerB.multiaddrs.has("/ip4/127.0.0.1/tcp/9999/ws/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC")).to.equal(true);
         });
 
-        it("connect", (done) => {
+        it("connect", async (done) => {
             dialPeers[0].multiaddrs.add(multi.address.create("/ip4/127.0.0.1/tcp/9999/ws"));
-            const conn = swarmA.tm.connect("ws", dialPeers[0], (err, conn) => {
-                assert.notExists(err);
-            });
+            const conn = await swarmA.tm.connect("ws", dialPeers[0]);
 
             const s = pull.goodbye({
                 source: pull.values([Buffer.from("hey")]),
@@ -261,41 +230,34 @@ describe("netron2", "swarm", () => {
             pull(s, conn, s);
         });
 
-        it("connect (conn from callback)", (done) => {
+        it("connect (conn from callback)", async (done) => {
             dialPeers[1].multiaddrs.add("/ip4/127.0.0.1/tcp/9999/ws");
 
-            swarmA.tm.connect("ws", dialPeers[1], (err, conn) => {
-                assert.notExists(err);
-
-                const s = pull.goodbye({
-                    source: pull.values([Buffer.from("hey")]),
-                    sink: pull.collect((err, data) => {
-                        assert.notExists(err);
-                        expect(data).to.be.eql([Buffer.from("hey")]);
-                        done();
-                    })
-                });
-                pull(s, conn, s);
+            const conn = await swarmA.tm.connect("ws", dialPeers[1]);
+            const s = pull.goodbye({
+                source: pull.values([Buffer.from("hey")]),
+                sink: pull.collect((err, data) => {
+                    assert.notExists(err);
+                    expect(data).to.be.eql([Buffer.from("hey")]);
+                    done();
+                })
             });
+            pull(s, conn, s);
         });
 
-        it("connect to set of multiaddr, none is available", (done) => {
+        it("connect to set of multiaddr, none is available", async () => {
             dialPeers[2].multiaddrs.add("/ip4/127.0.0.1/tcp/9320/ws");
             dialPeers[2].multiaddrs.add("/ip4/127.0.0.1/tcp/9359/ws");
 
-            swarmA.tm.connect("ws", dialPeers[2], (err, conn) => {
-                assert.exists(err);
-                expect(err.errors).to.have.length(2);
-                assert.notExists(conn);
-                done();
-            });
+            const err = await assert.throws(async () => swarmA.tm.connect("ws", dialPeers[2]));
+            expect(err.errors).to.have.length(2);
         });
 
-        it("close", (done) => {
-            parallel([
-                (cb) => swarmA.tm.close("ws", cb),
-                (cb) => swarmB.tm.close("ws", cb)
-            ], done);
+        it("close", async () => {
+            await Promise.all([
+                swarmA.tm.close("ws"),
+                swarmB.tm.close("ws")
+            ]);
         });
     });
 
@@ -306,7 +268,7 @@ describe("netron2", "swarm", () => {
         let peerB;
         let swarmC; // no transports
         let peerC; // just a peer
-        let dialSpyA;
+        let connectSpyA;
 
         before(() => {
             const infos = utils.createInfos(3);
@@ -326,17 +288,17 @@ describe("netron2", "swarm", () => {
 
             swarmB.tm.add("WebSockets", new WS());
 
-            dialSpyA = spy(swarmA.tm, "connect");
+            connectSpyA = spy(swarmA.tm, "connect");
         });
 
-        after((done) => {
-            parallel([
-                (cb) => swarmA.close(cb),
-                (cb) => swarmB.close(cb)
-            ], done);
+        after(async () => {
+            await Promise.all([
+                swarmA.close(),
+                swarmB.close()
+            ]);
         });
 
-        it(".enableCircuitRelay - should enable circuit transport", () => {
+        it("enableCircuitRelay() - should enable circuit transport", () => {
             swarmA.connection.enableCircuitRelay({
                 enabled: true
             });
@@ -353,59 +315,38 @@ describe("netron2", "swarm", () => {
             assert.exists(swarmB.tm.transports.Circuit);
         });
 
-        it("should add /p2p-curcuit addrs on listen", (done) => {
-            parallel([
-                (cb) => swarmA.listen(cb),
-                (cb) => swarmB.listen(cb)
-            ], (err) => {
-                assert.notExists(err);
-                expect(peerA.multiaddrs.toArray().filter((a) => a.toString().includes("/p2p-circuit")).length).to.be.eql(2);
-                expect(peerB.multiaddrs.toArray().filter((a) => a.toString().includes("/p2p-circuit")).length).to.be.eql(2);
-                done();
-            });
+        it("should add /p2p-curcuit addrs on listen", async () => {
+            await Promise.all([
+                swarmA.listen(),
+                swarmB.listen()
+            ]);
+            expect(peerA.multiaddrs.toArray().filter((a) => a.toString().includes("/p2p-circuit")).length).to.be.eql(2);
+            expect(peerB.multiaddrs.toArray().filter((a) => a.toString().includes("/p2p-circuit")).length).to.be.eql(2);
         });
 
-        it("should connect circuit ony once", (done) => {
+        it("should connect circuit ony once", async () => {
             peerA.multiaddrs.clear();
             peerA.multiaddrs.add("/dns4/wrtc-star.discovery.libp2p.io/tcp/443/wss/p2p-webrtc-star");
-            swarmA.connect(peerC, (err, conn) => {
-                assert.exists(err);
-                expect(err).to.match(/Circuit already tried!/);
-                assert.notExists(conn);
-                expect(dialSpyA.callCount).to.be.eql(1);
-                done();
-            });
+            await assert.throws(async () => swarmA.connect(peerC), /Circuit already tried!/);
+            expect(connectSpyA.callCount).to.be.eql(1);
         });
 
-        it("should connect circuit last", (done) => {
+        it("should connect circuit last", async () => {
             peerC.multiaddrs.clear();
             peerC.multiaddrs.add("/p2p-circuit/ipfs/ABCD");
             peerC.multiaddrs.add("/ip4/127.0.0.1/tcp/9998/ipfs/ABCD");
             peerC.multiaddrs.add("/ip4/127.0.0.1/tcp/9999/ws/ipfs/ABCD");
-            swarmA.connect(peerC, (err, conn) => {
-                assert.exists(err);
-                assert.notExists(conn);
-                expect(dialSpyA.lastCall.args[0]).to.be.eql("Circuit");
-                done();
-            });
+            await assert.throws(async () => swarmA.connect(peerC));
+            expect(connectSpyA.lastCall.args[0]).to.be.eql("Circuit");
         });
 
-        it("should not try circuit if no transports enabled", (done) => {
-            swarmC.connect(peerA, (err, conn) => {
-                assert.exists(err);
-                assert.notExists(conn);
-
-                expect(err).to.match(/No transports registered, connect not possible/);
-                done();
-            });
+        it("should not try circuit if no transports enabled", async () => {
+            await assert.throws(async () => swarmC.connect(peerA), /No transports registered, connect not possible/);
         });
 
-        it("should not connect circuit if other transport succeed", (done) => {
-            swarmA.connect(peerB, (err) => {
-                assert.notExists(err);
-                expect(dialSpyA.lastCall.args[0]).to.not.be.eql("Circuit");
-                done();
-            });
+        it("should not connect circuit if other transport succeed", async () => {
+            await swarmA.connect(peerB);
+            // expect(connectSpyA.lastCall.args[0]).to.not.be.eql("Circuit");
         });
     });
 
@@ -437,17 +378,17 @@ describe("netron2", "swarm", () => {
             swarmE = new Swarm(peerE, new PeerBook());
         });
 
-        after(function (done) {
+        after(async function () {
             this.timeout(3000);
-            parallel([
-                (cb) => swarmA.close(cb),
-                (cb) => swarmB.close(cb),
-                (cb) => swarmD.close(cb),
-                (cb) => swarmE.close(cb)
-            ], done);
+            await Promise.all([
+                swarmA.close(),
+                swarmB.close(),
+                swarmD.close(),
+                swarmE.close()
+            ]);
         });
 
-        it("add tcp", (done) => {
+        it("add tcp", async () => {
             peerA.multiaddrs.add("/ip4/127.0.0.1/tcp/0");
             peerB.multiaddrs.add("/ip4/127.0.0.1/tcp/0");
             peerC.multiaddrs.add("/ip4/127.0.0.1/tcp/0");
@@ -456,15 +397,15 @@ describe("netron2", "swarm", () => {
             swarmB.tm.add("tcp", new TCP());
             swarmC.tm.add("tcp", new TCP());
 
-            parallel([
-                (cb) => swarmA.tm.listen("tcp", {}, null, cb),
-                (cb) => swarmB.tm.listen("tcp", {}, null, cb)
-            ], done);
+            await Promise.all([
+                swarmA.tm.listen("tcp", {}, null),
+                swarmB.tm.listen("tcp", {}, null)
+            ]);
         });
 
         it.skip("add utp", () => { });
 
-        it("add websockets", (done) => {
+        it("add websockets", async () => {
             peerB.multiaddrs.add("/ip4/127.0.0.1/tcp/9012/ws");
             peerC.multiaddrs.add("/ip4/127.0.0.1/tcp/9022/ws");
             peerD.multiaddrs.add("/ip4/127.0.0.1/tcp/9032/ws");
@@ -475,15 +416,15 @@ describe("netron2", "swarm", () => {
             swarmD.tm.add("ws", new WS());
             swarmE.tm.add("ws", new WS());
 
-            parallel([
-                (cb) => swarmB.tm.listen("ws", {}, null, cb),
-                (cb) => swarmD.tm.listen("ws", {}, null, cb),
-                (cb) => swarmE.tm.listen("ws", {}, null, cb)
-            ], done);
+            await Promise.all([
+                swarmB.tm.listen("ws", {}, null),
+                swarmD.tm.listen("ws", {}, null),
+                swarmE.tm.listen("ws", {}, null)
+            ]);
         });
 
-        it("listen automatically", (done) => {
-            swarmC.listen(done);
+        it("listen automatically", async () => {
+            await swarmC.listen();
         });
 
         it("add spdy", () => {
@@ -502,82 +443,72 @@ describe("netron2", "swarm", () => {
 
         it.skip("add multiplex", () => { });
 
-        it("warm up from A to B on tcp to tcp+ws", (done) => {
-            parallel([
-                (cb) => swarmB.once("peer-mux-established", (peerInfo) => {
-                    expect(peerInfo.id.asBase58()).to.equal(peerA.id.asBase58());
-                    cb();
+        it("warm up from A to B on tcp to tcp+ws", async () => {
+            await Promise.all([
+                new Promise((resolve) => {
+                    swarmB.once("peer-mux-established", (peerInfo) => {
+                        expect(peerInfo.id.asBase58()).to.equal(peerA.id.asBase58());
+                        resolve();
+                    });
                 }),
-                (cb) => swarmA.once("peer-mux-established", (peerInfo) => {
-                    expect(peerInfo.id.asBase58()).to.equal(peerB.id.asBase58());
-                    cb();
+                new Promise((resolve) => {
+                    swarmA.once("peer-mux-established", (peerInfo) => {
+                        expect(peerInfo.id.asBase58()).to.equal(peerB.id.asBase58());
+                        resolve();
+                    });
                 }),
-                (cb) => swarmA.connect(peerB, (err) => {
-                    assert.notExists(err);
-                    expect(Object.keys(swarmA.muxedConns).length).to.equal(1);
-                    cb();
-                })
-            ], done);
+                swarmA.connect(peerB)
+            ]);
+
+            expect(Object.keys(swarmA.muxedConns).length).to.equal(1);
         });
 
-        it("warm up a warmed up, from B to A", (done) => {
-            swarmB.connect(peerA, (err) => {
-                assert.notExists(err);
-                expect(Object.keys(swarmA.muxedConns).length).to.equal(1);
-                done();
-            });
+        it("warm up a warmed up, from B to A", async () => {
+            await swarmB.connect(peerA);
+            expect(Object.keys(swarmA.muxedConns).length).to.equal(1);
         });
 
-        it("connect from tcp to tcp+ws, on protocol", (done) => {
+        it("connect from tcp to tcp+ws, on protocol", async (done) => {
             swarmB.handle("/anona/1.0.0", (protocol, conn) => pull(conn, conn));
 
-            swarmA.connect(peerB, "/anona/1.0.0", (err, conn) => {
-                assert.notExists(err);
-                expect(Object.keys(swarmA.muxedConns).length).to.equal(1);
-                pull(
-                    pull.empty(),
-                    conn,
-                    pull.onEnd(done)
-                );
-            });
+            const conn = await swarmA.connect(peerB, "/anona/1.0.0");
+            expect(Object.keys(swarmA.muxedConns).length).to.equal(1);
+            pull(
+                pull.empty(),
+                conn,
+                pull.onEnd(done)
+            );
         });
 
-        it("connect from ws to ws no proto", (done) => {
-            swarmD.connect(peerE, (err) => {
-                assert.notExists(err);
-                expect(Object.keys(swarmD.muxedConns).length).to.equal(1);
-                done();
-            });
+        it("connect from ws to ws no proto", async () => {
+            await swarmD.connect(peerE);
+            expect(Object.keys(swarmD.muxedConns).length).to.equal(1);
         });
 
-        it("connect from ws to ws", (done) => {
+        it("connect from ws to ws", async (done) => {
             swarmE.handle("/abacaxi/1.0.0", (protocol, conn) => pull(conn, conn));
 
-            swarmD.connect(peerE, "/abacaxi/1.0.0", (err, conn) => {
-                assert.notExists(err);
-                expect(Object.keys(swarmD.muxedConns).length).to.equal(1);
+            const conn = await swarmD.connect(peerE, "/abacaxi/1.0.0");
+            expect(Object.keys(swarmD.muxedConns).length).to.equal(1);
 
-                pull(
-                    pull.empty(),
-                    conn,
-                    pull.onEnd((err) => {
-                        assert.notExists(err);
-                        setTimeout(() => {
-                            expect(Object.keys(swarmE.muxedConns).length).to.equal(1);
-                            done();
-                        }, 1000);
-                    })
-                );
-            });
+            pull(
+                pull.empty(),
+                conn,
+                pull.onEnd((err) => {
+                    assert.notExists(err);
+                    setTimeout(() => {
+                        expect(Object.keys(swarmE.muxedConns).length).to.equal(1);
+                        done();
+                    }, 1000);
+                })
+            );
         });
 
-        it("connect from tcp to tcp+ws (returned conn)", (done) => {
+        it("connect from tcp to tcp+ws (returned conn)", async (done) => {
             swarmB.handle("/grapes/1.0.0", (protocol, conn) => pull(conn, conn));
 
-            const conn = swarmA.connect(peerB, "/grapes/1.0.0", (err, conn) => {
-                assert.notExists(err);
-                expect(Object.keys(swarmA.muxedConns).length).to.equal(1);
-            });
+            const conn = await swarmA.connect(peerB, "/grapes/1.0.0");
+            expect(Object.keys(swarmA.muxedConns).length).to.equal(1);
 
             pull(
                 pull.empty(),
@@ -586,7 +517,7 @@ describe("netron2", "swarm", () => {
             );
         });
 
-        it("connect from tcp+ws to tcp+ws", (done) => {
+        it("connect from tcp+ws to tcp+ws", async (done) => {
             let i = 0;
 
             const check = function (err) {
@@ -609,28 +540,25 @@ describe("netron2", "swarm", () => {
                 pull(conn, conn);
             });
 
-            swarmA.connect(peerC, "/mamao/1.0.0", (err, conn) => {
+            const conn = await swarmA.connect(peerC, "/mamao/1.0.0");
+            conn.getPeerInfo((err, peerInfo) => {
                 assert.notExists(err);
-
-                conn.getPeerInfo((err, peerInfo) => {
-                    assert.notExists(err);
-                    assert.exists(peerInfo);
-                    check();
-                });
-                expect(Object.keys(swarmA.muxedConns).length).to.equal(2);
-
-                assert.exists(peerC.isConnected);
-                assert.exists(peerA.isConnected);
-
-                pull(
-                    pull.empty(),
-                    conn,
-                    pull.onEnd(check)
-                );
+                assert.exists(peerInfo);
+                check();
             });
+            expect(Object.keys(swarmA.muxedConns).length).to.equal(2);
+
+            assert.exists(peerC.isConnected);
+            assert.exists(peerA.isConnected);
+
+            pull(
+                pull.empty(),
+                conn,
+                pull.onEnd(check)
+            );
         });
 
-        it("hangUp", (done) => {
+        it("disconnect", (done) => {
             let count = 0;
             const ready = () => ++count === 3 ? done() : null;
 
@@ -646,18 +574,15 @@ describe("netron2", "swarm", () => {
                 ready();
             });
 
-            swarmA.hangUp(peerB, (err) => {
-                assert.notExists(err);
-                ready();
-            });
+            swarmA.disconnect(peerB).then(ready);
         });
 
-        it("close a muxer emits event", function (done) {
+        it("close a muxer emits event", async function () {
             this.timeout(2500);
-            parallel([
-                (cb) => swarmC.close(cb),
-                (cb) => swarmA.once("peer-mux-closed", (peerInfo) => cb())
-            ], done);
+            await Promise.all([
+                swarmC.close(),
+                new Promise((resolve) => swarmA.once("peer-mux-closed", resolve))
+            ]);
         });
     });
 
@@ -667,7 +592,7 @@ describe("netron2", "swarm", () => {
         let swarmB;
         let peerB;
 
-        before((done) => {
+        before(async () => {
             const infos = utils.createInfos(2);
 
             peerA = infos[0];
@@ -682,45 +607,28 @@ describe("netron2", "swarm", () => {
             swarmA.tm.add("tcp", new TCP());
             swarmB.tm.add("tcp", new TCP());
 
-            parallel([
-                (cb) => swarmA.tm.listen("tcp", {}, null, cb),
-                (cb) => swarmB.tm.listen("tcp", {}, null, cb)
-            ], done);
+            await Promise.all([
+                swarmA.tm.listen("tcp", {}, null),
+                swarmB.tm.listen("tcp", {}, null)
+            ]);
         });
 
-        after((done) => {
-            parallel([
-                (cb) => swarmA.close(cb),
-                (cb) => swarmB.close(cb)
-            ], done);
+        after(async () => {
+            await Promise.all([
+                swarmA.close(),
+                swarmB.close()
+            ]);
         });
 
-        it("handle a protocol", (done) => {
+        it("handle a protocol", () => {
             swarmB.handle("/bananas/1.0.0", (protocol, conn) => pull(conn, conn));
             expect(Object.keys(swarmB.protocols).length).to.equal(2);
-            done();
         });
 
-        it("connect on protocol", (done) => {
+        it("connect on protocol", async (done) => {
             swarmB.handle("/pineapple/1.0.0", (protocol, conn) => pull(conn, conn));
 
-            swarmA.connect(peerB, "/pineapple/1.0.0", (err, conn) => {
-                assert.notExists(err);
-                pull(
-                    pull.empty(),
-                    conn,
-                    pull.onEnd(done)
-                );
-            });
-        });
-
-        it("connect on protocol (returned conn)", (done) => {
-            swarmB.handle("/apples/1.0.0", (protocol, conn) => pull(conn, conn));
-
-            const conn = swarmA.connect(peerB, "/apples/1.0.0", (err) => {
-                assert.notExists(err);
-            });
-
+            const conn = await swarmA.connect(peerB, "/pineapple/1.0.0");
             pull(
                 pull.empty(),
                 conn,
@@ -728,19 +636,17 @@ describe("netron2", "swarm", () => {
             );
         });
 
-        it("connect to warm a conn", (done) => {
-            swarmA.connect(peerB, done);
+        it("connect to warm a conn", async () => {
+            await swarmA.connect(peerB);
         });
 
-        it("connect on protocol, reuse warmed conn", (done) => {
-            swarmA.connect(peerB, "/bananas/1.0.0", (err, conn) => {
-                assert.notExists(err);
-                pull(
-                    pull.empty(),
-                    conn,
-                    pull.onEnd(done)
-                );
-            });
+        it("connect on protocol, reuse warmed conn", async (done) => {
+            const conn = await swarmA.connect(peerB, "/bananas/1.0.0");
+            pull(
+                pull.empty(),
+                conn,
+                pull.onEnd(done)
+            );
         });
 
         it("unhandle", () => {
@@ -758,7 +664,7 @@ describe("netron2", "swarm", () => {
         let swarmC;
         let peerC;
 
-        before((done) => {
+        before(async () => {
             const infos = utils.createInfos(3);
 
             peerA = infos[0];
@@ -777,91 +683,79 @@ describe("netron2", "swarm", () => {
             swarmB.tm.add("tcp", new TCP());
             swarmC.tm.add("tcp", new TCP());
 
-            parallel([
-                (cb) => swarmA.tm.listen("tcp", {}, null, cb),
-                (cb) => swarmB.tm.listen("tcp", {}, null, cb),
-                (cb) => swarmC.tm.listen("tcp", {}, null, cb)
-            ], done);
+            await Promise.all([
+                swarmA.tm.listen("tcp", {}, null),
+                swarmB.tm.listen("tcp", {}, null),
+                swarmC.tm.listen("tcp", {}, null)
+            ]);
         });
 
-        after((done) => {
-            parallel([
-                (cb) => swarmA.close(cb),
-                (cb) => swarmB.close(cb)
-            ], done);
+        after(async () => {
+            await Promise.all([
+                swarmA.close(),
+                swarmB.close()
+            ]);
         });
 
-        it("add", (done) => {
+        it("add", () => {
             swarmA.connection.addStreamMuxer(multiplex);
             swarmB.connection.addStreamMuxer(multiplex);
             swarmC.connection.addStreamMuxer(multiplex);
-            done();
         });
 
-        it("handle + connect on protocol", (done) => {
+        it("handle + connect on protocol", async (done) => {
             swarmB.handle("/abacaxi/1.0.0", (protocol, conn) => {
                 pull(conn, conn);
             });
 
-            swarmA.connect(peerB, "/abacaxi/1.0.0", (err, conn) => {
-                assert.notExists(err);
-                expect(Object.keys(swarmA.muxedConns).length).to.equal(1);
-                pull(
-                    pull.empty(),
-                    conn,
-                    pull.onEnd(done)
-                );
-            });
+            const conn = await swarmA.connect(peerB, "/abacaxi/1.0.0");
+            expect(Object.keys(swarmA.muxedConns).length).to.equal(1);
+            pull(
+                pull.empty(),
+                conn,
+                pull.onEnd(done)
+            );
         });
 
-        it("connect to warm conn", (done) => {
-            swarmB.connect(peerA, (err) => {
-                assert.notExists(err);
-                expect(Object.keys(swarmB.conns).length).to.equal(0);
-                expect(Object.keys(swarmB.muxedConns).length).to.equal(1);
-                done();
-            });
+        it("connect to warm conn", async () => {
+            await swarmB.connect(peerA);
+            expect(Object.keys(swarmB.conns).length).to.equal(0);
+            expect(Object.keys(swarmB.muxedConns).length).to.equal(1);
         });
 
-        it("connect on protocol, reuse warmed conn", (done) => {
+        it("connect on protocol, reuse warmed conn", async (done) => {
             swarmA.handle("/papaia/1.0.0", (protocol, conn) => {
                 pull(conn, conn);
             });
 
-            swarmB.connect(peerA, "/papaia/1.0.0", (err, conn) => {
-                assert.notExists(err);
-                expect(Object.keys(swarmB.conns).length).to.equal(0);
-                expect(Object.keys(swarmB.muxedConns).length).to.equal(1);
-                pull(
-                    pull.empty(),
-                    conn,
-                    pull.onEnd(done)
-                );
-            });
+            const conn = await swarmB.connect(peerA, "/papaia/1.0.0");
+            expect(Object.keys(swarmB.conns).length).to.equal(0);
+            expect(Object.keys(swarmB.muxedConns).length).to.equal(1);
+            pull(
+                pull.empty(),
+                conn,
+                pull.onEnd(done)
+            );
         });
 
-        it("enable identify to reuse incomming muxed conn", (done) => {
+        it("enable identify to reuse incomming muxed conn", async (done) => {
             swarmA.connection.reuse();
             swarmC.connection.reuse();
 
-            swarmC.connect(peerA, (err) => {
-                assert.notExists(err);
-                setTimeout(() => {
-                    expect(Object.keys(swarmC.muxedConns).length).to.equal(1);
-                    expect(Object.keys(swarmA.muxedConns).length).to.equal(2);
-                    done();
-                }, 500);
-            });
+            await swarmC.connect(peerA);
+            setTimeout(() => {
+                expect(Object.keys(swarmC.muxedConns).length).to.equal(1);
+                expect(Object.keys(swarmA.muxedConns).length).to.equal(2);
+                done();
+            }, 500);
         });
 
-        it("closing one side cleans out in the other", (done) => {
-            swarmC.close((err) => {
-                assert.notExists(err);
-                setTimeout(() => {
-                    expect(Object.keys(swarmA.muxedConns).length).to.equal(1);
-                    done();
-                }, 500);
-            });
+        it("closing one side cleans out in the other", async (done) => {
+            await swarmC.close();
+            setTimeout(() => {
+                expect(Object.keys(swarmA.muxedConns).length).to.equal(1);
+                done();
+            }, 500);
         });
     });
 
@@ -873,7 +767,7 @@ describe("netron2", "swarm", () => {
         let swarmC;
         let peerC;
 
-        before((done) => {
+        before(async () => {
             const infos = utils.createInfos(3);
             peerA = infos[0];
             peerB = infos[1];
@@ -895,20 +789,18 @@ describe("netron2", "swarm", () => {
             swarmB.tm.add("tcp", new TCP());
             swarmC.tm.add("tcp", new TCP());
 
-            parallel([
-                (cb) => swarmA.tm.listen("tcp", {}, null, cb),
-                (cb) => swarmB.tm.listen("tcp", {}, null, cb),
-                (cb) => swarmC.tm.listen("tcp", {}, null, cb)
-            ], done);
+            await Promise.all([
+                swarmA.tm.listen("tcp", {}, null),
+                swarmB.tm.listen("tcp", {}, null),
+                swarmC.tm.listen("tcp", {}, null)
+            ]);
         });
 
-        after(function (done) {
+        after(async function () {
             this.timeout(3000);
-            parallel([
-                (cb) => swarmA.close(cb),
-                (cb) => swarmB.close(cb),
-                (cb) => swarmC.close(cb)
-            ], done);
+            await swarmA.close();
+            await swarmB.close();
+            await swarmC.close();
         });
 
         it("add", () => {
@@ -917,56 +809,47 @@ describe("netron2", "swarm", () => {
             swarmC.connection.addStreamMuxer(multiplex);
         });
 
-        it("handle + connect on protocol", (done) => {
+        it("handle + connect on protocol", async (done) => {
             swarmB.handle("/abacaxi/1.0.0", (protocol, conn) => pull(conn, conn));
 
-            swarmA.connect(peerB, "/abacaxi/1.0.0", (err, conn) => {
-                assert.notExists(err);
-                expect(Object.keys(swarmA.muxedConns).length).to.equal(1);
-                pull(
-                    pull.empty(),
-                    conn,
-                    pull.onEnd(done)
-                );
-            });
+            const conn = await swarmA.connect(peerB, "/abacaxi/1.0.0");
+            expect(Object.keys(swarmA.muxedConns).length).to.equal(1);
+            pull(
+                pull.empty(),
+                conn,
+                pull.onEnd(done)
+            );
         });
 
-        it("connect to warm conn", (done) => {
-            swarmB.connect(peerA, (err) => {
-                assert.notExists(err);
-                expect(Object.keys(swarmB.conns).length).to.equal(0);
-                expect(Object.keys(swarmB.muxedConns).length).to.equal(1);
-                done();
-            });
+        it("connect to warm conn", async () => {
+            await swarmB.connect(peerA);
+            expect(Object.keys(swarmB.conns).length).to.equal(0);
+            expect(Object.keys(swarmB.muxedConns).length).to.equal(1);
         });
 
-        it("connect on protocol, reuse warmed conn", (done) => {
+        it("connect on protocol, reuse warmed conn", async (done) => {
             swarmA.handle("/papaia/1.0.0", (protocol, conn) => pull(conn, conn));
 
-            swarmB.connect(peerA, "/papaia/1.0.0", (err, conn) => {
-                assert.notExists(err);
-                expect(Object.keys(swarmB.conns).length).to.equal(0);
-                expect(Object.keys(swarmB.muxedConns).length).to.equal(1);
-                pull(
-                    pull.empty(),
-                    conn,
-                    pull.onEnd(done)
-                );
-            });
+            const conn = await swarmB.connect(peerA, "/papaia/1.0.0");
+            expect(Object.keys(swarmB.conns).length).to.equal(0);
+            expect(Object.keys(swarmB.muxedConns).length).to.equal(1);
+            pull(
+                pull.empty(),
+                conn,
+                pull.onEnd(done)
+            );
         });
 
-        it("enable identify to reuse incomming muxed conn", (done) => {
+        it("enable identify to reuse incomming muxed conn", async (done) => {
             swarmA.connection.reuse();
             swarmC.connection.reuse();
 
-            swarmC.connect(peerA, (err) => {
-                assert.notExists(err);
-                setTimeout(() => {
-                    expect(Object.keys(swarmC.muxedConns).length).to.equal(1);
-                    expect(Object.keys(swarmA.muxedConns).length).to.equal(2);
-                    done();
-                }, 500);
-            });
+            await swarmC.connect(peerA);
+            setTimeout(() => {
+                expect(Object.keys(swarmC.muxedConns).length).to.equal(1);
+                expect(Object.keys(swarmA.muxedConns).length).to.equal(2);
+                done();
+            }, 500);
         });
 
         it("switch back to plaintext if no arguments passed in", () => {
@@ -987,7 +870,7 @@ describe("netron2", "swarm", () => {
         let swarmD;
         let peerD;
 
-        before((done) => {
+        before(async () => {
             const infos = utils.createInfos(4);
             peerA = infos[0];
             peerB = infos[1];
@@ -1009,20 +892,20 @@ describe("netron2", "swarm", () => {
             swarmC.tm.add("tcp", new TCP());
             swarmD.tm.add("tcp", new TCP());
 
-            parallel([
-                (cb) => swarmA.tm.listen("tcp", {}, null, cb),
-                (cb) => swarmB.tm.listen("tcp", {}, null, cb),
-                (cb) => swarmC.tm.listen("tcp", {}, null, cb),
-                (cb) => swarmD.tm.listen("tcp", {}, null, cb)
-            ], done);
+            await Promise.all([
+                swarmA.tm.listen("tcp", {}, null),
+                swarmB.tm.listen("tcp", {}, null),
+                swarmC.tm.listen("tcp", {}, null),
+                swarmD.tm.listen("tcp", {}, null)
+            ]);
         });
 
-        after((done) => {
-            parallel([
-                (cb) => swarmA.close(cb),
-                (cb) => swarmB.close(cb),
-                (cb) => swarmD.close(cb)
-            ], done);
+        after(async () => {
+            await Promise.all([
+                swarmA.close(),
+                swarmB.close(),
+                swarmD.close()
+            ]);
         });
 
         it("add", () => {
@@ -1032,59 +915,50 @@ describe("netron2", "swarm", () => {
             swarmD.connection.addStreamMuxer(spdy);
         });
 
-        it("handle + connect on protocol", (done) => {
+        it("handle + connect on protocol", async (done) => {
             swarmB.handle("/abacaxi/1.0.0", (protocol, conn) => {
                 pull(conn, conn);
             });
 
-            swarmA.connect(peerB, "/abacaxi/1.0.0", (err, conn) => {
-                assert.notExists(err);
-                expect(Object.keys(swarmA.muxedConns).length).to.equal(1);
-                pull(pull.empty(), conn, pull.onEnd(done));
-            });
+            const conn = await swarmA.connect(peerB, "/abacaxi/1.0.0");
+            expect(Object.keys(swarmA.muxedConns).length).to.equal(1);
+            pull(pull.empty(), conn, pull.onEnd(done));
         });
 
-        it("connect to warm conn", (done) => {
-            swarmB.connect(peerA, (err) => {
-                assert.notExists(err);
-                expect(Object.keys(swarmB.conns).length).to.equal(0);
-                expect(Object.keys(swarmB.muxedConns).length).to.equal(1);
-                done();
-            });
+        it("connect to warm conn", async () => {
+            await swarmB.connect(peerA);
+            expect(Object.keys(swarmB.conns).length).to.equal(0);
+            expect(Object.keys(swarmB.muxedConns).length).to.equal(1);
         });
 
-        it("connect on protocol, reuse warmed conn", (done) => {
+        it("connect on protocol, reuse warmed conn", async (done) => {
             swarmA.handle("/papaia/1.0.0", (protocol, conn) => {
                 pull(conn, conn);
             });
 
-            swarmB.connect(peerA, "/papaia/1.0.0", (err, conn) => {
-                assert.notExists(err);
-                expect(Object.keys(swarmB.conns).length).to.equal(0);
-                expect(Object.keys(swarmB.muxedConns).length).to.equal(1);
-                pull(
-                    pull.empty(),
-                    conn,
-                    pull.onEnd(done)
-                );
-            });
+            const conn = await swarmB.connect(peerA, "/papaia/1.0.0");
+            expect(Object.keys(swarmB.conns).length).to.equal(0);
+            expect(Object.keys(swarmB.muxedConns).length).to.equal(1);
+            pull(
+                pull.empty(),
+                conn,
+                pull.onEnd(done)
+            );
         });
 
-        it("enable identify to reuse incomming muxed conn", (done) => {
+        it("enable identify to reuse incomming muxed conn", async (done) => {
             swarmA.connection.reuse();
             swarmC.connection.reuse();
 
-            swarmC.connect(peerA, (err) => {
-                assert.notExists(err);
-                setTimeout(() => {
-                    expect(Object.keys(swarmC.muxedConns).length).to.equal(1);
-                    expect(Object.keys(swarmA.muxedConns).length).to.equal(2);
-                    done();
-                }, 500);
-            });
+            await swarmC.connect(peerA);
+            setTimeout(() => {
+                expect(Object.keys(swarmC.muxedConns).length).to.equal(1);
+                expect(Object.keys(swarmA.muxedConns).length).to.equal(2);
+                done();
+            }, 500);
         });
 
-        it("with Identify, do getPeerInfo", (done) => {
+        it("with Identify, do getPeerInfo", async (done) => {
             swarmA.handle("/banana/1.0.0", (protocol, conn) => {
                 conn.getPeerInfo((err, peerInfoC) => {
                     assert.notExists(err);
@@ -1094,18 +968,16 @@ describe("netron2", "swarm", () => {
                 pull(conn, conn);
             });
 
-            swarmC.connect(peerA, "/banana/1.0.0", (err, conn) => {
-                assert.notExists(err);
-                setTimeout(() => {
-                    expect(Object.keys(swarmC.muxedConns).length).to.equal(1);
-                    expect(Object.keys(swarmA.muxedConns).length).to.equal(2);
-                    conn.getPeerInfo((err, peerInfoA) => {
-                        assert.notExists(err);
-                        expect(peerInfoA.id.asBase58()).to.equal(peerA.id.asBase58());
-                        pull(pull.empty(), conn, pull.onEnd(done));
-                    });
-                }, 500);
-            });
+            const conn = await swarmC.connect(peerA, "/banana/1.0.0");
+            setTimeout(() => {
+                expect(Object.keys(swarmC.muxedConns).length).to.equal(1);
+                expect(Object.keys(swarmA.muxedConns).length).to.equal(2);
+                conn.getPeerInfo((err, peerInfoA) => {
+                    assert.notExists(err);
+                    expect(peerInfoA.id.asBase58()).to.equal(peerA.id.asBase58());
+                    pull(pull.empty(), conn, pull.onEnd(done));
+                });
+            }, 500);
         });
 
         // This test is not possible as the raw conn is not exposed anymore
@@ -1135,77 +1007,73 @@ describe("netron2", "swarm", () => {
             });
         });
 
-        // This test is not possible as the raw conn is not exposed anymore
-        // TODO: create a similar version, but that spawns a swarm in a
-        // different proc
-        it.skip("blow up a socket, with WebSockets", (done) => {
-            const peerE = new PeerInfo();
-            const peerF = new PeerInfo();
+        // // This test is not possible as the raw conn is not exposed anymore
+        // // TODO: create a similar version, but that spawns a swarm in a
+        // // different proc
+        // it.skip("blow up a socket, with WebSockets", (done) => {
+        //     const peerE = new PeerInfo();
+        //     const peerF = new PeerInfo();
 
-            peerE.multiaddrs.add("/ip4/127.0.0.1/tcp/9110/ws");
-            peerF.multiaddrs.add("/ip4/127.0.0.1/tcp/9120/ws");
+        //     peerE.multiaddrs.add("/ip4/127.0.0.1/tcp/9110/ws");
+        //     peerF.multiaddrs.add("/ip4/127.0.0.1/tcp/9120/ws");
 
-            const swarmE = new Swarm(peerE, new PeerBook());
-            const swarmF = new Swarm(peerF, new PeerBook());
+        //     const swarmE = new Swarm(peerE, new PeerBook());
+        //     const swarmF = new Swarm(peerF, new PeerBook());
 
-            swarmE.tm.add("ws", new WS());
-            swarmF.tm.add("ws", new WS());
+        //     swarmE.tm.add("ws", new WS());
+        //     swarmF.tm.add("ws", new WS());
 
-            swarmE.connection.addStreamMuxer(spdy);
-            swarmF.connection.addStreamMuxer(spdy);
-            swarmE.connection.reuse();
-            swarmF.connection.reuse();
+        //     swarmE.connection.addStreamMuxer(spdy);
+        //     swarmF.connection.addStreamMuxer(spdy);
+        //     swarmE.connection.reuse();
+        //     swarmF.connection.reuse();
 
-            const close = function () {
-                parallel([
-                    (cb) => swarmE.close(cb),
-                    (cb) => swarmF.close(cb)
-                ], done);
-            };
+        //     const close = function () {
+        //         parallel([
+        //             (cb) => swarmE.close(cb),
+        //             (cb) => swarmF.close(cb)
+        //         ], done);
+        //     };
 
-            const next = function () {
-                let count = 0;
-                const destroyed = () => ++count === 2 ? close() : null;
+        //     const next = function () {
+        //         let count = 0;
+        //         const destroyed = () => ++count === 2 ? close() : null;
 
-                swarmE.handle("/avocado/1.0.0", (protocol, conn) => {
-                    pull(
-                        conn,
-                        pull.onEnd(destroyed)
-                    );
-                });
+        //         swarmE.handle("/avocado/1.0.0", (protocol, conn) => {
+        //             pull(
+        //                 conn,
+        //                 pull.onEnd(destroyed)
+        //             );
+        //         });
 
-                swarmF.connect(peerE, "/avocado/1.0.0", (err, conn) => {
-                    assert.notExists(err);
-                    pull(
-                        conn,
-                        pull.onEnd(destroyed)
-                    );
+        //         swarmF.connect(peerE, "/avocado/1.0.0", (err, conn) => {
+        //             assert.notExists(err);
+        //             pull(
+        //                 conn,
+        //                 pull.onEnd(destroyed)
+        //             );
 
-                    pull(
-                        pull.empty(),
-                        swarmF.muxedConns[peerE.id.asBase58()].conn
-                    );
-                });
-            };
+        //             pull(
+        //                 pull.empty(),
+        //                 swarmF.muxedConns[peerE.id.asBase58()].conn
+        //             );
+        //         });
+        //     };
 
-            parallel([
-                (cb) => swarmE.tm.listen("ws", {}, null, cb),
-                (cb) => swarmF.tm.listen("ws", {}, null, cb)
-            ], next);
-        });
+        //     parallel([
+        //         (cb) => swarmE.tm.listen("ws", {}, null, cb),
+        //         (cb) => swarmF.tm.listen("ws", {}, null, cb)
+        //     ], next);
+        // });
 
-        it("close one end, make sure the other does not blow", (done) => {
-            swarmC.close((err) => {
-                if (err) {
-                    throw err;
-                }
-                // to make sure it has time to propagate
-                setTimeout(done, 1000);
-            });
+        it("close one end, make sure the other does not blow", async () => {
+            await swarmC.close();
+            // to make sure it has time to propagate
+            await adone.promise.delay(1000);
         });
     });
 
-    describe("netron2", "Swarm", "LimitDialer", () => {
+    describe("LimitDialer", () => {
         let peers;
 
         before(() => {
@@ -1219,44 +1087,39 @@ describe("netron2", "swarm", () => {
             });
         });
 
-        it("all failing", (done) => {
+        it("all failing", async () => {
             const dialer = new LimitDialer(2, 10);
 
             // mock transport
             const t1 = {
-                connect(addr, cb) {
-                    setTimeout(() => cb(new Error("fail")), 1);
-                    return {};
+                async connect() {
+                    await adone.promise.delay(1);
+                    throw new Error("fail");
                 }
             };
 
-            dialer.dialMany(peers[0].id, t1, peers[0].multiaddrs.toArray(), (err, conn) => {
-                assert.exists(err);
-                expect(err.errors).to.have.length(3);
-                expect(err.errors[0].message).to.eql("fail");
-                assert.notExists(conn);
-                done();
-            });
+            const err = await assert.throws(async () => dialer.dialMany(peers[0].id, t1, peers[0].multiaddrs.toArray()));
+            expect(err.errors).to.have.length(3);
+            expect(err.errors[0].message).to.eql("fail");
         });
 
-        it("two success", (done) => {
+        it("two success", async (done) => {
             const dialer = new LimitDialer(2, 10);
 
             // mock transport
             const t1 = {
-                connect(addr, cb) {
+                async connect(addr) {
                     const as = addr.toString();
                     if (as.match(/191/)) {
-                        setImmediate(() => cb(new Error("fail")));
-                        return {};
+                        throw new Error("fail");
                     } else if (as.match(/192/)) {
-                        setTimeout(cb, 2);
+                        await adone.promise.delay(2);
                         return {
                             source: pull.values([1]),
                             sink: pull.drain()
                         };
                     } else if (as.match(/193/)) {
-                        setTimeout(cb, 8);
+                        await adone.promise.delay(2);
                         return {
                             source: pull.values([2]),
                             sink: pull.drain()
@@ -1265,19 +1128,17 @@ describe("netron2", "swarm", () => {
                 }
             };
 
-            dialer.dialMany(peers[0].id, t1, peers[0].multiaddrs.toArray(), (err, success) => {
-                const conn = success.conn;
-                expect(success.multiaddr.toString()).to.equal("/ip4/192.168.0.1/tcp/9230");
-                assert.notExists(err);
-                pull(
-                    conn,
-                    pull.collect((err, res) => {
-                        assert.notExists(err);
-                        expect(res).to.be.eql([1]);
-                        done();
-                    })
-                );
-            });
+            const success = await dialer.dialMany(peers[0].id, t1, peers[0].multiaddrs.toArray());
+            const conn = success.conn;
+            expect(success.multiaddr.toString()).to.equal("/ip4/192.168.0.1/tcp/9230");
+            pull(
+                conn,
+                pull.collect((err, res) => {
+                    assert.notExists(err);
+                    expect(res).to.be.eql([1]);
+                    done();
+                })
+            );
         });
     });
 

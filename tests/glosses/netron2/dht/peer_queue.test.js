@@ -4,7 +4,7 @@ const {
 
 const { PeerQueue } = adone.private(dht);
 
-describe("PeerQueue", () => {
+describe("netron2", "dht", "KadDHT", "PeerQueue", () => {
     it("basics", (done) => {
         const p1 = new PeerId(Buffer.from("11140beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a31"));
         const p2 = new PeerId(Buffer.from("11140beec7b5ea3f0fdbc95d0dd47f3c5bc275da8a32"));

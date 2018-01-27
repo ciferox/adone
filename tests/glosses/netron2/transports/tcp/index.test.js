@@ -17,112 +17,93 @@ describe("netron2", "transport", "tcp", () => {
             tcp = new TCP();
         });
 
-        it("close listener with connections, through timeout", (done) => {
+        it("close listener with connections, through timeout", async (done) => {
             const mh = multi.address.create("/ip4/127.0.0.1/tcp/9191/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
             const listener = tcp.createListener((conn) => {
                 pull(conn, conn);
             });
 
-            listener.listen(mh, () => {
-                const socket1 = net.connect(9191);
-                const socket2 = net.connect(9191);
+            await listener.listen(mh);
+            const socket1 = net.connect(9191);
+            const socket2 = net.connect(9191);
 
-                socket1.write("Some data that is never handled");
-                socket1.end();
-                socket1.on("error", () => { });
-                socket2.on("error", () => { });
-                socket1.on("connect", () => {
-                    listener.close(done);
-                });
+            socket1.write("Some data that is never handled");
+            socket1.end();
+            socket1.on("error", () => { });
+            socket2.on("error", () => { });
+            socket1.on("connect", () => {
+                listener.close().then(done);
             });
         });
 
-        it("listen on port 0", (done) => {
+        it("listen on port 0", async () => {
             const mh = multi.address.create("/ip4/127.0.0.1/tcp/0");
-            const listener = tcp.createListener((conn) => { });
-            listener.listen(mh, () => {
-                listener.close(done);
-            });
+            const listener = tcp.createListener();
+            await listener.listen(mh);
+            await listener.close();
         });
 
-        it("listen on IPv6 addr", (done) => {
+        it("listen on IPv6 addr", async () => {
             const mh = multi.address.create("/ip6/::/tcp/9191");
-            const listener = tcp.createListener((conn) => { });
-            listener.listen(mh, () => {
-                listener.close(done);
-            });
+            const listener = tcp.createListener();
+            await listener.listen(mh);
+            await listener.close();
         });
 
-        it("listen on any Interface", (done) => {
+        it("listen on any Interface", async () => {
             const mh = multi.address.create("/ip4/0.0.0.0/tcp/9191");
-            const listener = tcp.createListener((conn) => { });
-            listener.listen(mh, () => {
-                listener.close(done);
-            });
+            const listener = tcp.createListener();
+            await listener.listen(mh);
+            await listener.close();
         });
 
-        it("getAddrs", (done) => {
+        it("getAddrs", async () => {
             const mh = multi.address.create("/ip4/127.0.0.1/tcp/9191");
-            const listener = tcp.createListener((conn) => { });
-            listener.listen(mh, () => {
-                listener.getAddrs((err, multiaddrs) => {
-                    assert.notExists(err);
-                    expect(multiaddrs.length).to.equal(1);
-                    expect(multiaddrs[0]).to.deep.equal(mh);
-                    listener.close(done);
-                });
-            });
+            const listener = tcp.createListener();
+            await listener.listen(mh);
+            const multiaddrs = await listener.getAddrs();
+            expect(multiaddrs.length).to.equal(1);
+            expect(multiaddrs[0]).to.deep.equal(mh);
+            await listener.close();
         });
 
-        it("getAddrs on port 0 listen", (done) => {
+        it("getAddrs on port 0 listen", async () => {
             const mh = multi.address.create("/ip4/127.0.0.1/tcp/0");
-            const listener = tcp.createListener((conn) => { });
-            listener.listen(mh, () => {
-                listener.getAddrs((err, multiaddrs) => {
-                    assert.notExists(err);
-                    expect(multiaddrs.length).to.equal(1);
-                    listener.close(done);
-                });
-            });
+            const listener = tcp.createListener();
+            await listener.listen(mh);
+            const multiaddrs = await listener.getAddrs();
+            expect(multiaddrs.length).to.equal(1);
+            await listener.close();
         });
 
-        it("getAddrs from listening on 0.0.0.0", (done) => {
+        it("getAddrs from listening on 0.0.0.0", async () => {
             const mh = multi.address.create("/ip4/0.0.0.0/tcp/9191");
-            const listener = tcp.createListener((conn) => { });
-            listener.listen(mh, () => {
-                listener.getAddrs((err, multiaddrs) => {
-                    assert.notExists(err);
-                    expect(multiaddrs.length > 0).to.equal(true);
-                    expect(multiaddrs[0].toString().indexOf("0.0.0.0")).to.equal(-1);
-                    listener.close(done);
-                });
-            });
+            const listener = tcp.createListener();
+            await listener.listen(mh);
+            const multiaddrs = await listener.getAddrs();
+            expect(multiaddrs.length > 0).to.equal(true);
+            expect(multiaddrs[0].toString().indexOf("0.0.0.0")).to.equal(-1);
+            await listener.close();
         });
 
-        it("getAddrs from listening on 0.0.0.0 and port 0", (done) => {
+        it("getAddrs from listening on 0.0.0.0 and port 0", async () => {
             const mh = multi.address.create("/ip4/0.0.0.0/tcp/0");
-            const listener = tcp.createListener((conn) => { });
-            listener.listen(mh, () => {
-                listener.getAddrs((err, multiaddrs) => {
-                    assert.notExists(err);
-                    expect(multiaddrs.length > 0).to.equal(true);
-                    expect(multiaddrs[0].toString().indexOf("0.0.0.0")).to.equal(-1);
-                    listener.close(done);
-                });
-            });
+            const listener = tcp.createListener();
+            await listener.listen(mh);
+            const multiaddrs = await listener.getAddrs();
+            expect(multiaddrs.length > 0).to.equal(true);
+            expect(multiaddrs[0].toString().indexOf("0.0.0.0")).to.equal(-1);
+            await listener.close();
         });
 
-        it("getAddrs preserves IPFS Id", (done) => {
+        it("getAddrs preserves IPFS Id", async () => {
             const mh = multi.address.create("/ip4/127.0.0.1/tcp/9191/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
-            const listener = tcp.createListener((conn) => { });
-            listener.listen(mh, () => {
-                listener.getAddrs((err, multiaddrs) => {
-                    assert.notExists(err);
-                    expect(multiaddrs.length).to.equal(1);
-                    expect(multiaddrs[0]).to.deep.equal(mh);
-                    listener.close(done);
-                });
-            });
+            const listener = tcp.createListener();
+            await listener.listen(mh);
+            const multiaddrs = await listener.getAddrs();
+            expect(multiaddrs.length).to.equal(1);
+            expect(multiaddrs[0]).to.deep.equal(mh);
+            await listener.close();
         });
     });
 
@@ -131,7 +112,7 @@ describe("netron2", "transport", "tcp", () => {
         let listener;
         const ma = multi.address.create("/ip4/127.0.0.1/tcp/9191");
 
-        beforeEach((done) => {
+        beforeEach(async () => {
             tcp = new TCP();
             listener = tcp.createListener((conn) => {
                 pull(
@@ -140,17 +121,18 @@ describe("netron2", "transport", "tcp", () => {
                     conn
                 );
             });
-            listener.listen(ma, done);
+            await listener.listen(ma);
         });
 
-        afterEach((done) => {
-            listener.close(done);
+        afterEach(async () => {
+            await listener.close();
         });
 
-        it("connect on IPv4", (done) => {
+        it("connect on IPv4", async (done) => {
+            const conn = await tcp.connect(ma);
             pull(
                 pull.values(["hey"]),
-                tcp.connect(ma),
+                conn,
                 pull.collect((err, values) => {
                     assert.notExists(err);
                     expect(values).to.eql([Buffer.from("hey!")]);
@@ -159,46 +141,39 @@ describe("netron2", "transport", "tcp", () => {
             );
         });
 
-        it("connect to non existent listener", (done) => {
+        it("connect to non existent listener", async () => {
             const ma = multi.address.create("/ip4/127.0.0.1/tcp/8989");
-            pull(
-                tcp.connect(ma),
-                pull.onEnd((err) => {
-                    assert.exists(err);
-                    done();
-                })
-            );
+            await assert.throws(async () => tcp.connect(ma));
         });
 
-        it("connect on IPv6", (done) => {
+        it("connect on IPv6", async (done) => {
             const ma = multi.address.create("/ip6/::/tcp/9066");
             const listener = tcp.createListener((conn) => {
                 pull(conn, conn);
             });
-            listener.listen(ma, () => {
-                pull(
-                    pull.values(["hey"]),
-                    tcp.connect(ma),
-                    pull.collect((err, values) => {
-                        assert.notExists(err);
+            await listener.listen(ma);
+            const conn = await tcp.connect(ma);
+            pull(
+                pull.values(["hey"]),
+                conn,
+                pull.collect((err, values) => {
+                    assert.notExists(err);
 
-                        expect(values).to.be.eql([Buffer.from("hey")]);
+                    expect(values).to.be.eql([Buffer.from("hey")]);
 
-                        listener.close(done);
-                    })
-                );
-            });
+                    listener.close().then(done);
+                })
+            );
         });
 
-        it.skip("connect and destroy on listener", (done) => {
-            // TODO: why is this failing
+        it("connect and destroy on listener", async (done) => {
             let count = 0;
             let listener = null;
             const finish = function () {
-                listener.close(done);
+                listener.close().then(done);
             };
 
-            const closed = ++count === 2 ? finish() : null;
+            const closed = () => ++count === 2 ? finish() : null;
 
             const ma = multi.address.create("/ip6/::/tcp/9067");
 
@@ -210,17 +185,17 @@ describe("netron2", "transport", "tcp", () => {
                 );
             });
 
-            listener.listen(ma, () => {
-                pull(tcp.connect(ma), pull.onEnd(closed));
-            });
+            await listener.listen(ma);
+            const conn = await tcp.connect(ma);
+            pull(conn, pull.onEnd(closed));
         });
 
-        it("connect and destroy on dialer", (done) => {
+        it("connect and destroy on client", async (done) => {
             let count = 0;
             let listener = null;
 
             const finish = function () {
-                listener.close(done);
+                listener.close().then(done);
             };
             const destroyed = () => ++count === 2 ? finish() : null;
 
@@ -230,18 +205,18 @@ describe("netron2", "transport", "tcp", () => {
                 pull(conn, pull.onEnd(destroyed));
             });
 
-            listener.listen(ma, () => {
-                pull(
-                    pull.empty(),
-                    tcp.connect(ma),
-                    pull.onEnd(destroyed)
-                );
-            });
+            await listener.listen(ma);
+            const conn = await tcp.connect(ma);
+            pull(
+                pull.empty(),
+                conn,
+                pull.onEnd(destroyed)
+            );
         });
 
-        it("connect on IPv4 with IPFS Id", (done) => {
+        it("connect on IPv4 with IPFS Id", async (done) => {
             const ma = multi.address.create("/ip4/127.0.0.1/tcp/9191/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
-            const conn = tcp.connect(ma);
+            const conn = await tcp.connect(ma);
 
             pull(
                 pull.values(["hey"]),
@@ -295,7 +270,7 @@ describe("netron2", "transport", "tcp", () => {
 
         const ma = multi.address.create("/ip4/127.0.0.1/tcp/9191");
 
-        it("get observed addrs", (done) => {
+        it("get observed addrs", async (done) => {
             let dialerObsAddrs;
 
             const listener = tcp.createListener((conn) => {
@@ -307,33 +282,32 @@ describe("netron2", "transport", "tcp", () => {
                 });
             });
 
-            listener.listen(ma, () => {
-                const conn = tcp.connect(ma);
+            await listener.listen(ma);
+            const conn = await tcp.connect(ma);
 
-                const closeAndAssert = function (listener, addrs) {
-                    listener.close(() => {
-                        expect(addrs[0]).to.deep.equal(ma);
-                        expect(dialerObsAddrs.length).to.equal(1);
-                        done();
-                    });
-                };
+            const closeAndAssert = function (listener, addrs) {
+                listener.close().then(() => {
+                    expect(addrs[0]).to.deep.equal(ma);
+                    expect(dialerObsAddrs.length).to.equal(1);
+                    done();
+                });
+            };
 
-                const endHandler = function () {
-                    conn.getObservedAddrs((err, addrs) => {
-                        assert.notExists(err);
-                        pull(pull.empty(), conn);
-                        closeAndAssert(listener, addrs);
-                    });
-                };
+            const endHandler = function () {
+                conn.getObservedAddrs((err, addrs) => {
+                    assert.notExists(err);
+                    pull(pull.empty(), conn);
+                    closeAndAssert(listener, addrs);
+                });
+            };
 
-                pull(
-                    conn,
-                    pull.onEnd(endHandler)
-                );
-            });
+            pull(
+                conn,
+                pull.onEnd(endHandler)
+            );
         });
 
-        it("get Peer Info", (done) => {
+        it("get Peer Info", async (done) => {
             const listener = tcp.createListener((conn) => {
                 assert.exists(conn);
                 conn.getPeerInfo((err, peerInfo) => {
@@ -343,23 +317,22 @@ describe("netron2", "transport", "tcp", () => {
                 });
             });
 
-            listener.listen(ma, () => {
-                const conn = tcp.connect(ma);
+            await listener.listen(ma);
+            const conn = await tcp.connect(ma);
 
-                const endHandler = function () {
-                    conn.getPeerInfo((err, peerInfo) => {
-                        assert.exists(err);
-                        assert.notExists(peerInfo);
+            const endHandler = function () {
+                conn.getPeerInfo((err, peerInfo) => {
+                    assert.exists(err);
+                    assert.notExists(peerInfo);
 
-                        listener.close(done);
-                    });
-                };
+                    listener.close().then(done);
+                });
+            };
 
-                pull(conn, pull.onEnd(endHandler));
-            });
+            pull(conn, pull.onEnd(endHandler));
         });
 
-        it("set Peer Info", (done) => {
+        it("set Peer Info", async (done) => {
             const listener = tcp.createListener((conn) => {
                 assert.exists(conn);
                 conn.setPeerInfo("batatas");
@@ -370,21 +343,20 @@ describe("netron2", "transport", "tcp", () => {
                 });
             });
 
-            listener.listen(ma, () => {
-                const conn = tcp.connect(ma);
+            await listener.listen(ma);
+            const conn = await tcp.connect(ma);
 
-                const endHandler = function () {
-                    conn.setPeerInfo("arroz");
-                    conn.getPeerInfo((err, peerInfo) => {
-                        assert.notExists(err);
-                        expect(peerInfo).to.equal("arroz");
+            const endHandler = function () {
+                conn.setPeerInfo("arroz");
+                conn.getPeerInfo((err, peerInfo) => {
+                    assert.notExists(err);
+                    expect(peerInfo).to.equal("arroz");
 
-                        listener.close(done);
-                    });
-                };
+                    listener.close().then(done);
+                });
+            };
 
-                pull(conn, pull.onEnd(endHandler));
-            });
+            pull(conn, pull.onEnd(endHandler));
         });
     });
 
@@ -398,21 +370,20 @@ describe("netron2", "transport", "tcp", () => {
         let listener;
         const ma = multi.address.create("/ip4/127.0.0.1/tcp/9191");
 
-        beforeEach((done) => {
+        beforeEach(async () => {
             tcp = new TCP();
             listener = tcp.createListener((conn) => {
                 pull(conn, conn);
             });
-            listener.on("listening", done);
-            listener.listen(ma);
+            await listener.listen(ma);
         });
 
-        afterEach((done) => {
-            listener.close(done);
+        afterEach(async () => {
+            await listener.close();
         });
 
-        it("simple wrap", (done) => {
-            const conn = tcp.connect(ma);
+        it("simple wrap", async (done) => {
+            const conn = await tcp.connect(ma);
             conn.setPeerInfo("peerInfo");
             const connWrap = new Connection(conn);
             pull(
@@ -431,8 +402,8 @@ describe("netron2", "transport", "tcp", () => {
             );
         });
 
-        it("buffer wrap", (done) => {
-            const conn = tcp.connect(ma);
+        it("buffer wrap", async (done) => {
+            const conn = await tcp.connect(ma);
             const connWrap = new Connection();
             pull(
                 pull.values(["hey"]),
@@ -447,8 +418,8 @@ describe("netron2", "transport", "tcp", () => {
             connWrap.setInnerConn(conn);
         });
 
-        it("overload wrap", (done) => {
-            const conn = tcp.connect(ma);
+        it("overload wrap", async (done) => {
+            const conn = await tcp.connect(ma);
             const connWrap = new Connection(conn);
             connWrap.getPeerInfo = (callback) => {
                 callback(null, "none");
@@ -471,15 +442,12 @@ describe("netron2", "transport", "tcp", () => {
             );
         });
 
-        it("connect error", (done) => {
-            tcp.connect(multi.address.create("/ip4/999.0.0.1/tcp/1234"), (err) => {
-                assert.exists(err);
-                done();
-            });
+        it("connect error", async () => {
+            await assert.throws(async () => tcp.connect(multi.address.create("/ip4/999.0.0.1/tcp/1234")));
         });
 
-        it("matryoshka wrap", (done) => {
-            const conn = tcp.connect(ma);
+        it("matryoshka wrap", async (done) => {
+            const conn = await tcp.connect(ma);
             const connWrap1 = new Connection(conn);
             const connWrap2 = new Connection(connWrap1);
             const connWrap3 = new Connection(connWrap2);

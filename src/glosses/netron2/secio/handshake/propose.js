@@ -6,15 +6,11 @@ const crypto = require("./crypto");
 // step 1. Propose
 // -- propose cipher suite + send pubkeys + nonce
 module.exports = function propose(state, cb) {
-    adone.log("1. propose - start");
-
-    adone.log("1. propose - writing proposal");
     support.write(state, crypto.createProposal(state));
 
     waterfall([
         (cb) => support.read(state.shake, cb),
         (msg, cb) => {
-            adone.log("1. propose - reading proposal", msg);
             try {
                 crypto.identify(state, msg);
             } catch (err) {
@@ -35,7 +31,6 @@ module.exports = function propose(state, cb) {
             return cb(err);
         }
 
-        adone.log("1. propose - finish");
         cb();
     });
 };

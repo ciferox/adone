@@ -1,4 +1,4 @@
-const util = require("../../utils");
+import { makePeers, teardown, setupDHT } from "../../utils";
 
 const {
     netron2: { dht }
@@ -7,22 +7,18 @@ const { rpcHandler: { ping }, Message } = adone.private(dht);
 
 const T = Message.TYPES.PING;
 
-describe("rpc - handlers - Ping", () => {
+describe("netron2", "dht", "KadDHT", "rpc - handlers - Ping", () => {
     let peers;
     let dht;
 
     before(() => {
-        peers = util.makePeers(2);
+        peers = makePeers(2);
     });
 
-    afterEach((done) => util.teardown(done));
+    afterEach(() => teardown());
 
-    beforeEach((done) => {
-        util.setupDHT((err, res) => {
-            assert.notExists(err);
-            dht = res;
-            done();
-        });
+    beforeEach(async () => {
+        dht = await setupDHT();
     });
 
     it("replies with the same message", (done) => {

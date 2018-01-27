@@ -8,7 +8,7 @@ const {
 
 const { protocol, Listener, multicodec } = adone.private(adone.netron2.circuit);
 
-describe("listener", () => {
+describe("netron2", "circuit", "listener", () => {
     describe("listen", () => {
         let swarm = null;
         let handlerSpy = null;
@@ -210,23 +210,18 @@ describe("listener", () => {
             peerInfo.multiaddrs.add("/ip4/0.0.0.0/tcp/4002");
             peerInfo.multiaddrs.add("/ip4/127.0.0.1/tcp/4003/ws");
 
-            listener.getAddrs((err, addrs) => {
-                assert.null(err);
-                expect(addrs).to.deep.equal([
-                    multi.address.create("/p2p-circuit/ip4/0.0.0.0/tcp/4002/ipfs/QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy"),
-                    multi.address.create("/p2p-circuit/ip4/127.0.0.1/tcp/4003/ws/ipfs/QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy")]);
-            });
+            const addrs = listener.getAddrs();
+            expect(addrs).to.deep.equal([
+                multi.address.create("/p2p-circuit/ip4/0.0.0.0/tcp/4002/ipfs/QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy"),
+                multi.address.create("/p2p-circuit/ip4/127.0.0.1/tcp/4003/ws/ipfs/QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy")
+            ]);
         });
 
         it("don't return default addrs in an explicit p2p-circuit addres", () => {
             peerInfo.multiaddrs.add("/ip4/127.0.0.1/tcp/4003/ws");
             peerInfo.multiaddrs.add("/p2p-circuit/ip4/0.0.0.0/tcp/4002");
-            listener.getAddrs((err, addrs) => {
-                assert.null(err);
-                expect(addrs[0]
-                    .toString())
-                    .to.equal("/p2p-circuit/ip4/0.0.0.0/tcp/4002/ipfs/QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy");
-            });
+            const addrs = listener.getAddrs();
+            expect(addrs[0].toString()).to.equal("/p2p-circuit/ip4/0.0.0.0/tcp/4002/ipfs/QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy");
         });
     });
 });

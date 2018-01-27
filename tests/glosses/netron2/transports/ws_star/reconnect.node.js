@@ -5,7 +5,7 @@ const {
 
 const SERVER_PORT = 13580;
 
-describe("reconnect to signaling server", function () {
+describe.todo("reconnect to signaling server", function () {
     this.timeout(30000);
     
     let r;

@@ -22,9 +22,7 @@ module.exports = class Muxer extends event.Emitter {
             this.emit("close");
         });
 
-        spdy.on("error", (err) => {
-            this.emit("error", err);
-        });
+        spdy.on("error", (err) => this.emit("error", err));
 
         // needed by other spdy impl that need the response headers
         // in order to confirm the stream can be open

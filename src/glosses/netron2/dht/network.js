@@ -48,7 +48,6 @@ class Network {
     constructor(self) {
         this.dht = self;
         this.readMessageTimeout = c.READ_MESSAGE_TIMEOUT;
-        this._log = utils.logger(this.dht.peerInfo.id, "net");
         this._rpc = rpc(this.dht);
         this._onPeerConnected = this._onPeerConnected.bind(this);
         this._running = false;
@@ -130,23 +129,17 @@ class Network {
      */
     _onPeerConnected(peer) {
         if (!this.isConnected) {
-            return this._log.error("Network is offline");
+            return;
         }
 
-        this.dht.swarm.connect(peer, c.PROTOCOL_DHT, (err, conn) => {
-            if (err) {
-                return this._log("%s does not support protocol: %s", peer.id.asBase58(), c.PROTOCOL_DHT);
-            }
-
+        this.dht.swarm.connect(peer, c.PROTOCOL_DHT).catch(() => { }).then((conn) => {
             // TODO: conn.close()
             pull(pull.empty(), conn);
 
             try {
                 this.dht._add(peer);
-                this._log("added to the routing table: %s", peer.id.asBase58());
-
             } catch (err) {
-                return this._log.error("Failed to add to the routing table", err);
+                //
             }
         });
     }
@@ -165,12 +158,7 @@ class Network {
             return callback(new Error("Network is offline"));
         }
 
-        this._log("sending to: %s", to.asBase58());
-        this.dht.swarm.connect(to, c.PROTOCOL_DHT, (err, conn) => {
-            if (err) {
-                return callback(err);
-            }
-
+        this.dht.swarm.connect(to, c.PROTOCOL_DHT).catch(callback).then((conn) => {
             this._writeReadMessage(conn, msg.serialize(), callback);
         });
     }
@@ -188,13 +176,7 @@ class Network {
             return setImmediate(() => callback(new Error("Network is offline")));
         }
 
-        this._log("sending to: %s", to.asBase58());
-
-        this.dht.swarm.connect(to, c.PROTOCOL_DHT, (err, conn) => {
-            if (err) {
-                return callback(err);
-            }
-
+        this.dht.swarm.connect(to, c.PROTOCOL_DHT).catch(callback).then((conn) => {
             this._writeMessage(conn, msg.serialize(), callback);
         });
     }

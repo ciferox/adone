@@ -12,7 +12,7 @@ const createPeers = function (n) {
     return peers;
 };
 
-describe("RoutingTable", () => {
+describe("netron2", "dht", "KadDHT", "RoutingTable", () => {
     let table;
 
     beforeEach(function () {

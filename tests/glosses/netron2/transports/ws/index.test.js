@@ -20,26 +20,25 @@ describe("netron2", "trasnport", "ws", () => {
             ws = new WS();
         });
 
-        it("listen, check for callback", (done) => {
-            const listener = ws.createListener((conn) => { });
+        it("listen", async () => {
+            const listener = ws.createListener();
 
-            listener.listen(ma, () => {
-                listener.close(done);
-            });
+            await listener.listen(ma);
+            await listener.close();
         });
 
         it("listen, check for listening event", (done) => {
-            const listener = ws.createListener((conn) => { });
+            const listener = ws.createListener();
 
             listener.on("listening", () => {
-                listener.close(done);
+                listener.close().then(done);
             });
 
             listener.listen(ma);
         });
 
         it("listen, check for the close event", (done) => {
-            const listener = ws.createListener((conn) => { });
+            const listener = ws.createListener();
 
             listener.on("listening", () => {
                 listener.on("close", done);
@@ -49,14 +48,13 @@ describe("netron2", "trasnport", "ws", () => {
             listener.listen(ma);
         });
 
-        it("listen on addr with /ipfs/QmHASH", (done) => {
+        it("listen on addr with /ipfs/QmHASH", async () => {
             const ma = multi.address.create("/ip4/127.0.0.1/tcp/9595/ws/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
 
-            const listener = ws.createListener((conn) => { });
+            const listener = ws.createListener();
 
-            listener.listen(ma, () => {
-                listener.close(done);
-            });
+            await listener.listen(ma);
+            await listener.close();
         });
 
         it.skip("close listener with connections, through timeout", (done) => {
@@ -75,73 +73,52 @@ describe("netron2", "trasnport", "ws", () => {
             // TODO 0.0.0.0 not supported yet
         });
 
-        it("getAddrs", (done) => {
-            const listener = ws.createListener((conn) => {
-            });
-            listener.listen(ma, () => {
-                listener.getAddrs((err, addrs) => {
-                    assert.notExists(err);
-                    expect(addrs.length).to.equal(1);
-                    expect(addrs[0]).to.deep.equal(ma);
-                    listener.close(done);
-                });
-            });
+        it("getAddrs", async () => {
+            const listener = ws.createListener();
+            await listener.listen(ma);
+            const addrs = await listener.getAddrs();
+            expect(addrs.length).to.equal(1);
+            expect(addrs[0]).to.deep.equal(ma);
+            await listener.close();
         });
 
-        it("getAddrs on port 0 listen", (done) => {
+        it("getAddrs on port 0 listen", async () => {
             const addr = multi.address.create("/ip4/127.0.0.1/tcp/0/ws");
-            const listener = ws.createListener((conn) => {
-            });
-            listener.listen(addr, () => {
-                listener.getAddrs((err, addrs) => {
-                    assert.notExists(err);
-                    expect(addrs.length).to.equal(1);
-                    expect(addrs.map((a) => a.toOptions().port)).to.not.include("0");
-                    listener.close(done);
-                });
-            });
+            const listener = ws.createListener();
+            await listener.listen(addr);
+            const addrs = await listener.getAddrs();
+            expect(addrs.length).to.equal(1);
+            expect(addrs.map((a) => a.toOptions().port)).to.not.include("0");
+            await listener.close();
         });
 
-        it("getAddrs from listening on 0.0.0.0", (done) => {
+        it("getAddrs from listening on 0.0.0.0", async () => {
             const addr = multi.address.create("/ip4/0.0.0.0/tcp/9003/ws");
-            const listener = ws.createListener((conn) => {
-            });
-            listener.listen(addr, () => {
-                listener.getAddrs((err, addrs) => {
-                    assert.notExists(err);
-                    expect(addrs.map((a) => a.toOptions().host)).to.not.include("0.0.0.0");
-                    listener.close(done);
-                });
-            });
+            const listener = ws.createListener();
+            await listener.listen(addr);
+            const addrs = await listener.getAddrs();
+            expect(addrs.map((a) => a.toOptions().host)).to.not.include("0.0.0.0");
+            await listener.close();
         });
 
-        it("getAddrs from listening on 0.0.0.0 and port 0", (done) => {
+        it("getAddrs from listening on 0.0.0.0 and port 0", async () => {
             const addr = multi.address.create("/ip4/0.0.0.0/tcp/0/ws");
-            const listener = ws.createListener((conn) => {
-            });
-            listener.listen(addr, () => {
-                listener.getAddrs((err, addrs) => {
-                    assert.notExists(err);
-                    expect(addrs.map((a) => a.toOptions().host)).to.not.include("0.0.0.0");
-                    expect(addrs.map((a) => a.toOptions().port)).to.not.include("0");
-                    listener.close(done);
-                });
-            });
+            const listener = ws.createListener();
+            await listener.listen(addr);
+            const addrs = await listener.getAddrs();
+            expect(addrs.map((a) => a.toOptions().host)).to.not.include("0.0.0.0");
+            expect(addrs.map((a) => a.toOptions().port)).to.not.include("0");
+            await listener.close();
         });
 
-        it("getAddrs preserves IPFS Id", (done) => {
+        it("getAddrs preserves IPFS Id", async () => {
             const ma = multi.address.create("/ip4/127.0.0.1/tcp/9595/ws/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
-
-            const listener = ws.createListener((conn) => { });
-
-            listener.listen(ma, () => {
-                listener.getAddrs((err, addrs) => {
-                    assert.notExists(err);
-                    expect(addrs.length).to.equal(1);
-                    expect(addrs[0]).to.deep.equal(ma);
-                    listener.close(done);
-                });
-            });
+            const listener = ws.createListener();
+            await listener.listen(ma);
+            const addrs = await listener.getAddrs();
+            expect(addrs.length).to.equal(1);
+            expect(addrs[0]).to.deep.equal(ma);
+            await listener.close();
         });
     });
 
@@ -150,20 +127,20 @@ describe("netron2", "trasnport", "ws", () => {
         let listener;
         const ma = multi.address.create("/ip4/127.0.0.1/tcp/9596/ws");
 
-        beforeEach((done) => {
+        beforeEach(async () => {
             ws = new WS();
             listener = ws.createListener((conn) => {
                 pull(conn, conn);
             });
-            listener.listen(ma, done);
+            await listener.listen(ma);
         });
 
-        afterEach((done) => {
-            listener.close(done);
+        afterEach(async () => {
+            await listener.close();
         });
 
-        it("connect on IPv4", (done) => {
-            const conn = ws.connect(ma);
+        it("connect on IPv4", async (done) => {
+            const conn = await ws.connect(ma);
 
             const s = pull.goodbye({
                 source: pull.values(["hey"]),
@@ -182,9 +159,9 @@ describe("netron2", "trasnport", "ws", () => {
             // TODO IPv6 not supported yet
         });
 
-        it("connect on IPv4 with IPFS Id", (done) => {
+        it("connect on IPv4 with IPFS Id", async (done) => {
             const ma = multi.address.create("/ip4/127.0.0.1/tcp/9596/ws/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
-            const conn = ws.connect(ma);
+            const conn = await ws.connect(ma);
 
             const s = pull.goodbye({
                 source: pull.values(["hey"]),
@@ -338,7 +315,7 @@ describe("netron2", "trasnport", "ws", () => {
     describe("valid Connection", () => {
         const ma = multi.address.create("/ip4/127.0.0.1/tcp/9092/ws");
 
-        it("get observed addrs", (done) => {
+        it("get observed addrs", async (done) => {
             let dialerObsAddrs;
             let listenerObsAddrs;
 
@@ -355,33 +332,31 @@ describe("netron2", "trasnport", "ws", () => {
                 pull(conn, conn);
             });
 
-            listener.listen(ma, () => {
-                const conn = ws.connect(ma, () => {
-                    const onEnd = function () {
-                        conn.getObservedAddrs((err, addrs) => {
-                            assert.notExists(err);
-                            listenerObsAddrs = addrs;
-    
-                            const onClose = function () {
-                                expect(listenerObsAddrs[0]).to.deep.equal(ma);
-                                expect(dialerObsAddrs.length).to.equal(0);
-                                done();                            
-                            };
-    
-                            listener.close(onClose);
-                        });
+            await listener.listen(ma);
+            const conn = await ws.connect(ma);
+            const onEnd = function () {
+                conn.getObservedAddrs((err, addrs) => {
+                    assert.notExists(err);
+                    listenerObsAddrs = addrs;
+
+                    const onClose = function () {
+                        expect(listenerObsAddrs[0]).to.deep.equal(ma);
+                        expect(dialerObsAddrs.length).to.equal(0);
+                        done();
                     };
-    
-                    pull(
-                        pull.empty(),
-                        conn,
-                        pull.onEnd(onEnd)
-                    );
+
+                    listener.close().then(onClose);
                 });
-            });
+            };
+
+            pull(
+                pull.empty(),
+                conn,
+                pull.onEnd(onEnd)
+            );
         });
 
-        it("get Peer Info", (done) => {
+        it("get Peer Info", async (done) => {
             const ws = new WS();
 
             const listener = ws.createListener((conn) => {
@@ -394,25 +369,24 @@ describe("netron2", "trasnport", "ws", () => {
                 pull(conn, conn);
             });
 
-            listener.listen(ma, () => {
-                const conn = ws.connect(ma);
+            await listener.listen(ma);
+            const conn = await ws.connect(ma);
 
-                const onEnd = function () {
-                    conn.getPeerInfo((err, peerInfo) => {
-                        assert.exists(err);
-                        listener.close(done);
-                    });
-                };
+            const onEnd = function () {
+                conn.getPeerInfo((err, peerInfo) => {
+                    assert.exists(err);
+                    listener.close().then(done);
+                });
+            };
 
-                pull(
-                    pull.empty(),
-                    conn,
-                    pull.onEnd(onEnd)
-                );
-            });
+            pull(
+                pull.empty(),
+                conn,
+                pull.onEnd(onEnd)
+            );
         });
 
-        it("set Peer Info", (done) => {
+        it("set Peer Info", async (done) => {
             const ws = new WS();
 
             const listener = ws.createListener((conn) => {
@@ -427,26 +401,23 @@ describe("netron2", "trasnport", "ws", () => {
                 pull(conn, conn);
             });
 
-            const onListen = function () {
-                const conn = ws.connect(ma);
-                conn.setPeerInfo("b");
+            await listener.listen(ma);
+            const conn = await ws.connect(ma);
+            conn.setPeerInfo("b");
 
-                const onEnd = function () {
-                    conn.getPeerInfo((err, peerInfo) => {
-                        assert.notExists(err);
-                        expect(peerInfo).to.equal("b");
-                        listener.close(done);
-                    });
-                };
-
-                pull(
-                    pull.empty(),
-                    conn,
-                    pull.onEnd(onEnd)
-                );
+            const onEnd = function () {
+                conn.getPeerInfo((err, peerInfo) => {
+                    assert.notExists(err);
+                    expect(peerInfo).to.equal("b");
+                    listener.close().then(done);
+                });
             };
 
-            listener.listen(ma, onListen);
+            pull(
+                pull.empty(),
+                conn,
+                pull.onEnd(onEnd)
+            );
         });
     });
 

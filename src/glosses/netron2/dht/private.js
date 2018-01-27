@@ -13,7 +13,8 @@ const LimitedPeerList = require("./limited-peer-list");
 const {
     is,
     netron2: { PeerInfo, PeerId, crypto, record: { Record, validator, selection } },
-    multi
+    multi,
+    std
 } = adone;
 
 module.exports = (dht) => ({
@@ -610,7 +611,7 @@ module.exports = (dht) => ({
      * @private
      */
     _generateBootstrapId() {
-        const digest = multi.hash.create(crypto.randomBytes(16), "sha2-256");
+        const digest = multi.hash.create(std.crypto.randomBytes(16), "sha2-256");
         return new PeerId(digest);
     }
 });

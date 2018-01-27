@@ -4,14 +4,14 @@ const {
 } = adone;
 
 const __ = adone.lazifyPrivate({
-    CircuitDialer: "./circuit/dialer",
+    Connector: "./connector",
+    Listener: "./listener",
     StreamHandler: "./circuit/stream_handler",
     Hop: "./circuit/hop",
     Stop: "./circuit/stop",
     protocol: "./protocol",
     utils: "./circuit/utils",
-    multicodec: "./multicodec",
-    Listener: "./listener"
+    multicodec: "./multicodec"
 }, exports, require);
 
 export class Circuit {
@@ -31,23 +31,20 @@ export class Circuit {
         this.options = options || {};
 
         this.swarm = swarm;
-        this.dialer = null;
         this.utils = __.utils(swarm);
         this.peerInfo = this.swarm._peerInfo;
         this.relays = this.filter(this.peerInfo.multiaddrs.toArray());
 
         // if no explicit relays, add a default relay addr
         if (this.relays.length === 0) {
-            this.peerInfo
-                .multiaddrs
-                .add(`/p2p-circuit/ipfs/${this.peerInfo.id.asBase58()}`);
+            this.peerInfo.multiaddrs.add(`/p2p-circuit/ipfs/${this.peerInfo.id.asBase58()}`);
         }
 
-        this.dialer = new __.CircuitDialer(swarm, options);
+        this.connector = new __.Connector(swarm, options);
 
-        this.swarm.on("peer-mux-established", this.dialer.canHop.bind(this.dialer));
+        this.swarm.on("peer-mux-established", this.connector.canHop.bind(this.connector));
         this.swarm.on("peer-mux-closed", (peerInfo) => {
-            this.dialer.relayPeers.delete(peerInfo.id.asBase58());
+            this.connector.relayPeers.delete(peerInfo.id.asBase58());
         });
     }
 
@@ -66,7 +63,7 @@ export class Circuit {
                 .filter((segment) => segment.length);
 
             relaySegments.forEach((relaySegment) => {
-                this.dialer._dialRelay(this.utils.peerInfoFromMa(multi.address.create(relaySegment)));
+                this.connector._dialRelay(this.utils.peerInfoFromMa(multi.address.create(relaySegment)));
             });
         });
     }
@@ -82,7 +79,7 @@ export class Circuit {
      * @memberOf Dialer
      */
     connect(ma, options, cb) {
-        return this.dialer.connect(ma, options, cb);
+        return this.connector.connect(ma, options, cb);
     }
 
     /**

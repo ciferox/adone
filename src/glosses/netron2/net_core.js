@@ -202,9 +202,10 @@ export default class NetCore extends event.Emitter {
                 }
             });
 
+            await this.swarm.listen();
+
             return new Promise((resolve, reject) => {
                 series([
-                    (cb) => this.swarm.listen(cb),
                     (cb) => {
                         if (ws && !this.swarm.tm.has(ws.tag || ws.constructor.name)) {
                             // always add dialing on websockets
@@ -272,7 +273,7 @@ export default class NetCore extends event.Emitter {
                         }
                         cb();
                     },
-                    (cb) => this.swarm.close(cb),
+                    (cb) => this.swarm.close().then(cb),
                     (cb) => {
                         this.emit("stop");
                         cb();
@@ -296,26 +297,12 @@ export default class NetCore extends event.Emitter {
 
     async connect(peer, protocol) {
         const peerInfo = await this._getPeerInfo(peer);
-        return new Promise((resolve, reject) => {
-            this.swarm.connect(peerInfo, protocol, (err, conn) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(conn);
-            });
-        });
+        return this.swarm.connect(peerInfo, protocol);
     }
 
     async disconnect(peer) {
         const peerInfo = await this._getPeerInfo(peer);
-        return new Promise((resolve, reject) => {
-            this.swarm.hangUp(peerInfo, (err) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve();
-            });
-        });
+        return this.swarm.disconnect(peerInfo);
     }
 
     handle(protocol, handlerFunc, matchFunc) {

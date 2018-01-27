@@ -7,7 +7,7 @@ const {
 } = adone;
 const { Message } = adone.private(dht);
 
-describe("Message", () => {
+describe("netron2", "dht", "KadDHT", "Message", () => {
     it("create", () => {
         const k = Buffer.from("hello");
         const msg = new Message(Message.TYPES.PING, k, 5);

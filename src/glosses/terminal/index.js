@@ -4232,8 +4232,9 @@ export class Terminal extends adone.event.Emitter {
             };
 
             this.input.once("data", (data) => {
-                // Pull data from input stream internal buffer, thus, after the application is completed, this data will not be flushed to terminal.
-                this.input.read(data.length);
+                // // Pull data from input stream internal buffer, thus, after the application is completed, this data will not be flushed to terminal.
+                // Buggy
+                // this.input.read(data.length);
                 this.emit("data", data);
             });
             
