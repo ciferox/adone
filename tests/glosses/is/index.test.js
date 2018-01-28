@@ -228,7 +228,7 @@ describe("is", () => {
 
             describe("arguments", () => {
                 const getArguments = function () {
-                    return arguments;  // eslint-disable-line prefer-rest-params
+                    return arguments; // eslint-disable-line prefer-rest-params
                 };
 
                 it("returns true given two arguments", () => {

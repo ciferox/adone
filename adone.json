@@ -861,6 +861,13 @@
                                 "src": "src/glosses/utils/memcpy/native",
                                 "dst": "lib/glosses/utils/memcpy/native"
                             }
+                        },
+                        "throttle": {
+                            "description": "Throttling asyncronous cuncurrency",
+                            "namespace": "throttle",
+                            "task": "transpile",
+                            "src": "src/glosses/utils/throttle/**/*.js",
+                            "dst": "lib/glosses/utils/throttle"
                         }
                     }
                 },

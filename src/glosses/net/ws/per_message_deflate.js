@@ -1,7 +1,6 @@
 const {
     is,
     net: { ws },
-    promise,
     std: { zlib },
     util: { throttle }
 } = adone;
@@ -118,7 +117,7 @@ export default class PerMessageDeflate {
             const concurrency = !is.undefined(this._options.concurrencyLimit)
                 ? this._options.concurrencyLimit
                 : 10;
-            zlibLimiter = throttle(concurrency);
+            zlibLimiter = throttle.create({ concurrency });
         }
     }
 
@@ -351,7 +350,12 @@ export default class PerMessageDeflate {
      * @public
      */
     decompress(data, fin, callback) {
-        promise.nodeify(zlibLimiter(() => this._decompress(data, fin)), callback);
+        zlibLimiter((done) => {
+            this._decompress(data, fin, (err, result) => {
+                done();
+                callback(err, result);
+            });
+        });
     }
 
     /**
@@ -363,7 +367,12 @@ export default class PerMessageDeflate {
      * @public
      */
     compress(data, fin, callback) {
-        promise.nodeify(zlibLimiter(() => this._compress(data, fin)), callback);
+        zlibLimiter((done) => {
+            this._compress(data, fin, (err, result) => {
+                done();
+                callback(err, result);
+            });
+        });
     }
 
     /**
@@ -374,61 +383,59 @@ export default class PerMessageDeflate {
      * @param {Function} callback Callback
      * @private
      */
-    _decompress(data, fin, ) {
-        return new Promise((resolve, reject) => {
-            const endpoint = this._isServer ? "client" : "server";
+    _decompress(data, fin, callback) {
+        const endpoint = this._isServer ? "client" : "server";
 
-            if (!this._inflate) {
-                const key = `${endpoint}_max_window_bits`;
-                const windowBits = !is.number(this.params[key])
-                    ? zlib.Z_DEFAULT_WINDOWBITS
-                    : this.params[key];
+        if (!this._inflate) {
+            const key = `${endpoint}_max_window_bits`;
+            const windowBits = !is.number(this.params[key])
+                ? zlib.Z_DEFAULT_WINDOWBITS
+                : this.params[key];
 
-                this._inflate = zlib.createInflateRaw({ windowBits });
+            this._inflate = zlib.createInflateRaw({ windowBits });
+            this._inflate[kTotalLength] = 0;
+            this._inflate[kBuffers] = [];
+            this._inflate[kOwner] = this;
+            this._inflate.on("error", inflateOnError);
+            this._inflate.on("data", inflateOnData);
+        }
+
+        this._inflate[kCallback] = callback;
+        this._inflate[kWriteInProgress] = true;
+
+        this._inflate.write(data);
+        if (fin) {
+            this._inflate.write(TRAILER);
+        }
+
+        this._inflate.flush(() => {
+            const err = this._inflate[kError];
+
+            if (err) {
+                this._inflate.close();
+                this._inflate = null;
+                callback(err);
+                return;
+            }
+
+            const data = ws.util.concat(
+                this._inflate[kBuffers],
+                this._inflate[kTotalLength]
+            );
+
+            if (
+                (fin && this.params[`${endpoint}_no_context_takeover`]) ||
+                this._inflate[kPendingClose]
+            ) {
+                this._inflate.close();
+                this._inflate = null;
+            } else {
+                this._inflate[kWriteInProgress] = false;
                 this._inflate[kTotalLength] = 0;
                 this._inflate[kBuffers] = [];
-                this._inflate[kOwner] = this;
-                this._inflate.on("error", inflateOnError);
-                this._inflate.on("data", inflateOnData);
             }
 
-            this._inflate[kCallback] = reject;
-            this._inflate[kWriteInProgress] = true;
-
-            this._inflate.write(data);
-            if (fin) {
-                this._inflate.write(TRAILER);
-            }
-
-            this._inflate.flush(() => {
-                const err = this._inflate[kError];
-
-                if (err) {
-                    this._inflate.close();
-                    this._inflate = null;
-                    reject(err);
-                    return;
-                }
-
-                const data = ws.util.concat(
-                    this._inflate[kBuffers],
-                    this._inflate[kTotalLength]
-                );
-
-                if (
-                    (fin && this.params[`${endpoint}_no_context_takeover`]) ||
-                    this._inflate[kPendingClose]
-                ) {
-                    this._inflate.close();
-                    this._inflate = null;
-                } else {
-                    this._inflate[kWriteInProgress] = false;
-                    this._inflate[kTotalLength] = 0;
-                    this._inflate[kBuffers] = [];
-                }
-
-                resolve(data);
-            });
+            callback(null, data);
         });
     }
 
@@ -440,66 +447,64 @@ export default class PerMessageDeflate {
      * @param {Function} callback Callback
      * @private
      */
-    _compress(data, fin) {
-        return new Promise((resolve, reject) => {
-            if (!data || data.length === 0) {
-                resolve(EMPTY_BLOCK);
-                return;
+    _compress(data, fin, callback) {
+        if (!data || data.length === 0) {
+            process.nextTick(callback, null, EMPTY_BLOCK);
+            return;
+        }
+
+        const endpoint = this._isServer ? "server" : "client";
+
+        if (!this._deflate) {
+            const key = `${endpoint}_max_window_bits`;
+            const windowBits = !is.number(this.params[key])
+                ? zlib.Z_DEFAULT_WINDOWBITS
+                : this.params[key];
+
+            this._deflate = zlib.createDeflateRaw({
+                memLevel: this._options.memLevel,
+                level: this._options.level,
+                flush: zlib.Z_SYNC_FLUSH,
+                windowBits
+            });
+
+            this._deflate[kTotalLength] = 0;
+            this._deflate[kBuffers] = [];
+
+            //
+            // `zlib.DeflateRaw` emits an `'error'` event only when an attempt to use
+            // it is made after it has already been closed. This cannot happen here,
+            // so we only add a listener for the `'data'` event.
+            //
+            this._deflate.on("data", deflateOnData);
+        }
+
+        this._deflate[kWriteInProgress] = true;
+
+        this._deflate.write(data);
+        this._deflate.flush(zlib.Z_SYNC_FLUSH, () => {
+            let data = ws.util.concat(
+                this._deflate[kBuffers],
+                this._deflate[kTotalLength]
+            );
+
+            if (fin) {
+                data = data.slice(0, data.length - 4);
             }
 
-            const endpoint = this._isServer ? "server" : "client";
-
-            if (!this._deflate) {
-                const key = `${endpoint}_max_window_bits`;
-                const windowBits = !is.number(this.params[key])
-                    ? zlib.Z_DEFAULT_WINDOWBITS
-                    : this.params[key];
-
-                this._deflate = zlib.createDeflateRaw({
-                    memLevel: this._options.memLevel,
-                    level: this._options.level,
-                    flush: zlib.Z_SYNC_FLUSH,
-                    windowBits
-                });
-
+            if (
+                (fin && this.params[`${endpoint}_no_context_takeover`]) ||
+                this._deflate[kPendingClose]
+            ) {
+                this._deflate.close();
+                this._deflate = null;
+            } else {
+                this._deflate[kWriteInProgress] = false;
                 this._deflate[kTotalLength] = 0;
                 this._deflate[kBuffers] = [];
-
-                //
-                // `zlib.DeflateRaw` emits an `'error'` event only when an attempt to use
-                // it is made after it has already been closed. This cannot happen here,
-                // so we only add a listener for the `'data'` event.
-                //
-                this._deflate.on("data", deflateOnData);
             }
 
-            this._deflate[kWriteInProgress] = true;
-
-            this._deflate.write(data);
-            this._deflate.flush(zlib.Z_SYNC_FLUSH, () => {
-                let data = ws.util.concat(
-                    this._deflate[kBuffers],
-                    this._deflate[kTotalLength]
-                );
-
-                if (fin) {
-                    data = data.slice(0, data.length - 4);
-                }
-
-                if (
-                    (fin && this.params[`${endpoint}_no_context_takeover`]) ||
-                    this._deflate[kPendingClose]
-                ) {
-                    this._deflate.close();
-                    this._deflate = null;
-                } else {
-                    this._deflate[kWriteInProgress] = false;
-                    this._deflate[kTotalLength] = 0;
-                    this._deflate[kBuffers] = [];
-                }
-
-                resolve(data);
-            });
+            callback(null, data);
         });
     }
 }

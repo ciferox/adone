@@ -752,6 +752,32 @@ export const dotfile = (str) => {
 
 export const asyncFunction = (fn) => fn && toString.call(fn).slice(8, -1) === "AsyncFunction";
 
+const isNonArrowFnRegex = /^\s*function/;
+const isArrowFnWithParensRegex = /^\([^)]*\) *=>/;
+const isArrowFnWithoutParensRegex = /^[^=]*=>/;
+
+export const arrowFunction = (fn) => {
+    if (!function_(fn)) {
+        return false;
+    }
+    const fnStr = funcToString.call(fn);
+    return fnStr.length > 0 && !isNonArrowFnRegex.test(fnStr) && (isArrowFnWithParensRegex.test(fnStr) || isArrowFnWithoutParensRegex.test(fnStr));
+};
+
+const isFnRegex = /^\s*(?:function)?\*/;
+const getProto = Object.getPrototypeOf;
+const GeneratorFunction = getProto(function* () { });
+
+export const generatorFunction = (fn) => {
+    if (!function_(fn)) {
+        return false;
+    }
+    if (isFnRegex.test(funcToString.call(fn))) {
+        return true;
+    }
+    return getProto(fn) === GeneratorFunction;
+};
+
 export const promise = (obj) => !nil(obj) && function_(obj.then);
 
 export const validDate = (str) => !isNaN(Date.parse(str)); // eslint-disable-line

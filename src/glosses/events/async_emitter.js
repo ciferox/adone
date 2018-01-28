@@ -15,9 +15,9 @@ export default class AsyncEmitter extends adone.event.Emitter {
         this[ONCE_MAPPING] = new Map();
     }
 
-    setConcurrency(max = null) {
-        if (max >= 1) {
-            this[MANAGER] = util.throttle({ max });
+    setConcurrency(concurrency = null) {
+        if (concurrency >= 1) {
+            this[MANAGER] = util.throttle.create({ concurrency });
         } else {
             this[MANAGER] = null;
         }

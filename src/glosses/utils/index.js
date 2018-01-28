@@ -52,7 +52,6 @@ adone.lazify({
     }),
     shebang: "./shebang",
     reinterval: "./reinterval",
-    RateLimiter: "./rate_limiter",
     throttle: "./throttle",
     fakeClock: "./fake_clock",
     ltgt: "./ltgt",
@@ -210,7 +209,7 @@ const irregularPlurals = {
     woman: "women"
 };
 
-/*
+/**
  * An array of the own keys of the plain object (see util.keys)
  */
 const objectOwnProps = Object.getOwnPropertyNames({}.__proto__);
@@ -305,39 +304,6 @@ export const pluralizeWord = (str, plural, count) => {
     }
 
     return count === 1 ? str : plural;
-};
-
-export const functionParams = (fn) => {
-    if (!is.function(fn)) {
-        throw new x.InvalidArgument("The first argument must be a function");
-    }
-    if (fn.length === 0) { // todo: default args?
-        return [];
-    }
-
-    // from https://github.com/jrburke/requirejs
-    const reComments = /(\/\*([\s\S]*?)\*\/|([^:]|^)\/\/(.*)$)/mg;
-    const fnToStr = Function.prototype.toString;
-    let fnStr = fnToStr.call(fn);
-    if (fnStr.startsWith("async")) {
-        fnStr = fnStr.slice(5);
-    }
-    fnStr = fnStr.replace(reComments, "") || fnStr;
-    fnStr = fnStr.slice(0, fnStr.indexOf("{"));
-
-    let open = fnStr.indexOf("(");
-    let close = fnStr.indexOf(")");
-
-    open = open >= 0 ? open + 1 : 0;
-    close = close > 0 ? close : fnStr.indexOf("=");
-
-    fnStr = fnStr.slice(open, close);
-    fnStr = `(${fnStr})`;
-
-    const match = fnStr.match(/\(([\s\S]*)\)/);
-    return match ? match[1].split(",").map((param) => {
-        return param.trim();
-    }) : [];
 };
 
 export const randomChoice = (arrayLike, from = 0, to = arrayLike.length) => arrayLike[adone.math.random(from, to)];

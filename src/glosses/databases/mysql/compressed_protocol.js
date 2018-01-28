@@ -107,6 +107,6 @@ export default function enableCompression(connection) {
     connection.writeUncompressed = connection.write;
     connection.write = writeCompressed;
 
-    connection.inflateQueue = util.throttle({ max: 1 });
-    connection.deflateQueue = util.throttle({ max: 1 });
+    connection.inflateQueue = util.throttle.create({ concurrency: 1 });
+    connection.deflateQueue = util.throttle.create({ concurrency: 1 });
 }

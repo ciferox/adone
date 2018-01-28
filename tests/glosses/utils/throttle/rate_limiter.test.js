@@ -1,6 +1,6 @@
-describe("util", "RateLimiter", () => {
+describe("util", "throttle", "RateLimiter", () => {
     const {
-        util: { RateLimiter },
+        util: { throttle: { RateLimiter } },
         promise
     } = adone;
 

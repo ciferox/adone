@@ -496,7 +496,7 @@ describe("net", "ws", "PerMessageDeflate", () => {
             });
         });
 
-        it.todo("doesn't call the callback twice when `maxPayload` is exceeded", (done) => {
+        it("doesn't call the callback twice when `maxPayload` is exceeded", (done) => {
             const perMessageDeflate = new PerMessageDeflate({ threshold: 0 }, false, 25);
             const buf = Buffer.from("A".repeat(50));
             const errors = [];

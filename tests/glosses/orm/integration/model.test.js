@@ -2630,8 +2630,8 @@ describe("model", function () {
                 await t.rollback();
             };
             await User.sync({ force: true });
-            const cc = adone.util.throttle(testAsync, {
-                max: (sequelize.config.pool && sequelize.config.pool.max || 5) - 1
+            const cc = adone.util.throttle.create(testAsync, {
+                concurrency: (sequelize.config.pool && sequelize.config.pool.max || 5) - 1
             });
             await Promise.all(adone.util.range(1000).map(cc));
         });
