@@ -466,7 +466,7 @@ describe("net", "ws", "Server", () => {
                 });
             });
 
-            it.todo("can accept client synchronously", (done) => {
+            it("can accept client synchronously", (done) => {
                 const server = https.createServer({
                     cert: fs.readFileSync(fixture("certificate.pem")),
                     key: fs.readFileSync(fixture("key.pem"))

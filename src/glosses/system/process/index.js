@@ -706,7 +706,7 @@ export const getChildPids = async (pid) => {
     }
 
     if (!is.string(pid)) {
-        throw new adone.x.InvalidArgument(`Invalid process identifier: ${pid}`);
+        pid = process.pid.toString();
     }
 
     //
@@ -753,15 +753,17 @@ export const getChildPids = async (pid) => {
         }
     };
 
-    let stdout;
+    let child;
     if (is.windows) {
         // See also: https://github.com/nodejs/node-v0.x-archive/issues/2318
-        stdout = await execStdout("wmic.exe", ["PROCESS", "GET", "Name,ProcessId,ParentProcessId,Status"], {
+        child = exec("wmic.exe", ["PROCESS", "GET", "Name,ProcessId,ParentProcessId,Status"], {
             __winShell: true
         });
     } else {
-        stdout = await execStdout("ps", ["-A", "-o", "ppid,pid,stat,comm"]);
+        child = exec("ps", ["-A", "-o", "ppid,pid,stat,comm"]);
     }
+    const techPid = child.pid.toString();
+    const stdout = (await child).stdout;
 
     const lines = stdout.split(/\r?\n/);
     const childPids = [];
@@ -787,6 +789,11 @@ export const getChildPids = async (pid) => {
             parents.push(proc.pid);
             childPids.push(proc);
         }
+    }
+
+    // If we objain childs of current process then we need exclude ps/wmic.exe
+    if (pid === process.pid.toString()) {
+        return childPids.filter((x) => x.pid !== techPid);
     }
 
     return childPids;

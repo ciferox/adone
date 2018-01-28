@@ -4,7 +4,7 @@ const {
 } = adone;
 
 const Muxer = require("./muxer");
-const SPDY_CODEC = require("./spdy-codec");
+const SPDY_CODEC = "/spdy/3.1.0";
 
 const create = function (rawConn, isServer) {
     const conn = pull.toStream(rawConn);

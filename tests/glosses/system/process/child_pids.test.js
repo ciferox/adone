@@ -13,7 +13,7 @@ describe("system", "process", () => {
         spawnChildren: path.join(__dirname, "fixtures", "child_pids", "spawn_children.js")
     };
 
-    it("Spawn a Parent process which has a Two Child Processes", async () => {
+    it("spawn a parent process which has a two child processes", async () => {
         const parent = cp.exec(`node ${scripts.parent}`, (error, stdout, stderr) => { });
 
         await promise.delay(500);
@@ -30,7 +30,7 @@ describe("system", "process", () => {
         assert.equal(children.length, 0);
     });
 
-    it("FORCE ERROR by calling psTree without supplying a Callback", async () => {
+    it("force error by calling psTree without supplying a callback", async () => {
         const errmsg = "Error: childrenOfPid(pid, callback) expects callback";
         // Attempt to call psTree without a callback
         try {
@@ -60,7 +60,7 @@ describe("system", "process", () => {
         }
     });
 
-    it("Spawn a Child Process and psTree with a String as pid", async () => {
+    it("spawn a child process and psTree with a string as pid", async () => {
         const child = cp.exec(`node ${scripts.child}`, (error, stdout, stderr) => { });
         await promise.delay(200);
         let children = await getChildPids(child.pid.toString());
@@ -71,5 +71,10 @@ describe("system", "process", () => {
         await promise.delay(1000);
         children = await getChildPids(child.pid.toString());
         assert.equal(children.length, 0);
+    });
+
+    it.only("without args should use current process id", async () => {
+        const children = await getChildPids();
+        assert.lengthOf(children, 0);
     });
 });

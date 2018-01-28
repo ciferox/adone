@@ -120,7 +120,7 @@ const EventTarget = {
      */
     addEventListener(method, listener) {
         if (!is.function(listener)) {
-            return; 
+            return;
         }
 
         const onMessage = function (data) {
@@ -554,12 +554,12 @@ export default class WebSocket extends event.Emitter {
      * @type {Number}
      */
     get bufferedAmount() {
-        let amount = 0;
-
-        if (this._socket) {
-            amount = this._socket.bufferSize + this._sender._bufferedBytes;
+        if (!this._socket) {
+            return 0;
         }
-        return amount;
+        
+        // `socket.bufferSize` is `undefined` if the socket is closed.
+        return (this._socket.bufferSize || 0) + this._sender._bufferedBytes;
     }
 
     /**
@@ -581,22 +581,19 @@ export default class WebSocket extends event.Emitter {
         socket.setTimeout(0);
         socket.setNoDelay();
 
-        this._receiver = new Receiver(this._extensions, maxPayload, this.binaryType);
-        this._sender = new Sender(socket, this._extensions);
-        this._socket = socket;
-
         socket.on("close", this._finalize);
         socket.on("error", this._finalize);
         socket.on("end", this._finalize);
+
+        this._receiver = new Receiver(this._extensions, maxPayload, this.binaryType);
+        this._sender = new Sender(socket, this._extensions);
+        this._socket = socket;
 
         if (head.length > 0) {
             socket.unshift(head);
         }
 
-        socket.on("data", (data) => {
-            // this.bytesReceived += data.length;
-            this._receiver.add(data);
-        });
+        socket.on("data", this._receiver.add);
 
         this._receiver.onmessage = (data) => this.emit("message", data);
         this._receiver.onping = (data) => {
@@ -605,6 +602,8 @@ export default class WebSocket extends event.Emitter {
         };
         this._receiver.onpong = (data) => this.emit("pong", data);
         this._receiver.onclose = (code, reason) => {
+            // Discard any additional data that is received on the socket.
+            this._socket.removeListener("data", this._receiver.add);
             this._closeFrameReceived = true;
             this._closeMessage = reason;
             this._closeCode = code;
@@ -651,15 +650,19 @@ export default class WebSocket extends event.Emitter {
         this._finalized = true;
 
         if (typeof error === "object") {
-            this.emit("error", error);
+            if (this.listenerCount("error") > 0) {
+                this.emit("error", error);
+            }
         }
         if (!this._socket) {
-            return this.emitClose();
+            this.readyState = WebSocket.CLOSED;
+            this.emit("close", this._closeCode, this._closeMessage);
+            return;
         }
 
         clearTimeout(this._closeTimer);
-        this._closeTimer = null;
 
+        this._socket.removeListener("data", this._receiver.add);
         this._socket.removeListener("error", this._finalize);
         this._socket.removeListener("close", this._finalize);
         this._socket.removeListener("end", this._finalize);
@@ -671,28 +674,15 @@ export default class WebSocket extends event.Emitter {
             this._socket.destroy();
         }
 
-        this._socket = null;
-        this._sender = null;
+        this._receiver.cleanup(() => {
+            this.readyState = WebSocket.CLOSED;
 
-        this._receiver.cleanup(() => this.emitClose());
-        this._receiver = null;
-    }
+            if (this._extensions[PerMessageDeflate.extensionName]) {
+                this._extensions[PerMessageDeflate.extensionName].cleanup();
+            }
 
-    /**
-     * Emit the `close` event.
-     *
-     * @private
-     */
-    emitClose() {
-        this.readyState = WebSocket.CLOSED;
-
-        this.emit("close", this._closeCode, this._closeMessage);
-
-        if (this._extensions[PerMessageDeflate.extensionName]) {
-            this._extensions[PerMessageDeflate.extensionName].cleanup();
-        }
-
-        this.removeAllListeners();
+            this.emit("close", this._closeCode, this._closeMessage);
+        });
     }
 
     /**

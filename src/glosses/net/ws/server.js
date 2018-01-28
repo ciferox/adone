@@ -7,11 +7,32 @@ const {
 
 
 /**
+ * Add event listeners on an `EventEmitter` using a map of <event, listener>
+ * pairs.
+ *
+ * @param {EventEmitter} server The event emitter
+ * @param {Object.<String, Function>} map The listeners to add
+ * @return {Function} A function that will remove the added listeners when called
+ * @private
+ */
+const addListeners = function (server, map) {
+    for (const event of Object.keys(map)) {
+        server.on(event, map[event]);
+    }
+
+    return function removeListeners() {
+        for (const event of Object.keys(map)) {
+            server.removeListener(event, map[event]);
+        }
+    };
+};
+
+/**
  * Handle premature socket errors.
  *
  * @private
  */
-const socketError = function () {
+const socketOnError = function () {
     this.destroy();
 };
 
@@ -35,7 +56,7 @@ const abortConnection = function (socket, code, message) {
         );
     }
 
-    socket.removeListener("error", socketError);
+    socket.removeListener("error", socketOnError);
     socket.destroy();
 };
 
@@ -101,18 +122,15 @@ export default class WebSocketServer extends event.Emitter {
         }
 
         if (this._server) {
-            this._listeners = {
-                listening: () => this.emit("listening"),
-                error: (err) => this.emit("error", err),
+            this._removeListeners = addListeners(this._server, {
+                listening: this.emit.bind(this, "listening"),
+                error: this.emit.bind(this, "error"),
                 upgrade: (req, socket, head) => {
-                    this.handleUpgrade(req, socket, head, (client) => {
-                        this.emit("connection", client, req);
+                    this.handleUpgrade(req, socket, head, (ws) => {
+                        this.emit("connection", ws, req);
                     });
                 }
-            };
-            for (const [key, val] of Object.entries(this._listeners)) {
-                this._server.on(key, val);
-            }
+            });
         }
 
         if (options.perMessageDeflate === true) {
@@ -143,10 +161,8 @@ export default class WebSocketServer extends event.Emitter {
         const server = this._server;
 
         if (server) {
-            for (const [key, val] of Object.entries(this._listeners)) {
-                this._server.removeListener(key, val);
-            }
-            this._server = null;
+            this._removeListeners();
+            this._removeListeners = this._server = null;
 
             //
             // Close the http server if it was internally created.
@@ -186,7 +202,7 @@ export default class WebSocketServer extends event.Emitter {
      * @public
      */
     handleUpgrade(req, socket, head, cb) {
-        socket.on("error", socketError);
+        socket.on("error", socketOnError);
 
         const version = Number(req.headers["sec-websocket-version"]);
         const extensions = {};
@@ -314,7 +330,7 @@ export default class WebSocketServer extends event.Emitter {
         this.emit("headers", headers, req);
 
         socket.write(headers.concat("\r\n").join("\r\n"));
-        socket.removeListener("error", socketError);
+        socket.removeListener("error", socketOnError);
 
         ws.setSocket(socket, head, this.options.maxPayload);
 

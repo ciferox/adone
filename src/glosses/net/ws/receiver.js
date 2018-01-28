@@ -1,4 +1,5 @@
 const {
+    is,
     net: { ws: { util, constants, PerMessageDeflate } }
 } = adone;
 
@@ -75,10 +76,11 @@ export default class Receiver {
         this._fragments = [];
 
         this._cleanupCallback = null;
+        this._isCleaningUp = false;
         this._hadError = false;
-        this._dead = false;
         this._loop = false;
 
+        this.add = this.add.bind(this);
         this.onmessage = null;
         this.onclose = null;
         this.onerror = null;
@@ -89,82 +91,61 @@ export default class Receiver {
     }
 
     /**
-     * Consumes bytes from the available buffered data.
+     * Consumes `n` bytes from the buffered data, calls `cleanup` if necessary.
      *
-     * @param {Number} bytes The number of bytes to consume
-     * @return {Buffer} Consumed bytes
+     * @param {Number} n The number of bytes to consume
+     * @return {(Buffer|null)} The consumed bytes or `null` if `n` bytes are not
+     *     available
      * @private
      */
-    readBuffer(bytes) {
-        let offset = 0;
-        let dst;
-        let l;
+    consume(n) {
+        if (this._bufferedBytes < n) {
+            this._loop = false;
+            if (this._isCleaningUp) {
+                this.cleanup(this._cleanupCallback);
+            }
+            return null;
+        }
 
-        this._bufferedBytes -= bytes;
+        this._bufferedBytes -= n;
 
-        if (bytes === this._buffers[0].length) {
+        if (n === this._buffers[0].length) {
             return this._buffers.shift();
         }
 
-        if (bytes < this._buffers[0].length) {
-            dst = this._buffers[0].slice(0, bytes);
-            this._buffers[0] = this._buffers[0].slice(bytes);
-            return dst;
+        if (n < this._buffers[0].length) {
+            const buf = this._buffers[0];
+            this._buffers[0] = buf.slice(n);
+            return buf.slice(0, n);
         }
 
-        dst = Buffer.allocUnsafe(bytes);
+        const dst = Buffer.allocUnsafe(n);
 
-        while (bytes > 0) {
-            l = this._buffers[0].length;
+        do {
+            const buf = this._buffers[0];
 
-            if (bytes >= l) {
-                this._buffers[0].copy(dst, offset);
-                offset += l;
-                this._buffers.shift();
+            if (n >= buf.length) {
+                this._buffers.shift().copy(dst, dst.length - n);
             } else {
-                this._buffers[0].copy(dst, offset, 0, bytes);
-                this._buffers[0] = this._buffers[0].slice(bytes);
+                buf.copy(dst, dst.length - n, 0, n);
+                this._buffers[0] = buf.slice(n);
             }
 
-            bytes -= l;
-        }
+            n -= buf.length;
+        } while (n > 0);
 
         return dst;
     }
 
     /**
-     * Checks if the number of buffered bytes is bigger or equal than `n` and
-     * calls `cleanup` if necessary.
-     *
-     * @param {Number} n The number of bytes to check against
-     * @return {Boolean} `true` if `bufferedBytes >= n`, else `false`
-     * @private
-     */
-    hasBufferedBytes(n) {
-        if (this._bufferedBytes >= n) {
-            return true;
-        }
-
-        this._loop = false;
-        if (this._dead) {
-            this.cleanup(this._cleanupCallback);
-        }
-        return false;
-    }
-
-    /**
      * Adds new data to the parser.
      *
-     * @param {Buffer} data A chunk of data
+     * @param {Buffer} chunk A chunk of data
      * @public
      */
-    add(data) {
-        if (this._dead) {
-            return;
-        }
-
-        this._bufferedBytes += data.length;
-        this._buffers.push(data);
+    add(chunk) {
+        this._bufferedBytes += chunk.length;
+        this._buffers.push(chunk);
         this.startLoop();
     }
 
@@ -205,11 +186,10 @@ export default class Receiver {
      * @private
      */
     getInfo() {
-        if (!this.hasBufferedBytes(2)) {
+        const buf = this.consume(2);
+        if (is.null(buf)) {
             return;
         }
-
-        const buf = this.readBuffer(2);
 
         if ((buf[0] & 0x30) !== 0x00) {
             this.error(
@@ -321,11 +301,12 @@ export default class Receiver {
      * @private
      */
     getPayloadLength16() {
-        if (!this.hasBufferedBytes(2)) {
+        const buf = this.consume(2);
+        if (is.null(buf)) {
             return;
         }
 
-        this._payloadLength = this.readBuffer(2).readUInt16BE(0, true);
+        this._payloadLength = buf.readUInt16BE(0, true);
         this.haveLength();
     }
 
@@ -335,11 +316,11 @@ export default class Receiver {
      * @private
      */
     getPayloadLength64() {
-        if (!this.hasBufferedBytes(8)) {
+        const buf = this.consume(8);
+        if (is.null(buf)) {
             return;
         }
 
-        const buf = this.readBuffer(8);
         const num = buf.readUInt32BE(0, true);
 
         //
@@ -383,11 +364,11 @@ export default class Receiver {
      * @private
      */
     getMask() {
-        if (!this.hasBufferedBytes(4)) {
+        this._mask = this.consume(4);
+        if (is.null(this._mask)) {
             return;
         }
 
-        this._mask = this.readBuffer(4);
         this._state = GET_DATA;
     }
 
@@ -400,11 +381,11 @@ export default class Receiver {
         let data = adone.EMPTY_BUFFER;
 
         if (this._payloadLength) {
-            if (!this.hasBufferedBytes(this._payloadLength)) {
+            data = this.consume(this._payloadLength);
+            if (is.null(data)) {
                 return;
             }
 
-            data = this.readBuffer(this._payloadLength);
             if (this._masked) {
                 util.unmask(data, this._mask);
             }
@@ -612,10 +593,9 @@ export default class Receiver {
      * @public
      */
     cleanup(cb) {
-        this._dead = true;
-
         if (!this._hadError && (this._loop || this._state === INFLATING)) {
             this._cleanupCallback = cb;
+            this._isCleaningUp = true;
         } else {
             this._extensions = null;
             this._fragments = null;

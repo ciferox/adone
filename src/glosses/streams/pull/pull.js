@@ -46,4 +46,4 @@ export default function pull(...args) {
     }
 
     return read;
-};
+}

@@ -5,15 +5,13 @@ const {
     stream: { pull }
 } = adone;
 
-const SPDY_CODEC = require("./spdy-codec");
-
 module.exports = class Muxer extends event.Emitter {
     constructor(conn, spdy) {
         super();
 
         this.spdy = spdy;
         this.conn = conn;
-        this.multicodec = SPDY_CODEC;
+        this.multicodec = adone.netron2.spdy.multicodec;
 
         spdy.start(3.1);
 

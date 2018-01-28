@@ -62,7 +62,7 @@ export default class Run extends Subsystem {
         if (opts.has("inspect")) {
             return this._runInspect(path, opts, rest, shouldTranspile);
         }
-        
+
         return this._runScript(path, rest, opts.getAll());
     }
 
@@ -114,12 +114,27 @@ export default class Run extends Subsystem {
             runArgs.push(...rest);
 
             // We can run script directly with 'adone' pre-require.
-            await adone.system.process.exec(process.execPath, runArgs, {
+            const child = adone.system.process.exec(process.execPath, runArgs, {
                 stdio: ["inherit", "inherit", "inherit"]
             });
+
+            this.root.on("exit", async () => {
+                child.kill();
+                await adone.promise.delay(10);
+
+                // Force kill all childs
+                const pids = await adone.system.process.getChildPids(process.pid);
+                if (pids.length > 0) {
+                    await adone.system.process.kill(pids.map((x) => x.pid));
+                }
+            });
+
+            await child;
         } catch (err) {
-            adone.error(err);
-            return 1;
+            if (!err.killed) {
+                adone.error(err);
+                return 1;
+            }
         } finally {
             is.string(tmpPath) && await adone.fs.rm(tmpPath);
         }

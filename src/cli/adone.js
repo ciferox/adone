@@ -41,6 +41,8 @@ const baseSubsystem = (name) => std.path.join(__dirname, "..", "lib", "cli", "su
 })
 class AdoneCLI extends application.CliApplication {
     async configure() {
+        !is.windows && this.exitOnSignal("SIGINT");
+
         this.config = await adone.cli.Configuration.load();
 
         // Expose cli interface for subsystems.

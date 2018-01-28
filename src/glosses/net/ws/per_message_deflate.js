@@ -392,7 +392,7 @@ export default class PerMessageDeflate {
                 this._inflate.on("data", inflateOnData);
             }
 
-            this._inflate[kCallback] = reject; // why only reject ???
+            this._inflate[kCallback] = reject;
             this._inflate[kWriteInProgress] = true;
 
             this._inflate.write(data);

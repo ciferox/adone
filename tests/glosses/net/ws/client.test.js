@@ -204,7 +204,7 @@ describe("net", "ws", "Client", () => {
                 });
             });
 
-            it.todo("takes into account the data in the sender queue", (done) => {
+            it("takes into account the data in the sender queue", (done) => {
                 const wss = new Server({
                     perMessageDeflate: true,
                     port: 0
@@ -216,8 +216,9 @@ describe("net", "ws", "Client", () => {
 
                     ws.on("open", () => {
                         ws.send("foo");
-                        ws.send("bar", (err) => {
+                        ws.send("bar", async (err) => {
                             assert.ifError(err);
+                            await adone.promise.delay(100);
                             assert.strictEqual(ws.bufferedAmount, 0);
                             wss.close(done);
                         });
@@ -409,7 +410,7 @@ describe("net", "ws", "Client", () => {
             });
         });
 
-        it.todo("emits a 'ping' event", (done) => {
+        it("emits a 'ping' event", (done) => {
             const wss = new Server({ port: 0 }, () => {
                 const port = wss._server.address().port;
                 const ws = new Client(`ws://localhost:${port}`);
@@ -1028,7 +1029,7 @@ describe("net", "ws", "Client", () => {
             });
         });
 
-        it.todo("calls the optional callback when data is written out", (done) => {
+        it("calls the optional callback when data is written out", (done) => {
             const wss = new Server({ port: 0 }, () => {
                 const port = wss._server.address().port;
                 const ws = new Client(`ws://localhost:${port}`);
