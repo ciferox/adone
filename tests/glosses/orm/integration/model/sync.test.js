@@ -1,8 +1,8 @@
-describe("sync", () => {
+describe("sync", function () {
     const { orm } = adone;
     const { type } = orm;
 
-    beforeEach(function () {
+    beforeEach(() => {
         this.testSync = this.sequelize.define("testSync", {
             dummy: type.STRING
         });
@@ -105,5 +105,21 @@ describe("sync", () => {
             .then(() => testSync.create({ name: "test", age: "1" }))
             .then(() => testSync.create({ name: "test", age: "1" }))
             .then((data) => expect(data).not.to.be.ok, (error) => expect(error).to.be.ok);
+    });
+
+    it("should properly alter tables when there are foreign keys", function () {
+        const foreignKeyTestSyncA = this.sequelize.define("foreignKeyTestSyncA", {
+            dummy: type.STRING
+        });
+
+        const foreignKeyTestSyncB = this.sequelize.define("foreignKeyTestSyncB", {
+            dummy: type.STRING
+        });
+
+        foreignKeyTestSyncA.hasMany(foreignKeyTestSyncB);
+        foreignKeyTestSyncB.belongsTo(foreignKeyTestSyncA);
+
+        return this.sequelize.sync({ alter: true })
+            .then(() => this.sequelize.sync({ alter: true }));
     });
 });

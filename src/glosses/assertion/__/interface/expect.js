@@ -3,7 +3,14 @@ export default function (lib) {
 
     lib.expect = (value, message) => getAssertion(value, message);
 
-    lib.expect.fail = (actual, expected, message = "expect.fail()", operator) => {
+    lib.expect.fail = function (actual, expected, message, operator) {
+        if (arguments.length < 2) {
+            message = actual;
+            actual = undefined;
+        }
+
+        message = message || "expect.fail()";
+
         throw new AssertionError(message, {
             actual,
             expected,

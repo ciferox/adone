@@ -77,7 +77,27 @@ describe("QueryGenerator", () => {
                 arguments: [{ id: { type: "INTEGER", after: "Bar" } }],
                 expectation: { id: "INTEGER AFTER `Bar`" }
             },
-
+            // No Default Values allowed for certain types
+            {
+                title: "No Default value for MySQL BLOB allowed",
+                arguments: [{ id: { type: "BLOB", defaultValue: [] } }],
+                expectation: { id: "BLOB" }
+            },
+            {
+                title: "No Default value for MySQL TEXT allowed",
+                arguments: [{ id: { type: "TEXT", defaultValue: [] } }],
+                expectation: { id: "TEXT" }
+            },
+            {
+                title: "No Default value for MySQL GEOMETRY allowed",
+                arguments: [{ id: { type: "GEOMETRY", defaultValue: [] } }],
+                expectation: { id: "GEOMETRY" }
+            },
+            {
+                title: "No Default value for MySQL JSON allowed",
+                arguments: [{ id: { type: "JSON", defaultValue: [] } }],
+                expectation: { id: "JSON" }
+            },
             // New references style
             {
                 arguments: [{ id: { type: "INTEGER", references: { model: "Bar" } } }],
@@ -403,6 +423,28 @@ describe("QueryGenerator", () => {
                 arguments: ["myTable", { where: { field: { $notRegexp: "^[h|a|t]" } } }],
                 expectation: "SELECT * FROM `myTable` WHERE `myTable`.`field` NOT REGEXP '^[h|a|t]';",
                 context: QueryGenerator
+            }, {
+                title: "Empty having",
+                arguments: ["myTable", function () {
+                    return {
+                        having: {}
+                    };
+                }],
+                expectation: "SELECT * FROM `myTable`;",
+                context: QueryGenerator,
+                needsSequelize: true
+            }, {
+                title: "Having in subquery",
+                arguments: ["myTable", function () {
+                    return {
+                        subQuery: true,
+                        tableAs: "test",
+                        having: { creationYear: { [operator.gt]: 2002 } }
+                    };
+                }],
+                expectation: "SELECT `test`.* FROM (SELECT * FROM `myTable` AS `test` HAVING `creationYear` > 2002) AS `test`;",
+                context: QueryGenerator,
+                needsSequelize: true
             }
         ],
 
@@ -565,7 +607,7 @@ describe("QueryGenerator", () => {
         getForeignKeyQuery: [
             {
                 arguments: ["User", "email"],
-                expectation: "SELECT CONSTRAINT_NAME as constraint_name FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE (REFERENCED_TABLE_NAME = 'User' AND REFERENCED_COLUMN_NAME = 'email') OR (TABLE_NAME = 'User' AND COLUMN_NAME = 'email' AND REFERENCED_TABLE_NAME IS NOT NULL)"
+                expectation: "SELECT CONSTRAINT_NAME as constraint_name,CONSTRAINT_NAME as constraintName,CONSTRAINT_SCHEMA as constraintSchema,CONSTRAINT_SCHEMA as constraintCatalog,TABLE_NAME as tableName,TABLE_SCHEMA as tableSchema,TABLE_SCHEMA as tableCatalog,COLUMN_NAME as columnName,REFERENCED_TABLE_SCHEMA as referencedTableSchema,REFERENCED_TABLE_SCHEMA as referencedTableCatalog,REFERENCED_TABLE_NAME as referencedTableName,REFERENCED_COLUMN_NAME as referencedColumnName FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE (REFERENCED_TABLE_NAME = 'User' AND REFERENCED_COLUMN_NAME = 'email') OR (TABLE_NAME = 'User' AND COLUMN_NAME = 'email' AND REFERENCED_TABLE_NAME IS NOT NULL)"
             }
         ]
     };

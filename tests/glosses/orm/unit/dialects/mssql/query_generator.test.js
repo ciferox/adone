@@ -3,6 +3,7 @@ describe("QueryGenerator", function () {
     const expectsql = this.expectsql;
     const current = this.sequelize;
     const { operator } = adone.orm;
+    const { TableHints } = adone.private(adone.orm);
     const { QueryGenerator } = adone.private(adone.orm).dialect.mssql;
 
     // Dialect would normally be set by the query interface that instantiates the query-generator, but here we specify it explicitly
@@ -57,6 +58,16 @@ describe("QueryGenerator", function () {
         // Base case
         expectsql(modifiedGen.selectFromTableFragment({}, { primaryKeyField: "id" }, ["id", "name"], "myTable", "myOtherName", "WHERE id=1"), {
             mssql: "SELECT id, name FROM myTable AS myOtherName"
+        });
+
+        // With tableHint - nolock
+        expectsql(modifiedGen.selectFromTableFragment({ tableHint: TableHints.NOLOCK }, { primaryKeyField: "id" }, ["id", "name"], "myTable", "myOtherName"), {
+            mssql: "SELECT id, name FROM myTable AS myOtherName WITH (NOLOCK)"
+        });
+
+        // With tableHint - NOWAIT
+        expectsql(modifiedGen.selectFromTableFragment({ tableHint: TableHints.NOWAIT }, { primaryKeyField: "id" }, ["id", "name"], "myTable", "myOtherName"), {
+            mssql: "SELECT id, name FROM myTable AS myOtherName WITH (NOWAIT)"
         });
 
         // With limit
@@ -154,13 +165,30 @@ describe("QueryGenerator", function () {
 
     it("getForeignKeysQuery", () => {
         expectsql(QueryGenerator.getForeignKeysQuery("myTable"), {
-            mssql: "SELECT constraint_name = C.CONSTRAINT_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS C WHERE C.CONSTRAINT_TYPE = 'FOREIGN KEY' AND C.TABLE_NAME = 'myTable'"
+            mssql: "SELECT constraint_name = OBJ.NAME, constraintName = OBJ.NAME, constraintSchema = SCHEMA_NAME(OBJ.SCHEMA_ID), tableName = TB.NAME, tableSchema = SCHEMA_NAME(TB.SCHEMA_ID), columnName = COL.NAME, referencedTableSchema = SCHEMA_NAME(RTB.SCHEMA_ID), referencedTableName = RTB.NAME, referencedColumnName = RCOL.NAME FROM SYS.FOREIGN_KEY_COLUMNS FKC INNER JOIN SYS.OBJECTS OBJ ON OBJ.OBJECT_ID = FKC.CONSTRAINT_OBJECT_ID INNER JOIN SYS.TABLES TB ON TB.OBJECT_ID = FKC.PARENT_OBJECT_ID INNER JOIN SYS.COLUMNS COL ON COL.COLUMN_ID = PARENT_COLUMN_ID AND COL.OBJECT_ID = TB.OBJECT_ID INNER JOIN SYS.TABLES RTB ON RTB.OBJECT_ID = FKC.REFERENCED_OBJECT_ID INNER JOIN SYS.COLUMNS RCOL ON RCOL.COLUMN_ID = REFERENCED_COLUMN_ID AND RCOL.OBJECT_ID = RTB.OBJECT_ID WHERE TB.NAME ='myTable'"
+        });
+
+        expectsql(QueryGenerator.getForeignKeysQuery("myTable", "myDatabase"), {
+            mssql: "SELECT constraint_name = OBJ.NAME, constraintName = OBJ.NAME, constraintCatalog = 'myDatabase', constraintSchema = SCHEMA_NAME(OBJ.SCHEMA_ID), tableName = TB.NAME, tableSchema = SCHEMA_NAME(TB.SCHEMA_ID), tableCatalog = 'myDatabase', columnName = COL.NAME, referencedTableSchema = SCHEMA_NAME(RTB.SCHEMA_ID), referencedCatalog = 'myDatabase', referencedTableName = RTB.NAME, referencedColumnName = RCOL.NAME FROM SYS.FOREIGN_KEY_COLUMNS FKC INNER JOIN SYS.OBJECTS OBJ ON OBJ.OBJECT_ID = FKC.CONSTRAINT_OBJECT_ID INNER JOIN SYS.TABLES TB ON TB.OBJECT_ID = FKC.PARENT_OBJECT_ID INNER JOIN SYS.COLUMNS COL ON COL.COLUMN_ID = PARENT_COLUMN_ID AND COL.OBJECT_ID = TB.OBJECT_ID INNER JOIN SYS.TABLES RTB ON RTB.OBJECT_ID = FKC.REFERENCED_OBJECT_ID INNER JOIN SYS.COLUMNS RCOL ON RCOL.COLUMN_ID = REFERENCED_COLUMN_ID AND RCOL.OBJECT_ID = RTB.OBJECT_ID WHERE TB.NAME ='myTable'"
+        });
+
+        expectsql(QueryGenerator.getForeignKeysQuery({
+            tableName: "myTable",
+            schema: "mySchema"
+        }, "myDatabase"), {
+            mssql: "SELECT constraint_name = OBJ.NAME, constraintName = OBJ.NAME, constraintCatalog = 'myDatabase', constraintSchema = SCHEMA_NAME(OBJ.SCHEMA_ID), tableName = TB.NAME, tableSchema = SCHEMA_NAME(TB.SCHEMA_ID), tableCatalog = 'myDatabase', columnName = COL.NAME, referencedTableSchema = SCHEMA_NAME(RTB.SCHEMA_ID), referencedCatalog = 'myDatabase', referencedTableName = RTB.NAME, referencedColumnName = RCOL.NAME FROM SYS.FOREIGN_KEY_COLUMNS FKC INNER JOIN SYS.OBJECTS OBJ ON OBJ.OBJECT_ID = FKC.CONSTRAINT_OBJECT_ID INNER JOIN SYS.TABLES TB ON TB.OBJECT_ID = FKC.PARENT_OBJECT_ID INNER JOIN SYS.COLUMNS COL ON COL.COLUMN_ID = PARENT_COLUMN_ID AND COL.OBJECT_ID = TB.OBJECT_ID INNER JOIN SYS.TABLES RTB ON RTB.OBJECT_ID = FKC.REFERENCED_OBJECT_ID INNER JOIN SYS.COLUMNS RCOL ON RCOL.COLUMN_ID = REFERENCED_COLUMN_ID AND RCOL.OBJECT_ID = RTB.OBJECT_ID WHERE TB.NAME ='myTable' AND SCHEMA_NAME(TB.SCHEMA_ID) ='mySchema'"
         });
     });
 
     it("getForeignKeyQuery", () => {
         expectsql(QueryGenerator.getForeignKeyQuery("myTable", "myColumn"), {
-            mssql: "SELECT constraint_name = TC.CONSTRAINT_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS TC JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE CCU ON TC.CONSTRAINT_NAME = CCU.CONSTRAINT_NAME WHERE TC.CONSTRAINT_TYPE = 'FOREIGN KEY' AND TC.TABLE_NAME = 'myTable' AND CCU.COLUMN_NAME = 'myColumn'"
+            mssql: "SELECT constraint_name = OBJ.NAME, constraintName = OBJ.NAME, constraintSchema = SCHEMA_NAME(OBJ.SCHEMA_ID), tableName = TB.NAME, tableSchema = SCHEMA_NAME(TB.SCHEMA_ID), columnName = COL.NAME, referencedTableSchema = SCHEMA_NAME(RTB.SCHEMA_ID), referencedTableName = RTB.NAME, referencedColumnName = RCOL.NAME FROM SYS.FOREIGN_KEY_COLUMNS FKC INNER JOIN SYS.OBJECTS OBJ ON OBJ.OBJECT_ID = FKC.CONSTRAINT_OBJECT_ID INNER JOIN SYS.TABLES TB ON TB.OBJECT_ID = FKC.PARENT_OBJECT_ID INNER JOIN SYS.COLUMNS COL ON COL.COLUMN_ID = PARENT_COLUMN_ID AND COL.OBJECT_ID = TB.OBJECT_ID INNER JOIN SYS.TABLES RTB ON RTB.OBJECT_ID = FKC.REFERENCED_OBJECT_ID INNER JOIN SYS.COLUMNS RCOL ON RCOL.COLUMN_ID = REFERENCED_COLUMN_ID AND RCOL.OBJECT_ID = RTB.OBJECT_ID WHERE TB.NAME ='myTable' AND COL.NAME ='myColumn'"
+        });
+        expectsql(QueryGenerator.getForeignKeyQuery({
+            tableName: "myTable",
+            schema: "mySchema"
+        }, "myColumn"), {
+            mssql: "SELECT constraint_name = OBJ.NAME, constraintName = OBJ.NAME, constraintSchema = SCHEMA_NAME(OBJ.SCHEMA_ID), tableName = TB.NAME, tableSchema = SCHEMA_NAME(TB.SCHEMA_ID), columnName = COL.NAME, referencedTableSchema = SCHEMA_NAME(RTB.SCHEMA_ID), referencedTableName = RTB.NAME, referencedColumnName = RCOL.NAME FROM SYS.FOREIGN_KEY_COLUMNS FKC INNER JOIN SYS.OBJECTS OBJ ON OBJ.OBJECT_ID = FKC.CONSTRAINT_OBJECT_ID INNER JOIN SYS.TABLES TB ON TB.OBJECT_ID = FKC.PARENT_OBJECT_ID INNER JOIN SYS.COLUMNS COL ON COL.COLUMN_ID = PARENT_COLUMN_ID AND COL.OBJECT_ID = TB.OBJECT_ID INNER JOIN SYS.TABLES RTB ON RTB.OBJECT_ID = FKC.REFERENCED_OBJECT_ID INNER JOIN SYS.COLUMNS RCOL ON RCOL.COLUMN_ID = REFERENCED_COLUMN_ID AND RCOL.OBJECT_ID = RTB.OBJECT_ID WHERE TB.NAME ='myTable' AND COL.NAME ='myColumn' AND SCHEMA_NAME(TB.SCHEMA_ID) ='mySchema'"
         });
     });
 

@@ -524,4 +524,77 @@ describe("upsert", function () {
             });
         });
     }
+
+    if (current.dialect.supports.returnValues) {
+        describe("with returning option", () => {
+            it("works with upsert on id", function () {
+                return this.User.upsert({ id: 42, username: "john" }, { returning: true }).then(([user, created]) => {
+                    expect(user.get("id")).to.equal(42);
+                    expect(user.get("username")).to.equal("john");
+                    expect(created).to.be.true;
+
+                    return this.User.upsert({ id: 42, username: "doe" }, { returning: true });
+                }).then(([user, created]) => {
+                    expect(user.get("id")).to.equal(42);
+                    expect(user.get("username")).to.equal("doe");
+                    expect(created).to.be.false;
+                });
+            });
+
+            it("works for table with custom primary key field", function () {
+                const User = this.sequelize.define("User", {
+                    id: {
+                        type: type.INTEGER,
+                        autoIncrement: true,
+                        primaryKey: true,
+                        field: "id_the_primary"
+                    },
+                    username: {
+                        type: type.STRING
+                    }
+                });
+
+                return User.sync({ force: true }).then(() => {
+                    return User.upsert({ id: 42, username: "john" }, { returning: true });
+                }).then(([user, created]) => {
+                    expect(user.get("id")).to.equal(42);
+                    expect(user.get("username")).to.equal("john");
+                    expect(created).to.be.true;
+
+                    return User.upsert({ id: 42, username: "doe" }, { returning: true });
+                }).then(([user, created]) => {
+                    expect(user.get("id")).to.equal(42);
+                    expect(user.get("username")).to.equal("doe");
+                    expect(created).to.be.false;
+                });
+            });
+
+            it("works for non incrementing primaryKey", function () {
+                const User = this.sequelize.define("User", {
+                    id: {
+                        type: type.STRING,
+                        primaryKey: true,
+                        field: "id_the_primary"
+                    },
+                    username: {
+                        type: type.STRING
+                    }
+                });
+
+                return User.sync({ force: true }).then(() => {
+                    return User.upsert({ id: "surya", username: "john" }, { returning: true });
+                }).then(([user, created]) => {
+                    expect(user.get("id")).to.equal("surya");
+                    expect(user.get("username")).to.equal("john");
+                    expect(created).to.be.true;
+
+                    return User.upsert({ id: "surya", username: "doe" }, { returning: true });
+                }).then(([user, created]) => {
+                    expect(user.get("id")).to.equal("surya");
+                    expect(user.get("username")).to.equal("doe");
+                    expect(created).to.be.false;
+                });
+            });
+        });
+    }
 });

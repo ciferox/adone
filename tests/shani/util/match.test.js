@@ -129,7 +129,9 @@ describe("shani", "util", "match", () => {
     });
 
     it("returns true if number objects are equal", () => {
-        /*eslint-disable no-new-wrappers*/
+        /**
+         * eslint-disable no-new-wrappers
+         */
         const m = match({ one: new Number(1) });
 
         assert(m.test({ one: new Number(1) }));
@@ -598,6 +600,165 @@ describe("shani", "util", "match", () => {
 
             assert.equal(hasOwn.toString(), "hasOwn(\"test\", undefined)");
         });
+    });
+
+    describe(".every", () => {
+        it("throws if given argument is not a matcher", () => {
+            assert.throws(() => {
+                match.every({});
+            }, TypeError);
+            assert.throws(() => {
+                match.every(123);
+            }, TypeError);
+            assert.throws(() => {
+                match.every("123");
+            }, TypeError);
+        });
+
+        it("returns matcher", () => {
+            const every = match.every(match.any);
+
+            assert(match.isMatcher(every));
+        });
+
+        it("wraps the given matcher message with an \"every()\"", () => {
+            const every = match.every(match.number);
+
+            assert.equal(every.toString(), "every(typeOf(\"number\"))");
+        });
+
+        it("fails to match anything that is not an object or an iterable", () => {
+            const every = match.every(match.any);
+
+            assert.false(every.test(1));
+            assert.false(every.test("a"));
+            assert.false(every.test(null));
+            assert.false(every.test(() => {}));
+        });
+
+        it("matches an object if the predicate is true for every property", () => {
+            const every = match.every(match.number);
+
+            assert.true(every.test({ a: 1, b: 2 }));
+        });
+
+        it("fails if the predicate is false for some of the object properties", () => {
+            const every = match.every(match.number);
+
+            assert.false(every.test({ a: 1, b: "b" }));
+        });
+
+        it("matches an array if the predicate is true for every element", () => {
+            const every = match.every(match.number);
+
+            assert(every.test([1, 2]));
+        });
+
+        it("fails if the predicate is false for some of the array elements", () => {
+            const every = match.every(match.number);
+
+            assert.false(every.test([1, "b"]));
+        });
+
+        if (is.function(Set)) {
+            it("matches an iterable if the predicate is true for every element", () => {
+                const every = match.every(match.number);
+                const set = new Set();
+                set.add(1);
+                set.add(2);
+
+                assert(every.test(set));
+            });
+
+            it("fails if the predicate is false for some of the iterable elements", () => {
+                const every = match.every(match.number);
+                const set = new Set();
+                set.add(1);
+                set.add("b");
+
+                assert.false(every.test(set));
+            });
+        }
+    });
+
+    describe(".some", () => {
+        it("throws if given argument is not a matcher", () => {
+            assert.throws(() => {
+                match.some({});
+            }, TypeError);
+            assert.throws(() => {
+                match.some(123);
+            }, TypeError);
+            assert.throws(() => {
+                match.some("123");
+            }, TypeError);
+        });
+
+        it("returns matcher", () => {
+            const some = match.some(match.any);
+
+            assert(match.isMatcher(some));
+        });
+
+        it("wraps the given matcher message with an \"some()\"", () => {
+            const some = match.some(match.number);
+
+            assert.equal(some.toString(), "some(typeOf(\"number\"))");
+        });
+
+        it("fails to match anything that is not an object or an iterable", () => {
+            const some = match.some(match.any);
+
+            assert.false(some.test(1));
+            assert.false(some.test("a"));
+            assert.false(some.test(null));
+            assert.false(some.test(() => {}));
+        });
+
+        it("matches an object if the predicate is true for some of the properties", () => {
+            const some = match.some(match.number);
+
+            assert.true(some.test({ a: 1, b: "b" }));
+        });
+
+        it("fails if the predicate is false for all of the object properties", () => {
+            const some = match.some(match.number);
+
+            assert.false(some.test({ a: "a", b: "b" }));
+        });
+
+        it("matches an array if the predicate is true for some element", () => {
+            const some = match.some(match.number);
+
+            assert(some.test([1, "b"]));
+        });
+
+        it("fails if the predicate is false for all of the array elements", () => {
+            const some = match.some(match.number);
+
+            assert.false(some.test(["a", "b"]));
+        });
+
+        if (is.function(Set)) {
+            it("matches an iterable if the predicate is true for some element", () => {
+                const some = match.some(match.number);
+                const set = new Set();
+                set.add(1);
+                set.add("b");
+
+                assert(some.test(set));
+            });
+
+            it("fails if the predicate is false for all of the iterable elements", () => {
+                const some = match.some(match.number);
+                const set = new Set();
+                set.add("a");
+                set.add("b");
+
+
+                assert.false(some.test(set));
+            });
+        }
     });
 
     describe(".bool", () => {

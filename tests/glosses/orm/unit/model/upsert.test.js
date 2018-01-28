@@ -7,13 +7,12 @@ describe("upsert", function () {
         return;
     }
 
-    const self = this;
-    const User = current.define("User", {
+    this.User = current.define("User", {
         name: type.STRING,
         virtualValue: {
             type: type.VIRTUAL,
             set(val) {
-                return this.value = val;
+                this.value = val;
             },
             get() {
                 return this.value;
@@ -30,66 +29,63 @@ describe("upsert", function () {
         }
     });
 
-    const UserNoTime = current.define("UserNoTime", {
+    this.UserNoTime = current.define("UserNoTime", {
         name: type.STRING
     }, {
         timestamps: false
     });
 
     beforeEach(() => {
-        this.query = current.query;
-        current.query = stub().returns(Promise.resolve());
+        this.query = stub(current, "query").returns(Promise.resolve());
 
-        self.stub = stub(current.getQueryInterface(), "upsert").callsFake(() => {
-            return User.build({});
-        });
+        this.stub = stub(current.getQueryInterface(), "upsert").returns(Promise.resolve([true, undefined]));
     });
 
-    afterEach(function () {
-        current.query = this.query;
-        self.stub.restore();
+    afterEach(() => {
+        current.query.restore();
+        current.getQueryInterface().upsert.restore();
     });
 
 
     it("skip validations for missing fields", async () => {
-        await User.upsert({
+        await this.User.upsert({
             name: "Grumpy Cat"
         });
     });
 
     it("creates new record with correct field names", () => {
-        return User
+        return this.User
             .upsert({
                 name: "Young Cat",
                 virtualValue: 999
             })
             .then(() => {
-                expect(Object.keys(self.stub.getCall(0).args[1])).to.deep.equal([
+                expect(Object.keys(this.stub.getCall(0).args[1])).to.deep.equal([
                     "name", "value", "created_at", "updatedAt"
                 ]);
             });
     });
 
     it("creates new record with timestamps disabled", () => {
-        return UserNoTime
+        return this.UserNoTime
             .upsert({
                 name: "Young Cat"
             })
             .then(() => {
-                expect(Object.keys(self.stub.getCall(0).args[1])).to.deep.equal([
+                expect(Object.keys(this.stub.getCall(0).args[1])).to.deep.equal([
                     "name"
                 ]);
             });
     });
 
     it("updates all changed fields by default", () => {
-        return User
+        return this.User
             .upsert({
                 name: "Old Cat",
                 virtualValue: 111
             })
             .then(() => {
-                expect(Object.keys(self.stub.getCall(0).args[2])).to.deep.equal([
+                expect(Object.keys(this.stub.getCall(0).args[2])).to.deep.equal([
                     "name", "value", "updatedAt"
                 ]);
             });

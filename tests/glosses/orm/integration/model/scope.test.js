@@ -1,6 +1,6 @@
 describe("scope", () => {
     const { orm } = adone;
-    const { type } = orm;
+    const { type, operator } = orm;
 
     beforeEach(function () {
         this.ScopeMe = this.sequelize.define("ScopeMe", {
@@ -20,6 +20,30 @@ describe("scope", () => {
                 },
                 withName: {
                     attributes: ["username"]
+                },
+                highAccess: {
+                    where: {
+                        [operator.or]: [
+                            { access_level: { [operator.gte]: 5 } },
+                            { access_level: { [operator.eq]: 10 } }
+                        ]
+                    }
+                },
+                lessThanFour: {
+                    where: {
+                        [operator.and]: [
+                            { access_level: { [operator.lt]: 4 } }
+                        ]
+                    }
+                },
+                issue8473: {
+                    where: {
+                        [operator.or]: {
+                            access_level: 3,
+                            other_value: 10
+                        },
+                        access_level: 5
+                    }
                 }
             }
         });
@@ -41,6 +65,41 @@ describe("scope", () => {
                 expect(record.other_value).to.exist();
                 expect(record.username).to.exist();
                 expect(record.access_level).to.exist();
+            });
+    });
+
+    it("should work with Symbol operators", function () {
+        return this.ScopeMe.scope("highAccess").findOne()
+            .then((record) => {
+                expect(record.username).to.equal("tobi");
+                return this.ScopeMe.scope("lessThanFour").findAll();
+            })
+            .then((records) => {
+                expect(records).to.have.length(2);
+                expect(records[0].get("access_level")).to.equal(3);
+                expect(records[1].get("access_level")).to.equal(3);
+                return this.ScopeMe.scope("issue8473").findAll();
+            })
+            .then((records) => {
+                expect(records).to.have.length(1);
+                expect(records[0].get("access_level")).to.equal(5);
+                expect(records[0].get("other_value")).to.equal(10);
+            });
+    });
+
+    it("should keep symbols after default assignment", function () {
+        return this.ScopeMe.scope("highAccess").findOne()
+            .then((record) => {
+                expect(record.username).to.equal("tobi");
+                return this.ScopeMe.scope("lessThanFour").findAll({
+                    where: {}
+                });
+            })
+            .then((records) => {
+                expect(records).to.have.length(2);
+                expect(records[0].get("access_level")).to.equal(3);
+                expect(records[1].get("access_level")).to.equal(3);
+                return this.ScopeMe.scope("issue8473").findAll();
             });
     });
 });

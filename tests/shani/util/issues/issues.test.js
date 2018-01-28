@@ -261,7 +261,9 @@ describe("shani", "util", "issues", () => {
         });
 
         afterEach(() => {
-            /* eslint-disable no-extend-native */
+            /**
+             * eslint-disable no-extend-native
+             */
             Array.prototype.filter = orgFilter;
         });
 
@@ -287,6 +289,36 @@ describe("shani", "util", "issues", () => {
             foo.bar();
 
             mock.verify();
+        });
+    });
+
+    describe("#1648 - resetHistory ", () => {
+        it("should reset property spies", () => {
+            const obj = {
+                func() {},
+                get prop() {
+                    return 1;
+                }
+            };
+
+            const s = sandbox.create();
+            const spyFunc = s.spy(obj, "func");
+            const spyProp = s.spy(obj, "prop", ["get"]);
+
+            assert.false(spyFunc.called);
+            assert.false(spyProp.get.called);
+
+            obj.func();
+            //eslint-disable-next-line no-unused-expressions
+            obj.prop;
+
+            assert.true(spyFunc.called);
+            assert.true(spyProp.get.called);
+
+            s.resetHistory();
+
+            assert.false(spyFunc.called);
+            assert.false(spyProp.get.called);
         });
     });
 });

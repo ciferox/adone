@@ -373,16 +373,20 @@ export default function (lib, util) {
         }
         const object = flag(this, "object");
         if (flag(this, "deep")) {
-            return this.eql(value);
+            const prevLockSsfi = flag(this, "lockSsfi");
+            flag(this, "lockSsfi", true);
+            this.eql(value);
+            flag(this, "lockSsfi", prevLockSsfi);
+        } else {
+            this.assert(
+                value === object,
+                "expected #{this} to equal #{exp}",
+                "expected #{this} to not equal #{exp}",
+                value,
+                this._obj,
+                true
+            );
         }
-        this.assert(
-            value === object,
-            "expected #{this} to equal #{exp}",
-            "expected #{this} to not equal #{exp}",
-            value,
-            this._obj,
-            true
-        );
     };
 
     Assertion.addMethod("equal", assertEqual);

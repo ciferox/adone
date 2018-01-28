@@ -10,30 +10,30 @@ const {
 } = orm;
 
 /**
- Returns an object that treats SQLite's inabilities to do certain queries.
-
- @class QueryInterface
- @static
- @private
+ * Returns an object that treats SQLite's inabilities to do certain queries.
+ *
+ * @class QueryInterface
+ * @static
+ * @private
  */
 
 /**
-  A wrapper that fixes SQLite's inability to remove columns from existing tables.
-  It will create a backup of the table, drop the table afterwards and create a
-  new table with the same name but without the obsolete column.
-
-  @method removeColumn
-  @for    QueryInterface
-
-  @param  {String} tableName     The name of the table.
-  @param  {String} attributeName The name of the attribute that we want to remove.
-  @param  {Object} options
-  @param  {Boolean|Function} [options.logging] A function that logs the sql queries, or false for explicitly not logging these queries
-
-  @since 1.6.0
-  @private
+ * A wrapper that fixes SQLite's inability to remove columns from existing tables.
+ * It will create a backup of the table, drop the table afterwards and create a
+ * new table with the same name but without the obsolete column.
+ *
+ * @method removeColumn
+ * @for    QueryInterface
+ *
+ * @param  {String} tableName     The name of the table.
+ * @param  {String} attributeName The name of the attribute that we want to remove.
+ * @param  {Object} options
+ * @param  {Boolean|Function} [options.logging] A function that logs the sql queries, or false for explicitly not logging these queries
+ *
+ * @since 1.6.0
+ * @private
  */
-const removeColumn = async function (tableName, attributeName, options) {
+export const removeColumn = async function (tableName, attributeName, options) {
     options = options || {};
 
     const fields = await this.describeTable(tableName, options);
@@ -48,25 +48,24 @@ const removeColumn = async function (tableName, attributeName, options) {
     }
     return res;
 };
-exports.removeColumn = removeColumn;
 
 /**
-  A wrapper that fixes SQLite's inability to change columns from existing tables.
-  It will create a backup of the table, drop the table afterwards and create a
-  new table with the same name but with a modified version of the respective column.
-
-  @method changeColumn
-  @for    QueryInterface
-
-  @param  {String} tableName The name of the table.
-  @param  {Object} attributes An object with the attribute's name as key and its options as value object.
-  @param  {Object} options
-  @param  {Boolean|Function} [options.logging] A function that logs the sql queries, or false for explicitly not logging these queries
-
-  @since 1.6.0
-  @private
+ * A wrapper that fixes SQLite's inability to change columns from existing tables.
+ * It will create a backup of the table, drop the table afterwards and create a
+ * new table with the same name but with a modified version of the respective column.
+ *
+ * @method changeColumn
+ * @for    QueryInterface
+ *
+ * @param  {String} tableName The name of the table.
+ * @param  {Object} attributes An object with the attribute's name as key and its options as value object.
+ * @param  {Object} options
+ * @param  {Boolean|Function} [options.logging] A function that logs the sql queries, or false for explicitly not logging these queries
+ *
+ * @since 1.6.0
+ * @private
  */
-const changeColumn = async function (tableName, attributes, options) {
+export const changeColumn = async function (tableName, attributes, options) {
     const attributeName = Object.keys(attributes)[0];
     options = options || {};
 
@@ -83,26 +82,25 @@ const changeColumn = async function (tableName, attributes, options) {
     }
     return res;
 };
-exports.changeColumn = changeColumn;
 
 /**
-  A wrapper that fixes SQLite's inability to rename columns from existing tables.
-  It will create a backup of the table, drop the table afterwards and create a
-  new table with the same name but with a renamed version of the respective column.
-
-  @method renameColumn
-  @for    QueryInterface
-
-  @param  {String} tableName The name of the table.
-  @param  {String} attrNameBefore The name of the attribute before it was renamed.
-  @param  {String} attrNameAfter The name of the attribute after it was renamed.
-  @param  {Object} options
-  @param  {Boolean|Function} [options.logging] A function that logs the sql queries, or false for explicitly not logging these queries
-
-  @since 1.6.0
-  @private
+ * A wrapper that fixes SQLite's inability to rename columns from existing tables.
+ * It will create a backup of the table, drop the table afterwards and create a
+ * new table with the same name but with a renamed version of the respective column.
+ *
+ * @method renameColumn
+ * @for    QueryInterface
+ *
+ * @param  {String} tableName The name of the table.
+ * @param  {String} attrNameBefore The name of the attribute before it was renamed.
+ * @param  {String} attrNameAfter The name of the attribute after it was renamed.
+ * @param  {Object} options
+ * @param  {Boolean|Function} [options.logging] A function that logs the sql queries, or false for explicitly not logging these queries
+ *
+ * @since 1.6.0
+ * @private
  */
-const renameColumn = async function (tableName, attrNameBefore, attrNameAfter, options) {
+export const renameColumn = async function (tableName, attrNameBefore, attrNameAfter, options) {
     options = options || {};
 
     const fields = await this.describeTable(tableName, options);
@@ -119,9 +117,8 @@ const renameColumn = async function (tableName, attrNameBefore, attrNameAfter, o
     }
     return res;
 };
-exports.renameColumn = renameColumn;
 
-const removeConstraint = async function (tableName, constraintName, options) {
+export const removeConstraint = async function (tableName, constraintName, options) {
     let createTableSql;
 
     const [constraint] = await this.showConstraint(tableName, constraintName);
@@ -156,9 +153,8 @@ const removeConstraint = async function (tableName, constraintName, options) {
     }
     return res;
 };
-exports.removeConstraint = removeConstraint;
 
-const addConstraint = async function (tableName, options) {
+export const addConstraint = async function (tableName, options) {
     const constraintSnippet = this.QueryGenerator.getConstraintSnippet(tableName, options);
     const describeCreateTableSql = this.QueryGenerator.describeCreateTableQuery(tableName);
 
@@ -181,4 +177,28 @@ const addConstraint = async function (tableName, options) {
     }
     return res;
 };
-exports.addConstraint = addConstraint;
+
+/**
+ *
+ * @param {String} tableName
+ * @param {Object} options  Query Options
+ *
+ * @private
+ * @returns {Promise}
+ */
+export const getForeignKeyReferencesForTable = function (tableName, options) {
+    const database = this.sequelize.config.database;
+    const query = this.QueryGenerator.getForeignKeysQuery(tableName, database);
+    return this.sequelize.query(query, options)
+        .then((result) => {
+            return result.map((row) => ({
+                tableName,
+                columnName: row.from,
+                referencedTableName: row.table,
+                referencedColumnName: row.to,
+                tableCatalog: database,
+                referencedTableCatalog: database
+            }));
+        });
+};
+

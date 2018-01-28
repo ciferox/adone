@@ -126,7 +126,9 @@ export const cloneDeep = (obj) => {
     });
 };
 
-/* Expand and normalize finder options */
+/**
+ * Expand and normalize finder options
+ */
 export const mapFinderOptions = (options, Model) => {
     if (Model._hasVirtualAttributes && is.array(options.attributes)) {
         for (const attribute of options.attributes) {
@@ -143,7 +145,9 @@ export const mapFinderOptions = (options, Model) => {
     return options;
 };
 
-/* Used to map field names in attributes and where conditions */
+/**
+ * Used to map field names in attributes and where conditions
+ */
 export const mapOptionFieldNames = (options, Model) => {
     if (is.array(options.attributes)) {
         options.attributes = options.attributes.map((attr) => {
@@ -204,7 +208,9 @@ export const mapWhereFieldNames = (attributes, Model) => {
     return attributes;
 };
 
-/* Used to map field names in values */
+/**
+ * Used to map field names in values
+ */
 export const mapValueFieldNames = (dataValues, fields, Model) => {
     const values = {};
 
@@ -266,7 +272,15 @@ export const removeCommentsFromFunctionString = (s) => {
     return s;
 };
 
-export const toDefaultValue = (value) => {
+export const now = (dialect) => {
+    const now = new Date();
+    if (["mysql", "postgres", "sqlite", "mssql"].indexOf(dialect) === -1) {
+        now.setMilliseconds(0);
+    }
+    return now;
+};
+
+export const toDefaultValue = (value, dialect) => {
     const { type } = orm;
     if (is.function(value)) {
         const tmp = is.class(value) ? new value() : value();
@@ -279,7 +293,7 @@ export const toDefaultValue = (value) => {
     } else if (value instanceof type.UUIDV4) {
         return adone.util.uuid.v4();
     } else if (value instanceof type.NOW) {
-        return now();
+        return now(dialect);
     } else if (_.isPlainObject(value) || _.isArray(value)) {
         return _.clone(value);
     }
@@ -357,14 +371,6 @@ export const sliceArgs = (args, begin) => {
         tmp[i - begin] = args[i];
     }
     return tmp;
-};
-
-export const now = (dialect) => {
-    const now = new Date();
-    if (["mysql", "postgres", "sqlite", "mssql"].indexOf(dialect) === -1) {
-        now.setMilliseconds(0);
-    }
-    return now;
 };
 
 // Note: Use the `quoteIdentifier()` and `escape()` methods on the
@@ -643,4 +649,57 @@ export const mixinMethods = (association, obj, methods, aliases) => {
  */
 export const generateEnumName = (tableName, columnName) => {
     return `enum_${tableName}_${columnName}`;
+};
+
+/**
+ * Returns an new Object which keys are camelized
+ * @param {Object} obj
+ * @return {String}
+ * @private
+ */
+export const camelizeObjectKeys = (obj) => {
+    const newObj = {};
+    Object.keys(obj).forEach((key) => {
+        newObj[camelize(key)] = obj[key];
+    });
+    return newObj;
+};
+
+/**
+ * Assigns own and inherited enumerable string and symbol keyed properties of source
+ * objects to the destination object.
+ *
+ * https://lodash.com/docs/4.17.4#defaults
+ *
+ * **Note:** This method mutates `object`.
+ *
+ * @param {Object} object The destination object.
+ * @param {...Object} [sources] The source objects.
+ * @returns {Object} Returns `object`.
+ * @private
+ */
+export const defaults = function (object) {
+    object = Object(object);
+
+    const sources = _.tail(arguments);
+
+    sources.forEach((source) => {
+        if (source) {
+            source = Object(source);
+
+            getComplexKeys(source).forEach((key) => {
+                const value = object[key];
+                if (
+                    is.undefined(value) || (
+                        _.eq(value, Object.prototype[key]) &&
+              !Object.prototype.hasOwnProperty.call(object, key)
+                    )
+                ) {
+                    object[key] = source[key];
+                }
+            });
+        }
+    });
+
+    return object;
 };

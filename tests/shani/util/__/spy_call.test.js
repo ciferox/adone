@@ -910,7 +910,7 @@ describe("shani", "util", "__", "SpyCall", () => {
     });
 
     describe(".reset", () => {
-        function assertReset(spy) {
+        const assertReset = (spy) => {
             assert(!spy.called);
             assert(!spy.calledOnce);
             assert.equal(spy.args.length, 0);
@@ -921,13 +921,13 @@ describe("shani", "util", "__", "SpyCall", () => {
             assert.null(spy.secondCall);
             assert.null(spy.thirdCall);
             assert.null(spy.lastCall);
-        }
+        };
 
         it("resets spy state", () => {
             const spy = sspy();
             spy();
 
-            spy.reset();
+            spy.resetHistory();
 
             assertReset(spy);
         });
@@ -937,7 +937,7 @@ describe("shani", "util", "__", "SpyCall", () => {
             spies[0]();
             spies[1]();
 
-            spies[0].reset();
+            spies[0].resetHistory();
 
             assert(!spies[0].calledBefore(spies[1]));
         });
@@ -951,7 +951,7 @@ describe("shani", "util", "__", "SpyCall", () => {
             spy("c");
             const fakeC = spy.withArgs("c");
 
-            spy.reset();
+            spy.resetHistory();
 
             assertReset(fakeA);
             assertReset(fakeB);
@@ -1244,7 +1244,7 @@ describe("shani", "util", "__", "SpyCall", () => {
                     `\n\n    spy(${str})` +
                     `\n\n    spy(${str})`);
 
-                spy.reset();
+                spy.resetHistory();
 
                 spy("test");
                 spy("spy\ntest");
@@ -1262,7 +1262,7 @@ describe("shani", "util", "__", "SpyCall", () => {
             spy();
             assert.equal(spy.printf("%t"), "undefined");
 
-            spy.reset();
+            spy.resetHistory();
             spy.call(true);
             assert.equal(spy.printf("%t"), "true");
         });

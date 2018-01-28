@@ -1,6 +1,6 @@
 describe("model", function () {
     const { orm } = adone;
-    const { type } = orm;
+    const { type, operator } = orm;
 
     const { vendor: { lodash: _ } } = adone;
     const dialect = this.getTestDialect();
@@ -1575,6 +1575,33 @@ describe("model", function () {
                     return run.call(self);
                 });
             });
+        });
+
+        it("should work if model is paranoid and only operator in where clause is a Symbol", function () {
+            const User = this.sequelize.define("User", {
+                username: type.STRING
+            }, {
+                paranoid: true
+            });
+
+            return User.sync({ force: true })
+                .then(() => User.create({ username: "foo" }))
+                .then(() => User.create({ username: "bar" }))
+                .then(() => {
+                    return User.destroy({
+                        where: {
+                            [operator.or]: [
+                                { username: "bar" },
+                                { username: "baz" }
+                            ]
+                        }
+                    });
+                })
+                .then(() => User.findAll())
+                .then((users) => {
+                    expect(users).to.have.length(1);
+                    expect(users[0].get("username")).to.equal("foo");
+                });
         });
     });
 

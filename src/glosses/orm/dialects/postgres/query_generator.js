@@ -354,34 +354,38 @@ const QueryGenerator = {
         return `ALTER TABLE ${this.quoteTable(tableName)} RENAME COLUMN ${attrString.join(", ")};`;
     },
 
-    fn(fnName, tableName, body, returns, language) {
+    fn(fnName, tableName, parameters, body, returns, language) {
         fnName = fnName || "testfunc";
         language = language || "plpgsql";
-        returns = returns || `SETOF ${this.quoteTable(tableName)}`;
+        returns = returns ? `RETURNS ${returns}` : "";
+        parameters = parameters || "";
 
-        return `CREATE OR REPLACE FUNCTION pg_temp.${fnName}() RETURNS ${returns} AS $func$ BEGIN ${body} END; $func$ LANGUAGE ${language}; SELECT * FROM pg_temp.${fnName}();`;
+        return `CREATE OR REPLACE FUNCTION pg_temp.${fnName}(${parameters}) ${returns} AS $func$ BEGIN ${body} END; $func$ LANGUAGE ${language}; SELECT * FROM pg_temp.${fnName}();`;
     },
 
-    exceptionFn(fnName, tableName, main, then, when, returns, language) {
+    exceptionFn(fnName, tableName, parameters, main, then, when, returns, language) {
         when = when || "unique_violation";
 
         const body = `${main} EXCEPTION WHEN ${when} THEN ${then};`;
 
-        return this.fn(fnName, tableName, body, returns, language);
+        return this.fn(fnName, tableName, parameters, body, returns, language);
     },
 
     upsertQuery(tableName, insertValues, updateValues, where, model, options) {
-        const insert = this.insertQuery(tableName, insertValues, model.rawAttributes, options);
-        const update = this.updateQuery(tableName, updateValues, where, options, model.rawAttributes);
+        const primaryField = this.quoteIdentifier(model.primaryKeyField);
 
-        // The numbers here are selected to match the number of affected rows returned by MySQL
+        let insert = this.insertQuery(tableName, insertValues, model.rawAttributes, options);
+        let update = this.updateQuery(tableName, updateValues, where, options, model.rawAttributes);
+
+        insert = insert.replace("RETURNING *", `RETURNING ${primaryField} INTO primary_key`);
+        update = update.replace("RETURNING *", `RETURNING ${primaryField} INTO primary_key`);
+
         return this.exceptionFn(
             "sequelize_upsert",
             tableName,
-            `${insert} RETURN 1;`,
-            `${update}; RETURN 2`,
-            "unique_violation",
-            "integer"
+            "OUT created boolean, OUT primary_key text",
+            `${insert} created := true;`,
+            `${update}; created := false`
         );
     },
 
@@ -898,6 +902,53 @@ const QueryGenerator = {
     getForeignKeysQuery(tableName) {
         return "SELECT conname as constraint_name, pg_catalog.pg_get_constraintdef(r.oid, true) as condef FROM pg_catalog.pg_constraint r " +
             `WHERE r.conrelid = (SELECT oid FROM pg_class WHERE relname = '${tableName}' LIMIT 1) AND r.contype = 'f' ORDER BY 1;`;
+    },
+
+    /**
+     * Generate common SQL prefix for getForeignKeyReferencesQuery.
+     * @returns {String}
+     */
+    _getForeignKeyReferencesQueryPrefix() {
+        return "SELECT " +
+        "DISTINCT tc.constraint_name as constraint_name, " +
+        "tc.constraint_schema as constraint_schema, " +
+        "tc.constraint_catalog as constraint_catalog, " +
+        "tc.table_name as table_name," +
+        "tc.table_schema as table_schema," +
+        "tc.table_catalog as table_catalog," +
+        "kcu.column_name as column_name," +
+        "ccu.table_schema  AS referenced_table_schema," +
+        "ccu.table_catalog  AS referenced_table_catalog," +
+        "ccu.table_name  AS referenced_table_name," +
+        "ccu.column_name AS referenced_column_name " +
+      "FROM information_schema.table_constraints AS tc " +
+        "JOIN information_schema.key_column_usage AS kcu " +
+          "ON tc.constraint_name = kcu.constraint_name " +
+        "JOIN information_schema.constraint_column_usage AS ccu " +
+          "ON ccu.constraint_name = tc.constraint_name ";
+    },
+
+    /**
+     * Generates an SQL query that returns all foreign keys details of a table.
+     *
+     * As for getForeignKeysQuery is not compatible with getForeignKeyReferencesQuery, so add a new function.
+     * @param {String} tableName
+     * @param {String} catalogName
+     * @param {String} schemaName
+     */
+    getForeignKeyReferencesQuery(tableName, catalogName, schemaName) {
+        return `${this._getForeignKeyReferencesQueryPrefix()
+        }WHERE constraint_type = 'FOREIGN KEY' AND tc.table_name = '${tableName}'${
+            catalogName ? ` AND tc.table_catalog = '${catalogName}'` : ""
+        }${schemaName ? ` AND tc.table_schema = '${schemaName}'` : ""}`;
+    },
+
+    getForeignKeyReferenceQuery(table, columnName) {
+        const tableName = table.tableName || table;
+        const schema = table.schema;
+        return `${this._getForeignKeyReferencesQueryPrefix()
+        }WHERE constraint_type = 'FOREIGN KEY' AND tc.table_name='${tableName}' AND  kcu.column_name = '${columnName}'${
+            schema ? ` AND tc.table_schema = '${schema}'` : ""}`;
     },
 
     /**

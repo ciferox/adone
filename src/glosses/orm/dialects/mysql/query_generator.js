@@ -290,7 +290,9 @@ const QueryGenerator = {
         return `SHOW INDEX FROM ${this.quoteTable(tableName)}${(options || {}).database ? ` FROM \`${options.database}\`` : ""}`;
     },
 
-    showConstraintsQuery(tableName, constraintName) {
+    showConstraintsQuery(table, constraintName) {
+        const tableName = table.tableName || table;
+        const schemaName = table.schema;
         let sql = [
             "SELECT CONSTRAINT_CATALOG AS constraintCatalog,",
             "CONSTRAINT_NAME AS constraintName,",
@@ -304,6 +306,10 @@ const QueryGenerator = {
 
         if (constraintName) {
             sql += ` AND constraint_name = '${constraintName}'`;
+        }
+
+        if (schemaName) {
+            sql += ` AND TABLE_SCHEMA = '${schemaName}'`;
         }
 
         return `${sql};`;
@@ -326,7 +332,8 @@ const QueryGenerator = {
             };
         }
 
-        let template = attribute.type.toString({ escape: this.escape.bind(this) });
+        const attributeString = attribute.type.toString({ escape: this.escape.bind(this) });
+        let template = attributeString;
 
         if (attribute.allowNull === false) {
             template += " NOT NULL";
@@ -336,8 +343,15 @@ const QueryGenerator = {
             template += " auto_increment";
         }
 
-        // Blobs/texts cannot have a defaultValue
-        if (attribute.type !== "TEXT" && attribute.type._binary !== true && util.defaultValueSchemable(attribute.defaultValue)) {
+        // BLOB/TEXT/GEOMETRY/JSON cannot have a default value
+        if (
+            attributeString !== "BLOB"
+            && attributeString !== "TEXT"
+            && attributeString !== "GEOMETRY"
+            && attributeString !== "JSON"
+            && attribute.type._binary !== true
+            && util.defaultValueSchemable(attribute.defaultValue)
+        ) {
             template += ` DEFAULT ${this.escape(attribute.defaultValue)}`;
         }
 
@@ -490,6 +504,27 @@ const QueryGenerator = {
         return `(${quotedColumn}->>'${pathStr}')`;
     },
 
+    /**
+     *  Generates fields for getForeignKeysQuery
+     * @returns {String} fields
+     * @private
+     */
+    _getForeignKeysQueryFields() {
+        return [
+            "CONSTRAINT_NAME as constraint_name",
+            "CONSTRAINT_NAME as constraintName",
+            "CONSTRAINT_SCHEMA as constraintSchema",
+            "CONSTRAINT_SCHEMA as constraintCatalog",
+            "TABLE_NAME as tableName",
+            "TABLE_SCHEMA as tableSchema",
+            "TABLE_SCHEMA as tableCatalog",
+            "COLUMN_NAME as columnName",
+            "REFERENCED_TABLE_SCHEMA as referencedTableSchema",
+            "REFERENCED_TABLE_SCHEMA as referencedTableCatalog",
+            "REFERENCED_TABLE_NAME as referencedTableName",
+            "REFERENCED_COLUMN_NAME as referencedColumnName"
+        ].join(",");
+    },
 
     /**
      * Generates an SQL query that returns all foreign keys of a table.
@@ -500,8 +535,13 @@ const QueryGenerator = {
      * @private
      */
     getForeignKeysQuery(tableName, schemaName) {
-        return `SELECT CONSTRAINT_NAME as constraint_name FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE where TABLE_NAME = '${tableName /* jshint ignore: line */
-        }' AND CONSTRAINT_NAME!='PRIMARY' AND CONSTRAINT_SCHEMA='${schemaName}' AND REFERENCED_TABLE_NAME IS NOT NULL;`; /* jshint ignore: line */
+        return `SELECT ${
+            this._getForeignKeysQueryFields()
+        } FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE where TABLE_NAME = '${
+            tableName
+        }' AND CONSTRAINT_NAME!='PRIMARY' AND CONSTRAINT_SCHEMA='${
+            schemaName
+        }' AND REFERENCED_TABLE_NAME IS NOT NULL;`;
     },
 
     /**
@@ -513,18 +553,17 @@ const QueryGenerator = {
      * @private
      */
     getForeignKeyQuery(table, columnName) {
-        let tableName = table.tableName || table;
-        if (table.schema) {
-            tableName = `${table.schema}.${tableName}`;
-        }
-        return `${"SELECT CONSTRAINT_NAME as constraint_name"
-            + " FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE"
-            + " WHERE (REFERENCED_TABLE_NAME = "}${wrapSingleQuote(tableName)
+        const tableName = table.tableName || table;
+        const schemaName = table.schema;
+
+        return `SELECT ${this._getForeignKeysQueryFields()
+        } FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE (REFERENCED_TABLE_NAME = ${wrapSingleQuote(tableName)
+        }${schemaName ? ` AND REFERENCED_TABLE_SCHEMA = ${wrapSingleQuote(schemaName)}` : ""
         } AND REFERENCED_COLUMN_NAME = ${wrapSingleQuote(columnName)
         }) OR (TABLE_NAME = ${wrapSingleQuote(tableName)
+        }${schemaName ? ` AND TABLE_SCHEMA = ${wrapSingleQuote(schemaName)}` : ""
         } AND COLUMN_NAME = ${wrapSingleQuote(columnName)
-        } AND REFERENCED_TABLE_NAME IS NOT NULL`
-            + ")";
+        } AND REFERENCED_TABLE_NAME IS NOT NULL)`;
     },
 
     /**

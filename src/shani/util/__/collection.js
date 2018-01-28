@@ -38,13 +38,30 @@ export default class Collection {
     }
 
     resetHistory() {
-        for (const fake of getFakes(this)) {
-            const method = fake.resetHistory || fake.reset;
-
+        const privateResetHistory = (f) => {
+            const method = f.resetHistory || f.reset;
             if (method) {
-                method.call(fake);
+                method.call(f);
             }
-        }
+        };
+
+        getFakes(this).forEach((fake) => {
+            if (is.function(fake)) {
+                privateResetHistory(fake);
+                return;
+            }
+
+            const methods = [];
+            if (fake.get) {
+                methods.push(fake.get);
+            }
+
+            if (fake.set) {
+                methods.push(fake.set);
+            }
+
+            methods.forEach(privateResetHistory);
+        });
     }
 
     verifyAndRestore() {

@@ -245,12 +245,11 @@ export default class Query extends AbstractQuery {
             if (!this.options.returning) {
                 return parseInt(rowCount, 10);
             }
-
             return this.handleSelectQuery(rows);
         } else if (queryType.BULKDELETE === this.options.type) {
             return parseInt(rowCount, 10);
         } else if (this.isUpsertQuery()) {
-            return rows[0].sequelize_upsert;
+            return rows[0];
         } else if (this.isInsertQuery() || this.isUpdateQuery()) {
             if (this.instance && this.instance.dataValues) {
                 for (const key in rows[0]) {

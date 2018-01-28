@@ -412,6 +412,16 @@ describe("shani", "util", "spy", () => {
             assert(called);
         });
 
+        it("passes 'new' to underlying function", () => {
+            const TestClass = function () {};
+
+            const SpyClass = createSpy.create(TestClass);
+
+            const instance = new SpyClass();
+
+            assert(instance instanceof TestClass);
+        });
+
         it("passs arguments to function", () => {
             let actualArgs;
 
@@ -844,20 +854,28 @@ describe("shani", "util", "spy", () => {
         });
 
         it("is true if always called with new", function () {
-            /*eslint-disable no-unused-vars, new-cap*/
+            /**
+             * eslint-disable no-unused-vars, new-cap
+             */
             const result = new this.spy();
             const result2 = new this.spy();
             const result3 = new this.spy();
-            /*eslint-enable no-unused-vars, new-cap*/
+            /**
+             * eslint-enable no-unused-vars, new-cap
+             */
 
             assert(this.spy.alwaysCalledWithNew());
         });
 
         it("is false if called as function once", function () {
-            /*eslint-disable no-unused-vars, new-cap*/
+            /**
+             * eslint-disable no-unused-vars, new-cap
+             */
             const result = new this.spy();
             const result2 = new this.spy();
-            /*eslint-enable no-unused-vars, new-cap*/
+            /**
+             * eslint-enable no-unused-vars, new-cap
+             */
             this.spy();
 
             assert.false(this.spy.alwaysCalledWithNew());
@@ -1540,7 +1558,9 @@ describe("shani", "util", "spy", () => {
         it("stacks up return values", () => {
             let calls = 0;
 
-            /*eslint consistent-return: "off"*/
+            /**
+             * eslint consistent-return: "off"
+             */
             const spy = createSpy.create(() => {
                 calls += 1;
 
@@ -2444,17 +2464,17 @@ describe("shani", "util", "spy", () => {
         });
     });
 
-    describe(".reset", () => {
+    describe(".resetHistory", () => {
         it("return same object", () => {
             const spy = createSpy();
-            const reset = spy.reset();
+            const reset = spy.resetHistory();
 
             assert(reset === spy);
         });
 
         it("throws if called during spy invocation", () => {
-            var spy = createSpy(() => {
-                spy.reset();
+            const spy = createSpy(() => {
+                spy.resetHistory();
             });
 
             const err = assert.throws(spy);

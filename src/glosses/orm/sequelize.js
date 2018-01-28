@@ -246,7 +246,7 @@ export default class Sequelize {
 
     /**
      * Returns an instance of QueryInterface.
-
+     *
      * @method getQueryInterface
      * @memberOf Sequelize
      * @return {QueryInterface} An instance (singleton) of QueryInterface.
@@ -741,6 +741,20 @@ export default class Sequelize {
     }
 
     /**
+     * Get the fn for random based on the dialect
+     *
+     * @return {Sequelize.fn}
+     */
+    random() {
+        const dialect = this.getDialect();
+        if (_.includes(["postgres", "sqlite"], dialect)) {
+            return this.fn("RANDOM");
+        }
+        return this.fn("RAND");
+
+    }
+
+    /**
      * Creates an object representing a database function. This can be used in search queries, both in where and order parts, and as default values in column definitions.
      * If you want to refer to columns in your function, you should use `sequelize.col`, so that the columns are properly interpreted as columns and not a strings.
      *
@@ -971,6 +985,7 @@ export default class Sequelize {
         }
         return type;
     }
+
     normalizeAttribute(attribute) {
         if (!_.isPlainObject(attribute)) {
             attribute = { type: attribute };

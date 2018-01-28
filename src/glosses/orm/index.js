@@ -17,7 +17,8 @@ adone.lazifyPrivate({
     Model: "./model",
     Hooks: "./hooks",
     ModelManager: "./model_manager",
-    QueryInterface: "./query_interface"
+    QueryInterface: "./query_interface",
+    TableHints: "./table_hints"
 }, exports, require);
 
 const __ = adone.private(orm);

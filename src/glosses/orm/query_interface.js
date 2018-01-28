@@ -265,7 +265,6 @@ export default class QueryInterface {
             // If ENUM processed, then refresh OIDs
             if (promises.length) {
                 await this.sequelize.dialect.connectionManager._refreshDynamicOIDs();
-                await this.sequelize.refreshTypes(type.postgres);
             }
 
             return this.sequelize.query(sql, options);
@@ -722,6 +721,43 @@ export default class QueryInterface {
     }
 
     /**
+     * Get foreign key references details for the table.
+     *
+     * Those details contains constraintSchema, constraintName, constraintCatalog
+     * tableCatalog, tableSchema, tableName, columnName,
+     * referencedTableCatalog, referencedTableCatalog, referencedTableSchema, referencedTableName, referencedColumnName.
+     * Remind: constraint informations won't return if it's sqlite.
+     *
+     * @param {String} tableName
+     * @param {Object} [options]  Query options
+     * @returns {Promise}
+     */
+    getForeignKeyReferencesForTable(tableName, options) {
+        const queryOptions = Object.assign({}, options, {
+            type: queryType.FOREIGNKEYS
+        });
+        const catalogName = this.sequelize.config.database;
+        switch (this.sequelize.options.dialect) {
+            case "sqlite":
+                // sqlite needs some special treatment.
+                return __.dialect.sqlite.QueryInterface.getForeignKeyReferencesForTable.call(this, tableName, queryOptions);
+            case "postgres": {
+                // postgres needs some special treatment as those field names returned are all lowercase
+                // in order to keep same result with other dialects.
+                const query = this.QueryGenerator.getForeignKeyReferencesQuery(tableName, catalogName);
+                return this.sequelize.query(query, queryOptions)
+                    .then((result) => result.map(util.camelizeObjectKeys));
+            }
+            case "mssql":
+            case "mysql":
+            default: {
+                const query = this.QueryGenerator.getForeignKeysQuery(tableName, catalogName);
+                return this.sequelize.query(query, queryOptions);
+            }
+        }
+    }
+
+    /**
      * Remove an already existing index from a table
      *
      * @param {String} tableName             Table name to drop index from
@@ -833,8 +869,8 @@ export default class QueryInterface {
 
     }
 
-    showConstraint(tableName, options) {
-        const sql = this.QueryGenerator.showConstraintsQuery(tableName, options);
+    showConstraint(tableName, constraintName, options) {
+        const sql = this.QueryGenerator.showConstraintsQuery(tableName, constraintName);
         return this.sequelize.query(sql, Object.assign({}, options, { type: queryType.SHOWCONSTRAINTS }));
     }
 
@@ -877,9 +913,21 @@ export default class QueryInterface {
         return results;
     }
 
-    async upsert(tableName, valuesByField, updateValues, where, model, options) {
+    /**
+     * Upsert
+     *
+     * @param {String} tableName
+     * @param {Object} insertValues values to be inserted, mapped to field name
+     * @param {Object} updateValues values to be updated, mapped to field name
+     * @param {Object} where        various conditions
+     * @param {Model}  model
+     * @param {Object} options
+     *
+     * @returns {Promise<created, primaryKey>}
+     */
+    async upsert(tableName, insertValues, updateValues, where, model, options) {
         const wheres = [];
-        const attributes = Object.keys(valuesByField);
+        const attributes = Object.keys(insertValues);
         let indexes = [];
         let indexFields;
 
@@ -911,7 +959,7 @@ export default class QueryInterface {
             if (_.intersection(attributes, index).length === index.length) {
                 where = {};
                 for (const field of index) {
-                    where[field] = valuesByField[field];
+                    where[field] = insertValues[field];
                 }
                 wheres.push(where);
             }
@@ -922,15 +970,26 @@ export default class QueryInterface {
         options.type = queryType.UPSERT;
         options.raw = true;
 
-        const sql = this.QueryGenerator.upsertQuery(tableName, valuesByField, updateValues, where, model, options);
-        const rowCount = await this.sequelize.query(sql, options);
-        if (is.undefined(rowCount)) {
-            return rowCount;
+        const sql = this.QueryGenerator.upsertQuery(tableName, insertValues, updateValues, where, model, options);
+        const result = await this.sequelize.query(sql, options);
+        switch (this.sequelize.options.dialect) {
+            case "postgres":
+                return [result.created, result.primary_key];
+
+            case "mssql":
+                return [
+                    result.$action === "INSERT",
+                    result[model.primaryKeyField]
+                ];
+
+                // MySQL returns 1 for inserted, 2 for updated
+                // http://dev.mysql.com/doc/refman/5.0/en/insert-on-duplicate.html.
+            case "mysql":
+                return [result === 1, undefined];
+
+            default:
+                return [result, undefined];
         }
-
-        // MySQL returns 1 for inserted, 2 for updated http://dev.mysql.com/doc/refman/5.0/en/insert-on-duplicate.html. Postgres has been modded to do the same
-
-        return rowCount === 1;
     }
 
     /**

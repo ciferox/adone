@@ -78,8 +78,6 @@ describe("DataTypes", function () {
             return type.ABSTRACT.prototype.stringify.apply(this, args);
         });
 
-        current.refreshTypes();
-
         const User = current.define("user", {
             field: Type
         }, {
@@ -87,6 +85,8 @@ describe("DataTypes", function () {
         });
 
         return current.sync({ force: true }).then(() => {
+            current.refreshTypes();
+
             return User.create({
                 field: value
             });

@@ -415,27 +415,40 @@ describe("shani", "util", "__", "collection", () => {
     describe(".resetHistory", () => {
         beforeEach(function () {
             this.collection = new Collection();
-            this.collection.fakes = [{
-                resetHistory: sspy()
-            }, {
-                resetHistory: sspy()
-            }, {
-                // this fake pretends to be a spy, which does not have resetHistory method
-                // but has a reset method
-                reset: sspy()
-            }];
+            const spy1 = sspy();
+            spy1();
+
+            const spy2 = sspy();
+            spy2();
+
+            this.collection.fakes = [
+                spy1,
+                spy2
+            ];
         });
 
         it("resets the history on all fakes", function () {
             const fake0 = this.collection.fakes[0];
             const fake1 = this.collection.fakes[1];
-            const fake2 = this.collection.fakes[2];
 
             this.collection.resetHistory();
 
-            assert(fake0.resetHistory.called);
-            assert(fake1.resetHistory.called);
-            assert(fake2.reset.called);
+            assert.false(fake0.called);
+            assert.false(fake1.called);
+        });
+
+        it("calls reset on fake that do not have a resetHistory", function () {
+            const noop = function noop() {};
+
+            noop.reset = function reset() {
+                noop.reset.called = true;
+            };
+
+            this.collection.fakes.push(noop);
+
+            this.collection.resetHistory();
+
+            assert.true(noop.reset.called);
         });
     });
 

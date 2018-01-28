@@ -414,12 +414,27 @@ const QueryGenerator = {
         const quotedBackupTableName = this.quoteTable(backupTableName);
         const attributeNames = Object.keys(attributes).map((attr) => this.quoteIdentifier(attr)).join(", ");
 
-        return `${this.createTableQuery(backupTableName, attributes).replace("CREATE TABLE", "CREATE TEMPORARY TABLE")
-        }INSERT INTO ${quotedBackupTableName} SELECT ${attributeNames} FROM ${quotedTableName};`
-            + `DROP TABLE ${quotedTableName};${
-                this.createTableQuery(tableName, attributes)
-            }INSERT INTO ${quotedTableName} SELECT ${attributeNames} FROM ${quotedBackupTableName};`
-            + `DROP TABLE ${quotedBackupTableName};`;
+        // Temporary table cannot work for foreign keys.
+        return `${
+            this.createTableQuery(backupTableName, attributes)
+        }INSERT INTO ${
+            quotedBackupTableName
+        } SELECT ${
+            attributeNames
+        } FROM ${
+            quotedTableName
+        };DROP TABLE ${
+            quotedTableName
+        };${this.createTableQuery(tableName, attributes)
+        }INSERT INTO ${
+            quotedTableName
+        } SELECT ${
+            attributeNames
+        } FROM ${
+            quotedBackupTableName
+        };DROP TABLE ${
+            quotedBackupTableName
+        };`;
     },
 
     _alterConstraintQuery(tableName, attributes, createTableSql) {

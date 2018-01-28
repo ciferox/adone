@@ -10,6 +10,9 @@ describe("QueryGenerator", function () {
 
             expect(QG.whereItemQuery(operator.and, [{ test: { [operator.between]: [2, 5] } }, { test: { [operator.ne]: 3 } }, { test: { [operator.not]: 4 } }]))
                 .to.be.equal("(test BETWEEN 2 AND 5 AND test != 3 AND test != 4)");
+
+            expect(QG.whereItemQuery(operator.or, [{ test: { [operator.is]: null } }, { testSame: { [operator.eq]: null } }]))
+                .to.be.equal("(test IS NULL OR testSame IS NULL)");
         });
 
         it("should not parse any strings as aliases  operators", function () {

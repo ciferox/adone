@@ -99,8 +99,7 @@ describe("Values", function () {
             expect(user.dataValues.email).not.to.be.ok();
         });
 
-        it("allows use of sequelize.fn and sequelize.col in date and bool fields", function () {
-            const self = this;
+        it("allows use of sequelize.fn and sequelize.col in date and bool fields", async () => {
             const User = this.sequelize.define("User", {
                 d: type.DATE,
                 b: type.BOOLEAN,
@@ -110,33 +109,29 @@ describe("Values", function () {
                 }
             }, { timestamps: false });
 
-            return User.sync({ force: true }).then(() => {
-                return User.create({}).then((user) => {
-                    // Create the user first to set the proper default values. PG does not support column references in insert,
-                    // so we must create a record with the right value for always_false, then reference it in an update
-                    let now = dialect === "sqlite"
-                        ? self.sequelize.fn("", self.sequelize.fn("datetime", "now"))
-                        : self.sequelize.fn("NOW");
-                    if (dialect === "mssql") {
-                        now = self.sequelize.fn("", self.sequelize.fn("getdate"));
-                    }
-                    user.set({
-                        d: now,
-                        b: self.sequelize.col("always_false")
-                    });
-
-                    expect(user.get("d")).to.be.instanceof(orm.util.Fn);
-                    expect(user.get("b")).to.be.instanceof(orm.util.Col);
-
-                    return user.save().then(() => {
-                        return user.reload().then(() => {
-                            expect(user.d).to.be.a("date");
-                            expect(user.d.getTime()).to.be.closeTo(new Date().getTime(), 2000);
-                            expect(user.b).to.equal(false);
-                        });
-                    });
-                });
+            await User.sync({ force: true });
+            const user = await User.create({});
+            // Create the user first to set the proper default values. PG does not support column references in insert,
+            // so we must create a record with the right value for always_false, then reference it in an update
+            let now = dialect === "sqlite"
+                ? this.sequelize.fn("", this.sequelize.fn("datetime", "now"))
+                : this.sequelize.fn("NOW");
+            if (dialect === "mssql") {
+                now = this.sequelize.fn("", this.sequelize.fn("getdate"));
+            }
+            user.set({
+                d: now,
+                b: this.sequelize.col("always_false")
             });
+
+            expect(user.get("d")).to.be.instanceof(orm.util.Fn);
+            expect(user.get("b")).to.be.instanceof(orm.util.Col);
+
+            await user.save();
+            await user.reload();
+            expect(user.d).to.be.a("date");
+            expect(user.d.getTime()).to.be.closeTo(new Date().getTime(), 2000);
+            expect(user.b).to.equal(false);
         });
 
         describe("includes", () => {

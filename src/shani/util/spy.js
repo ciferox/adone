@@ -9,6 +9,7 @@ const filter = Array.prototype.filter;
 
 let callId = 0;
 const ErrorConstructor = Error.prototype.constructor;
+const bind = Function.prototype.bind;
 
 const incrementCallCount = function () {
     this.called = true;
@@ -125,7 +126,7 @@ let uuid = 0;
 // Public API
 const proto = {
     formatters: __.spyFormatters,
-    reset() {
+    resetHistory() {
         if (this.invoking) {
             const err = new Error("Cannot reset Sinon function while invoking it. " +
                 "Move the call to .reset outside of the callback.");
@@ -181,7 +182,7 @@ const proto = {
         delete proxy.create;
         Object.assign(proxy, func);
 
-        proxy.reset();
+        proxy.resetHistory();
         proxy.prototype = func.prototype;
         proxy.displayName = name || "spy";
         proxy.toString = __.util.functionToString;
@@ -211,11 +212,17 @@ const proto = {
         try {
             this.invoking = true;
 
-            returnValue = (this.func || func).apply(thisValue, args);
-
             const thisCall = this.getCall(this.callCount - 1);
-            if (thisCall.calledWithNew() && !is.object(returnValue)) {
-                returnValue = thisValue;
+
+            if (thisCall.calledWithNew()) {
+                // Call through with `new`
+                returnValue = new (bind.apply(this.func || func, [thisValue].concat(args)))();
+
+                if (is.primitive(returnValue)) {
+                    returnValue = thisValue;
+                }
+            } else {
+                returnValue = (this.func || func).apply(thisValue, args);
             }
         } catch (e) {
             exception = e;
@@ -419,7 +426,7 @@ const proto = {
             formatter = proto.formatters[specifyer];
 
             if (is.function(formatter)) {
-                return formatter(spyInstance, args);
+                return String(formatter(spyInstance, args));
             } else if (!is.nan(parseInt(specifyer, 10))) {
                 return __.util.format(args[specifyer - 1]);
             }

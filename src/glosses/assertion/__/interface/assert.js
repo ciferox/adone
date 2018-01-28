@@ -11,7 +11,16 @@ export default function (lib, util) {
     /**
      * Throws an exception, like node.js
      */
-    assert.fail = (actual, expected, message = "assert.fail()", operator) => {
+    assert.fail = function (actual, expected, message, operator) {
+        if (arguments.length < 2) {
+            // Comply with Node's fail([message]) interface
+
+            message = actual;
+            actual = undefined;
+        }
+
+        message = message || "assert.fail()";
+
         throw new AssertionError(message, { actual, expected, operator }, assert.fail);
     };
 

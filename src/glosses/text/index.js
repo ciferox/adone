@@ -231,7 +231,15 @@ export const wordwrap = (str, stop, { join = true, mode = "soft", countAnsiEscap
     return lines;
 };
 
-// the Levenshtein distance between two strings.
+/**
+ * Returns the Levenshtein distance between two strings
+ *
+ * @param {string} strA
+ * @param {string} strB
+ * @param {number[][]} [memo]
+ * @return {number} distance between strA and strB
+ * @api private
+ */
 export const stringDistance = (strA, strB, memo) => {
     if (!memo) {
         // `memo` is a two-dimensional array containing a cache of distances
@@ -254,6 +262,51 @@ export const stringDistance = (strA, strB, memo) => {
                 stringDistance(strA, sliceB, memo) + 1,
                 stringDistance(sliceA, sliceB, memo) +
                 (strA.slice(-1) === strB.slice(-1) ? 0 : 1)
+            );
+        }
+    }
+
+    return memo[strA.length][strB.length];
+};
+
+/**
+ * Return the Levenshtein distance between two strings, but no more than cap.
+ *
+ * @param {string} strA
+ * @param {string} strB
+ * @param {number} number
+ * @return {number} min(string distance between strA and strB, cap)
+ * @api private
+ */
+export const stringDistanceCapped = (strA, strB, cap) => {
+    if (Math.abs(strA.length - strB.length) >= cap) {
+        return cap;
+    }
+
+    const memo = [];
+    // `memo` is a two-dimensional array containing distances.
+    // memo[i][j] is the distance between strA.slice(0, i) and
+    // strB.slice(0, j).
+    for (let i = 0; i <= strA.length; i++) {
+        memo[i] = Array(strB.length + 1).fill(0);
+        memo[i][0] = i;
+    }
+    for (let j = 0; j < strB.length; j++) {
+        memo[0][j] = j;
+    }
+
+    for (let i = 1; i <= strA.length; i++) {
+        const ch = strA.charCodeAt(i - 1);
+        for (let j = 1; j <= strB.length; j++) {
+            if (Math.abs(i - j) >= cap) {
+                memo[i][j] = cap;
+                continue;
+            }
+            memo[i][j] = Math.min(
+                memo[i - 1][j] + 1,
+                memo[i][j - 1] + 1,
+                memo[i - 1][j - 1] +
+              (ch === strB.charCodeAt(j - 1) ? 0 : 1)
             );
         }
     }

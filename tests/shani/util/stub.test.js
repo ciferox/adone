@@ -586,7 +586,7 @@ describe("shani", "util", "stub", () => {
                 this.originalError = global.Error;
                 errorSpy = createSpy(global, "Error");
                 // errorSpy starts with a call already made, not sure why
-                errorSpy.reset();
+                errorSpy.resetHistory();
             });
 
             afterEach(function () {

@@ -58,7 +58,7 @@ const proto = {
             fake.resetBehavior();
         });
     },
-    resetHistory: util.spy.reset,
+    resetHistory: util.spy.resetHistory,
     reset() {
         this.resetHistory();
         this.resetBehavior();

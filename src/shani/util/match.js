@@ -217,6 +217,42 @@ match.hasNested = (...args) => {
     }, message);
 };
 
+match.every = function (predicate) {
+    if (!isMatcher(predicate)) {
+        throw new TypeError("Matcher expected");
+    }
+
+    return match((actual) => {
+        if (__.util.typeOf(actual) === "object") {
+            return every(Object.keys(actual), (key) => {
+                return predicate.test(actual[key]);
+            });
+        }
+
+        return Boolean(actual) && __.util.typeOf(actual.forEach) === "function" && every(actual, (element) => {
+            return predicate.test(element);
+        });
+    }, `every(${predicate.message})`);
+};
+
+match.some = function (predicate) {
+    if (!isMatcher(predicate)) {
+        throw new TypeError("Matcher expected");
+    }
+
+    return match((actual) => {
+        if (__.util.typeOf(actual) === "object") {
+            return !every(Object.keys(actual), (key) => {
+                return !predicate.test(actual[key]);
+            });
+        }
+
+        return Boolean(actual) && adone.util.typeOf(actual.forEach) === "function" && !every(actual, (element) => {
+            return !predicate.test(element);
+        });
+    }, `some(${predicate.message})`);
+};
+
 match.array = match.typeOf("array");
 
 match.array.deepEquals = (expectation) => match((actual) => {

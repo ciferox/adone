@@ -1,5 +1,12 @@
-const { assertion: $assert } = adone;
-const { config, __: { util } } = $assert;
+const {
+    is,
+    assertion: $assert
+} = adone;
+const {
+    config, __: {
+        util
+    }
+} = $assert;
 
 const builtins = ["__flags", "__methods", "_obj", "assert"];
 
@@ -21,17 +28,30 @@ export default function proxify(obj, nonChainableMethodName) {
                     throw Error(`Invalid property: ${nonChainableMethodName}.${property}. See docs for proper usage of "${nonChainableMethodName}".`);
                 }
 
-                const orderedProperties = util.getProperties(target).filter((property) => {
-                    return !Object.prototype.hasOwnProperty(property) &&
-                        builtins.indexOf(property) === -1;
-                }).sort((a, b) => {
-                    return adone.text.stringDistance(property, a) - adone.text.stringDistance(property, b);
+                // If the property is reasonably close to an existing Chai property,
+                // suggest that property to the user. Only suggest properties with a
+                // distance less than 4.
+                let suggestion = null;
+                let suggestionDistance = 4;
+                util.getProperties(target).forEach((prop) => {
+                    if (
+                        !Object.prototype.hasOwnProperty(prop)
+                        && builtins.indexOf(prop) === -1
+                    ) {
+                        const dist = adone.text.stringDistanceCapped(
+                            property,
+                            prop,
+                            suggestionDistance
+                        );
+                        if (dist < suggestionDistance) {
+                            suggestion = prop;
+                            suggestionDistance = dist;
+                        }
+                    }
                 });
 
-                if (orderedProperties.length && adone.text.stringDistance(orderedProperties[0], property) < 4) {
-                    // If the property is reasonably close to an existing property,
-                    // suggest that property to the user.
-                    throw Error(`Invalid property: ${property}. Did you mean "${orderedProperties[0]}"?`);
+                if (!is.null(suggestion)) {
+                    throw Error(`Invalid property: ${property}. Did you mean "${suggestion}"?`);
                 } else {
                     throw Error(`Invalid property: ${property}`);
                 }

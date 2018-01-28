@@ -20,10 +20,24 @@ describe("assertion", "assert", () => {
         }, "expected foo to equal `bar`");
     });
 
-    it("fail", () => {
-        expect(() => {
-            assert.fail(0, 1, "this has failed");
-        }).to.throw(AssertionError, /this has failed/);
+    describe("fail", () => {
+        it("should accept a message as the 3rd argument", () => {
+            err(() => {
+                assert.fail(0, 1, "this has failed");
+            }, /this has failed/);
+        });
+
+        it("should accept a message as the only argument", () => {
+            err(() => {
+                assert.fail("this has failed");
+            }, /this has failed/);
+        });
+
+        it("should produce a default message when called without any arguments", () => {
+            err(() => {
+                assert.fail();
+            }, /assert\.fail()/);
+        });
     });
 
     it("true", () => {

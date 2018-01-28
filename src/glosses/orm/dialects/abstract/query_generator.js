@@ -1109,10 +1109,12 @@ const QueryGenerator = {
         // Add HAVING to sub or main query
         if (options.hasOwnProperty("having")) {
             options.having = this.getWhereConditions(options.having, tableName, model, options, false);
-            if (subQuery) {
-                subQueryItems.push(` HAVING ${options.having}`);
-            } else {
-                mainQueryItems.push(` HAVING ${options.having}`);
+            if (options.having) {
+                if (subQuery) {
+                    subQueryItems.push(` HAVING ${options.having}`);
+                } else {
+                    mainQueryItems.push(` HAVING ${options.having}`);
+                }
             }
         }
 
@@ -1382,7 +1384,9 @@ const QueryGenerator = {
         const parentIsTop = Boolean(parent) && !include.parent.association && include.parent.model.name === topLevelInfo.options.model.name;
         let $parent;
         let joinWhere;
-        /* Attributes for the left side */
+        /**
+         * Attributes for the left side
+         */
         const left = includeAssociation.source;
         const attrLeft = includeAssociation instanceof association.BelongsTo
             ? includeAssociation.identifier
@@ -1391,7 +1395,9 @@ const QueryGenerator = {
             ? includeAssociation.identifierField
             : left.rawAttributes[includeAssociation.sourceKeyAttribute || left.primaryKeyAttribute].field;
         let asLeft;
-        /* Attributes for the right side */
+        /**
+         * Attributes for the right side
+         */
         const right = include.model;
         const tableRight = right.getTableName();
         const fieldRight = includeAssociation instanceof association.BelongsTo
@@ -2335,7 +2341,7 @@ const QueryGenerator = {
 
         if (is.null(value) && comparator === this.OperatorMap[operator.eq]) {
             return this._joinKeyValue(key, this.escape(value, field, escapeOptions), this.OperatorMap[operator.is], options.prefix);
-        } else if (is.null(value) && this.OperatorMap[operator.ne]) {
+        } else if (is.null(value) && comparator === this.OperatorMap[operator.ne]) {
             return this._joinKeyValue(key, this.escape(value, field, escapeOptions), this.OperatorMap[operator.not], options.prefix);
         }
 

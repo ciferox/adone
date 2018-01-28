@@ -1,7 +1,10 @@
 const {
     is,
     vendor: { lodash: _ },
-    orm
+    orm,
+    std: {
+        assert
+    }
 } = adone;
 
 const {
@@ -369,7 +372,9 @@ export default class Model {
         options.includeNames = [];
         options.includeMap = {};
 
-        /* Legacy */
+        /**
+         * Legacy
+         */
         options.hasSingleAssociation = false;
         options.hasMultiAssociation = false;
 
@@ -381,7 +386,6 @@ export default class Model {
         options.include = options.include.map((include) => {
             include = this._conformInclude(include);
             include.parent = options;
-
             this._validateIncludedElement.call(options.model, include, tableNames, options);
 
             if (is.undefined(include.duplicating)) {
@@ -433,7 +437,9 @@ export default class Model {
                 }
             }
 
-            /* Legacy */
+            /**
+             * Legacy
+             */
             options.hasIncludeWhere = options.hasIncludeWhere || include.hasIncludeWhere || Boolean(include.where);
             options.hasIncludeRequired = options.hasIncludeRequired || include.hasIncludeRequired || Boolean(include.required);
 
@@ -704,7 +710,7 @@ export default class Model {
      * @param {String}                  [options.initialAutoIncrement] Set the initial AUTO_INCREMENT value for the table in MySQL.
      * @param {Object}                  [options.hooks] An object of hook function that are called before and after certain lifecycle events. The possible hooks are: beforeValidate, afterValidate, validationFailed, beforeBulkCreate, beforeBulkDestroy, beforeBulkUpdate, beforeCreate, beforeDestroy, beforeUpdate, afterCreate, afterDestroy, afterUpdate, afterBulkCreate, afterBulkDestory and afterBulkUpdate. See Hooks for more information about hook functions and their signatures. Each property can either be a function, or an array of functions.
      * @param {Object}                  [options.validate] An object of model wide validations. Validations have access to all model values via `this`. If the validator function takes an argument, it is assumed to be async, and is called with a callback that accepts an optional error.
-
+     *
      * @return {Model}
      */
     static init(attributes, options) { // testhint options:none
@@ -981,7 +987,7 @@ export default class Model {
             }
 
             if (definition.hasOwnProperty("defaultValue")) {
-                this._defaultValues[name] = _.partial(util.toDefaultValue, definition.defaultValue);
+                this._defaultValues[name] = _.partial(util.toDefaultValue, definition.defaultValue, this.sequelize.options.dialect);
             }
 
             if (definition.hasOwnProperty("unique") && definition.unique) {
@@ -1113,23 +1119,55 @@ export default class Model {
         await this.QueryInterface.createTable(this.getTableName(options), attributes, options, this);
 
         if (options.alter) {
-            return this.QueryInterface.describeTable(this.getTableName(options))
-                .then((columns) => {
-                    const changes = []; // array of promises to run
-                    _.each(attributes, (columnDesc, columnName) => {
-                        if (!columns[columnName]) {
-                            changes.push(() => this.QueryInterface.addColumn(this.getTableName(options), columnName, attributes[columnName]));
-                        }
-                    });
-                    _.each(columns, (columnDesc, columnName) => {
-                        if (!attributes[columnName]) {
-                            changes.push(() => this.QueryInterface.removeColumn(this.getTableName(options), columnName, options));
-                        } else if (!attributes[columnName].primaryKey) {
-                            changes.push(() => this.QueryInterface.changeColumn(this.getTableName(options), columnName, attributes[columnName]));
-                        }
-                    });
-                    return changes.reduce((p, fn) => p.then(fn), Promise.resolve());
+            await Promise.all([
+                this.QueryInterface.describeTable(this.getTableName(options)),
+                this.QueryInterface.getForeignKeyReferencesForTable(this.getTableName(options))
+            ]).then((tableInfos) => {
+                const columns = tableInfos[0];
+                // Use for alter foreign keys
+                const foreignKeyReferences = tableInfos[1];
+
+                const changes = []; // array of promises to run
+                const removedConstraints = {};
+
+                _.each(attributes, (columnDesc, columnName) => {
+                    if (!columns[columnName]) {
+                        changes.push(() => this.QueryInterface.addColumn(this.getTableName(options), columnName, attributes[columnName]));
+                    }
                 });
+                _.each(columns, (columnDesc, columnName) => {
+                    const currentAttributes = attributes[columnName];
+                    if (!currentAttributes) {
+                        changes.push(() => this.QueryInterface.removeColumn(this.getTableName(options), columnName, options));
+                    } else if (!currentAttributes.primaryKey) {
+                        // Check foreign keys. If it's a foreign key, it should remove constraint first.
+                        const references = currentAttributes.references;
+                        if (currentAttributes.references) {
+                            const database = this.sequelize.config.database;
+                            const schema = this.sequelize.config.schema;
+                            // Find existed foreign keys
+                            _.each(foreignKeyReferences, (foreignKeyReference) => {
+                                const constraintName = foreignKeyReference.constraintName;
+                                if (
+                                    Boolean(constraintName)
+                                        && foreignKeyReference.tableCatalog === database
+                                        && (schema ? foreignKeyReference.tableSchema === schema : true)
+                                        && foreignKeyReference.referencedTableName === references.model
+                                        && foreignKeyReference.referencedColumnName === references.key
+                                        && (schema ? foreignKeyReference.referencedTableSchema === schema : true)
+                                        && !removedConstraints[constraintName]
+                                ) {
+                                    // Remove constraint on foreign keys.
+                                    changes.push(() => this.QueryInterface.removeConstraint(this.getTableName(options), constraintName, options));
+                                    removedConstraints[constraintName] = true;
+                                }
+                            });
+                        }
+                        changes.push(() => this.QueryInterface.changeColumn(this.getTableName(options), columnName, attributes[columnName]));
+                    }
+                });
+                return changes.reduce((p, fn) => p.then(fn), Promise.resolve());
+            });
         }
 
         let indexes = await this.QueryInterface.showIndex(this.getTableName(options), options);
@@ -1320,6 +1358,7 @@ export default class Model {
         const self = class extends this { };
         let scope;
         let scopeName;
+
         Object.defineProperty(self, "name", { value: this.name });
 
         self._scope = {};
@@ -1331,6 +1370,7 @@ export default class Model {
         }
 
         const options = _.flatten(arguments);
+
         for (const option of options) {
             scope = null;
             scopeName = null;
@@ -1364,7 +1404,7 @@ export default class Model {
             if (scope) {
                 _.assignWith(self._scope, scope, (objectValue, sourceValue, key) => {
                     if (key === "where") {
-                        return is.array(sourceValue) ? sourceValue : _.assign(objectValue || {}, sourceValue);
+                        return is.array(sourceValue) ? sourceValue : Object.assign(objectValue || {}, sourceValue);
                     } else if (["attributes", "include", "group"].indexOf(key) >= 0 && is.array(objectValue) && is.array(sourceValue)) {
                         return objectValue.concat(sourceValue);
                     }
@@ -1398,7 +1438,7 @@ export default class Model {
      * ```
      * ```sql
      * WHERE attr1 = 42 AND attr2 = 'cake'
-     *```
+     * ```
      *
      * __Using greater than, less than etc.__
      * ```js
@@ -1864,21 +1904,14 @@ export default class Model {
             countOptions.attributes = undefined;
         }
 
-
-        const count = await this.count(countOptions);
-
-        if (count === 0) {
-            return {
-                count: 0,
-                rows: []
-            };
-        }
-
-        const results = await this.findAll(options);
+        const [count, rows] = await Promise.all([
+            this.count(countOptions),
+            this.findAll(options)
+        ]);
 
         return {
-            count: count || 0,
-            rows: results
+            count,
+            rows: count === 0 ? [] : rows
         };
     }
 
@@ -1962,7 +1995,7 @@ export default class Model {
 
     /**
      * Builds a new model instance and calls save on it.
-
+     *
      * @see {@link Model#build}
      * @see {@link Model#save}
      *
@@ -2026,7 +2059,7 @@ export default class Model {
         if (is.null(instance)) {
             values = _.clone(options.defaults) || {};
             if (_.isPlainObject(options.where)) {
-                values = _.defaults(values, options.where);
+                values = util.defaults(values, options.where);
             }
 
             return [this.build(values), true];
@@ -2070,7 +2103,7 @@ export default class Model {
 
 
         try {
-            let instance = await this.findOne(_.defaults({ transaction }, options));
+            let instance = await this.findOne(util.defaults({ transaction }, options));
 
             if (!is.null(instance)) {
                 return [instance, false];
@@ -2078,7 +2111,7 @@ export default class Model {
 
             values = _.clone(options.defaults) || {};
             if (_.isPlainObject(options.where)) {
-                values = _.defaults(values, options.where);
+                values = util.defaults(values, options.where);
             }
 
             options.exception = true;
@@ -2110,7 +2143,7 @@ export default class Model {
                     });
                 }
                 // Someone must have created a matching instance inside the same transaction since we last did a find. Let's find it!
-                const instance = await this.findOne(_.defaults({
+                const instance = await this.findOne(util.defaults({
                     transaction: internalTransaction ? null : transaction
                 }, options));
                 // Sanity check, ideally we caught this at the defaultFeilds/err.fields check
@@ -2148,7 +2181,7 @@ export default class Model {
 
         let values = _.clone(options.defaults) || {};
         if (_.isPlainObject(options.where)) {
-            values = _.defaults(values, options.where);
+            values = util.defaults(values, options.where);
         }
 
         const result = await this.findOne(options);
@@ -2187,22 +2220,24 @@ export default class Model {
      * @param  {Boolean}      [options.validate=true] Run validations before the row is inserted
      * @param  {Array}        [options.fields=Object.keys(this.attributes)] The fields to insert / update. Defaults to all changed fields
      * @param  {Boolean}      [options.hooks=true]  Run before / after upsert hooks?
+     * @param  {Boolean}      [options.returning=false] Append RETURNING * to get back auto generated values (Postgres only)
      * @param  {Transaction}  [options.transaction] Transaction to run query under
      * @param  {Function}     [options.logging=false] A function that gets executed while running the query to log the sql.
      * @param  {Boolean}      [options.benchmark=false] Pass query execution time in milliseconds as second argument to logging function (options.logging).
      * @param  {String}       [options.searchPath=DEFAULT] An optional parameter to specify the schema search_path (Postgres only)
      *
-     * @return {Promise<created>} Returns a boolean indicating whether the row was created or updated.
+     * @return {Promise<created>} Returns a boolean indicating whether the row was created or updated. For Postgres/MSSQL with (options.returning=true), it returns record and created boolean with signature `<Model, created>`.
      */
     static async upsert(values, options) {
-        options = _.extend({
-            hooks: true
+        options = Object.assign({
+            hooks: true,
+            returning: false
         }, util.cloneDeep(options || {}));
         options.model = this;
 
         const createdAtAttr = this._timestampAttributes.createdAt;
         const updatedAtAttr = this._timestampAttributes.updatedAt;
-        const hadPrimary = this.primaryKeyField in values || this.primaryKeyAttribute in values;
+        const hasPrimary = this.primaryKeyField in values || this.primaryKeyAttribute in values;
         const instance = this.build(values);
 
         if (!options.fields) {
@@ -2229,7 +2264,7 @@ export default class Model {
 
         // Build adds a null value for the primary key, if none was given by the user.
         // We need to remove that because of some Postgres technicalities.
-        if (!hadPrimary && this.primaryKeyAttribute && !this.rawAttributes[this.primaryKeyAttribute].defaultValue) {
+        if (!hasPrimary && this.primaryKeyAttribute && !this.rawAttributes[this.primaryKeyAttribute].defaultValue) {
             delete insertValues[this.primaryKeyField];
             delete updateValues[this.primaryKeyField];
         }
@@ -2238,13 +2273,21 @@ export default class Model {
             await this.runHooks("beforeUpsert", values, options);
         }
 
-        const result = await this.QueryInterface.upsert(this.getTableName(options), insertValues, updateValues, instance.where(), this, options);
+        const [created, primaryKey] = await this.QueryInterface.upsert(this.getTableName(options), insertValues, updateValues, instance.where(), this, options);
 
-        if (options.hooks) {
-            await this.runHooks("afterUpsert", result, options);
+        let val;
+        if (options.returning === true && primaryKey) {
+            const record = await this.findById(primaryKey, options);
+            val = [record, created];
+        } else {
+            val = created;
         }
 
-        return result;
+        if (options.hooks) {
+            await this.runHooks("afterUpsert", val, options);
+        }
+
+        return val;
     }
 
     /**
@@ -2449,7 +2492,9 @@ export default class Model {
      * @return {Promise<Integer>} The number of destroyed rows
      */
     static async destroy(options) {
-        let instances;
+        options = util.cloneDeep(options);
+
+        this._injectScope(options);
 
         if (!options || !(options.where || options.truncate)) {
             throw new Error("Missing where or truncate attribute in the options parameter of model.destroy.");
@@ -2459,7 +2504,6 @@ export default class Model {
             throw new Error("Expected plain object, array or sequelize method in the options.where parameter of model.destroy.");
         }
 
-        options = util.cloneDeep(options);
         options = _.defaults(options, {
             hooks: true,
             individualHooks: false,
@@ -2473,6 +2517,7 @@ export default class Model {
 
         util.mapOptionFieldNames(options, this);
         options.model = this;
+        let instances;
 
         // Run before hook
         if (options.hooks) {
@@ -2499,7 +2544,7 @@ export default class Model {
             where[field] = deletedAtAttribute.hasOwnProperty("defaultValue") ? deletedAtAttribute.defaultValue : null;
 
             attrValueHash[field] = util.now(this.sequelize.options.dialect);
-            result = await this.QueryInterface.bulkUpdate(this.getTableName(options), attrValueHash, _.defaults(where, options.where), options, this.rawAttributes);
+            result = await this.QueryInterface.bulkUpdate(this.getTableName(options), attrValueHash, Object.assign(where, options.where), options, this.rawAttributes);
         } else {
             result = await this.QueryInterface.bulkDelete(this.getTableName(options), options.where, options, this);
         }
@@ -2604,9 +2649,11 @@ export default class Model {
      * @return {Promise<Array<affectedCount,affectedRows>>}
      */
     static async update(values, options) {
+        options = util.cloneDeep(options);
+        this._injectScope(options);
+
         this._optionsMustContainWhere(options);
 
-        options = util.cloneDeep(options);
         options = this._paranoidClause(this, _.defaults(options, {
             validate: true,
             hooks: true,
@@ -2617,8 +2664,6 @@ export default class Model {
         }));
 
         options.type = queryType.BULKUPDATE;
-
-        this._injectScope(options);
 
         // Clone values so it doesn't get modified for caller scope
         values = _.clone(values);
@@ -2785,7 +2830,7 @@ export default class Model {
 
     static _getDefaultTimestamp(attr) {
         if (Boolean(this.rawAttributes[attr]) && Boolean(this.rawAttributes[attr].defaultValue)) {
-            return util.toDefaultValue(this.rawAttributes[attr].defaultValue);
+            return util.toDefaultValue(this.rawAttributes[attr].defaultValue, this.sequelize.options.dialect);
         }
         return undefined;
     }
@@ -2813,8 +2858,8 @@ export default class Model {
 
         const filteredScope = _.omit(scope, "include"); // Includes need special treatment
 
-        _.defaults(options, filteredScope);
-        _.defaults(options.where, filteredScope.where);
+        util.defaults(options, filteredScope);
+        util.defaults(options.where, filteredScope.where);
 
         if (scope.include) {
             options.include = options.include || [];
@@ -2856,34 +2901,35 @@ export default class Model {
      * ```
      * query. To get the correct value after an increment into the Instance you should do a reload.
      *
-     *```js
-    * Model.increment('number', { where: { foo: 'bar' }) // increment number by 1
-    * Model.increment(['number', 'count'], { by: 2, where: { foo: 'bar' } }) // increment number and count by 2
-    * Model.increment({ answer: 42, tries: -1}, { by: 2, where: { foo: 'bar' } }) // increment answer by 42, and decrement tries by 1.
-    *                                                        // `by` is ignored, since each column has its own value
-    * ```
-    *
-    * @see {@link Model#reload}
-    * @param {String|Array|Object} fields If a string is provided, that column is incremented by the value of `by` given in options. If an array is provided, the same is true for each column. If and object is provided, each column is incremented by the value given.
-    * @param {Object} options
-    * @param {Object} options.where
-    * @param {Integer} [options.by=1] The number to increment by
-    * @param {Boolean} [options.silent=false] If true, the updatedAt timestamp will not be updated.
-    * @param {Function} [options.logging=false] A function that gets executed while running the query to log the sql.
-    * @param {Transaction} [options.transaction]
-    * @param  {String}       [options.searchPath=DEFAULT] An optional parameter to specify the schema search_path (Postgres only)
-    *
-    * @return {Promise<this>}
-    */
+     * ```js
+     * Model.increment('number', { where: { foo: 'bar' }) // increment number by 1
+     * Model.increment(['number', 'count'], { by: 2, where: { foo: 'bar' } }) // increment number and count by 2
+     * Model.increment({ answer: 42, tries: -1}, { by: 2, where: { foo: 'bar' } }) // increment answer by 42, and decrement tries by 1.
+     *                                                        // `by` is ignored, since each column has its own value
+     * ```
+     *
+     * @see {@link Model#reload}
+     * @param {String|Array|Object} fields If a string is provided, that column is incremented by the value of `by` given in options. If an array is provided, the same is true for each column. If and object is provided, each column is incremented by the value given.
+     * @param {Object} options
+     * @param {Object} options.where
+     * @param {Integer} [options.by=1] The number to increment by
+     * @param {Boolean} [options.silent=false] If true, the updatedAt timestamp will not be updated.
+     * @param {Function} [options.logging=false] A function that gets executed while running the query to log the sql.
+     * @param {Transaction} [options.transaction]
+     * @param  {String}       [options.searchPath=DEFAULT] An optional parameter to specify the schema search_path (Postgres only)
+     *
+     * @return {Promise<this>}
+     */
     static async increment(fields, options) {
         options = options || {};
+
         this._injectScope(options);
         this._optionsMustContainWhere(options);
 
         const updatedAtAttr = this._timestampAttributes.updatedAt;
         const versionAttr = this._versionAttribute;
         const updatedAtAttribute = this.rawAttributes[updatedAtAttr];
-        options = _.defaults({}, options, {
+        options = util.defaults({}, options, {
             by: 1,
             attributes: {},
             where: {},
@@ -2938,8 +2984,7 @@ export default class Model {
 
     static _optionsMustContainWhere(options) {
         assert(options && options.where, "Missing where attribute in the options parameter");
-        assert(_.isPlainObject(options.where) || _.isArray(options.where) || options.where instanceof util.SequelizeMethod,
-            "Expected plain object, array or sequelize method in the options.where parameter");
+        assert(_.isPlainObject(options.where) || _.isArray(options.where) || options.where instanceof util.SequelizeMethod, "Expected plain object, array or sequelize method in the options.where parameter");
     }
 
     /**
@@ -3017,24 +3062,24 @@ export default class Model {
             }
 
             if (this.constructor._timestampAttributes.createdAt && defaults[this.constructor._timestampAttributes.createdAt]) {
-                this.dataValues[this.constructor._timestampAttributes.createdAt] = util.toDefaultValue(defaults[this.constructor._timestampAttributes.createdAt]);
+                this.dataValues[this.constructor._timestampAttributes.createdAt] = util.toDefaultValue(defaults[this.constructor._timestampAttributes.createdAt], this.sequelize.options.dialect);
                 delete defaults[this.constructor._timestampAttributes.createdAt];
             }
 
             if (this.constructor._timestampAttributes.updatedAt && defaults[this.constructor._timestampAttributes.updatedAt]) {
-                this.dataValues[this.constructor._timestampAttributes.updatedAt] = util.toDefaultValue(defaults[this.constructor._timestampAttributes.updatedAt]);
+                this.dataValues[this.constructor._timestampAttributes.updatedAt] = util.toDefaultValue(defaults[this.constructor._timestampAttributes.updatedAt], this.sequelize.options.dialect);
                 delete defaults[this.constructor._timestampAttributes.updatedAt];
             }
 
             if (this.constructor._timestampAttributes.deletedAt && defaults[this.constructor._timestampAttributes.deletedAt]) {
-                this.dataValues[this.constructor._timestampAttributes.deletedAt] = util.toDefaultValue(defaults[this.constructor._timestampAttributes.deletedAt]);
+                this.dataValues[this.constructor._timestampAttributes.deletedAt] = util.toDefaultValue(defaults[this.constructor._timestampAttributes.deletedAt], this.sequelize.options.dialect);
                 delete defaults[this.constructor._timestampAttributes.deletedAt];
             }
 
             if (Object.keys(defaults).length) {
                 for (key in defaults) {
                     if (is.undefined(values[key])) {
-                        this.set(key, util.toDefaultValue(defaults[key]), defaultsOptions);
+                        this.set(key, util.toDefaultValue(defaults[key], this.sequelize.options.dialect), defaultsOptions);
                         delete values[key];
                     }
                 }
@@ -3670,18 +3715,18 @@ export default class Model {
     }
 
     /**
-    * Refresh the current instance in-place, i.e. update the object with current data from the DB and return the same object.
-    * This is different from doing a `find(Instance.id)`, because that would create and return a new instance. With this method,
-    * all references to the Instance are updated with the new data and no new objects are created.
-    *
-    * @see {@link Model.findAll}
-    * @param {Object} [options] Options that are passed on to `Model.find`
-    * @param {Function} [options.logging=false] A function that gets executed while running the query to log the sql.
-    *
-    * @return {Promise<this>}
-    */
+     * Refresh the current instance in-place, i.e. update the object with current data from the DB and return the same object.
+     * This is different from doing a `find(Instance.id)`, because that would create and return a new instance. With this method,
+     * all references to the Instance are updated with the new data and no new objects are created.
+     *
+     * @see {@link Model.findAll}
+     * @param {Object} [options] Options that are passed on to `Model.find`
+     * @param {Function} [options.logging=false] A function that gets executed while running the query to log the sql.
+     *
+     * @return {Promise<this>}
+     */
     async reload(options) {
-        options = _.defaults({}, options, {
+        options = util.defaults({}, options, {
             where: this.where(),
             include: this._options.include || null
         });
@@ -3703,17 +3748,17 @@ export default class Model {
     }
 
     /**
-    * Validate the attributes of this instance according to validation rules set in the model definition.
-    *
-    * The promise fulfills if and only if validation successful; otherwise it rejects an Error instance containing { field name : [error msgs] } entries.
-    *
-    * @param {Object} [options] Options that are passed to the validator
-    * @param {Array} [options.skip] An array of strings. All properties that are in this array will not be validated
-    * @param {Array} [options.fields] An array of strings. Only the properties that are in this array will be validated
-    * @param {Boolean} [options.hooks=true] Run before and after validate hooks
-    *
-    * @return {Promise<undefined>}
-    */
+     * Validate the attributes of this instance according to validation rules set in the model definition.
+     *
+     * The promise fulfills if and only if validation successful; otherwise it rejects an Error instance containing { field name : [error msgs] } entries.
+     *
+     * @param {Object} [options] Options that are passed to the validator
+     * @param {Array} [options.skip] An array of strings. All properties that are in this array will not be validated
+     * @param {Array} [options.fields] An array of strings. Only the properties that are in this array will be validated
+     * @param {Boolean} [options.hooks=true] Run before and after validate hooks
+     *
+     * @return {Promise<undefined>}
+     */
     validate(options) {
         return new InstanceValidator(this, options).validate();
     }
@@ -3892,26 +3937,26 @@ export default class Model {
      * ```
      * query. The updated instance will be returned by default in Postgres. However, in other dialects, you will need to do a reload to get the new values.
      *
-     *```js
-    * instance.increment('number') // increment number by 1
-    * instance.increment(['number', 'count'], { by: 2 }) // increment number and count by 2
-    * instance.increment({ answer: 42, tries: 1}, { by: 2 }) // increment answer by 42, and tries by 1.
-    *                                                        // `by` is ignored, since each column has its own value
-    * ```
-    *
-    * @see {@link Model#reload}
-    * @param {String|Array|Object} fields If a string is provided, that column is incremented by the value of `by` given in options. If an array is provided, the same is true for each column. If and object is provided, each column is incremented by the value given.
-    * @param {Object} [options]
-    * @param {Integer} [options.by=1] The number to increment by
-    * @param {Boolean} [options.silent=false] If true, the updatedAt timestamp will not be updated.
-    * @param {Function} [options.logging=false] A function that gets executed while running the query to log the sql.
-    * @param {Transaction} [options.transaction]
-    * @param  {String}       [options.searchPath=DEFAULT] An optional parameter to specify the schema search_path (Postgres only)
-    * @param {Boolean} [options.returning=true] Append RETURNING * to get back auto generated values (Postgres only)
-    *
-    * @return {Promise<this>}
-    * @since 4.0.0
-    */
+     * ```js
+     * instance.increment('number') // increment number by 1
+     * instance.increment(['number', 'count'], { by: 2 }) // increment number and count by 2
+     * instance.increment({ answer: 42, tries: 1}, { by: 2 }) // increment answer by 42, and tries by 1.
+     *                                                        // `by` is ignored, since each column has its own value
+     * ```
+     *
+     * @see {@link Model#reload}
+     * @param {String|Array|Object} fields If a string is provided, that column is incremented by the value of `by` given in options. If an array is provided, the same is true for each column. If and object is provided, each column is incremented by the value given.
+     * @param {Object} [options]
+     * @param {Integer} [options.by=1] The number to increment by
+     * @param {Boolean} [options.silent=false] If true, the updatedAt timestamp will not be updated.
+     * @param {Function} [options.logging=false] A function that gets executed while running the query to log the sql.
+     * @param {Transaction} [options.transaction]
+     * @param  {String}       [options.searchPath=DEFAULT] An optional parameter to specify the schema search_path (Postgres only)
+     * @param {Boolean} [options.returning=true] Append RETURNING * to get back auto generated values (Postgres only)
+     *
+     * @return {Promise<this>}
+     * @since 4.0.0
+     */
     async increment(fields, options) {
         const identifier = this.where();
 
