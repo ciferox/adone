@@ -251,7 +251,13 @@ export class RsaPrivateKey {
 
         if (format === "pkcs-8") {
             const key = crypto.pki.privateKeyFromJwk(this._key); // _key is a JWK (JSON Web Key)
-            return crypto.pki.encryptRsaPrivateKey(key, password);
+            const options = {
+                algorithm: "aes256",
+                count: 10000,
+                saltSize: 128 / 8,
+                prfAlgorithm: "sha512"
+            };
+            return crypto.pki.encryptRsaPrivateKey(key, password, options);
         }
 
         throw new Error(`Unknown export format '${format}'`);

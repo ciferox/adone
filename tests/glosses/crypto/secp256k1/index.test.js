@@ -100,6 +100,94 @@ describe("crypto", "secp256k1", () => {
             });
         });
 
+        describe("privateKeyNegate", () => {
+            it("private key should be a Buffer", () => {
+                assert.throws(() => {
+                    secp256k1.privateKeyNegate(null);
+                }, new RegExp(`^${messages.EC_PRIVATE_KEY_TYPE_INVALID}$`));
+            });
+
+            it("private key length is invalid", () => {
+                assert.throws(() => {
+                    const privateKey = util.getPrivateKey().slice(1);
+                    secp256k1.privateKeyNegate(privateKey);
+                }, new RegExp(`^${messages.EC_PRIVATE_KEY_LENGTH_INVALID}$`));
+            });
+
+            it("private key is 0", () => {
+                const privateKey = util.BN_ZERO.toArrayLike(Buffer, "be", 32);
+
+                const expected = Buffer.alloc(32);
+                const result = secp256k1.privateKeyNegate(privateKey);
+                assert.deepEqual(result, expected);
+            });
+
+            it("private key equal to N", () => {
+                const privateKey = util.ec.curve.n.toArrayLike(Buffer, "be", 32);
+
+                const expected = Buffer.alloc(32);
+                const result = secp256k1.privateKeyNegate(privateKey);
+                assert.deepEqual(result, expected);
+            });
+
+            it("private key overflow", () => {
+                const privateKey = util.ec.curve.n.addn(10).toArrayLike(Buffer, "be", 32);
+
+                const expected = util.ec.curve.n.subn(10).toArrayLike(Buffer, "be", 32);
+                const result = secp256k1.privateKeyNegate(privateKey);
+                assert.deepEqual(result, expected);
+            });
+
+            util.repeat("random tests", util.env.repeat, (done) => {
+                const privateKey = util.getPrivateKey();
+
+                const expected = util.ec.curve.n.sub(new BN(privateKey));
+                const result = secp256k1.privateKeyNegate(privateKey);
+                assert.deepEqual(result.toString("hex"), expected.toString(16, 64));
+
+                done();
+            });
+        });
+
+        describe("privateKeyModInverse", () => {
+            it("private key should be a Buffer", () => {
+                assert.throws(() => {
+                    secp256k1.privateKeyModInverse(null);
+                }, new RegExp(`^${messages.EC_PRIVATE_KEY_TYPE_INVALID}$`));
+            });
+
+            it("private key length is invalid", () => {
+                assert.throws(() => {
+                    const privateKey = util.getPrivateKey().slice(1);
+                    secp256k1.privateKeyModInverse(privateKey);
+                }, new RegExp(`^${messages.EC_PRIVATE_KEY_LENGTH_INVALID}$`));
+            });
+
+            it("private key is 0", () => {
+                assert.throws(() => {
+                    const privateKey = util.BN_ZERO.toArrayLike(Buffer, "be", 32);
+                    secp256k1.privateKeyModInverse(privateKey);
+                }, new RegExp(`^${messages.EC_PRIVATE_KEY_RANGE_INVALID}$`));
+            });
+
+            it("private key equal to N", () => {
+                assert.throws(() => {
+                    const privateKey = util.ec.curve.n.toArrayLike(Buffer, "be", 32);
+                    secp256k1.privateKeyModInverse(privateKey);
+                }, new RegExp(`^${messages.EC_PRIVATE_KEY_RANGE_INVALID}$`));
+            });
+
+            util.repeat("random tests", util.env.repeat, (done) => {
+                const privateKey = util.getPrivateKey();
+
+                const expected = new BN(privateKey).invm(util.ec.curve.n);
+                const result = secp256k1.privateKeyModInverse(privateKey);
+                assert.deepEqual(result.toString("hex"), expected.toString(16, 64));
+
+                done();
+            });
+        });
+
         describe("privateKeyTweakAdd", () => {
             it("private key should be a Buffer", () => {
                 assert.throws(() => {

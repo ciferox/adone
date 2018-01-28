@@ -116,6 +116,9 @@ export const marshalPrivateKey = (key, type) => {
 
 exports.import = (pem, password) => {
     const key = adone.crypto.pki.decryptRsaPrivateKey(pem, password);
+    if (is.null(key)) {
+        throw new Error("Cannot read the key, most likely the password is wrong or not a RSA key");
+    }
     const jwk = adone.crypto.pki.privateKeyToJwk(key);
     return supportedKeys.rsa.fromJwk(jwk);
 };

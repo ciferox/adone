@@ -146,4 +146,31 @@ describe("text", "sprintf", () => {
             shouldNotThrow("%s", ["crash?"]);
         });
     });
+
+    it("should not throw Error for expression which evaluates to undefined", () => {
+        shouldNotThrow("%(x.y)s", [{ x: {} }]);
+    });
+
+    it("should throw own Error when expression evaluation would raise TypeError", () => {
+        const fmt = "%(x.y)s";
+        try {
+            sprintf(fmt, {});
+        } catch (e) {
+            assert.true(e.message.includes("[sprintf]"));
+        }
+    });
+
+    it("should not throw when accessing properties on the prototype", () => {
+        class C {
+            get x() {
+                return 2;
+            }
+
+            set y(v) { /*Noop */ }
+        }
+
+        const c = new C();
+        shouldNotThrow("%(x)s", [c]);
+        shouldNotThrow("%(y)s", [c]);
+    });
 });

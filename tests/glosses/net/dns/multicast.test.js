@@ -3,7 +3,7 @@ const {
     std: { dgram }
 } = adone;
 
-describe("dns", "multicast", () => {
+describe("net", "dns", "multicast", () => {
     const port = function (cb) {
         const s = dgram.createSocket("udp4");
         s.bind(0, () => {
@@ -77,7 +77,8 @@ describe("dns", "multicast", () => {
                     type: "A",
                     name: "hello-world",
                     ttl: 120,
-                    data: "127.0.0.1" }]);
+                    data: "127.0.0.1"
+                }]);
             });
 
             dns.once("response", (packet) => {
@@ -310,5 +311,20 @@ describe("dns", "multicast", () => {
 
         //     dns.query("foo", "A");
         // });
+
+        test("Authoritive Answer bit", (dns, done) => {
+            dns.once("query", (packet) => {
+                dns.respond([]);
+            });
+
+            dns.once("response", (packet) => {
+                assert.ok(packet.flag_auth, "should be set");
+                dns.destroy(() => {
+                    done();
+                });
+            });
+
+            dns.query("foo", "A");
+        });
     });
 });

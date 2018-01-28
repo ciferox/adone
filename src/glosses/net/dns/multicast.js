@@ -211,6 +211,7 @@ export default function (opts) {
         }
 
         res.type = "response";
+        res.flags = (res.flags || 0) | packet.AUTHORITATIVE_ANSWER;
         that.send(res, rinfo, cb);
     };
 

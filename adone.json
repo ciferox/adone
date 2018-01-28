@@ -224,8 +224,7 @@
                             "task": "transpile",
                             "native": {
                                 "src": "src/glosses/crypto/secp256k1/native",
-                                "dst": "lib/glosses/crypto/secp256k1/native",
-                                "type": "gyp"
+                                "dst": "lib/glosses/crypto/secp256k1/native"
                             }
                         }
                     }
