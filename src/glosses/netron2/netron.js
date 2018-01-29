@@ -3,11 +3,8 @@ const {
     x,
     util,
     event,
-    netron2: { PeerInfo, Reference, Definitions, Reflection, Stub, SequenceId, OwnPeer },
-    // netron: {
-    //     ACTION,
-    //     PEER_STATUS,
-    // }
+    net: { p2p: { PeerInfo } },
+    netron2: { Reference, Definitions, Reflection, Stub, SequenceId, OwnPeer },
     tag
 } = adone;
 
@@ -70,10 +67,11 @@ export default class Netron extends event.AsyncEmitter {
      * Creates new netcore instance and own it.
      * 
      * @param {string} netId network name
+     * @returns {net.p2p.Core} - return instance of p2p core
      */
     createNetCore(netId, config = {}) {
         if (this.netCores.has(netId)) {
-            throw new adone.x.Exists(`NetCore '${netId}' is already exist`);
+            throw new adone.x.Exists(`Core '${netId}' is already exist`);
         }
 
         if (!config.transport) {
@@ -81,12 +79,13 @@ export default class Netron extends event.AsyncEmitter {
             config.transport = "tcp";
         }
 
-        const netCore = new adone.netron2.NetCore({
+        const netCore = new adone.net.p2p.Core({
             ...config,
             peer: this.peer.info
         });
 
         this.netCores.set(netId, netCore);
+        return netCore;
     }
 
     /**
@@ -119,20 +118,36 @@ export default class Netron extends event.AsyncEmitter {
 
     /**
      * Connects to peer using netcore identified by 'netCoreId'.
-     * @param {string} netId network name
-     * @param {*} peer 
+     * @param {string} netId - network/netcore name
+     * @param {options.onlyRaw} - if set to true, only raw connection will be initiated
+     * @param {*} peer - instance of RemotePeer
      */
-    async connect(netId, peer) {
-        const conn = await this.getNetCore(netId).connect(peer, adone.netron2.NETRON_PROTOCOL);
+    async connect(netId, peer, { onlyRaw = false, requestContexts = true } = {}) {
+        const rawConn = await this.getNetCore(netId).connect(peer);
         const remotePeer = new adone.netron2.RemotePeer(PeerInfo.create(peer));
-        remotePeer.connection = conn;
+        await remotePeer._setConnInfo(rawConn);
+
+        if (!onlyRaw) {
+            try {
+                // Try to connect using netron protocol
+                const netronConn = await this.getNetCore(netId).connect(peer, adone.netron2.NETRON_PROTOCOL);
+                await remotePeer._setConnInfo(undefined, netronConn);
+
+                if (requestContexts) {
+                    await remotePeer.requestContexts();
+                }
+            } catch (err) {
+                // Nothing to do...
+            }
+        }
+
         return remotePeer;
     }
 
     /**
      * Disconnects from peer useing netcore identified by netCoreId.
      * 
-     * @param {string} netId network name
+     * @param {string} netId - network name
      * @param {*} peer 
      */
     disconnect(netId, peer) {

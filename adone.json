@@ -624,6 +624,13 @@
                             "dst": "lib/glosses/net/mimes",
                             "namespace": "mimes"
                         },
+                        "p2p": {
+                            "description": "Multipurpose P2P implementation",
+                            "task": "transpile",
+                            "src": "src/glosses/net/p2p/**/*.js",
+                            "dst": "lib/glosses/net/p2p",
+                            "namespace": "p2p"
+                        },
                         "utp": {
                             "description": "UTP protocol/transport",
                             "task": "transpile",

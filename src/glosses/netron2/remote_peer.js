@@ -8,28 +8,37 @@ export default class RemotePeer extends AbstractPeer {
     constructor(info, netron) {
         super(info, netron);
 
-        this.connection = null;
+        this.rawConn = null;
+        this.netronConn = null;
         this.protocol = adone.netron2.NETRON_PROTOCOL;
     }
 
-    connect(/*options*/) {
-        throw new x.NotImplemented("Method connect() is not implemented");
+    /**
+     * Updates connection instances
+     * 
+     * @param {Connection|null|undefined} rawConn - instance of raw connection 
+     * @param {Connection|null|undefined} netronConn - instance of netron connection
+     */
+    _setConnInfo(rawConn, netronConn) {
+        if (!is.undefined(rawConn)) {
+            this.rawConn = rawConn;
+        }
+
+        if (!is.undefined(netronConn)) {
+            this.netronConn = netronConn;
+        }
     }
 
-    disconnect() {
-        throw new x.NotImplemented("Method disconnect() is not implemented");
+    hasNetronProtocol() {
+        return !is.null(this.netronConn);
     }
 
     isConnected() {
-        throw new x.NotImplemented("Method isConnected() is not implemented");
+        return !is.null(this.rawConn);
     }
 
     write(/*data*/) {
         throw new x.NotImplemented("Method write() is not implemented");
-    }
-
-    getRemoteAddress() {
-        throw new x.NotImplemented("Method getRemoteAddress() is not implemented");
     }
     
     send(impulse, streamId, packetId, action, data, awaiter) {
@@ -86,6 +95,10 @@ export default class RemotePeer extends AbstractPeer {
         return new Promise((resolve, reject) => {
             this.send(this, 1, this.streamId.next(), 1, ACTION.PING, null, resolve).catch(reject);
         });
+    }
+
+    async requestContexts() {
+
     }
 
     hasContext(ctxId) {

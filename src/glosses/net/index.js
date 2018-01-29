@@ -17,5 +17,6 @@ adone.lazify({
     amqp: "./amqp",
     dns: "./dns",
     utp: "./utp",
-    spdy: "./spdy"
+    spdy: "./spdy",
+    p2p: "./p2p"
 }, adone.asNamespace(exports), require);

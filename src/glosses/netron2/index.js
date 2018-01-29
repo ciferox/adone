@@ -8,27 +8,20 @@ const {
 export const NETRON_PROTOCOL = "/netron/1.0.0";
 
 export const ACTION = {
-    // Common actions
-    GET: 0x00,
-    SET: 0x01,
-    PING: 0x02,
+    // Contexts
+    REQUEST_CONTEXTS: 0x00,
+    CONTEXT_ATTACH: 0x01,
+    CONTEXT_DETACH: 0x02,
 
     // Events
-    EVENT_ON: 0x03,
-    EVENT_OFF: 0x04,
-    EVENT_EMIT: 0x05,
+    EVENT_ON: 0x10,
+    EVENT_OFF: 0x11,
+    EVENT_EMIT: 0x12,
 
-    // Contexts
-    CONTEXT_ATTACH: 0x06,
-    CONTEXT_DETACH: 0x07,
-
-    // Streams
-    STREAM_REQUEST: 0x08,
-    STREAM_ACCEPT: 0x09,
-    STREAM_DATA: 0x0A,
-    STREAM_PAUSE: 0x0B,
-    STREAM_RESUME: 0x0C,
-    STREAM_END: 0x0D,
+    // Functional actions
+    GET: 0x20,
+    SET: 0x21,
+    PING: 0x22,
 
     MAX: 0x100 // = 256
 };
@@ -40,8 +33,6 @@ adone.definePredicates({
     netron2Reference: "NETRON2_REFERENCE",
     netron2Interface: "NETRON2_INTERFACE",
     netron2Stub: "NETRON2_STUB",
-    peerId: "PEER_ID",
-    peerInfo: "PEER_INFO",
     netron2Peer: "NETRON2_ABSTRACTPEER",
     netron2OwnPeer: "NETRON2_OWNPEER",
     netron2RemotePeer: "NETRON2_REMOTEPEER"
@@ -114,7 +105,7 @@ export class Definitions {
         for (let i = 0; i < args.length; i++) {
             const arg = args[i];
             if (!is.netronDefinition(arg) && !is.netronContext(arg) && !is.netronInterface(arg)) {
-                throw new x.InvalidArgument(`Invalid argument ${i} (${typeof(arg)})`);
+                throw new x.InvalidArgument(`Invalid argument ${i} (${typeof (arg)})`);
             }
             ret = this._defs.push(arg);
         }
@@ -134,7 +125,7 @@ export class Definitions {
         for (let i = 0; i < args.length; i++) {
             const arg = args[i];
             if (!is.netronDefinition(arg) && !is.netronContext(arg) && !is.netronInterface(arg)) {
-                throw new x.InvalidArgument(`Invalid argument ${i} (${typeof(arg)})`);
+                throw new x.InvalidArgument(`Invalid argument ${i} (${typeof (arg)})`);
             }
             ret = this._defs.unshift(arg);
         }
@@ -169,29 +160,6 @@ export class SequenceId {
 }
 
 adone.lazify({
-    Connection: "./connection",
-    CID: "./cid",
-    circuit: "./circuit",
-    NetCore: "./net_core",
-    PeerId: "./peer_id",
-    PeerInfo: "./peer_info",
-    PeerBook: "./peer_book",
-    MulticastDNS: "./mdns",
-    Railing: "./railing",
-    dht: "./dht",
-    swarm: "./swarm",
-    Ping: "./ping",
-    crypto: "./crypto",
-    transport: "./transports",
-    multistream: "./multistream",
-    multiplex: "./multiplex",
-    spdy: "./spdy",
-    record: "./record",
-    secio: "./secio",
-    identify: "./identify",
-    floodsub: "./floodsub",
-    rendezvous: "./ws_star_rendezvous",
-    KBucket: "./k_bucket",
     Reflection: ["./reflection", (mod) => mod.Reflection],
     DContext: ["./reflection", (mod) => mod.DContext], // decorator
     DPublic: ["./reflection", (mod) => mod.DPublic], // decorator

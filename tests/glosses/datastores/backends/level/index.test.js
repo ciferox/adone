@@ -3,7 +3,7 @@ const each = require("async/each");
 const memdown = require("memdown");
 
 const {
-    netron2: { CID },
+    net: { p2p: { CID } },
     datastore: { Key, backend: { Level }, utils, wrapper: { Mount } },
     std: { path },
     stream: { pull }
