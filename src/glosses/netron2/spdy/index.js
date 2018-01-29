@@ -9,7 +9,7 @@ const SPDY_CODEC = "/spdy/3.1.0";
 const create = function (rawConn, isServer) {
     const conn = pull.toStream(rawConn);
     // Let it flow, let it flooow
-    conn.resume();
+    // conn.resume(); // cause a bug with spdy
 
     conn.on("end", () => {
         // Cleanup and destroy the connection when it ends

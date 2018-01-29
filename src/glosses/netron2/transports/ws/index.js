@@ -51,7 +51,6 @@ export default class WS {
                     const conn = new Connection(socket);
                     conn.getObservedAddrs = (cb) => cb(null, [ma]);
                     conn.close = (cb) => socket.close(cb);
-
                     resolve(conn);
                 }
             });

@@ -2,7 +2,6 @@ const waterfall = require("async/waterfall");
 const each = require("async/each");
 const queue = require("async/queue");
 const c = require("./constants");
-const PeerQueue = require("./peer-queue");
 const utils = require("./utils");
 
 /**
@@ -155,7 +154,7 @@ class Query {
             return callback();
         }
 
-        const q = PeerQueue.fromKey(this.key);
+        const q = adone.private(adone.netron2.dht).PeerQueue.fromKey(this.key);
         waterfall([
             (cb) => {
                 run.peersToQuery = q;

@@ -1,9 +1,9 @@
-const PeerList = require("./peer-list");
+const __ = adone.private(adone.netron2.dht);
 
 /**
  * Like PeerList but with a length restriction.
  */
-class LimitedPeerList extends PeerList {
+class LimitedPeerList extends __.PeerList {
     /**
      * Create a new limited peer list.
      *

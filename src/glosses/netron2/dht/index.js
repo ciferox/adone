@@ -20,17 +20,17 @@ const {
 adone.lazifyPrivate({
     rpc: "./rpc",
     rpcHandler: () => adone.lazify({
-        addProvider: "./rpc/handlers/add-provider",
-        findNode: "./rpc/handlers/find-node",
-        getProviders: "./rpc/handlers/get-providers",
-        getValue: "./rpc/handlers/get-value",
+        addProvider: "./rpc/handlers/add_provider",
+        findNode: "./rpc/handlers/find_node",
+        getProviders: "./rpc/handlers/get_providers",
+        getValue: "./rpc/handlers/get_value",
         ping: "./rpc/handlers/ping",
-        putValue: "./rpc/handlers/put-value"
+        putValue: "./rpc/handlers/put_value"
     }, null, require),
     utils: "./utils",
     constants: "./constants",
     Message: "./message",
-    LimitedPeerList: "./limited-peer-list",
+    LimitedPeerList: "./limited_peer_list",
     PeerList: "./peer_list",
     PeerQueue: "./peer_queue",
     Providers: "./providers",

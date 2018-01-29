@@ -412,7 +412,7 @@ describe("netron2", "muxer", "spdy", () => {
             );
         });
 
-        it.todo("open a spdy stream from listener and write a lot", (done) => {
+        it("open a spdy stream from listener and write a lot", (done) => {
             dialer.once("stream", (conn) => {
                 pull(conn, conn);
             });

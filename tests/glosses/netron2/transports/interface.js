@@ -138,7 +138,7 @@ export default (common) => {
             });
 
             // TODO: how to get the listener to emit an error?
-            it.todo("error", (done) => {
+            it.skip("error", (done) => {
                 const listener = transport.createListener();
                 listener.on("error", (err) => {
                     assert.exists(err);

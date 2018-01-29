@@ -1,5 +1,3 @@
-const debug = require("debug");
-const log = debug("libp2p:websocket-star");
 const utils = require("./utils");
 const Listener = require("./listener");
 const cleanUrlSIO = utils.cleanUrlSIO;
@@ -116,7 +114,6 @@ class WebsocketStar {
      * @private
      */
     _peerDiscovered(maStr) {
-        log("Peer Discovered:", maStr);
         const peerIdStr = maStr.split("/ipfs/").pop();
         const peerId = PeerId.createFromBase58(peerIdStr);
         const peerInfo = new PeerInfo(peerId);

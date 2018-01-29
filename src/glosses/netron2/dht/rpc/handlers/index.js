@@ -2,11 +2,11 @@ const T = require("../../message").TYPES;
 
 module.exports = (dht) => {
     const handlers = {
-        [T.GET_VALUE]: require("./get-value")(dht),
-        [T.PUT_VALUE]: require("./put-value")(dht),
-        [T.FIND_NODE]: require("./find-node")(dht),
-        [T.ADD_PROVIDER]: require("./add-provider")(dht),
-        [T.GET_PROVIDERS]: require("./get-providers")(dht),
+        [T.GET_VALUE]: require("./get_value")(dht),
+        [T.PUT_VALUE]: require("./put_value")(dht),
+        [T.FIND_NODE]: require("./find_node")(dht),
+        [T.ADD_PROVIDER]: require("./add_provider")(dht),
+        [T.GET_PROVIDERS]: require("./get_providers")(dht),
         [T.PING]: require("./ping")(dht)
     };
 

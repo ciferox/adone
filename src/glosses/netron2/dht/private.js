@@ -8,11 +8,10 @@ const errors = require("./errors");
 const Message = require("./message");
 const c = require("./constants");
 const Query = require("./query");
-const LimitedPeerList = require("./limited-peer-list");
 
 const {
     is,
-    netron2: { PeerInfo, PeerId, crypto, record: { Record, validator, selection } },
+    netron2: { PeerInfo, PeerId, record: { Record, validator, selection } },
     multi,
     std
 } = adone;
@@ -478,7 +477,7 @@ module.exports = (dht) => ({
      * @private
      */
     _findNProviders(key, maxTimeout, n, callback) {
-        const out = new LimitedPeerList(n);
+        const out = new (adone.private(adone.netron2.dht)).LimitedPeerList(n);
 
         dht.providers.getProviders(key, (err, provs) => {
             if (err) {
