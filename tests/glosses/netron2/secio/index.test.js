@@ -99,16 +99,14 @@ describe("secio", () => {
 
         pull(
             bToA,
-            pull.collect((err, chunks) => {
+            pull.collect(async (err, chunks) => {
                 assert.notExists(err);
 
                 expect(chunks).to.eql([Buffer.from("hello world")]);
 
-                bToA.getPeerInfo((err, PeerInfo) => {
-                    assert.notExists(err);
-                    expect(PeerInfo.id.asBase58()).to.equal(peerA.asBase58());
-                    done();
-                });
+                const peerInfo = await bToA.getPeerInfo();
+                expect(peerInfo.id.asBase58()).to.equal(peerA.asBase58());
+                done();
             })
         );
     });

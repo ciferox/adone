@@ -47,14 +47,9 @@ module.exports = (dht) => {
      * @param {Connection} conn
      * @returns {undefined}
      */
-    return function protocolHandler(protocol, conn) {
-        conn.getPeerInfo((err, peer) => {
-            if (err) {
-                log.error("Failed to get peer info");
-                log.error(err);
-                return;
-            }
-
+    return async function (protocol, conn) {
+        try {
+            const peer = await conn.getPeerInfo();
             log("from: %s", peer.id.asBase58());
 
             pull(
@@ -90,6 +85,9 @@ module.exports = (dht) => {
                 pull.lengthPrefixed.encode(),
                 conn
             );
-        });
+        } catch (err) {
+            log.error("Failed to get peer info");
+            log.error(err);
+        }
     };
 };

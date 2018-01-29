@@ -530,22 +530,17 @@ describe("netron2", "swarm", () => {
                 }
             };
 
-            swarmC.handle("/mamao/1.0.0", (protocol, conn) => {
-                conn.getPeerInfo((err, peerInfo) => {
-                    assert.notExists(err);
-                    assert.exists(peerInfo);
-                    check();
-                });
-
+            swarmC.handle("/mamao/1.0.0", async (protocol, conn) => {
                 pull(conn, conn);
-            });
-
-            const conn = await swarmA.connect(peerC, "/mamao/1.0.0");
-            conn.getPeerInfo((err, peerInfo) => {
-                assert.notExists(err);
+                const peerInfo = await conn.getPeerInfo();
                 assert.exists(peerInfo);
                 check();
             });
+
+            const conn = await swarmA.connect(peerC, "/mamao/1.0.0");
+            const peerInfo = await conn.getPeerInfo();
+            assert.exists(peerInfo);
+            check();
             expect(Object.keys(swarmA.muxedConns).length).to.equal(2);
 
             assert.exists(peerC.isConnected);
@@ -959,24 +954,19 @@ describe("netron2", "swarm", () => {
         });
 
         it("with Identify, do getPeerInfo", async (done) => {
-            swarmA.handle("/banana/1.0.0", (protocol, conn) => {
-                conn.getPeerInfo((err, peerInfoC) => {
-                    assert.notExists(err);
-                    expect(peerInfoC.id.asBase58()).to.equal(peerC.id.asBase58());
-                });
-
+            swarmA.handle("/banana/1.0.0", async (protocol, conn) => {
                 pull(conn, conn);
+                const peerInfoC = await conn.getPeerInfo();
+                expect(peerInfoC.id.asBase58()).to.equal(peerC.id.asBase58());
             });
 
             const conn = await swarmC.connect(peerA, "/banana/1.0.0");
-            setTimeout(() => {
+            setTimeout(async () => {
                 expect(Object.keys(swarmC.muxedConns).length).to.equal(1);
                 expect(Object.keys(swarmA.muxedConns).length).to.equal(2);
-                conn.getPeerInfo((err, peerInfoA) => {
-                    assert.notExists(err);
-                    expect(peerInfoA.id.asBase58()).to.equal(peerA.id.asBase58());
-                    pull(pull.empty(), conn, pull.onEnd(done));
-                });
+                const peerInfoA = await conn.getPeerInfo();
+                expect(peerInfoA.id.asBase58()).to.equal(peerA.id.asBase58());
+                pull(pull.empty(), conn, pull.onEnd(done));
             }, 500);
         });
 

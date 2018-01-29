@@ -1,8 +1,6 @@
-const timeout = require("async/timeout");
 const queue = require("async/queue");
 
 const {
-    netron2: { Connection },
     stream: { pull }
 } = adone;
 
@@ -49,8 +47,6 @@ export default class DialQueue {
             // one is enough
             token.cancel = true;
 
-            const proxyConn = new Connection();
-            proxyConn.setInnerConn(conn);
             callback(null, { multiaddr: addr, conn });
         } catch (err) {
             return callback(null, { error: err });

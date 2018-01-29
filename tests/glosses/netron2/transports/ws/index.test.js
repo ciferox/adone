@@ -359,24 +359,19 @@ describe("netron2", "trasnport", "ws", () => {
         it("get Peer Info", async (done) => {
             const ws = new WS();
 
-            const listener = ws.createListener((conn) => {
+            const listener = ws.createListener(async (conn) => {
                 assert.exists(conn);
 
-                conn.getPeerInfo((err, peerInfo) => {
-                    assert.exists(err);
-                });
-
+                await assert.throws(async () => conn.getPeerInfo());
                 pull(conn, conn);
             });
 
             await listener.listen(ma);
             const conn = await ws.connect(ma);
 
-            const onEnd = function () {
-                conn.getPeerInfo((err, peerInfo) => {
-                    assert.exists(err);
-                    listener.close().then(done);
-                });
+            const onEnd = async () => {
+                await assert.throws(async () => conn.getPeerInfo());
+                listener.close().then(done);
             };
 
             pull(
@@ -389,14 +384,12 @@ describe("netron2", "trasnport", "ws", () => {
         it("set Peer Info", async (done) => {
             const ws = new WS();
 
-            const listener = ws.createListener((conn) => {
+            const listener = ws.createListener(async (conn) => {
                 assert.exists(conn);
                 conn.setPeerInfo("a");
 
-                conn.getPeerInfo((err, peerInfo) => {
-                    assert.notExists(err);
-                    expect(peerInfo).to.equal("a");
-                });
+                const peerInfo = await conn.getPeerInfo();
+                expect(peerInfo).to.equal("a");
 
                 pull(conn, conn);
             });
@@ -405,12 +398,10 @@ describe("netron2", "trasnport", "ws", () => {
             const conn = await ws.connect(ma);
             conn.setPeerInfo("b");
 
-            const onEnd = function () {
-                conn.getPeerInfo((err, peerInfo) => {
-                    assert.notExists(err);
-                    expect(peerInfo).to.equal("b");
-                    listener.close().then(done);
-                });
+            const onEnd = async () => {
+                const peerInfo = await conn.getPeerInfo();
+                expect(peerInfo).to.equal("b");
+                listener.close().then(done);
             };
 
             pull(

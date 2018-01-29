@@ -36,20 +36,20 @@ module.exports = {
 
         const encryptedConnection = new Connection(undefined, conn);
 
-        const finish = function (err) {
+        const finish = async (err) => {
             if (err) {
                 return callback(err);
             }
 
-            conn.getPeerInfo((err, peerInfo) => {
-                encryptedConnection.setInnerConn(state.secure);
+            encryptedConnection.setInnerConn(state.secure);
+            try {
+                await conn.getPeerInfo();                
+            } catch (err) {
+                // no peerInfo yet, means I'm the receiver
+                encryptedConnection.setPeerInfo(new PeerInfo(state.id.remote));
+            }
 
-                if (err) { // no peerInfo yet, means I'm the receiver
-                    encryptedConnection.setPeerInfo(new PeerInfo(state.id.remote));
-                }
-
-                callback();
-            });
+            callback();
         };
 
         pull(

@@ -1,6 +1,5 @@
 const util = require("../util");
 const select = require("../select");
-const PROTOCOL_ID = require("./../constants").PROTOCOL_ID;
 
 const {
     data: { varint },
@@ -27,13 +26,7 @@ const collectLs = (conn) => {
 };
 
 
-/**
- *
- */
-class Dialer {
-    /**
-     * Create a new Dialer.
-     */
+export default class Dialer {
     constructor() {
         this.conn = null;
         this.log = util.log.dialer();
@@ -42,15 +35,14 @@ class Dialer {
     /**
      * Perform the multistream handshake.
      *
-     * @param {Connection} rawConn - The connection on which
-     * to perform the handshake.
+     * @param {Connection} rawConn - The connection on which to perform the handshake.
      * @param {function(Error)} callback - Called when the handshake completed.
      * @returns {undefined}
      */
     handle(rawConn, callback) {
         this.log("dialer handle conn");
         callback = once(callback);
-        const s = select(PROTOCOL_ID, (err, conn) => {
+        const s = select(adone.netron2.multistream.PROTOCOL_ID, (err, conn) => {
             if (err) {
                 return callback(err);
             }
@@ -141,5 +133,3 @@ class Dialer {
         );
     }
 }
-
-module.exports = Dialer;

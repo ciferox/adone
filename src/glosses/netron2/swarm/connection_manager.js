@@ -21,7 +21,7 @@ export default class ConnectionManager {
         this.swarm.muxers[muxer.multicodec] = muxer;
 
         // for listening
-        this.swarm.handle(muxer.multicodec, (protocol, conn) => {
+        this.swarm.handle(muxer.multicodec, async (protocol, conn) => {
             const muxedConn = muxer.listener(conn);
 
             muxedConn.on("stream", (conn) => {
@@ -34,27 +34,32 @@ export default class ConnectionManager {
             //   3. add this conn to the pool
             if (this.swarm.identify) {
                 // overload peerInfo to use Identify instead
-                conn.getPeerInfo = (cb) => {
-                    const conn = muxedConn.newStream();
-                    const ms = new multistream.Dialer();
+                conn.getPeerInfo = () => {
+                    return new Promise((resolve, reject) => {
+                        const conn = muxedConn.newStream();
+                        const ms = new multistream.Dialer();
 
-                    waterfall([
-                        (cb) => ms.handle(conn, cb),
-                        (cb) => ms.select(identify.multicodec, cb),
-                        (conn, cb) => identify.dialer(conn, cb),
-                        (peerInfo, observedAddrs, cb) => {
-                            observedAddrs.forEach((oa) => {
-                                this.swarm._peerInfo.multiaddrs.addSafe(oa);
-                            });
-                            cb(null, peerInfo);
-                        }
-                    ], cb);
+                        waterfall([
+                            (cb) => ms.handle(conn, cb),
+                            (cb) => ms.select(identify.multicodec, cb),
+                            (conn, cb) => identify.dialer(conn, cb),
+                            (peerInfo, observedAddrs, cb) => {
+                                observedAddrs.forEach((oa) => {
+                                    this.swarm._peerInfo.multiaddrs.addSafe(oa);
+                                });
+                                cb(null, peerInfo);
+                            }
+                        ], (err, peerInfo) => {
+                            if (err) {
+                                reject(err);
+                            }
+                            resolve(peerInfo);
+                        });
+                    });
                 };
 
-                conn.getPeerInfo((err, peerInfo) => {
-                    if (err) {
-                        return adone.log("Identify not successful");
-                    }
+                try {
+                    let peerInfo = await conn.getPeerInfo();
                     const b58Str = peerInfo.id.asBase58();
 
                     this.swarm.muxedConns[b58Str] = { muxer: muxedConn };
@@ -80,10 +85,12 @@ export default class ConnectionManager {
                     });
 
                     setImmediate(() => this.swarm.emit("peer-mux-established", peerInfo));
-                });
+                } catch (err) {
+                    return adone.log("Identify not successful");
+                }
             }
 
-            return conn;
+            // return conn;
         });
     }
 

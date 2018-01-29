@@ -22,16 +22,16 @@ export default class Connection {
         return this.conn.sink;
     }
 
-    getPeerInfo(callback) {
+    getPeerInfo() {
         if (this.info && this.info.getPeerInfo) {
-            return this.info.getPeerInfo(callback);
+            return this.info.getPeerInfo();
         }
 
         if (!this.peerInfo) {
-            return callback(new Error("Peer Info not set yet"));
+            throw new Error("Peer Info not set yet");
         }
 
-        callback(null, this.peerInfo);
+        return this.peerInfo;
     }
 
     setPeerInfo(peerInfo) {

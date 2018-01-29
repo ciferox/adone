@@ -56,7 +56,6 @@ export default class TransportManager {
 
         for (const ma of multiaddrs) {
             const listener = transport.createListener(handler);
-
             await listener.listen(ma); // eslint-disable-line
 
             const addrs = await listener.getAddrs(); // eslint-disable-line

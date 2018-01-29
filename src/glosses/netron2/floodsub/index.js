@@ -115,18 +115,16 @@ export class FloodSub extends event.Emitter {
         peer.sendSubscriptions(this.subscriptions);
     }
 
-    _onConnection(protocol, conn) {
-        conn.getPeerInfo((err, peerInfo) => {
-            if (err) {
-                log.err("Failed to identify incomming conn", err);
-                return pull(pull.empty(), conn);
-            }
-
+    async _onConnection(protocol, conn) {
+        try {
+            const peerInfo = await conn.getPeerInfo();
             const idB58Str = peerInfo.id.asBase58();
             const peer = this._addPeer(new Peer(peerInfo));
-
             this._processConnection(idB58Str, conn, peer);
-        });
+        } catch (err) {
+            log.err("Failed to identify incomming conn", err);
+            return pull(pull.empty(), conn);
+        }
     }
 
     _processConnection(idB58Str, conn, peer) {

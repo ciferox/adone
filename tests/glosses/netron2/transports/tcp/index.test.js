@@ -308,52 +308,41 @@ describe("netron2", "transport", "tcp", () => {
         });
 
         it("get Peer Info", async (done) => {
-            const listener = tcp.createListener((conn) => {
+            const listener = tcp.createListener(async (conn) => {
                 assert.exists(conn);
-                conn.getPeerInfo((err, peerInfo) => {
-                    assert.exists(err);
-                    assert.notExists(peerInfo);
-                    pull(pull.empty(), conn);
-                });
+                await assert.throws(async () => conn.getPeerInfo());
+                pull(pull.empty(), conn);
             });
 
             await listener.listen(ma);
             const conn = await tcp.connect(ma);
 
-            const endHandler = function () {
-                conn.getPeerInfo((err, peerInfo) => {
-                    assert.exists(err);
-                    assert.notExists(peerInfo);
-
-                    listener.close().then(done);
-                });
+            const endHandler = async () => {
+                await assert.throws(async () => conn.getPeerInfo());
+                listener.close().then(done);
             };
 
             pull(conn, pull.onEnd(endHandler));
         });
 
         it("set Peer Info", async (done) => {
-            const listener = tcp.createListener((conn) => {
+            const listener = tcp.createListener(async (conn) => {
                 assert.exists(conn);
                 conn.setPeerInfo("batatas");
-                conn.getPeerInfo((err, peerInfo) => {
-                    assert.notExists(err);
-                    expect(peerInfo).to.equal("batatas");
-                    pull(pull.empty(), conn);
-                });
+                const peerInfo = await conn.getPeerInfo();
+                expect(peerInfo).to.equal("batatas");
+                pull(pull.empty(), conn);
             });
 
             await listener.listen(ma);
             const conn = await tcp.connect(ma);
 
-            const endHandler = function () {
+            const endHandler = async () => {
                 conn.setPeerInfo("arroz");
-                conn.getPeerInfo((err, peerInfo) => {
-                    assert.notExists(err);
-                    expect(peerInfo).to.equal("arroz");
+                const peerInfo = await conn.getPeerInfo();
+                expect(peerInfo).to.equal("arroz");
 
-                    listener.close().then(done);
-                });
+                listener.close().then(done);
             };
 
             pull(conn, pull.onEnd(endHandler));
@@ -389,15 +378,13 @@ describe("netron2", "transport", "tcp", () => {
             pull(
                 pull.values(["hey"]),
                 connWrap,
-                pull.collect((err, chunks) => {
+                pull.collect(async (err, chunks) => {
                     assert.notExists(err);
                     expect(chunks).to.be.eql([Buffer.from("hey")]);
 
-                    connWrap.getPeerInfo((err, peerInfo) => {
-                        assert.notExists(err);
-                        expect(peerInfo).to.equal("peerInfo");
-                        done();
-                    });
+                    const peerInfo = await connWrap.getPeerInfo();
+                    expect(peerInfo).to.equal("peerInfo");
+                    done();
                 })
             );
         });
@@ -421,16 +408,10 @@ describe("netron2", "transport", "tcp", () => {
         it("overload wrap", async (done) => {
             const conn = await tcp.connect(ma);
             const connWrap = new Connection(conn);
-            connWrap.getPeerInfo = (callback) => {
-                callback(null, "none");
-            };
-            conn.getPeerInfo((err, peerInfo) => {
-                assert.exists(err);
-            });
-            connWrap.getPeerInfo((err, peerInfo) => {
-                assert.notExists(err);
-                expect(peerInfo).to.equal("none");
-            });
+            connWrap.getPeerInfo = () => "none";
+            await assert.throws(async () => conn.getPeerInfo());
+            const peerInfo = await connWrap.getPeerInfo();
+            expect(peerInfo).to.equal("none");
             pull(
                 pull.values(["hey"]),
                 connWrap,
@@ -452,20 +433,16 @@ describe("netron2", "transport", "tcp", () => {
             const connWrap2 = new Connection(connWrap1);
             const connWrap3 = new Connection(connWrap2);
 
-            conn.getPeerInfo = (callback) => {
-                callback(null, "inner doll");
-            };
+            conn.getPeerInfo = () => "inner doll";
             pull(
                 pull.values(["hey"]),
                 connWrap3,
-                pull.collect((err, chunks) => {
+                pull.collect(async (err, chunks) => {
                     assert.notExists(err);
                     expect(chunks).to.be.eql([Buffer.from("hey")]);
-                    connWrap3.getPeerInfo((err, peerInfo) => {
-                        assert.notExists(err);
-                        expect(peerInfo).to.equal("inner doll");
-                        done();
-                    });
+                    const peerInfo = await connWrap3.getPeerInfo();
+                    expect(peerInfo).to.equal("inner doll");
+                    done();
                 })
             );
         });

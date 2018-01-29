@@ -5,7 +5,7 @@ const {
     stream: { pull }
 } = adone;
 
-const select = function (multicodec, callback, log) {
+const select = (multicodec, callback, log) => {
     const stream = pull.handshake({
         timeout: 60 * 1000
     }, callback);

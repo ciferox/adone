@@ -1,9 +1,8 @@
 const select = require("../select");
-const selectHandler = require("./select-handler");
-const lsHandler = require("./ls-handler");
-const matchExact = require("./match-exact");
+const selectHandler = require("./select_handler");
+const lsHandler = require("./ls_handler");
+const matchExact = require("./match_exact");
 const util = require("./../util");
-const PROTOCOL_ID = require("./../constants").PROTOCOL_ID;
 
 const {
     is,
@@ -11,10 +10,7 @@ const {
     stream: { pull }
 } = adone;
 
-/**
- * Listener
- */
-class Listener {
+export default class Listener {
     /**
      * Create a new Listener.
      */
@@ -40,7 +36,7 @@ class Listener {
     handle(rawConn, callback) {
         this.log("listener handle conn");
 
-        const selectStream = select(PROTOCOL_ID, (err, conn) => {
+        const selectStream = select(adone.netron2.multistream.PROTOCOL_ID, (err, conn) => {
             if (err) {
                 return callback(err);
             }
@@ -107,5 +103,3 @@ class Listener {
      * @returns {undefined}
      */
 }
-
-module.exports = Listener;

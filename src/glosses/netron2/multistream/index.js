@@ -1,4 +1,8 @@
-exports.Listener = exports.listener = require("./listener");
-exports.Dialer = exports.dialer = require("./dialer");
-exports.matchSemver = require("./listener/match-semver");
-exports.matchExact = require("./listener/match-exact");
+export const PROTOCOL_ID = "/multistream/1.0.0";
+
+adone.lazify({
+    Listener: "./listener",
+    Dialer: "./dialer",
+    matchSemver: "./listener/match_semver",
+    matchExact: "./listener/match_exact"
+}, exports, require);

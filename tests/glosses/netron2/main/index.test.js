@@ -76,7 +76,6 @@ describe("netron2", () => {
 
             it("netCoreA.connect netCoreB using PeerInfo without proto (warmup)", async (done) => {
                 await netCoreA.connect(netCoreB.peerInfo);
-
                 const check = function () {
                     parallel([
                         (cb) => {

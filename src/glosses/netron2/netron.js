@@ -156,26 +156,20 @@ export default class Netron extends event.AsyncEmitter {
         const netCore = this.getNetCore(netId);
         if (!netCore.started) {
             await netCore.start();
-            netCore.swarm.on("peer-mux-established", (peerInfo) => {
+            netCore.on("peer:connect", (peerInfo) => {
                 const remotePeer = new adone.netron2.RemotePeer(peerInfo);
                 this.peers.set(peerInfo.id.asBase58(), remotePeer);
             });
 
-            netCore.swarm.on("peer-mux-closed", (peerInfo) => {
+            netCore.on("peer:disconnect", (peerInfo) => {
                 this.peers.delete(peerInfo.id.asBase58());
             });
 
             netCore.handle(adone.netron2.NETRON_PROTOCOL, async (protocol, conn) => {
-                adone.log("connected with protocol:", protocol);
-                // conn.getPeerInfo((peerInfo) => {
-                //     adone.log("connected peer:", peerInfo.id.asBase58());
-                // });
-                // adone.log(conn);
-                // adone.log("connection from", conn.peerInfo.id.asBase58());
-                // const remotePeer = this.peers.get(conn.peerInfo.id.asBase58());
-
-                // remotePeer.protocol = protocol;
-                // remotePeer.connection = conn;
+                const peerInfo = await conn.getPeerInfo();
+                const remotePeer = this.peers.get(peerInfo.id.asBase58());
+                remotePeer.protocol = protocol;
+                remotePeer.connection = conn;
             });
         }
     }

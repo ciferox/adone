@@ -47,4 +47,4 @@ export default function (opts, _cb) {
         sink: reader,
         source: pull.cat([writer, p.source])
     };
-};
+}

@@ -122,43 +122,35 @@ describe("netron2", "muxer", "spdy", () => {
             });
         });
 
-        it("getPeerInfo yields error", (done) => {
+        it("getPeerInfo yields error", async (done) => {
             const conn = dMuxer.newStream();
-            conn.getPeerInfo((err, pInfo) => {
-                assert.exists(err);
-                pull(pull.empty(), conn, pull.onEnd(done));
-            });
+            await assert.throws(async () => conn.getPeerInfo());
+            pull(pull.empty(), conn, pull.onEnd(done));
         });
 
         it("setPeerInfo on muxedConn, verify that it is the same on conn", (done) => {
             const conn = dMuxer.newStream();
             conn.setPeerInfo("banana");
             parallel([
-                (cb) => {
-                    conn.getPeerInfo((err, pInfo) => {
-                        assert.notExists(err);
-                        expect(pInfo).to.equal("banana");
-                        pull(pull.empty(), conn, pull.onEnd(cb));
-                    });
+                async (cb) => {
+                    const pInfo = await conn.getPeerInfo();
+                    expect(pInfo).to.equal("banana");
+                    pull(pull.empty(), conn, pull.onEnd(cb));
                 },
-                (cb) => {
-                    dConn.getPeerInfo((err, pInfo) => {
-                        assert.notExists(err);
-                        expect(pInfo).to.equal("banana");
-                        cb();
-                    });
+                async (cb) => {
+                    const pInfo = await dConn.getPeerInfo();
+                    expect(pInfo).to.equal("banana");
+                    cb();
                 }
             ], done);
         });
 
-        it("wrap the muxed stream in another Conn, see how everything still trickles", (done) => {
+        it("wrap the muxed stream in another Conn, see how everything still trickles", async (done) => {
             const conn = dMuxer.newStream();
             const proxyConn = new Connection(conn);
-            proxyConn.getPeerInfo((err, pInfo) => {
-                assert.notExists(err);
-                expect(pInfo).to.equal("banana");
-                pull(pull.empty(), conn, pull.onEnd(done));
-            });
+            const pInfo = await proxyConn.getPeerInfo();
+            expect(pInfo).to.equal("banana");
+            pull(pull.empty(), conn, pull.onEnd(done));
         });
 
         it("open several streams, see how they all pack the same info", (done) => {
@@ -168,33 +160,25 @@ describe("netron2", "muxer", "spdy", () => {
             const conn4 = dMuxer.newStream();
 
             parallel([
-                (cb) => {
-                    conn1.getPeerInfo((err, pInfo) => {
-                        assert.notExists(err);
-                        expect(pInfo).to.equal("banana");
-                        pull(pull.empty(), conn1, pull.onEnd(cb));
-                    });
+                async (cb) => {
+                    const pInfo = await conn1.getPeerInfo();
+                    expect(pInfo).to.equal("banana");
+                    pull(pull.empty(), conn1, pull.onEnd(cb));
                 },
-                (cb) => {
-                    conn2.getPeerInfo((err, pInfo) => {
-                        assert.notExists(err);
-                        expect(pInfo).to.equal("banana");
-                        pull(pull.empty(), conn2, pull.onEnd(cb));
-                    });
+                async (cb) => {
+                    const pInfo = await conn2.getPeerInfo();
+                    expect(pInfo).to.equal("banana");
+                    pull(pull.empty(), conn2, pull.onEnd(cb));
                 },
-                (cb) => {
-                    conn3.getPeerInfo((err, pInfo) => {
-                        assert.notExists(err);
-                        expect(pInfo).to.equal("banana");
-                        pull(pull.empty(), conn3, pull.onEnd(cb));
-                    });
+                async (cb) => {
+                    const pInfo = await conn3.getPeerInfo();
+                    expect(pInfo).to.equal("banana");
+                    pull(pull.empty(), conn3, pull.onEnd(cb));
                 },
-                (cb) => {
-                    conn4.getPeerInfo((err, pInfo) => {
-                        assert.notExists(err);
-                        expect(pInfo).to.equal("banana");
-                        pull(pull.empty(), conn4, pull.onEnd(cb));
-                    });
+                async (cb) => {
+                    const pInfo = await conn4.getPeerInfo();
+                    expect(pInfo).to.equal("banana");
+                    pull(pull.empty(), conn4, pull.onEnd(cb));
                 }
             ], done);
         });
@@ -203,19 +187,15 @@ describe("netron2", "muxer", "spdy", () => {
             const conn = dMuxer.newStream();
             dConn.setPeerInfo("pineapple");
             parallel([
-                (cb) => {
-                    conn.getPeerInfo((err, pInfo) => {
-                        assert.notExists(err);
-                        expect(pInfo).to.equal("pineapple");
-                        pull(pull.empty(), conn, pull.onEnd(cb));
-                    });
+                async (cb) => {
+                    const pInfo = await conn.getPeerInfo();
+                    expect(pInfo).to.equal("pineapple");
+                    pull(pull.empty(), conn, pull.onEnd(cb));
                 },
-                (cb) => {
-                    dConn.getPeerInfo((err, pInfo) => {
-                        assert.notExists(err);
-                        expect(pInfo).to.equal("pineapple");
-                        cb();
-                    });
+                async (cb) => {
+                    const pInfo = await dConn.getPeerInfo();
+                    expect(pInfo).to.equal("pineapple");
+                    cb();
                 }
             ], done);
         });

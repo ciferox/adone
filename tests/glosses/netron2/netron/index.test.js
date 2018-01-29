@@ -713,7 +713,7 @@ describe("netron2", "Netron", () => {
             assert.throws(() => netronS.deleteNetCore("default"), adone.x.NotAllowed);
         });
 
-        it("start one of netron netcore", async () => {
+        it("start one of netron's netcore", async () => {
             assert.false(netronS.getNetCore("default").started);
             await netronS.start("default");
             assert.true(netronS.getNetCore("default").started);
@@ -725,7 +725,5 @@ describe("netron2", "Netron", () => {
             await netronC.connect("default", peerS);
             assert.false(netronC.getNetCore("default").started);
         });
-
-
     });
 });
