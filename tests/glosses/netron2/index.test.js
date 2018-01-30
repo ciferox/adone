@@ -17,7 +17,23 @@ describe("Netron", () => {
         method() { }
     }
 
+    let idServer;
+    let idClient;
+    let peerS;
+    let peerC;
     const peerId = PeerId.create();
+
+    before(() => {
+        idServer = PeerId.create();
+        idClient = PeerId.create();
+    });
+
+    beforeEach(async () => {
+        peerS = new PeerInfo(idServer);
+        peerS.multiaddrs.add("/ip4/0.0.0.0/tcp/0");
+        peerC = new PeerInfo(idClient);
+        peerC.multiaddrs.add("/ip4/0.0.0.0/tcp/0");
+    });
 
     describe("initialization", () => {
         it("default", () => {
@@ -35,8 +51,8 @@ describe("Netron", () => {
         it("no netcores", () => {
             const n = new Netron(peerId);
 
-            assert.instanceOf(n.netCores, Map);
-            assert.equal(n.netCores.size, 0);
+            assert.instanceOf(n.networks, Map);
+            assert.equal(n.networks.size, 0);
         });
 
         it("no contexts", () => {
@@ -54,11 +70,28 @@ describe("Netron", () => {
         });
     });
 
-    it("own peer", () => {
-        const n = new Netron();
-        const ownPeer = n.peer;
-        assert.true(is.netron2OwnPeer(ownPeer));
-        assert.deepEqual(ownPeer.netron, n);
+    describe("own peer", () => {
+        let netron;
+        let ownPeer;
+
+        beforeEach(() => {
+            netron = new Netron();
+            ownPeer = netron.peer;
+        });
+
+        it("initialization", () => {
+            assert.true(is.netron2OwnPeer(ownPeer));
+            assert.deepEqual(ownPeer.netron, netron);
+        });
+
+        it("request 'ability' should return all netron options", async () => {
+            const response = await ownPeer.requestMeta("ability");
+            assert.deepEqual(response.length, 1);
+            const ability = response[0];
+            assert.equal(ability.id, "ability");
+            assert.deepEqual(ability.data, netron.options);
+            assert.deepEqual(ownPeer.meta.get("ability"), adone.util.omit(ability, "id"));
+        });
     });
 
     describe("getPeer()", () => {
@@ -171,14 +204,14 @@ describe("Netron", () => {
             it("known context", () => {
                 n.attachContext(new A(), "a");
 
-                const def = n.getDefinitionByName("a");
+                const def = n.peer.getDefinitionByName("a");
                 const stub = n.getStubById(def.id);
                 assert.true(is.netron2Stub(stub));
                 assert.instanceOf(stub, adone.netron2.Stub);
             });
 
             it("unknown context - should have thrown", () => {
-                assert.throws(() => n.getStubById(778899), adone.x.NotExists);
+                assert.throws(() => n.getStubById(778899), adone.x.Unknown);
             });
         });
 
@@ -199,11 +232,11 @@ describe("Netron", () => {
             // });
 
             it("should throws with unknown context", () => {
-                assert.throws(() => netron.getDefinitionByName("not_exists"), adone.x.Unknown);
+                assert.throws(() => netron.peer.getDefinitionByName("not_exists"), adone.x.Unknown);
             });
 
             it("Netron#getDefinitionByName() should return definition of attached context owned by netron instance", () => {
-                const def = netron.getDefinitionByName("a");
+                const def = netron.peer.getDefinitionByName("a");
                 assert.ok(is.netron2Definition(def));
                 assert.instanceOf(def, adone.netron2.Definition);
                 assert.equal(def.name, "A");
@@ -237,7 +270,7 @@ describe("Netron", () => {
         });
     });
 
-    describe("RPC", () => {
+    describe.skip("RPC", () => {
         @DContext()
         class A {
             @DPublic()
@@ -305,7 +338,7 @@ describe("Netron", () => {
                         //     uid = superNetron.uid;
                     } else if (mode === "local") {
                         n1.attachContext(new A(), "a");
-                        defID = n1.getDefinitionByName("a").id;
+                        defID = n1.peer.getDefinitionByName("a").id;
                         netron = n1;
                         peerInfo = null;
                     }
@@ -549,13 +582,13 @@ describe("Netron", () => {
             // });
 
             it("should return interface for valid context", () => {
-                const def = netron.getDefinitionByName("a");
-                const iface = netron.getInterfaceById(def.id);
+                const def = netron.peer.getDefinitionByName("a");
+                const iface = netron.peer.getInterfaceById(def.id);
                 assert.true(is.netron2Interface(iface));
             });
 
             it("should throw for unknown context", () => {
-                assert.throws(() => netron.getInterfaceById(100500), adone.x.NotExists);
+                assert.throws(() => netron.peer.getInterfaceById(100500), adone.x.Unknown);
             });
 
             // it("remote", () => {
@@ -584,17 +617,17 @@ describe("Netron", () => {
             // });
 
             it("should return interface for valid context", () => {
-                const iface = netron.getInterfaceByName("a");
+                const iface = netron.peer.getInterfaceByName("a");
                 assert.true(is.netron2Interface(iface));
             });
 
             it("should throw for unknown context", () => {
-                assert.throws(() => netron.getInterfaceByName("not_exists"), adone.x.Unknown);
+                assert.throws(() => netron.peer.getInterfaceByName("not_exists"), adone.x.Unknown);
             });
 
             it("getInterface() ~ getInterfaceByName()", () => {
-                const iface1 = netron.getInterfaceByName("a");
-                const iface2 = netron.getInterface("a");
+                const iface1 = netron.peer.getInterfaceByName("a");
+                const iface2 = netron.peer.getInterface("a");
                 assert.strictEqual(iface1, iface2); // ???
                 assert.deepEqual(iface1, iface2);
             });
@@ -626,7 +659,7 @@ describe("Netron", () => {
             // });
 
             it("Netron#getPeerForInterface() should return own peer for interface obtained directly from netron instance", () => {
-                const iInstance = netron.getInterfaceByName("a");
+                const iInstance = netron.peer.getInterfaceByName("a");
                 const ownPeer = netron.getPeerForInterface(iInstance);
                 assert.deepEqual(ownPeer, netron.peer);
             });
@@ -652,61 +685,70 @@ describe("Netron", () => {
             const n = new Netron(peerId);
             n.attachContext(new A(), "a");
 
-            const iInstance = n.getInterface("a");
+            const iInstance = n.peer.getInterface("a");
 
             assert.true(is.netron2Interface(iInstance));
-            assert.sameMembers(n.peer.interfaces, [iInstance]);
-            assert.sameMembers(n.getInterfacesForPeer(peerId), [iInstance]);
+            assert.sameMembers([...n.peer.interfaces.values()], [iInstance]);
 
-            n.releaseInterface(iInstance);
+            n.peer.releaseInterface(iInstance);
 
-            assert.lengthOf(n.peer.interfaces, 0);
-            assert.lengthOf(n.getInterfacesForPeer(peerId), 0);
+            assert.equal(n.peer.interfaces.size, 0);
+        });
+    });
+
+    describe("meta handlers", () => {
+        let netron;
+        beforeEach(() => {
+            netron = new Netron(peerC, {
+                proxyContexts: true
+            });
+            netron.attachContext(new A(), "a");
+            netron.attachContext(new B(), "b");
+        });
+
+        it("default 'ability' handler", () => {
+            const ability = netron.getMetaHandler("ability");
+            const abilities = ability(netron, netron.peer);
+            assert.strictEqual(abilities.proxyContexts, true);
+        });
+
+        it("default 'contexts' handler", () => {
+            const contexts = netron.getMetaHandler("contexts");
+            const defs = contexts(netron);
+            assert.sameMembers(Object.keys(defs), ["a", "b"]);
         });
     });
 
     describe("networking", () => {
-        let idServer;
-        let idClient;
-        let peerS;
-        let peerC;
         let netronS;
         let netronC;
 
-        before(() => {
-            idServer = PeerId.create();
-            idClient = PeerId.create();
-        });
-
         beforeEach(async () => {
-            peerS = new PeerInfo(idServer);
-            peerS.multiaddrs.add("/ip4/0.0.0.0/tcp/0");
             netronS = new Netron(peerS);
             netronS.createNetCore("default");
 
-            // adone.log("Server peer:", peerS.id.asBase58());
-
-            peerC = new PeerInfo(idClient);
-            peerC.multiaddrs.add("/ip4/0.0.0.0/tcp/0");
             netronC = new Netron(peerC);
             netronC.createNetCore("default");
 
+            // adone.log(peerS.multiaddrs.toArray().map((x) => x.toString()));
+            // adone.log("Server peer:", peerS.id.asBase58());
             // adone.log("Client peer:", peerC.id.asBase58());
         });
 
         afterEach(async () => {
+            // await netronC.disconnect();
             await netronS.stop("default");
         });
 
         it("should be only one created network", () => {
-            assert.equal(netronS.netCores.size, 1);
+            assert.equal(netronS.networks.size, 1);
             const netCore = netronS.getNetCore("default");
             assert.ok(netCore);
         });
 
         it("delete netcore", async () => {
             netronC.deleteNetCore("default");
-            assert.equal(netronC.netCores.size, 0);
+            assert.equal(netronC.networks.size, 0);
         });
 
         it("delete active netcore is not allowed", async () => {
@@ -723,25 +765,53 @@ describe("Netron", () => {
         it("connect one netron to another", async () => {
             await netronS.start("default");
             assert.true(netronS.getNetCore("default").started);
+            const remotePeer = await netronC.connect("default", peerS);
+            assert.deepEqual(remotePeer.netron, netronC);
+            const netCoreC = netronC.getNetCore("default");
+            assert.false(netCoreC.started);
+            assert.deepEqual(remotePeer.netCore, netCoreC);
+        });
+
+        it("emit event if peer connected", async (done) => {
+            let i = 0;
+            const check = () => ++i === 2 ? done() : null;
+            netronS.on("peer:connect", (peer) => {
+                netronS.peers.has(peer.info.id.asBase58());
+                check();
+            });
+            netronC.on("peer:connect", (peer) => {
+                netronC.peers.has(peer.info.id.asBase58());
+                check();
+            });
+
+            await netronS.start("default");
             await netronC.connect("default", peerS);
-            assert.false(netronC.getNetCore("default").started);
+            
+        });
+
+        it.todo("connects using different addresses of the remote netron should return same peer", async () => {
+
         });
 
         it("connect netron to netcore without netron protocol should be ok", async () => {
             const netCore = netronS.getNetCore("default");
             await netCore.start();
             const remotePeer = await netronC.connect("default", peerS);
-            assert.false(remotePeer.hasNetronProtocol());
+            assert.false(remotePeer.isNetronConnected());
         });
 
-        it.todo("connect by default should automatically request remote contexts", async () => {
+        it("connect by default should automatically request 'ability' and 'contexts' meta", async () => {
             netronS.attachContext(new A(), "a");
             netronS.attachContext(new B(), "b");
             await netronS.start("default");
             const remotePeer = await netronC.connect("default", peerS);
-            assert.true(remotePeer.hasNetronProtocol());
+            assert.true(remotePeer.isNetronConnected());
 
-            // const iA = 
+            assert.deepEqual(remotePeer.meta.get("ability").data, {
+                proxyContexts: false
+            });
+
+            assert.sameMembers(Object.keys(remotePeer.meta.get("contexts").data), ["a", "b"]);
         });
     });
 });

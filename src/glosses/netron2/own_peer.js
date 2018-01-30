@@ -25,7 +25,7 @@ export default class OwnPeer extends AbstractPeer {
         return new Promise((resolve, reject) => {
             stub.get(name, defaultData, this).catch(reject).then((result) => {
                 if (is.netron2Definition(result)) {
-                    resolve(this.netron._createInterface(result));
+                    resolve(this.netron._createInterface(result, this));
                 } else {
                     resolve(result);
                 }
@@ -33,8 +33,12 @@ export default class OwnPeer extends AbstractPeer {
         });
     }
 
-    ping() {
-        return null;
+    async requestMeta(request) {
+        const response = await this.netron.requestMeta(this, request);
+        for (const res of response) {
+            this.meta.set(res.id, adone.util.omit(res, "id"));
+        }
+        return response;
     }
 
     hasContext(ctxId) {
@@ -75,16 +79,7 @@ export default class OwnPeer extends AbstractPeer {
 
     getInterfaceById(defId) {
         const stub = this.netron.getStubById(defId);
-        return this.netron._createInterface(stub.definition, this.info);
-    }
-
-    getInterfaceByName(ctxId) {
-        const def = this.getDefinitionByName(ctxId);
-        return this.getInterfaceById(def.id);
-    }
-
-    getInterface(ctxId) {
-        return this.getInterfaceByName(ctxId);
+        return this.netron._createInterface(stub.definition, this);
     }    
 }
 adone.tag.add(OwnPeer, "NETRON2_OWNPEER");

@@ -8,22 +8,22 @@ const {
 export const NETRON_PROTOCOL = "/netron/1.0.0";
 
 export const ACTION = {
-    // Contexts
-    REQUEST_CONTEXTS: 0x00,
-    CONTEXT_ATTACH: 0x01,
-    CONTEXT_DETACH: 0x02,
+    // Common actions
+    GET: 0x00,
+    SET: 0x01,
+    META: 0x02,
 
     // Events
     EVENT_ON: 0x10,
     EVENT_OFF: 0x11,
     EVENT_EMIT: 0x12,
+    
+    // Contexts
+    REQUEST_CONTEXTS: 0x20,
+    CONTEXT_ATTACH: 0x21,
+    CONTEXT_DETACH: 0x32
 
-    // Functional actions
-    GET: 0x20,
-    SET: 0x21,
-    PING: 0x22,
-
-    MAX: 0x100 // = 256
+    // MAX: 0x7F
 };
 
 adone.definePredicates({
@@ -170,5 +170,13 @@ adone.lazify({
     Netron: "./netron",
     AbstractPeer: "./abstract_peer",
     OwnPeer: "./own_peer",
-    RemotePeer: "./remote_peer"
+    RemotePeer: "./remote_peer",
+    Packet: "./packet",
+    metaHandler: "./meta_handlers",
+    serializer: "./serializer"
 }, adone.asNamespace(exports), require);
+
+adone.lazifyPrivate({
+    I_DEFINITION_SYMBOL: () => Symbol(),
+    I_PEERID_SYMBOL: () => Symbol()
+}, exports, require);

@@ -185,15 +185,16 @@ const empty = Buffer.allocUnsafe(0);
 let pool = Buffer.alloc(10 * 1024);
 let used = 0;
 
-/* ::
-type MultiplexOpts = {
-  binaryName?: bool,
-  limit?: number,
-  initiator?: bool
-}
-
-type ChannelCallback = (Channel) => void
-*/
+/**
+ * ::
+ * type MultiplexOpts = {
+ * binaryName?: bool,
+ * limit?: number,
+ * initiator?: bool
+ * }
+ *
+ * type ChannelCallback = (Channel) => void
+ */
 
 export default class Multiplex extends adone.std.stream.Duplex {
     constructor(opts/* :: ?: MultiplexOpts | ChannelCallback */, onchannel /* :: ?: ChannelCallback */) {

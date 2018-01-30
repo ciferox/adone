@@ -1,53 +1,57 @@
 const {
     is,
-    netron2: { ACTION, AbstractPeer, Packet },
+    collection: { TimedoutMap },
+    netron2: { ACTION, AbstractPeer, Packet, SequenceId, serializer },
+    stream: { pull },
     x
 } = adone;
 
 export default class RemotePeer extends AbstractPeer {
-    constructor(info, netron) {
+    constructor(info, netron, netCore) {
         super(info, netron);
 
+        this.netCore = netCore;
         this.rawConn = null;
         this.netronConn = null;
         this.protocol = adone.netron2.NETRON_PROTOCOL;
-    }
 
-    /**
-     * Updates connection instances
-     * 
-     * @param {Connection|null|undefined} rawConn - instance of raw connection 
-     * @param {Connection|null|undefined} netronConn - instance of netron connection
-     */
-    _setConnInfo(rawConn, netronConn) {
-        if (!is.undefined(rawConn)) {
-            this.rawConn = rawConn;
-        }
+        this.packetId = new SequenceId();
+        this._responseAwaiters = new TimedoutMap(this.netron.options.responseTimeout, (id) => {
+            const awaiter = this._deleteAwaiter(id);
+            awaiter([1, new x.NetronTimeout(`Response timeout ${this.netron.options.responseTimeout}ms exceeded`)]);
+        });
 
-        if (!is.undefined(netronConn)) {
-            this.netronConn = netronConn;
-        }
-    }
-
-    hasNetronProtocol() {
-        return !is.null(this.netronConn);
+        this._ctxidDefs = new Map();
     }
 
     isConnected() {
         return !is.null(this.rawConn);
     }
 
-    write(/*data*/) {
-        throw new x.NotImplemented("Method write() is not implemented");
+    isNetronConnected() {
+        return !is.null(this.netronConn);
     }
-    
-    send(impulse, streamId, packetId, action, data, awaiter) {
-        const status = this.getStatus();
-        if (is.function(awaiter)) {
-            this._setAwaiter(streamId, awaiter);
-        }
 
-        return this.write(Packet.create(packetId, streamId, impulse, action, status, data).raw);
+    write(data) {
+        return new Promise((resolve, reject) => {
+            if (!is.null(this.netronConn)) {
+                const buf = new adone.collection.ByteArray().skipWrite(4);
+                const encoded = serializer.encode(data, buf);
+                encoded.writeUInt32BE(encoded.length - 4, 0);
+                pull(
+                    pull.values([encoded.toBuffer()]),
+                    this.netronConn
+                );
+                resolve();
+            } else {
+                reject(new adone.x.IllegalState("No active connection for netron protocol"));
+            }
+        });
+    }
+
+    send(impulse, packetId, action, data, awaiter) {
+        is.function(awaiter) && this._setAwaiter(packetId, awaiter);
+        return this.write(Packet.create(packetId, impulse, action, data).raw);
     }
 
     get(defId, name, defaultData) {
@@ -61,7 +65,7 @@ export default class RemotePeer extends AbstractPeer {
             $ = $[name];
             defaultData = this._processArgs(ctxDef, $, defaultData);
             return new Promise((resolve, reject) => {
-                this.send(this, 1, this.streamId.next(), 1, ACTION.GET, [defId, name, defaultData], (result) => {
+                this.send(1, this.packetId.next(), ACTION.GET, [defId, name, defaultData], (result) => {
                     if (result[0] === 1) {
                         reject(result[1]);
                     } else {
@@ -86,23 +90,47 @@ export default class RemotePeer extends AbstractPeer {
                 return Promise.reject(new x.InvalidAccess(`'${name}' is not writable`));
             }
             data = this._processArgs(ctxDef, $, data);
-            return this.send(this, 1, this.streamId.next(), 1, ACTION.SET, [defId, name, data]);
+            return this.send(1, this.packetId.next(), ACTION.SET, [defId, name, data]);
         }
         return Promise.reject(new x.NotExists(`'${name}' not exists`));
     }
 
-    ping() {
-        return new Promise((resolve, reject) => {
-            this.send(this, 1, this.streamId.next(), 1, ACTION.PING, null, resolve).catch(reject);
+    requestMeta(request) {
+        return new Promise(async (resolve, reject) => {
+            if (!(is.string(request) || is.array(request) || is.plainObject(request))) {
+                return reject(new adone.x.NotValid("Invalid meta request (should be string, plain object or array"));
+            }
+            this.send(1, this.packetId.next(), ACTION.META, request, async (response) => {
+                try {
+                    if (!is.array(response)) {
+                        return reject(new adone.x.NotValid(`Not valid response: ${adone.util.typeOf(response)}`));
+                    }
+
+                    for (const res of response) {
+                        this.meta.set(res.id, adone.util.omit(res, "id"));
+                    }
+                    resolve(response);
+                } catch (err) {
+                    reject(err);
+                }
+            });
         });
     }
 
-    async requestContexts() {
+    requestAbility() {
+        return this.requestMeta("ability");
+    }
 
+    requestContexts() {
+        return this.requestMeta("contexts");
     }
 
     hasContext(ctxId) {
         return this._ctxidDefs.has(ctxId);
+    }
+
+    getContextNames() {
+        return Array.from(this._ctxidDefs.keys());
     }
 
     getInterfaceById(defId) {
@@ -110,11 +138,82 @@ export default class RemotePeer extends AbstractPeer {
         if (is.undefined(def)) {
             throw new x.Unknown(`Unknown definition '${defId}'`);
         }
-        return this.netron._createInterface(def, this.info);
+        return this.netron._createInterface(def, this);
     }
 
     getDefinitionByName(ctxId) {
-        return this._ctxidDefs.get(ctxId);
+        const def = this._ctxidDefs.get(ctxId);
+        if (is.undefined(def)) {
+            throw new x.Unknown(`Unknown context '${ctxId}'`);
+        }
+        return def;
+    }
+
+    /**
+     * Updates connection instances
+     * 
+     * @param {Connection|null|undefined} rawConn - instance of raw connection 
+     * @param {Connection|null|undefined} netronConn - instance of netron connection
+     */
+    _setConnInfo(rawConn, netronConn) {
+        if (!is.undefined(rawConn)) {
+            this.rawConn = rawConn;
+        }
+
+        if (!is.undefined(netronConn)) {
+            this.netronConn = netronConn;
+            if (is.null(netronConn)) {
+                return;
+            }
+
+            // receive data from remote netron
+            const internalBuffer = new adone.collection.ByteArray(0);
+            let lpsz = null;
+
+            const handler = (chunk) => {
+                const buffer = internalBuffer;
+                buffer.write(chunk);
+
+                for (; ;) {
+                    if (buffer.length <= 4) {
+                        break;
+                    }
+                    let packetSize = lpsz;
+                    if (is.null(packetSize)) {
+                        lpsz = packetSize = buffer.readUInt32BE();
+                    }
+                    if (buffer.length < packetSize) {
+                        break;
+                    }
+
+                    const result = serializer.decoder.tryDecode(buffer);
+                    if (result) {
+                        if (packetSize !== result.bytesConsumed) {
+                            buffer.clear();
+                            adone.error("invalid packet");
+                            break;
+                        }
+                        this.netron._processPacket(this, result.value);
+                        lpsz = null;
+                    }
+                }
+            };
+
+            pull(
+                netronConn,
+                pull.drain(handler)
+            );
+        }
+    }
+
+    _setAwaiter(id, awaiter) {
+        this._responseAwaiters.set(id, awaiter);
+    }
+
+    _deleteAwaiter(id) {
+        const awaiter = this._responseAwaiters.get(id);
+        this._responseAwaiters.delete(id);
+        return awaiter;
     }
 }
 adone.tag.add(RemotePeer, "NETRON2_REMOTETPEER");

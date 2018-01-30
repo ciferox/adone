@@ -3,9 +3,10 @@ const {
     x,
     util,
     event: { AsyncEmitter },
-    collection: { TimedoutMap },
-    netron2: { PEER_STATUS, ACTION, RemoteStub, SequenceId }
+    netron2: { RemoteStub }
 } = adone;
+
+const __ = adone.private(adone.netron2);
 
 export default class AbstractPeer extends AsyncEmitter {
     constructor(info, netron) {
@@ -13,38 +14,69 @@ export default class AbstractPeer extends AsyncEmitter {
 
         this.info = info;
         this.netron = netron;
-        this.interfaces = [];
+        this.interfaces = new Map();
 
         // this.options = Object.assign({}, options);
 
-        // this.streamId = new SequenceId();
-        // this._responseAwaiters = new TimedoutMap(this.options.responseTimeout, (streamId) => {
-        //     const awaiter = this._removeAwaiter(streamId);
-        //     awaiter([1, new x.NetronTimeout(`Response timeout ${this.options.responseTimeout}ms exceeded`)]);
-        // });
-        // this._status = PEER_STATUS.OFFLINE;
         // this._defs = new Map();
-        // this._ctxidDefs = new Map();
         // this._ownDefIds = []; // super netron specific
 
-        // this.uid = null;
-        // this.connectedTime = null;
+        this.connectedTime = null;
+        this.meta = new Map();
     }
 
-    getStatus() {
-        return this._status;
-    }
-
+    /**
+     * Sets value of property or calls method with 'name' in context with 'defId' on peer side identified by 'peerInfo'.
+     * 
+     * @param {string|PeerId|PeerInfo|nil} peerInfo - peer identity
+     * @param {number} defId definition id
+     * @param {string} name property name
+     * @param {any} data property data
+     * @returns {Promise<undefined>}
+     */
     set(/*defId, name, data*/) {
         throw new adone.x.NotImplemented("Method set() is not implemented");
     }
 
+    /**
+     * Gets value of property or calls method with 'name' in context with 'defId' on peer side identified by 'peerInfo'.
+     * 
+     * @param {string|PeerId|PeerInfo|nil} peerInfo - peer identity
+     * @param {number} defId definition id
+     * @param {string} name property name
+     * @param {any} data property data
+     * @returns {Promise<any>} returns property value or result of called method
+     */
     get(/*defId, name, defaultData*/) {
         throw new adone.x.NotImplemented("Method get() is not implemented");
     }
 
-    ping() {
-        throw new adone.x.NotImplemented("Method ping() is not implemented");
+    /**
+     * Alias for get() for calling methods.
+     * 
+     * @param {number} defId definition id
+     * @param {string} name property name
+     * @param {any} data property data
+     * @returns {Promise<any>} returns property value or result of called method 
+     */
+    call(defId, method, ...args) {
+        return this.get(defId, method, args);
+    }
+
+    /**
+     * Alias for set() for calling methods.
+     *
+     * @param {number} defId definition id
+     * @param {string} name property name
+     * @param {any} data property data
+     * @returns {Promise<undefined>} 
+     */
+    callVoid(defId, method, ...args) {
+        return this.set(defId, method, args);
+    }
+
+    requestMeta(/*request*/) {
+        throw new adone.x.NotImplemented("Method requestMeta() is not implemented");
     }
 
     hasContext(ctxId) {
@@ -73,28 +105,51 @@ export default class AbstractPeer extends AsyncEmitter {
         return this.netron.detachContextRemote(this.uid, ctxId);
     }
 
-    getContextNames() {
-        return Array.from(this._ctxidDefs.keys());
-    }
-
     getDefinitionByName(/*ctxId*/) {
         throw new adone.x.NotImplemented("Method getDefinitionByName() is not implemented");
     }
 
+    /**
+     * Returns interface for context by definition id.
+     * 
+     * @param {number} defId 
+     * @param {string|PeerId|PeerInfo|Peer|nil} peerInfo 
+     */
+    getInterfaceById(/*defId*/) {
+        throw new adone.x.NotImplemented("Method getInterfaceById() is not implemented");
+    }
+
+    /**
+     * Returns interface for context by context id.
+     * 
+     * @param {string|nil} ctxId 
+     * @param {string|PeerId|PeerInfo|Peer|nil} peerInfo 
+     */
+    getInterfaceByName(ctxId) {
+        const def = this.getDefinitionByName(ctxId);
+        return this.getInterfaceById(def.id);
+    }
+
+    /**
+     * Returns interface for context by context id.
+     * 
+     * @param {string|nil} ctxId 
+     * @param {string|PeerId|PeerInfo|Peer|nil} peerInfo 
+     */
     getInterface(ctxId) {
         return this.getInterfaceByName(ctxId);
     }
 
-    getInterfaceByName(ctxId) {
-        const def = this.getDefinitionByName(ctxId);
-        if (is.undefined(def)) {
-            throw new x.Unknown(`Unknown context '${ctxId}'`);
+    /**
+     * Removes interface from internal collections.
+     * 
+     * @param {Interface} iInstance 
+     */
+    releaseInterface(iInstance) {
+        if (!is.netron2Interface(iInstance)) {
+            throw new x.NotValid("Object is not a netron interface");
         }
-        return this.getInterfaceById(def.id);
-    }
-
-    getInterfaceById(/*defId*/) {
-        throw new adone.x.NotImplemented("Method getInterfaceById() is not implemented");
+        this.interfaces.delete(iInstance[__.I_DEFINITION_SYMBOL].id);
     }
 
     getNumberOfAwaiters() {
@@ -113,23 +168,23 @@ export default class AbstractPeer extends AsyncEmitter {
         return this.onRemote("context detach", handler);
     }
 
-    _setStatus(status) {
-        if (status !== this._status) {
-            if (this._status === PEER_STATUS.ONLINE && status === PEER_STATUS.OFFLINE) {
-                for (const awaiter of this._responseAwaiters.values()) { // reject all the pending get requests
-                    awaiter([1, new x.NetronPeerDisconnected()]);
-                }
-            }
-            this._status = status;
-            if (status === PEER_STATUS.OFFLINE) {
-                this._responseAwaiters.clear();
-            } else if (status === PEER_STATUS.ONLINE) {
-                this.connectedTime = new Date();
-                this.netron.peers.set(this.uid, this);
-            }
-            this.emit("status", status);
-        }
-    }
+    // _setStatus(status) {
+    //     if (status !== this._status) {
+    //         if (this._status === PEER_STATUS.ONLINE && status === PEER_STATUS.OFFLINE) {
+    //             for (const awaiter of this._responseAwaiters.values()) { // reject all the pending get requests
+    //                 awaiter([1, new x.NetronPeerDisconnected()]);
+    //             }
+    //         }
+    //         this._status = status;
+    //         if (status === PEER_STATUS.OFFLINE) {
+    //             this._responseAwaiters.clear();
+    //         } else if (status === PEER_STATUS.ONLINE) {
+    //             this.connectedTime = new Date();
+    //             this.netron.peers.set(this.uid, this);
+    //         }
+    //         this.emit("status", status);
+    //     }
+    // }
 
     _updateStrongDefinitions(defs) {
         for (const [ctxId, def] of util.entries(defs, { all: true })) {
@@ -170,16 +225,6 @@ export default class AbstractPeer extends AsyncEmitter {
             this._ctxidDefs.delete(ctxData.id);
             this._defs.delete(ctxData.defId);
         });
-    }
-
-    _setAwaiter(streamId, awaiter) {
-        this._responseAwaiters.set(streamId, awaiter);
-    }
-
-    _removeAwaiter(streamId) {
-        const awaiter = this._responseAwaiters.get(streamId);
-        this._responseAwaiters.delete(streamId);
-        return awaiter;
     }
 
     _processArgs(ctxDef, field, data) {
