@@ -19,9 +19,8 @@ export const ACTION = {
     EVENT_EMIT: 0x12,
     
     // Contexts
-    REQUEST_CONTEXTS: 0x20,
-    CONTEXT_ATTACH: 0x21,
-    CONTEXT_DETACH: 0x32
+    CONTEXT_ATTACH: 0x20,
+    CONTEXT_DETACH: 0x21
 
     // MAX: 0x7F
 };

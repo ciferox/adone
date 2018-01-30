@@ -4,7 +4,7 @@ const {
     netron2: { Netron, DContext, DPublic }
 } = adone;
 
-describe("Netron", () => {
+describe("functional and complex cases", () => {
     @DContext()
     class A {
         @DPublic()

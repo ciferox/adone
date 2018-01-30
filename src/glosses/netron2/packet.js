@@ -3,6 +3,60 @@ const {
     x
 } = adone;
 
+const setBit = (target, offset) => target | (1 << offset);
+
+const clearBit = (target, offset) => target & ~(1 << offset);
+
+const getBit = (target, offset) => (target >> offset) & 1;
+
+const clearBits = (target, offset, count) => {
+    const maxOffset = offset + count;
+    for (let i = offset; i < maxOffset; ++i) {
+        target &= ~(1 << i);
+    }
+
+    return target;
+};
+
+const writeBits = (target, val, offset, count) => {
+    const maxOffset = offset + count;
+    if (val & 1) {
+        target |= (1 << offset);
+    }
+    for (let i = offset + 1; i < maxOffset; ++i) {
+        if (val & (1 << (i - offset))) {
+            target |= (1 << i);
+        }
+    }
+
+    return target;
+};
+
+const readBits = (target, offset, count) => {
+    let val = 0 >>> 0;
+    const maxOffset = offset + count;
+    for (let i = offset; i < maxOffset; ++i) {
+        if (getBit(target, i)) {
+            val |= (1 << (i - offset));
+        }
+    }
+    return val;
+};
+
+/**
+ * Represents netron packet.
+ * 
+ * Packet fields in left to right order:
+ * - flags - contains impulse and action values (uint8)
+ * - id    - packet id (uint32)
+ * - data  - custom data
+ * 
+ *    name | offset | bits | min/max
+ *   -------------------------------- 
+ *   action       0      7  0x00-0x7F 
+ *  impulse       7      1  0|1
+ * 
+ */
 export default class Packet {
     constructor() {
         this.flags = 0x00;
@@ -11,50 +65,19 @@ export default class Packet {
     }
 
     setAction(action) {
-        this.writeHeaderBits(action, 7, 0);
+        this.flags = writeBits(clearBits(this.flags, 0, 7), action, 0, 7);
     }
 
     getAction() {
-        return this.readHeaderBits(7, 0);
+        return readBits(this.flags, 0, 7);
     }
 
     setImpulse(impulse) {
-        impulse === 1 && this.setHeaderBit(7);
+        this.flags = impulse === 1 ? setBit(this.flags, 7) : clearBit(this.flags, 7);
     }
 
     getImpulse() {
-        return this.getHeaderBit(7);
-    }
-
-    setHeaderBit(bit) {
-        this.flags |= (1 << bit);
-    }
-
-    getHeaderBit(bit) {
-        return (this.flags >> bit) & 1;
-    }
-
-    writeHeaderBits(val, bits, offset) {
-        const maxOffset = offset + bits;
-        if (val & 1) {
-            this.flags |= (1 << offset);
-        }
-        for (let i = offset + 1; i < maxOffset; ++i) {
-            if (val & (1 << (i - offset))) {
-                this.flags |= (1 << i);
-            }
-        }
-    }
-
-    readHeaderBits(bits, offset) {
-        let val = 0 >>> 0;
-        const maxOffset = offset + bits;
-        for (let i = offset; i < maxOffset; ++i) {
-            if (this.getHeaderBit(i)) {
-                val |= (1 << (i - offset));
-            }
-        }
-        return val;
+        return getBit(this.flags, 7);
     }
 
     get raw() {
@@ -62,13 +85,12 @@ export default class Packet {
     }
 
     static create(id, impulse, action, data) {
-        const payload = new Packet();
-        payload.setImpulse(impulse);
-        payload.setAction(action);
-        payload.id = id;
-        payload.data = data;
-
-        return payload;
+        const packet = new Packet();
+        packet.setImpulse(impulse);
+        packet.setAction(action);
+        packet.id = id;
+        packet.data = data;
+        return packet;
     }
 
     static from(rawPacket) {

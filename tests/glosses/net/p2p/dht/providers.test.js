@@ -38,6 +38,7 @@ describe("dht", "KadDHT", "Providers", function () {
             providers.getProviders(cid, (err, provs) => {
                 assert.notExists(err);
                 expect(provs).to.be.eql([infos[0].id, infos[1].id]);
+                providers.stop();
 
                 done();
             });
@@ -71,6 +72,7 @@ describe("dht", "KadDHT", "Providers", function () {
                     provs.forEach((p) => {
                         expect(p[0].id).to.be.eql(infos[0].id.id);
                     });
+                    providers.stop();
                     cb();
                 });
             }
@@ -100,6 +102,7 @@ describe("dht", "KadDHT", "Providers", function () {
                 providers.getProviders(cid, (err, provs) => {
                     assert.notExists(err);
                     expect(provs).to.have.length(0);
+                    providers.stop();
                     done();
                 });
             }, 300);

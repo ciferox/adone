@@ -101,18 +101,14 @@ export default class RemotePeer extends AbstractPeer {
                 return reject(new adone.x.NotValid("Invalid meta request (should be string, plain object or array"));
             }
             this.send(1, this.packetId.next(), ACTION.META, request, async (response) => {
-                try {
-                    if (!is.array(response)) {
-                        return reject(new adone.x.NotValid(`Not valid response: ${adone.util.typeOf(response)}`));
-                    }
-
-                    for (const res of response) {
-                        this.meta.set(res.id, adone.util.omit(res, "id"));
-                    }
-                    resolve(response);
-                } catch (err) {
-                    reject(err);
+                if (!is.array(response)) {
+                    return reject(new adone.x.NotValid(`Not valid response: ${adone.util.typeOf(response)}`));
                 }
+
+                for (const res of response) {
+                    this.meta.set(res.id, adone.util.omit(res, "id"));
+                }
+                resolve(response);
             });
         });
     }
