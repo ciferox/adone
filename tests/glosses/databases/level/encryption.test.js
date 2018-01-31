@@ -11,6 +11,10 @@ const newDB = (opts) => {
 };
 
 describe("database", "level", "encryption", () => {
+    after(async () => {
+        await testCommon.cleanup();
+    });
+
     it("encrypt/decrypt", async () => {
         const passwordBased = {
             encryption: {
