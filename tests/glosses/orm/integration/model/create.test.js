@@ -435,7 +435,7 @@ describe("create", function () {
                         })
                     );
                 }).then(() => {
-                    expect(s).to.have.been.called;
+                    expect(s).to.have.been.called();
                 });
             });
 

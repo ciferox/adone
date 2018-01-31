@@ -265,8 +265,8 @@ describe("hooks", function () {
                 this.User.afterSync(afterHook);
 
                 return this.User.sync().then(() => {
-                    expect(beforeHook).to.have.been.calledOnce;
-                    expect(afterHook).to.have.been.calledOnce;
+                    expect(beforeHook).to.have.been.calledOnce();
+                    expect(afterHook).to.have.been.calledOnce();
                 });
             });
 
@@ -278,8 +278,8 @@ describe("hooks", function () {
                 this.User.afterSync(afterHook);
 
                 return this.User.sync({ hooks: false }).then(() => {
-                    expect(beforeHook).to.not.have.been.called;
-                    expect(afterHook).to.not.have.been.called;
+                    expect(beforeHook).to.not.have.been.called();
+                    expect(afterHook).to.not.have.been.called();
                 });
             });
 
@@ -300,8 +300,8 @@ describe("hooks", function () {
                     await this.User.sync();
                 });
 
-                expect(beforeHook).to.have.been.calledOnce;
-                expect(afterHook).not.to.have.been.called;
+                expect(beforeHook).to.have.been.calledOnce();
+                expect(afterHook).not.to.have.been.called();
             });
 
             it("should return an error from after", async function () {
@@ -318,8 +318,8 @@ describe("hooks", function () {
                     await this.User.sync();
                 });
 
-                expect(beforeHook).to.have.been.calledOnce;
-                expect(afterHook).to.have.been.calledOnce;
+                expect(beforeHook).to.have.been.calledOnce();
+                expect(afterHook).to.have.been.calledOnce();
             });
         });
     });
@@ -338,10 +338,10 @@ describe("hooks", function () {
                 this.sequelize.afterBulkSync(afterHook);
 
                 return this.sequelize.sync().then(() => {
-                    expect(beforeHook).to.have.been.calledOnce;
-                    expect(modelBeforeHook).to.have.been.calledOnce;
-                    expect(modelAfterHook).to.have.been.calledOnce;
-                    expect(afterHook).to.have.been.calledOnce;
+                    expect(beforeHook).to.have.been.calledOnce();
+                    expect(modelBeforeHook).to.have.been.calledOnce();
+                    expect(modelAfterHook).to.have.been.calledOnce();
+                    expect(afterHook).to.have.been.calledOnce();
                 });
             });
 
@@ -357,10 +357,10 @@ describe("hooks", function () {
                 this.sequelize.afterBulkSync(afterHook);
 
                 return this.sequelize.sync({ hooks: false }).then(() => {
-                    expect(beforeHook).to.not.have.been.called;
-                    expect(modelBeforeHook).to.not.have.been.called;
-                    expect(modelAfterHook).to.not.have.been.called;
-                    expect(afterHook).to.not.have.been.called;
+                    expect(beforeHook).to.not.have.been.called();
+                    expect(modelBeforeHook).to.not.have.been.called();
+                    expect(modelAfterHook).to.not.have.been.called();
+                    expect(afterHook).to.not.have.been.called();
                 });
             });
 
@@ -385,8 +385,8 @@ describe("hooks", function () {
                     await this.sequelize.sync();
                 });
 
-                expect(beforeHook).to.have.been.calledOnce;
-                expect(afterHook).not.to.have.been.called;
+                expect(beforeHook).to.have.been.calledOnce();
+                expect(afterHook).not.to.have.been.called();
             });
 
             it("should return an error from after", async function () {
@@ -403,8 +403,8 @@ describe("hooks", function () {
                     await this.sequelize.sync();
                 });
 
-                expect(beforeHook).to.have.been.calledOnce;
-                expect(afterHook).to.have.been.calledOnce;
+                expect(beforeHook).to.have.been.calledOnce();
+                expect(afterHook).to.have.been.calledOnce();
             });
 
             afterEach(function () {
@@ -423,13 +423,13 @@ describe("hooks", function () {
             this.User.hook("beforeCreate", "naruto", narutoHook);
 
             return this.User.create({ username: "makunouchi" }).then(() => {
-                expect(sasukeHook).to.have.been.calledOnce;
-                expect(narutoHook).to.have.been.calledOnce;
+                expect(sasukeHook).to.have.been.calledOnce();
+                expect(narutoHook).to.have.been.calledOnce();
                 this.User.removeHook("beforeCreate", "sasuke");
                 return this.User.create({ username: "sendo" });
             }).then(() => {
-                expect(sasukeHook).to.have.been.calledOnce;
-                expect(narutoHook).to.have.been.calledTwice;
+                expect(sasukeHook).to.have.been.calledOnce();
+                expect(narutoHook).to.have.been.calledTwice();
             });
         });
 
@@ -441,13 +441,13 @@ describe("hooks", function () {
             this.User.hook("beforeCreate", narutoHook);
 
             return this.User.create({ username: "makunouchi" }).then(() => {
-                expect(sasukeHook).to.have.been.calledOnce;
-                expect(narutoHook).to.have.been.calledOnce;
+                expect(sasukeHook).to.have.been.calledOnce();
+                expect(narutoHook).to.have.been.calledOnce();
                 this.User.removeHook("beforeCreate", sasukeHook);
                 return this.User.create({ username: "sendo" });
             }).then(() => {
-                expect(sasukeHook).to.have.been.calledOnce;
-                expect(narutoHook).to.have.been.calledTwice;
+                expect(sasukeHook).to.have.been.calledOnce();
+                expect(narutoHook).to.have.been.calledTwice();
             });
         });
 
@@ -459,13 +459,13 @@ describe("hooks", function () {
             this.User.hook("beforeSave", narutoHook);
 
             return this.User.create({ username: "makunouchi" }).then((user) => {
-                expect(sasukeHook).to.have.been.calledOnce;
-                expect(narutoHook).to.have.been.calledOnce;
+                expect(sasukeHook).to.have.been.calledOnce();
+                expect(narutoHook).to.have.been.calledOnce();
                 this.User.removeHook("beforeSave", sasukeHook);
                 return user.updateAttributes({ username: "sendo" });
             }).then(() => {
-                expect(sasukeHook).to.have.been.calledOnce;
-                expect(narutoHook).to.have.been.calledTwice;
+                expect(sasukeHook).to.have.been.calledOnce();
+                expect(narutoHook).to.have.been.calledTwice();
             });
         });
 

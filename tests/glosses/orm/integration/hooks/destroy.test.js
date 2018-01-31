@@ -26,8 +26,8 @@ describe("destroy", () => {
 
             return this.User.create({ username: "Toni", mood: "happy" }).then((user) => {
                 return user.destroy().then(() => {
-                    expect(beforeHook).to.have.been.calledOnce;
-                    expect(afterHook).to.have.been.calledOnce;
+                    expect(beforeHook).to.have.been.calledOnce();
+                    expect(afterHook).to.have.been.calledOnce();
                 });
             });
         });
@@ -50,8 +50,8 @@ describe("destroy", () => {
                 await user.destroy();
             });
 
-            expect(beforeHook).to.have.been.calledOnce;
-            expect(afterHook).not.to.have.been.called;
+            expect(beforeHook).to.have.been.calledOnce();
+            expect(afterHook).not.to.have.been.called();
         });
 
         it("should return an error from after", async function () {
@@ -70,8 +70,8 @@ describe("destroy", () => {
                 await user.destroy();
             });
 
-            expect(beforeHook).to.have.been.calledOnce;
-            expect(afterHook).to.have.been.calledOnce;
+            expect(beforeHook).to.have.been.calledOnce();
+            expect(afterHook).to.have.been.calledOnce();
         });
     });
 });

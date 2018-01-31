@@ -58,7 +58,7 @@ describe("database", "redis", "monitor", { skip: check }, () => {
             return Redis.prototype._readyCheck.apply(this, args);
         });
         const monitor = await redis.monitor();
-        expect(readyCheck).to.have.been.called;
+        expect(readyCheck).to.have.been.called();
         redis.disconnect();
         monitor.disconnect();
     });

@@ -42,19 +42,19 @@ describe("replset read preference", function () {
         const pickedServer = spy();
         db.serverConfig.replset.on("pickedServer", pickedServer);
         await db.collection("somecollection").findOne({}, { readPreference: new ReadPreference(ReadPreference.NEAREST) });
-        expect(pickedServer).to.have.been.calledOnce;
+        expect(pickedServer).to.have.been.calledOnce();
         {
             const { args: [, server] } = pickedServer.getCall(0);
             expect(server.name).to.be.equal(byTime[0].name);
         }
         await db.collection("somecollection").findOne({}, { readPreference: new ReadPreference(ReadPreference.SECONDARY) });
-        expect(pickedServer).to.have.been.calledTwice;
+        expect(pickedServer).to.have.been.calledTwice();
         {
             const { args: [, server] } = pickedServer.getCall(1);
             expect(secondaries).to.include(server.name);
         }
         await db.collection("somecollection").findOne({}, { readPreference: new ReadPreference(ReadPreference.SECONDARY_PREFERRED) });
-        expect(pickedServer).to.have.been.calledThrice;
+        expect(pickedServer).to.have.been.calledThrice();
         {
             const { args: [, server] } = pickedServer.getCall(2);
             expect(secondaries).to.include(server.name);
@@ -159,7 +159,7 @@ describe("replset read preference", function () {
 
         await db.close();
 
-        expect(pickedServer).to.have.been.called;
+        expect(pickedServer).to.have.been.called();
         for (let i = 0; i < pickedServer.callCount; ++i) {
             const { args: [, server] } = pickedServer.getCall(i);
             expect(server.name).to.be.oneOf(secondaries);
@@ -190,7 +190,7 @@ describe("replset read preference", function () {
 
         await db.close();
 
-        expect(pickedServer).to.have.been.called;
+        expect(pickedServer).to.have.been.called();
         for (let i = 0; i < pickedServer.callCount; ++i) {
             const { args: [, server] } = pickedServer.getCall(i);
             expect(server.name).to.be.equal(result.primary);
@@ -230,7 +230,7 @@ describe("replset read preference", function () {
 
         await db.close();
 
-        expect(pickedServer).to.have.been.called;
+        expect(pickedServer).to.have.been.called();
         for (let i = 0; i < pickedServer.callCount; ++i) {
             const { args: [, server] } = pickedServer.getCall(i);
             expect(server.name).to.be.oneOf(secondaries);
@@ -271,7 +271,7 @@ describe("replset read preference", function () {
 
         await db.close();
 
-        expect(pickedServer).to.have.been.called;
+        expect(pickedServer).to.have.been.called();
         for (let i = 0; i < pickedServer.callCount; ++i) {
             const { args: [, server] } = pickedServer.getCall(i);
             expect(server.name).to.be.oneOf(secondaries);
@@ -311,7 +311,7 @@ describe("replset read preference", function () {
 
         await db.close();
 
-        expect(pickedServer).to.have.been.called;
+        expect(pickedServer).to.have.been.called();
         for (let i = 0; i < pickedServer.callCount; ++i) {
             const { args: [, server] } = pickedServer.getCall(i);
             expect(server.name).to.be.oneOf(secondaries);
@@ -425,7 +425,7 @@ describe("replset read preference", function () {
 
         await db.db("local").collection("system.replset").find().toArray();
 
-        expect(pickedServer).to.have.been.calledOnce;
+        expect(pickedServer).to.have.been.calledOnce();
         const { args: [readPreference] } = pickedServer.getCall(0);
         expect(readPreference.tags.loc).to.be.equal("sf");
         expect(readPreference.preference).to.be.equal("secondary");
@@ -454,7 +454,7 @@ describe("replset read preference", function () {
 
         await db.db("local").collection("system.replset").find().toArray();
 
-        expect(pickedServer).to.have.been.calledOnce;
+        expect(pickedServer).to.have.been.calledOnce();
         const { args: [, server] } = pickedServer.getCall(0);
         expect(server.lastIsMaster().tags.loc).to.be.equal("ny");
 
@@ -490,7 +490,7 @@ describe("replset read preference", function () {
 
         await db.collection("test").findAndModify({}, {}, { upsert: false });
 
-        expect(pickedServer).to.have.been.calledOnce;
+        expect(pickedServer).to.have.been.calledOnce();
         const { args: [, server] } = pickedServer.getCall(0);
         expect(server.name).to.be.equal(`${this.host}:${this.port}`);
 

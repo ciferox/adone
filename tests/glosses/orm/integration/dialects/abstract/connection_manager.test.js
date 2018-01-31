@@ -130,7 +130,7 @@ describe("Connection Manager", function () {
 
         return connectionManager.getConnection(queryOptions)
             .then(() => {
-                expect(connectStub).to.have.been.calledTwice; // Once to get DB version, and once to actually get the connection.
+                expect(connectStub).to.have.been.calledTwice(); // Once to get DB version, and once to actually get the connection.
                 const calls = connectStub.getCalls();
                 expect(calls[1].args[0].host).to.eql("the-boss");
             });

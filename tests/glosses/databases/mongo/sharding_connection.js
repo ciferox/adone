@@ -79,14 +79,14 @@ describe("sharding connection", function () {
 
         await db2.close();
 
-        expect(close).to.have.been.calledTwice;
-        expect(open1).to.have.been.calledOnce;
+        expect(close).to.have.been.calledTwice();
+        expect(open1).to.have.been.calledOnce();
         expect(open1.getCall(0).args[1]).to.have.property("databaseName", "tests_1");
-        expect(open2).to.have.been.calledOnce;
+        expect(open2).to.have.been.calledOnce();
         expect(open2.getCall(0).args[1]).to.have.property("databaseName", "tests_2");
-        expect(fullSetup1).to.have.been.calledOnce;
+        expect(fullSetup1).to.have.been.calledOnce();
         expect(fullSetup1.getCall(0).args[1]).to.have.property("databaseName", "tests_1");
-        expect(fullSetup2).to.have.been.calledOnce;
+        expect(fullSetup2).to.have.been.calledOnce();
         expect(fullSetup2.getCall(0).args[1]).to.have.property("databaseName", "tests_2");
     });
 

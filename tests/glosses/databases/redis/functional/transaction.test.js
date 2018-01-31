@@ -59,7 +59,7 @@ describe("database", "redis", "transaction", { skip: check }, () => {
             [null, "OK"],
             [null, "bar"]
         ]);
-        expect(getFoo).to.have.been.calledOnce;
+        expect(getFoo).to.have.been.calledOnce();
         expect(getFoo).to.have.been.calledWith(match(is.null), "QUEUED");
         redis.disconnect();
     });
@@ -70,7 +70,7 @@ describe("database", "redis", "transaction", { skip: check }, () => {
         await assert.throws(async () => {
             await redis.multi().set("foo", setFoo).exec();
         }, "Transaction discarded because of previous errors");
-        expect(setFoo).to.have.been.calledOnce;
+        expect(setFoo).to.have.been.calledOnce();
         expect(setFoo).to.have.been.calledWith(match((err) => err.message.includes("wrong number of arguments")));
         redis.disconnect();
     });
@@ -107,7 +107,7 @@ describe("database", "redis", "transaction", { skip: check }, () => {
             });
             expect(res[3][0]).to.have.property("message", "WRONGTYPE Operation against a key holding the wrong kind of value");
             expect(res[4][0]).to.have.property("message", "WRONGTYPE Operation against a key holding the wrong kind of value");
-            expect(hgetallFoo).to.have.been.calledOnce;
+            expect(hgetallFoo).to.have.been.calledOnce();
             expect(hgetallFoo).to.have.been.calledWith(match(is.null), "QUEUED");
             redis.disconnect();
         });
@@ -161,7 +161,7 @@ describe("database", "redis", "transaction", { skip: check }, () => {
                 [null, "OK"],
                 [null, "bar"]
             ]);
-            expect(getFoo).to.have.been.calledOnce;
+            expect(getFoo).to.have.been.calledOnce();
             expect(getFoo).to.have.been.calledWith(match(is.null), "QUEUED");
             redis.disconnect();
         });

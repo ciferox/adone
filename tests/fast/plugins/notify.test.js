@@ -130,7 +130,7 @@ describe("fast", "transform", "notify", () => {
         expect(file.path).to.be.ok();
         expect(file.contents).to.be.ok();
 
-        expect(onNotify).to.have.been.calledOnce;
+        expect(onNotify).to.have.been.calledOnce();
         const [opts] = onNotify.args[0];
         expect(opts).to.be.ok();
         expect(opts.title).to.be.ok();
@@ -159,11 +159,11 @@ describe("fast", "transform", "notify", () => {
         expect(file.path).to.be.ok();
         expect(file.contents).to.be.ok();
 
-        expect(onTitle).to.have.been.calledOnce;
+        expect(onTitle).to.have.been.calledOnce();
         expect(onTitle).to.have.been.calledWithMatch((x) => x.path === srcFile);
-        expect(onMessage).to.have.been.calledOnce;
+        expect(onMessage).to.have.been.calledOnce();
         expect(onMessage).to.have.been.calledWithMatch((x) => x.path === srcFile);
-        expect(onNotify).to.have.been.calledOnce;
+        expect(onNotify).to.have.been.calledOnce();
         const [opts] = onNotify.args[0];
         expect(opts).to.be.ok();
         expect(opts.title).to.be.ok();
@@ -187,7 +187,7 @@ describe("fast", "transform", "notify", () => {
             expect(file.path).to.be.ok();
             expect(file.contents).to.be.ok();
         }
-        expect(onNotify).to.have.been.calledThrice;
+        expect(onNotify).to.have.been.calledThrice();
     });
 
     it("should handle streamed files", async () => {
@@ -212,7 +212,7 @@ describe("fast", "transform", "notify", () => {
         expect(file.path).to.be.ok();
         expect(file.contents).to.be.ok();
 
-        expect(onNotify).to.have.been.calledOnce;
+        expect(onNotify).to.have.been.calledOnce();
     });
 
     it("should support dot templates for titles and messages", async () => {
@@ -238,7 +238,7 @@ describe("fast", "transform", "notify", () => {
         expect(file).to.be.ok();
         expect(file.path).to.be.ok();
         expect(file.contents).to.be.ok();
-        expect(onNotify).to.have.been.calledOnce;
+        expect(onNotify).to.have.been.calledOnce();
     });
 
     context("onLast", () => {
@@ -258,7 +258,7 @@ describe("fast", "transform", "notify", () => {
                 expect(file.path).to.be.ok();
                 expect(file.contents).to.be.ok();
             }
-            expect(onNotify).to.have.been.calledOnce;
+            expect(onNotify).to.have.been.calledOnce();
         });
 
         it("should support dot templates for titles and messages when onLast", async () => {
@@ -280,7 +280,7 @@ describe("fast", "transform", "notify", () => {
                 expect(file.path).to.be.ok();
                 expect(file.contents).to.be.ok();
             }
-            expect(onNotify).to.have.been.calledOnce;
+            expect(onNotify).to.have.been.calledOnce();
         });
     });
 

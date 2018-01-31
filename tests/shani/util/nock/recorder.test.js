@@ -145,7 +145,7 @@ describe("shani", "util", "nock", "recorder", () => {
 
         const resp2 = await request.get(`http://localhost:${port}`);
         expect(resp2.data).to.be.equal(resp1.data);
-        expect(handler).to.have.been.calledOnce;
+        expect(handler).to.have.been.calledOnce();
         for (const nock of nocks) {
             nock.done();
         }
@@ -194,7 +194,7 @@ describe("shani", "util", "nock", "recorder", () => {
             nock.done();
         }
         expect(filteringRequestBodyCounter).to.be.equal(1);
-        expect(handler).to.have.been.calledOnce;
+        expect(handler).to.have.been.calledOnce();
     });
 
     it("when request body is json, it goes unstringified", async () => {
@@ -361,7 +361,7 @@ describe("shani", "util", "nock", "recorder", () => {
 
         const resp2 = await request.get(`http://localhost:${port}/`);
         expect(resp1.data).to.be.equal(resp2.data);
-        expect(handler).to.have.been.calledOnce;
+        expect(handler).to.have.been.calledOnce();
         for (const nock of nocks) {
             nock.done();
         }
@@ -399,7 +399,7 @@ describe("shani", "util", "nock", "recorder", () => {
 
         const resp2 = await request.get(`http://localhost:${port}`);
         expect(resp2.data).to.be.equal("hello");
-        expect(handler).to.have.been.calledOnce;
+        expect(handler).to.have.been.calledOnce();
 
         for (const nock of nocks) {
             nock.done();

@@ -110,7 +110,7 @@ describe("sharding read preference", function () {
         const open = spy();
         db.on("open", open);
         await db.open();
-        expect(open).to.have.been.calledOnce;
+        expect(open).to.have.been.calledOnce();
         await db.close();
     });
 

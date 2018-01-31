@@ -88,7 +88,7 @@ describe("database", "redis", "auth", { skip: check }, () => {
             await assert.throws(async () => {
                 await redis.get("foo");
             }, "ERR invalid password");
-            expect(onError).to.have.been.calledOnce;
+            expect(onError).to.have.been.calledOnce();
             expect(onError).to.have.been.calledWith(match((err) => err.message === "ERR invalid password"));
         } finally {
             redis.disconnect();

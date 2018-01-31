@@ -182,7 +182,7 @@ describe("net", "proxies", "http", "server", "http", () => {
             });
 
             expect(resp.data).to.be.deep.equal("hello");
-            expect(proxyHandler).to.have.been.calledTwice;
+            expect(proxyHandler).to.have.been.calledTwice();
             expect(proxyHandler.getCall(0)).to.have.been.calledWithMatch((ctx) => ctx.type === "http.connect");
             expect(proxyHandler.getCall(1)).to.have.been.calledWithMatch((ctx) => ctx.type === "stream");
         });
@@ -219,7 +219,7 @@ describe("net", "proxies", "http", "server", "http", () => {
             conn.send("world");
             const serverMsg = await new Promise((resolve) => client.once("message", resolve));
             expect(serverMsg).to.be.equal("world");
-            expect(proxyHandler).to.have.been.calledThrice;
+            expect(proxyHandler).to.have.been.calledThrice();
             expect(proxyHandler.getCall(0)).to.have.been.calledWithMatch((ctx) => ctx.type === "http.connect");
             expect(proxyHandler.getCall(1)).to.have.been.calledWithMatch((ctx) => ctx.type === "http.upgrade");
             expect(proxyHandler.getCall(2)).to.have.been.calledWithMatch((ctx) => ctx.type === "stream");
@@ -270,10 +270,10 @@ describe("net", "proxies", "http", "server", "http", () => {
                 })
             });
             expect(resp.data).to.be.equal("hello");
-            expect(getInternalCert).to.have.been.calledOnce;
-            expect(getCertificate).to.have.been.calledOnce;
+            expect(getInternalCert).to.have.been.calledOnce();
+            expect(getCertificate).to.have.been.calledOnce();
             expect(await responseBody).to.be.deep.equal(Buffer.from("hello"));
-            expect(proxyHandler).to.have.been.calledTwice;
+            expect(proxyHandler).to.have.been.calledTwice();
             expect(proxyHandler.getCall(0)).to.have.been.calledWithMatch((ctx) => ctx.type === "http.connect");
             expect(proxyHandler.getCall(1)).to.have.been.calledWithMatch((ctx) => ctx.type === "http" && ctx.localRequest.secure === true);
         });
@@ -330,7 +330,7 @@ describe("net", "proxies", "http", "server", "http", () => {
             } finally {
                 conn.terminate();
             }
-            expect(proxyHandler).to.have.been.calledThrice;
+            expect(proxyHandler).to.have.been.calledThrice();
             expect(proxyHandler.getCall(0)).to.have.been.calledWithMatch((ctx) => ctx.type === "http.connect");
             expect(proxyHandler.getCall(1)).to.have.been.calledWithMatch((ctx) => ctx.type === "http.upgrade" && ctx.localRequest.secure === true);
             expect(proxyHandler.getCall(2)).to.have.been.calledWithMatch((ctx) => ctx.type === "stream");

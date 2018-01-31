@@ -30,10 +30,10 @@ describe("updateAttributes", () => {
 
             return this.User.create({ username: "Toni", mood: "happy" }).then((user) => {
                 return user.updateAttributes({ username: "Chong" }).then((user) => {
-                    expect(beforeHook).to.have.been.calledOnce;
-                    expect(afterHook).to.have.been.calledOnce;
-                    expect(beforeSave).to.have.been.calledTwice;
-                    expect(afterSave).to.have.been.calledTwice;
+                    expect(beforeHook).to.have.been.calledOnce();
+                    expect(afterHook).to.have.been.calledOnce();
+                    expect(beforeSave).to.have.been.calledTwice();
+                    expect(afterSave).to.have.been.calledTwice();
                     expect(user.username).to.equal("Chong");
                 });
             });
@@ -59,10 +59,10 @@ describe("updateAttributes", () => {
             await assert.throws(async () => {
                 await user.updateAttributes({ username: "Chong" });
             });
-            expect(beforeHook).to.have.been.calledOnce;
-            expect(beforeSave).to.have.been.calledOnce;
-            expect(afterHook).not.to.have.been.called;
-            expect(afterSave).to.have.been.calledOnce;
+            expect(beforeHook).to.have.been.calledOnce();
+            expect(beforeSave).to.have.been.calledOnce();
+            expect(afterHook).not.to.have.been.called();
+            expect(afterSave).to.have.been.calledOnce();
         });
 
         it("should return an error from after", async function () {
@@ -85,10 +85,10 @@ describe("updateAttributes", () => {
                 await user.updateAttributes({ username: "Chong" });
             });
 
-            expect(beforeHook).to.have.been.calledOnce;
-            expect(afterHook).to.have.been.calledOnce;
-            expect(beforeSave).to.have.been.calledTwice;
-            expect(afterSave).to.have.been.calledOnce;
+            expect(beforeHook).to.have.been.calledOnce();
+            expect(afterHook).to.have.been.calledOnce();
+            expect(beforeSave).to.have.been.calledTwice();
+            expect(afterSave).to.have.been.calledOnce();
         });
     });
 

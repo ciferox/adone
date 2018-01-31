@@ -42,8 +42,8 @@ describe("bulk operations", () => {
                     { username: "Cheech", mood: "sad" },
                     { username: "Chong", mood: "sad" }
                 ]).then(() => {
-                    expect(beforeBulk).to.have.been.calledOnce;
-                    expect(afterBulk).to.have.been.calledOnce;
+                    expect(beforeBulk).to.have.been.calledOnce();
+                    expect(afterBulk).to.have.been.calledOnce();
                 });
             });
         });
@@ -177,8 +177,8 @@ describe("bulk operations", () => {
                     { username: "Chong", mood: "sad" }
                 ]).then(() => {
                     return self.User.update({ mood: "happy" }, { where: { mood: "sad" } }).then(() => {
-                        expect(beforeBulk).to.have.been.calledOnce;
-                        expect(afterBulk).to.have.been.calledOnce;
+                        expect(beforeBulk).to.have.been.calledOnce();
+                        expect(afterBulk).to.have.been.calledOnce();
                     });
                 });
             });
@@ -266,8 +266,8 @@ describe("bulk operations", () => {
                     expect(record.username).to.equal(`User${record.id}`);
                     expect(record.beforeHookTest).to.be.true();
                 });
-                expect(beforeBulk).to.have.been.calledOnce;
-                expect(afterBulk).to.have.been.calledOnce;
+                expect(beforeBulk).to.have.been.calledOnce();
+                expect(afterBulk).to.have.been.calledOnce();
             });
 
             it("should run the after/before functions for each item created successfully changing some data before updating", async function () {
@@ -310,8 +310,8 @@ describe("bulk operations", () => {
                     return self.User.update({ aNumber: 10 }, { where: { aNumber: 1 }, individualHooks: true }).catch((err) => {
                         expect(err).to.be.instanceOf(Error);
                         expect(err.message).to.be.equal("You shall not pass!");
-                        expect(beforeBulk).to.have.been.calledOnce;
-                        expect(afterBulk).not.to.have.been.called;
+                        expect(beforeBulk).to.have.been.calledOnce();
+                        expect(afterBulk).not.to.have.been.called();
                     });
                 });
             });
@@ -328,8 +328,8 @@ describe("bulk operations", () => {
                 this.User.afterBulkDestroy(afterBulk);
 
                 return this.User.destroy({ where: { username: "Cheech", mood: "sad" } }).then(() => {
-                    expect(beforeBulk).to.have.been.calledOnce;
-                    expect(afterBulk).to.have.been.calledOnce;
+                    expect(beforeBulk).to.have.been.calledOnce();
+                    expect(afterBulk).to.have.been.calledOnce();
                 });
             });
         });
@@ -473,8 +473,8 @@ describe("bulk operations", () => {
                 this.ParanoidUser.afterBulkRestore(afterBulk);
 
                 return this.ParanoidUser.restore({ where: { username: "adam", mood: "happy" } }).then(() => {
-                    expect(beforeBulk).to.have.been.calledOnce;
-                    expect(afterBulk).to.have.been.calledOnce;
+                    expect(beforeBulk).to.have.been.calledOnce();
+                    expect(afterBulk).to.have.been.calledOnce();
                 });
             });
         });
@@ -534,10 +534,10 @@ describe("bulk operations", () => {
                 }).then(() => {
                     return self.ParanoidUser.restore({ where: { aNumber: 1 }, individualHooks: true });
                 }).then(() => {
-                    expect(beforeBulk).to.have.been.calledOnce;
-                    expect(afterBulk).to.have.been.calledOnce;
-                    expect(beforeHook).to.have.been.calledThrice;
-                    expect(afterHook).to.have.been.calledThrice;
+                    expect(beforeBulk).to.have.been.calledOnce();
+                    expect(afterBulk).to.have.been.calledOnce();
+                    expect(beforeHook).to.have.been.calledThrice();
+                    expect(afterHook).to.have.been.calledThrice();
                 });
             });
 
@@ -563,10 +563,10 @@ describe("bulk operations", () => {
                     return self.ParanoidUser.restore({ where: { aNumber: 1 }, individualHooks: true });
                 }).catch((err) => {
                     expect(err).to.be.instanceOf(Error);
-                    expect(beforeBulk).to.have.been.calledOnce;
-                    expect(beforeHook).to.have.been.calledThrice;
-                    expect(afterBulk).not.to.have.been.called;
-                    expect(afterHook).not.to.have.been.called;
+                    expect(beforeBulk).to.have.been.calledOnce();
+                    expect(beforeHook).to.have.been.calledThrice();
+                    expect(afterBulk).not.to.have.been.called();
+                    expect(afterHook).not.to.have.been.called();
                 });
             });
         });

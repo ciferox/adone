@@ -17,7 +17,7 @@ describe("query", function () {
                 match: null
             }
         }).catch(() => {});
-        expect(releaseConnectionStub).have.been.calledOnce;
+        expect(releaseConnectionStub).have.been.calledOnce();
         queryStub.restore();
         getConnectionStub.restore();
         releaseConnectionStub.restore();

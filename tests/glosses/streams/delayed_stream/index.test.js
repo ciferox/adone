@@ -53,7 +53,7 @@ describe("stream", "DelayedStream", () => {
 
             DelayedStream.create(source);
 
-            expect(s).to.have.been.calledOnce;
+            expect(s).to.have.been.calledOnce();
         });
 
         it("should not pause when pauseStream is false", () => {
@@ -63,7 +63,7 @@ describe("stream", "DelayedStream", () => {
 
             DelayedStream.create(source, { pauseStream: false });
 
-            expect(s).to.have.not.been.called;
+            expect(s).to.have.not.been.called();
         });
     });
 
@@ -73,7 +73,7 @@ describe("stream", "DelayedStream", () => {
             const delayedStream = DelayedStream.create(source, { pauseStream: false });
             const s = spy(source, "pause");
             delayedStream.pause();
-            expect(s).to.have.been.calledOnce;
+            expect(s).to.have.been.calledOnce();
         });
     });
 
@@ -95,24 +95,24 @@ describe("stream", "DelayedStream", () => {
 
         // Make sure delayedStream did not emit, and source did
         assert.deepEqual(params, [1, 2]);
-        expect(emit).to.have.not.been.called;
+        expect(emit).to.have.not.been.called();
 
         const sResume = spy(source, "resume");
         delayedStream.resume();
-        expect(emit).to.have.been.calledTwice;
+        expect(emit).to.have.been.calledTwice();
         const fc = emit.getCall(0);
         const sc = emit.getCall(1);
         expect(fc.args).to.be.deep.equal(["foo", 1]);
         expect(sc.args).to.be.deep.equal(["foo", 2]);
-        expect(sResume).to.have.been.calledOnce;
+        expect(sResume).to.have.been.calledOnce();
 
         // Calling resume again will delegate to source
         delayedStream.resume();
-        expect(sResume).to.have.been.calledTwice;
+        expect(sResume).to.have.been.calledTwice();
 
         // Emitting more events directly leads to them being emitted
         source.emit("foo", 3);
-        expect(emit).to.have.been.calledThrice;
+        expect(emit).to.have.been.calledThrice();
         expect(emit.getCall(2).args).to.be.deep.equal(["foo", 3]);
     });
 
@@ -136,7 +136,7 @@ describe("stream", "DelayedStream", () => {
         const er = spy();
         delayedStream.on("error", er);
         source.emit("data", Buffer.alloc(1));
-        expect(er).to.have.been.calledOnce;
+        expect(er).to.have.been.calledOnce();
         expect(er.args[0][0].message).to.be.match(/1024 bytes exceeded/);
     });
 

@@ -29,10 +29,10 @@ describe("create", () => {
             this.User.afterSave(afterSave);
 
             return this.User.create({ username: "Toni", mood: "happy" }).then(() => {
-                expect(beforeHook).to.have.been.calledOnce;
-                expect(afterHook).to.have.been.calledOnce;
-                expect(beforeSave).to.have.been.calledOnce;
-                expect(afterSave).to.have.been.calledOnce;
+                expect(beforeHook).to.have.been.calledOnce();
+                expect(afterHook).to.have.been.calledOnce();
+                expect(beforeSave).to.have.been.calledOnce();
+                expect(afterSave).to.have.been.calledOnce();
             });
         });
     });
@@ -56,10 +56,10 @@ describe("create", () => {
                 await this.User.create({ username: "Toni", mood: "happy" });
             });
 
-            expect(beforeHook).to.have.been.calledOnce;
-            expect(afterHook).not.to.have.been.called;
-            expect(beforeSave).not.to.have.been.called;
-            expect(afterSave).not.to.have.been.called;
+            expect(beforeHook).to.have.been.calledOnce();
+            expect(afterHook).not.to.have.been.called();
+            expect(beforeSave).not.to.have.been.called();
+            expect(afterSave).not.to.have.been.called();
         });
 
         it("should return an error from after", async function () {
@@ -81,10 +81,10 @@ describe("create", () => {
                 await this.User.create({ username: "Toni", mood: "happy" });
             });
 
-            expect(beforeHook).to.have.been.calledOnce;
-            expect(afterHook).to.have.been.calledOnce;
-            expect(beforeSave).to.have.been.calledOnce;
-            expect(afterSave).not.to.have.been.called;
+            expect(beforeHook).to.have.been.calledOnce();
+            expect(afterHook).to.have.been.calledOnce();
+            expect(beforeSave).to.have.been.calledOnce();
+            expect(afterSave).not.to.have.been.called();
         });
     });
 

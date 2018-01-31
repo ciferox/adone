@@ -326,7 +326,7 @@ describe("aggregation", function () {
         ], {
             maxTimeMS: 1000
         });
-        expect(s).to.have.been.calledOnce;
+        expect(s).to.have.been.calledOnce();
         expect(s.getCall(0).args[0]).to.include({ maxTimeMS: 1000 });
         s.restore();
     });

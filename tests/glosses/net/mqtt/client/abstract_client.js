@@ -819,13 +819,13 @@ module.exports = function (server, config) {
 
             client.once("connect", () => {
                 clock.tick(interval * 1000);
-                expect(client._checkPing).to.have.been.calledOnce;
+                expect(client._checkPing).to.have.been.calledOnce();
 
                 clock.tick(interval * 1000);
-                expect(client._checkPing).to.have.been.calledTwice;
+                expect(client._checkPing).to.have.been.calledTwice();
 
                 clock.tick(interval * 1000);
-                expect(client._checkPing).to.have.been.calledThrice;
+                expect(client._checkPing).to.have.been.calledThrice();
 
                 client.end();
                 done();
@@ -843,7 +843,7 @@ module.exports = function (server, config) {
                 clock.tick(intervalMs - 1);
                 client.publish("foo", "bar");
                 clock.tick(2);
-                expect(client._checkPing).not.to.have.been.called;
+                expect(client._checkPing).not.to.have.been.called();
                 client.end();
                 done();
             });
@@ -863,7 +863,7 @@ module.exports = function (server, config) {
                 clock.tick(intervalMs - 1);
                 client.publish("foo", "bar");
                 clock.tick(2);
-                expect(client._checkPing).to.have.been.calledOnce;
+                expect(client._checkPing).to.have.been.calledOnce();
                 client.end();
                 done();
             });

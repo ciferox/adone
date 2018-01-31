@@ -93,7 +93,7 @@ const fs = adone.lazify({
             err ? reject(err) : resolve();
         });
     }),
-    fchownSYnc: () => (fd, uid, gid) => std.fs.fchownSync(fd, uid, gid),
+    fchownSync: () => (fd, uid, gid) => std.fs.fchownSync(fd, uid, gid),
     fchmod: () => (fd, mode) => new Promise((resolve, reject) => {
         std.fs.fchmod(fd, mode, (err) => {
             err ? reject(err) : resolve();

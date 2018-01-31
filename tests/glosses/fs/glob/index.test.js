@@ -1848,11 +1848,11 @@ describe("fs", "glob", () => {
         const end = spy();
         stream.on("error", error).on("data", data).on("end", end).resume();
         await end.waitForCall();
-        expect(error).to.have.been.calledOnce;
+        expect(error).to.have.been.calledOnce();
         // a a5 b c d e, d will throw on lstat and the stream should stop e/f should not be emitted
         expect(data).to.have.callCount(6);
-        expect(fileHook1).to.have.not.been.called;
-        expect(fileHook2).to.have.not.been.called;
+        expect(fileHook1).to.have.not.been.called();
+        expect(fileHook2).to.have.not.been.called();
     });
 
     it("should not emit 1-level files for **/*/**", async () => {
@@ -1889,7 +1889,7 @@ describe("fs", "glob", () => {
                 glob.on("match", s);
                 expect(glob.isPaused()).to.be.true();
                 await delay(10);
-                expect(s).to.have.not.been.called;
+                expect(s).to.have.not.been.called();
             });
 
             it("should resume the process asynchronously", async () => {
@@ -1899,9 +1899,9 @@ describe("fs", "glob", () => {
                 expect(glob.isPaused()).to.be.true();
                 glob.resume();
                 expect(glob.isPaused()).to.be.true();
-                expect(s).to.have.not.been.called;
+                expect(s).to.have.not.been.called();
                 await delay(10);
-                expect(s).to.have.been.calledOnce;
+                expect(s).to.have.been.calledOnce();
             });
 
             it("should not resume if paused synchronously", async () => {
@@ -1912,7 +1912,7 @@ describe("fs", "glob", () => {
                 glob.resume();
                 glob.pause();
                 await delay(10);
-                expect(s).to.have.not.been.called;
+                expect(s).to.have.not.been.called();
             });
         });
 
@@ -1945,7 +1945,7 @@ describe("fs", "glob", () => {
                 glob.on("match", match).on("end", end).on("match", () => glob.end()).resume();
                 await end.waitForCall();
                 await delay(100);
-                expect(match).to.have.been.calledOnce;
+                expect(match).to.have.been.calledOnce();
             });
 
             it("should end synchronously end the process but asynchronously emit end event", async () => {
@@ -1958,9 +1958,9 @@ describe("fs", "glob", () => {
                 const glob = new Glob("/virtual/**/*");
                 const end = spy();
                 glob.on("end", end).end();
-                expect(end).to.have.not.been.called;
+                expect(end).to.have.not.been.called();
                 await delay(10);
-                expect(end).to.have.been.calledOnce;
+                expect(end).to.have.been.calledOnce();
             });
 
             it("should synchronously end synchronously resumed stream and the stream should not emit match events", async () => {
@@ -1974,10 +1974,10 @@ describe("fs", "glob", () => {
                 const match = spy();
                 const end = spy();
                 glob.on("match", match).on("end", end).resume().end();
-                expect(end).to.have.not.been.called;
+                expect(end).to.have.not.been.called();
                 await delay(50);
-                expect(end).to.have.been.calledOnce;
-                expect(match).to.have.not.been.called;
+                expect(end).to.have.been.calledOnce();
+                expect(match).to.have.not.been.called();
             });
         });
     });

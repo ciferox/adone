@@ -17,7 +17,7 @@ describe("stream", "pull", "fromStream", () => {
                     read(null, function next(end, data) {
                         if (data > 0.9) {
                             read(true, (end) => {
-                                expect(onClose).to.have.been.calledOnce;
+                                expect(onClose).to.have.been.calledOnce();
                                 done();
                             });
                         } else {

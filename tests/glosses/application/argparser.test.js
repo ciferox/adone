@@ -442,7 +442,7 @@ describe("application", () => {
                             c: true
                         });
 
-                        expect(set).to.have.been.calledThrice;
+                        expect(set).to.have.been.calledThrice();
                         expect(set.getCall(0)).to.have.been.calledWith(true, "a", 2);
                         expect(set.getCall(1)).to.have.been.calledWith(true, "b", 2);
                         expect(set.getCall(2)).to.have.been.calledWith(false, "c", 2);

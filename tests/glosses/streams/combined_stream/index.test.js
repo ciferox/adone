@@ -129,7 +129,7 @@ describe("stream", "CombinedStream", function () {
         combinedStream.on("error", s);
         const data = await combinedStream.pipe(new BufferList());
         await s.waitForCall();
-        expect(s).to.have.been.calledOnce;
+        expect(s).to.have.been.calledOnce();
         expect(s.args[0].message).to.be.equal("HA");
     });
 

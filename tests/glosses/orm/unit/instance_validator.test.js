@@ -32,8 +32,8 @@ describe("instance validator", function () {
 
             instanceValidator.validate();
 
-            expect(_validateAndRunHooks).to.have.been.calledOnce;
-            expect(_validate).to.not.have.been.called;
+            expect(_validateAndRunHooks).to.have.been.calledOnce();
+            expect(_validate).to.not.have.been.called();
         });
 
         it("runs the validation sequence but skips hooks if the hooks option is false", () => {
@@ -43,8 +43,8 @@ describe("instance validator", function () {
 
             instanceValidator.validate();
 
-            expect(_validate).to.have.been.calledOnce;
-            expect(_validateAndRunHooks).to.not.have.been.called;
+            expect(_validate).to.have.been.calledOnce();
+            expect(_validateAndRunHooks).to.not.have.been.called();
         });
 
         it("fulfills when validation is successful", async () => {
@@ -93,8 +93,8 @@ describe("instance validator", function () {
             this.User.afterValidate(afterValidate);
 
             await this.successfulInstanceValidator._validateAndRunHooks();
-            expect(beforeValidate).to.have.been.calledOnce;
-            expect(afterValidate).to.have.been.calledOnce;
+            expect(beforeValidate).to.have.been.calledOnce();
+            expect(afterValidate).to.have.been.calledOnce();
         });
 
         it("should run beforeValidate hook but not afterValidate hook when _validate is unsuccessful", async () => {
@@ -111,8 +111,8 @@ describe("instance validator", function () {
                 await failingInstanceValidator._validateAndRunHooks();
             });
 
-            expect(beforeValidate).to.have.been.calledOnce;
-            expect(afterValidate).to.not.have.been.called;
+            expect(beforeValidate).to.have.been.calledOnce();
+            expect(afterValidate).to.not.have.been.called();
         });
 
         it("should emit an error from after hook when afterValidate fails", async () => {
@@ -138,7 +138,7 @@ describe("instance validator", function () {
                     await failingInstanceValidator._validateAndRunHooks();
                 });
 
-                expect(validationFailedHook).to.have.been.calledOnce;
+                expect(validationFailedHook).to.have.been.calledOnce();
             });
 
             it("should not replace the validation error in validationFailed hook by default", async () => {

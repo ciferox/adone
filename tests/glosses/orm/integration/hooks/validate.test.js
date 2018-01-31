@@ -122,7 +122,7 @@ describe("validate", () => {
             await assert.throws(async () => {
                 await this.User.create({ mood: "happy" });
             });
-            expect(validationFailedHook).to.have.been.calledOnce;
+            expect(validationFailedHook).to.have.been.calledOnce();
         });
 
         it("should not replace the validation error in validationFailed hook by default", async function () {

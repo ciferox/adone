@@ -96,7 +96,7 @@ describe("net", "proxy", "shadowsocks", "server", "parser", () => {
                 await adone.promise.delay(10);
                 expect(parser._state).to.be.equal(Parser.STATE_ERROR);
                 expect(parser._address).to.be.null();
-                expect(onError).to.have.been.calledOnce;
+                expect(onError).to.have.been.calledOnce();
                 const { args } = onError.getCall(0);
                 expect(args).to.have.lengthOf(1);
                 expect(args[0]).to.be.instanceOf(adone.x.IllegalState);
@@ -350,7 +350,7 @@ describe("net", "proxy", "shadowsocks", "server", "parser", () => {
                 stream.write(IV);
                 stream.write(header.toBuffer());
                 await adone.promise.delay(10);
-                expect(onRequest).to.have.been.calledOnce;
+                expect(onRequest).to.have.been.calledOnce();
                 const { args: [{ dstAddr, dstPort }] } = onRequest.getCall(0);
                 expect(dstAddr).to.be.equal("8.8.8.8");
                 expect(dstPort).to.be.equal(31337);
@@ -371,7 +371,7 @@ describe("net", "proxy", "shadowsocks", "server", "parser", () => {
                 stream.write(IV);
                 stream.write(header.toBuffer());
                 await adone.promise.delay(10);
-                expect(onRequest).to.have.been.calledOnce;
+                expect(onRequest).to.have.been.calledOnce();
                 const { args: [{ dstAddr, dstPort }] } = onRequest.getCall(0);
                 expect(dstAddr).to.be.equal("0808:0808:0808:0808:0808:0808:0808:0808");
                 expect(dstPort).to.be.equal(31337);
@@ -394,7 +394,7 @@ describe("net", "proxy", "shadowsocks", "server", "parser", () => {
                 stream.write(IV);
                 stream.write(header.toBuffer());
                 await adone.promise.delay(10);
-                expect(onRequest).to.have.been.calledOnce;
+                expect(onRequest).to.have.been.calledOnce();
                 const { args: [{ dstAddr, dstPort }] } = onRequest.getCall(0);
                 expect(dstAddr).to.be.equal(address);
                 expect(dstPort).to.be.equal(31337);
@@ -418,7 +418,7 @@ describe("net", "proxy", "shadowsocks", "server", "parser", () => {
                 stream.write(IV);
                 stream.write(header.toBuffer());
                 await adone.promise.delay(10);
-                expect(onRequest).to.have.been.calledOnce;
+                expect(onRequest).to.have.been.calledOnce();
                 const { args: [{ dstAddr, dstPort }, head] } = onRequest.getCall(0);
                 expect(dstAddr).to.be.equal(address);
                 expect(dstPort).to.be.equal(31337);

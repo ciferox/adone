@@ -78,7 +78,7 @@ describe("database", "redis", "pipeline", { skip: check }, () => {
             [null, "OK"],
             [null, "bar"]
         ]);
-        expect(getFoo).to.have.been.calledOnce;
+        expect(getFoo).to.have.been.calledOnce();
         expect(getFoo).to.have.been.calledWith(match(is.null), "bar");
         redis.disconnect();
     });
@@ -203,7 +203,7 @@ describe("database", "redis", "pipeline", { skip: check }, () => {
                 [null, "OK"],
                 [null, "bar"]
             ]);
-            expect(getFoo).to.have.been.calledOnce;
+            expect(getFoo).to.have.been.calledOnce();
             expect(getFoo).to.have.been.calledWith(match(is.null), "bar");
             redis.disconnect();
         });

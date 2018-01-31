@@ -89,7 +89,7 @@ describe("replset connection", function () {
         const s = spy();
         db.on("close", s);
         await db.close();
-        expect(s).to.have.been.calledOnce;
+        expect(s).to.have.been.calledOnce();
         await promise.delay(1000);
     });
 
@@ -196,7 +196,7 @@ describe("replset connection", function () {
         if (!fullSet.called) {
             await fullSet.waitForCall();
         }
-        expect(open).to.have.been.calledOnce;
+        expect(open).to.have.been.calledOnce();
         await db.close();
         await promise.delay(1000);
     });
@@ -254,9 +254,9 @@ describe("replset connection", function () {
         await collection2.insert({ value: "something" });
         await db2.close();
         await promise.delay(1000);
-        expect(open1).to.have.been.calledOnce;
-        expect(open2).to.have.been.calledOnce;
-        expect(close).to.have.been.calledTwice;
+        expect(open1).to.have.been.calledOnce();
+        expect(open2).to.have.been.calledOnce();
+        expect(close).to.have.been.calledTwice();
     });
 
     it("should receive all events for primary and secondary leaving", async () => {

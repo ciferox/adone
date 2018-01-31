@@ -256,7 +256,7 @@ describe("data", "yaml", "issues", () => {
 
         const onWarning = spy();
         yaml.safeLoad(content, { onWarning });
-        expect(onWarning).to.have.been.calledOnce;
+        expect(onWarning).to.have.been.calledOnce();
     });
 
     specify("Don\'t throw on warning - 203", async () => {

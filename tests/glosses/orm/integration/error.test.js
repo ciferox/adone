@@ -285,7 +285,7 @@ describe("errors", () => {
                 }).then(() => {
                     return User.create(record).catch(constraintTest.exception, s);
                 }).then(() => {
-                    expect(s).to.have.been.calledOnce;
+                    expect(s).to.have.been.calledOnce();
                 });
             });
 
@@ -309,7 +309,7 @@ describe("errors", () => {
                     }
                 });
             }).then(() => {
-                expect(s).to.have.been.calledOnce;
+                expect(s).to.have.been.calledOnce();
             });
         });
 

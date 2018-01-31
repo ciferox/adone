@@ -267,7 +267,7 @@ describe("event", "Emitter", () => {
             e.on("event-type", adone.noop);
             e.on("event-type", adone.noop); // Verify that warning is emitted only once.
             await adone.promise.delay(100);
-            expect(s).to.have.been.calledOnce;
+            expect(s).to.have.been.calledOnce();
             const warning = s.args[0][0];
             expect(warning).to.be.instanceOf(adone.x.Exception);
             expect(warning.name).to.be.equal("MaxListenersExceededWarning");
@@ -448,7 +448,7 @@ describe("event", "Emitter", () => {
                 const s = spy();
                 ee.once("foo", s);
                 Emitter.prototype.emit.apply(ee, args);
-                expect(s).to.have.been.calledOnce;
+                expect(s).to.have.been.calledOnce();
                 expect(s).to.have.been.calledWithExactly(...args.slice(1));
             }
         });
@@ -809,7 +809,7 @@ describe("event", "Emitter", () => {
                 ee1.emit("event");
                 prop.end();
                 ee1.emit("event");
-                expect(e).to.have.been.calledOnce;
+                expect(e).to.have.been.calledOnce();
             });
 
             it("after propagation old one still emits", () => {
@@ -826,7 +826,7 @@ describe("event", "Emitter", () => {
                 ee1.emit("event");
                 prop.end();
                 ee1.emit("event");
-                expect(e).to.have.been.calledTwice;
+                expect(e).to.have.been.calledTwice();
             });
 
             it("emit on source before destination", () => {
@@ -868,15 +868,15 @@ describe("event", "Emitter", () => {
 
                 p.end();
 
-                expect(e1).to.have.been.calledOnce;
-                expect(e2).to.have.been.calledOnce;
-                expect(e3).to.have.not.been.called;
+                expect(e1).to.have.been.calledOnce();
+                expect(e2).to.have.been.calledOnce();
+                expect(e3).to.have.not.been.called();
 
                 ee1.emit("event-1");
 
-                expect(e1).to.have.been.calledOnce;
-                expect(e2).to.have.been.calledOnce;
-                expect(e3).to.have.not.been.called;
+                expect(e1).to.have.been.calledOnce();
+                expect(e2).to.have.been.calledOnce();
+                expect(e3).to.have.not.been.called();
 
             });
 
@@ -907,15 +907,15 @@ describe("event", "Emitter", () => {
 
                 p.end();
 
-                expect(e1).to.have.been.calledOnce;
-                expect(e2).to.have.been.calledOnce;
-                expect(e3).to.have.not.been.called;
+                expect(e1).to.have.been.calledOnce();
+                expect(e2).to.have.been.calledOnce();
+                expect(e3).to.have.not.been.called();
 
                 ee1.emit("event-1");
 
-                expect(e1).to.have.been.calledOnce;
-                expect(e2).to.have.been.calledOnce;
-                expect(e3).to.have.not.been.called;
+                expect(e1).to.have.been.calledOnce();
+                expect(e2).to.have.been.calledOnce();
+                expect(e3).to.have.not.been.called();
             });
         };
 

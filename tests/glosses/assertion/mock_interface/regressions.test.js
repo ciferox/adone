@@ -9,7 +9,7 @@ describe("assertion", "mock interface", "regressions", () => {
         s();
 
         expect(() => {
-            expect(s).to.have.been.called;
+            expect(s).to.have.been.called();
         }).not.to.throw();
     });
 

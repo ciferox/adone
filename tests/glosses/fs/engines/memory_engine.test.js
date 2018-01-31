@@ -4529,7 +4529,7 @@ describe("fs", "engine", "MemoryEngine", () => {
                     const change = spy();
                     engine.watch("/a", change);
                     await engine.writeFile("/a", "he");
-                    expect(change).to.have.been.calledOnce;
+                    expect(change).to.have.been.calledOnce();
                     expect(change).to.have.been.calledWith("change", "a");
                 });
 
@@ -4540,7 +4540,7 @@ describe("fs", "engine", "MemoryEngine", () => {
                     const change = spy();
                     engine.watch("/a", change);
                     await engine.utimes("/a", 1, 1);
-                    expect(change).to.have.been.calledOnce;
+                    expect(change).to.have.been.calledOnce();
                     expect(change).to.have.been.calledWith("change", "a");
                 });
 
@@ -4551,7 +4551,7 @@ describe("fs", "engine", "MemoryEngine", () => {
                     const change = spy();
                     engine.watch("/a", change);
                     await engine.unlink("/a");
-                    expect(change).to.have.been.calledOnce;
+                    expect(change).to.have.been.calledOnce();
                     expect(change).to.have.been.calledWith("rename", "a");
                 });
 
@@ -4562,10 +4562,10 @@ describe("fs", "engine", "MemoryEngine", () => {
                     const change = spy();
                     engine.watch("/a", change);
                     await engine.rename("/a", "/b");
-                    expect(change).to.have.been.calledOnce;
+                    expect(change).to.have.been.calledOnce();
                     expect(change).to.have.been.calledWith("rename", "a");
                     await engine.writeFile("/b", "hello");
-                    expect(change).to.have.been.calledTwice;
+                    expect(change).to.have.been.calledTwice();
                     expect(change).to.have.been.calledWith("change", "a");
                 });
 
@@ -4576,7 +4576,7 @@ describe("fs", "engine", "MemoryEngine", () => {
                     const change = spy();
                     engine.watch("/a", change);
                     await engine.link("/a", "/b");
-                    expect(change).to.have.been.calledOnce;
+                    expect(change).to.have.been.calledOnce();
                     expect(change).to.have.been.calledWith("change", "a");
                 });
 
@@ -4587,9 +4587,9 @@ describe("fs", "engine", "MemoryEngine", () => {
                     const change = spy();
                     engine.watch("/a", change);
                     await engine.link("/a", "/b");
-                    expect(change).to.have.been.calledOnce;
+                    expect(change).to.have.been.calledOnce();
                     await engine.writeFile("/b", "hello");
-                    expect(change).to.have.been.calledTwice;
+                    expect(change).to.have.been.calledTwice();
                     expect(change.getCall(1)).to.have.been.calledWith("change", "a");
                 });
 
@@ -4600,9 +4600,9 @@ describe("fs", "engine", "MemoryEngine", () => {
                     const change = spy();
                     engine.watch("/a", change);
                     await engine.link("/a", "/b");
-                    expect(change).to.have.been.calledOnce;
+                    expect(change).to.have.been.calledOnce();
                     await engine.unlink("/b");
-                    expect(change).to.have.been.calledTwice;
+                    expect(change).to.have.been.calledTwice();
                     expect(change.getCall(1)).to.have.been.calledWith("change", "a");
                 });
 
@@ -4613,9 +4613,9 @@ describe("fs", "engine", "MemoryEngine", () => {
                     const change = spy();
                     engine.watch("/a", change);
                     await engine.link("/a", "/b");
-                    expect(change).to.have.been.calledOnce;
+                    expect(change).to.have.been.calledOnce();
                     await engine.unlink("/a");
-                    expect(change).to.have.been.calledTwice;
+                    expect(change).to.have.been.calledTwice();
                     expect(change.getCall(1)).to.have.been.calledWith("change", "a");
                 });
 
@@ -4626,12 +4626,12 @@ describe("fs", "engine", "MemoryEngine", () => {
                     const change = spy();
                     engine.watch("/a", change);
                     await engine.link("/a", "/b");
-                    expect(change).to.have.been.calledOnce;
+                    expect(change).to.have.been.calledOnce();
                     await engine.unlink("/a");
-                    expect(change).to.have.been.calledTwice;
+                    expect(change).to.have.been.calledTwice();
                     expect(change.getCall(1)).to.have.been.calledWith("change", "a");
                     await engine.unlink("/b");
-                    expect(change).to.have.been.calledThrice;
+                    expect(change).to.have.been.calledThrice();
                     expect(change.getCall(2)).to.have.been.calledWith("rename", "a");
                 });
 
@@ -4642,14 +4642,14 @@ describe("fs", "engine", "MemoryEngine", () => {
                     const change = spy();
                     const watcher = engine.watch("/a", change);
                     await engine.link("/a", "/b");
-                    expect(change).to.have.been.calledOnce;
+                    expect(change).to.have.been.calledOnce();
                     watcher.close();
                     await engine.unlink("/a");
-                    expect(change).to.have.been.calledOnce;
+                    expect(change).to.have.been.calledOnce();
                     await engine.writeFile("/b", "hello");
-                    expect(change).to.have.been.calledOnce;
+                    expect(change).to.have.been.calledOnce();
                     await engine.unlink("/b");
-                    expect(change).to.have.been.calledOnce;
+                    expect(change).to.have.been.calledOnce();
                 });
             });
 
@@ -4782,7 +4782,7 @@ describe("fs", "engine", "MemoryEngine", () => {
                     const change = spy();
                     engine.watch("/a", change);
                     await engine.writeFile("/a/b/a", "he");
-                    expect(change).to.have.not.been.called;
+                    expect(change).to.have.not.been.called();
                 });
 
                 it("should stop watching after close", async () => {
@@ -4798,18 +4798,18 @@ describe("fs", "engine", "MemoryEngine", () => {
                     const change = spy();
                     const watcher = engine.watch("/a", change);
                     await engine.writeFile("/a/a", "");
-                    expect(change).to.have.been.calledOnce;
+                    expect(change).to.have.been.calledOnce();
                     watcher.close();
                     await engine.writeFile("/a/a", "");
-                    expect(change).to.have.been.calledOnce;
+                    expect(change).to.have.been.calledOnce();
                     await engine.unlink("/a/a");
-                    expect(change).to.have.been.calledOnce;
+                    expect(change).to.have.been.calledOnce();
                     await engine.unlink("/a/b/a");
-                    expect(change).to.have.been.calledOnce;
+                    expect(change).to.have.been.calledOnce();
                     await engine.rmdir("/a/b");
-                    expect(change).to.have.been.calledOnce;
+                    expect(change).to.have.been.calledOnce();
                     await engine.rmdir("/a");
-                    expect(change).to.have.been.calledOnce;
+                    expect(change).to.have.been.calledOnce();
                 });
             });
         });
@@ -4823,7 +4823,7 @@ describe("fs", "engine", "MemoryEngine", () => {
                 const change = spy();
                 engine.watchFile("/a", { interval: 100 }, change);
                 await promise.delay(300);
-                expect(change).to.have.not.been.called;
+                expect(change).to.have.not.been.called();
                 await engine.writeFile("/a", "a");
                 if (change.callCount === 0) {
                     await change.waitForCall();
@@ -4839,7 +4839,7 @@ describe("fs", "engine", "MemoryEngine", () => {
                 engine.watchFile("/a", { interval: 100 }, change);
                 await promise.delay(300);
                 await engine.unwatchFile("/a");
-                expect(change).to.have.been.calledOnce;
+                expect(change).to.have.been.calledOnce();
                 const [prev, curr] = change.getCall(0).args;
                 expect(prev.ino).to.be.equal(0);
                 expect(curr.ino).to.be.equal(0);
@@ -4849,7 +4849,7 @@ describe("fs", "engine", "MemoryEngine", () => {
                 const change = spy();
                 engine.watchFile("/a", { interval: 100 }, change);
                 await promise.delay(300);
-                expect(change).to.have.been.calledOnce;
+                expect(change).to.have.been.calledOnce();
                 await engine.writeFile("/a", "hello");
                 if (change.callCount !== 2) {
                     await change.waitForCall();

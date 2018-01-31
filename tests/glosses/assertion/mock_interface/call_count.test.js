@@ -9,13 +9,13 @@ describe("assertion", "mock interface", "call count", () => {
     describe("called", () => {
         it("should throw an error when the spy is undefined", () => {
             expect(() => {
-                expect(undefined).to.have.been.called;
+                expect(undefined).to.have.been.called();
             }).to.throw(x.InvalidArgument);
         });
 
         it("should throw an assertion error when the spy is not called", () => {
             expect(() => {
-                expect(s).to.have.been.called;
+                expect(s).to.have.been.called();
             }).to.throw(AssertionError);
         });
 
@@ -23,7 +23,7 @@ describe("assertion", "mock interface", "call count", () => {
             s();
 
             expect(() => {
-                expect(s).to.have.been.called;
+                expect(s).to.have.been.called();
             }).not.to.throw();
         });
 
@@ -32,7 +32,7 @@ describe("assertion", "mock interface", "call count", () => {
             s();
 
             expect(() => {
-                expect(s).to.have.been.called;
+                expect(s).to.have.been.called();
             }).not.to.throw();
         });
     });
@@ -40,7 +40,7 @@ describe("assertion", "mock interface", "call count", () => {
     describe("not called", () => {
         it("should not throw when the spy is not called", () => {
             expect(() => {
-                expect(s).not.to.have.been.called;
+                expect(s).not.to.have.been.called();
             }).not.to.throw();
         });
 
@@ -48,7 +48,7 @@ describe("assertion", "mock interface", "call count", () => {
             s();
 
             expect(() => {
-                expect(s).not.to.have.been.called;
+                expect(s).not.to.have.been.called();
             }).to.throw(AssertionError);
         });
     });
@@ -86,7 +86,7 @@ describe("assertion", "mock interface", "call count", () => {
     describe("calledOnce", () => {
         it("should throw an assertion error when the spy is not called", () => {
             expect(() => {
-                expect(s).to.have.been.calledOnce;
+                expect(s).to.have.been.calledOnce();
             }).to.throw(AssertionError);
         });
 
@@ -94,7 +94,7 @@ describe("assertion", "mock interface", "call count", () => {
             s();
 
             expect(() => {
-                expect(s).to.have.been.calledOnce;
+                expect(s).to.have.been.calledOnce();
             }).not.to.throw();
         });
 
@@ -103,7 +103,7 @@ describe("assertion", "mock interface", "call count", () => {
             s();
 
             expect(() => {
-                expect(s).to.have.been.calledOnce;
+                expect(s).to.have.been.calledOnce();
             }).to.throw(AssertionError);
         });
     });
@@ -111,7 +111,7 @@ describe("assertion", "mock interface", "call count", () => {
     describe("calledTwice", () => {
         it("should throw an assertion error when the spy is not called", () => {
             expect(() => {
-                expect(s).to.have.been.calledTwice;
+                expect(s).to.have.been.calledTwice();
             }).to.throw(AssertionError);
         });
 
@@ -119,7 +119,7 @@ describe("assertion", "mock interface", "call count", () => {
             s();
 
             expect(() => {
-                expect(s).to.have.been.calledTwice;
+                expect(s).to.have.been.calledTwice();
             }).to.throw(AssertionError);
         });
 
@@ -128,7 +128,7 @@ describe("assertion", "mock interface", "call count", () => {
             s();
 
             expect(() => {
-                expect(s).to.have.been.calledTwice;
+                expect(s).to.have.been.calledTwice();
             }).not.to.throw();
         });
 
@@ -138,7 +138,7 @@ describe("assertion", "mock interface", "call count", () => {
             s();
 
             expect(() => {
-                expect(s).to.have.been.calledTwice;
+                expect(s).to.have.been.calledTwice();
             }).to.throw(AssertionError);
         });
     });
@@ -146,7 +146,7 @@ describe("assertion", "mock interface", "call count", () => {
     describe("calledThrice", () => {
         it("should throw an assertion error when the spy is not called", () => {
             expect(() => {
-                expect(s).to.have.been.calledThrice;
+                expect(s).to.have.been.calledThrice();
             }).to.throw(AssertionError);
         });
 
@@ -154,7 +154,7 @@ describe("assertion", "mock interface", "call count", () => {
             s();
 
             expect(() => {
-                expect(s).to.have.been.calledThrice;
+                expect(s).to.have.been.calledThrice();
             }).to.throw(AssertionError);
         });
 
@@ -163,7 +163,7 @@ describe("assertion", "mock interface", "call count", () => {
             s();
 
             expect(() => {
-                expect(s).to.have.been.calledThrice;
+                expect(s).to.have.been.calledThrice();
             }).to.throw(AssertionError);
         });
 
@@ -173,7 +173,7 @@ describe("assertion", "mock interface", "call count", () => {
             s();
 
             expect(() => {
-                expect(s).to.have.been.calledThrice;
+                expect(s).to.have.been.calledThrice();
             }).not.to.throw();
         });
 
@@ -184,7 +184,7 @@ describe("assertion", "mock interface", "call count", () => {
             s();
 
             expect(() => {
-                expect(s).to.have.been.calledThrice;
+                expect(s).to.have.been.calledThrice();
             }).to.throw(AssertionError);
         });
     });

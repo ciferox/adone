@@ -11,7 +11,7 @@ describe("read preference", function () {
         const collection = db.collection("read_pref_1", { readPreference: ReadPreference.SECONDARY_PREFERRED });
         const s = spy(db.serverConfig, "command");
         await collection.count();
-        expect(s).to.have.been.calledOnce;
+        expect(s).to.have.been.calledOnce();
         const { args } = s.getCall(0);
         expect(args[2].readPreference.preference).to.be.equal(ReadPreference.SECONDARY_PREFERRED);
     });
@@ -21,7 +21,7 @@ describe("read preference", function () {
         const collection = db.collection("read_pref_1", { readPreference: ReadPreference.SECONDARY_PREFERRED });
         const s = spy(db.serverConfig, "command");
         await collection.group([], {}, { count: 0 }, "function (obj, prev) { prev.count++; }");
-        expect(s).to.have.been.calledOnce;
+        expect(s).to.have.been.calledOnce();
         const { args } = s.getCall(0);
         expect(args[2].readPreference.preference).to.be.equal(ReadPreference.SECONDARY_PREFERRED);
     });
@@ -41,7 +41,7 @@ describe("read preference", function () {
         const collection = db.collection("read_pref_1", { readPreference: ReadPreference.SECONDARY_PREFERRED });
         const s = spy(db.serverConfig, "command");
         await collection.geoNear(50, 50, { query: { a: 1 }, num: 1 }).catch(() => { });
-        expect(s).to.have.been.calledOnce;
+        expect(s).to.have.been.calledOnce();
         const { args } = s.getCall(0);
         expect(args[2].readPreference.preference).to.be.equal(ReadPreference.SECONDARY_PREFERRED);
     });
@@ -51,7 +51,7 @@ describe("read preference", function () {
         const collection = db.collection("read_pref_1", { readPreference: ReadPreference.SECONDARY_PREFERRED });
         const s = spy(db.serverConfig, "command");
         await collection.geoHaystackSearch(50, 50, { search: { a: 1 }, limit: 1, maxDistance: 100 }).catch(() => { });
-        expect(s).to.have.been.calledOnce;
+        expect(s).to.have.been.calledOnce();
         const { args } = s.getCall(0);
         expect(args[2].readPreference.preference).to.be.equal(ReadPreference.SECONDARY_PREFERRED);
     });
@@ -67,7 +67,7 @@ describe("read preference", function () {
             return 1;
         };
         await collection.mapReduce(map, reduce, { out: { inline: 1 } }).catch(() => { });
-        expect(s).to.have.been.calledOnce;
+        expect(s).to.have.been.calledOnce();
         const { args } = s.getCall(0);
         expect(args[2].readPreference.preference).to.be.equal(ReadPreference.SECONDARY_PREFERRED);
     });
@@ -83,7 +83,7 @@ describe("read preference", function () {
             return 1;
         };
         await collection.mapReduce(map, reduce, { out: "inline" }).catch(() => { });
-        expect(s).to.have.been.calledOnce;
+        expect(s).to.have.been.calledOnce();
         const { args } = s.getCall(0);
         expect(args[2].readPreference.preference).to.be.equal(ReadPreference.SECONDARY_PREFERRED);
     });
@@ -121,7 +121,7 @@ describe("read preference", function () {
                 }
             }
         ]);
-        expect(s).to.have.been.calledOnce;
+        expect(s).to.have.been.calledOnce();
         const { args } = s.getCall(0);
         expect(args[2].readPreference.preference).to.be.equal(ReadPreference.SECONDARY_PREFERRED);
     });
@@ -131,7 +131,7 @@ describe("read preference", function () {
         const collection = db.collection("read_pref_1", { readPreference: ReadPreference.SECONDARY_PREFERRED });
         const s = spy(db.serverConfig, "command");
         await collection.stats().catch(() => { });
-        expect(s).to.have.been.calledOnce;
+        expect(s).to.have.been.calledOnce();
         const { args } = s.getCall(0);
         expect(args[2].readPreference.preference).to.be.equal(ReadPreference.SECONDARY_PREFERRED);
     });
@@ -141,14 +141,14 @@ describe("read preference", function () {
         const s = spy(db.serverConfig, "command");
         await db.command({ dbStats: true });
         {
-            expect(s).to.have.been.calledOnce;
+            expect(s).to.have.been.calledOnce();
             const { args } = s.getCall(0);
             expect(args[2].readPreference.preference).to.be.equal(ReadPreference.SECONDARY);
         }
 
         await db.command({ dbStats: true }, { readPreference: "secondaryPreferred" });
         {
-            expect(s).to.have.been.calledTwice;
+            expect(s).to.have.been.calledTwice();
             const { args } = s.getCall(1);
             expect(args[2].readPreference.preference).to.be.equal(ReadPreference.SECONDARY_PREFERRED);
         }

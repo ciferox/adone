@@ -58,7 +58,7 @@ describe("stream", "pull", "defer", "source", () => {
         deferred(true, s);
 
         deferred.resolve(pull.values([1, 2, 3], () => {
-            expect(s).to.have.been.calledOnce;
+            expect(s).to.have.been.calledOnce();
             done();
         }));
 
@@ -74,7 +74,7 @@ describe("stream", "pull", "defer", "source", () => {
         //queue a read immediately
 
         const s = stub().callsFake((end, data) => {
-            expect(t).to.have.not.been.called;
+            expect(t).to.have.not.been.called();
             assert.equal(data, 1);
         });
 
@@ -84,8 +84,8 @@ describe("stream", "pull", "defer", "source", () => {
         deferred(true, t);
 
         deferred.resolve(pull.values([1, 2, 3], () => {
-            expect(s).to.have.been.calledOnce;
-            expect(t).to.have.been.calledOnce;
+            expect(s).to.have.been.calledOnce();
+            expect(t).to.have.been.calledOnce();
             done();
         }));
 

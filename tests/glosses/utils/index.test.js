@@ -360,7 +360,7 @@ describe("util", () => {
             w();
             w();
             w();
-            expect(fn).to.have.been.calledOnce;
+            expect(fn).to.have.been.calledOnce();
         });
 
         it("should pass arguments", () => {

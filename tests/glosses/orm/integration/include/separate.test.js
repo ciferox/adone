@@ -52,7 +52,7 @@ describe("separate", function () {
                 expect(users[0].get("tasks")[0].createdAt).to.be.ok();
                 expect(users[0].get("tasks")[0].updatedAt).to.be.ok();
 
-                expect(sqlSpy).to.have.been.calledTwice;
+                expect(sqlSpy).to.have.been.calledTwice();
             });
         });
     });
@@ -90,7 +90,7 @@ describe("separate", function () {
             }).then((users) => {
                 expect(users[0].get("tasks")).to.be.ok();
                 expect(users[0].get("tasks").length).to.equal(3);
-                expect(sqlSpy).to.have.been.calledTwice;
+                expect(sqlSpy).to.have.been.calledTwice();
             });
         });
     });
@@ -164,7 +164,7 @@ describe("separate", function () {
                 expect(users[0].get("tasks").length).to.equal(2);
                 expect(users[1].get("tasks")).to.be.ok();
                 expect(users[1].get("tasks").length).to.equal(2);
-                expect(sqlSpy).to.have.been.calledTwice;
+                expect(sqlSpy).to.have.been.calledTwice();
             });
         });
     });
@@ -225,7 +225,7 @@ describe("separate", function () {
                 expect(users[0].get("company").get("tasks").length).to.equal(3);
                 expect(users[1].get("company").get("tasks")).to.be.ok();
                 expect(users[1].get("company").get("tasks").length).to.equal(1);
-                expect(sqlSpy).to.have.been.calledTwice;
+                expect(sqlSpy).to.have.been.calledTwice();
             });
         });
     });
@@ -286,7 +286,7 @@ describe("separate", function () {
                     logging: sqlSpy
                 });
             }).then((companies) => {
-                expect(sqlSpy).to.have.been.calledTwice;
+                expect(sqlSpy).to.have.been.calledTwice();
 
                 expect(companies[0].users[0].tasks[0].project).to.be.ok();
             });
@@ -378,7 +378,7 @@ describe("separate", function () {
                 expect(users[1].get("projects").length).to.equal(1);
                 expect(users[1].get("projects")[0].get("tasks").length).to.equal(2);
 
-                expect(sqlSpy).to.have.been.calledThrice;
+                expect(sqlSpy).to.have.been.calledThrice();
             });
         });
     });

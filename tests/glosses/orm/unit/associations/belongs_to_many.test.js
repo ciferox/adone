@@ -179,8 +179,8 @@ describe("belongsToMany", function () {
 
         it("uses one insert into statement", async function () {
             await user.setTasks([task1, task2]);
-            expect(this.findAll).to.have.been.calledOnce;
-            expect(this.bulkCreate).to.have.been.calledOnce;
+            expect(this.findAll).to.have.been.calledOnce();
+            expect(this.bulkCreate).to.have.been.calledOnce();
         });
 
         it("uses one delete from statement", async function () {
@@ -193,8 +193,8 @@ describe("belongsToMany", function () {
 
             await user.setTasks([task1, task2]);
             await user.setTasks(null);
-            expect(this.findAll).to.have.been.calledTwice;
-            expect(this.destroy).to.have.been.calledOnce;
+            expect(this.findAll).to.have.been.calledTwice();
+            expect(this.destroy).to.have.been.calledOnce();
         });
     });
 

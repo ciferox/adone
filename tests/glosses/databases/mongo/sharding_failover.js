@@ -91,7 +91,7 @@ describe("sharding failover", function () {
         await reconnect.waitForCall();
         await collection.insert({ c: 1 });
         await p;
-        expect(reconnect).to.have.been.calledOnce;
+        expect(reconnect).to.have.been.calledOnce();
         expect(await collection.count()).to.be.equal(2);
         await db.close();
     });

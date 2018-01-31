@@ -60,8 +60,8 @@ describe("DataTypes", function () {
         }).then(() => {
             return User.findAll();
         }).then(([user]) => {
-            expect(parse).to.have.been.called;
-            expect(stringify).to.have.been.called;
+            expect(parse).to.have.been.called();
+            expect(stringify).to.have.been.called();
 
             expect(adone.is.datetime(user.dateField)).to.be.ok();
 
@@ -93,8 +93,8 @@ describe("DataTypes", function () {
         }).then(() => {
             return User.findAll();
         }).then(() => {
-            expect(parse).to.have.been.called;
-            expect(stringify).to.have.been.called;
+            expect(parse).to.have.been.called();
+            expect(stringify).to.have.been.called();
 
             delete Type.constructor.parse;
             delete Type.constructor.prototype.stringify;

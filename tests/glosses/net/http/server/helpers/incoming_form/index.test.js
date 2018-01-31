@@ -588,8 +588,8 @@ describe("net", "http", "helpers", "incoming form", () => {
                     const onField = parser.onField = spy();
                     const onEnd = parser.onEnd = spy();
                     parser.end();
-                    expect(onField).to.have.been.calledThrice;
-                    expect(onEnd).to.have.been.calledOnce;
+                    expect(onField).to.have.been.calledThrice();
+                    expect(onEnd).to.have.been.calledOnce();
                     expect(onField).to.have.been.calledWith("a", "1");
                     expect(onField).to.have.been.calledWith("b", "2");
                     expect(onField).to.have.been.calledWith("c", "3");
@@ -633,7 +633,7 @@ describe("net", "http", "helpers", "incoming form", () => {
                     file.on("end", onEnd);
                     file.end();
                     await adone.promise.delay(1);
-                    expect(onEnd).to.have.been.calledOnce;
+                    expect(onEnd).to.have.been.calledOnce();
                     expect(file._writeStream._writableState.ended).to.be.true();
                 });
             });

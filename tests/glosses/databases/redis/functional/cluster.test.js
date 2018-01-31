@@ -263,7 +263,7 @@ describe("database", "redis", "cluster", { skip: check }, () => {
                 return err.message === "Failed to refresh slots cache." &&
                     err.lastNodeError.message === errorMessage;
             }));
-            expect(onNodeError).to.have.been.calledOnce;
+            expect(onNodeError).to.have.been.calledOnce();
             expect(onNodeError).to.have.been.calledWith(match((err) => {
                 return err.message === errorMessage;
             }));
@@ -328,7 +328,7 @@ describe("database", "redis", "cluster", { skip: check }, () => {
                     return slotTable;
                 }
                 if (argv[0] === "get" && argv[1] === "foo") {
-                    expect(redirect).to.have.been.called;
+                    expect(redirect).to.have.been.called();
                     moved();
                 }
             });
@@ -337,7 +337,7 @@ describe("database", "redis", "cluster", { skip: check }, () => {
                     return slotTable;
                 }
                 if (argv[0] === "get" && argv[1] === "foo") {
-                    expect(redirect).to.have.not.been.called;
+                    expect(redirect).to.have.not.been.called();
                     redirect();
                     return new Error(`MOVED ${calculateSlot("foo")} 127.0.0.1:30001`);
                 }
@@ -394,7 +394,7 @@ describe("database", "redis", "cluster", { skip: check }, () => {
                     return slotTable;
                 }
                 if (argv[0] === "get" && argv[1] === "foo") {
-                    expect(redirect).to.have.been.called;
+                    expect(redirect).to.have.been.called();
                     moved();
                 }
             });
@@ -403,7 +403,7 @@ describe("database", "redis", "cluster", { skip: check }, () => {
                     return slotTable;
                 }
                 if (argv[0] === "get" && argv[1] === "foo") {
-                    expect(redirect).to.have.not.been.called;
+                    expect(redirect).to.have.not.been.called();
                     redirect();
                     return new Error(`MOVED ${calculateSlot("foo")} 127.0.0.1:30001`);
                 }
@@ -434,7 +434,7 @@ describe("database", "redis", "cluster", { skip: check }, () => {
                     return slotTable;
                 }
                 if (argv[0] === "get" && argv[1] === "foo") {
-                    expect(asked).to.have.been.called;
+                    expect(asked).to.have.been.called();
                     getFoo1();
                 } else if (argv[0] === "asking") {
                     asked();
@@ -473,7 +473,7 @@ describe("database", "redis", "cluster", { skip: check }, () => {
             ];
             const node1 = new MockServer(30001, (argv) => {
                 if (argv[0] === "get" && argv[1] === "foo") {
-                    expect(ask).to.have.been.called;
+                    expect(ask).to.have.been.called();
                     return "bar";
                 } else if (argv[0] === "asking") {
                     ask();
@@ -520,7 +520,7 @@ describe("database", "redis", "cluster", { skip: check }, () => {
                 { host: "127.0.0.1", port: "30001" }
             ], { retryDelayOnTryAgain: 1 });
             await cluster.get("foo");
-            expect(getFoo).to.have.been.calledTwice;
+            expect(getFoo).to.have.been.calledTwice();
             cluster.disconnect();
             await server.disconnect();
         });
@@ -612,7 +612,7 @@ describe("database", "redis", "cluster", { skip: check }, () => {
         await assert.throws(async () => {
             await cluster.get("foo", "bar");
         }, "Wrong arguments count");
-        expect(getFooBar).to.have.been.called;
+        expect(getFooBar).to.have.been.called();
         cluster.disconnect();
         await node1.disconnect();
     });
@@ -690,7 +690,7 @@ describe("database", "redis", "cluster", { skip: check }, () => {
                 }
                 if (argv[1] === "foo") {
                     if (argv[0] === "set") {
-                        expect(move).to.have.not.been.called;
+                        expect(move).to.have.not.been.called();
                         move();
                     }
                     return new Error(`MOVED ${calculateSlot("foo")} 127.0.0.1:30001`);

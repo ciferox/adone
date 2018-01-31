@@ -635,7 +635,7 @@ describe("collection", "LinkedList", () => {
         it("should not call the callback for an empty list", () => {
             const s = spy();
             new LinkedList().forEach(s);
-            expect(s).to.have.not.been.called;
+            expect(s).to.have.not.been.called();
         });
 
         it("should stop iterating if the given function returns false", () => {
@@ -699,7 +699,7 @@ describe("collection", "LinkedList", () => {
         it("should not call the callback for an empty list", () => {
             const s = spy();
             new LinkedList().map(s);
-            expect(s).to.have.not.been.called;
+            expect(s).to.have.not.been.called();
         });
     });
 

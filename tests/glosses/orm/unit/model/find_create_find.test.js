@@ -20,7 +20,7 @@ describe("findCreateFind", function () {
         expect(await Model.findCreateFind({
             where
         })).to.be.deep.equal([result, false]);
-        expect(findSpy).to.have.been.calledOnce;
+        expect(findSpy).to.have.been.calledOnce();
         expect(findSpy.getCall(0).args[0].where).to.equal(where);
     });
 
@@ -52,7 +52,7 @@ describe("findCreateFind", function () {
         expect(await Model.findCreateFind({
             where
         })).to.be.deep.equal([result, false]);
-        expect(findSpy).to.have.been.calledTwice;
+        expect(findSpy).to.have.been.calledTwice();
         expect(findSpy.getCall(1).args[0].where).to.equal(where);
     });
 });

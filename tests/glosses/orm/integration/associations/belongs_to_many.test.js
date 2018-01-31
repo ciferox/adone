@@ -1183,7 +1183,7 @@ describe("belongsToMany", function () {
             await user.addProjects([project1, project2], {
                 logging: s
             });
-            expect(s).to.have.been.calledTwice;
+            expect(s).to.have.been.calledTwice();
             s.reset();
             const projects = await user.getProjects({
                 logging: s
@@ -1223,7 +1223,7 @@ describe("belongsToMany", function () {
             await user.removeProject(_project, {
                 logging: s
             });
-            expect(s).to.have.been.calledOnce;
+            expect(s).to.have.been.calledOnce();
         });
 
         it("should be able to handle nested includes properly", async function () {

@@ -280,8 +280,7 @@ export const retry = async (callback, options) => {
                         || match === err.message
                         || (is.function(match) && err instanceof match)
                         || (
-                            match instanceof RegExp && (match.test(err.message)
-                            || match.test(err.toString()))
+                            match instanceof RegExp && (match.test(err.message) || match.test(err.toString()))
                         )
                     ) {
                         shouldRetry = true;

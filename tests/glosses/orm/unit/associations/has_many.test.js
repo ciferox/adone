@@ -38,8 +38,8 @@ describe("hasMany", function () {
 
         it("uses one update statement for addition", async function () {
             await user.setTasks([task1, task2]);
-            expect(this.findAll).to.have.been.calledOnce;
-            expect(this.update).to.have.been.calledOnce;
+            expect(this.findAll).to.have.been.calledOnce();
+            expect(this.update).to.have.been.calledOnce();
         });
 
         it("uses one delete from statement", async function () {
@@ -53,8 +53,8 @@ describe("hasMany", function () {
             await user.setTasks([task1, task2]);
             this.update.reset();
             await user.setTasks(null);
-            expect(this.findAll).to.have.been.calledTwice;
-            expect(this.update).to.have.been.calledOnce;
+            expect(this.findAll).to.have.been.calledTwice();
+            expect(this.update).to.have.been.calledOnce();
         });
     });
 
@@ -132,7 +132,7 @@ describe("hasMany", function () {
 
             where[foreignKey] = idA;
 
-            expect(findAll).to.have.been.calledOnce;
+            expect(findAll).to.have.been.calledOnce();
             expect(findAll.firstCall.args[0].where).to.deep.equal(where);
 
             try {
@@ -168,7 +168,7 @@ describe("hasMany", function () {
                 User.build({ id: idC })
             ]);
 
-            expect(findAll).to.have.been.calledOnce;
+            expect(findAll).to.have.been.calledOnce();
             expect(findAll.firstCall.args[0].where).to.have.property(foreignKey);
             expect(findAll.firstCall.args[0].where[foreignKey]).to.have.property(operator.in);
             expect(findAll.firstCall.args[0].where[foreignKey][operator.in]).to.deep.equal([idA, idB, idC]);

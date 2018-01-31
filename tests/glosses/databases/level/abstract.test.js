@@ -425,9 +425,9 @@ describe("database", "level", "abstract", () => {
         const test = new Test("foobar");
         await test.del("no");
 
-        expect(_del).to.have.been.calledOnce;
-        expect(serializeKey).to.have.been.calledOnce;
-        expect(serializeValue).to.have.not.been.called;
+        expect(_del).to.have.been.calledOnce();
+        expect(serializeKey).to.have.been.calledOnce();
+        expect(serializeValue).to.have.not.been.called();
     });
 
     it("test serialization extensibility (batch array put)", async () => {
@@ -439,9 +439,9 @@ describe("database", "level", "abstract", () => {
         const test = new Test("foobar");
         await test.batch([{ type: "put", key: "no", value: "nope" }]);
 
-        expect(_batch).to.have.been.calledOnce;
-        expect(serializeKey).to.have.been.calledOnce;
-        expect(serializeValue).to.have.been.calledOnce;
+        expect(_batch).to.have.been.calledOnce();
+        expect(serializeKey).to.have.been.calledOnce();
+        expect(serializeValue).to.have.been.calledOnce();
         expect(_batch.getCall(0)).to.been.calledWith([{ type: "put", key: "foo", value: "bar" }]);
     });
 
@@ -454,9 +454,9 @@ describe("database", "level", "abstract", () => {
         const test = new Test("foobar");
         await test.chainedBatch().put("no", "nope").write();
 
-        expect(_batch).to.have.been.calledOnce;
-        expect(serializeKey).to.have.been.calledOnce;
-        expect(serializeValue).to.have.been.calledOnce;
+        expect(_batch).to.have.been.calledOnce();
+        expect(serializeKey).to.have.been.calledOnce();
+        expect(serializeValue).to.have.been.calledOnce();
         expect(_batch.getCall(0)).to.been.calledWith([{ type: "put", key: "foo", value: "bar" }]);
     });
 
@@ -469,9 +469,9 @@ describe("database", "level", "abstract", () => {
         const test = new Test("foobar");
         await test.batch([{ type: "del", key: "no" }]);
 
-        expect(_batch).to.have.been.calledOnce;
-        expect(serializeKey).to.have.been.calledOnce;
-        expect(serializeValue).to.have.not.been.called;
+        expect(_batch).to.have.been.calledOnce();
+        expect(serializeKey).to.have.been.calledOnce();
+        expect(serializeValue).to.have.not.been.called();
         expect(_batch.getCall(0)).to.have.been.calledWith([{ type: "del", key: "foo" }]);
     });
 
@@ -484,9 +484,9 @@ describe("database", "level", "abstract", () => {
         const test = new Test("foobar");
         await test.chainedBatch().del("no").write();
 
-        expect(_batch).to.have.been.calledOnce;
-        expect(serializeKey).to.have.been.calledOnce;
-        expect(serializeValue).to.have.not.been.called;
+        expect(_batch).to.have.been.calledOnce();
+        expect(serializeKey).to.have.been.calledOnce();
+        expect(serializeValue).to.have.not.been.called();
         expect(_batch.getCall(0)).to.have.been.calledWith([{ type: "del", key: "foo" }]);
     });
 
@@ -501,9 +501,9 @@ describe("database", "level", "abstract", () => {
         const op = { type: "put", key: "no", value: "nope" };
         await test.batch([op]);
 
-        expect(_batch).to.have.been.calledOnce;
-        expect(serializeKey).to.have.been.calledOnce;
-        expect(serializeValue).to.have.been.calledOnce;
+        expect(_batch).to.have.been.calledOnce();
+        expect(serializeKey).to.have.been.calledOnce();
+        expect(serializeValue).to.have.been.calledOnce();
         expect(_batch.getCall(0)).to.been.calledWith([{ type: "put", key: "foo", value: "bar" }]);
 
         expect(op.key).to.be.equal("no");

@@ -56,8 +56,8 @@ export default function mock(lib, utils) {
         };
     };
 
-    const mockProperty = (name, action, nonNegatedSuffix) => {
-        utils.addProperty(Assertion.prototype, name, function mockProperty() {
+    const mockPropertyCheckerAsMethod = (name, action, nonNegatedSuffix) => {
+        utils.addMethod(Assertion.prototype, name, function mockProperty() {
             assertCanWorkWith(this);
 
             const messages = getMessages(this._obj, action, nonNegatedSuffix, false);
@@ -113,11 +113,11 @@ export default function mock(lib, utils) {
         utils.flag(this, "always", true);
     });
 
-    mockProperty("called", "been called", " at least once, but it was never called");
+    mockPropertyCheckerAsMethod("called", "been called", " at least once, but it was never called");
     mockPropertyAsBooleanMethod("callCount", "been called exactly %1", ", but it was called %c%C");
-    mockProperty("calledOnce", "been called exactly once", ", but it was called %c%C");
-    mockProperty("calledTwice", "been called exactly twice", ", but it was called %c%C");
-    mockProperty("calledThrice", "been called exactly thrice", ", but it was called %c%C");
+    mockPropertyCheckerAsMethod("calledOnce", "been called exactly once", ", but it was called %c%C");
+    mockPropertyCheckerAsMethod("calledTwice", "been called exactly twice", ", but it was called %c%C");
+    mockPropertyCheckerAsMethod("calledThrice", "been called exactly thrice", ", but it was called %c%C");
     mockMethodAsProperty("calledWithNew", "been called with new");
     mockMethod("calledBefore", "been called before %1");
     mockMethod("calledAfter", "been called after %1");

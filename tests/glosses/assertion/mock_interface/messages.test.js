@@ -12,16 +12,16 @@ describe("assertion", "mock interface", "messages", () => {
             const s = spy();
 
             expect(() => {
-                expect(s).to.have.been.called;
+                expect(s).to.have.been.called();
             }).to.throw("expected spy to have been called at least once, but it was never called");
             expect(() => {
-                expect(s).to.have.been.calledOnce;
+                expect(s).to.have.been.calledOnce();
             }).to.throw("expected spy to have been called exactly once, but it was called 0 times");
             expect(() => {
-                expect(s).to.have.been.calledTwice;
+                expect(s).to.have.been.calledTwice();
             }).to.throw("expected spy to have been called exactly twice, but it was called 0 times");
             expect(() => {
-                expect(s).to.have.been.calledThrice;
+                expect(s).to.have.been.calledThrice();
             }).to.throw("expected spy to have been called exactly thrice, but it was called 0 times");
 
             expect(() => {
@@ -50,19 +50,19 @@ describe("assertion", "mock interface", "messages", () => {
             calledFourTimes();
 
             expect(() => {
-                expect(calledOnce).not.to.have.been.called;
+                expect(calledOnce).not.to.have.been.called();
             }).to.throw("expected spy to not have been called");
 
             expect(() => {
-                expect(calledOnce).not.to.have.been.calledOnce;
+                expect(calledOnce).not.to.have.been.calledOnce();
             }).to.throw("expected spy to not have been called exactly once");
 
             expect(() => {
-                expect(calledTwice).not.to.have.been.calledTwice;
+                expect(calledTwice).not.to.have.been.calledTwice();
             }).to.throw("expected spy to not have been called exactly twice");
 
             expect(() => {
-                expect(calledThrice).not.to.have.been.calledThrice;
+                expect(calledThrice).not.to.have.been.calledThrice();
             }).to.throw("expected spy to not have been called exactly thrice");
 
             expect(() => {
@@ -440,7 +440,7 @@ describe("assertion", "mock interface", "messages", () => {
 
         it("should be informative for properties", () => {
             expect(() => {
-                expect(notSpy).to.have.been.called;
+                expect(notSpy).to.have.been.called();
             }).to.throw(/not a spy/);
         });
 

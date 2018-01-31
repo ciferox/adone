@@ -137,7 +137,7 @@ describe("ssl client", function () {
             sslCA: ca,
             checkServerIdentity
         });
-        expect(checkServerIdentity).to.have.been.calledOnce;
+        expect(checkServerIdentity).to.have.been.calledOnce();
         await db.close();
     });
 

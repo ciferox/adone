@@ -57,7 +57,7 @@ describe("stream", "pull", "toStream", () => {
 
             s.once("end", () => {
                 expect(onData).to.have.callCount(9);
-                expect(onEnd).to.have.been.calledOnce;
+                expect(onEnd).to.have.been.calledOnce();
                 done();
             });
         });

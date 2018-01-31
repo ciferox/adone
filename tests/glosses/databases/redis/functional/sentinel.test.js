@@ -96,7 +96,7 @@ describe("database", "redis", "sentinel", { skip: check }, () => {
             await assert.throws(async () => {
                 await redis.get("foo");
             }, "are unreachable");
-            expect(onError).to.have.been.calledOnce;
+            expect(onError).to.have.been.calledOnce();
             expect(onError).to.have.been.calledWith(match((err) => err.message.includes("are unreachable")));
             redis.disconnect();
             await waitFor(redis, "end");

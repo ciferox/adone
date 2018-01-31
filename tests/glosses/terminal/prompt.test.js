@@ -160,7 +160,7 @@ describe("terminal", "prompt", () => {
                 name1: "bar",
                 name2: "foo"
             });
-            expect(prompts[1].message).to.have.been.calledOnce;
+            expect(prompts[1].message).to.have.been.calledOnce();
             expect(collector.data()).to.include("name2 message");
         });
 
@@ -185,7 +185,7 @@ describe("terminal", "prompt", () => {
             const answers = await promise;
             collector.stop();
             expect(answers).to.be.deep.equal({ name1: "bar", name2: "foo" });
-            expect(prompts[1].message).to.have.been.calledOnce;
+            expect(prompts[1].message).to.have.been.calledOnce();
             expect(collector.data()).to.include("name2 message");
         });
 
@@ -205,7 +205,7 @@ describe("terminal", "prompt", () => {
             const promise = term.prompt().run(prompts);
             await emitLines(2);
             const answers = await promise;
-            expect(prompts[1].default).to.have.been.calledOnce;
+            expect(prompts[1].default).to.have.been.calledOnce();
             expect(answers).to.be.deep.equal({ name1: "bar", name2: "foo" });
         });
 
@@ -228,7 +228,7 @@ describe("terminal", "prompt", () => {
             const promise = term.prompt().run(prompts);
             await emitLines(2);
             const answers = await promise;
-            expect(prompts[1].default).to.have.been.calledOnce;
+            expect(prompts[1].default).to.have.been.calledOnce();
             expect(answers).to.be.deep.equal({
                 name1: "bar",
                 name2: "foo"
@@ -256,7 +256,7 @@ describe("terminal", "prompt", () => {
             const answers = await promise;
             collector.stop();
             expect(answers).to.be.deep.equal({ name1: "hello", name2: "foo" });
-            expect(prompts[1].choices).to.have.been.calledOnce;
+            expect(prompts[1].choices).to.have.been.calledOnce();
             expect(collector.data()).to.match(/\(Use arrow keys\)\n. foo \n\s{2}bar/);
         });
 
@@ -277,7 +277,7 @@ describe("terminal", "prompt", () => {
                     "Y"
                 ]);
                 const answers = await promise;
-                expect(prompts[1].when).to.have.been.calledOnce;
+                expect(prompts[1].when).to.have.been.calledOnce();
                 expect(answers).to.be.deep.equal({ q1: true });
             });
 
@@ -301,7 +301,7 @@ describe("terminal", "prompt", () => {
                 ]);
                 const answers = await promise;
                 expect(answers).to.be.deep.equal({ q1: true, q2: "bar-var" });
-                expect(prompts[1].when).to.have.been.calledOnce;
+                expect(prompts[1].when).to.have.been.calledOnce();
             });
 
             it("should run prompt if `when` is true", async () => {
@@ -350,7 +350,7 @@ describe("terminal", "prompt", () => {
                 ]);
                 const answers = await promise;
                 expect(answers).to.be.deep.equal({ q1: true, q3: "foo" });
-                expect(prompts[1].when).to.have.been.calledOnce;
+                expect(prompts[1].when).to.have.been.calledOnce();
             });
 
             it("should not run prompt if `when` is false", async () => {
@@ -402,7 +402,7 @@ describe("terminal", "prompt", () => {
                 ], 100);
                 const answers = await promise;
                 expect(answers).to.be.deep.equal({ q1: true, q2: "foo-bar" });
-                expect(prompts[1].when).to.have.been.calledOnce;
+                expect(prompts[1].when).to.have.been.calledOnce();
             });
         });
     });
@@ -713,7 +713,7 @@ describe("terminal", "prompt", () => {
                         const promise = prompt.run();
                         await emitLines(1);
                         await promise;
-                        expect(validate).to.have.been.calledOnce;
+                        expect(validate).to.have.been.calledOnce();
                     });
 
                     it("should allow validate function to be asynchronous", async function () {
@@ -1078,7 +1078,7 @@ describe("terminal", "prompt", () => {
                     emitLines(1);
                     await promise;
                     collector.stop();
-                    expect(this.fixture.choices[0].disabled).to.have.been.calledOnce;
+                    expect(this.fixture.choices[0].disabled).to.have.been.calledOnce();
                     expect(this.fixture.choices[0].disabled).to.have.been.calledWith({ foo: "foo" });
                     expect(collector.data()).to.include("- dis1 (Disabled)");
                 });
@@ -1747,7 +1747,7 @@ describe("terminal", "prompt", () => {
                     this.prompt = createAutocomplete(this.fixture);
                     this.prompt.run();
                     await waitForChoices();
-                    expect(this.fixture.source).to.have.been.calledOnce;
+                    expect(this.fixture.source).to.have.been.calledOnce();
                     expect(this.fixture.source).to.have.been.calledWithExactly(undefined, null);
                 });
 
@@ -1837,9 +1837,9 @@ describe("terminal", "prompt", () => {
                         it("searches again, since not possible to select something that does not exist", async function () {
                             this.prompt.run();
                             await waitForChoices;
-                            expect(source).to.have.been.calledOnce;
+                            expect(source).to.have.been.calledOnce();
                             await emitEnter();
-                            expect(source).to.have.been.calledTwice;
+                            expect(source).to.have.been.calledTwice();
                         });
                     });
 
@@ -1900,12 +1900,12 @@ describe("terminal", "prompt", () => {
 
                             it("stops searching on typing", async () => {
                                 await emitChars("test");
-                                expect(source).to.have.not.been.called;
+                                expect(source).to.have.not.been.called();
                             });
 
                             it("does not change answer on enter", async function () {
                                 await emitEnter();
-                                expect(source).to.have.not.been.called;
+                                expect(source).to.have.not.been.called();
                                 expect(this.prompt.answer).to.be.equal(answerValue);
                                 expect(this.prompt.status).to.be.equal("answered");
                             });

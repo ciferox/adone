@@ -238,6 +238,8 @@ export const getDiff = (actual, expected) => {
                 return styler.dim(obj);
             case "class.name":
                 return styler.magenta(obj);
+            case "name":
+                return styler.cyan(obj);
             case "regex": {
                 let src;
                 let flags;
@@ -481,36 +483,54 @@ export const getDiff = (actual, expected) => {
                 return `${colorizer("Symbol", "class.name")}(${obj.toString().slice(7, -1)})`;
             }
             case "function": {
-                let { code } = adone.js.compiler.core.transform(`const a = ${obj.toString()}`, {
-                    plugins: [({ types: t }) => ({
-                        visitor: {
-                            FunctionExpression(path) {
-                                path.node.body.body = [];
-                            },
-                            ArrowFunctionExpression(path) {
-                                if (path.node.body.type === "BlockStatement") {
-                                    path.node.body.body = [];
-                                } else {
-                                    path.node.body = t.blockStatement([]);
-                                }
-                            }
-                        }
-                    })],
-                    generatorOpts: {
-                        comments: false,
-                        compact: false,
-                        quotes: "double",
-                        retainFunctionParens: true
-                    }
-                });
-                code = code.slice(10, -1).replace(adone.js.tokens.regex, (...args) => {
-                    const type = getTokenType(args);
-                    return args[0]
-                        .split(NEWLINE)
-                        .map((str) => colorizer(str, type))
-                        .join("\n");
-                });
-                return `${code.slice(0, -3)} { ... }`;
+                return `${
+                    colorizer("[", "square.bracket")
+                }${
+                    colorizer(
+                        is.generatorFunction(obj)
+                            ? "GeneratorFunction" // TODO: async genrators
+                            : is.asyncFunction(obj)
+                                ? "AsyncFunction"
+                                : "Function",
+                        "class.name"
+                    )
+                }${
+                    obj.name
+                        ? `: ${colorizer(obj.name, "name")}`
+                        : ""
+                }${
+                    colorizer("]", "square.bracket")
+                }`;
+                // let { code } = adone.js.compiler.core.transform(`const a = ${obj.toString()}`, {
+                //     plugins: [({ types: t }) => ({
+                //         visitor: {
+                //             FunctionExpression(path) {
+                //                 path.node.body.body = [];
+                //             },
+                //             ArrowFunctionExpression(path) {
+                //                 if (path.node.body.type === "BlockStatement") {
+                //                     path.node.body.body = [];
+                //                 } else {
+                //                     path.node.body = t.blockStatement([]);
+                //                 }
+                //             }
+                //         }
+                //     })],
+                //     generatorOpts: {
+                //         comments: false,
+                //         compact: false,
+                //         quotes: "double",
+                //         retainFunctionParens: true
+                //     }
+                // });
+                // code = code.slice(10, -1).replace(adone.js.tokens.regex, (...args) => {
+                //     const type = getTokenType(args);
+                //     return args[0]
+                //         .split(NEWLINE)
+                //         .map((str) => colorizer(str, type))
+                //         .join("\n");
+                // });
+                // return `${code.slice(0, -3)} { ... }`;
             }
             case "class": {
                 return `${colorizer("[", "square.bracket")}${colorizer(`class ${obj.name}`, "class.name")}${colorizer("]", "square.bracket")}`;

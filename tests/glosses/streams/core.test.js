@@ -26,9 +26,9 @@ describe("core", () => {
             stream.push(4);
             stream.push(5);
             stream.push(6);
-            expect(next).to.have.not.been.called;
+            expect(next).to.have.not.been.called();
             await promise.delay(50);
-            expect(next).to.have.not.been.called;
+            expect(next).to.have.not.been.called();
         });
 
         it("should emit elements after resume, but on the next tick", async () => {
@@ -42,7 +42,7 @@ describe("core", () => {
             stream.push(5);
             stream.push(6);
             stream.resume();
-            expect(next).to.have.not.been.called;
+            expect(next).to.have.not.been.called();
             await nextTick();
             expect(next).to.have.callCount(6);
             stream.write(7);
@@ -83,7 +83,7 @@ describe("core", () => {
             stream.resume();
             await nextTick();
             stream.write(1);
-            expect(error).to.have.been.calledOnce;
+            expect(error).to.have.been.calledOnce();
             const [err] = error.args[0];
             expect(err.message).to.be.equal("cannot process 1");
         });
@@ -99,8 +99,8 @@ describe("core", () => {
             stream.resume();
             await nextTick();
             stream.push(1);
-            expect(error).to.have.not.been.called;
-            expect(next).to.have.been.calledOnce;
+            expect(error).to.have.not.been.called();
+            expect(next).to.have.been.calledOnce();
             expect(next).to.have.been.calledWithExactly(1);
         });
 
@@ -109,9 +109,9 @@ describe("core", () => {
             const end = spy();
             stream.onEnd(end);
             stream.end();
-            expect(end).to.have.not.been.called;
+            expect(end).to.have.not.been.called();
             await nextTick();
-            expect(end).to.have.been.calledOnce;
+            expect(end).to.have.been.calledOnce();
         });
 
         it("should not end stream if it has elements to emit", () => {
@@ -119,7 +119,7 @@ describe("core", () => {
             const end = spy();
             stream.push(1);
             stream.end();
-            expect(end).to.have.not.been.called;
+            expect(end).to.have.not.been.called();
         });
 
         it("should schedule flush after resume and run them asynchronously", async () => {
@@ -128,14 +128,14 @@ describe("core", () => {
             stream.push(1);
             const [next, end] = [spy(), spy()];
             stream.onNext(next).onEnd(end).end().resume();
-            expect(end).to.have.not.been.called;
-            expect(flush).to.have.not.been.called;
-            expect(next).to.have.not.been.called;
+            expect(end).to.have.not.been.called();
+            expect(flush).to.have.not.been.called();
+            expect(next).to.have.not.been.called();
             await nextTick();
-            expect(next).to.have.been.calledOnce;
+            expect(next).to.have.been.calledOnce();
             expect(next).to.have.been.calledWithExactly(1);
-            expect(end).to.have.been.calledOnce;
-            expect(flush).to.have.been.calledOnce;
+            expect(end).to.have.been.calledOnce();
+            expect(flush).to.have.been.calledOnce();
             // next -> flush -> end
             expect(next).to.have.been.calledBefore(flush);
             expect(flush).to.have.been.calledBefore(end);
@@ -147,21 +147,21 @@ describe("core", () => {
             stream.write(1);
             const [next, end] = [spy(), spy()];
             stream.onNext(next).onEnd(end).resume();
-            expect(next).to.have.not.been.called;
-            expect(end).to.have.not.been.called;
+            expect(next).to.have.not.been.called();
+            expect(end).to.have.not.been.called();
             await nextTick();
-            expect(next).to.have.been.calledOnce;
+            expect(next).to.have.been.calledOnce();
             expect(next.getCall(0)).to.have.been.calledWithExactly(1);
-            expect(end).to.have.not.been.called;
+            expect(end).to.have.not.been.called();
             stream.write(2);
-            expect(next).to.have.been.calledTwice;
+            expect(next).to.have.been.calledTwice();
             expect(next.getCall(1)).to.have.been.calledWithExactly(2);
             stream.end();
-            expect(flush).to.have.not.been.called;
-            expect(end).to.have.not.been.called; // flush is async
+            expect(flush).to.have.not.been.called();
+            expect(end).to.have.not.been.called(); // flush is async
             await nextTick();
-            expect(flush).to.have.been.calledOnce;
-            expect(end).to.have.been.calledOnce;
+            expect(flush).to.have.been.calledOnce();
+            expect(end).to.have.been.calledOnce();
             expect(flush).to.have.been.calledBefore(end);
         });
 
@@ -171,10 +171,10 @@ describe("core", () => {
             const end = spy();
             stream.onEnd(end);
             stream.end();
-            expect(end).to.have.not.been.called; // flush is always async
+            expect(end).to.have.not.been.called(); // flush is always async
             await nextTick();
-            expect(end).to.have.been.calledOnce;
-            expect(flush).to.have.been.calledOnce;
+            expect(end).to.have.been.calledOnce();
+            expect(flush).to.have.been.calledOnce();
             expect(flush).to.have.been.calledBefore(end);
         });
 
@@ -188,9 +188,9 @@ describe("core", () => {
             const end = spy();
             stream.onEnd(end);
             stream.end();
-            expect(end).to.have.not.been.called; // flush is async
+            expect(end).to.have.not.been.called(); // flush is async
             await end.waitForCall();
-            expect(flush).to.have.been.calledOnce;
+            expect(flush).to.have.been.calledOnce();
             expect(flush).to.have.been.calledBefore(end);
         });
 
@@ -204,9 +204,9 @@ describe("core", () => {
             stream.onEnd(end).onNext(next);
             stream.resume();
             stream.end();
-            expect(end).to.have.not.been.called;
+            expect(end).to.have.not.been.called();
             await end.waitForCall();
-            expect(next).to.have.been.calledOnce;
+            expect(next).to.have.been.calledOnce();
             expect(next).to.have.been.calledWithExactly(123);
             expect(next).to.have.been.calledBefore(end);
         });
@@ -222,9 +222,9 @@ describe("core", () => {
             stream.onEnd(end).onNext(next);
             stream.resume();
             stream.end();
-            expect(end).to.have.not.been.called;
+            expect(end).to.have.not.been.called();
             await end.waitForCall();
-            expect(next).to.have.been.calledOnce;
+            expect(next).to.have.been.calledOnce();
             expect(next).to.have.been.calledWithExactly(123);
             expect(next).to.have.been.calledBefore(end);
         });
@@ -237,9 +237,9 @@ describe("core", () => {
             const error = spy();
             stream.onError(error);
             stream.end();
-            expect(error).not.have.not.been.called; // flush is always async
+            expect(error).not.have.not.been.called(); // flush is always async
             await nextTick();
-            expect(error).to.have.been.calledOnce;
+            expect(error).to.have.been.calledOnce();
             const [err] = error.args[0];
             expect(err.message).to.be.equal("hello");
         });
@@ -253,7 +253,7 @@ describe("core", () => {
             const error = spy();
             stream.onError(error);
             stream.end();
-            expect(error).to.have.not.been.called; // async flushing
+            expect(error).to.have.not.been.called(); // async flushing
             await error.waitForCall();
             const [err] = error.args[0];
             expect(err.message).to.be.equal("hello");
@@ -268,11 +268,11 @@ describe("core", () => {
             const end = spy();
             stream.onEnd(end).onError(error);
             stream.end();
-            expect(end).to.have.not.been.called; // flush always async
-            expect(error).to.have.not.been.called; // flush always async
+            expect(end).to.have.not.been.called(); // flush always async
+            expect(error).to.have.not.been.called(); // flush always async
             await nextTick();
-            expect(end).to.have.been.calledOnce;
-            expect(error).to.have.been.calledOnce;
+            expect(end).to.have.been.calledOnce();
+            expect(error).to.have.been.calledOnce();
             // error -> end
             expect(end).to.have.been.calledAfter(error);
         });
@@ -287,10 +287,10 @@ describe("core", () => {
             const end = spy();
             stream.onEnd(end).onError(error);
             stream.end();
-            expect(end).to.have.not.been.called; // async
-            expect(error).to.have.not.been.called; // async
+            expect(end).to.have.not.been.called(); // async
+            expect(error).to.have.not.been.called(); // async
             await end.waitForCall();
-            expect(error).to.have.been.calledOnce;
+            expect(error).to.have.been.calledOnce();
             expect(end).to.have.been.calledAfter(error);
         });
 
@@ -303,10 +303,10 @@ describe("core", () => {
             const error = spy();
             const next = spy();
             stream.onError(error).onNext(next).resume().end();
-            expect(next).to.have.not.been.called; // nextTick resume, next must have not been called
+            expect(next).to.have.not.been.called(); // nextTick resume, next must have not been called
             await nextTick();
-            expect(error).to.have.been.calledOnce; // flush always async
-            expect(next).to.have.been.calledOnce;
+            expect(error).to.have.been.calledOnce(); // flush always async
+            expect(next).to.have.been.calledOnce();
             expect(next).to.have.been.calledWithExactly(123);
             expect(error.args[0][0].message).to.be.equal("hello");
         });
@@ -321,11 +321,11 @@ describe("core", () => {
             const error = spy();
             const next = spy();
             stream.onError(error).onNext(next).resume().end();
-            expect(error).to.have.not.been.called; // async fail
-            expect(next).to.have.not.been.called; // nextTick resume, next must have not been called
+            expect(error).to.have.not.been.called(); // async fail
+            expect(next).to.have.not.been.called(); // nextTick resume, next must have not been called
             await next.waitForCall();
             expect(next).to.have.been.calledWithExactly(123);
-            expect(error).to.have.been.calledOnce;
+            expect(error).to.have.been.calledOnce();
             /**
              * at this moment stream is resumed,
              * the next element will be emitted immediately and only then the error
@@ -343,14 +343,14 @@ describe("core", () => {
             const stream = new SyncTransform(passthrough, flush);
             const [end, next, error] = [spy(), spy(), spy()];
             stream.onEnd(end).onNext(next).onError(error).resume().end();
-            expect(error).to.have.not.been.called; // flush always async
-            expect(end).to.have.not.been.called; // has some elements to emit
-            expect(next).to.have.not.been.called; // async resume
+            expect(error).to.have.not.been.called(); // flush always async
+            expect(end).to.have.not.been.called(); // has some elements to emit
+            expect(next).to.have.not.been.called(); // async resume
             await nextTick();
-            expect(error).to.have.been.calledOnce;
+            expect(error).to.have.been.calledOnce();
             expect(error.args[0][0].message).to.be.equal("hello");
-            expect(next).to.have.been.calledOnce;
-            expect(end).to.have.been.calledOnce;
+            expect(next).to.have.been.calledOnce();
+            expect(end).to.have.been.calledOnce();
             // next -> error -> end
             expect(next).to.have.been.calledBefore(error);
             expect(error).to.have.been.calledBefore(end);
@@ -365,13 +365,13 @@ describe("core", () => {
             const stream = new SyncTransform(passthrough, flush);
             const [end, next, error] = [spy(), spy(), spy()];
             stream.onEnd(end).onNext(next).onError(error).resume().end();
-            expect(error).to.have.not.been.called; // async fail
-            expect(end).to.have.not.been.called; // has some elements to emit
-            expect(next).to.have.not.been.called; // async resume
+            expect(error).to.have.not.been.called(); // async fail
+            expect(end).to.have.not.been.called(); // has some elements to emit
+            expect(next).to.have.not.been.called(); // async resume
             await end.waitForCall();
-            expect(error).to.have.been.calledOnce;
+            expect(error).to.have.been.calledOnce();
             expect(error.args[0][0].message).to.be.equal("hello");
-            expect(next).to.have.been.calledOnce;
+            expect(next).to.have.been.calledOnce();
             // next -> error -> end
             expect(next).to.have.been.calledBefore(error);
             expect(error).to.have.been.calledBefore(end);
@@ -384,15 +384,15 @@ describe("core", () => {
             const stream = new SyncTransform(passthrough, flush);
             const [next, end] = [spy(), spy()];
             stream.onNext(next).onEnd(end).end();
-            expect(next).to.have.not.been.called; // paused
-            expect(end).to.have.not.been.called;
+            expect(next).to.have.not.been.called(); // paused
+            expect(end).to.have.not.been.called();
             stream.resume();
-            expect(next).to.have.not.been.called; // async resume
-            expect(end).to.have.not.been.called;
+            expect(next).to.have.not.been.called(); // async resume
+            expect(end).to.have.not.been.called();
             await nextTick();
-            expect(next).to.have.been.calledOnce;
+            expect(next).to.have.been.calledOnce();
             expect(next).to.have.been.calledWithExactly(123);
-            expect(end).to.have.been.calledOnce;
+            expect(end).to.have.been.calledOnce();
             expect(next).to.have.been.calledBefore(end);
         });
 
@@ -404,13 +404,13 @@ describe("core", () => {
             const stream = new SyncTransform(passthrough, flush);
             const [next, end] = [spy(), spy()];
             stream.onNext(next).onEnd(end).end();
-            expect(next).to.have.not.been.called; // paused
-            expect(end).to.have.not.been.called;
+            expect(next).to.have.not.been.called(); // paused
+            expect(end).to.have.not.been.called();
             stream.resume();
-            expect(next).to.have.not.been.called; // async resume
-            expect(end).to.have.not.been.called;
+            expect(next).to.have.not.been.called(); // async resume
+            expect(end).to.have.not.been.called();
             await end.waitForCall();
-            expect(next).to.have.been.calledOnce;
+            expect(next).to.have.been.calledOnce();
             expect(next).to.have.been.calledWithExactly(123);
             expect(next).to.have.been.calledBefore(end);
         });
@@ -423,18 +423,18 @@ describe("core", () => {
             const stream = new SyncTransform(passthrough, flush);
             const [next, end, error] = [spy(), spy(), spy()];
             stream.onNext(next).onEnd(end).onError(error).end();
-            expect(next).to.have.not.been.called; // paused
-            expect(end).to.have.not.been.called;
-            expect(error).to.have.not.been.called; // flush is called on the next tick
+            expect(next).to.have.not.been.called(); // paused
+            expect(end).to.have.not.been.called();
+            expect(error).to.have.not.been.called(); // flush is called on the next tick
             stream.resume();
-            expect(error).to.have.not.been.called;
-            expect(next).to.have.not.been.called; // async resume
-            expect(end).to.have.not.been.called;
+            expect(error).to.have.not.been.called();
+            expect(next).to.have.not.been.called(); // async resume
+            expect(end).to.have.not.been.called();
             await nextTick();
-            expect(error).to.have.been.calledOnce;
-            expect(next).to.have.been.calledOnce;
+            expect(error).to.have.been.calledOnce();
+            expect(next).to.have.been.calledOnce();
             expect(next).to.have.been.calledWithExactly(123);
-            expect(end).to.have.been.calledOnce;
+            expect(end).to.have.been.calledOnce();
             // next -> error -> end; flush is always scheduled after resume
             expect(next).to.have.been.calledBefore(error);
             expect(error).to.have.been.calledBefore(end);
@@ -449,19 +449,19 @@ describe("core", () => {
             const stream = new SyncTransform(passthrough, flush);
             const [next, end, error] = [spy(), spy(), spy()];
             stream.onNext(next).onEnd(end).onError(error).end();
-            expect(next).to.have.not.been.called; // paused
-            expect(end).to.have.not.been.called;
-            expect(error).to.have.not.been.called; // async fail
+            expect(next).to.have.not.been.called(); // paused
+            expect(end).to.have.not.been.called();
+            expect(error).to.have.not.been.called(); // async fail
             stream.resume();
-            expect(error).to.have.not.been.called;
-            expect(next).to.have.not.been.called; // async resume
-            expect(end).to.have.not.been.called;
+            expect(error).to.have.not.been.called();
+            expect(next).to.have.not.been.called(); // async resume
+            expect(end).to.have.not.been.called();
             await end.waitForCall();
-            expect(error).to.have.been.calledOnce;
+            expect(error).to.have.been.calledOnce();
             expect(error.args[0][0].message).to.be.equal("hello");
-            expect(next).to.have.been.calledOnce;
+            expect(next).to.have.been.calledOnce();
             expect(next).to.have.been.calledWithExactly(123);
-            expect(end).to.have.been.calledOnce;
+            expect(end).to.have.been.calledOnce();
             // next -> error -> end
             expect(next).to.have.been.calledBefore(error);
             expect(error).to.have.been.calledBefore(end);
@@ -473,16 +473,16 @@ describe("core", () => {
             stream.onNext(next);
             stream.push(1);
             stream.push(2);
-            expect(next).to.have.not.been.called;
+            expect(next).to.have.not.been.called();
             stream.resume().pause();
             await promise.delay(10);
-            expect(next).to.have.not.been.called;
+            expect(next).to.have.not.been.called();
             stream.resume().pause().resume().pause();
             await promise.delay(10);
-            expect(next).to.have.not.been.called;
+            expect(next).to.have.not.been.called();
             stream.resume().pause().resume();
             await promise.delay(10);
-            expect(next).to.have.been.calledTwice;
+            expect(next).to.have.been.calledTwice();
             expect(next.getCall(0)).to.have.been.calledWithExactly(1);
             expect(next.getCall(1)).to.have.been.calledWithExactly(2);
         });
@@ -497,13 +497,13 @@ describe("core", () => {
                 stream.push(1);
                 stream.push(2);
                 stream.destroy();
-                expect(flush).to.have.not.been.called; // async flush
-                expect(end).to.have.not.been.called;
+                expect(flush).to.have.not.been.called(); // async flush
+                expect(end).to.have.not.been.called();
                 await nextTick();
-                expect(flush).to.have.been.calledOnce;
-                expect(end).to.have.been.calledOnce;
+                expect(flush).to.have.been.calledOnce();
+                expect(end).to.have.been.calledOnce();
                 expect(flush).to.have.been.calledBefore(end);
-                expect(next).to.have.not.been.called;
+                expect(next).to.have.not.been.called();
             });
 
             it("should disable onNext and initiate end for resumed stream", async () => {
@@ -516,13 +516,13 @@ describe("core", () => {
                 stream.push(1);
                 stream.push(2);
                 stream.destroy();
-                expect(flush).to.have.not.been.called; // async flush
-                expect(end).to.have.not.been.called;
+                expect(flush).to.have.not.been.called(); // async flush
+                expect(end).to.have.not.been.called();
                 await nextTick();
-                expect(flush).to.have.been.calledOnce;
-                expect(end).to.have.been.calledOnce;
+                expect(flush).to.have.been.calledOnce();
+                expect(end).to.have.been.calledOnce();
                 expect(flush).to.have.been.calledBefore(end);
-                expect(next).to.have.been.calledTwice; // 2 pushes
+                expect(next).to.have.been.calledTwice(); // 2 pushes
             });
 
             it("should not emit elements and stop for ended stream if destoryed while flushing", async () => {
@@ -538,7 +538,7 @@ describe("core", () => {
                 await flush.waitForCall();
                 stream.destroy();
                 await end.waitForCall();
-                expect(next).to.have.not.been.called;
+                expect(next).to.have.not.been.called();
             });
 
             it("should not emit elements and stop for resumed stream if destoryed while flushing", async () => {
@@ -553,12 +553,12 @@ describe("core", () => {
                 stream.onNext(next).onEnd(end).resume();
                 await nextTick();
                 stream.push(1);
-                expect(next).to.have.been.calledOnce;
+                expect(next).to.have.been.calledOnce();
                 stream.end();
                 await flush.waitForCall();
                 stream.destroy();
                 await end.waitForCall();
-                expect(next).to.have.been.calledOnce;
+                expect(next).to.have.been.calledOnce();
             });
         });
 
@@ -601,8 +601,8 @@ describe("core", () => {
                 s2.onEnd(end2);
                 s1.end();
                 await end2.waitForCall();
-                expect(flush1).to.have.been.calledOnce;
-                expect(flush2).to.have.been.calledOnce;
+                expect(flush1).to.have.been.calledOnce();
+                expect(flush2).to.have.been.calledOnce();
                 expect(flush2).to.have.been.calledAfter(flush1).and.calledBefore(end2);
             });
         });
@@ -626,9 +626,9 @@ describe("core", () => {
             stream.push(4);
             stream.push(5);
             stream.push(6);
-            expect(next).to.have.not.been.called;
+            expect(next).to.have.not.been.called();
             await promise.delay(50);
-            expect(next).to.have.not.been.called;
+            expect(next).to.have.not.been.called();
         });
 
         it("should emit elements after resume, but on the next tick and only after processing", async () => {
@@ -642,7 +642,7 @@ describe("core", () => {
             stream.push(5);
             stream.push(6);
             stream.resume();
-            expect(next).to.have.not.been.called;
+            expect(next).to.have.not.been.called();
             await next.waitForNCalls(6);
             stream.write(7);
             await next.waitForCall();
@@ -664,7 +664,7 @@ describe("core", () => {
             stream.push(4);
             stream.push(5);
             stream.push(6);
-            expect(next).to.have.been.calledThrice; // pushes
+            expect(next).to.have.been.calledThrice(); // pushes
             await next.waitForNCalls(3); // writes
             expect(next.getCall(0)).to.have.been.calledWithExactly(4);
             expect(next.getCall(1)).to.have.been.calledWithExactly(5);
@@ -683,7 +683,7 @@ describe("core", () => {
             stream.resume();
             await nextTick();
             stream.write(1);
-            expect(error).to.have.not.been.called; // async processing
+            expect(error).to.have.not.been.called(); // async processing
             await error.waitForCall();
             const [err] = error.args[0];
             expect(err.message).to.be.equal("cannot process 1");
@@ -700,8 +700,8 @@ describe("core", () => {
             stream.resume();
             await nextTick();
             stream.push(1);
-            expect(error).to.have.not.been.called;
-            expect(next).to.have.been.calledOnce;
+            expect(error).to.have.not.been.called();
+            expect(next).to.have.been.calledOnce();
             expect(next).to.have.been.calledWithExactly(1);
         });
 
@@ -710,9 +710,9 @@ describe("core", () => {
             const end = spy();
             stream.onEnd(end);
             stream.end();
-            expect(end).to.have.not.been.called;
+            expect(end).to.have.not.been.called();
             await nextTick();
-            expect(end).to.have.been.calledOnce;
+            expect(end).to.have.been.calledOnce();
         });
 
         it("should not end stream if it has elements to emit", () => {
@@ -720,7 +720,7 @@ describe("core", () => {
             const end = spy();
             stream.push(1);
             stream.end();
-            expect(end).to.have.not.been.called;
+            expect(end).to.have.not.been.called();
         });
 
         it("should schedule flush after resume and run them asynchronously", async () => {
@@ -729,14 +729,14 @@ describe("core", () => {
             stream.push(1);
             const [next, end] = [spy(), spy()];
             stream.onNext(next).onEnd(end).end().resume();
-            expect(end).to.have.not.been.called;
-            expect(flush).to.have.not.been.called;
-            expect(next).to.have.not.been.called;
+            expect(end).to.have.not.been.called();
+            expect(flush).to.have.not.been.called();
+            expect(next).to.have.not.been.called();
             await nextTick();
-            expect(next).to.have.been.calledOnce;
+            expect(next).to.have.been.calledOnce();
             expect(next).to.have.been.calledWithExactly(1);
-            expect(end).to.have.been.calledOnce;
-            expect(flush).to.have.been.calledOnce;
+            expect(end).to.have.been.calledOnce();
+            expect(flush).to.have.been.calledOnce();
             // next -> flush -> end
             expect(next).to.have.been.calledBefore(flush);
             expect(flush).to.have.been.calledBefore(end);
@@ -748,20 +748,20 @@ describe("core", () => {
             stream.write(1);
             const [next, end] = [spy(), spy()];
             stream.onNext(next).onEnd(end).resume();
-            expect(next).to.have.not.been.called;
-            expect(end).to.have.not.been.called;
+            expect(next).to.have.not.been.called();
+            expect(end).to.have.not.been.called();
             await next.waitForCall();
             expect(next.getCall(0)).to.have.been.calledWithExactly(1);
-            expect(end).to.have.not.been.called;
+            expect(end).to.have.not.been.called();
             stream.write(2);
             await next.waitForCall();
             expect(next.getCall(1)).to.have.been.calledWithExactly(2);
             stream.end();
-            expect(flush).to.have.not.been.called;
-            expect(end).to.have.not.been.called; // flush is async
+            expect(flush).to.have.not.been.called();
+            expect(end).to.have.not.been.called(); // flush is async
             await nextTick();
-            expect(flush).to.have.been.calledOnce;
-            expect(end).to.have.been.calledOnce;
+            expect(flush).to.have.been.calledOnce();
+            expect(end).to.have.been.calledOnce();
             expect(flush).to.have.been.calledBefore(end);
         });
 
@@ -771,10 +771,10 @@ describe("core", () => {
             const end = spy();
             stream.onEnd(end);
             stream.end();
-            expect(end).to.have.not.been.called; // flush is always async
+            expect(end).to.have.not.been.called(); // flush is always async
             await nextTick();
-            expect(end).to.have.been.calledOnce;
-            expect(flush).to.have.been.calledOnce;
+            expect(end).to.have.been.calledOnce();
+            expect(flush).to.have.been.calledOnce();
             expect(flush).to.have.been.calledBefore(end);
         });
 
@@ -788,9 +788,9 @@ describe("core", () => {
             const end = spy();
             stream.onEnd(end);
             stream.end();
-            expect(end).to.have.not.been.called; // flush is async
+            expect(end).to.have.not.been.called(); // flush is async
             await end.waitForCall();
-            expect(flush).to.have.been.calledOnce;
+            expect(flush).to.have.been.calledOnce();
             expect(flush).to.have.been.calledBefore(end);
         });
 
@@ -804,9 +804,9 @@ describe("core", () => {
             stream.onEnd(end).onNext(next);
             stream.resume();
             stream.end();
-            expect(end).to.have.not.been.called;
+            expect(end).to.have.not.been.called();
             await end.waitForCall();
-            expect(next).to.have.been.calledOnce;
+            expect(next).to.have.been.calledOnce();
             expect(next).to.have.been.calledWithExactly(123);
             expect(next).to.have.been.calledBefore(end);
         });
@@ -822,9 +822,9 @@ describe("core", () => {
             stream.onEnd(end).onNext(next);
             stream.resume();
             stream.end();
-            expect(end).to.have.not.been.called;
+            expect(end).to.have.not.been.called();
             await end.waitForCall();
-            expect(next).to.have.been.calledOnce;
+            expect(next).to.have.been.calledOnce();
             expect(next).to.have.been.calledWithExactly(123);
             expect(next).to.have.been.calledBefore(end);
         });
@@ -837,9 +837,9 @@ describe("core", () => {
             const error = spy();
             stream.onError(error);
             stream.end();
-            expect(error).not.have.not.been.called; // flush is always async
+            expect(error).not.have.not.been.called(); // flush is always async
             await nextTick();
-            expect(error).to.have.been.calledOnce;
+            expect(error).to.have.been.calledOnce();
             const [err] = error.args[0];
             expect(err.message).to.be.equal("hello");
         });
@@ -853,7 +853,7 @@ describe("core", () => {
             const error = spy();
             stream.onError(error);
             stream.end();
-            expect(error).to.have.not.been.called; // async flushing
+            expect(error).to.have.not.been.called(); // async flushing
             await error.waitForCall();
             const [err] = error.args[0];
             expect(err.message).to.be.equal("hello");
@@ -868,11 +868,11 @@ describe("core", () => {
             const end = spy();
             stream.onEnd(end).onError(error);
             stream.end();
-            expect(end).to.have.not.been.called; // flush always async
-            expect(error).to.have.not.been.called; // flush always async
+            expect(end).to.have.not.been.called(); // flush always async
+            expect(error).to.have.not.been.called(); // flush always async
             await nextTick();
-            expect(end).to.have.been.calledOnce;
-            expect(error).to.have.been.calledOnce;
+            expect(end).to.have.been.calledOnce();
+            expect(error).to.have.been.calledOnce();
             // error -> end
             expect(end).to.have.been.calledAfter(error);
         });
@@ -887,10 +887,10 @@ describe("core", () => {
             const end = spy();
             stream.onEnd(end).onError(error);
             stream.end();
-            expect(end).to.have.not.been.called; // async
-            expect(error).to.have.not.been.called; // async
+            expect(end).to.have.not.been.called(); // async
+            expect(error).to.have.not.been.called(); // async
             await end.waitForCall();
-            expect(error).to.have.been.calledOnce;
+            expect(error).to.have.been.calledOnce();
             expect(end).to.have.been.calledAfter(error);
         });
 
@@ -903,10 +903,10 @@ describe("core", () => {
             const error = spy();
             const next = spy();
             stream.onError(error).onNext(next).resume().end();
-            expect(next).to.have.not.been.called; // nextTick resume, next must have not been called
+            expect(next).to.have.not.been.called(); // nextTick resume, next must have not been called
             await nextTick();
-            expect(error).to.have.been.calledOnce; // flush always async
-            expect(next).to.have.been.calledOnce;
+            expect(error).to.have.been.calledOnce(); // flush always async
+            expect(next).to.have.been.calledOnce();
             expect(next).to.have.been.calledWithExactly(123);
             expect(error.args[0][0].message).to.be.equal("hello");
         });
@@ -921,11 +921,11 @@ describe("core", () => {
             const error = spy();
             const next = spy();
             stream.onError(error).onNext(next).resume().end();
-            expect(error).to.have.not.been.called; // async fail
-            expect(next).to.have.not.been.called; // nextTick resume, next must have not been called
+            expect(error).to.have.not.been.called(); // async fail
+            expect(next).to.have.not.been.called(); // nextTick resume, next must have not been called
             await next.waitForCall();
             expect(next).to.have.been.calledWithExactly(123);
-            expect(error).to.have.been.calledOnce;
+            expect(error).to.have.been.calledOnce();
             /**
              * at this moment stream is resumed,
              * the next element will be emitted immediately and only then the error
@@ -943,14 +943,14 @@ describe("core", () => {
             const stream = new AsyncTransform(passthrough, flush);
             const [end, next, error] = [spy(), spy(), spy()];
             stream.onEnd(end).onNext(next).onError(error).resume().end();
-            expect(error).to.have.not.been.called; // flush always async
-            expect(end).to.have.not.been.called; // has some elements to emit
-            expect(next).to.have.not.been.called; // async resume
+            expect(error).to.have.not.been.called(); // flush always async
+            expect(end).to.have.not.been.called(); // has some elements to emit
+            expect(next).to.have.not.been.called(); // async resume
             await nextTick();
-            expect(error).to.have.been.calledOnce;
+            expect(error).to.have.been.calledOnce();
             expect(error.args[0][0].message).to.be.equal("hello");
-            expect(next).to.have.been.calledOnce;
-            expect(end).to.have.been.calledOnce;
+            expect(next).to.have.been.calledOnce();
+            expect(end).to.have.been.calledOnce();
             // next -> error -> end
             expect(next).to.have.been.calledBefore(error);
             expect(error).to.have.been.calledBefore(end);
@@ -965,13 +965,13 @@ describe("core", () => {
             const stream = new AsyncTransform(passthrough, flush);
             const [end, next, error] = [spy(), spy(), spy()];
             stream.onEnd(end).onNext(next).onError(error).resume().end();
-            expect(error).to.have.not.been.called; // async fail
-            expect(end).to.have.not.been.called; // has some elements to emit
-            expect(next).to.have.not.been.called; // async resume
+            expect(error).to.have.not.been.called(); // async fail
+            expect(end).to.have.not.been.called(); // has some elements to emit
+            expect(next).to.have.not.been.called(); // async resume
             await end.waitForCall();
-            expect(error).to.have.been.calledOnce;
+            expect(error).to.have.been.calledOnce();
             expect(error.args[0][0].message).to.be.equal("hello");
-            expect(next).to.have.been.calledOnce;
+            expect(next).to.have.been.calledOnce();
             // next -> error -> end
             expect(next).to.have.been.calledBefore(error);
             expect(error).to.have.been.calledBefore(end);
@@ -984,15 +984,15 @@ describe("core", () => {
             const stream = new AsyncTransform(passthrough, flush);
             const [next, end] = [spy(), spy()];
             stream.onNext(next).onEnd(end).end();
-            expect(next).to.have.not.been.called; // paused
-            expect(end).to.have.not.been.called;
+            expect(next).to.have.not.been.called(); // paused
+            expect(end).to.have.not.been.called();
             stream.resume();
-            expect(next).to.have.not.been.called; // async resume
-            expect(end).to.have.not.been.called;
+            expect(next).to.have.not.been.called(); // async resume
+            expect(end).to.have.not.been.called();
             await nextTick();
-            expect(next).to.have.been.calledOnce;
+            expect(next).to.have.been.calledOnce();
             expect(next).to.have.been.calledWithExactly(123);
-            expect(end).to.have.been.calledOnce;
+            expect(end).to.have.been.calledOnce();
             expect(next).to.have.been.calledBefore(end);
         });
 
@@ -1004,13 +1004,13 @@ describe("core", () => {
             const stream = new AsyncTransform(passthrough, flush);
             const [next, end] = [spy(), spy()];
             stream.onNext(next).onEnd(end).end();
-            expect(next).to.have.not.been.called; // paused
-            expect(end).to.have.not.been.called;
+            expect(next).to.have.not.been.called(); // paused
+            expect(end).to.have.not.been.called();
             stream.resume();
-            expect(next).to.have.not.been.called; // async resume
-            expect(end).to.have.not.been.called;
+            expect(next).to.have.not.been.called(); // async resume
+            expect(end).to.have.not.been.called();
             await end.waitForCall();
-            expect(next).to.have.been.calledOnce;
+            expect(next).to.have.been.calledOnce();
             expect(next).to.have.been.calledWithExactly(123);
             expect(next).to.have.been.calledBefore(end);
         });
@@ -1023,18 +1023,18 @@ describe("core", () => {
             const stream = new AsyncTransform(passthrough, flush);
             const [next, end, error] = [spy(), spy(), spy()];
             stream.onNext(next).onEnd(end).onError(error).end();
-            expect(next).to.have.not.been.called; // paused
-            expect(end).to.have.not.been.called;
-            expect(error).to.have.not.been.called; // flush is called on the next tick
+            expect(next).to.have.not.been.called(); // paused
+            expect(end).to.have.not.been.called();
+            expect(error).to.have.not.been.called(); // flush is called on the next tick
             stream.resume();
-            expect(error).to.have.not.been.called;
-            expect(next).to.have.not.been.called; // async resume
-            expect(end).to.have.not.been.called;
+            expect(error).to.have.not.been.called();
+            expect(next).to.have.not.been.called(); // async resume
+            expect(end).to.have.not.been.called();
             await nextTick();
-            expect(error).to.have.been.calledOnce;
-            expect(next).to.have.been.calledOnce;
+            expect(error).to.have.been.calledOnce();
+            expect(next).to.have.been.calledOnce();
             expect(next).to.have.been.calledWithExactly(123);
-            expect(end).to.have.been.calledOnce;
+            expect(end).to.have.been.calledOnce();
             // next -> error -> end; flush is always scheduled after resume
             expect(next).to.have.been.calledBefore(error);
             expect(error).to.have.been.calledBefore(end);
@@ -1049,19 +1049,19 @@ describe("core", () => {
             const stream = new AsyncTransform(passthrough, flush);
             const [next, end, error] = [spy(), spy(), spy()];
             stream.onNext(next).onEnd(end).onError(error).end();
-            expect(next).to.have.not.been.called; // paused
-            expect(end).to.have.not.been.called;
-            expect(error).to.have.not.been.called; // async fail
+            expect(next).to.have.not.been.called(); // paused
+            expect(end).to.have.not.been.called();
+            expect(error).to.have.not.been.called(); // async fail
             stream.resume();
-            expect(error).to.have.not.been.called;
-            expect(next).to.have.not.been.called; // async resume
-            expect(end).to.have.not.been.called;
+            expect(error).to.have.not.been.called();
+            expect(next).to.have.not.been.called(); // async resume
+            expect(end).to.have.not.been.called();
             await end.waitForCall();
-            expect(error).to.have.been.calledOnce;
+            expect(error).to.have.been.calledOnce();
             expect(error.args[0][0].message).to.be.equal("hello");
-            expect(next).to.have.been.calledOnce;
+            expect(next).to.have.been.calledOnce();
             expect(next).to.have.been.calledWithExactly(123);
-            expect(end).to.have.been.calledOnce;
+            expect(end).to.have.been.calledOnce();
             // next -> error -> end
             expect(next).to.have.been.calledBefore(error);
             expect(error).to.have.been.calledBefore(end);
@@ -1073,16 +1073,16 @@ describe("core", () => {
             stream.onNext(next);
             stream.push(1);
             stream.push(2);
-            expect(next).to.have.not.been.called;
+            expect(next).to.have.not.been.called();
             stream.resume().pause();
             await promise.delay(10);
-            expect(next).to.have.not.been.called;
+            expect(next).to.have.not.been.called();
             stream.resume().pause().resume().pause();
             await promise.delay(10);
-            expect(next).to.have.not.been.called;
+            expect(next).to.have.not.been.called();
             stream.resume().pause().resume();
             await promise.delay(10);
-            expect(next).to.have.been.calledTwice;
+            expect(next).to.have.been.calledTwice();
             expect(next.getCall(0)).to.have.been.calledWithExactly(1);
             expect(next.getCall(1)).to.have.been.calledWithExactly(2);
         });
@@ -1097,13 +1097,13 @@ describe("core", () => {
                 stream.push(1);
                 stream.push(2);
                 stream.destroy();
-                expect(flush).to.have.not.been.called; // async flush
-                expect(end).to.have.not.been.called;
+                expect(flush).to.have.not.been.called(); // async flush
+                expect(end).to.have.not.been.called();
                 await nextTick();
-                expect(flush).to.have.been.calledOnce;
-                expect(end).to.have.been.calledOnce;
+                expect(flush).to.have.been.calledOnce();
+                expect(end).to.have.been.calledOnce();
                 expect(flush).to.have.been.calledBefore(end);
-                expect(next).to.have.not.been.called;
+                expect(next).to.have.not.been.called();
             });
 
             it("should disable onNext and initiate end for resumed stream", async () => {
@@ -1116,13 +1116,13 @@ describe("core", () => {
                 stream.push(1);
                 stream.push(2);
                 stream.destroy();
-                expect(flush).to.have.not.been.called; // async flush
-                expect(end).to.have.not.been.called;
+                expect(flush).to.have.not.been.called(); // async flush
+                expect(end).to.have.not.been.called();
                 await nextTick();
-                expect(flush).to.have.been.calledOnce;
-                expect(end).to.have.been.calledOnce;
+                expect(flush).to.have.been.calledOnce();
+                expect(end).to.have.been.calledOnce();
                 expect(flush).to.have.been.calledBefore(end);
-                expect(next).to.have.been.calledTwice; // 2 pushes
+                expect(next).to.have.been.calledTwice(); // 2 pushes
             });
 
             it("should stop processing if destoryed, not emit processed element but wait", async () => {
@@ -1147,17 +1147,17 @@ describe("core", () => {
                 await next.waitForCall(); // -1
                 await promise.delay(10);
                 stream.destroy(); // destroy while processing, 2 must not be emitted, 3 must not be processed at all
-                expect(flush).to.have.not.been.called; // async flush
-                expect(end).to.have.not.been.called;
+                expect(flush).to.have.not.been.called(); // async flush
+                expect(end).to.have.not.been.called();
                 await end.waitForCall();
-                expect(flush).to.have.been.calledOnce;
-                expect(end).to.have.been.calledOnce;
+                expect(flush).to.have.been.calledOnce();
+                expect(end).to.have.been.calledOnce();
                 expect(flush).to.have.been.calledBefore(end);
-                expect(next).to.have.been.calledOnce;
+                expect(next).to.have.been.calledOnce();
                 expect(next).to.have.been.calledWithExactly(-1);
-                expect(afterLastPush).to.have.been.calledOnce;
+                expect(afterLastPush).to.have.been.calledOnce();
                 expect(afterLastPush).to.have.been.calledBefore(flush);
-                expect(processed).to.have.been.calledTwice;
+                expect(processed).to.have.been.calledTwice();
                 expect(processed.getCall(0)).to.have.been.calledWithExactly(1);
                 expect(processed.getCall(1)).to.have.been.calledWithExactly(2);
             });
@@ -1175,7 +1175,7 @@ describe("core", () => {
                 await flush.waitForCall();
                 stream.destroy();
                 await end.waitForCall();
-                expect(next).to.have.not.been.called;
+                expect(next).to.have.not.been.called();
             });
 
             it("should not emit elements and stop for resumed stream if destoryed while flushing", async () => {
@@ -1190,12 +1190,12 @@ describe("core", () => {
                 stream.onNext(next).onEnd(end).resume();
                 await nextTick();
                 stream.push(1);
-                expect(next).to.have.been.calledOnce;
+                expect(next).to.have.been.calledOnce();
                 stream.end();
                 await flush.waitForCall();
                 stream.destroy();
                 await end.waitForCall();
-                expect(next).to.have.been.calledOnce;
+                expect(next).to.have.been.calledOnce();
             });
         });
 
@@ -1238,8 +1238,8 @@ describe("core", () => {
                 s2.onEnd(end2);
                 s1.end();
                 await end2.waitForCall();
-                expect(flush1).to.have.been.calledOnce;
-                expect(flush2).to.have.been.calledOnce;
+                expect(flush1).to.have.been.calledOnce();
+                expect(flush2).to.have.been.calledOnce();
                 expect(flush2).to.have.been.calledAfter(flush1).and.calledBefore(end2);
             });
         });
@@ -1252,15 +1252,15 @@ describe("core", () => {
             const end = spy();
             stream.on("data", data).once("end", end);
             stream.write(1);
-            expect(data).to.have.not.been.called; // paused by default
+            expect(data).to.have.not.been.called(); // paused by default
             stream.resume();
             await nextTick();
-            expect(data).to.have.been.calledOnce;
+            expect(data).to.have.been.calledOnce();
             expect(data).to.have.been.calledWithExactly(1);
             stream.end();
-            expect(end).to.have.not.been.called; // async
+            expect(end).to.have.not.been.called(); // async
             await nextTick();
-            expect(end).to.have.been.called;
+            expect(end).to.have.been.called();
         });
 
         it("should create a passthrough stream with flush function", async () => {
@@ -1270,16 +1270,16 @@ describe("core", () => {
             const end = spy();
             stream.on("data", data).once("end", end);
             stream.write(1);
-            expect(data).to.have.not.been.called; // paused by default
+            expect(data).to.have.not.been.called(); // paused by default
             stream.resume();
             await nextTick();
-            expect(data).to.have.been.calledOnce;
+            expect(data).to.have.been.calledOnce();
             expect(data).to.have.been.calledWithExactly(1);
             stream.end();
-            expect(end).to.have.not.been.called; // async
+            expect(end).to.have.not.been.called(); // async
             await nextTick();
-            expect(end).to.have.been.calledOnce;
-            expect(flush).to.have.been.calledOnce;
+            expect(end).to.have.been.calledOnce();
+            expect(flush).to.have.been.calledOnce();
             expect(flush).to.have.been.calledBefore(end);
         });
 
@@ -1296,16 +1296,16 @@ describe("core", () => {
             const [data, end] = [spy(), spy()];
             stream.on("data", data).once("end", end).resume();
             await nextTick();
-            expect(data).to.have.been.calledTwice;
+            expect(data).to.have.been.calledTwice();
             expect(data.getCall(0)).to.have.been.calledWithExactly(1);
             expect(data.getCall(1)).to.have.been.calledWithExactly(2);
-            expect(end).to.have.not.been.called;
+            expect(end).to.have.not.been.called();
             stream.write(3);
-            expect(data).to.have.been.calledThrice;
+            expect(data).to.have.been.calledThrice();
             expect(data.getCall(2)).to.have.been.calledWithExactly(-3);
             stream.end();
             await end.waitForCall();
-            expect(flush).to.have.been.calledOnce;
+            expect(flush).to.have.been.calledOnce();
             expect(flush).to.have.been.calledBefore(end);
         });
 
@@ -1325,14 +1325,14 @@ describe("core", () => {
             await data.waitForNCalls(2);
             expect(data.getCall(0)).to.have.been.calledWithExactly(1);
             expect(data.getCall(1)).to.have.been.calledWithExactly(2);
-            expect(end).to.have.not.been.called;
+            expect(end).to.have.not.been.called();
             stream.write(3);
-            expect(data).to.have.been.calledTwice;
+            expect(data).to.have.been.calledTwice();
             await data.waitForCall();
             expect(data.getCall(2)).to.have.been.calledWithExactly(-3);
             stream.end();
             await end.waitForCall();
-            expect(flush).to.have.been.calledOnce;
+            expect(flush).to.have.been.calledOnce();
             expect(flush).to.have.been.calledBefore(end);
         });
 
@@ -1346,9 +1346,9 @@ describe("core", () => {
             stream.push(4);
             stream.push(5);
             stream.push(6);
-            expect(data).to.have.not.been.called;
+            expect(data).to.have.not.been.called();
             await promise.delay(100);
-            expect(data).to.have.not.been.called;
+            expect(data).to.have.not.been.called();
         });
 
         it("should emit data after resume, but on the next tick", async () => {
@@ -1362,7 +1362,7 @@ describe("core", () => {
             stream.push(5);
             stream.push(6);
             stream.resume();
-            expect(data).to.have.not.been.called;
+            expect(data).to.have.not.been.called();
             await nextTick();
             expect(data).to.have.callCount(6);
         });
@@ -1373,34 +1373,34 @@ describe("core", () => {
             stream.on("data", data);
             stream.resume();
             stream.push(1);
-            expect(data).to.have.not.been.called;
+            expect(data).to.have.not.been.called();
             await nextTick();
-            expect(data).to.have.been.calledOnce;
+            expect(data).to.have.been.calledOnce();
             stream.pause();
             stream.push(1);
-            expect(data).to.have.been.calledOnce;
+            expect(data).to.have.been.calledOnce();
             await promise.delay(10);
-            expect(data).to.have.been.calledOnce;
+            expect(data).to.have.been.calledOnce();
             stream.resume();
-            expect(data).to.have.been.calledOnce;
+            expect(data).to.have.been.calledOnce();
             await nextTick();
-            expect(data).to.have.been.calledTwice;
+            expect(data).to.have.been.calledTwice();
         });
 
         it("should create stream from array", async () => {
             const stream = core.create([1, 2, 3, 4, 5]);
             const [data, end] = [spy(), spy()];
             stream.on("data", data).once("end", end);
-            expect(data).to.have.not.been.called;
+            expect(data).to.have.not.been.called();
             await promise.delay(100);
-            expect(data).to.have.not.been.called;
+            expect(data).to.have.not.been.called();
             stream.resume();
             await nextTick();
             expect(data).to.have.callCount(5);
             for (let i = 0; i < 5; ++i) {
                 expect(data.getCall(i)).to.have.been.calledWithExactly(i + 1);
             }
-            expect(end).to.have.been.calledOnce;
+            expect(end).to.have.been.calledOnce();
         });
 
         describe("api", () => {
@@ -1415,7 +1415,7 @@ describe("core", () => {
                     a.resume();
                     await nextTick();
                     a.write(1);
-                    expect(data).to.have.been.calledOnce;
+                    expect(data).to.have.been.calledOnce();
                     expect(data).to.have.been.calledWithExactly(2);
                 });
 
@@ -1428,10 +1428,10 @@ describe("core", () => {
                     const end = spy();
                     a.on("end", end);
                     a.end();
-                    expect(flush).to.have.not.been.called;
-                    expect(end).to.have.not.been.called;
+                    expect(flush).to.have.not.been.called();
+                    expect(end).to.have.not.been.called();
                     await end.waitForCall();
-                    expect(flush).to.have.been.calledOnce;
+                    expect(flush).to.have.been.calledOnce();
                     expect(flush).to.have.been.calledBefore(end);
                 });
 
@@ -1449,17 +1449,17 @@ describe("core", () => {
                     const [data, error, end] = [spy(), spy(), spy()];
                     a.on("data", data).on("error", error).on("end", end);
                     a.write(1);
-                    expect(error).to.have.been.calledOnce;
-                    expect(end).to.have.not.been.called;
-                    expect(data).to.have.not.been.called;
+                    expect(error).to.have.been.calledOnce();
+                    expect(end).to.have.not.been.called();
+                    expect(data).to.have.not.been.called();
                     a.write(2);
-                    expect(error).to.have.been.calledOnce;
-                    expect(end).to.have.not.been.called;
-                    expect(data).to.have.been.calledOnce;
+                    expect(error).to.have.been.calledOnce();
+                    expect(end).to.have.not.been.called();
+                    expect(data).to.have.been.calledOnce();
                     a.write(1);
-                    expect(error).to.have.been.calledTwice;
-                    expect(end).to.have.not.been.called;
-                    expect(data).to.have.been.calledOnce;
+                    expect(error).to.have.been.calledTwice();
+                    expect(end).to.have.not.been.called();
+                    expect(data).to.have.been.calledOnce();
                     a.end();
                     await end.waitForCall();
                 });
@@ -1475,7 +1475,7 @@ describe("core", () => {
                     a.on("error", error).on("end", end);
                     a.end();
                     await end.waitForCall();
-                    expect(error).to.have.been.calledOnce;
+                    expect(error).to.have.been.calledOnce();
                     expect(error).to.have.been.calledBefore(end);
                 });
 
@@ -1516,9 +1516,9 @@ describe("core", () => {
                     a.write(4);
                     a.end();
                     await end.waitForCall();
-                    expect(error).to.have.been.calledThrice;
+                    expect(error).to.have.been.calledThrice();
 
-                    expect(data).to.have.been.calledThrice;
+                    expect(data).to.have.been.calledThrice();
                     expect(data.getCall(0)).to.have.been.calledWithExactly(5);
                     expect(data.getCall(1)).to.have.been.calledWithExactly(6);
                     expect(data.getCall(2)).to.have.been.calledWithExactly(7);
@@ -1542,7 +1542,7 @@ describe("core", () => {
                     a.on("error", error).on("end", end);
                     a.end();
                     await end.waitForCall();
-                    expect(error).to.have.been.calledTwice;
+                    expect(error).to.have.been.calledTwice();
                     expect(flush1).to.have.been.calledBefore(flush2);
                     expect(flush2).to.have.been.calledBefore(end);
                 });
@@ -1566,11 +1566,11 @@ describe("core", () => {
                     const [data, end] = [spy(), spy()];
                     a.on("data", data).once("end", end);
                     a.write(1);
-                    expect(data).to.have.been.calledOnce;
+                    expect(data).to.have.been.calledOnce();
                     expect(data).to.have.been.calledWithExactly(8);
-                    expect(f1).to.have.not.been.called;
-                    expect(f2).to.have.not.been.called;
-                    expect(f3).to.have.not.been.called;
+                    expect(f1).to.have.not.been.called();
+                    expect(f2).to.have.not.been.called();
+                    expect(f3).to.have.not.been.called();
                     a.end();
                     await end.waitForCall();
                     // f1 -> f2 -> f3 -> end
@@ -1591,7 +1591,7 @@ describe("core", () => {
                     a.resume();
                     await nextTick();
                     a.write(1);
-                    expect(data).to.have.not.been.called;
+                    expect(data).to.have.not.been.called();
                     await data.waitForCall();
                     expect(data).to.have.been.calledWithExactly(2);
                 });
@@ -1605,10 +1605,10 @@ describe("core", () => {
                     const end = spy();
                     a.on("end", end);
                     a.end();
-                    expect(flush).to.have.not.been.called;
-                    expect(end).to.have.not.been.called;
+                    expect(flush).to.have.not.been.called();
+                    expect(end).to.have.not.been.called();
                     await end.waitForCall();
-                    expect(flush).to.have.been.calledOnce;
+                    expect(flush).to.have.been.calledOnce();
                     expect(flush).to.have.been.calledBefore(end);
                 });
 
@@ -1626,18 +1626,18 @@ describe("core", () => {
                     const [data, error, end] = [spy(), spy(), spy()];
                     a.on("data", data).on("error", error).on("end", end);
                     a.write(1);
-                    expect(error).to.have.not.been.called;
+                    expect(error).to.have.not.been.called();
                     await error.waitForCall();
-                    expect(end).to.have.not.been.called;
-                    expect(data).to.have.not.been.called;
+                    expect(end).to.have.not.been.called();
+                    expect(data).to.have.not.been.called();
                     a.write(2);
                     await data.waitForCall();
-                    expect(error).to.have.been.calledOnce;
-                    expect(end).to.have.not.been.called;
+                    expect(error).to.have.been.calledOnce();
+                    expect(end).to.have.not.been.called();
                     a.write(1);
                     await error.waitForCall();
-                    expect(end).to.have.not.been.called;
-                    expect(data).to.have.been.calledOnce;
+                    expect(end).to.have.not.been.called();
+                    expect(data).to.have.been.calledOnce();
                     a.end();
                     await end.waitForCall();
                 });
@@ -1653,7 +1653,7 @@ describe("core", () => {
                     a.on("error", error).on("end", end);
                     a.end();
                     await end.waitForCall();
-                    expect(error).to.have.been.calledOnce;
+                    expect(error).to.have.been.calledOnce();
                     expect(error).to.have.been.calledBefore(end);
                 });
 
@@ -1697,9 +1697,9 @@ describe("core", () => {
                     a.write(4);
                     a.end();
                     await end.waitForCall();
-                    expect(error).to.have.been.calledThrice;
+                    expect(error).to.have.been.calledThrice();
 
-                    expect(data).to.have.been.calledThrice;
+                    expect(data).to.have.been.calledThrice();
                     expect(data.getCall(0)).to.have.been.calledWithExactly(5);
                     expect(data.getCall(1)).to.have.been.calledWithExactly(6);
                     expect(data.getCall(2)).to.have.been.calledWithExactly(7);
@@ -1723,7 +1723,7 @@ describe("core", () => {
                     a.on("error", error).on("end", end);
                     a.end();
                     await end.waitForCall();
-                    expect(error).to.have.been.calledTwice;
+                    expect(error).to.have.been.calledTwice();
                     expect(flush1).to.have.been.calledBefore(flush2);
                     expect(flush2).to.have.been.calledBefore(end);
                 });
@@ -1750,12 +1750,12 @@ describe("core", () => {
                     const [data, end] = [spy(), spy()];
                     a.on("data", data).once("end", end);
                     a.write(1);
-                    expect(data).to.have.not.been.called;
+                    expect(data).to.have.not.been.called();
                     await data.waitForCall();
                     expect(data).to.have.been.calledWithExactly(8);
-                    expect(f1).to.have.not.been.called;
-                    expect(f2).to.have.not.been.called;
-                    expect(f3).to.have.not.been.called;
+                    expect(f1).to.have.not.been.called();
+                    expect(f2).to.have.not.been.called();
+                    expect(f3).to.have.not.been.called();
                     a.end();
                     await end.waitForCall();
                     // f1 -> f2 -> f3 -> end
@@ -1779,7 +1779,7 @@ describe("core", () => {
                     a.on("data", data).once("end", end);
                     a.write(1);
                     a.end();
-                    expect(data).to.have.not.been.called;
+                    expect(data).to.have.not.been.called();
                     await data.waitForCall();
                     expect(data).to.have.been.calledWithExactly(2);
                     await end.waitForCall();
@@ -1799,9 +1799,9 @@ describe("core", () => {
                     a.on("data", data).once("end", end);
                     a.write(1);
                     a.end();
-                    expect(data).to.have.been.calledOnce;
+                    expect(data).to.have.been.calledOnce();
                     expect(data).to.have.been.calledWithExactly(2);
-                    expect(end).to.have.not.been.called;
+                    expect(end).to.have.not.been.called();
                     await end.waitForCall();
                     expect(data).to.have.been.calledBefore(flush);
                     expect(flush).to.have.been.calledBefore(end);
@@ -1845,7 +1845,7 @@ describe("core", () => {
                     const cb = spy();
                     const cb2 = spy();
                     core.create([1, 2, 3, 4, 5]).forEach(cb).forEach(cb2).resume();
-                    expect(cb2).to.have.not.been.called;
+                    expect(cb2).to.have.not.been.called();
                 });
 
                 it("should passthrough elements if passthrough = true", async () => {
@@ -1886,7 +1886,7 @@ describe("core", () => {
                         fEnd();
                     }, { wait: false }).once("end", end);
                     await end.waitForCall();
-                    expect(fEnd).to.have.not.been.called;
+                    expect(fEnd).to.have.not.been.called();
                     await fEnd.waitForCall();
                 });
             });
@@ -1931,9 +1931,9 @@ describe("core", () => {
                     await end.waitForCall();
                     const h = spy();
                     c.toArray(h);
-                    expect(h).to.have.not.been.called;
+                    expect(h).to.have.not.been.called();
                     await adone.promise.delay(2);
-                    expect(h).to.have.been.calledOnce;
+                    expect(h).to.have.been.calledOnce();
                 });
             });
 
@@ -2071,7 +2071,7 @@ describe("core", () => {
                     c.resume();
                     await nextTick();
                     c.write(1);
-                    expect(data).to.have.been.calledOnce;
+                    expect(data).to.have.been.calledOnce();
                     expect(data).to.have.been.calledWithExactly(2);
                 });
 
@@ -2082,7 +2082,7 @@ describe("core", () => {
                     c.resume();
                     await nextTick();
                     c.write(1);
-                    expect(data).to.have.not.been.called;
+                    expect(data).to.have.not.been.called();
                     await data.waitForCall();
                     expect(data).to.have.been.calledWithExactly(2);
                 });
@@ -2112,7 +2112,7 @@ describe("core", () => {
                     c.resume();
                     await nextTick();
                     c.write(2);
-                    expect(data).to.have.been.calledOnce;
+                    expect(data).to.have.been.calledOnce();
                     expect(data).to.have.been.calledWithExactly(4);
                 });
 
@@ -2123,7 +2123,7 @@ describe("core", () => {
                     c.resume();
                     await nextTick();
                     c.write(2);
-                    expect(data).to.have.not.been.called;
+                    expect(data).to.have.not.been.called();
                     await data.waitForCall();
                     expect(data).to.have.been.calledWithExactly(4);
                 });
@@ -2135,7 +2135,7 @@ describe("core", () => {
                     c.resume();
                     await nextTick();
                     c.write(2);
-                    expect(data).to.have.not.been.called;
+                    expect(data).to.have.not.been.called();
                     await data.waitForCall();
                     expect(data).to.have.been.calledWithExactly(4);
                 });
@@ -2147,7 +2147,7 @@ describe("core", () => {
                     c.resume();
                     await nextTick();
                     c.write(2);
-                    expect(data).to.have.not.been.called;
+                    expect(data).to.have.not.been.called();
                     await data.waitForCall();
                     expect(data).to.have.been.calledWithExactly(4);
                 });
@@ -2211,7 +2211,7 @@ describe("core", () => {
                     c.resume();
                     await nextTick();
                     c.write(1);
-                    expect(data).to.have.been.calledOnce;
+                    expect(data).to.have.been.calledOnce();
                 });
 
                 it("should create an sync transform if callback is async", async () => {
@@ -2221,7 +2221,7 @@ describe("core", () => {
                     c.resume();
                     await nextTick();
                     c.write(1);
-                    expect(data).to.have.not.been.called;
+                    expect(data).to.have.not.been.called();
                     await data.waitForCall();
                 });
             });
@@ -2232,7 +2232,7 @@ describe("core", () => {
                     const end = spy();
                     core.create([1, 2, 3]).done(cb).resume().once("end", end);
                     await end.waitForCall();
-                    expect(cb).to.have.been.calledOnce;
+                    expect(cb).to.have.been.calledOnce();
                     expect(cb).to.have.been.calledBefore(end);
                 });
 
@@ -2241,7 +2241,7 @@ describe("core", () => {
                     const end = spy();
                     core.create([1, 2, 3]).done(cb).once("end", end);
                     await end.waitForCall();
-                    expect(cb).to.have.been.calledOnce;
+                    expect(cb).to.have.been.calledOnce();
                     expect(cb).to.have.been.calledBefore(end);
                 });
 
@@ -2251,9 +2251,9 @@ describe("core", () => {
                     const end = spy();
                     core.create([1, 2, 3]).done(cb).toArray(arr).resume().once("end", end);
                     await end.waitForCall();
-                    expect(cb).to.have.been.calledOnce;
+                    expect(cb).to.have.been.calledOnce();
                     expect(cb).to.have.been.calledBefore(end);
-                    expect(arr).to.have.been.calledOnce;
+                    expect(arr).to.have.been.calledOnce();
                     expect(arr).to.have.been.calledAfter(cb).and.calledBefore(end);
                     expect(arr).to.have.been.calledWithExactly([]);
                 });
@@ -2264,9 +2264,9 @@ describe("core", () => {
                     const end = spy();
                     core.create([1, 2, 3]).done(cb, { passthrough: true }).toArray(arr).resume().once("end", end);
                     await end.waitForCall();
-                    expect(cb).to.have.been.calledOnce;
+                    expect(cb).to.have.been.calledOnce();
                     expect(cb).to.have.been.calledBefore(end);
-                    expect(arr).to.have.been.calledOnce;
+                    expect(arr).to.have.been.calledOnce();
                     expect(arr).to.have.been.calledAfter(cb).and.calledBefore(end);
                     expect(arr).to.have.been.calledWithExactly([1, 2, 3]);
                 });
@@ -2317,7 +2317,7 @@ describe("core", () => {
                     const clear = spy(Set.prototype, "clear");
                     a.unique();
                     await a;
-                    expect(clear).to.have.been.called;
+                    expect(clear).to.have.been.called();
                 });
             });
 

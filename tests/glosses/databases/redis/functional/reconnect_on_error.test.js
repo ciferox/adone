@@ -25,7 +25,7 @@ describe("database", "redis", "reconnectOnError", { skip: check }, () => {
         checkError(await assert.throws(async () => {
             await redis.set("foo");
         }));
-        expect(checkError).to.have.been.calledTwice;
+        expect(checkError).to.have.been.calledTwice();
     });
 
     it("should not reconnect if reconnectOnError returns false", async () => {

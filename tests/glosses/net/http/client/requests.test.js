@@ -54,8 +54,8 @@ describe("net", "http", "client", "requests", () => {
         const rejectSpy = spy();
 
         const finish = function () {
-            expect(resolveSpy).not.to.have.been.called;
-            expect(rejectSpy).to.have.been.calledOnce;
+            expect(resolveSpy).not.to.have.been.called();
+            expect(rejectSpy).to.have.been.calledOnce();
             const reason = rejectSpy.getCall(0).args[0];
             expect(reason.code).to.be.equal("ENOTFOUND");
             expect(reason.config.method).to.be.equal("get");
@@ -82,8 +82,8 @@ describe("net", "http", "client", "requests", () => {
                 return status !== 500;
             }
         }).then(resolveSpy, rejectSpy);
-        expect(resolveSpy).not.to.have.been.called;
-        expect(rejectSpy).to.have.been.calledOnce;
+        expect(resolveSpy).not.to.have.been.called();
+        expect(rejectSpy).to.have.been.calledOnce();
         const reason = rejectSpy.getCall(0).args[0];
         expect(reason instanceof Error).to.be.true();
         expect(reason.message).to.be.equal("Request failed with status code 500");
@@ -105,8 +105,8 @@ describe("net", "http", "client", "requests", () => {
                 return status === 500;
             }
         }).then(resolveSpy, rejectSpy);
-        expect(resolveSpy).to.have.been.calledOnce;
-        expect(rejectSpy).not.to.have.been.called;
+        expect(resolveSpy).to.have.been.calledOnce();
+        expect(rejectSpy).not.to.have.been.called();
     });
 
     // https://github.com/mzabriskie/axios/issues/378

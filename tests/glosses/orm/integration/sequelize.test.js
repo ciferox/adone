@@ -847,20 +847,20 @@ describe("Sequelize", function () {
             instance.custom;
             instance.override;
 
-            expect(defaultGetterMethod).to.have.been.calledOnce;
-            expect(customGetterMethod).to.have.been.calledOnce;
+            expect(defaultGetterMethod).to.have.been.calledOnce();
+            expect(customGetterMethod).to.have.been.calledOnce();
             expect(overrideGetterMethod.callCount).to.be.eql(0);
-            expect(customOverrideGetterMethod).to.have.been.calledOnce;
+            expect(customOverrideGetterMethod).to.have.been.calledOnce();
 
             // Call Setters
             instance.default = "test";
             instance.custom = "test";
             instance.override = "test";
 
-            expect(defaultSetterMethod).to.have.been.calledOnce;
-            expect(customSetterMethod).to.have.been.calledOnce;
+            expect(defaultSetterMethod).to.have.been.calledOnce();
+            expect(customSetterMethod).to.have.been.calledOnce();
             expect(overrideSetterMethod.callCount).to.be.eql(0);
-            expect(customOverrideSetterMethod).to.have.been.calledOnce;
+            expect(customOverrideSetterMethod).to.have.been.calledOnce();
         });
     });
 

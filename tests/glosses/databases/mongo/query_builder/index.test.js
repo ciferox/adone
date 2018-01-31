@@ -1937,7 +1937,7 @@ describe("database", "mongo", "QueryBuilder", () => {
                     try {
                         await m.exec();
 
-                        expect(update).to.have.been.calledOnce;
+                        expect(update).to.have.been.calledOnce();
 
                         const [, doc, opts] = update.getCall(0).args;
 
@@ -2023,7 +2023,7 @@ describe("database", "mongo", "QueryBuilder", () => {
                     buildQuery(col).where({ name }).remove();
                     await promise.delay(300);
 
-                    expect(remove).to.have.not.been.called;
+                    expect(remove).to.have.not.been.called();
                 } finally {
                     remove.restore();
                 }

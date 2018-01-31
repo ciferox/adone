@@ -30,8 +30,8 @@ describe("upsert", function () {
             this.User.afterUpsert(afterHook);
 
             return this.User.upsert({ username: "Toni", mood: "happy" }).then(() => {
-                expect(beforeHook).to.have.been.calledOnce;
-                expect(afterHook).to.have.been.calledOnce;
+                expect(beforeHook).to.have.been.calledOnce();
+                expect(afterHook).to.have.been.calledOnce();
             });
         });
     });
@@ -51,8 +51,8 @@ describe("upsert", function () {
                 await this.User.upsert({ username: "Toni", mood: "happy" });
             });
 
-            expect(beforeHook).to.have.been.calledOnce;
-            expect(afterHook).not.to.have.been.called;
+            expect(beforeHook).to.have.been.calledOnce();
+            expect(afterHook).not.to.have.been.called();
         });
 
         it("should return an error from after", async function () {
@@ -69,8 +69,8 @@ describe("upsert", function () {
                 await this.User.upsert({ username: "Toni", mood: "happy" });
             });
 
-            expect(beforeHook).to.have.been.calledOnce;
-            expect(afterHook).to.have.been.calledOnce;
+            expect(beforeHook).to.have.been.calledOnce();
+            expect(afterHook).to.have.been.calledOnce();
         });
     });
 

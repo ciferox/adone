@@ -25,7 +25,7 @@ describe("errors", function () {
 
         form.append("my_array", ["bird", "cute"]);
 
-        expect(s).to.have.been.calledOnce;
+        expect(s).to.have.been.calledOnce();
         const { args: [err] } = await p;
         expect(err.message).to.be.equal("Arrays are not supported.");
     });
