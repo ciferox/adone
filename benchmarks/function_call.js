@@ -44,8 +44,11 @@ export default {
     "obj.sum(a, b)"() {
         return a.sum(1, 2);
     },
-    "obj.sum.apply(null, args)"() {
+    "obj.sum.apply(obj, args)"() {
         return a.sum.apply(a, [1, 2]);
+    },
+    "Reflect.apply(obj.sum, obj, args)"() {
+        return Reflect.apply(a.sum, a, [1, 2]);
     },
     "obj.wrap1(...args)"() {
         return a.wrap1(1, 2);

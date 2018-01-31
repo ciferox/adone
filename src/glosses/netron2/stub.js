@@ -5,23 +5,24 @@ const {
 } = adone;
 
 export default class Stub {
-    constructor(netron, instance, r) {
+    constructor(netron, obj) {
         this.netron = netron;
-        this.instance = instance;
-        this._reflection = r || Reflection.from(instance);
+        if (is.netron2Context(obj)) {
+            this.instance = obj;
+            this.reflection = Reflection.from(obj);
+        } else {
+            this.instance = obj.instance;
+            this.reflection = obj;
+        }
         this._def = null;
-    }
-
-    investigator() {
-        return this._reflection;
     }
 
     get definition() {
         if (is.null(this._def)) {
-            const r = this._reflection;
+            const r = this.reflection;
             const def = this._def = new Definition();
 
-            def.id = this.netron.uniqueDefId.next();
+            def.id = this.netron._defUniqueId.next();
             def.parentId = 0;
             def.name = r.getName();
             def.description = r.getDescription();
@@ -57,46 +58,43 @@ export default class Stub {
 
     set(prop, data, peer) {
         let $ = this.definition.$;
-        const target = this.instance;
         if (prop in $) {
             $ = $[prop];
             if ($.method) {
                 this._processArgs(peer, data, true);
-                return Reflect.apply(target[prop], this.instance, data);
+                return this.instance[prop](...data);
             } else if (!$.readonly) {
                 data = this._processArgs(peer, data, false);
-                target[prop] = data;
-            } else {
-                return Promise.reject(new x.InvalidAccess(`${prop} is not writable`));
+                this.instance[prop] = data;
+                return;
             }
-            return Promise.resolve(true);
+            throw new x.InvalidAccess(`${prop} is not writable`);
         }
-        return Promise.reject(new x.NotExists(`${prop} not exists`));
+        throw new x.NotExists(`Property '${prop}' not exists`);
     }
 
     get(prop, defaultData, peer) {
         let $ = this.definition.$;
-        const target = this.instance;
         if (prop in $) {
             $ = $[prop];
             if ($.method) {
                 this._processArgs(peer, defaultData, true);
-                return new Promise((resolve) => {
-                    resolve(target[prop].apply(this.instance, defaultData));
-                }).then((result) => {
-                    return this._processResult(peer, result);
-                });
+                const result = this.instance[prop](...defaultData);
+                if (is.promise(result)) {
+                    return result.then((result) => this._processResult(peer, result));
+                }
+                return this._processResult(peer, result);
             }
-            let val = target[prop];
+            let val = this.instance[prop];
             if (is.undefined(val)) {
                 defaultData = this._processArgs(peer, defaultData, false);
                 val = defaultData;
             } else {
                 val = this._processResult(peer, val);
             }
-            return Promise.resolve(val);
+            return val;
         }
-        return Promise.reject(new x.NotExists(`${prop} not exists`));
+        throw new x.NotExists(`Property '${prop}' not exists`);
     }
 
     _processResult(peer, result) {

@@ -80,6 +80,10 @@ export default class Packet {
         return getBit(this.flags, 7);
     }
 
+    setData(data) {
+        this.data = data;
+    }
+
     get raw() {
         return [this.flags, this.id, this.data];
     }

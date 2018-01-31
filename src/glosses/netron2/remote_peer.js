@@ -1,7 +1,7 @@
 const {
     is,
     collection: { TimedoutMap },
-    netron2: { ACTION, AbstractPeer, Packet, SequenceId, serializer },
+    netron2: { ACTION, AbstractPeer, Packet, FastUniqueId, serializer },
     stream: { pull },
     x
 } = adone;
@@ -15,7 +15,7 @@ export default class RemotePeer extends AbstractPeer {
         this.netronConn = null;
         this.protocol = adone.netron2.NETRON_PROTOCOL;
 
-        this.packetId = new SequenceId();
+        this.packetId = new FastUniqueId();
         this._responseAwaiters = new TimedoutMap(this.netron.options.responseTimeout, (id) => {
             const awaiter = this._deleteAwaiter(id);
             awaiter([1, new x.NetronTimeout(`Response timeout ${this.netron.options.responseTimeout}ms exceeded`)]);
@@ -52,6 +52,11 @@ export default class RemotePeer extends AbstractPeer {
     send(impulse, packetId, action, data, awaiter) {
         is.function(awaiter) && this._setAwaiter(packetId, awaiter);
         return this.write(Packet.create(packetId, impulse, action, data).raw);
+    }
+
+    sendReply(packet) {
+        packet.setImpulse(0);
+        return this.write(packet.raw);
     }
 
     get(defId, name, defaultData) {
@@ -119,6 +124,10 @@ export default class RemotePeer extends AbstractPeer {
 
     requestContexts() {
         return this.requestMeta("contexts");
+    }
+
+    hasContexts() {
+        return this._ctxidDefs.size > 0;
     }
 
     hasContext(ctxId) {
@@ -212,4 +221,4 @@ export default class RemotePeer extends AbstractPeer {
         return awaiter;
     }
 }
-adone.tag.add(RemotePeer, "NETRON2_REMOTETPEER");
+adone.tag.add(RemotePeer, "NETRON2_REMOTEPEER");

@@ -26,6 +26,20 @@ export default class AbstractPeer extends AsyncEmitter {
     }
 
     /**
+     * Checks peer is connected.
+     */
+    isConnected() {
+        throw new adone.x.NotImplemented("Method isConnected() is not implemented");
+    }
+
+    /**
+     * Checks peer is connected using netron protocol.
+     */
+    isNetronConnected() {
+        throw new adone.x.NotImplemented("Method isNetronConnected() is not implemented");
+    }
+
+    /**
      * Sets value of property or calls method with 'name' in context with 'defId' on peer side identified by 'peerInfo'.
      * 
      * @param {string|PeerId|PeerInfo|nil} peerInfo - peer identity
@@ -79,8 +93,29 @@ export default class AbstractPeer extends AsyncEmitter {
         throw new adone.x.NotImplemented("Method requestMeta() is not implemented");
     }
 
-    hasContext(ctxId) {
-        return this._ctxidDefs.has(ctxId);
+    hasContexts() {
+        throw new adone.x.NotImplemented("Method hasContexts() is not implemented");
+    }
+
+    hasContext(/*ctxId*/) {
+        throw new adone.x.NotImplemented("Method hasContext() is not implemented");
+    }
+
+    /**
+     * Attaches context to associated peer.
+     * 
+     * @param instance - context instance
+     * @param ctxId - context identifier, if not specified, the class name will be used
+     */
+    attachContext(/*instance, ctxId*/) {
+        throw new adone.x.NotImplemented("Method attachContext() is not implemented");
+    }
+
+    /**
+     * Detaches before attached context with specified name.
+     */
+    detachContext(/*ctxId, releaseOriginated*/) {
+        throw new adone.x.NotImplemented("Method detachContext() is not implemented");
     }
 
     waitForContext(ctxId) {

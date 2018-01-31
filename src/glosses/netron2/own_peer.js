@@ -9,6 +9,10 @@ export default class OwnPeer extends AbstractPeer {
         return true; // always connected
     }
 
+    isNetronConnected() {
+        return true; // always connected
+    }
+
     set(defId, name, data) {
         const stub = this.netron._stubs.get(defId);
         if (is.undefined(stub)) {
@@ -41,28 +45,20 @@ export default class OwnPeer extends AbstractPeer {
         return response;
     }
 
+    hasContexts() {
+        return this.netron.hasContexts();
+    }
+
     hasContext(ctxId) {
         return this.netron.hasContext(ctxId);
     }
 
-    /**
-     * Only for compatibility.
-     * 
-     * @param {*} instance 
-     * @param {*} ctxId 
-     */
-    attachContextRemote(instance, ctxId) {
+    attachContext(instance, ctxId) {
         return this.netron.attachContext(instance, ctxId);
     }
 
-    /**
-     * Only for compatibility.
-     * 
-     * @param {*} instance 
-     * @param {*} ctxId 
-     */
-    detachContextRemote(ctxId) {
-        return this.netron.detachContext(ctxId);
+    detachContext(ctxId, releaseOriginated) {
+        return this.netron.detachContext(ctxId, releaseOriginated);
     }
 
     getContextNames() {

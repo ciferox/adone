@@ -35,65 +35,6 @@ describe("functional and complex cases", () => {
         peerC.multiaddrs.add("/ip4/0.0.0.0/tcp/0");
     });
 
-    describe("initialization", () => {
-        it("default", () => {
-            const n = new Netron();
-
-            assert.true(is.netron2(n));
-            assert.true(is.peerInfo(n.peer.info));
-        });
-
-        it("with precreated PeerId", () => {
-            const n = new Netron(peerId);
-            assert.deepEqual(peerId, n.peer.info.id);
-        });
-
-        it("no netcores", () => {
-            const n = new Netron(peerId);
-
-            assert.instanceOf(n.networks, Map);
-            assert.equal(n.networks.size, 0);
-        });
-
-        it("no contexts", () => {
-            const n = new Netron(peerId);
-
-            assert.instanceOf(n.contexts, Map);
-            assert.equal(n.contexts.size, 0);
-        });
-
-        it("no peers", () => {
-            const n = new Netron(peerId);
-
-            assert.instanceOf(n.peers, Map);
-            assert.equal(n.peers.size, 0);
-        });
-    });
-
-    describe("own peer", () => {
-        let netron;
-        let ownPeer;
-
-        beforeEach(() => {
-            netron = new Netron();
-            ownPeer = netron.peer;
-        });
-
-        it("initialization", () => {
-            assert.true(is.netron2OwnPeer(ownPeer));
-            assert.deepEqual(ownPeer.netron, netron);
-        });
-
-        it("request 'ability' should return all netron options", async () => {
-            const response = await ownPeer.requestMeta("ability");
-            assert.deepEqual(response.length, 1);
-            const ability = response[0];
-            assert.equal(ability.id, "ability");
-            assert.deepEqual(ability.data, netron.options);
-            assert.deepEqual(ownPeer.meta.get("ability"), adone.util.omit(ability, "id"));
-        });
-    });
-
     describe("getPeer()", () => {
         let netron;
         beforeEach(() => {

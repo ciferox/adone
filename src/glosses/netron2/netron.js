@@ -4,7 +4,7 @@ const {
     util,
     event,
     net: { p2p: { PeerInfo } },
-    netron2: { Packet, Reference, Definitions, Reflection, Stub, SequenceId, OwnPeer, ACTION },
+    netron2: { Packet, Reference, Definitions, Reflection, Stub, FastUniqueId, OwnPeer, ACTION },
     tag
 } = adone;
 
@@ -60,7 +60,7 @@ export default class Netron extends event.AsyncEmitter {
 
         this._stubs = new Map();
         this._peerStubs = new Map();
-        this.uniqueDefId = new SequenceId();
+        this._defUniqueId = this.options.uniqueId || new FastUniqueId();
         // this._localTwins = new Map();
 
         this._metaHandlers = new Map();
@@ -324,7 +324,7 @@ export default class Netron extends event.AsyncEmitter {
             throw new x.Exists(`Context '${ctxId}' already attached`);
         }
 
-        return this._attachContext(ctxId, new Stub(this, instance, r));
+        return this._attachContext(ctxId, new Stub(this, r));
     }
 
     detachContext(ctxId, releaseOriginted = true) {
@@ -627,7 +627,8 @@ export default class Netron extends event.AsyncEmitter {
         switch (action) {
             case ACTION.META: {
                 if (packet.getImpulse()) {
-                    peer.send(0, packet.id, ACTION.META, await this.requestMeta(peer, packet.data));
+                    packet.setData(await this.requestMeta(peer, packet.data));
+                    peer.sendReply(packet);
                 } else {
                     const awaiter = peer._deleteAwaiter(packet.id);
                     !is.undefined(awaiter) && awaiter(packet.data);

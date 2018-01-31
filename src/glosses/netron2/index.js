@@ -17,7 +17,7 @@ export const ACTION = {
     EVENT_ON: 0x10,
     EVENT_OFF: 0x11,
     EVENT_EMIT: 0x12,
-    
+
     // Contexts
     CONTEXT_ATTACH: 0x20,
     CONTEXT_DETACH: 0x21
@@ -143,7 +143,7 @@ adone.tag.add(Definitions, "NETRON2_DEFINITIONS");
 
 const MAX_INTEGER = Number.MAX_SAFE_INTEGER >>> 0;
 
-export class SequenceId {
+export class FastUniqueId {
     constructor() {
         this._id = 0 >>> 0;
     }
@@ -159,6 +159,29 @@ export class SequenceId {
 }
 
 adone.lazify({
+    UniqueId: () => {
+        const { math: { Long } } = adone;
+        const ONE_LONG = new Long(1, 0, true);
+        const ZERO = 0 >>> 0;
+        const ONE = 1 >>> 0;
+        class UniqueId {
+            constructor() {
+                this._id = new Long(0, 0, true);
+            }
+
+            next() {
+                if (this._id.equals(Long.MAX_UNSIGNED_VALUE)) {
+                    this._id.low = ONE;
+                    this._id.high = ZERO;
+                } else {
+                    this._id = this._id.add(ONE_LONG);
+                }
+                return this._id;
+            }
+        }
+
+        return UniqueId;
+    },
     Reflection: ["./reflection", (mod) => mod.Reflection],
     DContext: ["./reflection", (mod) => mod.DContext], // decorator
     DPublic: ["./reflection", (mod) => mod.DPublic], // decorator
