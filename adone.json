@@ -100,14 +100,14 @@
                     "description": "Archivers",
                     "src": "src/glosses/archives/**/*.js",
                     "dst": "lib/glosses/archives",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "namespace": "archives"
                 },
                 "assertion": {
                     "description": "Assertion utilites",
                     "src": "src/glosses/assertion/**/*.js",
                     "dst": "lib/glosses/assertion",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "namespace": "assertion"
                 },
                 "cmake": {
@@ -121,7 +121,7 @@
                     "description": "Implementations of common collections",
                     "src": "src/glosses/collections/**/*.js",
                     "dst": "lib/glosses/collections",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "namespace": "collection"
                 },
                 "compressor": {
@@ -194,7 +194,7 @@
                     "description": "Configurations",
                     "src": "src/glosses/configurations/**/*.js",
                     "dst": "lib/glosses/configurations",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "namespace": "configuration"
                 },
                 "crypto": {
@@ -347,35 +347,42 @@
                 },
                 "datastore": {
                     "description": "Datastores",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/datastores/**/*.js",
                     "dst": "lib/glosses/datastores",
                     "namespace": "datastore"
                 },
                 "datetime": {
                     "description": "Datetime utilites",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/datetime/**/*.js",
                     "dst": "lib/glosses/datetime",
                     "namespace": "datetime"
                 },
                 "diff": {
                     "description": "Text differencing",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/diff/**/*.js",
                     "dst": "lib/glosses/diff",
                     "namespace": "diff"
                 },
                 "event": {
                     "description": "Event emitters and other event utilites",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/events/**/*.js",
                     "dst": "lib/glosses/events",
                     "namespace": "event"
                 },
+                "fake": {
+                    "description": "Fake data generators and appropriate stuff",
+                    "task": "transpile",
+                    "src": "src/glosses/fake/**/*.js",
+                    "dst": "lib/glosses/fake",
+                    "namespace": "fake"
+                },
                 "x": {
                     "description": "Exceptions and helpers",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/exceptions/**/*.js",
                     "dst": "lib/glosses/exceptions",
                     "namespace": "x"
@@ -403,7 +410,7 @@
                 },
                 "geoip": {
                     "description": "Geolocation utilites",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/geoip/**/*.js",
                     "dst": "lib/glosses/geoip",
                     "namespace": "geoip"
@@ -429,7 +436,7 @@
                 },
                 "hardware": {
                     "description": "Hardware stuff",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/hardware/**/*.js",
                     "dst": "lib/glosses/hardware",
                     "namespace": "hardware",
@@ -495,14 +502,14 @@
                 },
                 "is": {
                     "description": "Implementation of common predicates",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/is/**/*.js",
                     "dst": "lib/glosses/is",
                     "namespace": "is"
                 },
                 "js": {
                     "description": "JavaScript language stuff",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/js/**/*.js",
                     "dst": "lib/glosses/js",
                     "namespace": "js"
@@ -659,14 +666,14 @@
                 },
                 "netron": {
                     "description": "Implementation of Netron",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/netron/**/*.js",
                     "dst": "lib/glosses/netron",
                     "namespace": "netron"
                 },
                 "netron2": {
                     "description": "Implementation of Netron 2",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/netron2/**/*.js",
                     "dst": "lib/glosses/netron2",
                     "namespace": "netron2"
@@ -685,49 +692,49 @@
                 },
                 "notifier": {
                     "description": "Implementation of system notifier",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/notifier/**/*.js",
                     "dst": "lib/glosses/notifier",
                     "namespace": "notifier"
                 },
                 "odm": {
                     "description": "Object document mapper",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/odm/**/*.js",
                     "dst": "lib/glosses/odm",
                     "namespace": "odm"
                 },
                 "orm": {
                     "description": "ORM implementation",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/orm/**/*.js",
                     "dst": "lib/glosses/orm",
                     "namespace": "orm"
                 },
                 "promise": {
                     "description": "Promise utilites",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/promise/**/*.js",
                     "dst": "lib/glosses/promise",
                     "namespace": "promise"
                 },
                 "punycode": {
                     "description": "Implementation of punycode",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/punycode/**/*.js",
                     "dst": "lib/glosses/punycode",
                     "namespace": "punycode"
                 },
                 "regex": {
                     "description": "Regular expression utiliter and common regular expressions",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/regex/**/*.js",
                     "dst": "lib/glosses/regex",
                     "namespace": "regex"
                 },
                 "schema": {
                     "description": "Schema validators",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/schema/**/*.js",
                     "dst": "lib/glosses/schema",
                     "namespace": "schema",
@@ -741,27 +748,27 @@
                 },
                 "semver": {
                     "description": "Semantic version parser",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/semver/**/*.js",
                     "dst": "lib/glosses/semver",
                     "namespace": "semver"
                 },
                 "shell": {
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/shell/**/*.js",
                     "dst": "lib/glosses/shell",
                     "namespace": "shell"
                 },
                 "sourcemap": {
                     "description": "Sourcemaps",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/sourcemap/**/*.js",
                     "dst": "lib/glosses/sourcemap",
                     "namespace": "sourcemap"
                 },
                 "stream": {
                     "description": "Different streams and stream utilites",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/streams/**/*.js",
                     "dst": "lib/glosses/streams",
                     "namespace": "stream"
@@ -802,14 +809,14 @@
                 },
                 "task": {
                     "description": "Tasks management",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/tasks/**/*.js",
                     "dst": "lib/glosses/tasks",
                     "namespace": "task"
                 },
                 "templating": {
                     "description": "Template engines",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/templating/**/*.js",
                     "dst": "lib/glosses/templating",
                     "dstClean": "lib/glosses/templating/**/*",
@@ -831,21 +838,21 @@
                 },
                 "terminal": {
                     "description": "Terminal stuff",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/terminal/**/*.js",
                     "dst": "lib/glosses/terminal",
                     "namespace": "terminal"
                 },
                 "text": {
                     "description": "Text utilites",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/text/**/*.js",
                     "dst": "lib/glosses/text",
                     "namespace": "text"
                 },
                 "uri": {
                     "description": "URI manipulation",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/uri/**/*.js",
                     "dst": "lib/glosses/uri",
                     "namespace": "uri"
@@ -879,7 +886,7 @@
                 },
                 "vault": {
                     "description": "Vault implementation on top of leveldb",
-                    "task": "adoneTranspile",
+                    "task": "transpile",
                     "src": "src/glosses/vault/**/*.js",
                     "dst": "lib/glosses/vault",
                     "namespace": "vault"

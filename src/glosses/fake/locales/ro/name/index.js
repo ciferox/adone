@@ -1,0 +1,8 @@
+const name = {};
+module.exports = name;
+name.male_first_name = require("./male_first_name");
+name.female_first_name = require("./female_first_name");
+name.last_name = require("./last_name");
+name.prefix = require("./prefix");
+name.suffix = require("./suffix");
+name.name = require("./name");
