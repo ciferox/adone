@@ -22,7 +22,7 @@ export default class Stub {
             const r = this.reflection;
             const def = this._def = new Definition();
 
-            def.id = this.netron._defUniqueId.next();
+            def.id = this.netron._defUniqueId.get();
             def.parentId = 0;
             def.name = r.getName();
             def.description = r.getDescription();

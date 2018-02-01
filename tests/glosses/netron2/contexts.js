@@ -21,7 +21,9 @@ export class A {
     propA = 1;
 }
 
-@DContext()
+@DContext({
+    description: "class b extends a"
+})
 export class B extends A {
     constructor() {
         super();

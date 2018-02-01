@@ -52,4 +52,26 @@ describe("common stuff", () => {
             assert.true(is.netron2Reference(new Reference(1)));
         });
     });
+
+    describe("unique id generators", () => {
+        it("fast numeric generator", () => {
+            const generator = new adone.netron2.FastUniqueId();
+
+            for (let i = 1; i < 1000; i++) {
+                assert.equal(generator.get(), i);
+            }
+
+            assert.true(is.integer(generator.get()));
+        });
+
+        it("long-based/slow numeric generator", () => {
+            const generator = new adone.netron2.UniqueId();
+
+            for (let i = 1; i < 1000; i++) {
+                assert.true(generator.get().equals(adone.math.Long.fromNumber(i)));
+            }
+
+            assert.true(is.long(generator.get()));
+        });
+    });
 });

@@ -1,8 +1,3 @@
-const {
-    is,
-    x
-} = adone;
-
 const setBit = (target, offset) => target | (1 << offset);
 
 const clearBit = (target, offset) => target & ~(1 << offset);
@@ -82,28 +77,5 @@ export default class Packet {
 
     setData(data) {
         this.data = data;
-    }
-
-    get raw() {
-        return [this.flags, this.id, this.data];
-    }
-
-    static create(id, impulse, action, data) {
-        const packet = new Packet();
-        packet.setImpulse(impulse);
-        packet.setAction(action);
-        packet.id = id;
-        packet.data = data;
-        return packet;
-    }
-
-    static from(rawPacket) {
-        if (!is.array(rawPacket) || rawPacket.length !== 3) {
-            throw new x.NotValid("Bad packet");
-        }
-
-        const packet = new Packet();
-        [packet.flags, packet.id, packet.data] = rawPacket;
-        return packet;
     }
 }

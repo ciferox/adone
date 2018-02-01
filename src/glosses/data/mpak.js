@@ -19,7 +19,7 @@ export class Encoder {
         switch (type) {
             case "undefined": {
                 buf.writeUInt32BE(0xD4000000); // fixext special type/value
-                buf.wOffset--;
+                buf.woffset--;
                 break;
             }
             case "boolean": {
@@ -137,7 +137,7 @@ export class Encoder {
                                 buf.writeUInt16BE(0xC700 | length);
                             } else if (length < 0x10000) {
                                 buf.writeUInt32BE(0xC8000000 | (length << 8));
-                                buf.wOffset -= 1;
+                                buf.woffset -= 1;
                             } else {
                                 buf.writeUInt8(0xC9);
                                 buf.writeUInt32BE(length);
@@ -296,7 +296,7 @@ export class Decoder {
                 if (!isValidDataSize(length, bufLength, 2)) {
                     return null;
                 }
-                result = buf.toString("utf8", buf.rOffset, buf.rOffset + length);
+                result = buf.toString("utf8", buf.roffset, buf.roffset + length);
                 buf.skipRead(length);
                 return buildDecodeResult(result, 2 + length);
             case 0xda:
@@ -305,7 +305,7 @@ export class Decoder {
                 if (!isValidDataSize(length, bufLength, 3)) {
                     return null;
                 }
-                result = buf.toString("utf8", buf.rOffset, buf.rOffset + length);
+                result = buf.toString("utf8", buf.roffset, buf.roffset + length);
                 buf.skipRead(length);
                 return buildDecodeResult(result, 3 + length);
             case 0xdb:
@@ -314,7 +314,7 @@ export class Decoder {
                 if (!isValidDataSize(length, bufLength, 5)) {
                     return null;
                 }
-                result = buf.toString("utf8", buf.rOffset, buf.rOffset + length);
+                result = buf.toString("utf8", buf.roffset, buf.roffset + length);
                 buf.skipRead(length);
                 return buildDecodeResult(result, 5 + length);
             case 0xc4:
@@ -323,7 +323,7 @@ export class Decoder {
                 if (!isValidDataSize(length, bufLength, 2)) {
                     return null;
                 }
-                result = buf.slice(buf.rOffset, buf.rOffset + length).buffer;
+                result = buf.slice(buf.roffset, buf.roffset + length).buffer;
                 buf.skipRead(length);
                 return buildDecodeResult(result, 2 + length);
             case 0xc5:
@@ -332,7 +332,7 @@ export class Decoder {
                 if (!isValidDataSize(length, bufLength, 3)) {
                     return null;
                 }
-                result = buf.slice(buf.rOffset, buf.rOffset + length).buffer;
+                result = buf.slice(buf.roffset, buf.roffset + length).buffer;
                 buf.skipRead(length);
                 return buildDecodeResult(result, 3 + length);
             case 0xc6:
@@ -341,7 +341,7 @@ export class Decoder {
                 if (!isValidDataSize(length, bufLength, 5)) {
                     return null;
                 }
-                result = buf.slice(buf.rOffset, buf.rOffset + length).buffer;
+                result = buf.slice(buf.roffset, buf.roffset + length).buffer;
                 buf.skipRead(length);
                 return buildDecodeResult(result, 5 + length);
             case 0xdc:
@@ -414,7 +414,7 @@ export class Decoder {
             // fixstr up to 31 bytes
             length = first & 0x1f;
             if (isValidDataSize(length, bufLength, 1)) {
-                result = buf.toString("utf8", buf.rOffset, buf.rOffset + length);
+                result = buf.toString("utf8", buf.roffset, buf.roffset + length);
                 buf.skipRead(length);
                 return buildDecodeResult(result, length + 1);
             }
@@ -479,7 +479,7 @@ export class Decoder {
         const decTypes = this._decodingTypes;
         for (let i = 0; i < decTypes.length; ++i) {
             if (type === decTypes[i].type) {
-                const value = decTypes[i].decode(buf.slice(buf.rOffset, buf.rOffset + size));
+                const value = decTypes[i].decode(buf.slice(buf.roffset, buf.roffset + size));
                 buf.skipRead(size);
                 return buildDecodeResult(value, headerSize + size);
             }

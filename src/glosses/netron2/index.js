@@ -62,7 +62,7 @@ export class Definition {
         this.name = undefined;
         this.description = undefined;
         this.$ = undefined;
-        this.twin = undefined;
+        // this.twin = undefined;
     }
 }
 tag.add(Definition, "NETRON2_DEFINITION");
@@ -148,7 +148,7 @@ export class FastUniqueId {
         this._id = 0 >>> 0;
     }
 
-    next() {
+    get() {
         if (this._id === MAX_INTEGER) {
             this._id = 1;
         } else {
@@ -169,7 +169,7 @@ adone.lazify({
                 this._id = new Long(0, 0, true);
             }
 
-            next() {
+            get() {
                 if (this._id.equals(Long.MAX_UNSIGNED_VALUE)) {
                     this._id.low = ONE;
                     this._id.high = ZERO;
@@ -193,9 +193,8 @@ adone.lazify({
     AbstractPeer: "./abstract_peer",
     OwnPeer: "./own_peer",
     RemotePeer: "./remote_peer",
-    Packet: "./packet",
-    metaHandler: "./meta_handlers",
-    serializer: "./serializer"
+    packet: "./packet",
+    metaHandler: "./meta_handlers"
 }, adone.asNamespace(exports), require);
 
 adone.lazifyPrivate({

@@ -3,7 +3,6 @@ const {
 } = adone;
 
 const localeFallback = "en";
-let seedValue;
 let locale;
 
 export const setLocale = (loc) => {
@@ -84,7 +83,6 @@ const __ = adone.lazify({
 }, adone.asNamespace(exports), require);
 
 export const seed = (value) => {
-    seedValue = value;
     if (value) {
         if (is.array(value) && value.length) {
             __.random.mersenne.seed_array(value);

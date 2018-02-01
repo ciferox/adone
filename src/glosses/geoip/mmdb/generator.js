@@ -391,7 +391,7 @@ export default class Generator {
         const dataBuf = new ByteArray();
         const dataRef = [];
         for (const i of data) {
-            dataRef.push(dataBuf.wOffset);
+            dataRef.push(dataBuf.woffset);
             dataBuf.write(this.genData(i));
         }
 

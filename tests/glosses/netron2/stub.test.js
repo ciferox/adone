@@ -34,6 +34,10 @@ describe("Stub", () => {
         const def = stub.definition;
 
         assert.instanceOf(def, Definition);
+        assert.strictEqual(def.id, 1);
+        assert.strictEqual(def.parentId, 0);
+        assert.equal(def.name, "B");
+        assert.equal(def.description, "class b extends a");
     });
 
     describe("get()/call()", () => {

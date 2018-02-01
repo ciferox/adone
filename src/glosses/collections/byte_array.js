@@ -217,8 +217,8 @@ export default class ByteArray {
         }
 
         this.buffer = capacity === 0 ? adone.EMPTY_BUFFER : Buffer.allocUnsafe(capacity);
-        this.wOffset = 0;
-        this.rOffset = 0;
+        this.woffset = 0;
+        this.roffset = 0;
         this.noAssert = noAssert;
     }
 
@@ -228,7 +228,7 @@ export default class ByteArray {
      * @returns {number}
      */
     get length() {
-        return this.wOffset - this.rOffset;
+        return this.woffset - this.roffset;
     }
 
     /**
@@ -249,7 +249,7 @@ export default class ByteArray {
     readBitSet(offset) {
         const relative = is.undefined(offset);
         if (relative) {
-            offset = this.rOffset;
+            offset = this.roffset;
         }
 
         const ret = this.readVarint32(offset);
@@ -282,7 +282,7 @@ export default class ByteArray {
         }
 
         if (relative) {
-            this.rOffset = offset;
+            this.roffset = offset;
         }
         return value;
     }
@@ -297,7 +297,7 @@ export default class ByteArray {
     read(length, offset) {
         const relative = is.undefined(offset);
         if (relative) {
-            offset = this.rOffset;
+            offset = this.roffset;
         }
         if (!this.noAssert) {
             if (!is.number(offset) || offset % 1 !== 0) {
@@ -310,7 +310,7 @@ export default class ByteArray {
         }
         const slice = this.slice(offset, offset + length);
         if (relative) {
-            this.rOffset += length;
+            this.roffset += length;
         }
         return slice;
     }
@@ -613,7 +613,7 @@ export default class ByteArray {
     write(source, offset, length, encoding) {
         const relative = is.undefined(offset);
         if (relative) {
-            offset = this.wOffset;
+            offset = this.woffset;
         }
         const result = offset >>>= 0;
         if (!this.noAssert) {
@@ -632,7 +632,7 @@ export default class ByteArray {
             if (!is.byteArray(source)) {
                 source = ByteArray.wrap(source, encoding);
             }
-            length = source.wOffset - source.rOffset;
+            length = source.woffset - source.roffset;
         }
 
         if (length <= 0) {
@@ -646,11 +646,11 @@ export default class ByteArray {
         if (isString) {
             this.buffer.write(source, result);
         } else {
-            source.buffer.copy(this.buffer, result, source.rOffset, source.wOffset);
-            source.rOffset += length;
+            source.buffer.copy(this.buffer, result, source.roffset, source.woffset);
+            source.roffset += length;
         }
         if (relative) {
-            this.wOffset += length;
+            this.woffset += length;
         }
         return this;
     }
@@ -664,7 +664,7 @@ export default class ByteArray {
     writeBitSet(value, offset) {
         const relative = is.undefined(offset);
         if (relative) {
-            offset = this.wOffset;
+            offset = this.woffset;
         }
         if (!this.noAssert) {
             if (!is.array(value)) {
@@ -708,7 +708,7 @@ export default class ByteArray {
         }
 
         if (relative) {
-            this.wOffset = offset;
+            this.woffset = offset;
             return this;
         }
         return offset - start;
@@ -727,7 +727,7 @@ export default class ByteArray {
         }
         const relative = is.undefined(offset);
         if (relative) {
-            offset = this.wOffset;
+            offset = this.woffset;
         }
         const targetEnd = offset + buf.length;
         let capacity = this.buffer.length;
@@ -737,7 +737,7 @@ export default class ByteArray {
         }
         buf.copy(this.buffer, offset);
         if (relative) {
-            this.wOffset = targetEnd;
+            this.woffset = targetEnd;
         }
         return this;
     }
@@ -1045,8 +1045,8 @@ export default class ByteArray {
 
     _checkRead(offset, bytes) {
         if (is.undefined(offset)) {
-            offset = this.rOffset;
-            this.rOffset += bytes;
+            offset = this.roffset;
+            this.roffset += bytes;
         }
         if (!this.noAssert) {
             if (!is.number(offset) || offset % 1 !== 0) {
@@ -1061,8 +1061,8 @@ export default class ByteArray {
 
     _checkWrite(value, offset, bytes, isFloat) {
         if (is.undefined(offset)) {
-            offset = this.wOffset;
-            this.wOffset += bytes;
+            offset = this.woffset;
+            this.woffset += bytes;
         }
         const result = offset >>>= 0;
         if (!this.noAssert) {
@@ -1086,8 +1086,8 @@ export default class ByteArray {
 
     _checkWriteLong(value, offset) {
         if (is.undefined(offset)) {
-            offset = this.wOffset;
-            this.wOffset += 8;
+            offset = this.woffset;
+            this.woffset += 8;
         }
         const result = offset >>>= 0;
         if (!this.noAssert) {
@@ -1129,7 +1129,7 @@ export default class ByteArray {
     writeVarint32(value, offset) {
         const relative = is.undefined(offset);
         if (relative) {
-            offset = this.wOffset;
+            offset = this.woffset;
         }
         if (!this.noAssert) {
             if (!is.number(value) || value % 1 !== 0) {
@@ -1160,7 +1160,7 @@ export default class ByteArray {
         }
         this.buffer[offset++] = value;
         if (relative) {
-            this.wOffset = offset;
+            this.woffset = offset;
             return this;
         }
         return size;
@@ -1187,7 +1187,7 @@ export default class ByteArray {
     readVarint32(offset) {
         const relative = is.undefined(offset);
         if (relative) {
-            offset = this.rOffset;
+            offset = this.roffset;
         }
         if (!this.noAssert) {
             if (!is.number(offset) || offset % 1 !== 0) {
@@ -1215,7 +1215,7 @@ export default class ByteArray {
         } while ((b & 0x80) !== 0);
         value |= 0;
         if (relative) {
-            this.rOffset = offset;
+            this.roffset = offset;
             return value;
         }
         return { value, length: c };
@@ -1248,7 +1248,7 @@ export default class ByteArray {
     writeVarint64(value, offset) {
         const relative = is.undefined(offset);
         if (relative) {
-            offset = this.wOffset;
+            offset = this.woffset;
         }
         if (!this.noAssert) {
             if (is.number(value)) {
@@ -1315,7 +1315,7 @@ export default class ByteArray {
                 this.buffer[offset] = size !== 1 ? (part0) | 0x80 : (part0) & 0x7F;
         }
         if (relative) {
-            this.wOffset += size;
+            this.woffset += size;
             return this;
         }
         return size;
@@ -1343,7 +1343,7 @@ export default class ByteArray {
     readVarint64(offset) {
         const relative = is.undefined(offset);
         if (relative) {
-            offset = this.rOffset;
+            offset = this.roffset;
         }
         if (!this.noAssert) {
             if (!is.number(offset) || offset % 1 !== 0) {
@@ -1403,7 +1403,7 @@ export default class ByteArray {
         }
         const value = Long.fromBits(part0 | (part1 << 28), (part1 >>> 4) | (part2) << 24, false);
         if (relative) {
-            this.rOffset = offset;
+            this.roffset = offset;
             return value;
         }
         return { value, length: offset - start };
@@ -1437,7 +1437,7 @@ export default class ByteArray {
     writeCString(str, offset) {
         const relative = is.undefined(offset);
         if (relative) {
-            offset = this.wOffset;
+            offset = this.woffset;
         }
         let i;
         let k = str.length;
@@ -1469,7 +1469,7 @@ export default class ByteArray {
         offset += this.buffer.write(str, offset, k, "utf8");
         this.buffer[offset++] = 0;
         if (relative) {
-            this.wOffset = offset;
+            this.woffset = offset;
             return this;
         }
         return k;
@@ -1486,7 +1486,7 @@ export default class ByteArray {
     readCString(offset) {
         const relative = is.undefined(offset);
         if (relative) {
-            offset = this.rOffset;
+            offset = this.roffset;
         }
         if (!this.noAssert) {
             if (!is.number(offset) || offset % 1 !== 0) {
@@ -1508,7 +1508,7 @@ export default class ByteArray {
         } while (temp !== 0);
         const str = this.buffer.toString("utf8", start, offset - 1);
         if (relative) {
-            this.rOffset = offset;
+            this.roffset = offset;
             return str;
         }
         return { string: str, length: offset - start };
@@ -1524,7 +1524,7 @@ export default class ByteArray {
     writeString(str, offset) {
         const relative = is.undefined(offset);
         if (relative) {
-            offset = this.wOffset;
+            offset = this.woffset;
         }
         if (!this.noAssert) {
             if (!is.number(offset) || offset % 1 !== 0) {
@@ -1545,7 +1545,7 @@ export default class ByteArray {
         offset -= k;
         offset += this.buffer.write(str, offset, k, "utf8");
         if (relative) {
-            this.wOffset = offset;
+            this.woffset = offset;
             return this;
         }
         return k;
@@ -1567,7 +1567,7 @@ export default class ByteArray {
         }
         const relative = is.undefined(offset);
         if (relative) {
-            offset = this.rOffset;
+            offset = this.roffset;
         }
         if (is.undefined(metrics)) {
             metrics = ByteArray.METRICS_CHARS;
@@ -1599,7 +1599,7 @@ export default class ByteArray {
                 throw new x.NotValid(`Illegal range: Truncated data, ${i} == ${length}`);
             }
             if (relative) {
-                this.rOffset = offset;
+                this.roffset = offset;
                 return sd();
             }
             return { string: sd(), length: offset - start };
@@ -1615,7 +1615,7 @@ export default class ByteArray {
             }
             temp = this.buffer.toString("utf8", offset, offset + length);
             if (relative) {
-                this.rOffset += length;
+                this.roffset += length;
                 return temp;
             }
             return { string: temp, length };
@@ -1634,7 +1634,7 @@ export default class ByteArray {
     writeVString(str, offset) {
         const relative = is.undefined(offset);
         if (relative) {
-            offset = this.wOffset;
+            offset = this.woffset;
         }
         if (!this.noAssert) {
             if (!is.string(str)) {
@@ -1660,7 +1660,7 @@ export default class ByteArray {
         offset += this.writeVarint32(k, offset);
         offset += this.buffer.write(str, offset, k, "utf8");
         if (relative) {
-            this.wOffset = offset;
+            this.woffset = offset;
             return this;
         }
         return offset - start;
@@ -1676,7 +1676,7 @@ export default class ByteArray {
     readVString(offset) {
         const relative = is.undefined(offset);
         if (relative) {
-            offset = this.rOffset;
+            offset = this.roffset;
         }
         if (!this.noAssert) {
             if (!is.number(offset) || offset % 1 !== 0) {
@@ -1692,7 +1692,7 @@ export default class ByteArray {
         const str = this.readString(len.value, ByteArray.METRICS_BYTES, offset += len.length);
         offset += str.length;
         if (relative) {
-            this.rOffset = offset;
+            this.roffset = offset;
             return str.string;
         }
         return { string: str.string, length: offset - start };
@@ -1728,15 +1728,15 @@ export default class ByteArray {
      * @returns {this}
      */
     reset(resetWOffset = false) {
-        this.rOffset = 0;
+        this.roffset = 0;
         if (resetWOffset) {
-            this.wOffset = 0;
+            this.woffset = 0;
         }
         return this;
     }
 
     /**
-     * Creates a cloned instance of this ByteArray, preset with this ByteArray's values for rOffset and wOffset.
+     * Creates a cloned instance of this ByteArray, preset with this ByteArray's values for roffset and woffset.
      *
      * @param {boolean} copy Whether to copy the backing buffer or to return another view on the same, false by default
      * @param {ByteArray}
@@ -1750,8 +1750,8 @@ export default class ByteArray {
         } else {
             bb.buffer = this.buffer;
         }
-        bb.rOffset = this.rOffset;
-        bb.wOffset = this.wOffset;
+        bb.roffset = this.roffset;
+        bb.woffset = this.woffset;
         return bb;
     }
 
@@ -1764,7 +1764,7 @@ export default class ByteArray {
      * @returns {this}
      */
     compact(begin, end) {
-        begin = is.undefined(begin) ? this.rOffset : begin;
+        begin = is.undefined(begin) ? this.roffset : begin;
         end = is.undefined(end) ? this.buffer.length : end;
         if (!this.noAssert) {
             if (!is.number(begin) || begin % 1 !== 0) {
@@ -1785,15 +1785,15 @@ export default class ByteArray {
         const len = end - begin;
         if (len === 0) {
             this.buffer = adone.EMPTY_BUFFER;
-            this.rOffset = 0;
-            this.wOffset = 0;
+            this.roffset = 0;
+            this.woffset = 0;
             return this;
         }
         const buffer = Buffer.allocUnsafe(len);
         this.buffer.copy(buffer, 0, begin, end);
         this.buffer = buffer;
-        this.wOffset -= this.rOffset;
-        this.rOffset = 0;
+        this.woffset -= this.roffset;
+        this.roffset = 0;
         return this;
     }
 
@@ -1805,8 +1805,8 @@ export default class ByteArray {
      * @returns {ByteArray}
      */
     copy(begin, end) {
-        begin = is.undefined(begin) ? this.rOffset : begin;
-        end = is.undefined(end) ? this.wOffset : end;
+        begin = is.undefined(begin) ? this.roffset : begin;
+        end = is.undefined(end) ? this.woffset : end;
         if (!this.noAssert) {
             if (!is.number(begin) || begin % 1 !== 0) {
                 throw new x.InvalidArgument("Illegal begin: Not an integer");
@@ -1825,8 +1825,8 @@ export default class ByteArray {
         }
         const capacity = end - begin;
         const bb = new ByteArray(capacity, this.noAssert);
-        bb.rOffset = 0;
-        bb.wOffset = 0;
+        bb.roffset = 0;
+        bb.woffset = 0;
         this.copyTo(bb, 0, begin, end);
         return bb;
     }
@@ -1848,9 +1848,9 @@ export default class ByteArray {
                 throw new x.InvalidArgument("'target' is not a ByteArray");
             }
         }
-        targetOffset = (targetRelative = is.undefined(targetOffset)) ? target.wOffset : targetOffset | 0;
-        sourceStart = (relative = is.undefined(sourceStart)) ? this.rOffset : sourceStart | 0;
-        sourceEnd = is.undefined(sourceEnd) ? this.wOffset : sourceEnd | 0;
+        targetOffset = (targetRelative = is.undefined(targetOffset)) ? target.woffset : targetOffset | 0;
+        sourceStart = (relative = is.undefined(sourceStart)) ? this.roffset : sourceStart | 0;
+        sourceEnd = is.undefined(sourceEnd) ? this.woffset : sourceEnd | 0;
 
         if (targetOffset < 0 || targetOffset > target.buffer.length) {
             throw new x.NotValid(`Illegal target range: 0 <= ${targetOffset} <= ${target.buffer.length}`);
@@ -1869,10 +1869,10 @@ export default class ByteArray {
         this.buffer.copy(target.buffer, targetOffset, sourceStart, sourceEnd);
 
         if (relative) {
-            this.rOffset += len;
+            this.roffset += len;
         }
         if (targetRelative) {
-            target.wOffset += len;
+            target.woffset += len;
         }
 
         return this;
@@ -1905,13 +1905,13 @@ export default class ByteArray {
     fill(value, begin, end) {
         const relative = is.undefined(begin);
         if (relative) {
-            begin = this.wOffset;
+            begin = this.woffset;
         }
         if (is.string(value) && value.length > 0) {
             value = value.charCodeAt(0);
         }
         if (is.undefined(end)) {
-            end = this.buffer.length; // ??? may be wOffset
+            end = this.buffer.length; // ??? may be woffset
         }
         if (!this.noAssert) {
             if (!is.number(value) || value % 1 !== 0) {
@@ -1935,7 +1935,7 @@ export default class ByteArray {
         }
         this.buffer.fill(value, begin, end);
         if (relative) {
-            this.wOffset = end;
+            this.woffset = end;
         }
         return this;
     }
@@ -1958,7 +1958,7 @@ export default class ByteArray {
         }
         const relative = is.undefined(offset);
         if (relative) {
-            offset = this.rOffset;
+            offset = this.roffset;
         }
         if (!this.noAssert) {
             if (!is.number(offset) || offset % 1 !== 0) {
@@ -1972,7 +1972,7 @@ export default class ByteArray {
         if (!is.byteArray(source)) {
             source = ByteArray.wrap(source, encoding);
         }
-        const len = source.buffer.length - source.rOffset;
+        const len = source.buffer.length - source.roffset;
         if (len <= 0) {
             return this; // Nothing to prepend
         }
@@ -1981,15 +1981,15 @@ export default class ByteArray {
             const buffer = Buffer.allocUnsafe(this.buffer.length + diff);
             this.buffer.copy(buffer, len, offset, this.buffer.length);
             this.buffer = buffer;
-            this.rOffset += diff;
-            this.wOffset += diff;
+            this.roffset += diff;
+            this.woffset += diff;
             offset += diff;
         }
-        source.buffer.copy(this.buffer, offset - len, source.rOffset, source.buffer.length);
+        source.buffer.copy(this.buffer, offset - len, source.roffset, source.buffer.length);
 
-        source.rOffset = source.buffer.length;
+        source.roffset = source.buffer.length;
         if (relative) {
-            this.rOffset -= len;
+            this.roffset -= len;
         }
         return this;
     }
@@ -2036,13 +2036,13 @@ export default class ByteArray {
     /**
      * Reverses this ByteArray's contents.
      *
-     * @param {number} [begin] Offset to start at, defaults to rOffset
-     * @param {number} [end] Offset to end at, defaults to wOffset
+     * @param {number} [begin] Offset to start at, defaults to roffset
+     * @param {number} [end] Offset to end at, defaults to woffset
      * @returns {this}
      */
     reverse(begin, end) {
-        begin = is.undefined(begin) ? this.rOffset : begin;
-        end = is.undefined(end) ? this.wOffset : end;
+        begin = is.undefined(begin) ? this.roffset : begin;
+        end = is.undefined(end) ? this.woffset : end;
         if (!this.noAssert) {
             if (!is.number(begin) || begin % 1 !== 0) {
                 throw new x.InvalidArgument("Illegal begin: Not an integer");
@@ -2076,13 +2076,13 @@ export default class ByteArray {
             }
             length |= 0;
         }
-        const offset = this.rOffset + length;
+        const offset = this.roffset + length;
         if (!this.noAssert) {
             if (offset < 0 || offset > this.buffer.length) {
-                throw new x.NotValid(`Illegal length: 0 <= ${this.rOffset} + ${length} <= ${this.buffer.length}`);
+                throw new x.NotValid(`Illegal length: 0 <= ${this.roffset} + ${length} <= ${this.buffer.length}`);
             }
         }
-        this.rOffset = offset;
+        this.roffset = offset;
         return this;
     }
 
@@ -2099,26 +2099,26 @@ export default class ByteArray {
             }
             length |= 0;
         }
-        const offset = this.wOffset + length;
+        const offset = this.woffset + length;
         if (!this.noAssert) {
             if (offset < 0 || offset > this.buffer.length) {
-                throw new x.NotValid(`Illegal length: 0 <= ${this.wOffset} + ${length} <= ${this.buffer.length}`);
+                throw new x.NotValid(`Illegal length: 0 <= ${this.woffset} + ${length} <= ${this.buffer.length}`);
             }
         }
-        this.wOffset = offset;
+        this.woffset = offset;
         return this;
     }
 
     /**
-     * Slices this ByteArray by creating a cloned instance with rOffset = begin and wOffset = end
+     * Slices this ByteArray by creating a cloned instance with roffset = begin and woffset = end
      *
      * @param {number} [begin] Begin offset, defaults to offset
      * @param {number} [end] End offset, defaults to limit
      * @returns {ByteArray}
      */
     slice(begin, end) {
-        begin = is.undefined(begin) ? this.rOffset : begin;
-        end = is.undefined(end) ? this.wOffset : end;
+        begin = is.undefined(begin) ? this.roffset : begin;
+        end = is.undefined(end) ? this.woffset : end;
         if (!this.noAssert) {
             if (!is.number(begin) || begin % 1 !== 0) {
                 throw new x.InvalidArgument("Illegal begin: Not an integer");
@@ -2134,7 +2134,7 @@ export default class ByteArray {
         }
         const bb = new ByteArray(end - begin);
         bb.buffer = this.buffer.slice(begin, end);
-        bb.wOffset = bb.capacity;
+        bb.woffset = bb.capacity;
         return bb;
     }
 
@@ -2143,13 +2143,13 @@ export default class ByteArray {
      *
      * @param {boolean} [forceCopy] If true returns a copy, otherwise returns a view referencing the same memory if possible,
      *      false by default
-     * @param {number} [begin] Begin offset, rOffset by default
-     * @param {number} [end] End offset, wOffset by default
+     * @param {number} [begin] Begin offset, roffset by default
+     * @param {number} [end] End offset, woffset by default
      * @returns {Buffer}
      */
     toBuffer(forceCopy, begin, end) {
-        begin = is.undefined(begin) ? this.rOffset : begin;
-        end = is.undefined(end) ? this.wOffset : end;
+        begin = is.undefined(begin) ? this.roffset : begin;
+        end = is.undefined(end) ? this.woffset : end;
         begin >>>= 0;
         end >>>= 0;
         if (!this.noAssert) {
@@ -2180,8 +2180,8 @@ export default class ByteArray {
      * @returns {ArrayBuffer}
      */
     toArrayBuffer() {
-        let offset = this.rOffset;
-        let limit = this.wOffset;
+        let offset = this.roffset;
+        let limit = this.woffset;
         if (!this.noAssert) {
             if (!is.number(offset) || offset % 1 !== 0) {
                 throw new x.InvalidArgument("Illegal offset: Not an integer");
@@ -2210,7 +2210,7 @@ export default class ByteArray {
      */
     toString(encoding, begin, end) {
         if (is.undefined(encoding)) {
-            return `ByteArrayNB(rOffset=${this.rOffset},wOffset=${this.wOffset},capacity=${this.capacity})`;
+            return `ByteArrayNB(roffset=${this.roffset},woffset=${this.woffset},capacity=${this.capacity})`;
         }
 
         switch (encoding) {
@@ -2239,8 +2239,8 @@ export default class ByteArray {
      * @returns {string}
      */
     toBase64(begin, end) {
-        begin = is.undefined(begin) ? this.rOffset : begin;
-        end = is.undefined(end) ? this.wOffset : end;
+        begin = is.undefined(begin) ? this.roffset : begin;
+        end = is.undefined(end) ? this.woffset : end;
         begin = begin | 0; end = end | 0;
         if (begin < 0 || end > this.buffer.length || begin > end) {
             throw new x.NotValid("begin, end");
@@ -2256,8 +2256,8 @@ export default class ByteArray {
      * @returns {string}
      */
     toBinary(begin, end) {
-        begin = is.undefined(begin) ? this.rOffset : begin;
-        end = is.undefined(end) ? this.wOffset : end;
+        begin = is.undefined(begin) ? this.roffset : begin;
+        end = is.undefined(end) ? this.woffset : end;
         begin |= 0; end |= 0;
         if (begin < 0 || end > this.capacity || begin > end) {
             throw new x.NotValid("begin, end");
@@ -2268,11 +2268,11 @@ export default class ByteArray {
     /**
      * Encodes this ByteArray to a hex encoded string with marked offsets
      * 
-     * '<' - rOffset
-     * '>' - wOffset
-     * '|' - rOffset=wOffset=capacity
-     * '^' - rOffset=wOffset
-     * ']' - wOffset=capacity
+     * '<' - roffset
+     * '>' - woffset
+     * '|' - roffset=woffset=capacity
+     * '^' - roffset=woffset
+     * ']' - woffset=capacity
      * '*' - capacity
      *
      * @param {boolean} [columns] If true returns two columns hex + ascii, defaults to false
@@ -2307,17 +2307,17 @@ export default class ByteArray {
                     hex = asc = "";
                 }
             }
-            if (i === this.rOffset && this.rOffset === this.wOffset && this.wOffset === this.buffer.length) {
+            if (i === this.roffset && this.roffset === this.woffset && this.woffset === this.buffer.length) {
                 hex += "|";
-            } else if (i === this.rOffset && this.rOffset === this.wOffset) {
+            } else if (i === this.roffset && this.roffset === this.woffset) {
                 hex += "^";
-            } else if (i === this.rOffset && this.rOffset === this.buffer.length) {
+            } else if (i === this.roffset && this.roffset === this.buffer.length) {
                 hex += "[";
-            } else if (i === this.wOffset && this.wOffset === this.buffer.length) {
+            } else if (i === this.woffset && this.woffset === this.buffer.length) {
                 hex += "]";
-            } else if (i === this.rOffset) {
+            } else if (i === this.roffset) {
                 hex += "<";
-            } else if (i === this.wOffset) {
+            } else if (i === this.woffset) {
                 hex += ">";
             } else if (i === this.buffer.length) {
                 hex += "*";
@@ -2342,8 +2342,8 @@ export default class ByteArray {
      * @returns {string}
      */
     toHex(begin, end) {
-        begin = is.undefined(begin) ? this.rOffset : begin;
-        end = is.undefined(end) ? this.wOffset : end;
+        begin = is.undefined(begin) ? this.roffset : begin;
+        end = is.undefined(end) ? this.woffset : end;
         if (!this.noAssert) {
             if (!is.number(begin) || begin % 1 !== 0) {
                 throw new x.InvalidArgument("Illegal begin: Not an integer");
@@ -2368,8 +2368,8 @@ export default class ByteArray {
      * @returns {string}
      */
     toUTF8(begin, end) {
-        begin = is.undefined(begin) ? this.rOffset : begin;
-        end = is.undefined(end) ? this.wOffset : end;
+        begin = is.undefined(begin) ? this.roffset : begin;
+        end = is.undefined(end) ? this.woffset : end;
         if (!this.noAssert) {
             if (!is.number(begin) || begin % 1 !== 0) {
                 throw new x.InvalidArgument("Illegal begin: Not an integer");
@@ -2416,7 +2416,7 @@ export default class ByteArray {
             if (!is.byteArray(buffers[i])) {
                 buffers[i] = ByteArray.wrap(buffers[i], encoding);
             }
-            length = buffers[i].wOffset - buffers[i].rOffset;
+            length = buffers[i].woffset - buffers[i].roffset;
             if (length > 0) {
                 capacity += length;
             }
@@ -2430,14 +2430,14 @@ export default class ByteArray {
 
         while (i < k) {
             bi = buffers[i++];
-            length = bi.wOffset - bi.rOffset;
+            length = bi.woffset - bi.roffset;
             if (length <= 0) {
                 continue;
             }
-            bi.buffer.copy(bb.buffer, bb.wOffset, bi.rOffset, bi.wOffset);
-            bb.wOffset += length;
+            bi.buffer.copy(bb.buffer, bb.woffset, bi.roffset, bi.woffset);
+            bb.woffset += length;
         }
-        bb.rOffset = 0;
+        bb.roffset = 0;
         return bb;
     }
 
@@ -2495,7 +2495,7 @@ export default class ByteArray {
         bb = new ByteArray(0, noAssert);
         if (buffer.length > 0) { // Avoid references to more than one EMPTY_BUFFER
             bb.buffer = buffer;
-            bb.wOffset = buffer.length;
+            bb.woffset = buffer.length;
         }
         return bb;
     }
@@ -2703,7 +2703,7 @@ export default class ByteArray {
                         }
                         hr = hw = hl = true;
                     }
-                    bb.rOffset = bb.wOffset = j;
+                    bb.roffset = bb.woffset = j;
                     rs = false;
                     break;
                 case "]":
@@ -2714,7 +2714,7 @@ export default class ByteArray {
                         }
                         hw = hl = true;
                     }
-                    bb.wOffset = j;
+                    bb.woffset = j;
                     rs = false;
                     break;
                 case "^":
@@ -2725,7 +2725,7 @@ export default class ByteArray {
                         }
                         hr = hw = true;
                     }
-                    bb.rOffset = bb.wOffset = j;
+                    bb.roffset = bb.woffset = j;
                     rs = false;
                     break;
                 case "<":
@@ -2736,7 +2736,7 @@ export default class ByteArray {
                         }
                         hr = true;
                     }
-                    bb.rOffset = j;
+                    bb.roffset = j;
                     rs = false;
                     break;
                 case "*":
@@ -2757,7 +2757,7 @@ export default class ByteArray {
                         }
                         hw = true;
                     }
-                    bb.wOffset = j;
+                    bb.woffset = j;
                     rs = false;
                     break;
                 case " ":
@@ -2785,7 +2785,7 @@ export default class ByteArray {
         }
         if (!noAssert) {
             if (!hr || !hw || !hl) {
-                throw new x.NotValid(`Missing rOffset or wOffset or limit: ${str}`);
+                throw new x.NotValid(`Missing roffset or woffset or limit: ${str}`);
             }
             if (j < bb.buffer.length) {
                 throw new x.NotValid(`Not a debug encoded string (is it hex?) ${j} < ${k}`);
@@ -2811,7 +2811,7 @@ export default class ByteArray {
         }
         const bb = new ByteArray(0, true);
         bb.buffer = Buffer.from(str, "hex");
-        bb.wOffset = bb.buffer.length;
+        bb.woffset = bb.buffer.length;
         return bb;
     }
 
@@ -2830,7 +2830,7 @@ export default class ByteArray {
         }
         const bb = new ByteArray(0, noAssert);
         bb.buffer = Buffer.from(str, "utf8");
-        bb.wOffset = bb.buffer.length;
+        bb.woffset = bb.buffer.length;
         return bb;
     }
 }

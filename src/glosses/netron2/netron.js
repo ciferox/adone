@@ -4,7 +4,7 @@ const {
     util,
     event,
     net: { p2p: { PeerInfo } },
-    netron2: { Packet, Reference, Definitions, Reflection, Stub, FastUniqueId, OwnPeer, ACTION },
+    netron2: { Reference, Definitions, Reflection, Stub, FastUniqueId, OwnPeer, ACTION },
     tag
 } = adone;
 
@@ -615,14 +615,7 @@ export default class Netron extends event.AsyncEmitter {
         this._metaHandlers.delete(handler);
     }
 
-    async _processPacket(peer, rawPacket) {
-        let packet;
-        try {
-            packet = Packet.from(rawPacket);
-        } catch (err) {
-            return adone.error(err.message);
-        }
-
+    async _processPacket(peer, packet) {
         const action = packet.getAction();
         switch (action) {
             case ACTION.META: {

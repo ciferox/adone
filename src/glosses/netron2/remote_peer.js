@@ -1,10 +1,12 @@
 const {
     is,
     collection: { TimedoutMap },
-    netron2: { ACTION, AbstractPeer, Packet, FastUniqueId, serializer },
+    netron2: { ACTION, AbstractPeer, packet, FastUniqueId },
     stream: { pull },
     x
 } = adone;
+
+const HEADER_BUFFER = Buffer.alloc(4);
 
 export default class RemotePeer extends AbstractPeer {
     constructor(info, netron, netCore) {
@@ -32,14 +34,13 @@ export default class RemotePeer extends AbstractPeer {
         return !is.null(this.netronConn);
     }
 
-    write(data) {
+    write(pkt) {
         return new Promise((resolve, reject) => {
             if (!is.null(this.netronConn)) {
-                const buf = new adone.collection.ByteArray().skipWrite(4);
-                const encoded = serializer.encode(data, buf);
-                encoded.writeUInt32BE(encoded.length - 4, 0);
+                const rawPkt = packet.encode(pkt).toBuffer();
+                HEADER_BUFFER.writeUInt32BE(rawPkt.length, 0);
                 pull(
-                    pull.values([encoded.toBuffer()]),
+                    pull.values([HEADER_BUFFER, rawPkt]),
                     this.netronConn
                 );
                 resolve();
@@ -51,12 +52,12 @@ export default class RemotePeer extends AbstractPeer {
 
     send(impulse, packetId, action, data, awaiter) {
         is.function(awaiter) && this._setAwaiter(packetId, awaiter);
-        return this.write(Packet.create(packetId, impulse, action, data).raw);
+        return this.write(packet.create(packetId, impulse, action, data));
     }
 
     sendReply(packet) {
         packet.setImpulse(0);
-        return this.write(packet.raw);
+        return this.write(packet);
     }
 
     get(defId, name, defaultData) {
@@ -70,7 +71,7 @@ export default class RemotePeer extends AbstractPeer {
             $ = $[name];
             defaultData = this._processArgs(ctxDef, $, defaultData);
             return new Promise((resolve, reject) => {
-                this.send(1, this.packetId.next(), ACTION.GET, [defId, name, defaultData], (result) => {
+                this.send(1, this.packetId.get(), ACTION.GET, [defId, name, defaultData], (result) => {
                     if (result[0] === 1) {
                         reject(result[1]);
                     } else {
@@ -95,7 +96,7 @@ export default class RemotePeer extends AbstractPeer {
                 return Promise.reject(new x.InvalidAccess(`'${name}' is not writable`));
             }
             data = this._processArgs(ctxDef, $, data);
-            return this.send(1, this.packetId.next(), ACTION.SET, [defId, name, data]);
+            return this.send(1, this.packetId.get(), ACTION.SET, [defId, name, data]);
         }
         return Promise.reject(new x.NotExists(`'${name}' not exists`));
     }
@@ -105,7 +106,7 @@ export default class RemotePeer extends AbstractPeer {
             if (!(is.string(request) || is.array(request) || is.plainObject(request))) {
                 return reject(new adone.x.NotValid("Invalid meta request (should be string, plain object or array"));
             }
-            this.send(1, this.packetId.next(), ACTION.META, request, async (response) => {
+            this.send(1, this.packetId.get(), ACTION.META, request, async (response) => {
                 if (!is.array(response)) {
                     return reject(new adone.x.NotValid(`Not valid response: ${adone.util.typeOf(response)}`));
                 }
@@ -172,11 +173,11 @@ export default class RemotePeer extends AbstractPeer {
             }
 
             // receive data from remote netron
-            const internalBuffer = new adone.collection.ByteArray(0);
-            let lpsz = null;
+            const permBuffer = new adone.collection.ByteArray(0);
+            let lpsz = 0;
 
             const handler = (chunk) => {
-                const buffer = internalBuffer;
+                const buffer = permBuffer;
                 buffer.write(chunk);
 
                 for (; ;) {
@@ -184,22 +185,25 @@ export default class RemotePeer extends AbstractPeer {
                         break;
                     }
                     let packetSize = lpsz;
-                    if (is.null(packetSize)) {
+                    if (packetSize === 0) {
                         lpsz = packetSize = buffer.readUInt32BE();
                     }
                     if (buffer.length < packetSize) {
                         break;
                     }
 
-                    const result = serializer.decoder.tryDecode(buffer);
-                    if (result) {
-                        if (packetSize !== result.bytesConsumed) {
-                            buffer.clear();
-                            adone.error("invalid packet");
-                            break;
+                    try {
+                        const roffset = buffer.roffset;
+                        const pkt = packet.decode(buffer);
+                        if (packetSize !== (buffer.roffset - roffset)) {
+                            throw new x.NotValid("Invalid packet");
                         }
-                        this.netron._processPacket(this, result.value);
-                        lpsz = null;
+                        this.netron._processPacket(this, pkt);
+                    } catch (err) {
+                        buffer.reset(true);
+                        adone.error(err);
+                    } finally {
+                        lpsz = 0;
                     }
                 }
             };
