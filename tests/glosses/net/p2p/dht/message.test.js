@@ -95,12 +95,12 @@ describe("dht", "KadDHT", "Message", () => {
             expect(msg.clusterLevel).to.gte(0);
             if (msg.record) {
                 expect(is.buffer(msg.record.key)).to.eql(true);
-                expect(is.peerId(msg.record.author)).to.eql(true);
+                expect(is.p2pPeerId(msg.record.author)).to.eql(true);
             }
 
             if (msg.providerPeers.length > 0) {
                 msg.providerPeers.forEach((p) => {
-                    expect(is.peerInfo(p)).to.eql(true);
+                    expect(is.p2pPeerInfo(p)).to.eql(true);
                 });
             }
         });

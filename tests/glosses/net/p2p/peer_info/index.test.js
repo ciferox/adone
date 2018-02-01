@@ -29,9 +29,9 @@ describe("PeerInfo", () => {
     });
 
     it("isPeerInfo", () => {
-        expect(is.peerInfo(pi)).to.equal(true);
-        expect(is.peerInfo(pi.id)).to.equal(false);
-        expect(is.peerInfo("bananas")).to.equal(false);
+        expect(is.p2pPeerInfo(pi)).to.equal(true);
+        expect(is.p2pPeerInfo(pi.id)).to.equal(false);
+        expect(is.p2pPeerInfo("bananas")).to.equal(false);
     });
 
     it(".create", function () {

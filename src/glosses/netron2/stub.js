@@ -125,7 +125,7 @@ export default class Stub {
 
     _processObject(peer, obj) {
         if (is.netron2Reference(obj)) {
-            const stub = this.netron.getStubById(obj.defId);
+            const stub = this.netron._getStub(obj.defId);
             if (is.undefined(stub)) {
                 throw new x.Unknown(`Unknown definition id ${obj.defId}`);
             }

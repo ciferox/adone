@@ -31,9 +31,9 @@ describe("PeerId", () => {
 
     it("isPeerId", () => {
         const id = PeerId.create(testOpts);
-        expect(is.peerId(id)).to.equal(true);
-        expect(is.peerId("aaa")).to.equal(false);
-        expect(is.peerId(Buffer.from("batatas"))).to.equal(false);
+        expect(is.p2pPeerId(id)).to.equal(true);
+        expect(is.p2pPeerId("aaa")).to.equal(false);
+        expect(is.p2pPeerId(Buffer.from("batatas"))).to.equal(false);
     });
 
     it("throws on changing the id", function () {

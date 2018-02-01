@@ -1,6 +1,7 @@
 adone.definePredicates({
-    peerId: "PEER_ID",
-    peerInfo: "PEER_INFO"
+    p2pPeerId: "P2P_PEER_ID",
+    p2pPeerInfo: "P2P_PEER_INFO",
+    p2pCore: "P2P_CORE"
 });
 
 adone.lazify({

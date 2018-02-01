@@ -197,4 +197,4 @@ export default class PeerId {
         return new PeerId(id, null, pub);
     }
 }
-adone.tag.add(PeerId, "PEER_ID");
+adone.tag.add(PeerId, "P2P_PEER_ID");

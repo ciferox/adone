@@ -18,7 +18,7 @@ module.exports = function (swarm) {
         if (multi.address.isMultiaddr(peer)) {
             const relayMa = multi.address.create(peer);
             b58Id = relayMa.getPeerId();
-        } else if (is.peerInfo(peer)) {
+        } else if (is.p2pPeerInfo(peer)) {
             b58Id = peer.id.asBase58();
         }
 
@@ -37,7 +37,7 @@ module.exports = function (swarm) {
     const peerInfoFromMa = function (peer) {
         let p;
         // PeerInfo
-        if (is.peerInfo(peer)) {
+        if (is.p2pPeerInfo(peer)) {
             p = peer;
             // Multiaddr instance (not string)
         } else if (multi.address.isMultiaddr(peer)) {
@@ -49,7 +49,7 @@ module.exports = function (swarm) {
             }
             p.multiaddrs.add(peer);
             // PeerId
-        } else if (is.peerId(peer)) {
+        } else if (is.p2pPeerId(peer)) {
             const peerIdB58Str = peer.asBase58();
             p = swarm._peerBook.has(peerIdB58Str) ? swarm._peerBook.get(peerIdB58Str) : peer;
         }

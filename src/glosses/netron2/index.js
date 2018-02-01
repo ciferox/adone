@@ -145,16 +145,20 @@ const MAX_INTEGER = Number.MAX_SAFE_INTEGER >>> 0;
 
 export class FastUniqueId {
     constructor() {
-        this._id = 0 >>> 0;
+        this.id = 0 >>> 0;
     }
 
     get() {
-        if (this._id === MAX_INTEGER) {
-            this._id = 1;
+        if (this.id === MAX_INTEGER) {
+            this.id = 1;
         } else {
-            this._id++;
+            this.id++;
         }
-        return this._id;
+        return this.id;
+    }
+
+    isEqual(id1, id2) {
+        return id1 === id2;
     }
 }
 
@@ -166,17 +170,21 @@ adone.lazify({
         const ONE = 1 >>> 0;
         class UniqueId {
             constructor() {
-                this._id = new Long(0, 0, true);
+                this.id = new Long(0, 0, true);
             }
 
             get() {
-                if (this._id.equals(Long.MAX_UNSIGNED_VALUE)) {
-                    this._id.low = ONE;
-                    this._id.high = ZERO;
+                if (this.id.equals(Long.MAX_UNSIGNED_VALUE)) {
+                    this.id.low = ONE;
+                    this.id.high = ZERO;
                 } else {
-                    this._id = this._id.add(ONE_LONG);
+                    this.id = this.id.add(ONE_LONG);
                 }
-                return this._id;
+                return this.id;
+            }
+
+            isEqual(id1, id2) {
+                return id1.equals(id2);
             }
         }
 

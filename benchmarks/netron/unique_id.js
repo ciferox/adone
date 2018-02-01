@@ -16,9 +16,9 @@ export const init = () => {
 
 export default {
     "FastUniqueId"() {
-        return fastUniq.next();
+        return fastUniq.get();
     },
     "UniqueId"() {
-        return uniq.next();
+        return uniq.get();
     }
 };

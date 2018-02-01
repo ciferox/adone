@@ -21,36 +21,21 @@ describe("AbstractPeer", () => {
             "hasContext",
             "attachContext",
             "detachContext",
+            "detachAllContexts",
             "set",
             "get",
-            {
-                name: "call",
-                err: "get"
-            },
-            {
-                name: "callVoid",
-                err: "set"
-            },
             "requestMeta",
-            "getDefinitionByName",
-            "getInterfaceById"
+            "_getContextDefinition",
+            "_queryInterfaceByDefinition"
         ];
 
         for (const m of methods) {
             // eslint-disable-next-line
-            it(`${is.string(m) ? m : m.name}()`, () => {
-                let name;
-                let err;
-                if (is.string(m)) {
-                    name = err = m;
-                } else {
-                    name = m.name;
-                    err = m.err;
-                }
-                assert.true(is.function(peer[name]));
-                const e = assert.throws(() => peer[name]());
+            it(`${m}()`, () => {
+                assert.true(is.function(peer[m]));
+                const e = assert.throws(() => peer[m]());
                 assert.instanceOf(e, x.NotImplemented);
-                assert.match(e.message, new RegExp(`Method ${err}()`));
+                assert.match(e.message, new RegExp(`Method ${m}()`));
             });
         }
     });

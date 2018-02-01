@@ -21,20 +21,16 @@ export default class OwnPeer extends AbstractPeer {
         return stub.set(name, data, this);
     }
 
-    get(defId, name, defaultData) {
+    async get(defId, name, defaultData) {
         const stub = this.netron._stubs.get(defId);
         if (is.undefined(stub)) {
             throw new x.NotExists(`Context with definition id '${defId}' not exists`);
         }
-        return new Promise((resolve, reject) => {
-            stub.get(name, defaultData, this).catch(reject).then((result) => {
-                if (is.netron2Definition(result)) {
-                    resolve(this.netron._createInterface(result, this));
-                } else {
-                    resolve(result);
-                }
-            });
-        });
+        const result = await stub.get(name, defaultData, this);
+        if (is.netron2Definition(result)) {
+            return this.netron._createInterface(result, this);
+        }
+        return result;
     }
 
     async requestMeta(request) {
@@ -61,11 +57,15 @@ export default class OwnPeer extends AbstractPeer {
         return this.netron.detachContext(ctxId, releaseOriginated);
     }
 
+    detachAllContexts(releaseOriginated) {
+        return this.netron.detachAllContexts(releaseOriginated);
+    }
+
     getContextNames() {
         return this.netron.getContextNames();
     }
 
-    getDefinitionByName(ctxId) {
+    _getContextDefinition(ctxId) {
         const stub = this.netron.contexts.get(ctxId);
         if (is.undefined(stub)) {
             throw new x.Unknown(`Unknown context '${ctxId}'`);
@@ -73,9 +73,9 @@ export default class OwnPeer extends AbstractPeer {
         return stub.definition;
     }
 
-    getInterfaceById(defId) {
-        const stub = this.netron.getStubById(defId);
+    _queryInterfaceByDefinition(defId) {
+        const stub = this.netron._getStub(defId);
         return this.netron._createInterface(stub.definition, this);
-    }    
+    }
 }
 adone.tag.add(OwnPeer, "NETRON2_OWNPEER");

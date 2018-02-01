@@ -100,7 +100,7 @@ export default class Netron extends event.AsyncEmitter {
     }
 
     /**
-     * Deletes early created netcore.
+     * Deletes early created network core.
      * 
      * If netcore is used, it will be stopped.
      * 
@@ -128,13 +128,19 @@ export default class Netron extends event.AsyncEmitter {
     }
 
     /**
-     * Connects to peer using netcore identified by 'netCoreId'.
-     * @param {string} netId - network/netcore name
+     * Connects to peer using netcore identified by 'netId'.
+     * 
+     * @param {string} netId - network core name
      * @param {options.onlyRaw} - if set to true, only raw connection will be initiated
      * @param {options.metaRequest} - meta requests that will be executed after successful connection to netron protocol
      * @param {PeerInfo|string|Peer} peer - instance of RemotePeer
      */
     async connect(netId, peer, { onlyRaw = false, metaRequest = USEFUL_META_REQUEST } = {}) {
+        try {
+            return this.getPeer(peer);
+        } catch (err) {
+            // fresh peer...
+        }
         const netCore = this.getNetCore(netId);
         const rawConn = await netCore.connect(peer);
         const remotePeer = new adone.netron2.RemotePeer(PeerInfo.create(peer), this, netCore);
@@ -159,11 +165,14 @@ export default class Netron extends event.AsyncEmitter {
     }
 
     /**
-     * Disconnects from remote peers in from network identified by 'netId'.
+     * Disconnects all peers associated with network identified by 'netId' or all networks if not specified.
      * 
      * @param {string} netId - network name
      */
     async disconnect(netId) {
+        if (is.nil(netId)) {
+
+        }
         // for (const peer of this.peers.values()) {
         //     await peer.disconnect();
         // }
@@ -327,7 +336,7 @@ export default class Netron extends event.AsyncEmitter {
         return this._attachContext(ctxId, new Stub(this, r));
     }
 
-    detachContext(ctxId, releaseOriginted = true) {
+    detachContext(ctxId, releaseOriginated = true) {
         const stub = this.contexts.get(ctxId);
         if (is.undefined(stub)) {
             throw new x.Unknown(`Unknown context '${ctxId}'`);
@@ -335,10 +344,16 @@ export default class Netron extends event.AsyncEmitter {
 
         this.contexts.delete(ctxId);
         const defId = stub.definition.id;
-        releaseOriginted && this._releaseOriginatedContexts(defId);
+        releaseOriginated && this._releaseOriginatedContexts(defId);
         this._stubs.delete(defId);
         // this._emitContextEvent("context detach", { id: ctxId, defId });
         return defId;
+    }
+
+    detachAllContexts(releaseOriginated = true) {
+        for (const ctxId of this.contexts.keys()) {
+            this.detachContext(ctxId, releaseOriginated);
+        }
     }
 
     // async attachContextRemote(uid, instance, ctxId = null) {
@@ -397,7 +412,7 @@ export default class Netron extends event.AsyncEmitter {
         return names;
     }
 
-    getStubById(defId) {
+    _getStub(defId) {
         const stub = this._stubs.get(defId);
         if (is.undefined(stub)) {
             throw new x.Unknown(`Unknown definition '${defId}'`);
@@ -458,25 +473,25 @@ export default class Netron extends event.AsyncEmitter {
             return this.peer;
         }
 
-        let base58;
+        let base58Id;
         if (is.netron2Peer(peerId)) {
-            base58 = peerId.info.id.asBase58();
-            if (this.peers.has(base58)) {
+            base58Id = peerId.info.id.asBase58();
+            if (this.peers.has(base58Id)) {
                 return peerId;
             }
-        } else if (is.peerInfo(peerId)) {
-            base58 = peerId.id.asBase58();
-        } else if (is.peerId(peerId)) {
-            base58 = peerId.asBase58();
+        } else if (is.p2pPeerInfo(peerId)) {
+            base58Id = peerId.id.asBase58();
+        } else if (is.p2pPeerId(peerId)) {
+            base58Id = peerId.asBase58();
         } else if (is.string(peerId)) { // base58
-            base58 = peerId;
+            base58Id = peerId;
         } else {
             throw new x.NotValid(`Invalid type of peer identity: ${adone.util.typeOf(peerId)}`);
         }
 
-        const peer = this.peers.get(base58);
+        const peer = this.peers.get(base58Id);
         if (is.undefined(peer)) {
-            if (this.peer.info.id.asBase58() === base58) {
+            if (this.peer.info.id.asBase58() === base58Id) {
                 return this.peer;
             }
             throw new x.Unknown(`Unknown peer: '${peerId.toString()}'`);

@@ -10,9 +10,9 @@ const getB58Str = (peer) => {
         b58Str = peer;
     } else if (is.buffer(peer)) {
         b58Str = base58.encode(peer).toString();
-    } else if (is.peerId(peer)) {
+    } else if (is.p2pPeerId(peer)) {
         b58Str = peer.asBase58();
-    } else if (is.peerInfo(peer)) {
+    } else if (is.p2pPeerInfo(peer)) {
         b58Str = peer.id.asBase58();
     } else {
         throw new Error("not valid PeerId or PeerInfo, or B58Str");

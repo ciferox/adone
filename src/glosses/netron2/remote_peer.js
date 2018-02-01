@@ -139,7 +139,7 @@ export default class RemotePeer extends AbstractPeer {
         return Array.from(this._ctxidDefs.keys());
     }
 
-    getInterfaceById(defId) {
+    _queryInterfaceByDefinition(defId) {
         const def = this._defs.get(defId);
         if (is.undefined(def)) {
             throw new x.Unknown(`Unknown definition '${defId}'`);
@@ -147,7 +147,7 @@ export default class RemotePeer extends AbstractPeer {
         return this.netron._createInterface(def, this);
     }
 
-    getDefinitionByName(ctxId) {
+    _getContextDefinition(ctxId) {
         const def = this._ctxidDefs.get(ctxId);
         if (is.undefined(def)) {
             throw new x.Unknown(`Unknown context '${ctxId}'`);

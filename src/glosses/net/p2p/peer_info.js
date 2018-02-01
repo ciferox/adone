@@ -140,9 +140,9 @@ export default class PeerInfo {
     static create(val) {
         if (!val) {
             return new PeerInfo(PeerId.create());
-        } else if (is.peerId(val)) {
+        } else if (is.p2pPeerId(val)) {
             return new PeerInfo(val);
-        } else if (is.peerInfo(val)) {
+        } else if (is.p2pPeerInfo(val)) {
             return val;
         } else if (is.plainObject(val)) {
             return new PeerInfo(PeerId.createFromJSON(val));
@@ -150,4 +150,4 @@ export default class PeerInfo {
         throw new adone.x.NotValid(`Invalid type of input for PeerInfo: ${util.typeOf(val)}`);
     }
 }
-adone.tag.add(PeerInfo, "PEER_INFO");
+adone.tag.add(PeerInfo, "P2P_PEER_INFO");

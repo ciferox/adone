@@ -50,11 +50,11 @@ const getTransports = (transports) => {
     });
 };
 
-export default class NetCore extends event.Emitter {
+export default class Core extends event.Emitter {
     constructor({ peer, transport, muxer, crypto, discovery, dht, relay } = {}) {
         super();
 
-        if (!is.peerInfo(peer)) {
+        if (!is.p2pPeerInfo(peer)) {
             throw new adone.x.NotValid("PeerInfo instance is not valid");
         }
 
@@ -319,7 +319,7 @@ export default class NetCore extends event.Emitter {
     _getPeerInfo(peer) {
         let p;
         // PeerInfo
-        if (is.peerInfo(peer)) {
+        if (is.p2pPeerInfo(peer)) {
             p = peer;
             // Multiaddr instance or Multiaddr String
         } else if (multi.address.isMultiaddr(peer) || is.string(peer)) {
@@ -335,7 +335,7 @@ export default class NetCore extends event.Emitter {
             p.multiaddrs.add(peer);
 
             // PeerId
-        } else if (is.peerId(peer)) {
+        } else if (is.p2pPeerId(peer)) {
             const peerIdB58Str = peer.asBase58();
             try {
                 p = this.peerBook.get(peerIdB58Str);
@@ -356,3 +356,4 @@ export default class NetCore extends event.Emitter {
         return p;
     }
 }
+adone.tag.add(Core, "P2P_CORE");
