@@ -311,7 +311,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         assertion: "./glosses/assertion",
         event: "./glosses/events",
         is: "./glosses/is",
-        x: "./glosses/exceptions",
+        exception: "./glosses/exceptions",
         application: "./glosses/application",
         configuration: "./glosses/configurations",
         collection: "./glosses/collections",

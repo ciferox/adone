@@ -1,4 +1,8 @@
-const { is, x, data } = adone;
+const {
+    is,
+    exception,
+    data
+} = adone;
 
 const CREDENTIALS_REGEXP = /^ *(?:[Bb][Aa][Ss][Ii][Cc]) +([A-Za-z0-9._~+/-]+=*) *$/;
 const USER_PASS_REGEXP = /^([^:]*):(.*)$/;
@@ -33,7 +37,7 @@ export const parse = (string) => {
 
 const getAuthorization = (req) => {
     if (!req.headers || !is.object(req.headers)) {
-        throw new x.InvalidArgument("required to have headers property");
+        throw new exception.InvalidArgument("required to have headers property");
     }
 
     return req.headers.authorization;
@@ -41,10 +45,10 @@ const getAuthorization = (req) => {
 
 export const from = (req) => {
     if (!req) {
-        throw new x.InvalidArgument("req is required");
+        throw new exception.InvalidArgument("req is required");
     }
     if (!is.object(req)) {
-        throw new x.InvalidArgument("req must be an object");
+        throw new exception.InvalidArgument("req must be an object");
     }
 
     const header = getAuthorization(req.req || req);

@@ -143,7 +143,7 @@ export default class Configuration extends adone.configuration.Generic {
             }
 
             if (count > 1) {
-                throw new adone.x.NotAllowed("It is not allowed to expose multiple root namespaces");
+                throw new adone.exception.NotAllowed("It is not allowed to expose multiple root namespaces");
             } else if (count === 1) {
                 const constructPath = (glob, index) => {
                     let result;
@@ -159,7 +159,7 @@ export default class Configuration extends adone.configuration.Generic {
                     } else if (is.array(glob)) {
                         const globs = glob.filter((x) => x[0] !== "!");
                         if (globs.length !== 1) {
-                            throw new adone.x.NotValid(`Invalid glob: ${glob}`);
+                            throw new adone.exception.NotValid(`Invalid glob: ${glob}`);
                         }
 
                         result = constructPath(globs[0], index);
@@ -323,7 +323,7 @@ export default class Configuration extends adone.configuration.Generic {
                             const parents = excludes.map((x) => adone.util.globParent(x));
                             const prefix = adone.text.longestCommonPrefix(parents);
                             if (prefix === "") {
-                                throw new adone.x.NotValid(`No common glob prefix in '${fullKey}' block`);
+                                throw new adone.exception.NotValid(`No common glob prefix in '${fullKey}' block`);
                             }
 
                             unit.src = adone.util.arrify(unit.src);
@@ -334,7 +334,7 @@ export default class Configuration extends adone.configuration.Generic {
 
                 if (is.string(unit.task)) {
                     if (!is.exist(unit.src)) {
-                        throw new adone.x.NotValid(`No 'src' property needed by 'task' in '${fullKey}'`);
+                        throw new adone.exception.NotValid(`No 'src' property needed by 'task' in '${fullKey}'`);
                     }
 
                     if (!is.exist(unit.dst)) {
@@ -364,7 +364,7 @@ export default class Configuration extends adone.configuration.Generic {
                     const subConfigPath = std.path.join(subCwd, Configuration.configName);
                     // eslint-disable-next-line
                     if (!(await fs.exists(subConfigPath))) {
-                        throw new adone.x.NotExists(`Configuration '${subConfigPath}' is not exist`);
+                        throw new adone.exception.NotExists(`Configuration '${subConfigPath}' is not exist`);
                     }
 
                     this[SUB_CONFIGS].set(fullKey, {

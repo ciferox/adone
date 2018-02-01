@@ -1,5 +1,10 @@
 
-const { std: { path: { basename } }, is, x, util } = adone;
+const {
+    std: { path: { basename } },
+    is,
+    exception,
+    util
+} = adone;
 
 // RegExp to match non attr-char, *after* encodeURIComponent (i.e. not including "%")
 const ENCODE_URL_ATTR_CHAR_REGEXP = /[\x00-\x20"'()*,/:;<=>?@[\\\]{}\x7f]/g;
@@ -102,7 +107,7 @@ const decodefield = (str) => {
     const match = EXT_VALUE_REGEXP.exec(str);
 
     if (!match) {
-        throw new x.InvalidArgument("invalid extended field value");
+        throw new exception.InvalidArgument("invalid extended field value");
     }
 
     const charset = match[1].toLowerCase();
@@ -122,7 +127,7 @@ const decodefield = (str) => {
             break;
         }
         default: {
-            throw new x.NotSupported("unsupported charset in extended field");
+            throw new exception.NotSupported("unsupported charset in extended field");
         }
     }
 
@@ -134,7 +139,7 @@ const format = (obj) => {
     const { parameters, type } = obj;
 
     if (!type || !is.string(type) || !TOKEN_REGEXP.test(type)) {
-        throw new x.InvalidArgument("invalid type");
+        throw new exception.InvalidArgument("invalid type");
     }
 
     // start with normalized type
@@ -162,15 +167,15 @@ const createParams = (filename, fallback = true) => {
     const params = {};
 
     if (!is.string(filename)) {
-        throw new x.InvalidArgument("filename must be a string");
+        throw new exception.InvalidArgument("filename must be a string");
     }
 
     if (!is.string(fallback) && !is.boolean(fallback)) {
-        throw new x.InvalidArgument("fallback must be a string or boolean");
+        throw new exception.InvalidArgument("fallback must be a string or boolean");
     }
 
     if (is.string(fallback) && NON_LATIN1_REGEXP.test(fallback)) {
-        throw new x.InvalidArgument("fallback must be ISO-8859-1 string");
+        throw new exception.InvalidArgument("fallback must be ISO-8859-1 string");
     }
 
     // restrict to file base name
@@ -216,13 +221,13 @@ const contentDisposition = (filename, options = {}) => {
 // Parse Content-Disposition header string.
 contentDisposition.parse = (string) => {
     if (!string || !is.string(string)) {
-        throw new x.InvalidArgument("argument string is required");
+        throw new exception.InvalidArgument("argument string is required");
     }
 
     let match = DISPOSITION_TYPE_REGEXP.exec(string);
 
     if (!match) {
-        throw new x.InvalidArgument("invalid type format");
+        throw new exception.InvalidArgument("invalid type format");
     }
 
     // normalize type
@@ -240,7 +245,7 @@ contentDisposition.parse = (string) => {
     // match parameters
     while ((match = PARAM_REGEXP.exec(string))) {
         if (match.index !== index) {
-            throw new x.InvalidArgument("invalid parameter format");
+            throw new exception.InvalidArgument("invalid parameter format");
         }
 
         index += match[0].length;
@@ -248,7 +253,7 @@ contentDisposition.parse = (string) => {
         value = match[2];
 
         if (names.includes(key)) {
-            throw new x.InvalidArgument("invalid duplicate parameter");
+            throw new exception.InvalidArgument("invalid duplicate parameter");
         }
 
         names.push(key);
@@ -276,7 +281,7 @@ contentDisposition.parse = (string) => {
     }
 
     if (index !== -1 && index !== string.length) {
-        throw new x.InvalidArgument("invalid parameter format");
+        throw new exception.InvalidArgument("invalid parameter format");
     }
 
     return new ContentDisposition(type, params);

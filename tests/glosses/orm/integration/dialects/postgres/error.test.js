@@ -27,7 +27,7 @@ describe("error", () => {
                 table: "table_name",
                 parent: new Error("Test error")
             };
-            const err = new orm.x.ExclusionConstraintError(errDetails);
+            const err = new orm.exception.ExclusionConstraintError(errDetails);
 
             _.each(errDetails, (value, key) => {
                 expect(value).to.be.deep.equal(err[key]);
@@ -51,7 +51,7 @@ describe("error", () => {
                     guestName: "Frequent Visitor",
                     period: [new Date(2015, 0, 2), new Date(2015, 0, 5)]
                 });
-            }, orm.x.ExclusionConstraintError);
+            }, orm.exception.ExclusionConstraintError);
         });
     });
 });

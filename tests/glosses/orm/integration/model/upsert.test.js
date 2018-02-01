@@ -483,7 +483,7 @@ describe("upsert", function () {
             await User.create({ username: "user1" });
             await assert.throws(async () => {
                 await Posts.upsert({ title: "Title", username: "user2" });
-            }, orm.x.ForeignKeyConstraintError);
+            }, orm.exception.ForeignKeyConstraintError);
         });
     }
 

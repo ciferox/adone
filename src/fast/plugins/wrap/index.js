@@ -1,10 +1,10 @@
 export default function plugin() {
-    const { is, x, std: { fs }, vendor: { lodash: _ } } = adone;
+    const { is, exception, std: { fs }, vendor: { lodash: _ } } = adone;
 
     return function wrap(template, data, options) {
         if (is.object(template) && !is.function(template)) {
             if (!is.string(template.src)) {
-                throw new x.InvalidArgument("Expecting `src` option");
+                throw new exception.InvalidArgument("Expecting `src` option");
             }
             template = new Promise((resolve, reject) => {
                 fs.readFile(template.src, "utf8", (err, data) => {
@@ -13,7 +13,7 @@ export default function plugin() {
             });
         } else {
             if (!is.string(template) && !is.function(template)) {
-                throw new x.InvalidArgument("Template must be a string or a function");
+                throw new exception.InvalidArgument("Template must be a string or a function");
             }
             template = Promise.resolve(template);
         }
@@ -67,7 +67,7 @@ export default function plugin() {
                                 break;
                         }
                     } catch (err) {
-                        throw new adone.x.Exception(`Error parsing: ${file.path}`);
+                        throw new adone.exception.Exception(`Error parsing: ${file.path}`);
                     }
                 }
             }

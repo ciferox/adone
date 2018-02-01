@@ -1054,7 +1054,7 @@ describe("QueryInterface", function () {
                         type: "unique"
                     });
                 });
-                expect(err).to.be.instanceof(orm.x.UnknownConstraintError);
+                expect(err).to.be.instanceof(orm.exception.UnknownConstraintError);
             });
         });
     });

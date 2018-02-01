@@ -2,7 +2,7 @@ import BaseContext from "./base";
 
 const {
     is,
-    x,
+    exception,
     net: {
         proxy: {
             http: { tunnel }
@@ -140,7 +140,7 @@ export class LocalRequest {
         if (is.buffer(value) || is.readableStream(value) || is.string(value)) {
             this._body = value;
         }
-        throw new x.InvalidArgument("request body must be a buffer, string or readable stream");
+        throw new exception.InvalidArgument("request body must be a buffer, string or readable stream");
     }
 
     get httpVersion() {

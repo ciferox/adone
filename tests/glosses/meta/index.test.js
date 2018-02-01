@@ -8,7 +8,7 @@ describe("meta", () => {
                 globals: ["global", "adone", "is"]
             },
             {
-                code: "const { x, netron } = adone",
+                code: "const { exception, netron } = adone",
                 result: ["global", "adone", "adone.x", "adone.netron"],
                 globals: ["global", "adone", "x", "netron"]
             },

@@ -36,7 +36,7 @@ export default class PeerBook {
     }
 
     /**
-     * Stores a peerInfo, if already exist, throws adone.x.Exists exception.
+     * Stores a peerInfo, if already exist, throws adone.exception.Exists exception.
      *
      * @param {PeerInfo} peerInfo
      */

@@ -161,7 +161,7 @@ export default class Configuration extends Valuable {
                     val = await this._setVal(key, path, val);
                 }
                 if (this.validateNetron && !this.validateNetron(val)) {
-                    throw new adone.x.AggregateException(this.validateNetron.errors);
+                    throw new adone.exception.AggregateException(this.validateNetron.errors);
                 }
                 break;
             }
@@ -171,7 +171,7 @@ export default class Configuration extends Valuable {
                     adone.log(val);
                 }
                 if (this.validateService && !this.validateService(val)) {
-                    throw new adone.x.AggregateException(this.validateService.errors);
+                    throw new adone.exception.AggregateException(this.validateService.errors);
                 }
                 break;
             }
@@ -185,7 +185,7 @@ export default class Configuration extends Valuable {
                 }
                 for (const gate of gates) {
                     if (this.validateService && !this.validateGate(gate)) {
-                        throw new adone.x.AggregateException(this.validateGate.errors);
+                        throw new adone.exception.AggregateException(this.validateGate.errors);
                     }
                 }
                 return super.set("gates", gates);
@@ -194,7 +194,7 @@ export default class Configuration extends Valuable {
                 break;
             }
             default:
-                throw new adone.x.NotExists(`Key not exist: ${key}`);
+                throw new adone.exception.NotExists(`Key not exist: ${key}`);
         }
         return super.set(key, val);
     }
@@ -205,7 +205,7 @@ export default class Configuration extends Valuable {
 
         const object = await super.get(path.shift());
         if (is.undefined(object)) {
-            throw new adone.x.NotExists(`Key not exist: ${key}`);
+            throw new adone.exception.NotExists(`Key not exist: ${key}`);
         }
 
         if (path.length === 0) {
@@ -214,7 +214,7 @@ export default class Configuration extends Valuable {
 
         const result = adone.vendor.lodash.get(object, path);
         if (is.undefined(result)) {
-            throw new adone.x.NotExists(`Key not exist: ${key}`);
+            throw new adone.exception.NotExists(`Key not exist: ${key}`);
         }
         return result;
     }
@@ -226,7 +226,7 @@ export default class Configuration extends Valuable {
 
         if (path.length === 0) {
             if (["service", "netron"].includes(key)) {
-                throw new adone.x.NotAllowed("Operation not allowed");
+                throw new adone.exception.NotAllowed("Operation not allowed");
             }
             return super.delete(key);
         }
@@ -257,7 +257,7 @@ export default class Configuration extends Valuable {
     getGate(name) {
         const index = this.gates.findIndex((g) => g.name === name);
         if (index < 0) {
-            throw new adone.x.NotExists(`Gate with name '${name}' is not exist`);
+            throw new adone.exception.NotExists(`Gate with name '${name}' is not exist`);
         }
 
         return this.gates[index];
@@ -271,11 +271,11 @@ export default class Configuration extends Valuable {
     @Public()
     addGate(gate) {
         if (!this.validateGate(gate)) {
-            throw new adone.x.AggregateException(this.validateGate.errors);
+            throw new adone.exception.AggregateException(this.validateGate.errors);
         }
 
         if (this.hasGate(gate.name)) {
-            throw new adone.x.Exists(`Gate with name '${gate.name}' is already exist`);
+            throw new adone.exception.Exists(`Gate with name '${gate.name}' is already exist`);
         }
 
         this.gates.push(gate);
@@ -287,7 +287,7 @@ export default class Configuration extends Valuable {
     deleteGate(name) {
         const index = this.gates.findIndex((g) => g.name === name);
         if (index < 0) {
-            throw new adone.x.NotExists(`Gate with name '${name}' is not exist`);
+            throw new adone.exception.NotExists(`Gate with name '${name}' is not exist`);
         }
 
         this.gates.splice(index, 1);
@@ -305,7 +305,7 @@ export default class Configuration extends Valuable {
         options.name = name;
 
         if (!this.validateGate(gate)) {
-            throw new adone.x.AggregateException(this.validateGate.errors);
+            throw new adone.exception.AggregateException(this.validateGate.errors);
         }
 
         Object.assign(gate, options);

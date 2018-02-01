@@ -1,4 +1,9 @@
-const { is, std: { path, fs }, x, noop } = adone;
+const {
+    is,
+    std: { path, fs },
+    exception,
+    noop
+} = adone;
 
 const normalize = !is.windows ? adone.identity : (name) => name.replace(/\\/g, "/").replace(/[:?<>|]/g, "_");
 
@@ -146,7 +151,7 @@ export const packStream = (cwd = process.cwd(), opts = {}) => {
 
         if (!stat.isFile()) {
             if (strict) {
-                return pack.destroy(new x.NotSupported(`Unsupported type for ${filename}`));
+                return pack.destroy(new exception.NotSupported(`Unsupported type for ${filename}`));
             }
             return onnextentry();
         }
@@ -341,7 +346,7 @@ export const unpackStream = (cwd = process.cwd(), opts = {}) => {
             }
 
             if (strict) {
-                return next(new x.NotSupported(`Unsupported type for ${name} (${header.type})`));
+                return next(new exception.NotSupported(`Unsupported type for ${name} (${header.type})`));
             }
 
             stream.resume();

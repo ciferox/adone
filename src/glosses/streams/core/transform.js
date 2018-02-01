@@ -1,4 +1,9 @@
-const { collection, noop, x, is } = adone;
+const {
+    collection,
+    noop,
+    exception,
+    is
+} = adone;
 
 /**
  * Represents an abstact transform stream
@@ -121,10 +126,10 @@ export default class Transform {
      */
     write(value) {
         if (this._ending) {
-            throw new x.IllegalState("Write after end");
+            throw new exception.IllegalState("Write after end");
         }
         if (this._destroyed) {
-            throw new x.IllegalState("destroyed");
+            throw new exception.IllegalState("destroyed");
         }
         this._process(value);
         return true;

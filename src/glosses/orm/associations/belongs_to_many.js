@@ -6,7 +6,7 @@ const {
 
 const {
     util,
-    x,
+    exception,
     operator
 } = orm;
 
@@ -22,7 +22,7 @@ export default class BelongsToMany extends association.Base {
         super(source, target, options);
 
         if (is.undefined(this.options.through) || this.options.through === true || is.null(this.options.through)) {
-            throw new x.AssociationError("belongsToMany must be given a through option, either a string or a model");
+            throw new exception.AssociationError("belongsToMany must be given a through option, either a string or a model");
         }
 
         if (!this.options.through.model) {
@@ -39,7 +39,7 @@ export default class BelongsToMany extends association.Base {
         this.doubleLinked = false;
 
         if (!this.as && this.isSelfAssociation) {
-            throw new x.AssociationError("'as' must be defined for many-to-many self-associations");
+            throw new exception.AssociationError("'as' must be defined for many-to-many self-associations");
         }
 
         if (this.as) {

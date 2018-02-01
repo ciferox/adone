@@ -55,18 +55,18 @@
         //     }
 
         //     it("twin interface validation", () => {
-        //         assert.throws(() => exNetron.setInterfaceTwin("a"), adone.x.InvalidArgument);
-        //         assert.throws(() => exNetron.setInterfaceTwin("a", 1), adone.x.InvalidArgument);
-        //         assert.throws(() => exNetron.setInterfaceTwin("a", {}), adone.x.InvalidArgument);
-        //         assert.throws(() => exNetron.setInterfaceTwin("a", []), adone.x.InvalidArgument);
-        //         assert.throws(() => exNetron.setInterfaceTwin("a", "twin"), adone.x.InvalidArgument);
-        //         assert.throws(() => exNetron.setInterfaceTwin("a", new TwinA()), adone.x.InvalidArgument);
+        //         assert.throws(() => exNetron.setInterfaceTwin("a"), adone.exception.InvalidArgument);
+        //         assert.throws(() => exNetron.setInterfaceTwin("a", 1), adone.exception.InvalidArgument);
+        //         assert.throws(() => exNetron.setInterfaceTwin("a", {}), adone.exception.InvalidArgument);
+        //         assert.throws(() => exNetron.setInterfaceTwin("a", []), adone.exception.InvalidArgument);
+        //         assert.throws(() => exNetron.setInterfaceTwin("a", "twin"), adone.exception.InvalidArgument);
+        //         assert.throws(() => exNetron.setInterfaceTwin("a", new TwinA()), adone.exception.InvalidArgument);
         //         assert.doesNotThrow(() => exNetron.setInterfaceTwin("a", TwinA));
         //     });
 
         //     it("set twin interface double times", () => {
         //         assert.doesNotThrow(() => exNetron.setInterfaceTwin("a", TwinA));
-        //         assert.throws(() => exNetron.setInterfaceTwin("a", TwinA), adone.x.Exists);
+        //         assert.throws(() => exNetron.setInterfaceTwin("a", TwinA), adone.exception.Exists);
         //     });
 
         //     it("local interface twin - basic access", async () => {

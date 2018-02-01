@@ -3,7 +3,7 @@ const {
     event,
     data: { bson },
     is,
-    x,
+    exception,
     util
 } = adone;
 const {
@@ -311,7 +311,7 @@ const basicReadValidations = (self, options) => {
     basicWriteValidations(self, options);
 
     if (options.readPreference && !(options.readPreference instanceof ReadPreference)) {
-        throw new x.InvalidArgument("readPreference must be an instance of ReadPreference");
+        throw new exception.InvalidArgument("readPreference must be an instance of ReadPreference");
     }
 };
 

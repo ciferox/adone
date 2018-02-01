@@ -1,4 +1,10 @@
-const { data: { yaml }, is, x, util, text } = adone;
+const {
+    data: { yaml },
+    is,
+    exception,
+    util,
+    text
+} = adone;
 
 const CHAR_TAB = 0x09;
 const CHAR_LINE_FEED = 0x0A;
@@ -84,7 +90,7 @@ const encodeHex = (character) => {
         handle = "U";
         length = 8;
     } else {
-        throw new x.IllegalState("code point within a string may not be greater than 0xFFFFFFFF");
+        throw new exception.IllegalState("code point within a string may not be greater than 0xFFFFFFFF");
     }
 
     return `\\${handle}${"0".repeat(length - string.length)}${string}`;
@@ -451,7 +457,7 @@ const writeScalar = (state, string, level, iskey) => {
             break;
         }
         default: {
-            throw new x.IllegalState("impossible error: invalid scalar style");
+            throw new exception.IllegalState("impossible error: invalid scalar style");
         }
     }
 };
@@ -553,7 +559,7 @@ const writeBlockMapping = (state, level, object, compact) => {
         keys.sort(state.sortKeys);
     } else if (state.sortKeys) {
         // Something is wrong
-        throw new x.InvalidArgument("sortKeys must be a boolean or a function");
+        throw new exception.InvalidArgument("sortKeys must be a boolean or a function");
     }
     let _result = "";
     const _tag = state.tag;
@@ -625,7 +631,7 @@ const detectType = (state, object, explicit) => {
                 } else if (is.propertyOwned(type.represent, style)) {
                     result = type.represent[style](object, style);
                 } else {
-                    throw new x.IllegalState(`!<${type.tag}> tag resolver accepts not "${style}" style`);
+                    throw new exception.IllegalState(`!<${type.tag}> tag resolver accepts not "${style}" style`);
                 }
 
                 state.dump = result;
@@ -649,7 +655,7 @@ const writeNode = (state, level, object, block, compact, iskey) => {
         detectType(state, object, true);
     }
 
-    const type = util.typeOf(state.dump);
+    const type = adone.meta.typeOf(state.dump);
 
     if (block) {
         block = (state.flowLevel < 0 || state.flowLevel > level);
@@ -706,7 +712,7 @@ const writeNode = (state, level, object, block, compact, iskey) => {
             if (state.skipInvalid) {
                 return false;
             }
-            throw new x.IllegalState(`unacceptable kind of an object to dump ${type}`);
+            throw new exception.IllegalState(`unacceptable kind of an object to dump ${type}`);
         }
 
         if (!is.null(state.tag) && state.tag !== "?") {

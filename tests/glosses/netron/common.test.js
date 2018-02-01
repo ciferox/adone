@@ -58,7 +58,7 @@ describe("netron", "common", function () {
             const err = await assert.throws(async () => customExNetron.connect({
                 port: NETRON_PORT
             }));
-            assert.instanceOf(err, adone.x.Connect);
+            assert.instanceOf(err, adone.exception.Connect);
             assert.equal(reconnects, 4);
         });
 
@@ -181,7 +181,7 @@ describe("netron", "common", function () {
         });
 
         it("ping() unknown netron should have thrown", async () => {
-            await assert.throws(async () => exNetron.ping(adone.util.uuid.v4()), adone.x.Unknown);
+            await assert.throws(async () => exNetron.ping(adone.util.uuid.v4()), adone.exception.Unknown);
         });
 
         it("ping remote netron", async () => {
@@ -197,7 +197,7 @@ describe("netron", "common", function () {
     });
 
     it("getPeer(null)", () => {
-        assert.throws(() => exNetron.getPeer(null), adone.x.InvalidArgument);
+        assert.throws(() => exNetron.getPeer(null), adone.exception.InvalidArgument);
     });
 
     it("getPeer(uid)", async () => {
@@ -379,28 +379,28 @@ describe("netron", "common", function () {
         describe("Reflection.from()", () => {
             it("not instance", () => {
                 const err = assert.throws(() => Reflection.from("a"));
-                assert.instanceOf(err, adone.x.NotValid);
+                assert.instanceOf(err, adone.exception.NotValid);
             });
 
             it("class instead instance", () => {
                 const err = assert.throws(() => Reflection.from(A));
-                assert.instanceOf(err, adone.x.NotValid);
+                assert.instanceOf(err, adone.exception.NotValid);
             });
 
             it("class without constructor", () => {
                 class SomeClass { }
                 const err = assert.throws(() => Reflection.from(new SomeClass()));
-                assert.instanceOf(err, adone.x.NotValid);
+                assert.instanceOf(err, adone.exception.NotValid);
             });
 
             it("Object instead instance", () => {
                 const err = assert.throws(() => Reflection.from(Object));
-                assert.instanceOf(err, adone.x.NotValid);
+                assert.instanceOf(err, adone.exception.NotValid);
             });
 
             it("empty function instead instance", () => {
                 const err = assert.throws(() => Reflection.from(adone.noop));
-                assert.instanceOf(err, adone.x.NotValid);
+                assert.instanceOf(err, adone.exception.NotValid);
             });
 
             it("instance of unnamed class", () => {
@@ -412,7 +412,7 @@ describe("netron", "common", function () {
                 );
 
                 const err = assert.throws(() => Reflection.from(a));
-                assert.instanceOf(err, adone.x.NotValid);
+                assert.instanceOf(err, adone.exception.NotValid);
             });
 
             it("instance with no public methods", () => {
@@ -423,7 +423,7 @@ describe("netron", "common", function () {
                 }
 
                 const err = assert.throws(() => Reflection.from(new A()));
-                assert.instanceOf(err, adone.x.NotValid);
+                assert.instanceOf(err, adone.exception.NotValid);
             });
 
             it("valid way", () => {
@@ -464,7 +464,7 @@ describe("netron", "common", function () {
                 const ctx = new A();
                 superNetron.attachContext(ctx, "a");
                 const err = assert.throws(() => superNetron.attachContext(ctx, "a"));
-                assert.instanceOf(err, adone.x.Exists);
+                assert.instanceOf(err, adone.exception.Exists);
             });
         });
 
@@ -521,14 +521,14 @@ describe("netron", "common", function () {
 
                 await exNetron.attachContextRemote(peer.uid, ctx, "a");
                 const err = await assert.throws(async () => exNetron.attachContextRemote(peer.uid, ctx, "a"));
-                assert.instanceOf(err, adone.x.Exists);
+                assert.instanceOf(err, adone.exception.Exists);
             });
         });
 
         describe("detach contexts", () => {
             it("detach not existing context", () => {
                 const e = assert.throws(() => superNetron.detachContext("this_context_not_exists"));
-                assert.instanceOf(e, adone.x.Unknown);
+                assert.instanceOf(e, adone.exception.Unknown);
             });
 
             it("valid way", async () => {
@@ -573,7 +573,7 @@ describe("netron", "common", function () {
                 const peer = await exNetron.connect();
 
                 const e = await assert.throws(async () => exNetron.detachContextRemote(peer.uid, "this_context_not_exists"));
-                assert.instanceOf(e, adone.x.NotExists);
+                assert.instanceOf(e, adone.exception.NotExists);
             });
 
             it("valid way", async () => {
@@ -639,7 +639,7 @@ describe("netron", "common", function () {
             assert.instanceOf(def, adone.netron.Definition);
             assert.equal(def.name, "A");
 
-            assert.throws(() => superNetron.getDefinitionByName("not_exists"), adone.x.Unknown);
+            assert.throws(() => superNetron.getDefinitionByName("not_exists"), adone.exception.Unknown);
         });
 
         it("remote", () => {
@@ -887,7 +887,7 @@ describe("netron", "common", function () {
                     if (!err) {
                         throw new Error("No error was thrown");
                     }
-                    expect(err).to.be.instanceOf(adone.x.NetronTimeout);
+                    expect(err).to.be.instanceOf(adone.exception.NetronTimeout);
                     expect(err.message).to.be.equal("Response timeout 500ms exceeded");
                 });
 
@@ -905,7 +905,7 @@ describe("netron", "common", function () {
                     if (!err) {
                         throw new Error("No error was thrown");
                     }
-                    expect(err).to.be.instanceOf(adone.x.NetronTimeout);
+                    expect(err).to.be.instanceOf(adone.exception.NetronTimeout);
                     expect(err.message).to.be.equal("Response timeout 500ms exceeded");
                 });
 
@@ -925,10 +925,10 @@ describe("netron", "common", function () {
                     if (!err) {
                         throw new Error("No error was thrown");
                     }
-                    if (err instanceof adone.x.NetronTimeout) {
+                    if (err instanceof adone.exception.NetronTimeout) {
                         throw new Error("Wrong error was thrown");
                     }
-                    expect(err).to.be.instanceOf(adone.x.NetronPeerDisconnected);
+                    expect(err).to.be.instanceOf(adone.exception.NetronPeerDisconnected);
                 });
 
                 it("set should not throw if the peer disconnects", async () => {
@@ -949,10 +949,10 @@ describe("netron", "common", function () {
                     if (!err) {
                         throw new Error("No error was thrown");
                     }
-                    if (err instanceof adone.x.NetronTimeout) {
+                    if (err instanceof adone.exception.NetronTimeout) {
                         throw new Error("Wrong error was thrown");
                     }
-                    expect(err).to.be.instanceOf(adone.x.NetronPeerDisconnected);
+                    expect(err).to.be.instanceOf(adone.exception.NetronPeerDisconnected);
                 });
 
                 it("callVoid should not throw if the peer disconnects", async () => {
@@ -988,7 +988,7 @@ describe("netron", "common", function () {
             assert.ok(iface);
             assert.instanceOf(iface, adone.netron.Interface);
 
-            assert.throws(() => superNetron.getInterfaceById(100500), adone.x.Unknown);
+            assert.throws(() => superNetron.getInterfaceById(100500), adone.exception.Unknown);
         });
 
         it("remote", () => {
@@ -997,7 +997,7 @@ describe("netron", "common", function () {
             assert.ok(iface);
             assert.instanceOf(iface, adone.netron.Interface);
 
-            assert.throws(() => exNetron.getInterfaceById(100500, superNetron.uid), adone.x.Unknown);
+            assert.throws(() => exNetron.getInterfaceById(100500, superNetron.uid), adone.exception.Unknown);
         });
     });
 
@@ -1024,7 +1024,7 @@ describe("netron", "common", function () {
             assert.ok(iface);
             assert.instanceOf(iface, adone.netron.Interface);
 
-            assert.throws(() => superNetron.getInterfaceByName("not_exists"), adone.x.Unknown);
+            assert.throws(() => superNetron.getInterfaceByName("not_exists"), adone.exception.Unknown);
         });
 
         it("remote", () => {
@@ -1034,7 +1034,7 @@ describe("netron", "common", function () {
 
             assert.throws(() => {
                 exNetron.getInterfaceByName("not_exists", superNetron.uid);
-            }, adone.x.Unknown);
+            }, adone.exception.Unknown);
         });
     });
 
@@ -1077,7 +1077,7 @@ describe("netron", "common", function () {
 
         it("local", () => {
             const iface = superNetron.getInterfaceByName("a");
-            assert.throws(() => superNetron.getPeerForInterface(iface), adone.x.InvalidArgument);
+            assert.throws(() => superNetron.getPeerForInterface(iface), adone.exception.InvalidArgument);
         });
 
         it("remote", () => {
@@ -1089,7 +1089,7 @@ describe("netron", "common", function () {
             assert.equal(peerIface.uid, superNetron.uid);
             assert.equal(peerIface, peer);
 
-            assert.throws(() => exNetron.getPeerForInterface(null), adone.x.InvalidArgument);
+            assert.throws(() => exNetron.getPeerForInterface(null), adone.exception.InvalidArgument);
         });
     });
 
@@ -1352,7 +1352,7 @@ describe("netron", "common", function () {
                 });
 
                 const e = await assert.throws(async () => exNetron.connect());
-                assert.instanceOf(e, adone.x.Connect);
+                assert.instanceOf(e, adone.exception.Connect);
                 assert.include(e.message, "refused connection");
                 assert.equal(resolved, false);
             });
@@ -1376,7 +1376,7 @@ describe("netron", "common", function () {
                 });
 
                 const e = await assert.throws(async () => exNetron.connect());
-                assert.instanceOf(e, adone.x.Connect);
+                assert.instanceOf(e, adone.exception.Connect);
                 assert.include(e.message, "refused connection");
                 assert.equal(resolved, false);
             });
@@ -1420,7 +1420,7 @@ describe("netron", "common", function () {
                 });
 
                 const e = await assert.throws(async () => exNetron.connect());
-                assert.instanceOf(e, adone.x.Connect);
+                assert.instanceOf(e, adone.exception.Connect);
                 assert.include(e.message, "refused connection");
                 await peerOffline;
             });
@@ -1443,7 +1443,7 @@ describe("netron", "common", function () {
                 });
 
                 const e = await assert.throws(async () => exNetron.connect());
-                assert.instanceOf(e, adone.x.Connect);
+                assert.instanceOf(e, adone.exception.Connect);
                 assert.include(e.message, "refused connection");
                 await peerOffline;
             });
@@ -1501,7 +1501,7 @@ describe("netron", "common", function () {
                 await client.connect();
 
                 const e = await assert.throws(async () => hacker.connect());
-                assert.instanceOf(e, adone.x.Connect);
+                assert.instanceOf(e, adone.exception.Connect);
                 assert.include(e.message, "refused connection");
             });
         });

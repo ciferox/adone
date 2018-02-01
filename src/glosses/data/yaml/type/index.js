@@ -1,4 +1,9 @@
-const { util, x, is, lazify } = adone;
+const {
+    util,
+    exception,
+    is,
+    lazify
+} = adone;
 
 const TYPE_CONSTRUCTOR_OPTIONS = new Set([
     "kind",
@@ -37,12 +42,12 @@ export class Type {
 
         for (const name of util.keys(options)) {
             if (!TYPE_CONSTRUCTOR_OPTIONS.has(name)) {
-                throw new x.InvalidArgument(`Unknown option "${name}" is met in definition of "${tag}" YAML type.`);
+                throw new exception.InvalidArgument(`Unknown option "${name}" is met in definition of "${tag}" YAML type.`);
             }
         }
 
         if (!YAML_NODE_KINDS.has(options.kind)) {
-            throw new x.InvalidArgument(`Unknown kind "${this.kind}" is specified for "${tag}" YAML type.`);
+            throw new exception.InvalidArgument(`Unknown kind "${this.kind}" is specified for "${tag}" YAML type.`);
         }
 
         // TODO: Add tag format check.

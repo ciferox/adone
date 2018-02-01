@@ -1,5 +1,5 @@
 describe("promise", () => {
-    const { promise, x } = adone;
+    const { promise, exception } = adone;
 
     describe("defer", () => {
         it("should have a promise", () => {
@@ -50,14 +50,14 @@ describe("promise", () => {
         it("should throw if the first argument is not a promise", () => {
             expect(() => {
                 promise.timeout(5);
-            }).to.throw(adone.x.InvalidArgument, "The first argument must be a promise");
+            }).to.throw(adone.exception.InvalidArgument, "The first argument must be a promise");
         });
 
         it("should reject the promise after the dalay", async () => {
             const p = promise.delay(500);
             const q = promise.timeout(p, 200);
             const res = await q.then(() => null, (x) => x);
-            expect(res).to.be.instanceOf(adone.x.Timeout);
+            expect(res).to.be.instanceOf(adone.exception.Timeout);
             expect(res.message).to.be.equal("Timeout of 200ms exceeded");
         });
 
@@ -85,7 +85,7 @@ describe("promise", () => {
                     resolve();
                 });
             }), 100).then(() => null, (x) => x);
-            expect(q).to.be.instanceOf(adone.x.Timeout);
+            expect(q).to.be.instanceOf(adone.exception.Timeout);
             expect(q.message).to.be.equal("Timeout of 100ms exceeded");
         });
 
@@ -99,7 +99,7 @@ describe("promise", () => {
                     reject(new Error("hello"));
                 });
             }), 100).then(() => null, (x) => x);
-            expect(q).to.be.instanceOf(adone.x.Timeout);
+            expect(q).to.be.instanceOf(adone.exception.Timeout);
             expect(q.message).to.be.equal("Timeout of 100ms exceeded");
             expect(q.original).to.be.instanceOf(Error);
             expect(q.original.message).to.be.equal("hello");
@@ -143,7 +143,7 @@ describe("promise", () => {
         it("should throw if the first argument is not a promise", () => {
             expect(() => {
                 promise.nodeify();
-            }).to.throw(adone.x.InvalidArgument, "The first argument must be a promise");
+            }).to.throw(adone.exception.InvalidArgument, "The first argument must be a promise");
         });
 
         it("should return the promise if the second argument is not a function", () => {
@@ -241,7 +241,7 @@ describe("promise", () => {
         it("should throw if the first argument is not a function", () => {
             expect(() => {
                 promise.promisify();
-            }).to.throw(adone.x.InvalidArgument, "The first argument must be a function");
+            }).to.throw(adone.exception.InvalidArgument, "The first argument must be a function");
         });
 
         it("should set the promisified property", () => {
@@ -408,7 +408,7 @@ describe("promise", () => {
 
     describe("custom promisifier", () => {
         const input = "adone";
-        const err = new adone.x.NotValid();
+        const err = new adone.exception.NotValid();
         const a = {
             ok(input, callback) {
                 setTimeout(() => {
@@ -514,7 +514,7 @@ describe("promise", () => {
                         backoffBase: 0,
                         timeout: 1000
                     });
-                }, x.Timeout);
+                }, exception.Timeout);
             });
 
             it("should throw if reject on last attempt", async () => {
@@ -531,7 +531,7 @@ describe("promise", () => {
                         backoffBase: 0,
                         timeout: 1500
                     });
-                }, x.Timeout);
+                }, exception.Timeout);
                 expect(count).to.equal(3);
             });
         });
@@ -637,7 +637,7 @@ describe("promise", () => {
                         max: 3,
                         timeout: 1000
                     });
-                }, x.Timeout);
+                }, exception.Timeout);
             });
         });
     });

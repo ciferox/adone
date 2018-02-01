@@ -1,4 +1,7 @@
-const { x, is } = adone;
+const {
+    exception,
+    is
+} = adone;
 
 let s = 0;
 const S = {
@@ -333,9 +336,10 @@ export default class MultipartParser {
             callback(this, "partEnd");
             callback(this, "end");
         } else if (this.state !== S.END) {
-            return new x.IllegalState(`MultipartParser.end(): stream ended unexpectedly: ${this.explain()}`);
+            return new exception.IllegalState(`MultipartParser.end(): stream ended unexpectedly: ${this.explain()}`);
         }
     }
+
     explain() {
         return `state = ${MultipartParser.stateToString(this.state)}`;
     }

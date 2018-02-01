@@ -1,4 +1,8 @@
-const { is, x, noop } = adone;
+const {
+    is,
+    exception,
+    noop
+} = adone;
 
 const NativeDate = Date;
 let uniqueTimerId = 1;
@@ -46,7 +50,7 @@ const getEpoch = (epoch) => {
     if (is.number(epoch)) {
         return epoch;
     }
-    throw new x.InvalidArgument("now should be milliseconds since UNIX epoch");
+    throw new exception.InvalidArgument("now should be milliseconds since UNIX epoch");
 };
 
 const inRange = (from, to, timer) => timer && timer.callAt >= from && timer.callAt <= to;

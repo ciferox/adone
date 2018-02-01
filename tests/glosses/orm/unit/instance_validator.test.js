@@ -1,6 +1,6 @@
 describe("instance validator", function () {
     const InstanceValidator = adone.private(adone.orm).InstanceValidator;
-    const ValidationError = adone.orm.x.ValidationError;
+    const ValidationError = adone.orm.exception.ValidationError;
     const { orm } = adone;
     const { type } = orm;
 

@@ -1,4 +1,4 @@
-const { is, x } = adone;
+const { is, exception } = adone;
 
 const PATH_REGEXP = new RegExp([
     // Match escaped characters that would otherwise appear in future matches.
@@ -123,7 +123,7 @@ const tokensToFunction = (tokens) => {
 
                     continue;
                 } else {
-                    throw new x.IllegalState(`Expected "${token.name}" to be defined`);
+                    throw new exception.IllegalState(`Expected "${token.name}" to be defined`);
                 }
             }
 
@@ -131,14 +131,14 @@ const tokensToFunction = (tokens) => {
 
             if (is.array(value)) {
                 if (!token.repeat) {
-                    throw new x.IllegalState(`Expected "${token.name}" to not repeat, but received \`${JSON.stringify(value)}\``);
+                    throw new exception.IllegalState(`Expected "${token.name}" to not repeat, but received \`${JSON.stringify(value)}\``);
                 }
 
                 if (value.length === 0) {
                     if (token.optional) {
                         continue;
                     } else {
-                        throw new x.IllegalState(`Expected "${token.name}" to not be empty`);
+                        throw new exception.IllegalState(`Expected "${token.name}" to not be empty`);
                     }
                 }
 
@@ -146,7 +146,7 @@ const tokensToFunction = (tokens) => {
                     segment = encode(value[j]);
 
                     if (!matches[i].test(segment)) {
-                        throw new x.IllegalState(`Expected all "${token.name}" to match "${token.pattern}", but received \`${JSON.stringify(segment)}\``);
+                        throw new exception.IllegalState(`Expected all "${token.name}" to match "${token.pattern}", but received \`${JSON.stringify(segment)}\``);
                     }
 
                     path += (j === 0 ? token.prefix : token.delimiter) + segment;
@@ -158,7 +158,7 @@ const tokensToFunction = (tokens) => {
             segment = token.asterisk ? encodeAsterisk(value) : encode(value);
 
             if (!matches[i].test(segment)) {
-                throw new x.IllegalState(`Expected "${token.name}" to match "${token.pattern}", but received "${segment}"`);
+                throw new exception.IllegalState(`Expected "${token.name}" to match "${token.pattern}", but received "${segment}"`);
             }
 
             path += token.prefix + segment;

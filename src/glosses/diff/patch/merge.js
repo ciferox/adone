@@ -1,4 +1,8 @@
-const { is, x, diff: { util: { structuredPatch, parsePatch } } } = adone;
+const {
+    is,
+    exception,
+    diff: { util: { structuredPatch, parsePatch } }
+} = adone;
 
 const loadPatch = (param, base = adone.null) => {
     if (is.string(param)) {
@@ -7,7 +11,7 @@ const loadPatch = (param, base = adone.null) => {
         }
 
         if (base === adone.null) {
-            throw new x.InvalidArgument("Must provide a base reference or pass in a patch");
+            throw new exception.InvalidArgument("Must provide a base reference or pass in a patch");
         }
         return structuredPatch(undefined, undefined, base, param);
     }

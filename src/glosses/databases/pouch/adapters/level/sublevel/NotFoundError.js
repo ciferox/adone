@@ -1,2 +1,2 @@
-export default class NotFoundError extends adone.x.Exception {};
+export default class NotFoundError extends adone.exception.Exception {};
 NotFoundError.prototype.name = "NotFoundError";

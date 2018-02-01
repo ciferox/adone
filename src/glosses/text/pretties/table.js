@@ -2,7 +2,7 @@ const {
     is,
     util,
     runtime: { term },
-    x
+    exception
 } = adone;
 
 const percentRegexp = /^(\d{1,3}(?:.\d+)?)%$/;
@@ -10,11 +10,11 @@ const percentRegexp = /^(\d{1,3}(?:.\d+)?)%$/;
 const coercePercent = (percent, total) => {
     const match = percent.match(percentRegexp);
     if (is.null(match)) {
-        throw new x.InvalidArgument(`Invalid percent value: ${percent}`);
+        throw new exception.InvalidArgument(`Invalid percent value: ${percent}`);
     }
     const value = parseFloat(match[1]);
     if (value > 100) {
-        throw new x.InvalidArgument(`Invalid percent value: ${percent}`);
+        throw new exception.InvalidArgument(`Invalid percent value: ${percent}`);
     }
     return Math.floor(value / 100 * total);
 };
@@ -166,8 +166,8 @@ export default function prettyTable(data, {
             if (is.plainObject(map[key])) {
                 const m = map[key];
                 const style = m.style;
-                const styleType = util.typeOf(style);
-                const formatType = util.typeOf(m.format);
+                const styleType = adone.meta.typeOf(style);
+                const formatType = adone.meta.typeOf(m.format);
                 let str;
                 if (is.function(m.handle)) {
                     str = m.handle(item);

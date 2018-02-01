@@ -33,7 +33,7 @@ export default class InstallTask extends task.Task {
                 // passing them path to pacakge with the damaged symlink.
             } else {
                 if (!(await fs.exists(this.destPath))) {
-                    throw new adone.x.NotExists(`Package ${this.name} is not exists`);
+                    throw new adone.exception.NotExists(`Package ${this.name} is not exists`);
                 }
 
                 const adoneConf = await adone.configuration.Adone.load({
@@ -48,7 +48,7 @@ export default class InstallTask extends task.Task {
                 } else {
                     const subConfigs = adoneConf.getSubConfigs();
                     if (subConfigs.length === 0) {
-                        throw new adone.x.NotValid("Invalid or useless package");
+                        throw new adone.exception.NotValid("Invalid or useless package");
                     }
 
                     for (const sub of subConfigs) {

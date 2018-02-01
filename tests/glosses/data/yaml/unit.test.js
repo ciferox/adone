@@ -1,5 +1,5 @@
 describe("data", "yaml", "unit", () => {
-    const { fs, data: { yaml }, util, x } = adone;
+    const { fs, data: { yaml }, util, exception } = adone;
     const fixtures = new fs.Directory(__dirname, "fixtures");
 
     describe("alias nodes", () => {
@@ -496,7 +496,7 @@ describe("data", "yaml", "unit", () => {
         specify("Dumper must throw an exception on invalid type when option `skipInvalid` is false.", () => {
             assert.throws(() => {
                 yaml.safeDump(sample, { skipInvalid: false });
-            }, x.IllegalState);
+            }, exception.IllegalState);
         });
 
         specify("Dumper must skip pairs and values with invalid types when option `skipInvalid` is true.", () => {

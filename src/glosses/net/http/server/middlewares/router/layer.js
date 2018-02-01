@@ -1,6 +1,6 @@
 const {
     is,
-    x,
+    exception,
     util,
     net: { http: { server: { helper: { pathToRegexp } } } }
 } = adone;
@@ -23,7 +23,7 @@ export default class Layer {
 
         for (const fn of this.stack) {
             if (!is.function(fn)) {
-                throw new x.InvalidArgument(`${methods.toString()} \`${this.opts.name || path}\`: \`middleware\` must be a function, not \`${typeof fn}\``);
+                throw new exception.InvalidArgument(`${methods.toString()} \`${this.opts.name || path}\`: \`middleware\` must be a function, not \`${typeof fn}\``);
             }
         }
 

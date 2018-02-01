@@ -1,6 +1,6 @@
 const {
     is,
-    x
+    exception
 } = adone;
 
 /**
@@ -23,7 +23,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
      */
     addTask(name, task, options) {
         if (this._tasks.has(name)) {
-            throw new x.Exists(`Task '${name}' already exists`);
+            throw new exception.Exists(`Task '${name}' already exists`);
         }
         return this.setTask(name, task, options);
     }
@@ -176,7 +176,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
         const taskInfo = this._getTaskInfo(name);
 
         if (taskInfo.instances.size >= taskInfo.meta.concurrency) {
-            throw new x.LimitExceeded(`Limit of running task instances is exceeded (max ${taskInfo.meta.concurrency})`);
+            throw new exception.LimitExceeded(`Limit of running task instances is exceeded (max ${taskInfo.meta.concurrency})`);
         }
 
         const runTask = await this._createTaskRunner(context, taskInfo);
@@ -266,17 +266,17 @@ export default class TaskManager extends adone.event.AsyncEmitter {
             const taskInstance = new task();
 
             if (!is.task(taskInstance)) {
-                throw new x.NotValid("The task class should be inherited from 'adone.task.Task' class");
+                throw new exception.NotValid("The task class should be inherited from 'adone.task.Task' class");
             }
         } else if (!is.function(task)) {
-            throw new x.NotValid("Task should be a class or a function");
+            throw new exception.NotValid("Task should be a class or a function");
         }
     }
 
     _getTaskInfo(name) {
         const taskInfo = this._tasks.get(name);
         if (is.undefined(taskInfo) || taskInfo.zombi === true) {
-            throw new x.NotExists(`Task '${name}' not exists`);
+            throw new exception.NotExists(`Task '${name}' not exists`);
         }
 
         return taskInfo;

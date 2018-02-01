@@ -1,4 +1,9 @@
-const { is, x, identity, fs } = adone;
+const {
+    is,
+    exception,
+    identity,
+    fs
+} = adone;
 
 export default class Storage {
     static async ensureFileDoesntExist(file) {
@@ -30,7 +35,7 @@ export default class Storage {
         const closeError = await adone.fs.close(fd).then(() => null, identity);
 
         if (syncError || closeError) {
-            const e = new x.Exception("Failed to flush to storage");
+            const e = new exception.Exception("Failed to flush to storage");
             e.errorOnFsync = syncError;
             e.errorOnClose = closeError;
             return Promise.reject(e);

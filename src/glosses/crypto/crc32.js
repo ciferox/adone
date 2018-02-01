@@ -1,4 +1,8 @@
-const { is, x, util } = adone;
+const {
+    is,
+    exception,
+    util
+} = adone;
 
 const CRC_TABLE = new Int32Array([
     0x00000000, 0x77073096, 0xee0e612c, 0x990951ba, 0x076dc419,
@@ -68,7 +72,7 @@ const ensureBuffer = (input) => {
         return Buffer.from(input);
     }
 
-    throw new x.InvalidArgument(`input must be buffer, number or string, received ${util.typeOf(input)}`);
+    throw new exception.InvalidArgument(`input must be buffer, number or string, received ${adone.meta.typeOf(input)}`);
 };
 
 const _crc32 = (buf, previous) => {

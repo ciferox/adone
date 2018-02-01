@@ -1,7 +1,7 @@
 const {
     is,
     netron2: { packet },
-    x
+    exception
 } = adone;
 
 const { serializer } = packet;
@@ -17,14 +17,14 @@ const decode1 = (buffer) => {
     if (result) {
         const rawPacket = result.value;
         if (!is.array(rawPacket) || rawPacket.length !== 3) {
-            throw new x.NotValid("Invalid packet");
+            throw new exception.NotValid("Invalid packet");
         }
 
         const pkt = new packet.Packet();
         [pkt.flags, pkt.id, pkt.data] = rawPacket;
         return pkt;
     }
-    throw new x.NotValid("Invalid packet");
+    throw new exception.NotValid("Invalid packet");
 };
 
 
@@ -48,7 +48,7 @@ const decode2 = (buffer) => {
         pkt.data = result.value;
         return pkt;
     }
-    throw new x.NotValid("Invalid packet");
+    throw new exception.NotValid("Invalid packet");
 };
 
 
@@ -70,7 +70,7 @@ const decode3 = (buffer) => {
         return pkt;
     }
 
-    throw new x.NotValid("Invalid packet");
+    throw new exception.NotValid("Invalid packet");
 };
 
 

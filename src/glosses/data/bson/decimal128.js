@@ -1,4 +1,8 @@
-const { is, x, data: { bson: { Long } } } = adone;
+const {
+    is,
+    exception,
+    data: { bson: { Long } }
+} = adone;
 
 const PARSE_STRING_REGEXP = /^(\+|\-)?(\d+|(\d*\.\d*))?(E|e)?([\-\+])?(\d+)?$/;
 const PARSE_INF_REGEXP = /^(\+|\-)?(Infinity|inf)$/i;
@@ -157,12 +161,12 @@ export default class Decimal128 {
 
         // Validate the string
         if (!stringMatch && !infMatch && !nanMatch || string.length === 0) {
-            throw new x.InvalidArgument(`${String(string)} not a valid Decimal128 string`);
+            throw new exception.InvalidArgument(`${String(string)} not a valid Decimal128 string`);
         }
 
         // Check if we have an illegal exponent format
         if (stringMatch && stringMatch[4] && is.undefined(stringMatch[2])) {
-            throw new x.InvalidArgument(`${String(string)} not a valid Decimal128 string`);
+            throw new exception.InvalidArgument(`${String(string)} not a valid Decimal128 string`);
         }
 
         // Get the negative or positive sign
@@ -220,7 +224,7 @@ export default class Decimal128 {
         }
 
         if (sawRadix && !nDigitsRead) {
-            throw new x.InvalidArgument(`${String(string)} not a valid Decimal128 string`);
+            throw new exception.InvalidArgument(`${String(string)} not a valid Decimal128 string`);
         }
 
         // Read exponent if exists

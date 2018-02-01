@@ -1,4 +1,9 @@
-const { is, x, std: { url }, schema: { traverse, __: { util, SchemaObject } } } = adone;
+const {
+    is,
+    exception,
+    std: { url },
+    schema: { traverse, __: { util, SchemaObject } }
+} = adone;
 
 const _getFullPath = (p) => {
     const protocolSeparator = p.protocol || p.href.startsWith("//") ? "//" : "";
@@ -214,12 +219,12 @@ const resolveIds = function (schema) {
             }
             if (refVal && refVal.schema) {
                 if (!is.deepEqual(sch, refVal.schema)) {
-                    throw new x.IllegalState(`id "${id}" resolves to more than one schema`);
+                    throw new exception.IllegalState(`id "${id}" resolves to more than one schema`);
                 }
             } else if (id !== normalizeId(fullPath)) {
                 if (id[0] === "#") {
                     if (localRefs[id] && !is.deepEqual(sch, localRefs[id])) {
-                        throw new x.IllegalState(`id "${id}" resolves to more than one schema`);
+                        throw new exception.IllegalState(`id "${id}" resolves to more than one schema`);
                     }
                     localRefs[id] = sch;
                 } else {

@@ -9,7 +9,7 @@ export default async function (host, program) {
         if (result.code === 0) {
             return result.stdout;
         } 
-        throw new adone.x.Runtime(result.stderr);
+        throw new adone.exception.Runtime(result.stderr);
         
     } else if (host.isSSH()) {
         const ssh = await host.getConnection();

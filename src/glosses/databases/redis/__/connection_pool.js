@@ -4,7 +4,7 @@ const {
     noop,
     util,
     is,
-    x
+    exception
 } = adone;
 
 const __ = adone.private(redis);
@@ -96,7 +96,7 @@ export default class ConnectionPool extends event.Emitter {
             } else if (is.number(node)) {
                 options.port = node;
             } else {
-                throw new x.InvalidArgument(`Invalid argument ${node}`);
+                throw new exception.InvalidArgument(`Invalid argument ${node}`);
             }
             if (is.string(options.port)) {
                 options.port = parseInt(options.port, 10);

@@ -1,4 +1,9 @@
-const { is, x, util, shani: { util: { __ } } } = adone;
+const {
+    is,
+    exception,
+    util,
+    shani: { util: { __ } }
+} = adone;
 
 const useLeftMostCallback = -1;
 const useRightMostCallback = -2;
@@ -62,7 +67,7 @@ const callCallback = (behavior, args) => {
         const func = getCallback(behavior, args);
 
         if (!is.function(func)) {
-            throw new x.InvalidArgument(getCallbackError(behavior, func, args));
+            throw new exception.InvalidArgument(getCallbackError(behavior, func, args));
         }
 
         if (behavior.callbackAsync) {
@@ -115,7 +120,7 @@ export const proto = {
             return context;
         } else if (is.number(this.throwArgAt)) {
             if (args.length < this.throwArgAt) {
-                throw new x.InvalidArgument(`throwArgs failed: ${this.throwArgAt} arguments required but only ${args.length} present`);
+                throw new exception.InvalidArgument(`throwArgs failed: ${this.throwArgAt} arguments required but only ${args.length} present`);
             }
             throw args[this.throwArgAt];
         } else if (this.fakeFn) {

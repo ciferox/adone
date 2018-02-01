@@ -1,6 +1,6 @@
 const {
     is,
-    x,
+    exception,
     util,
     std: {
         url: { parse: urlParse }
@@ -142,7 +142,7 @@ export default class ConnectionConfig {
         const num = c.charset[charset.toUpperCase()];
 
         if (is.undefined(num)) {
-            throw new x.Unknown(`Unknown charset '${charset}'`);
+            throw new exception.Unknown(`Unknown charset '${charset}'`);
         }
 
         return num;
@@ -152,7 +152,7 @@ export default class ConnectionConfig {
         const ssl = c.sslProfile[name];
 
         if (is.undefined(ssl)) {
-            throw new x.Unknown(`Unknown SSL profile '${name}'`);
+            throw new exception.Unknown(`Unknown SSL profile '${name}'`);
         }
 
         return ssl;

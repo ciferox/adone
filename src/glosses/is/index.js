@@ -602,8 +602,8 @@ export const deepEqual = (leftHandOperand, rightHandOperand, options) => {
             }
         }
 
-        const leftHandType = adone.util.typeOf(leftHandOperand);
-        if (leftHandType !== adone.util.typeOf(rightHandOperand)) {
+        const leftHandType = adone.meta.typeOf(leftHandOperand);
+        if (leftHandType !== adone.meta.typeOf(rightHandOperand)) {
             memoizeSet(leftHandOperand, rightHandOperand, options.memoize, false);
             return false;
         }
@@ -975,13 +975,13 @@ export const knownError = (err) => {
     }
     const name = err.constructor.name;
 
-    for (const Exc of adone.x.adoneExceptions) {
+    for (const Exc of adone.exception.adoneExceptions) {
         if (name === Exc.name) {
             return true;
         }
     }
 
-    for (const Exc of adone.x.stdExceptions) {
+    for (const Exc of adone.exception.stdExceptions) {
         if (name === Exc.name) {
             return true;
         }

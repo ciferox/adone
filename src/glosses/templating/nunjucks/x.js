@@ -1,6 +1,6 @@
-const { x } = adone;
+const { exception } = adone;
 
-export class TemplateError extends x.Exception {
+export class TemplateError extends exception.Exception {
     constructor(message, lineno, colno) {
         if (message instanceof Error) {
             message = `${message.name}: ${message.message}`;

@@ -1,9 +1,13 @@
-const { is, x, net: { http: { server: { helper } } } } = adone;
+const {
+    is,
+    exception,
+    net: { http: { server: { helper } } }
+} = adone;
 
 export default function basicAuth(verify, options = {}) {
     if (!is.function(verify)) {
         if (!is.object(verify)) {
-            throw new x.InvalidArgument("verify function or creds are required");
+            throw new exception.InvalidArgument("verify function or creds are required");
         }
         [verify, options] = [null, verify];
     }
@@ -11,7 +15,7 @@ export default function basicAuth(verify, options = {}) {
     if (is.null(verify)) {
         const { name = null, pass = null } = options;
         if (is.null(name) || is.null(pass)) {
-            throw new x.InvalidArgument("name and pass are required");
+            throw new exception.InvalidArgument("name and pass are required");
         }
         verify = (creds) => creds.name === name && creds.pass === pass;
     }

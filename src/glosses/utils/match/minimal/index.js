@@ -1,5 +1,5 @@
 const {
-    x,
+    exception,
     is,
     util,
     std
@@ -101,7 +101,7 @@ adone.definePrivate({
  */
 minimalMatch.match = (list, pattern, options) => {
     if (is.array(pattern)) {
-        throw new x.InvalidArgument("expected pattern to be a string");
+        throw new exception.InvalidArgument("expected pattern to be a string");
     }
 
     const unixify = _util.unixify(options);
@@ -126,7 +126,7 @@ minimalMatch.match = (list, pattern, options) => {
 
     if (matches.length === 0) {
         if (options.failglob === true) {
-            throw new x.IllegalState(`no matches found for "${pattern}"`);
+            throw new exception.IllegalState(`no matches found for "${pattern}"`);
         }
         if (options.nonull === true || options.nullglob === true) {
             return [options.unescape ? _util.unescape(pattern) : pattern];
@@ -151,7 +151,7 @@ minimalMatch.match = (list, pattern, options) => {
  */
 minimalMatch.isMatch = (str, pattern, options) => {
     if (!is.string(str)) {
-        throw new x.InvalidArgument(`expected a string: "${std.util.inspect(str)}"`);
+        throw new exception.InvalidArgument(`expected a string: "${std.util.inspect(str)}"`);
     }
 
     if (_util.isEmptyString(str) || _util.isEmptyString(pattern)) {
@@ -221,7 +221,7 @@ minimalMatch.every = (list, patterns, options) => {
  */
 minimalMatch.any = (str, patterns, options) => {
     if (!is.string(str)) {
-        throw new x.InvalidArgument(`expected a string: "${std.util.inspect(str)}"`);
+        throw new exception.InvalidArgument(`expected a string: "${std.util.inspect(str)}"`);
     }
 
     if (_util.isEmptyString(str) || _util.isEmptyString(patterns)) {
@@ -250,7 +250,7 @@ minimalMatch.any = (str, patterns, options) => {
  */
 minimalMatch.all = (str, patterns, options) => {
     if (!is.string(str)) {
-        throw new x.InvalidArgument(`expected a string: "${std.util.inspect(str)}"`);
+        throw new exception.InvalidArgument(`expected a string: "${std.util.inspect(str)}"`);
     }
 
     if (is.string(patterns)) {
@@ -299,7 +299,7 @@ minimalMatch.not = (list, patterns, options) => {
  */
 minimalMatch.contains = (str, patterns, options) => {
     if (!is.string(str)) {
-        throw new x.InvalidArgument(`expected a string: "${std.util.inspect(str)}"`);
+        throw new exception.InvalidArgument(`expected a string: "${std.util.inspect(str)}"`);
     }
 
     if (is.string(patterns)) {
@@ -345,7 +345,7 @@ minimalMatch.matchBase = (pattern, options) => {
  */
 minimalMatch.matchKeys = (obj, patterns, options) => {
     if (!is.plainObject(obj)) {
-        throw new x.InvalidArgument("expected the first argument to be an object");
+        throw new exception.InvalidArgument("expected the first argument to be an object");
     }
     const keys = minimalMatch(Object.keys(obj), patterns, options);
     return util.pick(obj, keys);
@@ -420,7 +420,7 @@ minimalMatch.matcher = (pattern, options) => {
 
     // if pattern is invalid
     if (!is.string(pattern)) {
-        throw new x.InvalidArgument("expected pattern to be an array, string or regex");
+        throw new exception.InvalidArgument("expected pattern to be an array, string or regex");
     }
 
     // if pattern is a non-glob string
@@ -486,11 +486,11 @@ minimalMatch.makeRe = (pattern, options) => {
     }
 
     if (!is.string(pattern)) {
-        throw new x.InvalidArgument("expected pattern to be a string");
+        throw new exception.InvalidArgument("expected pattern to be a string");
     }
 
     if (pattern.length > minimalMatch.MAX_LENGTH) {
-        throw new x.LimitExceeded(`expected pattern to be less than ${minimalMatch.MAX_LENGTH} characters`);
+        throw new exception.LimitExceeded(`expected pattern to be less than ${minimalMatch.MAX_LENGTH} characters`);
     }
 
     const makeRe = () => {
@@ -517,7 +517,7 @@ minimalMatch.makeRe = (pattern, options) => {
  */
 minimalMatch.create = (pattern, options) => {
     if (!is.string(pattern)) {
-        throw new x.InvalidArgument("expected a string");
+        throw new exception.InvalidArgument("expected a string");
     }
     const create = () => minimalMatch.compile(minimalMatch.parse(pattern, options), options);
     return memoize("create", pattern, options, create);
@@ -532,7 +532,7 @@ minimalMatch.create = (pattern, options) => {
  */
 minimalMatch.parse = (pattern, options) => {
     if (!is.string(pattern)) {
-        throw new x.InvalidArgument("expected a string");
+        throw new exception.InvalidArgument("expected a string");
     }
 
     const parse = () => {

@@ -12,7 +12,7 @@ const {
 } = adone.private(orm);
 
 const {
-    x
+    exception
 } = orm;
 
 const debug = orm.util.getLogger().debugContext("connection:mysql");
@@ -146,17 +146,17 @@ export default class ConnectionManager extends AbstractConnectionManager {
         } catch (err) {
             switch (err.code) {
                 case "ECONNREFUSED":
-                    throw new x.ConnectionRefusedError(err);
+                    throw new exception.ConnectionRefusedError(err);
                 case "ER_ACCESS_DENIED_ERROR":
-                    throw new x.AccessDeniedError(err);
+                    throw new exception.AccessDeniedError(err);
                 case "ENOTFOUND":
-                    throw new x.HostNotFoundError(err);
+                    throw new exception.HostNotFoundError(err);
                 case "EHOSTUNREACH":
-                    throw new x.HostNotReachableError(err);
+                    throw new exception.HostNotReachableError(err);
                 case "EINVAL":
-                    throw new x.InvalidConnectionError(err);
+                    throw new exception.InvalidConnectionError(err);
                 default:
-                    throw new x.ConnectionError(err);
+                    throw new exception.ConnectionError(err);
             }
         }
     }
@@ -171,7 +171,7 @@ export default class ConnectionManager extends AbstractConnectionManager {
         return new Promise((resolve, reject) => {
             connection.end((err) => {
                 if (err) {
-                    reject(new x.ConnectionError(err));
+                    reject(new exception.ConnectionError(err));
                 } else {
                     debug("connection disconnected");
                     resolve();

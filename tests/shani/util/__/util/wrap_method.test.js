@@ -1,5 +1,5 @@
 describe("shani", "util", "__", "util", "wrapMethod", () => {
-    const { x } = adone;
+    const { exception } = adone;
     const { __: { util: { wrapMethod } }, spy: createSpy, stub: createStub } = adone.shani.util;
 
     beforeEach(function () {
@@ -21,7 +21,7 @@ describe("shani", "util", "__", "util", "wrapMethod", () => {
     it("throws if first argument is not object", () => {
         assert.throws(() => {
             wrapMethod();
-        }, x.InvalidArgument);
+        }, exception.InvalidArgument);
     });
 
     it("throws if object defines property but is not function", function () {

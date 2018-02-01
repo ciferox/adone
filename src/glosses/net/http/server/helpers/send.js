@@ -2,7 +2,8 @@ const {
     std: { path: { normalize, basename, extname, resolve, parse, sep } },
     net: { http: { server: { helper: { resolvePath } } } },
     fs,
-    x, is
+    exception,
+    is
 } = adone;
 
 const isHidden = (root, path) => {
@@ -27,10 +28,10 @@ const decode = (path) => {
 
 export default async function send(ctx, path, opts = {}) {
     if (!ctx) {
-        throw new x.InvalidArgument("context is required");
+        throw new exception.InvalidArgument("context is required");
     }
     if (!path) {
-        throw new x.InvalidArgument("pathname is required");
+        throw new exception.InvalidArgument("pathname is required");
     }
 
     const { index, maxage = 0, hidden = false, immutable = false, setHeaders } = opts;
@@ -44,7 +45,7 @@ export default async function send(ctx, path, opts = {}) {
     const gzip = opts.gzip === false ? false : true;
 
     if (setHeaders && !is.function(setHeaders)) {
-        throw new x.InvalidArgument("option setHeaders must be function");
+        throw new exception.InvalidArgument("option setHeaders must be function");
     }
 
     path = decode(path);
@@ -80,7 +81,7 @@ export default async function send(ctx, path, opts = {}) {
     if (extensions && !/\.[^/]*$/.exec(path)) {
         for (let ext of extensions) {
             if (!is.string(ext)) {
-                throw new x.InvalidArgument("option extensions must be array of strings or false");
+                throw new exception.InvalidArgument("option extensions must be array of strings or false");
             }
             if (!/^\./.exec(ext)) {
                 ext = `.${ext}`;

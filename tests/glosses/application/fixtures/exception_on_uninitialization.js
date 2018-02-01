@@ -7,7 +7,7 @@ class TestApp extends adone.application.Application {
         return 0;
     }
     async uninitialize() {
-        throw new adone.x.Runtime("Something bad happend during uninitialization");
+        throw new adone.exception.Runtime("Something bad happend during uninitialization");
     }
 }
 

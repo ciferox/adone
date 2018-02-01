@@ -1,6 +1,9 @@
-const { x, schema: { __ } } = adone;
+const {
+    exception,
+    schema: { __ }
+} = adone;
 
-export class MissingRef extends x.Exception {
+export class MissingRef extends exception.Exception {
     constructor(baseId, ref, message) {
         super(message);
         this.message = message || MissingRef.message(baseId, ref);
@@ -13,7 +16,7 @@ export class MissingRef extends x.Exception {
     }
 }
 
-export class Validation extends x.Exception {
+export class Validation extends exception.Exception {
     constructor(errors) {
         super("validation failed");
         this.errors = errors;

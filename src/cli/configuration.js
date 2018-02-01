@@ -15,14 +15,14 @@ export default class Configuration extends adone.configuration.Generic {
 
     getCommand(name) {
         if (!this.hasCommand(name)) {
-            throw new adone.x.Unknown(`Unknown command: ${name}`);
+            throw new adone.exception.Unknown(`Unknown command: ${name}`);
         }
         return this.raw.commands.find((x) => x.name === name);
     }
 
     updateCommand(name, props) {
         if (!this.hasCommand(name)) {
-            throw new adone.x.Unknown(`Unknown command: ${name}`);
+            throw new adone.exception.Unknown(`Unknown command: ${name}`);
         }
         const cmdInfo = this.raw.commands.find((x) => x.name === name);
 
@@ -56,7 +56,7 @@ export default class Configuration extends adone.configuration.Generic {
 
     getLink(name) {
         if (!this.hasLink(name)) {
-            throw new adone.x.Unknown(`Unknown link name: ${name}`);
+            throw new adone.exception.Unknown(`Unknown link name: ${name}`);
         }
         return this.raw.links.find((x) => x.name === name);
     }
@@ -64,7 +64,7 @@ export default class Configuration extends adone.configuration.Generic {
     addLink(linkInfo, updateIfExists = false) {
         const isExists = this.hasLink(linkInfo.name);
         if (isExists && !updateIfExists) {
-            throw new adone.x.Exists(`Link '${linkInfo.name}' already exists`);
+            throw new adone.exception.Exists(`Link '${linkInfo.name}' already exists`);
         }
 
         if (!is.array(this.raw.links)) {

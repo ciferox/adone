@@ -1,5 +1,5 @@
 const {
-    x,
+    exception,
     is,
     application
 } = adone;
@@ -10,7 +10,7 @@ const {
 
 const parseNumber = (str) => {
     if (!is.numeral(str)) {
-        throw new x.InvalidArgument("Argument must be a real number");
+        throw new exception.InvalidArgument("Argument must be a real number");
     }
     return Number(str);
 };

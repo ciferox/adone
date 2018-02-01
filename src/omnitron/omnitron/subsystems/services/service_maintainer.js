@@ -6,7 +6,7 @@ const {
     netron: { Context, Public },
     omnitron: { STATUS },
     std,
-    x
+    exception
 } = adone;
 
 const SERVICE_APP_PATH = std.path.join(__dirname, "service_application.js");
@@ -115,15 +115,15 @@ export default class ServiceMaintainer extends AsyncEmitter {
         const serviceData = await this.manager.services.get(name);
 
         if (serviceData.group !== this.group) {
-            throw new x.NotAllowed(`Service '${name}' is not in group '${this.group}'`);
+            throw new exception.NotAllowed(`Service '${name}' is not in group '${this.group}'`);
         }
         if (serviceData.status === STATUS.DISABLED) {
-            throw new x.IllegalState("Service is disabled");
+            throw new exception.IllegalState("Service is disabled");
         } else if (serviceData.status === STATUS.INACTIVE) {
             const onError = async (reject) => {
                 await this.setServiceStatus(name, STATUS.INACTIVE);
                 adone.error(`Unsuccessful attempt to start service '${serviceData.name}':`);
-                const err = new x.Timeout("Timeout occured");
+                const err = new exception.Timeout("Timeout occured");
                 adone.error(err);
                 reject(err);
             };
@@ -167,7 +167,7 @@ export default class ServiceMaintainer extends AsyncEmitter {
                                 err = data.error;
                                 break;
                             default:
-                                err = new x.IllegalState(`Service status: ${data.status}`);
+                                err = new exception.IllegalState(`Service status: ${data.status}`);
                         }
 
                         adone.error(`Unsuccessful attempt to start service '${serviceData.name}':`);
@@ -180,17 +180,17 @@ export default class ServiceMaintainer extends AsyncEmitter {
                 );
             });
         } else {
-            throw new x.IllegalState(`Service status: ${serviceData.status}`);
+            throw new exception.IllegalState(`Service status: ${serviceData.status}`);
         }
     }
 
     async stopService(name) {
         const serviceData = await this.manager.services.get(name);
         if (serviceData.group !== this.group) {
-            throw new x.NotAllowed(`Service '${name}' is not in group '${this.group}'`);
+            throw new exception.NotAllowed(`Service '${name}' is not in group '${this.group}'`);
         }
         if (serviceData.status === STATUS.DISABLED) {
-            throw new x.IllegalState("Service is disabled");
+            throw new exception.IllegalState("Service is disabled");
         } else if (serviceData.status === STATUS.ACTIVE) {
             await this.setServiceStatus(name, STATUS.STOPPING);
             await this.iServiceApp.unloadService(serviceData.name);
@@ -206,7 +206,7 @@ export default class ServiceMaintainer extends AsyncEmitter {
                                 err = result.error;
                                 break;
                             default:
-                                err = new x.IllegalState(`Service status: ${result.status}`);
+                                err = new exception.IllegalState(`Service status: ${result.status}`);
                         }
                         adone.error(`Unsuccessful attempt to stop service '${serviceData.name}':`);
                         adone.error(err);
@@ -217,7 +217,7 @@ export default class ServiceMaintainer extends AsyncEmitter {
                         // Need additional verification
                         await this.setServiceStatus(name, STATUS.INACTIVE); // ???
                         adone.error(`Unsuccessful attempt to stop service '${serviceData.name}':`);
-                        const err = new x.Timeout("Timeout occured");
+                        const err = new exception.Timeout("Timeout occured");
                         adone.error(err);
                         reject(err);
                     },
@@ -225,7 +225,7 @@ export default class ServiceMaintainer extends AsyncEmitter {
                 );
             });
         } else {
-            throw new x.IllegalState(`Service status: ${serviceData.status}`);
+            throw new exception.IllegalState(`Service status: ${serviceData.status}`);
         }
     }
 

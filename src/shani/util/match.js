@@ -1,4 +1,11 @@
-const { is, x, util: { keys }, shani: { util }, lazify, vendor } = adone;
+const {
+    is,
+    exception,
+    util: { keys },
+    shani: { util },
+    lazify,
+    vendor
+} = adone;
 const { __ } = util;
 
 const lazy = lazify({
@@ -124,7 +131,7 @@ const match = (expectation, message) => {
 
 matcher.or = function (m2) {
     if (!arguments.length) {
-        throw new x.InvalidArgument("Matcher expected");
+        throw new exception.InvalidArgument("Matcher expected");
     } else if (!isMatcher(m2)) {
         m2 = match(m2);
     }
@@ -137,7 +144,7 @@ matcher.or = function (m2) {
 
 matcher.and = function (m2) {
     if (!arguments.length) {
-        throw new x.InvalidArgument("Matcher expected");
+        throw new exception.InvalidArgument("Matcher expected");
     } else if (!isMatcher(m2)) {
         m2 = match(m2);
     }
@@ -247,7 +254,7 @@ match.some = function (predicate) {
             });
         }
 
-        return Boolean(actual) && adone.util.typeOf(actual.forEach) === "function" && !every(actual, (element) => {
+        return Boolean(actual) && adone.meta.typeOf(actual.forEach) === "function" && !every(actual, (element) => {
             return !predicate.test(element);
         });
     }, `some(${predicate.message})`);

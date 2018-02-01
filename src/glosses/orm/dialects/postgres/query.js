@@ -7,7 +7,7 @@ const debug = orm.util.getLogger().debugContext("sql:pg");
 
 const {
     queryType,
-    x
+    exception
 } = orm;
 
 const {
@@ -349,7 +349,7 @@ export default class Query extends AbstractQuery {
                 if (err.sql && /CONSTRAINT/gi.test(err.sql)) {
                     message = "Unknown constraint error";
 
-                    throw new x.UnknownConstraintError({
+                    throw new exception.UnknownConstraintError({
                         message,
                         constraint: err.constraint,
                         fields,
@@ -359,7 +359,7 @@ export default class Query extends AbstractQuery {
                 }
                 // fixme: break ??
             default:
-                return new x.DatabaseError(err);
+                return new exception.DatabaseError(err);
         }
     }
 

@@ -1,9 +1,9 @@
 const {
     is,
-    x
+    exception
 } = adone;
 
-export default class MongoError extends x.Exception {
+export default class MongoError extends exception.Exception {
     static create(options) {
         let err = null;
 

@@ -1,4 +1,4 @@
-const { x } = adone;
+const { exception } = adone;
 
 const opts = new Set(["i", "m", "x", "l", "s", "u"]);
 
@@ -11,7 +11,7 @@ export default class BSONRegExp {
         // Validate options
         for (const opt of this.options) {
             if (!opts.has(opt)) {
-                throw new x.InvalidArgument(`the regular expression options [${opt}] is not supported`);
+                throw new exception.InvalidArgument(`the regular expression options [${opt}] is not supported`);
             }
         }
     }

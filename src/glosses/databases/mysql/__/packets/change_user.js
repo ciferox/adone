@@ -1,6 +1,6 @@
 const {
     is,
-    x,
+    exception,
     database: { mysql }
 } = adone;
 
@@ -86,11 +86,11 @@ export default class ChangeUser {
 
     toPacket() {
         if (!is.string(this.user)) {
-            throw new x.IllegalState('"user" connection config property must be a string');
+            throw new exception.IllegalState('"user" connection config property must be a string');
         }
 
         if (!is.string(this.database)) {
-            throw new x.IllegalState('"database" connection config property must be a string');
+            throw new exception.IllegalState('"database" connection config property must be a string');
         }
 
         // dry run: calculate resulting packet length

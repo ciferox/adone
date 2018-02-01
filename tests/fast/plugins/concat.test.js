@@ -1,5 +1,5 @@
 describe("fast", "transform", "concat", () => {
-    const { fast, std: { path }, x } = adone;
+    const { fast, std: { path }, exception } = adone;
     const { File, Stream } = fast;
 
     let root;
@@ -32,7 +32,7 @@ describe("fast", "transform", "concat", () => {
         } catch (_err) {
             err = _err;
         }
-        expect(err).to.be.instanceOf(adone.x.InvalidArgument);
+        expect(err).to.be.instanceOf(adone.exception.InvalidArgument);
     });
 
     it("should ignore null files", async () => {
@@ -45,15 +45,15 @@ describe("fast", "transform", "concat", () => {
         const files = [];
         const e = await fast
             .src(file.path(), { stream: true })
-            .map((x) => {
-                files.push(x);
-                return x;
+            .map((exception) => {
+                files.push(exception);
+                return exception;
             })
             .concat("test.js")
             .dest(todir.path(), { produceFiles: true })
             .then(() => null, (e) => e);
-        files.map((x) => x.contents.close());
-        expect(e).to.be.instanceOf(x.NotSupported);
+        files.map((exception) => exception.contents.close());
+        expect(e).to.be.instanceOf(exception.NotSupported);
     });
 
     it("should concat one file", async () => {
@@ -76,7 +76,7 @@ describe("fast", "transform", "concat", () => {
         const files = await fast.src(srcPath).concat("test.js").dest(todir.path(), { produceFiles: true });
         const file = todir.getFile("test.js");
         expect(await file.exists()).to.be.true();
-        expect(await file.contents()).to.be.equal(files.map((x) => x.contents.toString()).join("\n"));
+        expect(await file.contents()).to.be.equal(files.map((exception) => exception.contents.toString()).join("\n"));
     });
 
     it("should preserve mode from files", async () => {
@@ -84,9 +84,9 @@ describe("fast", "transform", "concat", () => {
             contents: "consle.log(123);"
         });
         let mode;
-        const [file] = await fast.src(srcPath).map((x) => {
-            mode = x.stat.mode;
-            return x;
+        const [file] = await fast.src(srcPath).map((exception) => {
+            mode = exception.stat.mode;
+            return exception;
         }).concat("test12.js").dest(todir.path(), { produceFiles: true });
         expect(file.stat.mode).to.be.equal(mode);
     });
@@ -102,7 +102,7 @@ describe("fast", "transform", "concat", () => {
             contents: "console.log(789);"
         });
         let latest;
-        const [file] = await fast.src(srcPath).map((x) => latest = x).concat("test.js");
+        const [file] = await fast.src(srcPath).map((exception) => latest = exception).concat("test.js");
         expect(latest.base).to.be.equal(path.dirname(file.path));
     });
 
@@ -128,9 +128,9 @@ describe("fast", "transform", "concat", () => {
         await fast.src(srcPath)
             .sourcemapsInit()
             .concat("all.js")
-            .map((x) => {
-                expect(x.sourceMap.sources).to.have.lengthOf(2);
-                expect(x.sourceMap.file).to.be.equal("all.js");
+            .map((exception) => {
+                expect(exception.sourceMap.sources).to.have.lengthOf(2);
+                expect(exception.sourceMap.file).to.be.equal("all.js");
             });
     });
 
@@ -154,7 +154,7 @@ describe("fast", "transform", "concat", () => {
             } catch (_err) {
                 err = _err;
             }
-            expect(err).to.be.instanceOf(adone.x.InvalidArgument);
+            expect(err).to.be.instanceOf(adone.exception.InvalidArgument);
         });
 
         it("should create file based on path property", async () => {

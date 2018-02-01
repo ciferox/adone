@@ -1,5 +1,5 @@
 describe("findCreateFind", function () {
-    const UniqueConstraintError = adone.orm.x.UniqueConstraintError;
+    const UniqueConstraintError = adone.orm.exception.UniqueConstraintError;
     const current = this.sequelize;
 
     const Model = current.define("Model", {});

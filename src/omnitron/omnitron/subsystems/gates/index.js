@@ -57,7 +57,7 @@ export default class Gates extends application.Subsystem {
 
     deleteGate(name) {
         if (runtime.netron.gates.has(name)) {
-            throw new adone.x.NotAllowed("Delete active gate is not allowed");
+            throw new adone.exception.NotAllowed("Delete active gate is not allowed");
         }
         return this.config.deleteGate(name);
     }
@@ -65,20 +65,20 @@ export default class Gates extends application.Subsystem {
     async upGate(name) {
         const gate = await this.config.getGate(name);
         if (runtime.netron.gates.has(name)) {
-            throw new adone.x.IllegalState(`Gate with name '${name}' already active`);
+            throw new adone.exception.IllegalState(`Gate with name '${name}' already active`);
         }
         await runtime.netron.bind(gate);
     }
 
     async downGate(name) {
         if (name === "local") {
-            throw new adone.x.NotAllowed("Down local gate is not allow");
+            throw new adone.exception.NotAllowed("Down local gate is not allow");
         }
 
         // This call checks if gate is exist.
         const gate = await this.config.getGate(name);
         if (!runtime.netron.gates.has(name)) {
-            throw new adone.x.IllegalState(`Gate with name '${name}' is not active`);
+            throw new adone.exception.IllegalState(`Gate with name '${name}' is not active`);
         }
         await runtime.netron.unbind(gate.name);
     }

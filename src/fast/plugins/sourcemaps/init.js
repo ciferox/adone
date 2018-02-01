@@ -1,5 +1,11 @@
 export default function plugin({ __ }) {
-    const { x, is, util, sourcemap } = adone;
+    const {
+        exception,
+        is,
+        util,
+        sourcemap
+    } = adone;
+    
     return function init(options = {}) {
         return this.throughSync(function (file) {
             // pass through if file is null or already has a source map
@@ -9,7 +15,7 @@ export default function plugin({ __ }) {
             }
 
             if (file.isStream()) {
-                throw new x.NotSupported("Streaming is not supported");
+                throw new exception.NotSupported("Streaming is not supported");
             }
 
             let fileContent = file.contents.toString();

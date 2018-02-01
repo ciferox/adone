@@ -1,7 +1,7 @@
 const {
     is,
     std,
-    x,
+    exception,
     net: { ip }
 } = adone;
 
@@ -10,10 +10,10 @@ export default class IPRange {
         if (is.string(start) && is.string(end)) {
             const t = std.net.isIP(start);
             if (!t) {
-                throw new x.InvalidArgument("invalid start address");
+                throw new exception.InvalidArgument("invalid start address");
             }
             if (std.net.isIP(end) !== t) {
-                throw new x.InvalidArgument("invalid end address");
+                throw new exception.InvalidArgument("invalid end address");
             }
             this.type = t;
             if (t === 4) {
@@ -29,10 +29,10 @@ export default class IPRange {
             this.type = 6;
         }
         if (!start.valid) {
-            throw new x.InvalidArgument(`invalid start address: ${start.error}`);
+            throw new exception.InvalidArgument(`invalid start address: ${start.error}`);
         }
         if (!end.valid) {
-            throw new x.InvalidArgument(`invalid end address: ${end.error}`);
+            throw new exception.InvalidArgument(`invalid end address: ${end.error}`);
         }
         this.ranges = ip.splitRange(start, end);
     }

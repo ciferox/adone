@@ -23,13 +23,13 @@ export class FastLocalMapStream extends adone.fast.LocalStream {
             for (let i = 0; i < this._matchers.length; ++i) {
                 if (this._matchers[i](sourcePath)) {
                     if (!is.null(match)) {
-                        throw new adone.x.Exception(`Ambiguity. This file "${sourcePath}" has more than one possible source: "${this._mappings[match].from}" or "${this._mappings[i].from}"`);
+                        throw new adone.exception.Exception(`Ambiguity. This file "${sourcePath}" has more than one possible source: "${this._mappings[match].from}" or "${this._mappings[i].from}"`);
                     }
                     match = i;
                 }
             }
             if (is.null(match)) {
-                throw new adone.x.Exception(`Invalid file: "${sourcePath}". There is no matching source`);
+                throw new adone.exception.Exception(`Invalid file: "${sourcePath}". There is no matching source`);
             }
 
             return std.path.resolve(cwd, this._mappings[match].to);

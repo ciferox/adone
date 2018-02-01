@@ -1,4 +1,9 @@
-const { is, x, shani: { util }, lazify } = adone;
+const {
+    is,
+    exception,
+    shani: { util },
+    lazify
+} = adone;
 const { __ } = util;
 
 const lazy = lazify({
@@ -73,7 +78,7 @@ const expectation = {
     },
     atLeast(num) {
         if (!is.number(num)) {
-            throw new x.InvalidArgument(`'${__.util.valueToString(num)}' is not number`);
+            throw new exception.InvalidArgument(`'${__.util.valueToString(num)}' is not number`);
         }
 
         if (!this.limitsSet) {
@@ -87,7 +92,7 @@ const expectation = {
     },
     atMost(num) {
         if (!is.number(num)) {
-            throw new x.InvalidArgument(`'${__.util.valueToString(num)}' is not number`);
+            throw new exception.InvalidArgument(`'${__.util.valueToString(num)}' is not number`);
         }
 
         if (!this.limitsSet) {
@@ -113,7 +118,7 @@ const expectation = {
     },
     exactly(num) {
         if (!is.number(num)) {
-            throw new x.InvalidArgument(`'${__.util.valueToString(num)}' is not a number`);
+            throw new exception.InvalidArgument(`'${__.util.valueToString(num)}' is not a number`);
         }
 
         this.atLeast(num);
@@ -245,7 +250,7 @@ const expectation = {
         util.assert.pass(message);
     },
     fail(message) {
-        const exception = new x.Exception(message);
+        const exception = new exception.Exception(message);
         exception.name = "ExpectationError";
 
         throw exception;

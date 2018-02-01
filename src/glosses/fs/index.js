@@ -1,6 +1,6 @@
 const {
     is,
-    x,
+    exception,
     std
 } = adone;
 
@@ -35,7 +35,7 @@ const stringToFlockFlags = (flag) => {
             return b.LOCK_UN;
 
         default:
-            throw new x.Unknown(`Unknown flock flag: ${flag}`);
+            throw new exception.Unknown(`Unknown flock flag: ${flag}`);
     }
 };
 
@@ -362,7 +362,7 @@ export const copy = async (source, dest, options = {}) => {
     const currentPath = std.path.resolve(basePath, source);
     const targetPath = std.path.resolve(basePath, dest);
     if (currentPath === targetPath) {
-        throw new x.NotAllowed("Source and destination must not be the same.");
+        throw new exception.NotAllowed("Source and destination must not be the same.");
     }
 
     const stats = await fs.lstat(source);
@@ -783,7 +783,7 @@ export const lookup = async (path) => {
         }
     }
 
-    throw new adone.x.NotFound(path);
+    throw new adone.exception.NotFound(path);
 };
 
 export const chownr = async (path, uid, gid) => {

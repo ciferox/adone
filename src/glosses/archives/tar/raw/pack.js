@@ -3,7 +3,7 @@ import * as headers from "./headers";
 const {
     std: { constants, stream: { Writable, Readable }, StringDecoder },
     is,
-    x
+    exception
 } = adone;
 
 const DMODE = 0o755;
@@ -84,7 +84,7 @@ class Void extends Writable {
     }
 
     _write(data, enc, cb) {
-        cb(new x.IllegalState("No body allowed for this entry"));
+        cb(new exception.IllegalState("No body allowed for this entry"));
     }
 
     destroy() {
@@ -108,7 +108,7 @@ export default class RawPackStream extends Readable {
 
     entry(header, buffer, callback) {
         if (this._stream) {
-            throw new x.IllegalState("already piping an entry");
+            throw new exception.IllegalState("already piping an entry");
         }
         if (this._finalized || this._destroyed) {
             return;
@@ -184,7 +184,7 @@ export default class RawPackStream extends Readable {
             self._stream = null;
             if (sink.written !== header.size) { // corrupting tar
                 self.destroy();
-                return callback(new x.IllegalState("size mismatch"));
+                return callback(new exception.IllegalState("size mismatch"));
             }
 
             overflow(self, header.size);

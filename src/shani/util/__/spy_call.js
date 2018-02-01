@@ -1,4 +1,8 @@
-const { is, x, shani: { util }, lazify } = adone;
+const {
+    is,
+    exception,
+    shani: { util }, lazify
+} = adone;
 const { __ } = util;
 
 const lazy = lazify({
@@ -10,13 +14,13 @@ const throwYieldError = (proxy, text, args) => {
     if (args.length) {
         msg += ` Received [${args.join(", ")}]`;
     }
-    throw new x.Exception(msg);
+    throw new exception.Exception(msg);
 };
 
 export default class SpyCall {
     constructor(spy, thisValue, args, returnValue, exception, id, errorWithCallStack) {
         if (!is.number(id)) {
-            throw new x.InvalidArgument("Call id is not a number");
+            throw new exception.InvalidArgument("Call id is not a number");
         }
         this.proxy = spy;
         this.thisValue = thisValue;
@@ -122,7 +126,7 @@ export default class SpyCall {
 
     throwArg(pos) {
         if (pos > this.args.length) {
-            throw new x.InvalidArgument(`Not enough arguments: ${pos} required but only ${this.args.length} present`);
+            throw new exception.InvalidArgument(`Not enough arguments: ${pos} required but only ${this.args.length} present`);
         }
 
         throw this.args[pos];

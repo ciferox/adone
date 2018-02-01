@@ -1,6 +1,6 @@
 const {
     is,
-    x
+    exception
 } = adone;
 
 export default class FlowTask extends adone.task.Task {
@@ -8,10 +8,10 @@ export default class FlowTask extends adone.task.Task {
         const _checkTask = (task) => {
             if (is.string(task)) {
                 if (!this.manager.hasTask(task)) {
-                    throw new x.Unknown(`Unknown task: ${task}`);
+                    throw new exception.Unknown(`Unknown task: ${task}`);
                 }
             } else if (!is.class(task) && !is.function(task)) {
-                throw new x.NotValid("Task should be a string (task name) or a class inherited from 'adone.task.Task' or function");
+                throw new exception.NotValid("Task should be a string (task name) or a class inherited from 'adone.task.Task' or function");
             }
         };
 
@@ -28,7 +28,7 @@ export default class FlowTask extends adone.task.Task {
     }
 
     _run() {
-        throw new adone.x.NotImplemented("Method _run() is not implemented");
+        throw new adone.exception.NotImplemented("Method _run() is not implemented");
     }
 
     async _iterate(handler) {
@@ -61,7 +61,7 @@ export default class FlowTask extends adone.task.Task {
             return this.manager.runOnce(task, ...args); // eslint-disable-line
         }
 
-        throw new adone.x.NotAllowed("Invalid task");
+        throw new adone.exception.NotAllowed("Invalid task");
     }
 }
 adone.tag.add(FlowTask, "FLOW_TASK");

@@ -1,6 +1,6 @@
 const {
     is,
-    x
+    exception
 } = adone;
 
 export default class Adapter {
@@ -14,11 +14,11 @@ export default class Adapter {
     }
 
     bind(netron) {
-        throw new x.NotImplemented("method bind() should be implemented");
+        throw new exception.NotImplemented("method bind() should be implemented");
     }
 
     unbind() {
-        throw new x.NotImplemented("method unbind() should be implemented");
+        throw new exception.NotImplemented("method unbind() should be implemented");
     }
 }
 adone.tag.add(Adapter, "NETRON_ADAPTER");

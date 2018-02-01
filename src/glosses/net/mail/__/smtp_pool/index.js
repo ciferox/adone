@@ -1,6 +1,6 @@
 const {
     is,
-    x,
+    exception,
     event,
     net: { mail: { __ } }
 } = adone;
@@ -164,7 +164,7 @@ export default class SMTPPool extends event.Emitter {
             const entry = this._queue.shift();
             if (entry && is.function(entry.callback)) {
                 try {
-                    entry.callback(new x.IllegalState("Connection pool was closed"));
+                    entry.callback(new exception.IllegalState("Connection pool was closed"));
                 } catch (E) {
                     this.logger.error({
                         err: E,
@@ -493,7 +493,7 @@ export default class SMTPPool extends event.Emitter {
                     return;
                 }
                 returned = true;
-                return callback(new x.IllegalState("Connection closed"));
+                return callback(new exception.IllegalState("Connection closed"));
             });
 
             const finalize = () => {

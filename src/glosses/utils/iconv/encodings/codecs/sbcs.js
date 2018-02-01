@@ -1,4 +1,4 @@
-const { x } = adone;
+const { exception } = adone;
 
 // Single-byte codec. Needs a 'chars' string parameter that contains 256 or 128 chars that
 // correspond to encoded bytes (if 128 - then lower half is ASCII).
@@ -48,12 +48,12 @@ class SBCSDecoder {
 export default class SBCSCodec {
     constructor(codecOptions, iconv) {
         if (!codecOptions) {
-            throw new x.InvalidArgument("SBCS codec is called without the data.");
+            throw new exception.InvalidArgument("SBCS codec is called without the data.");
         }
 
         // Prepare char buffer for decoding.
         if (!codecOptions.chars || (codecOptions.chars.length !== 128 && codecOptions.chars.length !== 256)) {
-            throw new x.InvalidArgument(`Encoding '${codecOptions.type}' has incorrect 'chars' (must be of len 128 or 256)`);
+            throw new exception.InvalidArgument(`Encoding '${codecOptions.type}' has incorrect 'chars' (must be of len 128 or 256)`);
         }
 
         if (codecOptions.chars.length === 128) {

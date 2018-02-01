@@ -1,4 +1,9 @@
-const { database: { redis }, is, x, lazify } = adone;
+const {
+    database: { redis },
+    is,
+    exception,
+    lazify
+} = adone;
 const __ = adone.private(redis);
 
 const parser = lazify({
@@ -18,7 +23,7 @@ export const initParser = function () {
         },
         returnFatalError: (err) => {
             this.flushQueue(err, { offlineQueue: false });
-            this.silentEmit("error", new x.Exception(`Redis parser fatal error: ${err.stack}`));
+            this.silentEmit("error", new exception.Exception(`Redis parser fatal error: ${err.stack}`));
             this.disconnect(true);
         }
     });
@@ -172,7 +177,7 @@ export const returnReply = function (reply) {
     } else {
         item = this.commandQueue.shift();
         if (!item) {
-            const err = new x.Exception(`Command queue state error. Last reply: ${reply.toString()}`);
+            const err = new exception.Exception(`Command queue state error. Last reply: ${reply.toString()}`);
             return this.emit("error", err);
         }
         if (__.Command.checkFlag("ENTER_SUBSCRIBER_MODE", item.command.name)) {

@@ -1,6 +1,6 @@
 const {
     is,
-    x
+    exception
 } = adone;
 
 // Incrementing request id
@@ -30,15 +30,15 @@ export class Query {
     constructor(bson, ns, query, options = {}) {
         // Basic options needed to be passed in
         if (is.nil(ns)) {
-            throw new x.InvalidArgument("ns must be specified for query");
+            throw new exception.InvalidArgument("ns must be specified for query");
         }
         if (is.nil(query)) {
-            throw new x.InvalidArgument("query must be specified for query");
+            throw new exception.InvalidArgument("query must be specified for query");
         }
 
         // Validate that we are not passing 0x00 in the collection name
         if (ns.includes("\x00")) {
-            throw new x.InvalidArgument("namespace cannot contain a null character");
+            throw new exception.InvalidArgument("namespace cannot contain a null character");
         }
 
         // Basic options

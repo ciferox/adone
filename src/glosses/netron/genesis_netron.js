@@ -1,6 +1,6 @@
 const {
     is,
-    x,
+    exception,
     util,
     net,
     event: { AsyncEmitter },
@@ -88,7 +88,7 @@ export default class GenesisNetron extends AsyncEmitter {
                     this._svrNetronAddrs.delete(addr);
                     await this._peerDisconnected(peer);
                     if (is.null(hsStatus)) {
-                        reject(new x.Connect(`Peer ${addr} refused connection`));
+                        reject(new exception.Connect(`Peer ${addr} refused connection`));
                     }
                 });
                 peer._setStatus(PEER_STATUS.CONNECTING);
@@ -100,7 +100,7 @@ export default class GenesisNetron extends AsyncEmitter {
                     try {
                         const data = payload.data;
                         if (!is.plainObject(data)) {
-                            throw new adone.x.NotValid(`Not valid packet: ${typeof (data)}`);
+                            throw new adone.exception.NotValid(`Not valid packet: ${typeof (data)}`);
                         }
                         this._onReceiveInitial(peer, data);
                         peer._setStatus(PEER_STATUS.ONLINE);
@@ -173,7 +173,7 @@ export default class GenesisNetron extends AsyncEmitter {
 
     releaseInterface(iObj) {
         if (!is.netronInterface(iObj)) {
-            throw new x.InvalidArgument("Argument is not an interface");
+            throw new exception.InvalidArgument("Argument is not an interface");
         }
         for (const [hash, i] of this._interfaces.entries()) {
             if (i.$def.id === iObj.$def.id && i.$uid === iObj.$uid) {
@@ -190,7 +190,7 @@ export default class GenesisNetron extends AsyncEmitter {
             ctxId = instance.__proto__.constructor.name;
         }
         if (this.contexts.has(ctxId)) {
-            throw new x.Exists(`Context '${ctxId}' already attached`);
+            throw new exception.Exists(`Context '${ctxId}' already attached`);
         }
 
         return this._attachContext(ctxId, new Stub(this, instance, r));
@@ -206,7 +206,7 @@ export default class GenesisNetron extends AsyncEmitter {
             this._emitContextEvent("context detach", { id: ctxId, defId });
             return defId;
         }
-        throw new x.Unknown(`Unknown context '${ctxId}'`);
+        throw new exception.Unknown(`Unknown context '${ctxId}'`);
     }
 
     hasContext(ctxId) {
@@ -225,7 +225,7 @@ export default class GenesisNetron extends AsyncEmitter {
         if (is.nil(uid)) {
             const stub = this.contexts.get(ctxId);
             if (is.undefined(stub)) {
-                throw new x.Unknown(`Unknown context '${ctxId}'`);
+                throw new exception.Unknown(`Unknown context '${ctxId}'`);
             }
             return stub.definition;
         }
@@ -248,7 +248,7 @@ export default class GenesisNetron extends AsyncEmitter {
     async attachContextRemote(uid, instance, ctxId = null) {
         const peer = this.getPeer(uid);
         if (!peer.isSuper) {
-            throw new x.Unknown(`Peer '${uid}' is not a super-netron`);
+            throw new exception.Unknown(`Peer '${uid}' is not a super-netron`);
         }
         const r = Reflection.from(instance);
         if (is.null(ctxId)) {
@@ -256,7 +256,7 @@ export default class GenesisNetron extends AsyncEmitter {
         }
         const defId = peer._attachedContexts.get(ctxId);
         if (!is.undefined(defId)) {
-            throw new x.Exists(`Context '${ctxId}' already attached on the peer '${uid}' side`);
+            throw new exception.Exists(`Context '${ctxId}' already attached on the peer '${uid}' side`);
         }
 
         const stub = new Stub(this, instance, r);
@@ -271,11 +271,11 @@ export default class GenesisNetron extends AsyncEmitter {
     async detachContextRemote(uid, ctxId) {
         const peer = this.getPeer(uid);
         if (!peer.isSuper) {
-            throw new x.Unknown(`Peer '${uid}' is not a super-netron`);
+            throw new exception.Unknown(`Peer '${uid}' is not a super-netron`);
         }
         const defId = peer._attachedContexts.get(ctxId);
         if (is.undefined(defId)) {
-            throw new x.NotExists(`Context '${ctxId}' not attached on the peer '${uid}' code`);
+            throw new exception.NotExists(`Context '${ctxId}' not attached on the peer '${uid}' code`);
         }
         this._stubs.delete(defId);
         peer._attachedContexts.delete(ctxId);
@@ -286,14 +286,14 @@ export default class GenesisNetron extends AsyncEmitter {
 
     setInterfaceTwin(ctxClassName, TwinClass) {
         if (!is.class(TwinClass)) {
-            throw new x.InvalidArgument("TwinClass should be a class");
+            throw new exception.InvalidArgument("TwinClass should be a class");
         }
         if (!is.netronInterface(new TwinClass())) {
-            throw new x.InvalidArgument("TwinClass should be extended from adone.netron.Interface");
+            throw new exception.InvalidArgument("TwinClass should be extended from adone.netron.Interface");
         }
         const Class = this._localTwins.get(ctxClassName);
         if (!is.undefined(Class)) {
-            throw new x.Exists(`Twin for interface '${ctxClassName}' exists`);
+            throw new exception.Exists(`Twin for interface '${ctxClassName}' exists`);
         }
         this._localTwins.set(ctxClassName, TwinClass);
     }
@@ -311,7 +311,7 @@ export default class GenesisNetron extends AsyncEmitter {
         if (is.nil(uid)) {
             const stub = this._stubs.get(defId);
             if (is.undefined(stub)) {
-                return Promise.reject(new x.NotExists(`Context with definition id '${defId}' not exists`));
+                return Promise.reject(new exception.NotExists(`Context with definition id '${defId}' not exists`));
             }
             return stub.set(name, data);
         }
@@ -323,7 +323,7 @@ export default class GenesisNetron extends AsyncEmitter {
         if (is.nil(uid)) {
             const stub = this._stubs.get(defId);
             if (is.undefined(stub)) {
-                return Promise.reject(new x.NotExists(`Context with definition id '${defId}' not exists`));
+                return Promise.reject(new exception.NotExists(`Context with definition id '${defId}' not exists`));
             }
             return new Promise((resolve, reject) => {
                 stub.get(name, defaultData).catch(reject).then((result) => {
@@ -359,18 +359,18 @@ export default class GenesisNetron extends AsyncEmitter {
 
     getPeer(uid) {
         if (is.nil(uid)) {
-            throw new x.InvalidArgument("Invalid peer or peer uid");
+            throw new exception.InvalidArgument("Invalid peer or peer uid");
         }
         const peer = is.genesisPeer(uid) ? uid : this.peers.get(uid);
         if (is.genesisPeer(peer)) {
             return peer;
         }
-        throw new x.Unknown(`Unknown peer '${uid}'`);
+        throw new exception.Unknown(`Unknown peer '${uid}'`);
     }
 
     getPeerForInterface(int) {
         if (!is.netronInterface(int)) {
-            throw new x.InvalidArgument("Object is not a netron interface");
+            throw new exception.InvalidArgument("Object is not a netron interface");
         } else {
             return this.getPeer(int.$uid);
         }
@@ -387,7 +387,7 @@ export default class GenesisNetron extends AsyncEmitter {
     getInterfaceById(defId, uid = null) {
         if (is.nil(uid)) {
             if (!this._stubs.has(defId)) {
-                throw new x.Unknown(`Unknown definition '${defId}'`);
+                throw new exception.Unknown(`Unknown definition '${defId}'`);
             }
             return this._createInterface(this._stubs.get(defId).definition);
         }
@@ -605,7 +605,7 @@ export default class GenesisNetron extends AsyncEmitter {
 
                         try {
                             if (is.undefined(stub)) {
-                                return this.send(peer, 0, packet.streamId, 1, ACTION.SET, [1, new x.NotExists("Context not exists")]);
+                                return this.send(peer, 0, packet.streamId, 1, ACTION.SET, [1, new exception.NotExists("Context not exists")]);
                             }
                             const result = await stub.get(name, data[2], peer);
                             await this.send(peer, 0, packet.streamId, 1, ACTION.SET, [0, result]);
@@ -652,7 +652,7 @@ export default class GenesisNetron extends AsyncEmitter {
             case ACTION.CONTEXT_ATTACH: {
                 if (packet.getImpulse()) {
                     if ((await this.customProcessPacket(peer, packet)) === false) {
-                        return this.send(peer, 0, packet.streamId, 1, ACTION.SET, [1, new x.NotImplemented("This feature is not implemented")]);
+                        return this.send(peer, 0, packet.streamId, 1, ACTION.SET, [1, new exception.NotImplemented("This feature is not implemented")]);
                     }
                 } else { // reply
                     const awaiter = peer._removeAwaiter(packet.streamId);
@@ -663,7 +663,7 @@ export default class GenesisNetron extends AsyncEmitter {
             case ACTION.CONTEXT_DETACH: {
                 if (packet.getImpulse()) {
                     if ((await this.customProcessPacket(peer, packet)) === false) {
-                        return this.send(peer, 0, packet.streamId, 1, ACTION.SET, [1, new x.NotImplemented("This feature is not implemented")]);
+                        return this.send(peer, 0, packet.streamId, 1, ACTION.SET, [1, new exception.NotImplemented("This feature is not implemented")]);
                     }
                 } else { // reply
                     const awaiter = peer._removeAwaiter(packet.streamId);
@@ -796,7 +796,7 @@ export default class GenesisNetron extends AsyncEmitter {
     }
 
     _createPeer(socket, gate, peerType) {
-        throw new x.NotImplemented("Method _createPeer() should be implemented");
+        throw new exception.NotImplemented("Method _createPeer() should be implemented");
     }
 
     _createInterface(def, uid = null) {

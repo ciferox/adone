@@ -31,9 +31,9 @@ describe("configuration", function () {
                     await seq.query("select 1 as hello");
                 });
                 if (
-                    !(err instanceof orm.x.InvalidConnectionError)
-                    && !(err instanceof orm.x.HostNotReachableError)
-                    && !(err instanceof orm.x.ConnectionError)
+                    !(err instanceof orm.exception.InvalidConnectionError)
+                    && !(err instanceof orm.exception.HostNotReachableError)
+                    && !(err instanceof orm.exception.ConnectionError)
                 ) {
                     assert.fail();
                 }

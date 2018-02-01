@@ -28,11 +28,11 @@ describe("configuration", "Base", () => {
     });
 
     it("should correctly check key", () => {
-        assert.throws(() => (conf.get(1)), adone.x.InvalidArgument);
-        assert.throws(() => (conf.get({})), adone.x.InvalidArgument);
-        assert.throws(() => (conf.get(true)), adone.x.InvalidArgument);
-        assert.throws(() => (conf.get("")), adone.x.InvalidArgument);
-        assert.throws(() => (conf.get([""])), adone.x.InvalidArgument);
+        assert.throws(() => (conf.get(1)), adone.exception.InvalidArgument);
+        assert.throws(() => (conf.get({})), adone.exception.InvalidArgument);
+        assert.throws(() => (conf.get(true)), adone.exception.InvalidArgument);
+        assert.throws(() => (conf.get("")), adone.exception.InvalidArgument);
+        assert.throws(() => (conf.get([""])), adone.exception.InvalidArgument);
     });
 
     it("raw access to property", () => {

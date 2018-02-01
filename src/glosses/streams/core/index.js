@@ -1,7 +1,7 @@
 const {
     noop,
     is,
-    x,
+    exception,
     event,
     std,
     collection
@@ -51,7 +51,7 @@ const wrapBefore = (cb, func, nargs) => {
 
 const _checkDestroyed = function () {
     if (this._destroyed) {
-        throw new x.IllegalState("Stream was destroyed");
+        throw new exception.IllegalState("Stream was destroyed");
     }
 };
 
@@ -235,7 +235,7 @@ export class Stream extends event.Emitter {
     @checkDestroyed(1)
     map(callback) {
         if (!is.function(callback)) {
-            throw new x.InvalidArgument("'callback' must be a function");
+            throw new exception.InvalidArgument("'callback' must be a function");
         }
         if (is.asyncFunction(callback)) {
             return this.throughAsync(async function (value) {
@@ -250,11 +250,11 @@ export class Stream extends event.Emitter {
     @checkDestroyed(2)
     mapIf(condition, callback) {
         if (!is.function(condition)) {
-            throw new x.InvalidArgument("'condition' must be a function");
+            throw new exception.InvalidArgument("'condition' must be a function");
         }
 
         if (!is.function(callback)) {
-            throw new x.InvalidArgument("'callback' must be a function");
+            throw new exception.InvalidArgument("'callback' must be a function");
         }
 
         if (is.asyncFunction(condition) || is.asyncFunction(callback)) {
@@ -278,7 +278,7 @@ export class Stream extends event.Emitter {
     @checkDestroyed(1)
     filter(callback) {
         if (!is.function(callback)) {
-            throw new x.InvalidArgument("'callback' must be a function");
+            throw new exception.InvalidArgument("'callback' must be a function");
         }
         if (is.asyncFunction(callback)) {
             return this.throughAsync(async function (value) {
@@ -297,7 +297,7 @@ export class Stream extends event.Emitter {
     @checkDestroyed(2)
     forEach(callback, { wait = true, passthrough = false } = {}) {
         if (!is.function(callback)) {
-            throw new x.InvalidArgument("'callback' must be a function");
+            throw new exception.InvalidArgument("'callback' must be a function");
         }
         if (is.asyncFunction(callback)) {
             if (wait) {
@@ -327,7 +327,7 @@ export class Stream extends event.Emitter {
     @checkDestroyed(2)
     done(callback, { passthrough = false } = {}) {
         if (!is.function(callback)) {
-            throw new x.InvalidArgument("'callback' must be a function");
+            throw new exception.InvalidArgument("'callback' must be a function");
         }
         if (passthrough) {
             return this.throughSync(function (value) {
@@ -344,7 +344,7 @@ export class Stream extends event.Emitter {
     @checkDestroyed(2)
     toArray(callback, { passthrough = false } = {}) {
         if (!is.function(callback)) {
-            throw new x.InvalidArgument("'callback' must be a function");
+            throw new exception.InvalidArgument("'callback' must be a function");
         }
         if (this._last.isEnded()) {
             process.nextTick(callback, []);
@@ -364,7 +364,7 @@ export class Stream extends event.Emitter {
     @checkDestroyed(1)
     unique(prop = null) {
         if (!is.null(prop) && !is.function(prop)) {
-            throw new x.InvalidArgument("'prop' must be a function or null");
+            throw new exception.InvalidArgument("'prop' must be a function or null");
         }
         const cache = new Set();
         return this.throughSync(function (x) {
@@ -383,7 +383,7 @@ export class Stream extends event.Emitter {
         if (is.function(name)) {
             [name, filter] = [undefined, name];
         } else if (!is.function(filter)) {
-            throw new x.InvalidArgument("'filter' must be a function");
+            throw new exception.InvalidArgument("'filter' must be a function");
         }
 
         let stashes;
@@ -423,7 +423,7 @@ export class Stream extends event.Emitter {
             stream = stashes.unnamed.pop();
         } else {
             if (!stashes.named.has(name)) {
-                throw new x.Unknown(`unknown stash stream '${name}'`);
+                throw new exception.Unknown(`unknown stash stream '${name}'`);
             }
             stream = stashes.named.get(name);
             stashes.named.delete(name);
@@ -503,7 +503,7 @@ export class Stream extends event.Emitter {
             if (x instanceof std.stream.Readable) {
                 return !x._readableState.ended;
             }
-            throw new x.InvalidArgument(`Invalid stream at ${i}`);
+            throw new exception.InvalidArgument(`Invalid stream at ${i}`);
         });
         let m = streams.length;
         const onEnd = () => {

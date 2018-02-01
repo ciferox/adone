@@ -1,5 +1,5 @@
 const {
-    x,
+    exception,
     is,
     math: { Long },
     database: { mysql },
@@ -218,7 +218,7 @@ export default class Packet {
         }
 
         adone.trace();
-        throw new x.IllegalState(`Should not reach here: ${tag}`);
+        throw new exception.IllegalState(`Should not reach here: ${tag}`);
     }
 
     readFloat() {
@@ -683,7 +683,7 @@ export default class Packet {
             sqlState = this.readBuffer(5).toString();
         }
         const message = this.readString(undefined, encoding);
-        const err = new x.Exception(message);
+        const err = new exception.Exception(message);
         err.code = c.error[errorCode];
         err.errno = errorCode;
         err.sqlState = sqlState;

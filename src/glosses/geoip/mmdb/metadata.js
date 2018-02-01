@@ -1,4 +1,7 @@
-const { x, geoip: { mmdb: { __: { Decoder } } } } = adone;
+const {
+    exception,
+    geoip: { mmdb: { __: { Decoder } } }
+} = adone;
 
 const METADATA_START_MARKER = Buffer.from("ABCDEF4D61784D696E642E636F6D", "hex");
 const VALID_RECORD_SIZES = new Set([24, 28, 32]);
@@ -10,7 +13,7 @@ export default class Metadata {
         const metadata = decoder.decode(offset).value;
 
         if (!metadata) {
-            throw new x.InvalidArgument("Cannot parse binary database");
+            throw new exception.InvalidArgument("Cannot parse binary database");
         }
 
         this.binaryFormatMajorVersion = metadata.binary_format_major_version;
@@ -25,7 +28,7 @@ export default class Metadata {
         this.recordSize = metadata.record_size;
 
         if (!VALID_RECORD_SIZES.has(this.recordSize)) {
-            throw new x.NotSupported("Unsupported record size");
+            throw new exception.NotSupported("Unsupported record size");
         }
 
         this.nodeByteSize = this.recordSize / 4;

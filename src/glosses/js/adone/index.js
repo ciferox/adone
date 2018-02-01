@@ -30,7 +30,7 @@ export class Inspector {
     getNamespace(name, names = null) {
         const { namespace, objectName } = adone.meta.parseName(name);
         if (!this.namespaces.has(namespace)) {
-            throw new adone.x.Unknown(`Unknown namespace: '${namespace}'`);
+            throw new adone.exception.Unknown(`Unknown namespace: '${namespace}'`);
         }
         if (is.plainObject(names)) {
             names.namespace = namespace;

@@ -18,16 +18,16 @@ export default function protocols(proto) {
             return protocols.codes[proto];
         }
 
-        throw new adone.x.Unknown(`No protocol with code: ${proto}`);
+        throw new adone.exception.Unknown(`No protocol with code: ${proto}`);
     } else if (is.string(proto)) {
         if (protocols.names[proto]) {
             return protocols.names[proto];
         }
 
-        throw new adone.x.Unknown(`No protocol with name: ${proto}`);
+        throw new adone.exception.Unknown(`No protocol with name: ${proto}`);
     }
 
-    throw new adone.x.NotValid(`Invalid protocol id type: ${proto}`);
+    throw new adone.exception.NotValid(`Invalid protocol id type: ${proto}`);
 }
 
 protocols.lengthPrefixedVarSize = V;

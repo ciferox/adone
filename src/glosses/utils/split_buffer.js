@@ -4,7 +4,7 @@ const {
 
 const bufferIndexOf = function (buffer, search, offset, encoding) {
     if (!is.buffer(buffer)) {
-        throw new adone.x.InvalidArgument("'buffer' is not a Buffer");
+        throw new adone.exception.InvalidArgument("'buffer' is not a Buffer");
     }
 
     // allow optional offset when providing an encoding
@@ -18,7 +18,7 @@ const bufferIndexOf = function (buffer, search, offset, encoding) {
     } else if (is.number(search) && !isNaN(search)) {
         search = Buffer.from([search]);
     } else if (!is.buffer(search)) {
-        throw new adone.x.InvalidArgument("'search' is not a bufferable object");
+        throw new adone.exception.InvalidArgument("'search' is not a bufferable object");
     }
 
     if (search.length === 0) {
@@ -28,7 +28,7 @@ const bufferIndexOf = function (buffer, search, offset, encoding) {
     if (is.undefined(offset) || (is.number(offset) && isNaN(offset))) {
         offset = 0;
     } else if (!is.number(offset)) {
-        throw new adone.x.InvalidArgument("'offset' is not a number");
+        throw new adone.exception.InvalidArgument("'offset' is not a number");
     }
 
     if (offset < 0) {

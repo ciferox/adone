@@ -1,4 +1,4 @@
-const { x } = adone;
+const { exception } = adone;
 
 export const parsePatch = (uniDiff, options = {}) => {
     const diffstr = uniDiff.split(/\r\n|[\n\v\f\r\x85]/);
@@ -79,10 +79,10 @@ export const parsePatch = (uniDiff, options = {}) => {
         // Perform optional sanity checking
         if (options.strict) {
             if (addCount !== hunk.newLines) {
-                throw new x.IllegalState(`Added line count did not match for hunk at line ${chunkHeaderIndex + 1}`);
+                throw new exception.IllegalState(`Added line count did not match for hunk at line ${chunkHeaderIndex + 1}`);
             }
             if (removeCount !== hunk.oldLines) {
-                throw new x.IllegalState(`Removed line count did not match for hunk at line ${chunkHeaderIndex + 1}`);
+                throw new exception.IllegalState(`Removed line count did not match for hunk at line ${chunkHeaderIndex + 1}`);
             }
         }
 
@@ -128,7 +128,7 @@ export const parsePatch = (uniDiff, options = {}) => {
                 index.hunks.push(parseHunk());
             } else if (line && options.strict) {
                 // Ignore unexpected content unless in strict mode
-                throw new x.Unknown(`Unknown line ${i + 1} ${JSON.stringify(line)}`);
+                throw new exception.Unknown(`Unknown line ${i + 1} ${JSON.stringify(line)}`);
             } else {
                 i++;
             }

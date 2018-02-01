@@ -1,4 +1,10 @@
-const { is, x, data, collection, sourcemap } = adone;
+const {
+    is,
+    exception,
+    data,
+    collection,
+    sourcemap
+} = adone;
 
 export class SourceMapGenerator {
     constructor(args = {}) {
@@ -114,7 +120,7 @@ export class SourceMapGenerator {
     applySourceMap(consumer, sourceFile, sourcemapPath) {
         if (is.nil(sourceFile)) {
             if (is.nil(consumer.file)) {
-                throw new x.InvalidArgument("requires either an explicit source file, or the source map's \"file\" property");
+                throw new exception.InvalidArgument("requires either an explicit source file, or the source map's \"file\" property");
             }
             sourceFile = consumer.file;
         }
@@ -210,7 +216,7 @@ export class SourceMapGenerator {
             // Cases 2 and 3.
             return;
         }
-        throw new x.Exception(`Invalid mapping: ${JSON.stringify({
+        throw new exception.Exception(`Invalid mapping: ${JSON.stringify({
             generated,
             source,
             original,

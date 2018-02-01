@@ -8,6 +8,7 @@ export const skipAdoneNs = (namespace) => namespace.substring(ADONE_PREFIX_LEN);
 export const skipGlobalNs = (namespace) => namespace.substring(GLOBAL_PREFIX_LEN);
 
 adone.lazify({
+    typeOf: "./typeof",
     reflect: "./reflect",
     inspect: ["./inspect", (mod) => mod.inspect],
     inspectError: ["./inspect", (mod) => mod.inspectError],
@@ -55,7 +56,7 @@ collectNamespace(metaNamespace, null);
 export const getNamespaceInfo = (nsName) => {
     const namespace = namespaces.find((ns) => ns.name === nsName);
     if (is.undefined(namespace)) {
-        throw new adone.x.Unknown(`Unknown namespace: ${nsName}`);
+        throw new adone.exception.Unknown(`Unknown namespace: ${nsName}`);
     }
     return namespace;
 };
@@ -123,7 +124,7 @@ export const search = (keyword, nsName = "adone", { threshold = 0.3 } = {}) => {
     let { namespace } = adone.meta.parseName(nsName);
 
     if (namespace !== nsName) {
-        throw new adone.x.NotValid(`Invalid namespace: ${nsName}`);
+        throw new adone.exception.NotValid(`Invalid namespace: ${nsName}`);
     }
 
     let ns;

@@ -20,7 +20,7 @@ class Specter {
             } else {
                 const url = new adone.std.url.URL(hostInfo);
                 if (!PROTOCOLS.includes(url.protocol)) {
-                    throw new adone.x.NotSupported(`Not supported protocol: ${url.protocol}`);
+                    throw new adone.exception.NotSupported(`Not supported protocol: ${url.protocol}`);
                 }
                 const hostname = await adone.net.ip.lookup(url.hostname);
 
@@ -54,7 +54,7 @@ class Specter {
         } else if (is.plainObject(hostInfo)) {
             host = new Host(hostInfo);
         } else {
-            throw new adone.x.NotValid(`Invalid type of host: ${adone.util.typeOf(host)}`);
+            throw new adone.exception.NotValid(`Invalid type of host: ${adone.meta.typeOf(host)}`);
         }
 
         this._.hosts.push(host);

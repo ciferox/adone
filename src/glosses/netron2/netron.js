@@ -1,6 +1,6 @@
 const {
     is,
-    x,
+    exception,
     util,
     event,
     net: { p2p: { PeerInfo } },
@@ -82,7 +82,7 @@ export default class Netron extends event.AsyncEmitter {
      */
     createNetCore(netId, config = {}) {
         if (this.networks.has(netId)) {
-            throw new adone.x.Exists(`Core '${netId}' is already exist`);
+            throw new exception.Exists(`Core '${netId}' is already exist`);
         }
 
         if (!config.transport) {
@@ -109,7 +109,7 @@ export default class Netron extends event.AsyncEmitter {
     deleteNetCore(netId) {
         const netCore = this.getNetCore(netId);
         if (netCore.started) {
-            throw new adone.x.NotAllowed("It is not allow to delete active netcore");
+            throw new exception.NotAllowed("It is not allow to delete active netcore");
         }
         this.networks.delete(netId);
     }
@@ -121,7 +121,7 @@ export default class Netron extends event.AsyncEmitter {
     getNetCore(netId) {
         const ni = this.networks.get(netId);
         if (is.undefined(ni)) {
-            throw new adone.x.Unknown(`Unknown network name: ${netId}`);
+            throw new exception.Unknown(`Unknown network name: ${netId}`);
         }
 
         return ni.netCore;
@@ -330,7 +330,7 @@ export default class Netron extends event.AsyncEmitter {
             ctxId = instance.__proto__.constructor.name;
         }
         if (this.contexts.has(ctxId)) {
-            throw new x.Exists(`Context '${ctxId}' already attached`);
+            throw new exception.Exists(`Context '${ctxId}' already attached`);
         }
 
         return this._attachContext(ctxId, new Stub(this, r));
@@ -339,7 +339,7 @@ export default class Netron extends event.AsyncEmitter {
     detachContext(ctxId, releaseOriginated = true) {
         const stub = this.contexts.get(ctxId);
         if (is.undefined(stub)) {
-            throw new x.Unknown(`Unknown context '${ctxId}'`);
+            throw new exception.Unknown(`Unknown context '${ctxId}'`);
         }
 
         this.contexts.delete(ctxId);
@@ -359,7 +359,7 @@ export default class Netron extends event.AsyncEmitter {
     // async attachContextRemote(uid, instance, ctxId = null) {
     //     const peer = this.getPeer(uid);
     //     if (!peer.isSuper) {
-    //         throw new x.Unknown(`Peer '${uid}' is not a super-netron`);
+    //         throw new exception.Unknown(`Peer '${uid}' is not a super-netron`);
     //     }
     //     const r = Reflection.from(instance);
     //     if (is.null(ctxId)) {
@@ -367,7 +367,7 @@ export default class Netron extends event.AsyncEmitter {
     //     }
     //     const defId = peer._attachedContexts.get(ctxId);
     //     if (!is.undefined(defId)) {
-    //         throw new x.Exists(`Context '${ctxId}' already attached on the peer '${uid}' side`);
+    //         throw new exception.Exists(`Context '${ctxId}' already attached on the peer '${uid}' side`);
     //     }
 
     //     const stub = new Stub(this, instance, r);
@@ -382,11 +382,11 @@ export default class Netron extends event.AsyncEmitter {
     // async detachContextRemote(uid, ctxId) {
     //     const peer = this.getPeer(uid);
     //     if (!peer.isSuper) {
-    //         throw new x.Unknown(`Peer '${uid}' is not a super-netron`);
+    //         throw new exception.Unknown(`Peer '${uid}' is not a super-netron`);
     //     }
     //     const defId = peer._attachedContexts.get(ctxId);
     //     if (is.undefined(defId)) {
-    //         throw new x.NotExists(`Context '${ctxId}' not attached on the peer '${uid}' code`);
+    //         throw new exception.NotExists(`Context '${ctxId}' not attached on the peer '${uid}' code`);
     //     }
     //     this._stubs.delete(defId);
     //     peer._attachedContexts.delete(ctxId);
@@ -415,21 +415,21 @@ export default class Netron extends event.AsyncEmitter {
     _getStub(defId) {
         const stub = this._stubs.get(defId);
         if (is.undefined(stub)) {
-            throw new x.Unknown(`Unknown definition '${defId}'`);
+            throw new exception.Unknown(`Unknown definition '${defId}'`);
         }
         return stub;
     }
 
     // setInterfaceTwin(ctxClassName, TwinClass) {
     //     if (!is.class(TwinClass)) {
-    //         throw new x.InvalidArgument("TwinClass should be a class");
+    //         throw new exception.InvalidArgument("TwinClass should be a class");
     //     }
     //     if (!is.netronInterface(new TwinClass())) {
-    //         throw new x.InvalidArgument("TwinClass should be extended from adone.netron.Interface");
+    //         throw new exception.InvalidArgument("TwinClass should be extended from adone.netron.Interface");
     //     }
     //     const Class = this._localTwins.get(ctxClassName);
     //     if (!is.undefined(Class)) {
-    //         throw new x.Exists(`Twin for interface '${ctxClassName}' exists`);
+    //         throw new exception.Exists(`Twin for interface '${ctxClassName}' exists`);
     //     }
     //     this._localTwins.set(ctxClassName, TwinClass);
     // }
@@ -486,7 +486,7 @@ export default class Netron extends event.AsyncEmitter {
         } else if (is.string(peerId)) { // base58
             base58Id = peerId;
         } else {
-            throw new x.NotValid(`Invalid type of peer identity: ${adone.util.typeOf(peerId)}`);
+            throw new exception.NotValid(`Invalid type of peer identity: ${adone.meta.typeOf(peerId)}`);
         }
 
         const peer = this.peers.get(base58Id);
@@ -494,14 +494,14 @@ export default class Netron extends event.AsyncEmitter {
             if (this.peer.info.id.asBase58() === base58Id) {
                 return this.peer;
             }
-            throw new x.Unknown(`Unknown peer: '${peerId.toString()}'`);
+            throw new exception.Unknown(`Unknown peer: '${peerId.toString()}'`);
         }
         return peer;
     }
 
     getPeerForInterface(iInstance) {
         if (!is.netron2Interface(iInstance)) {
-            throw new x.NotValid("Object is not a netron interface");
+            throw new exception.NotValid("Object is not a netron interface");
         }
 
         return this.getPeer(iInstance[__.I_PEERID_SYMBOL]);
@@ -613,7 +613,7 @@ export default class Netron extends event.AsyncEmitter {
     setMetaHandler(id, handler, replace = false) {
         const localHandler = this._metaHandlers.get(id);
         if (!is.undefined(localHandler) && !replace) {
-            throw new x.Exists(`Handler '${id}' already exists`);
+            throw new exception.Exists(`Handler '${id}' already exists`);
         }
         this._metaHandlers.set(id, handler);
     }
@@ -621,7 +621,7 @@ export default class Netron extends event.AsyncEmitter {
     getMetaHandler(id) {
         const handler = this._metaHandlers.get(id);
         if (is.undefined(handler)) {
-            throw new adone.x.NotExists(`Handler '${is}' not exists`);
+            throw new exception.NotExists(`Handler '${is}' not exists`);
         }
         return handler;
     }
@@ -698,7 +698,7 @@ export default class Netron extends event.AsyncEmitter {
 
             //             try {
             //                 if (is.undefined(stub)) {
-            //                     return this.send(peer, 0, packet.streamId, 1, ACTION.SET, [1, new x.NotExists("Context not exists")]);
+            //                     return this.send(peer, 0, packet.streamId, 1, ACTION.SET, [1, new exception.NotExists("Context not exists")]);
             //                 }
             //                 const result = await stub.get(name, data[2], peer);
             //                 await this.send(peer, 0, packet.streamId, 1, ACTION.SET, [0, result]);
@@ -732,7 +732,7 @@ export default class Netron extends event.AsyncEmitter {
         //     case ACTION.CONTEXT_ATTACH: {
         //         if (packet.getImpulse()) {
         //             if ((await this.customProcessPacket(peer, packet)) === false) {
-        //                 return this.send(peer, 0, packet.streamId, 1, ACTION.SET, [1, new x.NotImplemented("This feature is not implemented")]);
+        //                 return this.send(peer, 0, packet.streamId, 1, ACTION.SET, [1, new exception.NotImplemented("This feature is not implemented")]);
         //             }
         //         } else { // reply
         //             const awaiter = peer._removeAwaiter(packet.streamId);
@@ -743,7 +743,7 @@ export default class Netron extends event.AsyncEmitter {
         //     case ACTION.CONTEXT_DETACH: {
         //         if (packet.getImpulse()) {
         //             if ((await this.customProcessPacket(peer, packet)) === false) {
-        //                 return this.send(peer, 0, packet.streamId, 1, ACTION.SET, [1, new x.NotImplemented("This feature is not implemented")]);
+        //                 return this.send(peer, 0, packet.streamId, 1, ACTION.SET, [1, new exception.NotImplemented("This feature is not implemented")]);
         //             }
         //         } else { // reply
         //             const awaiter = peer._removeAwaiter(packet.streamId);
@@ -848,7 +848,7 @@ export default class Netron extends event.AsyncEmitter {
     }
 
     // _createPeer(socket, gate, peerType) {
-    //     throw new x.NotImplemented("Method _createPeer() should be implemented");
+    //     throw new exception.NotImplemented("Method _createPeer() should be implemented");
     // }
 
     _createInterface(def, peer) {

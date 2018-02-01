@@ -1,4 +1,9 @@
-const { is, x, crypto: { stringCompare }, std: { crypto } } = adone;
+const {
+    is,
+    exception,
+    crypto: { stringCompare },
+    std: { crypto }
+} = adone;
 
 const cryptoHashes = new Set(crypto.getHashes());
 const cryptoCiphers = new Set(crypto.getCiphers());
@@ -8,7 +13,7 @@ const cipher = Symbol("cipher");
 export default class Keygrip {
     constructor(keys, { hash = "sha256", cipher = "aes-256-cbc" } = {}) {
         if (!is.array(keys) || keys.length === 0) {
-            throw new x.InvalidArgument("Keys must be provided");
+            throw new exception.InvalidArgument("Keys must be provided");
         }
         this.keys = keys;
         this.hash = hash;
@@ -21,7 +26,7 @@ export default class Keygrip {
 
     set hash(val) {
         if (!cryptoHashes.has(val)) {
-            throw new x.NotSupported(`unsupported hash algorithm: ${val}`);
+            throw new exception.NotSupported(`unsupported hash algorithm: ${val}`);
         }
         this[hash] = val;
     }
@@ -32,14 +37,13 @@ export default class Keygrip {
 
     set cipher(val) {
         if (!cryptoCiphers.has(val)) {
-            throw new x.NotSupported(`unsupported cipher: ${val}`);
+            throw new exception.NotSupported(`unsupported cipher: ${val}`);
         }
         this[cipher] = val;
     }
 
     encrypt(data, iv = null, key = this.keys[0]) {
-        const cipher = is.null(iv) ? crypto.createCipher(this.cipher, key) :
-                                     crypto.createCipheriv(this.cipher, key, iv);
+        const cipher = is.null(iv) ? crypto.createCipher(this.cipher, key) : crypto.createCipheriv(this.cipher, key, iv);
         const text = cipher.update(data, "utf8");
         const pad = cipher.final();
         return Buffer.concat([text, pad]);
@@ -59,7 +63,7 @@ export default class Keygrip {
         }
         try {
             const decipher = is.null(iv) ? crypto.createDecipher(this.cipher, key) :
-                                           crypto.createDecipheriv(this.cipher, key, iv);
+                crypto.createDecipheriv(this.cipher, key, iv);
             const text = decipher.update(data, "utf8");
             const pad = decipher.final();
             return Buffer.concat([text, pad]);

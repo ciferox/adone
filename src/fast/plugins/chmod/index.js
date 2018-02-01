@@ -1,5 +1,5 @@
 export default function () {
-    const { is, x, fs, util } = adone;
+    const { is, exception, fs, util } = adone;
 
     const defaultMode = 0o777 & (~process.umask());
 
@@ -38,7 +38,7 @@ export default function () {
 
     return function chmod(mode, dirMode) {
         if (!is.nil(mode) && !is.number(mode) && !is.object(mode)) {
-            throw new x.InvalidArgument("Expected mode to be null/undefined/number/Object");
+            throw new exception.InvalidArgument("Expected mode to be null/undefined/number/Object");
         }
 
         if (dirMode === true) {

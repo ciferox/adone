@@ -1,6 +1,6 @@
 const {
     is,
-    x,
+    exception,
     std: {
         url
     },
@@ -134,7 +134,7 @@ export default class Scope extends adone.std.events.EventEmitter {
 
     done() {
         if (!this.isDone()) {
-            throw new x.IllegalState(`Mocks not yet satisfied:\n${this.pendingMocks().join("\n")}`);
+            throw new exception.IllegalState(`Mocks not yet satisfied:\n${this.pendingMocks().join("\n")}`);
         }
     }
 

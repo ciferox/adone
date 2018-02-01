@@ -1,6 +1,6 @@
 const {
     is,
-    x,
+    exception,
     std,
     runtime: { term },
     tag,
@@ -48,7 +48,7 @@ export default class Application extends application.Subsystem {
         // Prevent double initialization of global application instance
         // (for cases where two or more Applications run in-process, the first app will be common).
         if (!is.null(adone.runtime.app)) {
-            throw new x.IllegalState("It is impossible to have several main applications");
+            throw new exception.IllegalState("It is impossible to have several main applications");
         }
         adone.runtime.app = this;
 

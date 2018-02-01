@@ -1,4 +1,8 @@
-const { is, x, std: { child_process: cp, path, url, os, fs, net } } = adone;
+const {
+    is,
+    exception,
+    std: { child_process: cp, path, url, os, fs, net }
+} = adone;
 
 const escapeQuotes = function (str) {
     if (is.string(str)) {
@@ -122,7 +126,7 @@ const notifierExists = async (notifier) => {
 export const immediateFileCommand = async (notifier, options) => {
     const exists = await notifierExists(notifier);
     if (!exists) {
-        throw new x.NotExists(`Notifier (${notifier}) not found on system`);
+        throw new exception.NotExists(`Notifier (${notifier}) not found on system`);
     }
     cp.execFile(notifier, options);
 };

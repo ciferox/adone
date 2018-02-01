@@ -41,14 +41,14 @@ export class B extends A {
 
     @DPublic()
     syncErrorB() {
-        throw new adone.x.InvalidArgument("Invalid argument");
+        throw new adone.exception.InvalidArgument("Invalid argument");
     }
 
     @DPublic()
     asyncErrorB() {
         return new Promise(async (resolve, reject) => {
             await adone.promise.delay(1);
-            reject(new adone.x.InvalidArgument("Invalid argument"));
+            reject(new adone.exception.InvalidArgument("Invalid argument"));
         });
     }
 

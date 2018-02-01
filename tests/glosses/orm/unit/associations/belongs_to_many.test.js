@@ -5,7 +5,7 @@ describe("belongsToMany", function () {
     const { type } = orm;
 
     const {
-        x: { AssociationError }
+        exception: { AssociationError }
     } = orm;
 
     const {

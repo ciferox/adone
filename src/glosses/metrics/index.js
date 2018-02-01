@@ -23,7 +23,7 @@ adone.lazify({
             case "freebsd": OperatingSystem = require("./system/freebsd").default; break;
             case "darwin": OperatingSystem = require("./system/darwin").default; break;
             case "sunos": OperatingSystem = require("./system/sunos").default; break;
-            default: throw new adone.x.NotSupported(`Unsupported operating system: ${process.platform}`);
+            default: throw new adone.exception.NotSupported(`Unsupported operating system: ${process.platform}`);
         }
         return new OperatingSystem();
     },
@@ -35,7 +35,7 @@ adone.lazify({
             case "freebsd": Hardware = require("./hardware/freebsd").default; break;
             case "darwin": Hardware = require("./hardware/darwin").default; break;
             case "sunos": Hardware = require("./hardware/sunos").default; break;
-            default: throw new adone.x.NotSupported(`Unsupported operating system: ${Hardware.platform}`);
+            default: throw new adone.exception.NotSupported(`Unsupported operating system: ${Hardware.platform}`);
         }
         return new Hardware();
     }

@@ -31,7 +31,7 @@ export default (testInterface) => {
             });
 
             it("should throws with unknown context", () => {
-                assert.throws(() => peer._getContextDefinition("not_exists"), adone.x.Unknown);
+                assert.throws(() => peer._getContextDefinition("not_exists"), adone.exception.Unknown);
             });
 
             it("_getContextDefinition() should return definition of attached context owned by netron instance", () => {
@@ -107,7 +107,7 @@ export default (testInterface) => {
             });
 
             it("detach non-existing context", async () => {
-                await assert.throws(async () => peer.detachContext("this_context_not_exists"), adone.x.Unknown);
+                await assert.throws(async () => peer.detachContext("this_context_not_exists"), adone.exception.Unknown);
             });
 
             it("attach same context twice should have thrown", async () => {
@@ -115,7 +115,7 @@ export default (testInterface) => {
                 assert.false(peer.hasContexts());
                 await peer.attachContext(a, "a");
                 assert.true(peer.hasContexts());
-                await assert.throws(async () => peer.attachContext(a, "a"), adone.x.Exists);
+                await assert.throws(async () => peer.attachContext(a, "a"), adone.exception.Exists);
             });
 
             //     it("context attach notification", async () => {
@@ -187,7 +187,7 @@ export default (testInterface) => {
 
             //         await exNetron.attachContextRemote(peer.uid, ctx, "a");
             //         const err = await assert.throws(async () => exNetron.attachContextRemote(peer.uid, ctx, "a"));
-            //         assert.instanceOf(err, adone.x.Exists);
+            //         assert.instanceOf(err, adone.exception.Exists);
             //     });
             // });
 
@@ -224,7 +224,7 @@ export default (testInterface) => {
             //         const peer = await exNetron.connect();
 
             //         const e = await assert.throws(async () => exNetron.detachContextRemote(peer.uid, "this_context_not_exists"));
-            //         assert.instanceOf(e, adone.x.NotExists);
+            //         assert.instanceOf(e, adone.exception.NotExists);
             //     });
 
             //     it("valid way", async () => {
@@ -325,7 +325,7 @@ export default (testInterface) => {
         //         });
     
         //         it("should throw for unknown context", () => {
-        //             assert.throws(() => netron.peer._queryInterfaceByDefinition(100500), adone.x.Unknown);
+        //             assert.throws(() => netron.peer._queryInterfaceByDefinition(100500), adone.exception.Unknown);
         //         });
     
         //         // it("remote", () => {
@@ -334,7 +334,7 @@ export default (testInterface) => {
         //         //     assert.ok(iface);
         //         //     assert.instanceOf(iface, adone.netron.Interface);
     
-        //         //     assert.throws(() => exNetron._queryInterfaceByDefinition(100500, superNetron.uid), adone.x.Unknown);
+        //         //     assert.throws(() => exNetron._queryInterfaceByDefinition(100500, superNetron.uid), adone.exception.Unknown);
         //         // });
         //     });
     
@@ -359,7 +359,7 @@ export default (testInterface) => {
         //         });
     
         //         it("should throw for unknown context", () => {
-        //             assert.throws(() => netron.peer.getInterfaceByName("not_exists"), adone.x.Unknown);
+        //             assert.throws(() => netron.peer.getInterfaceByName("not_exists"), adone.exception.Unknown);
         //         });
     
         //         // it("remote", () => {
@@ -369,7 +369,7 @@ export default (testInterface) => {
     
         //         //     assert.throws(() => {
         //         //         exNetron.getInterfaceByName("not_exists", superNetron.uid);
-        //         //     }, adone.x.Unknown);
+        //         //     }, adone.exception.Unknown);
         //         // });
         //     });
     
@@ -395,7 +395,7 @@ export default (testInterface) => {
         //         });
     
         //         it("should throw for non-interface instance", () => {
-        //             assert.throws(() => netron.getPeerForInterface(new A()), adone.x.NotValid);
+        //             assert.throws(() => netron.getPeerForInterface(new A()), adone.exception.NotValid);
         //         });
     
         //         // it("remote", () => {
@@ -407,7 +407,7 @@ export default (testInterface) => {
         //         //     assert.equal(peerIface.uid, superNetron.uid);
         //         //     assert.equal(peerIface, peer);
     
-        //         //     assert.throws(() => exNetron.getPeerForInterface(null), adone.x.InvalidArgument);
+        //         //     assert.throws(() => exNetron.getPeerForInterface(null), adone.exception.InvalidArgument);
         //         // });
         //     });
     

@@ -1,7 +1,7 @@
 adone.lazify({
     server: "./server",
     client: "./client",
-    x: "./x",
+    exception: "./exception",
     Downloader: "./downloader",
     followRedirects: "./follow_redirects"
 }, exports, require);

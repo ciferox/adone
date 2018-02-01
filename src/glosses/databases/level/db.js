@@ -1,6 +1,6 @@
 const {
     is,
-    x,
+    exception,
     database: { level: { Codec } }
 } = adone;
 
@@ -38,7 +38,7 @@ class IteratorStream extends adone.std.stream.Readable {
                 try {
                     value = this._decoder(result.key, result.value);
                 } catch (err) {
-                    this.emit("error", new x.Encoding(err));
+                    this.emit("error", new exception.Encoding(err));
                     this.push(null);
                     return;
                 }
@@ -78,7 +78,7 @@ export default class DB extends adone.event.Emitter {
         super();
 
         if (!is.class(db) || !is.string(location)) {
-            throw new x.DatabaseInitialization("Must provide a location for the database");
+            throw new exception.DatabaseInitialization("Must provide a location for the database");
         }
 
         this.options = {
@@ -113,7 +113,7 @@ export default class DB extends adone.event.Emitter {
                 const encOptions = this.options.encryption;
 
                 if (!is.string(encOptions.password) && !is.buffer(encOptions.password)) {
-                    throw new adone.x.NotValid("Password is not valid");
+                    throw new adone.exception.NotValid("Password is not valid");
                 }
 
                 if (!is.undefined(encOptions.salt)) {
@@ -247,7 +247,7 @@ export default class DB extends adone.event.Emitter {
                 this.emit("open");
                 this.emit("ready");
             } catch (err) {
-                err = new x.DatabaseOpen(err);
+                err = new exception.DatabaseOpen(err);
                 this.emit("error", err);
                 throw err;
             }
@@ -303,16 +303,16 @@ export default class DB extends adone.event.Emitter {
             try {
                 value = this._codec.decodeValue(value, options);
             } catch (err) {
-                err = new x.Encoding(err);
+                err = new exception.Encoding(err);
                 this.emit("error", err);
                 throw err;
             }
             return value;
         } catch (err) {
             if ((/notfound/i).test(err) || err.notFound) {
-                err = new x.NotFound(`Key '${key_}' not found in database`, err);
-            } else if (!(err instanceof x.Encoding)) {
-                err = new x.DatabaseRead(err);
+                err = new exception.NotFound(`Key '${key_}' not found in database`, err);
+            } else if (!(err instanceof exception.Encoding)) {
+                err = new exception.DatabaseRead(err);
             }
             this.emit("error", err);
             throw err;
@@ -329,7 +329,7 @@ export default class DB extends adone.event.Emitter {
             await this.db.put(key, value, options);
             this.emit("put", key_, value_);
         } catch (err) {
-            err = new x.DatabaseWrite(err);
+            err = new exception.DatabaseWrite(err);
             this.emit("error", err);
             throw err;
         }
@@ -344,7 +344,7 @@ export default class DB extends adone.event.Emitter {
             await this.db.del(key, options);
             this.emit("del", key_);
         } catch (err) {
-            err = new x.DatabaseWrite(err);
+            err = new exception.DatabaseWrite(err);
             this.emit("error", err);
             throw err;
         }
@@ -356,7 +356,7 @@ export default class DB extends adone.event.Emitter {
         this._maybeError();
 
         if (!is.array(arr_)) {
-            const err = new x.DatabaseWrite("batch() requires an array argument");
+            const err = new exception.DatabaseWrite("batch() requires an array argument");
             this.emit("error", err);
             throw err;
         }
@@ -373,7 +373,7 @@ export default class DB extends adone.event.Emitter {
             await this.db.batch(arr, options);
             this.emit("batch", arr_);
         } catch (err) {
-            err = new x.DatabaseWrite(err);
+            err = new exception.DatabaseWrite(err);
             this.emit("error", err);
             throw err;
         }
@@ -408,7 +408,7 @@ export default class DB extends adone.event.Emitter {
 
     _maybeError() {
         if (!this._isOpening() && !this.isOpen()) {
-            const err = new x.DatabaseRead("Database is not open");
+            const err = new exception.DatabaseRead("Database is not open");
             this.emit("error", err);
             throw err;
         }

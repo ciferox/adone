@@ -102,10 +102,10 @@ export default class Server extends adone.event.Emitter {
                             });
                             clientSocket.connect({ path: options.port }, () => {
                                 clientSocket.end();
-                                reject(new adone.x.Bind(`address '${options.port}' already in use`));
+                                reject(new adone.exception.Bind(`address '${options.port}' already in use`));
                             });
                         } else {
-                            reject(new adone.x.Bind(`address '${options.host}:${options.port}' already in use`));
+                            reject(new adone.exception.Bind(`address '${options.host}:${options.port}' already in use`));
                         }
                     } else {
                         try {
@@ -119,7 +119,7 @@ export default class Server extends adone.event.Emitter {
                 this.server.listen(options.port, options.host, backlog, resolve);
             });
         }
-        throw new adone.x.Bind(`already bound on address ${this.address().full}`);
+        throw new adone.exception.Bind(`already bound on address ${this.address().full}`);
     }
 
     disconnect() {

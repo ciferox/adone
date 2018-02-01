@@ -1,4 +1,13 @@
-const { is, event, util, fs, std, x, compressor, noop } = adone;
+const {
+    is,
+    event,
+    util,
+    fs,
+    std,
+    exception,
+    compressor,
+    noop
+} = adone;
 
 /**
  * Represents a log file rotator.
@@ -23,11 +32,11 @@ export default class LogRotator extends event.Emitter {
         this.maxSize = util.parseSize(maxSize);
 
         if (!this.checkInterval) {
-            throw new x.InvalidArgument("invalid checkInterval");
+            throw new exception.InvalidArgument("invalid checkInterval");
         }
 
         if (!this.maxSize) {
-            throw new x.InvalidArgument("invalid maxSize");
+            throw new exception.InvalidArgument("invalid maxSize");
         }
 
         this.maxFiles = maxFiles;

@@ -4,7 +4,7 @@ import * as transformer from "./transformer";
 import * as nodes from "./nodes";
 import { Frame } from "./runtime";
 
-const { is, x } = adone;
+const { is, exception } = adone;
 
 const compareOps = new Map([
     ["==", "=="],
@@ -1118,7 +1118,7 @@ export class Compiler {
             const name = block.name.value;
 
             if (blockNames.includes(name)) {
-                throw new x.IllegalState(`Block "${name}" defined more than once.`);
+                throw new exception.IllegalState(`Block "${name}" defined more than once.`);
             }
             blockNames.push(name);
 

@@ -9,7 +9,7 @@ export default class TestService extends adone.omnitron.Service {
 
         await adone.promise.delay(100);
 
-        throw new adone.x.Runtime("configuration failed");
+        throw new adone.exception.Runtime("configuration failed");
     }
 
     async uninitializeService() {

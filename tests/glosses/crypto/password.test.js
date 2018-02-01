@@ -222,7 +222,7 @@ describe("crypto", "password", () => {
         });
 
         it("should prevent using invalid patterns", () => {
-            assert.throws(() => password.generate(11, false, /test/), adone.x.NotValid);
+            assert.throws(() => password.generate(11, false, /test/), adone.exception.NotValid);
         });
     });
 });

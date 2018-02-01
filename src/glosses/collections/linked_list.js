@@ -1,4 +1,4 @@
-const { is, x } = adone;
+const { is, exception } = adone;
 
 const empty = Symbol.for("linkedlist:empty");
 
@@ -158,7 +158,7 @@ export default class LinkedList {
             if (this.autoresize) {
                 this.resize(this.maxLength * 2);
             } else {
-                throw new x.IllegalState("Full");
+                throw new exception.IllegalState("Full");
             }
         }
         this.tail = this.tail.next;
@@ -212,7 +212,7 @@ export default class LinkedList {
             if (this.autoresize) {
                 this.resize(this.maxLength * 2);
             } else {
-                throw new x.IllegalState("Full");
+                throw new exception.IllegalState("Full");
             }
         }
         this.head = this.head.prev;
@@ -324,7 +324,7 @@ export default class LinkedList {
      */
     get front() {
         if (this.length === 0) {
-            throw new x.IllegalState("Empty");
+            throw new exception.IllegalState("Empty");
         }
         return this.head.value;
     }
@@ -336,7 +336,7 @@ export default class LinkedList {
      */
     get back() {
         if (this.length === 0) {
-            throw new x.IllegalState("Empty");
+            throw new exception.IllegalState("Empty");
         }
         return this.tail.value;
     }

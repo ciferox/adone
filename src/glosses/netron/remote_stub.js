@@ -1,6 +1,6 @@
 const {
     is,
-    x,
+    exception,
     util,
     netron: { Definition }
 } = adone;
@@ -38,9 +38,9 @@ export default class RemoteStub {
                 this._processArgs(peer, data, false);
                 return target[prop].set(data);
             }
-            return Promise.reject(new x.InvalidAccess(`${prop} is not writable`));
+            return Promise.reject(new exception.InvalidAccess(`${prop} is not writable`));
         }
-        return Promise.reject(new x.NotExists(`${prop} not exists`));
+        return Promise.reject(new exception.NotExists(`${prop} not exists`));
 
     }
 
@@ -56,7 +56,7 @@ export default class RemoteStub {
             this._processArgs(peer, defaultData, false);
             return target[prop].get(defaultData);
         }
-        return Promise.reject(new x.NotExists(`${prop} not exists`));
+        return Promise.reject(new exception.NotExists(`${prop} not exists`));
     }
 
     _processArgs(peer, args, isMethod) {

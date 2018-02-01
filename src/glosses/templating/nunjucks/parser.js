@@ -2,7 +2,7 @@ import * as lexer from "./lexer";
 import * as nodes from "./nodes";
 import { TemplateError } from "./x";
 
-const { is, x } = adone;
+const { is, exception } = adone;
 
 export class Parser {
     constructor(tokens) {
@@ -45,7 +45,7 @@ export class Parser {
 
     pushToken(tok) {
         if (this.peeked) {
-            throw new x.IllegalState("pushToken: can only push one token on between reads");
+            throw new exception.IllegalState("pushToken: can only push one token on between reads");
         }
         this.peeked = tok;
     }

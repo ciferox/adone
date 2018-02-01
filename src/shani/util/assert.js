@@ -1,4 +1,9 @@
-const { is, x, util: { keys }, shani: { util } } = adone;
+const {
+    is,
+    exception,
+    util: { keys },
+    shani: { util }
+} = adone;
 const { __ } = util;
 
 const isProxy = Symbol.for("shani:isProxy");
@@ -102,7 +107,7 @@ const assert = {
     },
     expose(target, options) {
         if (!target) {
-            throw new x.InvalidArgument("target is null or undefined");
+            throw new exception.InvalidArgument("target is null or undefined");
         }
 
         const o = options || {};

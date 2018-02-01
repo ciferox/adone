@@ -10,7 +10,7 @@ describe("util", "globize", () => {
     });
 
     it("invalid path", () => {
-        assert.throws(() => globize({}), adone.x.InvalidArgument);
+        assert.throws(() => globize({}), adone.exception.InvalidArgument);
     });
 
     it("empty or nil path", () => {

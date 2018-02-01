@@ -1,5 +1,5 @@
 const {
-    x,
+    exception,
     is,
     event,
     std: { tls, http: _http }
@@ -95,7 +95,7 @@ class TunnelingAgent extends event.Emitter {
         connectReq.once("error", (err) => {
             connectReq.removeAllListeners();
 
-            const error = new x.IllegalState(`tunneling socket could not be established, cause=${err.message}`);
+            const error = new exception.IllegalState(`tunneling socket could not be established, cause=${err.message}`);
             error.code = "ECONNRESET";
             options.request.emit("error", error);
             this.removeSocket(placeholder);

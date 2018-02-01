@@ -6,7 +6,7 @@ const {
     multi,
     net: { p2p: { PeerId, crypto } },
     std: { util },
-    x
+    exception
 } = adone;
 
 const testIdHex = testId.id;
@@ -21,7 +21,7 @@ const testOpts = {
 
 describe("PeerId", () => {
     it("create an instance without id", () => {
-        assert.throws(() => new PeerId(), x.NotValid);
+        assert.throws(() => new PeerId(), exception.NotValid);
     });
 
     it("create a new id", () => {
@@ -42,7 +42,7 @@ describe("PeerId", () => {
         expect(id.asBase58().length).to.equal(46);
         assert.throws(() => {
             id.id = Buffer.from("hello");
-        }, adone.x.NotAllowed);
+        }, adone.exception.NotAllowed);
     });
 
     it("recreate an Id from Hex string", () => {

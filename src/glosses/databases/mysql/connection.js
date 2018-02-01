@@ -1,7 +1,7 @@
 const {
     event,
     is,
-    x,
+    exception,
     util,
     database: { mysql },
     std: {
@@ -108,7 +108,7 @@ export default class Connection extends event.Emitter {
             }
 
             if (!this._protocolError) { // no particular error message before disconnect
-                this._protocolError = new x.Exception("Connection lost: The server closed the connection.");
+                this._protocolError = new exception.Exception("Connection lost: The server closed the connection.");
                 this._protocolError.fatal = true;
                 this._protocolError.code = "PROTOCOL_CONNECTION_LOST";
             }
@@ -147,7 +147,7 @@ export default class Connection extends event.Emitter {
     }
 
     _addCommandClosedState(cmd) {
-        const err = new x.IllegalState("Can't add new command when connection is in closed state");
+        const err = new exception.IllegalState("Can't add new command when connection is in closed state");
         err.fatal = true;
         if (cmd.onResult) {
             cmd.onResult(err);
@@ -162,7 +162,7 @@ export default class Connection extends event.Emitter {
         this.stream.removeAllListeners("data");
         this.addCommand = this._addCommandClosedState;
         this.write = () => {
-            this.emit("error", new x.IllegalState("Can't write in closed state"));
+            this.emit("error", new exception.IllegalState("Can't write in closed state"));
         };
         this._notifyError(err);
         this._fatalError = err;
@@ -180,7 +180,7 @@ export default class Connection extends event.Emitter {
 
         this.stream.destroy && this.stream.destroy();
 
-        const err = new x.Timeout("connect ETIMEDOUT");
+        const err = new exception.Timeout("connect ETIMEDOUT");
         err.errorno = "ETIMEDOUT";
         err.code = "ETIMEDOUT";
         err.syscall = "connect";
@@ -357,7 +357,7 @@ export default class Connection extends event.Emitter {
     }
 
     protocolError(message, code) {
-        const err = new x.Exception(message);
+        const err = new exception.Exception(message);
         err.fatal = true;
         err.code = code || "PROTOCOL_ERROR";
         this.emit("error", err);

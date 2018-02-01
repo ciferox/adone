@@ -1,6 +1,6 @@
 const {
     is,
-    x,
+    exception,
     net,
     netron: { DEFAULT_PORT, ACTION, PEER_STATUS, GenesisNetron, Peer, RemoteStub }
 } = adone;
@@ -39,7 +39,7 @@ class Gate {
                     host
                 });
             } else {
-                throw new adone.x.NotSupported(`Unsupported adapter: ${adapter}`);
+                throw new adone.exception.NotSupported(`Unsupported adapter: ${adapter}`);
             }
         }
 
@@ -59,7 +59,7 @@ class Gate {
                     } else if (is.ip6(addr)) {
                         ipAddr = new net.ip.IP6(addr).toBigNumber();
                     } else {
-                        throw new x.NotValid(`Address or subnet '${addr}' is not valid`);
+                        throw new exception.NotValid(`Address or subnet '${addr}' is not valid`);
                     }
 
                     this.ips.push(ipAddr);
@@ -89,7 +89,7 @@ class Gate {
 
     bind() {
         if (this.netron.gates.has(this.name)) {
-            throw new x.Exists(`Already bound to '${this.address}'`);
+            throw new exception.Exists(`Already bound to '${this.address}'`);
         }
 
         // Add gate to netron gates map
@@ -196,7 +196,7 @@ export default class Netron extends GenesisNetron {
 
     registerAdapter(name, AdapterClass) {
         if (this.adapters.has(name)) {
-            throw new adone.x.Exists(`Adapter with name '${name}' already registered`);
+            throw new adone.exception.Exists(`Adapter with name '${name}' already registered`);
         }
         this.adapters.set(name, AdapterClass);
     }
@@ -225,7 +225,7 @@ export default class Netron extends GenesisNetron {
         if (is.string(options)) {
             const gate = this.gates.get(options);
             if (is.undefined(gate)) {
-                throw new x.Unknown(`Unknown gate with name '${options}'`);
+                throw new exception.Unknown(`Unknown gate with name '${options}'`);
             }
 
             // Disconnect from peers
@@ -240,7 +240,7 @@ export default class Netron extends GenesisNetron {
             if (is.string(options.port) && !options.port.includes("/") && !options.port.endsWith(".sock")) {
                 const gate = this.gates.getByAddress(options.port);
                 if (is.undefined(gate)) {
-                    throw new x.Unknown(`Unknown gate '${options.port}'`);
+                    throw new exception.Unknown(`Unknown gate '${options.port}'`);
                 }
     
                 await gate.server.unbind();
@@ -250,7 +250,7 @@ export default class Netron extends GenesisNetron {
                 const addr = net.util.humanizeAddr(this.options.protocol, port, host);
                 const gate = this.gates.getByAddress(addr);
                 if (is.undefined(gate)) {
-                    throw new x.Unknown(`Unknown gate '${options.port}'`);
+                    throw new exception.Unknown(`Unknown gate '${options.port}'`);
                 }
                 await gate.server.unbind();
                 this.gates.deleteByAddress(addr);
@@ -284,7 +284,7 @@ export default class Netron extends GenesisNetron {
             } else if (is.ip6(peerAddress)) {
                 peerIpBn = new net.ip.IP6(peerAddress).toBigNumber();
             } else {
-                throw new x.Unknown(`Unknown address: ${peerAddress}`);
+                throw new exception.Unknown(`Unknown address: ${peerAddress}`);
             }
             if (gate.applyPolicy(peerIpBn, gate.ips)) {
                 return peer.disconnect();
@@ -338,7 +338,7 @@ export default class Netron extends GenesisNetron {
 
         const uid = data.uid;
         if (this.peers.has(uid)) {
-            throw new x.Exists(`Peer '${uid}' already connected`);
+            throw new exception.Exists(`Peer '${uid}' already connected`);
         }
 
         const isConfirmed = await this.onConfirmPeer(peer, packet);
@@ -346,7 +346,7 @@ export default class Netron extends GenesisNetron {
             this._onReceiveInitial(peer, data);
             this._removePeerFromNonauthList(peer);
         } else {
-            throw new x.InvalidAccess(`Access denied for peer '${peer.uid}' - peer not confirmed`);
+            throw new exception.InvalidAccess(`Access denied for peer '${peer.uid}' - peer not confirmed`);
         }
     }
 

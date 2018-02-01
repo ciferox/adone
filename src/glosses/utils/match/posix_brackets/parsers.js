@@ -1,5 +1,5 @@
 const {
-    x,
+    exception,
     util
 } = adone;
 
@@ -214,7 +214,7 @@ export default function parsers(brackets) {
             const bracket = this.pop("bracket");
             if (!this.isType(bracket, "bracket")) {
                 if (this.options.strict) {
-                    throw new x.IllegalState('missing opening "["');
+                    throw new exception.IllegalState('missing opening "["');
                 }
                 node.type = "bracket.inner";
                 node.escaped = true;

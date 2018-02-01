@@ -1,6 +1,6 @@
 const {
     database: { redis },
-    x,
+    exception,
     is,
     std,
     util,
@@ -15,10 +15,10 @@ export default class SentinelConnector extends __.Connector {
     constructor(options) {
         super(options);
         if (this.options.sentinels.length === 0) {
-            throw new x.InvalidArgument("Requires at least one sentinel to connect to.");
+            throw new exception.InvalidArgument("Requires at least one sentinel to connect to.");
         }
         if (!this.options.name) {
-            throw new x.InvalidArgument("Requires the name of master.");
+            throw new exception.InvalidArgument("Requires the name of master.");
         }
     }
 
@@ -53,7 +53,7 @@ export default class SentinelConnector extends __.Connector {
                     err = _err;
                 }
                 if (!this.connecting) {
-                    throw new x.Exception(__.util.CONNECTION_CLOSED_ERROR_MSG);
+                    throw new exception.Exception(__.util.CONNECTION_CLOSED_ERROR_MSG);
                 }
                 if (resolved) {
                     this.stream = std.net.createConnection(resolved);

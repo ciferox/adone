@@ -104,7 +104,7 @@ export default class LinkManager extends application.Subsystem {
             const scriptPath = this._getScriptPath(linkName);
 
             if (await fs.exists(scriptPath)) {
-                throw new adone.x.Exists(`File '${scriptPath}' already exists`);
+                throw new adone.exception.Exists(`File '${scriptPath}' already exists`);
             }
 
             const isAdone = chain.length === 1 && chain[0] === "adone";
@@ -190,7 +190,7 @@ export default class LinkManager extends application.Subsystem {
             } else {
                 if (!(await fs.exists(linkInfo.path))) {
                     await cliConfig.deleteLink(linkName);
-                    throw new adone.x.NotExists(`File '${linkInfo.path}' is not exist`);
+                    throw new adone.exception.NotExists(`File '${linkInfo.path}' is not exist`);
                 }
 
                 await fs.unlink(linkInfo.path);

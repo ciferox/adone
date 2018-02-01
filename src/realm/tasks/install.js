@@ -6,7 +6,7 @@ const {
     std,
     task,
     util,
-    x
+    exception
 } = adone;
 
 const DEST_OPTIONS = {
@@ -95,7 +95,7 @@ export default class InstallTask extends task.Task {
         this.rollbackData.adoneConf = adoneConf;
 
         if (!is.string(adoneConf.raw.name)) {
-            throw new adone.x.NotValid("Package name is not specified");
+            throw new adone.exception.NotValid("Package name is not specified");
         }
 
         this.name = adoneConf.getFullName();
@@ -127,7 +127,7 @@ export default class InstallTask extends task.Task {
         } else {
             const subConfigs = adoneConf.getSubConfigs();
             if (subConfigs.length === 0) {
-                throw new adone.x.NotValid("Invalid or useless package");
+                throw new adone.exception.NotValid("Invalid or useless package");
             }
 
             this.rollbackData.subProjects = [];
@@ -169,7 +169,7 @@ export default class InstallTask extends task.Task {
         if (await fs.exists(this.destPath)) {
             const stat = fs.lstatSync(this.destPath);
             if (!stat.isSymbolicLink()) {
-                throw new x.Exists(`Package ${this.name} already installed, please uninstall it and try again`);
+                throw new exception.Exists(`Package ${this.name} already installed, please uninstall it and try again`);
             }
             await fs.rm(this.destPath);
         }
@@ -213,7 +213,7 @@ export default class InstallTask extends task.Task {
         } else {
             const indexPath = std.path.join(this.srcPath, "index.js");
             if (!(await fs.exists(indexPath))) {
-                throw new adone.x.NotExists(`File ${indexPath} is not exist`);
+                throw new adone.exception.NotExists(`File ${indexPath} is not exist`);
             }
 
             await fs.copyTo(indexPath, this.destPath);

@@ -1,7 +1,7 @@
 const {
     database: { redis },
     is,
-    x,
+    exception,
     noop,
     collection,
     promise,
@@ -26,7 +26,7 @@ export default class Cluster extends __.Commander.mixin(event.Emitter) {
             this.options.scaleReads !== "slave"
         ) {
 
-            throw new x.Exception(`Invalid option scaleReads ${this.options.scaleReads}. Expected "all", "master", "slave" or a custom function`);
+            throw new exception.Exception(`Invalid option scaleReads ${this.options.scaleReads}. Expected "all", "master", "slave" or a custom function`);
         }
 
         this.connectionPool = new __.ConnectionPool(this.options.redisOptions);
@@ -76,20 +76,20 @@ export default class Cluster extends __.Commander.mixin(event.Emitter) {
 
         return new Promise((resolve, reject) => {
             if (this.status === "connecting" || this.status === "connect" || this.status === "ready") {
-                reject(new x.IllegalState("Redis is already connecting/connected"));
+                reject(new exception.IllegalState("Redis is already connecting/connected"));
                 return;
             }
             this.setStatus("connecting");
 
             if (!is.array(this.startupNodes) || this.startupNodes.length === 0) {
-                throw new x.InvalidArgument("`startupNodes` should contain at least one node.");
+                throw new exception.InvalidArgument("`startupNodes` should contain at least one node.");
             }
 
             this.connectionPool.reset(this.startupNodes);
 
             const closeListener = () => {
                 this.removeListener("refresh", refreshListener); // eslint-disable-line no-use-before-define
-                reject(new x.Exception("None of startup nodes is available"));
+                reject(new exception.Exception("None of startup nodes is available"));
             };
 
             const refreshListener = () => {
@@ -139,7 +139,7 @@ export default class Cluster extends __.Commander.mixin(event.Emitter) {
             }, retryDelay);
         } else {
             this.setStatus("end");
-            this.flushQueue(new x.IllegalState("None of startup nodes is available"));
+            this.flushQueue(new exception.IllegalState("None of startup nodes is available"));
         }
     }
 
@@ -191,7 +191,7 @@ export default class Cluster extends __.Commander.mixin(event.Emitter) {
 
     nodes(role = "all") {
         if (role !== "all" && role !== "master" && role !== "slave") {
-            throw new x.InvalidArgument(`Invalid role "${role}. Expected "all", "master" or "slave"`);
+            throw new exception.InvalidArgument(`Invalid role "${role}. Expected "all", "master" or "slave"`);
         }
         return util.values(this.connectionPool.nodes[role]);
     }
@@ -262,19 +262,19 @@ export default class Cluster extends __.Commander.mixin(event.Emitter) {
                     await this.getInfoFromNode(this.connectionPool.nodes.all[key]);
                 } catch (err) {
                     if (this.status === "END") {
-                        throw new x.Exception("Cluster is disconnected.");
+                        throw new exception.Exception("Cluster is disconnected.");
                     }
                     this.emit("node error", err);
                     lastNodeError = err;
                     continue;
                 }
                 if (this.status === "END") {
-                    throw new x.Exception("Cluster is disconnected.");
+                    throw new exception.Exception("Cluster is disconnected.");
                 }
                 this.emit("refresh");
                 return;
             }
-            const error = new x.Exception("Failed to refresh slots cache.");
+            const error = new exception.Exception("Failed to refresh slots cache.");
             error.lastNodeError = lastNodeError;
             throw error;
         } finally {
@@ -305,7 +305,7 @@ export default class Cluster extends __.Commander.mixin(event.Emitter) {
             this.connect().catch(noop);
         }
         if (this.status === "end") {
-            command.reject(new x.Exception(__.util.CONNECTION_CLOSED_ERROR_MSG));
+            command.reject(new exception.Exception(__.util.CONNECTION_CLOSED_ERROR_MSG));
             return command.promise;
         }
         let to = this.options.scaleReads;
@@ -320,7 +320,7 @@ export default class Cluster extends __.Commander.mixin(event.Emitter) {
         const ttl = {};
         const tryConnection = (random, asking) => {
             if (this.status === "end") {
-                command.reject(new x.Exception("Cluster is ended."));
+                command.reject(new exception.Exception("Cluster is ended."));
                 return;
             }
             let instance;
@@ -380,7 +380,7 @@ export default class Cluster extends __.Commander.mixin(event.Emitter) {
             } else if (this.options.enableOfflineQueue) {
                 this.offlineQueue.push({ command, stream, node });
             } else {
-                command.reject(new x.Exception("Cluster isn't ready and enableOfflineQueue options is false"));
+                command.reject(new exception.Exception("Cluster isn't ready and enableOfflineQueue options is false"));
             }
         };
         if (!node && !command[isRejectOverwritten]) {
@@ -432,7 +432,7 @@ export default class Cluster extends __.Commander.mixin(event.Emitter) {
             ttl.value -= 1;
         }
         if (ttl.value <= 0) {
-            handlers.maxRedirections(new x.Exception(`Too many Cluster redirections. Last error: ${error}`));
+            handlers.maxRedirections(new exception.Exception(`Too many Cluster redirections. Last error: ${error}`));
             return;
         }
         const errv = error.message.split(" ");
@@ -460,7 +460,7 @@ export default class Cluster extends __.Commander.mixin(event.Emitter) {
 
     async getInfoFromNode(instance) {
         if (!instance) {
-            throw new x.Exception("Node is disconnected");
+            throw new exception.Exception("Node is disconnected");
         }
         let result;
         try {

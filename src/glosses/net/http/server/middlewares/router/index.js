@@ -1,4 +1,11 @@
-const { is, util, x, lazify, std: { http: { METHODS } }, net: { http } } = adone;
+const {
+    is,
+    util,
+    exception,
+    lazify,
+    std: { http: { METHODS } },
+    net: { http }
+} = adone;
 const { server: { helper } } = http;
 
 const lazy = lazify({
@@ -140,7 +147,7 @@ export class Router {
                             if (is.function(options.notImplemented)) {
                                 notImplementedThrowable = options.notImplemented();
                             } else {
-                                notImplementedThrowable = new http.x.NotImplemented();
+                                notImplementedThrowable = new http.exception.NotImplemented();
                             }
                             throw notImplementedThrowable;
                         } else {
@@ -158,7 +165,7 @@ export class Router {
                                 if (is.function(options.methodNotAllowed)) {
                                     notAllowedThrowable = options.methodNotAllowed();
                                 } else {
-                                    notAllowedThrowable = new http.x.MethodNotAllowed();
+                                    notAllowedThrowable = new http.exception.MethodNotAllowed();
                                 }
                                 throw notAllowedThrowable;
                             } else {
@@ -251,7 +258,7 @@ export class Router {
             return route.url(...args);
         }
 
-        return new x.NotFound(`No route found for name: ${name}`);
+        return new exception.NotFound(`No route found for name: ${name}`);
     }
 
     // Match given `path` and return corresponding routes.

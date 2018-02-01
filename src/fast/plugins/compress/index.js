@@ -1,7 +1,7 @@
 export default function plugin() {
     return function compress(compressorType, options = {}) {
         if (!(compressorType in adone.compressor)) {
-            throw new adone.x.InvalidArgument(`Unknown compressor: ${compressorType}`);
+            throw new adone.exception.InvalidArgument(`Unknown compressor: ${compressorType}`);
         }
 
         const { compress, compressStream } = adone.compressor[compressorType];

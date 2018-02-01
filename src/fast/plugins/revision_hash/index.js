@@ -1,5 +1,5 @@
 const {
-    x,
+    exception,
     std: { crypto, path },
     is,
     fast: { File }
@@ -24,7 +24,7 @@ export const rev = function () {
             return;
         }
         if (file.isStream()) {
-            throw new x.NotSupported("Streaming is not supported");
+            throw new exception.NotSupported("Streaming is not supported");
         }
         if (file.extname === ".map") {
             sourcemaps.push(file);

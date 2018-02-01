@@ -563,19 +563,19 @@ describe("multi", "address", () => {
             it("number", () => {
                 expect(
                     () => address.protocols(1234)
-                ).to.throw(adone.x.Unknown);
+                ).to.throw(adone.exception.Unknown);
             });
 
             it("string", () => {
                 expect(
                     () => address.protocols("hello")
-                ).to.throw(adone.x.Unknown);
+                ).to.throw(adone.exception.Unknown);
             });
 
             it("else", () => {
                 expect(
                     () => address.protocols({ hi: 34 })
-                ).to.throw(adone.x.NotValid);
+                ).to.throw(adone.exception.NotValid);
             });
         });
     });

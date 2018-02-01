@@ -181,7 +181,7 @@ export default class Grid extends adone.terminal.ui.widget.Element {
         } else if (content.cols) {
             items = content.cols;
         } else {
-            throw new adone.x.NotValid("nothing 'cols' or 'rows' specified");
+            throw new adone.exception.NotValid("nothing 'cols' or 'rows' specified");
         }
 
         if (is.propertyDefined(content, "width")) {

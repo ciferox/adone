@@ -9,7 +9,7 @@ const {
             PassThrough
         }
     },
-    x,
+    exception,
     event,
     stream
 } = adone;
@@ -33,19 +33,19 @@ export class RandomAccessFile extends event.Emitter {
 
     async read(length, offset = null) {
         if (!this.readable) {
-            throw new x.IllegalState("File is not readable");
+            throw new exception.IllegalState("File is not readable");
         }
 
         const buf = Buffer.alloc(length);
         let bytes = 0;
         for ( ; length > 0; ) {
             if (!this.fd) {
-                throw new x.IllegalState("File is closed");
+                throw new exception.IllegalState("File is closed");
             }
             // eslint-disable-next-line
             bytes = await fs.read(this.fd, buf, buf.length - length, length, offset);
             if (bytes === 0) {
-                throw new x.IllegalState("Could not satisfy length");
+                throw new exception.IllegalState("Could not satisfy length");
             }
             if (is.number(offset)) {
                 offset += bytes;
@@ -57,14 +57,14 @@ export class RandomAccessFile extends event.Emitter {
 
     async write(buf, offset = null) {
         if (!this.writable) {
-            throw new x.IllegalState("File is not writable");
+            throw new exception.IllegalState("File is not writable");
         }
 
         let length = buf.length;
         let bytes = 0;
         for ( ; length > 0; ) {
             if (!this.fd) {
-                throw new x.IllegalState("File is closed");
+                throw new exception.IllegalState("File is closed");
             }
             // eslint-disable-next-line
             bytes = await fs.write(this.fd, buf, buf.length - length, length, offset);
@@ -206,7 +206,7 @@ export class AbstractRandomAccessReader extends event.Emitter {
             return;
         }
         if (this.refCount < 0) {
-            throw new x.IllegalState("invalid unref");
+            throw new exception.IllegalState("invalid unref");
         }
 
         this.close().then(() => {
@@ -262,7 +262,7 @@ export class AbstractRandomAccessReader extends event.Emitter {
     }
 
     _readStreamForRange(/* start, end */) {
-        throw new x.NotImplemented();
+        throw new exception.NotImplemented();
     }
 
     async read(buffer, offset, length, position) {

@@ -2,7 +2,7 @@ const {
     database: { mongo },
     event,
     is,
-    x,
+    exception,
     lazify
 } = adone;
 const {
@@ -783,7 +783,7 @@ export default class Pool extends event.Emitter {
                 && (!is.function(options.bson.serialize) || !is.function(options.bson.deserialize))
             )
         ) {
-            throw new x.InvalidArgument("must pass in valid bson parser");
+            throw new exception.InvalidArgument("must pass in valid bson parser");
         }
 
         // Pool state

@@ -1,6 +1,6 @@
 const {
     is,
-    x,
+    exception,
     event,
     util,
     net: { mail: { __ } }
@@ -176,7 +176,7 @@ export default class SMTPTransport extends event.Emitter {
                     }
                     returned = true;
                     // still have not returned, this means we have an unexpected connection close
-                    const err = new x.IllegalState("Unexpected socket close");
+                    const err = new exception.IllegalState("Unexpected socket close");
                     if (connection && connection._socket && connection._socket.upgrading) {
                         // starttls connection errors
                         err.code = "ETLS";
@@ -316,7 +316,7 @@ export default class SMTPTransport extends event.Emitter {
                     return;
                 }
                 returned = true;
-                return callback(new x.IllegalState("Connection closed"));
+                return callback(new exception.IllegalState("Connection closed"));
             });
 
             const finalize = () => {

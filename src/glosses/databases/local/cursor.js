@@ -1,4 +1,9 @@
-const { database: { local: { Model } }, x, is, util } = adone;
+const {
+    database: { local: { Model } },
+    exception,
+    is,
+    util
+} = adone;
 
 export default class Cursor {
     constructor(db, query = {}, execFn = null) {
@@ -41,7 +46,7 @@ export default class Cursor {
         for (let i = 0; i < keys.length; ++i) {
             const key = keys[i];
             if (!is.undefined(action) && this._projection[key] !== action) {
-                throw new x.IllegalState("Can't both keep and omit fields except for _id");
+                throw new exception.IllegalState("Can't both keep and omit fields except for _id");
             }
             action = this._projection[key];
         }

@@ -122,7 +122,7 @@ export default {
         const makeCode = this[key];
 
         if (makeCode === undefined) {
-            throw new adone.x.Unknown(`Unknown key: ${key}`);
+            throw new adone.exception.Unknown(`Unknown key: ${key}`);
         }
 
         if (key === "PAUSE") {

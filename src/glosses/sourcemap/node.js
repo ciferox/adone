@@ -1,4 +1,9 @@
-const { x, is, util, sourcemap } = adone;
+const {
+    exception,
+    is,
+    util,
+    sourcemap
+} = adone;
 
 const REGEX_NEWLINE = /(\r?\n)/;
 const NEWLINE_CODE = 10;
@@ -114,7 +119,7 @@ export default class SourceNode {
                 this.children.push(chunk);
             }
         } else {
-            throw new x.InvalidArgument(`Expected a SourceNode, string, or an array of SourceNodes and strings. Got ${chunk}`);
+            throw new exception.InvalidArgument(`Expected a SourceNode, string, or an array of SourceNodes and strings. Got ${chunk}`);
         }
         return this;
     }
@@ -127,7 +132,7 @@ export default class SourceNode {
         } else if (chunk[isSourceNode] || is.string(chunk)) {
             this.children.unshift(chunk);
         } else {
-            throw new x.InvalidArgument(`Expected a SourceNode, string, or an array of SourceNodes and strings. Got ${chunk}`);
+            throw new exception.InvalidArgument(`Expected a SourceNode, string, or an array of SourceNodes and strings. Got ${chunk}`);
         }
         return this;
     }

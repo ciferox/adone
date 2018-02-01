@@ -5,7 +5,8 @@ const arrayIteratorPrototype = Object.getPrototypeOf([][Symbol.iterator]());
 const stringIteratorPrototype = Object.getPrototypeOf(""[Symbol.iterator]());
 
 export default function typeOf(obj) {
-    /* ! Speed optimisation
+    /**
+     * ! Speed optimisation
      * Pre:
      *   string literal     x 3,039,035 ops/sec ±1.62% (78 runs sampled)
      *   boolean literal    x 1,424,138 ops/sec ±4.54% (75 runs sampled)

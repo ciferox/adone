@@ -1,7 +1,7 @@
 import * as _util from "./utils";
 
 const {
-    x,
+    exception,
     is,
     util
 } = adone;
@@ -85,11 +85,11 @@ braces.optimize = function (pattern, options) {
  */
 braces.create = function (pattern, options) {
     if (!is.string(pattern)) {
-        throw new x.InvalidArgument("expected a string");
+        throw new exception.InvalidArgument("expected a string");
     }
 
     if (pattern.length >= braces.MAX_LENGTH) {
-        throw new x.LimitExceeded(`expected pattern to be less than ${braces.MAX_LENGTH} characters`);
+        throw new exception.LimitExceeded(`expected pattern to be less than ${braces.MAX_LENGTH} characters`);
     }
 
     const create = () => {
@@ -144,11 +144,11 @@ braces.create = function (pattern, options) {
  */
 braces.makeRe = function (pattern, options) {
     if (!is.string(pattern)) {
-        throw new x.InvalidArgument("expected a string");
+        throw new exception.InvalidArgument("expected a string");
     }
 
     if (pattern.length >= braces.MAX_LENGTH) {
-        throw new x.LimitExceeded(`expected pattern to be less than ${braces.MAX_LENGTH} characters`);
+        throw new exception.LimitExceeded(`expected pattern to be less than ${braces.MAX_LENGTH} characters`);
     }
 
     const makeRe = () => {

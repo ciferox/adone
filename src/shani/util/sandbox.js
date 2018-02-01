@@ -1,4 +1,8 @@
-const { x, shani: { util }, lazify } = adone;
+const {
+    exception,
+    shani: { util },
+    lazify
+} = adone;
 const { __ } = util;
 
 const exposeValue = (sandbox, config, key, value) => {
@@ -57,7 +61,7 @@ class Sandbox extends __.Collection {
 
     restore(...args) {
         if (args.length) {
-            throw new x.InvalidArgument("sandbox.restore() does not take any parameters. Perhaps you meant stub.restore()");
+            throw new exception.InvalidArgument("sandbox.restore() does not take any parameters. Perhaps you meant stub.restore()");
         }
         super.restore(...args);
         this.restoreContext();

@@ -48,7 +48,7 @@ class Message {
     constructor(type, key, level) {
         if (key) {
             if (!is.buffer(key)) {
-                throw new adone.x.NotValid("Invalid key");
+                throw new adone.exception.NotValid("Invalid key");
             }
         }
 

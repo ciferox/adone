@@ -1,4 +1,4 @@
-const { is, x } = adone;
+const { is, exception } = adone;
 
 adone.asNamespace(exports);
 
@@ -223,7 +223,7 @@ export class SemVer {
             }
             version = version.version;
         } else if (!is.string(version)) {
-            throw new x.InvalidArgument(`Invalid Version: ${version}`);
+            throw new exception.InvalidArgument(`Invalid Version: ${version}`);
         }
 
         if (version.length > MAX_LENGTH) {
@@ -238,7 +238,7 @@ export class SemVer {
         const m = version.trim().match(loose ? re[LOOSE] : re[FULL]);
 
         if (!m) {
-            throw new x.InvalidArgument(`Invalid Version: ${version}`);
+            throw new exception.InvalidArgument(`Invalid Version: ${version}`);
         }
 
         this.raw = version;
@@ -249,15 +249,15 @@ export class SemVer {
         this.patch = Number(m[3]);
 
         if (this.major > MAX_SAFE_INTEGER || this.major < 0) {
-            throw new x.NotValid("Invalid major version");
+            throw new exception.NotValid("Invalid major version");
         }
 
         if (this.minor > MAX_SAFE_INTEGER || this.minor < 0) {
-            throw new x.NotValid("Invalid minor version");
+            throw new exception.NotValid("Invalid minor version");
         }
 
         if (this.patch > MAX_SAFE_INTEGER || this.patch < 0) {
-            throw new x.NotValid("Invalid patch version");
+            throw new exception.NotValid("Invalid patch version");
         }
 
         // numberify any prerelease numeric ids
@@ -440,7 +440,7 @@ export class SemVer {
                 break;
 
             default:
-                throw new x.InvalidArgument(`invalid increment argument: ${release}`);
+                throw new exception.InvalidArgument(`invalid increment argument: ${release}`);
         }
         this.format();
         this.raw = this.version;

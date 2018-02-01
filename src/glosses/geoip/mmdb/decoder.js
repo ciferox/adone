@@ -1,4 +1,8 @@
-const { x, collection, geoip: { mmdb: { __: { helper: { concat2, concat3, concat4 } } } } } = adone;
+const {
+    exception,
+    collection,
+    geoip: { mmdb: { __: { helper: { concat2, concat3, concat4 } } } }
+} = adone;
 
 const types = [
     "extended", //  0
@@ -27,7 +31,7 @@ const cursor = (value, offset) => ({ value, offset });
 export default class Decoder {
     constructor(db, baseOffset = 0, opts = {}) {
         if (!db) {
-            throw new x.InvalidArguemnt("File stream is required");
+            throw new exception.InvalidArguemnt("File stream is required");
         }
         this.db = db;
         this.baseOffset = baseOffset;

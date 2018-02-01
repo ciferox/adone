@@ -1,4 +1,10 @@
-const { x, is, util, net: { mail: { __ } }, std: { http, https, url, zlib, stream: { PassThrough } } } = adone;
+const {
+    exception,
+    is,
+    util,
+    net: { mail: { __ } },
+    std: { http, https, url, zlib, stream: { PassThrough } }
+} = adone;
 
 const MAX_REDIRECTS = 5;
 
@@ -120,7 +126,7 @@ export default function fetch(_url, options) {
             }
             finished = true;
             req.abort();
-            const err = new x.Timeout("Request Timeout");
+            const err = new exception.Timeout("Request Timeout");
             err.type = "FETCH";
             err.sourceUrl = _url;
             fetchRes.emit("error", err);
@@ -162,7 +168,7 @@ export default function fetch(_url, options) {
             options.redirects++;
             if (options.redirects > options.maxRedirects) {
                 finished = true;
-                const err = new x.IllegalState("Maximum redirect count exceeded");
+                const err = new exception.IllegalState("Maximum redirect count exceeded");
                 err.type = "FETCH";
                 err.sourceUrl = _url;
                 fetchRes.emit("error", err);
@@ -176,7 +182,7 @@ export default function fetch(_url, options) {
 
         if (res.statusCode >= 300 && !options.allowErrorResponse) {
             finished = true;
-            const err = new x.IllegalState(`Invalid status code ${res.statusCode}`);
+            const err = new exception.IllegalState(`Invalid status code ${res.statusCode}`);
             err.type = "FETCH";
             err.sourceUrl = _url;
             fetchRes.emit("error", err);

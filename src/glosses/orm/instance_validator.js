@@ -7,7 +7,7 @@ const {
 
 const {
     util,
-    x,
+    exception,
     type
 } = orm;
 
@@ -85,7 +85,7 @@ export default class InstanceValidator {
             [this._builtinValidators(), this._customValidators()].map(reflectPromise)
         ).then(() => {
             if (this.errors.length) {
-                throw new x.ValidationError(null, this.errors);
+                throw new exception.ValidationError(null, this.errors);
             }
         });
     }
@@ -335,7 +335,7 @@ export default class InstanceValidator {
             const validators = this.modelInstance.validators[field];
             const errMsg = _.get(validators, "notNull.msg", `${this.modelInstance.constructor.name}.${field} cannot be null`);
 
-            this.errors.push(new x.ValidationErrorItem(
+            this.errors.push(new exception.ValidationErrorItem(
                 errMsg,
                 "notNull Violation", // sequelizeError.ValidationErrorItem.Origins.CORE,
                 field,
@@ -347,7 +347,7 @@ export default class InstanceValidator {
 
         if (rawAttribute.type === type.STRING || rawAttribute.type instanceof type.STRING || rawAttribute.type === type.TEXT || rawAttribute.type instanceof type.TEXT) {
             if (is.array(value) || _.isObject(value) && !(value instanceof util.SequelizeMethod) && !is.buffer(value)) {
-                this.errors.push(new x.ValidationErrorItem(
+                this.errors.push(new exception.ValidationErrorItem(
                     `${field} cannot be an array or an object`,
                     "string violation", // sequelizeError.ValidationErrorItem.Origins.CORE,
                     field,
@@ -395,7 +395,7 @@ export default class InstanceValidator {
      */
     _pushError(isBuiltin, errorKey, rawError, value, fnName, fnArgs) {
         const message = rawError.message || rawError || "Validation error";
-        const error = new x.ValidationErrorItem(
+        const error = new exception.ValidationErrorItem(
             message,
             "Validation error", // sequelizeError.ValidationErrorItem.Origins.FUNCTION,
             errorKey,

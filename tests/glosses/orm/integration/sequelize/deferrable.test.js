@@ -51,7 +51,7 @@ describe("Deferrable", function () {
         it("does not allow the violation of the foreign key constraint", async function () {
             await assert.throws(async () => {
                 await this.run(orm.Deferrable.NOT);
-            }, orm.x.ForeignKeyConstraintError);
+            }, orm.exception.ForeignKeyConstraintError);
         });
     });
 
@@ -70,7 +70,7 @@ describe("Deferrable", function () {
                 await this.run(orm.Deferrable.INITIALLY_IMMEDIATE, {
                     deferrable: undefined
                 });
-            }, orm.x.ForeignKeyConstraintError);
+            }, orm.exception.ForeignKeyConstraintError);
         });
 
         it("allows the violation of the foreign key constraint if the transaction deferres only the foreign key constraint", function () {

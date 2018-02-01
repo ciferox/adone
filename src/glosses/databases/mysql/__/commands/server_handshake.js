@@ -1,5 +1,5 @@
 const {
-    x,
+    exception,
     database: { mysql }
 } = adone;
 
@@ -23,7 +23,7 @@ export default class ServerHandshake extends Command {
         this.serverHello = serverHelloPacket;
         serverHelloPacket.setScrambleData((err) => {
             if (err) {
-                connection.emit("error", new x.Exception("Error generating random bytes"));
+                connection.emit("error", new exception.Exception("Error generating random bytes"));
                 return;
             }
             connection.writePacket(serverHelloPacket.toPacket(0));

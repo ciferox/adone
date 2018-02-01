@@ -1,6 +1,6 @@
 const {
     is,
-    x,
+    exception,
     database: { level: { DB, Batch, backend: { LevelDB } } }
 } = adone;
 const delayed = require("delayed").delayed;
@@ -130,7 +130,7 @@ describe("database", "level", () => {
         });
 
         it("new DB()", () => {
-            assert.throws(() => new DB(), x.DatabaseInitialization);
+            assert.throws(() => new DB(), exception.DatabaseInitialization);
         });
 
         for (let encMode = 0; encMode <= 1; encMode++) {
@@ -228,7 +228,7 @@ describe("database", "level", () => {
             try {
                 await Manager.open({ location: manager.nextLocation(), encryption: {} });
             } catch (err) {
-                assert.instanceOf(err, x.NotValid);
+                assert.instanceOf(err, exception.NotValid);
                 return;
             }
             assert.fail("NotValid exeption hasn't been thrown");
@@ -248,13 +248,13 @@ describe("database", "level", () => {
 
         it("not valid batch list", async () => {
             const db = await manager.openTestDatabase();
-            await Manager.shouldThrows(() => db.batch(null, {}), x.DatabaseWrite, "batch() requires an array argument", "no-arg batch() throws");
-            await Manager.shouldThrows(() => db.batch({}), x.DatabaseWrite, "batch() requires an array argument", "1-arg, no Array batch() throws");
+            await Manager.shouldThrows(() => db.batch(null, {}), exception.DatabaseWrite, "batch() requires an array argument", "no-arg batch() throws");
+            await Manager.shouldThrows(() => db.batch({}), exception.DatabaseWrite, "batch() requires an array argument", "1-arg, no Array batch() throws");
         });
 
         it("get() on empty database causes error", async () => {
             const db = await manager.openTestDatabase();
-            await Manager.shouldThrows(() => db.get("undefkey"), x.NotFound);
+            await Manager.shouldThrows(() => db.get("undefkey"), exception.NotFound);
         });
 
         it("put() and get() simple string key/value pairs", async () => {
@@ -277,7 +277,7 @@ describe("database", "level", () => {
                 const v = await db.get(`k${k}`);
                 assert.equal(v, `v${k}`);
             }
-            await Manager.shouldThrows(() => db.get("k4"), x.NotFound);
+            await Manager.shouldThrows(() => db.get("k4"), exception.NotFound);
             await db.close();
         });
 
@@ -295,7 +295,7 @@ describe("database", "level", () => {
             await db.del("bar");
             for (const key of ["foo", "bar", "baz"]) {
                 if (key === "bar") {
-                    await Manager.shouldThrows(() => db.get(key), x.NotFound);
+                    await Manager.shouldThrows(() => db.get(key), exception.NotFound);
                 } else {
                     await db.get(key);
                 }
@@ -324,27 +324,27 @@ describe("database", "level", () => {
             });
 
             it("get() with null key causes error", async () => {
-                await Manager.shouldThrows(() => _db.get(null), x.Database);
+                await Manager.shouldThrows(() => _db.get(null), exception.Database);
             });
 
             it("get() with undefined key causes error", async () => {
-                await Manager.shouldThrows(() => _db.get(undefined), x.Database);
+                await Manager.shouldThrows(() => _db.get(undefined), exception.Database);
             });
 
             it("del() with null key causes error", async () => {
-                await Manager.shouldThrows(() => _db.del(null), x.Database);
+                await Manager.shouldThrows(() => _db.del(null), exception.Database);
             });
 
             it("del() with undefined key causes error", async () => {
-                await Manager.shouldThrows(() => _db.del(undefined), x.Database);
+                await Manager.shouldThrows(() => _db.del(undefined), exception.Database);
             });
 
             it("put() with null key causes error", async () => {
-                await Manager.shouldThrows(() => _db.put(null, "foo"), x.Database);
+                await Manager.shouldThrows(() => _db.put(null, "foo"), exception.Database);
             });
 
             it("put() with undefined key causes error", async () => {
-                await Manager.shouldThrows(() => _db.put(undefined, "foo"), x.Database);
+                await Manager.shouldThrows(() => _db.put(undefined, "foo"), exception.Database);
             });
 
             it("put() with null value works", async () => {
@@ -364,11 +364,11 @@ describe("database", "level", () => {
             });
 
             it("batch() with undefined key causes error", async () => {
-                await Manager.shouldThrows(() => _db.batch([{ key: undefined, value: "bar", type: "put" }]), x.Database);
+                await Manager.shouldThrows(() => _db.batch([{ key: undefined, value: "bar", type: "put" }]), exception.Database);
             });
 
             it("batch() with null key causes error", async () => {
-                await Manager.shouldThrows(() => _db.batch([{ key: null, value: "bar", type: "put" }]), x.Database);
+                await Manager.shouldThrows(() => _db.batch([{ key: null, value: "bar", type: "put" }]), exception.Database);
             });
         });
     });
@@ -404,7 +404,7 @@ describe("database", "level", () => {
             await db.put("foo", "this {} is [] not : json");
             await db.close();
             db = await Manager.open({ location: db.location, valueEncoding: "json" });
-            await Manager.shouldThrows(() => db.get("foo"), x.Encoding);
+            await Manager.shouldThrows(() => db.get("foo"), exception.Encoding);
             await db.close();
         });
 
@@ -542,7 +542,7 @@ describe("database", "level", () => {
             const db = await manager.openTestDatabase();
             await db.put(testData, "binarydata", { valueEncoding: "binary" });
             await db.del(testData, { valueEncoding: "binary" });
-            Manager.shouldThrows(() => db.get(testData, { valueEncoding: "binary" }), x.NotFound);
+            Manager.shouldThrows(() => db.get(testData, { valueEncoding: "binary" }), exception.NotFound);
         });
 
         it("batch() with multiple puts", async () => {
@@ -591,7 +591,7 @@ describe("database", "level", () => {
                 assert.equal(value, `a${key}value`);
             }
 
-            await Manager.shouldThrows(() => db.get("k4"), x.NotFound);
+            await Manager.shouldThrows(() => db.get("k4"), exception.NotFound);
             await db.close();
         });
 
@@ -632,7 +632,7 @@ describe("database", "level", () => {
 
             // these shouldn't exist
             for (const key of ["1", "foo"]) {
-                Manager.shouldThrows(() => db.get(key), x.NotFound);
+                Manager.shouldThrows(() => db.get(key), exception.NotFound);
             }
         });
 
@@ -664,7 +664,7 @@ describe("database", "level", () => {
                 }
             }
 
-            await Manager.shouldThrows(() => db.get("k4"), x.NotFound);
+            await Manager.shouldThrows(() => db.get("k4"), exception.NotFound);
         });
 
         it("batch() exposes ops queue length", async () => {
@@ -705,7 +705,7 @@ describe("database", "level", () => {
             }
             // these shouldn't exist
             for (const key of ["1", "foo"]) {
-                Manager.shouldThrows(() => db.get(key), x.NotFound);
+                Manager.shouldThrows(() => db.get(key), exception.NotFound);
             }
         });
 
@@ -723,7 +723,7 @@ describe("database", "level", () => {
                 assert.notNull(value);
             }
             // this shouldn't exist
-            await Manager.shouldThrows(() => db.get("1"), x.NotFound);
+            await Manager.shouldThrows(() => db.get("1"), exception.NotFound);
         });
 
         describe("chained batch() arguments", () => {
@@ -742,32 +742,32 @@ describe("database", "level", () => {
 
             it("test batch#put() with missing `key`", () => {
                 // key = undefined
-                assert.throws(() => _batch.put(undefined, "foo1"), x.DatabaseWrite, "key cannot be `null` or `undefined`");
+                assert.throws(() => _batch.put(undefined, "foo1"), exception.DatabaseWrite, "key cannot be `null` or `undefined`");
 
                 // key = null
-                assert.throws(() => _batch.put(null, "foo1"), x.DatabaseWrite, "key cannot be `null` or `undefined`");
+                assert.throws(() => _batch.put(null, "foo1"), exception.DatabaseWrite, "key cannot be `null` or `undefined`");
             });
 
             it("test batch#put() with missing `key` and `value`", () => {
                 // undefined
-                assert.throws(() => _batch.put(), x.DatabaseWrite, "key cannot be `null` or `undefined`");
+                assert.throws(() => _batch.put(), exception.DatabaseWrite, "key cannot be `null` or `undefined`");
 
                 // null
-                assert.throws(() => _batch.put(null, null), x.DatabaseWrite, "key cannot be `null` or `undefined`");
+                assert.throws(() => _batch.put(null, null), exception.DatabaseWrite, "key cannot be `null` or `undefined`");
             });
 
             it("test batch#del() with missing `key`", () => {
                 // key = undefined
-                assert.throws(() => _batch.del(undefined, "foo1"), x.DatabaseWrite, "key cannot be `null` or `undefined`");
+                assert.throws(() => _batch.del(undefined, "foo1"), exception.DatabaseWrite, "key cannot be `null` or `undefined`");
 
                 // key = null
-                assert.throws(() => _batch.del(null, "foo1"), x.DatabaseWrite, "key cannot be `null` or `undefined`");
+                assert.throws(() => _batch.del(null, "foo1"), exception.DatabaseWrite, "key cannot be `null` or `undefined`");
             });
 
             describe("test batch operations after write()", () => {
                 beforeEach(async () => {
                     await _batch.put("foo", "bar").put("boom", "bang").del("foo").write();
-                    manager.verify = (cb) => Manager.shouldThrows(cb, x.DatabaseWrite, "write() already called on this batch");
+                    manager.verify = (cb) => Manager.shouldThrows(cb, exception.DatabaseWrite, "write() already called on this batch");
                 });
 
                 it("test put()", () => {

@@ -114,12 +114,12 @@ describe("Netron", () => {
             it("attach same context twice with same name should have thrown", () => {
                 const a = new A();
                 netron.attachContext(a, "a");
-                assert.throws(() => netron.attachContext(a, "a"), adone.x.Exists);
+                assert.throws(() => netron.attachContext(a, "a"), adone.exception.Exists);
             });
 
             it("attach different contexts with same name should have thrown", () => {
                 netron.attachContext(new A(), "a");
-                assert.throws(() => netron.attachContext(new B(), "a"), adone.x.Exists);
+                assert.throws(() => netron.attachContext(new B(), "a"), adone.exception.Exists);
             });
 
             it("attach same context with different name should be ok", () => {
@@ -129,7 +129,7 @@ describe("Netron", () => {
             });
 
             it("detach unknown context should have thrown", () => {
-                assert.throws(() => netron.detachContext("b"), adone.x.Unknown);
+                assert.throws(() => netron.detachContext("b"), adone.exception.Unknown);
             });
 
             it("detach attached context", () => {
@@ -164,7 +164,7 @@ describe("Netron", () => {
             });
 
             it("unknown context - should have thrown", () => {
-                assert.throws(() => netron._getStub(778899), adone.x.Unknown);
+                assert.throws(() => netron._getStub(778899), adone.exception.Unknown);
             });
         });
     });
@@ -247,7 +247,7 @@ describe("Netron", () => {
 
         it("delete active netcore is not allowed", async () => {
             await netronS.start("default");
-            assert.throws(() => netronS.deleteNetCore("default"), adone.x.NotAllowed);
+            assert.throws(() => netronS.deleteNetCore("default"), adone.exception.NotAllowed);
             assert.strictEqual(netronS.networks.size, 1);
         });
 

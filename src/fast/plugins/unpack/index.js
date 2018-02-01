@@ -7,7 +7,7 @@ export default function plugin() {
 
     return function unpack(archiveType, { inRoot = false, dirname, ...extractorOptions } = {}) {
         if (!(archiveType in adone.archive)) {
-            throw new x.InvalidArgument(`Unknown archive type: ${archiveType}`);
+            throw new exception.InvalidArgument(`Unknown archive type: ${archiveType}`);
         }
         const archive = adone.archive[archiveType];
 
@@ -102,7 +102,7 @@ export default function plugin() {
                         contents = await file.contents.pipe(new adone.collection.BufferList());
                         file.contents = contents;
                     } else {
-                        throw new x.NotSupported("Zip unpacker support only streams and buffers");
+                        throw new exception.NotSupported("Zip unpacker support only streams and buffers");
                     }
                     const zipfile = await adone.archive.zip.unpack.fromBuffer(contents, { ...extractorOptions, lazyEntries: true });
                     for (; ;) {

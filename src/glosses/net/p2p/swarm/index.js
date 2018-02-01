@@ -18,11 +18,11 @@ export class Swarm extends adone.event.Emitter {
         super();
 
         if (!peerInfo) {
-            throw new adone.x.NotValid("You must provide a `peerInfo`");
+            throw new adone.exception.NotValid("You must provide a `peerInfo`");
         }
 
         if (!peerBook) {
-            throw new adone.x.NotValid("You must provide a `peerBook`");
+            throw new adone.exception.NotValid("You must provide a `peerBook`");
         }
 
         this._peerInfo = peerInfo;

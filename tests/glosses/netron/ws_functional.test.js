@@ -1,6 +1,6 @@
 const {
     is,
-    x,
+    exception,
     net,
     netron: { DEFAULT_PORT, Netron, Property, Context, Public }
 } = adone;
@@ -222,7 +222,7 @@ describe("netron", "websocket", "functional tests", () => {
                 propVal = await superNetron.call(null, defID, "getValue1");
                 expect(propVal).to.be.equal("newProp1");
                 const err = await assert.throws(async () => superNetron.call(null, defID, "getValue2"));
-                assert.instanceOf(err, x.NotExists);
+                assert.instanceOf(err, exception.NotExists);
             });
 
             it("remote - methods call", async () => {
@@ -240,7 +240,7 @@ describe("netron", "websocket", "functional tests", () => {
                 propVal = await exNetron.call(peer.uid, defID, "getValue1");
                 expect(propVal).to.be.equal("newProp1");
                 const err = await assert.throws(async () => exNetron.call(peer.uid, defID, "getValue2"));
-                assert.instanceOf(err, x.NotExists);
+                assert.instanceOf(err, exception.NotExists);
             });
 
             it("local - properties access", async () => {
@@ -251,7 +251,7 @@ describe("netron", "websocket", "functional tests", () => {
                 try {
                     propVal = await superNetron.get(null, defID, "prop1");
                 } catch (err) {
-                    isOK = err instanceof x.NotExists;
+                    isOK = err instanceof exception.NotExists;
                 }
                 expect(isOK).to.be.true();
                 propVal = await superNetron.get(null, defID, "prop2");
@@ -260,7 +260,7 @@ describe("netron", "websocket", "functional tests", () => {
                 try {
                     await superNetron.set(null, defID, "prop2", "newProp2");
                 } catch (err) {
-                    isOK = err instanceof x.InvalidAccess;
+                    isOK = err instanceof exception.InvalidAccess;
                 }
                 expect(isOK).to.be.true();
                 await superNetron.set(null, defID, "prop3", "newProp3");
@@ -282,7 +282,7 @@ describe("netron", "websocket", "functional tests", () => {
                 try {
                     propVal = await exNetron.get(peer.uid, defID, "prop1");
                 } catch (err) {
-                    isOK = err instanceof x.NotExists;
+                    isOK = err instanceof exception.NotExists;
                 }
                 expect(isOK).to.be.true();
                 propVal = await exNetron.get(peer.uid, defID, "prop2");
@@ -291,7 +291,7 @@ describe("netron", "websocket", "functional tests", () => {
                 try {
                     await exNetron.set(peer.uid, defID, "prop2", "newProp2");
                 } catch (err) {
-                    isOK = err instanceof x.InvalidAccess;
+                    isOK = err instanceof exception.InvalidAccess;
                 }
                 expect(isOK).to.be.true();
                 await exNetron.set(peer.uid, defID, "prop3", "newProp3");
@@ -842,7 +842,7 @@ describe("netron", "websocket", "functional tests", () => {
                     assert.equal(await iWeak.doSomething(), 888);
                     await iStrong.releaseWeak();
                     const err = await assert.throws(async () => iWeak.doSomething());
-                    assert.ok(err instanceof x.NotExists);
+                    assert.ok(err instanceof exception.NotExists);
                     assert.equal(err.message, "Context not exists");
                 });
 
@@ -1105,10 +1105,10 @@ describe("netron", "websocket", "functional tests", () => {
                 await adone.promise.delay(100);
                 assert.throws(() => {
                     superNetron.getInterfaceById(aDefId);
-                }, x.Unknown);
+                }, exception.Unknown);
                 assert.throws(() => {
                     peer.getInterfaceById(aDefId);
-                }, x.Unknown);
+                }, exception.Unknown);
             });
 
             it("obtain unknown interfaces after disconnect", async () => {
@@ -1132,7 +1132,7 @@ describe("netron", "websocket", "functional tests", () => {
                 assert.throws(() => {
                     const iA = peer.getInterfaceById(aDefId);
                     iA.originateB();
-                }, x.Unknown);
+                }, exception.Unknown);
             });
 
             it("inverse object manupulation stub referencing", async () => {

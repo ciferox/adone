@@ -1,6 +1,6 @@
 const {
     database: { redis },
-    x,
+    exception,
     is,
     promise,
     lazify
@@ -40,7 +40,7 @@ const generateFunction = (_commandName, _encoding) => {
         if (this.options.dropBufferSupport) {
             if (!_encoding) {
                 return promise.nodeify(
-                    Promise.reject(new x.Exception(DROP_BUFFER_SUPPORT_ERROR)),
+                    Promise.reject(new exception.Exception(DROP_BUFFER_SUPPORT_ERROR)),
                     callback
                 );
             }
@@ -74,7 +74,7 @@ const generateScriptingFunction = (_script, _encoding) => {
         if (this.options.dropBufferSupport) {
             if (!_encoding) {
                 return promise.nodeify(
-                    Promise.reject(new x.Exception(DROP_BUFFER_SUPPORT_ERROR)),
+                    Promise.reject(new exception.Exception(DROP_BUFFER_SUPPORT_ERROR)),
                     callback
                 );
             }

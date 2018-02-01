@@ -1,5 +1,5 @@
 describe("shani", "util", "assert", () => {
-    const { x } = adone;
+    const { exception } = adone;
     const suitil = adone.shani.util;
     const { __: { color } } = suitil;
     const { stub: sstub } = suitil;
@@ -1131,13 +1131,13 @@ describe("shani", "util", "assert", () => {
         it("throws if target is undefined", () => {
             assert.throws(() => {
                 sassert.expose();
-            }, x.InvalidArgument);
+            }, exception.InvalidArgument);
         });
 
         it("throws if target is null", () => {
             assert.throws(() => {
                 sassert.expose(null);
-            }, x.InvalidArgument);
+            }, exception.InvalidArgument);
         });
     });
 

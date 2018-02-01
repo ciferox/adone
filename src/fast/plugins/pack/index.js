@@ -8,7 +8,7 @@ export default function plugin() {
 
     return function pack(archiveType, packerOptions = {}) {
         if (!(archiveType in adone.archive)) {
-            throw new x.InvalidArgument(`Unknown archive type: ${archiveType}`);
+            throw new exception.InvalidArgument(`Unknown archive type: ${archiveType}`);
         }
         if (is.string(packerOptions)) {
             packerOptions = { filename: packerOptions };
@@ -19,7 +19,7 @@ export default function plugin() {
         } = packerOptions;
 
         if (!is.string(filename)) {
-            throw new x.InvalidArgument("fast.pack: You must specify filename");
+            throw new exception.InvalidArgument("fast.pack: You must specify filename");
         }
 
         switch (archiveType) {
@@ -106,7 +106,7 @@ export default function plugin() {
                         } else if (file.isStream()) {
                             zipfile.addReadStream(file.contents, file.relative, opts);
                         } else if (file.isSymbolic()) {
-                            throw new x.NotSupported(`zip packer does not support symlinks: ${file.path}`);
+                            throw new exception.NotSupported(`zip packer does not support symlinks: ${file.path}`);
                         }
                     }
                 }, async function flush() {
@@ -120,7 +120,7 @@ export default function plugin() {
                 });
             }
             default: {
-                throw new x.NotImplemented(`support for ${archiveType} archives is not implemented`);
+                throw new exception.NotImplemented(`support for ${archiveType} archives is not implemented`);
             }
         }
     };

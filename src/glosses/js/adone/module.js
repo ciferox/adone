@@ -1,5 +1,5 @@
 const {
-    x,
+    exception,
     is,
     fs,
     js: { compiler: { traverse } },
@@ -152,11 +152,11 @@ class AdoneDependencyCollector {
             const { value, key } = prop;
 
             if (prop.computed) {
-                throw new x.IllegalState("Expected object pattern not to have computed values");
+                throw new exception.IllegalState("Expected object pattern not to have computed values");
             }
 
             if (key.type !== "Identifier") {
-                throw new x.IllegalState(`Expected object pattern key type to be Identifier but got: ${key.type}`);
+                throw new exception.IllegalState(`Expected object pattern key type to be Identifier but got: ${key.type}`);
             }
 
             const p = `${prefix}.${key.name}`;
@@ -217,7 +217,7 @@ class AdoneDependencyCollector {
                 }
 
                 if (p.hasComputedValue) {
-                    // throw new x.IllegalState("Expected adone vars not to have computed properties");
+                    // throw new exception.IllegalState("Expected adone vars not to have computed properties");
                 }
 
                 switch (node.id.type) {
@@ -337,7 +337,7 @@ export default class XModule extends adone.js.adone.Base {
         try {
             this.code = await fs.readFile(this.filePath, { check: true, encoding: "utf8" });
         } catch (err) {
-            throw new x.IllegalState(`Could not load the module: ${err.message}`);
+            throw new exception.IllegalState(`Could not load the module: ${err.message}`);
         }
         this.init();
 
@@ -472,7 +472,7 @@ export default class XModule extends adone.js.adone.Base {
                                 for (const prop of props) {
                                     const name = prop.key.name;
                                     if (prop.value.type === "StringLiteral") {
-                                        throw new adone.x.NotImplemented("Not implemented yet");
+                                        throw new adone.exception.NotImplemented("Not implemented yet");
                                         // lazies.push({ name: objectName, path: adone.std.path.join(basePath, prop.value.value) });
                                     } else if (prop.value.type === "ArrowFunctionExpression") {
                                         const lazyPath = this.getPathFor(path, prop.value);
@@ -481,7 +481,7 @@ export default class XModule extends adone.js.adone.Base {
                                 }
                             }
                             // TODO
-                            // throw new adone.x.NotValid(`Not valid attempt to lazify non-object: ${xObj.ast.type}`);
+                            // throw new adone.exception.NotValid(`Not valid attempt to lazify non-object: ${xObj.ast.type}`);
                         }
                         path.skip();
                         return;
@@ -502,7 +502,7 @@ export default class XModule extends adone.js.adone.Base {
                             for (const specifier of node.specifiers) {
                                 xObj = this.lookupInGlobalScope(specifier.local.name);
                                 if (is.null(xObj)) {
-                                    throw new adone.x.NotFound(`Variable '${specifier.local.name}' not found in global scope`);
+                                    throw new adone.exception.NotFound(`Variable '${specifier.local.name}' not found in global scope`);
                                 }
                                 if (specifier.local.name !== specifier.exported.name) {
                                     switch (specifier.exported.name) {
@@ -515,7 +515,7 @@ export default class XModule extends adone.js.adone.Base {
                                         case "finally":
                                             break;
                                         default:
-                                            throw new adone.x.NotValid(`Local name of export-specifier should be same as exported name: "${specifier.local.name}" != ${specifier.exported.name}`);
+                                            throw new adone.exception.NotValid(`Local name of export-specifier should be same as exported name: "${specifier.local.name}" != ${specifier.exported.name}`);
                                     }
                                 }
                                 // It should always be VariableDeclarator (ClassDeclarations???)
@@ -812,7 +812,7 @@ export default class XModule extends adone.js.adone.Base {
             switch (node.type) {
                 case "ClassDeclaration": {
                     if (is.null(node.id)) {
-                        throw new adone.x.NotValid("Anonymous class");
+                        throw new adone.exception.NotValid("Anonymous class");
                     }
                     name = node.id.name;
                     break;
@@ -827,7 +827,7 @@ export default class XModule extends adone.js.adone.Base {
                     break;
                 }
                 default:
-                    throw new adone.x.NotSupported(`Unsupported export type: ${node.type}`);
+                    throw new adone.exception.NotSupported(`Unsupported export type: ${node.type}`);
             }
             if (exportedName) {
                 // export { a as null }
@@ -854,7 +854,7 @@ export default class XModule extends adone.js.adone.Base {
         } else if (is.undefined(rawExports.default)) {
             return rawExports;
         } else {
-            throw new adone.x.NotSupported(`Unsupported type '${rawExports.default.ast.type}' of exports: ${xModule.filePath}`);
+            throw new adone.exception.NotSupported(`Unsupported type '${rawExports.default.ast.type}' of exports: ${xModule.filePath}`);
         }
         return result;
     }

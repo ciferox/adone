@@ -1,4 +1,9 @@
-const { lazify, x, util, data: { yaml } } = adone;
+const {
+    lazify,
+    exception,
+    util,
+    data: { yaml }
+} = adone;
 
 const compileList = (schema, name, result) => {
     const exclude = [];
@@ -27,7 +32,7 @@ export class Schema {
 
         for (const type of this.implicit) {
             if (type.loadKind && type.loadKind !== "scalar") {
-                throw new x.InvalidArgument("There is a non-scalar type in the implicit list of a schema. Implicit resolving of such types is not supported.");
+                throw new exception.InvalidArgument("There is a non-scalar type in the implicit list of a schema. Implicit resolving of such types is not supported.");
             }
         }
 
@@ -124,7 +129,7 @@ const schema = lazify({
 
 export const create = function (schemas = adone.null, types = adone.null) {
     if (schemas === adone.null && types === adone.null) {
-        throw new x.InvalidArgument("Wrong number of arguments for schema.create function");
+        throw new exception.InvalidArgument("Wrong number of arguments for schema.create function");
     }
 
     if (types === adone.null) {
@@ -135,11 +140,11 @@ export const create = function (schemas = adone.null, types = adone.null) {
     types = util.arrify(types);
 
     if (!schemas.every((schema) => schema instanceof Schema)) {
-        throw new x.InvalidArgument("Specified list of super schemas (or a single Schema object) contains a non-Schema object.");
+        throw new exception.InvalidArgument("Specified list of super schemas (or a single Schema object) contains a non-Schema object.");
     }
 
     if (!types.every((type) => type instanceof yaml.type.Type)) {
-        throw new x.InvalidArgument("Specified list of YAML types (or a single Type object) contains a non-Type object.");
+        throw new exception.InvalidArgument("Specified list of YAML types (or a single Type object) contains a non-Type object.");
     }
 
     return new Schema({ include: schemas, explicit: types });

@@ -66,7 +66,7 @@ export const createSocket = (proxyUrl, destinationPort, destinationHost) => new 
 
         let headers = "";
         const onSocketEnd = () => {
-            reject(new adone.x.Exception("Socket was prematurely closed"));
+            reject(new adone.exception.Exception("Socket was prematurely closed"));
         };
         const onSocketData = (chunk) => {
             let match;

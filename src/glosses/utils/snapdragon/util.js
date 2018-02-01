@@ -304,7 +304,7 @@ export const removeNode = function (parent, node) {
  */
 export const isType = function (node, type) {
     assert(isNode(node), "expected node to be an instance of Node");
-    switch (adone.util.typeOf(type)) {
+    switch (adone.meta.typeOf(type)) {
         case "Array": {
             const types = type.slice();
             for (let i = 0; i < types.length; i++) {
@@ -576,7 +576,7 @@ export const isInside = function (state, node, type) {
         return (parent && parent.type === type) || isInsideType(state, type);
     }
 
-    if (adone.util.typeOf(type) === "RegExp") {
+    if (adone.meta.typeOf(type) === "RegExp") {
         if (parent && parent.type && type.test(parent.type)) {
             return true;
         }

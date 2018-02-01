@@ -1,6 +1,6 @@
 const {
     task,
-    x
+    exception
 } = adone;
 
 export default class BaseTask extends task.Task {
@@ -30,7 +30,7 @@ export default class BaseTask extends task.Task {
      * The method in which the common logic should be implemented.
      */
     main() {
-        throw new x.NotImplemented("Method main() is not implemented");
+        throw new exception.NotImplemented("Method main() is not implemented");
     }
 
     /**

@@ -1,4 +1,9 @@
-const { is, x, crypto: { Keygrip: { UrlSafe: Keygrip } }, util } = adone;
+const {
+    is,
+    exception,
+    crypto: { Keygrip: { UrlSafe: Keygrip } },
+    util
+} = adone;
 
 /**
  * RegExp to match field-content in RFC 7230 sec 3.2
@@ -15,11 +20,11 @@ const sameSiteRegExp = /^(?:lax|strict)$/i;
 class Cookie {
     constructor(name, value, attrs) {
         if (!fieldContentRegExp.test(name)) {
-            throw new x.InvalidArgument("argument name is invalid");
+            throw new exception.InvalidArgument("argument name is invalid");
         }
 
         if (value && !fieldContentRegExp.test(value)) {
-            throw new x.InvalidArgument("argument value is invalid");
+            throw new exception.InvalidArgument("argument value is invalid");
         }
 
         if (!value) {
@@ -35,15 +40,15 @@ class Cookie {
         }
 
         if (this.path && !fieldContentRegExp.test(this.path)) {
-            throw new x.InvalidArgument("option path is invalid");
+            throw new exception.InvalidArgument("option path is invalid");
         }
 
         if (this.domain && !fieldContentRegExp.test(this.domain)) {
-            throw new x.InvalidArgument("option domain is invalid");
+            throw new exception.InvalidArgument("option domain is invalid");
         }
 
         if (this.sameSite && this.sameSite !== true && !sameSiteRegExp.test(this.sameSite)) {
-            throw new x.InvalidArgument("option sameSite is invalid");
+            throw new exception.InvalidArgument("option sameSite is invalid");
         }
     }
 
@@ -149,7 +154,7 @@ export default class Cookies {
         }
 
         if (!this.keys) {
-            throw new x.IllegalState(".keys required for signed cookies");
+            throw new exception.IllegalState(".keys required for signed cookies");
         }
 
         const sigName = `${name}.sig`;
@@ -176,7 +181,7 @@ export default class Cookies {
         const secure = is.undefined(this.secure) ? req.protocol === "https" || req.connection.encrypted : Boolean(this.secure);
 
         if (!secure && opts && opts.secure) {
-            throw new x.IllegalState("Cannot send secure cookie over unencrypted connection");
+            throw new exception.IllegalState("Cannot send secure cookie over unencrypted connection");
         }
 
         const cookie = new Cookie(name, value, opts);
@@ -198,7 +203,7 @@ export default class Cookies {
 
         if (opts && signed) {
             if (!this.keys) {
-                throw new x.IllegalState(".keys required for signed cookies");
+                throw new exception.IllegalState(".keys required for signed cookies");
             }
             cookie.value = this.keys.sign(cookie.toString());
             cookie.name += ".sig";

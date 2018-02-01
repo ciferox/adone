@@ -1,6 +1,6 @@
 const {
     is,
-    x,
+    exception,
     database: { mongo },
     event,
     data
@@ -414,7 +414,7 @@ export default class Cursor extends event.Emitter {
     next(callback) {
         // We have notified about it
         if (this.cursorState.notified) {
-            return callback(new x.IllegalState("cursor is exhausted"));
+            return callback(new exception.IllegalState("cursor is exhausted"));
         }
 
         // Cursor is killed return null

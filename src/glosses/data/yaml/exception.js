@@ -1,4 +1,6 @@
-const { x: { Exception } } = adone;
+const {
+    exception: { Exception }
+} = adone;
 
 export default class YAMLException extends Exception {
     constructor(reason, mark) {

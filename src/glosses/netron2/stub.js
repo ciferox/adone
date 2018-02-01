@@ -1,6 +1,6 @@
 const {
     is,
-    x,
+    exception,
     netron2: { Definition, Definitions, Reflection }
 } = adone;
 
@@ -68,9 +68,9 @@ export default class Stub {
                 this.instance[prop] = data;
                 return;
             }
-            throw new x.InvalidAccess(`${prop} is not writable`);
+            throw new exception.InvalidAccess(`${prop} is not writable`);
         }
-        throw new x.NotExists(`Property '${prop}' not exists`);
+        throw new exception.NotExists(`Property '${prop}' not exists`);
     }
 
     get(prop, defaultData, peer) {
@@ -94,7 +94,7 @@ export default class Stub {
             }
             return val;
         }
-        throw new x.NotExists(`Property '${prop}' not exists`);
+        throw new exception.NotExists(`Property '${prop}' not exists`);
     }
 
     _processResult(peer, result) {
@@ -127,7 +127,7 @@ export default class Stub {
         if (is.netron2Reference(obj)) {
             const stub = this.netron._getStub(obj.defId);
             if (is.undefined(stub)) {
-                throw new x.Unknown(`Unknown definition id ${obj.defId}`);
+                throw new exception.Unknown(`Unknown definition id ${obj.defId}`);
             }
             return stub.instance;
         } else if (is.netron2Definition(obj)) {

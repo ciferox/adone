@@ -1,5 +1,8 @@
 export default function plugin() {
-    const { x, std: { path } } = adone;
+    const {
+        exception,
+        std: { path }
+    } = adone;
 
     return function revisionHashReplace(options = {}) {
         let renames = [];
@@ -32,7 +35,7 @@ export default function plugin() {
             }
 
             if (file.isStream()) {
-                this.emit("error", new x.NotSupported("Streaming is not supported"));
+                this.emit("error", new exception.NotSupported("Streaming is not supported"));
                 return;
             }
             // Collect renames from reved files.

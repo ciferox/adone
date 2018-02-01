@@ -1,6 +1,6 @@
 const {
     application,
-    x,
+    exception,
     is,
     fs,
     omnitron: { STATUS }
@@ -120,11 +120,11 @@ export default class Services extends application.Subsystem {
             name
         });
         if (services.length === 0) {
-            throw new adone.x.Unknown(`Unknown service: ${name}`);
+            throw new adone.exception.Unknown(`Unknown service: ${name}`);
         }
 
         if (services[0].status === adone.omnitron.STATUS.INVALID) {
-            throw new adone.x.NotValid(`Service '${name}' is invalid`);
+            throw new adone.exception.NotValid(`Service '${name}' is invalid`);
         }
 
         return services[0];
@@ -179,7 +179,7 @@ export default class Services extends application.Subsystem {
             serviceData.status = STATUS.INACTIVE;
             return this.services.set(name, serviceData);
         }
-        throw new x.IllegalState("Service is not disabled");
+        throw new exception.IllegalState("Service is not disabled");
     }
 
     async disableService(name) {
@@ -188,7 +188,7 @@ export default class Services extends application.Subsystem {
             if (serviceData.status === STATUS.ACTIVE) {
                 await this.stop(name);
             } else if (serviceData.status !== STATUS.INACTIVE) {
-                throw new x.IllegalState(`Cannot disable service with '${serviceData.status}' status`);
+                throw new exception.IllegalState(`Cannot disable service with '${serviceData.status}' status`);
             }
             serviceData.status = STATUS.DISABLED;
             return this.services.set(name, serviceData);
@@ -211,7 +211,7 @@ export default class Services extends application.Subsystem {
         const serviceData = await this.services.get(name);
 
         if (![STATUS.DISABLED, STATUS.INACTIVE].includes(serviceData.status)) {
-            throw new x.NotAllowed("Cannot configure active service");
+            throw new exception.NotAllowed("Cannot configure active service");
         }
 
         if (is.string(group)) {
@@ -234,7 +234,7 @@ export default class Services extends application.Subsystem {
             if (onlyExist) {
                 const inGroupServices = await this.enumerateByGroup(group);
                 if (inGroupServices.length === 0) {
-                    throw new x.Unknown(`Unknown group: ${group}`);
+                    throw new exception.Unknown(`Unknown group: ${group}`);
                 }
             }
             maintainer = new api.ServiceMaintainer(this, group);
@@ -259,7 +259,7 @@ export default class Services extends application.Subsystem {
     //         let defaulted = false;
     //         const checkDefault = () => {
     //             if (defaulted) {
-    //                 throw new x.NotAllowed("Only one context of service can be default");
+    //                 throw new exception.NotAllowed("Only one context of service can be default");
     //             }
     //             defaulted = true;
     //         };
@@ -357,14 +357,14 @@ export default class Services extends application.Subsystem {
     //             if (is.undefined(depService)) {
     //                 const depConfig = this.config.omnitron.services[depName];
     //                 if (is.undefined(depConfig)) {
-    //                     throw new x.Unknown(`Unknown service '${depName}' in dependency list of '${service.name}' service`);
+    //                     throw new exception.Unknown(`Unknown service '${depName}' in dependency list of '${service.name}' service`);
     //                 }
     //                 config = depConfig;
     //             } else {
     //                 config = depService.config;
     //             }
     //             if (checkDisabled && config.status === DISABLED) {
-    //                 throw new x.IllegalState(`Dependent service '${depName}' is disabled`);
+    //                 throw new exception.IllegalState(`Dependent service '${depName}' is disabled`);
     //             }
     //             await handler(depName, config);
     //         }

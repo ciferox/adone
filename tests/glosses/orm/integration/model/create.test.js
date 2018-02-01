@@ -90,7 +90,7 @@ describe("create", function () {
                         username: "gottlieb"
                     }
                 });
-            }, orm.x.UniqueConstraintError);
+            }, orm.exception.UniqueConstraintError);
         });
 
         it("should error correctly when defaults contain a unique key and the where clause is complex", function () {
@@ -119,7 +119,7 @@ describe("create", function () {
                         username: "gottlieb"
                     }
                 }).catch((error) => {
-                    expect(error).to.be.instanceof(orm.x.UniqueConstraintError);
+                    expect(error).to.be.instanceof(orm.exception.UniqueConstraintError);
                     expect(error.errors[0].path).to.be.a("string", "username");
                 }));
         });
@@ -364,7 +364,7 @@ describe("create", function () {
                         }
                     }), 1000)
                         .catch((err) => {
-                            if (err instanceof orm.x.ValidationError) {
+                            if (err instanceof orm.exception.ValidationError) {
                                 return test(times + 1);
                             }
                             throw err;
@@ -467,7 +467,7 @@ describe("create", function () {
                         }).then(() => {
                             throw new Error("I should have ben rejected");
                         }).catch((err) => {
-                            expect(err instanceof orm.x.UniqueConstraintError).to.be.ok();
+                            expect(err instanceof orm.exception.UniqueConstraintError).to.be.ok();
                             expect(err.fields).to.be.ok();
                         }),
                         User.findOrCreate({
@@ -480,7 +480,7 @@ describe("create", function () {
                         }).then(() => {
                             throw new Error("I should have ben rejected");
                         }).catch((err) => {
-                            expect(err instanceof orm.x.UniqueConstraintError).to.be.ok();
+                            expect(err instanceof orm.exception.UniqueConstraintError).to.be.ok();
                             expect(err.fields).to.be.ok();
                         })
                     ]);

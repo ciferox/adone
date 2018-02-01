@@ -10,7 +10,7 @@ const {
 const {
     util,
     queryType,
-    x,
+    exception,
     type,
     operator
 } = orm;
@@ -287,7 +287,7 @@ export default class Model {
 
                 const types = validTypes[type];
                 if (!types) {
-                    throw new x.EagerLoadingError(`include all '${type}' is not valid - must be BelongsTo, HasOne, HasMany, One, Has, Many or All`);
+                    throw new exception.EagerLoadingError(`include all '${type}' is not valid - must be BelongsTo, HasOne, HasMany, One, Has, Many or All`);
                 }
 
                 if (types !== true) {
@@ -578,22 +578,22 @@ export default class Model {
         const associations = this.getAssociations(targetModel);
         let association = null;
         if (associations.length === 0) {
-            throw new x.EagerLoadingError(`${targetModel.name} is not associated to ${this.name}!`);
+            throw new exception.EagerLoadingError(`${targetModel.name} is not associated to ${this.name}!`);
         } else if (associations.length === 1) {
             association = this.getAssociationForAlias(targetModel, targetAlias);
             if (!association) {
                 if (targetAlias) {
-                    throw new x.EagerLoadingError(`${targetModel.name} is associated to ${this.name} using an alias. ` +
+                    throw new exception.EagerLoadingError(`${targetModel.name} is associated to ${this.name} using an alias. ` +
                         `You've included an alias (${targetAlias}), but it does not match the alias defined in your association.`);
                 } else {
-                    throw new x.EagerLoadingError(`${targetModel.name} is associated to ${this.name} using an alias. ` +
+                    throw new exception.EagerLoadingError(`${targetModel.name} is associated to ${this.name} using an alias. ` +
                         "You must use the 'as' keyword to specify the alias within your include statement.");
                 }
             }
         } else {
             association = this.getAssociationForAlias(targetModel, targetAlias);
             if (!association) {
-                throw new x.EagerLoadingError(`${targetModel.name} is associated to ${this.name} multiple times. ` +
+                throw new exception.EagerLoadingError(`${targetModel.name} is associated to ${this.name} multiple times. ` +
                     "To identify the correct association, you must use the 'as' keyword to specify the alias of the association you want to include.");
             }
         }
@@ -1413,7 +1413,7 @@ export default class Model {
                 });
                 self._scopeNames.push(scopeName ? scopeName : "defaultScope");
             } else {
-                throw new x.ScopeError(`Invalid scope ${scopeName} called.`);
+                throw new exception.ScopeError(`Invalid scope ${scopeName} called.`);
             }
         }
 
@@ -1528,12 +1528,12 @@ export default class Model {
      */
     static async findAll(options) {
         if (!is.undefined(options) && !_.isPlainObject(options)) {
-            throw new x.QueryError("The argument passed to findAll must be an options object, use findById if you wish to pass a single primary key value");
+            throw new exception.QueryError("The argument passed to findAll must be an options object, use findById if you wish to pass a single primary key value");
         }
 
         if (!is.undefined(options) && options.attributes) {
             if (!is.array(options.attributes) && !_.isPlainObject(options.attributes)) {
-                throw new x.QueryError("The attributes option must be an array of column names or an object");
+                throw new exception.QueryError("The attributes option must be an array of column names or an object");
             }
         }
 
@@ -1606,7 +1606,7 @@ export default class Model {
             } else if (typeof options.rejectOnEmpty === "object") {
                 throw options.rejectOnEmpty;
             } else {
-                throw new x.EmptyResultError();
+                throw new exception.EmptyResultError();
             }
         }
 
@@ -2375,7 +2375,7 @@ export default class Model {
 
             delete options.skip;
             if (errors.length) {
-                throw new adone.x.AggregateException(errors);
+                throw new adone.exception.AggregateException(errors);
             }
         }
 
@@ -3636,7 +3636,7 @@ export default class Model {
         if (versionAttr) {
             // Check to see that a row was updated, otherwise it's an optimistic locking error.
             if (rowsUpdated < 1) {
-                throw new x.OptimisticLockError({
+                throw new exception.OptimisticLockError({
                     modelName: this.constructor.name,
                     values,
                     where
@@ -3733,7 +3733,7 @@ export default class Model {
 
         const reload = await this.constructor.findOne(options);
         if (!reload) {
-            throw new x.InstanceError(
+            throw new exception.InstanceError(
                 "Instance could not be reloaded because it does not exist anymore (find call returned null)"
             );
         }
@@ -3840,7 +3840,7 @@ export default class Model {
             );
             const rowsUpdated = results[1];
             if (this.constructor._versionAttribute && rowsUpdated < 1) {
-                throw new x.OptimisticLockError({
+                throw new exception.OptimisticLockError({
                     modelName: this.constructor.name,
                     values,
                     where

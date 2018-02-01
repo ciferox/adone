@@ -1,6 +1,6 @@
 const {
     is,
-    x
+    exception
 } = adone;
 
 export default class Adapter extends adone.netron.Adapter {
@@ -23,7 +23,7 @@ export default class Adapter extends adone.netron.Adapter {
             } else if (is.string(options.cert)) {
                 cert = adone.std.fs.readFileSync(options.cert);
             } else {
-                throw new x.NotValid("parameter 'options.cert' is not valid (should be buffer or string)");
+                throw new exception.NotValid("parameter 'options.cert' is not valid (should be buffer or string)");
             }
 
             if (is.buffer(options.key)) {
@@ -31,7 +31,7 @@ export default class Adapter extends adone.netron.Adapter {
             } else if (is.string(options.key)) {
                 key = adone.std.fs.readFileSync(options.key);
             } else {
-                throw new x.NotValid("parameter 'options.key' is not valid (should be buffer or string)");
+                throw new exception.NotValid("parameter 'options.key' is not valid (should be buffer or string)");
             }
 
             this.server = adone.std.https.createServer({ cert, key });
@@ -58,10 +58,10 @@ export default class Adapter extends adone.netron.Adapter {
                         });
                         clientSocket.connect({ path: port }, () => {
                             clientSocket.end();
-                            reject(new x.Bind(`address '${port}' already in use`));
+                            reject(new exception.Bind(`address '${port}' already in use`));
                         });
                     } else {
-                        reject(new x.Bind(`address '${host}:${port}' already in use`));
+                        reject(new exception.Bind(`address '${host}:${port}' already in use`));
                     }
                 } else {
                     try {
@@ -94,7 +94,7 @@ export default class Adapter extends adone.netron.Adapter {
             connHandler(peer).then(() => {
                 if (peer.isConnected()) {
                     ws.onerror = (errEvent) => {
-                        peer.emit("error", new x.Runtime(errEvent.data));
+                        peer.emit("error", new exception.Runtime(errEvent.data));
                     };
                     ws.onclose = () => {
                         peer.emit("disconnect");

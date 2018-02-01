@@ -166,7 +166,7 @@ describe("fast", "transform", "rename", () => {
     });
 
     context("throws unsupported parameter type", () => {
-        const err = adone.x.InvalidArgument;
+        const err = adone.exception.InvalidArgument;
 
         for (const obj of [undefined, null, "", true, 1]) {
             it(`with ${is.null(obj) ? "null" : typeof obj}`, async () => {

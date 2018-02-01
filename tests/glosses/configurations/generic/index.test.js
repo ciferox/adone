@@ -34,7 +34,7 @@ describe("configuration", "Generic", () => {
 
     it("should not load config without extension", async () => {
         const err = await assert.throws(async () => conf.load("a", true));
-        assert.instanceOf(err, adone.x.NotExists);
+        assert.instanceOf(err, adone.exception.NotExists);
     });
 
     it("load simple config with specified name", async () => {
@@ -65,7 +65,7 @@ describe("configuration", "Generic", () => {
     it("should throw exceptions on load es6-config without 'transpile' flag", async () => {
         const conf = new configuration.Generic();
         const err = await assert.throws(async () => conf.load(fixture("b.js"), true));
-        assert.instanceOf(err, adone.x.NotValid);
+        assert.instanceOf(err, adone.exception.NotValid);
     });
 
     it("load dir", async () => {
@@ -152,7 +152,7 @@ describe("configuration", "Generic", () => {
             const conf = new configuration.Generic(options);
             await conf.load("unsupport.dat");
         } catch (err) {
-            assert.instanceOf(err, adone.x.NotSupported);
+            assert.instanceOf(err, adone.exception.NotSupported);
             return;
         }
         assert.fail("Should throw NotSupported exception");

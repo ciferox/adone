@@ -5,7 +5,7 @@ const {
         }
     },
     is,
-    x,
+    exception,
     util,
     text,
     event
@@ -71,7 +71,7 @@ export default class Datastore extends event.Emitter {
 
     ensureIndex(options = {}) {
         if (!options.fieldName) {
-            const err = new x.InvalidArgument("Cannot create an index without a fieldName");
+            const err = new exception.InvalidArgument("Cannot create an index without a fieldName");
             err.missingFieldName = true;
             throw err;
         }

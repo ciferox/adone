@@ -76,18 +76,18 @@ export default class CliCommandHandler extends realm.TypeHandler {
         const modExports = require(std.path.join(destPath, adoneConf.getMainPath()));
 
         if (!modExports.__esModule) {
-            throw new adone.x.NotValid("Startup module should be es6-module");
+            throw new adone.exception.NotValid("Startup module should be es6-module");
         }
 
         const StartupClass = modExports.default;
 
         if (!is.class(StartupClass)) {
-            throw new adone.x.NotValid("Startup script is not valid");
+            throw new adone.exception.NotValid("Startup script is not valid");
         }
 
         const instance = new StartupClass();
         if (!is.subsystem(instance)) {
-            throw new adone.x.NotValid("Startup script should export class inherited from the class subsystem");
+            throw new adone.exception.NotValid("Startup script should export class inherited from the class subsystem");
         }
     }
 }

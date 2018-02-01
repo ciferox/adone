@@ -25,7 +25,7 @@ export default class XClass extends adone.js.adone.Base {
                         break;
                     }
                     default:
-                        throw new adone.x.Unknown(`Unknown super class type: ${node.type}`);
+                        throw new adone.exception.Unknown(`Unknown super class type: ${node.type}`);
                 }
             }
         } else {

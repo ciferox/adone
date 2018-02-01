@@ -1,5 +1,5 @@
 describe("database", "redis", "unit", "util", () => {
-    const { x, database: { redis } } = adone;
+    const { exception, database: { redis } } = adone;
     const { util } = adone.private(redis);
 
     describe(".convertBufferToString", () => {
@@ -53,7 +53,7 @@ describe("database", "redis", "unit", "util", () => {
 
             let invokedTimes = 0;
             const wrappedCallback2 = util.timeout((err) => {
-                expect(err).to.be.instanceOf(x.Timeout);
+                expect(err).to.be.instanceOf(exception.Timeout);
                 invokedTimes += 1;
                 wrappedCallback2();
                 setTimeout(() => {

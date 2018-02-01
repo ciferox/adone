@@ -1,6 +1,6 @@
 const {
     is,
-    x
+    exception
 } = adone;
 
 import HTTPContext from "./context/http";
@@ -60,7 +60,7 @@ export default class Server {
 
     use(middleware) {
         if (!is.function(middleware)) {
-            throw new x.InvalidArgument("middleware must be a function");
+            throw new exception.InvalidArgument("middleware must be a function");
         }
         this.middlewares.push(middleware);
         return this;

@@ -4,7 +4,7 @@ const {
     collection,
     noop,
     is,
-    x,
+    exception,
     promise,
     util,
     lazify
@@ -56,7 +56,7 @@ export default class Redis extends __.Commander.mixin(event.Emitter) {
             } else if (is.number(arg)) {
                 this.options.port = arg;
             } else {
-                throw new x.InvalidArgument(arg);
+                throw new exception.InvalidArgument(arg);
             }
         }
         const _dropBufferSupport = "dropBufferSupport" in this.options;
@@ -82,7 +82,7 @@ export default class Redis extends __.Commander.mixin(event.Emitter) {
 
     async connect() {
         if (this.status === "connecting" || this.status === "connect" || this.status === "ready") {
-            throw new x.IllegalState("Redis is already connecting/connected");
+            throw new exception.IllegalState("Redis is already connecting/connected");
         }
         this.setStatus("connecting");
 
@@ -117,7 +117,7 @@ export default class Redis extends __.Commander.mixin(event.Emitter) {
                 stream.setTimeout(0);
                 stream.destroy();
 
-                const err = new x.Timeout("connect ETIMEDOUT");
+                const err = new exception.Timeout("connect ETIMEDOUT");
                 err.errorno = "ETIMEDOUT";
                 err.code = "ETIMEDOUT";
                 err.syscall = "connect";
@@ -138,7 +138,7 @@ export default class Redis extends __.Commander.mixin(event.Emitter) {
 
             const connectionCloseHandler = () => {
                 this.removeListener(CONNECT_EVENT, connectionConnectHandler);
-                reject(new x.Exception(__.util.CONNECTION_CLOSED_ERROR_MSG));
+                reject(new exception.Exception(__.util.CONNECTION_CLOSED_ERROR_MSG));
             };
             this.once(CONNECT_EVENT, connectionConnectHandler);
             this.once("close", connectionCloseHandler);
@@ -263,11 +263,11 @@ export default class Redis extends __.Commander.mixin(event.Emitter) {
             this.connect().catch(noop);
         }
         if (this.status === "end") {
-            command.reject(new x.Exception(__.util.CONNECTION_CLOSED_ERROR_MSG));
+            command.reject(new exception.Exception(__.util.CONNECTION_CLOSED_ERROR_MSG));
             return command.promise;
         }
         if (this.condition.subscriber && !__.Command.checkFlag("VALID_IN_SUBSCRIBER_MODE", command.name)) {
-            command.reject(new x.InvalidArgument("Connection in subscriber mode, only subscriber commands may be used"));
+            command.reject(new exception.InvalidArgument("Connection in subscriber mode, only subscriber commands may be used"));
             return command.promise;
         }
 
@@ -284,7 +284,7 @@ export default class Redis extends __.Commander.mixin(event.Emitter) {
         }
 
         if (!writable && !this.options.enableOfflineQueue) {
-            command.reject(new x.IllegalState("Stream isn't writeable and enableOfflineQueue options is false"));
+            command.reject(new exception.IllegalState("Stream isn't writeable and enableOfflineQueue options is false"));
             return command.promise;
         }
 

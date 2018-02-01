@@ -127,7 +127,7 @@ describe("Sequelize", function () {
                         .catch((err) => {
                             expect(
                                 err instanceof RangeError ||
-                err instanceof orm.x.ConnectionError
+                err instanceof orm.exception.ConnectionError
                             ).to.be.ok();
                         });
                 });
@@ -166,7 +166,7 @@ describe("Sequelize", function () {
                         .sequelizeWithInvalidCredentials
                         .authenticate()
                         .catch((err) => {
-                            expect(err).to.be.instanceof(orm.x.ORMException);
+                            expect(err).to.be.instanceof(orm.exception.ORMException);
                         });
                 });
 

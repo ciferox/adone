@@ -1,6 +1,6 @@
 const {
     is,
-    x,
+    exception,
     lazify
 } = adone;
 
@@ -11,7 +11,7 @@ const parsers = lazify({
 
 export default function createParser(options) {
     if (!options || !is.function(options.returnError) || !is.function(options.returnReply)) {
-        throw new x.Exception("Please provide all return functions while initiating the parser");
+        throw new exception.Exception("Please provide all return functions while initiating the parser");
     }
 
     options.name = (options.name || "hiredis").toLowerCase();

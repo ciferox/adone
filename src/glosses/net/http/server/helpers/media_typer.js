@@ -1,4 +1,4 @@
-const { is, x } = adone;
+const { is, exception } = adone;
 
 /**
  * RegExp to match type in RFC 6838
@@ -22,17 +22,17 @@ const TYPE_REGEXP = /^ *([A-Za-z0-9][A-Za-z0-9!#$&^_-]{0,126})\/([A-Za-z0-9][A-Z
 
 export const format = (obj) => {
     if (!obj || !is.object(obj)) {
-        throw new x.InvalidArgument("argument obj is required");
+        throw new exception.InvalidArgument("argument obj is required");
     }
 
     const { subtype, suffix, type } = obj;
 
     if (!type || !TYPE_NAME_REGEXP.test(type)) {
-        throw new x.InvalidArgument("invalid type");
+        throw new exception.InvalidArgument("invalid type");
     }
 
     if (!subtype || !SUBTYPE_NAME_REGEXP.test(subtype)) {
-        throw new x.InvalidArgument("invalid subtype");
+        throw new exception.InvalidArgument("invalid subtype");
     }
 
     // format as type/subtype
@@ -40,7 +40,7 @@ export const format = (obj) => {
 
     if (suffix) {
         if (!TYPE_NAME_REGEXP.test(suffix)) {
-            throw new x.InvalidArgument("invalid suffix");
+            throw new exception.InvalidArgument("invalid suffix");
         }
 
         string += `+${suffix}`;
@@ -61,11 +61,11 @@ class MediaType {
 
 export const parse = (string) => {
     if (!string) {
-        throw new x.InvalidArgument("argument string is required");
+        throw new exception.InvalidArgument("argument string is required");
     }
 
     if (!is.string(string)) {
-        throw new x.InvalidArgument("argument string is required to be a string");
+        throw new exception.InvalidArgument("argument string is required to be a string");
     }
 
     const k = string.indexOf(";");
@@ -77,7 +77,7 @@ export const parse = (string) => {
     const match = TYPE_REGEXP.exec(string.toLowerCase());
 
     if (!match) {
-        throw new x.InvalidArgument("invalid media type");
+        throw new exception.InvalidArgument("invalid media type");
     }
 
     const type = match[1];

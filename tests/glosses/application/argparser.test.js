@@ -1,5 +1,8 @@
 describe("application", () => {
-    const { x, application: { CliApplication } } = adone;
+    const {
+        exception,
+        application: { CliApplication }
+    } = adone;
 
     describe("argv handling", () => {
         let app = null;
@@ -579,7 +582,7 @@ describe("application", () => {
                         args.get("z");
                     }, "No such argument: z");
                     expect(errors).to.have.length(1);
-                    expect(errors[0]).to.be.instanceof(x.IllegalState);
+                    expect(errors[0]).to.be.instanceof(exception.IllegalState);
                     expect(errors[0].message).to.be.equal("unknown parameter: 3");
                 });
             });
@@ -1084,7 +1087,7 @@ describe("application", () => {
                     });
                     const { errors } = await parse("-abd", "--1");
                     expect(errors).to.have.length(1);
-                    expect(errors[0]).to.be.instanceof(x.IllegalState);
+                    expect(errors[0]).to.be.instanceof(exception.IllegalState);
                     expect(errors[0].message).to.be.equal("Options with arguments cannot be grouped: -d");
                 });
 
@@ -1123,9 +1126,9 @@ describe("application", () => {
                         opts.get("world");
                     }, "No such argument: world");
                     expect(errors).to.have.length(2);
-                    expect(errors[0]).to.be.instanceof(x.IllegalState);
+                    expect(errors[0]).to.be.instanceof(exception.IllegalState);
                     expect(errors[0].message).to.be.equal("unknown option: --world");
-                    expect(errors[1]).to.be.instanceof(x.IllegalState);
+                    expect(errors[1]).to.be.instanceof(exception.IllegalState);
                     expect(errors[1].message).to.be.equal("unknown parameter: 2");
                 });
 
@@ -1159,9 +1162,9 @@ describe("application", () => {
                         opts.get("c");
                     }, "No such argument: c");
                     expect(errors).to.have.length(2);
-                    expect(errors[0]).to.be.instanceof(x.IllegalState);
+                    expect(errors[0]).to.be.instanceof(exception.IllegalState);
                     expect(errors[0].message).to.be.equal("unknown option: --c");
-                    expect(errors[1]).to.be.instanceof(x.IllegalState);
+                    expect(errors[1]).to.be.instanceof(exception.IllegalState);
                     expect(errors[1].message).to.be.equal("unknown parameter: 2");
                 });
             });

@@ -1,4 +1,9 @@
-const { is, x, net: { mail: { __ } }, std: { crypto, stream: { Stream } } } = adone;
+const {
+    is,
+    exception,
+    net: { mail: { __ } },
+    std: { crypto, stream: { Stream } }
+} = adone;
 
 /**
  * XOAUTH2 access_token generator for Gmail.
@@ -37,7 +42,7 @@ export default class XOAuth2 extends Stream {
         if (options && options.serviceClient) {
             if (!options.privateKey || !options.user) {
                 setImmediate(() => {
-                    this.emit("error", new x.InvalidArgument('Options "privateKey" and "user" are required for service account!'));
+                    this.emit("error", new exception.InvalidArgument('Options "privateKey" and "user" are required for service account!'));
                 });
                 return;
             }
@@ -185,11 +190,11 @@ export default class XOAuth2 extends Stream {
             }
 
             if (!data || !is.object(data)) {
-                return callback(new x.IllegalState("Invalid authentication response"));
+                return callback(new exception.IllegalState("Invalid authentication response"));
             }
 
             if (data.error) {
-                return callback(new x.IllegalState(data.error));
+                return callback(new exception.IllegalState(data.error));
             }
 
             if (data.access_token) {
@@ -197,7 +202,7 @@ export default class XOAuth2 extends Stream {
                 return callback(null, this.accessToken);
             }
 
-            return callback(new x.IllegalState("No access token"));
+            return callback(new exception.IllegalState("No access token"));
         });
     }
 

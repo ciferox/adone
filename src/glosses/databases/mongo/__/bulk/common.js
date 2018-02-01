@@ -1,6 +1,6 @@
 const {
     is,
-    x,
+    exception,
     database: { mongo }
 } = adone;
 
@@ -52,7 +52,7 @@ export const writeConcern = function (target, col, options) {
     return writeConcern;
 };
 
-class WriteConcernError extends x.Exception {
+class WriteConcernError extends exception.Exception {
     constructor(err) {
         super(err.errmsg, false);
         this.err = err;
@@ -203,7 +203,7 @@ export class BulkWriteResult {
     }
 }
 
-export class WriteError extends x.Exception {
+export class WriteError extends exception.Exception {
     constructor(err) {
         super(err.errmsg, false);
         this.err = err;

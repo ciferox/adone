@@ -15,7 +15,7 @@ export class Task {
      * @return {any}
      */
     run() {
-        throw new adone.x.NotImplemented("Method run() is not implemented");
+        throw new adone.exception.NotImplemented("Method run() is not implemented");
     }
 
     /**
@@ -66,7 +66,7 @@ export class TaskObserver {
      */
     async cancel() {
         if (!this.task.isCancelable()) {
-            throw new adone.x.NotAllowed(`Task '${this.name}' is not cancelable`);
+            throw new adone.exception.NotAllowed(`Task '${this.name}' is not cancelable`);
         }
         if (this.state === STATE.RUNNING) {
             this.state = STATE.CANCELLING;

@@ -315,7 +315,7 @@ export const matchStringOrRegexp = (target, pattern) => {
 
 // return [newKey, newValue]
 export const formatQueryValue = (key, value, stringFormattingFn) => {
-    switch (util.typeOf(value)) {
+    switch (adone.meta.typeOf(value)) {
         case "number":
         case "boolean": {
             value = value.toString();

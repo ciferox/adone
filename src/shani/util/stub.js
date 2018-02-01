@@ -1,4 +1,9 @@
-const { is, x, util: { keys }, shani: { util } } = adone;
+const {
+    is,
+    exception,
+    util: { keys },
+    shani: { util }
+} = adone;
 const { __ } = util;
 
 // eslint-disable-next-line no-use-before-define
@@ -147,7 +152,7 @@ export default function stub(object, property, ...args) {
 
 stub.createStubInstance = function (constructor) {
     if (!is.function(constructor)) {
-        throw new x.InvalidArgument("The constructor should be a function.");
+        throw new exception.InvalidArgument("The constructor should be a function.");
     }
     return stub(Object.create(constructor.prototype));
 };

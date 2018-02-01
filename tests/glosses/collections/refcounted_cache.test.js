@@ -1,6 +1,6 @@
 describe("collection", "RefcountedCache", () => {
     const {
-        x,
+        exception,
         collection: {
             RefcountedCache
         }

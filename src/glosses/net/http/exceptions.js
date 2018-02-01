@@ -1,9 +1,11 @@
-
-const { net: { http: { server: { helper: { status } } } }, is } = adone;
+const {
+    net: { http: { server: { helper: { status } } } },
+    is
+} = adone;
 
 const x = {};
 
-class HttpError extends adone.x.Exception {}
+class HttpError extends adone.exception.Exception {}
 HttpError.prototype.name = "HttpError";
 
 for (const [code, statusMessage] of status.codes.entries()) {
@@ -14,7 +16,7 @@ for (const [code, statusMessage] of status.codes.entries()) {
         .split(" ").map((x) => `${x[0].toUpperCase()}${x.slice(1)}`).join("")
         .replace(/[^ _0-9a-z]/gi, "");
 
-    const { [name]: Error } = {  // to keep the name
+    const { [name]: Error } = { // to keep the name
         [name]: class extends HttpError {
             constructor(message = statusMessage) {
                 super(message);
@@ -24,7 +26,7 @@ for (const [code, statusMessage] of status.codes.entries()) {
 
     Error.prototype.name = name;
     Error.prototype.status = code;
-    Error.prototype.expose = code < 500;  // client error
+    Error.prototype.expose = code < 500; // client error
 
     x[name] = x[code] = Error;
 }
@@ -60,7 +62,7 @@ const create = (statusCode = 500, message, properties) => {
 
     if (!err) {
         // create error
-        err = HttpError ? new HttpError(message) : new adone.x.Exception(message || status.getMessageByCode(statusCode));
+        err = HttpError ? new HttpError(message) : new adone.exception.Exception(message || status.getMessageByCode(statusCode));
         Error.captureStackTrace(err, create);
     }
 

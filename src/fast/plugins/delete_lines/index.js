@@ -1,12 +1,16 @@
 export default function plugin() {
-    const { x, util, text } = adone;
+    const {
+        exception,
+        util,
+        text
+    } = adone;
 
     return function deleteLines(filters) {
         filters = util.arrify(filters);
 
         return this.throughSync(function (file) {
             if (file.isStream()) {
-                throw new x.NotSupported("delete-lines: streams are unsuppored");
+                throw new exception.NotSupported("delete-lines: streams are unsuppored");
             }
 
             if (!file.isNull()) {

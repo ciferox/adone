@@ -1,5 +1,6 @@
 const {
-    is, x,
+    is,
+    exception,
     schema: { __, x: schemaX }
 } = adone;
 
@@ -210,7 +211,7 @@ export default function compile(schema, root, localRefs, baseId) {
         }
 
         if (is.undefined(validate)) {
-            throw new x.Exception(`custom keyword "${rule.keyword}"failed to compile`);
+            throw new exception.Exception(`custom keyword "${rule.keyword}"failed to compile`);
         }
 
         const index = customRules.length;

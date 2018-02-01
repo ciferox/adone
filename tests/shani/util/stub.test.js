@@ -1,5 +1,5 @@
 describe("shani", "util", "stub", () => {
-    const { is, x } = adone;
+    const { is, exception } = adone;
     const {
         stub: createStub,
         spy: createSpy,
@@ -348,7 +348,7 @@ describe("shani", "util", "stub", () => {
 
             assert.throws(() => {
                 stub.returnsArg();
-            }, x.InvalidArgument);
+            }, exception.InvalidArgument);
         });
     });
 
@@ -374,7 +374,7 @@ describe("shani", "util", "stub", () => {
 
             assert.throws(() => {
                 stub.throwsArg();
-            }, x.InvalidArgument);
+            }, exception.InvalidArgument);
         });
 
         it("should throw without enough arguments", () => {
@@ -385,7 +385,7 @@ describe("shani", "util", "stub", () => {
                 () => {
                     stub("only", "two arguments");
                 },
-                x.InvalidArgument,
+                exception.InvalidArgument,
                 "throwArgs failed: 3 arguments required but only 2 present"
             );
 
@@ -659,7 +659,7 @@ describe("shani", "util", "stub", () => {
 
             assert.throws(() => {
                 this.stub(1);
-            }, x.InvalidArgument, "argument at index 0 is not a function: 1");
+            }, exception.InvalidArgument, "argument at index 0 is not a function: 1");
         });
 
         it("throws if no index is specified", function () {
@@ -667,7 +667,7 @@ describe("shani", "util", "stub", () => {
 
             assert.throws(() => {
                 stub.callsArg();
-            }, x.InvalidArgument);
+            }, exception.InvalidArgument);
         });
 
         it("throws if index is not number", function () {
@@ -675,7 +675,7 @@ describe("shani", "util", "stub", () => {
 
             assert.throws(() => {
                 stub.callsArg({});
-            }, x.InvalidArgument);
+            }, exception.InvalidArgument);
         });
     });
 
@@ -725,7 +725,7 @@ describe("shani", "util", "stub", () => {
 
             assert.throws(() => {
                 stub.callsArgWith();
-            }, x.InvalidArgument);
+            }, exception.InvalidArgument);
         });
 
         it("throws if index is not number", function () {
@@ -733,7 +733,7 @@ describe("shani", "util", "stub", () => {
 
             assert.throws(() => {
                 stub.callsArgWith({});
-            }, x.InvalidArgument);
+            }, exception.InvalidArgument);
         });
     });
 
@@ -786,7 +786,7 @@ describe("shani", "util", "stub", () => {
 
             assert.throws(() => {
                 this.stub(1);
-            }, x.InvalidArgument);
+            }, exception.InvalidArgument);
         });
 
         it("throws if no index is specified", function () {
@@ -794,7 +794,7 @@ describe("shani", "util", "stub", () => {
 
             assert.throws(() => {
                 stub.callsArgOn();
-            }, x.InvalidArgument);
+            }, exception.InvalidArgument);
         });
 
         it("throws if index is not number", function () {
@@ -802,7 +802,7 @@ describe("shani", "util", "stub", () => {
 
             assert.throws(() => {
                 stub.callsArgOn(this.fakeContext, 2);
-            }, x.InvalidArgument);
+            }, exception.InvalidArgument);
         });
     });
 
@@ -900,7 +900,7 @@ describe("shani", "util", "stub", () => {
 
             assert.throws(() => {
                 stub.callsArgOnWith();
-            }, x.InvalidArgument);
+            }, exception.InvalidArgument);
         });
 
         it("throws if index is not number", function () {
@@ -908,7 +908,7 @@ describe("shani", "util", "stub", () => {
 
             assert.throws(() => {
                 stub.callsArgOnWith({});
-            }, x.InvalidArgument);
+            }, exception.InvalidArgument);
         });
     });
 
@@ -1384,7 +1384,7 @@ describe("shani", "util", "stub", () => {
         it("throws if no context is specified", function () {
             assert.throws(() => {
                 this.stub.yieldsOn();
-            }, x.InvalidArgument);
+            }, exception.InvalidArgument);
         });
 
         it("throws understandable error if no callback is passed", function () {

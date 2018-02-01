@@ -1,5 +1,5 @@
 const {
-    x,
+    exception,
     is
 } = adone;
 
@@ -30,7 +30,7 @@ const keepEscaping = (opts, str, idx) => {
 
 export default function splitString(str, options, fn) {
     if (!is.string(str)) {
-        throw new x.InvalidArgument("Expected a string");
+        throw new exception.InvalidArgument("Expected a string");
     }
 
     if (is.function(options)) {

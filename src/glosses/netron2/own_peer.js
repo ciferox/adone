@@ -1,7 +1,7 @@
 const {
     is,
     netron2: { AbstractPeer },
-    x
+    exception
 } = adone;
 
 export default class OwnPeer extends AbstractPeer {
@@ -16,7 +16,7 @@ export default class OwnPeer extends AbstractPeer {
     set(defId, name, data) {
         const stub = this.netron._stubs.get(defId);
         if (is.undefined(stub)) {
-            throw new x.NotExists(`Context with definition id '${defId}' not exists`);
+            throw new exception.NotExists(`Context with definition id '${defId}' not exists`);
         }
         return stub.set(name, data, this);
     }
@@ -24,7 +24,7 @@ export default class OwnPeer extends AbstractPeer {
     async get(defId, name, defaultData) {
         const stub = this.netron._stubs.get(defId);
         if (is.undefined(stub)) {
-            throw new x.NotExists(`Context with definition id '${defId}' not exists`);
+            throw new exception.NotExists(`Context with definition id '${defId}' not exists`);
         }
         const result = await stub.get(name, defaultData, this);
         if (is.netron2Definition(result)) {
@@ -68,7 +68,7 @@ export default class OwnPeer extends AbstractPeer {
     _getContextDefinition(ctxId) {
         const stub = this.netron.contexts.get(ctxId);
         if (is.undefined(stub)) {
-            throw new x.Unknown(`Unknown context '${ctxId}'`);
+            throw new exception.Unknown(`Unknown context '${ctxId}'`);
         }
         return stub.definition;
     }

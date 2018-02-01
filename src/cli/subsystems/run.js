@@ -50,7 +50,7 @@ export default class Run extends Subsystem {
             });
 
             if (!is.string(conf.raw.bin)) {
-                throw new adone.x.NotValid(`Path '${path}' is not containt adone application`);
+                throw new adone.exception.NotValid(`Path '${path}' is not containt adone application`);
             }
 
             path = std.path.join(path, conf.raw.bin);

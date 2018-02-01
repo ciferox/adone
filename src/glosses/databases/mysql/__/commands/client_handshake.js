@@ -1,6 +1,6 @@
 const {
     database: { mysql },
-    x
+    exception
 } = adone;
 
 const {
@@ -110,7 +110,7 @@ export default class ClientHandshake extends Command {
         if (connection.config.ssl) {
             // client requires SSL but server does not support it
             if (!serverSSLSupport) {
-                const err = new x.NotSupported("Server does not support secure connnection");
+                const err = new exception.NotSupported("Server does not support secure connnection");
                 err.code = "HANDSHAKE_NO_SSL_SUPPORT";
                 err.fatal = true;
                 command.emit("error", err);
@@ -167,7 +167,7 @@ export default class ClientHandshake extends Command {
             } else {
                 connection.emit(
                     "error",
-                    new x.IllegalState("Server requires auth switch, but no auth switch handler provided")
+                    new exception.IllegalState("Server requires auth switch, but no auth switch handler provided")
                 );
                 return null;
             }
@@ -175,7 +175,7 @@ export default class ClientHandshake extends Command {
         }
 
         if (marker !== 0) {
-            const err = new x.IllegalState("Unexpected packet during handshake phase");
+            const err = new exception.IllegalState("Unexpected packet during handshake phase");
             if (this.onResult) {
                 this.onResult(err);
             } else {

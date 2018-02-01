@@ -7,7 +7,7 @@ const {
 } = adone;
 
 const {
-    x,
+    exception,
     util: {
         Validator: {
             validator
@@ -63,7 +63,7 @@ class STRING extends ABSTRACT {
             if (this.options.binary && is.buffer(value) || _.isNumber(value)) {
                 return true;
             }
-            throw new x.ValidationError(sprintf("%j is not a valid string", value));
+            throw new exception.ValidationError(sprintf("%j is not a valid string", value));
         }
 
         return true;
@@ -110,7 +110,7 @@ class TEXT extends ABSTRACT {
 
     validate(value) {
         if (!_.isString(value)) {
-            throw new x.ValidationError(sprintf("%j is not a valid string", value));
+            throw new exception.ValidationError(sprintf("%j is not a valid string", value));
         }
 
         return true;
@@ -150,7 +150,7 @@ class NUMBER extends ABSTRACT {
 
     validate(value) {
         if (!validator.isFloat(String(value))) {
-            throw new x.ValidationError(sprintf(`%j is not a valid ${_.toLower(this.key)}`, value));
+            throw new exception.ValidationError(sprintf(`%j is not a valid ${_.toLower(this.key)}`, value));
         }
 
         return true;
@@ -178,7 +178,7 @@ class INTEGER extends NUMBER {
 
     validate(value) {
         if (!validator.isInt(String(value))) {
-            throw new x.ValidationError(sprintf(`%j is not a valid ${_.toLower(this.key)}`, value));
+            throw new exception.ValidationError(sprintf(`%j is not a valid ${_.toLower(this.key)}`, value));
         }
 
         return true;
@@ -207,7 +207,7 @@ class FLOAT extends NUMBER {
 
     validate(value) {
         if (!validator.isFloat(String(value))) {
-            throw new x.ValidationError(sprintf("%j is not a valid float", value));
+            throw new exception.ValidationError(sprintf("%j is not a valid float", value));
         }
 
         return true;
@@ -247,7 +247,7 @@ class DECIMAL extends NUMBER {
 
     validate(value) {
         if (!validator.isDecimal(String(value))) {
-            throw new x.ValidationError(sprintf("%j is not a valid decimal", value));
+            throw new exception.ValidationError(sprintf("%j is not a valid decimal", value));
         }
 
         return true;
@@ -276,7 +276,7 @@ class BOOLEAN extends ABSTRACT {
 
     validate(value) {
         if (!validator.isBoolean(String(value))) {
-            throw new x.ValidationError(sprintf("%j is not a valid boolean", value));
+            throw new exception.ValidationError(sprintf("%j is not a valid boolean", value));
         }
 
         return true;
@@ -326,7 +326,7 @@ class DATE extends ABSTRACT {
 
     validate(value) {
         if (!validator.isDate(String(value))) {
-            throw new x.ValidationError(sprintf("%j is not a valid date", value));
+            throw new exception.ValidationError(sprintf("%j is not a valid date", value));
         }
 
         return true;
@@ -417,7 +417,7 @@ DATEONLY.prototype.key = DATEONLY.key = "DATEONLY";
 class HSTORE extends ABSTRACT {
     validate(value) {
         if (!_.isPlainObject(value)) {
-            throw new x.ValidationError(sprintf("%j is not a valid hstore", value));
+            throw new exception.ValidationError(sprintf("%j is not a valid hstore", value));
         }
 
         return true;
@@ -465,7 +465,7 @@ class BLOB extends ABSTRACT {
 
     validate(value) {
         if (!_.isString(value) && !is.buffer(value)) {
-            throw new x.ValidationError(sprintf("%j is not a valid blob", value));
+            throw new exception.ValidationError(sprintf("%j is not a valid blob", value));
         }
 
         return true;
@@ -541,11 +541,11 @@ class RANGE extends ABSTRACT {
         }
 
         if (!_.isArray(value)) {
-            throw new x.ValidationError(sprintf("%j is not a valid range", value));
+            throw new exception.ValidationError(sprintf("%j is not a valid range", value));
         }
 
         if (value.length !== 2) {
-            throw new x.ValidationError("A range must be an array with two elements");
+            throw new exception.ValidationError("A range must be an array with two elements");
         }
 
         return true;
@@ -556,7 +556,7 @@ RANGE.prototype.key = RANGE.key = "RANGE";
 class UUID extends ABSTRACT {
     validate(value, options) {
         if (!_.isString(value) || !validator.isUUID(value) && (!options || !options.acceptStrings)) {
-            throw new x.ValidationError(sprintf("%j is not a valid uuid", value));
+            throw new exception.ValidationError(sprintf("%j is not a valid uuid", value));
         }
 
         return true;
@@ -567,7 +567,7 @@ UUID.prototype.key = UUID.key = "UUID";
 class UUIDV1 extends ABSTRACT {
     validate(value, options) {
         if (!_.isString(value) || !validator.isUUID(value) && (!options || !options.acceptStrings)) {
-            throw new x.ValidationError(sprintf("%j is not a valid uuid", value));
+            throw new exception.ValidationError(sprintf("%j is not a valid uuid", value));
         }
 
         return true;
@@ -578,7 +578,7 @@ UUIDV1.prototype.key = UUIDV1.key = "UUIDV1";
 class UUIDV4 extends ABSTRACT {
     validate(value, options) {
         if (!_.isString(value) || !validator.isUUID(value, 4) && (!options || !options.acceptStrings)) {
-            throw new x.ValidationError(sprintf("%j is not a valid uuidv4", value));
+            throw new exception.ValidationError(sprintf("%j is not a valid uuidv4", value));
         }
 
         return true;
@@ -624,7 +624,7 @@ class ENUM extends ABSTRACT {
 
     validate(value) {
         if (!_.includes(this.values, value)) {
-            throw new x.ValidationError(sprintf("%j is not a valid choice in %j", value, this.values));
+            throw new exception.ValidationError(sprintf("%j is not a valid choice in %j", value, this.values));
         }
 
         return true;
@@ -645,7 +645,7 @@ class ARRAY extends ABSTRACT {
 
     validate(value) {
         if (!_.isArray(value)) {
-            throw new x.ValidationError(sprintf("%j is not a valid array", value));
+            throw new exception.ValidationError(sprintf("%j is not a valid array", value));
         }
 
         return true;

@@ -1,5 +1,6 @@
 const {
-    is
+    is,
+    exception
 } = adone;
 
 class TestApp extends adone.application.Application {
@@ -10,7 +11,7 @@ class TestApp extends adone.application.Application {
             try {
                 this[getter] = null;
             } catch (err) {
-                if (err instanceof TypeError && /Cannot set property /.test(err.message)) {
+                if (err instanceof exception.NotAllowed) {
                     counter++;
                 } else {
                     adone.log(err);

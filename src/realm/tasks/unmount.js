@@ -4,7 +4,7 @@ const {
     is,
     std,
     task,
-    x
+    exception
 } = adone;
 
 export default class MountTask extends task.Task {
@@ -14,7 +14,7 @@ export default class MountTask extends task.Task {
             const devmntPath = adone.realm.config.devmntPath;
 
             if (!is.string(name)) {
-                throw new x.NotValid(`Name of namespace is not valid: ${name}`);
+                throw new exception.NotValid(`Name of namespace is not valid: ${name}`);
             }
 
             name = adone.text.toCamelCase(name);
@@ -23,7 +23,7 @@ export default class MountTask extends task.Task {
                 const config = await adone.configuration.load(devmntPath);
 
                 if (!is.string(config.raw[name])) {
-                    throw new x.NotExists(`Namespace 'adone.dev.${name}' is not exist`);
+                    throw new exception.NotExists(`Namespace 'adone.dev.${name}' is not exist`);
                 }
 
                 delete config.raw[name];
@@ -37,7 +37,7 @@ export default class MountTask extends task.Task {
                     result: true
                 });
             } else {
-                throw new x.NotExists(`Namespace 'adone.dev.${name}' is not exist`);
+                throw new exception.NotExists(`Namespace 'adone.dev.${name}' is not exist`);
             }
         } catch (err) {
             kit.updateProgress({

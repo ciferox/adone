@@ -18,7 +18,7 @@ export default function expectTypes(obj, types) {
         return `${or + art} ${t}`;
     }).join(", ");
 
-    const objType = adone.util.typeOf(obj).toLowerCase();
+    const objType = adone.meta.typeOf(obj).toLowerCase();
 
     if (!types.some((expected) => objType === expected)) {
         throw new $assert.AssertionError(

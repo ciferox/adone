@@ -1,4 +1,8 @@
-const { is, x, lazify } = adone;
+const {
+    is,
+    exception,
+    lazify
+} = adone;
 
 const JSONSchema = lazify({
     x: "./x",
@@ -156,7 +160,7 @@ const addInitialFormats = (self) => {
 
 const checkUnique = (self, id) => {
     if (self._schemas[id] || self._refs[id]) {
-        throw new x.Exists(`schema with key or id "${id}" already exists`);
+        throw new exception.Exists(`schema with key or id "${id}" already exists`);
     }
 };
 
@@ -260,7 +264,7 @@ export class Validator {
         if (is.string(schemaKeyRef)) {
             v = this.getSchema(schemaKeyRef);
             if (!v) {
-                throw new x.Unknown(`no schema with key or ref "${schemaKeyRef}"`);
+                throw new exception.Unknown(`no schema with key or ref "${schemaKeyRef}"`);
             }
         } else {
             const schemaObj = this._addSchema(schemaKeyRef);
@@ -289,7 +293,7 @@ export class Validator {
         }
         const id = this._getId(schema);
         if (!is.undefined(id) && !is.string(id)) {
-            throw new x.InvalidArgument("schema id must be string");
+            throw new exception.InvalidArgument("schema id must be string");
         }
         key = __.resolve.normalizeId(key || id);
         checkUnique(this, key);
@@ -327,7 +331,7 @@ export class Validator {
             if (this._opts.validateSchema === "log") {
                 this.logger.error(message);
             } else {
-                throw new x.Exception(message);
+                throw new exception.Exception(message);
             }
         }
         return valid;
@@ -413,7 +417,7 @@ export class Validator {
 
     _addSchema(schema, skipValidation, meta, shouldAddSchema) {
         if (!is.object(schema) && !is.boolean(schema)) {
-            throw new x.InvalidArgument("schema should be object or boolean");
+            throw new exception.InvalidArgument("schema should be object or boolean");
         }
         const serialize = this._opts.serialize;
         const cacheKey = serialize ? serialize(schema) : schema;
@@ -504,16 +508,16 @@ export class Validator {
         const RULES = this.RULES;
 
         if (RULES.keywords[keyword]) {
-            throw new x.IllegalState(`Keyword ${keyword} is already defined`);
+            throw new exception.IllegalState(`Keyword ${keyword} is already defined`);
         }
 
         if (!IDENTIFIER.test(keyword)) {
-            throw new x.InvalidArgument(`Keyword ${keyword} is not a valid identifier`);
+            throw new exception.InvalidArgument(`Keyword ${keyword} is not a valid identifier`);
         }
 
         if (definition) {
             if (definition.macro && !is.undefined(definition.valid)) {
-                throw new x.IllegalState('"valid" option cannot be used with macro keywords');
+                throw new exception.IllegalState('"valid" option cannot be used with macro keywords');
             }
 
             const _addRule = (keyword, dataType, definition) => {
@@ -543,7 +547,7 @@ export class Validator {
 
             const checkDataType = (dataType) => {
                 if (!RULES.types[dataType]) {
-                    throw new x.Unknown(`Unknown type ${dataType}`);
+                    throw new exception.Unknown(`Unknown type ${dataType}`);
                 }
             };
 
@@ -564,7 +568,7 @@ export class Validator {
 
             const $data = definition.$data === true && this._opts.$data;
             if ($data && !definition.validate) {
-                throw new x.IllegalState('$data support: "validate" function is not defined');
+                throw new exception.IllegalState('$data support: "validate" function is not defined');
             }
 
             let metaSchema = definition.metaSchema;
@@ -612,7 +616,7 @@ export class Validator {
 
     compileAsync(schema, meta, callback) {
         if (!is.function(this._opts.loadSchema)) {
-            throw new x.InvalidArgument("options.loadSchema should be a function");
+            throw new exception.InvalidArgument("options.loadSchema should be a function");
         }
 
         if (is.function(meta)) {

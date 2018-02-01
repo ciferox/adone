@@ -1,6 +1,6 @@
 const {
     std: { os },
-    x: { cleanStack, AggregateException }
+    exception: { cleanStack, AggregateException }
 } = adone;
 
 describe("x", () => {

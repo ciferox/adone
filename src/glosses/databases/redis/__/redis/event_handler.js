@@ -1,4 +1,9 @@
-const { database: { redis }, x, is, noop } = adone;
+const {
+    database: { redis },
+    exception,
+    is,
+    noop
+} = adone;
 
 const __ = adone.private(redis);
 
@@ -14,7 +19,7 @@ export const readyHandler = (self) => {
                 if (__.Command.checkFlag("VALID_IN_MONITOR_MODE", command.name)) {
                     return sendCommand.call(self, command);
                 }
-                command.reject(new x.Exception("Connection is in monitoring mode, can't process commands."));
+                command.reject(new exception.Exception("Connection is in monitoring mode, can't process commands."));
                 return command.promise;
             };
             self.once("close", () => {
@@ -127,7 +132,7 @@ export const connectHandler = (self) => {
                 }
             }, (err) => {
                 if (!flushed) {
-                    self.flushQueue(new x.Exception(`Ready check failed: ${err.message}`));
+                    self.flushQueue(new exception.Exception(`Ready check failed: ${err.message}`));
                     self.silentEmit("error", err);
                     self.disconnect(true);
                 }
@@ -139,7 +144,7 @@ export const connectHandler = (self) => {
 export const closeHandler = (self) => {
     const close = () => {
         self.setStatus("end");
-        self.flushQueue(new x.Exception(__.util.CONNECTION_CLOSED_ERROR_MSG));
+        self.flushQueue(new exception.Exception(__.util.CONNECTION_CLOSED_ERROR_MSG));
     };
 
     return () => {

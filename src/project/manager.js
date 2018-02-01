@@ -45,7 +45,7 @@ export default class ProjectManager extends task.Manager {
 
     async load() {
         if (this._loaded) {
-            throw new adone.x.IllegalState("Project already loaded");
+            throw new adone.exception.IllegalState("Project already loaded");
         }
 
         this.config = await configuration.Adone.load({
@@ -210,7 +210,7 @@ export default class ProjectManager extends task.Manager {
 
     _checkLoaded() {
         if (!this._loaded) {
-            throw new adone.x.IllegalState("Project is not loaded");
+            throw new adone.exception.IllegalState("Project is not loaded");
         }
     }
 

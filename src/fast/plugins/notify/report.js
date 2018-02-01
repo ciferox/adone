@@ -1,5 +1,5 @@
 const {
-    x,
+    exception,
     std: { path },
     is,
     templating: { dot },
@@ -153,7 +153,7 @@ const constructOptions = (options, object, templateOptions) => {
 
 export default async function report(reporter, message, options, templateOptions) {
     if (!reporter) {
-        throw new x.InvalidArgument("No reporter specified");
+        throw new exception.InvalidArgument("No reporter specified");
     }
 
     options = constructOptions(options, message, templateOptions);

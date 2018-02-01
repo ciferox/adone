@@ -1,5 +1,5 @@
 const {
-    x,
+    exception,
     application
 } = adone;
 
@@ -9,11 +9,11 @@ const {
 
 const parseComplexNumber = (str) => {
     if (!str) {
-        throw new x.InvalidArgument("Number cannot be empty");
+        throw new exception.InvalidArgument("Number cannot be empty");
     }
     const res = str.match(/^(-?\d+)((?:\+\d+|-\d+))i$/);
     if (!res) {
-        throw new x.InvalidArgument("Numbers must have format a+bi, where a and b are real numbers");
+        throw new exception.InvalidArgument("Numbers must have format a+bi, where a and b are real numbers");
     }
     const [, a, b] = res;
     return [Number(a), Number(b)];

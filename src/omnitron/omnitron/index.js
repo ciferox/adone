@@ -382,7 +382,7 @@ export default class Omnitron extends application.Application {
     @Public()
     async unloadSubsystem(name) {
         if (CORE_SUBSYSTEMS.includes(name)) {
-            throw new adone.x.NotAllowed("Unload core subsystem is not possible");
+            throw new adone.exception.NotAllowed("Unload core subsystem is not possible");
         }
         await super.unloadSubsystem(name);
     }

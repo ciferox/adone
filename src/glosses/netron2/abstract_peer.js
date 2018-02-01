@@ -1,6 +1,6 @@
 const {
     is,
-    x,
+    exception,
     util,
     event: { AsyncEmitter },
     netron2: { RemoteStub }
@@ -27,14 +27,14 @@ export default class AbstractPeer extends AsyncEmitter {
      * Checks peer is connected.
      */
     isConnected() {
-        throw new adone.x.NotImplemented("Method isConnected() is not implemented");
+        throw new adone.exception.NotImplemented("Method isConnected() is not implemented");
     }
 
     /**
      * Checks peer is connected using netron protocol.
      */
     isNetronConnected() {
-        throw new adone.x.NotImplemented("Method isNetronConnected() is not implemented");
+        throw new adone.exception.NotImplemented("Method isNetronConnected() is not implemented");
     }
 
     /**
@@ -47,7 +47,7 @@ export default class AbstractPeer extends AsyncEmitter {
      * @returns {Promise<undefined>}
      */
     set(/*defId, name, data*/) {
-        throw new adone.x.NotImplemented("Method set() is not implemented");
+        throw new adone.exception.NotImplemented("Method set() is not implemented");
     }
 
     /**
@@ -60,7 +60,7 @@ export default class AbstractPeer extends AsyncEmitter {
      * @returns {Promise<any>} returns property value or result of called method
      */
     get(/*defId, name, defaultData*/) {
-        throw new adone.x.NotImplemented("Method get() is not implemented");
+        throw new adone.exception.NotImplemented("Method get() is not implemented");
     }
 
     /**
@@ -88,15 +88,15 @@ export default class AbstractPeer extends AsyncEmitter {
     }
 
     requestMeta(/*request*/) {
-        throw new adone.x.NotImplemented("Method requestMeta() is not implemented");
+        throw new adone.exception.NotImplemented("Method requestMeta() is not implemented");
     }
 
     hasContexts() {
-        throw new adone.x.NotImplemented("Method hasContexts() is not implemented");
+        throw new adone.exception.NotImplemented("Method hasContexts() is not implemented");
     }
 
     hasContext(/*ctxId*/) {
-        throw new adone.x.NotImplemented("Method hasContext() is not implemented");
+        throw new adone.exception.NotImplemented("Method hasContext() is not implemented");
     }
 
     /**
@@ -107,21 +107,21 @@ export default class AbstractPeer extends AsyncEmitter {
      * @returns 
      */
     attachContext(/*instance, ctxId*/) {
-        throw new adone.x.NotImplemented("Method attachContext() is not implemented");
+        throw new adone.exception.NotImplemented("Method attachContext() is not implemented");
     }
 
     /**
      * Detaches before attached context with specified name.
      */
     detachContext(/*ctxId, releaseOriginated*/) {
-        throw new adone.x.NotImplemented("Method detachContext() is not implemented");
+        throw new adone.exception.NotImplemented("Method detachContext() is not implemented");
     }
 
     /**
      * Detaches all contexts.
      */
     detachAllContexts(/*releaseOriginated*/) {
-        throw new adone.x.NotImplemented("Method detachAllContexts() is not implemented");
+        throw new adone.exception.NotImplemented("Method detachAllContexts() is not implemented");
     }
 
     waitForContext(ctxId) {
@@ -155,13 +155,13 @@ export default class AbstractPeer extends AsyncEmitter {
      */
     releaseInterface(iInstance) {
         if (!is.netron2Interface(iInstance)) {
-            throw new x.NotValid("Object is not a netron interface");
+            throw new exception.NotValid("Object is not a netron interface");
         }
         this.interfaces.delete(iInstance[__.I_DEFINITION_SYMBOL].id);
     }
 
     _getContextDefinition(/*ctxId*/) {
-        throw new adone.x.NotImplemented("Method _getContextDefinition() is not implemented");
+        throw new adone.exception.NotImplemented("Method _getContextDefinition() is not implemented");
     }
 
     /**
@@ -171,7 +171,7 @@ export default class AbstractPeer extends AsyncEmitter {
      * @param {string|PeerId|PeerInfo|Peer|nil} peerInfo 
      */
     _queryInterfaceByDefinition(/*defId*/) {
-        throw new adone.x.NotImplemented("Method _queryInterfaceByDefinition() is not implemented");
+        throw new adone.exception.NotImplemented("Method _queryInterfaceByDefinition() is not implemented");
     }
 
     // getNumberOfAwaiters() {
@@ -194,7 +194,7 @@ export default class AbstractPeer extends AsyncEmitter {
     // //     if (status !== this._status) {
     // //         if (this._status === PEER_STATUS.ONLINE && status === PEER_STATUS.OFFLINE) {
     // //             for (const awaiter of this._responseAwaiters.values()) { // reject all the pending get requests
-    // //                 awaiter([1, new x.NetronPeerDisconnected()]);
+    // //                 awaiter([1, new exception.NetronPeerDisconnected()]);
     // //             }
     // //         }
     // //         this._status = status;

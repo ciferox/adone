@@ -104,7 +104,7 @@ export default function (lib, util) {
         }
 
         const obj = flag(this, "object");
-        const objType = adone.util.typeOf(obj).toLowerCase();
+        const objType = adone.meta.typeOf(obj).toLowerCase();
         let flagMsg = flag(this, "message");
         const negate = flag(this, "negate");
         const ssfi = flag(this, "ssfi");
@@ -442,8 +442,8 @@ export default function (lib, util) {
         const flagMsg = flag(this, "message");
         const msgPrefix = ((flagMsg) ? `${flagMsg}: ` : "");
         const ssfi = flag(this, "ssfi");
-        const objectType = adone.util.typeOf(object).toLowerCase();
-        const nType = adone.util.typeOf(n).toLowerCase();
+        const objectType = adone.meta.typeOf(object).toLowerCase();
+        const nType = adone.meta.typeOf(n).toLowerCase();
         let shouldThrow = true;
         let errorMessage;
 
@@ -500,8 +500,8 @@ export default function (lib, util) {
         const flagMsg = flag(this, "message");
         const msgPrefix = ((flagMsg) ? `${flagMsg}: ` : "");
         const ssfi = flag(this, "ssfi");
-        const objectType = adone.util.typeOf(object).toLowerCase();
-        const nType = adone.util.typeOf(n).toLowerCase();
+        const objectType = adone.meta.typeOf(object).toLowerCase();
+        const nType = adone.meta.typeOf(n).toLowerCase();
         let shouldThrow = true;
 
         if (doLength) {
@@ -559,8 +559,8 @@ export default function (lib, util) {
         const flagMsg = flag(this, "message");
         const msgPrefix = ((flagMsg) ? `${flagMsg}: ` : "");
         const ssfi = flag(this, "ssfi");
-        const objectType = adone.util.typeOf(object).toLowerCase();
-        const nType = adone.util.typeOf(n).toLowerCase();
+        const objectType = adone.meta.typeOf(object).toLowerCase();
+        const nType = adone.meta.typeOf(n).toLowerCase();
         let shouldThrow = true;
 
         if (doLength) {
@@ -619,8 +619,8 @@ export default function (lib, util) {
         const flagMsg = flag(this, "message");
         const msgPrefix = ((flagMsg) ? `${flagMsg}: ` : "");
         const ssfi = flag(this, "ssfi");
-        const objectType = adone.util.typeOf(object).toLowerCase();
-        const nType = adone.util.typeOf(n).toLowerCase();
+        const objectType = adone.meta.typeOf(object).toLowerCase();
+        const nType = adone.meta.typeOf(n).toLowerCase();
         let shouldThrow = true;
 
         if (doLength) {
@@ -678,9 +678,9 @@ export default function (lib, util) {
         const flagMsg = flag(this, "message");
         const msgPrefix = ((flagMsg) ? `${flagMsg}: ` : "");
         const ssfi = flag(this, "ssfi");
-        const objectType = adone.util.typeOf(object).toLowerCase();
-        const startType = adone.util.typeOf(start).toLowerCase();
-        const finishType = adone.util.typeOf(finish).toLowerCase();
+        const objectType = adone.meta.typeOf(object).toLowerCase();
+        const startType = adone.meta.typeOf(start).toLowerCase();
+        const finishType = adone.meta.typeOf(finish).toLowerCase();
         let shouldThrow = true;
         const range = (startType === "date" && finishType === "date")
             ? `${start.toUTCString()}..${finish.toUTCString()}`
@@ -741,7 +741,7 @@ export default function (lib, util) {
             if (err instanceof TypeError) {
                 flagMsg = flagMsg ? `${flagMsg}: ` : "";
                 throw new AssertionError(
-                    `${flagMsg}The instanceof assertion needs a constructor but ${adone.util.typeOf(constructor).toLowerCase()} was given.`,
+                    `${flagMsg}The instanceof assertion needs a constructor but ${adone.meta.typeOf(constructor).toLowerCase()} was given.`,
                     undefined,
                     ssfi
                 );

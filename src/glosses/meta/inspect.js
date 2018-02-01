@@ -127,7 +127,7 @@ const inspect_ = (runtime, options, variable) => {
     let descriptor;
     let nextAncestors;
 
-    const type = adone.util.typeOf(variable);
+    const type = adone.meta.typeOf(variable);
     const indent = options.style.tab.repeat(runtime.depth);
 
     if (type === "function" && options.noFunc) {

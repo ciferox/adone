@@ -1,5 +1,6 @@
 const {
-    is, x,
+    is,
+    exception,
     database: { mongo },
     std: { crypto, tls, net },
     event
@@ -269,7 +270,7 @@ export default class Connection extends event.Emitter {
         this.id = _id++;
         // No bson parser passed in
         if (!options.bson) {
-            throw new x.InvalidArgument("must pass in valid bson parser");
+            throw new exception.InvalidArgument("must pass in valid bson parser");
         }
         // Get bson parser
         this.bson = options.bson;

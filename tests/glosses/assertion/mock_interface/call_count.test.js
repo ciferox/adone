@@ -1,5 +1,9 @@
 describe("assertion", "mock interface", "call count", () => {
-    const { assertion: { AssertionError }, x } = adone;
+    const {
+        assertion: { AssertionError },
+        exception
+    } = adone;
+    
     let s = null;
 
     beforeEach(() => {
@@ -10,7 +14,7 @@ describe("assertion", "mock interface", "call count", () => {
         it("should throw an error when the spy is undefined", () => {
             expect(() => {
                 expect(undefined).to.have.been.called();
-            }).to.throw(x.InvalidArgument);
+            }).to.throw(exception.InvalidArgument);
         });
 
         it("should throw an assertion error when the spy is not called", () => {

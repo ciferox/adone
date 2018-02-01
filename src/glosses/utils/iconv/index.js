@@ -1,4 +1,4 @@
-const { is, x } = adone;
+const { is, exception } = adone;
 
 const BOMChar = "\uFEFF";
 
@@ -106,7 +106,7 @@ const getCodec = (encoding) => {
                 return codec;
             }
             default: {
-                throw new x.Unknown(`Encoding not recognized: '${encoding}' (searched as: '${enc}')`);
+                throw new exception.Unknown(`Encoding not recognized: '${encoding}' (searched as: '${enc}')`);
             }
         }
     }

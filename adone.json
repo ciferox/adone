@@ -380,12 +380,12 @@
                     "dst": "lib/glosses/fake",
                     "namespace": "fake"
                 },
-                "x": {
+                "exception": {
                     "description": "Exceptions and helpers",
                     "task": "transpile",
                     "src": "src/glosses/exceptions/**/*.js",
                     "dst": "lib/glosses/exceptions",
-                    "namespace": "x"
+                    "namespace": "exception"
                 },
                 "fs": {
                     "description": "Filesystem utilites",

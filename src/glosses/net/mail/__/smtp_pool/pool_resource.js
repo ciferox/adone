@@ -1,5 +1,5 @@
 const {
-    x,
+    exception,
     event,
     util,
     net: { mail: { __ } }
@@ -105,7 +105,7 @@ export default class PoolResource extends event.Emitter {
                         return;
                     }
                     // still have not returned, this means we have an unexpected connection close
-                    const err = new x.IllegalState("Unexpected socket close");
+                    const err = new exception.IllegalState("Unexpected socket close");
                     if (this.connection && this.connection._socket && this.connection._socket.upgrading) {
                         // starttls connection errors
                         err.code = "ETLS";
@@ -201,7 +201,7 @@ export default class PoolResource extends event.Emitter {
             setImmediate(() => {
                 let err;
                 if (this.messages >= this.options.maxMessages) {
-                    err = new x.IllegalState("Resource exhausted");
+                    err = new exception.IllegalState("Resource exhausted");
                     err.code = "EMAXLIMIT";
                     this.connection.close();
                     this.emit("error", err);

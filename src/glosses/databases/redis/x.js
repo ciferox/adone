@@ -1,5 +1,5 @@
 const {
-    x: { Exception }
+    exception: { Exception }
 } = adone;
 
 export class ReplyError extends Exception {}

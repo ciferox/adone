@@ -1,4 +1,8 @@
-const { is, x, collection } = adone;
+const {
+    is,
+    exception,
+    collection
+} = adone;
 
 const __ = adone.lazify({
     RateLimiter: "./rate_limiter"
@@ -85,7 +89,7 @@ const throttleNoInterval = (concurrency, drop, dropLast, fn, onDone) => {
     }
     return function (fn, ...args) {
         if (!is.function(fn)) {
-            throw new x.InvalidArgument("The first argument must be a function");
+            throw new exception.InvalidArgument("The first argument must be a function");
         }
         return run(fn, this, args);
     };
@@ -102,7 +106,7 @@ export const create = function (fn, opts = {}) {
 
     // Just for fun
     if (concurrency === Infinity) {
-        throw new x.NotAllowed("Infinite concurrency is not allowed");
+        throw new exception.NotAllowed("Infinite concurrency is not allowed");
     }
 
     if (!interval) {

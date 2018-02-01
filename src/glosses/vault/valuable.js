@@ -1,6 +1,6 @@
 const {
     is,
-    x,
+    exception,
     vault
 } = adone;
 
@@ -36,7 +36,7 @@ export default class Valuable {
         let keyMeta = this._getKeyUnsafe(name);
         let id;
         let shouldUpdateMeta = false;
-        type = (is.undefined(type) ? adone.util.typeOf(value) : type);
+        type = (is.undefined(type) ? adone.meta.typeOf(value) : type);
         if (is.undefined(keyMeta)) {
             id = this.meta.nextKeyId++;
             keyMeta = {
@@ -271,7 +271,7 @@ export default class Valuable {
     _getKey(name) {
         const keyMeta = this._getKeyUnsafe(name);
         if (is.undefined(keyMeta)) {
-            throw new x.NotExists(`Key not exists: ${name}`);
+            throw new exception.NotExists(`Key not exists: ${name}`);
         }
         return keyMeta;
     }

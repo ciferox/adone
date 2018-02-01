@@ -1,4 +1,9 @@
-const { is, x, util, templating: { nunjucks } } = adone;
+const {
+    is,
+    exception,
+    util,
+    templating: { nunjucks }
+} = adone;
 
 export default function installCompat() {
     // This must be called like `nunjucks.installCompat` so that `this` references the nunjucks instance
@@ -173,7 +178,7 @@ export default function installCompat() {
                 return this.pop();
             }
             if (index >= this.length || index < 0) {
-                throw new x.Exception("KeyError");
+                throw new exception.Exception("KeyError");
             }
             return this.splice(index, 1);
         },
@@ -186,7 +191,7 @@ export default function installCompat() {
                     return this.splice(i, 1);
                 }
             }
-            throw new x.Exception("ValueError");
+            throw new exception.Exception("ValueError");
         },
         count(element) {
             let count = 0;
@@ -200,7 +205,7 @@ export default function installCompat() {
         index(element) {
             const i = this.indexOf(element);
             if (i === -1) {
-                throw new x.Exception("ValueError");
+                throw new exception.Exception("ValueError");
             }
             return i;
         },
@@ -236,7 +241,7 @@ export default function installCompat() {
             if (is.undefined(output) && !is.undefined(def)) {
                 output = def;
             } else if (is.undefined(output)) {
-                throw new x.Exception("KeyError");
+                throw new exception.Exception("KeyError");
             } else {
                 delete this[key];
             }
@@ -249,7 +254,7 @@ export default function installCompat() {
                 delete this[k];
                 return [k, val];
             }
-            throw new x.Exception("KeyError");
+            throw new exception.Exception("KeyError");
         },
         setdefault(key, def) {
             if (key in this) {

@@ -1,4 +1,9 @@
-const { x, std: { path }, fs, is } = adone;
+const {
+    exception,
+    std: { path },
+    fs,
+    is
+} = adone;
 
 export const _ = adone.lazify({
     UA: "./ua",
@@ -40,7 +45,7 @@ class Parser {
 
     createParsers() {
         if (is.null(this.regexes)) {
-            throw new x.IllegalState("regexes must be loaded");
+            throw new exception.IllegalState("regexes must be loaded");
         }
         const {
             pattern,
@@ -61,7 +66,7 @@ class Parser {
             this.regexes = adone.data.yaml.safeLoad(data);
             this.createParsers();
         } else {
-            throw new x.InvalidArgument(`No such file: ${file}`);
+            throw new exception.InvalidArgument(`No such file: ${file}`);
         }
     }
 
@@ -71,7 +76,7 @@ class Parser {
             this.regexes = adone.data.yaml.safeLoad(data);
             this.createParsers();
         } else {
-            throw new x.InvalidArgument(`No such file: ${file}`);
+            throw new exception.InvalidArgument(`No such file: ${file}`);
         }
     }
 }

@@ -1,5 +1,5 @@
 const orm = adone.lazify({
-    x: "./errors",
+    exception: "./errors",
     type: "./data_types",
     operator: "./operators",
     util: "./utils",

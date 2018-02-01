@@ -1,7 +1,10 @@
 import Dispatcher from "./dispatcher";
 
 describe("database", "mongo", function () {
-    const { x, database: { mongo } } = adone;
+    const {
+        exception,
+        database: { mongo }
+    } = adone;
     const __ = adone.private(mongo);
 
     this.timeout(300000);
@@ -49,7 +52,7 @@ describe("database", "mongo", function () {
     const initConnection = () => {
         beforeEach("open connection", async () => {
             if (!this.DB) {
-                throw new x.IllegalState("There is no DB instance");
+                throw new exception.IllegalState("There is no DB instance");
             }
             this.db = await this.DB.open();
         });

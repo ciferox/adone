@@ -867,7 +867,7 @@ export const kill = (input, { force = false, ignoreCase = false, tree = true, wi
         });
     })).then(() => {
         if (errors.length > 0) {
-            throw new adone.x.AggregateException(errors);
+            throw new adone.exception.AggregateException(errors);
         }
     });
 };

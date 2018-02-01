@@ -10,7 +10,7 @@ class TestApp extends adone.application.CliApplication {
             try {
                 this[getter] = null;
             } catch (err) {
-                if (err instanceof TypeError && /Cannot set property /.test(err.message)) {
+                if (err instanceof adone.exception.NotAllowed) {
                     counter++;
                 } else {
                     adone.log(err);

@@ -1,12 +1,12 @@
 export default function plugin() {
-    const { is, std: { path }, x, fast: { File } } = adone;
+    const { is, std: { path }, exception, fast: { File } } = adone;
 
     const { Concat } = adone.private(adone.fast);
 
     return function concat(file, options = {}) {
 
         if (!file) {
-            throw new x.InvalidArgument("Missing file option");
+            throw new exception.InvalidArgument("Missing file option");
         }
         // to preserve existing |undefined| behaviour and to introduce |newLine: ""| for binaries
         if (!is.string(options.newLine)) {
@@ -24,7 +24,7 @@ export default function plugin() {
         } else if (is.string(file.path)) {
             fileName = path.basename(file.path);
         } else {
-            throw new x.InvalidArgument("Missing path in file options");
+            throw new exception.InvalidArgument("Missing path in file options");
         }
 
         return this.throughSync((file) => {
@@ -32,7 +32,7 @@ export default function plugin() {
                 return;
             }
             if (file.isStream()) {
-                throw new x.NotSupported("Streaming is not supported");
+                throw new exception.NotSupported("Streaming is not supported");
             }
 
             // enable sourcemap support for concat

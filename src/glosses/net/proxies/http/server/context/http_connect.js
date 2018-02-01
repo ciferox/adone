@@ -5,7 +5,7 @@ import HTTPUpgradeContext from "./http_upgrade";
 
 const {
     is,
-    x
+    exception
 } = adone;
 
 export default class HTTPConnectContext extends BaseContext {
@@ -90,7 +90,7 @@ export default class HTTPConnectContext extends BaseContext {
                         })
                             .once("connect", (res, socket) => {
                                 if (res.statusCode !== 200) {
-                                    reject(new x.IllegalState(`Cannot establish a connection with the proxy, statusCode = ${res.statusCode}`));
+                                    reject(new exception.IllegalState(`Cannot establish a connection with the proxy, statusCode = ${res.statusCode}`));
                                 } else {
                                     resolve(socket);
                                 }

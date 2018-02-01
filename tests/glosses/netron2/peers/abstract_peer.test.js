@@ -1,7 +1,7 @@
 const {
     is,
     netron2: { AbstractPeer, Netron },
-    x
+    exception
 } = adone;
 
 describe("AbstractPeer", () => {
@@ -34,7 +34,7 @@ describe("AbstractPeer", () => {
             it(`${m}()`, () => {
                 assert.true(is.function(peer[m]));
                 const e = assert.throws(() => peer[m]());
-                assert.instanceOf(e, x.NotImplemented);
+                assert.instanceOf(e, exception.NotImplemented);
                 assert.match(e.message, new RegExp(`Method ${m}()`));
             });
         }

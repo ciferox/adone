@@ -1,4 +1,9 @@
-const { is, x, shani: { util }, lazify } = adone;
+const {
+    is,
+    exception,
+    shani: { util },
+    lazify
+} = adone;
 const { __ } = util;
 
 const lazy = lazify({
@@ -480,29 +485,29 @@ delegateToCalls("alwaysReturned", false, "returned");
 delegateToCalls("calledWithNew", true);
 delegateToCalls("alwaysCalledWithNew", false, "calledWithNew");
 delegateToCalls("callArg", false, "callArgWith", function () {
-    throw new x.IllegalState(`${this.toString()} cannot call arg since it was not yet invoked.`);
+    throw new exception.IllegalState(`${this.toString()} cannot call arg since it was not yet invoked.`);
 });
 proto.callArgWith = proto.callArg;
 delegateToCalls("callArgOn", false, "callArgOnWith", function () {
-    throw new x.IllegalState(`${this.toString()} cannot call arg since it was not yet invoked.`);
+    throw new exception.IllegalState(`${this.toString()} cannot call arg since it was not yet invoked.`);
 });
 proto.callArgOnWith = proto.callArgOn;
 delegateToCalls("throwArg", false, "throwArg", function () {
-    throw new x.IllegalState(`${this.toString()} cannot throw arg since it was not yet invoked.`);
+    throw new exception.IllegalState(`${this.toString()} cannot throw arg since it was not yet invoked.`);
 });
 delegateToCalls("yield", false, "yield", function () {
-    throw new x.IllegalState(`${this.toString()} cannot yield since it was not yet invoked.`);
+    throw new exception.IllegalState(`${this.toString()} cannot yield since it was not yet invoked.`);
 });
 // "invokeCallback" is an alias for "yield" since "yield" is invalid in strict mode.
 proto.invokeCallback = proto.yield;
 delegateToCalls("yieldOn", false, "yieldOn", function () {
-    throw new x.IllegalState(`${this.toString()} cannot yield since it was not yet invoked.`);
+    throw new exception.IllegalState(`${this.toString()} cannot yield since it was not yet invoked.`);
 });
 delegateToCalls("yieldTo", false, "yieldTo", function (property) {
-    throw new x.IllegalState(`${this.toString()} cannot yield to '${__.util.valueToString(property)}' since it was not yet invoked.`);
+    throw new exception.IllegalState(`${this.toString()} cannot yield to '${__.util.valueToString(property)}' since it was not yet invoked.`);
 });
 delegateToCalls("yieldToOn", false, "yieldToOn", function (property) {
-    throw new x.IllegalState(`${this.toString()} cannot yield to '${__.util.valueToString(property)}' since it was not yet invoked.`);
+    throw new exception.IllegalState(`${this.toString()} cannot yield to '${__.util.valueToString(property)}' since it was not yet invoked.`);
 });
 
 export default function spy(object, property, types) {

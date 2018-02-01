@@ -1,6 +1,6 @@
 const {
     is,
-    x,
+    exception,
     std,
     text,
     util,
@@ -147,7 +147,7 @@ class Argument {
             if (is.regexp(type)) {
                 const match = value.match(type);
                 if (is.null(match)) {
-                    const err = new x.Exception(`Incorrect value, must match ${type}`);
+                    const err = new exception.Exception(`Incorrect value, must match ${type}`);
                     err.fatal = true;
                     throw err;
                 }
@@ -173,12 +173,12 @@ class Argument {
         try {
             res = await this._verify(args, opts);
         } catch (err) {
-            throw new x.InvalidArgument(`verification of ${this.names[0]} failed due to "${err.message}"`);
+            throw new exception.InvalidArgument(`verification of ${this.names[0]} failed due to "${err.message}"`);
         }
         // each non-true value is recognized as an error
         if (res !== true) {
             const message = is.string(res) ? res : `verification of ${this.names[0]} failed`;
-            throw new x.InvalidArgument(message);
+            throw new exception.InvalidArgument(message);
         }
     }
 
@@ -212,15 +212,15 @@ class Argument {
             }
             return false;
         }
-        throw new x.InvalidArgument();
+        throw new exception.InvalidArgument();
     }
 
     get positional() {
-        throw new x.NotImplemented();
+        throw new exception.NotImplemented();
     }
 
     get optional() {
-        throw new x.NotImplemented();
+        throw new exception.NotImplemented();
     }
 
     static normalize(options, cmd, arg) {
@@ -231,7 +231,7 @@ class Argument {
         }
         if (!options.name || options.name.length === 0) {
             const type = arg.positional ? "a positional" : "an optional";
-            throw new x.IllegalState(`${cmd.getCommandChain()}: you are trying to define ${type} argument with no name`);
+            throw new exception.IllegalState(`${cmd.getCommandChain()}: you are trying to define ${type} argument with no name`);
         }
         options.name = util.arrify(options.name);
 
@@ -239,7 +239,7 @@ class Argument {
 
         const invalid = (msg) => {
             const t = arg.positional ? "argument" : "option";
-            return new x.InvalidArgument(`${cmd.getCommandChain()} / "${name}" ${t}: ${msg}`);
+            return new exception.InvalidArgument(`${cmd.getCommandChain()} / "${name}" ${t}: ${msg}`);
         };
         if (options.action) {
             if (!["store", "store_const", "store_true", "store_false", "append", "count", "set"].includes(options.action)) {
@@ -438,7 +438,7 @@ class Argument {
     }
 
     _formatValue(x) {
-        const type = util.typeOf(x);
+        const type = adone.meta.typeOf(x);
 
         switch (type) {
             case "string": {
@@ -523,13 +523,13 @@ class PositionalArgument extends Argument {
         }, options);
         super(options, command);
         if ("action" in options && options.action !== "store" && options.action !== "set") {
-            throw new x.IllegalState(`${this.names[0]}: A positional agrument must have action 'store' or 'set'`);
+            throw new exception.IllegalState(`${this.names[0]}: A positional agrument must have action 'store' or 'set'`);
         }
         if (this.names.length > 1) {
-            throw new x.IllegalState(`${this.names[0]}: A positional argument cannot have multiple names`);
+            throw new exception.IllegalState(`${this.names[0]}: A positional argument cannot have multiple names`);
         }
         if (this.names[0][0] === "-") {
-            throw new x.IllegalState(`${this.names[0]}: The name of a positional argument cannot start with "-"`);
+            throw new exception.IllegalState(`${this.names[0]}: The name of a positional argument cannot start with "-"`);
         }
     }
 
@@ -604,17 +604,17 @@ class OptionalArgument extends Argument {
         }, options), command);
         for (const name of this.names) {
             if (name[0] !== "-") {
-                throw new x.IllegalState(`${this.names[0]}: The name of an optional argument must start with "-": ${name}`);
+                throw new exception.IllegalState(`${this.names[0]}: The name of an optional argument must start with "-": ${name}`);
             }
             if (/\s/.test(name)) {
-                throw new x.IllegalState(`${this.names[0]}: The name of an optional argument cannot have space characters: ${name}`);
+                throw new exception.IllegalState(`${this.names[0]}: The name of an optional argument cannot have space characters: ${name}`);
             }
             if (/^-+$/.test(name)) {
-                throw new x.IllegalState(`${this.names[0]}: The name of an optional argument must have a name: ${name}`);
+                throw new exception.IllegalState(`${this.names[0]}: The name of an optional argument must have a name: ${name}`);
             }
         }
         if (this.action === "set") {
-            throw new x.IllegalState(`${this.names[0]}: Cannot use 'set' action with an optional argument`);
+            throw new exception.IllegalState(`${this.names[0]}: Cannot use 'set' action with an optional argument`);
         }
         this.group = options.group || UNNAMED;
         this.handler = options.handler || adone.noop;
@@ -837,7 +837,7 @@ class ArgumentsMap {
 
     get(key, defaultValue = EMPTY_VALUE) {
         if (!this.args.has(key)) {
-            throw new x.Unknown(`No such argument: ${key}`);
+            throw new exception.Unknown(`No such argument: ${key}`);
         }
         const arg = this.args.get(key);
         if (arg.present || arg.hasDefaultValue()) {
@@ -973,13 +973,13 @@ class Command {
             return;
         }
         if (this.hasArgument(newArgument)) {
-            throw new x.Exists(`${this.names[0]}: Argument with name ${newArgument.names[0]} is already exist`);
+            throw new exception.Exists(`${this.names[0]}: Argument with name ${newArgument.names[0]} is already exist`);
         }
         if (this.arguments.length > 0) {
             const last = this.arguments[this.arguments.length - 1];
             const nonRequiredMode = !last.required;
             if (nonRequiredMode && newArgument.required) {
-                throw new x.IllegalState(`${this.names[0]}: non-default agrument must not follow default argument: ${last.names[0]} -> ${newArgument.names[0]}`);
+                throw new exception.IllegalState(`${this.names[0]}: non-default agrument must not follow default argument: ${last.names[0]} -> ${newArgument.names[0]}`);
             }
         }
         // newArgument.setCommand(this);
@@ -1003,10 +1003,10 @@ class Command {
             return;
         }
         if (this.hasOption(newOption)) {
-            throw new x.Exists(`${this.names[0]}: Option with name ${newOption.names[0]} is already exist`);
+            throw new exception.Exists(`${this.names[0]}: Option with name ${newOption.names[0]} is already exist`);
         }
         if (this.blindMode && (newOption.nargs === "?" || newOption.nargs === "*")) {
-            throw new x.IllegalState(`${this.names[0]}: Cannot use options with nargs = "*" | "+" | "?" it can lead to unexpected behaviour`);
+            throw new exception.IllegalState(`${this.names[0]}: Cannot use options with nargs = "*" | "+" | "?" it can lead to unexpected behaviour`);
         }
         for (const group of this.optionsGroups) {
             if (group.name === newOption.group) {
@@ -1015,7 +1015,7 @@ class Command {
                 return;
             }
         }
-        throw new x.IllegalState(`${newOption.names[0]}: Cannot add the option; No such group: ${newOption.group}`);
+        throw new exception.IllegalState(`${newOption.names[0]}: Cannot add the option; No such group: ${newOption.group}`);
     }
 
     hasOptionsGroup(group) {
@@ -1032,7 +1032,7 @@ class Command {
             newGroup = new Group(newGroup);
         }
         if (this.hasOptionsGroup(newGroup)) {
-            throw new x.Exists(`${this.names[0]}: Options group with name ${newGroup.name} is already exist`);
+            throw new exception.Exists(`${this.names[0]}: Options group with name ${newGroup.name} is already exist`);
         }
         const groups = this.optionsGroups;
         groups.push(newGroup);
@@ -1055,7 +1055,7 @@ class Command {
             newCommand = new Command(newCommand, this);
         }
         if (this.hasCommand(newCommand)) {
-            throw new x.Exists(`${this.names[0]}: Command with name ${newCommand.names[0]} is already exist`);
+            throw new exception.Exists(`${this.names[0]}: Command with name ${newCommand.names[0]} is already exist`);
         }
 
         for (const group of this.commandsGroups) {
@@ -1065,7 +1065,7 @@ class Command {
                 return;
             }
         }
-        throw new x.IllegalState(`${newCommand.names[0]}: Cannot add the command; No such group: ${newCommand.group}`);
+        throw new exception.IllegalState(`${newCommand.names[0]}: Cannot add the command; No such group: ${newCommand.group}`);
     }
 
     hasCommandsGroup(group) {
@@ -1082,7 +1082,7 @@ class Command {
             newGroup = new Group(newGroup);
         }
         if (this.hasOptionsGroup(newGroup)) {
-            throw new x.Exists(`${this.names[0]}: Commands group with name ${newGroup.name} is already exist`);
+            throw new exception.Exists(`${this.names[0]}: Commands group with name ${newGroup.name} is already exist`);
         }
         const groups = this.commandsGroups;
         groups.push(newGroup);
@@ -1118,7 +1118,7 @@ class Command {
             }
             return false;
         }
-        throw new x.InvalidArgument();
+        throw new exception.InvalidArgument();
     }
 
     getArgumentsMap() {
@@ -1166,7 +1166,7 @@ class Command {
                 options.handler[INTERNAL] = true;
             }
         } else if (!is.function(options.handler)) {
-            throw new x.IllegalState(`${name}: A command handler must be a function`);
+            throw new exception.IllegalState(`${name}: A command handler must be a function`);
         }
 
         if (!is.string(options.description)) {
@@ -1183,7 +1183,7 @@ class Command {
         if (!options.match) {
             options.match = null;
         } else if (options.name.length > 1) {
-            throw new x.IllegalState(`${name}: When match is set only one name is possible`);
+            throw new exception.IllegalState(`${name}: When match is set only one name is possible`);
         } else {
             if (is.regexp(options.match)) {
                 const re = options.match;
@@ -1223,12 +1223,12 @@ class Command {
     static normalize(options) {
         options = adone.o(options);
         if (!options.name) {
-            throw new x.IllegalState("A command should have a name");
+            throw new exception.IllegalState("A command should have a name");
         }
         options.name = util.arrify(options.name);
         for (const name of options.name) {
             if (!is.string(name) || !name) {
-                throw new x.IllegalState("A command name must be a non-empty string");
+                throw new exception.IllegalState("A command name must be a non-empty string");
             }
         }
         return this._postNormalize(options.name[0], options);
@@ -1773,7 +1773,7 @@ export default class CliApplication extends application.Application {
                 if (create) {
                     subcmd = this._createCommand({ name }, cmd);
                 } else {
-                    throw new x.NotExists(`No such command: ${chain.slice(0, i + 1).join(" ")}`);
+                    throw new exception.NotExists(`No such command: ${chain.slice(0, i + 1).join(" ")}`);
                 }
             }
             cmd = subcmd;
@@ -1811,7 +1811,7 @@ export default class CliApplication extends application.Application {
         }
 
         if (!is.object(cmdParams)) {
-            throw new x.InvalidArgument("The options must be an object");
+            throw new exception.InvalidArgument("The options must be an object");
         }
 
         if (subsystem) {
@@ -1920,7 +1920,7 @@ export default class CliApplication extends application.Application {
                     continue nextPart;
                 }
             }
-            throw new x.Unknown(`Unknown command ${parts.slice(0, i).join(".")}`);
+            throw new exception.Unknown(`Unknown command ${parts.slice(0, i).join(".")}`);
         }
         for (const option of cmd.options) {
             const names = option.names.map((x) => {
@@ -1935,7 +1935,7 @@ export default class CliApplication extends application.Application {
                 return value ? option.value : option;
             }
         }
-        throw new x.NotExists(`${cmd.names[0]} doesnt have this option: ${optionName}`);
+        throw new exception.NotExists(`${cmd.names[0]} doesnt have this option: ${optionName}`);
     }
 
     async _parseArgs(_argv) {
@@ -1953,7 +1953,7 @@ export default class CliApplication extends application.Application {
         let hasStopMark = false;
         for (const part of _argv) {
             if (part === "-") {
-                throw new x.IllegalState('We do not handle "-" yet');
+                throw new exception.IllegalState('We do not handle "-" yet');
             }
             if (part === "--") {
                 // a special case where we have to stop the parsing process
@@ -2069,7 +2069,7 @@ export default class CliApplication extends application.Application {
                                         if (arg.match(`-${opt}`)) {
                                             if (arg.nargs !== 0) {
                                                 // fatal error, stop parsing
-                                                throw new x.IllegalState(`Options with arguments cannot be grouped: -${opt}`);
+                                                throw new exception.IllegalState(`Options with arguments cannot be grouped: -${opt}`);
                                             }
                                             return true;
                                         }
@@ -2097,7 +2097,7 @@ export default class CliApplication extends application.Application {
                                 // may be it is a negative number?
                                 if (!isNegativeNumber(part)) {
                                     // not a negative number
-                                    errors.push(new x.IllegalState(`unknown option: ${part}`));
+                                    errors.push(new exception.IllegalState(`unknown option: ${part}`));
                                     state.push("next argument");
                                     nextPart();
                                     continue;
@@ -2176,7 +2176,7 @@ export default class CliApplication extends application.Application {
                                 }
                             }
                             if (!isNegativeNumber(part)) {
-                                errors.push(new x.IllegalState(`unknown option: ${part}`));
+                                errors.push(new exception.IllegalState(`unknown option: ${part}`));
                                 nextPart();
                                 state.push("finish argument");
                                 continue next;
@@ -2251,7 +2251,7 @@ export default class CliApplication extends application.Application {
                             continue next;
                         }
                         if (argument.choices && !argument.choices.includes(value)) {
-                            errors.push(new x.IllegalState(`${argument.names[0]}: invalid choice "${value}" (choose from ${argument.choices.map((x) => `"${x}"`).join(", ")})`));
+                            errors.push(new exception.IllegalState(`${argument.names[0]}: invalid choice "${value}" (choose from ${argument.choices.map((x) => `"${x}"`).join(", ")})`));
                             state.push("finish argument");
                             nextPart();
                             continue next;
@@ -2274,17 +2274,17 @@ export default class CliApplication extends application.Application {
                     case "finish argument": {
                         if (is.integer(argument.nargs)) {
                             if (argument.nargs > 0 && !argument.hasValue()) {
-                                errors.push(new x.IllegalState(`${argument.names[0]}: must have a value`));
+                                errors.push(new exception.IllegalState(`${argument.names[0]}: must have a value`));
                             }
                             if (argument.action === "store" && argument.value.length !== argument.nargs) {
-                                errors.push(new x.IllegalState(`${argument.names[0]}: has not enough parameters, ${argument.value.length} of ${argument.nargs}`));
+                                errors.push(new exception.IllegalState(`${argument.names[0]}: has not enough parameters, ${argument.value.length} of ${argument.nargs}`));
                             }
                             if (argument.nargs === 1) {
                                 argument.value = argument.value[0];
                             }
                         } else if (argument.nargs === "+") {
                             if (argument.value.length === 0) {
-                                errors.push(new x.IllegalState(`${argument.names[0]}: has not enough parameters, must have at least 1`));
+                                errors.push(new exception.IllegalState(`${argument.names[0]}: has not enough parameters, must have at least 1`));
                             }
                         } else if (argument.nargs === "?") {
                             if (argument.value.length) {
@@ -2322,7 +2322,7 @@ export default class CliApplication extends application.Application {
                     }
                     case "finish": {
                         if (remaining >= 0) { // it should be -1 if there are no elements, so we have extra args, weird
-                            errors.push(new x.IllegalState(`unknown parameter: ${part}`));
+                            errors.push(new exception.IllegalState(`unknown parameter: ${part}`));
                         }
                         finished = true;
                         // check required arguments
@@ -2336,9 +2336,9 @@ export default class CliApplication extends application.Application {
                                 } else if (arg.nargs === "*" || arg.nargs === "?" || !arg.required) {
                                     arg.value = arg.default;
                                 } else if (arg.nargs === "+") {
-                                    errors.push(new x.IllegalState(`${arg.names[0]}: has not enough parameters, must have at least 1`));
+                                    errors.push(new exception.IllegalState(`${arg.names[0]}: has not enough parameters, must have at least 1`));
                                 } else if (is.integer(arg.nargs)) {
-                                    errors.push(new x.IllegalState(`${arg.names[0]}: has not enough parameters, must have ${arg.nargs}`));
+                                    errors.push(new exception.IllegalState(`${arg.names[0]}: has not enough parameters, must have ${arg.nargs}`));
                                 }
                             }
                         }
@@ -2347,7 +2347,7 @@ export default class CliApplication extends application.Application {
                             if (!arg.present) {
                                 const { nargs } = arg;
                                 if (arg.required) {
-                                    errors.push(new x.IllegalState(`${arg.names[0]}: must be provided`));
+                                    errors.push(new exception.IllegalState(`${arg.names[0]}: must be provided`));
                                 } else if (
                                     arg.action === "append" ||
                                     nargs === "+" ||

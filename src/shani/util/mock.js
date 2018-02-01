@@ -1,4 +1,9 @@
-const { is, x, shani: { util }, lazify } = adone;
+const {
+    is,
+    exception,
+    shani: { util },
+    lazify
+} = adone;
 const { __ } = util;
 
 
@@ -19,14 +24,14 @@ const arrayEquals = (arr1, arr2, compareLength) => {
 class Mock {
     constructor(object) {
         if (!object) {
-            throw new x.InvalidArgument("object is falsy");
+            throw new exception.InvalidArgument("object is falsy");
         }
         this.object = object;
     }
 
     expects(method) {
         if (!method) {
-            throw new x.InvalidArgument("method is falsy");
+            throw new exception.InvalidArgument("method is falsy");
         }
 
         if (!this.expectations) {

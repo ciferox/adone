@@ -72,7 +72,7 @@ export default class Inspection extends Subsystem {
 
                 const list = [];
                 for (let [key, value] of util.entries(ns, { onlyEnumerable: false, all: opts.has("all") })) {
-                    const origType = util.typeOf(value);
+                    const origType = adone.meta.typeOf(value);
                     let type = origType;
 
                     switch (type) {
@@ -162,14 +162,14 @@ export default class Inspection extends Subsystem {
                 // adone.log(adone.meta.inspect(ns, inspectOptions));
             } else if (adone.vendor.lodash.has(ns, objectName)) {
                 const obj = adone.vendor.lodash.get(ns, objectName);
-                const type = adone.util.typeOf(obj);
+                const type = adone.meta.typeOf(obj);
                 if (type === "function") {
                     adone.log(adone.js.highlighter.highlight(obj.toString()));
                 } else {
                     adone.log(adone.meta.inspect(adone.vendor.lodash.get(ns, objectName), inspectOptions));
                 }
             } else {
-                throw new adone.x.Unknown(`Unknown object: ${name}`);
+                throw new adone.exception.Unknown(`Unknown object: ${name}`);
             }
             return 0;
         } catch (err) {

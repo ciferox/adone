@@ -40,7 +40,7 @@ export default function nut(db, precodec, codec) {
         apply(ops, opts, cb) {
             if (!this.isOpen()) {
                 process.nextTick(() => {
-                    cb(new adone.x.Database("Database is not open"));
+                    cb(new adone.exception.Database("Database is not open"));
                 });
                 return;
             }
@@ -65,7 +65,7 @@ export default function nut(db, precodec, codec) {
         get(key, prefix, opts, cb) {
             if (!this.isOpen()) {
                 process.nextTick(() => {
-                    cb(new adone.x.Database("Database is not open"));
+                    cb(new adone.exception.Database("Database is not open"));
                 });
                 return;
             }
@@ -95,7 +95,7 @@ export default function nut(db, precodec, codec) {
         close: function close(cb) {
             if (!this.isOpen()) {
                 process.nextTick(() => {
-                    cb(new adone.x.Database("Database is not open"));
+                    cb(new adone.exception.Database("Database is not open"));
                 });
                 return;
             }

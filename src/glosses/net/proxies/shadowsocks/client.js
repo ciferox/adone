@@ -1,6 +1,6 @@
 const {
     is,
-    x,
+    exception,
     event,
     net: { proxy: { shadowsocks } },
     util: { memcpy },
@@ -161,20 +161,20 @@ export class Client extends event.Emitter {
         iv = null
     } = {}) {
         if (!(is.string(password) || is.buffer(password)) || password.length === 0) {
-            throw new x.InvalidArgument("Password must be a non-empty string/buffer");
+            throw new exception.InvalidArgument("Password must be a non-empty string/buffer");
         }
         if (!shadowsocks.c.ciphers[cipher]) {
-            throw new x.InvalidArgument("Unknown cipher");
+            throw new exception.InvalidArgument("Unknown cipher");
         }
         if (!is.null(iv) && (!(is.string(iv) || is.buffer(iv)) || iv.lentgh === 0)) {
-            throw new x.InvalidArgument("IV must be a non-empty string/buffer");
+            throw new exception.InvalidArgument("IV must be a non-empty string/buffer");
         }
         super();
         this._cipher = cipher;
         ({ key: this._keyLength, iv: this._ivLength } = shadowsocks.c.ciphers[cipher]);
         this._cipherKey = adone.crypto.EVPBytesToKey(password, this._keyLength, this._ivLength).key;
         if (iv && iv.length !== this.ivLength) {
-            throw new x.InvalidArgument(`Invalid iv length (${iv.length} != ${this.ivLength})`);
+            throw new exception.InvalidArgument(`Invalid iv length (${iv.length} != ${this.ivLength})`);
         }
         this._iv = iv;
         this._proxyHost = proxyHost;
@@ -196,7 +196,7 @@ export class Client extends event.Emitter {
             })
             .once("close", (hadError) => {
                 if (!this._ready) {
-                    this.emit("error", new x.Exception("Connection reset by peer"));
+                    this.emit("error", new exception.Exception("Connection reset by peer"));
                     this._hadError = true;
                 }
                 this.emit("close", this._hadError || hadError);

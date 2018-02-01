@@ -1,6 +1,5 @@
 const {
-    x,
-    is,
+    exception,
     fs,
     std: {
         os,
@@ -222,16 +221,16 @@ export const mount = async (mnt, ops = {}, opts = {}) => {
             stat = await fs.stat(mnt);
         } catch (err) {
             if (err.code === "ENOENT") {
-                throw new x.IllegalState(`Mountpoint does not exist: ${mnt}`);
+                throw new exception.IllegalState(`Mountpoint does not exist: ${mnt}`);
             }
             throw err;
         }
         if (!stat.isDirectory()) {
-            throw new x.IllegalState(`Mountpoint is not a directory: ${mnt}`);
+            throw new exception.IllegalState(`Mountpoint is not a directory: ${mnt}`);
         }
         const parent = await fs.stat(path.join(mnt, ".."));
         if (parent.dev !== stat.dev) {
-            throw new x.IllegalState("Mountpoint in use");
+            throw new exception.IllegalState("Mountpoint in use");
         }
         native.mount(mnt, ops);
     } else {

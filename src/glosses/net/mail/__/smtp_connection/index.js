@@ -1,6 +1,6 @@
 const {
     is,
-    x,
+    exception,
     event,
     util,
     std: { net, tls, os, crypto, stream: { PassThrough } },
@@ -199,7 +199,7 @@ export default class SMTPConnection extends event.Emitter {
             if (this.secureConnection && !this.alreadySecured) {
                 setImmediate(() => this._upgradeConnection((err) => {
                     if (err) {
-                        this._onError(new x.Connect(`Error initiating TLS - ${err.message || err}`), "ETLS", false, "CONN");
+                        this._onError(new exception.Connect(`Error initiating TLS - ${err.message || err}`), "ETLS", false, "CONN");
                         return;
                     }
                     this._onConnect();
@@ -602,9 +602,9 @@ export default class SMTPConnection extends event.Emitter {
         }, "Connection closed");
 
         if (this.upgrading && !this._destroyed) {
-            return this._onError(new x.IllegalState("Connection closed unexpectedly"), "ETLS", false, "CONN");
+            return this._onError(new exception.IllegalState("Connection closed unexpectedly"), "ETLS", false, "CONN");
         } else if (![this._actionGreeting, this.close].includes(this._responseActions[0]) && !this._destroyed) {
-            return this._onError(new x.IllegalState("Connection closed unexpectedly"), "ECONNECTION", false, "CONN");
+            return this._onError(new exception.IllegalState("Connection closed unexpectedly"), "ECONNECTION", false, "CONN");
         }
 
         this._destroy();
@@ -625,7 +625,7 @@ export default class SMTPConnection extends event.Emitter {
      * @event
      */
     _onTimeout() {
-        return this._onError(new x.Timeout("Timeout"), "ETIMEDOUT", false, "CONN");
+        return this._onError(new exception.Timeout("Timeout"), "ETIMEDOUT", false, "CONN");
     }
 
     /**
@@ -717,7 +717,7 @@ export default class SMTPConnection extends event.Emitter {
             action.call(this, str);
             setImmediate(() => this._processResponse(true));
         } else {
-            return this._onError(new x.IllegalState("Unexpected Response"), "EPROTOCOL", str, "CONN");
+            return this._onError(new exception.IllegalState("Unexpected Response"), "EPROTOCOL", str, "CONN");
         }
     }
 
@@ -857,7 +857,7 @@ export default class SMTPConnection extends event.Emitter {
         }
 
         if (ret && !["FULL", "HDRS"].includes(ret)) {
-            throw new x.IllegalState(`ret: ${JSON.stringify(ret)}`);
+            throw new exception.IllegalState(`ret: ${JSON.stringify(ret)}`);
         }
 
         const envid = (params.envid || params.id || "").toString() || null;
@@ -957,7 +957,7 @@ export default class SMTPConnection extends event.Emitter {
         clearTimeout(this._greetingTimeout);
 
         if (str.substr(0, 3) !== "220") {
-            this._onError(new x.Exception(`Invalid greeting from server:\n${str}`), "EPROTOCOL", str, "CONN");
+            this._onError(new exception.Exception(`Invalid greeting from server:\n${str}`), "EPROTOCOL", str, "CONN");
             return;
         }
 
@@ -978,7 +978,7 @@ export default class SMTPConnection extends event.Emitter {
      */
     _actionLHLO(str) {
         if (str.charAt(0) !== "2") {
-            this._onError(new x.Exception(`Invalid response for LHLO:\n${str}`), "EPROTOCOL", str, "LHLO");
+            this._onError(new exception.Exception(`Invalid response for LHLO:\n${str}`), "EPROTOCOL", str, "LHLO");
             return;
         }
 
@@ -997,13 +997,13 @@ export default class SMTPConnection extends event.Emitter {
         let match;
 
         if (str.substr(0, 3) === "421") {
-            this._onError(new x.Exception(`Server terminates connection:\n${str}`), "ECONNECTION", str, "EHLO");
+            this._onError(new exception.Exception(`Server terminates connection:\n${str}`), "ECONNECTION", str, "EHLO");
             return;
         }
 
         if (str.charAt(0) !== "2") {
             if (this.options.requireTLS) {
-                this._onError(new x.Exception(`EHLO failed but HELO does not support required STARTTLS:\n${str}`), "ECONNECTION", str, "EHLO");
+                this._onError(new exception.Exception(`EHLO failed but HELO does not support required STARTTLS:\n${str}`), "ECONNECTION", str, "EHLO");
                 return;
             }
 
@@ -1077,7 +1077,7 @@ export default class SMTPConnection extends event.Emitter {
      */
     _actionHELO(str) {
         if (str.charAt(0) !== "2") {
-            this._onError(new x.Exception(`Invalid response for EHLO/HELO:\n${str}`), "EPROTOCOL", str, "HELO");
+            this._onError(new exception.Exception(`Invalid response for EHLO/HELO:\n${str}`), "EPROTOCOL", str, "HELO");
             return;
         }
 
@@ -1099,13 +1099,13 @@ export default class SMTPConnection extends event.Emitter {
                 }, "Failed STARTTLS upgrade, continuing unencrypted");
                 return this.emit("connect");
             }
-            this._onError(new x.Exception("Error upgrading connection with STARTTLS"), "ETLS", str, "STARTTLS");
+            this._onError(new exception.Exception("Error upgrading connection with STARTTLS"), "ETLS", str, "STARTTLS");
             return;
         }
 
         this._upgradeConnection((err, secured) => {
             if (err) {
-                this._onError(new x.Exception(`Error initiating TLS - ${err.message || err}`), "ETLS", false, "STARTTLS");
+                this._onError(new exception.Exception(`Error initiating TLS - ${err.message || err}`), "ETLS", false, "STARTTLS");
                 return;
             }
 

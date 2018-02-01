@@ -1,4 +1,4 @@
-const { is, collection, x } = adone;
+const { is, collection, exception } = adone;
 
 class _AVLTree extends collection.BinarySearchTree {
     balanceFactor() {
@@ -13,20 +13,20 @@ class _AVLTree extends collection.BinarySearchTree {
         }
 
         if (this.left && is.undefined(this.left.height)) {
-            throw new x.IllegalState(`Undefined height for node ${this.left.key}`);
+            throw new exception.IllegalState(`Undefined height for node ${this.left.key}`);
         }
         if (this.right && is.undefined(this.right.height)) {
-            throw new x.IllegalState(`Undefined height for node ${this.right.key}`);
+            throw new exception.IllegalState(`Undefined height for node ${this.right.key}`);
         }
         if (is.undefined(this.height)) {
-            throw new x.IllegalState(`Undefined height for node ${this.key}`);
+            throw new exception.IllegalState(`Undefined height for node ${this.key}`);
         }
 
         const leftH = this.left ? this.left.height : 0;
         const rightH = this.right ? this.right.height : 0;
 
         if (this.height !== 1 + Math.max(leftH, rightH)) {
-            throw new x.IllegalState(`Height constraint failed for node ${this.key}`);
+            throw new exception.IllegalState(`Height constraint failed for node ${this.key}`);
         }
         if (this.left) {
             this.left.checkHeightCorrect();
@@ -38,7 +38,7 @@ class _AVLTree extends collection.BinarySearchTree {
 
     checkBalanceFactors() {
         if (Math.abs(this.balanceFactor()) > 1) {
-            throw new x.IllegalState(`Tree is unbalanced at node ${this.key}`);
+            throw new exception.IllegalState(`Tree is unbalanced at node ${this.key}`);
         }
 
         if (this.left) {
@@ -201,7 +201,7 @@ class _AVLTree extends collection.BinarySearchTree {
             // Same key: no change in the tree structure
             if (currentNode._compareKeys(currentNode.key, key) === 0) {
                 if (currentNode._unique) {
-                    const err = new x.IllegalState(`Can't insert key ${key}, it violates the unique constraint`);
+                    const err = new exception.IllegalState(`Can't insert key ${key}, it violates the unique constraint`);
                     err.key = key;
                     err.errorType = "uniqueViolated";
                     throw err;

@@ -323,7 +323,7 @@ describe("fast", "transform", "notify", () => {
             });
 
             fast.src(srcPath).through(() => {
-                throw new adone.x.Exception(testMessage);
+                throw new adone.exception.Exception(testMessage);
             }).on("error", onError).resume();
         });
 
@@ -345,7 +345,7 @@ describe("fast", "transform", "notify", () => {
             });
 
             new Stream([getFile("1.txt")]).through(() => {
-                throw new adone.x.Exception("test");
+                throw new adone.exception.Exception("test");
             }).on("error", onError).resume();
         });
     });

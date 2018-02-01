@@ -1,5 +1,5 @@
 describe("util", () => {
-    const { util, is, x } = adone;
+    const { util, is, exception } = adone;
 
     describe("arrify", () => {
         it("no args", () => {
@@ -567,7 +567,7 @@ describe("util", () => {
                 for (const i of zip({})) {  // eslint-disable-line
 
                 }
-            }).to.throw(x.InvalidArgument, "Only iterables are supported");
+            }).to.throw(exception.InvalidArgument, "Only iterables are supported");
         });
 
         it("should correctly handle an empty array", () => {

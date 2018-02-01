@@ -23,7 +23,7 @@ export default class RealmManager extends task.Manager {
         const HandlerClass = this.typeHandler[typeName];
 
         if (!is.class(HandlerClass)) {
-            throw new adone.x.NotSupported(`Unsupported type: ${typeName}`);
+            throw new adone.exception.NotSupported(`Unsupported type: ${typeName}`);
         }
 
         return new HandlerClass(this);
@@ -40,7 +40,7 @@ export default class RealmManager extends task.Manager {
     async install(options) {
         let observer = null;
         if (!is.plainObject(options) || !is.string(options.name)) {
-            throw new adone.x.InvalidArgument("Install options is not valid");
+            throw new adone.exception.InvalidArgument("Install options is not valid");
         }
         await this.lock();
         observer = await this.run("install", options);

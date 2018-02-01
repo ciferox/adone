@@ -1,5 +1,5 @@
 const {
-    x,
+    exception,
     util
 } = adone;
 
@@ -38,7 +38,7 @@ brackets.match = (arr, pattern, options) => {
 
     if (res.length === 0) {
         if (opts.failglob === true) {
-            throw new x.IllegalState(`no matches found for "${pattern}"`);
+            throw new exception.IllegalState(`no matches found for "${pattern}"`);
         }
 
         if (opts.nonull === true || opts.nullglob === true) {

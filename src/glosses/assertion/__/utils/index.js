@@ -25,7 +25,7 @@ const util = lazify({
     isProxyEnabled: "./is_proxy_enabled",
     getActual: "./get_actual",
     getProperties: "./get_properties",
-    type: () => adone.util.typeOf,
+    type: () => adone.meta.typeOf,
     eql: () => adone.is.deepEqual,
     eqlArray: () => adone.is.equalArrays,
     getPathInfo: () => util.pathval.getPathInfo,

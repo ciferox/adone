@@ -1,6 +1,6 @@
 const {
     is,
-    x,
+    exception,
     util,
     event,
     database: { mysql }
@@ -38,7 +38,7 @@ class PoolNamespace {
         const clusterNode = this._getClusterNode();
 
         if (is.null(clusterNode)) {
-            return cb(new x.NotExists("Pool does Not exists."));
+            return cb(new exception.NotExists("Pool does Not exists."));
         }
 
         return this._cluster._getConnection(clusterNode, (err, connection) => {

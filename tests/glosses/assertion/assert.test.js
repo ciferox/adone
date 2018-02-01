@@ -1636,8 +1636,8 @@ describe("assertion", "assert", () => {
         expect(e.message).to.be.equal("123");
 
         await assert.throws(async () => {
-            throw new adone.x.Timeout("timeout exceeded");
-        }, adone.x.Timeout, /exceeded/);
+            throw new adone.exception.Timeout("timeout exceeded");
+        }, adone.exception.Timeout, /exceeded/);
     });
 
     it("doesNotThrow", () => {

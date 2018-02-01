@@ -1,4 +1,4 @@
-const { is, x } = adone;
+const { is, exception } = adone;
 
 const TWO_PWR_16_DBL = 1 << 16;
 const TWO_PWR_24_DBL = 1 << 24;
@@ -59,7 +59,7 @@ export default class Long {
      */
     toString(radix = 10) {
         if (radix < 2 || radix > 36) {
-            throw new x.InvalidArgument("radix is invalid");
+            throw new exception.InvalidArgument("radix is invalid");
         }
         if (this.isZero()) {
             return "0";
@@ -442,7 +442,7 @@ export default class Long {
             divisor = this.constructor.fromValue(divisor);
         }
         if (divisor.isZero()) {
-            throw new x.IllegalState("division by zero");
+            throw new exception.IllegalState("division by zero");
         }
         if (this.isZero()) {
             return this.unsigned ? this.constructor.UZERO : this.constructor.ZERO;
@@ -821,7 +821,7 @@ export default class Long {
      */
     static fromString(str, unsigned, radix = 10) {
         if (str.length === 0) {
-            throw new x.InvalidArgument("empty string");
+            throw new exception.InvalidArgument("empty string");
         }
         if (str === "NaN" || str === "Infinity" || str === "+Infinity" || str === "-Infinity") {
             return this.ZERO;
@@ -834,12 +834,12 @@ export default class Long {
             unsigned = Boolean(unsigned);
         }
         if (radix < 2 || radix > 36) {
-            throw new x.InvalidArgument("radix is invalid");
+            throw new exception.InvalidArgument("radix is invalid");
         }
 
         const p = str.indexOf("-");
         if (p > 0) {
-            throw new x.InvalidArgument("interior hyphen");
+            throw new exception.InvalidArgument("interior hyphen");
         }
         if (p === 0) {
             return this.fromString(str.substring(1), unsigned, radix).negate();

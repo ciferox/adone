@@ -4,7 +4,7 @@ const {
     project: { Manager },
     std,
     text,
-    x,
+    exception,
     util
 } = adone;
 
@@ -51,7 +51,7 @@ describe("project", function () {
             const err = await assert.throws(async () => manager.createProject({
                 name: "test1"
             }));
-            assert.instanceOf(err, x.Exists);
+            assert.instanceOf(err, exception.Exists);
         });
 
         it("should have thrown if name of project is not specified", async () => {
@@ -61,7 +61,7 @@ describe("project", function () {
             const err = await assert.throws(async () => manager.createProject({
                 description: "test1"
             }));
-            assert.instanceOf(err, x.InvalidArgument);
+            assert.instanceOf(err, exception.InvalidArgument);
         });
 
         const fileTypes = [
@@ -137,7 +137,7 @@ describe("project", function () {
                             type: type.name,
                             cwd: projectPath
                         }));
-                        assert.instanceOf(err, adone.x.NotValid);
+                        assert.instanceOf(err, adone.exception.NotValid);
                     } else {
                         await manager.createFile({
                             type: type.name,
@@ -166,7 +166,7 @@ describe("project", function () {
                         name,
                         cwd: FIXTURES_PATH
                     }));
-                    assert.instanceOf(err, adone.x.Exists);
+                    assert.instanceOf(err, adone.exception.Exists);
                 });
 
                 it("should not throw is file exists and flag 'rewriteFile=true'", async () => {

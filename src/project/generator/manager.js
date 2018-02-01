@@ -69,13 +69,13 @@ export default class ProjectGenerator extends task.Manager {
 
     async _checkAndCreateProject(input, context) {
         if (!is.string(input.name)) {
-            throw new adone.x.InvalidArgument("Invalid name of project");
+            throw new adone.exception.InvalidArgument("Invalid name of project");
         }
 
         if (await fs.exists(input.cwd)) {
             const files = await fs.readdir(input.cwd);
             if (files.length > 0) {
-                throw new adone.x.Exists(`Path '${input.cwd}' exists and is not empty`);
+                throw new adone.exception.Exists(`Path '${input.cwd}' exists and is not empty`);
             }
         } else {
             await fs.mkdirp(input.cwd);

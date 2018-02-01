@@ -1,5 +1,5 @@
 const {
-    x
+    exception
 } = adone;
 
 const __ = adone.lazify({
@@ -34,5 +34,5 @@ export const decode = (buffer) => {
         return pkt;
     }
 
-    throw new x.NotValid("Invalid packet");
+    throw new exception.NotValid("Invalid packet");
 };

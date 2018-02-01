@@ -1,5 +1,5 @@
 const {
-    x,
+    exception,
     std: {
         stream: { Transform }
     }
@@ -16,7 +16,7 @@ export default class AssertByteCountStream extends Transform {
         this.actualByteCount += chunk.length;
         if (this.actualByteCount > this.expectedByteCount) {
             const msg = `too many bytes in the stream. expected ${this.expectedByteCount}. got at least ${this.actualByteCount}`;
-            return cb(new x.IllegalState(msg));
+            return cb(new exception.IllegalState(msg));
         }
         cb(null, chunk);
     }
@@ -24,7 +24,7 @@ export default class AssertByteCountStream extends Transform {
     _flush(cb) {
         if (this.actualByteCount < this.expectedByteCount) {
             const msg = `not enough bytes in the stream. expected ${this.expectedByteCount}. got only ${this.actualByteCount}`;
-            return cb(new x.IllegalState(msg));
+            return cb(new exception.IllegalState(msg));
         }
         cb();
     }

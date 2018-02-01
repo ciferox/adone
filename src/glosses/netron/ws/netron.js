@@ -1,13 +1,13 @@
 const {
     is,
-    x,
+    exception,
     netron: { DEFAULT_PORT, ACTION, PEER_STATUS, GenesisNetron, ws: { Peer } }
 } = adone;
 
 export default class Netron extends GenesisNetron {
     getDefinitionByName(ctxId, uid = null) {
         if (is.nil(uid)) {
-            throw new x.NotSupported("local contexts not supported");
+            throw new exception.NotSupported("local contexts not supported");
         } else {
             return this.getPeer(uid).getDefinitionByName(ctxId);
         }
@@ -15,7 +15,7 @@ export default class Netron extends GenesisNetron {
 
     getInterfaceByName(ctxId, uid = null) {
         if (is.nil(uid)) {
-            throw new x.NotSupported("local contexts not supported");
+            throw new exception.NotSupported("local contexts not supported");
         } else {
             return this.getPeer(uid).getInterfaceByName(ctxId);
         }
