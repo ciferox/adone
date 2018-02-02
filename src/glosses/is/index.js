@@ -123,6 +123,9 @@ export const numeral = (value) => {
     return finite(value);
 };
 
+export const emitter = (obj ) => adone.tag.has(obj, "EMITTER");
+export const asyncEmitter = (obj ) => adone.tag.has(obj, "ASYNC_EMITTER");
+
 export const long = (obj) => adone.tag.has(obj, "LONG");
 export const bigNumber = (obj) => adone.tag.has(obj, "BIGNUMBER");
 

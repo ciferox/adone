@@ -3,6 +3,10 @@ const {
 } = adone;
 
 describe("event", "Emitter", () => {
+    it("is.emitter() should return true", () => {
+        assert.true(adone.is.emitter(new Emitter()));
+    });
+
     describe("addListeners", () => {
         it("should add and call an \"on\" listener", () => {
             const ee = new Emitter();

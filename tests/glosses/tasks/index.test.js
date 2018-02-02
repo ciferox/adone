@@ -79,11 +79,27 @@ describe("task", () => {
         }
     }
 
+    class SimpleTask extends task.Task {
+        constructor() {
+            super();
+            this.value = 0;
+        }
+
+        async run(value, timeout) {
+            this.value++;
+            if (is.number(timeout)) {
+                await adone.promise.delay(timeout);
+            }
+            return value;
+        }
+    }
+
     beforeEach(() => {
         manager = new task.Manager();
     });
 
     it("construct manager", () => {
+        assert.true(is.taskManager(manager));
         assert.lengthOf(manager.getTaskNames(), 0);
     });
 
@@ -125,17 +141,21 @@ describe("task", () => {
     });
 
     it("run task", async () => {
-        class TaskA extends task.Task {
-            run(version) {
-                return `adone ${version}`;
-            }
-        }
-
-        await manager.addTask("a", TaskA);
+        await manager.addTask("a", SimpleTask);
         const observer = await manager.run("a", adone.package.version);
+        assert.true(adone.is.taskObserver(observer));
         assert.true(observer.isCompleted());
-        assert.equal(await observer.result, `adone ${adone.package.version}`);
+        assert.equal(await observer.result, adone.package.version);
         assert.true(observer.isCompleted());
+    });
+
+    it("regular task is stateless", async () => {
+        await manager.addTask("a", SimpleTask);
+        const observer1 = await manager.run("a", adone.package.version);
+        const observer2 = await manager.run("a", adone.package.version);
+        await Promise.all([observer1.result, observer2.result]);
+        assert.strictEqual(observer1.task.value, 1);
+        assert.strictEqual(observer1.task.value, observer1.task.value);
     });
 
     it("observer should contain correct error info for sync task", async () => {
@@ -203,16 +223,10 @@ describe("task", () => {
     });
 
     it("run task once", async () => {
-        class TaskA extends task.Task {
-            run(version) {
-                return `adone ${version}`;
-            }
-        }
-
-        const observer = await manager.runOnce(TaskA, adone.package.version);
+        const observer = await manager.runOnce(SimpleTask, adone.package.version);
         assert.lengthOf(manager.getTaskNames(), 0);
         assert.true(observer.isCompleted());
-        assert.equal(await observer.result, `adone ${adone.package.version}`);
+        assert.equal(await observer.result, adone.package.version);
         assert.true(observer.isCompleted());
     });
 
@@ -225,11 +239,155 @@ describe("task", () => {
         }
 
         const observer = await manager.runOnce(TaskA, adone.package.version);
-        assert.lengthOf(manager.getTaskNames(), 1);
+        assert.lengthOf(manager.getTaskNames(), 0);
         assert.true(observer.isRunning());
         assert.equal(await observer.result, `adone ${adone.package.version}`);
         assert.true(observer.isCompleted());
+    });
+
+    it("run deleted but still running task should have thrown", async () => {
+        class TaskA extends task.Task {
+            async run(version) {
+                await promise.delay(100);
+                return `adone ${version}`;
+            }
+        }
+
+        await manager.addTask("a", TaskA);
+        const observer = await manager.run("a", adone.package.version);
+        await manager.deleteTask("a");
+        await assert.throws(async () => manager.run("a", adone.package.version), adone.exception.NotExists);
+
         assert.lengthOf(manager.getTaskNames(), 0);
+        assert.true(observer.isRunning());
+        assert.equal(await observer.result, `adone ${adone.package.version}`);
+        assert.true(observer.isCompleted());
+    });
+
+    describe("singleton tasks", () => {
+        it("singleton task is stateful", async () => {
+            await manager.addTask("a", SimpleTask, {
+                singleton: true
+            });
+            const observer1 = await manager.run("a", adone.package.version);
+            const observer2 = await manager.run("a", adone.package.version);
+            await Promise.all([observer1.result, observer2.result]);
+            assert.strictEqual(observer1.task.value, 2);
+            assert.deepEqual(observer1.task, observer1.task);
+        });
+
+        it("deletion of singleton task should be performed immediately", async () => {
+            await manager.addTask("a", SimpleTask, {
+                singleton: true
+            });
+            const observer = await manager.run("a", adone.package.version, 100);
+            assert.lengthOf(manager.getTaskNames(), 1);
+            manager.deleteTask("a");
+            assert.lengthOf(manager.getTaskNames(), 0);
+            await observer.result;
+        });
+    });
+
+    describe("concurrency", () => {
+        let counter;
+        let inc;
+
+        class TaskA extends task.Task {
+            async run(maxVal, timeout, check) {
+                counter++;
+                inc++;
+                if (maxVal) {
+                    assert.atMost(inc, maxVal);
+                }
+                if (check) {
+                    assert.equal(counter, inc);
+                }
+                await promise.delay(timeout);
+                inc--;
+                return inc;
+            }
+        }
+
+        class SingletonTask extends task.Task {
+            constructor() {
+                super();
+                this.inc = 0;
+            }
+
+            async run(maxVal, timeout) {
+                this.inc++;
+                if (maxVal) {
+                    assert.atMost(this.inc, maxVal);
+                }
+                await promise.delay(timeout);
+                this.inc--;
+                return this.inc;
+            }
+        }
+
+        beforeEach(() => {
+            inc = 0;
+            counter = 0;
+        });
+
+        it("run 10 task instances without cuncurrency", async () => {
+            await manager.addTask("a", TaskA);
+
+            const promises = [];
+            for (let i = 0; i < 10; i++) {
+                const observer = await manager.run("a", 0, 30, true); // eslint-disable-line
+                promises.push(observer.result);
+            }
+
+            await Promise.all(promises);
+        });
+
+        it("concurrency should involve tasks but not creation of observers", async () => {
+            await manager.addTask("a", TaskA, {
+                concurrency: 10
+            });
+
+            const observers = [];
+            const results = [];
+            for (let i = 0; i < 10; i++) {
+                const observer = await manager.run("a", 0, 30, true); // eslint-disable-line
+                observers.push(observer);
+                results.push(observer.result);
+            }
+
+            assert.atLeast(counter, 10);
+            await Promise.all(results);
+            assert.strictEqual(counter, 10);
+        });
+
+        it("run maximum 3 task instances at a time", async () => {
+            await manager.addTask("a", TaskA, {
+                concurrency: 3
+            });
+
+            const promises = [];
+            for (let i = 0; i < 100; i++) {
+                const observer = await manager.run("a", 3, 50, false); // eslint-disable-line
+                promises.push(observer.result);
+            }
+
+            await Promise.all(promises);
+        });
+
+        it("run singleton task in parallel", async () => {
+            await manager.addTask("a", SingletonTask, {
+                concurrency: 3,
+                singleton: true
+            });
+
+            const promises = [];
+            for (let i = 0; i < 100; i++) {
+                const observer = await manager.run("a", 3, 50); // eslint-disable-line
+                promises.push(observer.result);
+            }
+
+            await Promise.all(promises);
+        });
     });
 
     describe("suspend/resume/cancel", () => {

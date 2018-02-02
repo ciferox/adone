@@ -112,3 +112,4 @@ export default class AsyncEmitter extends adone.event.Emitter {
         }
     }
 }
+adone.tag.add(AsyncEmitter, "ASYNC_EMITTER");

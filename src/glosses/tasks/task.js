@@ -186,3 +186,4 @@ export class TaskObserver {
         return this.state === STATE.SUSPENDED;
     }
 }
+adone.tag.add(TaskObserver, "TASK_OBSERVER");

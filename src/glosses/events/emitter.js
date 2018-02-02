@@ -503,5 +503,5 @@ export default class Emitter {
         };
     }
 }
-
 Emitter.prototype.on = Emitter.prototype.addListener;
+adone.tag.add(Emitter, "EMITTER");

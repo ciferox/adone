@@ -37,9 +37,10 @@ export default class TaskManager extends adone.event.AsyncEmitter {
      */
     setTask(name, task, options) {
         this._checkTask(task);
-        const taskInfo = this._initTaskInfo(Object.assign({
+        const taskInfo = this._initTaskInfo({
+            ...options,
             name
-        }, options));
+        });
 
         let TaskClass;
         if (is.class(task)) {
@@ -52,7 +53,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
             };
         }
 
-        taskInfo.meta.Class = TaskClass;
+        taskInfo.Class = TaskClass;
         return this._installTask(taskInfo);
     }
 
@@ -72,7 +73,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
      */
     getTaskClass(name) {
         const taskInfo = this._getTaskInfo(name);
-        return taskInfo.meta.Class;
+        return taskInfo.Class;
     }
 
     /**
@@ -99,7 +100,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
      */
     deleteTask(name) {
         const taskInfo = this._getTaskInfo(name);
-        if (taskInfo.instances.size > 0) {
+        if (!is.undefined(taskInfo.runners) && taskInfo.runners.size > 0) {
             taskInfo.zombi = true;
         } else {
             return this._uninstallTask(taskInfo);
@@ -110,7 +111,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
      * Returns list of task names.
      */
     getTaskNames() {
-        return [...this._tasks.keys()];
+        return [...this._tasks.entries()].filter((entry) => !entry[1].zombi).map((entry) => entry[0]);
     }
 
     /**
@@ -174,26 +175,33 @@ export default class TaskManager extends adone.event.AsyncEmitter {
 
     async _run(context, name, ...args) {
         const taskInfo = this._getTaskInfo(name);
+        let taskObserver;
 
-        if (taskInfo.instances.size >= taskInfo.meta.concurrency) {
-            throw new exception.LimitExceeded(`Limit of running task instances is exceeded (max ${taskInfo.meta.concurrency})`);
-        }
-
-        const runTask = await this._createTaskRunner(context, taskInfo);
-        taskInfo.instances.add(runTask);
-        const taskObserver = await runTask(args);
-
-        const releaseRunner = () => {
-            taskInfo.instances.delete(runTask);
-            if (taskInfo.zombi === true && taskInfo.instances.size === 0) {
-                this._uninstallTask(taskInfo);
+        if (taskInfo.singleton) {
+            if (is.undefined(taskInfo.runner)) {
+                taskInfo.runner = await this._createTaskRunner(context, taskInfo);
             }
-        };
-
-        if (is.promise(taskObserver.result)) {
-            adone.promise.finally(taskObserver.result, releaseRunner).catch(adone.noop);
+            taskObserver = await taskInfo.runner(args);
         } else {
-            releaseRunner();
+            const runTask = await this._createTaskRunner(context, taskInfo);
+            if (is.undefined(taskInfo.runners)) {
+                taskInfo.runners = new Set();
+            }
+            taskInfo.runners.add(runTask);
+            taskObserver = await runTask(args);
+
+            const releaseRunner = () => {
+                taskInfo.runners.delete(runTask);
+                if (taskInfo.zombi === true && taskInfo.runners.size === 0) {
+                    this._uninstallTask(taskInfo);
+                }
+            };
+
+            if (is.promise(taskObserver.result)) {
+                adone.promise.finally(taskObserver.result, releaseRunner).catch(adone.noop);
+            } else {
+                releaseRunner();
+            }
         }
 
         return taskObserver;
@@ -203,10 +211,10 @@ export default class TaskManager extends adone.event.AsyncEmitter {
         return async (args) => {
             const instance = this._createTaskInstance(taskInfo);
 
-            const taskObserver = new adone.task.TaskObserver(instance, taskInfo.meta.name);
+            const taskObserver = new adone.task.TaskObserver(instance, taskInfo.name);
             taskObserver.state = adone.task.STATE.RUNNING;
             try {
-                taskObserver.result = instance.run(...args);
+                taskObserver.result = taskInfo.throttle(() => instance.run(...args));
             } catch (err) {
                 if (is.function(taskObserver.task.undo)) {
                     await taskObserver.task.undo(err);
@@ -237,28 +245,44 @@ export default class TaskManager extends adone.event.AsyncEmitter {
     }
 
     _createTaskInstance(taskInfo) {
-        const instance = new taskInfo.meta.Class();
+        if (taskInfo.singleton) {
+            if (is.undefined(taskInfo.instance)) {
+                taskInfo.instance = new taskInfo.Class();
+            }
+            return taskInfo.instance;
+        }
+        const instance = new taskInfo.Class();
         instance.manager = this;
         return instance;
     }
 
-    _initTaskInfo({ name, concurrency = Infinity, description = "" } = {}) {
-        return {
-            meta: {
-                name,
-                concurrency,
-                description
-            },
-            instances: new Set()
+    _initTaskInfo({ name, concurrency = Infinity, interval, singleton = false, description = "" } = {}) {
+        const taskInfo = {
+            name,
+            concurrency,
+            interval,
+            singleton,
+            description
         };
+
+        if (concurrency !== Infinity && concurrency > 0) {
+            taskInfo.throttle = adone.util.throttle.create({
+                concurrency,
+                interval
+            });
+        } else {
+            taskInfo.throttle = (tsk) => tsk();
+        }
+
+        return taskInfo;
     }
 
     _installTask(taskInfo) {
-        this._tasks.set(taskInfo.meta.name, taskInfo);
+        this._tasks.set(taskInfo.name, taskInfo);
     }
 
     _uninstallTask(taskInfo) {
-        this._tasks.delete(taskInfo.meta.name);
+        this._tasks.delete(taskInfo.name);
     }
 
     _checkTask(task) {
@@ -282,3 +306,4 @@ export default class TaskManager extends adone.event.AsyncEmitter {
         return taskInfo;
     }
 }
+adone.tag.add(TaskManager, "TASK_MANAGER");

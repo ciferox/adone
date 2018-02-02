@@ -3,7 +3,13 @@ const {
 } = adone;
 
 describe("AsyncEmitter", () => {
-    describe(".emitParallel", () => {
+    it("is.emitter() should return true", () => {
+        const emitter = new AsyncEmitter();
+        assert.true(adone.is.emitter(emitter));
+        assert.true(adone.is.asyncEmitter(emitter));
+    });
+    
+    describe("emitParallel()", () => {
         it("should receive the return value of listeners asynchronously", async () => {
             const emitter = new AsyncEmitter();
             emitter.on("foo", (action) => action);
@@ -62,7 +68,7 @@ describe("AsyncEmitter", () => {
         });
     });
 
-    describe(".emitSerial", () => {
+    describe("emitSerial()", () => {
         it("listener should be run serially", async () => {
             const delay = 100;
             const expectedArray = new Array(3);
@@ -112,7 +118,7 @@ describe("AsyncEmitter", () => {
         });
     });
 
-    describe(".emitReduce/.emitReduceRight", () => {
+    describe("emitReduce()/emitReduceRight()", () => {
         it("listener should be run serially using previous listener return value", async () => {
             assert.deepEqual((await (new AsyncEmitter().emitReduce("noop"))), []);
             assert.deepEqual((await (new AsyncEmitter().emitReduce("noop", 1))), [1]);
@@ -163,7 +169,7 @@ describe("AsyncEmitter", () => {
         });
     });
 
-    describe(".once", () => {
+    describe("once()", () => {
         it("listeners that have been executed should be removed immediately", async () => {
             const emitter = new AsyncEmitter();
             emitter.once("foo", (action) => action);
@@ -188,7 +194,7 @@ describe("AsyncEmitter", () => {
         });
     });
 
-    describe(".subscribe", () => {
+    describe("subscribe()", () => {
         it("if executed the return value, should remove the listener", async () => {
             const emitter = new AsyncEmitter();
             const unsubcribe = emitter.subscribe("foo", (action) => action);
@@ -223,7 +229,7 @@ describe("AsyncEmitter", () => {
         });
     });
 
-    describe(".setConcurrency", () => {
+    describe("setConcurrency()", () => {
         const delay = 100;
         const delayTolerance = 10;
         const delayListener = () => new Promise((resolve) => {
@@ -277,7 +283,7 @@ describe("AsyncEmitter", () => {
     });
 
     describe("issues (regression test)", () => {
-        describe(".once", () => {
+        describe("once()", () => {
             it("#3: always the listener should be stopped at the removeListener", async () => {
                 const listener = () => 1;
                 const emitter = new AsyncEmitter();
@@ -289,7 +295,7 @@ describe("AsyncEmitter", () => {
                 assert.equal(values[0], undefined);
             });
         });
-        describe(".emitSerial", () => {
+        describe("emitSerial()", () => {
             it("#4: should not be destroying a listener for the return values", async () => {
                 const delay = 100;
                 const emitter = new AsyncEmitter();
