@@ -8,7 +8,7 @@ export const skipAdoneNs = (namespace) => namespace.substring(ADONE_PREFIX_LEN);
 export const skipGlobalNs = (namespace) => namespace.substring(GLOBAL_PREFIX_LEN);
 
 adone.lazify({
-    typeOf: "./typeof",
+    typeOf: "./type_of",
     reflect: "./reflect",
     inspect: ["./inspect", (mod) => mod.inspect],
     inspectError: ["./inspect", (mod) => mod.inspectError],
