@@ -3,7 +3,7 @@ const {
 } = adone;
 
 const localeFallback = "en";
-let locale;
+let locale = "en";
 
 export const setLocale = (loc) => {
     locale = loc;
