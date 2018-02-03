@@ -16,11 +16,16 @@ export default class AbstractPeer extends AsyncEmitter {
         this.netron = netron;
         this.interfaces = new Map();
         this.connectedTime = null;
-        this.meta = new Map();
+        this.task = {}; // task's results
 
         // this.options = Object.assign({}, options);
-        // this._defs = new Map();
-        // this._ownDefIds = []; // super netron specific
+    }
+
+    /**
+     * Disconnects peer.
+     */
+    disconnect() {
+        throw new adone.exception.NotImplemented("Method disconnect() is not implemented");
     }
 
     /**
@@ -87,16 +92,31 @@ export default class AbstractPeer extends AsyncEmitter {
         return this.set(defId, method, args);
     }
 
-    requestMeta(/*request*/) {
-        throw new adone.exception.NotImplemented("Method requestMeta() is not implemented");
+    /**
+     * Run one or more tasks on associated netron and store results in 'task' property.
+     */
+    async runTask(task) {
+        const result = await this._runTask(task);
+        Object.assign(this.task, result);
+        return result;
     }
 
-    hasContexts() {
-        throw new adone.exception.NotImplemented("Method hasContexts() is not implemented");
+    /**
+     * Returns task result or adone.null if it not exists.
+     * 
+     * @param {string} name - task name
+     */
+    getTaskResult(name) {
+        const taskObj = this.task[name];
+        return taskObj ? taskObj.result : adone.null;
     }
 
-    hasContext(/*ctxId*/) {
-        throw new adone.exception.NotImplemented("Method hasContext() is not implemented");
+    subscribe(/*eventName, handler*/) {
+        throw new adone.exception.NotImplemented("Method subscribe() is not implemented");
+    }
+
+    unsubscribe(/*eventName, handler*/) {
+        throw new adone.exception.NotImplemented("Method unsubscribe() is not implemented");
     }
 
     /**
@@ -122,6 +142,14 @@ export default class AbstractPeer extends AsyncEmitter {
      */
     detachAllContexts(/*releaseOriginated*/) {
         throw new adone.exception.NotImplemented("Method detachAllContexts() is not implemented");
+    }
+
+    hasContexts() {
+        throw new adone.exception.NotImplemented("Method hasContexts() is not implemented");
+    }
+
+    hasContext(/*ctxId*/) {
+        throw new adone.exception.NotImplemented("Method hasContext() is not implemented");
     }
 
     waitForContext(ctxId) {
@@ -160,6 +188,19 @@ export default class AbstractPeer extends AsyncEmitter {
         this.interfaces.delete(iInstance[__.I_DEFINITION_SYMBOL].id);
     }
 
+    /**
+     * Run one or more tasks on associated netron and store results in 'task' property.
+     * 
+     * This method should not be called directly.
+     * 
+     * Implementations os this method should never throw an exception.
+     * 
+     * @param {string|array|object} task - task(s) description(s)
+     */
+    _runTask(/*task*/) {
+        throw new adone.exception.NotImplemented("Method _runTask() is not implemented");
+    }
+
     _getContextDefinition(/*ctxId*/) {
         throw new adone.exception.NotImplemented("Method _getContextDefinition() is not implemented");
     }
@@ -190,39 +231,12 @@ export default class AbstractPeer extends AsyncEmitter {
     //     return this.onRemote("context detach", handler);
     // }
 
-    // // _setStatus(status) {
-    // //     if (status !== this._status) {
-    // //         if (this._status === PEER_STATUS.ONLINE && status === PEER_STATUS.OFFLINE) {
-    // //             for (const awaiter of this._responseAwaiters.values()) { // reject all the pending get requests
-    // //                 awaiter([1, new exception.NetronPeerDisconnected()]);
-    // //             }
-    // //         }
-    // //         this._status = status;
-    // //         if (status === PEER_STATUS.OFFLINE) {
-    // //             this._responseAwaiters.clear();
-    // //         } else if (status === PEER_STATUS.ONLINE) {
-    // //             this.connectedTime = new Date();
-    // //             this.netron.peers.set(this.uid, this);
-    // //         }
-    // //         this.emit("status", status);
-    // //     }
-    // // }
-
     // _updateStrongDefinitions(defs) {
     //     for (const [ctxId, def] of util.entries(defs, { all: true })) {
     //         def.ctxId = ctxId;
     //         this._ctxidDefs.set(ctxId, def);
     //     }
     //     this._updateDefinitions(defs);
-    // }
-
-    // _updateDefinitions(defs) {
-    //     for (const [, def] of util.entries(defs, { all: true })) {
-    //         if (this.netron.options.acceptTwins === false) {
-    //             delete def.twin;
-    //         }
-    //         this._defs.set(def.id, def);
-    //     }
     // }
 
     // // _removeRelatedDefinitions(proxyDef) {

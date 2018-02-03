@@ -23,7 +23,20 @@ export default class RemotePeer extends AbstractPeer {
             awaiter([1, new exception.NetronTimeout(`Response timeout ${this.netron.options.responseTimeout}ms exceeded`)]);
         });
 
+        this._remoteEvents = new Map();
+        this._remoteSubscriptions = new Map();
         this._ctxidDefs = new Map();
+        this._proxifiedContexts = new Map();
+
+        this._defs = new Map();
+        this._ownDefIds = []; // proxied contexts (used when proxyContexts feature is enabled)
+    }
+
+    /**
+     * Disconnects peer.
+     */
+    disconnect() {
+        return this.netron.disconnectPeer(this);
     }
 
     isConnected() {
@@ -101,30 +114,75 @@ export default class RemotePeer extends AbstractPeer {
         return Promise.reject(new exception.NotExists(`'${name}' not exists`));
     }
 
-    requestMeta(request) {
-        return new Promise(async (resolve, reject) => {
-            if (!(is.string(request) || is.array(request) || is.plainObject(request))) {
-                return reject(new adone.exception.NotValid("Invalid meta request (should be string, plain object or array"));
-            }
-            this.send(1, this.packetId.get(), ACTION.META, request, async (response) => {
-                if (!is.array(response)) {
-                    return reject(new adone.exception.NotValid(`Not valid response: ${adone.meta.typeOf(response)}`));
-                }
-
-                for (const res of response) {
-                    this.meta.set(res.id, adone.util.omit(res, "id"));
-                }
-                resolve(response);
+    async subscribe(eventName, handler) {
+        const handlers = this._remoteEvents.get(eventName);
+        if (is.undefined(handlers)) {
+            this._remoteEvents.set(eventName, [handler]);
+            await this.runTask({
+                task: "subscribe",
+                args: eventName
             });
+        } else {
+            handlers.push(handler);
+        }
+    }
+
+    async unsubscribe(eventName, handler) {
+        const handlers = this._remoteEvents.get(eventName);
+        if (!is.undefined(handlers)) {
+            const index = handlers.indexOf(handler);
+            if (index >= 0) {
+                handlers.splice(index, 1);
+                if (handlers.length === 0) {
+                    this._remoteEvents.delete(eventName);
+                    await this.runTask({
+                        task: "unsubscribe",
+                        args: eventName
+                    });
+                }
+            }
+        }
+    }
+
+    async attachContext(instance, ctxId = null) {
+        const config = this.getTaskResult("config");
+        if (config !== adone.null && !config.proxyContexts) {
+            throw new exception.NotSupported(`Context proxification feature is not enabled on remote netron (peer id: '${this.info.id.asBase58()}')`);
+        }
+
+        const stub = new adone.netron2.Stub(this.netron, instance);
+        if (is.null(ctxId)) {
+            ctxId = stub.reflection.getName();
+        }
+
+        if (this._proxifiedContexts.has(ctxId)) {
+            throw new exception.Exists(`Context '${ctxId}' already proxified on the peer '${this.info.id.asBase58()}' side`);
+        }
+
+        const def = stub.definition;
+        this.netron._stubs.set(def.id, stub);
+        this._proxifiedContexts.set(ctxId, def.id);
+        return this.runTask({
+            task: "proxifyContext",
+            args: [ctxId, def]
         });
     }
 
-    requestAbility() {
-        return this.requestMeta("ability");
-    }
-
-    requestContexts() {
-        return this.requestMeta("contexts");
+    async detachContext(ctxId, releaseOriginated) {
+        const config = this.getTaskResult("config");
+        if (config !== adone.null && !config.proxyContexts) {
+            throw new exception.NotSupported(`Context proxification feature is not enabled on remote netron (peer id: '${this.info.id.asBase58()}')`);
+        }
+        const defId = this._attachedContexts.get(ctxId);
+        if (is.undefined(defId)) {
+            throw new exception.NotExists(`Context '${ctxId}' not proxified on the peer '${this.info.id.asBase58()}' code`);
+        }
+        this.netron._stubs.delete(defId);
+        this._attachedContexts.delete(ctxId);
+        return this.runTask({
+            task: "deproxifyContext",
+            args: [ctxId, releaseOriginated]
+        });
     }
 
     hasContexts() {
@@ -137,6 +195,17 @@ export default class RemotePeer extends AbstractPeer {
 
     getContextNames() {
         return Array.from(this._ctxidDefs.keys());
+    }
+
+    _runTask(task) {
+        return new Promise((resolve, reject) => {
+            this.send(1, this.packetId.get(), ACTION.TASK, task, (result) => {
+                if (!is.plainObject(result)) {
+                    return reject(new adone.exception.NotValid(`Not valid result: ${adone.meta.typeOf(result)}`));
+                }
+                resolve(result);
+            });
+        });
     }
 
     _queryInterfaceByDefinition(defId) {
@@ -214,6 +283,16 @@ export default class RemotePeer extends AbstractPeer {
             );
         }
     }
+
+    _updateDefinitions(defs) {
+        for (const [, def] of adone.util.entries(defs, { all: true })) {
+            // if (this.netron.options.acceptTwins === false) {
+            //     delete def.twin;
+            // }
+            this._defs.set(def.id, def);
+        }
+    }
+
 
     _setAwaiter(id, awaiter) {
         this._responseAwaiters.set(id, awaiter);

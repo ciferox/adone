@@ -15,16 +15,19 @@ describe("AbstractPeer", () => {
 
     describe("abstract methods", () => {
         const methods = [
+            "disconnect",
             "isConnected",
             "isNetronConnected",
-            "hasContexts",
-            "hasContext",
+            "subscribe",
+            "unsubscribe",
             "attachContext",
             "detachContext",
             "detachAllContexts",
+            "hasContexts",
+            "hasContext",
             "set",
             "get",
-            "requestMeta",
+            "_runTask",
             "_getContextDefinition",
             "_queryInterfaceByDefinition"
         ];

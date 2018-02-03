@@ -2,15 +2,26 @@ const {
     is,
     exception,
     util,
-    event,
     net: { p2p: { PeerInfo } },
     netron2: { Reference, Definitions, Reflection, Stub, FastUniqueId, OwnPeer, ACTION },
     tag
 } = adone;
 
-const USEFUL_META_REQUEST = ["ability", "contexts"];
+const CONNECT_TASKS = ["config", "contextDefs"];
 
 const __ = adone.private(adone.netron2);
+
+const normalizeError = (err) => {
+    let normErr;
+    if (is.knownError(err)) {
+        normErr = err;
+    } else {
+        normErr = new Error(err.message);
+        normErr.stack = err.stack;
+    }
+
+    return normErr;
+};
 
 /**
  * Class represented netron interface.
@@ -31,7 +42,7 @@ class NetworkInfo {
     }
 }
 
-export default class Netron extends event.AsyncEmitter {
+export default class Netron extends adone.task.Manager {
     constructor(peerInfo, options) {
         super();
 
@@ -53,8 +64,7 @@ export default class Netron extends event.AsyncEmitter {
         this.contexts = new Map();
         this.peers = new Map();
         this.networks = new Map();
-        // this._peerEvents = new Map();
-        // this._remoteEvents = new Map();
+        this._peerEvents = new Map();
         // this._remoteListeners = new Map();
         // this._contextEvents = new Map();
 
@@ -62,12 +72,6 @@ export default class Netron extends event.AsyncEmitter {
         this._peerStubs = new Map();
         this._defUniqueId = this.options.uniqueId || new FastUniqueId();
         // this._localTwins = new Map();
-
-        this._metaHandlers = new Map();
-        // Default metahandlers
-        for (const [id, handler] of Object.entries(adone.netron2.metaHandler)) {
-            this.setMetaHandler(id, handler);
-        }
 
         this.setMaxListeners(Infinity);
     }
@@ -132,10 +136,10 @@ export default class Netron extends event.AsyncEmitter {
      * 
      * @param {string} netId - network core name
      * @param {options.onlyRaw} - if set to true, only raw connection will be initiated
-     * @param {options.metaRequest} - meta requests that will be executed after successful connection to netron protocol
+     * @param {options.tasks} - tasks that should be executed on remote side after successful connection to netron protocol
      * @param {PeerInfo|string|Peer} peer - instance of RemotePeer
      */
-    async connect(netId, peer, { onlyRaw = false, metaRequest = USEFUL_META_REQUEST } = {}) {
+    async connect(netId, peer, { onlyRaw = false, tasks = CONNECT_TASKS } = {}) {
         try {
             return this.getPeer(peer);
         } catch (err) {
@@ -152,8 +156,8 @@ export default class Netron extends event.AsyncEmitter {
                 const netronConn = await netCore.connect(peer, adone.netron2.NETRON_PROTOCOL);
                 await remotePeer._setConnInfo(undefined, netronConn);
 
-                if (!is.nil(metaRequest)) {
-                    await remotePeer.requestMeta(metaRequest);
+                if (!is.nil(tasks)) {
+                    await remotePeer.runTask(tasks);
                 }
             } catch (err) {
                 // Nothing to do...
@@ -171,11 +175,17 @@ export default class Netron extends event.AsyncEmitter {
      */
     async disconnect(netId) {
         if (is.nil(netId)) {
-
+            //
         }
         // for (const peer of this.peers.values()) {
         //     await peer.disconnect();
         // }
+    }
+
+    async disconnectPeer(peerId) {
+        const peer = this.getPeer(peerId);
+        await peer.netCore.disconnect(peer.info);
+        return this._peerDisconnected(peer);
     }
 
     /**
@@ -220,7 +230,7 @@ export default class Netron extends event.AsyncEmitter {
     _peerConnected(peer) {
         this.peers.set(peer.info.id.asBase58(), peer);
         peer.connectedTime = new Date();
-        this.emit("peer:connect", peer);
+        return this._emitPeerEvent("peer:connect", peer);
     }
 
     async _peerDisconnected(peer) {
@@ -247,8 +257,8 @@ export default class Netron extends event.AsyncEmitter {
 
         peer.interfaces.clear();
 
-        // await this._emitPeerEvent("peer offline", peer);
-        // this._peerEvents.delete(peer);
+        await this._emitPeerEvent("peer:disconnect", peer);
+        this._peerEvents.delete(peer.info.id.asBase58());
     }
 
     /**
@@ -270,17 +280,6 @@ export default class Netron extends event.AsyncEmitter {
             await netCore.stop();
         }
     }
-
-    // disconnect(uid) {
-    //     if (is.nil(uid)) {
-    //         const promises = [];
-    //         for (const uid of this.peers.keys()) {
-    //             promises.push(this.disconnect(uid));
-    //         }
-    //         return Promise.all(promises);
-    //     }
-    //     return this.getPeer(uid).disconnect();
-    // }
 
     refContext(peerInfo, obj) {
         const peerId = peerInfo.id.asBase58();
@@ -322,6 +321,13 @@ export default class Netron extends event.AsyncEmitter {
     //     }
     // }
 
+    /**
+     * Attaches context to associated peer.
+     * 
+     * @param instance - context instance
+     * @param ctxId - context identifier, if not specified, the class name will be used
+     * @returns 
+     */
     attachContext(instance, ctxId = null) {
         // Call this first because it validate instance.
         const r = Reflection.from(instance);
@@ -336,6 +342,9 @@ export default class Netron extends event.AsyncEmitter {
         return this._attachContext(ctxId, new Stub(this, r));
     }
 
+    /**
+     * Detaches before attached context with specified name.
+     */
     detachContext(ctxId, releaseOriginated = true) {
         const stub = this.contexts.get(ctxId);
         if (is.undefined(stub)) {
@@ -350,51 +359,14 @@ export default class Netron extends event.AsyncEmitter {
         return defId;
     }
 
+    /**
+     * Detaches all contexts.
+     */
     detachAllContexts(releaseOriginated = true) {
         for (const ctxId of this.contexts.keys()) {
             this.detachContext(ctxId, releaseOriginated);
         }
     }
-
-    // async attachContextRemote(uid, instance, ctxId = null) {
-    //     const peer = this.getPeer(uid);
-    //     if (!peer.isSuper) {
-    //         throw new exception.Unknown(`Peer '${uid}' is not a super-netron`);
-    //     }
-    //     const r = Reflection.from(instance);
-    //     if (is.null(ctxId)) {
-    //         ctxId = instance.__proto__.constructor.name;
-    //     }
-    //     const defId = peer._attachedContexts.get(ctxId);
-    //     if (!is.undefined(defId)) {
-    //         throw new exception.Exists(`Context '${ctxId}' already attached on the peer '${uid}' side`);
-    //     }
-
-    //     const stub = new Stub(this, instance, r);
-    //     const def = stub.definition;
-    //     this._stubs.set(def.id, stub);
-    //     peer._attachedContexts.set(ctxId, def.id);
-    //     return new Promise((resolve, reject) => {
-    //         this.send(peer, 1, peer.streamId.next(), 1, ACTION.CONTEXT_ATTACH, { id: ctxId, def }, resolve).catch(reject);
-    //     });
-    // }
-
-    // async detachContextRemote(uid, ctxId) {
-    //     const peer = this.getPeer(uid);
-    //     if (!peer.isSuper) {
-    //         throw new exception.Unknown(`Peer '${uid}' is not a super-netron`);
-    //     }
-    //     const defId = peer._attachedContexts.get(ctxId);
-    //     if (is.undefined(defId)) {
-    //         throw new exception.NotExists(`Context '${ctxId}' not attached on the peer '${uid}' code`);
-    //     }
-    //     this._stubs.delete(defId);
-    //     peer._attachedContexts.delete(ctxId);
-    //     return new Promise((resolve, reject) => {
-    //         this.send(peer, 1, peer.streamId.next(), 1, ACTION.CONTEXT_DETACH, ctxId, resolve).catch(reject);
-    //     });
-    // }
-
 
     hasContexts() {
         return this.contexts.size > 0;
@@ -507,64 +479,6 @@ export default class Netron extends event.AsyncEmitter {
         return this.getPeer(iInstance[__.I_PEERID_SYMBOL]);
     }
 
-    // async onRemote(uid, eventName, handler) {
-    //     if (is.nil(uid)) {
-    //         const promises = [];
-    //         for (const uid of this.peers.keys()) {
-    //             promises.push(this.onRemote(uid, eventName, handler));
-    //         }
-    //         return Promise.all(promises);
-    //     }
-    //     const peer = this.getPeer(uid);
-    //     let events = this._remoteEvents.get(uid);
-    //     if (is.undefined(events)) {
-    //         events = new Map();
-    //         events.set(eventName, [handler]);
-    //         this._remoteEvents.set(uid, events);
-    //         await (new Promise((resolve, reject) => {
-    //             this.send(peer, 1, peer.streamId.next(), 1, ACTION.EVENT_ON, eventName, resolve).catch(reject);
-    //         }));
-    //     } else {
-    //         const handlers = events.get(eventName);
-    //         if (is.undefined(handlers)) {
-    //             events.set(eventName, [handler]);
-    //             await (new Promise((resolve, reject) => {
-    //                 this.send(peer, 1, peer.streamId.next(), 1, ACTION.EVENT_ON, eventName, resolve).catch(reject);
-    //             }));
-    //         } else {
-    //             handlers.push(handler);
-    //         }
-    //     }
-
-    // }
-
-    // async offRemote(uid, eventName, listener) {
-    //     if (is.nil(uid)) {
-    //         const promises = [];
-    //         for (const uid of this.peers.keys()) {
-    //             promises.push(this.offRemote(uid, eventName, listener));
-    //         }
-    //         return Promise.all(promises);
-    //     }
-    //     const peer = this.getPeer(uid);
-    //     const events = this._remoteEvents.get(uid);
-    //     if (!is.undefined(events)) {
-    //         const listeners = events.get(eventName);
-    //         if (!is.undefined(listeners)) {
-    //             const index = listeners.indexOf(listener);
-    //             if (index >= 0) {
-    //                 listeners.splice(index, 1);
-    //                 if (listeners.length === 0) {
-    //                     events.delete(eventName);
-    //                     await (new Promise((resolve, reject) => {
-    //                         this.send(peer, 1, peer.streamId.next(), 1, ACTION.EVENT_OFF, eventName, resolve).catch(reject);
-    //                     }));
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
-
     // _onReceiveInitial(peer, data) {
     //     peer.isSuper = Boolean(data.isSuper);
     //     if (peer.isSuper) {
@@ -607,35 +521,55 @@ export default class Netron extends event.AsyncEmitter {
     // //     }
     // // }
 
-    // customProcessPacket(peer, packet) {
-    // }
-
-    setMetaHandler(id, handler, replace = false) {
-        const localHandler = this._metaHandlers.get(id);
-        if (!is.undefined(localHandler) && !replace) {
-            throw new exception.Exists(`Handler '${id}' already exists`);
-        }
-        this._metaHandlers.set(id, handler);
-    }
-
-    getMetaHandler(id) {
-        const handler = this._metaHandlers.get(id);
-        if (is.undefined(handler)) {
-            throw new exception.NotExists(`Handler '${is}' not exists`);
-        }
-        return handler;
-    }
-
-    deleteMetaHandler(id, handler) {
-        this._metaHandlers.delete(handler);
-    }
-
     async _processPacket(peer, packet) {
         const action = packet.getAction();
         switch (action) {
-            case ACTION.META: {
+            case ACTION.SET: {
                 if (packet.getImpulse()) {
-                    packet.setData(await this.requestMeta(peer, packet.data));
+                    const data = packet.data;
+                    const defId = data[0];
+                    const name = data[1];
+                    const stub = this._stubs.get(defId);
+                    if (!is.undefined(stub)) {
+                        try {
+                            await stub.set(name, data[2], peer);
+                        } catch (err) {
+                            adone.error(err.message);
+                        }
+                    }
+                } else { // reply
+                    const awaiter = peer._removeAwaiter(packet.streamId);
+                    !is.undefined(awaiter) && awaiter(packet.data);
+                }
+                break;
+            }
+            case ACTION.GET: {
+                const data = packet.data;
+                const defId = data[0];
+                const name = data[1];
+                const stub = this._stubs.get(defId);
+
+                try {
+                    if (is.undefined(stub)) {
+                        return this.send(peer, 0, packet.streamId, 1, ACTION.SET, [1, new exception.NotExists("Context not exists")]);
+                    }
+                    const result = await stub.get(name, data[2], peer);
+                    await this.send(peer, 0, packet.streamId, 1, ACTION.SET, [0, result]);
+                } catch (err) {
+                    adone.error(err);
+                    if (err.name !== "NetronIllegalState") {
+                        try {
+                            await this.send(peer, 0, packet.streamId, 1, ACTION.SET, [1, normalizeError(err)]);
+                        } catch (err) {
+                            adone.error(err);
+                        }
+                    }
+                }
+                break;
+            }
+            case ACTION.TASK: {
+                if (packet.getImpulse()) {
+                    packet.setData(await this._runPeerTask(peer, packet.data));
                     peer.sendReply(packet);
                 } else {
                     const awaiter = peer._deleteAwaiter(packet.id);
@@ -643,213 +577,50 @@ export default class Netron extends event.AsyncEmitter {
                 }
                 break;
             }
-            // case ACTION.SET: {
-            //     switch (status) {
-            //         case PEER_STATUS.HANDSHAKING: {
-            //             if (!packet.getImpulse()) {
-            //                 const awaiter = peer._removeAwaiter(packet.streamId);
-            //                 !is.undefined(awaiter) && awaiter(packet);
-            //             } else {
-            //                 adone.error("Illegal `impulse` flag (1) during handshake response");
-            //             }
-            //             return;
-            //         }
-            //         case PEER_STATUS.ONLINE: {
-            //             if (packet.getImpulse()) {
-            //                 const data = packet.data;
-            //                 const defId = data[0];
-            //                 const name = data[1];
-            //                 const stub = this._stubs.get(defId);
-            //                 if (!is.undefined(stub)) {
-            //                     try {
-            //                         await stub.set(name, data[2], peer);
-            //                     } catch (err) {
-            //                         adone.error(err.message);
-            //                     }
-            //                 }
-            //             } else { // reply
-            //                 const awaiter = peer._removeAwaiter(packet.streamId);
-            //                 !is.undefined(awaiter) && awaiter(packet.data);
-            //             }
-            //             return;
-            //         }
-            //         default: {
-            //             adone.error(`Unknown peer status: ${status}`);
-            //         }
-            //     }
-            //     break;
-            // }
-            // case ACTION.GET: {
-            //     switch (status) {
-            //         case PEER_STATUS.HANDSHAKING: {
-            //             if (!packet.getImpulse()) {
-            //                 peer.disconnect();
-            //                 adone.error("Flag `impulse` cannot be zero during request of handshake");
-            //             } else {
-            //                 await this.customProcessPacket(peer, packet);
-            //             }
-            //             return;
-            //         }
-            //         case PEER_STATUS.ONLINE: {
-            //             const data = packet.data;
-            //             const defId = data[0];
-            //             const name = data[1];
-            //             const stub = this._stubs.get(defId);
-
-            //             try {
-            //                 if (is.undefined(stub)) {
-            //                     return this.send(peer, 0, packet.streamId, 1, ACTION.SET, [1, new exception.NotExists("Context not exists")]);
-            //                 }
-            //                 const result = await stub.get(name, data[2], peer);
-            //                 await this.send(peer, 0, packet.streamId, 1, ACTION.SET, [0, result]);
-            //             } catch (err) {
-            //                 adone.error(err);
-            //                 if (err.name !== "NetronIllegalState") {
-            //                     try {
-            //                         let normErr;
-            //                         if (is.knownError(err)) {
-            //                             normErr = err;
-            //                         } else {
-            //                             normErr = new Error(err.message);
-            //                             normErr.stack = err.stack;
-            //                         }
-            //                         await this.send(peer, 0, packet.streamId, 1, ACTION.SET, [1, normErr]);
-            //                     } catch (err) {
-            //                         adone.error(err);
-            //                     }
-            //                 }
-            //             }
-            //             return;
-            //         }
-            //     }
-            //     break;
-            // }
         }
-
-        // status = ONLINE
-
-        // switch (action) {
-        //     case ACTION.CONTEXT_ATTACH: {
-        //         if (packet.getImpulse()) {
-        //             if ((await this.customProcessPacket(peer, packet)) === false) {
-        //                 return this.send(peer, 0, packet.streamId, 1, ACTION.SET, [1, new exception.NotImplemented("This feature is not implemented")]);
-        //             }
-        //         } else { // reply
-        //             const awaiter = peer._removeAwaiter(packet.streamId);
-        //             !is.undefined(awaiter) && awaiter(packet.data);
-        //         }
-        //         break;
-        //     }
-        //     case ACTION.CONTEXT_DETACH: {
-        //         if (packet.getImpulse()) {
-        //             if ((await this.customProcessPacket(peer, packet)) === false) {
-        //                 return this.send(peer, 0, packet.streamId, 1, ACTION.SET, [1, new exception.NotImplemented("This feature is not implemented")]);
-        //             }
-        //         } else { // reply
-        //             const awaiter = peer._removeAwaiter(packet.streamId);
-        //             !is.undefined(awaiter) && awaiter(packet.data);
-        //         }
-        //         break;
-        //     }
-        //     case ACTION.EVENT_ON: {
-        //         if (packet.getImpulse()) {
-        //             const eventName = packet.data;
-        //             const fn = (...args) => {
-        //                 if (this.options.isSuper) {
-        //                     if (!is.undefined(peer._ownDefIds)) {
-        //                         if (peer._ownDefIds.includes(args[0].defId)) {
-        //                             return;
-        //                         }
-        //                     }
-        //                 }
-        //                 return new Promise((resolve, reject) => {
-        //                     this.send(peer, 1, peer.streamId.next(), 1, ACTION.EVENT_EMIT, [eventName].concat(args), resolve).catch(reject);
-        //                 });
-        //             };
-        //             //this._emitRemote.bind(this, peer, eventName);
-        //             const listeners = this._remoteListeners.get(peer.uid);
-        //             if (is.undefined(listeners)) {
-        //                 const map = new Map();
-        //                 map.set(eventName, fn);
-        //                 this._remoteListeners.set(peer.uid, map);
-        //             } else if (!listeners.has(eventName)) {
-        //                 listeners.set(eventName, fn);
-        //             }
-        //             this.on(eventName, fn);
-        //             try {
-        //                 await this.send(peer, 0, packet.streamId, 1, ACTION.EVENT_ON, eventName);
-        //             } catch (err) {
-        //                 adone.error(err);
-        //             }
-        //         } else { // reply
-        //             const awaiter = peer._removeAwaiter(packet.streamId);
-        //             !is.undefined(awaiter) && awaiter(packet.data);
-        //         }
-        //         break;
-        //     }
-        //     case ACTION.EVENT_OFF: {
-        //         if (packet.getImpulse()) {
-        //             const data = packet.data;
-        //             const eventName = data[0];
-        //             const listeners = this._remoteListeners.get(peer.uid);
-        //             if (!is.undefined(listeners)) {
-        //                 const fn = listeners.get(eventName);
-        //                 if (!is.undefined(fn)) {
-        //                     this.removeListener(eventName, fn);
-        //                     listeners.delete(eventName);
-        //                     if (listeners.size === 0) {
-        //                         this._remoteListeners.delete(peer.uid);
-        //                     }
-        //                 }
-        //             }
-        //             try {
-        //                 await this.send(peer, 0, packet.streamId, 1, ACTION.EVENT_OFF, eventName);
-        //             } catch (err) {
-        //                 adone.error(err);
-        //             }
-        //         } else { // reply
-        //             const awaiter = peer._removeAwaiter(packet.streamId);
-        //             !is.undefined(awaiter) && awaiter(packet.data);
-        //         }
-        //         break;
-        //     }
-        //     case ACTION.EVENT_EMIT: {
-        //         if (packet.getImpulse()) {
-        //             const args = packet.data;
-        //             const eventName = args.shift();
-        //             args.unshift(peer);
-        //             const events = this._remoteEvents.get(peer.uid);
-        //             if (!is.undefined(events)) {
-        //                 const handlers = events.get(eventName);
-        //                 if (!is.undefined(handlers)) {
-        //                     const promises = [];
-        //                     for (const fn of handlers) {
-        //                         promises.push(Promise.resolve(fn.apply(this, args)));
-        //                     }
-        //                     try {
-        //                         await Promise.all(promises).then(() => {
-        //                             return this.send(peer, 0, packet.streamId, 1, ACTION.EVENT_EMIT);
-        //                         });
-        //                     } catch (err) {
-        //                         adone.error(err);
-        //                     }
-        //                 }
-        //             }
-        //         } else { // reply
-        //             const awaiter = peer._removeAwaiter(packet.streamId);
-        //             !is.undefined(awaiter) && awaiter(packet.data);
-        //         }
-        //         break;
-        //     }
-        //     default:
-        //         await this.customProcessPacket(peer, packet);
-        //         break;
-        // }
     }
 
-    // _createPeer(socket, gate, peerType) {
-    //     throw new exception.NotImplemented("Method _createPeer() should be implemented");
-    // }
+    async _runPeerTask(peer, task) {
+        const tasksResults = {};
+        const results = [];
+
+        for (let t of adone.util.arrify(task)) {
+            if (is.string(t)) {
+                t = {
+                    task: t
+                };
+            }
+            if (is.plainObject(t) && is.string(t.task)) {
+                if (!this.hasTask(t.task)) {
+                    if (t.task in adone.netron2.task) {
+                        // eslint-disable-next-line
+                        await this.addTask(t.task, adone.netron2.task[t.task], {
+                            singleton: true
+                        });
+                    } else {
+                        tasksResults[t.task] = {
+                            error: new exception.NotExists(`Task '${t.task}' is not exist`)
+                        };
+                        continue;
+                    }
+                }
+                const observer = await this.run(t.task, peer, ...adone.util.arrify(t.args)); // eslint-disable-line
+                const r = is.promise(observer.result) ? observer.result : Promise.resolve(observer.result);
+                results.push(r.then((result) => {
+                    tasksResults[t.task] = {
+                        result
+                    };
+                }).catch((error) => {
+                    tasksResults[t.task] = {
+                        error
+                    };
+                }));
+            }
+        }
+
+        await Promise.all(results);
+        return tasksResults;
+    }
 
     _createInterface(def, peer) {
         const defId = def.id;
@@ -1023,27 +794,27 @@ export default class Netron extends event.AsyncEmitter {
     //     return defId;
     // }
 
-    // async _emitPeerEvent(event, peer) {
-    //     let events = this._peerEvents.get(peer);
-    //     if (is.undefined(events)) {
-    //         events = [event];
-    //         this._peerEvents.set(peer, events);
-    //     } else {
-    //         events.push(event);
-    //         if (events.length > 1) {
-    //             return;
-    //         }
-    //     }
-    //     while (events.length > 0) {
-    //         event = events[0];
-    //         try {
-    //             // eslint-disable-next-line
-    //             await this.emitParallel(event, peer);
-    //         } catch (err) {
-    //             adone.error(err);
-    //         }
-    //         events.splice(0, 1);
-    //     }
-    // }
+    async _emitPeerEvent(event, peer) {
+        let events = this._peerEvents.get(peer.info.id.asBase58());
+        if (is.undefined(events)) {
+            events = [event];
+            this._peerEvents.set(peer, events);
+        } else {
+            events.push(event);
+            if (events.length > 1) {
+                return;
+            }
+        }
+        while (events.length > 0) {
+            event = events[0];
+            try {
+                // eslint-disable-next-line
+                await this.emitParallel(event, peer);
+            } catch (err) {
+                adone.error(err);
+            }
+            events.splice(0, 1);
+        }
+    }
 }
 tag.add(Netron, "NETRON2");

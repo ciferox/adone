@@ -3,6 +3,8 @@ const {
     exception
 } = adone;
 
+const DUMMY_THROTTLE = (tsk) => tsk();
+
 /**
  * Basic implementation of task manager that owns and manages tasks.
  * 
@@ -245,13 +247,17 @@ export default class TaskManager extends adone.event.AsyncEmitter {
     }
 
     _createTaskInstance(taskInfo) {
+        let instance;
         if (taskInfo.singleton) {
             if (is.undefined(taskInfo.instance)) {
-                taskInfo.instance = new taskInfo.Class();
+                instance = taskInfo.instance = new taskInfo.Class();
+            } else {
+                return taskInfo.instance;
             }
-            return taskInfo.instance;
+        } else {
+            instance = new taskInfo.Class();
         }
-        const instance = new taskInfo.Class();
+        
         instance.manager = this;
         return instance;
     }
@@ -271,7 +277,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
                 interval
             });
         } else {
-            taskInfo.throttle = (tsk) => tsk();
+            taskInfo.throttle = DUMMY_THROTTLE;
         }
 
         return taskInfo;

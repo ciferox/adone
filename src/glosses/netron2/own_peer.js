@@ -33,20 +33,12 @@ export default class OwnPeer extends AbstractPeer {
         return result;
     }
 
-    async requestMeta(request) {
-        const response = await this.netron.requestMeta(this, request);
-        for (const res of response) {
-            this.meta.set(res.id, adone.util.omit(res, "id"));
-        }
-        return response;
+    subscribe(eventName, handler, once = false) {
+        return (once) ? this.netron.once(eventName, handler) : this.netron.addListener(eventName, handler);
     }
 
-    hasContexts() {
-        return this.netron.hasContexts();
-    }
-
-    hasContext(ctxId) {
-        return this.netron.hasContext(ctxId);
+    unsubscribe(eventName, handler) {
+        return this.netron.removeListener(eventName, handler);
     }
 
     attachContext(instance, ctxId) {
@@ -61,8 +53,20 @@ export default class OwnPeer extends AbstractPeer {
         return this.netron.detachAllContexts(releaseOriginated);
     }
 
+    hasContexts() {
+        return this.netron.hasContexts();
+    }
+
+    hasContext(ctxId) {
+        return this.netron.hasContext(ctxId);
+    }
+
     getContextNames() {
         return this.netron.getContextNames();
+    }
+
+    _runTask(task) {
+        return this.netron._runPeerTask(this, task);
     }
 
     _getContextDefinition(ctxId) {

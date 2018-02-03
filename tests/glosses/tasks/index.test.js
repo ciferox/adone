@@ -265,6 +265,16 @@ describe("task", () => {
     });
 
     describe("singleton tasks", () => {
+        it("correct value of 'manager' property in task", async () => {
+            await manager.addTask("a", SimpleTask, {
+                singleton: true
+            });
+
+            const observer = await manager.run("a");
+            await observer.result;
+            assert.notNull(observer.task.manager);
+        });
+
         it("singleton task is stateful", async () => {
             await manager.addTask("a", SimpleTask, {
                 singleton: true

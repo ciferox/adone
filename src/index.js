@@ -378,7 +378,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             } else {
                 mounts = {};
             }
-            
+
             return adone.asNamespace(adone.lazify(mounts, null));
         },
         vendor: "./vendor",

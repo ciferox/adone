@@ -27,7 +27,7 @@ export default (testInterface) => {
 
         describe("_getContextDefinition()", () => {
             beforeEach(async () => {
-                await peer.attachContext(new A(), "a");
+                await netron.attachContext(new A(), "a");
             });
 
             it("should throws with unknown context", () => {
@@ -49,23 +49,16 @@ export default (testInterface) => {
             });
         });
 
-        it("request meta 'ability' should return all netron options", async () => {
-            const response = await peer.requestMeta("ability");
-            assert.deepEqual(response.length, 1);
-            const ability = response[0];
-            assert.equal(ability.id, "ability");
-            assert.deepEqual(ability.data, netron.options);
-            assert.deepEqual(peer.meta.get("ability"), adone.util.omit(ability, "id"));
+        it("run 'config' task", async () => {
+            const result = await peer.runTask("config");
+            assert.deepEqual(result.config.result, netron.options);
         });
 
-        it("request meta 'contexts' should returl all context definitions", async () => {
-            peer.attachContext(new A(), "a");
-            peer.attachContext(new B(), "b");
-            const response = await peer.requestMeta("contexts");
-            assert.deepEqual(response.length, 1);
-            const contexts = response[0];
-            assert.equal(contexts.id, "contexts");
-            assert.sameMembers(Object.keys(contexts.data), ["a", "b"]);
+        it("run 'contextDefs' task", async () => {
+            netron.attachContext(new A(), "a");
+            netron.attachContext(new B(), "b");
+            const result = await peer.runTask("contextDefs");
+            assert.sameMembers(Object.keys(result.contextDefs.result), ["a", "b"]);
         });
 
         describe("contexts", () => {
@@ -79,43 +72,6 @@ export default (testInterface) => {
 
             it("hasContext() should return false for unknown context", () => {
                 assert.false(peer.hasContext("a"));
-            });
-
-            it("attach context", async () => {
-                assert.false(peer.hasContexts());
-                await peer.attachContext(new A(), "a");
-                assert.true(peer.hasContexts());
-                assert.sameDeepMembers(peer.getContextNames(), ["a"]);
-            });
-
-            it("detach context", async () => {
-                assert.false(peer.hasContexts());
-                await peer.attachContext(new A(), "a");
-                assert.true(peer.hasContexts());
-                await peer.detachContext("a");
-                assert.false(peer.hasContexts());
-            });
-
-            it("detach all contexts", async () => {
-                await peer.attachContext(new A(), "a");
-                await peer.attachContext(new B(), "b");
-                assert.true(peer.hasContexts());
-                assert.sameMembers(peer.getContextNames(), ["a", "b"]);
-                await peer.detachAllContexts();
-                assert.false(peer.hasContexts());
-                assert.lengthOf(peer.getContextNames(), 0);
-            });
-
-            it("detach non-existing context", async () => {
-                await assert.throws(async () => peer.detachContext("this_context_not_exists"), adone.exception.Unknown);
-            });
-
-            it("attach same context twice should have thrown", async () => {
-                const a = new A();
-                assert.false(peer.hasContexts());
-                await peer.attachContext(a, "a");
-                assert.true(peer.hasContexts());
-                await assert.throws(async () => peer.attachContext(a, "a"), adone.exception.Exists);
             });
 
             //     it("context attach notification", async () => {
