@@ -1,9 +1,8 @@
 const {
     is,
     exception,
-    util,
     net: { p2p: { PeerInfo } },
-    netron2: { Reference, Definitions, Reflection, Stub, FastUniqueId, OwnPeer, ACTION },
+    netron2: { Reflection, Stub, FastUniqueId, OwnPeer, ACTION },
     tag
 } = adone;
 
@@ -22,19 +21,6 @@ const normalizeError = (err) => {
 
     return normErr;
 };
-
-/**
- * Class represented netron interface.
- * 
- * For checking object is netron interface use is.netron2Interface() predicate.
- */
-class Interface {
-    constructor(def, peerId) {
-        this[__.I_DEFINITION_SYMBOL] = def;
-        this[__.I_PEERID_SYMBOL] = peerId;
-    }
-}
-tag.add(Interface, "NETRON2_INTERFACE");
 
 class NetworkInfo {
     constructor(netCore) {
@@ -61,12 +47,11 @@ export default class Netron extends adone.task.Manager {
             ...options
         };
 
+        this.interfaceFactory = new __.InterfaceFactory(this);
         this.contexts = new Map();
         this.peers = new Map();
         this.networks = new Map();
-        this._peerEvents = new Map();
-        // this._remoteListeners = new Map();
-        // this._contextEvents = new Map();
+        this._ownEvents = new Map();
 
         this._stubs = new Map();
         this._peerStubs = new Map();
@@ -139,29 +124,34 @@ export default class Netron extends adone.task.Manager {
      * @param {options.tasks} - tasks that should be executed on remote side after successful connection to netron protocol
      * @param {PeerInfo|string|Peer} peer - instance of RemotePeer
      */
-    async connect(netId, peer, { onlyRaw = false, tasks = CONNECT_TASKS } = {}) {
+    async connect(netId, peer, { onlyRaw = false, tasks = CONNECT_TASKS, subscribeOnContexts = true } = {}) {
         try {
             return this.getPeer(peer);
         } catch (err) {
             // fresh peer...
         }
+
         const netCore = this.getNetCore(netId);
-        const rawConn = await netCore.connect(peer);
         const remotePeer = new adone.netron2.RemotePeer(PeerInfo.create(peer), this, netCore);
-        await remotePeer._setConnInfo(rawConn);
 
-        if (!onlyRaw) {
-            try {
-                // Try to connect using netron protocol
-                const netronConn = await netCore.connect(peer, adone.netron2.NETRON_PROTOCOL);
-                await remotePeer._setConnInfo(undefined, netronConn);
+        if (onlyRaw) {
+            const rawConn = await netCore.connect(peer);
+            await remotePeer._setConnInfo(rawConn);
+        } else {
+            // try {
+            const netronConn = await netCore.connect(peer, adone.netron2.NETRON_PROTOCOL);
+            await remotePeer._setConnInfo(undefined, netronConn);
 
-                if (!is.nil(tasks)) {
-                    await remotePeer.runTask(tasks);
-                }
-            } catch (err) {
-                // Nothing to do...
+            if (!is.nil(tasks)) {
+                await remotePeer.runTask(tasks);
             }
+
+            if (subscribeOnContexts) {
+                await remotePeer._subscribeOnContexts();
+            }
+            // } catch (err) {
+            //     // Nothing to do...
+            // }
         }
 
         this._peerConnected(remotePeer);
@@ -228,28 +218,31 @@ export default class Netron extends adone.task.Manager {
     }
 
     _peerConnected(peer) {
-        this.peers.set(peer.info.id.asBase58(), peer);
+        const base58Id = peer.info.id.asBase58();
+        this.peers.set(base58Id, peer);
         peer.connectedTime = new Date();
-        return this._emitPeerEvent("peer:connect", peer);
+        return this._emitOwnEvent("peer:connect", `peer:${base58Id}`, {
+            id: base58Id
+        });
     }
 
     async _peerDisconnected(peer) {
         this.peers.delete(peer.info.id.asBase58());
 
+        if (peer._remoteSubscriptions.size > 0) {
+            for (const [eventName, fn] of peer._remoteSubscriptions.entries()) {
+                this.removeListener(eventName, fn);
+            }
+            peer._remoteSubscriptions.clear();
+        }
 
-        // const listeners = this._remoteListeners.get(peer.uid);
-        // if (!is.undefined(listeners)) {
-        //     for (const [eventName, fn] of listeners.entries()) {
-        //         this.removeListener(eventName, fn);
-        //     }
-        // }
-        // this._remoteListeners.delete(peer.uid);
-        this._peerStubs.delete(peer.uid);
+        const base58Id = peer.info.id.asBase58();
+        this._peerStubs.delete(base58Id);
 
         // Release stubs sended to peer;
         for (const [defId, stub] of this._stubs.entries()) {
             const def = stub.definition;
-            if (def.uid === peer.uid) {
+            if (def.peerId === base58Id) {
                 this._stubs.delete(defId);
                 this._releaseOriginatedContexts(defId);
             }
@@ -257,8 +250,10 @@ export default class Netron extends adone.task.Manager {
 
         peer.interfaces.clear();
 
-        await this._emitPeerEvent("peer:disconnect", peer);
-        this._peerEvents.delete(peer.info.id.asBase58());
+        await this._emitOwnEvent("peer:disconnect", `peer:${base58Id}`, {
+            id: base58Id
+        });
+        this._ownEvents.delete(`peer:${peer.info.id.asBase58()}`);
     }
 
     /**
@@ -282,11 +277,11 @@ export default class Netron extends adone.task.Manager {
     }
 
     refContext(peerInfo, obj) {
-        const peerId = peerInfo.id.asBase58();
-        let stubs = this._peerStubs.get(peerId);
+        const base58Id = peerInfo.id.asBase58();
+        let stubs = this._peerStubs.get(base58Id);
         if (is.undefined(stubs)) {
             stubs = [];
-            this._peerStubs.set(peerId, stubs);
+            this._peerStubs.set(base58Id, stubs);
         }
         const stub = stubs.find((s) => s.instance === obj);
         if (is.undefined(stub)) {
@@ -299,27 +294,27 @@ export default class Netron extends adone.task.Manager {
         return stub.definition;
     }
 
-    // releaseContext(obj, releaseOriginated = true) {
-    //     for (const [defId, stub] of this._stubs.entries()) {
-    //         if (stub.instance === obj) {
-    //             this._stubs.delete(defId);
-    //             releaseOriginated && this._releaseOriginatedContexts(defId, true);
-    //         }
-    //     }
+    releaseContext(obj, releaseOriginated = true) {
+        for (const [defId, stub] of this._stubs.entries()) {
+            if (stub.instance === obj) {
+                this._stubs.delete(defId);
+                releaseOriginated && this._releaseOriginatedContexts(defId, true);
+            }
+        }
 
-    //     for (const [uid, stubs] of this._peerStubs.entries()) {
-    //         for (let i = 0; i < stubs.length; i++) {
-    //             const stub = stubs[i];
-    //             if (stub.instance === obj) {
-    //                 stubs.splice(i, 1);
-    //                 if (stubs.length === 0) {
-    //                     this._peerStubs.delete(uid);
-    //                 }
-    //                 break;
-    //             }
-    //         }
-    //     }
-    // }
+        for (const [uid, stubs] of this._peerStubs.entries()) {
+            for (let i = 0; i < stubs.length; i++) {
+                const stub = stubs[i];
+                if (stub.instance === obj) {
+                    stubs.splice(i, 1);
+                    if (stubs.length === 0) {
+                        this._peerStubs.delete(uid);
+                    }
+                    break;
+                }
+            }
+        }
+    }
 
     /**
      * Attaches context to associated peer.
@@ -355,7 +350,7 @@ export default class Netron extends adone.task.Manager {
         const defId = stub.definition.id;
         releaseOriginated && this._releaseOriginatedContexts(defId);
         this._stubs.delete(defId);
-        // this._emitContextEvent("context detach", { id: ctxId, defId });
+        this._emitOwnEvent("context:detach", `ctx:${ctxId}`, { id: ctxId, defId });
         return defId;
     }
 
@@ -479,17 +474,6 @@ export default class Netron extends adone.task.Manager {
         return this.getPeer(iInstance[__.I_PEERID_SYMBOL]);
     }
 
-    // _onReceiveInitial(peer, data) {
-    //     peer.isSuper = Boolean(data.isSuper);
-    //     if (peer.isSuper) {
-    //         peer._attachedContexts = new Map();
-    //     }
-    //     peer.uid = data.uid;
-    //     if (is.propertyDefined(data, "defs")) {
-    //         peer._updateStrongDefinitions(data.defs);
-    //     }
-    // }
-
     _releaseOriginatedContexts(defId) {
         const defIds = [];
         const ignoreIds = [];
@@ -570,7 +554,7 @@ export default class Netron extends adone.task.Manager {
             case ACTION.TASK: {
                 if (packet.getImpulse()) {
                     packet.setData(await this._runPeerTask(peer, packet.data));
-                    peer.sendReply(packet);
+                    peer._sendReply(packet);
                 } else {
                     const awaiter = peer._deleteAwaiter(packet.id);
                     !is.undefined(awaiter) && awaiter(packet.data);
@@ -611,6 +595,7 @@ export default class Netron extends adone.task.Manager {
                         result
                     };
                 }).catch((error) => {
+                    adone.log(error);
                     tasksResults[t.task] = {
                         error
                     };
@@ -622,183 +607,23 @@ export default class Netron extends adone.task.Manager {
         return tasksResults;
     }
 
-    _createInterface(def, peer) {
-        const defId = def.id;
-        const base58Str = peer.info.id.asBase58();
-        let iInstance = peer.interfaces.get(defId);
-        if (!is.undefined(iInstance)) {
-            return iInstance;
-        }
-
-        // Заготовка под создаваемый интерфейс.
-        class XInterface extends Interface { }
-
-        const proto = XInterface.prototype;
-
-        for (const [key, meta] of util.entries(def.$, { all: true })) {
-            if (meta.method) {
-                const method = (...args) => {
-                    this._processArgs(peer.info, args, true);
-                    return peer.get(defId, key, args);
-                };
-                method.void = (...args) => {
-                    this._processArgs(peer.info, args, true);
-                    return peer.set(defId, key, args);
-                };
-                proto[key] = method;
-            } else {
-                const propMethods = {};
-                propMethods.get = (defaultValue) => {
-                    defaultValue = this._processArgs(peer.info, defaultValue, false);
-                    return peer.get(defId, key, defaultValue);
-                };
-                if (!meta.readonly) {
-                    propMethods.set = (value) => {
-                        value = this._processArgs(peer.info, value, false);
-                        return peer.set(defId, key, value);
-                    };
-                }
-                proto[key] = propMethods;
-            }
-        }
-
-        iInstance = new XInterface(def, base58Str);
-
-        // if (!is.undefined(def.twin)) {
-        //     let twinCode;
-        //     if (!is.string(def.twin) && is.string(def.twin.node)) {
-        //         twinCode = def.twin.node;
-        //     } else {
-        //         twinCode = def.twin;
-        //     }
-
-        //     if (is.string(twinCode)) {
-        //         const wrappedCode = `
-        //             (function() {
-        //                 return ${twinCode};
-        //             })();`;
-
-        //         const taskClassScript = adone.std.vm.createScript(adone.js.compiler.core.transform(wrappedCode, this.options.transpiler).code, { filename: def.name, displayErrors: true });
-        //         const scriptOptions = {
-        //             displayErrors: true,
-        //             breakOnSigint: false
-        //         };
-
-        //         const TwinInterface = taskClassScript.runInThisContext(scriptOptions);
-        //         if (is.netronInterface(new TwinInterface())) {
-        //             class XTwin extends TwinInterface { }
-        //             const twinProto = XTwin.prototype;
-        //             const twinMethods = util.keys(twinProto, { all: true });
-        //             for (const [name, prop] of util.entries(XInterface.prototype, { all: true })) {
-        //                 if (!twinMethods.includes(name)) {
-        //                     twinProto[name] = prop;
-        //                 }
-        //             }
-
-        //             const twinInterface = new XTwin();
-        //             twinInterface.$twin = anInterface;
-        //             this.interfaces.set(hash, twinInterface);
-        //             return twinInterface;
-        //         }
-        //     }
-        // } else if (this._localTwins.has(def.name)) {
-        //     const TwinInterface = this._localTwins.get(def.name);
-        //     if (!is.undefined(TwinInterface)) {
-        //         class XTwin extends TwinInterface { }
-        //         const twinProto = XTwin.prototype;
-        //         const twinMethods = util.keys(twinProto, { all: true });
-        //         for (const [name, prop] of util.entries(XInterface.prototype, { all: true })) {
-        //             if (!twinMethods.includes(name)) {
-        //                 twinProto[name] = prop;
-        //             }
-        //         }
-
-        //         const twinInterface = new XTwin();
-        //         twinInterface.$twin = anInterface;
-        //         this.interfaces.set(hash, twinInterface);
-        //         return twinInterface;
-        //     }
-        // }
-
-        peer.interfaces.set(defId, iInstance);
-        return iInstance;
-    }
-
-    _processArgs(peerInfo, args, isMethod) {
-        if (isMethod && is.array(args)) {
-            for (let i = 0; i < args.length; ++i) {
-                args[i] = this._processObject(peerInfo, args[i]);
-            }
-        } else {
-            return this._processObject(peerInfo, args);
-        }
-    }
-
-    _processObject(peerInfo, obj) {
-        if (is.netronInterface(obj)) {
-            return new Reference(obj[__.I_DEFINITION_SYMBOL].id);
-        } else if (is.netronContext(obj)) {
-            const def = this.refContext(peerInfo, obj);
-            def.uid = peerInfo.id.asBase58(); // definition owner
-            return def;
-        } else if (is.netronDefinitions(obj)) {
-            const newDefs = new Definitions();
-            for (let i = 0; i < obj.length; i++) {
-                newDefs.push(this._processObject(peerInfo, obj.get(i)));
-            }
-            return newDefs;
-        }
-        return obj;
-    }
-
     _attachContext(ctxId, stub) {
         const def = stub.definition;
         const defId = def.id;
         this.contexts.set(ctxId, stub);
         this._stubs.set(defId, stub);
-        // this._emitContextEvent("context attach", {
-        //     id: ctxId,
-        //     defId,
-        //     def
-        // });
+        this._emitOwnEvent("context:attach", `ctx:${ctxId}`, {
+            id: ctxId,
+            def
+        });
         return defId;
     }
 
-    // async _emitContextEvent(event, ctxData) {
-    //     let events = this._contextEvents.get(ctxData.id);
-    //     if (is.undefined(events)) {
-    //         events = [event];
-    //         this._contextEvents.set(ctxData.id, events);
-    //     } else {
-    //         events.push(event);
-    //         if (events.length > 1) {
-    //             return;
-    //         }
-    //     }
-    //     while (events.length > 0) {
-    //         event = events[0];
-    //         try {
-    //             // eslint-disable-next-line
-    //             await this.emitParallel(event, ctxData);
-    //         } catch (err) {
-    //             adone.error(err);
-    //         }
-    //         events.splice(0, 1);
-    //     }
-    // }
-
-    // _proxifyContext(ctxId, stub) {
-    //     const def = stub.definition;
-    //     const defId = def.id;
-    //     this._stubs.set(defId, stub);
-    //     return defId;
-    // }
-
-    async _emitPeerEvent(event, peer) {
-        let events = this._peerEvents.get(peer.info.id.asBase58());
+    async _emitOwnEvent(event, id, data) {
+        let events = this._ownEvents.get(id);
         if (is.undefined(events)) {
             events = [event];
-            this._peerEvents.set(peer, events);
+            this._ownEvents.set(id, events);
         } else {
             events.push(event);
             if (events.length > 1) {
@@ -806,10 +631,9 @@ export default class Netron extends adone.task.Manager {
             }
         }
         while (events.length > 0) {
-            event = events[0];
+            const eventName = events[0];
             try {
-                // eslint-disable-next-line
-                await this.emitParallel(event, peer);
+                await this.emitParallel(eventName, data); // eslint-disable-line
             } catch (err) {
                 adone.error(err);
             }

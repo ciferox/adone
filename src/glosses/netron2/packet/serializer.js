@@ -1,4 +1,5 @@
 const {
+    net: { p2p: { PeerId, PeerInfo } },
     netron2: { Definition, Definitions, Reference }
 } = adone;
 
@@ -44,5 +45,15 @@ s.register(109, Definition, (obj, buf) => {
     }
     return defs;
 });
+// TODO
+// .register(106, PeerInfo, (obj, buf) => {
+
+// }, (buf) => {
+
+// }).register(106, PeerId, (obj, buf) => {
+
+// }, (buf) => {
+
+// });
 
 export default s;

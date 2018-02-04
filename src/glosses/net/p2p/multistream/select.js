@@ -22,7 +22,7 @@ const select = (multicodec, callback, log) => {
         const protocol = data.toString().slice(0, -1);
 
         if (protocol !== multicodec) {
-            return callback(new Error(`"${multicodec}" not supported`), shake.rest());
+            return callback(new adone.exception.NotSupported(`"${multicodec}" not supported`), shake.rest());
         }
 
         log(`received ack: ${protocol}`);

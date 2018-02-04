@@ -132,7 +132,7 @@ export default class Stub {
             return stub.instance;
         } else if (is.netron2Definition(obj)) {
             peer._updateDefinitions({ weak: obj });
-            return this.netron._createInterface(obj, peer.info);
+            return this.netron.interfaceFactory.create(obj, peer.info);
         } else if (is.netron2Definitions(obj)) {
             for (let i = 0; i < obj.length; i++) {
                 obj.set(i, this._processObject(peer, obj.get(i)));

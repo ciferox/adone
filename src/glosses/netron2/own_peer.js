@@ -28,7 +28,7 @@ export default class OwnPeer extends AbstractPeer {
         }
         const result = await stub.get(name, defaultData, this);
         if (is.netron2Definition(result)) {
-            return this.netron._createInterface(result, this);
+            return this.netron.interfaceFactory.create(result, this);
         }
         return result;
     }
@@ -79,7 +79,7 @@ export default class OwnPeer extends AbstractPeer {
 
     _queryInterfaceByDefinition(defId) {
         const stub = this.netron._getStub(defId);
-        return this.netron._createInterface(stub.definition, this);
+        return this.netron.interfaceFactory.create(stub.definition, this);
     }
 }
 adone.tag.add(OwnPeer, "NETRON2_OWNPEER");

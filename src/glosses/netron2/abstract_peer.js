@@ -1,9 +1,7 @@
 const {
     is,
     exception,
-    util,
-    event: { AsyncEmitter },
-    netron2: { RemoteStub }
+    event: { AsyncEmitter }
 } = adone;
 
 const __ = adone.private(adone.netron2);
@@ -98,6 +96,9 @@ export default class AbstractPeer extends AsyncEmitter {
     async runTask(task) {
         const result = await this._runTask(task);
         Object.assign(this.task, result);
+        for (const [task, info] of Object.entries(result)) {
+            this.emit("task:result", task, info);
+        }
         return result;
     }
 
@@ -219,24 +220,12 @@ export default class AbstractPeer extends AsyncEmitter {
     //     return this._responseAwaiters.size;
     // }
 
-    // onRemote(eventName, handler) {
-    //     return this.netron.onRemote(this.uid, eventName, (peer, ...args) => handler(...args));
-    // }
-
     // onContextAttach(handler) {
     //     return this.onRemote("context attach", handler);
     // }
 
     // onContextDetach(handler) {
     //     return this.onRemote("context detach", handler);
-    // }
-
-    // _updateStrongDefinitions(defs) {
-    //     for (const [ctxId, def] of util.entries(defs, { all: true })) {
-    //         def.ctxId = ctxId;
-    //         this._ctxidDefs.set(ctxId, def);
-    //     }
-    //     this._updateDefinitions(defs);
     // }
 
     // // _removeRelatedDefinitions(proxyDef) {
@@ -246,83 +235,5 @@ export default class AbstractPeer extends AsyncEmitter {
     // //         }
     // //     }
     // // }
-
-    // /**
-    //  * Method called when peer successfully connected to netron. Override this method allow custom handling of peer connection.
-    //  */
-    // async connected() {
-    //     await this.onContextAttach((ctxData) => {
-    //         const def = {};
-    //         def[ctxData.id] = ctxData.def;
-    //         this._updateStrongDefinitions(def);
-    //     });
-
-    //     await this.onContextDetach((ctxData) => {
-    //         this._ctxidDefs.delete(ctxData.id);
-    //         this._defs.delete(ctxData.defId);
-    //     });
-    // }
-
-    // _processArgs(ctxDef, field, data) {
-    //     if (ctxDef.$remote) {
-    //         if (field.method) {
-    //             this._processArgsRemote(data, true);
-    //         } else {
-    //             data = this._processArgsRemote(data, false);
-    //         }
-    //     }
-    //     return data;
-    // }
-
-    // _processArgsRemote(args, isMethod) {
-    //     if (isMethod && is.array(args)) {
-    //         for (let i = 0; i < args.length; ++i) {
-    //             args[i] = this._processObjectRemote(args[i]);
-    //         }
-    //     } else {
-    //         return this._processObjectRemote(args);
-    //     }
-    // }
-
-    // _processObjectRemote(obj) {
-    //     if (is.netronDefinition(obj)) {
-    //         const iCtx = this.netron._createInterface(obj, obj.$peer.uid);
-    //         const stub = new RemoteStub(this.netron, iCtx);
-    //         const def = stub.definition;
-    //         obj.$remote = true;
-    //         obj.$proxyDef = def;
-    //         this.netron._proxifyContext(obj.id, stub);
-    //         obj.$peer._updateDefinitions({ "": obj });
-    //         return def;
-    //     } else if (is.netronDefinitions(obj)) {
-    //         for (let i = 0; i < obj.length; i++) {
-    //             obj.set(i, this._processObjectRemote(obj.get(i)));
-    //         }
-    //     }
-    //     return obj;
-    // }
-
-    // _processResult(ctxDef, result) {
-    //     if (is.netronDefinition(result)) {
-    //         this._updateDefinitions({ weak: result });
-    //         if (ctxDef.$remote) {
-    //             const iCtx = this.netron._createInterface(result, this.uid);
-    //             const stub = new RemoteStub(this.netron, iCtx);
-    //             const def = stub.definition;
-    //             def.parentId = ctxDef.$proxyDef.id;
-    //             result.$remote = true;
-    //             result.$proxyDef = def;
-    //             this.netron._proxifyContext(result.id, stub);
-    //             return def;
-    //         }
-    //         return this.netron._createInterface(result, this.uid);
-
-    //     } else if (is.netronDefinitions(result)) {
-    //         for (let i = 0; i < result.length; i++) {
-    //             result.set(i, this._processResult(ctxDef, result.get(i)));
-    //         }
-    //     }
-    //     return result;
-    // }
 }
 adone.tag.add(AbstractPeer, "NETRON2_ABSTRACTPEER");

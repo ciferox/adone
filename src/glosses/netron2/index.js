@@ -199,5 +199,6 @@ adone.lazify({
 
 adone.lazifyPrivate({
     I_DEFINITION_SYMBOL: () => Symbol(),
-    I_PEERID_SYMBOL: () => Symbol()
+    I_PEERID_SYMBOL: () => Symbol(),
+    InterfaceFactory: "./interface_factory"
 }, exports, require);

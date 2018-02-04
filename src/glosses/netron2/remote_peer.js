@@ -3,7 +3,8 @@ const {
     collection: { TimedoutMap },
     netron2: { ACTION, AbstractPeer, packet, FastUniqueId },
     stream: { pull },
-    exception
+    exception,
+    util
 } = adone;
 
 const HEADER_BUFFER = Buffer.alloc(4);
@@ -17,11 +18,13 @@ export default class RemotePeer extends AbstractPeer {
         this.netronConn = null;
         this.protocol = adone.netron2.NETRON_PROTOCOL;
 
-        this.packetId = new FastUniqueId();
+        this._packetIdPool = new FastUniqueId();
         this._responseAwaiters = new TimedoutMap(this.netron.options.responseTimeout, (id) => {
             const awaiter = this._deleteAwaiter(id);
             awaiter([1, new exception.NetronTimeout(`Response timeout ${this.netron.options.responseTimeout}ms exceeded`)]);
         });
+
+        this._writer;
 
         this._remoteEvents = new Map();
         this._remoteSubscriptions = new Map();
@@ -30,6 +33,13 @@ export default class RemotePeer extends AbstractPeer {
 
         this._defs = new Map();
         this._ownDefIds = []; // proxied contexts (used when proxyContexts feature is enabled)
+
+        // subscribe on task result for contextDefs
+        this.on("task:result", (task, info) => {
+            if (task === "contextDefs" && info.result) {
+                this._updateStrongDefinitions(info.result);
+            }
+        });
     }
 
     /**
@@ -47,32 +57,6 @@ export default class RemotePeer extends AbstractPeer {
         return !is.null(this.netronConn);
     }
 
-    write(pkt) {
-        return new Promise((resolve, reject) => {
-            if (!is.null(this.netronConn)) {
-                const rawPkt = packet.encode(pkt).toBuffer();
-                HEADER_BUFFER.writeUInt32BE(rawPkt.length, 0);
-                pull(
-                    pull.values([HEADER_BUFFER, rawPkt]),
-                    this.netronConn
-                );
-                resolve();
-            } else {
-                reject(new adone.exception.IllegalState("No active connection for netron protocol"));
-            }
-        });
-    }
-
-    send(impulse, packetId, action, data, awaiter) {
-        is.function(awaiter) && this._setAwaiter(packetId, awaiter);
-        return this.write(packet.create(packetId, impulse, action, data));
-    }
-
-    sendReply(packet) {
-        packet.setImpulse(0);
-        return this.write(packet);
-    }
-
     get(defId, name, defaultData) {
         const ctxDef = this._defs.get(defId);
         if (is.undefined(ctxDef)) {
@@ -84,7 +68,7 @@ export default class RemotePeer extends AbstractPeer {
             $ = $[name];
             defaultData = this._processArgs(ctxDef, $, defaultData);
             return new Promise((resolve, reject) => {
-                this.send(1, this.packetId.get(), ACTION.GET, [defId, name, defaultData], (result) => {
+                this._send(1, ACTION.GET, [defId, name, defaultData], (result) => {
                     if (result[0] === 1) {
                         reject(result[1]);
                     } else {
@@ -109,7 +93,7 @@ export default class RemotePeer extends AbstractPeer {
                 return Promise.reject(new exception.InvalidAccess(`'${name}' is not writable`));
             }
             data = this._processArgs(ctxDef, $, data);
-            return this.send(1, this.packetId.get(), ACTION.SET, [defId, name, data]);
+            return this._send(1, ACTION.SET, [defId, name, data]);
         }
         return Promise.reject(new exception.NotExists(`'${name}' not exists`));
     }
@@ -197,9 +181,34 @@ export default class RemotePeer extends AbstractPeer {
         return Array.from(this._ctxidDefs.keys());
     }
 
+    _write(pkt) {
+        return new Promise((resolve, reject) => {
+            if (!is.null(this.netronConn)) {
+                const rawPkt = packet.encode(pkt).toBuffer();
+                HEADER_BUFFER.writeUInt32BE(rawPkt.length, 0);
+                this._writer.push(HEADER_BUFFER);
+                this._writer.push(rawPkt);
+                resolve();
+            } else {
+                reject(new adone.exception.IllegalState("No active connection for netron protocol"));
+            }
+        });
+    }
+
+    _send(impulse, action, data, awaiter) {
+        const packetId = this._packetIdPool.get();
+        is.function(awaiter) && this._setAwaiter(packetId, awaiter);
+        return this._write(packet.create(packetId, impulse, action, data));
+    }
+
+    _sendReply(packet) {
+        packet.setImpulse(0);
+        return this._write(packet);
+    }
+
     _runTask(task) {
         return new Promise((resolve, reject) => {
-            this.send(1, this.packetId.get(), ACTION.TASK, task, (result) => {
+            this._send(1, ACTION.TASK, task, (result) => {
                 if (!is.plainObject(result)) {
                     return reject(new adone.exception.NotValid(`Not valid result: ${adone.meta.typeOf(result)}`));
                 }
@@ -213,7 +222,7 @@ export default class RemotePeer extends AbstractPeer {
         if (is.undefined(def)) {
             throw new exception.Unknown(`Unknown definition '${defId}'`);
         }
-        return this.netron._createInterface(def, this);
+        return this.netron.interfaceFactory.create(def, this);
     }
 
     _getContextDefinition(ctxId) {
@@ -238,8 +247,12 @@ export default class RemotePeer extends AbstractPeer {
         if (!is.undefined(netronConn)) {
             this.netronConn = netronConn;
             if (is.null(netronConn)) {
+                this._writer.end();
+                this._writer = null;
                 return;
             }
+
+            this._writer = pull.pushable();
 
             // receive data from remote netron
             const permBuffer = new adone.collection.ByteArray(0);
@@ -278,8 +291,11 @@ export default class RemotePeer extends AbstractPeer {
             };
 
             pull(
+                this._writer,
                 netronConn,
-                pull.drain(handler)
+                pull.drain(handler, (err) => {
+                    // adone.warn(err);
+                })
             );
         }
     }
@@ -302,6 +318,97 @@ export default class RemotePeer extends AbstractPeer {
         const awaiter = this._responseAwaiters.get(id);
         this._responseAwaiters.delete(id);
         return awaiter;
+    }
+
+    _processResult(ctxDef, result) {
+        if (is.netronDefinition(result)) {
+            this._updateDefinitions({ weak: result });
+            if (ctxDef.$remote) {
+                const iCtx = this.netron.interfaceFactory.create(result, this.uid);
+                const stub = new adone.netron2.RemoteStub(this.netron, iCtx);
+                const def = stub.definition;
+                def.parentId = ctxDef.$proxyDef.id;
+                result.$remote = true;
+                result.$proxyDef = def;
+                this._proxifyContext(result.id, stub);
+                return def;
+            }
+            return this.netron.interfaceFactory.create(result, this.uid);
+
+        } else if (is.netronDefinitions(result)) {
+            for (let i = 0; i < result.length; i++) {
+                result.set(i, this._processResult(ctxDef, result.get(i)));
+            }
+        }
+        return result;
+    }
+
+    _processArgs(ctxDef, field, data) {
+        if (ctxDef.$remote) {
+            if (field.method) {
+                this._processArgsRemote(data, true);
+            } else {
+                data = this._processArgsRemote(data, false);
+            }
+        }
+        return data;
+    }
+
+    _processArgsRemote(args, isMethod) {
+        if (isMethod && is.array(args)) {
+            for (let i = 0; i < args.length; ++i) {
+                args[i] = this._processObjectRemote(args[i]);
+            }
+        } else {
+            return this._processObjectRemote(args);
+        }
+    }
+
+    _processObjectRemote(obj) {
+        if (is.netronDefinition(obj)) {
+            const iCtx = this.netron.interfaceFactory.create(obj, obj.$peer.uid);
+            const stub = new adone.netron2.RemoteStub(this.netron, iCtx);
+            const def = stub.definition;
+            obj.$remote = true;
+            obj.$proxyDef = def;
+            this._proxifyContext(obj.id, stub);
+            obj.$peer._updateDefinitions({ "": obj });
+            return def;
+        } else if (is.netronDefinitions(obj)) {
+            for (let i = 0; i < obj.length; i++) {
+                obj.set(i, this._processObjectRemote(obj.get(i)));
+            }
+        }
+        return obj;
+    }
+
+    _proxifyContext(ctxId, stub) {
+        const def = stub.definition;
+        const defId = def.id;
+        this.netron._stubs.set(defId, stub);
+        return defId;
+    }
+
+    _updateStrongDefinitions(defs) {
+        for (const [ctxId, def] of Object.entries(defs)) {
+            def.ctxId = ctxId;
+            this._ctxidDefs.set(ctxId, def);
+        }
+        this._updateDefinitions(defs);
+    }
+
+    _subscribeOnContexts() {
+        return Promise.all([
+            this.subscribe("context:attach", (peer, { id, def }) => {
+                const entry = {};
+                entry[id] = def;
+                this._updateStrongDefinitions(entry);
+            }),
+            this.subscribe("context:detach", (peer, { id, defId }) => {
+                this._ctxidDefs.delete(id);
+                this._defs.delete(defId);
+            })
+        ]);
     }
 }
 adone.tag.add(RemotePeer, "NETRON2_REMOTEPEER");

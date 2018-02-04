@@ -169,23 +169,29 @@ export default class Core extends event.Emitter {
             }
         };
 
-        // so that we can have webrtc-star addrs without adding manually the id
-        const maOld = [];
-        const maNew = [];
-        this.peerInfo.multiaddrs.toArray().forEach((ma) => {
-            if (!ma.getPeerId()) {
-                maOld.push(ma);
-                maNew.push(ma.encapsulate(`/ipfs/${this.peerInfo.id.asBase58()}`));
-            }
-        });
-        this.peerInfo.multiaddrs.replace(maOld, maNew);
+        if (this.peerInfo.multiaddrs.size > 0) {
+            // so that we can have webrtc-star addrs without adding manually the id
+            const maOld = [];
+            const maNew = [];
+            this.peerInfo.multiaddrs.toArray().forEach((ma) => {
+                if (!ma.getPeerId()) {
+                    maOld.push(ma);
+                    maNew.push(ma.encapsulate(`/ipfs/${this.peerInfo.id.asBase58()}`));
+                }
+            });
+            this.peerInfo.multiaddrs.replace(maOld, maNew);
 
-        const multiaddrs = this.peerInfo.multiaddrs.toArray();
-        this.transports.forEach((transport) => {
-            if (transport.filter(multiaddrs).length > 0) {
+            const multiaddrs = this.peerInfo.multiaddrs.toArray();
+            this.transports.forEach((transport) => {
+                if (transport.filter(multiaddrs).length > 0) {
+                    this.swarm.tm.add(transport.tag || transport.constructor.name, transport);
+                }
+            });
+        } else {
+            this.transports.forEach((transport) => {
                 this.swarm.tm.add(transport.tag || transport.constructor.name, transport);
-            }
-        });
+            });
+        }
     }
 
     /**
