@@ -254,7 +254,7 @@ describe("net", "dns", "multicast", () => {
                     type: "TXT",
                     name: "hello-world",
                     ttl: 120,
-                    data,
+                    data: [data],
                     class: "IN",
                     flush: false
                 });
@@ -318,7 +318,7 @@ describe("net", "dns", "multicast", () => {
             });
 
             dns.once("response", (packet) => {
-                assert.ok(packet.flag_auth, "should be set");
+                assert.ok(packet.flag_aa, "should be set");
                 dns.destroy(() => {
                     done();
                 });

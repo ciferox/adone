@@ -7,14 +7,18 @@ const {
 const tcp = new TCP();
 
 const queryLAN = (mdns, serviceTag, interval) => {
-    return setInterval(() => {
+    const query = () => {
         mdns.query({
             questions: [{
                 name: serviceTag,
                 type: "PTR"
             }]
         });
-    }, interval);
+    };
+
+    // Immediately start a query, then do it every interval.
+    query();
+    return setInterval(query, interval);
 };
 
 const gotResponse = (rsp, peerInfo, serviceTag, callback) => {
@@ -53,7 +57,9 @@ const gotResponse = (rsp, peerInfo, serviceTag, callback) => {
         multiaddrs.push(new multi.address.Multiaddr(`/ip4/${a.data}/tcp/${port}`));
     });
 
-    // TODO Create multiaddrs from AAAA (IPv6) records as well
+    answers.aaaa.forEach((a) => {
+        multiaddrs.push(new multi.address.Multiaddr(`/ip6/${a.data}/tcp/${port}`));
+    });
 
     if (peerInfo.id.asBase58() === b58Id) {
         return; // replied to myself, ignore
@@ -150,7 +156,7 @@ export default class MulticastDNS extends adone.event.Emitter {
 
         this.broadcast = options.broadcast !== false;
         this.interval = options.interval || (1e3 * 10);
-        this.serviceTag = options.serviceTag || "_ipfs-discovery._udp";
+        this.serviceTag = options.serviceTag || "ipfs.local";
         this.port = options.port || 5353;
         this.peerInfo = peerInfo;
         this._queryInterval = null;

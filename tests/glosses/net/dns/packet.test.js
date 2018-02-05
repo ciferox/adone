@@ -6,7 +6,7 @@ const {
 const { rcodes, opcodes } = packet;
 
 describe("net", "dns", "packet", () => {
-    const compare = function (a, b) {
+    const compare = (a, b) => {
         if (is.buffer(a)) {
             return a.toString("hex") === b.toString("hex");
         }
@@ -23,19 +23,19 @@ describe("net", "dns", "packet", () => {
         return true;
     };
 
-    const testEncoder = function (rpacket, val) {
+    const testEncoder = (rpacket, val) => {
         const buf = rpacket.encode(val);
         const val2 = rpacket.decode(buf);
 
-        assert.equal(buf.length, rpacket.encode.bytes, "encode.bytes was set correctly");
-        assert.equal(buf.length, rpacket.encodingLength(val), "encoding length matches");
+        assert.deepEqual(buf.length, rpacket.encode.bytes, "encode.bytes was set correctly");
+        assert.deepEqual(buf.length, rpacket.encodingLength(val), "encoding length matches");
         assert.ok(compare(val, val2), "decoded object match");
 
         const buf2 = rpacket.encode(val2);
         const val3 = rpacket.decode(buf2);
 
-        assert.equal(buf2.length, rpacket.encode.bytes, "encode.bytes was set correctly on re-encode");
-        assert.equal(buf2.length, rpacket.encodingLength(val), "encoding length matches on re-encode");
+        assert.deepEqual(buf2.length, rpacket.encode.bytes, "encode.bytes was set correctly on re-encode");
+        assert.deepEqual(buf2.length, rpacket.encodingLength(val), "encoding length matches on re-encode");
 
         assert.ok(compare(val, val3), "decoded object match on re-encode");
         assert.ok(compare(val2, val3), "re-encoded decoded object match on re-encode");
@@ -46,7 +46,7 @@ describe("net", "dns", "packet", () => {
         const val4 = rpacket.decode(buf3, 10);
 
         assert.ok(buf3 === bigger, "echoes buffer on external buffer");
-        assert.equal(rpacket.encode.bytes, buf.length, "encode.bytes is the same on external buffer");
+        assert.deepEqual(rpacket.encode.bytes, buf.length, "encode.bytes is the same on external buffer");
         assert.ok(compare(val, val4), "decoded object match on external buffer");
     };
 
@@ -55,9 +55,39 @@ describe("net", "dns", "packet", () => {
     });
 
     it("txt", () => {
-        testEncoder(packet.txt, Buffer.allocUnsafe(0));
-        testEncoder(packet.txt, Buffer.from("hello world"));
-        testEncoder(packet.txt, Buffer.from([0, 1, 2, 3, 4, 5]));
+        testEncoder(packet.txt, []);
+        testEncoder(packet.txt, ["hello world"]);
+        testEncoder(packet.txt, ["hello", "world"]);
+        testEncoder(packet.txt, [Buffer.from([0, 1, 2, 3, 4, 5])]);
+        testEncoder(packet.txt, ["a", "b", Buffer.from([0, 1, 2, 3, 4, 5])]);
+        testEncoder(packet.txt, ["", Buffer.allocUnsafe(0)]);
+    });
+
+    it("txt-scalar-string", () => {
+        const buf = packet.txt.encode("hi");
+        const val = packet.txt.decode(buf);
+        assert.ok(val.length === 1, "array length");
+        assert.ok(val[0].toString() === "hi", "data");
+    });
+
+    it("txt-scalar-buffer", () => {
+        const data = Buffer.from([0, 1, 2, 3, 4, 5]);
+        const buf = packet.txt.encode(data);
+        const val = packet.txt.decode(buf);
+        assert.ok(val.length === 1, "array length");
+        assert.ok(val[0].equals(data), "data");
+    });
+
+    it("txt-invalid-data", () => {
+        assert.throws(() => {
+            packet.txt.encode(null);
+        }, adone.exception.NotValid);
+        assert.throws(() => {
+            packet.txt.encode(undefined);
+        }, adone.exception.NotValid);
+        assert.throws(() => {
+            packet.txt.encode(10);
+        }, adone.exception.NotValid);
     });
 
     it("null", () => {
@@ -157,6 +187,17 @@ describe("net", "dns", "packet", () => {
     it("response", () => {
         testEncoder(packet, {
             type: "response",
+            answers: [{
+                type: "A",
+                class: "IN",
+                flush: true,
+                name: "hello.a.com",
+                data: "127.0.0.1"
+            }]
+        });
+
+        testEncoder(packet, {
+            type: "response",
             flags: packet.TRUNCATED_RESPONSE,
             answers: [{
                 type: "A",
@@ -234,9 +275,9 @@ describe("net", "dns", "packet", () => {
         const val = packet.decode(buf);
         assert.ok(val.type === "response", "decode type");
         assert.ok(val.opcode === "QUERY", "decode opcode");
-        assert.ok(val.flag_qr === true, "decode flag_auth");
-        assert.ok(val.flag_auth === true, "decode flag_auth");
-        assert.ok(val.flag_trunc === false, "decode flag_trunc");
+        assert.ok(val.flag_qr === true, "decode flag_qr");
+        assert.ok(val.flag_aa === true, "decode flag_aa");
+        assert.ok(val.flag_tc === false, "decode flag_tc");
         assert.ok(val.flag_rd === false, "decode flag_rd");
         assert.ok(val.flag_ra === true, "decode flag_ra");
         assert.ok(val.flag_z === false, "decode flag_z");
@@ -274,5 +315,31 @@ describe("net", "dns", "packet", () => {
         assert.ok(packet.name.encode.bytes === 1, "name encoding length matches");
         dd = packet.name.decode(buf, offset);
         assert.ok(data === dd, "encode/decode matches");
+    });
+
+    it("stream", () => {
+        const val = {
+            type: "query",
+            id: 45632,
+            flags: 0x8480,
+            answers: [{
+                type: "A",
+                name: "test2.example.net",
+                data: "198.51.100.1"
+            }]
+        };
+        const buf = packet.streamEncode(val);
+        const val2 = packet.streamDecode(buf);
+
+        assert.deepEqual(buf.length, packet.streamEncode.bytes, "streamEncode.bytes was set correctly");
+        assert.deepEqual(packet.streamDecode.bytes, packet.streamEncode.bytes, "streamDecode.bytes was set correctly");
+        assert.ok(compare(val2.type, val.type), "streamDecoded type match");
+        assert.ok(compare(val2.id, val.id), "streamDecoded id match");
+        assert.ok(parseInt(val2.flags) === parseInt(val.flags & 0x7FFF), "streamDecoded flags match");
+        const answer = val.answers[0];
+        const answer2 = val2.answers[0];
+        assert.ok(compare(answer.type, answer2.type), "streamDecoded RR type match");
+        assert.ok(compare(answer.name, answer2.name), "streamDecoded RR name match");
+        assert.ok(compare(answer.data, answer2.data), "streamDecoded RR rdata match");
     });
 });

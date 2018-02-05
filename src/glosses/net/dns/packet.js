@@ -182,7 +182,6 @@ export const opcodes = {
         }
         return `OPCODE_${opcode}`;
     },
-
     toOpcode(code) {
         switch (code.toUpperCase()) {
             case "QUERY": return 0;
@@ -236,7 +235,7 @@ const NOT_FLUSH_MASK = ~FLUSH_MASK;
 const QU_MASK = 1 << 15;
 const NOT_QU_MASK = ~QU_MASK;
 
-export const name = {};
+const name = exports.txt = exports.name = {};
 
 name.encode = function (str, buf, offset) {
     if (!buf) {
@@ -383,8 +382,8 @@ header.decode = function (buf, offset) {
         flags: flags & 32767,
         flag_qr: ((flags >> 15) & 0x1) === 1,
         opcode: opcodes.toString((flags >> 11) & 0xf),
-        flag_auth: ((flags >> 10) & 0x1) === 1,
-        flag_trunc: ((flags >> 9) & 0x1) === 1,
+        flag_aa: ((flags >> 10) & 0x1) === 1,
+        flag_tc: ((flags >> 9) & 0x1) === 1,
         flag_rd: ((flags >> 8) & 0x1) === 1,
         flag_ra: ((flags >> 7) & 0x1) === 1,
         flag_z: ((flags >> 6) & 0x1) === 1,
@@ -404,11 +403,11 @@ header.encodingLength = function () {
     return 12;
 };
 
-export const unknown = {};
+const runknown = exports.unknown = {};
 
-unknown.encode = function (data, buf, offset) {
+runknown.encode = function (data, buf, offset) {
     if (!buf) {
-        buf = Buffer.allocUnsafe(unknown.encodingLength(data));
+        buf = Buffer.allocUnsafe(runknown.encodingLength(data));
     }
     if (!offset) {
         offset = 0;
@@ -417,34 +416,34 @@ unknown.encode = function (data, buf, offset) {
     buf.writeUInt16BE(data.length, offset);
     data.copy(buf, offset + 2);
 
-    unknown.encode.bytes = data.length + 2;
+    runknown.encode.bytes = data.length + 2;
     return buf;
 };
 
-unknown.encode.bytes = 0;
+runknown.encode.bytes = 0;
 
-unknown.decode = function (buf, offset) {
+runknown.decode = function (buf, offset) {
     if (!offset) {
         offset = 0;
     }
 
     const len = buf.readUInt16BE(offset);
     const data = buf.slice(offset + 2, offset + 2 + len);
-    unknown.decode.bytes = len + 2;
+    runknown.decode.bytes = len + 2;
     return data;
 };
 
-unknown.decode.bytes = 0;
+runknown.decode.bytes = 0;
 
-unknown.encodingLength = function (data) {
+runknown.encodingLength = function (data) {
     return data.length + 2;
 };
 
-export const ns = {};
+const rns = exports.ns = {};
 
-ns.encode = function (data, buf, offset) {
+rns.encode = function (data, buf, offset) {
     if (!buf) {
-        buf = Buffer.allocUnsafe(ns.encodingLength(data));
+        buf = Buffer.allocUnsafe(rns.encodingLength(data));
     }
     if (!offset) {
         offset = 0;
@@ -452,13 +451,13 @@ ns.encode = function (data, buf, offset) {
 
     name.encode(data, buf, offset + 2);
     buf.writeUInt16BE(name.encode.bytes, offset);
-    ns.encode.bytes = name.encode.bytes + 2;
+    rns.encode.bytes = name.encode.bytes + 2;
     return buf;
 };
 
-ns.encode.bytes = 0;
+rns.encode.bytes = 0;
 
-ns.decode = function (buf, offset) {
+rns.decode = function (buf, offset) {
     if (!offset) {
         offset = 0;
     }
@@ -466,21 +465,21 @@ ns.decode = function (buf, offset) {
     const len = buf.readUInt16BE(offset);
     const dd = name.decode(buf, offset + 2);
 
-    ns.decode.bytes = len + 2;
+    rns.decode.bytes = len + 2;
     return dd;
 };
 
-ns.decode.bytes = 0;
+rns.decode.bytes = 0;
 
-ns.encodingLength = function (data) {
+rns.encodingLength = function (data) {
     return name.encodingLength(data) + 2;
 };
 
-export const soa = {};
+const rsoa = exports.soa = {};
 
-soa.encode = function (data, buf, offset) {
+rsoa.encode = function (data, buf, offset) {
     if (!buf) {
-        buf = Buffer.allocUnsafe(soa.encodingLength(data));
+        buf = Buffer.allocUnsafe(rsoa.encodingLength(data));
     }
     if (!offset) {
         offset = 0;
@@ -504,13 +503,13 @@ soa.encode = function (data, buf, offset) {
     offset += 4;
 
     buf.writeUInt16BE(offset - oldOffset - 2, oldOffset);
-    soa.encode.bytes = offset - oldOffset;
+    rsoa.encode.bytes = offset - oldOffset;
     return buf;
 };
 
-soa.encode.bytes = 0;
+rsoa.encode.bytes = 0;
 
-soa.decode = function (buf, offset) {
+rsoa.decode = function (buf, offset) {
     if (!offset) {
         offset = 0;
     }
@@ -534,22 +533,100 @@ soa.decode = function (buf, offset) {
     data.minimum = buf.readUInt32BE(offset);
     offset += 4;
 
-    soa.decode.bytes = offset - oldOffset;
+    rsoa.decode.bytes = offset - oldOffset;
     return data;
 };
 
-soa.decode.bytes = 0;
+rsoa.decode.bytes = 0;
 
-soa.encodingLength = function (data) {
+rsoa.encodingLength = function (data) {
     return 22 + name.encodingLength(data.mname) + name.encodingLength(data.rname);
 };
 
-export const txt = {};
-export { txt as null };
+const rtxt = exports.txt = {};
 
-txt.encode = function (data, buf, offset) {
+rtxt.encode = function (data, buf, offset) {
+    if (!is.array(data)) {
+        data = [data];
+    }
+    for (let i = 0; i < data.length; i++) {
+        if (is.string(data[i])) {
+            data[i] = Buffer.from(data[i]);
+        }
+        if (!is.buffer(data[i])) {
+            throw new adone.exception.NotValid("Must be a Buffer");
+        }
+    }
+
     if (!buf) {
-        buf = Buffer.allocUnsafe(txt.encodingLength(data));
+        buf = Buffer.allocUnsafe(rtxt.encodingLength(data));
+    }
+    if (!offset) {
+        offset = 0;
+    }
+
+    const oldOffset = offset;
+    offset += 2;
+
+    data.forEach((d) => {
+        buf[offset++] = d.length;
+        d.copy(buf, offset, 0, d.length);
+        offset += d.length;
+    });
+
+    buf.writeUInt16BE(offset - oldOffset - 2, oldOffset);
+    rtxt.encode.bytes = offset - oldOffset;
+    return buf;
+};
+
+rtxt.encode.bytes = 0;
+
+rtxt.decode = function (buf, offset) {
+    if (!offset) {
+        offset = 0;
+    }
+    const oldOffset = offset;
+    let remaining = buf.readUInt16BE(offset);
+    offset += 2;
+
+    const data = [];
+    while (remaining > 0) {
+        const len = buf[offset++];
+        --remaining;
+        if (remaining < len) {
+            throw new Error("Buffer overflow");
+        }
+        data.push(buf.slice(offset, offset + len));
+        offset += len;
+        remaining -= len;
+    }
+
+    rtxt.decode.bytes = offset - oldOffset;
+    return data;
+};
+
+rtxt.decode.bytes = 0;
+
+rtxt.encodingLength = function (data) {
+    if (!is.array(data)) {
+        data = [data];
+    }
+    let length = 2;
+    data.forEach((buf) => {
+        if (is.string(buf)) {
+            length += Buffer.byteLength(buf) + 1;
+        } else {
+            length += buf.length + 1;
+        }
+    });
+    return length;
+};
+
+const rnull = exports.null = {};
+
+rnull.encode = function (data, buf, offset) {
+    if (!buf) {
+        buf = Buffer.allocUnsafe(rnull.encodingLength(data));
     }
     if (!offset) {
         offset = 0;
@@ -570,13 +647,13 @@ txt.encode = function (data, buf, offset) {
     offset += len;
 
     buf.writeUInt16BE(offset - oldOffset - 2, oldOffset);
-    txt.encode.bytes = offset - oldOffset;
+    rnull.encode.bytes = offset - oldOffset;
     return buf;
 };
 
-txt.encode.bytes = 0;
+rnull.encode.bytes = 0;
 
-txt.decode = function (buf, offset) {
+rnull.decode = function (buf, offset) {
     if (!offset) {
         offset = 0;
     }
@@ -588,24 +665,24 @@ txt.decode = function (buf, offset) {
     const data = buf.slice(offset, offset + len);
     offset += len;
 
-    txt.decode.bytes = offset - oldOffset;
+    rnull.decode.bytes = offset - oldOffset;
     return data;
 };
 
-txt.decode.bytes = 0;
+rnull.decode.bytes = 0;
 
-txt.encodingLength = function (data) {
+rnull.encodingLength = function (data) {
     if (!data) {
         return 2;
     }
     return (is.buffer(data) ? data.length : Buffer.byteLength(data)) + 2;
 };
 
-export const hinfo = {};
+const rhinfo = exports.hinfo = {};
 
-hinfo.encode = function (data, buf, offset) {
+rhinfo.encode = function (data, buf, offset) {
     if (!buf) {
-        buf = Buffer.allocUnsafe(hinfo.encodingLength(data));
+        buf = Buffer.allocUnsafe(rhinfo.encodingLength(data));
     }
     if (!offset) {
         offset = 0;
@@ -618,13 +695,13 @@ hinfo.encode = function (data, buf, offset) {
     string.encode(data.os, buf, offset);
     offset += string.encode.bytes;
     buf.writeUInt16BE(offset - oldOffset - 2, oldOffset);
-    hinfo.encode.bytes = offset - oldOffset;
+    rhinfo.encode.bytes = offset - oldOffset;
     return buf;
 };
 
-hinfo.encode.bytes = 0;
+rhinfo.encode.bytes = 0;
 
-hinfo.decode = function (buf, offset) {
+rhinfo.decode = function (buf, offset) {
     if (!offset) {
         offset = 0;
     }
@@ -637,22 +714,23 @@ hinfo.decode = function (buf, offset) {
     offset += string.decode.bytes;
     data.os = string.decode(buf, offset);
     offset += string.decode.bytes;
-    hinfo.decode.bytes = offset - oldOffset;
+    rhinfo.decode.bytes = offset - oldOffset;
     return data;
 };
 
-hinfo.decode.bytes = 0;
+rhinfo.decode.bytes = 0;
 
-hinfo.encodingLength = function (data) {
+rhinfo.encodingLength = function (data) {
     return string.encodingLength(data.cpu) + string.encodingLength(data.os) + 2;
 };
 
-export const ptr = {};
-export { ptr as cname, ptr as dname };
+const rptr = exports.ptr = {};
+const rcname = exports.cname = rptr;
+const rdname = exports.dname = rptr;
 
-ptr.encode = function (data, buf, offset) {
+rptr.encode = function (data, buf, offset) {
     if (!buf) {
-        buf = Buffer.allocUnsafe(ptr.encodingLength(data));
+        buf = Buffer.allocUnsafe(rptr.encodingLength(data));
     }
     if (!offset) {
         offset = 0;
@@ -660,33 +738,33 @@ ptr.encode = function (data, buf, offset) {
 
     name.encode(data, buf, offset + 2);
     buf.writeUInt16BE(name.encode.bytes, offset);
-    ptr.encode.bytes = name.encode.bytes + 2;
+    rptr.encode.bytes = name.encode.bytes + 2;
     return buf;
 };
 
-ptr.encode.bytes = 0;
+rptr.encode.bytes = 0;
 
-ptr.decode = function (buf, offset) {
+rptr.decode = function (buf, offset) {
     if (!offset) {
         offset = 0;
     }
 
     const data = name.decode(buf, offset + 2);
-    ptr.decode.bytes = name.decode.bytes + 2;
+    rptr.decode.bytes = name.decode.bytes + 2;
     return data;
 };
 
-ptr.decode.bytes = 0;
+rptr.decode.bytes = 0;
 
-ptr.encodingLength = function (data) {
+rptr.encodingLength = function (data) {
     return name.encodingLength(data) + 2;
 };
 
-export const srv = {};
+const rsrv = exports.srv = {};
 
-srv.encode = function (data, buf, offset) {
+rsrv.encode = function (data, buf, offset) {
     if (!buf) {
-        buf = Buffer.allocUnsafe(srv.encodingLength(data));
+        buf = Buffer.allocUnsafe(rsrv.encodingLength(data));
     }
     if (!offset) {
         offset = 0;
@@ -700,13 +778,13 @@ srv.encode = function (data, buf, offset) {
     const len = name.encode.bytes + 6;
     buf.writeUInt16BE(len, offset);
 
-    srv.encode.bytes = len + 2;
+    rsrv.encode.bytes = len + 2;
     return buf;
 };
 
-srv.encode.bytes = 0;
+rsrv.encode.bytes = 0;
 
-srv.decode = function (buf, offset) {
+rsrv.decode = function (buf, offset) {
     if (!offset) {
         offset = 0;
     }
@@ -719,32 +797,32 @@ srv.decode = function (buf, offset) {
     data.port = buf.readUInt16BE(offset + 6);
     data.target = name.decode(buf, offset + 8);
 
-    srv.decode.bytes = len + 2;
+    rsrv.decode.bytes = len + 2;
     return data;
 };
 
-srv.decode.bytes = 0;
+rsrv.decode.bytes = 0;
 
-srv.encodingLength = function (data) {
+rsrv.encodingLength = function (data) {
     return 8 + name.encodingLength(data.target);
 };
 
-export const caa = {};
+const rcaa = exports.caa = {};
 
-caa.ISSUER_CRITICAL = 1 << 7;
+rcaa.ISSUER_CRITICAL = 1 << 7;
 
-caa.encode = function (data, buf, offset) {
-    const len = caa.encodingLength(data);
+rcaa.encode = function (data, buf, offset) {
+    const len = rcaa.encodingLength(data);
 
     if (!buf) {
-        buf = Buffer.allocUnsafe(caa.encodingLength(data));
+        buf = Buffer.allocUnsafe(rcaa.encodingLength(data));
     }
     if (!offset) {
         offset = 0;
     }
 
     if (data.issuerCritical) {
-        data.flags = caa.ISSUER_CRITICAL;
+        data.flags = rcaa.ISSUER_CRITICAL;
     }
 
     buf.writeUInt16BE(len - 2, offset);
@@ -756,13 +834,13 @@ caa.encode = function (data, buf, offset) {
     buf.write(data.value, offset);
     offset += Buffer.byteLength(data.value);
 
-    caa.encode.bytes = len;
+    rcaa.encode.bytes = len;
     return buf;
 };
 
-caa.encode.bytes = 0;
+rcaa.encode.bytes = 0;
 
-caa.decode = function (buf, offset) {
+rcaa.decode = function (buf, offset) {
     if (!offset) {
         offset = 0;
     }
@@ -778,16 +856,16 @@ caa.decode = function (buf, offset) {
     offset += string.decode.bytes;
     data.value = buf.toString("utf-8", offset, oldOffset + len);
 
-    data.issuerCritical = Boolean(data.flags & caa.ISSUER_CRITICAL);
+    data.issuerCritical = Boolean(data.flags & rcaa.ISSUER_CRITICAL);
 
-    caa.decode.bytes = len + 2;
+    rcaa.decode.bytes = len + 2;
 
     return data;
 };
 
-caa.decode.bytes = 0;
+rcaa.decode.bytes = 0;
 
-caa.encodingLength = function (data) {
+rcaa.encodingLength = function (data) {
     return string.encodingLength(data.tag) + string.encodingLength(data.value) + 2;
 };
 
@@ -827,11 +905,11 @@ ra.encodingLength = function () {
     return 6;
 };
 
-export const aaaa = {};
+const raaaa = exports.aaaa = {};
 
-aaaa.encode = function (host, buf, offset) {
+raaaa.encode = function (host, buf, offset) {
     if (!buf) {
-        buf = Buffer.allocUnsafe(aaaa.encodingLength(host));
+        buf = Buffer.allocUnsafe(raaaa.encodingLength(host));
     }
     if (!offset) {
         offset = 0;
@@ -840,45 +918,45 @@ aaaa.encode = function (host, buf, offset) {
     buf.writeUInt16BE(16, offset);
     offset += 2;
     ip.toBuffer(host, buf, offset);
-    aaaa.encode.bytes = 18;
+    raaaa.encode.bytes = 18;
     return buf;
 };
 
-aaaa.encode.bytes = 0;
+raaaa.encode.bytes = 0;
 
-aaaa.decode = function (buf, offset) {
+raaaa.decode = function (buf, offset) {
     if (!offset) {
         offset = 0;
     }
 
     offset += 2;
     const host = ip.toString(buf, offset, 16);
-    aaaa.decode.bytes = 18;
+    raaaa.decode.bytes = 18;
     return host;
 };
 
-aaaa.decode.bytes = 0;
+raaaa.decode.bytes = 0;
 
-aaaa.encodingLength = function () {
+raaaa.encodingLength = function () {
     return 18;
 };
 
-export const record = function (type) {
+const renc = exports.record = function (type) {
     switch (type.toUpperCase()) {
         case "A": return ra;
-        case "PTR": return ptr;
-        case "CNAME": return ptr;
-        case "DNAME": return ptr;
-        case "TXT": return txt;
-        case "NULL": return txt;
-        case "AAAA": return aaaa;
-        case "SRV": return srv;
-        case "HINFO": return hinfo;
-        case "CAA": return caa;
-        case "NS": return ns;
-        case "SOA": return soa;
+        case "PTR": return rptr;
+        case "CNAME": return rcname;
+        case "DNAME": return rdname;
+        case "TXT": return rtxt;
+        case "NULL": return rnull;
+        case "AAAA": return raaaa;
+        case "SRV": return rsrv;
+        case "HINFO": return rhinfo;
+        case "CAA": return rcaa;
+        case "NS": return rns;
+        case "SOA": return rsoa;
     }
-    return unknown;
+    return runknown;
 };
 
 const answer = exports.answer = {};
@@ -906,7 +984,7 @@ answer.encode = function (a, buf, offset) {
 
     buf.writeUInt32BE(a.ttl || 0, offset + 4);
 
-    const enc = record(a.type);
+    const enc = renc(a.type);
     enc.encode(a.data, buf, offset + 8);
     offset += 8 + enc.encode.bytes;
 
@@ -927,15 +1005,13 @@ answer.decode = function (buf, offset) {
     a.name = name.decode(buf, offset);
     offset += name.decode.bytes;
     a.type = types.toString(buf.readUInt16BE(offset));
-    a.class = classes.toString(buf.readUInt16BE(offset + 2));
+    const klass = buf.readUInt16BE(offset + 2);
     a.ttl = buf.readUInt32BE(offset + 4);
 
-    a.flush = Boolean(a.class & FLUSH_MASK);
-    if (a.flush) {
-        a.class &= NOT_FLUSH_MASK;
-    }
+    a.class = classes.toString(klass & NOT_FLUSH_MASK);
+    a.flush = Boolean(klass & FLUSH_MASK);
 
-    const enc = record(a.type);
+    const enc = renc(a.type);
     a.data = enc.decode(buf, offset + 8);
     offset += 8 + enc.decode.bytes;
 
@@ -946,10 +1022,10 @@ answer.decode = function (buf, offset) {
 answer.decode.bytes = 0;
 
 answer.encodingLength = function (a) {
-    return name.encodingLength(a.name) + 8 + record(a.type).encodingLength(a.data);
+    return name.encodingLength(a.name) + 8 + renc(a.type).encodingLength(a.data);
 };
 
-export const question = {};
+const question = exports.question = {};
 
 question.encode = function (q, buf, offset) {
     if (!buf) {
@@ -1008,13 +1084,6 @@ question.encodingLength = function (q) {
     return name.encodingLength(q.name) + 4;
 };
 
-export const AUTHORITATIVE_ANSWER = 1 << 10;
-export const TRUNCATED_RESPONSE = 1 << 9;
-export const RECURSION_DESIRED = 1 << 8;
-export const RECURSION_AVAILABLE = 1 << 7;
-export const AUTHENTIC_DATA = 1 << 5;
-export const CHECKING_DISABLED = 1 << 4;
-
 const encodingLengthList = (list, enc) => {
     let len = 0;
     for (let i = 0; i < list.length; i++) {
@@ -1039,17 +1108,16 @@ const decodeList = (list, enc, buf, offset) => {
     return offset;
 };
 
-export const encodingLength = function (result) {
-    return header.encodingLength(result) +
-        encodingLengthList(result.questions || [], question) +
-        encodingLengthList(result.answers || [], answer) +
-        encodingLengthList(result.authorities || [], answer) +
-        encodingLengthList(result.additionals || [], answer);
-};
+exports.AUTHORITATIVE_ANSWER = 1 << 10;
+exports.TRUNCATED_RESPONSE = 1 << 9;
+exports.RECURSION_DESIRED = 1 << 8;
+exports.RECURSION_AVAILABLE = 1 << 7;
+exports.AUTHENTIC_DATA = 1 << 5;
+exports.CHECKING_DISABLED = 1 << 4;
 
-export const encode = function (result, buf, offset) {
+exports.encode = function (result, buf, offset) {
     if (!buf) {
-        buf = Buffer.allocUnsafe(encodingLength(result));
+        buf = Buffer.allocUnsafe(exports.encodingLength(result));
     }
     if (!offset) {
         offset = 0;
@@ -1078,14 +1146,14 @@ export const encode = function (result, buf, offset) {
     offset = encodeList(result.authorities, answer, buf, offset);
     offset = encodeList(result.additionals, answer, buf, offset);
 
-    encode.bytes = offset - oldOffset;
+    exports.encode.bytes = offset - oldOffset;
 
     return buf;
 };
 
-encode.bytes = 0;
+exports.encode.bytes = 0;
 
-export const decode = function (buf, offset) {
+exports.decode = function (buf, offset) {
     if (!offset) {
         offset = 0;
     }
@@ -1099,9 +1167,40 @@ export const decode = function (buf, offset) {
     offset = decodeList(result.authorities, answer, buf, offset);
     offset = decodeList(result.additionals, answer, buf, offset);
 
-    decode.bytes = offset - oldOffset;
+    exports.decode.bytes = offset - oldOffset;
 
     return result;
 };
 
-decode.bytes = 0;
+exports.decode.bytes = 0;
+
+exports.encodingLength = function (result) {
+    return header.encodingLength(result) +
+        encodingLengthList(result.questions || [], question) +
+        encodingLengthList(result.answers || [], answer) +
+        encodingLengthList(result.authorities || [], answer) +
+        encodingLengthList(result.additionals || [], answer);
+};
+
+exports.streamEncode = function (result) {
+    const len = exports.encodingLength(result);
+    const buf = Buffer.allocUnsafe(len + 2);
+    exports.encode(result, buf, 2);
+    buf.writeUInt16BE(len, 0);
+    exports.streamEncode.bytes = len + 2;
+    return buf;
+};
+
+exports.streamEncode.bytes = 0;
+
+exports.streamDecode = function (buf) {
+    const len = buf.readUInt16BE(0);
+    if (buf.length < len + 2) {
+        return null;
+    }
+    const result = exports.decode(buf, 2);
+    exports.streamDecode.bytes = exports.decode.bytes + 2;
+    return result;
+};
+
+exports.streamDecode.bytes = 0;

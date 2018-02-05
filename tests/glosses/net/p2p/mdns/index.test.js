@@ -1,4 +1,5 @@
 const parallel = require("async/parallel");
+const series = require("async/series");
 
 const {
     multi,
@@ -19,6 +20,7 @@ describe("MulticastDNS", () => {
 
         pB = PeerInfo.create();
         pB.multiaddrs.add(multi.address.create("/ip4/127.0.0.1/tcp/20002"));
+        pB.multiaddrs.add(multi.address.create("/ip6/::1/tcp/20002"));
 
         pC = PeerInfo.create();
         pC.multiaddrs.add(multi.address.create("/ip4/127.0.0.1/tcp/20003"));
@@ -32,7 +34,10 @@ describe("MulticastDNS", () => {
         const options = {
             port: 50001 // port must be the same
         };
-        const mdnsA = new MulticastDNS(pA, options);
+        const mdnsA = new MulticastDNS(pA, {
+            broadcast: false, // do not talk to ourself
+            port: 50001
+        });
         const mdnsB = new MulticastDNS(pB, options);
 
         parallel([
@@ -41,7 +46,10 @@ describe("MulticastDNS", () => {
         ], () => {
             mdnsA.once("peer", (peerInfo) => {
                 expect(pB.id.asBase58()).to.eql(peerInfo.id.asBase58());
-                done();
+                parallel([
+                    (cb) => mdnsA.stop(cb),
+                    (cb) => mdnsB.stop(cb)
+                ], done);
             });
 
             mdnsB.once("peer", (peerInfo) => { });
@@ -53,7 +61,10 @@ describe("MulticastDNS", () => {
             port: 50003 // port must be the same
         };
 
-        const mdnsA = new MulticastDNS(pA, options);
+        const mdnsA = new MulticastDNS(pA, {
+            broadcast: false, // do not talk to ourself
+            port: 50003
+        });
         const mdnsC = new MulticastDNS(pC, options);
         const mdnsD = new MulticastDNS(pD, options);
 
@@ -66,10 +77,43 @@ describe("MulticastDNS", () => {
             mdnsA.once("peer", (peerInfo) => {
                 expect(pC.id.asBase58()).to.eql(peerInfo.id.asBase58());
                 expect(peerInfo.multiaddrs.size).to.equal(1);
-                done();
+                parallel([
+                    (cb) => mdnsA.stop(cb),
+                    (cb) => mdnsC.stop(cb),
+                    (cb) => mdnsD.stop(cb)
+                ], done);
             });
 
             mdnsC.once("peer", (peerInfo) => { });
+        });
+    });
+
+    it("announces IP6 addresses", function (done) {
+        this.timeout(40 * 1000);
+
+        const options = {
+            port: 50001 // port must be the same
+        };
+        const mdnsA = new MulticastDNS(pA, {
+            broadcast: false, // do not talk to ourself
+            port: 50001
+        });
+        const mdnsB = new MulticastDNS(pB, options);
+
+        series([
+            (cb) => mdnsB.start(cb),
+            (cb) => mdnsA.start(cb)
+        ], () => {
+            mdnsA.once("peer", (peerInfo) => {
+                expect(pB.id.asBase58()).to.eql(peerInfo.id.asBase58());
+                expect(peerInfo.multiaddrs.size).to.equal(2);
+                parallel([
+                    (cb) => mdnsA.stop(cb),
+                    (cb) => mdnsB.stop(cb)
+                ], done);
+            });
+
+            mdnsB.once("peer", (peerInfo) => { });
         });
     });
 
@@ -80,18 +124,13 @@ describe("MulticastDNS", () => {
         const mdnsA = new MulticastDNS(pA, options);
         const mdnsC = new MulticastDNS(pC, options);
 
-        setTimeout(done, 15000);
-
-        parallel([
+        series([
             (cb) => mdnsA.start(cb),
+            (cb) => setTimeout(cb, 1000),
+            (cb) => mdnsA.stop(cb),
             (cb) => mdnsC.start(cb)
         ], () => {
-            mdnsA.stop((err) => {
-                if (err) {
-                    return done(err);
-                }
-            });
-
+            setTimeout(() => mdnsC.stop(done), 5000);
             mdnsC.once("peer", (peerInfo) => {
                 done(new Error("Should not receive new peer."));
             });

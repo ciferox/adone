@@ -333,6 +333,9 @@ export default class Core extends event.Emitter {
                 peer = multi.address.create(peer);
             }
             const peerIdB58Str = peer.getPeerId();
+            if (!peerIdB58Str) {
+                throw new Error("Peer multiaddr instance or string must include peerId");
+            }
             try {
                 p = this.peerBook.get(peerIdB58Str);
             } catch (err) {
