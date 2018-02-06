@@ -9,10 +9,6 @@ export default class OwnPeer extends AbstractPeer {
         return true; // always connected
     }
 
-    isNetronConnected() {
-        return true; // always connected
-    }
-
     set(defId, name, data) {
         const stub = this.netron._stubs.get(defId);
         if (is.undefined(stub)) {

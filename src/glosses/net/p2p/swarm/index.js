@@ -141,6 +141,7 @@ export class Swarm extends adone.event.Emitter {
                             return reject(err);
                         }
                         proxyConn.setInnerConn(conn);
+
                         resolve(proxyConn);
                     });
                 });
@@ -178,7 +179,7 @@ export class Swarm extends adone.event.Emitter {
 
                 const muxers = Object.keys(this.muxers);
                 if (muxers.length === 0) {
-                    return cb(new Error("no muxers available"));
+                    return cb(new Error("No muxers available"));
                 }
 
                 // 1. try to handshake in one of the muxers available
@@ -192,7 +193,7 @@ export class Swarm extends adone.event.Emitter {
                     ms.select(key, (err, conn) => {
                         if (err) {
                             if (muxers.length === 0) {
-                                cb(new Error("could not upgrade to stream muxing"));
+                                cb(new Error("Could not upgrade to stream muxing"));
                             } else {
                                 nextMuxer(muxers.shift());
                             }
@@ -213,7 +214,7 @@ export class Swarm extends adone.event.Emitter {
                             const b58Str = pi.id.asBase58();
                             delete this.muxedConns[b58Str];
                             pi.disconnect();
-                            setImmediate(() => this.emit("peer-mux-closed", pi));
+                            setImmediate(() => this.emit("peer:mux:closed", pi, key));
                         });
 
                         // For incoming streams, in case identify is on
@@ -221,7 +222,7 @@ export class Swarm extends adone.event.Emitter {
                             protocolMuxer(this.protocols, conn);
                         });
 
-                        setImmediate(() => this.emit("peer-mux-established", pi));
+                        setImmediate(() => this.emit("peer:mux:established", pi, key));
 
                         cb(null, muxedConn);
                     });
@@ -229,7 +230,7 @@ export class Swarm extends adone.event.Emitter {
 
                 ms.handle(conn, (err) => {
                     if (err) {
-                        return cb(new Error("multistream not supported"));
+                        return cb(new Error("Multistream not supported"));
                     }
 
                     nextMuxer(muxers.shift());

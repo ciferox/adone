@@ -85,12 +85,10 @@ export default class Core extends event.Emitter {
 
             // Received incommind connect and muxer upgrade happened,
             // reuse this muxed connection
-            this.swarm.on("peer-mux-established", (peerInfo) => {
-                this.emit("peer:connect", peerInfo);
-            });
-
-            this.swarm.on("peer-mux-closed", (peerInfo) => {
-                this.emit("peer:disconnect", peerInfo);
+            this.swarm.on("peer:mux:established", (peerInfo, protocol) => {
+                this.emit("peer:connect", peerInfo, protocol);
+            }).on("peer:mux:closed", (peerInfo, protocol) => {
+                this.emit("peer:disconnect", peerInfo, protocol);
                 // this.peerBook.delete(peerInfo);
             });
         }

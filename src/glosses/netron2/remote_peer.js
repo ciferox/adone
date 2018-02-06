@@ -3,8 +3,7 @@ const {
     collection: { TimedoutMap },
     netron2: { ACTION, AbstractPeer, packet, FastUniqueId },
     stream: { pull },
-    exception,
-    util
+    exception
 } = adone;
 
 const HEADER_BUFFER = Buffer.alloc(4);
@@ -13,9 +12,9 @@ export default class RemotePeer extends AbstractPeer {
     constructor(info, netron, netCore) {
         super(info, netron);
 
+        this._writer = undefined;
         this.netCore = netCore;
-        this.rawConn = null;
-        this.netronConn = null;
+        this._conn = null;
         this.protocol = adone.netron2.NETRON_PROTOCOL;
 
         this._packetIdPool = new FastUniqueId();
@@ -23,8 +22,6 @@ export default class RemotePeer extends AbstractPeer {
             const awaiter = this._deleteAwaiter(id);
             awaiter([1, new exception.NetronTimeout(`Response timeout ${this.netron.options.responseTimeout}ms exceeded`)]);
         });
-
-        this._writer;
 
         this._remoteEvents = new Map();
         this._remoteSubscriptions = new Map();
@@ -50,11 +47,7 @@ export default class RemotePeer extends AbstractPeer {
     }
 
     isConnected() {
-        return !is.null(this.rawConn);
-    }
-
-    isNetronConnected() {
-        return !is.null(this.netronConn);
+        return !is.null(this._conn);
     }
 
     get(defId, name, defaultData) {
@@ -181,13 +174,17 @@ export default class RemotePeer extends AbstractPeer {
         return Array.from(this._ctxidDefs.keys());
     }
 
+    getNumberOfAwaiters() {
+        return this._responseAwaiters.size;
+    }
+
     _write(pkt) {
         return new Promise((resolve, reject) => {
-            if (!is.null(this.netronConn)) {
+            if (!is.null(this._conn)) {
                 const rawPkt = packet.encode(pkt).toBuffer();
                 HEADER_BUFFER.writeUInt32BE(rawPkt.length, 0);
-                this._writer.push(HEADER_BUFFER);
-                this._writer.push(rawPkt);
+                // pull-pushable won't using right order while processing data, so we can only push header+packet as one chunk
+                this._writer.push(Buffer.concat([HEADER_BUFFER, rawPkt]));
                 resolve();
             } else {
                 reject(new adone.exception.IllegalState("No active connection for netron protocol"));
@@ -236,68 +233,61 @@ export default class RemotePeer extends AbstractPeer {
     /**
      * Updates connection instances
      * 
-     * @param {Connection|null|undefined} rawConn - instance of raw connection 
-     * @param {Connection|null|undefined} netronConn - instance of netron connection
+     * @param {Connection|null} conn - instance of connection 
      */
-    _setConnInfo(rawConn, netronConn) {
-        if (!is.undefined(rawConn)) {
-            this.rawConn = rawConn;
+    _setConnInfo(conn) {
+        this._conn = conn;
+        if (is.null(conn)) {
+            this._writer.end();
+            this._writer = null;
+            return;
         }
 
-        if (!is.undefined(netronConn)) {
-            this.netronConn = netronConn;
-            if (is.null(netronConn)) {
-                this._writer.end();
-                this._writer = null;
-                return;
-            }
+        this._writer = pull.pushable();
 
-            this._writer = pull.pushable();
+        // receive data from remote netron
+        const permBuffer = new adone.collection.ByteArray(0);
+        let lpsz = 0;
 
-            // receive data from remote netron
-            const permBuffer = new adone.collection.ByteArray(0);
-            let lpsz = 0;
+        const handler = (chunk) => {
+            const buffer = permBuffer;
+            buffer.write(chunk);
 
-            const handler = (chunk) => {
-                const buffer = permBuffer;
-                buffer.write(chunk);
-
-                for (; ;) {
-                    if (buffer.length <= 4) {
-                        break;
-                    }
-                    let packetSize = lpsz;
-                    if (packetSize === 0) {
-                        lpsz = packetSize = buffer.readUInt32BE();
-                    }
-                    if (buffer.length < packetSize) {
-                        break;
-                    }
-
-                    try {
-                        const roffset = buffer.roffset;
-                        const pkt = packet.decode(buffer);
-                        if (packetSize !== (buffer.roffset - roffset)) {
-                            throw new exception.NotValid("Invalid packet");
-                        }
-                        this.netron._processPacket(this, pkt);
-                    } catch (err) {
-                        buffer.reset(true);
-                        adone.error(err);
-                    } finally {
-                        lpsz = 0;
-                    }
+            for (; ;) {
+                if (buffer.length <= 4) {
+                    break;
                 }
-            };
+                let packetSize = lpsz;
+                if (packetSize === 0) {
+                    lpsz = packetSize = buffer.readUInt32BE();
+                }
+                if (buffer.length < packetSize) {
+                    break;
+                }
 
-            pull(
-                this._writer,
-                netronConn,
-                pull.drain(handler, (err) => {
-                    // adone.warn(err);
-                })
-            );
-        }
+                try {
+                    const roffset = buffer.roffset;
+                    const pkt = packet.decode(buffer);
+                    if (packetSize !== (buffer.roffset - roffset)) {
+                        throw new exception.NotValid("Invalid packet");
+                    }
+                    this.netron._processPacket(this, pkt);
+                } catch (err) {
+                    buffer.reset(true);
+                    adone.error(err);
+                } finally {
+                    lpsz = 0;
+                }
+            }
+        };
+
+        pull(
+            this._writer,
+            conn,
+            pull.drain(handler, (err) => {
+                // adone.warn(err);
+            })
+        );
     }
 
     _updateDefinitions(defs) {

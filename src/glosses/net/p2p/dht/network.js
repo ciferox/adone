@@ -77,7 +77,7 @@ class Network {
         this.dht.swarm.handle(c.PROTOCOL_DHT, this._rpc);
 
         // handle new connections
-        this.dht.swarm.on("peer-mux-established", this._onPeerConnected);
+        this.dht.swarm.on("peer:mux:established", this._onPeerConnected);
 
         cb();
     }
@@ -95,7 +95,7 @@ class Network {
             return cb(new Error("Network is already stopped"));
         }
         this._running = false;
-        this.dht.swarm.removeListener("peer-mux-established", this._onPeerConnected);
+        this.dht.swarm.removeListener("peer:mux:established", this._onPeerConnected);
 
         this.dht.swarm.unhandle(c.PROTOCOL_DHT);
         cb();

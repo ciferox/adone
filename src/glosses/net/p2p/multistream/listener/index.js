@@ -2,7 +2,6 @@ const select = require("../select");
 const selectHandler = require("./select_handler");
 const lsHandler = require("./ls_handler");
 const matchExact = require("./match_exact");
-const util = require("./../util");
 
 const {
     is,
@@ -22,7 +21,6 @@ export default class Listener {
 
             }
         };
-        this.log = util.log.listener();
     }
 
     /**
@@ -34,8 +32,6 @@ export default class Listener {
      * @returns {undefined}
      */
     handle(rawConn, callback) {
-        this.log("listener handle conn");
-
         const selectStream = select(adone.net.p2p.multistream.PROTOCOL_ID, (err, conn) => {
             if (err) {
                 return callback(err);
@@ -43,7 +39,7 @@ export default class Listener {
 
             const shConn = new Connection(conn, rawConn);
 
-            const sh = selectHandler(shConn, this.handlers, this.log);
+            const sh = selectHandler(shConn, this.handlers);
 
             pull(
                 shConn,
@@ -52,7 +48,7 @@ export default class Listener {
             );
 
             callback();
-        }, this.log);
+        });
 
         pull(
             rawConn,
@@ -70,14 +66,13 @@ export default class Listener {
      * @returns {undefined}
      */
     addHandler(protocol, handlerFunc, matchFunc) {
-        this.log(`adding handler: ${protocol}`);
         if (!is.function(handlerFunc)) {
             throw new adone.exception.InvalidArgument("Handler must be a function");
         }
 
-        if (this.handlers[protocol]) {
-            this.log(`overwriting handler for ${protocol}`);
-        }
+        // if (this.handlers[protocol]) {
+        //     this.log(`overwriting handler for ${protocol}`);
+        // }
 
         if (!matchFunc) {
             matchFunc = matchExact;

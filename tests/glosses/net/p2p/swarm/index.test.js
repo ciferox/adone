@@ -446,13 +446,13 @@ describe("swarm", () => {
         it("warm up from A to B on tcp to tcp+ws", async () => {
             await Promise.all([
                 new Promise((resolve) => {
-                    swarmB.once("peer-mux-established", (peerInfo) => {
+                    swarmB.once("peer:mux:established", (peerInfo) => {
                         expect(peerInfo.id.asBase58()).to.equal(peerA.id.asBase58());
                         resolve();
                     });
                 }),
                 new Promise((resolve) => {
-                    swarmA.once("peer-mux-established", (peerInfo) => {
+                    swarmA.once("peer:mux:established", (peerInfo) => {
                         expect(peerInfo.id.asBase58()).to.equal(peerB.id.asBase58());
                         resolve();
                     });
@@ -557,13 +557,13 @@ describe("swarm", () => {
             let count = 0;
             const ready = () => ++count === 3 ? done() : null;
 
-            swarmB.once("peer-mux-closed", (peerInfo) => {
+            swarmB.once("peer:mux:closed", (peerInfo) => {
                 expect(Object.keys(swarmB.muxedConns).length).to.equal(0);
                 assert.notExists(peerB.isConnected());
                 ready();
             });
 
-            swarmA.once("peer-mux-closed", (peerInfo) => {
+            swarmA.once("peer:mux:closed", (peerInfo) => {
                 expect(Object.keys(swarmA.muxedConns).length).to.equal(1);
                 assert.notExists(peerA.isConnected());
                 ready();
@@ -576,7 +576,7 @@ describe("swarm", () => {
             this.timeout(2500);
             await Promise.all([
                 swarmC.close(),
-                new Promise((resolve) => swarmA.once("peer-mux-closed", resolve))
+                new Promise((resolve) => swarmA.once("peer:mux:closed", resolve))
             ]);
         });
     });

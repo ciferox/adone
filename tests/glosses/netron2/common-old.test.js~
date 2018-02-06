@@ -31,32 +31,6 @@ describe("netron", "common", function () {
     });
 
     describe("connection", () => {
-        it("Peer#disconnect() from client", async (done) => {
-            await superNetron.bind();
-            const peer = await exNetron.connect();
-            assert.ok(superNetron.getPeer(exNetron.uid));
-            assert.ok(exNetron.getPeer(superNetron.uid));
-
-            exNetron.on("peer offline", (peer) => {
-                assert.equal(peer.uid, superNetron.uid);
-                done();
-            });
-
-            peer.disconnect();
-        });
-
-        it("Peer#disconnect() from server", async (done) => {
-            await superNetron.bind();
-            await exNetron.connect();
-
-            superNetron.on("peer offline", (peer) => {
-                assert.equal(peer.uid, exNetron.uid);
-                done();
-            });
-
-            superNetron.getPeer(exNetron.uid).disconnect();
-        });
-
         it("Netron#disconnect(uid)", async (done) => {
             await superNetron.bind();
             await exNetron.connect();

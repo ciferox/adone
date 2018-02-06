@@ -42,8 +42,8 @@ export class Circuit {
 
         this.connector = new __.Connector(swarm, options);
 
-        this.swarm.on("peer-mux-established", this.connector.canHop.bind(this.connector));
-        this.swarm.on("peer-mux-closed", (peerInfo) => {
+        this.swarm.on("peer:mux:established", this.connector.canHop.bind(this.connector));
+        this.swarm.on("peer:mux:closed", (peerInfo) => {
             this.connector.relayPeers.delete(peerInfo.id.asBase58());
         });
     }

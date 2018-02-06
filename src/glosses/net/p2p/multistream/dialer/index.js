@@ -1,4 +1,3 @@
-const util = require("../util");
 const select = require("../select");
 
 const {
@@ -29,7 +28,6 @@ const collectLs = (conn) => {
 export default class Dialer {
     constructor() {
         this.conn = null;
-        this.log = util.log.dialer();
     }
 
     /**
@@ -40,18 +38,16 @@ export default class Dialer {
      * @returns {undefined}
      */
     handle(rawConn, callback) {
-        this.log("dialer handle conn");
         callback = once(callback);
         const s = select(adone.net.p2p.multistream.PROTOCOL_ID, (err, conn) => {
             if (err) {
                 return callback(err);
             }
-            this.log("handshake success");
 
             this.conn = new Connection(conn, rawConn);
 
             callback();
-        }, this.log);
+        });
 
         pull(
             rawConn,
@@ -73,7 +69,6 @@ export default class Dialer {
      * @returns {undefined}
      */
     select(protocol, callback) {
-        this.log(`dialer select ${protocol}`);
         callback = once(callback);
         if (!this.conn) {
             return callback(new Error("multistream handshake has not finalized yet"));
@@ -85,7 +80,7 @@ export default class Dialer {
                 return callback(err);
             }
             callback(null, new Connection(conn, this.conn));
-        }, this.log);
+        });
 
         pull(
             this.conn,

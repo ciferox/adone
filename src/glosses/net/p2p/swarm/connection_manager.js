@@ -81,10 +81,10 @@ export default class ConnectionManager {
                         delete this.swarm.muxedConns[b58Str];
                         peerInfo.disconnect();
                         peerInfo = this.swarm._peerBook.set(peerInfo);
-                        setImmediate(() => this.swarm.emit("peer-mux-closed", peerInfo));
+                        setImmediate(() => this.swarm.emit("peer:mux:closed", peerInfo, protocol));
                     });
 
-                    setImmediate(() => this.swarm.emit("peer-mux-established", peerInfo));
+                    setImmediate(() => this.swarm.emit("peer:mux:established", peerInfo, protocol));
                 } catch (err) {
                     return adone.log("Identify not successful");
                 }

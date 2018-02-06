@@ -79,9 +79,19 @@ export default class Netron extends adone.task.Manager {
             config.transport = "tcp";
         }
 
+        config.muxer = "spdy";
+
         const netCore = new adone.net.p2p.Core({
             ...config,
             peer: this.peer.info
+        });
+
+        netCore.on("peer:disconnect", (peerInfo) => {
+            try {
+                this._peerDisconnected(this.getPeer(peerInfo));
+            } catch (err) {
+                // Peer already disconnected, nothing todo...
+            }
         });
 
         this.networks.set(netId, new NetworkInfo(netCore));
@@ -120,42 +130,37 @@ export default class Netron extends adone.task.Manager {
      * Connects to peer using netcore identified by 'netId'.
      * 
      * @param {string} netId - network core name
-     * @param {options.onlyRaw} - if set to true, only raw connection will be initiated
-     * @param {options.tasks} - tasks that should be executed on remote side after successful connection to netron protocol
-     * @param {PeerInfo|string|Peer} peer - instance of RemotePeer
+     * @param {PeerInfo|Multiaddr|string|Peer} addr - peer address
      */
-    async connect(netId, peer, { onlyRaw = false, tasks = CONNECT_TASKS, subscribeOnContexts = true } = {}) {
+    async connect(netId, addr) {
+        let peerInfo;
+        if (adone.multi.address.isMultiaddr(addr) || is.string(addr)) {
+            let ma = addr;
+            if (is.string(addr)) {
+                ma = adone.multi.address.create(addr);
+            }
+            const peerIdB58Str = ma.getPeerId();
+            if (!peerIdB58Str) {
+                throw new Error("Peer multiaddr instance or string must include peerId");
+            }
+            peerInfo = new PeerInfo(adone.net.p2p.PeerId.createFromBase58(peerIdB58Str));
+            peerInfo.multiaddrs.add(ma);
+        } else {
+            peerInfo = addr;
+        }
+
         try {
-            return this.getPeer(peer);
+            return this.getPeer(peerInfo);
         } catch (err) {
             // fresh peer...
         }
 
         const netCore = this.getNetCore(netId);
-        const remotePeer = new adone.netron2.RemotePeer(PeerInfo.create(peer), this, netCore);
-
-        if (onlyRaw) {
-            const rawConn = await netCore.connect(peer);
-            await remotePeer._setConnInfo(rawConn);
-        } else {
-            // try {
-            const netronConn = await netCore.connect(peer, adone.netron2.NETRON_PROTOCOL);
-            await remotePeer._setConnInfo(undefined, netronConn);
-
-            if (!is.nil(tasks)) {
-                await remotePeer.runTask(tasks);
-            }
-
-            if (subscribeOnContexts) {
-                await remotePeer._subscribeOnContexts();
-            }
-            // } catch (err) {
-            //     // Nothing to do...
-            // }
-        }
-
-        this._peerConnected(remotePeer);
-        return remotePeer;
+        const peer = new adone.netron2.RemotePeer(PeerInfo.create(peerInfo), this, netCore);
+        const protocol = adone.netron2.NETRON_PROTOCOL;
+        await peer._setConnInfo(await netCore.connect(peerInfo, protocol));
+        await this._peerConnected(peer, protocol);
+        return peer;
     }
 
     /**
@@ -175,7 +180,6 @@ export default class Netron extends adone.task.Manager {
     async disconnectPeer(peerId) {
         const peer = this.getPeer(peerId);
         await peer.netCore.disconnect(peer.info);
-        return this._peerDisconnected(peer);
     }
 
     /**
@@ -183,7 +187,7 @@ export default class Netron extends adone.task.Manager {
      * 
      * @param {string} netId network name
      */
-    async start(netId, { netronProtocol = true } = {}) {
+    async start(netId) {
         if (!is.string(netId)) {
             const promises = [];
             for (const id of this.networks.keys()) {
@@ -196,38 +200,31 @@ export default class Netron extends adone.task.Manager {
         if (!netCore.started) {
             await netCore.start();
 
-            // TODO: obtain raw connection for remote peer
-            netCore.on("peer:connect", (peerInfo) => {
-                const remotePeer = new adone.netron2.RemotePeer(peerInfo, this, netCore);
-                this._peerConnected(remotePeer);
+            netCore.handle(adone.netron2.NETRON_PROTOCOL, async (protocol, conn) => {
+                const peerInfo = await conn.getPeerInfo();
+                const peer = new adone.netron2.RemotePeer(peerInfo, this, netCore);
+                peer._setConnInfo(conn);
+                await this._peerConnected(peer, protocol);
             });
-
-            netCore.on("peer:disconnect", (peerInfo) => {
-                this._peerDisconnected(this.peers.get(peerInfo.id.asBase58()));
-            });
-
-            if (netronProtocol) {
-                netCore.handle(adone.netron2.NETRON_PROTOCOL, async (protocol, conn) => {
-                    const peerInfo = await conn.getPeerInfo();
-                    const remotePeer = this.peers.get(peerInfo.id.asBase58());
-                    remotePeer.protocol = protocol;
-                    remotePeer._setConnInfo(undefined, conn);
-                });
-            }
         }
     }
 
-    _peerConnected(peer) {
+    async _peerConnected(peer, protocol) {
         const base58Id = peer.info.id.asBase58();
         this.peers.set(base58Id, peer);
+        peer.protocol = protocol;
         peer.connectedTime = new Date();
+        await peer.runTask(CONNECT_TASKS);
+        await peer._subscribeOnContexts();
         return this._emitOwnEvent("peer:connect", `peer:${base58Id}`, {
             id: base58Id
         });
     }
 
     async _peerDisconnected(peer) {
-        this.peers.delete(peer.info.id.asBase58());
+        const base58Id = peer.info.id.asBase58();
+        this.peers.delete(base58Id);
+        peer._setConnInfo(null);
 
         if (peer._remoteSubscriptions.size > 0) {
             for (const [eventName, fn] of peer._remoteSubscriptions.entries()) {
@@ -236,7 +233,6 @@ export default class Netron extends adone.task.Manager {
             peer._remoteSubscriptions.clear();
         }
 
-        const base58Id = peer.info.id.asBase58();
         this._peerStubs.delete(base58Id);
 
         // Release stubs sended to peer;
@@ -253,7 +249,7 @@ export default class Netron extends adone.task.Manager {
         await this._emitOwnEvent("peer:disconnect", `peer:${base58Id}`, {
             id: base58Id
         });
-        this._ownEvents.delete(`peer:${peer.info.id.asBase58()}`);
+        this._ownEvents.delete(`peer:${base58Id}`);
     }
 
     /**
@@ -461,7 +457,7 @@ export default class Netron extends adone.task.Manager {
             if (this.peer.info.id.asBase58() === base58Id) {
                 return this.peer;
             }
-            throw new exception.Unknown(`Unknown peer: '${peerId.toString()}'`);
+            throw new exception.Unknown(`Unknown peer: '${base58Id}'`);
         }
         return peer;
     }

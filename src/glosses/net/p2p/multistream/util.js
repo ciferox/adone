@@ -34,30 +34,3 @@ exports.writeEncoded = (writer, msg, callback) => {
         writer.write(msg);
     });
 };
-
-const createLogger = function (type) {
-    const rId = randomId();
-
-    const printer = function (logger) {
-        return (msg) => {
-            if (is.array(msg)) {
-                msg = msg.join(" ");
-            }
-            logger("(%s) %s", rId, msg);
-        };
-    };
-
-    const log = printer(debug(`mss:${type}`));
-    log.error = printer(debug(`mss:${type}:error`));
-
-    return log;
-};
-
-exports.log = {};
-
-exports.log.dialer = () => {
-    return createLogger("dialer\t");
-};
-exports.log.listener = () => {
-    return createLogger("listener\t");
-};

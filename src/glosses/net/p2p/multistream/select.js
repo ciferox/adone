@@ -5,14 +5,13 @@ const {
     stream: { pull }
 } = adone;
 
-const select = (multicodec, callback, log) => {
+const select = (multicodec, callback) => {
     const stream = pull.handshake({
         timeout: 60 * 1000
     }, callback);
 
     const shake = stream.handshake;
 
-    log(`writing multicodec: ${multicodec}`);
     writeEncoded(shake, Buffer.from(`${multicodec}\n`), callback);
 
     pull.lengthPrefixed.decodeFromReader(shake, (err, data) => {
@@ -25,7 +24,6 @@ const select = (multicodec, callback, log) => {
             return callback(new adone.exception.NotSupported(`"${multicodec}" not supported`), shake.rest());
         }
 
-        log(`received ack: ${protocol}`);
         callback(null, shake.rest());
     });
 

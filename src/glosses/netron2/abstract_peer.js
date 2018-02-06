@@ -27,17 +27,10 @@ export default class AbstractPeer extends AsyncEmitter {
     }
 
     /**
-     * Checks peer is connected.
+     * Checks peer is connected using netron protocol.
      */
     isConnected() {
         throw new adone.exception.NotImplemented("Method isConnected() is not implemented");
-    }
-
-    /**
-     * Checks peer is connected using netron protocol.
-     */
-    isNetronConnected() {
-        throw new adone.exception.NotImplemented("Method isNetronConnected() is not implemented");
     }
 
     /**
@@ -215,18 +208,6 @@ export default class AbstractPeer extends AsyncEmitter {
     _queryInterfaceByDefinition(/*defId*/) {
         throw new adone.exception.NotImplemented("Method _queryInterfaceByDefinition() is not implemented");
     }
-
-    // getNumberOfAwaiters() {
-    //     return this._responseAwaiters.size;
-    // }
-
-    // onContextAttach(handler) {
-    //     return this.onRemote("context attach", handler);
-    // }
-
-    // onContextDetach(handler) {
-    //     return this.onRemote("context detach", handler);
-    // }
 
     // // _removeRelatedDefinitions(proxyDef) {
     // //     for (let [defId, def] of this._defs.entries()) {

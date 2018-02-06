@@ -17,7 +17,6 @@ describe("AbstractPeer", () => {
         const methods = [
             "disconnect",
             "isConnected",
-            "isNetronConnected",
             "subscribe",
             "unsubscribe",
             "attachContext",

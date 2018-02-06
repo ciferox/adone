@@ -23,10 +23,6 @@ describe("netron", "OwnPeer", () => {
         it("isConnected() always return true", () => {
             assert.true(peer.isConnected());
         });
-    
-        it("isNetronConnected() always return true", () => {
-            assert.true(peer.isNetronConnected());
-        });
     });
 
     class TestInterface {
