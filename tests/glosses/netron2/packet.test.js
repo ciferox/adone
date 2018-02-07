@@ -24,24 +24,36 @@ describe("Packet", () => {
         assert.equal(pkt.getImpulse(), 0);
     });
 
+    it("set/get error bit", () => {
+        assert.equal(pkt.getError(), 0);
+        pkt.setError(1);
+        assert.equal(pkt.getError(), 1);
+        assert.equal(pkt.flags, 0x40);
+        pkt.setError(0);
+        assert.equal(pkt.getError(), 0);
+    });
+
     it("set/get action value", () => {
         pkt.setImpulse(1);
         assert.equal(pkt.getAction(), 0);
         pkt.setAction(0x34);
         assert.equal(pkt.getAction(), 0x34);
         assert.equal(pkt.getImpulse(), 1);
-        pkt.setAction(0x7F);
-        assert.equal(pkt.getAction(), 0x7F);
+        assert.equal(pkt.getError(), 0);
+        pkt.setAction(0x3F);
+        assert.equal(pkt.getAction(), 0x3F);
         assert.equal(pkt.getImpulse(), 1);
+        assert.equal(pkt.getError(), 0);
         pkt.setAction(0);
         assert.equal(pkt.getAction(), 0);
         assert.equal(pkt.getImpulse(), 1);
+        assert.equal(pkt.getError(), 0);
     });
 
     it("set bigger action value should not rewrite impulse bit", () => {
         assert.equal(pkt.getAction(), 0);
         pkt.setAction(0xFF);
-        assert.equal(pkt.getAction(), 0x7F);
+        assert.equal(pkt.getAction(), 0x3F);
         assert.equal(pkt.getImpulse(), 0);
     });
 

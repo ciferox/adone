@@ -35,7 +35,9 @@ describe("netron", "RemotePeer", () => {
         }
 
         async beforeEach() {
-            this.netronS = new Netron(this.peerInfoS);
+            this.netronS = new Netron(this.peerInfoS, {
+                proxyContexts: true
+            });
             this.peerS = this.netronS.peer;
 
             this.netronC = new Netron(this.peerInfoC);

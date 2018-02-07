@@ -128,13 +128,13 @@ export default class InterfaceFactory {
     }
 
     _processObject(peerInfo, obj) {
-        if (is.netronInterface(obj)) {
+        if (is.netron2Interface(obj)) {
             return new Reference(obj[__.I_DEFINITION_SYMBOL].id);
-        } else if (is.netronContext(obj)) {
+        } else if (is.netron2Context(obj)) {
             const def = this.netron.refContext(peerInfo, obj);
             def.peerId = peerInfo.id.asBase58(); // definition owner
             return def;
-        } else if (is.netronDefinitions(obj)) {
+        } else if (is.netron2Definitions(obj)) {
             const newDefs = new Definitions();
             for (let i = 0; i < obj.length; i++) {
                 newDefs.push(this._processObject(peerInfo, obj.get(i)));

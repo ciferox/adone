@@ -62,7 +62,7 @@ describe("Stub", () => {
         });
 
         it("get value of parent class property", () => {
-            assert.equal(stub.get("propA", undefined, netron.peer), 1);
+            assert.equal(stub.get("propA", undefined, netron.peer), "aaa");
         });
 
         it("call sync method", () => {
@@ -122,7 +122,7 @@ describe("Stub", () => {
         });
 
         it("set value of parent class property", () => {
-            assert.equal(stub.get("propA", undefined, netron.peer), 1);
+            assert.equal(stub.get("propA", undefined, netron.peer), "aaa");
             stub.set("propA", 88, netron.peer);
             assert.equal(stub.get("propA", undefined, netron.peer), 88);
         });

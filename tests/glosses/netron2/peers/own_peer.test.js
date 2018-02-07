@@ -1,4 +1,5 @@
 import testInterface from "./interface";
+import { createNetron } from "../common";
 
 const {
     net: { p2p: { PeerInfo } },
@@ -10,16 +11,16 @@ describe("netron", "OwnPeer", () => {
         let peerInfo;
         let netron;
         let peer;
-    
+
         before(() => {
             peerInfo = PeerInfo.create();
         });
-    
+
         beforeEach(() => {
             netron = new Netron(peerInfo);
             peer = netron.peer;
         });
-    
+
         it("isConnected() always return true", () => {
             assert.true(peer.isConnected());
         });
@@ -36,15 +37,18 @@ describe("netron", "OwnPeer", () => {
 
         after() {
         }
-    
-        beforeEach() {
-            this.netron = new Netron(this.peerInfo);
+
+        async beforeEach() {
+            this.netron = createNetron(this.peerInfo, "/ip4/0.0.0.0/tcp/0");
             this.peer = this.netron.peer;
+
+            await this.netron.start();
 
             return [this.netron, this.peer];
         }
 
-        afterEach() {
+        async afterEach() {
+            await this.netron.stop();
             this._reset();
         }
 

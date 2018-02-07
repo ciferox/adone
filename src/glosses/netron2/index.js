@@ -187,6 +187,7 @@ adone.lazify({
     DMethod: ["./reflection", (mod) => mod.DMethod], // decorator
     DProperty: ["./reflection", (mod) => mod.DProperty], // decorator
     CONTEXT_ANNOTATION: ["./reflection", (mod) => mod.CONTEXT_ANNOTATION],
+    PUBLIC_ANNOTATION: ["./reflection", (mod) => mod.PUBLIC_ANNOTATION],
     Stub: "./stub",
     RemoteStub: "./remote_stub",
     Netron: "./netron",

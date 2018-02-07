@@ -1,11 +1,15 @@
-import { A, B } from "../contexts";
+import { A, B, commonTypes, CommonTypes } from "../contexts";
+import { createNetron } from "../common";
 
 const {
-    is
+    is,
+    promise
 } = adone;
 
+const __ = adone.private(adone.netron2);
+
 export default (testInterface) => {
-    describe("interface", () => {
+    describe("peer interface", () => {
         let netron;
         let peer;
 
@@ -28,11 +32,11 @@ export default (testInterface) => {
         describe("_getContextDefinition()", () => {
             beforeEach(async () => {
                 await netron.attachContext(new A(), "a");
-                await adone.promise.delay(500);
+                await promise.delay(500);
             });
 
             it("should throws with unknown context", () => {
-                assert.throws(() => peer._getContextDefinition("not_exists"), adone.exception.Unknown);
+                assert.throws(() => peer._getContextDefinition("not_exists"), adone.exception.NotExists);
             });
 
             it("_getContextDefinition() should return definition of attached context owned by netron instance", () => {
@@ -75,189 +79,455 @@ export default (testInterface) => {
                 assert.false(peer.hasContext("a"));
             });
 
-            // it("context attach notification", async () => {
-            //     await superNetron.bind();
-            //     const peer = await exNetron.connect();
+            it("attached contexts should be accessible from the same peer", async () => {
+                await peer.attachContext(new A(), "a");
+                await peer.attachContext(new B());
 
-            //     superNetron.attachContext(new A(), "a");
-            //     superNetron.attachContext(new B());
+                await promise.delay(500);
 
-            //     assert.include(superNetron.getContextNames(), "a");
-            //     assert.include(superNetron.getContextNames(), "B");
+                assert.include(netron.getContextNames(), "a");
+                assert.include(netron.getContextNames(), "B");
 
-            //     await adone.promise.delay(100);
-            //     assert.include(peer.getContextNames(), "a");
-            //     assert.include(peer.getContextNames(), "B");
-            // });
+                await promise.delay(100);
 
+                assert.include(peer.getContextNames(), "a");
+                assert.include(peer.getContextNames(), "B");
+            });
 
-            // describe("attach remote contexts", () => {
-            //     let exNetron2;
+            it("attached contexts (before connect) should be accessible from other peer", async () => {
+                await peer.attachContext(new A(), "a");
+                await peer.attachContext(new B());
 
-            //     beforeEach(async () => {
-            //         exNetron2 = new Netron();
-            //     });
+                await promise.delay(500);
 
-            //     afterEach(async () => {
-            //         await superNetron.disconnect();
-            //         await superNetron.unbind();
-            //     });
+                const netron2 = createNetron();
+                const remotePeer = await netron2.connect("default", netron.peer.info);
+                assert.true(remotePeer.isConnected());
 
-            //     it("netrons should exchange contexts when connected", async () => {
-            //         await superNetron.bind();
-            //         const peer = await exNetron.connect();
-            //         await exNetron.attachContextRemote(peer.uid, new A(), "a");
-            //         await exNetron.attachContextRemote(peer.uid, new B());
+                assert.include(netron.getContextNames(), "a");
+                assert.include(netron.getContextNames(), "B");
 
-            //         const peer2 = await exNetron2.connect();
+                assert.include(peer.getContextNames(), "a");
+                assert.include(peer.getContextNames(), "B");
 
-            //         assert.include(superNetron.getContextNames(), "a");
-            //         assert.include(superNetron.getContextNames(), "B");
-            //         assert.include(peer.getContextNames(), "a");
-            //         assert.include(peer.getContextNames(), "B");
-            //         assert.include(peer2.getContextNames(), "a");
-            //         assert.include(peer2.getContextNames(), "B");
-            //     });
+                assert.include(remotePeer.getContextNames(), "a");
+                assert.include(remotePeer.getContextNames(), "B");
+            });
 
-            //     it("attach notifications should be sent between the netrons when new contexts are attached", async () => {
-            //         await superNetron.bind();
-            //         const peer = await exNetron.connect();
-            //         const peer2 = await exNetron2.connect();
-            //         await exNetron.attachContextRemote(peer.uid, new A(), "a");
-            //         await exNetron.attachContextRemote(peer.uid, new B());
+            it("attached contexts (after connect) should be accessible from other peer", async () => {
+                const netron2 = createNetron();
+                const remotePeer = await netron2.connect("default", netron.peer.info);
+                assert.true(remotePeer.isConnected());
 
-            //         assert.include(superNetron.getContextNames(), "a");
-            //         assert.include(superNetron.getContextNames(), "B");
+                await peer.attachContext(new A(), "a");
+                await peer.attachContext(new B());
 
-            //         await adone.promise.delay(100);
-            //         assert.include(peer.getContextNames(), "a");
-            //         assert.include(peer.getContextNames(), "B");
-            //         assert.include(peer2.getContextNames(), "a");
-            //         assert.include(peer2.getContextNames(), "B");
-            //     });
+                await promise.delay(500);
 
-            //     it("double attach same context should have thrown", async () => {
-            //         const ctx = new A();
+                assert.include(netron.getContextNames(), "a");
+                assert.include(netron.getContextNames(), "B");
 
-            //         await superNetron.bind();
-            //         const peer = await exNetron.connect();
+                assert.include(peer.getContextNames(), "a");
+                assert.include(peer.getContextNames(), "B");
 
-            //         await exNetron.attachContextRemote(peer.uid, ctx, "a");
-            //         const err = await assert.throws(async () => exNetron.attachContextRemote(peer.uid, ctx, "a"));
-            //         assert.instanceOf(err, adone.exception.Exists);
-            //     });
-            // });
+                assert.include(remotePeer.getContextNames(), "a");
+                assert.include(remotePeer.getContextNames(), "B");
+            });
 
-            // describe("detach contexts", () => {
-            //     it("detach notification", async () => {
-            //         await superNetron.bind();
-            //         superNetron.attachContext(new A(), "a");
-            //         superNetron.attachContext(new B());
-            //         const peer = await exNetron.connect();
+            it("attach same context twice should have thrown", async () => {
+                const a = new A();
 
-            //         superNetron.detachContext("a");
-            //         superNetron.detachContext("B");
+                await peer.attachContext(a, "a");
+                const err = await assert.throws(async () => peer.attachContext(a, "a"));
+                assert.instanceOf(err, adone.exception.Exists);
+            });
 
-            //         await adone.promise.delay(100);
-            //         assert.notInclude(peer.getContextNames(), "a");
-            //         assert.notInclude(peer.getContextNames(), "B");
-            //     });
-            // });
+            it("detach contexts", async () => {
+                const netron2 = createNetron();
+                const remotePeer = await netron2.connect("default", netron.peer.info);
+                assert.true(remotePeer.isConnected());
 
-            // describe("detach remote contexts", () => {
-            //     let exNetron2;
+                await promise.delay(500);
 
-            //     beforeEach(async () => {
-            //         exNetron2 = new Netron();
-            //     });
+                await peer.attachContext(new A(), "a");
+                await peer.attachContext(new B());
 
-            //     afterEach(async () => {
-            //         await superNetron.disconnect();
-            //         await superNetron.unbind();
-            //     });
+                await promise.delay(500);
 
-            //     it("detach not existing context", async () => {
-            //         await superNetron.bind();
-            //         const peer = await exNetron.connect();
+                assert.sameMembers(remotePeer.getContextNames(), ["a", "B"]);
+                assert.sameMembers(peer.getContextNames(), ["a", "B"]);
+                assert.sameMembers(netron.getContextNames(), ["a", "B"]);
 
-            //         const e = await assert.throws(async () => exNetron.detachContextRemote(peer.uid, "this_context_not_exists"));
-            //         assert.instanceOf(e, adone.exception.NotExists);
-            //     });
+                await peer.detachContext("a");
+                await peer.detachContext("B");
 
-            //     it("valid way", async () => {
-            //         await superNetron.bind();
-            //         const peer = await exNetron.connect();
+                await promise.delay(500);
 
-            //         await exNetron.attachContextRemote(peer.uid, new A(), "a");
-            //         await exNetron.attachContextRemote(peer.uid, new B());
+                assert.lengthOf(netron.getContextNames(), 0);
+                assert.lengthOf(peer.getContextNames(), 0);
+                assert.lengthOf(remotePeer.getContextNames(), 0);
+            });
 
-            //         assert.include(peer.getContextNames(), "a");
-            //         assert.include(peer.getContextNames(), "B");
-
-            //         await exNetron.detachContextRemote(peer.uid, "a");
-            //         await exNetron.detachContextRemote(peer.uid, "B");
-
-            //         assert.notInclude(superNetron.getContextNames(), "a");
-            //         assert.notInclude(superNetron.getContextNames(), "B");
-            //     });
-
-            //     it("detach notification", async () => {
-            //         await superNetron.bind();
-            //         const peer = await exNetron.connect();
-            //         await exNetron.attachContextRemote(peer.uid, new A(), "a");
-            //         await exNetron.attachContextRemote(peer.uid, new B());
-
-            //         const peer2 = await exNetron2.connect();
-            //         assert.include(peer2.getContextNames(), "a");
-            //         assert.include(peer2.getContextNames(), "B");
-
-            //         await exNetron.detachContextRemote(peer.uid, "a");
-            //         await exNetron.detachContextRemote(peer.uid, "B");
-
-            //         await adone.promise.delay(100);
-            //         assert.notInclude(peer2.getContextNames(), "a");
-            //         assert.notInclude(peer2.getContextNames(), "B");
-            //     });
-            // });
-
-
-
-
-            // it("obtain interface of netron context", async () => {
-            //     @Context()
-            //     class CtxA {
-            //         @Public()
-            //         method1() {
-            //             return "Adone";
-            //         }
-            //     }
-            //     await netron.attachContext(new CtxA(), "a");
-            //     const ownPeer = await netron.connect(null);
-            //     const iA = ownPeer.queryInterface("a");
-            //     assert.equal(await iA.method1(), "Adone");
-
-            //     await assert.throws(async () => ownPeer.disconnect());
-            // });
-
-            // it("attach remote context should simply attach context", async () => {
-            //     @Context()
-            //     class CtxA {
-            //         @Public()
-            //         method1() {
-            //             return "Adone";
-            //         }
-            //     }
-            //     const ownPeer = await netron.connect(null);
-            //     await ownPeer.attachContextRemote(new CtxA());
-            //     const iA = ownPeer.queryInterface("CtxA");
-            //     assert.equal(await iA.method1(), "Adone");
-            //     assert.sameMembers(netron.getContextNames(), ["CtxA"]);
-
-            //     await ownPeer.detachContextRemote("CtxA");
-            //     assert.lengthOf(netron.getContextNames(), 0);
-            // });
+            it("detach non-existing context should have thrown", async () => {
+                await assert.throws(async () => peer.detachContext("hack"), adone.exception.NotExists);
+            });
         });
 
+        describe("interfaces", () => {
+            it("query interface", async () => {
+                await peer.attachContext(new A(), "a");
+                await promise.delay(500);
+
+                const iA = peer.queryInterface("a");
+                assert.true(is.netron2Interface(iA));
+                assert.true(peer.interfaces.has(iA[__.I_DEFINITION_SYMBOL].id));
+            });
+
+            it("query interface (remote)", async () => {
+                const netron2 = createNetron();
+                const remotePeer = await netron2.connect("default", netron.peer.info);
+
+                await peer.attachContext(new A(), "a");
+                await promise.delay(500);
+
+                const iA = remotePeer.queryInterface("a");
+                assert.true(is.netron2Interface(iA));
+                assert.true(remotePeer.interfaces.has(iA[__.I_DEFINITION_SYMBOL].id));
+            });
+
+            it("query non-existing interface should have thrown", async () => {
+                assert.throws(() => peer.queryInterface("a"), adone.exception.NotExists);
+            });
+
+            it("release interface", async () => {
+                await peer.attachContext(new A(), "a");
+                await promise.delay(500);
+
+                const iA = peer.queryInterface("a");
+                assert.true(is.netron2Interface(iA));
+                const defId = iA[__.I_DEFINITION_SYMBOL].id;
+                assert.true(peer.interfaces.has(defId));
+
+                peer.releaseInterface(iA);
+                assert.false(peer.interfaces.has(defId));
+            });
+
+            it("release interface (remote)", async () => {
+                const netron2 = createNetron();
+                const remotePeer = await netron2.connect("default", netron.peer.info);
+
+                await peer.attachContext(new A(), "a");
+                await promise.delay(500);
+
+                const iA = remotePeer.queryInterface("a");
+                assert.true(is.netron2Interface(iA));
+                const defId = iA[__.I_DEFINITION_SYMBOL].id;
+                assert.true(remotePeer.interfaces.has(defId));
+
+                remotePeer.releaseInterface(iA);
+                assert.false(remotePeer.interfaces.has(defId));
+            });
+
+            it("release non-interface should have thrown", async () => {
+                assert.throws(() => peer.releaseInterface(new A()), adone.exception.NotValid);
+            });
+
+            describe("common types", () => {
+                let iCt;
+                beforeEach(async () => {
+                    await peer.attachContext(new CommonTypes(), "ct");
+
+                    await promise.delay(500);
+                    iCt = peer.queryInterface("ct");
+                });
+
+                describe("public properties", () => {
+                    for (const ct of commonTypes) {
+                        // eslint-disable-next-line
+                        it(`_${ct.name}`, async () => {
+                            assert.deepEqual(await iCt[`_${ct.name}`].get(), ct.value);
+                        });
+                    }
+                });
+
+                describe("public methods", () => {
+                    for (const ct of commonTypes) {
+                        // eslint-disable-next-line
+                        it(`${ct.name}()`, async () => {
+                            assert.deepEqual(await iCt[ct.name](), ct.value);
+                        });
+                    }
+                });
+            });
+
+            describe("common types (remote peer)", () => {
+                let netron2;
+                let remotePeer;
+                let iCt;
+
+                before(() => {
+                    netron2 = createNetron();
+                });
+
+                beforeEach(async () => {
+                    await peer.attachContext(new CommonTypes(), "ct");
+
+                    remotePeer = await netron2.connect("default", netron.peer.info);
+
+                    iCt = remotePeer.queryInterface("ct");
+                    assert.true(is.netron2Interface(iCt));
+                });
+
+                describe("public properties", () => {
+                    for (const ct of commonTypes) {
+                        // eslint-disable-next-line
+                        it(`_${ct.name}`, async () => {
+                            assert.deepEqual(await iCt[`_${ct.name}`].get(), ct.value);
+                        });
+                    }
+                });
+
+                describe("public methods", () => {
+                    for (const ct of commonTypes) {
+                        // eslint-disable-next-line
+                        it(`${ct.name}()`, async () => {
+                            assert.deepEqual(await iCt[ct.name](), ct.value);
+                        });
+                    }
+                });
+            });
+
+            it("get property of non-existing context", async () => {
+                await peer.attachContext(new A(), "a");
+
+                await promise.delay(500);
+
+                const iA = peer.queryInterface("a");
+                assert.true(is.netron2Interface(iA));
+                assert.equal(await iA.propA.get(), "aaa");
+
+                await peer.detachContext("a");
+
+                await promise.delay(500);
+
+                await assert.throws(async () => iA.propA.get(), adone.exception.NotExists);
+            });
+
+            it("get property of non-existing context (remote)", async () => {
+                const netron2 = createNetron();
+                await peer.attachContext(new A(), "a");
+
+                await promise.delay(500);
+
+                const remotePeer = await netron2.connect("default", netron.peer.info);
+
+                const iA = remotePeer.queryInterface("a");
+                assert.true(is.netron2Interface(iA));
+                assert.equal(await iA.propA.get(), "aaa");
+
+                await peer.detachContext("a");
+
+                await promise.delay(500);
+
+                await assert.throws(async () => iA.propA.get(), adone.exception.NotExists);
+            });
+
+            it("call method of non-existing context", async () => {
+                await peer.attachContext(new A(), "a");
+
+                await promise.delay(500);
+
+                const iA = peer.queryInterface("a");
+                assert.true(is.netron2Interface(iA));
+                assert.equal(await iA.methodA(), "aaa");
+
+                await peer.detachContext("a");
+
+                await promise.delay(500);
+
+                await assert.throws(async () => iA.methodA(), adone.exception.NotExists);
+            });
+
+            it("call method of non-existing context (remote)", async () => {
+                const netron2 = createNetron();
+                await peer.attachContext(new A(), "a");
+
+                await promise.delay(500);
+
+                const remotePeer = await netron2.connect("default", netron.peer.info);
+
+                const iA = remotePeer.queryInterface("a");
+                assert.true(is.netron2Interface(iA));
+                assert.equal(await iA.methodA(), "aaa");
+
+                await netron.detachContext("a");
+
+                await promise.delay(500);
+
+                await assert.throws(async () => iA.methodA(), adone.exception.NotExists);
+            });
+
+            // it("should not emit events about conexts to context origin netron in super mode", async () => {
+            //     await superNetron.bind();
+            //     await exNetron.connect();
+            //     let nCatchedEvent = false;
+            //     let n2CatchedEvent = false;
+            //     await exNetron.onRemote(superNetron.uid, "context detach", (peer, ctxData) => {
+            //         nCatchedEvent = true;
+            //     });
+
+            //     await exNetron.attachContextRemote(superNetron.uid, new A(), "a");
+            //     await exNetron.attachContextRemote(superNetron.uid, new B(), "b");
+            //     exNetron2 = new Netron();
+            //     await exNetron2.connect();
+
+
+            //     await exNetron2.onRemote(superNetron.uid, "context detach", (peer, ctxData) => {
+            //         n2CatchedEvent = true;
+            //     });
+
+            //     await exNetron.detachContextRemote(superNetron.uid, "a");
+            //     await promise.delay(1000);
+            //     await superNetron.disconnect();
+            //     await superNetron.unbind();
+            //     assert.equal(nCatchedEvent, false);
+            //     assert.equal(n2CatchedEvent, true);
+            // });
+
+            // for (const contextType of ["Strict", "Weak"]) {
+            //     // eslint-disable-next-line
+            //     describe(contextType, () => {
+            //         for (const currentCase of ["local", "remote", "super remote"]) {
+            //             // eslint-disable-next-line
+            //             describe(currentCase, () => {
+            //                 let netron;
+            //                 let uid;
+            //                 let iface;
+
+            //                 beforeEach(async () => {
+
+            //                     if (currentCase === "remote") {
+
+            //                         superNetron.attachContext(new A(), "a");
+            //                         superNetron.attachContext(new B(), "b");
+            //                         await superNetron.bind();
+            //                         await exNetron.connect();
+            //                         netron = exNetron;
+            //                         uid = superNetron.uid;
+
+            //                     } else if (currentCase === "super remote") {
+
+            //                         await superNetron.bind();
+            //                         await exNetron.connect();
+            //                         await exNetron.attachContextRemote(superNetron.uid, new A(), "a");
+            //                         await exNetron.attachContextRemote(superNetron.uid, new B(), "b");
+            //                         exNetron2 = new Netron();
+            //                         await exNetron2.connect();
+            //                         netron = exNetron2;
+            //                         uid = superNetron.uid;
+
+            //                     } else if (currentCase === "local") {
+
+            //                         superNetron.attachContext(new A(), "a");
+            //                         superNetron.attachContext(new B(), "b");
+            //                         netron = superNetron;
+            //                         uid = null;
+
+            //                     } else {
+            //                         throw Error(`Unknown case: ${currentCase}`);
+            //                     }
+
+            //                     if (contextType === "Strict") {
+            //                         iface = netron.getInterfaceByName("a", uid);
+            //                     } else if (contextType === "Weak") {
+            //                         const tmp = netron.getInterfaceByName("b", uid);
+            //                         iface = await tmp.getWeakContext();
+            //                     } else {
+            //                         throw Error(`Unknown context type: ${contextType}`);
+            //                     }
+            //                 });
+
+            //                 afterEach(async () => {
+            //                     if (currentCase.includes("remote")) {
+            //                         await exNetron.disconnect();
+            //                         await promise.delay(300);
+            //                         if (currentCase === "super remote") {
+            //                             await exNetron2.disconnect();
+            //                         }
+            //                         await superNetron.unbind();
+            //                     }
+            //                 });
+
+            //                 it("property set/get", async () => {
+            //                     assert.strictEqual(await iface.property.get(), null);
+
+            //                     await iface.property.set(true);
+            //                     assert.strictEqual(await iface.property.get(), true);
+
+            //                     await iface.property.set(false);
+            //                     assert.strictEqual(await iface.property.get(), false);
+
+            //                     await iface.property.set(10);
+            //                     assert.strictEqual(await iface.property.get(), 10);
+
+            //                     await iface.property.set("string");
+            //                     assert.strictEqual(await iface.property.get(), "string");
+
+            //                     const arr = [true, 1, "string"];
+            //                     await iface.property.set(arr);
+            //                     assert.deepEqual(await iface.property.get(), arr);
+
+            //                     const obj = { a: 1, b: "string" };
+            //                     await iface.property.set(obj);
+            //                     assert.deepEqual(await iface.property.get(), obj);
+            //                 });
+
+            //                 it("get default value", async () => {
+            //                     const iface = netron.getInterfaceByName("a", uid);
+            //                     assert.strictEqual(await iface.undefinedProperty.get(100500), 100500, "default value");
+            //                 });
+
+            //                 it("call function with return", async () => {
+            //                     let result;
+            //                     const data = [true, 1, "string", { a: true, b: 1, c: "string" }, [true, 1, "string"]];
+
+            //                     for (const t of data) {
+            //                         result = await iface.method(t);
+            //                         assert.deepEqual(result, [t]);
+            //                         result = await iface.method(t, t);
+            //                         assert.deepEqual(result, [t, t]);
+            //                     }
+            //                 });
+
+            //                 it("exception in function call", async () => {
+            //                     const e = await assert.throws(async () => iface.errorMethod());
+            //                     assert.instanceOf(e, Error);
+            //                     assert.equal(e.message, "I'm an error!");
+            //                 });
+
+            //                 it("call function without return", async () => {
+            //                     const data = [true, 1, "string", { a: true, b: 1, c: "string" }, [true, 1, "string"]];
+            //                     let counter = 0;
+
+            //                     for (const t of data) {
+            //                         await iface.voidMethod();
+            //                         assert.strictEqual(await iface.counter.get(), ++counter, "without arguments");
+            //                         assert.deepEqual(await iface.storage.get(), [], "without arguments");
+
+            //                         await iface.voidMethod(1);
+            //                         assert.strictEqual(await iface.counter.get(), ++counter, "one arguments");
+            //                         assert.deepEqual(await iface.storage.get(), [1], "one arguments");
+
+            //                         await iface.voidMethod(1, t);
+            //                         assert.strictEqual(await iface.counter.get(), ++counter, "multiple arguments");
+            //                         assert.deepEqual(await iface.storage.get(), [1, t], "multiple arguments");
+            //                     }
+            //                 });
+            //             });
+            //         }
+            //     });
+            // }
+        });
 
         // describe("interfaces", () => {
         //     describe("_queryInterfaceByDefinition()", () => {
@@ -382,212 +652,5 @@ export default (testInterface) => {
         //         assert.equal(n.peer.interfaces.size, 0);
         //     });
         // });
-
-        describe("interfaces", () => {
-            // let exNetron2;
-
-            // @Context()
-            // class A {
-            //     @Public()
-            //     property = null;
-
-            //     @Public()
-            //     undefinedProperty = undefined;
-
-            //     @Public()
-            //     storage = null;
-
-            //     @Public()
-            //     counter = 0;
-
-            //     @Public()
-            //     method(...args) {
-            //         return args;
-            //     }
-
-            //     @Public()
-            //     errorMethod() {
-            //         throw Error("I'm an error!");
-            //     }
-
-            //     @Public()
-            //     voidMethod(...args) {
-            //         ++this.counter;
-
-            //         if (!is.nil(args)) {
-            //             this.storage = args;
-            //         }
-            //     }
-            // }
-
-            // @Context()
-            // class B {
-            //     @Public()
-            //     getWeakContext() {
-            //         return (new A());
-            //     }
-            // }
-
-            // it("should not emit events about conexts to context origin netron in super mode", async () => {
-            //     await superNetron.bind();
-            //     await exNetron.connect();
-            //     let nCatchedEvent = false;
-            //     let n2CatchedEvent = false;
-            //     await exNetron.onRemote(superNetron.uid, "context detach", (peer, ctxData) => {
-            //         nCatchedEvent = true;
-            //     });
-
-            //     await exNetron.attachContextRemote(superNetron.uid, new A(), "a");
-            //     await exNetron.attachContextRemote(superNetron.uid, new B(), "b");
-            //     exNetron2 = new Netron();
-            //     await exNetron2.connect();
-
-
-            //     await exNetron2.onRemote(superNetron.uid, "context detach", (peer, ctxData) => {
-            //         n2CatchedEvent = true;
-            //     });
-
-            //     await exNetron.detachContextRemote(superNetron.uid, "a");
-            //     await adone.promise.delay(1000);
-            //     await superNetron.disconnect();
-            //     await superNetron.unbind();
-            //     assert.equal(nCatchedEvent, false);
-            //     assert.equal(n2CatchedEvent, true);
-            // });
-
-            // for (const contextType of ["Strict", "Weak"]) {
-            //     // eslint-disable-next-line
-            //     describe(contextType, () => {
-            //         for (const currentCase of ["local", "remote", "super remote"]) {
-            //             // eslint-disable-next-line
-            //             describe(currentCase, () => {
-            //                 let netron;
-            //                 let uid;
-            //                 let iface;
-
-            //                 beforeEach(async () => {
-
-            //                     if (currentCase === "remote") {
-
-            //                         superNetron.attachContext(new A(), "a");
-            //                         superNetron.attachContext(new B(), "b");
-            //                         await superNetron.bind();
-            //                         await exNetron.connect();
-            //                         netron = exNetron;
-            //                         uid = superNetron.uid;
-
-            //                     } else if (currentCase === "super remote") {
-
-            //                         await superNetron.bind();
-            //                         await exNetron.connect();
-            //                         await exNetron.attachContextRemote(superNetron.uid, new A(), "a");
-            //                         await exNetron.attachContextRemote(superNetron.uid, new B(), "b");
-            //                         exNetron2 = new Netron();
-            //                         await exNetron2.connect();
-            //                         netron = exNetron2;
-            //                         uid = superNetron.uid;
-
-            //                     } else if (currentCase === "local") {
-
-            //                         superNetron.attachContext(new A(), "a");
-            //                         superNetron.attachContext(new B(), "b");
-            //                         netron = superNetron;
-            //                         uid = null;
-
-            //                     } else {
-            //                         throw Error(`Unknown case: ${currentCase}`);
-            //                     }
-
-            //                     if (contextType === "Strict") {
-            //                         iface = netron.getInterfaceByName("a", uid);
-            //                     } else if (contextType === "Weak") {
-            //                         const tmp = netron.getInterfaceByName("b", uid);
-            //                         iface = await tmp.getWeakContext();
-            //                     } else {
-            //                         throw Error(`Unknown context type: ${contextType}`);
-            //                     }
-            //                 });
-
-            //                 afterEach(async () => {
-            //                     if (currentCase.includes("remote")) {
-            //                         await exNetron.disconnect();
-            //                         await adone.promise.delay(300);
-            //                         if (currentCase === "super remote") {
-            //                             await exNetron2.disconnect();
-            //                         }
-            //                         await superNetron.unbind();
-            //                     }
-            //                 });
-
-            //                 it("property set/get", async () => {
-            //                     assert.strictEqual(await iface.property.get(), null);
-
-            //                     await iface.property.set(true);
-            //                     assert.strictEqual(await iface.property.get(), true);
-
-            //                     await iface.property.set(false);
-            //                     assert.strictEqual(await iface.property.get(), false);
-
-            //                     await iface.property.set(10);
-            //                     assert.strictEqual(await iface.property.get(), 10);
-
-            //                     await iface.property.set("string");
-            //                     assert.strictEqual(await iface.property.get(), "string");
-
-            //                     const arr = [true, 1, "string"];
-            //                     await iface.property.set(arr);
-            //                     assert.deepEqual(await iface.property.get(), arr);
-
-            //                     const obj = { a: 1, b: "string" };
-            //                     await iface.property.set(obj);
-            //                     assert.deepEqual(await iface.property.get(), obj);
-            //                 });
-
-            //                 it("get default value", async () => {
-            //                     const iface = netron.getInterfaceByName("a", uid);
-            //                     assert.strictEqual(await iface.undefinedProperty.get(100500), 100500, "default value");
-            //                 });
-
-            //                 it("call function with return", async () => {
-            //                     let result;
-            //                     const data = [true, 1, "string", { a: true, b: 1, c: "string" }, [true, 1, "string"]];
-
-            //                     for (const t of data) {
-            //                         result = await iface.method(t);
-            //                         assert.deepEqual(result, [t]);
-            //                         result = await iface.method(t, t);
-            //                         assert.deepEqual(result, [t, t]);
-            //                     }
-            //                 });
-
-            //                 it("exception in function call", async () => {
-            //                     const e = await assert.throws(async () => iface.errorMethod());
-            //                     assert.instanceOf(e, Error);
-            //                     assert.equal(e.message, "I'm an error!");
-            //                 });
-
-            //                 it("call function without return", async () => {
-            //                     const data = [true, 1, "string", { a: true, b: 1, c: "string" }, [true, 1, "string"]];
-            //                     let counter = 0;
-
-            //                     for (const t of data) {
-            //                         await iface.voidMethod();
-            //                         assert.strictEqual(await iface.counter.get(), ++counter, "without arguments");
-            //                         assert.deepEqual(await iface.storage.get(), [], "without arguments");
-
-            //                         await iface.voidMethod(1);
-            //                         assert.strictEqual(await iface.counter.get(), ++counter, "one arguments");
-            //                         assert.deepEqual(await iface.storage.get(), [1], "one arguments");
-
-            //                         await iface.voidMethod(1, t);
-            //                         assert.strictEqual(await iface.counter.get(), ++counter, "multiple arguments");
-            //                         assert.deepEqual(await iface.storage.get(), [1, t], "multiple arguments");
-            //                     }
-            //                 });
-            //             });
-            //         }
-            //     });
-            // }
-        });
     });
 };

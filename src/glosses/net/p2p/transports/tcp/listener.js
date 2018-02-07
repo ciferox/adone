@@ -10,21 +10,22 @@ const IPFS_CODE = 421;
 const CLOSE_TIMEOUT = 2000;
 
 const getMultiaddr = (socket) => {
-    let mh;
+    let ma;
 
     if (socket.remoteFamily === "IPv6") {
         const addr = new adone.net.ip.IP6(socket.remoteAddress);
+
         if (addr.v4) {
             const ip4 = addr.to4().correctForm();
-            mh = multi.address.create(`/ip4/${ip4}/tcp/${socket.remotePort}`);
+            ma = multi.address.create(`/ip4/${ip4}/tcp/${socket.remotePort}`);
         } else {
-            mh = multi.address.create(`/ip6/${socket.remoteAddress}/tcp/${socket.remotePort}`);
+            ma = multi.address.create(`/ip6/${socket.remoteAddress}/tcp/${socket.remotePort}`);
         }
     } else {
-        mh = multi.address.create(`/ip4/${socket.remoteAddress}/tcp/${socket.remotePort}`);
+        ma = multi.address.create(`/ip4/${socket.remoteAddress}/tcp/${socket.remotePort}`);
     }
 
-    return mh;
+    return ma;
 };
 
 

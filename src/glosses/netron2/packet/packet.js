@@ -52,6 +52,12 @@ const readBits = (target, offset, count) => {
  *  impulse       7      1  0|1
  * 
  */
+
+const IMPULSE_OFFSET = 7;
+const ERROR_OFFSET = 6;
+const ACTION_OFFSET = 0;
+const ACTION_SIZE = 6;
+
 export default class Packet {
     constructor() {
         this.flags = 0x00;
@@ -60,19 +66,27 @@ export default class Packet {
     }
 
     setAction(action) {
-        this.flags = writeBits(clearBits(this.flags, 0, 7), action, 0, 7);
+        this.flags = writeBits(clearBits(this.flags, ACTION_OFFSET, ACTION_SIZE), action, ACTION_OFFSET, ACTION_SIZE);
     }
 
     getAction() {
-        return readBits(this.flags, 0, 7);
+        return readBits(this.flags, ACTION_OFFSET, ACTION_SIZE);
     }
 
-    setImpulse(impulse) {
-        this.flags = impulse === 1 ? setBit(this.flags, 7) : clearBit(this.flags, 7);
+    setImpulse(val) {
+        this.flags = val === 1 ? setBit(this.flags, IMPULSE_OFFSET) : clearBit(this.flags, IMPULSE_OFFSET);
     }
 
     getImpulse() {
-        return getBit(this.flags, 7);
+        return getBit(this.flags, IMPULSE_OFFSET);
+    }
+
+    setError(val) {
+        this.flags = val === 1 ? setBit(this.flags, ERROR_OFFSET) : clearBit(this.flags, ERROR_OFFSET);
+    }
+
+    getError() {
+        return getBit(this.flags, ERROR_OFFSET);
     }
 
     setData(data) {

@@ -339,7 +339,7 @@ export default class Netron extends adone.task.Manager {
     detachContext(ctxId, releaseOriginated = true) {
         const stub = this.contexts.get(ctxId);
         if (is.undefined(stub)) {
-            throw new exception.Unknown(`Unknown context '${ctxId}'`);
+            throw new exception.NotExists(`Context '${ctxId}' not exists`);
         }
 
         this.contexts.delete(ctxId);
@@ -517,43 +517,43 @@ export default class Netron extends adone.task.Manager {
                             adone.error(err.message);
                         }
                     }
-                } else { // reply
-                    const awaiter = peer._removeAwaiter(packet.streamId);
-                    !is.undefined(awaiter) && awaiter(packet.data);
+                } else {
+                    peer._handleResponse(packet);
                 }
                 break;
             }
             case ACTION.GET: {
-                const data = packet.data;
-                const defId = data[0];
-                const name = data[1];
-                const stub = this._stubs.get(defId);
+                if (packet.getImpulse()) {
+                    const data = packet.data;
+                    const defId = data[0];
+                    const name = data[1];
+                    const stub = this._stubs.get(defId);
 
-                try {
-                    if (is.undefined(stub)) {
-                        return this.send(peer, 0, packet.streamId, 1, ACTION.SET, [1, new exception.NotExists("Context not exists")]);
-                    }
-                    const result = await stub.get(name, data[2], peer);
-                    await this.send(peer, 0, packet.streamId, 1, ACTION.SET, [0, result]);
-                } catch (err) {
-                    adone.error(err);
-                    if (err.name !== "NetronIllegalState") {
-                        try {
-                            await this.send(peer, 0, packet.streamId, 1, ACTION.SET, [1, normalizeError(err)]);
-                        } catch (err) {
-                            adone.error(err);
+                    try {
+                        if (is.undefined(stub)) {
+                            return peer._sendErrorResponse(packet, new exception.NotExists(`Context with definition id '${defId}' not exists`));
+                        }
+                        await peer._sendResponse(packet, await stub.get(name, data[2], peer));
+                    } catch (err) {
+                        adone.error(err);
+                        if (err.name !== "NetronIllegalState") {
+                            try {
+                                await peer._sendErrorResponse(packet, normalizeError(err));
+                            } catch (err) {
+                                adone.error(err);
+                            }
                         }
                     }
+                } else {
+                    peer._handleResponse(packet);
                 }
                 break;
             }
             case ACTION.TASK: {
                 if (packet.getImpulse()) {
-                    packet.setData(await this._runPeerTask(peer, packet.data));
-                    peer._sendReply(packet);
+                    peer._sendResponse(packet, await this._runPeerTask(peer, packet.data));
                 } else {
-                    const awaiter = peer._deleteAwaiter(packet.id);
-                    !is.undefined(awaiter) && awaiter(packet.data);
+                    peer._handleResponse(packet);
                 }
                 break;
             }
@@ -626,14 +626,17 @@ export default class Netron extends adone.task.Manager {
                 return;
             }
         }
-        while (events.length > 0) {
+        for (; ;) {
             const eventName = events[0];
             try {
                 await this.emitParallel(eventName, data); // eslint-disable-line
             } catch (err) {
                 adone.error(err);
             }
-            events.splice(0, 1);
+
+            if (is.undefined(events.shift())) {
+                break;
+            }
         }
     }
 }

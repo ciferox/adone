@@ -1,4 +1,5 @@
 import { A, B } from "./contexts";
+import { createNetron } from "./common";
 
 const {
     is,
@@ -134,7 +135,7 @@ describe("Netron", () => {
             });
 
             it("detach non-existing context should have thrown", () => {
-                assert.throws(() => netron.detachContext("b"), adone.exception.Unknown);
+                assert.throws(() => netron.detachContext("b"), adone.exception.NotExists);
             });
 
             it("detach attached context", () => {
@@ -296,16 +297,6 @@ describe("Netron", () => {
         let idClient;
         let peerS;
         let peerC;
-
-        const createNetron = (peerId, addrs) => {
-            const peerInfo = PeerInfo.create(peerId);
-            if (addrs) {
-                peerInfo.multiaddrs.add(addrs);
-            }
-            const netron = new Netron(peerInfo);
-            netron.createNetCore("default");
-            return netron;
-        };
 
         before(() => {
             idServer = PeerId.create();

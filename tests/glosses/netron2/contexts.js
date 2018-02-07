@@ -14,11 +14,11 @@ export class Simple {
 export class A {
     @DPublic()
     methodA() {
-        return "aaa";
+        return this.propA;
     }
 
     @DPublic()
-    propA = 1;
+    propA = "aaa";
 }
 
 @DContext({
@@ -79,4 +79,82 @@ export class C extends B {
 
     @DPublic()
     propC = 3;
+}
+
+export const commonTypes = [
+    {
+        name: "string",
+        value: "adone"
+    },
+    {
+        name: "integer",
+        value: 7887
+    },
+    {
+        name: "double",
+        value: 78.87
+    },
+    {
+        name: "date",
+        value: new Date()
+    },
+    {
+        name: "boolean",
+        value: true
+    },
+    {
+        name: "null",
+        value: null
+    },
+    {
+        name: "undefined",
+        value: undefined
+    },
+    // {
+    //     name: "regexp",
+    //     value: /adone/
+    // },
+    {
+        name: "array1",
+        value: [1, 2, 3]
+    },
+    {
+        name: "array2",
+        value: ["3", "2", "1"]
+    },
+    {
+        name: "array3",
+        value: [true, 1, "adone", new Date()]
+    },
+    {
+        name: "object1",
+        value: {
+            a: 1
+        }
+    },
+    {
+        name: "object2",
+        value: {
+            a: "adone",
+            b: {
+                c: [1, {
+                    // e: /adone/,
+                    d: 98.99
+                }, new Date()]
+            }
+        }
+    }
+];
+
+@DContext()
+export class CommonTypes { }
+
+for (const ct of commonTypes) {
+    CommonTypes.prototype[`_${ct.name}`] = ct.value;
+    adone.meta.reflect.defineMetadata(adone.netron2.PUBLIC_ANNOTATION, {}, CommonTypes.prototype, `_${ct.name}`);
+
+    CommonTypes.prototype[ct.name] = function () {
+        return this[`_${ct.name}`];
+    };
+    adone.meta.reflect.defineMetadata(adone.netron2.PUBLIC_ANNOTATION, {}, CommonTypes.prototype, ct.name);
 }

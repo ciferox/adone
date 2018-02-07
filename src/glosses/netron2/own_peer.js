@@ -68,7 +68,7 @@ export default class OwnPeer extends AbstractPeer {
     _getContextDefinition(ctxId) {
         const stub = this.netron.contexts.get(ctxId);
         if (is.undefined(stub)) {
-            throw new exception.Unknown(`Unknown context '${ctxId}'`);
+            throw new exception.NotExists(`Context '${ctxId}' not exists`);
         }
         return stub.definition;
     }
