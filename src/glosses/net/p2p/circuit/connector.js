@@ -13,16 +13,16 @@ const __ = adone.private(adone.net.p2p.circuit);
 export default class Dialer {
     /**
      * Creates an instance of Dialer.
-     * @param {Swarm} swarm - the swarm
+     * @param {Switch} sw - the switch
      * @param {any} options - config options
      *
      * @memberOf Dialer
      */
-    constructor(swarm, options) {
-        this.swarm = swarm;
+    constructor(sw, options) {
+        this.switch = sw;
         this.relayPeers = new Map();
         this.options = options;
-        this.utils = __.utils(swarm);
+        this.utils = __.utils(sw);
     }
 
     /**
@@ -158,7 +158,7 @@ export default class Dialer {
     _negotiateRelay(relay, dstMa, callback) {
         dstMa = multi.address.create(dstMa);
 
-        const srcMas = this.swarm._peerInfo.multiaddrs.toArray();
+        const srcMas = this.switch._peerInfo.multiaddrs.toArray();
         let streamHandler;
         waterfall([
             (cb) => {
@@ -177,7 +177,7 @@ export default class Dialer {
                     __.protocol.CircuitRelay.encode({
                         type: __.protocol.CircuitRelay.Type.HOP,
                         srcPeer: {
-                            id: this.swarm._peerInfo.id.id,
+                            id: this.switch._peerInfo.id.id,
                             addrs: srcMas.map((addr) => addr.buffer)
                         },
                         dstPeer: {
@@ -214,6 +214,6 @@ export default class Dialer {
     _dialRelay(peer, cb) {
         cb = once(cb || (() => { }));
 
-        this.swarm.connect(peer, multicodec.relay).catch(cb).then((conn) => cb(null, new __.StreamHandler(conn)));
+        this.switch.connect(peer, multicodec.relay).catch(cb).then((conn) => cb(null, new __.StreamHandler(conn)));
     }
 }

@@ -5,26 +5,26 @@ const {
 const __ = adone.private(adone.net.p2p.circuit);
 
 export default class Listener extends adone.event.Emitter {
-    constructor(swarm, connHandler, options) {
+    constructor(sw, connHandler, options) {
         super();
 
-        this.swarm = swarm;
+        this.switch = sw;
         this.options = options;
         this.connHandler = connHandler;
 
-        this.utils = __.utils(swarm);
+        this.utils = __.utils(sw);
 
-        this.stopHandler = new __.Stop(swarm);
-        this.hopHandler = new __.Hop(swarm, options.hop);
+        this.stopHandler = new __.Stop(sw);
+        this.hopHandler = new __.Hop(sw, options.hop);
     }
 
     /**
-     * Add swarm handler and listen for incoming connections
+     * Add switch handler and listen for incoming connections
      *
      * @param {Multiaddr} ma
      */
     listen(ma) {
-        this.swarm.handle(__.multicodec.relay, (relayProto, conn) => {
+        this.switch.handle(__.multicodec.relay, (relayProto, conn) => {
             const streamHandler = new __.StreamHandler(conn);
 
             streamHandler.read((err, msg) => {
@@ -60,10 +60,10 @@ export default class Listener extends adone.event.Emitter {
     }
 
     /**
-     * Remove swarm listener
+     * Remove switch listener
      */
     close() {
-        this.swarm.unhandle(__.multicodec.stop);
+        this.switch.unhandle(__.multicodec.stop);
         setImmediate(() => this.emit("close"));
     }
 
@@ -81,12 +81,12 @@ export default class Listener extends adone.event.Emitter {
      *
      */
     getAddrs() {
-        let addrs = this.swarm._peerInfo.multiaddrs.toArray();
+        let addrs = this.switch._peerInfo.multiaddrs.toArray();
 
         // get all the explicit relay addrs excluding self
         const p2pAddrs = addrs.filter((addr) => {
             return multi.address.validator.Circuit.matches(addr) &&
-                !addr.toString().includes(this.swarm._peerInfo.id.asBase58());
+                !addr.toString().includes(this.switch._peerInfo.id.asBase58());
         });
 
         // use the explicit relays instead of any relay
@@ -96,7 +96,7 @@ export default class Listener extends adone.event.Emitter {
 
         const listenAddrs = [];
         addrs.forEach((addr) => {
-            const peerMa = `/p2p-circuit/ipfs/${this.swarm._peerInfo.id.asBase58()}`;
+            const peerMa = `/p2p-circuit/ipfs/${this.switch._peerInfo.id.asBase58()}`;
             if (addr.toString() === peerMa) {
                 listenAddrs.push(multi.address.create(peerMa));
                 return;
@@ -107,10 +107,10 @@ export default class Listener extends adone.event.Emitter {
                     // by default we're reachable over any relay
                     listenAddrs.push(multi.address.create("/p2p-circuit").encapsulate(addr));
                 } else {
-                    listenAddrs.push(multi.address.create("/p2p-circuit").encapsulate(`${addr}/ipfs/${this.swarm._peerInfo.id.asBase58()}`));
+                    listenAddrs.push(multi.address.create("/p2p-circuit").encapsulate(`${addr}/ipfs/${this.switch._peerInfo.id.asBase58()}`));
                 }
             } else {
-                listenAddrs.push(addr.encapsulate(`/ipfs/${this.swarm._peerInfo.id.asBase58()}`));
+                listenAddrs.push(addr.encapsulate(`/ipfs/${this.switch._peerInfo.id.asBase58()}`));
             }
         });
 

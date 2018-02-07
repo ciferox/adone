@@ -41,7 +41,7 @@ module.exports = (dht) => {
     };
 
     /**
-     * Handle incoming streams from the swarm, on the dht protocol.
+     * Handle incoming streams from the switch, on the dht protocol.
      *
      * @param {string} protocol
      * @param {Connection} conn

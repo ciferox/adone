@@ -42,14 +42,17 @@ const readBits = (target, offset, count) => {
  * Represents netron packet.
  * 
  * Packet fields in left to right order:
- * - flags - contains impulse and action values (uint8)
+ * - flags - control flags (uint8)
  * - id    - packet id (uint32)
- * - data  - custom data
+ * - data  - payload (mpak)
+ * 
+ * flags:
  * 
  *    name | offset | bits | min/max
  *   -------------------------------- 
- *   action       0      7  0x00-0x7F 
+ *   action       0      6  0x00-0x3F 
  *  impulse       7      1  0|1
+ *    error       6      1  0|1
  * 
  */
 

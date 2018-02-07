@@ -6,7 +6,7 @@ const {
     multi
 } = adone;
 
-module.exports = function (swarm) {
+module.exports = function (sw) {
     /**
      * Get b58 string from multiaddr or peerinfo
      *
@@ -29,7 +29,7 @@ module.exports = function (swarm) {
      * Helper to make a peer info from a multiaddrs
      *
      * @param {Multiaddr|PeerInfo|PeerId} ma
-     * @param {Swarm} swarm
+     * @param {Switch} sw
      * @return {PeerInfo}
      * @private
      */
@@ -43,7 +43,7 @@ module.exports = function (swarm) {
         } else if (multi.address.isMultiaddr(peer)) {
             const peerIdB58Str = peer.getPeerId();
             try {
-                p = swarm._peerBook.get(peerIdB58Str);
+                p = sw._peerBook.get(peerIdB58Str);
             } catch (err) {
                 p = new PeerInfo(PeerId.createFromBase58(peerIdB58Str));
             }
@@ -51,7 +51,7 @@ module.exports = function (swarm) {
             // PeerId
         } else if (is.p2pPeerId(peer)) {
             const peerIdB58Str = peer.asBase58();
-            p = swarm._peerBook.has(peerIdB58Str) ? swarm._peerBook.get(peerIdB58Str) : peer;
+            p = sw._peerBook.has(peerIdB58Str) ? sw._peerBook.get(peerIdB58Str) : peer;
         }
 
         return p;
@@ -61,11 +61,11 @@ module.exports = function (swarm) {
      * Checks if peer has an existing connection
      *
      * @param {String} peerId
-     * @param {Swarm} swarm
+     * @param {Switch} sw
      * @return {Boolean}
      */
     const isPeerConnected = function (peerId) {
-        return swarm.muxedConns[peerId] || swarm.conns[peerId];
+        return sw.muxedConns[peerId] || sw.conns[peerId];
     };
 
     /**

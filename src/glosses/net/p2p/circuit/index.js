@@ -22,17 +22,17 @@ export class Circuit {
     /**
      * Creates an instance of Dialer.
      *
-     * @param {Swarm} swarm - the swarm
+     * @param {Switch} sw - the switch
      * @param {any} options - config options
      *
      * @memberOf Dialer
      */
-    constructor(swarm, options) {
+    constructor(sw, options) {
         this.options = options || {};
 
-        this.swarm = swarm;
-        this.utils = __.utils(swarm);
-        this.peerInfo = this.swarm._peerInfo;
+        this.switch = sw;
+        this.utils = __.utils(sw);
+        this.peerInfo = this.switch._peerInfo;
         this.relays = this.filter(this.peerInfo.multiaddrs.toArray());
 
         // if no explicit relays, add a default relay addr
@@ -40,22 +40,22 @@ export class Circuit {
             this.peerInfo.multiaddrs.add(`/p2p-circuit/ipfs/${this.peerInfo.id.asBase58()}`);
         }
 
-        this.connector = new __.Connector(swarm, options);
+        this.connector = new __.Connector(sw, options);
 
-        this.swarm.on("peer:mux:established", this.connector.canHop.bind(this.connector));
-        this.swarm.on("peer:mux:closed", (peerInfo) => {
+        this.switch.on("peer:mux:established", this.connector.canHop.bind(this.connector));
+        this.switch.on("peer:mux:closed", (peerInfo) => {
             this.connector.relayPeers.delete(peerInfo.id.asBase58());
         });
     }
 
     /**
-     * Dial the relays in the Addresses.Swarm config
+     * Dial the relays in the Addresses.Switch config
      *
      * @param {Array} relays
      * @return {void}
      */
     _dialSwarmRelays() {
-        // if we have relay addresses in swarm config, then connect those relays
+        // if we have relay addresses in switch config, then connect those relays
         this.relays.forEach((relay) => {
             const relaySegments = relay
                 .toString()
@@ -90,7 +90,7 @@ export class Circuit {
      * @return {listener}
      */
     createListener(handler, options = this.options) {
-        const listener = new __.Listener(this.swarm, handler, options);
+        const listener = new __.Listener(this.switch, handler, options);
         listener.on("listen", this._dialSwarmRelays.bind(this));
         return listener;
     }

@@ -15,14 +15,14 @@ const rnd = (length) => {
 };
 
 export default class Ping extends event.Emitter {
-    constructor(swarm, peer) {
+    constructor(sw, peer) {
         super();
 
         this._stop = false;
         this._shake;
         const self = this;
 
-        swarm.connect(peer, PROTOCOL).catch((err) => this.emit("error", err)).then((conn) => {
+        sw.connect(peer, PROTOCOL).catch((err) => this.emit("error", err)).then((conn) => {
             const stream = pull.handshake({ timeout: 0 });
             this._shake = stream.handshake;
 
@@ -70,8 +70,8 @@ export default class Ping extends event.Emitter {
         );
     }
 
-    static mount(swarm) {
-        swarm.handle(PROTOCOL, (protocol, conn) => {
+    static mount(sw) {
+        sw.handle(PROTOCOL, (protocol, conn) => {
             const stream = pull.handshake({ timeout: 0 });
             const shake = stream.handshake;
 
@@ -101,7 +101,7 @@ export default class Ping extends event.Emitter {
         });
     }
 
-    static unmount(swarm) {
-        swarm.unhandle(PROTOCOL);
+    static unmount(sw) {
+        sw.unhandle(PROTOCOL);
     }
 }

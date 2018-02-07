@@ -46,16 +46,16 @@ export class KadDHT {
     /**
      * Create a new KadDHT.
      *
-     * @param {Swarm} swarm
+     * @param {Switch} sw
      * @param {object} options // {kBucketSize=20, datastore=MemoryDatastore}
      */
-    constructor(swarm, { kBucketSize = 20, ncp = 6, datastore } = {}) {
+    constructor(sw, { kBucketSize = 20, ncp = 6, datastore } = {}) {
         /**
-         * Local reference to swarm.
+         * Local reference to switch.
          *
-         * @type {Swarm}
+         * @type {Switch}
          */
-        this.swarm = swarm;
+        this.switch = sw;
 
         /**
          * k-bucket size, defaults to 20.
@@ -146,11 +146,11 @@ export class KadDHT {
      * @type {PeerInfo}
      */
     get peerInfo() {
-        return this.swarm._peerInfo;
+        return this.switch._peerInfo;
     }
 
     get peerBook() {
-        return this.swarm._peerBook;
+        return this.switch._peerBook;
     }
 
     /**

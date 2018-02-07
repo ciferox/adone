@@ -1,7 +1,7 @@
 const { makePeers } = require("./utils");
 
 const {
-    net: { p2p: { multiplex, dht, swarm: { Swarm }, PeerBook, transport: { TCP } } }
+    net: { p2p: { multiplex, dht, switch: { Switch }, PeerBook, transport: { TCP } } }
 } = adone;
 const { KadDHT } = dht;
 const { Query } = adone.private(dht);
@@ -13,18 +13,18 @@ describe("dht", "KadDHT", "Query", () => {
     before(function () {
         this.timeout(5 * 1000);
         peerInfos = makePeers(3);
-        const swarm = new Swarm(peerInfos[0], new PeerBook());
-        swarm.tm.add("tcp", new TCP());
-        swarm.connection.addStreamMuxer(multiplex);
-        swarm.connection.reuse();
-        dht = new KadDHT(swarm);
+        const sw = new Switch(peerInfos[0], new PeerBook());
+        sw.tm.add("tcp", new TCP());
+        sw.connection.addStreamMuxer(multiplex);
+        sw.connection.reuse();
+        dht = new KadDHT(sw);
     });
 
     it("simple run", (done) => {
         const peer = peerInfos[0];
 
         // mock this so we can connect non existing peers
-        dht.swarm.connect = (peer) => { };
+        dht.switch.connect = (peer) => { };
 
         let i = 0;
         const query = (p, cb) => {
@@ -56,7 +56,7 @@ describe("dht", "KadDHT", "Query", () => {
         const peer = peerInfos[0];
 
         // mock this so we can connect non existing peers
-        dht.swarm.connect = (peer) => { };
+        dht.switch.connect = (peer) => { };
 
         const query = (p, cb) => cb(new Error("fail"));
 
@@ -72,7 +72,7 @@ describe("dht", "KadDHT", "Query", () => {
         const peer = peerInfos[0];
 
         // mock this so we can connect non existing peers
-        dht.swarm.connect = (peer) => { };
+        dht.switch.connect = (peer) => { };
 
         const query = (p, cb) => {
             cb(null, {

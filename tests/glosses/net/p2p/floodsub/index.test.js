@@ -364,7 +364,7 @@ describe("floodsub", () => {
 
                 after(async () => {
                     // note: setTimeout to avoid the tests finishing
-                    // before swarm does its connects
+                    // before switch does its connects
                     await adone.promise.delay(1000);
                     await a.netCore.stop();
                     await b.netCore.stop();
@@ -535,7 +535,7 @@ describe("floodsub", () => {
 
                 after(async () => {
                     // note: setTimeout to avoid the tests finishing
-                    // before swarm does its connects
+                    // before switch does its connects
                     await adone.promise.delay(1000);
                     await a.netCore.stop();
                     await b.netCore.stop();

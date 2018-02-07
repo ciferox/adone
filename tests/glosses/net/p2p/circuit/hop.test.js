@@ -10,7 +10,7 @@ const { StreamHandler, Hop, protocol } = adone.private(adone.net.p2p.circuit);
 describe("circuit", "relay", () => {
     describe("should handle circuit requests", () => {
         let relay;
-        let swarm;
+        let sw;
         let fromConn;
         let stream;
         let shake;
@@ -37,7 +37,7 @@ describe("circuit", "relay", () => {
             const peerId = PeerId.createFromJSON(nodes.node4);
             const peer = PeerInfo.create(peerId);
             peer.multiaddrs.add("/p2p-circuit/ipfs/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE");
-            swarm = {
+            sw = {
                 _peerInfo: peer,
                 conns: {
                     QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE: new Connection(),
@@ -55,7 +55,7 @@ describe("circuit", "relay", () => {
                 }
             };
 
-            relay = new Hop(swarm, { enabled: true });
+            relay = new Hop(sw, { enabled: true });
             relay._circuit = stub();
             relay._circuit.callsArg(2, null, new Connection());
         });

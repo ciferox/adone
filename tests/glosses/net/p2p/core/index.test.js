@@ -117,14 +117,14 @@ describe("core and all together", () => {
                         (cb) => {
                             const peers = netCoreA.peerBook.getAll();
                             assert.equal(peers.size, 1);
-                            expect(Object.keys(netCoreA.swarm.muxedConns)).to.have.length(0);
+                            expect(Object.keys(netCoreA.switch.muxedConns)).to.have.length(0);
                             cb();
                         },
                         (cb) => {
                             const peers = netCoreB.peerBook.getAll();
                             assert.equal(peers.size, 1);
 
-                            expect(Object.keys(netCoreB.swarm.muxedConns)).to.have.length(0);
+                            expect(Object.keys(netCoreB.switch.muxedConns)).to.have.length(0);
                             cb();
                         }
                     ], done);
@@ -141,14 +141,14 @@ describe("core and all together", () => {
                             const peers = netCoreA.peerBook.getAll();
                             assert.equal(peers.size, 1);
 
-                            expect(Object.keys(netCoreA.swarm.muxedConns)).to.have.length(1);
+                            expect(Object.keys(netCoreA.switch.muxedConns)).to.have.length(1);
                             cb();
                         },
                         (cb) => {
                             const peers = netCoreB.peerBook.getAll();
                             assert.equal(peers.size, 1);
 
-                            expect(Object.keys(netCoreA.swarm.muxedConns)).to.have.length(1);
+                            expect(Object.keys(netCoreA.switch.muxedConns)).to.have.length(1);
                             cb();
                         }
                     ], () => {
@@ -177,14 +177,14 @@ describe("core and all together", () => {
                             const peers = netCoreA.peerBook.getAll();
                             assert.equal(peers.size, 1);
 
-                            expect(Object.keys(netCoreA.swarm.muxedConns)).to.have.length(0);
+                            expect(Object.keys(netCoreA.switch.muxedConns)).to.have.length(0);
                             cb();
                         },
                         (cb) => {
                             const peers = netCoreB.peerBook.getAll();
                             assert.equal(peers.size, 1);
 
-                            expect(Object.keys(netCoreB.swarm.muxedConns)).to.have.length(0);
+                            expect(Object.keys(netCoreB.switch.muxedConns)).to.have.length(0);
                             cb();
                         }
                     ], done);
@@ -202,13 +202,13 @@ describe("core and all together", () => {
                         (cb) => {
                             const peers = netCoreA.peerBook.getAll();
                             assert.equal(peers.size, 1);
-                            expect(Object.keys(netCoreA.swarm.muxedConns)).to.have.length(1);
+                            expect(Object.keys(netCoreA.switch.muxedConns)).to.have.length(1);
                             cb();
                         },
                         (cb) => {
                             const peers = netCoreB.peerBook.getAll();
                             assert.equal(peers.size, 1);
-                            expect(Object.keys(netCoreA.swarm.muxedConns)).to.have.length(1);
+                            expect(Object.keys(netCoreA.switch.muxedConns)).to.have.length(1);
                             cb();
                         }
                     ], () => {
@@ -235,13 +235,13 @@ describe("core and all together", () => {
                         (cb) => {
                             const peers = netCoreA.peerBook.getAll();
                             assert.equal(peers.size, 1);
-                            expect(Object.keys(netCoreA.swarm.muxedConns)).to.have.length(0);
+                            expect(Object.keys(netCoreA.switch.muxedConns)).to.have.length(0);
                             cb();
                         },
                         (cb) => {
                             const peers = netCoreB.peerBook.getAll();
                             assert.equal(peers.size, 1);
-                            expect(Object.keys(netCoreB.swarm.muxedConns)).to.have.length(0);
+                            expect(Object.keys(netCoreB.switch.muxedConns)).to.have.length(0);
                             cb();
                         }
                     ], done);
@@ -281,13 +281,13 @@ describe("core and all together", () => {
                         (cb) => {
                             const peers = netCoreTCP.peerBook.getAll();
                             assert.equal(peers.size, 1);
-                            expect(Object.keys(netCoreTCP.swarm.muxedConns)).to.have.length(1);
+                            expect(Object.keys(netCoreTCP.switch.muxedConns)).to.have.length(1);
                             cb();
                         },
                         (cb) => {
                             const peers = netCoreTCPnWS.peerBook.getAll();
                             assert.equal(peers.size, 1);
-                            expect(Object.keys(netCoreTCPnWS.swarm.muxedConns)).to.have.length(1);
+                            expect(Object.keys(netCoreTCPnWS.switch.muxedConns)).to.have.length(1);
                             cb();
                         }
                     ], done);
@@ -305,14 +305,14 @@ describe("core and all together", () => {
                         (cb) => {
                             const peers = netCoreTCP.peerBook.getAll();
                             assert.equal(peers.size, 1);
-                            expect(Object.keys(netCoreTCP.swarm.muxedConns)).to.have.length(0);
+                            expect(Object.keys(netCoreTCP.switch.muxedConns)).to.have.length(0);
 
                             cb();
                         },
                         (cb) => {
                             const peers = netCoreTCPnWS.peerBook.getAll();
                             assert.equal(peers.size, 1);
-                            expect(Object.keys(netCoreTCPnWS.swarm.muxedConns)).to.have.length(0);
+                            expect(Object.keys(netCoreTCPnWS.switch.muxedConns)).to.have.length(0);
                             cb();
                         }
                     ], done);
@@ -328,13 +328,13 @@ describe("core and all together", () => {
                         (cb) => {
                             const peers = netCoreTCPnWS.peerBook.getAll();
                             assert.equal(peers.size, 2);
-                            expect(Object.keys(netCoreTCPnWS.swarm.muxedConns)).to.have.length(1);
+                            expect(Object.keys(netCoreTCPnWS.switch.muxedConns)).to.have.length(1);
                             cb();
                         },
                         (cb) => {
                             const peers = netCoreWS.peerBook.getAll();
                             assert.equal(peers.size, 1);
-                            expect(Object.keys(netCoreWS.swarm.muxedConns)).to.have.length(1);
+                            expect(Object.keys(netCoreWS.switch.muxedConns)).to.have.length(1);
                             cb();
                         }
                     ], done);
@@ -352,14 +352,14 @@ describe("core and all together", () => {
                         (cb) => {
                             const peers = netCoreTCPnWS.peerBook.getAll();
                             assert.equal(peers.size, 2);
-                            expect(Object.keys(netCoreTCPnWS.swarm.muxedConns)).to.have.length(0);
+                            expect(Object.keys(netCoreTCPnWS.switch.muxedConns)).to.have.length(0);
 
                             cb();
                         },
                         (cb) => {
                             const peers = netCoreWS.peerBook.getAll();
                             assert.equal(peers.size, 1);
-                            expect(Object.keys(netCoreWS.swarm.muxedConns)).to.have.length(0);
+                            expect(Object.keys(netCoreWS.switch.muxedConns)).to.have.length(0);
                             cb();
                         }
                     ], done);
@@ -437,7 +437,7 @@ describe("core and all together", () => {
                 let i = 1;
                 [netCoreAll, otherNode].forEach((netCore) => {
                     assert.equal(netCore.peerBook.getAll().size, i-- ? peers : 1);
-                    expect(Object.keys(netCore.swarm.muxedConns)).to.have.length(muxed);
+                    expect(Object.keys(netCore.switch.muxedConns)).to.have.length(muxed);
                 });
                 callback();
             };
@@ -545,7 +545,7 @@ describe("core and all together", () => {
                 let i = 1;
                 [netCoreAll, otherNode].forEach((netCore) => {
                     assert.equal(netCore.peerBook.getAll().size, i-- ? peers : 1);
-                    expect(Object.keys(netCore.swarm.muxedConns)).to.have.length(muxed);
+                    expect(Object.keys(netCore.switch.muxedConns)).to.have.length(muxed);
                 });
                 done();
             };
@@ -733,11 +733,11 @@ describe("core and all together", () => {
 
             await setup();
             // it will just 'warm up a conn'
-            expect(Object.keys(netCoreA.swarm.muxers)).to.have.length(1);
-            expect(Object.keys(netCoreB.swarm.muxers)).to.have.length(1);
+            expect(Object.keys(netCoreA.switch.muxers)).to.have.length(1);
+            expect(Object.keys(netCoreB.switch.muxers)).to.have.length(1);
 
             await netCoreA.connect(netCoreB.peerInfo);
-            expect(Object.keys(netCoreA.swarm.muxedConns)).to.have.length(0);
+            expect(Object.keys(netCoreA.switch.muxedConns)).to.have.length(0);
             await teardown(netCoreA, netCoreB);
         });
     });
@@ -984,7 +984,7 @@ describe("core and all together", () => {
             const netCore = createNetCore(addrs, options);
             netCore.handle("/echo/1.0.0", echo);
             await netCore.start();
-            handlerSpies.push(spy(netCore.swarm.tm.transports[Circuit.tag].listeners[0].hopHandler, "handle"));
+            handlerSpies.push(spy(netCore.switch.tm.transports[Circuit.tag].listeners[0].hopHandler, "handle"));
             return netCore;
         };
 

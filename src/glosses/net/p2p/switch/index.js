@@ -13,7 +13,7 @@ const __ = adone.lazifyPrivate({
     ConnectionManager: "./connection_manager"
 }, exports, require);
 
-export class Swarm extends adone.event.Emitter {
+export class Switch extends adone.event.Emitter {
     constructor(peerInfo, peerBook) {
         super();
 
@@ -80,25 +80,12 @@ export class Swarm extends adone.event.Emitter {
     }
 
     // Start listening on all available transports
-    listen() {
+    start() {
         const transports = this.availableTransports(this._peerInfo);
         return Promise.all(transports.map((ts) => this.tm.listen(ts, {}, null)));
     }
 
-    handle(protocol, handlerFunc, matchFunc) {
-        this.protocols[protocol] = {
-            handlerFunc,
-            matchFunc
-        };
-    }
-
-    unhandle(protocol) {
-        if (this.protocols[protocol]) {
-            delete this.protocols[protocol];
-        }
-    }
-
-    async close() {
+    async stop() {
         for (const conn of Object.values(this.muxedConns)) {
             /* eslint-disable */
             await new Promise((resolve, reject) => {
@@ -120,6 +107,19 @@ export class Swarm extends adone.event.Emitter {
             }
         }
         await Promise.all(promises);
+    }
+
+    handle(protocol, handlerFunc, matchFunc) {
+        this.protocols[protocol] = {
+            handlerFunc,
+            matchFunc
+        };
+    }
+
+    unhandle(protocol) {
+        if (this.protocols[protocol]) {
+            delete this.protocols[protocol];
+        }
     }
 
     async connect(peer, protocol) {
@@ -203,7 +203,7 @@ export class Swarm extends adone.event.Emitter {
                         const muxedConn = this.muxers[key].dialer(conn);
                         this.muxedConns[b58Id] = {};
                         this.muxedConns[b58Id].muxer = muxedConn;
-                        // should not be needed anymore - swarm.muxedConns[b58Id].conn = conn
+                        // should not be needed anymore - switch.muxedConns[b58Id].conn = conn
 
                         this._peerBook.set(pi);
 
@@ -214,7 +214,7 @@ export class Swarm extends adone.event.Emitter {
                             const b58Str = pi.id.asBase58();
                             delete this.muxedConns[b58Str];
                             pi.disconnect();
-                            setImmediate(() => this.emit("peer:mux:closed", pi, key));
+                            setImmediate(() => this.emit("peer:mux:closed", pi));
                         });
 
                         // For incoming streams, in case identify is on
@@ -222,7 +222,7 @@ export class Swarm extends adone.event.Emitter {
                             protocolMuxer(this.protocols, conn);
                         });
 
-                        setImmediate(() => this.emit("peer:mux:established", pi, key));
+                        setImmediate(() => this.emit("peer:mux:established", pi));
 
                         cb(null, muxedConn);
                     });

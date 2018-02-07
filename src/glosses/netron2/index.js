@@ -12,7 +12,7 @@ export const ACTION = {
     SET: 0x01,
     TASK: 0x02
 
-    // MAX: 0x7F
+    // MAX: 0x3F
 };
 
 adone.definePredicates({

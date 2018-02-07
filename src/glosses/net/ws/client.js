@@ -494,6 +494,7 @@ export default class WebSocket extends event.Emitter {
         this._receiver = null;
         this._sender = null;
         this._socket = null;
+        this._error = null;
 
         if (!is.null(address)) {
             if (!protocols) {
@@ -557,7 +558,7 @@ export default class WebSocket extends event.Emitter {
         if (!this._socket) {
             return 0;
         }
-        
+
         // `socket.bufferSize` is `undefined` if the socket is closed.
         return (this._socket.bufferSize || 0) + this._sender._bufferedBytes;
     }
@@ -622,13 +623,11 @@ export default class WebSocket extends event.Emitter {
             this._closeMessage = "";
             this._closeCode = code;
 
-            //
-            // Ensure that the error is emitted even if `WebSocket#finalize()` has
-            // already been called.
-            //
-            this.readyState = WebSocket.CLOSING;
-            this.emit("error", error);
-            this.finalize(true);
+            if (!this._finalized) {
+                this.finalize(error);
+            } else if (!this._error) {
+                this.emit("error", error);
+            }
         };
 
         this.readyState = WebSocket.OPEN;
@@ -636,9 +635,9 @@ export default class WebSocket extends event.Emitter {
     }
 
     /**
-     * Clean up and release internal resources.
+     * Clean up internal resources and emit the `'close'` event.
      *
-     * @param {(Boolean|Error)} error Indicates whether or not an error occurred
+     * @param {(Boolean|Error|undefined)} error Indicates whether or not an error occurred
      * @private
      */
     finalize(error) {
@@ -649,12 +648,11 @@ export default class WebSocket extends event.Emitter {
         this.readyState = WebSocket.CLOSING;
         this._finalized = true;
 
-        if (typeof error === "object") {
-            if (this.listenerCount("error") > 0) {
+        if (!this._socket) {
+            // error` is always an `Error` instance in this case.
+            if (this.listenerCount("error") > 0) { // Is it good???
                 this.emit("error", error);
             }
-        }
-        if (!this._socket) {
             this.readyState = WebSocket.CLOSED;
             this.emit("close", this._closeCode, this._closeMessage);
             return;
@@ -668,13 +666,25 @@ export default class WebSocket extends event.Emitter {
         this._socket.removeListener("end", this._finalize);
         this._socket.on("error", adone.noop);
 
-        if (!error) {
-            this._socket.end();
-        } else {
+        if (error) {
+            if (error !== true) {
+                this._error = error;
+            }
             this._socket.destroy();
+        } else {
+            this._socket.end();
         }
 
         this._receiver.cleanup(() => {
+            const err = this._error;
+
+            if (err) {
+                this._error = null;
+                if (this.listenerCount("error") > 0) { // Is it good???
+                    this.emit("error", err);
+                }
+            }
+
             this.readyState = WebSocket.CLOSED;
 
             if (this._extensions[PerMessageDeflate.extensionName]) {

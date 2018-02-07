@@ -16,16 +16,16 @@ export default class Hop extends adone.event.Emitter {
      *
      * This class will handle incoming circuit connections and
      * either start a relay or hand the relayed connection to
-     * the swarm
+     * the switch
      *
-     * @param {Swarm} swarm
+     * @param {Switch} sw
      * @param {Object} options
      */
-    constructor(swarm, options) {
+    constructor(sw, options) {
         super();
-        this.swarm = swarm;
-        this.peerInfo = this.swarm._peerInfo;
-        this.utils = __.utils(swarm);
+        this.switch = sw;
+        this.peerInfo = this.switch._peerInfo;
+        this.utils = __.utils(sw);
         this.config = assignInWith(
             {
                 active: false,
@@ -74,7 +74,7 @@ export default class Hop extends adone.event.Emitter {
 
             let dstPeer;
             try {
-                dstPeer = this.swarm._peerBook.get(dstPeerId);
+                dstPeer = this.switch._peerBook.get(dstPeerId);
                 if (!dstPeer.isConnected() && !this.active) {
                     throw new Error("No Connection to peer");
                 }
@@ -170,6 +170,6 @@ export default class Hop extends adone.event.Emitter {
     _dialPeer(dstPeer, callback) {
         const peerInfo = new PeerInfo(PeerId.createFromBytes(dstPeer.id));
         dstPeer.addrs.forEach((a) => peerInfo.multiaddrs.add(a));
-        this.swarm.connect(peerInfo, multicodec.relay).catch(callback).then((conn) => callback(null, conn));
+        this.switch.connect(peerInfo, multicodec.relay).catch(callback).then((conn) => callback(null, conn));
     }
 }

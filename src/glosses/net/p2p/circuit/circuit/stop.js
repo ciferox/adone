@@ -7,10 +7,10 @@ const {
 const __ = adone.private(adone.net.p2p.circuit);
 
 export default class Stop extends adone.event.Emitter {
-    constructor(swarm) {
+    constructor(sw) {
         super();
-        this.swarm = swarm;
-        this.utils = __.utils(swarm);
+        this.switch = sw;
+        this.utils = __.utils(sw);
     }
 
     handle(message, streamHandler, callback) {

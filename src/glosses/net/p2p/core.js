@@ -6,7 +6,7 @@ const {
     event,
     is,
     multi,
-    net: { p2p: { PeerId, PeerInfo, PeerBook, Ping, swarm: { Swarm } } },
+    net: { p2p: { PeerId, PeerInfo, PeerBook, Ping, switch: { Switch } } },
     util
 } = adone;
 
@@ -71,31 +71,31 @@ export default class Core extends event.Emitter {
 
         this.started = false;
 
-        this.swarm = new Swarm(this.peerInfo, this.peerBook);
+        this.switch = new Switch(this.peerInfo, this.peerBook);
 
         // Attach stream multiplexers
         if (this.muxers) {
-            this.muxers.forEach((muxer) => this.swarm.connection.addStreamMuxer(muxer));
+            this.muxers.forEach((muxer) => this.switch.connection.addStreamMuxer(muxer));
 
             // If muxer exists, we can use Identify
-            this.swarm.connection.reuse();
+            this.switch.connection.reuse();
 
             // If muxer exists, we can use Relay for listening/dialing
-            this.swarm.connection.enableCircuitRelay(relay);
+            this.switch.connection.enableCircuitRelay(relay);
 
             // Received incommind connect and muxer upgrade happened,
             // reuse this muxed connection
-            this.swarm.on("peer:mux:established", (peerInfo, protocol) => {
-                this.emit("peer:connect", peerInfo, protocol);
-            }).on("peer:mux:closed", (peerInfo, protocol) => {
-                this.emit("peer:disconnect", peerInfo, protocol);
+            this.switch.on("peer:mux:established", (peerInfo) => {
+                this.emit("peer:connect", peerInfo);
+            }).on("peer:mux:closed", (peerInfo) => {
+                this.emit("peer:disconnect", peerInfo);
                 // this.peerBook.delete(peerInfo);
             });
         }
 
         // Attach crypto channels
         this.cryptos.forEach((crypto) => {
-            this.swarm.connection.crypto(crypto.tag, crypto.encrypt);
+            this.switch.connection.crypto(crypto.tag, crypto.encrypt);
         });
 
         // Attach discovery mechanisms
@@ -108,12 +108,9 @@ export default class Core extends event.Emitter {
             });
         }
 
-        // Mount default protocols
-        Ping.mount(this.swarm);
-
         // dht provided components (peerRouting, contentRouting, dht)
         if (dht) {
-            this._dht = new adone.net.p2p.dht.KadDHT(this.swarm, is.plainObject(dht) ? dht : {});
+            this._dht = new adone.net.p2p.dht.KadDHT(this.switch, is.plainObject(dht) ? dht : {});
         }
 
         this.peerRouting = {
@@ -182,14 +179,17 @@ export default class Core extends event.Emitter {
             const multiaddrs = this.peerInfo.multiaddrs.toArray();
             this.transports.forEach((transport) => {
                 if (transport.filter(multiaddrs).length > 0) {
-                    this.swarm.tm.add(transport.tag || transport.constructor.name, transport);
+                    this.switch.tm.add(transport.tag || transport.constructor.name, transport);
                 }
             });
         } else {
             this.transports.forEach((transport) => {
-                this.swarm.tm.add(transport.tag || transport.constructor.name, transport);
+                this.switch.tm.add(transport.tag || transport.constructor.name, transport);
             });
         }
+
+        // Mount default protocols
+        Ping.mount(this.switch);
     }
 
     /**
@@ -206,14 +206,14 @@ export default class Core extends event.Emitter {
                 }
             });
 
-            await this.swarm.listen();
+            await this.switch.start();
 
             return new Promise((resolve, reject) => {
                 series([
                     (cb) => {
-                        if (ws && !this.swarm.tm.has(ws.tag || ws.constructor.name)) {
+                        if (ws && !this.switch.tm.has(ws.tag || ws.constructor.name)) {
                             // always add dialing on websockets
-                            this.swarm.tm.add(ws.tag || ws.constructor.name, ws);
+                            this.switch.tm.add(ws.tag || ws.constructor.name, ws);
                         }
 
                         // all transports need to be setup before discover starts
@@ -277,7 +277,7 @@ export default class Core extends event.Emitter {
                         }
                         cb();
                     },
-                    (cb) => this.swarm.close().then(cb),
+                    (cb) => this.switch.stop().then(cb),
                     (cb) => {
                         this.emit("stop");
                         cb();
@@ -296,25 +296,25 @@ export default class Core extends event.Emitter {
     async ping(peer) {
         assert(this.isStarted(), NOT_STARTED_ERROR_MESSAGE);
         const peerInfo = await this._getPeerInfo(peer);
-        return new Ping(this.swarm, peerInfo);
+        return new Ping(this.switch, peerInfo);
     }
 
     async connect(peer, protocol) {
         const peerInfo = await this._getPeerInfo(peer);
-        return this.swarm.connect(peerInfo, protocol);
+        return this.switch.connect(peerInfo, protocol);
     }
 
     async disconnect(peer) {
         const peerInfo = await this._getPeerInfo(peer);
-        return this.swarm.disconnect(peerInfo);
+        return this.switch.disconnect(peerInfo);
     }
 
     handle(protocol, handlerFunc, matchFunc) {
-        this.swarm.handle(protocol, handlerFunc, matchFunc);
+        this.switch.handle(protocol, handlerFunc, matchFunc);
     }
 
     unhandle(protocol) {
-        this.swarm.unhandle(protocol);
+        this.switch.unhandle(protocol);
     }
 
     /**

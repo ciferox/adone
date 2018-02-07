@@ -133,6 +133,34 @@ describe("net", "ws", "Server", () => {
         });
     });
 
+    describe("#address", () => {
+        it("returns the address of the server", (done) => {
+            const wss = new Server({ port: 0 }, () => {
+                const addr = wss.address();
+
+                assert.deepStrictEqual(addr, wss._server.address());
+                wss.close(done);
+            });
+        });
+
+        it('throws an error when operating in "noServer" mode', () => {
+            const wss = new Server({ noServer: true });
+
+            assert.throws(() => {
+                wss.address();
+            }, /^The server is operating in "noServer" mode$/);
+        });
+
+        it("returns `null` if called after close", (done) => {
+            const wss = new Server({ port: 0 }, () => {
+                wss.close(() => {
+                    assert.strictEqual(wss.address(), null);
+                    done();
+                });
+            });
+        });
+    });
+
     describe("#close", () => {
         it("does not thrown when called twice", (done) => {
             const wss = new Server({ port: 0 }, () => {

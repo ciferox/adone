@@ -4,19 +4,19 @@ const {
     util: { arrify }
 } = adone;
 
-const __ = adone.private(adone.net.p2p.swarm);
+const __ = adone.private(adone.net.p2p.switch);
 
 const dialables = (tp, multiaddrs) => tp.filter(multiaddrs);
 
 export default class TransportManager {
     /**
      * 
-     * @param {Swarm} swarm  instance os Swarm
+     * @param {Switch} sw  instance os Switch
      * @param {integer} options.dialTimeout  the amount of time a single connect has to succeed
      * @param {integer} options.perPeerRateLimit  number of concurrent outbound dials to make per peer
      */
-    constructor(swarm, { dialTimeout = 30 * 1000, perPeerRateLimit = 8 } = {}) {
-        this.swarm = swarm;
+    constructor(sw, { dialTimeout = 30 * 1000, perPeerRateLimit = 8 } = {}) {
+        this.switch = sw;
         this.dialer = new __.LimitDialer(perPeerRateLimit, dialTimeout);
         this.transports = {};
     }
@@ -39,19 +39,19 @@ export default class TransportManager {
         const multiaddrs = dialables(t, arrify(pi.multiaddrs.toArray()));
         const success = await this.dialer.dialMany(pi.id, t, multiaddrs);
         pi.connect(success.multiaddr);
-        this.swarm._peerBook.set(pi);
+        this.switch._peerBook.set(pi);
         return success.conn;
     }
 
     async listen(key, options, handler) {
-        const multiaddrs = dialables(this.transports[key], this.swarm._peerInfo.multiaddrs.distinct());
+        const multiaddrs = dialables(this.transports[key], this.switch._peerInfo.multiaddrs.distinct());
         const transport = this.transports[key];
         let freshMultiaddrs = [];
         transport.listeners = arrify(transport.listeners);
 
         // if no handler is passed, we pass conns to protocolMuxer
         if (!handler) {
-            handler = protocolMuxer.bind(null, this.swarm.protocols);
+            handler = protocolMuxer.bind(null, this.switch.protocols);
         }
 
         for (const ma of multiaddrs) {
@@ -64,7 +64,7 @@ export default class TransportManager {
         }
 
         // cause we can listen on port 0 or 0.0.0.0
-        this.swarm._peerInfo.multiaddrs.replace(multiaddrs, freshMultiaddrs);
+        this.switch._peerInfo.multiaddrs.replace(multiaddrs, freshMultiaddrs);
     }
 
     close(key) {

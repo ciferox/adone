@@ -8,8 +8,8 @@ const {
 } = adone;
 
 export default class ConnectionManager {
-    constructor(swarm) {
-        this.swarm = swarm;
+    constructor(sw) {
+        this.switch = sw;
     }
 
     addUpgrade() {
@@ -18,21 +18,21 @@ export default class ConnectionManager {
 
     addStreamMuxer(muxer) {
         // for dialing
-        this.swarm.muxers[muxer.multicodec] = muxer;
+        this.switch.muxers[muxer.multicodec] = muxer;
 
         // for listening
-        this.swarm.handle(muxer.multicodec, async (protocol, conn) => {
+        this.switch.handle(muxer.multicodec, async (protocol, conn) => {
             const muxedConn = muxer.listener(conn);
 
             muxedConn.on("stream", (conn) => {
-                protocolMuxer(this.swarm.protocols, conn);
+                protocolMuxer(this.switch.protocols, conn);
             });
 
             // If identify is enabled
             //   1. overload getPeerInfo
             //   2. call getPeerInfo
             //   3. add this conn to the pool
-            if (this.swarm.identify) {
+            if (this.switch.identify) {
                 // overload peerInfo to use Identify instead
                 conn.getPeerInfo = () => {
                     return new Promise((resolve, reject) => {
@@ -45,7 +45,7 @@ export default class ConnectionManager {
                             (conn, cb) => identify.dialer(conn, cb),
                             (peerInfo, observedAddrs, cb) => {
                                 observedAddrs.forEach((oa) => {
-                                    this.swarm._peerInfo.multiaddrs.addSafe(oa);
+                                    this.switch._peerInfo.multiaddrs.addSafe(oa);
                                 });
                                 cb(null, peerInfo);
                             }
@@ -62,7 +62,7 @@ export default class ConnectionManager {
                     let peerInfo = await conn.getPeerInfo();
                     const b58Str = peerInfo.id.asBase58();
 
-                    this.swarm.muxedConns[b58Str] = { muxer: muxedConn };
+                    this.switch.muxedConns[b58Str] = { muxer: muxedConn };
 
                     if (peerInfo.multiaddrs.size > 0) {
                         // with incomming conn and through identify, going to pick one
@@ -75,16 +75,16 @@ export default class ConnectionManager {
                         // no addr, use just their IPFS id
                         peerInfo.connect(`/ipfs/${b58Str}`);
                     }
-                    peerInfo = this.swarm._peerBook.set(peerInfo);
+                    peerInfo = this.switch._peerBook.set(peerInfo);
 
                     muxedConn.on("close", () => {
-                        delete this.swarm.muxedConns[b58Str];
+                        delete this.switch.muxedConns[b58Str];
                         peerInfo.disconnect();
-                        peerInfo = this.swarm._peerBook.set(peerInfo);
-                        setImmediate(() => this.swarm.emit("peer:mux:closed", peerInfo, protocol));
+                        peerInfo = this.switch._peerBook.set(peerInfo);
+                        setImmediate(() => this.switch.emit("peer:mux:closed", peerInfo));
                     });
 
-                    setImmediate(() => this.swarm.emit("peer:mux:established", peerInfo, protocol));
+                    setImmediate(() => this.switch.emit("peer:mux:established", peerInfo));
                 } catch (err) {
                     return adone.log("Identify not successful");
                 }
@@ -95,9 +95,9 @@ export default class ConnectionManager {
     }
 
     reuse() {
-        this.swarm.identify = true;
-        this.swarm.handle(identify.multicodec, (protocol, conn) => {
-            identify.listener(conn, this.swarm._peerInfo);
+        this.switch.identify = true;
+        this.switch.handle(identify.multicodec, (protocol, conn) => {
+            identify.listener(conn, this.switch._peerInfo);
         });
     }
 
@@ -110,7 +110,7 @@ export default class ConnectionManager {
             }
 
             // TODO: should we enable circuit listener and dialer by default?
-            this.swarm.tm.add(Circuit.tag, new Circuit(this.swarm, config));
+            this.switch.tm.add(Circuit.tag, new Circuit(this.switch, config));
         }
     }
 
@@ -120,14 +120,14 @@ export default class ConnectionManager {
             encrypt = plaintext.encrypt;
         }
 
-        this.swarm.unhandle(this.swarm.crypto.tag);
-        this.swarm.handle(tag, (protocol, conn) => {
-            const myId = this.swarm._peerInfo.id;
+        this.switch.unhandle(this.switch.crypto.tag);
+        this.switch.handle(tag, (protocol, conn) => {
+            const myId = this.switch._peerInfo.id;
             const secure = encrypt(myId, conn, undefined, () => {
-                protocolMuxer(this.swarm.protocols, secure);
+                protocolMuxer(this.switch.protocols, secure);
             });
         });
 
-        this.swarm.crypto = { tag, encrypt };
+        this.switch.crypto = { tag, encrypt };
     }
 }

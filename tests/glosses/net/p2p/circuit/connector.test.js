@@ -178,7 +178,7 @@ describe("circuit", "Connector", () => {
             const peerId = PeerId.createFromJSON(nodes.node4);
             const peer = PeerInfo.create(peerId);
             peer.multiaddrs.add("/p2p-circuit/ipfs/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE");
-            dialer.swarm = {
+            dialer.switch = {
                 _peerInfo: peer
             };
             dialer.relayConns = new Map();

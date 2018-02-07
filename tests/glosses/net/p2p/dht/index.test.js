@@ -8,7 +8,7 @@ import { makePeers, setupDHT, makeValues, teardown } from "./utils";
 
 const {
     math: { random },
-    net: { p2p: { multiplex, dht, swarm: { Swarm }, PeerBook, record: { Record }, transport: { TCP } } },
+    net: { p2p: { multiplex, dht, switch: { Switch }, PeerBook, record: { Record }, transport: { TCP } } },
     vendor: { lodash: _ }
 } = adone;
 const { KadDHT } = dht;
@@ -24,7 +24,7 @@ const connectNoSync = (a, b) => {
     const target = _.cloneDeep(b.peerInfo);
     target.id._pubKey = target.id.pubKey;
     target.id._privKey = null;
-    return a.swarm.connect(target);
+    return a.switch.connect(target);
 };
 
 const find = (a, b) => {
@@ -115,14 +115,14 @@ describe("dht", "KadDHT", () => {
     });
 
     it("create", () => {
-        const swarm = new Swarm(peerInfos[0], new PeerBook());
-        swarm.tm.add("tcp", new TCP());
-        swarm.connection.addStreamMuxer(multiplex);
-        swarm.connection.reuse();
-        const dht = new KadDHT(swarm, { kBucketSize: 5 });
+        const sw = new Switch(peerInfos[0], new PeerBook());
+        sw.tm.add("tcp", new TCP());
+        sw.connection.addStreamMuxer(multiplex);
+        sw.connection.reuse();
+        const dht = new KadDHT(sw, { kBucketSize: 5 });
 
         expect(dht).to.have.property("peerInfo").eql(peerInfos[0]);
-        expect(dht).to.have.property("swarm").eql(swarm);
+        expect(dht).to.have.property("switch").eql(sw);
         expect(dht).to.have.property("kBucketSize", 5);
         expect(dht).to.have.property("routingTable");
     });
@@ -245,8 +245,8 @@ describe("dht", "KadDHT", () => {
         dhtB.peerBook.set(peerA);
 
         await Promise.all([
-            dhtA.swarm.connect(peerB.id),
-            dhtB.swarm.connect(peerA.id)
+            dhtA.switch.connect(peerB.id),
+            dhtB.switch.connect(peerA.id)
         ]);
     });
 
@@ -363,11 +363,11 @@ describe("dht", "KadDHT", () => {
     });
 
     it("_nearestPeersToQuery", () => {
-        const swarm = new Swarm(peerInfos[0], new PeerBook());
-        swarm.tm.add("tcp", new TCP());
-        swarm.connection.addStreamMuxer(multiplex);
-        swarm.connection.reuse();
-        const dht = new KadDHT(swarm);
+        const sw = new Switch(peerInfos[0], new PeerBook());
+        sw.tm.add("tcp", new TCP());
+        sw.connection.addStreamMuxer(multiplex);
+        sw.connection.reuse();
+        const dht = new KadDHT(sw);
 
         dht.peerBook.set(peerInfos[1]);
         dht._add(peerInfos[1]);
@@ -376,11 +376,11 @@ describe("dht", "KadDHT", () => {
     });
 
     it("_betterPeersToQuery", () => {
-        const swarm = new Swarm(peerInfos[0], new PeerBook());
-        swarm.tm.add("tcp", new TCP());
-        swarm.connection.addStreamMuxer(multiplex);
-        swarm.connection.reuse();
-        const dht = new KadDHT(swarm);
+        const sw = new Switch(peerInfos[0], new PeerBook());
+        sw.tm.add("tcp", new TCP());
+        sw.connection.addStreamMuxer(multiplex);
+        sw.connection.reuse();
+        const dht = new KadDHT(sw);
 
         dht.peerBook.set(peerInfos[1]);
         dht.peerBook.set(peerInfos[2]);
@@ -394,11 +394,11 @@ describe("dht", "KadDHT", () => {
 
     describe("_verifyRecordLocally", () => {
         it("invalid record (missing public key)", () => {
-            const swarm = new Swarm(peerInfos[0], new PeerBook());
-            swarm.tm.add("tcp", new TCP());
-            swarm.connection.addStreamMuxer(multiplex);
-            swarm.connection.reuse();
-            const dht = new KadDHT(swarm);
+            const sw = new Switch(peerInfos[0], new PeerBook());
+            sw.tm.add("tcp", new TCP());
+            sw.connection.addStreamMuxer(multiplex);
+            sw.connection.reuse();
+            const dht = new KadDHT(sw);
 
             // Not putting the peer info into the peerbook
             // dht.peerBook.set(peerInfos[1])
@@ -414,11 +414,11 @@ describe("dht", "KadDHT", () => {
         });
 
         it("valid record - signed", () => {
-            const swarm = new Swarm(peerInfos[0], new PeerBook());
-            swarm.tm.add("tcp", new TCP());
-            swarm.connection.addStreamMuxer(multiplex);
-            swarm.connection.reuse();
-            const dht = new KadDHT(swarm);
+            const sw = new Switch(peerInfos[0], new PeerBook());
+            sw.tm.add("tcp", new TCP());
+            sw.connection.addStreamMuxer(multiplex);
+            sw.connection.reuse();
+            const dht = new KadDHT(sw);
 
             dht.peerBook.set(peerInfos[1]);
 
@@ -433,11 +433,11 @@ describe("dht", "KadDHT", () => {
         });
 
         it("valid record - not signed", () => {
-            const swarm = new Swarm(peerInfos[0], new PeerBook());
-            swarm.tm.add("tcp", new TCP());
-            swarm.connection.addStreamMuxer(multiplex);
-            swarm.connection.reuse();
-            const dht = new KadDHT(swarm);
+            const sw = new Switch(peerInfos[0], new PeerBook());
+            sw.tm.add("tcp", new TCP());
+            sw.connection.addStreamMuxer(multiplex);
+            sw.connection.reuse();
+            const dht = new KadDHT(sw);
 
             dht.peerBook.set(peerInfos[1]);
 

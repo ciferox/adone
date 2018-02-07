@@ -1,7 +1,7 @@
 const { makePeers } = require("./utils");
 
 const {
-    net: { p2p: { multiplex, dht, swarm: { Swarm }, PeerBook, Connection, transport: { TCP } } },
+    net: { p2p: { multiplex, dht, switch: { Switch }, PeerBook, Connection, transport: { TCP } } },
     stream: { pull }
 } = adone;
 const { KadDHT } = dht;
@@ -14,13 +14,13 @@ describe("dht", "KadDHT", "Network", () => {
     before(async function () {
         this.timeout(10 * 1000);
         peerInfos = makePeers(3);
-        const swarm = new Swarm(peerInfos[0], new PeerBook());
-        swarm.tm.add("tcp", new TCP());
-        swarm.connection.addStreamMuxer(multiplex);
-        swarm.connection.reuse();
-        dht = new KadDHT(swarm);
+        const sw = new Switch(peerInfos[0], new PeerBook());
+        sw.tm.add("tcp", new TCP());
+        sw.connection.addStreamMuxer(multiplex);
+        sw.connection.reuse();
+        dht = new KadDHT(sw);
 
-        await swarm.listen();
+        await sw.start();
         await new Promise((resolve) => dht.start(resolve));
     });
 
@@ -28,7 +28,7 @@ describe("dht", "KadDHT", "Network", () => {
         this.timeout(10 * 1000);
 
         await new Promise((resolve) => dht.stop(resolve));
-        await dht.swarm.close();
+        await dht.switch.stop();
     });
 
     describe("sendRequest", () => {
@@ -43,7 +43,7 @@ describe("dht", "KadDHT", "Network", () => {
             const msg = new Message(Message.TYPES.PING, Buffer.from("hello"), 0);
 
             // mock it
-            dht.swarm.connect = (peer, protocol) => {
+            dht.switch.connect = (peer, protocol) => {
                 expect(protocol).to.eql("/ipfs/kad/1.0.0");
                 const msg = new Message(Message.TYPES.FIND_NODE, Buffer.from("world"), 0);
 
@@ -83,7 +83,7 @@ describe("dht", "KadDHT", "Network", () => {
             const msg = new Message(Message.TYPES.PING, Buffer.from("hello"), 0);
 
             // mock it
-            dht.swarm.connect = (peer, protocol) => {
+            dht.switch.connect = (peer, protocol) => {
                 expect(protocol).to.eql("/ipfs/kad/1.0.0");
                 const rawConn = {
                     // hanging

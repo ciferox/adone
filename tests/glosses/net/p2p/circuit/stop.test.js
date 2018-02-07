@@ -11,7 +11,7 @@ describe("circuit", "stop", () => {
     describe("handle relayed connections", () => {
         let stopHandler;
 
-        let swarm;
+        let sw;
         let conn;
         let stream;
 
@@ -23,14 +23,14 @@ describe("circuit", "stop", () => {
             const peerId = PeerId.createFromJSON(nodes.node4);
             const peer = PeerInfo.create(peerId);
             peer.multiaddrs.add("/p2p-circuit/ipfs/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE");
-            swarm = {
+            sw = {
                 _peerInfo: peer,
                 conns: {
                     QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE: new Connection()
                 }
             };
 
-            stopHandler = new Stop(swarm);
+            stopHandler = new Stop(sw);
         });
 
         it("handle request with a valid multiaddr", (done) => {

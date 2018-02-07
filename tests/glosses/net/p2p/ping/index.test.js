@@ -1,10 +1,10 @@
 const {
-    net: { p2p: { swarm: { Swarm }, transport: { TCP }, PeerInfo, PeerBook, Ping } }
+    net: { p2p: { switch: { Switch }, transport: { TCP }, PeerInfo, PeerBook, Ping } }
 } = adone;
 
 describe("ping", function () {
-    let swarmA;
-    let swarmB;
+    let switchA;
+    let switchB;
     let peerA;
     let peerB;
 
@@ -16,26 +16,26 @@ describe("ping", function () {
         peerA.multiaddrs.add("/ip4/127.0.0.1/tcp/0");
         peerB = PeerInfo.create();
         peerB.multiaddrs.add("/ip4/127.0.0.1/tcp/0");
-        swarmA = new Swarm(peerA, new PeerBook());
-        swarmB = new Swarm(peerB, new PeerBook());
-        swarmA.tm.add("tcp", new TCP());
-        swarmB.tm.add("tcp", new TCP());
+        switchA = new Switch(peerA, new PeerBook());
+        switchB = new Switch(peerB, new PeerBook());
+        switchA.tm.add("tcp", new TCP());
+        switchB.tm.add("tcp", new TCP());
 
-        await swarmA.listen();
-        await swarmB.listen();
-        Ping.mount(swarmA);
-        Ping.mount(swarmB);
+        await switchA.start();
+        await switchB.start();
+        Ping.mount(switchA);
+        Ping.mount(switchB);
     });
 
     after(async () => {
         await Promise.all([
-            swarmA.close(),
-            swarmB.close()
+            switchA.stop(),
+            switchB.stop()
         ]);
     });
 
     it("ping once from peerA to peerB", (done) => {
-        const p = new Ping(swarmA, peerB);
+        const p = new Ping(switchA, peerB);
 
         p.on("error", (err) => {
             assert.notExists(err);
@@ -49,7 +49,7 @@ describe("ping", function () {
     });
 
     it("ping 5 times from peerB to peerA", (done) => {
-        const p = new Ping(swarmB, peerA);
+        const p = new Ping(switchB, peerA);
 
         p.on("error", (err) => {
             assert.notExists(err);
@@ -67,7 +67,7 @@ describe("ping", function () {
     });
 
     it("ping itself", (done) => {
-        const p = new Ping(swarmA, peerA);
+        const p = new Ping(switchA, peerA);
 
         p.on("error", (err) => {
             assert.notExists(err);
@@ -81,7 +81,7 @@ describe("ping", function () {
     });
 
     it("unmount PING protocol", () => {
-        Ping.unmount(swarmA);
-        Ping.unmount(swarmB);
+        Ping.unmount(switchA);
+        Ping.unmount(switchB);
     });
 });

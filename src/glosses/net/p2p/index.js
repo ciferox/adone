@@ -15,7 +15,7 @@ adone.lazify({
     MulticastDNS: "./mdns",
     Railing: "./railing",
     dht: "./dht",
-    swarm: "./swarm",
+    switch: "./switch",
     Ping: "./ping",
     crypto: "./crypto",
     transport: "./transports",

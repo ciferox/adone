@@ -1,6 +1,6 @@
 const {
     multi,
-    net: { p2p: { CID, PeerId, multiplex, dht, swarm: { Swarm }, PeerInfo, PeerBook, transport: { TCP } } },
+    net: { p2p: { CID, PeerId, multiplex, dht, switch: { Switch }, PeerInfo, PeerBook, transport: { TCP } } },
     std
 } = adone;
 const { KadDHT } = dht;
@@ -24,12 +24,12 @@ export const setupDHT = async () => {
     const p = peers[0];
     p.multiaddrs.add("/ip4/0.0.0.0/tcp/0");
 
-    const swarm = new Swarm(p, new PeerBook());
-    swarm.tm.add("tcp", new TCP());
-    swarm.connection.addStreamMuxer(multiplex);
-    swarm.connection.reuse();
+    const sw = new Switch(p, new PeerBook());
+    sw.tm.add("tcp", new TCP());
+    sw.connection.addStreamMuxer(multiplex);
+    sw.connection.reuse();
 
-    const dht = new KadDHT(swarm);
+    const dht = new KadDHT(sw);
 
     dht.validators.v = {
         func(key, publicKey) {
@@ -39,7 +39,7 @@ export const setupDHT = async () => {
 
     dht.selectors.v = (k, records) => 0;
 
-    await swarm.listen();
+    await sw.start();
     await new Promise((resolve, reject) => {
         dht.start((err) => {
             if (err) {
@@ -57,7 +57,7 @@ export const setupDHT = async () => {
 export const teardown = async () => {
     await Promise.all(nodes.map(async (n) => {
         await new Promise((resolve) => n.stop(resolve));
-        await n.swarm.close();
+        await n.switch.stop();
     }));
 
     nodes = [];

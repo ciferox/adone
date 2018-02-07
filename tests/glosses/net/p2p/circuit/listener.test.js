@@ -10,7 +10,7 @@ const { protocol, Listener, multicodec } = adone.private(adone.net.p2p.circuit);
 
 describe("circuit", "listener", () => {
     describe("listen", () => {
-        let swarm = null;
+        let sw = null;
         let handlerSpy = null;
         let listener = null;
         let stream = null;
@@ -25,7 +25,7 @@ describe("circuit", "listener", () => {
 
             const peerId = PeerId.createFromJSON(nodes.node4);
             const peer = PeerInfo.create(peerId);
-            swarm = {
+            sw = {
                 _peerInfo: peer,
                 handle: spy((proto, h) => {
                     handlerSpy = spy(h);
@@ -35,7 +35,7 @@ describe("circuit", "listener", () => {
                 }
             };
 
-            listener = new Listener(swarm, {}, () => { });
+            listener = new Listener(sw, {}, () => { });
             listener.listen();
         });
 
@@ -187,19 +187,19 @@ describe("circuit", "listener", () => {
     });
 
     describe("getAddrs", () => {
-        let swarm = null;
+        let sw = null;
         let listener = null;
         let peerInfo = null;
 
         beforeEach(() => {
             const peerId = PeerId.createFromJSON(nodes.node4);
             const peer = PeerInfo.create(peerId);
-            swarm = {
+            sw = {
                 _peerInfo: peer
             };
 
             peerInfo = peer;
-            listener = new Listener(swarm, {}, () => { });
+            listener = new Listener(sw, {}, () => { });
         });
 
         afterEach(() => {

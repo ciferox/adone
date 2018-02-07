@@ -157,7 +157,7 @@ export default class Receiver {
     startLoop() {
         this._loop = true;
 
-        while (this._loop) {
+        do {
             switch (this._state) {
                 case GET_INFO:
                     this.getInfo();
@@ -177,7 +177,7 @@ export default class Receiver {
                 default: // `INFLATING`
                     this._loop = false;
             }
-        }
+        } while (this._loop);
     }
 
     /**
@@ -477,8 +477,8 @@ export default class Receiver {
     controlMessage(data) {
         if (this._opcode === 0x08) {
             if (data.length === 0) {
-                this.onclose(1005, "");
                 this._loop = false;
+                this.onclose(1005, "");
                 this.cleanup(this._cleanupCallback);
             } else if (data.length === 1) {
                 this.error(
@@ -508,8 +508,8 @@ export default class Receiver {
                     return;
                 }
 
-                this.onclose(code, buf.toString());
                 this._loop = false;
+                this.onclose(code, buf.toString());
                 this.cleanup(this._cleanupCallback);
             }
 
@@ -533,9 +533,9 @@ export default class Receiver {
      * @private
      */
     error(err, code) {
-        this.onerror(err, code);
         this._hadError = true;
         this._loop = false;
+        this.onerror(err, code);
         this.cleanup(this._cleanupCallback);
     }
 
@@ -593,25 +593,32 @@ export default class Receiver {
      * @public
      */
     cleanup(cb) {
-        if (!this._hadError && (this._loop || this._state === INFLATING)) {
-            this._cleanupCallback = cb;
-            this._isCleaningUp = true;
-        } else {
-            this._extensions = null;
-            this._fragments = null;
-            this._buffers = null;
-            this._mask = null;
-
-            this._cleanupCallback = null;
-            this.onmessage = null;
-            this.onclose = null;
-            this.onerror = null;
-            this.onping = null;
-            this.onpong = null;
-
+        if (is.null(this._extensions)) {
             if (cb) {
                 cb();
             }
+            return;
+        }
+
+        if (!this._hadError && (this._loop || this._state === INFLATING)) {
+            this._cleanupCallback = cb;
+            this._isCleaningUp = true;
+            return;
+        }
+        this._extensions = null;
+        this._fragments = null;
+        this._buffers = null;
+        this._mask = null;
+
+        this._cleanupCallback = null;
+        this.onmessage = null;
+        this.onclose = null;
+        this.onerror = null;
+        this.onping = null;
+        this.onpong = null;
+
+        if (cb) {
+            cb();
         }
     }
 }
