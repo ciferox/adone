@@ -1,0 +1,70 @@
+#!/bin/bash
+
+### BEGIN INIT INFO
+# Provides:          omnitron
+# Required-Start:    $local_fs $time
+# Required-Stop:     $local_fs $time
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Omnitron service
+# Description:       Omnitron service (adone execution core)
+# Author:            Adone Core Team
+# Created:           {{created}}
+### END INIT INFO
+
+. /lib/lsb/init-functions
+
+NAME=omnitron
+NODE_EXEC=$(which node)
+WRAPPER_PATH={{script}}
+USER={{user}}
+PIDFILE={{pidfile}}
+
+startOmnitron() {
+  if start-stop-daemon --start --quiet --chuid $USER --pidfile $PIDFILE --background --exec $NODE_EXEC -- $WRAPPER_PATH start ; then
+    log_end_msg 0
+  else
+    log_end_msg 1
+  fi
+}
+
+stopOmnitron() {
+  if start-stop-daemon --stop --quiet --chuid $USER --pidfile $PIDFILE --exec $NODE_EXEC -- $WRAPPER_PATH stop ; then
+    log_end_msg 0
+  else
+    log_end_msg 1
+  fi
+}
+
+case "$1" in
+  start) startOmnitron ;;
+  stop) stopOmnitron ;;
+  restart)
+    stopOmnitron
+    case "$?" in
+      0|1)
+        startOmnitron
+        case "$?" in
+          0) log_end_msg 0 ;;
+          1) log_end_msg 1 ;;
+          *) log_end_msg 1 ;;
+        esac
+      ;;
+      *)
+        log_end_msg 1
+      ;;
+    esac
+  ;;
+  status)
+    if [ -e $PIDFILE ]; then
+      status_of_proc -p $PIDFILE $NODE_EXEC "$NAME process" && exit 0 || exit $?
+    else
+      log_daemon_msg "$NAME process is not running"
+      log_end_msg 0
+    fi
+  ;;
+  *)
+    echo "Usage: $0 {start|stop|restart|status}" >&2
+    exit 3
+  ;;
+esac

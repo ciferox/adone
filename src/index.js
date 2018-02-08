@@ -366,6 +366,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         realm: "./realm",
         cli: "./cli",
         omnitron: "./omnitron",
+        omnitron2: "./omnitron2",
         fast: "./fast",
         shani: "./shani",
         specter: "./specter",

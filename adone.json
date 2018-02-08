@@ -973,6 +973,12 @@
                     "dst": "lib/omnitron",
                     "namespace": "omnitron"
                 },
+                "omnitron2": {
+                    "task": "adoneTranspile",
+                    "src": "src/omnitron2/**/*.js",
+                    "dst": "lib/omnitron2",
+                    "namespace": "omnitron2"
+                },
                 "omnitronAssets": {
                     "src": [
                         "src/omnitron/**/*",

@@ -1,0 +1,6 @@
+{
+    "name": "omnitron",
+    "description": "Cli interface to omnitron",
+    "version": "0.6.70",
+    "type": "cli.command"
+}

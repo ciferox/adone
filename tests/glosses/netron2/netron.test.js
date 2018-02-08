@@ -296,7 +296,7 @@ describe("Netron", () => {
         let idServer;
         let idClient;
         let peerS;
-        let peerC;
+        let peerC = null;
 
         before(() => {
             idServer = PeerId.create();
@@ -403,6 +403,9 @@ describe("Netron", () => {
 
             await netronS.start("default");
             await netronC.connect("default", peerS);
+        });
+
+        it.todo("disconnect all peers", async () => {
 
         });
 
