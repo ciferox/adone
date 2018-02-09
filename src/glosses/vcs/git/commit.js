@@ -1,6 +1,6 @@
 const {
     is,
-    event,
+    event: { Emitter },
     promise: { promisifyAll },
     vcs: { git: { native, Oid, Utils: { lookupWrapper } } }
 } = adone;
@@ -193,7 +193,7 @@ Commit.prototype.getTree = function (callback) {
  * @start start()
  */
 Commit.prototype.history = function () {
-    const event = new event.Emitter();
+    const event = new Emitter();
     const oid = this.id();
     const revwalk = this.repo.createRevWalk();
 

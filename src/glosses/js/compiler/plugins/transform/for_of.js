@@ -3,11 +3,64 @@ const {
 } = adone;
 
 export default function (api, options) {
-    const { loose } = options;
+    const { loose, assumeArray } = options;
 
-    const buildForOfArray = template(`
-    for (var KEY = 0; KEY < ARR.length; KEY++) BODY;
-  `);
+    if (loose === true && assumeArray === true) {
+        throw new Error(
+            "The loose and assumeArray options cannot be used together in @babel/plugin-transform-for-of",
+        );
+    }
+
+    if (assumeArray) {
+        return {
+            visitor: {
+                ForOfStatement(path) {
+                    const { scope } = path;
+                    const { left, right, body } = path.node;
+                    const i = scope.generateUidIdentifier("i");
+                    let array = scope.maybeGenerateMemoised(right, true);
+
+                    const inits = [t.variableDeclarator(i, t.numericLiteral(0))];
+                    if (array) {
+                        inits.push(t.variableDeclarator(array, right));
+                    } else {
+                        array = right;
+                    }
+
+                    const item = t.memberExpression(
+                        t.cloneNode(array),
+                        t.cloneNode(i),
+                        true,
+                    );
+                    let assignment;
+                    if (t.isVariableDeclaration(left)) {
+                        assignment = left;
+                        assignment.declarations[0].init = item;
+                    } else {
+                        assignment = t.expressionStatement(
+                            t.assignmentExpression("=", left, item),
+                        );
+                    }
+
+                    const block = t.toBlock(body);
+                    block.body.unshift(assignment);
+
+                    path.replaceWith(
+                        t.forStatement(
+                            t.variableDeclaration("let", inits),
+                            t.binaryExpression(
+                                "<",
+                                t.cloneNode(i),
+                                t.memberExpression(t.cloneNode(array), t.identifier("length")),
+                            ),
+                            t.updateExpression("++", t.cloneNode(i)),
+                            block,
+                        ),
+                    );
+                }
+            }
+        };
+    }
 
     const buildForOfLoose = template(`
     for (var LOOP_OBJECT = OBJECT,
@@ -26,7 +79,9 @@ export default function (api, options) {
     }
   `);
 
-    /* eslint-disable max-len */
+    /**
+     * eslint-disable max-len
+     */
     const buildForOf = template(`
     var ITERATOR_COMPLETION = true;
     var ITERATOR_HAD_ERROR_KEY = false;
@@ -49,62 +104,6 @@ export default function (api, options) {
       }
     }
   `);
-    /* eslint-enable max-len */
-
-    const _ForOfStatementArray = function (path) {
-        const { node, scope } = path;
-        const nodes = [];
-        let right = node.right;
-
-        if (!t.isIdentifier(right) || !scope.hasBinding(right.name)) {
-            const uid = scope.generateUidIdentifier("arr");
-            nodes.push(
-                t.variableDeclaration("var", [t.variableDeclarator(uid, right)]),
-            );
-            right = uid;
-        }
-
-        const iterationKey = scope.generateUidIdentifier("i");
-
-        let loop = buildForOfArray({
-            BODY: node.body,
-            KEY: iterationKey,
-            ARR: right
-        });
-
-        t.inherits(loop, node);
-        t.ensureBlock(loop);
-
-        const iterationValue = t.memberExpression(right, iterationKey, true);
-
-        const left = node.left;
-        if (t.isVariableDeclaration(left)) {
-            left.declarations[0].init = iterationValue;
-            loop.body.body.unshift(left);
-        } else {
-            loop.body.body.unshift(
-                t.expressionStatement(
-                    t.assignmentExpression("=", left, iterationValue),
-                ),
-            );
-        }
-
-        if (path.parentPath.isLabeledStatement()) {
-            loop = t.labeledStatement(path.parentPath.node.label, loop);
-        }
-
-        nodes.push(loop);
-
-        return nodes;
-    };
-
-    const replaceWithArray = function (path) {
-        if (path.parentPath.isLabeledStatement()) {
-            path.parentPath.replaceWithMultiple(_ForOfStatementArray(path));
-        } else {
-            path.replaceWithMultiple(_ForOfStatementArray(path));
-        }
-    };
 
     const pushComputedPropsLoose = function (path, file) {
         const { node, scope, parent } = path;
@@ -125,9 +124,11 @@ export default function (api, options) {
             // for (let i of test)
             id = scope.generateUidIdentifier("ref");
             declar = t.variableDeclaration(left.kind, [
-                t.variableDeclarator(left.declarations[0].id, id)
+                t.variableDeclarator(left.declarations[0].id, t.identifier(id.name))
             ]);
-            intermediate = t.variableDeclaration("var", [t.variableDeclarator(id)]);
+            intermediate = t.variableDeclaration("var", [
+                t.variableDeclarator(t.identifier(id.name))
+            ]);
         } else {
             throw file.buildCodeFrameError(
                 left,
@@ -168,8 +169,11 @@ export default function (api, options) {
         const left = node.left;
         let declar;
 
-        const stepKey = scope.generateUidIdentifier("step");
-        const stepValue = t.memberExpression(stepKey, t.identifier("value"));
+        const stepKey = scope.generateUid("step");
+        const stepValue = t.memberExpression(
+            t.identifier(stepKey),
+            t.identifier("value"),
+        );
 
         if (
             t.isIdentifier(left) ||
@@ -192,20 +196,15 @@ export default function (api, options) {
             );
         }
 
-        //
-
-        const iteratorKey = scope.generateUidIdentifier("iterator");
-
         const template = buildForOf({
             ITERATOR_HAD_ERROR_KEY: scope.generateUidIdentifier("didIteratorError"),
             ITERATOR_COMPLETION: scope.generateUidIdentifier(
                 "iteratorNormalCompletion",
             ),
             ITERATOR_ERROR_KEY: scope.generateUidIdentifier("iteratorError"),
-            ITERATOR_KEY: iteratorKey,
-            STEP_KEY: stepKey,
-            OBJECT: node.right,
-            BODY: null
+            ITERATOR_KEY: scope.generateUidIdentifier("iterator"),
+            STEP_KEY: t.identifier(stepKey),
+            OBJECT: node.right
         });
 
         const isLabeledParent = t.isLabeledStatement(parent);
@@ -227,9 +226,76 @@ export default function (api, options) {
         };
     };
 
-    const pushComputedProps = loose
-        ? pushComputedPropsLoose
-        : pushComputedPropsSpec;
+    const pushComputedProps = loose ? pushComputedPropsLoose : pushComputedPropsSpec;
+
+    const buildForOfArray = template(`
+    for (var KEY = 0; KEY < ARR.length; KEY++) BODY;
+  `);
+
+    /**
+     * eslint-enable max-len
+     */
+
+    const _ForOfStatementArray = function (path) {
+        const { node, scope } = path;
+        const nodes = [];
+        let right = node.right;
+
+        if (!t.isIdentifier(right) || !scope.hasBinding(right.name)) {
+            const uid = scope.generateUid("arr");
+            nodes.push(
+                t.variableDeclaration("var", [
+                    t.variableDeclarator(t.identifier(uid), right)
+                ]),
+            );
+            right = t.identifier(uid);
+        }
+
+        const iterationKey = scope.generateUidIdentifier("i");
+
+        let loop = buildForOfArray({
+            BODY: node.body,
+            KEY: iterationKey,
+            ARR: right
+        });
+
+        t.inherits(loop, node);
+        t.ensureBlock(loop);
+
+        const iterationValue = t.memberExpression(
+            t.cloneNode(right),
+            t.cloneNode(iterationKey),
+            true,
+        );
+
+        const left = node.left;
+        if (t.isVariableDeclaration(left)) {
+            left.declarations[0].init = iterationValue;
+            loop.body.body.unshift(left);
+        } else {
+            loop.body.body.unshift(
+                t.expressionStatement(
+                    t.assignmentExpression("=", left, iterationValue),
+                ),
+            );
+        }
+
+        if (path.parentPath.isLabeledStatement()) {
+            loop = t.labeledStatement(path.parentPath.node.label, loop);
+        }
+
+        nodes.push(loop);
+
+        return nodes;
+    };
+
+    const replaceWithArray = function (path) {
+        if (path.parentPath.isLabeledStatement()) {
+            path.parentPath.replaceWithMultiple(_ForOfStatementArray(path));
+        } else {
+            path.replaceWithMultiple(_ForOfStatementArray(path));
+        }
+    };
 
     return {
         visitor: {

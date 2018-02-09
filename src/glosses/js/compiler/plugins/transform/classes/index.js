@@ -24,8 +24,8 @@ export default function (api, options) {
     return {
         visitor: {
             ExportDefaultDeclaration(path) {
-                if (!path.get("declaration").isClassDeclaration()) { 
-                    return; 
+                if (!path.get("declaration").isClassDeclaration()) {
+                    return;
                 }
 
                 const { node } = path;
@@ -37,7 +37,7 @@ export default function (api, options) {
                 path.replaceWith(node.declaration);
                 path.insertAfter(
                     t.exportNamedDeclaration(null, [
-                        t.exportSpecifier(ref, t.identifier("default"))
+                        t.exportSpecifier(t.cloneNode(ref), t.identifier("default"))
                     ]),
                 );
             },
@@ -56,8 +56,8 @@ export default function (api, options) {
 
             ClassExpression(path, state) {
                 const { node } = path;
-                if (node[VISITED]) { 
-                    return; 
+                if (node[VISITED]) {
+                    return;
                 }
 
                 const inferred = functionName(path);

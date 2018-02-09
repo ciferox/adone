@@ -225,6 +225,6 @@ export default class PathHoister {
       uid = t.JSXExpressionContainer(uid);
     }
 
-    this.path.replaceWith(uid);
+    this.path.replaceWith(t.cloneNode(uid));
   }
 }

@@ -7,7 +7,7 @@
 export default class Separator {
     constructor(terminal, line) {
         this.type = "separator";
-        this.line = adone.terminal.styler.dim(line || new Array(15).join(adone.text.unicode.symbol.line));
+        this.line = adone.terminal.chalk.dim(line || new Array(15).join(adone.text.unicode.symbol.line));
     }
 
     /**

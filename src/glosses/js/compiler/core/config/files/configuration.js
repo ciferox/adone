@@ -18,40 +18,50 @@ export type IgnoreFile = {
   ignore: Array<string>,
 };
 
+export type RelativeConfig = {
+  config: ConfigFile | null,
+  ignore: IgnoreFile | null,
+};
+
 const BABELRC_FILENAME = ".babelrc";
 const BABELRC_JS_FILENAME = ".babelrc.js";
 const PACKAGE_FILENAME = "package.json";
 const BABELIGNORE_FILENAME = ".babelignore";
 
-export function findBabelrc(
+export function findRelativeConfig(
   filepath: string,
   envName: string,
-): ConfigFile | null {
+): RelativeConfig {
+  let config = null;
+  let ignore = null;
+
   const dirname = path.dirname(filepath);
   let loc = dirname;
   while (true) {
-    const conf = [
-      BABELRC_FILENAME,
-      BABELRC_JS_FILENAME,
-      PACKAGE_FILENAME,
-    ].reduce((previousConfig: ConfigFile | null, name) => {
-      const filepath = path.join(loc, name);
-      const config = readConfig(filepath, envName);
+    if (!config) {
+      config = [BABELRC_FILENAME, BABELRC_JS_FILENAME, PACKAGE_FILENAME].reduce(
+        (previousConfig: ConfigFile | null, name) => {
+          const filepath = path.join(loc, name);
+          const config = readConfig(filepath, envName);
 
-      if (config && previousConfig) {
-        throw new Error(
-          `Multiple configuration files found. Please remove one:\n` +
-          ` - ${path.basename(previousConfig.filepath)}\n` +
-          ` - ${name}\n` +
-          `from ${loc}`,
-        );
-      }
+          if (config && previousConfig) {
+            throw new Error(
+              `Multiple configuration files found. Please remove one:\n` +
+                ` - ${path.basename(previousConfig.filepath)}\n` +
+                ` - ${name}\n` +
+                `from ${loc}`,
+            );
+          }
 
-      return config || previousConfig;
-    }, null);
+          return config || previousConfig;
+        },
+        null,
+      );
+    }
 
-    if (conf) {
-      return conf;
+    if (!ignore) {
+      const ignoreLoc = path.join(loc, BABELIGNORE_FILENAME);
+      ignore = readIgnoreConfig(ignoreLoc);
     }
 
     const nextLoc = path.dirname(loc);
@@ -59,26 +69,7 @@ export function findBabelrc(
     loc = nextLoc;
   }
 
-  return null;
-}
-
-export function findBabelignore(filepath: string): IgnoreFile | null {
-  const dirname = path.dirname(filepath);
-  let loc = dirname;
-  while (true) {
-    const ignoreLoc = path.join(loc, BABELIGNORE_FILENAME);
-    const ignore = readIgnoreConfig(ignoreLoc);
-
-    if (ignore) {
-      return ignore;
-    }
-
-    const nextLoc = path.dirname(loc);
-    if (loc === nextLoc) break;
-    loc = nextLoc;
-  }
-
-  return null;
+  return { config, ignore };
 }
 
 export function loadConfig(
@@ -100,7 +91,7 @@ export function loadConfig(
  * Read the given config file, returning the result. Returns null if no config was found, but will
  * throw if there are parsing errors while loading a config.
  */
-function readConfig(filepath, envName) {
+function readConfig(filepath, envName): ConfigFile | null {
   return path.extname(filepath) === ".js"
     ? readConfigJS(filepath, { envName })
     : readConfigFile(filepath);
@@ -134,49 +125,49 @@ const readConfigJS = makeStrongCache(
 
       // $FlowIssue
       const configModule = (require(filepath): mixed);
-options =
-  configModule && configModule.__esModule
-    ? configModule.default || undefined
-    : configModule;
+      options =
+        configModule && configModule.__esModule
+          ? configModule.default || undefined
+          : configModule;
     } catch (err) {
-  err.message = `${filepath}: Error while loading config - ${err.message}`;
-  throw err;
-} finally {
-  LOADING_CONFIGS.delete(filepath);
-}
+      err.message = `${filepath}: Error while loading config - ${err.message}`;
+      throw err;
+    } finally {
+      LOADING_CONFIGS.delete(filepath);
+    }
 
-if (typeof options === "function") {
-  options = options({
-    cache: cache.simple(),
-    // Expose ".env()" so people can easily get the same env that we expose using the "env" key.
-    env: () => cache.using(data => data.envName),
-    async: () => false,
-  });
+    if (typeof options === "function") {
+      options = options({
+        cache: cache.simple(),
+        // Expose ".env()" so people can easily get the same env that we expose using the "env" key.
+        env: () => cache.using(data => data.envName),
+        async: () => false,
+      });
 
-  if (!cache.configured()) throwConfigError();
-}
+      if (!cache.configured()) throwConfigError();
+    }
 
-if (!options || typeof options !== "object" || Array.isArray(options)) {
-  throw new Error(
-    `${filepath}: Configuration should be an exported JavaScript object.`,
-  );
-}
+    if (!options || typeof options !== "object" || Array.isArray(options)) {
+      throw new Error(
+        `${filepath}: Configuration should be an exported JavaScript object.`,
+      );
+    }
 
-if (typeof options.then === "function") {
-  throw new Error(
-    `You appear to be using an async configuration, ` +
-    `which your current version of Babel does not support. ` +
-    `We may add support for this in the future, ` +
-    `but if you're on the most recent version of @babel/core and still ` +
-    `seeing this error, then you'll need to synchronously return your config.`,
-  );
-}
+    if (typeof options.then === "function") {
+      throw new Error(
+        `You appear to be using an async configuration, ` +
+          `which your current version of Babel does not support. ` +
+          `We may add support for this in the future, ` +
+          `but if you're on the most recent version of @babel/core and still ` +
+          `seeing this error, then you'll need to synchronously return your config.`,
+      );
+    }
 
-return {
-  filepath,
-  dirname: path.dirname(filepath),
-  options,
-};
+    return {
+      filepath,
+      dirname: path.dirname(filepath),
+      options,
+    };
   },
 );
 

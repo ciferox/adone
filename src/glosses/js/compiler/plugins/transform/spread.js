@@ -5,12 +5,11 @@ const {
 export default function (api, options) {
     const { loose } = options;
 
-    const getSpreadLiteral = (spread, scope) => {
+    const getSpreadLiteral = function (spread, scope) {
         if (loose && !t.isIdentifier(spread.argument, { name: "arguments" })) {
             return spread.argument;
         }
         return scope.toArray(spread.argument, true);
-
     };
 
     const hasSpread = function (nodes) {
@@ -58,11 +57,11 @@ export default function (api, options) {
                 }
 
                 const nodes = build(elements, scope, state);
-                let first = nodes.shift();
+                const first = nodes.shift();
 
-                if (!t.isArrayExpression(first)) {
-                    nodes.unshift(first);
-                    first = t.arrayExpression([]);
+                if (nodes.length === 0 && first !== elements[0].argument) {
+                    path.replaceWith(first);
+                    return;
                 }
 
                 path.replaceWith(
@@ -117,7 +116,7 @@ export default function (api, options) {
                         callee.object = t.assignmentExpression("=", temp, callee.object);
                         contextLiteral = temp;
                     } else {
-                        contextLiteral = t.cloneDeep(callee.object);
+                        contextLiteral = t.cloneNode(callee.object);
                     }
                     t.appendToMemberExpression(callee, t.identifier("apply"));
                 } else {
@@ -128,7 +127,7 @@ export default function (api, options) {
                     contextLiteral = t.thisExpression();
                 }
 
-                node.arguments.unshift(contextLiteral);
+                node.arguments.unshift(t.cloneNode(contextLiteral));
             },
 
             NewExpression(path, state) {

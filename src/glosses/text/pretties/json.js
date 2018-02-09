@@ -1,6 +1,6 @@
 const {
     is,
-    terminal: { styler }
+    terminal: { chalk }
 } = adone;
 
 /**
@@ -59,22 +59,22 @@ const addColorToData = function (input, options) {
 
     if (is.string(input)) {
         // Print strings in regular term color
-        return options.stringColor ? styler[options.stringColor](input) : input;
+        return options.stringColor ? chalk[options.stringColor](input) : input;
     }
 
     const sInput = String(input);
 
     if (input === true) {
-        return styler.green(sInput);
+        return chalk.green(sInput);
     }
     if (input === false) {
-        return styler.red(sInput);
+        return chalk.red(sInput);
     }
     if (is.null(input)) {
-        return styler.grey(sInput);
+        return chalk.grey(sInput);
     }
     if (is.number(input)) {
-        return styler[options.numberColor](sInput);
+        return chalk[options.numberColor](sInput);
     }
     if (is.function(input)) {
         return "function() {}";
@@ -122,7 +122,7 @@ const renderToArray = function (data, options, indentation) {
             // Prepend the dash at the begining of each array's element line
             let line = "- ";
             if (!options.noColor) {
-                line = styler[options.dashColor](line);
+                line = chalk[options.dashColor](line);
             }
             line = indent(indentation) + line;
 
@@ -168,7 +168,7 @@ const renderToArray = function (data, options, indentation) {
         // Prepend the index at the beginning of the line
         key = (`${i}: `);
         if (!options.noColor) {
-            key = styler[options.keysColor](key);
+            key = chalk[options.keysColor](key);
         }
         key = indent(indentation) + key;
 

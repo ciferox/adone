@@ -1,7 +1,7 @@
 import VanillaTransformer from "./vanilla";
 
 const {
-    js: { compiler: { types: t } }
+    js: { compiler: { types: t, helper: { functionName } } }
 } = adone;
 
 export default class LooseClassTransformer extends VanillaTransformer {
@@ -36,7 +36,7 @@ export default class LooseClassTransformer extends VanillaTransformer {
                 classRef = this._protoAlias;
             }
             const methodName = t.memberExpression(
-                classRef,
+                t.cloneNode(classRef),
                 node.key,
                 node.computed || t.isLiteral(node.key),
             );
@@ -51,10 +51,10 @@ export default class LooseClassTransformer extends VanillaTransformer {
             func.returnType = node.returnType;
             const key = t.toComputedKey(node, node.key);
             if (t.isStringLiteral(key)) {
-                func = adone.js.compiler.helper.functionName({
+                func = functionName({
                     node: func,
                     id: key,
-                    scope
+                    scope,
                 });
             }
 

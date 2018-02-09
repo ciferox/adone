@@ -13,7 +13,7 @@ import {
   assignmentExpression,
   conditionalExpression,
 } from "../builders/generated";
-
+import cloneNode from "../clone/cloneNode";
 
 export default function gatherSequenceExpressions(
   nodes: Array<Object>,
@@ -38,7 +38,7 @@ export default function gatherSequenceExpressions(
         for (const key in bindings) {
           declars.push({
             kind: node.kind,
-            id: bindings[key],
+            id: cloneNode(bindings[key]),
           });
         }
 

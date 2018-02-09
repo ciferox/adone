@@ -33,15 +33,15 @@ const buildGeneratorPropertyMethodAssignmentWrapper = template(`
 const visitor = {
     "ReferencedIdentifier|BindingIdentifier"(path, state) {
         // check if this node matches our function id
-        if (path.node.name !== state.name) { 
+        if (path.node.name !== state.name) {
             return;
         }
 
         // check that we don't have a local variable declared as that removes the need
         // for the wrapper
         const localDeclar = path.scope.getBindingIdentifier(state.name);
-        if (localDeclar !== state.outerDeclar) { 
-            return; 
+        if (localDeclar !== state.outerDeclar) {
+            return;
         }
 
         state.selfReference = true;
@@ -56,8 +56,8 @@ const wrap = (state, method, id, scope) => {
             scope.rename(id.name);
         } else {
             // we don't currently support wrapping class expressions
-            if (!t.isFunction(method)) { 
-                return; 
+            if (!t.isFunction(method)) {
+                return;
             }
 
             // need to add a wrapper since we can't change the references
@@ -138,8 +138,8 @@ const visit = (node, name, scope) => {
  */
 export default function ({ node, parent, scope, id }, localBinding = false) {
     // has an `id` so we don't need to infer one
-    if (node.id) { 
-        return; 
+    if (node.id) {
+        return;
     }
 
     if (
@@ -162,7 +162,7 @@ export default function ({ node, parent, scope, id }, localBinding = false) {
                 scope.getBinding(id.name) === binding
             ) {
                 // always going to reference this method
-                node.id = id;
+                node.id = t.cloneNode(id);
                 node.id[t.NOT_LOCAL_BINDING] = true;
                 return;
             }

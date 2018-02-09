@@ -5,7 +5,7 @@ const {
     is,
     fs,
     std: { path },
-    vcs: { git: { Commit, Reference, Repository, Signature, Diff, Reflog } }
+    vcs: { git: { Commit, Reference, Repository, Signature, Diff, Reflog, Oid } }
 } = adone;
 const exec = adone.system.process.shell;
 
@@ -483,16 +483,31 @@ describe("Commit", () => {
     it("can get header fields", function () {
         const commit = this.commit;
         return commit.headerField("parent").then((field) => {
-            assert.equal(field,
-                "ecfd36c80a3e9081f200dfda2391acadb56dac27");
+            assert.equal(field, "ecfd36c80a3e9081f200dfda2391acadb56dac27");
             return commit.headerField("author");
         }).then((field) => {
-            assert.equal(field,
-                "Michael Robinson <mike@panmedia.co.nz> 1362012884 +1300");
+            assert.equal(field, "Michael Robinson <mike@panmedia.co.nz> 1362012884 +1300");
             return commit.headerField("committer");
         }).then((field) => {
-            assert.equal(field,
-                "Michael Robinson <mike@panmedia.co.nz> 1362012884 +1300");
+            assert.equal(field, "Michael Robinson <mike@panmedia.co.nz> 1362012884 +1300");
+        });
+    });
+
+    it("can lookup using a short id", () => {
+        return Repository.open(reposPath).then((repo) => {
+            return Commit.lookupPrefix(repo, Oid.fromString("bf1da765"), 8);
+        }).then((commit) => {
+            assert.equal(commit.id().toString(), "bf1da765e357a9b936d6d511f2c7b78e0de53632");
+        });
+    });
+
+    it("can find nth gen ancestor", () => {
+        return Repository.open(reposPath).then((repo) => {
+            return repo.getCommit("b52067acaa755c3b3fc21b484ffed2bce4150f62");
+        }).then((commit) => {
+            return commit.nthGenAncestor(3);
+        }).then((commit) => {
+            assert.equal(commit.id().toString(), "9b2f3a37d46d47248d2704b6a46ec7e197bcd48c");
         });
     });
 

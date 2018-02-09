@@ -4,7 +4,7 @@ const {
 } = adone;
 
 const {
-    styler
+    chalk
 } = terminal;
 
 export default class InputPrompt extends terminal.BasePrompt {
@@ -46,13 +46,13 @@ export default class InputPrompt extends terminal.BasePrompt {
         let message = this.getQuestion();
 
         if (this.status === "answered") {
-            message += styler.cyan(this.answer);
+            message += chalk.cyan(this.answer);
         } else {
             message += this.term.readline.line;
         }
 
         if (error) {
-            bottomContent = styler.red(">> ") + error;
+            bottomContent = chalk.red(">> ") + error;
         }
 
         this.screen.render(message, bottomContent);

@@ -6,7 +6,7 @@ const {
     util,
     runtime: { term },
     tag,
-    terminal: { styler },
+    terminal: { chalk },
     application,
     meta: { reflect }
 } = adone;
@@ -16,39 +16,72 @@ const {
     STATE
 } = application;
 
+// Temporary here...
+const {
+    Context,
+    Public
+} = adone.netron;
+
+@Context()
+class CliContext {
+    constructor(app) {
+        this.app = app;
+    }
+
+    @Public()
+    defineArguments(options) {
+        return this.app.defineArguments(options);
+    }
+
+    @Public()
+    defineCommand(subsystem, ...args) {
+        return this.app.defineCommand(subsystem, ...args);
+    }
+
+    @Public()
+    defineCommandFromSubsystem(...args) {
+        // Should be implemented
+    }
+
+    @Public()
+    exitOnSignal(signame) {
+        return this.app.exitOnSignal(signame);
+    }
+}
+
 const noStyleLength = (x) => text.stripAnsi(x).length;
 
 const hasColorsSupport = Boolean(process.stdout.isTTY);
 
 const defaultColors = {
     commandName: (x) => term.parse(`{#4CAF50-fg}${x}{/}`),
-    commandHelpMessage: (x) => styler.italic(x),
+    commandHelpMessage: (x) => chalk.italic(x),
     commandSeparator: (x) => x,
     optionName: (x) => term.parse(`{#00B0FF-fg}${x}{/}`),
     optionVariable: (x) => x,
-    optionHelpMessage: (x) => styler.italic(x),
+    optionHelpMessage: (x) => chalk.italic(x),
     // argumentName: (x) => x,
     argumentName: (x) => term.parse(`{#F44336-fg}${x}{/}`),
-    argumentHelpMessage: (x) => styler.italic(x),
-    default: (x) => styler.grey(x),
+    argumentHelpMessage: (x) => chalk.italic(x),
+    default: (x) => chalk.grey(x),
     // angleBracket: (x) => term.green(x),
     angleBracket: (x) => term.parse(`{#F44336-fg}${x}{/}`),
-    squareBracket: (x) => styler.yellow(x),
-    curlyBracket: (x) => styler.yellow(x),
-    ellipsis: (x) => styler.dim(x),
-    usage: (x) => styler.underline(x),
-    commandGroupHeading: (x) => styler.underline(x),
-    argumentGroupHeading: (x) => styler.underline(x),
-    optionGroupHeading: (x) => styler.underline(x),
+    squareBracket: (x) => chalk.yellow(x),
+    curlyBracket: (x) => chalk.yellow(x),
+    ellipsis: (x) => chalk.dim(x),
+    usage: (x) => chalk.underline(x),
+    commandGroupHeading: (x) => chalk.underline(x),
+    argumentGroupHeading: (x) => chalk.underline(x),
+    optionGroupHeading: (x) => chalk.underline(x),
     value: {
-        string: (x) => styler.green(x),
-        null: (x) => styler.yellow(x),
-        number: (x) => styler.yellow(x),
-        undefined: (x) => styler.yellow(x),
-        boolean: (x) => styler.yellow(x),
+        string: (x) => chalk.green(x),
+        null: (x) => chalk.yellow(x),
+        number: (x) => chalk.yellow(x),
+        undefined: (x) => chalk.yellow(x),
+        boolean: (x) => chalk.yellow(x),
         object: {
             key: (x) => x,
-            separator: (x) => styler.cyan(x)
+            separator: (x) => chalk.cyan(x)
         }
     }
 };
@@ -1496,37 +1529,6 @@ export default class CliApplication extends application.Application {
             return;
         }
 
-        const {
-            Context,
-            Public
-        } = adone.netron;
-
-        @Context()
-        class CliContext {
-            constructor(app) {
-                this.app = app;
-            }
-
-            @Public()
-            defineArguments(options) {
-                return this.app.defineArguments(options);
-            }
-
-            @Public()
-            defineCommand(subsystem, ...args) {
-                return this.app.defineCommand(subsystem, ...args);
-            }
-
-            @Public()
-            defineCommandFromSubsystem(...args) {
-                // Should be implemented
-            }
-
-            @Public()
-            exitOnSignal(signame) {
-                return this.app.exitOnSignal(signame);
-            }
-        }
         adone.runtime.netron.attachContext(new CliContext(this), ctxId);
     }
 

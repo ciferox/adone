@@ -44,7 +44,7 @@ export default function parseAndBuildMetadata<T>(
   const placeholders = [];
   const placeholderNames = new Set();
 
-  t.traverse(ast, (placeholderVisitorHandler), {
+  t.traverse(ast, (placeholderVisitorHandler: TraversalHandler<*>), {
     placeholders,
     placeholderNames,
     placeholderWhitelist,
@@ -60,7 +60,7 @@ export default function parseAndBuildMetadata<T>(
 
 function placeholderVisitorHandler(
   node: BabelNode,
-  ancestors,
+  ancestors: TraversalAncestors,
   state: MetadataState,
 ) {
   let name;
@@ -109,7 +109,7 @@ function placeholderVisitorHandler(
   state.placeholderNames.add(name);
 }
 
-function resolveAncestors(ast: BabelNodeFile, ancestors) {
+function resolveAncestors(ast: BabelNodeFile, ancestors: TraversalAncestors) {
   let parent: BabelNode = ast;
   for (let i = 0; i < ancestors.length - 1; i++) {
     const { key, index } = ancestors[i];
@@ -148,8 +148,8 @@ function parseWithCodeFrame(code: string, parserOpts: {}): BabelNodeFile {
   } catch (err) {
     const loc = err.loc;
     if (loc) {
-      err.loc = null;
       err.message += "\n" + codeFrameColumns(code, { start: loc });
+      err.code = "BABEL_TEMPLATE_PARSE_ERROR";
     }
     throw err;
   }

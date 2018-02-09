@@ -4,39 +4,37 @@ import traverse from "../index";
 import NodePath from "./index";
 
 const {
-    is,
-    js: { compiler: { types: t, parse, codeFrameColumns } }
+  is,
+  js: { compiler: { types: t, parse, codeFrameColumns } }
 } = adone;
 
 const hoistVariablesVisitor = {
-    Function(path) {
-        path.skip();
-    },
+  Function(path) {
+    path.skip();
+  },
 
-    VariableDeclaration(path) {
-        if (path.node.kind !== "var") {
-            return;
-        }
+  VariableDeclaration(path) {
+    if (path.node.kind !== "var") return;
 
-        const bindings = path.getBindingIdentifiers();
-        for (const key in bindings) {
-            path.scope.push({ id: bindings[key] });
-        }
-
-        const exprs = [];
-
-        for (const declar of (path.node.declarations: Array<Object>)) {
-            if (declar.init) {
-                exprs.push(
-                    t.expressionStatement(
-                        t.assignmentExpression("=", declar.id, declar.init),
-                    ),
-                );
-            }
-        }
-
-        path.replaceWithMultiple(exprs);
+    const bindings = path.getBindingIdentifiers();
+    for (const key in bindings) {
+      path.scope.push({ id: bindings[key] });
     }
+
+    const exprs = [];
+
+    for (const declar of (path.node.declarations: Array<Object>)) {
+      if (declar.init) {
+        exprs.push(
+          t.expressionStatement(
+            t.assignmentExpression("=", declar.id, declar.init),
+          ),
+        );
+      }
+    }
+
+    path.replaceWithMultiple(exprs);
+  },
 };
 
 /**
@@ -48,20 +46,20 @@ const hoistVariablesVisitor = {
  */
 
 export function replaceWithMultiple(nodes: Array<Object>) {
-    this.resync();
+  this.resync();
 
-    nodes = this._verifyNodeList(nodes);
-    t.inheritLeadingComments(nodes[0], this.node);
-    t.inheritTrailingComments(nodes[nodes.length - 1], this.node);
-    this.node = this.container[this.key] = null;
-    const paths = this.insertAfter(nodes);
+  nodes = this._verifyNodeList(nodes);
+  t.inheritLeadingComments(nodes[0], this.node);
+  t.inheritTrailingComments(nodes[nodes.length - 1], this.node);
+  this.node = this.container[this.key] = null;
+  const paths = this.insertAfter(nodes);
 
-    if (this.node) {
-        this.requeue();
-    } else {
-        this.remove();
-    }
-    return paths;
+  if (this.node) {
+    this.requeue();
+  } else {
+    this.remove();
+  }
+  return paths;
 }
 
 /**
@@ -73,39 +71,30 @@ export function replaceWithMultiple(nodes: Array<Object>) {
  */
 
 export function replaceWithSourceString(replacement) {
-    this.resync();
+  this.resync();
 
-    try {
-        replacement = `(${replacement})`;
-        replacement = parse(replacement);
-    } catch (err) {
-        const loc = err.loc;
-        if (loc) {
-            const location = {
-                start: {
-                    line: loc.line,
-                    column: loc.column + 1
-                }
-            };
-            // Set the location to null or else the re-thrown exception could
-            // incorrectly interpret the location as referencing the file being
-            // transformed.
-            err.loc = null;
-            err.message +=
-                " - make sure this is an expression.\n" +
-                codeFrameColumns(replacement, {
-                    start: {
-                        line: loc.line,
-                        column: loc.column + 1,
-                    },
-                });
-        }
-        throw err;
+  try {
+    replacement = `(${replacement})`;
+    replacement = parse(replacement);
+  } catch (err) {
+    const loc = err.loc;
+    if (loc) {
+      err.message +=
+        " - make sure this is an expression.\n" +
+        codeFrameColumns(replacement, {
+          start: {
+            line: loc.line,
+            column: loc.column + 1,
+          },
+        });
+      err.code = "BABEL_REPLACE_SOURCE_ERROR";
     }
+    throw err;
+  }
 
-    replacement = replacement.program.body[0].expression;
-    traverse.removeProperties(replacement);
-    return this.replaceWith(replacement);
+  replacement = replacement.program.body[0].expression;
+  traverse.removeProperties(replacement);
+  return this.replaceWith(replacement);
 }
 
 /**
@@ -113,85 +102,85 @@ export function replaceWithSourceString(replacement) {
  */
 
 export function replaceWith(replacement) {
-    this.resync();
+  this.resync();
 
-    if (this.removed) {
-        throw new Error("You can't replace this node, we've already removed it");
+  if (this.removed) {
+    throw new Error("You can't replace this node, we've already removed it");
+  }
+
+  if (replacement instanceof NodePath) {
+    replacement = replacement.node;
+  }
+
+  if (!replacement) {
+    throw new Error(
+      "You passed `path.replaceWith()` a falsy node, use `path.remove()` instead",
+    );
+  }
+
+  if (this.node === replacement) {
+    return [this];
+  }
+
+  if (this.isProgram() && !t.isProgram(replacement)) {
+    throw new Error(
+      "You can only replace a Program root node with another Program node",
+    );
+  }
+
+  if (Array.isArray(replacement)) {
+    throw new Error(
+      "Don't use `path.replaceWith()` with an array of nodes, use `path.replaceWithMultiple()`",
+    );
+  }
+
+  if (typeof replacement === "string") {
+    throw new Error(
+      "Don't use `path.replaceWith()` with a source string, use `path.replaceWithSourceString()`",
+    );
+  }
+
+  let nodePath = "";
+
+  if (this.isNodeType("Statement") && t.isExpression(replacement)) {
+    if (
+      !this.canHaveVariableDeclarationOrExpression() &&
+      !this.canSwapBetweenExpressionAndStatement(replacement) &&
+      !this.parentPath.isExportDefaultDeclaration()
+    ) {
+      // replacing a statement with an expression so wrap it in an expression statement
+      replacement = t.expressionStatement(replacement);
+      nodePath = "expression";
     }
+  }
 
-    if (replacement instanceof NodePath) {
-        replacement = replacement.node;
+  if (this.isNodeType("Expression") && t.isStatement(replacement)) {
+    if (
+      !this.canHaveVariableDeclarationOrExpression() &&
+      !this.canSwapBetweenExpressionAndStatement(replacement)
+    ) {
+      // replacing an expression with a statement so let's explode it
+      return this.replaceExpressionWithStatements([replacement]);
     }
+  }
 
-    if (!replacement) {
-        throw new Error(
-            "You passed `path.replaceWith()` a falsy node, use `path.remove()` instead",
-        );
-    }
+  const oldNode = this.node;
+  if (oldNode) {
+    t.inheritsComments(replacement, oldNode);
+    t.removeComments(oldNode);
+  }
 
-    if (this.node === replacement) {
-        return [this];
-    }
+  // replace the node
+  this._replaceWith(replacement);
+  this.type = replacement.type;
 
-    if (this.isProgram() && !t.isProgram(replacement)) {
-        throw new Error(
-            "You can only replace a Program root node with another Program node",
-        );
-    }
+  // potentially create new scope
+  this.setScope();
 
-    if (is.array(replacement)) {
-        throw new Error(
-            "Don't use `path.replaceWith()` with an array of nodes, use `path.replaceWithMultiple()`",
-        );
-    }
+  // requeue for visiting
+  this.requeue();
 
-    if (is.string(replacement)) {
-        throw new Error(
-            "Don't use `path.replaceWith()` with a source string, use `path.replaceWithSourceString()`",
-        );
-    }
-
-    let nodePath = "";
-
-    if (this.isNodeType("Statement") && t.isExpression(replacement)) {
-        if (
-            !this.canHaveVariableDeclarationOrExpression() &&
-            !this.canSwapBetweenExpressionAndStatement(replacement) &&
-            !this.parentPath.isExportDefaultDeclaration()
-        ) {
-            // replacing a statement with an expression so wrap it in an expression statement
-            replacement = t.expressionStatement(replacement);
-            nodePath = "expression";
-        }
-    }
-
-    if (this.isNodeType("Expression") && t.isStatement(replacement)) {
-        if (
-            !this.canHaveVariableDeclarationOrExpression() &&
-            !this.canSwapBetweenExpressionAndStatement(replacement)
-        ) {
-            // replacing an expression with a statement so let's explode it
-            return this.replaceExpressionWithStatements([replacement]);
-        }
-    }
-
-    const oldNode = this.node;
-    if (oldNode) {
-        t.inheritsComments(replacement, oldNode);
-        t.removeComments(oldNode);
-    }
-
-    // replace the node
-    this._replaceWith(replacement);
-    this.type = replacement.type;
-
-    // potentially create new scope
-    this.setScope();
-
-    // requeue for visiting
-    this.requeue();
-
-    return [nodePath ? this.get(nodePath) : this];
+  return [nodePath ? this.get(nodePath) : this];
 }
 
 /**
@@ -199,17 +188,17 @@ export function replaceWith(replacement) {
  */
 
 export function _replaceWith(node) {
-    if (!this.container) {
-        throw new ReferenceError("Container is falsy");
-    }
+  if (!this.container) {
+    throw new ReferenceError("Container is falsy");
+  }
 
-    if (this.inList) {
-        t.validate(this.parent, this.key, [node]);
-    } else {
-        t.validate(this.parent, this.key, node);
-    }
+  if (this.inList) {
+    t.validate(this.parent, this.key, [node]);
+  } else {
+    t.validate(this.parent, this.key, node);
+  }
 
-    this.node = this.container[this.key] = node;
+  this.node = this.container[this.key] = node;
 }
 
 /**
@@ -219,67 +208,69 @@ export function _replaceWith(node) {
  */
 
 export function replaceExpressionWithStatements(nodes: Array<Object>) {
-    this.resync();
+  this.resync();
 
-    const toSequenceExpression = t.toSequenceExpression(nodes, this.scope);
+  const toSequenceExpression = t.toSequenceExpression(nodes, this.scope);
 
-    if (toSequenceExpression) {
-        return this.replaceWith(toSequenceExpression)[0].get("expressions");
+  if (toSequenceExpression) {
+    return this.replaceWith(toSequenceExpression)[0].get("expressions");
+  }
+  const container = t.arrowFunctionExpression([], t.blockStatement(nodes));
+
+  this.replaceWith(t.callExpression(container, []));
+  this.traverse(hoistVariablesVisitor);
+
+  // add implicit returns to all ending expression statements
+  const completionRecords: Array<NodePath> = this.get(
+    "callee",
+  ).getCompletionRecords();
+  for (const path of completionRecords) {
+    if (!path.isExpressionStatement()) continue;
+
+    const loop = path.findParent(path => path.isLoop());
+    if (loop) {
+      let uid = loop.getData("expressionReplacementReturnUid");
+
+      if (!uid) {
+        const callee = this.get("callee");
+        uid = callee.scope.generateDeclaredUidIdentifier("ret");
+        callee
+          .get("body")
+          .pushContainer("body", t.returnStatement(t.cloneNode(uid)));
+        loop.setData("expressionReplacementReturnUid", uid);
+      } else {
+        uid = t.identifier(uid.name);
+      }
+
+      path
+        .get("expression")
+        .replaceWith(
+          t.assignmentExpression("=", t.cloneNode(uid), path.node.expression),
+        );
+    } else {
+      path.replaceWith(t.returnStatement(path.node.expression));
     }
-    const container = t.arrowFunctionExpression([], t.blockStatement(nodes));
+  }
 
-    this.replaceWith(t.callExpression(container, []));
-    this.traverse(hoistVariablesVisitor);
+  const callee = this.get("callee");
+  callee.arrowFunctionToExpression();
 
-    // add implicit returns to all ending expression statements
-    const completionRecords: Array<NodePath> = this.get(
-        "callee",
-    ).getCompletionRecords();
-    for (const path of completionRecords) {
-        if (!path.isExpressionStatement()) {
-            continue;
-        }
-
-        const loop = path.findParent((path) => path.isLoop());
-        if (loop) {
-            let uid = loop.getData("expressionReplacementReturnUid");
-
-            if (!uid) {
-                const callee = this.get("callee");
-                uid = callee.scope.generateDeclaredUidIdentifier("ret");
-                callee.get("body").pushContainer("body", t.returnStatement(uid));
-                loop.setData("expressionReplacementReturnUid", uid);
-            } else {
-                uid = t.identifier(uid.name);
-            }
-
-            path
-                .get("expression")
-                .replaceWith(t.assignmentExpression("=", uid, path.node.expression));
-        } else {
-            path.replaceWith(t.returnStatement(path.node.expression));
-        }
-    }
-
-    const callee = this.get("callee");
-    callee.arrowFunctionToExpression();
-
-    return callee.get("body.body");
+  return callee.get("body.body");
 }
 
 export function replaceInline(nodes: Object | Array<Object>) {
-    this.resync();
+  this.resync();
 
-    if (is.array(nodes)) {
-        if (is.array(this.container)) {
-            nodes = this._verifyNodeList(nodes);
-            const paths = this._containerInsertAfter(nodes);
-            this.remove();
-            return paths;
-        }
-        return this.replaceWithMultiple(nodes);
-
+  if (Array.isArray(nodes)) {
+    if (Array.isArray(this.container)) {
+      nodes = this._verifyNodeList(nodes);
+      const paths = this._containerInsertAfter(nodes);
+      this.remove();
+      return paths;
+    } else {
+      return this.replaceWithMultiple(nodes);
     }
+  } else {
     return this.replaceWith(nodes);
-
+  }
 }

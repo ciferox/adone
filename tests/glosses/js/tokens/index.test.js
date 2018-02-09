@@ -6,26 +6,23 @@ const {
 
 const fixture = (name) => adone.std.path.join(__dirname, "fixtures", name);
 
-describe("js", () => {
-    describe("tokens", () => {
+describe("js", "tokens", () => {
+    describe("regex", () => {
         it("is a regex", () => {
             assert(util.isRegExp(regex));
         });
-
     });
 
     describe("matchToToken", () => {
         it("is a function", () => {
             assert.equal(typeof matchToToken, "function");
         });
-
     });
 
-
     describe("tokens", () => {
-        const matchHelper = (type, string, expected, extra) => {
+        const matchHelper = function (type, string, expected, extra) {
             extra = extra || {};
-            if (is.object(expected)) {
+            if (typeof expected === "object") {
                 extra = expected;
                 expected = undefined;
             }
@@ -50,7 +47,7 @@ describe("js", () => {
             });
         };
 
-        const token = (name, fn) => {
+        const token = function (name, fn) {
             describe(name, fn.bind(null, matchHelper.bind(null, name)));
         };
 
@@ -75,7 +72,6 @@ describe("js", () => {
 
             match("\u00a0");
             match("\u1680");
-            match("\u180e");
             match("\u2000");
             match("\u2001");
             match("\u2002");
@@ -259,7 +255,8 @@ describe("js", () => {
             match("/a/i");
             match("/a/y");
             match("/a/u");
-            match("/a/gmiyu");
+            match("/a/s");
+            match("/a/gmiyus");
             match("/a/myg");
             match("/a/e", false);
             match("/a/invalidFlags", false);
@@ -581,7 +578,6 @@ describe("js", () => {
 
             match("a\u00a0", "a");
             match("a\u1680", "a");
-            match("a\u180e", "a");
             match("a\u2000", "a");
             match("a\u2001", "a");
             match("a\u2002", "a");
@@ -843,7 +839,9 @@ describe("js", () => {
 
     });
 
+
     describe("tokenization", () => {
+
         const testFile = (file) => {
             const contents = fs.readFileSync(fixture(`${file}.js`)).toString();
             const expected = require(fixture(`${file}.json`));

@@ -4,7 +4,7 @@ const {
 } = adone;
 
 const {
-    styler
+    chalk
 } = terminal;
 
 export default class EditorPrompt extends terminal.BasePrompt {
@@ -59,13 +59,13 @@ export default class EditorPrompt extends terminal.BasePrompt {
         let message = this.getQuestion();
 
         if (this.status === "answered") {
-            message += styler.dim("Received");
+            message += chalk.dim("Received");
         } else {
-            message += styler.dim("Press <enter> to launch your preferred editor.");
+            message += chalk.dim("Press <enter> to launch your preferred editor.");
         }
 
         if (error) {
-            bottomContent = styler.red(">> ") + error;
+            bottomContent = chalk.red(">> ") + error;
         }
 
         this.screen.render(message, bottomContent);

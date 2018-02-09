@@ -1,6 +1,6 @@
 const {
     is,
-    event,
+    event: { Emitter },
     promise: { promisifyAll },
     std: { path },
     vcs: { git: { native, Diff, TreeBuilder, Utils: { lookupWrapper } } }
@@ -162,7 +162,7 @@ Tree.prototype.walk = function (blobsOnly) {
     blobsOnly = is.boolean(blobsOnly) ? blobsOnly : true;
 
     const self = this;
-    const event = new event.Emitter();
+    const event = new Emitter();
 
     let total = 1;
     const entries = new Set();

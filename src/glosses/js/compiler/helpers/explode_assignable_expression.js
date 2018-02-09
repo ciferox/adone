@@ -17,7 +17,6 @@ const getObjRef = function (node, nodes, file, scope) {
         // could possibly trigger a getter so we need to only evaluate
         // it once
         ref = node;
-
     } else if (t.isMemberExpression(node)) {
         ref = node.object;
 
@@ -34,20 +33,18 @@ const getObjRef = function (node, nodes, file, scope) {
 
     const temp = scope.generateUidIdentifierBasedOnNode(ref);
     scope.push({ id: temp });
-    nodes.push(t.assignmentExpression("=", temp, ref));
+    nodes.push(t.assignmentExpression("=", t.cloneNode(temp), t.cloneNode(ref)));
     return temp;
 };
 
 const getPropRef = function (node, nodes, file, scope) {
     const prop = node.property;
     const key = t.toComputedKey(node, prop);
-    if (t.isLiteral(key) && t.isPureish(key)) {
-        return key; 
-    }
+    if (t.isLiteral(key) && t.isPureish(key)) { return key; }
 
     const temp = scope.generateUidIdentifierBasedOnNode(prop);
     scope.push({ id: temp });
-    nodes.push(t.assignmentExpression("=", temp, prop));
+    nodes.push(t.assignmentExpression("=", t.cloneNode(temp), t.cloneNode(prop)));
     return temp;
 };
 
@@ -72,12 +69,13 @@ export default function (
     let uid;
 
     if (t.isIdentifier(node)) {
-        ref = node;
+        ref = t.cloneNode(node);
         uid = obj;
     } else {
         const prop = getPropRef(node, nodes, file, scope);
         const computed = node.computed || t.isLiteral(prop);
-        uid = ref = t.memberExpression(obj, prop, computed);
+        uid = t.memberExpression(t.cloneNode(obj), t.cloneNode(prop), computed);
+        ref = t.memberExpression(t.cloneNode(obj), t.cloneNode(prop), computed);
     }
 
     return {

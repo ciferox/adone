@@ -5,7 +5,7 @@ const {
 } = adone;
 
 const {
-    styler
+    chalk
 } = terminal;
 
 export default class ConfirmPrompt extends terminal.BasePrompt {
@@ -64,7 +64,7 @@ export default class ConfirmPrompt extends terminal.BasePrompt {
         let message = this.getQuestion();
 
         if (is.boolean(answer)) {
-            message += styler.cyan(answer ? "Yes" : "No");
+            message += chalk.cyan(answer ? "Yes" : "No");
         } else {
             message += this.term.readline.line;
         }

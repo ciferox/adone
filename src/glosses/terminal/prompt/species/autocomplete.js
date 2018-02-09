@@ -5,7 +5,7 @@ const {
 } = adone;
 
 const {
-    styler
+    chalk
 } = terminal;
 
 /**
@@ -28,7 +28,7 @@ const listRender = (term, choices, pointer) => {
         let line = (isSelected ? `${adone.text.unicode.symbol.pointer} ` : "  ") + choice.name;
 
         if (isSelected) {
-            line = styler.cyan(line);
+            line = chalk.cyan(line);
         }
         output += `${line} \n`;
     });
@@ -101,25 +101,25 @@ export default class AutocompletePrompt extends terminal.BasePrompt {
 
         if (this.firstRender) {
             const suggestText = this.opt.suggestOnly ? ", tab to autocomplete" : "";
-            content += styler.dim(`(Use arrow keys or type to search${suggestText})`);
+            content += chalk.dim(`(Use arrow keys or type to search${suggestText})`);
         }
         // Render choices or answer depending on the state
         if (this.status === "answered") {
-            content += styler.cyan(this.shortAnswer || this.answerName || this.answer);
+            content += chalk.cyan(this.shortAnswer || this.answerName || this.answer);
         } else if (this.searching) {
             content += this.rl.line;
-            bottomContent += `  ${styler.dim("Searching...")}`;
+            bottomContent += `  ${chalk.dim("Searching...")}`;
         } else if (this.currentChoices.length) {
             const choicesStr = listRender(this.term, this.currentChoices, this.selected);
             content += this.rl.line;
             bottomContent += this.paginator.paginate(choicesStr, this.selected, this.opt.pageSize);
         } else {
             content += this.rl.line;
-            bottomContent += `  ${styler.yellow("No results...")}`;
+            bottomContent += `  ${chalk.yellow("No results...")}`;
         }
 
         if (error) {
-            bottomContent += `\n${styler.red(">> ")}${error}`;
+            bottomContent += `\n${chalk.red(">> ")}${error}`;
         }
 
         this.firstRender = false;

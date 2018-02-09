@@ -5,7 +5,7 @@ const {
 } = adone;
 
 const {
-    styler
+    chalk
 } = terminal;
 
 /**
@@ -29,7 +29,7 @@ const renderChoices = (terminal, choices, pointer) => {
         const index = i - separatorOffset;
         let display = `${index + 1}) ${choice.name}`;
         if (index === pointer) {
-            display = styler.cyan(display);
+            display = chalk.cyan(display);
         }
         output += display;
     });
@@ -108,7 +108,7 @@ export default class RawlistPrompt extends terminal.BasePrompt {
         let bottomContent = "";
 
         if (this.status === "answered") {
-            message += styler.cyan(this.answer);
+            message += chalk.cyan(this.answer);
         } else {
             const choicesStr = renderChoices(this.term, this.opt.choices, this.selected);
             message += this.paginator.paginate(choicesStr, this.selected, this.opt.pageSize);
@@ -118,7 +118,7 @@ export default class RawlistPrompt extends terminal.BasePrompt {
         message += this.term.readline.line;
 
         if (error) {
-            bottomContent = `\n${styler.red(">> ")}${error}`;
+            bottomContent = `\n${chalk.red(">> ")}${error}`;
         }
 
         this.screen.render(message, bottomContent);

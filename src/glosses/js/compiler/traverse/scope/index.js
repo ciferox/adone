@@ -5,70 +5,9 @@ import { scope as scopeCache } from "../cache";
 
 const {
   js: { compiler: { types: t, traverse } },
-  vendor: { lodash: { includes, repeat, defaults } }
+  vendor: { lodash: { includes, repeat, defaults } },
+  util: { globals }
 } = adone;
-
-const builtin = [
-  "Array",
-  "ArrayBuffer",
-  "Boolean",
-  "constructor",
-  "DataView",
-  "Date",
-  "decodeURI",
-  "decodeURIComponent",
-  "encodeURI",
-  "encodeURIComponent",
-  "Error",
-  "escape",
-  "eval",
-  "EvalError",
-  "Float32Array",
-  "Float64Array",
-  "Function",
-  "hasOwnProperty",
-  "Infinity",
-  "Int16Array",
-  "Int32Array",
-  "Int8Array",
-  "isFinite",
-  "isNaN",
-  "isPrototypeOf",
-  "JSON",
-  "Map",
-  "Math",
-  "NaN",
-  "Number",
-  "Object",
-  "parseFloat",
-  "parseInt",
-  "Promise",
-  "propertyIsEnumerable",
-  "Proxy",
-  "RangeError",
-  "ReferenceError",
-  "Reflect",
-  "RegExp",
-  "Set",
-  "String",
-  "Symbol",
-  "SyntaxError",
-  "System",
-  "toLocaleString",
-  "toString",
-  "TypeError",
-  "Uint16Array",
-  "Uint32Array",
-  "Uint8Array",
-  "Uint8ClampedArray",
-  "undefined",
-  "unescape",
-  "URIError",
-  "valueOf",
-  "WeakMap",
-  "WeakSet"
-];
-
 // Recursively gathers the identifying names of a node.
 function gatherNodeParts(node: Object, parts: Array) {
   if (t.isModuleDeclaration(node)) {
@@ -237,7 +176,7 @@ export default class Scope {
    * Globals.
    */
 
-  static globals = builtin;
+  static globals = Object.keys(globals.builtin);
 
   /**
    * Variables available in current context.
@@ -273,7 +212,7 @@ export default class Scope {
   generateDeclaredUidIdentifier(name: string = "temp") {
     const id = this.generateUidIdentifier(name);
     this.push({ id });
-    return id;
+    return t.cloneNode(id);
   }
 
   /**
@@ -323,14 +262,7 @@ export default class Scope {
     return `_${id}`;
   }
 
-  /**
-   * Generate a unique identifier based on a node.
-   */
-
-  generateUidIdentifierBasedOnNode(
-    parent: Object,
-    defaultName?: String,
-  ): Object {
+  generateUidBasedOnNode(parent: Object, defaultName?: String) {
     let node = parent;
 
     if (t.isAssignmentExpression(parent)) {
@@ -347,7 +279,18 @@ export default class Scope {
     let id = parts.join("$");
     id = id.replace(/^_/, "") || defaultName || "ref";
 
-    return this.generateUidIdentifier(id.slice(0, 20));
+    return this.generateUid(id.slice(0, 20));
+  }
+
+  /**
+   * Generate a unique identifier based on a node.
+   */
+
+  generateUidIdentifierBasedOnNode(
+    parent: Object,
+    defaultName?: String,
+  ): Object {
+    return t.identifier(this.generateUidBasedOnNode(parent, defaultName));
   }
 
   /**
@@ -386,7 +329,10 @@ export default class Scope {
       return null;
     } else {
       const id = this.generateUidIdentifierBasedOnNode(node);
-      if (!dontPush) this.push({ id });
+      if (!dontPush) {
+        this.push({ id });
+        return t.cloneNode(id);
+      }
       return id;
     }
   }

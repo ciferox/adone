@@ -8,12 +8,6 @@ const {
 
 const DONE = new WeakSet();
 
-const ignoreBlock = (path) => t.isLoop(path.parent) || t.isCatchClause(path.parent);
-
-const buildRetCheck = template(`
-  if (typeof RETURN === "object") return RETURN.v;
-`);
-
 const isBlockScoped = function (node) {
     if (!t.isVariableDeclaration(node)) {
         return false;
@@ -38,6 +32,7 @@ const isInLoop = function (path) {
 
     return loopOrFunctionParent && loopOrFunctionParent.isLoop();
 };
+
 
 const convertBlockScopedToVar = function (
     path,
@@ -75,7 +70,110 @@ const convertBlockScopedToVar = function (
     }
 };
 
-const isVar = (node) => t.isVariableDeclaration(node, { kind: "var" }) && !isBlockScoped(node);
+export default function (api, opts) {
+    const { throwIfClosureRequired = false, tdz: tdzEnabled = false } = opts;
+    if (!is.boolean(throwIfClosureRequired)) {
+        throw new Error(".throwIfClosureRequired must be a boolean, or undefined");
+    }
+    if (!is.boolean(tdzEnabled)) {
+        throw new Error(".throwIfClosureRequired must be a boolean, or undefined");
+    }
+
+    return {
+        visitor: {
+            VariableDeclaration(path) {
+                const { node, parent, scope } = path;
+                if (!isBlockScoped(node)) {
+                    return;
+                }
+                convertBlockScopedToVar(path, null, parent, scope, true);
+
+                if (node._tdzThis) {
+                    const nodes = [node];
+
+                    for (let i = 0; i < node.declarations.length; i++) {
+                        const decl = node.declarations[i];
+                        if (decl.init) {
+                            const assign = t.assignmentExpression("=", decl.id, decl.init);
+                            assign._ignoreBlockScopingTDZ = true;
+                            nodes.push(t.expressionStatement(assign));
+                        }
+                        decl.init = this.addHelper("temporalUndefined");
+                    }
+
+                    node._blockHoist = 2;
+
+                    if (path.isCompletionRecord()) {
+                        // ensure we don't break completion record semantics by returning
+                        // the initialiser of the last declarator
+                        nodes.push(t.expressionStatement(scope.buildUndefinedNode()));
+                    }
+
+                    path.replaceWithMultiple(nodes);
+                }
+            },
+
+            Loop(path, state) {
+                const { parent, scope } = path;
+                path.ensureBlock();
+                const blockScoping = new BlockScoping(
+                    path,
+                    path.get("body"),
+                    parent,
+                    scope,
+                    throwIfClosureRequired,
+                    tdzEnabled,
+                    state,
+                );
+                const replace = blockScoping.run();
+                if (replace) {
+                    path.replaceWith(replace);
+                }
+            },
+
+            CatchClause(path, state) {
+                const { parent, scope } = path;
+                const blockScoping = new BlockScoping(
+                    null,
+                    path.get("body"),
+                    parent,
+                    scope,
+                    throwIfClosureRequired,
+                    tdzEnabled,
+                    state,
+                );
+                blockScoping.run();
+            },
+
+            "BlockStatement|SwitchStatement|Program"(path, state) {
+                if (!ignoreBlock(path)) {
+                    const blockScoping = new BlockScoping(
+                        null,
+                        path,
+                        path.parent,
+                        path.scope,
+                        throwIfClosureRequired,
+                        tdzEnabled,
+                        state,
+                    );
+                    blockScoping.run();
+                }
+            }
+        }
+    };
+}
+
+const ignoreBlock = function (path) {
+    return t.isLoop(path.parent) || t.isCatchClause(path.parent);
+};
+
+const buildRetCheck = template(`
+  if (typeof RETURN === "object") return RETURN.v;
+`);
+
+const isVar = function (node) {
+    return t.isVariableDeclaration(node, { kind: "var" }) && !isBlockScoped(node);
+};
 
 const letReferenceFunctionVisitor = traverse.visitors.merge([
     {
@@ -99,6 +197,7 @@ const letReferenceFunctionVisitor = traverse.visitors.merge([
     },
     tdzVisitor
 ]);
+
 
 const letReferenceBlockVisitor = traverse.visitors.merge([
     {
@@ -261,15 +360,17 @@ const loopVisitor = {
 
 class BlockScoping {
     constructor(
-        loopPath,
-        blockPath,
-        parent,
-        scope,
-        throwIfClosureRequired,
-        tdzEnabled,
+        loopPath?: NodePath,
+        blockPath: NodePath,
+        parent: Object,
+        scope: Scope,
+        throwIfClosureRequired: boolean,
+        tdzEnabled: boolean,
+        state: Object,
     ) {
         this.parent = parent;
         this.scope = scope;
+        this.state = state;
         this.throwIfClosureRequired = throwIfClosureRequired;
         this.tdzEnabled = tdzEnabled;
 
@@ -303,6 +404,8 @@ class BlockScoping {
 
         const needsClosure = this.getLetReferences();
 
+        this.checkConstants();
+
         // this is a block within a `Function/Program` so we can safely leave it be
         if (t.isFunction(this.parent) || t.isProgram(this.block)) {
             this.updateScopeInfo();
@@ -327,8 +430,43 @@ class BlockScoping {
         }
     }
 
+    checkConstants() {
+        const scope = this.scope;
+        const state = this.state;
+
+        for (const name in scope.bindings) {
+            const binding = scope.bindings[name];
+            if (binding.kind !== "const") {
+                continue;
+            }
+
+            for (const violation of (binding.constantViolations: Array)) {
+                const readOnlyError = state.addHelper("readOnlyError");
+                const throwNode = t.callExpression(readOnlyError, [
+                    t.stringLiteral(name)
+                ]);
+
+                if (violation.isAssignmentExpression()) {
+                    violation
+                        .get("right")
+                        .replaceWith(
+                            t.sequenceExpression([throwNode, violation.get("right").node]),
+                        );
+                } else if (violation.isUpdateExpression()) {
+                    violation.replaceWith(
+                        t.sequenceExpression([throwNode, violation.node]),
+                    );
+                } else if (violation.isForXStatement()) {
+                    violation.ensureBlock();
+                    violation.node.body.body.unshift(t.expressionStatement(throwNode));
+                }
+            }
+        }
+    }
+
     updateScopeInfo(wrappedInClosure) {
         const scope = this.scope;
+
         const parentScope = scope.getFunctionParent() || scope.getProgramParent();
         const letRefs = this.letReferences;
 
@@ -419,8 +557,8 @@ class BlockScoping {
         this.hoistVarDeclarations();
 
         // turn outsideLetReferences into an array
-        const args = values(outsideRefs);
-        const params = args.map((id) => t.clone(id));
+        const args = values(outsideRefs).map((id) => t.cloneNode(id));
+        const params = args.map((id) => t.cloneNode(id));
 
         const isSwitch = this.blockPath.isSwitchStatement();
 
@@ -464,10 +602,12 @@ class BlockScoping {
         let placeholderPath;
         let index;
         if (this.has.hasReturn || this.has.hasBreakContinue) {
-            const ret = this.scope.generateUidIdentifier("ret");
+            const ret = this.scope.generateUid("ret");
 
             this.body.push(
-                t.variableDeclaration("var", [t.variableDeclarator(ret, call)]),
+                t.variableDeclaration("var", [
+                    t.variableDeclarator(t.identifier(ret), call)
+                ]),
             );
             placeholderPath = `declarations.0.init${basePath}`;
             index = this.body.length - 1;
@@ -495,12 +635,14 @@ class BlockScoping {
 
         let fnPath;
         if (this.loop) {
-            const ref = this.scope.generateUidIdentifier("loop");
+            const loopId = this.scope.generateUid("loop");
             const p = this.loopPath.insertBefore(
-                t.variableDeclaration("var", [t.variableDeclarator(ref, fn)]),
+                t.variableDeclaration("var", [
+                    t.variableDeclarator(t.identifier(loopId), fn)
+                ]),
             );
 
-            placeholder.replaceWith(ref);
+            placeholder.replaceWith(t.identifier(loopId));
             fnPath = p[0].get("declarations.0.init");
         } else {
             placeholder.replaceWith(fn);
@@ -534,20 +676,33 @@ class BlockScoping {
                 continue;
             }
 
-            const newParam = this.scope.generateUidIdentifier(param.name);
-            fn.params[i] = newParam;
+            const paramName = param.name;
+            const newParamName = this.scope.generateUid(param.name);
+            fn.params[i] = t.identifier(newParamName);
 
-            this.scope.rename(param.name, newParam.name, fn);
+            this.scope.rename(paramName, newParamName, fn);
 
             state.returnStatements.forEach((returnStatement) => {
                 returnStatement.insertBefore(
-                    t.expressionStatement(t.assignmentExpression("=", param, newParam)),
+                    t.expressionStatement(
+                        t.assignmentExpression(
+                            "=",
+                            t.identifier(paramName),
+                            t.identifier(newParamName),
+                        ),
+                    ),
                 );
             });
 
             // assign outer reference as it's been modified internally and needs to be retained
             fn.body.body.push(
-                t.expressionStatement(t.assignmentExpression("=", param, newParam)),
+                t.expressionStatement(
+                    t.assignmentExpression(
+                        "=",
+                        t.identifier(paramName),
+                        t.identifier(newParamName),
+                    ),
+                ),
             );
         }
     }
@@ -694,14 +849,18 @@ class BlockScoping {
                 continue;
             }
 
-            const expr = t.assignmentExpression("=", declar.id, declar.init);
+            const expr = t.assignmentExpression(
+                "=",
+                t.cloneNode(declar.id),
+                t.cloneNode(declar.init),
+            );
             replace.push(t.inherits(expr, declar));
         }
 
         return replace;
     }
 
-    buildHas(ret: { type: "Identifier" }) {
+    buildHas(ret: string) {
         const body = this.body;
 
         let retCheck;
@@ -711,7 +870,7 @@ class BlockScoping {
         if (has.hasReturn) {
             // typeof ret === "object"
             retCheck = buildRetCheck({
-                RETURN: ret
+                RETURN: t.identifier(ret)
             });
         }
 
@@ -728,7 +887,7 @@ class BlockScoping {
                 const single = cases[0];
                 body.push(
                     t.ifStatement(
-                        t.binaryExpression("===", ret, single.test),
+                        t.binaryExpression("===", t.identifier(ret), single.test),
                         single.consequent[0],
                     ),
                 );
@@ -738,13 +897,15 @@ class BlockScoping {
                     for (let i = 0; i < cases.length; i++) {
                         const caseConsequent = cases[i].consequent[0];
                         if (t.isBreakStatement(caseConsequent) && !caseConsequent.label) {
-                            caseConsequent.label = this.loopLabel =
-                                this.loopLabel || this.scope.generateUidIdentifier("loop");
+                            if (!this.loopLabel) {
+                                this.loopLabel = this.scope.generateUidIdentifier("loop");
+                            }
+                            caseConsequent.label = t.cloneNode(this.loopLabel);
                         }
                     }
                 }
 
-                body.push(t.switchStatement(ret, cases));
+                body.push(t.switchStatement(t.identifier(ret), cases));
             }
         } else {
             if (has.hasReturn) {
@@ -752,95 +913,4 @@ class BlockScoping {
             }
         }
     }
-}
-
-
-export default function (api, opts) {
-    const { throwIfClosureRequired = false, tdz: tdzEnabled = false } = opts;
-    if (!is.boolean(throwIfClosureRequired)) {
-        throw new Error(".throwIfClosureRequired must be a boolean, or undefined");
-    }
-    if (!is.boolean(tdzEnabled)) {
-        throw new Error(".throwIfClosureRequired must be a boolean, or undefined");
-    }
-
-    return {
-        visitor: {
-            VariableDeclaration(path) {
-                const { node, parent, scope } = path;
-                if (!isBlockScoped(node)) {
-                    return;
-                }
-                convertBlockScopedToVar(path, null, parent, scope, true);
-
-                if (node._tdzThis) {
-                    const nodes = [node];
-
-                    for (let i = 0; i < node.declarations.length; i++) {
-                        const decl = node.declarations[i];
-                        if (decl.init) {
-                            const assign = t.assignmentExpression("=", decl.id, decl.init);
-                            assign._ignoreBlockScopingTDZ = true;
-                            nodes.push(t.expressionStatement(assign));
-                        }
-                        decl.init = this.addHelper("temporalUndefined");
-                    }
-
-                    node._blockHoist = 2;
-
-                    if (path.isCompletionRecord()) {
-                        // ensure we don't break completion record semantics by returning
-                        // the initialiser of the last declarator
-                        nodes.push(t.expressionStatement(scope.buildUndefinedNode()));
-                    }
-
-                    path.replaceWithMultiple(nodes);
-                }
-            },
-
-            Loop(path) {
-                const { parent, scope } = path;
-                path.ensureBlock();
-                const blockScoping = new BlockScoping(
-                    path,
-                    path.get("body"),
-                    parent,
-                    scope,
-                    throwIfClosureRequired,
-                    tdzEnabled,
-                );
-                const replace = blockScoping.run();
-                if (replace) {
-                    path.replaceWith(replace);
-                }
-            },
-
-            CatchClause(path) {
-                const { parent, scope } = path;
-                const blockScoping = new BlockScoping(
-                    null,
-                    path.get("body"),
-                    parent,
-                    scope,
-                    throwIfClosureRequired,
-                    tdzEnabled,
-                );
-                blockScoping.run();
-            },
-
-            "BlockStatement|SwitchStatement|Program"(path) {
-                if (!ignoreBlock(path)) {
-                    const blockScoping = new BlockScoping(
-                        null,
-                        path,
-                        path.parent,
-                        path.scope,
-                        throwIfClosureRequired,
-                        tdzEnabled,
-                    );
-                    blockScoping.run();
-                }
-            }
-        }
-    };
 }

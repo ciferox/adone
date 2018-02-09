@@ -6724,7 +6724,7 @@ export class Terminal extends adone.event.Emitter {
 }
 Terminal.prototype.type = "program";
 
-adone.lazify({
+const __ = adone.lazify({
     BasePrompt: "./prompt/base_prompt",
     Prompt: "./prompt",
     Separator: "./prompt/separator",
@@ -6732,6 +6732,7 @@ adone.lazify({
     Choices: "./prompt/choices",
     Progress: "./progress",
     esc: "./esc",
-    styler: "./styler",
+    Chalk: "./chalk",
+    chalk: () => new __.Chalk(),
     ui: "./ui"
 }, adone.asNamespace(exports), require);

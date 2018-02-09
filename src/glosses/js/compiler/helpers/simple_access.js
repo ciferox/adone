@@ -31,20 +31,20 @@ const simpleAssignmentVisitor = {
                     t.assignmentExpression("+=", arg.node, t.numericLiteral(1)),
                 );
             } else {
-                const varName = path.scope.generateDeclaredUidIdentifier("old");
+                const varName = path.scope.generateDeclaredUidIdentifier("old").name;
 
-                const assignment = t.binaryExpression(
+                const binary = t.binaryExpression(
                     path.node.operator.slice(0, 1),
-                    varName,
+                    t.identifier(varName),
                     t.numericLiteral(1),
                 );
 
                 // i++ => (_tmp = i, i = _tmp + 1, _tmp)
                 path.replaceWith(
                     t.sequenceExpression([
-                        t.assignmentExpression("=", varName, arg.node),
-                        t.assignmentExpression("=", arg.node, assignment),
-                        varName
+                        t.assignmentExpression("=", t.identifier(varName), arg.node),
+                        t.assignmentExpression("=", t.cloneNode(arg.node), binary),
+                        t.identifier(varName)
                     ]),
                 );
             }
@@ -56,25 +56,25 @@ const simpleAssignmentVisitor = {
             const { scope, seen, bindingNames } = this;
 
             if (path.node.operator === "=") {
-                return; 
+                return;
             }
 
-            if (seen.has(path.node)) { 
+            if (seen.has(path.node)) {
                 return;
             }
             seen.add(path.node);
 
             const left = path.get("left");
-            if (!left.isIdentifier()) { 
-                return; 
+            if (!left.isIdentifier()) {
+                return;
             }
 
             // Simple update-assign foo += 1;
             // =>   exports.foo =  (foo += 1);
             const localName = left.node.name;
 
-            if (!bindingNames.has(localName)) { 
-                return; 
+            if (!bindingNames.has(localName)) {
+                return;
             }
 
             // redeclared in this scope
@@ -84,7 +84,7 @@ const simpleAssignmentVisitor = {
 
             path.node.right = t.binaryExpression(
                 path.node.operator.slice(0, -1),
-                path.node.left,
+                t.cloneNode(path.node.left),
                 path.node.right,
             );
             path.node.operator = "=";

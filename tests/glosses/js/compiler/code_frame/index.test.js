@@ -1,10 +1,10 @@
 const {
-    js: { compiler: { codeFrame, codeFrameColumns } },
-    terminal: { styler },
-    text: { stripAnsi }
+    terminal: { chalk },
+    text: { stripAnsi },
+    js: { compiler: { codeFrame, codeFrameColumns } }
 } = adone;
 
-describe("js", "compiler", "codeFrame", () => {
+describe("js", "compiler", "codeFrame/codeFrameColumns", () => {
     it("basic usage", () => {
         const rawLines = ["class Foo {", "  constructor()", "};"].join("\n");
         assert.equal(
@@ -185,9 +185,60 @@ describe("js", "compiler", "codeFrame", () => {
         );
     });
 
+    it("opts.linesAbove no lines above", () => {
+        const rawLines = [
+            "class Foo {",
+            "  constructor() {",
+            "    console.log(arguments);",
+            "  }",
+            "};"
+        ].join("\n");
+        assert.equal(
+            codeFrameColumns(rawLines, { start: { line: 2 } }, { linesAbove: 0 }),
+            [
+                "> 2 |   constructor() {",
+                "  3 |     console.log(arguments);",
+                "  4 |   }",
+                "  5 | };"
+            ].join("\n"),
+        );
+    });
+
+    it("opts.linesBelow no lines below", () => {
+        const rawLines = [
+            "class Foo {",
+            "  constructor() {",
+            "    console.log(arguments);",
+            "  }",
+            "};"
+        ].join("\n");
+        assert.equal(
+            codeFrameColumns(rawLines, { start: { line: 2 } }, { linesBelow: 0 }),
+            ["  1 | class Foo {", "> 2 |   constructor() {"].join("\n"),
+        );
+    });
+
+    it("opts.linesBelow single line", () => {
+        const rawLines = [
+            "class Foo {",
+            "  constructor() {",
+            "    console.log(arguments);",
+            "  }",
+            "};"
+        ].join("\n");
+        assert.equal(
+            codeFrameColumns(
+                rawLines,
+                { start: { line: 2 } },
+                { linesAbove: 0, linesBelow: 0 },
+            ),
+            ["> 2 |   constructor() {"].join("\n"),
+        );
+    });
+
     it("opts.forceColor", () => {
-        const marker = styler.red.bold;
-        const gutter = styler.grey;
+        const marker = chalk.red.bold;
+        const gutter = chalk.grey;
 
         const rawLines = ["", "", "", ""].join("\n");
         assert.equal(
@@ -196,7 +247,7 @@ describe("js", "compiler", "codeFrame", () => {
                 linesBelow: 1,
                 forceColor: true
             }),
-            styler.reset(
+            chalk.reset(
                 [
                     ` ${gutter(" 2 | ")}`,
                     marker(">") + gutter(" 3 | "),

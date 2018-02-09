@@ -3,7 +3,7 @@ const {
 } = adone;
 
 const {
-    styler
+    chalk
 } = terminal;
 
 /**
@@ -31,7 +31,7 @@ const listRender = (term, choices, pointer) => {
         const isSelected = (i - separatorOffset === pointer);
         let line = (isSelected ? `${adone.text.unicode.symbol.pointer} ` : "  ") + choice.name;
         if (isSelected) {
-            line = styler.cyan(line);
+            line = chalk.cyan(line);
         }
         output += `${line} \n`;
     });
@@ -138,14 +138,14 @@ export default class Prompt extends terminal.BasePrompt {
         let message = this.getQuestion();
 
         if (this.firstRender) {
-            message += styler.dim("(Use arrow keys)");
+            message += chalk.dim("(Use arrow keys)");
         }
 
         // Render choices or answer depending on the state
         if (this.status === "answered") {
-            message += styler.cyan(adone.std.path.relative(this.opt.basePath, this.currentPath));
+            message += chalk.cyan(adone.std.path.relative(this.opt.basePath, this.currentPath));
         } else {
-            message += `${styler.bold("\n Current directory: ") + this.opt.basePath}/${styler.cyan(adone.std.path.relative(this.opt.basePath, this.currentPath))}`;
+            message += `${chalk.bold("\n Current directory: ") + this.opt.basePath}/${chalk.cyan(adone.std.path.relative(this.opt.basePath, this.currentPath))}`;
             const choicesStr = listRender(this.term, this.opt.choices, this.selected);
             message += `\n${this.paginator.paginate(choicesStr, this.selected, this.opt.pageSize)}`;
             if (this.searchMode) {

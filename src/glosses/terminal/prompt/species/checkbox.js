@@ -5,7 +5,7 @@ const {
 } = adone;
 
 const {
-    styler
+    chalk
 } = terminal;
 
 /**
@@ -14,7 +14,7 @@ const {
  * @return {String} Composited checkbox string
  */
 const getCheckbox = (term, checked) => {
-    return checked ? styler.green(adone.text.unicode.symbol.radioOn) : adone.text.unicode.symbol.radioOff;
+    return checked ? chalk.green(adone.text.unicode.symbol.radioOn) : adone.text.unicode.symbol.radioOff;
 };
 
 /**
@@ -39,7 +39,7 @@ const renderChoices = (term, choices, pointer) => {
             output += ` (${is.string(choice.disabled) ? choice.disabled : "Disabled"})`;
         } else {
             const isSelected = (i - separatorOffset === pointer);
-            output += isSelected ? styler.cyan(adone.text.unicode.symbol.pointer) : " ";
+            output += isSelected ? chalk.cyan(adone.text.unicode.symbol.pointer) : " ";
             output += `${getCheckbox(term, choice.checked)} ${choice.name}`;
         }
 
@@ -124,12 +124,12 @@ export default class CheckboxPrompt extends terminal.BasePrompt {
         let bottomContent = "";
 
         if (this.firstRender) {
-            message += `(Press ${styler.cyan.bold("<space>")} to select, ${styler.cyan.bold("<a>")} to toggle all, ${styler.cyan.bold("<i>")} to invert selection)`;
+            message += `(Press ${chalk.cyan.bold("<space>")} to select, ${chalk.cyan.bold("<a>")} to toggle all, ${chalk.cyan.bold("<i>")} to invert selection)`;
         }
 
         // Render choices or answer depending on the state
         if (this.status === "answered") {
-            message += styler.cyan(this.selection.join(", "));
+            message += chalk.cyan(this.selection.join(", "));
         } else {
             const choicesStr = renderChoices(this.term, this.opt.choices, this.pointer);
             const indexPosition = this.opt.choices.indexOf(this.opt.choices.getChoice(this.pointer));
@@ -137,7 +137,7 @@ export default class CheckboxPrompt extends terminal.BasePrompt {
         }
 
         if (error) {
-            bottomContent = styler.red(">> ") + error;
+            bottomContent = chalk.red(">> ") + error;
         }
 
         this.screen.render(message, bottomContent);

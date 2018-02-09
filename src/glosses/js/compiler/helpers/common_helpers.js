@@ -1,7 +1,7 @@
 /* eslint max-len: "off" */
 
 const {
-  js: { compiler: { template } }
+    js: { compiler: { template } }
 } = adone;
 
 const helpers = {};

@@ -4,7 +4,7 @@ const {
 } = adone;
 
 const {
-    styler
+    chalk
 } = terminal;
 
 const mask = (input, maskChar) => {
@@ -59,15 +59,15 @@ export default class PasswordPrompt extends terminal.BasePrompt {
         let bottomContent = "";
 
         if (this.status === "answered") {
-            message += this.opt.mask ? styler.cyan(mask(this.answer, this.opt.mask)) : styler.italic.dim("[hidden]");
+            message += this.opt.mask ? chalk.cyan(mask(this.answer, this.opt.mask)) : chalk.italic.dim("[hidden]");
         } else if (this.opt.mask) {
             message += mask(this.term.readline.line || "", this.opt.mask);
         } else {
-            message += styler.italic.dim("[input is hidden] ");
+            message += chalk.italic.dim("[input is hidden] ");
         }
 
         if (error) {
-            bottomContent = `\n${styler.red(">> ")}${error}`;
+            bottomContent = `\n${chalk.red(">> ")}${error}`;
         }
 
         this.screen.render(message, bottomContent);

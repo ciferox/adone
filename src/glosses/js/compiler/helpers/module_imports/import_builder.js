@@ -9,9 +9,11 @@ const {
  */
 export default class ImportBuilder {
     _statements = [];
+
     _resultName = null;
 
     _scope = null;
+
     _file = null;
 
     constructor(importedSource, scope, file) {
@@ -52,21 +54,23 @@ export default class ImportBuilder {
         assert(statement.type === "ImportDeclaration");
         assert(statement.specifiers.length === 0);
         statement.specifiers = [t.importNamespaceSpecifier(name)];
-        this._resultName = t.clone(name);
+        this._resultName = t.cloneNode(name);
         return this;
     }
+
     default(name) {
         name = this._scope.generateUidIdentifier(name);
         const statement = this._statements[this._statements.length - 1];
         assert(statement.type === "ImportDeclaration");
         assert(statement.specifiers.length === 0);
         statement.specifiers = [t.importDefaultSpecifier(name)];
-        this._resultName = t.clone(name);
+        this._resultName = t.cloneNode(name);
         return this;
     }
+
     named(name, importName) {
-        if (importName === "default") { 
-            return this.default(name); 
+        if (importName === "default") {
+            return this.default(name);
         }
 
         name = this._scope.generateUidIdentifier(name);
@@ -74,7 +78,7 @@ export default class ImportBuilder {
         assert(statement.type === "ImportDeclaration");
         assert(statement.specifiers.length === 0);
         statement.specifiers = [t.importSpecifier(name, t.identifier(importName))];
-        this._resultName = t.clone(name);
+        this._resultName = t.cloneNode(name);
         return this;
     }
 
@@ -90,13 +94,14 @@ export default class ImportBuilder {
             "var",
             [t.variableDeclarator(name, statement.expression)],
         );
-        this._resultName = t.clone(name);
+        this._resultName = t.cloneNode(name);
         return this;
     }
 
     defaultInterop() {
         return this._interop(this._file.addHelper("interopRequireDefault"));
     }
+
     wildcardInterop() {
         return this._interop(this._file.addHelper("interopRequireWildcard"));
     }

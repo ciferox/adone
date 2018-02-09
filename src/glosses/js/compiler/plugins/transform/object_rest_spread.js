@@ -1,9 +1,15 @@
 const {
+    is,
     js: { compiler: { types: t } }
 } = adone;
 
-export default function () {
-    const hasRestElement = (path) => {
+export default function (api, opts) {
+    const { useBuiltIns = false } = opts;
+    if (!is.boolean(useBuiltIns)) {
+        throw new Error(".useBuiltIns must be a boolean, or undefined");
+    }
+
+    const hasRestElement = function (path) {
         let foundRestElement = false;
         path.traverse({
             RestElement() {
@@ -14,7 +20,7 @@ export default function () {
         return foundRestElement;
     };
 
-    const hasSpread = (node) => {
+    const hasSpread = function (node) {
         for (const prop of node.properties) {
             if (t.isSpreadElement(prop)) {
                 return true;
@@ -27,7 +33,7 @@ export default function () {
     // were converted to stringLiterals or not
     // e.g. extracts {keys: ["a", "b", "3", ++x], allLiteral: false }
     // from ast of {a: "foo", b, 3: "bar", [++x]: "baz"}
-    const extractNormalizedKeys = (path) => {
+    const extractNormalizedKeys = function (path) {
         const props = path.node.properties;
         const keys = [];
         let allLiteral = true;
@@ -39,7 +45,7 @@ export default function () {
             } else if (t.isLiteral(prop.key)) {
                 keys.push(t.stringLiteral(String(prop.key.value)));
             } else {
-                keys.push(prop.key);
+                keys.push(t.cloneNode(prop.key));
                 allLiteral = false;
             }
         }
@@ -49,28 +55,26 @@ export default function () {
 
     // replaces impure computed keys with new identifiers
     // and returns variable declarators of these new identifiers
-    const replaceImpureComputedKeys = (path) => {
+    const replaceImpureComputedKeys = function (path) {
         const impureComputedPropertyDeclarators = [];
         for (const propPath of path.get("properties")) {
             const key = propPath.get("key");
             if (propPath.node.computed && !key.isPure()) {
-                const identifier = path.scope.generateUidIdentifierBasedOnNode(
-                    key.node,
-                );
-                const declarator = t.variableDeclarator(identifier, key.node);
+                const name = path.scope.generateUidBasedOnNode(key.node);
+                const declarator = t.variableDeclarator(t.identifier(name), key.node);
                 impureComputedPropertyDeclarators.push(declarator);
-                key.replaceWith(identifier);
+                key.replaceWith(t.identifier(name));
             }
         }
         return impureComputedPropertyDeclarators;
     };
 
     //expects path to an object pattern
-    const createObjectSpread = (path, file, objRef) => {
+    const createObjectSpread = function (path, file, objRef) {
         const props = path.get("properties");
         const last = props[props.length - 1];
         t.assertRestElement(last.node);
-        const restElement = t.clone(last.node);
+        const restElement = t.cloneNode(last.node);
         last.remove();
 
         const impureComputedPropertyDeclarators = replaceImpureComputedKeys(path);
@@ -91,13 +95,13 @@ export default function () {
             impureComputedPropertyDeclarators,
             restElement.argument,
             t.callExpression(file.addHelper("objectWithoutProperties"), [
-                objRef,
+                t.cloneNode(objRef),
                 keyExpression
             ])
         ];
     };
 
-    const replaceRestElement = (parentPath, paramPath, i, numParams) => {
+    const replaceRestElement = function (parentPath, paramPath, i, numParams) {
         if (paramPath.isAssignmentPattern()) {
             replaceRestElement(parentPath, paramPath.get("left"), i, numParams);
             return;
@@ -120,7 +124,7 @@ export default function () {
 
             parentPath.ensureBlock();
             parentPath.get("body").unshiftContainer("body", declar);
-            paramPath.replaceWith(uid);
+            paramPath.replaceWith(t.cloneNode(uid));
         }
     };
 
@@ -128,7 +132,7 @@ export default function () {
         inherits: adone.js.compiler.plugin.syntax.objectRestSpread,
 
         visitor: {
-            // taken from transform-es2015-parameters/src/destructuring.js
+            // taken from transform-parameters/src/destructuring.js
             // function a({ b, ...c }) {}
             Function(path) {
                 const params = path.get("params");
@@ -136,7 +140,7 @@ export default function () {
                     replaceRestElement(params[i].parentPath, params[i], i, params.length);
                 }
             },
-            // adapted from transform-es2015-destructuring/src/index.js#pushObjectRest
+            // adapted from transform-destructuring/src/index.js#pushObjectRest
             // const { a, ...b } = c;
             VariableDeclarator(path, file) {
                 if (!path.get("id").isObjectPattern()) {
@@ -176,7 +180,10 @@ export default function () {
                                 );
                                 // replace foo() with _foo
                                 this.originalPath.replaceWith(
-                                    t.variableDeclarator(this.originalPath.node.id, initRef),
+                                    t.variableDeclarator(
+                                        this.originalPath.node.id,
+                                        t.cloneNode(initRef),
+                                    ),
                                 );
 
                                 return;
@@ -184,11 +191,13 @@ export default function () {
 
                             let ref = this.originalPath.node.init;
                             const refPropertyPath = [];
+                            let kind;
 
                             path.findParent((path) => {
                                 if (path.isObjectProperty()) {
                                     refPropertyPath.unshift(path.node.key.name);
                                 } else if (path.isVariableDeclarator()) {
+                                    kind = path.parentPath.node.kind;
                                     return true;
                                 }
                             });
@@ -218,8 +227,15 @@ export default function () {
 
                             insertionPath = insertionPath.getSibling(insertionPath.key + 1);
 
+                            path.scope.registerBinding(kind, insertionPath);
+
                             if (objectPatternPath.node.properties.length === 0) {
-                                objectPatternPath.findParent((path) => path.isObjectProperty() || path.isVariableDeclarator()).remove();
+                                objectPatternPath
+                                    .findParent(
+                                        (path) =>
+                                            path.isObjectProperty() || path.isVariableDeclarator(),
+                                    )
+                                    .remove();
                             }
                         }
                     },
@@ -228,22 +244,23 @@ export default function () {
                     },
                 );
             },
-            // taken from transform-es2015-destructuring/src/index.js#visitor
+            // taken from transform-destructuring/src/index.js#visitor
             // export var { a, ...b } = c;
             ExportNamedDeclaration(path) {
                 const declaration = path.get("declaration");
                 if (!declaration.isVariableDeclaration()) {
-                    return;
+                    return; 
                 }
                 if (!hasRestElement(declaration)) {
-                    return;
+                    return; 
                 }
 
                 const specifiers = [];
 
                 for (const name in path.getOuterBindingIdentifiers(path)) {
-                    const id = t.identifier(name);
-                    specifiers.push(t.exportSpecifier(id, id));
+                    specifiers.push(
+                        t.exportSpecifier(t.identifier(name), t.identifier(name)),
+                    );
                 }
 
                 // Split the declaration and export list into two declarations so that the variable
@@ -263,14 +280,14 @@ export default function () {
                 if (leftPath.isObjectPattern() && hasRestElement(leftPath)) {
                     const nodes = [];
 
-                    const ref = path.scope.generateUidIdentifierBasedOnNode(
+                    const refName = path.scope.generateUidBasedOnNode(
                         path.node.right,
                         "ref",
                     );
 
                     nodes.push(
                         t.variableDeclaration("var", [
-                            t.variableDeclarator(ref, path.node.right)
+                            t.variableDeclarator(t.identifier(refName), path.node.right)
                         ]),
                     );
 
@@ -278,7 +295,7 @@ export default function () {
                         impureComputedPropertyDeclarators,
                         argument,
                         callExpression
-                    ] = createObjectSpread(leftPath, file, ref);
+                    ] = createObjectSpread(leftPath, file, t.identifier(refName));
 
                     if (impureComputedPropertyDeclarators.length > 0) {
                         nodes.push(
@@ -286,23 +303,20 @@ export default function () {
                         );
                     }
 
-                    const nodeWithoutSpread = t.clone(path.node);
-                    nodeWithoutSpread.right = ref;
+                    const nodeWithoutSpread = t.cloneNode(path.node);
+                    nodeWithoutSpread.right = t.identifier(refName);
                     nodes.push(t.expressionStatement(nodeWithoutSpread));
                     nodes.push(
                         t.toStatement(
                             t.assignmentExpression("=", argument, callExpression),
                         ),
                     );
-
-                    if (ref) {
-                        nodes.push(t.expressionStatement(ref));
-                    }
+                    nodes.push(t.expressionStatement(t.identifier(refName)));
 
                     path.replaceWithMultiple(nodes);
                 }
             },
-            // taken from transform-es2015-destructuring/src/index.js#visitor
+            // taken from transform-destructuring/src/index.js#visitor
             ForXStatement(path) {
                 const { node, scope } = path;
                 const leftPath = path.get("left");
@@ -319,19 +333,21 @@ export default function () {
                     path.ensureBlock();
 
                     node.body.body.unshift(
-                        t.variableDeclaration("var", [t.variableDeclarator(left, temp)]),
+                        t.variableDeclaration("var", [
+                            t.variableDeclarator(left, t.cloneNode(temp))
+                        ]),
                     );
 
                     return;
                 }
 
                 if (!t.isVariableDeclaration(left)) {
-                    return;
+                    return; 
                 }
 
                 const pattern = left.declarations[0].id;
                 if (!t.isObjectPattern(pattern)) {
-                    return;
+                    return; 
                 }
 
                 const key = scope.generateUidIdentifier("ref");
@@ -343,30 +359,22 @@ export default function () {
 
                 node.body.body.unshift(
                     t.variableDeclaration(node.left.kind, [
-                        t.variableDeclarator(pattern, key)
+                        t.variableDeclarator(pattern, t.cloneNode(key))
                     ]),
                 );
             },
             // var a = { ...b, ...c }
             ObjectExpression(path, file) {
                 if (!hasSpread(path.node)) {
-                    return;
-                }
-
-                const useBuiltIns = file.opts.useBuiltIns || false;
-                if (!adone.is.boolean(useBuiltIns)) {
-                    throw new Error(
-                        "transform-object-rest-spread currently only accepts a boolean " +
-                        "option for useBuiltIns (defaults to false)",
-                    );
+                    return; 
                 }
 
                 const args = [];
                 let props = [];
 
-                const push = () => {
+                const push = function () {
                     if (!props.length) {
-                        return;
+                        return; 
                     }
                     args.push(t.objectExpression(props));
                     props = [];

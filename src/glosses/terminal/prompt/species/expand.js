@@ -5,7 +5,7 @@ const {
 } = adone;
 
 const {
-    styler
+    chalk
 } = terminal;
 
 /**
@@ -26,7 +26,7 @@ const renderChoices = (terminal, choices, pointer) => {
 
         let choiceStr = `${choice.key}) ${choice.name}`;
         if (pointer === choice.key) {
-            choiceStr = styler.cyan(choiceStr);
+            choiceStr = chalk.cyan(choiceStr);
         }
         output += choiceStr;
     });
@@ -102,7 +102,7 @@ export default class ExpandPrompt extends terminal.BasePrompt {
         let bottomContent = "";
 
         if (this.status === "answered") {
-            message += styler.cyan(this.answer);
+            message += chalk.cyan(this.answer);
         } else if (this.status === "expanded") {
             const choicesStr = renderChoices(this.term, this.opt.choices, this.selectedKey);
             message += this.paginator.paginate(choicesStr, this.selectedKey, this.opt.pageSize);
@@ -112,11 +112,11 @@ export default class ExpandPrompt extends terminal.BasePrompt {
         message += this.term.readline.line;
 
         if (error) {
-            bottomContent = styler.red(">> ") + error;
+            bottomContent = chalk.red(">> ") + error;
         }
 
         if (hint) {
-            bottomContent = styler.cyan(">> ") + hint;
+            bottomContent = chalk.cyan(">> ") + hint;
         }
 
         this.screen.render(message, bottomContent);
@@ -151,7 +151,7 @@ export default class ExpandPrompt extends terminal.BasePrompt {
 
             let choiceStr = `${choice.key}) ${choice.name}`;
             if (this.selectedKey === choice.key) {
-                choiceStr = styler.cyan(choiceStr);
+                choiceStr = chalk.cyan(choiceStr);
             }
             output += choiceStr;
         });

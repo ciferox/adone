@@ -6,7 +6,7 @@ const {
 } = adone;
 
 const {
-    styler
+    chalk
 } = terminal;
 
 const height = (content) => content.split("\n").length;
@@ -218,7 +218,7 @@ export default class BasePrompt {
                 return true;
             },
             suffix: "",
-            prefix: styler.green("?")
+            prefix: chalk.green("?")
         });
 
         // Check to make sure prompt requirements are there
@@ -325,11 +325,11 @@ export default class BasePrompt {
      * @return {String} prompt question string
      */
     getQuestion() {
-        let message = `${this.opt.prefix} ${styler.bold(this.opt.message)}${this.opt.suffix}${styler.reset(" ")}`;
+        let message = `${this.opt.prefix} ${chalk.bold(this.opt.message)}${this.opt.suffix}${chalk.reset(" ")}`;
 
         // Append the default if available, and if question isn't answered
         if (is.exist(this.opt.default) && this.status !== "answered") {
-            message += styler.dim(`(${this.opt.default}) `);
+            message += chalk.dim(`(${this.opt.default}) `);
         }
 
         return message;

@@ -15,44 +15,44 @@ class App extends application.CliApplication {
             { name: "boolean-false", default: false },
             { name: "null", default: null },
             { name: "undefined", default: undefined, colors: {
-                argumentName: (x) => adone.terminal.styler.red(x)
+                argumentName: (x) => adone.terminal.chalk.red(x)
             } },
             { name: "choices", choices: [1, 2, 3, "hello", false], default: 2, help: "must be one of" }
         ],
         options: [
             { name: "--array", nargs: 1, default: ["", "1", 2], help: "some text", colors: {
-                optionName: (x) => adone.terminal.styler.grey(x)
+                optionName: (x) => adone.terminal.chalk.grey(x)
             } },
             { name: "--nested-array", holder: "AA", nargs: 1, default: [[1], [false], [[{ a: 2 }]]], colors: false },
             { name: "--object", nargs: 1, default: { a: 1, b: "123", c: [{ b: 4, c: "2" }] }, colors: {
-                value: { number: (x) => adone.terminal.styler.red(x) }
+                value: { number: (x) => adone.terminal.chalk.red(x) }
             } },
             { name: "--object-2", nargs: 1, default: { a: 1, b: "123", c: [{ b: 4, c: "2" }] }, colors: {
                 inherit: false,
-                value: { number: (x) => adone.terminal.styler.green(x) }
+                value: { number: (x) => adone.terminal.chalk.green(x) }
             } },
             { name: "--object-3", nargs: 1, default: { a: 1, b: "123", c: [{ b: 4, c: "2" }] }, colors: "default" }
         ],
         colors: {
-            usage: (x) => adone.terminal.styler.strikethrough.grey(x),
+            usage: (x) => adone.terminal.chalk.strikethrough.grey(x),
             commandName: (x) => {
                 switch (Number(x[x.length - 1]) % 3) {
                     case 0: {
-                        return adone.terminal.styler.red(x);
+                        return adone.terminal.chalk.red(x);
                     }
                     case 1: {
-                        return adone.terminal.styler.green(x);
+                        return adone.terminal.chalk.green(x);
                     }
                     case 2: {
-                        return adone.terminal.styler.cyan(x);
+                        return adone.terminal.chalk.cyan(x);
                     }
                 }
             },
             optionName: (x) => {
                 if (Math.random() > 0.5) {
-                    return adone.terminal.styler.cyan(x);
+                    return adone.terminal.chalk.cyan(x);
                 }
-                return adone.terminal.styler.red(x);
+                return adone.terminal.chalk.red(x);
             }
         }
     })
@@ -68,7 +68,7 @@ class App extends application.CliApplication {
         name: "command-2",
         help: "{magenta-bg}Help message styling{/}",
         colors: {
-            commandHelpMessage: (x) => adone.terminal.styler.italic(adone.runtime.term.parse(x))
+            commandHelpMessage: (x) => adone.terminal.chalk.italic(adone.runtime.term.parse(x))
         }
     })
     cmd2() {}
@@ -87,7 +87,7 @@ class App extends application.CliApplication {
     @DCliCommand({
         name: "command-5", // uses parent colors
         colors: {
-            commandName: (x) => adone.terminal.styler.yellow(x) // only for inner commands
+            commandName: (x) => adone.terminal.chalk.yellow(x) // only for inner commands
         },
         commands: [
             { name: "command-1" },
@@ -129,7 +129,7 @@ class App extends application.CliApplication {
         name: "command-8",
         help: "extends default colors",
         colors: {
-            optionName: (x) => adone.terminal.styler.grey(x)
+            optionName: (x) => adone.terminal.chalk.grey(x)
         },
         arguments: ["a1", "a2", "a3"],
         options: ["--o1", "--o2", { name: "--o3", nargs: 1, holder: "X" }],
@@ -146,12 +146,12 @@ class App extends application.CliApplication {
         help: "extends parent colors",
         colors: {
             inherit: true,
-            optionName: (x) => adone.terminal.styler.grey(x)
+            optionName: (x) => adone.terminal.chalk.grey(x)
         },
         arguments: ["a1", "a2", "a3"],
         options: ["--o1", "--o2", { name: "--o3", nargs: 1, default: "test", holder: "X", colors: {
-            optionName: (x) => adone.terminal.styler.yellow(x),
-            value: { string: (x) => adone.terminal.styler.red(x) }
+            optionName: (x) => adone.terminal.chalk.yellow(x),
+            value: { string: (x) => adone.terminal.chalk.red(x) }
         } }],
         commands: [
             { name: "command-1" },
@@ -167,8 +167,8 @@ class App extends application.CliApplication {
         colors: false,
         arguments: ["a1", "a2", "a3"],
         options: ["--o1", "--o2", { name: "--o3", nargs: 1, default: "test", holder: "X", colors: {
-            optionName: (x) => adone.terminal.styler.yellow(x),
-            value: { string: (x) => adone.terminal.styler.red(x) }
+            optionName: (x) => adone.terminal.chalk.yellow(x),
+            value: { string: (x) => adone.terminal.chalk.red(x) }
         } }],
         commands: [
             { name: "command-1", help: "default colors" },

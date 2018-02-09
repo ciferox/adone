@@ -6,7 +6,7 @@ const {
 // ✌️
 const HARDCORE_THIS_REF = new WeakSet();
 
-const isIllegalBareSuper = (node, parent) => {
+const isIllegalBareSuper = function (node, parent) {
     if (!t.isSuper(node)) {
         return false;
     }
@@ -19,7 +19,9 @@ const isIllegalBareSuper = (node, parent) => {
     return true;
 };
 
-const isMemberExpressionSuper = (node) => t.isMemberExpression(node) && t.isSuper(node.object);
+const isMemberExpressionSuper = function (node) {
+    return t.isMemberExpression(node) && t.isSuper(node.object);
+};
 
 /**
  * Creates an expression which result is the proto of objectRef.
@@ -33,8 +35,10 @@ const isMemberExpressionSuper = (node) => t.isMemberExpression(node) && t.isSupe
  *
  *   CLASS.prototype.__proto__ || Object.getPrototypeOf(CLASS.prototype)
  */
-const getPrototypeOfExpression = (objectRef, isStatic) => {
-    const targetRef = isStatic ? objectRef : t.memberExpression(objectRef, t.identifier("prototype"));
+const getPrototypeOfExpression = function (objectRef, isStatic) {
+    const targetRef = isStatic
+        ? objectRef
+        : t.memberExpression(objectRef, t.identifier("prototype"));
 
     return t.logicalExpression(
         "||",
@@ -44,7 +48,7 @@ const getPrototypeOfExpression = (objectRef, isStatic) => {
                 t.identifier("Object"),
                 t.identifier("getPrototypeOf"),
             ),
-            [targetRef],
+            [t.cloneNode(targetRef)],
         ),
     );
 };
@@ -115,6 +119,7 @@ export default class ReplaceSupers {
         this.isStatic = opts.isStatic;
         this.hasSuper = false;
         this.inClass = inClass;
+        this.inConstructor = opts.inConstructor;
         this.isLoose = opts.isLoose;
         this.scope = this.methodPath.scope;
         this.file = opts.file;
@@ -126,28 +131,41 @@ export default class ReplaceSupers {
     }
 
     forceSuperMemoisation: boolean;
+
     methodPath: NodePath;
+
     methodNode: Object;
+
     superRef: Object;
+
     isStatic: boolean;
+
     hasSuper: boolean;
+
     inClass: boolean;
+
+    inConstructor: boolean;
+
     isLoose: boolean;
+
     scope: Scope;
+
     file;
+
     opts: {
         forceSuperMemoisation: boolean,
         getObjetRef: Function,
         methodPath: NodePath,
         methodNode: Object,
         superRef: Object,
+        inConstructor: boolean,
         isStatic: boolean,
         isLoose: boolean,
         file: any,
     };
 
     getObjectRef() {
-        return this.opts.objectRef || this.opts.getObjectRef();
+        return t.cloneNode(this.opts.objectRef || this.opts.getObjectRef());
     }
 
     /**
@@ -183,10 +201,18 @@ export default class ReplaceSupers {
      */
 
     getSuperProperty(property: Object, isComputed: boolean): Object {
+        let thisExpr = t.thisExpression();
+        if (this.inConstructor) {
+            thisExpr = t.callExpression(
+                this.file.addHelper("assertThisInitialized"),
+                [thisExpr],
+            );
+        }
+
         return t.callExpression(this.file.addHelper("get"), [
             getPrototypeOfExpression(this.getObjectRef(), this.isStatic),
             isComputed ? property : t.stringLiteral(property.name),
-            t.thisExpression()
+            thisExpr
         ]);
     }
 
@@ -204,9 +230,12 @@ export default class ReplaceSupers {
 
         } else if (t.isMemberExpression(parent) && !methodNode.static) {
             // super.test -> objectRef.prototype.test
-            return t.memberExpression(superRef, t.identifier("prototype"));
+            return t.memberExpression(
+                t.cloneNode(superRef),
+                t.identifier("prototype"),
+            );
         } else {
-            return superRef;
+            return t.cloneNode(superRef);
         }
     }
 
@@ -242,12 +271,18 @@ export default class ReplaceSupers {
         // super.age += 2; -> let _ref = super.age; super.age = _ref + 2;
         ref = ref || path.scope.generateUidIdentifier("ref");
         return [
-            t.variableDeclaration("var", [t.variableDeclarator(ref, node.left)]),
+            t.variableDeclaration("var", [
+                t.variableDeclarator(t.cloneNode(ref), t.cloneNode(node.left))
+            ]),
             t.expressionStatement(
                 t.assignmentExpression(
                     "=",
                     node.left,
-                    t.binaryExpression(node.operator.slice(0, -1), ref, node.right),
+                    t.binaryExpression(
+                        node.operator.slice(0, -1),
+                        t.cloneNode(ref),
+                        node.right,
+                    ),
                 ),
             )
         ];
@@ -315,7 +350,7 @@ export default class ReplaceSupers {
         }
 
         if (!property) {
-            return;
+            return; 
         }
 
         const superProperty = this.getSuperProperty(property, computed);

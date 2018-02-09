@@ -1,7 +1,6 @@
 const {
     is,
-    js: { tokens, compiler: { esutils } },
-    terminal: { styler }
+    terminal: { chalk }
 } = adone;
 
 let deprecationWarningShown = false;
@@ -17,26 +16,14 @@ type NodeLocation = {
 };
 
 /**
- * Chalk styles for token types.
+ * Chalk styles for code frame token types.
  */
-
-const getDefs = () => {
-    return {
-        keyword: styler.cyan,
-        capitalized: styler.yellow,
-        jsx_tag: styler.yellow,
-        punctuator: styler.yellow,
-        // bracket:  intentionally omitted.
-        number: styler.magenta,
-        string: styler.green,
-        regex: styler.magenta,
-        comment: styler.grey,
-        invalid: styler.white.bgRed.bold,
-        gutter: styler.grey,
-        marker: styler.red.bold,
-        message: styler.red.bold
-    };
+const DEFS = {
+    gutter: chalk.grey,
+    marker: chalk.red.bold,
+    message: chalk.red.bold
 };
+
 
 /**
  * RegExp to test for newlines in terminal.
@@ -45,85 +32,21 @@ const getDefs = () => {
 const NEWLINE = /\r\n|[\n\r\u2028\u2029]/;
 
 /**
- * RegExp to test for what seems to be a JSX tag name.
- */
-
-const JSX_TAG = /^[a-z][\w-]*$/i;
-
-/**
- * RegExp to test for the three types of brackets.
- */
-
-const BRACKET = /^[()[\]{}]$/;
-
-/**
- * Get the type of token, specifying punctuator type.
- */
-
-const getTokenType = (match) => {
-    const [offset, text] = match.slice(-2);
-    const token = tokens.matchToToken(match);
-
-    if (token.type === "name") {
-        if (esutils.keyword.isReservedWordES6(token.value)) {
-            return "keyword";
-        }
-
-        if (
-            JSX_TAG.test(token.value) &&
-            (text[offset - 1] === "<" || text.substr(offset - 2, 2) === "</")
-        ) {
-            return "jsx_tag";
-        }
-
-        if (token.value[0] !== token.value[0].toLowerCase()) {
-            return "capitalized";
-        }
-    }
-
-    if (token.type === "punctuator" && BRACKET.test(token.value)) {
-        return "bracket";
-    }
-
-    if (
-        token.type === "invalid" &&
-        (token.value === "@" || token.value === "#")
-    ) {
-        return "punctuator";
-    }
-
-    return token.type;
-};
-
-/**
- * Highlight `text`.
- */
-
-const highlight = (defs: Object, text: string) => {
-    return text.replace(tokens.regex, (...args) => {
-        const type = getTokenType(args);
-        const colorize = defs[type];
-        if (colorize) {
-            return args[0].split(NEWLINE).map((str) => colorize(str)).join("\n");
-        }
-        return args[0];
-    });
-};
-
-/**
  * Extract what lines should be marked and highlighted.
  */
 
-const getMarkerLines = (loc: NodeLocation, source: Array<string>, opts: Object): { start: number, end: number, markerLines: Object } => {
+const getMarkerLines = function (
+    loc: NodeLocation,
+    source: Array<string>,
+    opts: Object,
+): { start: number, end: number, markerLines: Object } {
     const startLoc: Location = Object.assign(
         {},
         { column: 0, line: -1 },
         loc.start,
     );
     const endLoc: Location = Object.assign({}, startLoc, loc.end);
-    const linesAbove = opts.linesAbove || 2;
-    const linesBelow = opts.linesBelow || 3;
-
+    const { linesAbove = 2, linesBelow = 3 } = opts || {};
     const startLine = startLoc.line;
     const startColumn = startLoc.column;
     const endLine = endLoc.line;
@@ -176,14 +99,17 @@ const getMarkerLines = (loc: NodeLocation, source: Array<string>, opts: Object):
     return { start, end, markerLines };
 };
 
-export const codeFrameColumns = (rawLines: string, loc: NodeLocation, opts: Object = {}): string => {
+export const codeFrameColumns = function (
+    rawLines: string,
+    loc: NodeLocation,
+    opts: Object = {},
+): string {
     const highlighted = opts.highlightCode || opts.forceColor;
     const maybeHighlight = (chalkFn, string) => {
         return highlighted ? chalkFn(string) : string;
     };
-    const defs = getDefs();
     if (highlighted) {
-        rawLines = highlight(defs, rawLines);
+        rawLines = adone.js.highlight(rawLines);
     }
 
     const lines = rawLines.split(NEWLINE);
@@ -210,23 +136,23 @@ export const codeFrameColumns = (rawLines: string, loc: NodeLocation, opts: Obje
 
                     markerLine = [
                         "\n ",
-                        maybeHighlight(defs.gutter, gutter.replace(/\d/g, " ")),
+                        maybeHighlight(DEFS.gutter, gutter.replace(/\d/g, " ")),
                         markerSpacing,
-                        maybeHighlight(defs.marker, "^").repeat(numberOfMarkers)
+                        maybeHighlight(DEFS.marker, "^").repeat(numberOfMarkers)
                     ].join("");
 
                     if (lastMarkerLine && opts.message) {
-                        markerLine += ` ${maybeHighlight(defs.message, opts.message)}`;
+                        markerLine += ` ${maybeHighlight(DEFS.message, opts.message)}`;
                     }
                 }
                 return [
-                    maybeHighlight(defs.marker, ">"),
-                    maybeHighlight(defs.gutter, gutter),
+                    maybeHighlight(DEFS.marker, ">"),
+                    maybeHighlight(DEFS.gutter, gutter),
                     line,
                     markerLine
                 ].join("");
             }
-            return ` ${maybeHighlight(defs.gutter, gutter)}${line}`;
+            return ` ${maybeHighlight(DEFS.gutter, gutter)}${line}`;
 
         })
         .join("\n");
@@ -236,7 +162,7 @@ export const codeFrameColumns = (rawLines: string, loc: NodeLocation, opts: Obje
     }
 
     if (highlighted) {
-        return styler.reset(frame);
+        return chalk.reset(frame);
     }
     return frame;
 };
@@ -245,12 +171,17 @@ export const codeFrameColumns = (rawLines: string, loc: NodeLocation, opts: Obje
  * Create a code frame, adding line numbers, code highlighting, and pointing to a given position.
  */
 
-export const codeFrame = (rawLines: string, lineNumber: number, colNumber: ?number, opts: Object = {}): string => {
+export const codeFrame = function (
+    rawLines: string,
+    lineNumber: number,
+    colNumber: ?number,
+    opts: Object = {},
+): string {
     if (!deprecationWarningShown) {
         deprecationWarningShown = true;
 
         const deprecationError = new Error(
-            "Passing lineNumber and colNumber is deprecated. Please use `codeFrameColumns`.",
+            "Passing lineNumber and colNumber is deprecated to @babel/code-frame. Please use `codeFrameColumns`.",
         );
         deprecationError.name = "DeprecationWarning";
 
@@ -268,4 +199,4 @@ export const codeFrame = (rawLines: string, lineNumber: number, colNumber: ?numb
     };
 
     return codeFrameColumns(rawLines, location, opts);
-};
+}

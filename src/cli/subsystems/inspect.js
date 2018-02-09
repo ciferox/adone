@@ -164,7 +164,7 @@ export default class Inspection extends Subsystem {
                 const obj = adone.vendor.lodash.get(ns, objectName);
                 const type = adone.meta.typeOf(obj);
                 if (type === "function") {
-                    adone.log(adone.js.highlighter.highlight(obj.toString()));
+                    adone.log(adone.js.highlight(obj.toString()));
                 } else {
                     adone.log(adone.meta.inspect(adone.vendor.lodash.get(ns, objectName), inspectOptions));
                 }

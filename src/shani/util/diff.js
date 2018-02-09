@@ -221,25 +221,25 @@ class Differ extends adone.event.Emitter {
 export const getDiff = (actual, expected) => {
     const differ = new Differ();
 
-    const styler = adone.terminal.styler;
+    const { chalk } = adone.terminal;
 
     const colorizer = (obj, type) => {
         switch (type) {
             case "string":
-                return styler.green(obj);
+                return chalk.green(obj);
             case "boolean":
             case "null":
             case "undefined":
             case "number":
-                return styler.yellow(obj);
+                return chalk.yellow(obj);
             case "curly.bracket":
             case "square.bracket":
             case "angle.bracket":
-                return styler.dim(obj);
+                return chalk.dim(obj);
             case "class.name":
-                return styler.magenta(obj);
+                return chalk.magenta(obj);
             case "name":
-                return styler.cyan(obj);
+                return chalk.cyan(obj);
             case "regex": {
                 let src;
                 let flags;
@@ -251,12 +251,12 @@ export const getDiff = (actual, expected) => {
                     src = match[1];
                     flags = match[2] || "";
                 }
-                return `${styler.green("/")}${styler.cyan(src)}${styler.green("/")}${styler.magenta(flags)}`;
+                return `${chalk.green("/")}${chalk.cyan(src)}${chalk.green("/")}${chalk.magenta(flags)}`;
             }
             case "comment":
-                return styler.dim(obj);
+                return chalk.dim(obj);
             case "keyword":
-                return styler.cyan(obj);
+                return chalk.cyan(obj);
             default:
                 return obj;
         }
@@ -286,11 +286,11 @@ export const getDiff = (actual, expected) => {
             const part = str.slice(start, end);
             switch (action) {
                 case "delete": {
-                    result += styler.bgRed.white(part);
+                    result += chalk.bgRed.white(part);
                     break;
                 }
                 case "add": {
-                    result += styler.bgGreen.black(part);
+                    result += chalk.bgGreen.black(part);
                     break;
                 }
                 default: {
@@ -308,7 +308,7 @@ export const getDiff = (actual, expected) => {
         return colorizer(key, "object.key");
     };
 
-    const circular = () => `${colorizer("[", "square.bracket")}${styler.cyan("Circular")}${colorizer("]", "square.bracket")}`;
+    const circular = () => `${colorizer("[", "square.bracket")}${chalk.cyan("Circular")}${colorizer("]", "square.bracket")}`;
 
     const MAX_DEPTH = 3; // todo: customize it
 
@@ -338,7 +338,7 @@ export const getDiff = (actual, expected) => {
         };
 
         // if (level === MAX_DEPTH) {
-        //     return `${colorizer("[", "square.bracket")}${styler.cyan("DEPTH LIMIT")}${colorizer("]", "square.bracket")}`;
+        //     return `${colorizer("[", "square.bracket")}${chalk.cyan("DEPTH LIMIT")}${colorizer("]", "square.bracket")}`;
         // }
 
         switch (type) {
@@ -366,19 +366,19 @@ export const getDiff = (actual, expected) => {
                 if (obj.byteLength === 0) {
                     return `${
                         colorizer("ArrayBuffer", "class.name")
-                    } ${
+                        } ${
                         colorizer("{", "curly.bracket")
-                    }${
+                        }${
                         colorizer("}", "curly.bracket")
-                    }`;
+                        }`;
                 }
                 let result = `${
                     colorizer("ArrayBuffer", "class.name")
-                } as ${
+                    } as ${
                     colorizer("Uint8Array", "class.name")
-                } ${
+                    } ${
                     colorizer("{", "curly.bracket")
-                }\n`;
+                    }\n`;
                 const view = new Uint8Array(obj);
                 for (let i = 0; i < view.length; ++i) {
                     const byte = `0x${view[i].toString(16).padStart(2, "0").toUpperCase()}`;
@@ -397,9 +397,9 @@ export const getDiff = (actual, expected) => {
                 if (obj.constructor) {
                     return `${
                         colorizer("[", "square.bracket")
-                    }${styler.cyan("instance of")} ${colorizer(obj.constructor.name, "class.name")}${
+                        }${chalk.cyan("instance of")} ${colorizer(obj.constructor.name, "class.name")}${
                         colorizer("]", "square.bracket")
-                    }`;
+                        }`;
                     // } ${handlePlainObject(obj)}`;
                 }
                 return obj.toString();
@@ -467,17 +467,17 @@ export const getDiff = (actual, expected) => {
 
                 return `${
                     colorizer("<", "angle.bracket")
-                }${
+                    }${
                     colorizer("Buffer ", "class.name")
-                }${
+                    }${
                     [...contents].map((x) => colorizer(x.toString(16).padStart(2, "0"), "number")).join(" ")
-                }${
+                    }${
                     contents.length < obj.length
-                        ? ` ${styler.dim("...")} `
+                        ? ` ${chalk.dim("...")} `
                         : ""
-                }${
+                    }${
                     colorizer(">", "angle.bracket")
-                }`;
+                    }`;
             }
             case "symbol": {
                 return `${colorizer("Symbol", "class.name")}(${obj.toString().slice(7, -1)})`;
@@ -485,7 +485,7 @@ export const getDiff = (actual, expected) => {
             case "function": {
                 return `${
                     colorizer("[", "square.bracket")
-                }${
+                    }${
                     colorizer(
                         is.generatorFunction(obj)
                             ? "GeneratorFunction" // TODO: async genrators
@@ -494,13 +494,13 @@ export const getDiff = (actual, expected) => {
                                 : "Function",
                         "class.name"
                     )
-                }${
+                    }${
                     obj.name
                         ? `: ${colorizer(obj.name, "name")}`
                         : ""
-                }${
+                    }${
                     colorizer("]", "square.bracket")
-                }`;
+                    }`;
                 // let { code } = adone.js.compiler.core.transform(`const a = ${obj.toString()}`, {
                 //     plugins: [({ types: t }) => ({
                 //         visitor: {
@@ -635,10 +635,10 @@ export const getDiff = (actual, expected) => {
 
         switch (type) {
             case "delete":
-                marker = `${styler.red("-")} `;
+                marker = `${chalk.red("-")} `;
                 break;
             case "add":
-                marker = `${styler.green("+")} `;
+                marker = `${chalk.green("+")} `;
                 break;
             default:
                 marker = "";

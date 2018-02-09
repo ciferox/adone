@@ -4,7 +4,7 @@ const {
 } = adone;
 
 const {
-    styler
+    chalk
 } = terminal;
 
 /**
@@ -34,7 +34,7 @@ const listRender = (terminal, choices, pointer) => {
         const isSelected = (i - separatorOffset === pointer);
         let line = (isSelected ? `${adone.text.unicode.symbol.pointer} ` : "  ") + choice.name;
         if (isSelected) {
-            line = styler.cyan(line);
+            line = chalk.cyan(line);
         }
         output += `${line} \n`;
     });
@@ -113,12 +113,12 @@ export default class ListPrompt extends terminal.BasePrompt {
         let message = this.getQuestion();
 
         if (this.firstRender) {
-            message += styler.dim("(Use arrow keys)");
+            message += chalk.dim("(Use arrow keys)");
         }
 
         // Render choices or answer depending on the state
         if (this.status === "answered") {
-            message += styler.cyan(this.opt.choices.getChoice(this.selected).short);
+            message += chalk.cyan(this.opt.choices.getChoice(this.selected).short);
         } else {
             const choicesStr = listRender(this.term, this.opt.choices, this.selected);
             const indexPosition = this.opt.choices.indexOf(this.opt.choices.getChoice(this.selected));

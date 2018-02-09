@@ -3,9 +3,9 @@ const {
 } = adone;
 
 export default function () {
-    const getTempId = (scope) => {
+    const getTempId = function (scope) {
         let id = scope.path.getData("functionBind");
-        if (id) {
+        if (id) { 
             return id;
         }
 
@@ -13,15 +13,15 @@ export default function () {
         return scope.path.setData("functionBind", id);
     };
 
-    const getStaticContext = (bind, scope) => {
+    const getStaticContext = function (bind, scope) {
         const object = bind.object || bind.callee.object;
         return scope.isStatic(object) && object;
     };
 
-    const inferBindContext = (bind, scope) => {
+    const inferBindContext = function (bind, scope) {
         const staticContext = getStaticContext(bind, scope);
-        if (staticContext) {
-            return t.cloneDeep(staticContext);
+        if (staticContext) { 
+            return t.cloneNode(staticContext); 
         }
 
         const tempId = getTempId(scope);
@@ -46,8 +46,8 @@ export default function () {
         visitor: {
             CallExpression({ node, scope }) {
                 const bind = node.callee;
-                if (!t.isBindExpression(bind)) {
-                    return;
+                if (!t.isBindExpression(bind)) { 
+                    return; 
                 }
 
                 const context = inferBindContext(bind, scope);

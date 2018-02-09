@@ -139,7 +139,7 @@ const applyStyle = function (...args) {
     return str;
 };
 
-const proto = Object.defineProperties(() => {}, styles);
+const proto = Object.defineProperties(() => { }, styles);
 
 const build = function (_styles, _empty, key) {
     const builder = function (...args) {
@@ -199,15 +199,13 @@ const build = function (_styles, _empty, key) {
 //     return template(chalk, parts.join(""));
 // }
 
-class Styler {
-    constructor(options = {}) {
+export default class Chalk {
+    constructor({ enabled, level } = {}) {
         // Detect level if not set manually
         const scLevel = adone.runtime.term.level;
-        this.level = is.undefined(options.level) ? scLevel : options.level;
-        this.enabled = "enabled" in options ? options.enabled : this.level > 0;
+        this.level = is.undefined(level) ? scLevel : level;
+        this.enabled = is.undefined(enabled) ? this.level > 0 : enabled;
     }
 }
 
-Object.defineProperties(Styler.prototype, styles);
-
-export default new Styler(); // eslint-disable-line new-cap
+Object.defineProperties(Chalk.prototype, styles);

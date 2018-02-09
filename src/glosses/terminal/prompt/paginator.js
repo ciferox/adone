@@ -41,6 +41,6 @@ export default class Paginator {
         const topIndex = Math.max(0, active + lines.length - this.pointer);
 
         const section = infinite.splice(topIndex, pageSize).join("\n");
-        return `${section}\n${adone.terminal.styler.dim("(Move up and down to reveal more choices)")}`;
+        return `${section}\n${adone.terminal.chalk.dim("(Move up and down to reveal more choices)")}`;
     }
 }
