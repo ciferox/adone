@@ -1,5 +1,6 @@
 const {
     is,
+    exception: x,
     util,
     vendor: {
         lodash
@@ -90,13 +91,13 @@ export const isCancel = (value) => Boolean(value && value[Symbol.for("adone:requ
  * @param {Array|Function} fns A single function or Array of functions
  * @returns {*} The resulting transformed data
  */
-export const transformData = (data, headers, fns) => {
+export const transformData = (data, headers, config, fns) => {
     if (is.nil(fns)) {
         return data;
     }
     fns = util.arrify(fns);
     for (const fn of fns) {
-        data = fn(data, headers);
+        data = fn(data, headers, config);
     }
     return data;
 };
@@ -131,8 +132,8 @@ export const defaults = {
         return data;
     }],
 
-    transformResponse: [(data) => {
-        if (is.string(data)) {
+    transformResponse: [(data, headers, config = {}) => {
+        if (config.responseType === "json") { // TODO: do it here???
             try {
                 data = JSON.parse(data);
             } catch (e) { /* Ignore */ }
@@ -147,7 +148,10 @@ export const defaults = {
 
     maxContentLength: -1,
 
-    validateStatus: (status) => status >= 200 && status < 300
+    validateStatus: (status) => status >= 200 && status < 300,
+
+    responseType: "json",
+    responseEncoding: "utf8"
 };
 
 defaults.headers = {
@@ -217,8 +221,18 @@ export class Client {
                 // Ensure headers exist
                 options.headers = options.headers || {};
 
+                switch (options.responseType) {
+                    case "buffer":
+                    case "json":
+                    case "stream":
+                    case "string":
+                        break;
+                    default:
+                        throw new x.InvalidArgument(`responseType can be either buffer, json, stream or string, but got: ${options.responseType}`);
+                }
+
                 // Transform request data
-                options.data = transformData(options.data, options.headers, options.transformRequest);
+                options.data = transformData(options.data, options.headers, options, options.transformRequest);
 
                 // Flatten headers
                 options.headers = lodash.merge(
@@ -236,14 +250,14 @@ export class Client {
 
                 return adapter(options).then((response) => {
                     throwIfCancellationRequested(options);
-                    response.data = transformData(response.data, response.headers, options.transformResponse);
+                    response.data = transformData(response.data, response.headers, options, options.transformResponse);
                     return response;
                 }, (reason) => {
                     if (!isCancel(reason)) {
                         throwIfCancellationRequested(options);
 
                         if (reason && reason.response) {
-                            reason.response.data = transformData(reason.response.data, reason.response.headers, options.transformResponse);
+                            reason.response.data = transformData(reason.response.data, reason.response.headers, options, options.transformResponse);
                         }
                     }
                     return Promise.reject(reason);

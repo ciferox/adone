@@ -1,8 +1,10 @@
 const {
     is,
+    exception: x,
     net: {
         http
-    }
+    },
+    util
 } = adone;
 
 const __ = adone.private(http.client);
@@ -41,6 +43,12 @@ export default async function adapter(config) {
 
     if (!is.string(headers["User-Agent"]) && !is.string(headers["user-agent"])) {
         headers["User-Agent"] = `Adone/${adone.package.version}`;
+    }
+
+    const { responseEncoding = "utf8" } = config;
+
+    if (!util.iconv.encodingExists(responseEncoding)) {
+        throw new x.InvalidArgument(`Invalid responseEncoding: ${config.responseEncoding}`);
     }
 
     if (config.formData) {
@@ -234,11 +242,14 @@ export default async function adapter(config) {
 
                 stream.on("end", function handleStreamEnd() {
                     let responseData = Buffer.concat(responseBuffer);
-                    if (config.responseType !== "arraybuffer") {
-                        responseData = responseData.toString("utf8");
+                    const { responseType } = config;
+
+                    if (responseType === "json" || responseType === "string") {
+                        responseData = util.iconv.decode(responseData, responseEncoding);
                     }
 
                     response.data = responseData;
+
                     __.settle(resolve, reject, response);
                 });
             }

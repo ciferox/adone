@@ -2267,7 +2267,7 @@ export default class ByteArray {
 
     /**
      * Encodes this ByteArray to a hex encoded string with marked offsets
-     * 
+     *
      * '<' - roffset
      * '>' - woffset
      * '|' - roffset=woffset=capacity

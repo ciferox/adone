@@ -5,8 +5,8 @@ describe("net", "http", "client", "core", "settle", () => {
     const reject = spy();
 
     beforeEach(() => {
-        resolve.reset();
-        reject.reset();
+        resolve.resetHistory();
+        reject.resetHistory();
     });
 
     it("should resolve promise if status is not set", () => {

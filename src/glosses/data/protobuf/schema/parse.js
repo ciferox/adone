@@ -811,4 +811,4 @@ export default function (buf) {
     });
 
     return schema;
-};
+}

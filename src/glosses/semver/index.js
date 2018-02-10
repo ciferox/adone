@@ -771,7 +771,6 @@ export const parseComparator = (comp, loose) => {
     return comp;
 };
 
-
 export class Range {
     constructor(range, loose) {
         if (range instanceof Range) {
@@ -782,7 +781,7 @@ export class Range {
 
         }
 
-        if (range instanceof Comparator) {
+        if (range instanceof Comparator) { // eslint-disable-line
             return new Range(range.value, loose);
         }
 
@@ -852,9 +851,7 @@ export class Range {
                 return Boolean(comp.match(compRe));
             });
         }
-        set = set.map((comp) => {
-            return new Comparator(comp, loose);
-        });
+        set = set.map((comp) => new Comparator(comp, loose)); // eslint-disable-line
 
         return set;
     }
@@ -896,33 +893,12 @@ export class Range {
 
 export const satisfies = (version, range, loose) => {
     try {
-        range = new Range(range, loose);
+        range = new Range(range, loose); // eslint-disable-line
     } catch (er) {
         return false;
     }
     return range.test(version);
 };
-
-export const maxSatisfying = (versions, range, loose) => {
-    let max = null;
-    let maxSV = null;
-    let rangeObj;
-    try {
-        rangeObj = new Range(range, loose);
-    } catch (er) {
-        return null;
-    }
-    versions.forEach((v) => {
-        if (rangeObj.test(v)) { // satisfies(v, range, loose)
-            if (!max || maxSV.compare(v) === -1) { // compare(max, v, true)
-                max = v;
-                maxSV = new SemVer(max, loose);
-            }
-        }
-    });
-    return max;
-};
-
 
 export class Comparator {
     constructor(comp, loose) {
@@ -1023,6 +999,26 @@ export class Comparator {
             oppositeDirectionsLessThan || oppositeDirectionsGreaterThan;
     }
 }
+
+export const maxSatisfying = (versions, range, loose) => {
+    let max = null;
+    let maxSV = null;
+    let rangeObj;
+    try {
+        rangeObj = new Range(range, loose);
+    } catch (er) {
+        return null;
+    }
+    versions.forEach((v) => {
+        if (rangeObj.test(v)) { // satisfies(v, range, loose)
+            if (!max || maxSV.compare(v) === -1) { // compare(max, v, true)
+                max = v;
+                maxSV = new SemVer(max, loose);
+            }
+        }
+    });
+    return max;
+};
 
 // Mostly just for testing and legacy API reasons
 export const toComparators = (range, loose) => {
@@ -1220,13 +1216,13 @@ export const coerce = (version) => {
         return version;
     }
 
-    if (!is.string(version)) { 
-        return null; 
+    if (!is.string(version)) {
+        return null;
     }
 
     const match = version.match(re[COERCE]);
 
-    if (is.nil(match)) { 
+    if (is.nil(match)) {
         return null;
     }
 

@@ -46,7 +46,8 @@ describe("net", "http", "client", "interceptors", () => {
         request.interceptors.request.use(() => {
             return {
                 url: "http://example.org/bar",
-                method: "post"
+                method: "post",
+                responseType: "json"
             };
         });
 

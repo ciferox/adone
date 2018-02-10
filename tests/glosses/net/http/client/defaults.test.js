@@ -28,7 +28,7 @@ describe("net", "http", "client", "defaults", () => {
     });
 
     it("should transform response json", () => {
-        const data = defaults.transformResponse[0]("{\"foo\":\"bar\"}");
+        const data = defaults.transformResponse[0]("{\"foo\":\"bar\"}", {}, { responseType: "json" });
 
         expect(typeof data).to.be.equal("object");
         expect(data.foo).to.be.equal("bar");

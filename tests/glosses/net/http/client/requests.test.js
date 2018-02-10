@@ -199,15 +199,29 @@ describe("net", "http", "client", "requests", () => {
         request.post("http://example.org/foo", input);
     });
 
-    it("should support array buffer response", (done) => {
+    it("should support buffer response", (done) => {
         nock("http://example.org")
             .get("/foo")
             .reply(200, Buffer.from("Hello, World!"));
 
         request("http://example.org/foo", {
-            responseType: "arraybuffer"
+            responseType: "buffer"
         }).then((response) => {
-            expect(response.data.byteLength).to.be.equal(13);
+            expect(response.data).to.be.a("buffer");
+            done();
+        });
+    });
+
+    it("should support different encoding response", (done) => {
+        nock("http://example.org")
+            .get("/foo")
+            .reply(200, adone.util.iconv.encode(Buffer.from("привет"), "cp1251"));
+
+        request("http://example.org/foo", {
+            responseType: "string",
+            responseEncoding: "cp1251"
+        }).then((response) => {
+            expect(response.data).to.be.equal("привет");
             done();
         });
     });

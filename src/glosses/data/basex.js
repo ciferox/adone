@@ -53,8 +53,7 @@ export default function (ALPHABET) {
 
     const decodeUnsafe = (string) => {
         if (!is.string(string)) {
-            throw new TypeError("Expected String")
-            ;
+            throw new TypeError("Expected String");
         }
         if (string.length === 0) {
             return Buffer.allocUnsafe(0);

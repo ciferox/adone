@@ -5,7 +5,7 @@ const {
 } = adone;
 
 const __ = adone.lazify({
-    schema: "./schema"    
+    schema: "./schema"
 }, adone.asNamespace(exports), require);
 
 
@@ -48,4 +48,4 @@ export const create = function (proto, opts) {
     };
 
     return new Messages();
-}
+};
