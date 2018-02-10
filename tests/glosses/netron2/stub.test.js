@@ -113,7 +113,7 @@ describe("Stub", () => {
 
         it("set value of writable property", () => {
             assert.equal(stub.get("propB", undefined, netron.peer), 2);
-            stub.set("propB", 10, netron.peer);
+            assert.undefined(stub.set("propB", 10, netron.peer));
             assert.equal(stub.get("propB", undefined, netron.peer), 10);
         });
 
@@ -123,13 +123,12 @@ describe("Stub", () => {
 
         it("set value of parent class property", () => {
             assert.equal(stub.get("propA", undefined, netron.peer), "aaa");
-            stub.set("propA", 88, netron.peer);
+            assert.undefined(stub.set("propA", 88, netron.peer));
             assert.equal(stub.get("propA", undefined, netron.peer), 88);
         });
 
         it("call sync method", () => {
-            const result = stub.set("methodB", [], netron.peer);
-            assert.false(is.promise(result));
+            assert.undefined(stub.set("methodB", [], netron.peer));
         });
 
         it("call async mrthod", async () => {

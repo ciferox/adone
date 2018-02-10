@@ -510,11 +510,20 @@ export default class Netron extends adone.task.Manager {
                     const defId = data[0];
                     const name = data[1];
                     const stub = this._stubs.get(defId);
-                    if (!is.undefined(stub)) {
-                        try {
-                            await stub.set(name, data[2], peer);
-                        } catch (err) {
-                            adone.error(err.message);
+                    
+                    try {
+                        if (is.undefined(stub)) {
+                            return peer._sendErrorResponse(packet, new exception.NotExists(`Context with definition id '${defId}' not exists`));
+                        }
+                        await peer._sendResponse(packet, await stub.set(name, data[2], peer));
+                    } catch (err) {
+                        adone.error(err);
+                        if (err.name !== "NetronIllegalState") {
+                            try {
+                                await peer._sendErrorResponse(packet, normalizeError(err));
+                            } catch (err) {
+                                adone.error(err);
+                            }
                         }
                     }
                 } else {

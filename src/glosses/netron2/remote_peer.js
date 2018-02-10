@@ -82,7 +82,11 @@ export default class RemotePeer extends AbstractPeer {
                 throw new exception.InvalidAccess(`'${name}' is not writable`);
             }
             data = this._processArgs(ctxDef, $, data);
-            return this._sendRequest(ACTION.SET, [defId, name, data]);
+            return new Promise((resolve, reject) => {
+                this._sendRequest(ACTION.SET, [defId, name, data], () => {
+                    resolve();
+                }, reject).catch(reject);
+            });
         }
         throw new exception.NotExists(`'${name}' not exists`);
     }
@@ -135,10 +139,12 @@ export default class RemotePeer extends AbstractPeer {
         const def = stub.definition;
         this.netron._stubs.set(def.id, stub);
         this._proxifiedContexts.set(ctxId, def.id);
-        return this.runTask({
+        const taskResult = await this.runTask({
             task: "proxifyContext",
             args: [ctxId, def]
         });
+
+        return taskResult.proxifyContext.result;
     }
 
     async detachContext(ctxId, releaseOriginated) {
@@ -152,10 +158,12 @@ export default class RemotePeer extends AbstractPeer {
         }
         this.netron._stubs.delete(defId);
         this._proxifiedContexts.delete(ctxId);
-        return this.runTask({
+        const taskResult = await this.runTask({
             task: "deproxifyContext",
             args: [ctxId, releaseOriginated]
         });
+
+        return taskResult.deproxifyContext.result;
     }
 
     hasContexts() {
@@ -329,7 +337,7 @@ export default class RemotePeer extends AbstractPeer {
         if (is.netron2Definition(result)) {
             this._updateDefinitions({ weak: result });
             if (ctxDef.$remote) {
-                const iCtx = this.netron.interfaceFactory.create(result, this.uid);
+                const iCtx = this.netron.interfaceFactory.create(result, this);
                 const stub = new adone.netron2.RemoteStub(this.netron, iCtx);
                 const def = stub.definition;
                 def.parentId = ctxDef.$proxyDef.id;
@@ -338,7 +346,7 @@ export default class RemotePeer extends AbstractPeer {
                 this._proxifyContext(result.id, stub);
                 return def;
             }
-            return this.netron.interfaceFactory.create(result, this.uid);
+            return this.netron.interfaceFactory.create(result, this);
 
         } else if (is.netron2Definitions(result)) {
             for (let i = 0; i < result.length; i++) {
@@ -371,7 +379,7 @@ export default class RemotePeer extends AbstractPeer {
 
     _processObjectRemote(obj) {
         if (is.netron2Definition(obj)) {
-            const iCtx = this.netron.interfaceFactory.create(obj, obj.$peer.uid);
+            const iCtx = this.netron.interfaceFactory.create(obj, obj.$peer);
             const stub = new adone.netron2.RemoteStub(this.netron, iCtx);
             const def = stub.definition;
             obj.$remote = true;

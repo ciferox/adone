@@ -1,4 +1,4 @@
-export default class ContextDetachTask extends adone.task.Task {
+export default class DeproxifyContextTask extends adone.task.Task {
     run(peer, ctxId, releaseOriginated) {
         const defId = this.manager.detachContext(ctxId, releaseOriginated);
         peer._defs.delete(defId);

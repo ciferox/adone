@@ -62,11 +62,15 @@ export default class Stub {
             $ = $[prop];
             if ($.method) {
                 this._processArgs(peer, data, true);
-                return this.instance[prop](...data);
+                const result = this.instance[prop](...data);
+                if (is.promise(result)) {
+                    return result.then(adone.noop);
+                }
+                return undefined;
             } else if (!$.readonly) {
                 data = this._processArgs(peer, data, false);
                 this.instance[prop] = data;
-                return;
+                return undefined;
             }
             throw new exception.InvalidAccess(`${prop} is not writable`);
         }
@@ -132,7 +136,7 @@ export default class Stub {
             return stub.instance;
         } else if (is.netron2Definition(obj)) {
             peer._updateDefinitions({ weak: obj });
-            return this.netron.interfaceFactory.create(obj, peer.info);
+            return this.netron.interfaceFactory.create(obj, peer);
         } else if (is.netron2Definitions(obj)) {
             for (let i = 0; i < obj.length; i++) {
                 obj.set(i, this._processObject(peer, obj.get(i)));
