@@ -415,3 +415,188 @@ export class Devil {
     @DPublic()
     possessedSoul = null;
 }
+
+@DContext()
+export class Weak {
+    @DPublic()
+    doSomething() {
+        return 888;
+    }
+}
+
+@DContext()
+export class Strong {
+    constructor(netron) {
+        this.netron = netron;
+        this.weak = new Weak();
+    }
+
+    @DPublic()
+    getWeak() {
+        return this.weak;
+    }
+
+    @DPublic()
+    releaseWeak() {
+        this.netron.releaseContext(this.weak);
+        this.weak = null;
+    }
+}
+
+let depthCounter;
+
+@DContext()
+export class CounterKeeper {
+    constructor(keeper = null) {
+        this.keeper = keeper;
+    }
+
+    @DPublic()
+    async getCounter() {
+        if (this.keeper) {
+            depthCounter++;
+            return (await this.keeper.getCounter()) + 1;
+        }
+        return 1;
+
+    }
+
+    @DPublic()
+    async getNextKeeper(keeper) {
+        return new CounterKeeper(keeper);
+    }
+
+    static getValue() {
+        return depthCounter;
+    }
+
+    static setValue(val) {
+        depthCounter = val;
+    }
+}
+
+@DContext()
+export class NumField {
+    constructor(val) {
+        this._val = val;
+    }
+
+    @DPublic()
+    getValue() {
+        return this._val;
+    }
+}
+
+@DContext()
+export class NumSet {
+    @DPublic()
+    getFields(start, end) {
+        const defs = new adone.netron2.Definitions();
+        for (let i = start; i < end; i++) {
+            defs.push(new NumField(i));
+        }
+        return defs;
+    }
+
+    @DPublic()
+    setFields(fields) {
+        this._fields = fields;
+    }
+}
+
+@DContext()
+export class StdErrs {
+    @DPublic()
+    throwError() {
+        throw new Error("description");
+    }
+
+    @DPublic()
+    throwEvalError() {
+        throw new EvalError("description");
+    }
+
+    @DPublic()
+    throwRangeError() {
+        throw new RangeError("description");
+    }
+
+    @DPublic()
+    throwReferenceError() {
+        throw new ReferenceError("description");
+    }
+
+    @DPublic()
+    throwSyntaxError() {
+        throw new SyntaxError("description");
+    }
+
+    @DPublic()
+    throwTypeError() {
+        throw new TypeError("description");
+    }
+
+    @DPublic()
+    throwURIError() {
+        throw new URIError("description");
+    }
+}
+
+
+@DContext()
+export class AdoneErrs { }
+
+export const adoneErrors = adone.exception.adoneExceptions;
+export const netronErrors = [];
+for (const AdoneError of adoneErrors) {
+    if (adone.exception.exceptionIdMap[AdoneError] < 1000) {
+        const fnName = `throw${AdoneError.name}`;
+        if (AdoneError.name.startsWith("Netron")) {
+            netronErrors.push(AdoneError.name);
+        } else {
+            if (AdoneError.name === "AggregateException") {
+                AdoneErrs.prototype[fnName] = function () {
+                    throw new AdoneError([new adone.exception.Exception("a"), new adone.exception.Runtime("b")]);
+                };
+            } else {
+                AdoneErrs.prototype[fnName] = function () {
+                    throw new AdoneError("description");
+                };
+            }
+            adone.meta.reflect.defineMetadata(adone.netron2.PUBLIC_ANNOTATION, {}, AdoneErrs.prototype, fnName);
+        }
+    }
+}
+
+
+class MyError extends Error { }
+
+@DContext()
+export class NonStdErr {
+    @DPublic()
+    throw() {
+        throw new MyError("Hello World!");
+    }
+}
+
+process.binding("natives").native_module = "";
+const nm = nodeRequire("native_module");
+export const nodeErrors = adone.util.omit(nm.require("internal/errors"), ["message", "E"]);
+
+@DContext()
+export class NodeErrs {
+}
+
+for (const [name, Exc] of Object.entries(nodeErrors)) {
+    const fnName = `throw${name}`;
+    NodeErrs.prototype[fnName] = function () {
+        if (Exc.name === "AssertionError") {
+            throw new Exc({
+                message: "Hello World!"
+            });
+        }
+        throw new Exc("Hello World!");
+    };
+    adone.meta.reflect.defineMetadata(adone.netron2.PUBLIC_ANNOTATION, {}, NodeErrs.prototype, fnName);
+    
+}

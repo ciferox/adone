@@ -1,7 +1,7 @@
 const {
     is,
     collection: { TimedoutMap },
-    netron2: { ACTION, AbstractPeer, packet, FastUniqueId },
+    netron2: { ACTION, AbstractPeer, packet, FastUniqueId, Reference },
     stream: { pull },
     exception
 } = adone;
@@ -359,25 +359,25 @@ export default class RemotePeer extends AbstractPeer {
     _processArgs(ctxDef, field, data) {
         if (ctxDef.$remote) {
             if (field.method) {
-                this._processArgsRemote(data, true);
+                this._processArgsRemote(data, true, ctxDef);
             } else {
-                data = this._processArgsRemote(data, false);
+                data = this._processArgsRemote(data, false, ctxDef);
             }
         }
         return data;
     }
 
-    _processArgsRemote(args, isMethod) {
+    _processArgsRemote(args, isMethod, ctxDef) {
         if (isMethod && is.array(args)) {
             for (let i = 0; i < args.length; ++i) {
-                args[i] = this._processObjectRemote(args[i]);
+                args[i] = this._processObjectRemote(args[i], ctxDef);
             }
         } else {
-            return this._processObjectRemote(args);
+            return this._processObjectRemote(args, ctxDef);
         }
     }
 
-    _processObjectRemote(obj) {
+    _processObjectRemote(obj, ctxDef) {
         if (is.netron2Definition(obj)) {
             const iCtx = this.netron.interfaceFactory.create(obj, obj.$peer);
             const stub = new adone.netron2.RemoteStub(this.netron, iCtx);
@@ -391,6 +391,15 @@ export default class RemotePeer extends AbstractPeer {
             for (let i = 0; i < obj.length; i++) {
                 obj.set(i, this._processObjectRemote(obj.get(i)));
             }
+        } else if (is.netron2Reference(obj)) {
+            if (ctxDef.$proxyDef.id === obj.defId) {
+                return new Reference(ctxDef.id);
+            }
+            const def = this.netron._getStub(obj.defId).definition;
+            if (def.parentId === ctxDef.id) {
+                return new Reference(def.id);
+            }
+            return def;
         }
         return obj;
     }

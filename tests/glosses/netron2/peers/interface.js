@@ -1,4 +1,4 @@
-import { A, B, commonTypes, CommonTypes, ObjectStorage, Document, DocumentTypes, Soul, Devil, BodyStatuses } from "../contexts";
+import { A, B, commonTypes, CommonTypes, ObjectStorage, Document, DocumentTypes, Soul, Devil, BodyStatuses, Strong, CounterKeeper, NumSet, NumField, StdErrs, AdoneErrs, adoneErrors, netronErrors, NonStdErr, NodeErrs, nodeErrors } from "../contexts";
 import { createNetron } from "../common";
 
 const {
@@ -465,7 +465,8 @@ export default (testInterface) => {
                     assert.strictEqual(data, idea);
                 });
 
-                it("create remote object, pass it to other remote object and get it from there", async () => {
+                it("create remote object, obtain it and send again to remote", async function () {
+                    this.timeout(600 * 100000);
                     const idea = "To get out of difficulty, one usually must go throught it";
                     const storage = new ObjectStorage("simplestore", 3);
                     await peer.attachContext(storage, "storage");
@@ -476,12 +477,12 @@ export default (testInterface) => {
                     await iStorage.addDocument("idea", iDoc);
                     const iDocSame = await iStorage.getDocument("idea");
                     const data = await iDocSame.data.get();
+                    assert.instanceOf(storage.getDocument("idea"), Document);
                     assert.deepEqual(data, idea);
                     assert.deepEqual(iDoc.$def, iDocSame.$def);
                 });
 
-                describe("inverse object interfacing", function () {
-                    this.timeout(60 * 10000);
+                describe("inverse object interfacing", () => {
                     it("simple", async () => {
                         const peter = new Soul("Peter");
                         const mike = new Soul("Mike");
@@ -502,7 +503,7 @@ export default (testInterface) => {
                         assert.deepEqual(peter.bodyStatus, BodyStatuses.Dead);
                     });
 
-                    it.todo("complex", async () => {
+                    it("complex", async () => {
                         const peter = new Soul("Peter");
                         const mike = new Soul("Mike");
                         const devil = new Devil();
@@ -511,348 +512,160 @@ export default (testInterface) => {
                         const remotePeer = await netron2.connect("default", netron.peer.info);
                         const iDevil = remotePeer.queryInterface("devil");
 
-                        // await iDevil.sellSoul(peter.name, peter);
+                        await iDevil.sellSoul(peter.name, peter);
                         await iDevil.sellSoul(mike.name, mike);
                         devil.possess("Mike");
-                        // await devil.takeVitality(50);
-                        // assert.strictEqual(mike.vitality, 50);
-                        // devil.possess("Peter");
-                        // await devil.takeVitality(100);
-                        // assert.strictEqual(peter.vitality, 0);
-                        // assert.deepEqual(peter.bodyStatus, BodyStatuses.Dead);
+                        await devil.takeVitality(50);
+                        assert.strictEqual(mike.vitality, 50);
+                        devil.possess("Peter");
+                        await devil.takeVitality(100);
+                        assert.strictEqual(peter.vitality, 0);
+                        assert.deepEqual(peter.bodyStatus, BodyStatuses.Dead);
                         await devil.doEvil("Mike", 50);
-                        // const iMikeSoul = devil.souls.get("Mike");
-                        // const mikeVitality = await iMikeSoul.vitality.get();
-                        // const mikeBodyStatus = await iMikeSoul.bodyStatus.get();
-                        // assert.strictEqual(mikeVitality, 0);
-                        // assert.deepEqual(mikeBodyStatus, BodyStatuses.Dead);
+                        const iMikeSoul = devil.souls.get("Mike");
+                        const mikeVitality = await iMikeSoul.vitality.get();
+                        const mikeBodyStatus = await iMikeSoul.bodyStatus.get();
+                        assert.strictEqual(mikeVitality, 0);
+                        assert.deepEqual(mikeBodyStatus, BodyStatuses.Dead);
                     });
                 });
 
-                // describe("Weak-contexts", () => {
-                //     @Context()
-                //     class Weak {
-                //         @Public()
-                //         doSomething() {
-                //             return 888;
-                //         }
-                //     }
+                it("call released weak context", async function () {
+                    this.timeout(600 * 10000);
+                    await peer.attachContext(new Strong(peer.netron), "strong");
+                    const netron2 = createNetron();
+                    const remotePeer = await netron2.connect("default", netron.peer.info);
+                    const iStrong = remotePeer.queryInterface("strong");
+                    const iWeak = await iStrong.getWeak();
+                    assert.equal(await iWeak.doSomething(), 888);
+                    await iStrong.releaseWeak();
+                    const err = await assert.throws(async () => iWeak.doSomething());
+                    assert.ok(err instanceof adone.exception.NotExists);
+                    assert.match(err.message, /Context with definition id /);
+                });
 
-                //     @Context()
-                //     class Strong {
-                //         constructor(netron) {
-                //             this.netron = netron;
-                //             this.weak = new Weak();
-                //         }
-
-                //         @Public()
-                //         getWeak() {
-                //             return this.weak;
-                //         }
-
-                //         @Public()
-                //         releaseWeak() {
-                //             this.netron.releaseContext(this.weak);
-                //             this.weak = null;
-                //         }
-                //     }
-
-                //     it("call released context", async () => {
-                //         superNetron.attachContext(new Strong(superNetron), "strong");
-
-                //         exNetron = new adone.netron.Netron();
-
-                //         await superNetron.bind();
-                //         const peer = await exNetron.connect();
-                //         const iStrong = peer.getInterfaceByName("strong");
-                //         const iWeak = await iStrong.getWeak();
-                //         assert.equal(await iWeak.doSomething(), 888);
-                //         await iStrong.releaseWeak();
-                //         const err = await assert.throws(async () => iWeak.doSomething());
-                //         assert.ok(err instanceof adone.x.NotExists);
-                //         assert.equal(err.message, "Context not exists");
-                //     });
-
-                //     it("deep contexting", async () => {
-                //         let depthLabel;
-
-                //         @Context()
-                //         class CounterKeeper {
-                //             constructor(keeper = null) {
-                //                 this.keeper = keeper;
-                //             }
-
-                //             @Public()
-                //             async getCounter() {
-                //                 if (this.keeper) {
-                //                     depthLabel++;
-                //                     return (await this.keeper.getCounter()) + 1;
-                //                 }
-                //                 return 1;
-
-                //             }
-
-                //             @Public()
-                //             async getNextKeeper(keeper) {
-                //                 return new CounterKeeper(keeper);
-                //             }
-                //         }
-
-                //         await superNetron.attachContext(new CounterKeeper(), "keeper");
-                //         await superNetron.bind();
-                //         const superNetronPeer = await exNetron.connect();
-                //         let keeper = superNetronPeer.getInterfaceByName("keeper");
-                //         let counter = 1;
-                //         assert.strictEqual(await keeper.getCounter(), counter);
-                //         while (counter < 30) {
-                //             keeper = new CounterKeeper(keeper);
-                //             assert.strictEqual(await keeper.getCounter(), ++counter);
-                //             keeper = await keeper.getNextKeeper(keeper);
-                //             depthLabel = 1;
-                //             assert.strictEqual(await keeper.getCounter(), ++counter);
-                //             assert.strictEqual(depthLabel, counter);
-                //         }
-                //     });
-
-                //     describe("complex weak-context inversion", () => {
-
-                //         let n1;
-                //         let n2;
-
-                //         afterEach(async () => {
-                //             await n2.disconnect();
-                //             await adone.promise.delay(100);
-                //             await n1.disconnect();
-
-                //             await superNetron.disconnect();
-                //             await superNetron.unbind();
-                //         });
-
-                //         it("complex weak-context inversion", async () => {
-
-                //             @Context()
-                //             class PM {
-                //                 @Public()
-                //                 on(handle) {
-                //                     return handle.emit();
-                //                 }
-                //             }
-
-                //             @Context()
-                //             class Handle {
-                //                 @Public()
-                //                 emit() {
-                //                     return adone.ok;
-                //                 }
-                //             }
-
-                //             @Context()
-                //             class System {
-                //                 constructor(pm) {
-                //                     this.pm = pm;
-                //                 }
-
-                //                 @Public()
-                //                 register() {
-                //                     return this.pm.on(new Handle());
-                //                 }
-                //             }
-
-                //             superNetron = new adone.netron.Netron({ isSuper: true });
-                //             await superNetron.bind();
-
-                //             n1 = new adone.netron.Netron();
-                //             const client1 = await n1.connect();
-                //             await n1.attachContextRemote(superNetron.uid, new PM(), "pm");
-
-                //             n2 = new adone.netron.Netron();
-                //             const client2 = await n2.connect();
-                //             await n2.attachContextRemote(superNetron.uid, new System(client2.getInterfaceByName("pm")), "system");
-
-                //             await adone.promise.delay(200);
-                //             const system = client1.getInterfaceByName("system");
-
-                //             const answer = await system.register();
-                //             assert.strictEqual(answer, adone.ok);
-                //         });
-                //     });
-
-                //     describe.skip("cycle weak-context transmission", () => {
-
-                //         let n1;
-                //         let n2;
-
-                //         afterEach(async () => {
-                //             await n1.disconnect();
-                //             await n1.unbind();
-                //             await superNetron.disconnect();
-                //             await superNetron.unbind();
-                //         });
-
-                //         it.skip("cycle weak-context transmission", async () => {
-
-                //             @Context()
-                //             class Ball {
-                //                 @Public()
-                //                 hit() {
-                //                     return "bounce";
-                //                 }
-                //             }
-
-                //             @Context()
-                //             class Basket {
-                //                 constructor() {
-                //                     this.ball = null;
-                //                 }
-
-                //                 @Public()
-                //                 putBall(ball) {
-                //                     assert.instanceOf(ball, adone.netron.Interface);
-                //                     this.ball = ball;
-                //                 }
-
-                //                 @Public()
-                //                 getBall() {
-                //                     return this.ball;
-                //                 }
-                //             }
-
-                //             superNetron = new adone.netron.Netron({ isSuper: true });
-                //             await superNetron.bind();
-
-                //             // n1 provides basket to Server
-                //             n1 = new adone.netron.Netron();
-                //             await n1.connect();
-                //             const basket = new Basket();
-                //             await n1.attachContextRemote(superNetron.uid, basket, "basket");
-
-                //             // n2 put ball in basket via Server
-                //             n2 = new adone.netron.Netron();
-                //             const client2toS = await n2.connect();
-                //             const remoteBasket = await client2toS.getInterfaceByName("basket");
-                //             await remoteBasket.putBall(new Ball());
-
-                //             // n1 get n2's ball from basket on Server
-                //             let ball = basket.getBall();
-                //             assert.ok(ball);
-                //             assert.equal(await ball.hit(), "bounce");
-                //             // and put it on another basket
-                //             let anotherBasket = new Basket();
-                //             anotherBasket.putBall(ball);
-                //             n1.attachContext(anotherBasket, "basket");
-
-                //             // n2 returns his ball from n1 and hit it
-                //             await n1.bind({ port: 12509 });
-                //             const client2to1 = await n2.connect({ port: 12509 });
-                //             assert.equal(client2to1.uid, n1.uid);
-                //             anotherBasket = await client2to1.getInterfaceByName("basket");
-                //             ball = await anotherBasket.getBall();
-                //             assert.equal(ball.hit(), "bounce");
-                //         });
-                //     });
-                // });
+                it("deep weak contexting", async () => {
+                    await peer.attachContext(new CounterKeeper(), "keeper");
+                    const netron2 = createNetron();
+                    const remotePeer = await netron2.connect("default", netron.peer.info);
+                    let keeper = remotePeer.queryInterface("keeper");
+                    let counter = 1;
+                    assert.strictEqual(await keeper.getCounter(), counter);
+                    while (counter < 30) {
+                        keeper = new CounterKeeper(keeper);
+                        assert.strictEqual(await keeper.getCounter(), ++counter);
+                        keeper = await keeper.getNextKeeper(keeper);
+                        CounterKeeper.setValue(1);
+                        assert.strictEqual(await keeper.getCounter(), ++counter);
+                        assert.strictEqual(CounterKeeper.getValue(), counter);
+                    }
+                });
             });
 
-            // describe("multiple definitions", () => {
-            //     @Context()
-            //     class NumField {
-            //         constructor(val) {
-            //             this._val = val;
-            //         }
+            describe("multiple definitions", () => {
+                it("get multiple definitions", async () => {
+                    const numSet = new NumSet();
+                    await peer.attachContext(numSet, "numset");
+                    const netron2 = createNetron();
+                    const remotePeer = await netron2.connect("default", netron.peer.info);
+                    const iNumSet = remotePeer.queryInterface("numset");
+                    const defs = await iNumSet.getFields(0, 8);
+                    expect(defs.length).to.be.equal(8);
+                    for (let i = 0; i < defs.length; i++) {
+                        const def = defs.get(i);
+                        expect(await def.getValue()).to.be.equal(i);
+                    }
+                });
 
-            //         @Public()
-            //         getValue() {
-            //             return this._val;
-            //         }
-            //     }
+                it("set multiple definitions (control inversion)", async () => {
+                    const numSet = new NumSet();
+                    await peer.attachContext(numSet, "numset");
+                    const netron2 = createNetron();
+                    const remotePeer = await netron2.connect("default", netron.peer.info);
+                    const iNumSet = remotePeer.queryInterface("numset");
+                    const fields = new adone.netron2.Definitions();
+                    for (let i = 0; i < 10; i++) {
+                        fields.push(new NumField(i));
+                    }
+                    await iNumSet.setFields(fields);
+                    expect(numSet._fields.length).to.be.equal(10);
+                    for (let i = 0; i < numSet._fields.length; i++) {
+                        const def = numSet._fields.get(i);
+                        expect(await def.getValue()).to.be.equal(i);
+                    }
+                });
+            });
 
-            //     @Context()
-            //     class NumSet {
-            //         @Public()
-            //         getFields(start, end) {
-            //             const defs = new adone.netron.Definitions();
-            //             for (let i = start; i < end; i++) {
-            //                 defs.push(new NumField(i));
-            //             }
-            //             return defs;
-            //         }
+            describe("exceptions", () => {
+                it("standart exceptions", async () => {
+                    let okCount = 0;
+                    await peer.attachContext(new StdErrs(), "a");
+                    const netron2 = createNetron();
+                    const remotePeer = await netron2.connect("default", netron.peer.info);
+                    const iA = remotePeer.queryInterface("a");
+                    const stdErrors = adone.exception.stdExceptions;
+                    for (const StdError of stdErrors) {
+                        try {
+                            await iA[`throw${StdError.prototype.name}`]();
+                        } catch (err) {
+                            okCount += (err instanceof StdError ? 1 : 0);
+                        }
+                    }
+                    assert.strictEqual(okCount, stdErrors.length);
+                });
 
-            //         @Public()
-            //         setFields(fields) {
-            //             this._fields = fields;
-            //         }
-            //     }
+                it("adone exceptions", async () => {
+                    let okCount = 0;
 
-            //     it("get multiple definitions", async () => {
-            //         const numSet = new NumSet();
-            //         superNetron.attachContext(numSet, "numset");
-            //         await superNetron.bind();
-            //         const peer = await exNetron.connect();
-            //         const iNumSet = peer.getInterfaceByName("numset");
-            //         const defs = await iNumSet.getFields(0, 8);
-            //         expect(defs.length).to.be.equal(8);
-            //         for (let i = 0; i < defs.length; i++) {
-            //             const def = defs.get(i);
-            //             expect(await def.getValue()).to.be.equal(i);
-            //         }
-            //     });
+                    await peer.attachContext(new AdoneErrs(), "a");
+                    const netron2 = createNetron();
+                    const remotePeer = await netron2.connect("default", netron.peer.info);
+                    const iA = remotePeer.queryInterface("a");
 
-            //     it("get multiple definitions through super-netron", async () => {
-            //         const numSet = new NumSet();
-            //         await superNetron.bind();
-            //         const peer = await exNetron.connect();
-            //         await exNetron.attachContextRemote(peer.uid, numSet, "numset");
-            //         const exNetron2 = new adone.netron.Netron();
-            //         const peer2 = await exNetron2.connect();
-            //         const iNumSet = peer2.getInterfaceByName("numset");
-            //         const defs = await iNumSet.getFields(0, 8);
-            //         expect(defs.length).to.be.equal(8);
-            //         for (let i = 0; i < defs.length; i++) {
-            //             const def = defs.get(i);
-            //             expect(await def.getValue()).to.be.equal(i);
-            //         }
-            //         await exNetron2.disconnect();
-            //     });
+                    for (const AdoneError of adoneErrors) {
+                        if (netronErrors.includes(AdoneError.name)) {
+                            continue;
+                        }
+                        try {
+                            const fnName = `throw${AdoneError.name}`;
+                            await iA[fnName]();
+                        } catch (err) {
+                            okCount += (err instanceof AdoneError ? 1 : 0);
+                        }
+                    }
+                    assert.strictEqual(okCount, adoneErrors.length - netronErrors.length);
+                });
 
-            //     it("set multiple definitions (control inversion)", async () => {
-            //         const numSet = new NumSet();
-            //         superNetron.attachContext(numSet, "numset");
-            //         await superNetron.bind();
-            //         const peer = await exNetron.connect();
-            //         const iNumSet = peer.getInterfaceByName("numset");
-            //         const fields = new adone.netron.Definitions();
-            //         for (let i = 0; i < 10; i++) {
-            //             fields.push(new NumField(i));
-            //         }
-            //         await iNumSet.setFields(fields);
-            //         expect(numSet._fields.length).to.be.equal(10);
-            //         for (let i = 0; i < numSet._fields.length; i++) {
-            //             const def = numSet._fields.get(i);
-            //             expect(await def.getValue()).to.be.equal(i);
-            //         }
-            //     });
+                it("node internal errors", async () => {
+                    let okCount = 0;
+                    await peer.attachContext(new NodeErrs(), "a");
+                    const netron2 = createNetron();
+                    const remotePeer = await netron2.connect("default", netron.peer.info);
+                    const iA = remotePeer.queryInterface("a");
+                    for (const [name, Exc] of Object.entries(nodeErrors)) {
+                        try {
+                            const fnName = `throw${name}`;
+                            await iA[fnName]();
+                        } catch (err) {
+                            okCount += (err instanceof Error ? 1 : 0);
+                        }
+                    }
 
-            //     it("set multiple definitions through super-netron (control inversion)", async () => {
-            //         const numSet = new NumSet();
-            //         await superNetron.bind();
-            //         const peer = await exNetron.connect();
-            //         await exNetron.attachContextRemote(peer.uid, numSet, "numset");
-            //         const exNetron2 = new adone.netron.Netron();
-            //         const peer2 = await exNetron2.connect();
-            //         const iNumSet = peer2.getInterfaceByName("numset");
-            //         const fields = new adone.netron.Definitions();
-            //         for (let i = 0; i < 10; i++) {
-            //             fields.push(new NumField(i));
-            //         }
-            //         await iNumSet.setFields(fields);
-            //         expect(numSet._fields.length).to.be.equal(10);
-            //         for (let i = 0; i < numSet._fields.length; i++) {
-            //             const def = numSet._fields.get(i);
-            //             expect(await def.getValue()).to.be.equal(i);
-            //         }
-            //         await exNetron2.disconnect();
-            //     });
-            // });
+                    assert.strictEqual(okCount, Object.keys(nodeErrors).length);
+                });
+
+                it("should not fail when a non-standard error is sent", async () => {
+                    await peer.attachContext(new NonStdErr(), "a");
+
+                    const netron2 = createNetron();
+                    const remotePeer = await netron2.connect("default", netron.peer.info);
+                    const iA = remotePeer.queryInterface("a");
+
+                    await assert.throws(async () => {
+                        await iA.throw();
+                    }, "Hello World!");
+                });
+            });
         });
     });
 };

@@ -279,13 +279,11 @@ export default class Netron extends adone.task.Manager {
             stubs = [];
             this._peerStubs.set(base58Id, stubs);
         }
-        const stub = stubs.find((s) => s.instance === obj);
+        let stub = stubs.find((s) => s.instance === obj);
         if (is.undefined(stub)) {
-            const stub = new Stub(this, obj);
-            const def = stub.definition;
-            this._stubs.set(def.id, stub);
+            stub = new Stub(this, obj);
+            this._stubs.set(stub.definition.id, stub);
             stubs.push(stub);
-            return def;
         }
         return stub.definition;
     }
@@ -544,7 +542,6 @@ export default class Netron extends adone.task.Manager {
                         }
                         await peer._sendResponse(packet, await stub.get(name, data[2], peer));
                     } catch (err) {
-                        adone.error(err);
                         if (err.name !== "NetronIllegalState") {
                             try {
                                 await peer._sendErrorResponse(packet, normalizeError(err));

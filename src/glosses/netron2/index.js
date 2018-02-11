@@ -94,7 +94,7 @@ export class Definitions {
         let ret;
         for (let i = 0; i < args.length; i++) {
             const arg = args[i];
-            if (!is.netronDefinition(arg) && !is.netronContext(arg) && !is.netronInterface(arg)) {
+            if (!is.netron2Definition(arg) && !is.netron2Context(arg) && !is.netron2Interface(arg)) {
                 throw new exception.InvalidArgument(`Invalid argument ${i} (${typeof (arg)})`);
             }
             ret = this._defs.push(arg);
@@ -114,7 +114,7 @@ export class Definitions {
         let ret;
         for (let i = 0; i < args.length; i++) {
             const arg = args[i];
-            if (!is.netronDefinition(arg) && !is.netronContext(arg) && !is.netronInterface(arg)) {
+            if (!is.netron2Definition(arg) && !is.netron2Context(arg) && !is.netron2Interface(arg)) {
                 throw new exception.InvalidArgument(`Invalid argument ${i} (${typeof (arg)})`);
             }
             ret = this._defs.unshift(arg);
