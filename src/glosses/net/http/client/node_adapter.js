@@ -52,7 +52,7 @@ export default async function adapter(config) {
     }
 
     if (config.formData) {
-        const form = new require("form-data")();
+        const form = new http.client.FormData();
         const appendFormValue = function (key, value) {
             if (value && value.hasOwnProperty("value") && value.hasOwnProperty("options")) {
                 form.append(key, value.value, value.options);
