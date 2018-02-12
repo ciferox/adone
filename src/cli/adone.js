@@ -110,7 +110,7 @@ class AdoneCLI extends application.CliApplication {
     @DCliCommand({
         name: "install",
         group: "realm",
-        help: "Install adone glosses, extensions, applications, etc.",
+        help: "Install adone glosses, extensions, subsystems, applications, etc.",
         arguments: [
             {
                 name: "name",

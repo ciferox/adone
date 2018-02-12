@@ -31,6 +31,47 @@ describe("configuration", "Adone", () => {
         assert.deepEqual(conf.raw, {});
     });
 
+    describe.only("getMainPath()/getCliMainPath()", () => {
+        let cwd;
+        let conf;
+
+        before(() => {
+            cwd = fixture("cli_command");
+        });
+
+        beforeEach(async () => {
+            conf = await configuration.Adone.load({
+                cwd
+            });
+        });
+
+        it("getMainPath()", () => {
+            assert.strictEqual(conf.getMainPath(), "lib");
+        });
+
+        it("getCliMainPath()", () => {
+            assert.strictEqual(conf.getCliMainPath(), "lib/cli.js");
+        });
+
+        it("getMainPath(true)", () => {
+            assert.strictEqual(conf.getMainPath(true), std.path.join(cwd, "lib"));
+        });
+
+        it("getCliMainPath(true)", () => {
+            assert.strictEqual(conf.getCliMainPath(true), std.path.join(cwd, "lib/cli.js"));
+        });
+
+        it("getMainPath(path)", () => {
+            const path = "/some/path";
+            assert.strictEqual(conf.getMainPath(path), std.path.join(path, "lib"));
+        });
+
+        it("getCliMainPath(path)", () => {
+            const path = "/some/path";
+            assert.strictEqual(conf.getCliMainPath(path), std.path.join(path, "lib/cli.js"));
+        });
+    });
+
     describe("structure", () => {
         for (const s of structs) {
             it(s.name, () => {
@@ -245,7 +286,7 @@ describe("configuration", "Adone", () => {
                     id: "lib.templating",
                     description: "Template engines",
                     index: "index.js",
-                    task: "adoneTranspile",
+                    task: "transpile",
                     src: [
                         "src/glosses/templating/**/*.js",
                         "!src/glosses/templating/dot/**/*.js",
@@ -260,7 +301,7 @@ describe("configuration", "Adone", () => {
                     description: "Implementation of DoT template engine",
                     src: "src/glosses/templating/dot/**/*.js",
                     dst: "lib/glosses/templating/dot",
-                    task: "adoneTranspile",
+                    task: "transpile",
                     namespace: "dot",
                     index: "index.js"
                 },
@@ -269,7 +310,7 @@ describe("configuration", "Adone", () => {
                     description: "Implementation of Nunjucks template engine",
                     src: "src/glosses/templating/nunjucks/**/*.js",
                     dst: "lib/glosses/templating/nunjucks",
-                    task: "adoneTranspile",
+                    task: "transpile",
                     namespace: "nunjucks",
                     index: "index.js"
                 }
@@ -277,7 +318,7 @@ describe("configuration", "Adone", () => {
         });
     });
 
-    describe.only("#getNamespace()", () => {
+    describe("getNamespace()", () => {
         for (const ns of namespaces) {
             it(ns.name, () => {
                 const conf = new configuration.Adone();

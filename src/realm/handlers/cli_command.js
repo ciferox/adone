@@ -1,7 +1,6 @@
 const {
     is,
-    realm,
-    std
+    realm
 } = adone;
 
 export default class CliCommandHandler extends realm.TypeHandler {
@@ -10,16 +9,10 @@ export default class CliCommandHandler extends realm.TypeHandler {
     }
 
     async register(adoneConf, destPath) {
-        let indexPath;
+        const indexPath = adoneConf.getCliMainPath(destPath);
 
         // Check startup file
-        await this._checkMainFile(adoneConf, destPath);
-
-        if (is.string(adoneConf.raw.main)) {
-            indexPath = std.path.join(destPath, adoneConf.raw.main);
-        } else {
-            indexPath = destPath;
-        }
+        await this._checkMainFile(indexPath);
 
         const commandInfo = {
             name: adoneConf.raw.name,
@@ -72,8 +65,8 @@ export default class CliCommandHandler extends realm.TypeHandler {
         return result;
     }
 
-    _checkMainFile(adoneConf, destPath) {
-        const modExports = require(std.path.join(destPath, adoneConf.getMainPath()));
+    _checkMainFile(path) {
+        const modExports = require(path);
 
         if (!modExports.__esModule) {
             throw new adone.exception.NotValid("Startup module should be es6-module");

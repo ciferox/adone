@@ -104,11 +104,23 @@ export default class Configuration extends adone.configuration.Generic {
         });
     }
 
-    getMainPath() {
-        if (is.string(this.raw.main)) {
-            return this.raw.main;
-        }
-        return "index.js";
+    getMainPath(absolute) {
+        const path = is.string(this.raw.main) ? this.raw.main : "";
+        return is.string(absolute)
+            ? std.path.join(absolute, path)
+            : absolute === true
+                ? std.path.join(this.getCwd(), path)
+                : path;
+    }
+
+    getCliMainPath(absolute) {
+        return is.string(this.raw.cliMain)
+            ? is.string(absolute)
+                ? std.path.join(absolute, this.raw.cliMain)
+                : absolute === true
+                    ? std.path.join(this.getCwd(), this.raw.cliMain)
+                    : this.raw.cliMain
+            : this.getMainPath(absolute);
     }
 
     getEntries(path) {
@@ -147,7 +159,7 @@ export default class Configuration extends adone.configuration.Generic {
             } else if (count === 1) {
                 const constructPath = (glob, index) => {
                     let result;
-                    
+
                     if (is.string(glob)) {
                         let prefix;
                         if (is.glob(glob)) {
@@ -164,7 +176,7 @@ export default class Configuration extends adone.configuration.Generic {
 
                         result = constructPath(globs[0], index);
                     }
-                    
+
                     return result;
                 };
 

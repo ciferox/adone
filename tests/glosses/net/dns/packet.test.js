@@ -121,6 +121,11 @@ describe("net", "dns", "packet", () => {
         testEncoder(packet.caa, { tag: "issue", value: "letsencrypt.org" });
     });
 
+    it("mx", () => {
+        testEncoder(packet.mx, { preference: 10, exchange: "mx.hello.world.com" });
+        testEncoder(packet.mx, { exchange: "mx.hello.world.com" });
+    });
+
     it("ns", () => {
         testEncoder(packet.ns, "ns.world.com");
     });
