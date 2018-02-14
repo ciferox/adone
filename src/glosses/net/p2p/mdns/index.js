@@ -49,7 +49,7 @@ const gotResponse = (rsp, peerInfo, serviceTag, callback) => {
         return;
     }
 
-    const b58Id = answers.txt.data.toString();
+    const b58Id = answers.txt.data[0].toString();
     const port = answers.srv.data.port;
     const multiaddrs = [];
 

@@ -1273,55 +1273,44 @@ class Utf8String {
 
 #endif  // NODE_MODULE_VERSION
 
-//=== async_context ============================================================
-
-#if NODE_MODULE_VERSION >= NODE_8_0_MODULE_VERSION
-  typedef node::async_context async_context;
-#else
-  struct async_context {};
-#endif
-
 // === AsyncResource ===========================================================
 
   class AsyncResource {
    public:
     AsyncResource(
-        MaybeLocal<v8::Object> maybe_resource
-      , v8::Local<v8::String> resource_name) {
+        v8::Local<v8::String> name
+      , v8::Local<v8::Object> resource = New<v8::Object>()) {
 #if NODE_MODULE_VERSION >= NODE_8_0_MODULE_VERSION
       v8::Isolate* isolate = v8::Isolate::GetCurrent();
 
-      v8::Local<v8::Object> resource =
-          maybe_resource.IsEmpty() ? New<v8::Object>()
-                                  : maybe_resource.ToLocalChecked();
+      if (resource.IsEmpty()) {
+        resource = New<v8::Object>();
+      }
 
-      node::async_context context =
-          node::EmitAsyncInit(isolate, resource, resource_name);
-      asyncContext = static_cast<async_context>(context);
+      context = node::EmitAsyncInit(isolate, resource, name);
 #endif
     }
 
-    AsyncResource(MaybeLocal<v8::Object> maybe_resource, const char* name) {
+    AsyncResource(
+        const char* name
+      , v8::Local<v8::Object> resource = New<v8::Object>()) {
 #if NODE_MODULE_VERSION >= NODE_8_0_MODULE_VERSION
       v8::Isolate* isolate = v8::Isolate::GetCurrent();
 
-      v8::Local<v8::Object> resource =
-          maybe_resource.IsEmpty() ? New<v8::Object>()
-                                  : maybe_resource.ToLocalChecked();
+      if (resource.IsEmpty()) {
+        resource = New<v8::Object>();
+      }
+
       v8::Local<v8::String> name_string =
           New<v8::String>(name).ToLocalChecked();
-      node::async_context context =
-          node::EmitAsyncInit(isolate, resource, name_string);
-      asyncContext = static_cast<async_context>(context);
+      context = node::EmitAsyncInit(isolate, resource, name_string);
 #endif
     }
 
     ~AsyncResource() {
 #if NODE_MODULE_VERSION >= NODE_8_0_MODULE_VERSION
       v8::Isolate* isolate = v8::Isolate::GetCurrent();
-      node::async_context node_context =
-          static_cast<node::async_context>(asyncContext);
-      node::EmitAsyncDestroy(isolate, node_context);
+      node::EmitAsyncDestroy(isolate, context);
 #endif
     }
 
@@ -1334,8 +1323,7 @@ class Utf8String {
       return MakeCallback(target, func, argc, argv);
 #else
       return node::MakeCallback(
-          v8::Isolate::GetCurrent(), target, func, argc, argv,
-          static_cast<node::async_context>(asyncContext));
+          v8::Isolate::GetCurrent(), target, func, argc, argv, context);
 #endif
     }
 
@@ -1348,8 +1336,7 @@ class Utf8String {
       return MakeCallback(target, symbol, argc, argv);
 #else
       return node::MakeCallback(
-          v8::Isolate::GetCurrent(), target, symbol, argc, argv,
-          static_cast<node::async_context>(asyncContext));
+          v8::Isolate::GetCurrent(), target, symbol, argc, argv, context);
 #endif
     }
 
@@ -1362,13 +1349,15 @@ class Utf8String {
       return MakeCallback(target, method, argc, argv);
 #else
       return node::MakeCallback(
-          v8::Isolate::GetCurrent(), target, method, argc, argv,
-          static_cast<node::async_context>(asyncContext));
+          v8::Isolate::GetCurrent(), target, method, argc, argv, context);
 #endif
     }
 
    private:
-    async_context asyncContext;
+    NAN_DISALLOW_ASSIGN_COPY_MOVE(AsyncResource)
+#if NODE_MODULE_VERSION >= NODE_8_0_MODULE_VERSION
+    node::async_context context;
+#endif
   };
 
 typedef void (*FreeCallback)(char *data, void *hint);
@@ -1506,6 +1495,21 @@ class Callback {
     return this->Call(argc, argv);
   }
 
+  inline MaybeLocal<v8::Value> operator()(
+      AsyncResource* resource
+    , int argc = 0
+    , v8::Local<v8::Value> argv[] = 0) const {
+    return this->Call(argc, argv, resource);
+  }
+
+  inline MaybeLocal<v8::Value> operator()(
+      AsyncResource* resource
+    , v8::Local<v8::Object> target
+    , int argc = 0
+    , v8::Local<v8::Value> argv[] = 0) const {
+    return this->Call(target, argc, argv, resource);
+  }
+
   // TODO(kkoopa): remove
   inline void SetFunction(const v8::Local<v8::Function> &fn) {
     Reset(fn);
@@ -1531,7 +1535,7 @@ class Callback {
   Call(v8::Local<v8::Object> target
      , int argc
      , v8::Local<v8::Value> argv[]) const {
-#if (NODE_MODULE_VERSION > NODE_0_10_MODULE_VERSION)
+#if NODE_MODULE_VERSION > NODE_0_10_MODULE_VERSION
     v8::Isolate *isolate = v8::Isolate::GetCurrent();
     return Call_(isolate, target, argc, argv);
 #else
@@ -1541,7 +1545,39 @@ class Callback {
 
   inline v8::Local<v8::Value>
   Call(int argc, v8::Local<v8::Value> argv[]) const {
-#if (NODE_MODULE_VERSION > NODE_0_10_MODULE_VERSION)
+#if NODE_MODULE_VERSION > NODE_0_10_MODULE_VERSION
+    v8::Isolate *isolate = v8::Isolate::GetCurrent();
+    v8::EscapableHandleScope scope(isolate);
+    return scope.Escape(
+        Call_(isolate, isolate->GetCurrentContext()->Global(), argc, argv));
+#else
+    v8::HandleScope scope;
+    return scope.Close(Call_(v8::Context::GetCurrent()->Global(), argc, argv));
+#endif
+  }
+
+  inline MaybeLocal<v8::Value>
+  Call(v8::Local<v8::Object> target
+     , int argc
+     , v8::Local<v8::Value> argv[]
+     , AsyncResource* resource) const {
+#if NODE_MODULE_VERSION >= NODE_8_0_MODULE_VERSION
+    v8::Isolate* isolate = v8::Isolate::GetCurrent();
+    return Call_(isolate, target, argc, argv, resource);
+#elif NODE_MODULE_VERSION > NODE_0_10_MODULE_VERSION
+    v8::Isolate *isolate = v8::Isolate::GetCurrent();
+    return Call_(isolate, target, argc, argv);
+#else
+    return Call_(target, argc, argv);
+#endif
+  }
+
+  inline MaybeLocal<v8::Value>
+  Call(int argc, v8::Local<v8::Value> argv[], AsyncResource* resource) const {
+#if NODE_MODULE_VERSION >= NODE_8_0_MODULE_VERSION
+    v8::Isolate* isolate = v8::Isolate::GetCurrent();
+    return Call(isolate->GetCurrentContext()->Global(), argc, argv, resource);
+#elif NODE_MODULE_VERSION > NODE_0_10_MODULE_VERSION
     v8::Isolate *isolate = v8::Isolate::GetCurrent();
     v8::EscapableHandleScope scope(isolate);
     return scope.Escape(
@@ -1556,7 +1592,22 @@ class Callback {
   NAN_DISALLOW_ASSIGN_COPY_MOVE(Callback)
   Persistent<v8::Function> handle_;
 
-#if (NODE_MODULE_VERSION > NODE_0_10_MODULE_VERSION)
+#if NODE_MODULE_VERSION >= NODE_8_0_MODULE_VERSION
+  MaybeLocal<v8::Value> Call_(v8::Isolate *isolate
+                            , v8::Local<v8::Object> target
+                            , int argc
+                            , v8::Local<v8::Value> argv[]
+                            , AsyncResource* resource) const {
+    EscapableHandleScope scope;
+    v8::Local<v8::Function> func = New(handle_);
+    auto maybe = resource->runInAsyncScope(target, func, argc, argv);
+    v8::Local<v8::Value> local;
+    if (!maybe.ToLocal(&local)) return MaybeLocal<v8::Value>();
+    return scope.Escape(local);
+  }
+#endif
+
+#if NODE_MODULE_VERSION > NODE_0_10_MODULE_VERSION
   v8::Local<v8::Value> Call_(v8::Isolate *isolate
                            , v8::Local<v8::Object> target
                            , int argc
@@ -1601,13 +1652,15 @@ class Callback {
 
 /* abstract */ class AsyncWorker {
  public:
-  explicit AsyncWorker(Callback *callback_)
+  explicit AsyncWorker(Callback *callback_,
+                       const char* resource_name = "nan:AsyncWorker")
       : callback(callback_), errmsg_(NULL) {
     request.data = this;
 
     HandleScope scope;
     v8::Local<v8::Object> obj = New<v8::Object>();
     persistentHandle.Reset(obj);
+    async_resource = new AsyncResource(resource_name, obj);
   }
 
   virtual ~AsyncWorker() {
@@ -1617,6 +1670,7 @@ class Callback {
       persistentHandle.Reset();
     delete callback;
     delete[] errmsg_;
+    delete async_resource;
   }
 
   virtual void WorkComplete() {
@@ -1676,11 +1730,12 @@ class Callback {
  protected:
   Persistent<v8::Object> persistentHandle;
   Callback *callback;
+  AsyncResource *async_resource;
 
   virtual void HandleOKCallback() {
     HandleScope scope;
 
-    callback->Call(0, NULL);
+    callback->Call(0, NULL, async_resource);
   }
 
   virtual void HandleErrorCallback() {
@@ -1689,7 +1744,7 @@ class Callback {
     v8::Local<v8::Value> argv[] = {
       v8::Exception::Error(New<v8::String>(ErrorMessage()).ToLocalChecked())
     };
-    callback->Call(1, argv);
+    callback->Call(1, argv, async_resource);
   }
 
   void SetErrorMessage(const char *msg) {
@@ -1711,8 +1766,10 @@ class Callback {
 
 /* abstract */ class AsyncBareProgressWorkerBase : public AsyncWorker {
  public:
-  explicit AsyncBareProgressWorkerBase(Callback *callback_)
-      : AsyncWorker(callback_) {
+  explicit AsyncBareProgressWorkerBase(
+      Callback *callback_,
+      const char* resource_name = "nan:AsyncBareProgressWorkerBase")
+      : AsyncWorker(callback_, resource_name) {
     uv_async_init(
         uv_default_loop()
       , &async
@@ -1751,8 +1808,10 @@ template<class T>
 /* abstract */
 class AsyncBareProgressWorker : public AsyncBareProgressWorkerBase {
  public:
-  explicit AsyncBareProgressWorker(Callback *callback_)
-      : AsyncBareProgressWorkerBase(callback_) {
+  explicit AsyncBareProgressWorker(
+      Callback *callback_,
+      const char* resource_name = "nan:AsyncBareProgressWorker")
+      : AsyncBareProgressWorkerBase(callback_, resource_name) {
   }
 
   virtual ~AsyncBareProgressWorker() {
@@ -1791,8 +1850,11 @@ template<class T>
 /* abstract */
 class AsyncProgressWorkerBase : public AsyncBareProgressWorker<T> {
  public:
-  explicit AsyncProgressWorkerBase(Callback *callback_)
-      : AsyncBareProgressWorker<T>(callback_), asyncdata_(NULL), asyncsize_(0) {
+  explicit AsyncProgressWorkerBase(
+      Callback *callback_,
+      const char* resource_name = "nan:AsyncProgressWorkerBase")
+      : AsyncBareProgressWorker<T>(callback_, resource_name), asyncdata_(NULL),
+        asyncsize_(0) {
     uv_mutex_init(&async_lock);
   }
 
@@ -1847,8 +1909,10 @@ template<class T>
 /* abstract */
 class AsyncBareProgressQueueWorker : public AsyncBareProgressWorkerBase {
  public:
-  explicit AsyncBareProgressQueueWorker(Callback *callback_)
-      : AsyncBareProgressWorkerBase(callback_) {
+  explicit AsyncBareProgressQueueWorker(
+      Callback *callback_,
+      const char* resource_name = "nan:AsyncBareProgressQueueWorker")
+      : AsyncBareProgressWorkerBase(callback_, resource_name) {
   }
 
   virtual ~AsyncBareProgressQueueWorker() {
@@ -1884,7 +1948,9 @@ template<class T>
 /* abstract */
 class AsyncProgressQueueWorker : public AsyncBareProgressQueueWorker<T> {
  public:
-  explicit AsyncProgressQueueWorker(Callback *callback_)
+  explicit AsyncProgressQueueWorker(
+      Callback *callback_,
+      const char* resource_name = "nan:AsyncProgressQueueWorker")
       : AsyncBareProgressQueueWorker<T>(callback_) {
     uv_mutex_init(&async_lock);
   }

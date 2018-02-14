@@ -144,9 +144,7 @@ export class Multiaddr {
      * // [ 'ip4', 'tcp' ]
      */
     protoNames() {
-        return map(this.protos(), (proto) => {
-            return proto.name;
-        });
+        return map(this.protos(), (proto) => proto.name);
     }
 
     /**

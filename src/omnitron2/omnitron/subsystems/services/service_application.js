@@ -10,7 +10,7 @@ const {
 @Context()
 class ServiceApplication extends application.Application {
     async configure() {
-        this.group = process.env.OMNITRON_SERVICE_GROUP;
+        this.group = process.env.OMNITRON2_SERVICE_GROUP;
 
         this.exitOnSignal("SIGTERM");
 

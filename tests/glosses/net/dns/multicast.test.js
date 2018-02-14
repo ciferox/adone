@@ -51,7 +51,7 @@ describe("net", "dns", "multicast", () => {
 
         test("ANY query", (dns, done) => {
             dns.once("query", (packet) => {
-                assert.equal(packet.questions.length, 1, "one question");
+                assert.lengthOf(packet.questions, 1, "one question");
                 assert.deepEqual(packet.questions[0], {
                     name: "hello-world",
                     type: "ANY",
@@ -67,7 +67,7 @@ describe("net", "dns", "multicast", () => {
 
         test("A record", (dns, done) => {
             dns.once("query", (packet) => {
-                assert.equal(packet.questions.length, 1, "one question");
+                assert.lengthOf(packet.questions, 1, "one question");
                 assert.deepEqual(packet.questions[0], {
                     name: "hello-world",
                     type: "A",
@@ -82,7 +82,7 @@ describe("net", "dns", "multicast", () => {
             });
 
             dns.once("response", (packet) => {
-                assert.equal(packet.answers.length, 1, "one answer");
+                assert.lengthOf(packet.answers, 1, "one answer");
                 assert.deepEqual(packet.answers[0], {
                     type: "A",
                     name: "hello-world",
@@ -101,7 +101,7 @@ describe("net", "dns", "multicast", () => {
 
         test("A record (two questions)", (dns, done) => {
             dns.once("query", (packet) => {
-                assert.equal(packet.questions.length, 2, "two questions");
+                assert.lengthOf(packet.questions, 2, "two questions");
                 assert.deepEqual(packet.questions[0], {
                     name: "hello-world",
                     type: "A",
@@ -126,7 +126,7 @@ describe("net", "dns", "multicast", () => {
             });
 
             dns.once("response", (packet) => {
-                assert.equal(packet.answers.length, 2, "one answers");
+                assert.lengthOf(packet.answers, 2, "one answers");
                 assert.deepEqual(packet.answers[0], {
                     type: "A",
                     name: "hello-world",
@@ -159,7 +159,7 @@ describe("net", "dns", "multicast", () => {
 
         test("AAAA record", (dns, done) => {
             dns.once("query", (packet) => {
-                assert.equal(packet.questions.length, 1, "one question");
+                assert.lengthOf(packet.questions, 1, "one question");
                 assert.deepEqual(packet.questions[0], {
                     name: "hello-world",
                     type: "AAAA",
@@ -174,7 +174,7 @@ describe("net", "dns", "multicast", () => {
             });
 
             dns.once("response", (packet) => {
-                assert.equal(packet.answers.length, 1, "one answer");
+                assert.lengthOf(packet.answers, 1, "one answer");
                 assert.deepEqual(packet.answers[0], {
                     type: "AAAA",
                     name: "hello-world",
@@ -193,7 +193,7 @@ describe("net", "dns", "multicast", () => {
 
         test("SRV record", (dns, done) => {
             dns.once("query", (packet) => {
-                assert.equal(packet.questions.length, 1, "one question");
+                assert.lengthOf(packet.questions, 1, "one question");
                 assert.deepEqual(packet.questions[0], {
                     name: "hello-world",
                     type: "SRV",
@@ -213,7 +213,7 @@ describe("net", "dns", "multicast", () => {
             });
 
             dns.once("response", (packet) => {
-                assert.equal(packet.answers.length, 1, "one answer");
+                assert.lengthOf(packet.answers, 1, "one answer");
                 assert.deepEqual(packet.answers[0], {
                     type: "SRV",
                     name: "hello-world",
@@ -231,10 +231,10 @@ describe("net", "dns", "multicast", () => {
         });
 
         test("TXT record", (dns, done) => {
-            const data = Buffer.from("black box");
+            const data = [Buffer.from("black box")];
 
             dns.once("query", (packet) => {
-                assert.equal(packet.questions.length, 1, "one question");
+                assert.lengthOf(packet.questions, 1, "one question");
                 assert.deepEqual(packet.questions[0], {
                     name: "hello-world",
                     type: "TXT",
@@ -249,15 +249,35 @@ describe("net", "dns", "multicast", () => {
             });
 
             dns.once("response", (packet) => {
-                assert.equal(packet.answers.length, 1, "one answer");
+                assert.lengthOf(packet.answers, 1, "one answer");
                 assert.deepEqual(packet.answers[0], {
                     type: "TXT",
                     name: "hello-world",
                     ttl: 120,
-                    data: [data],
+                    data,
                     class: "IN",
                     flush: false
                 });
+                dns.destroy(() => {
+                    done();
+                });
+            });
+
+            dns.query("hello-world", "TXT");
+        });
+
+        test("TXT array record", (dns, done) => {
+            const data = ["black", "box"];
+
+            dns.once("query", (packet) => {
+                assert.lengthOf(packet.questions, 1, "one question");
+                assert.deepEqual(packet.questions[0], { name: "hello-world", type: "TXT", class: "IN" });
+                dns.respond([{ type: "TXT", name: "hello-world", ttl: 120, data }]);
+            });
+
+            dns.once("response", (packet) => {
+                assert.lengthOf(packet.answers, 1, "one answer");
+                assert.deepEqual(packet.answers[0], { type: "TXT", name: "hello-world", ttl: 120, data, class: "IN", flush: false });
                 dns.destroy(() => {
                     done();
                 });

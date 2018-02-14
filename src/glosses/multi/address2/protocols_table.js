@@ -43,12 +43,12 @@ protocols.table = [
     [17, 16, "udt"],
     [18, 16, "utp"],
     [19, 16, "quic"],
-    [53, V, "dns", "resolvable"],
-    [54, V, "dns4", "resolvable"],
-    [55, V, "dns6", "resolvable"],
+    [53, V, "dns", true],
+    [54, V, "dns4", true],
+    [55, V, "dns6", true],
     // all of the below use varint for size
-    [400, protocols.lengthPrefixedVarSize, "unix"], // unix socket
-    [401, protocols.lengthPrefixedVarSize, "winpipe"], // windows pipe name
+    [400, protocols.lengthPrefixedVarSize, "unix"], // path of unix socket
+    [401, protocols.lengthPrefixedVarSize, "winpipe"], // name of windows pipe
     [420, protocols.lengthPrefixedVarSize, "p2p"], // new
     [421, protocols.lengthPrefixedVarSize, "ipfs"],
     [480, 0, "http"],
