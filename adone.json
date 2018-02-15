@@ -512,7 +512,16 @@
                     "task": "transpile",
                     "src": "src/glosses/js/**/*.js",
                     "dst": "lib/glosses/js",
-                    "namespace": "js"
+                    "namespace": "js",
+                    "struct": {
+                        "bundle": {
+                            "description": "Bundler implementation",
+                            "task": "transpile",
+                            "src": "src/glosses/js/bundle/**/*.js",
+                            "dst": "lib/glosses/js/bundle",
+                            "namespace": "bundle"
+                        }
+                    }
                 },
                 "math": {
                     "description": "Implementation of common math classes and primitives",

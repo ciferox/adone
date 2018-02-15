@@ -14,6 +14,7 @@ export default class RealmManager extends task.Manager {
         this.id = id;
         this.bar = null;
         this.typeHandler = null;
+        this.peerInfo = null;
     }
 
     addTypeHandler(typeName, handler) {

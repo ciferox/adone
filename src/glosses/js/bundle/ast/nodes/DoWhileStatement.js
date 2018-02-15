@@ -1,0 +1,7 @@
+import { StatementBase } from "./shared/Node";
+export default class DoWhileStatement extends StatementBase {
+    hasEffects(options) {
+        return (this.test.hasEffects(options) ||
+            this.body.hasEffects(options.setIgnoreBreakStatements()));
+    }
+}

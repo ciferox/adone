@@ -11,8 +11,7 @@ const {
 
 const {
     DApplication,
-    DCliCommand,
-    DMainCliCommand
+    DCliCommand
 } = application;
 
 const baseSubsystem = (name) => std.path.join(__dirname, "..", "lib", "cli", "subsystems", name);

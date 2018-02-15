@@ -1,0 +1,27 @@
+import { StatementBase } from "./shared/Node";
+export default class ExpressionStatement extends StatementBase {
+    initialiseNode(_parentScope) {
+        if (this.directive && this.directive !== "use strict" && this.parent.type === "Program") {
+            this.module.warn(// This is necessary, because either way (deleting or not) can lead to errors.
+                {
+                    code: "MODULE_LEVEL_DIRECTIVE",
+                    message: `Module level directives cause errors when bundled, '${this.directive}' was ignored.`
+                }, this.start);
+        }
+        return super.initialiseNode(_parentScope);
+    }
+
+    shouldBeIncluded() {
+        if (this.directive && this.directive !== "use strict") {
+            return this.parent.type !== "Program";
+        }
+        return super.shouldBeIncluded();
+    }
+
+    render(code, options) {
+        super.render(code, options);
+        if (this.included) {
+            this.insertSemicolon(code);
+        }
+    }
+}

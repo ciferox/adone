@@ -14,7 +14,8 @@ const plugins = {
         objectRestSpread: "./syntax/object_rest_spread",
         // jsx: "./syntax/jsx"
         numericSeparator: "./syntax/numeric_separator",
-        exponentiationOperator: "./syntax/exponentiation_operator"
+        exponentiationOperator: "./syntax/exponentiation_operator",
+        dynamicImport: "./syntax/dynamic_import"
     }, null, require),
     transform: lazify({
         asyncToGenerator: "./transform/async_to_generator",
