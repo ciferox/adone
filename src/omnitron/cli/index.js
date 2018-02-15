@@ -6,7 +6,7 @@ const {
     },
     is,
     cli: { kit },
-    text: { pretty },
+    pretty,
     omnitron,
     std
 } = adone;
@@ -203,7 +203,7 @@ export default class Omnitron extends Subsystem {
                 result: true,
                 clean: true
             });
-            adone.log(adone.text.pretty.json(result));
+            adone.log(adone.pretty.json(result));
             return 0;
         } catch (err) {
             kit.updateProgress({

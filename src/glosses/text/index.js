@@ -439,10 +439,6 @@ adone.lazify({
     unicode: "./unicode",
     spinner: "./spinners",
     table: "./table",
-    pretty: () => adone.lazify({
-        json: "./pretties/json",
-        table: "./pretties/table"
-    }, null, require),
     Fuzzy: "./fuzzy",
     charcode: "./charcodes",
     longestCommonPrefix: "./longest_common_prefix"

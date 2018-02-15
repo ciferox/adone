@@ -72,7 +72,7 @@ export default class Config extends Subsystem {
                 clean: true
             });
 
-            adone.log(adone.text.pretty.json(value));
+            adone.log(adone.pretty.json(value));
             return 0;
         } catch (err) {
             kit.updateProgress({
@@ -131,7 +131,7 @@ export default class Config extends Subsystem {
                 clean: true
             });
 
-            adone.log(adone.text.pretty.json(await config.getAll()));
+            adone.log(adone.pretty.json(await config.getAll()));
             return 0;
         } catch (err) {
             kit.updateProgress({

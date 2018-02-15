@@ -166,14 +166,14 @@ export default class Omnitron extends application.Application {
 
             result.process = {
                 id: process.pid,
-                uptime: adone.util.humanizeTime(1000 * Math.floor(process.uptime())),
+                uptime: adone.pretty.time(1000 * Math.floor(process.uptime())),
                 cpu: {
-                    user: adone.util.humanizeTime(cpuUsage.user),
-                    system: adone.util.humanizeTime(cpuUsage.system)
+                    user: adone.pretty.time(cpuUsage.user),
+                    system: adone.pretty.time(cpuUsage.system)
                 },
                 memory: {
-                    total: adone.util.humanizeSize(totalMemory),
-                    used: `${adone.util.humanizeSize(memoryUsage.rss)} (${(memoryUsage.rss / totalMemory * 100).toFixed(0)}%)`,
+                    total: adone.pretty.size(totalMemory),
+                    used: `${adone.pretty.size(memoryUsage.rss)} (${(memoryUsage.rss / totalMemory * 100).toFixed(0)}%)`,
                     detail: {
                         total: totalMemory,
                         ...memoryUsage

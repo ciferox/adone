@@ -106,7 +106,7 @@ adone.application.run({
         });
     },
     async main(args, opts) {
-        const { net: { proxy: { http: { Server: HTTPProxyServer } } }, util } = adone;
+        const { net: { proxy: { http: { Server: HTTPProxyServer } } }, pretty } = adone;
         let proxy = null;
         if (opts.has("proxy")) {
             const t = opts.get("proxy").split(":");
@@ -168,7 +168,7 @@ adone.application.run({
                         ctx.localRequest.method,
                         ctx.remoteResponse && ctx.remoteResponse.status,
                         ctx.localRequest.href,
-                        util.humanizeTime(new Date() - start)
+                        pretty.time(new Date() - start)
                     );
                     adone.info("request body");
                     requestBody = requestBody.slice();
@@ -181,7 +181,7 @@ adone.application.run({
                         "%s %s %s",
                         ctx.localRequest.method,
                         ctx.localRequest.url,
-                        util.humanizeTime(new Date() - start)
+                        pretty.time(new Date() - start)
                     );
                 } else if (ctx.type === "upgrade") {
                     adone.info(
@@ -197,7 +197,7 @@ adone.application.run({
                         ctx.clientPort,
                         ctx.remoteAddress,
                         ctx.remotePort,
-                        util.humanizeTime(new Date() - start)
+                        pretty.time(new Date() - start)
                     );
                     adone.info("incoming");
                     incoming = incoming.slice();

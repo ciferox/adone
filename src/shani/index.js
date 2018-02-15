@@ -1788,7 +1788,7 @@ export const consoleReporter = ({
         let bar = null;
 
         const elapsedToString = (elapsed, timeout, little = true) => {
-            let elapsedString = adone.util.humanizeTime(elapsed); // ms
+            let elapsedString = adone.pretty.time(elapsed); // ms
 
             const k = elapsed / timeout;
             if (k < 0.25) {
@@ -2096,8 +2096,8 @@ export const consoleReporter = ({
 
                 log();
                 totalElapsed = hrtime(totalElapsed);
-                testsElapsed = adone.util.humanizeTime(testsElapsed);
-                totalElapsed = adone.util.humanizeTime(
+                testsElapsed = adone.pretty.time(testsElapsed);
+                totalElapsed = adone.pretty.time(
                     totalElapsed[0] * 1e3 + totalElapsed[1] / 1e6
                 );
                 log(`    {green-fg}${passed} passed{/} {grey-fg}(${testsElapsed}){/}`);
@@ -2366,7 +2366,7 @@ export const simpleReporter = ({
         const globalErrors = [];
 
         const elapsedToString = (elapsed, timeout, little = true) => {
-            let elapsedString = adone.util.humanizeTime(elapsed); // ms
+            let elapsedString = adone.pretty.time(elapsed); // ms
 
             const k = elapsed / timeout;
             if (k < 0.25) {
@@ -2617,8 +2617,8 @@ export const simpleReporter = ({
 
                 log();
                 totalElapsed = hrtime(totalElapsed);
-                testsElapsed = adone.util.humanizeTime(testsElapsed);
-                totalElapsed = adone.util.humanizeTime(
+                testsElapsed = adone.pretty.time(testsElapsed);
+                totalElapsed = adone.pretty.time(
                     totalElapsed[0] * 1e3 + totalElapsed[1] / 1e6
                 );
                 log(`    {green-fg}${passed} passed{/} {grey-fg}(${testsElapsed}){/}`);

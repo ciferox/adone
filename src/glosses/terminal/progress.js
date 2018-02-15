@@ -99,7 +99,7 @@ export default class ProgressBar {
             completeOk: `{green-fg}${approx(symbol.tick)}{/}`,
             completeBad: `{red-fg}${approx(symbol.cross)}{/}`
         },
-        timeFormatter = adone.util.humanizeTime,
+        timeFormatter = adone.pretty.time,
         blank = "—",
         filled = approx(symbol.square),
         callback,

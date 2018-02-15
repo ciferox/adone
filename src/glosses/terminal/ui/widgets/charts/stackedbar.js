@@ -148,7 +148,7 @@ export default class StackedBar extends adone.terminal.ui.widget.Canvas {
                 c.fillStyle = this.options.barFgColor;
             }
             if (this.options.showText) {
-                const str = adone.util.humanizeSize(Number.parseInt(data.toString()), "");
+                const str = adone.pretty.size(Number.parseInt(data.toString()), "");
                 c.fillText(str, Math.floor(x + this.options.barWidth / 2 + str.length / 2), calcY + Math.round(calcHeight / 2));
             }
         }

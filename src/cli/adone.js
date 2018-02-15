@@ -260,7 +260,7 @@ class AdoneCLI extends application.CliApplication {
             const result = await observer.result;
 
             if (result.length > 0) {
-                adone.log(adone.text.pretty.table(result, {
+                adone.log(adone.pretty.table(result, {
                     borderless: true,
                     noHeader: true,
                     style: {

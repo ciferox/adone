@@ -3,6 +3,7 @@ const {
     exception,
     std,
     text,
+    pretty,
     util,
     runtime: { term },
     tag,
@@ -1372,7 +1373,7 @@ class Command {
             helpMessage.push("");
             if (this.arguments.length) {
                 helpMessage.push(argumentHeading("Arguments:"));
-                helpMessage.push(text.pretty.table(this.arguments.map((arg) => {
+                helpMessage.push(pretty.table(this.arguments.map((arg) => {
                     return {
                         names: arg.getNamesMessage(),
                         message: arg.getShortHelpMessage()
@@ -1410,7 +1411,7 @@ class Command {
                         helpMessage.push(optionHeading(`${group.description}:`));
                     }
 
-                    helpMessage.push(text.pretty.table([...group].map((opt) => {
+                    helpMessage.push(pretty.table([...group].map((opt) => {
                         return {
                             names: opt.getUsageMessage({ required: false, allNames: true }),
                             message: opt.getShortHelpMessage()
@@ -1449,7 +1450,7 @@ class Command {
                         helpMessage.push(commandHeading(`${group.description}:`));
                     }
 
-                    helpMessage.push(text.pretty.table([...group].map((cmd) => {
+                    helpMessage.push(pretty.table([...group].map((cmd) => {
                         return {
                             names: cmd.getNamesMessage(),
                             message: cmd.getShortHelpMessage()

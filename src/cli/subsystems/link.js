@@ -45,7 +45,7 @@ export default class LinkManager extends application.Subsystem {
             const links = cliConfig.getLinks();
 
             if (links.length > 0) {
-                adone.log(adone.text.pretty.table(links, {
+                adone.log(adone.pretty.table(links, {
                     style: {
                         head: ["gray"],
                         compact: true

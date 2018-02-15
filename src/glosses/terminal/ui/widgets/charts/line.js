@@ -117,7 +117,7 @@ export default class Line extends adone.terminal.ui.widget.Canvas {
         const formatYLabel = (value, max, min, numLabels, wholeNumbersOnly, abbreviate) => {
             const fixed = (max / numLabels < 1 && value !== 0 && !wholeNumbersOnly) ? 2 : 0;
             const res = value.toFixed(fixed);
-            return abbreviate ? adone.util.humanizeSize(Number.parseInt(res), "") : res;
+            return abbreviate ? adone.pretty.size(Number.parseInt(res), "") : res;
         };
 
         const getMaxXLabelPadding = (numLabels, wholeNumbersOnly, abbreviate, min) => {

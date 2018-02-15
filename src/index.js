@@ -335,6 +335,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         terminal: "./glosses/terminal",
         stream: "./glosses/streams",
         templating: "./glosses/templating",
+        pretty: "./glosses/pretty",
         promise: "./glosses/promise",
         math: "./glosses/math",
         meta: "./glosses/meta",

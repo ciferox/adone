@@ -1,7 +1,7 @@
 
 const {
     net: { http: { server: { helper: { status: { isEmptyBody } } } } },
-    util: { humanizeSize, humanizeTime },
+    pretty,
     is, application: { Logger }
 } = adone;
 
@@ -40,16 +40,16 @@ export default function (options = {}) {
                         "-x-": "{yellow-fg}",
                         "---": "{gray-fg}"
                     }
-                },  // upstream
-                { style: "{bold}" },  // method
-                { style: "{white-fg}" },  // path
-                {  // status code
+                }, // upstream
+                { style: "{bold}" }, // method
+                { style: "{white-fg}" }, // path
+                { // status code
                     format: "%s",
                     styleArgTransform: (arg) => arg !== "-" ? Math.floor(arg / 100) : 0,
                     style: ["", "{green-fg}", "{green-fg}", "{cyan-fg}", "{yellow-fg}", "{red-fg}"]
                 },
-                { style: "{gray-fg}" },  // time
-                { style: "{gray-fg}" }  // response size
+                { style: "{gray-fg}" }, // time
+                { style: "{gray-fg}" } // response size
             ]
         };
         if (options.timestamp) {
@@ -78,10 +78,10 @@ export default function (options = {}) {
                 let upstream;
                 if (event === "close") {
                     upstream = "-x-";
-                    res.removeListener("finish", onfinish);  // eslint-disable-line no-use-before-define
+                    res.removeListener("finish", onfinish); // eslint-disable-line no-use-before-define
                 } else {
                     upstream = "---";
-                    res.removeListener("close", onclose);  // eslint-disable-line no-use-before-define
+                    res.removeListener("close", onclose); // eslint-disable-line no-use-before-define
                 }
                 length = counter ? counter.length : length;
 
@@ -92,9 +92,9 @@ export default function (options = {}) {
                 } else if (is.nil(length)) {
                     length = "-";
                 } else {
-                    length = humanizeSize(length, "");
+                    length = pretty.size(length, "");
                 }
-                logger.log(upstream, ctx.method, ctx.originalUrl, status, humanizeTime(new Date() - start), length);
+                logger.log(upstream, ctx.method, ctx.originalUrl, status, pretty.time(new Date() - start), length);
             };
 
             const onfinish = () => done("finish");
@@ -103,7 +103,7 @@ export default function (options = {}) {
             res.once("finish", onfinish);
             res.once("close", onclose);
         }, (err) => {
-            logger.log("xxx", ctx.method, ctx.originalUrl, "-", humanizeTime(new Date() - start), "-");
+            logger.log("xxx", ctx.method, ctx.originalUrl, "-", pretty.time(new Date() - start), "-");
             return Promise.reject(err);
         });
     };

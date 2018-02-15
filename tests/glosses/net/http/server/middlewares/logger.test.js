@@ -2,7 +2,7 @@ describe("net", "http", "server", "middlewares", "logger", () => {
     const {
         net: { http: { server: { Server, middleware: { logger } } } },
         collection: { BufferList },
-        util: { humanizeSize },
+        pretty,
         fs, noop
     } = adone;
 
@@ -52,7 +52,7 @@ describe("net", "http", "server", "middlewares", "logger", () => {
         expect(parts[2]).to.be.equal("/");
         expect(parts[3]).to.be.equal("200");
         expect(parts[4]).to.match(/^\d+ms$/);
-        expect(parts[5]).to.be.equal(humanizeSize(12345, ""));
+        expect(parts[5]).to.be.equal(pretty.size(12345, ""));
     });
 
     it("should handle response streams", async () => {
@@ -81,7 +81,7 @@ describe("net", "http", "server", "middlewares", "logger", () => {
         expect(parts[4]).to.match(/^\d+ms$/);
 
         const { size } = await fs.stat(__filename);
-        expect(parts[5]).to.be.equal(humanizeSize(size, ""));
+        expect(parts[5]).to.be.equal(pretty.size(size, ""));
     });
 
     it("should mark closed socket", async () => {

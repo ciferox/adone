@@ -1,4 +1,12 @@
-const { is, util, text, lazify, js, std: { vm, path }, fs } = adone;
+const {
+    is,
+    util,
+    lazify,
+    js,
+    std: { vm, path },
+    fs,
+    pretty
+} = adone;
 
 lazify({
     plugin: "./plugin"
@@ -156,7 +164,7 @@ export const printTable = (filter) => {
             overall: `${overall.overall.passed} / ${overall.overall.total} / ${round(overall.overall.percent)}%`
         });
     }
-    const table = text.pretty.table(data, {
+    const table = pretty.table(data, {
         model: [
             { id: "path", header: "#", align: "center", wordwrap: "hard", maxWidth: 50 },
             { id: "overall", header: "%", align: "center" },

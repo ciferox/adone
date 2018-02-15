@@ -720,6 +720,13 @@
                     "dst": "lib/glosses/orm",
                     "namespace": "orm"
                 },
+                "pretty": {
+                    "description": "Useful prettiers/pretty-printers",
+                    "task": "transpile",
+                    "src": "src/glosses/pretty/**/*.js",
+                    "dst": "lib/glosses/pretty",
+                    "namespace": "pretty"
+                },
                 "promise": {
                     "description": "Promise utilites",
                     "task": "transpile",

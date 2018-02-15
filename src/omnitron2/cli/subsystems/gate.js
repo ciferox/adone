@@ -42,7 +42,7 @@ export default class Gate extends Subsystem {
                 clean: true
             });
             if (gates.length > 0) {
-                adone.log(adone.text.pretty.json(gates));
+                adone.log(adone.pretty.json(gates));
             } else {
                 adone.runtime.term.print("{white-fg}No gates{/}\n");
             }
@@ -253,7 +253,7 @@ export default class Gate extends Subsystem {
                     result: true,
                     clean: true
                 });
-                adone.log(adone.text.pretty.json(await config.configureGate(args.get("name"))));
+                adone.log(adone.pretty.json(await config.configureGate(args.get("name"))));
             } else {
                 await config.configureGate(args.get("name"), opts.getAll(true));
                 kit.updateProgress({

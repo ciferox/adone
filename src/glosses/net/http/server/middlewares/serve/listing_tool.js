@@ -2,7 +2,11 @@ const {
     std: { path: { relative, resolve, extname } },
     templating: { nunjucks },
     net,
-    collection, util, fs, identity
+    collection,
+    util,
+    pretty,
+    fs,
+    identity
 } = adone;
 
 const iconsPath = resolve(__dirname, "icons");
@@ -124,7 +128,7 @@ const defaultFilters = {
         if (file.isDirectory) {
             return "";
         }
-        return util.humanizeSize(bytes);
+        return pretty.size(bytes);
     },
     midificationDate: (obj) => {
         return obj.format("DD.MM.YYYY HH:mm:ss");
