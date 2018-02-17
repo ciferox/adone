@@ -36,6 +36,7 @@ const throttleNoInterval = (concurrency, drop, dropLast, fn, onDone) => {
 
             let result;
 
+            // TODO: ???
             if (fn.length === 1) { // with callback
                 result = fn.call(self, release, ...args);
             } else {
@@ -45,7 +46,7 @@ const throttleNoInterval = (concurrency, drop, dropLast, fn, onDone) => {
                 }
             }
 
-            return result;
+            return Promise.resolve(result);
         }
         if (drop) {
             if (dropLast) {

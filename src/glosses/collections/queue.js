@@ -72,4 +72,12 @@ export default class Queue {
         this.remaining = this.maxLength;
         return this;
     }
+
+    static from(iterable, length = Infinity) {
+        const q = new this(length);
+        for (const i of iterable) {
+            q.push(i);
+        }
+        return q;
+    }
 }
