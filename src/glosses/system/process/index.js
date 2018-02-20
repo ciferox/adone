@@ -5,41 +5,48 @@ const {
 
 adone.asNamespace(exports);
 
-// The Node team wants to deprecate `process.bind(...)`.
-//   https://github.com/nodejs/node/pull/2768
-//
-// However, we need the 'uv' binding for errname support.
-// This is a defensive wrapper around it so `execa` will not fail entirely if it stops working someday.
-//
-// If this ever stops working. See: https://github.com/sindresorhus/execa/issues/31#issuecomment-215939939 for another possible solution.
-let uv;
 
-try {
-    uv = process.binding("uv");
+let errname;
 
-    if (!is.function(uv.errname)) {
-        throw new TypeError("uv.errname is not a function");
+if (is.function(adone.std.util.getSystemErrorName)) {
+    errname = (code) => adone.std.util.getSystemErrorName(code);
+} else {
+    // The Node team wants to deprecate `process.bind(...)`.
+    //   https://github.com/nodejs/node/pull/2768
+    //
+    // However, we need the 'uv' binding for errname support.
+    // This is a defensive wrapper around it so `execa` will not fail entirely if it stops working someday.
+    //
+    // If this ever stops working. See: https://github.com/sindresorhus/execa/issues/31#issuecomment-215939939 for another possible solution.
+    let uv;
+
+    try {
+        uv = process.binding("uv");
+
+        if (!is.function(uv.errname)) {
+            throw new TypeError("uv.errname is not a function");
+        }
+    } catch (err) {
+        adone.logError("execa/lib/errname: unable to establish process.binding('uv')", err);
+        uv = null;
     }
-} catch (err) {
-    adone.logError("execa/lib/errname: unable to establish process.binding('uv')", err);
-    uv = null;
+
+    const uvErrname = (uv, code) => {
+        if (uv) {
+            return uv.errname(code);
+        }
+
+        if (!(code < 0)) {
+            throw new Error("err >= 0");
+        }
+
+        return `Unknown system error ${code}`;
+    };
+
+    errname = (code) => uvErrname(uv, code);
 }
 
-const uvErrname = (uv, code) => {
-    if (uv) {
-        return uv.errname(code);
-    }
-
-    if (!(code < 0)) {
-        throw new Error("err >= 0");
-    }
-
-    return `Unknown system error ${code}`;
-};
-
-export const errname = (code) => uvErrname(uv, code);
-// Used for testing the fallback behavior
-export const errnameFallback = uvErrname;
+export { errname };
 
 const alias = ["stdin", "stdout", "stderr"];
 
@@ -344,7 +351,10 @@ const handleArgs = (cmd, args, opts) => {
             args,
             options: opts,
             file: cmd,
-            original: cmd
+            original: {
+                cmd,
+                args
+            }
         };
     } else {
         parsed = parse(cmd, args, opts);

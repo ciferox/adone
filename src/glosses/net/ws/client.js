@@ -609,10 +609,6 @@ export default class WebSocket extends event.Emitter {
             this._closeMessage = reason;
             this._closeCode = code;
 
-            if (this._finalized) {
-                return;
-            }
-
             if (code === 1005) {
                 this.close();
             } else {
@@ -620,12 +616,14 @@ export default class WebSocket extends event.Emitter {
             }
         };
         this._receiver.onerror = (error, code) => {
-            this._closeMessage = "";
+            if (this._error) {
+                return;
+            }
             this._closeCode = code;
 
             if (!this._finalized) {
                 this.finalize(error);
-            } else if (!this._error) {
+            } else {
                 this.emit("error", error);
             }
         };

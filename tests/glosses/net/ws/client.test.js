@@ -56,8 +56,7 @@ describe("net", "ws", "Client", () => {
 
             it("accepts the `localAddress` option", function (done) {
                 const wss = new Server({ host: "127.0.0.1", port: 0 }, () => {
-                    const port = wss._server.address().port;
-                    const ws = new Client(`ws://localhost:${port}`, {
+                    const ws = new Client(`ws://localhost:${wss.address().port}`, {
                         localAddress: "127.0.0.2"
                     });
 
@@ -66,8 +65,8 @@ describe("net", "ws", "Client", () => {
                             //
                             // Skip this test on machines where 127.0.0.2 is disabled.
                             //
-                            if (err.code === "EADDRNOTAVAIL") { 
-                                return this.skip(); 
+                            if (err.code === "EADDRNOTAVAIL") {
+                                return this.skip();
                             }
 
                             done(err);
@@ -91,8 +90,8 @@ describe("net", "ws", "Client", () => {
                 //
                 // Skip this test on machines where IPv6 is not supported.
                 //
-                if (!hasIPv6) { 
-                    return this.skip(); 
+                if (!hasIPv6) {
+                    return this.skip();
                 }
 
                 dns.lookup("localhost", { family: 6, all: true }, (err, addresses) => {
@@ -110,8 +109,9 @@ describe("net", "ws", "Client", () => {
                     }
 
                     const wss = new Server({ host: "::1", port: 0 }, () => {
-                        const port = wss._server.address().port;
-                        const ws = new Client(`ws://localhost:${port}`, { family: 6 });
+                        const ws = new Client(`ws://localhost:${wss.address().port}`, {
+                            family: 6
+                        });
                     });
 
                     wss.on("connection", (ws, req) => {
@@ -194,8 +194,7 @@ describe("net", "ws", "Client", () => {
 
             it('defaults to zero upon "open"', (done) => {
                 const wss = new Server({ port: 0 }, () => {
-                    const port = wss._server.address().port;
-                    const ws = new Client(`ws://localhost:${port}`);
+                    const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                     ws.onopen = () => {
                         assert.strictEqual(ws.bufferedAmount, 0);
@@ -209,16 +208,14 @@ describe("net", "ws", "Client", () => {
                     perMessageDeflate: true,
                     port: 0
                 }, () => {
-                    const port = wss._server.address().port;
-                    const ws = new Client(`ws://localhost:${port}`, {
+                    const ws = new Client(`ws://localhost:${wss.address().port}`, {
                         perMessageDeflate: { threshold: 0 }
                     });
 
                     ws.on("open", () => {
                         ws.send("foo");
-                        ws.send("bar", async (err) => {
+                        ws.send("bar", (err) => {
                             assert.ifError(err);
-                            await adone.promise.delay(100);
                             assert.strictEqual(ws.bufferedAmount, 0);
                             wss.close(done);
                         });
@@ -230,8 +227,7 @@ describe("net", "ws", "Client", () => {
 
             it("takes into account the data in the socket queue", (done) => {
                 const wss = new Server({ port: 0 }, () => {
-                    const port = wss._server.address().port;
-                    const ws = new Client(`ws://localhost:${port}`);
+                    const ws = new Client(`ws://localhost:${wss.address().port}`);
                 });
 
                 wss.on("connection", (ws) => {
@@ -250,8 +246,7 @@ describe("net", "ws", "Client", () => {
         describe("`extensions`", () => {
             it("exposes the negotiated extensions names (1/2)", (done) => {
                 const wss = new Server({ port: 0 }, () => {
-                    const port = wss._server.address().port;
-                    const ws = new Client(`ws://localhost:${port}`);
+                    const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                     assert.strictEqual(ws.extensions, "");
 
@@ -272,8 +267,7 @@ describe("net", "ws", "Client", () => {
                     perMessageDeflate: true,
                     port: 0
                 }, () => {
-                    const port = wss._server.address().port;
-                    const ws = new Client(`ws://localhost:${port}`);
+                    const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                     assert.strictEqual(ws.extensions, "");
 
@@ -293,7 +287,7 @@ describe("net", "ws", "Client", () => {
         describe("`protocol`", () => {
             it("exposes the subprotocol selected by the server", (done) => {
                 const wss = new Server({ port: 0 }, () => {
-                    const port = wss._server.address().port;
+                    const port = wss.address().port;
                     const ws = new Client(`ws://localhost:${port}`, "foo");
 
                     assert.strictEqual(ws.extensions, "");
@@ -322,8 +316,7 @@ describe("net", "ws", "Client", () => {
 
             it("is set to `OPEN` once connection is established", (done) => {
                 const wss = new Server({ port: 0 }, () => {
-                    const port = wss._server.address().port;
-                    const ws = new Client(`ws://localhost:${port}`);
+                    const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                     ws.on("open", () => {
                         assert.strictEqual(ws.readyState, Client.OPEN);
@@ -336,8 +329,7 @@ describe("net", "ws", "Client", () => {
 
             it("is set to `CLOSED` once connection is closed", (done) => {
                 const wss = new Server({ port: 0 }, () => {
-                    const port = wss._server.address().port;
-                    const ws = new Client(`ws://localhost:${port}`);
+                    const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                     ws.on("close", () => {
                         assert.strictEqual(ws.readyState, Client.CLOSED);
@@ -350,8 +342,7 @@ describe("net", "ws", "Client", () => {
 
             it("is set to `CLOSED` once connection is terminated", (done) => {
                 const wss = new Server({ port: 0 }, () => {
-                    const port = wss._server.address().port;
-                    const ws = new Client(`ws://localhost:${port}`);
+                    const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                     ws.on("close", () => {
                         assert.strictEqual(ws.readyState, Client.CLOSED);
@@ -376,8 +367,7 @@ describe("net", "ws", "Client", () => {
     describe("Events", () => {
         it("emits an 'error' event if an error occurs", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("error", (err) => {
                     assert.ok(err instanceof RangeError);
@@ -401,8 +391,7 @@ describe("net", "ws", "Client", () => {
 
         it("emits an 'upgrade' event", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
                 ws.on("upgrade", (res) => {
                     assert.ok(res instanceof http.IncomingMessage);
                     wss.close(done);
@@ -412,8 +401,7 @@ describe("net", "ws", "Client", () => {
 
         it("emits a 'ping' event", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
                 ws.on("ping", () => wss.close(done));
             });
 
@@ -422,8 +410,7 @@ describe("net", "ws", "Client", () => {
 
         it("emits a 'pong' event", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
                 ws.on("pong", () => wss.close(done));
             });
 
@@ -662,7 +649,7 @@ describe("net", "ws", "Client", () => {
     describe("Connection with query string", () => {
         it("connects when pathname is not null", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
+                const port = wss.address().port;
                 const ws = new Client(`ws://localhost:${port}/?token=qwerty`);
 
                 ws.on("open", () => wss.close(done));
@@ -671,7 +658,7 @@ describe("net", "ws", "Client", () => {
 
         it("connects when pathname is null", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
+                const port = wss.address().port;
                 const ws = new Client(`ws://localhost:${port}?token=qwerty`);
 
                 ws.on("open", () => wss.close(done));
@@ -702,8 +689,7 @@ describe("net", "ws", "Client", () => {
 
         it("can send a ping with no data", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("open", () => {
                     ws.ping(() => ws.ping());
@@ -724,8 +710,7 @@ describe("net", "ws", "Client", () => {
 
         it("can send a ping with data", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("open", () => {
                     ws.ping("hi", () => ws.ping("hi", true));
@@ -736,7 +721,7 @@ describe("net", "ws", "Client", () => {
                 let pings = 0;
                 ws.on("ping", (message) => {
                     assert.strictEqual(message.toString(), "hi");
-                    if (++pings === 2) { 
+                    if (++pings === 2) {
                         wss.close(done);
                     }
                 });
@@ -745,8 +730,7 @@ describe("net", "ws", "Client", () => {
 
         it("can send numbers as ping payload", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("open", () => ws.ping(0));
             });
@@ -783,8 +767,7 @@ describe("net", "ws", "Client", () => {
 
         it("can send a pong with no data", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("open", () => {
                     ws.pong(() => ws.pong());
@@ -796,7 +779,7 @@ describe("net", "ws", "Client", () => {
                 ws.on("pong", (data) => {
                     assert.ok(is.buffer(data));
                     assert.strictEqual(data.length, 0);
-                    if (++pongs === 2) { 
+                    if (++pongs === 2) {
                         wss.close(done);
                     }
                 });
@@ -805,8 +788,7 @@ describe("net", "ws", "Client", () => {
 
         it("can send a pong with data", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("open", () => {
                     ws.pong("hi", () => ws.pong("hi", true));
@@ -826,8 +808,7 @@ describe("net", "ws", "Client", () => {
 
         it("can send numbers as pong payload", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("open", () => ws.pong(0));
             });
@@ -850,8 +831,7 @@ describe("net", "ws", "Client", () => {
                     array[i] = i / 5;
                 }
 
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("open", () => ws.send(array, { compress: false }));
                 ws.on("message", (msg) => {
@@ -867,8 +847,7 @@ describe("net", "ws", "Client", () => {
 
         it("can send text data", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("open", () => ws.send("hi"));
                 ws.on("message", (message) => {
@@ -884,8 +863,7 @@ describe("net", "ws", "Client", () => {
 
         it("does not override the `fin` option", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("open", () => {
                     ws.send("fragment", { fin: false });
@@ -903,8 +881,7 @@ describe("net", "ws", "Client", () => {
 
         it("sends numbers as strings", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("open", () => ws.send(0));
             });
@@ -929,8 +906,7 @@ describe("net", "ws", "Client", () => {
                 const buf = Buffer.from(partial.buffer)
                     .slice(partial.byteOffset, partial.byteOffset + partial.byteLength);
 
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("open", () => ws.send(partial, { binary: true }));
                 ws.on("message", (message) => {
@@ -947,8 +923,7 @@ describe("net", "ws", "Client", () => {
         it("can send binary data as a buffer", (done) => {
             const wss = new Server({ port: 0 }, () => {
                 const buf = Buffer.from("foobar");
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("open", () => ws.send(buf, { binary: true }));
                 ws.on("message", (message) => {
@@ -970,8 +945,7 @@ describe("net", "ws", "Client", () => {
                     array[i] = i / 2;
                 }
 
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("open", () => ws.send(array.buffer));
                 ws.onmessage = (event) => {
@@ -988,8 +962,7 @@ describe("net", "ws", "Client", () => {
         it("can send a `Buffer`", (done) => {
             const wss = new Server({ port: 0 }, () => {
                 const buf = Buffer.from("foobar");
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("open", () => ws.send(buf));
 
@@ -1031,8 +1004,7 @@ describe("net", "ws", "Client", () => {
 
         it("calls the optional callback when data is written out", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("open", () => {
                     ws.send("hi", (err) => {
@@ -1045,8 +1017,7 @@ describe("net", "ws", "Client", () => {
 
         it("works when the `data` argument is falsy", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("open", () => ws.send());
             });
@@ -1061,8 +1032,7 @@ describe("net", "ws", "Client", () => {
 
         it("can send text data with `mask` option set to `false`", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("open", () => ws.send("hi", { mask: false }));
             });
@@ -1083,8 +1053,7 @@ describe("net", "ws", "Client", () => {
             }
 
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("open", () => ws.send(array, { mask: false }));
             });
@@ -1101,8 +1070,7 @@ describe("net", "ws", "Client", () => {
     describe("#close", () => {
         it("closes the connection if called while connecting (1/2)", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("open", () => done(new Error("Unexpected 'open' event")));
                 ws.on("error", (err) => {
@@ -1122,8 +1090,7 @@ describe("net", "ws", "Client", () => {
                 verifyClient: (info, cb) => setTimeout(cb, 300, true),
                 port: 0
             }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("open", () => done(new Error("Unexpected 'open' event")));
                 ws.on("error", (err) => {
@@ -1152,8 +1119,7 @@ describe("net", "ws", "Client", () => {
 
         it("can be called from a listener of the 'upgrade' event", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("open", () => done(new Error("Unexpected 'open' event")));
                 ws.on("error", (err) => {
@@ -1170,8 +1136,7 @@ describe("net", "ws", "Client", () => {
 
         it("throws an error if the first argument is invalid (1/2)", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("open", () => {
                     assert.throws(
@@ -1186,8 +1151,7 @@ describe("net", "ws", "Client", () => {
 
         it("throws an error if the first argument is invalid (2/2)", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("open", () => {
                     assert.throws(
@@ -1202,8 +1166,7 @@ describe("net", "ws", "Client", () => {
 
         it("emits an error if the close frame can not be sent", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const socket = net.createConnection(port, () => {
+                const socket = net.createConnection(wss.address().port, () => {
                     socket.write(
                         "GET / HTTP/1.1\r\n" +
                         "Host: localhost\r\n" +
@@ -1234,8 +1197,7 @@ describe("net", "ws", "Client", () => {
         it("sends the close status code only when necessary", (done) => {
             let sent;
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("open", () => {
                     ws._socket.once("data", (data) => {
@@ -1261,8 +1223,7 @@ describe("net", "ws", "Client", () => {
 
         it("works when close reason is not specified", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("open", () => ws.close(1000));
             });
@@ -1278,8 +1239,7 @@ describe("net", "ws", "Client", () => {
 
         it("works when close reason is specified", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("open", () => ws.close(1000, "some reason"));
             });
@@ -1298,8 +1258,7 @@ describe("net", "ws", "Client", () => {
                 clientTracking: false,
                 port: 0
             }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("open", () => {
                     ws.on("close", (code, reason) => {
@@ -1317,8 +1276,7 @@ describe("net", "ws", "Client", () => {
                 perMessageDeflate: { threshold: 0 },
                 port: 0
             }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
                 const messages = [];
 
                 ws.on("message", (message) => messages.push(message));
@@ -1342,8 +1300,7 @@ describe("net", "ws", "Client", () => {
 
         it("allows close code 1013", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("close", (code) => {
                     assert.strictEqual(code, 1013);
@@ -1356,8 +1313,7 @@ describe("net", "ws", "Client", () => {
 
         it("does nothing if `readyState` is `CLOSED`", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("close", (code) => {
                     assert.strictEqual(code, 1005);
@@ -1374,8 +1330,7 @@ describe("net", "ws", "Client", () => {
     describe("#terminate", () => {
         it("closes the connection if called while connecting (1/2)", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("open", () => done(new Error("Unexpected 'open' event")));
                 ws.on("error", (err) => {
@@ -1395,8 +1350,7 @@ describe("net", "ws", "Client", () => {
                 verifyClient: (info, cb) => setTimeout(cb, 300, true),
                 port: 0
             }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("open", () => done(new Error("Unexpected 'open' event")));
                 ws.on("error", (err) => {
@@ -1425,8 +1379,7 @@ describe("net", "ws", "Client", () => {
 
         it("can be called from a listener of the 'upgrade' event", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("open", () => done(new Error("Unexpected 'open' event")));
                 ws.on("error", (err) => {
@@ -1443,8 +1396,7 @@ describe("net", "ws", "Client", () => {
 
         it("does nothing if `readyState` is `CLOSED`", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.on("close", (code) => {
                     assert.strictEqual(code, 1006);
@@ -1481,8 +1433,7 @@ describe("net", "ws", "Client", () => {
 
         it("works like the `EventEmitter` interface", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.onmessage = (messageEvent) => {
                     assert.strictEqual(messageEvent.data, "foo");
@@ -1576,8 +1527,7 @@ describe("net", "ws", "Client", () => {
 
         it("wraps text data in a `MessageEvent`", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.addEventListener("open", () => ws.send("hi"));
                 ws.addEventListener("message", (messageEvent) => {
@@ -1593,8 +1543,7 @@ describe("net", "ws", "Client", () => {
 
         it("receives a `CloseEvent` when server closes (1000)", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.addEventListener("close", (closeEvent) => {
                     assert.ok(closeEvent.wasClean);
@@ -1609,8 +1558,7 @@ describe("net", "ws", "Client", () => {
 
         it("receives a `CloseEvent` when server closes (4000)", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.addEventListener("close", (closeEvent) => {
                     assert.ok(closeEvent.wasClean);
@@ -1626,8 +1574,7 @@ describe("net", "ws", "Client", () => {
         it("sets `target` and `type` on events", (done) => {
             const wss = new Server({ port: 0 }, () => {
                 const err = new Error("forced");
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.addEventListener("open", (openEvent) => {
                     assert.strictEqual(openEvent.type, "open");
@@ -1658,8 +1605,7 @@ describe("net", "ws", "Client", () => {
 
         it("passes binary data as a Node.js `Buffer` by default", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.onmessage = (evt) => {
                     assert.ok(is.buffer(evt.data));
@@ -1672,8 +1618,7 @@ describe("net", "ws", "Client", () => {
 
         it("ignores `binaryType` for text messages", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
                 ws.binaryType = "arraybuffer";
 
@@ -1688,10 +1633,9 @@ describe("net", "ws", "Client", () => {
 
         it("allows to update `binaryType` on the fly", (done) => {
             const wss = new Server({ port: 0 }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
 
-                const testType = function (binaryType, next) {
+                const testType = (binaryType, next) => {
                     const buf = Buffer.from(binaryType);
                     ws.binaryType = binaryType;
 
@@ -2019,8 +1963,7 @@ describe("net", "ws", "Client", () => {
                 perMessageDeflate: { threshold: 0 },
                 port: 0
             }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`, {
+                const ws = new Client(`ws://localhost:${wss.address().port}`, {
                     perMessageDeflate: { threshold: 0 }
                 });
 
@@ -2047,8 +1990,7 @@ describe("net", "ws", "Client", () => {
                 perMessageDeflate: { threshold: 0 },
                 port: 0
             }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`, {
+                const ws = new Client(`ws://localhost:${wss.address().port}`, {
                     perMessageDeflate: { threshold: 0 }
                 });
 
@@ -2075,8 +2017,7 @@ describe("net", "ws", "Client", () => {
                 perMessageDeflate: { threshold: 0 },
                 port: 0
             }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`, {
+                const ws = new Client(`ws://localhost:${wss.address().port}`, {
                     perMessageDeflate: { threshold: 0 }
                 });
 
@@ -2097,8 +2038,7 @@ describe("net", "ws", "Client", () => {
                 perMessageDeflate: { threshold: 0 },
                 port: 0
             }, () => {
-                const port = wss._server.address().port;
-                const ws = new Client(`ws://localhost:${port}`);
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
                 const messages = [];
 
                 ws.on("message", (message) => messages.push(message));
@@ -2120,8 +2060,7 @@ describe("net", "ws", "Client", () => {
         describe("#send", () => {
             it("ignores the `compress` option if the extension is disabled", (done) => {
                 const wss = new Server({ port: 0 }, () => {
-                    const port = wss._server.address().port;
-                    const ws = new Client(`ws://localhost:${port}`, {
+                    const ws = new Client(`ws://localhost:${wss.address().port}`, {
                         perMessageDeflate: false
                     });
 
@@ -2144,8 +2083,7 @@ describe("net", "ws", "Client", () => {
                     perMessageDeflate: { threshold: 0 },
                     port: 0
                 }, () => {
-                    const port = wss._server.address().port;
-                    const ws = new Client(`ws://localhost:${port}`, {
+                    const ws = new Client(`ws://localhost:${wss.address().port}`, {
                         perMessageDeflate: { threshold: 0 }
                     });
 
@@ -2164,14 +2102,11 @@ describe("net", "ws", "Client", () => {
                     perMessageDeflate: true,
                     port: 0
                 }, () => {
-                    const port = wss._server.address().port;
-                    const ws = new Client(`ws://localhost:${port}`);
+                    const ws = new Client(`ws://localhost:${wss.address().port}`);
                     const messages = [];
 
                     ws.on("message", (message) => {
-                        if (messages.push(message) > 1) {
-                            return;
-                        }
+                        if (messages.push(message) > 1) { return; }
 
                         process.nextTick(() => {
                             assert.strictEqual(ws._receiver._state, 5);

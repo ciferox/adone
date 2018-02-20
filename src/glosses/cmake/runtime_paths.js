@@ -9,7 +9,7 @@ const runtimePaths = {
     node(targetOptions) {
         if (semver.lt(targetOptions.runtimeVersion, "4.0.0")) {
             return {
-                externalPath: `http://nodejs.org/dist/v${targetOptions.runtimeVersion}/`,
+                externalPath: `https://nodejs.org/dist/v${targetOptions.runtimeVersion}/`,
                 winLibs: [{
                     dir: targetOptions.isX64 ? "x64" : "",
                     name: `${targetOptions.runtime}.lib`
@@ -20,7 +20,7 @@ const runtimePaths = {
         }
 
         return {
-            externalPath: `http://nodejs.org/dist/v${targetOptions.runtimeVersion}/`,
+            externalPath: `https://nodejs.org/dist/v${targetOptions.runtimeVersion}/`,
             winLibs: [{
                 dir: targetOptions.isX64 ? "win-x64" : "win-x86",
                 name: `${targetOptions.runtime}.lib`
@@ -44,7 +44,7 @@ const runtimePaths = {
     nw(targetOptions) {
         if (semver.gte(targetOptions.runtimeVersion, "0.13.0")) {
             return {
-                externalPath: `http://node-webkit.s3.amazonaws.com/v${targetOptions.runtimeVersion}/`,
+                externalPath: `https://node-webkit.s3.amazonaws.com/v${targetOptions.runtimeVersion}/`,
                 winLibs: [
                     {
                         dir: targetOptions.isX64 ? "x64" : "",
@@ -71,7 +71,7 @@ const runtimePaths = {
     },
     electron(targetOptions) {
         return {
-            externalPath: `http://atom.io/download/atom-shell/v${targetOptions.runtimeVersion}/`,
+            externalPath: `https://atom.io/download/atom-shell/v${targetOptions.runtimeVersion}/`,
             winLibs: [{
                 dir: targetOptions.isX64 ? "x64" : "",
                 name: "node.lib"

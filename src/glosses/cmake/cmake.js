@@ -125,7 +125,7 @@ export default class CMake {
 
         // Custom options
         for (const k of _.keys(this.cMakeOptions)) {
-            D.push({ [k.toUpperCase()]: this.cMakeOptions[k] });
+            D.push({ [k]: this.cMakeOptions[k] });
         }
 
         // Toolset:

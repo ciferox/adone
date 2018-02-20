@@ -46,6 +46,6 @@ export default {
         const buildSystem = new BuildSystem(options);
 
         const command = await buildSystem.getConfigureCommand();
-        assert.notEqual(command.indexOf("-DFOO=\"bar\""), -1, "custom options added");
+        assert.notEqual(command.indexOf("-Dfoo=\"bar\""), -1, "custom options added");
     }
 };

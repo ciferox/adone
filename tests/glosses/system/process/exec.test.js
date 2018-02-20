@@ -126,8 +126,8 @@ describe("system", "process", () => {
         assert.throws(() => {
             execSync("foo");
         }, is.windows
-                ? /^('|")foo('|")/ // ?
-                : "spawnSync foo ENOENT"
+            ? /^('|")foo('|")/ // ?
+            : "spawnSync foo ENOENT"
         );
     });
 
@@ -532,27 +532,30 @@ describe("system", "process", () => {
 
     describe("errname", () => {
         // Simulates failure to capture `process.binding('uv');`
-        const fallback = (code) => errnameFallback(null, code);
+        // const fallback = (code) => errnameFallback(null, code);
 
         const makeTests = (name, m, expected) => {
             // In node 9.x this test leads to SIGABRT
             it.skip(`${name}: >=0 exit codes`, async () => {
                 // Throws >= 0
-                await assert.throws(async () => m(0), /err >= 0/);
-                await assert.throws(async () => m(1), /err >= 0/);
-                await assert.throws(async () => m("2"), /err >= 0/);
-                await assert.throws(async () => m("foo"), /err >= 0/);
+                // await assert.throws(async () => m(0), /err >= 0/);
+                // await assert.throws(async () => m(1), /err >= 0/);
+                // await assert.throws(async () => m("2"), /err >= 0/);
+                // await assert.throws(async () => m("foo"), /err >= 0/);
+                await assert.throws(() => m(0), /err >= 0|It must be a negative integer/);
+                await assert.throws(() => m(1), /err >= 0|It must be a negative integer/);
+                await assert.throws(() => m("2"), /err >= 0|must be of type number/);
+                await assert.throws(() => m("foo"), /err >= 0|must be of type number/);
             });
 
             it(`${name}: negative exit codes`, async () => {
                 assert.equal(await m(-2), expected);
-                assert.equal(await m("-2"), expected);
             });
         };
 
         const unknown = "Unknown system error -2";
 
         makeTests("native", errname, is.windows ? unknown : "ENOENT");
-        makeTests("fallback", fallback, unknown);
+        // makeTests("fallback", fallback, unknown);
     });
 });
