@@ -1,7 +1,7 @@
 describe("assertion", "mock interface", "call count", () => {
     const {
         assertion: { AssertionError },
-        exception
+        error
     } = adone;
     
     let s = null;
@@ -14,7 +14,7 @@ describe("assertion", "mock interface", "call count", () => {
         it("should throw an error when the spy is undefined", () => {
             expect(() => {
                 expect(undefined).to.have.been.called();
-            }).to.throw(exception.InvalidArgument);
+            }).to.throw(error.InvalidArgument);
         });
 
         it("should throw an assertion error when the spy is not called", () => {

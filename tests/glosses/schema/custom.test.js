@@ -408,7 +408,7 @@ describe("schema", "custom keywords", () => {
             });
         });
 
-        it("should throw exception if macro expansion is an invalid schema", () => {
+        it("should throw error if macro expansion is an invalid schema", () => {
             instance.addKeyword("invalid", { macro: macroInvalid });
             const schema = { invalid: true };
 
@@ -1202,7 +1202,7 @@ describe("schema", "custom keywords", () => {
             expect(instance.validate({ fail: "" }, 1)).to.be.equal(false);
         });
 
-        it("should throw exception if used with macro keyword", () => {
+        it("should throw error if used with macro keyword", () => {
             expect(() => {
                 instance.addKeyword("pass", {
                     macro() {

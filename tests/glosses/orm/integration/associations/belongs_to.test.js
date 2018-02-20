@@ -215,11 +215,11 @@ describe("belongsTo", function () {
             await this.sequelize.sync({ force: true });
             await assert.throws(async () => {
                 await Task.create({ title: "task", UserXYZId: 5 });
-            }, orm.exception.ForeignKeyConstraintError);
+            }, orm.error.ForeignKeyConstraintError);
             const task = await Task.create({ title: "task" });
             await assert.throws(async () => {
                 await Task.update({ title: "taskUpdate", UserXYZId: 5 }, { where: { id: task.id } });
-            }, orm.exception.ForeignKeyConstraintError);
+            }, orm.error.ForeignKeyConstraintError);
         });
 
         it("supports passing the primary key instead of an object", function () {
@@ -466,7 +466,7 @@ describe("belongsTo", function () {
             await Task.create({ title: "task", UserId: user.id });
             await assert.throws(async () => {
                 await user.destroy();
-            }, orm.exception.ForeignKeyConstraintError);
+            }, orm.error.ForeignKeyConstraintError);
             expect(await Task.findAll()).to.have.length(1);
         });
 
@@ -526,7 +526,7 @@ describe("belongsTo", function () {
 
                 await assert.throws(async () => {
                     await user.destroy();
-                }, orm.exception.ForeignKeyConstraintError);
+                }, orm.error.ForeignKeyConstraintError);
 
                 expect(await Task.findAll()).to.have.length(1);
             });
@@ -550,7 +550,7 @@ describe("belongsTo", function () {
                 await assert.throws(async () => {
                     // Should fail due to FK restriction
                     await user.sequelize.getQueryInterface().update(user, tableName, { id: 999 }, { id: user.id });
-                }, orm.exception.ForeignKeyConstraintError);
+                }, orm.error.ForeignKeyConstraintError);
 
                 expect(await Task.findAll()).to.have.length(1);
             });

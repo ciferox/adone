@@ -871,7 +871,7 @@ describe("util", "fakeClock", () => {
                 assert(spies[2].called);
             });
 
-            it("throws exception thrown by timer", function () {
+            it("throws error thrown by timer", function () {
                 const clock = this.clock;
                 const stb = stub().throws();
 

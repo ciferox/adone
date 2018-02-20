@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     util,
     event: { AsyncEmitter },
     collection: { TimedoutMap },
@@ -16,7 +16,7 @@ export default class GenesisPeer extends AsyncEmitter {
         this.streamId = new SequenceId();
         this._responseAwaiters = new TimedoutMap(this.options.responseTimeout, (streamId) => {
             const awaiter = this._removeAwaiter(streamId);
-            awaiter([1, new exception.NetronTimeout(`Response timeout ${this.options.responseTimeout}ms exceeded`)]);
+            awaiter([1, new error.NetronTimeout(`Response timeout ${this.options.responseTimeout}ms exceeded`)]);
         });
         this._status = PEER_STATUS.OFFLINE;
         this._defs = new Map();
@@ -35,23 +35,23 @@ export default class GenesisPeer extends AsyncEmitter {
     }
 
     connect(/*options*/) {
-        throw new exception.NotImplemented("Method connect() is not implemented");
+        throw new error.NotImplemented("Method connect() is not implemented");
     }
 
     disconnect() {
-        throw new exception.NotImplemented("Method disconnect() is not implemented");
+        throw new error.NotImplemented("Method disconnect() is not implemented");
     }
 
     isConnected() {
-        throw new exception.NotImplemented("Method isConnected() is not implemented");
+        throw new error.NotImplemented("Method isConnected() is not implemented");
     }
 
     write(/*data*/) {
-        throw new exception.NotImplemented("Method write() is not implemented");
+        throw new error.NotImplemented("Method write() is not implemented");
     }
 
     getRemoteAddress() {
-        throw new exception.NotImplemented("Method getRemoteAddress() is not implemented");
+        throw new error.NotImplemented("Method getRemoteAddress() is not implemented");
     }
 
     getStatus() {
@@ -78,7 +78,7 @@ export default class GenesisPeer extends AsyncEmitter {
     async acceptStream({ remoteStreamId, highWaterMark = 16, allowHalfOpen = true } = {}) {
         // acceptor side -> incomming stream
         if (!this._awaitingStreamIds.has(remoteStreamId)) {
-            throw new exception.NotExists("No awaiting stream with such id");
+            throw new error.NotExists("No awaiting stream with such id");
         }
 
         const id = this.streamId.next();
@@ -102,25 +102,25 @@ export default class GenesisPeer extends AsyncEmitter {
     set(defId, name, data) {
         const ctxDef = this._defs.get(defId);
         if (is.undefined(ctxDef)) {
-            return Promise.reject(new exception.Unknown(`Unknown definition '${defId}'`));
+            return Promise.reject(new error.Unknown(`Unknown definition '${defId}'`));
         }
 
         let $ = ctxDef.$;
         if (name in $) {
             $ = $[name];
             if (!$.method && $.readonly) {
-                return Promise.reject(new exception.InvalidAccess(`'${name}' is not writable`));
+                return Promise.reject(new error.InvalidAccess(`'${name}' is not writable`));
             }
             data = this._processArgs(ctxDef, $, data);
             return this.netron.send(this, 1, this.streamId.next(), 1, ACTION.SET, [defId, name, data]);
         }
-        return Promise.reject(new exception.NotExists(`'${name}' not exists`));
+        return Promise.reject(new error.NotExists(`'${name}' not exists`));
     }
 
     get(defId, name, defaultData) {
         const ctxDef = this._defs.get(defId);
         if (is.undefined(ctxDef)) {
-            return Promise.reject(new exception.Unknown(`Unknown definition '${defId}'`));
+            return Promise.reject(new error.Unknown(`Unknown definition '${defId}'`));
         }
 
         let $ = ctxDef.$;
@@ -137,7 +137,7 @@ export default class GenesisPeer extends AsyncEmitter {
                 }).catch(reject);
             });
         }
-        return Promise.reject(new exception.NotExists(`'${name}' not exists`));
+        return Promise.reject(new error.NotExists(`'${name}' not exists`));
     }
 
     ping() {
@@ -185,7 +185,7 @@ export default class GenesisPeer extends AsyncEmitter {
     getInterfaceByName(ctxId) {
         const def = this.getDefinitionByName(ctxId);
         if (is.undefined(def)) {
-            throw new exception.Unknown(`Unknown context '${ctxId}'`);
+            throw new error.Unknown(`Unknown context '${ctxId}'`);
         }
         return this.getInterfaceById(def.id);
     }
@@ -193,7 +193,7 @@ export default class GenesisPeer extends AsyncEmitter {
     getInterfaceById(defId) {
         const def = this._defs.get(defId);
         if (is.undefined(def)) {
-            throw new exception.Unknown(`Unknown definition '${defId}'`);
+            throw new error.Unknown(`Unknown definition '${defId}'`);
         }
         return this.netron._createInterface(def, this.uid);
     }
@@ -218,7 +218,7 @@ export default class GenesisPeer extends AsyncEmitter {
         if (status !== this._status) {
             if (this._status === PEER_STATUS.ONLINE && status === PEER_STATUS.OFFLINE) {
                 for (const awaiter of this._responseAwaiters.values()) { // reject all the pending get requests
-                    awaiter([1, new exception.NetronPeerDisconnected()]);
+                    awaiter([1, new error.NetronPeerDisconnected()]);
                 }
             }
             this._status = status;

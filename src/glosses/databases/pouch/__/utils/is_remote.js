@@ -18,7 +18,7 @@ export default function isRemote(db) {
     }
     /* istanbul ignore next */
     if (is.function(db.type)) {
-        adone.warn(
+        adone.logWarn(
             "db.type() is deprecated and will be removed in " +
             "a future version of PouchDB");
         return db.type() === "http";

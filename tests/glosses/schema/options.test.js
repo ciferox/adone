@@ -324,9 +324,9 @@ describe("schema", "options", () => {
         });
 
         it('should not throw on invalid schema with validateSchema: "log"', () => {
-            const logError = adone.error;
+            const logError = adone.logError;
             let loggedError = false;
-            adone.error = function (...args) {
+            adone.logError = function (...args) {
                 loggedError = true;
                 logError.apply(adone, args);
             };
@@ -344,7 +344,7 @@ describe("schema", "options", () => {
                 }).not.to.throw();
                 expect(loggedError).to.be.equal(false);
             } finally {
-                adone.error = logError;
+                adone.logError = logError;
             }
         });
 
@@ -939,9 +939,9 @@ describe("schema", "options", () => {
         const testWarning = (instance, msgPattern) => {
             let oldConsole;
             try {
-                oldConsole = adone.warn;
+                oldConsole = adone.logWarn;
                 let consoleMsg;
-                adone.warn = function () {
+                adone.logWarn = function () {
                     consoleMsg = Array.prototype.join.call(arguments, " ");
                 };
 
@@ -960,7 +960,7 @@ describe("schema", "options", () => {
                     expect(consoleMsg).not.to.be.ok();
                 }
             } finally {
-                adone.warn = oldConsole;
+                adone.logWarn = oldConsole;
             }
         };
     });
@@ -1230,18 +1230,18 @@ describe("schema", "options", () => {
          * The logger option tests are based on the meta scenario which writes into the logger.warn
          */
 
-        const origConsoleWarn = adone.warn;
+        const origConsoleWarn = adone.logWarn;
         let consoleCalled;
 
         beforeEach(() => {
             consoleCalled = false;
-            adone.warn = function () {
+            adone.logWarn = function () {
                 consoleCalled = true;
             };
         });
 
         afterEach(() => {
-            adone.warn = origConsoleWarn;
+            adone.logWarn = origConsoleWarn;
         });
 
         it("no custom logger is given - global console should be used", () => {

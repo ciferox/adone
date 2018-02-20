@@ -164,7 +164,7 @@ export default class Admin {
         if (!is.nil(doc.result) && doc.result.constructor !== String) {
             throw toError("Error with validation data");
         }
-        if (!is.nil(doc.result) && !is.null(doc.result.match(/exception|corrupt/))) {
+        if (!is.nil(doc.result) && !is.null(doc.result.match(/error|corrupt/))) {
             return toError(`Error: invalid collection ${collectionName}`);
         }
         if (!is.nil(doc.valid) && !doc.valid) {

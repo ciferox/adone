@@ -517,15 +517,15 @@ describe("multi", "address2", () => {
     describe("protocols", () => {
         describe("throws on non existent protocol", () => {
             it("number", () => {
-                expect(() => address2.protocols(1234)).to.throw(adone.exception.Unknown);
+                expect(() => address2.protocols(1234)).to.throw(adone.error.Unknown);
             });
 
             it("string", () => {
-                expect(() => address2.protocols("hello")).to.throw(adone.exception.Unknown);
+                expect(() => address2.protocols("hello")).to.throw(adone.error.Unknown);
             });
 
             it("else", () => {
-                expect(() => address2.protocols({ hi: 34 })).to.throw(adone.exception.NotValid);
+                expect(() => address2.protocols({ hi: 34 })).to.throw(adone.error.NotValid);
             });
         });
     });

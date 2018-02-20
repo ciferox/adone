@@ -24,7 +24,7 @@ const looper = (fun) => {
 
 const destroy = (stream) => {
     if (!stream.destroy) {
-        adone.warn("warning, stream-to-pull-stream: the wrapped node-stream does not implement `destroy`, this may cause resource leaks.");
+        adone.logWarn("warning, stream-to-pull-stream: the wrapped node-stream does not implement `destroy`, this may cause resource leaks.");
     } else {
         stream.destroy();
     }

@@ -545,7 +545,7 @@ conversions.rgb.ansi256 = function (args) {
     const g = args[1];
     const b = args[2];
 
-    // we use the extended greyscale palette here, with the exception of
+    // we use the extended greyscale palette here, with the error of
     // black and white. normal palette only has 4 greyscale shades.
     if (r === g && g === b) {
         if (r < 8) {

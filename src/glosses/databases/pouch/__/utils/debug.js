@@ -7,7 +7,7 @@ export default function debugPouch(PouchDB) {
         // rest should be passed verbatim to debug module
         const logArgs = args.slice(1);
         if (!logs[logId]) {
-            logs[logId] = (...args) => adone.debug(`pouchdb:${logId}`, ...args);
+            logs[logId] = (...args) => adone.logDebug(`pouchdb:${logId}`, ...args);
         }
         logs[logId].apply(null, logArgs);
     });

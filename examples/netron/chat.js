@@ -146,11 +146,11 @@ class Server extends StdinWorker {
     async join(client_int){
         let name = await client_int.name();
         if ( this.clients.has(name) ) {
-            throw new adone.exception.Exists(`User with name ${name} already exists. Choose another name.`);
+            throw new adone.error.Exists(`User with name ${name} already exists. Choose another name.`);
         } else if ( ["server", "admin"].indexOf(name.toLowerCase()) > -1 ){
-            throw new adone.exception.NotValid(`Name ${name} is system. Choose another name.`);
+            throw new adone.error.NotValid(`Name ${name} is system. Choose another name.`);
         } else if ( !(/^[A-Za-z0-9]+$/.test(name)) ){
-            throw new adone.exception.NotValid("Invalid name. Mask: ^[A-Za-z0-9]+$.");
+            throw new adone.error.NotValid("Invalid name. Mask: ^[A-Za-z0-9]+$.");
         }
 
         this.clients.set(name, {

@@ -1,6 +1,6 @@
 const {
     is,
-    exception
+    error
 } = adone;
 
 class TestApp extends adone.application.Application {
@@ -11,7 +11,7 @@ class TestApp extends adone.application.Application {
             try {
                 this[getter] = null;
             } catch (err) {
-                if (err instanceof exception.NotAllowed) {
+                if (err instanceof error.NotAllowed) {
                     counter++;
                 } else {
                     adone.log(err);

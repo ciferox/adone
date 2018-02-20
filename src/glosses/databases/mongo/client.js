@@ -75,11 +75,11 @@ const validOptions = (options) => {
         if (!_validOptions.includes(name) && options.validateOptions) {
             return new MongoError(`option ${name} is not supported`);
         } else if (!_validOptions.includes(name)) {
-            adone.warn(`the options [${name}] is not supported`);
+            adone.logWarn(`the options [${name}] is not supported`);
         }
 
         if (legacyOptionNames.includes(name)) {
-            // adone.warn(f("the server/replset/mongos options are deprecated, all their options are supported at the top level of the options object [%s]", validOptionNames));
+            // adone.logWarn(f("the server/replset/mongos options are deprecated, all their options are supported at the top level of the options object [%s]", validOptionNames));
         }
     }
 };

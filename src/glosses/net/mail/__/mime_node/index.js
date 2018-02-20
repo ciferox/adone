@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     std: { crypto, os, fs, punycode, stream: { PassThrough } },
     net: { mail: { __ } }
 } = adone;
@@ -933,7 +933,7 @@ export default class MimeNode {
         } else if (content && is.string(content.path) && !content.href) {
             if (this.disableFileAccess) {
                 contentStream = new PassThrough();
-                setImmediate(() => contentStream.emit("error", new exception.IllegalState(`File access rejected for ${content.path}`)));
+                setImmediate(() => contentStream.emit("error", new error.IllegalState(`File access rejected for ${content.path}`)));
                 return contentStream;
             }
             // read file
@@ -941,7 +941,7 @@ export default class MimeNode {
         } else if (content && is.string(content.href)) {
             if (this.disableUrlAccess) {
                 contentStream = new PassThrough();
-                setImmediate(() => contentStream.emit("error", new exception.IllegalState(`Url access rejected for ${content.href}`)));
+                setImmediate(() => contentStream.emit("error", new error.IllegalState(`Url access rejected for ${content.href}`)));
                 return contentStream;
             }
             // fetch URL

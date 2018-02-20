@@ -1042,7 +1042,7 @@ describe("crypto", "pkcs1", () => {
             try {
                 const decrypted = keys.privateKey.decrypt(Buffer.from(out, "binary"), null);
                 pkcs1.decodeRSAOAEP(keys.privateKey, decrypted);
-                throw new Error("Expected an exception");
+                throw new Error("Expected an error");
             } catch (e) {
                 assert.equal(e.message, "Invalid RSAES-OAEP padding.");
             }

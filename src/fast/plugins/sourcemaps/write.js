@@ -1,5 +1,5 @@
 export default function plugin({ __ }) {
-    const { is, exception, util } = adone;
+    const { is, error, util } = adone;
     return function write(destPath, options) {
         if (is.undefined(options) && !is.string(destPath)) {
             options = destPath;
@@ -20,7 +20,7 @@ export default function plugin({ __ }) {
             }
 
             if (file.isStream()) {
-                throw new exception.NotSupported("Streaming is not supported");
+                throw new error.NotSupported("Streaming is not supported");
             }
 
             // fix paths if Windows style paths

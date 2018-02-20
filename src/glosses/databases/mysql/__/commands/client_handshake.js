@@ -1,6 +1,6 @@
 const {
     database: { mysql },
-    exception
+    error
 } = adone;
 
 const {
@@ -40,7 +40,7 @@ export default class ClientHandshake extends Command {
 
     sendCredentials(connection) {
         if (connection.config.debug) {
-            adone.debug("Sending handshake packet: flags:%d=(%s)", this.clientFlags,
+            adone.logDebug("Sending handshake packet: flags:%d=(%s)", this.clientFlags,
                 flagNames(this.clientFlags).join(", "));
         }
 
@@ -91,7 +91,7 @@ export default class ClientHandshake extends Command {
 
         this.handshake = packet.Handshake.fromPacket(helloPacket);
         if (connection.config.debug) {
-            adone.debug(
+            adone.logDebug(
                 "Server hello packet: capability flags:%d=(%s)",
                 this.handshake.capabilityFlags,
                 flagNames(this.handshake.capabilityFlags).join(", ")
@@ -110,7 +110,7 @@ export default class ClientHandshake extends Command {
         if (connection.config.ssl) {
             // client requires SSL but server does not support it
             if (!serverSSLSupport) {
-                const err = new exception.NotSupported("Server does not support secure connnection");
+                const err = new error.NotSupported("Server does not support secure connnection");
                 err.code = "HANDSHAKE_NO_SSL_SUPPORT";
                 err.fatal = true;
                 command.emit("error", err);
@@ -167,7 +167,7 @@ export default class ClientHandshake extends Command {
             } else {
                 connection.emit(
                     "error",
-                    new exception.IllegalState("Server requires auth switch, but no auth switch handler provided")
+                    new error.IllegalState("Server requires auth switch, but no auth switch handler provided")
                 );
                 return null;
             }
@@ -175,7 +175,7 @@ export default class ClientHandshake extends Command {
         }
 
         if (marker !== 0) {
-            const err = new exception.IllegalState("Unexpected packet during handshake phase");
+            const err = new error.IllegalState("Unexpected packet during handshake phase");
             if (this.onResult) {
                 this.onResult(err);
             } else {

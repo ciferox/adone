@@ -15,8 +15,8 @@ adone.application.run({
                 await this.engine.uninitialize();
                 break;
             } catch (err) {
-                adone.error("could not unmount");
-                adone.error(err);
+                adone.logError("could not unmount");
+                adone.logError(err);
                 await adone.promise.delay(1000);
             }
         }

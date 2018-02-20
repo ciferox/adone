@@ -26,7 +26,7 @@ export default class Railing extends adone.event.Emitter {
                     peerInfo.multiaddrs.add(ma);
                     this.emit("peer", peerInfo);
                 } catch (err) {
-                    return adone.error("Invalid bootstrap peer id", err);
+                    return adone.logError("Invalid bootstrap peer id", err);
                 }
 
             });

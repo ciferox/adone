@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     net: { amqp },
     event,
     std: {
@@ -249,7 +249,7 @@ const channel0 = function (connection) {
             // Oh. OK. I guess we're done here then.
             connection.sendMethod(0, defs.ConnectionCloseOk, {});
             const emsg = fmt("Connection closed: %s", closeMsg(f));
-            const s = exception.captureStack(emsg);
+            const s = error.captureStack(emsg);
             const e = new Error(emsg);
             e.code = f.fields.replyCode;
             if (isFatalError(e)) {
@@ -392,7 +392,7 @@ export class Connection extends event.Emitter {
         };
 
         const send = (Method) => {
-            // This can throw an exception if there's some problem with the
+            // This can throw an error if there's some problem with the
             // options; e.g., something is a string instead of a number.
             try {
                 this.sendMethod(0, Method, tunedOptions);

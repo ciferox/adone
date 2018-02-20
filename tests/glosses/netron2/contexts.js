@@ -42,14 +42,14 @@ export class B extends A {
 
     @DPublic()
     syncErrorB() {
-        throw new adone.exception.InvalidArgument("Invalid argument");
+        throw new adone.error.InvalidArgument("Invalid argument");
     }
 
     @DPublic()
     asyncErrorB() {
         return new Promise(async (resolve, reject) => {
             await adone.promise.delay(1);
-            reject(new adone.exception.InvalidArgument("Invalid argument"));
+            reject(new adone.error.InvalidArgument("Invalid argument"));
         });
     }
 
@@ -546,17 +546,17 @@ export class StdErrs {
 @DContext()
 export class AdoneErrs { }
 
-export const adoneErrors = adone.exception.adoneExceptions;
+export const adoneErrors = adone.error.adoneExceptions;
 export const netronErrors = [];
 for (const AdoneError of adoneErrors) {
-    if (adone.exception.exceptionIdMap[AdoneError] < 1000) {
+    if (adone.error.exceptionIdMap[AdoneError] < 1000) {
         const fnName = `throw${AdoneError.name}`;
         if (AdoneError.name.startsWith("Netron")) {
             netronErrors.push(AdoneError.name);
         } else {
             if (AdoneError.name === "AggregateException") {
                 AdoneErrs.prototype[fnName] = function () {
-                    throw new AdoneError([new adone.exception.Exception("a"), new adone.exception.Runtime("b")]);
+                    throw new AdoneError([new adone.error.Exception("a"), new adone.error.Runtime("b")]);
                 };
             } else {
                 AdoneErrs.prototype[fnName] = function () {

@@ -1,5 +1,5 @@
 const {
-    exception,
+    error,
     is,
     util
 } = adone;
@@ -31,7 +31,7 @@ const quoteString = (val) => {
     }
 
     if (str.length > 0 && !TEXT_REGEXP.test(str)) {
-        throw new exception.InvalidArgument("invalid parameter value");
+        throw new error.InvalidArgument("invalid parameter value");
     }
 
     return `"${str.replace(QUOTE_REGEXP, "\\$1")}"`;
@@ -39,13 +39,13 @@ const quoteString = (val) => {
 
 export const format = (obj) => {
     if (!is.object(obj)) {
-        throw new exception.InvalidArgument("argument obj is required");
+        throw new error.InvalidArgument("argument obj is required");
     }
 
     const { parameters, type } = obj;
 
     if (!type || !TYPE_REGEXP.test(type)) {
-        throw new exception.InvalidArgument("invalid type");
+        throw new error.InvalidArgument("invalid type");
     }
 
     let string = type;
@@ -59,7 +59,7 @@ export const format = (obj) => {
             param = params[i];
 
             if (!TOKEN_REGEXP.test(param)) {
-                throw new exception.InvalidArgument("invalid parameter name");
+                throw new error.InvalidArgument("invalid parameter name");
             }
 
             string += `; ${param}=${quoteString(parameters[param])}`;
@@ -88,14 +88,14 @@ const getContentType = (obj) => {
         header = obj.headers["content-type"];
     }
     if (!is.string(header)) {
-        throw new exception.IllegalState("content-type header is missing from object");
+        throw new error.IllegalState("content-type header is missing from object");
     }
     return header;
 };
 
 export const parse = (string) => {
     if (!string) {
-        throw new exception.InvalidArgument("argument string is required");
+        throw new error.InvalidArgument("argument string is required");
     }
 
     const header = is.object(string)
@@ -110,7 +110,7 @@ export const parse = (string) => {
     const type = index !== -1 ? header.substr(0, index).trim() : header.trim();
 
     if (!TYPE_REGEXP.test(type)) {
-        throw new exception.IllegalState("invalid media type");
+        throw new error.IllegalState("invalid media type");
     }
 
     const obj = new ContentType(type.toLowerCase());
@@ -123,7 +123,7 @@ export const parse = (string) => {
         let match;
         while ((match = PARAM_REGEXP.exec(header))) {
             if (match.index !== index) {
-                throw new exception.IllegalState("invalid parameter format");
+                throw new error.IllegalState("invalid parameter format");
             }
 
             index += match[0].length;
@@ -139,7 +139,7 @@ export const parse = (string) => {
         }
 
         if (index !== header.length) {
-            throw new exception.IllegalState("invalid parameter format");
+            throw new error.IllegalState("invalid parameter format");
         }
     }
 

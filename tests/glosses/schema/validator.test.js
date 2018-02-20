@@ -78,7 +78,7 @@ describe("schema", "Validator", () => {
             expect(instance.validate("//e.com/str.json", 1)).to.be.equal(false);
         });
 
-        it("should throw exception if no schema with ref", () => {
+        it("should throw error if no schema with ref", () => {
             expect(instance.validate({ id: "integer", type: "integer" }, 1)).to.be.equal(true);
             expect(instance.validate("integer", 1)).to.be.equal(true);
 
@@ -206,7 +206,7 @@ describe("schema", "Validator", () => {
         it("should throw if schema id is not a string", () => {
             try {
                 instance.addSchema({ id: 1, type: "integer" });
-                throw new Error("should have throw exception");
+                throw new Error("should have throw error");
             } catch (e) {
                 expect(e.message).to.be.equal("schema id must be string");
             }
@@ -497,7 +497,7 @@ describe("schema", "Validator", () => {
             expect(instance.errors[2].keyword).to.be.equal("anyOf");
         });
 
-        it("should throw exception if meta-schema is unknown", () => {
+        it("should throw error if meta-schema is unknown", () => {
             expect(() => {
                 instance.validateSchema({
                     $schema: "http://example.com/unknown/schema#",
@@ -506,7 +506,7 @@ describe("schema", "Validator", () => {
             }).to.throw();
         });
 
-        it("should throw exception if $schema is not a string", () => {
+        it("should throw error if $schema is not a string", () => {
             expect(() => {
                 instance.validateSchema({
                     $schema: {},

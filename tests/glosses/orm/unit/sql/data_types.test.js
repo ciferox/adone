@@ -88,7 +88,7 @@ describe("data types", function () {
 
                 expect(() => {
                     t.validate(12345);
-                }).to.throw(orm.exception.ValidationError, "12345 is not a valid string");
+                }).to.throw(orm.error.ValidationError, "12345 is not a valid string");
             });
 
             it("should return `true` if `value` is a string", () => {
@@ -139,7 +139,7 @@ describe("data types", function () {
 
                 expect(() => {
                     t.validate(12345);
-                }).to.throw(orm.exception.ValidationError, "12345 is not a valid boolean");
+                }).to.throw(orm.error.ValidationError, "12345 is not a valid boolean");
             });
 
             it("should return `true` if `value` is a boolean", () => {
@@ -176,7 +176,7 @@ describe("data types", function () {
 
                 expect(() => {
                     t.validate("foobar");
-                }).to.throw(orm.exception.ValidationError, '"foobar" is not a valid date');
+                }).to.throw(orm.error.ValidationError, '"foobar" is not a valid date');
             });
 
             it("should return `true` if `value` is a date", () => {
@@ -195,7 +195,7 @@ describe("data types", function () {
 
                     expect(() => {
                         t.validate("foobar");
-                    }).to.throw(orm.exception.ValidationError, '"foobar" is not a valid hstore');
+                    }).to.throw(orm.error.ValidationError, '"foobar" is not a valid hstore');
                 });
 
                 it("should return `true` if `value` is an hstore", () => {
@@ -221,11 +221,11 @@ describe("data types", function () {
 
                 expect(() => {
                     t.validate("foobar");
-                }).to.throw(orm.exception.ValidationError, '"foobar" is not a valid uuid');
+                }).to.throw(orm.error.ValidationError, '"foobar" is not a valid uuid');
 
                 expect(() => {
                     t.validate(["foobar"]);
-                }).to.throw(orm.exception.ValidationError, '["foobar"] is not a valid uuid');
+                }).to.throw(orm.error.ValidationError, '["foobar"] is not a valid uuid');
             });
 
             it("should return `true` if `value` is an uuid", () => {
@@ -253,11 +253,11 @@ describe("data types", function () {
 
                 expect(() => {
                     t.validate("foobar");
-                }).to.throw(orm.exception.ValidationError, '"foobar" is not a valid uuid');
+                }).to.throw(orm.error.ValidationError, '"foobar" is not a valid uuid');
 
                 expect(() => {
                     t.validate(["foobar"]);
-                }).to.throw(orm.exception.ValidationError, '["foobar"] is not a valid uuid');
+                }).to.throw(orm.error.ValidationError, '["foobar"] is not a valid uuid');
             });
 
             it("should return `true` if `value` is an uuid", () => {
@@ -286,11 +286,11 @@ describe("data types", function () {
 
                 expect(() => {
                     t.validate(value);
-                }).to.throw(orm.exception.ValidationError, util.format("%j is not a valid uuidv4", value));
+                }).to.throw(orm.error.ValidationError, util.format("%j is not a valid uuidv4", value));
 
                 expect(() => {
                     t.validate(["foobar"]);
-                }).to.throw(orm.exception.ValidationError, '["foobar"] is not a valid uuidv4');
+                }).to.throw(orm.error.ValidationError, '["foobar"] is not a valid uuidv4');
             });
 
             it("should return `true` if `value` is an uuid", () => {
@@ -377,15 +377,15 @@ describe("data types", function () {
 
                 expect(() => {
                     t.validate("foobar");
-                }).to.throw(orm.exception.ValidationError, '"foobar" is not a valid integer');
+                }).to.throw(orm.error.ValidationError, '"foobar" is not a valid integer');
 
                 expect(() => {
                     t.validate("123.45");
-                }).to.throw(orm.exception.ValidationError, '"123.45" is not a valid integer');
+                }).to.throw(orm.error.ValidationError, '"123.45" is not a valid integer');
 
                 expect(() => {
                     t.validate(123.45);
-                }).to.throw(orm.exception.ValidationError, "123.45 is not a valid integer");
+                }).to.throw(orm.error.ValidationError, "123.45 is not a valid integer");
             });
 
             it("should return `true` if `value` is a valid integer", () => {
@@ -501,11 +501,11 @@ describe("data types", function () {
 
                 expect(() => {
                     t.validate("foobar");
-                }).to.throw(orm.exception.ValidationError, '"foobar" is not a valid tinyint');
+                }).to.throw(orm.error.ValidationError, '"foobar" is not a valid tinyint');
 
                 expect(() => {
                     t.validate(123.45);
-                }).to.throw(orm.exception.ValidationError, "123.45 is not a valid tinyint");
+                }).to.throw(orm.error.ValidationError, "123.45 is not a valid tinyint");
             });
 
             it("should return `true` if `value` is an integer", () => {
@@ -631,11 +631,11 @@ describe("data types", function () {
 
                 expect(() => {
                     t.validate("foobar");
-                }).to.throw(orm.exception.ValidationError, '"foobar" is not a valid smallint');
+                }).to.throw(orm.error.ValidationError, '"foobar" is not a valid smallint');
 
                 expect(() => {
                     t.validate(123.45);
-                }).to.throw(orm.exception.ValidationError, "123.45 is not a valid smallint");
+                }).to.throw(orm.error.ValidationError, "123.45 is not a valid smallint");
             });
 
             it("should return `true` if `value` is an integer", () => {
@@ -741,11 +741,11 @@ describe("data types", function () {
 
                 expect(() => {
                     t.validate("foobar");
-                }).to.throw(orm.exception.ValidationError, '"foobar" is not a valid mediumint');
+                }).to.throw(orm.error.ValidationError, '"foobar" is not a valid mediumint');
 
                 expect(() => {
                     t.validate(123.45);
-                }).to.throw(orm.exception.ValidationError, "123.45 is not a valid mediumint");
+                }).to.throw(orm.error.ValidationError, "123.45 is not a valid mediumint");
             });
 
             it("should return `true` if `value` is an integer", () => {
@@ -820,11 +820,11 @@ describe("data types", function () {
 
                 expect(() => {
                     t.validate("foobar");
-                }).to.throw(orm.exception.ValidationError, '"foobar" is not a valid bigint');
+                }).to.throw(orm.error.ValidationError, '"foobar" is not a valid bigint');
 
                 expect(() => {
                     t.validate(123.45);
-                }).to.throw(orm.exception.ValidationError, "123.45 is not a valid bigint");
+                }).to.throw(orm.error.ValidationError, "123.45 is not a valid bigint");
             });
 
             it("should return `true` if `value` is an integer", () => {
@@ -1103,7 +1103,7 @@ describe("data types", function () {
 
                 expect(() => {
                     t.validate("foobar");
-                }).to.throw(orm.exception.ValidationError, '"foobar" is not a valid float');
+                }).to.throw(orm.error.ValidationError, '"foobar" is not a valid float');
             });
 
             it("should return `true` if `value` is a float", () => {
@@ -1170,15 +1170,15 @@ describe("data types", function () {
 
                 expect(() => {
                     t.validate("foobar");
-                }).to.throw(orm.exception.ValidationError, '"foobar" is not a valid decimal');
+                }).to.throw(orm.error.ValidationError, '"foobar" is not a valid decimal');
 
                 expect(() => {
                     t.validate("0.1a");
-                }).to.throw(orm.exception.ValidationError, '"0.1a" is not a valid decimal');
+                }).to.throw(orm.error.ValidationError, '"0.1a" is not a valid decimal');
 
                 expect(() => {
                     t.validate(NaN);
-                }).to.throw(orm.exception.ValidationError, "null is not a valid decimal");
+                }).to.throw(orm.error.ValidationError, "null is not a valid decimal");
             });
 
             it("should return `true` if `value` is a decimal", () => {
@@ -1208,7 +1208,7 @@ describe("data types", function () {
 
                 expect(() => {
                     t.validate("foobar");
-                }).to.throw(orm.exception.ValidationError, '"foobar" is not a valid choice in ["foo"]');
+                }).to.throw(orm.error.ValidationError, '"foobar" is not a valid choice in ["foo"]');
             });
 
             it("should return `true` if `value` is a valid choice", () => {
@@ -1257,7 +1257,7 @@ describe("data types", function () {
 
                 expect(() => {
                     t.validate(12345);
-                }).to.throw(orm.exception.ValidationError, "12345 is not a valid blob");
+                }).to.throw(orm.error.ValidationError, "12345 is not a valid blob");
             });
 
             it("should return `true` if `value` is a blob", () => {
@@ -1276,7 +1276,7 @@ describe("data types", function () {
 
                 expect(() => {
                     t.validate("foobar");
-                }).to.throw(orm.exception.ValidationError, '"foobar" is not a valid range');
+                }).to.throw(orm.error.ValidationError, '"foobar" is not a valid range');
             });
 
             it("should throw an error if `value` is not an array with two elements", () => {
@@ -1284,7 +1284,7 @@ describe("data types", function () {
 
                 expect(() => {
                     t.validate([1]);
-                }).to.throw(orm.exception.ValidationError, "A range must be an array with two elements");
+                }).to.throw(orm.error.ValidationError, "A range must be an array with two elements");
             });
 
             it("should throw an error if `value.inclusive` is invalid", () => {
@@ -1292,7 +1292,7 @@ describe("data types", function () {
 
                 expect(() => {
                     t.validate({ inclusive: "foobar" });
-                }).to.throw(orm.exception.ValidationError, '"foobar" is not a valid range');
+                }).to.throw(orm.error.ValidationError, '"foobar" is not a valid range');
             });
 
             it("should throw an error if `value.inclusive` is not an array with two elements", () => {
@@ -1300,7 +1300,7 @@ describe("data types", function () {
 
                 expect(() => {
                     t.validate({ inclusive: [1] });
-                }).to.throw(orm.exception.ValidationError, "A range must be an array with two elements");
+                }).to.throw(orm.error.ValidationError, "A range must be an array with two elements");
             });
 
             it("should return `true` if `value` is a range", () => {
@@ -1389,7 +1389,7 @@ describe("data types", function () {
 
                     expect(() => {
                         t.validate("foobar");
-                    }).to.throw(orm.exception.ValidationError, '"foobar" is not a valid array');
+                    }).to.throw(orm.error.ValidationError, '"foobar" is not a valid array');
                 });
 
                 it("should return `true` if `value` is an array", () => {

@@ -1,4 +1,4 @@
-const { exception } = adone;
+const { error } = adone;
 
 /**
  * Respresetns a data structure which is a combination of an array and a set.
@@ -71,7 +71,7 @@ export default class ArraySet {
         if (idx >= 0 && idx < this._array.length) {
             return this._array[idx];
         }
-        throw new exception.Unknown(`No element indexed by ${idx}`);
+        throw new error.Unknown(`No element indexed by ${idx}`);
     }
 
     /**

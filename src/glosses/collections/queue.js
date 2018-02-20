@@ -1,5 +1,5 @@
 const {
-    exception,
+    error,
     collection
 } = adone;
 
@@ -40,7 +40,7 @@ export default class Queue {
      */
     push(x) {
         if (this.remaining === 0) {
-            throw new exception.IllegalState("This queue is full");
+            throw new error.IllegalState("This queue is full");
         }
         this._incoming.push(x);
         ++this.length;

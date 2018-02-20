@@ -52,7 +52,7 @@ class Server {
 
     createRoom(roomName) {
         if (this.rooms.has(roomName)) {
-            throw new adone.exception.Exception("A room with this name already exists");
+            throw new adone.error.Exception("A room with this name already exists");
         }
         const room = new Set;
         this.rooms.set(roomName, room);
@@ -61,7 +61,7 @@ class Server {
 
     getRoom(roomName) {
         if (!this.rooms.has(roomName)) {
-            throw new adone.exception.Exception("There is no such room");
+            throw new adone.error.Exception("There is no such room");
         }
         return this.rooms.get(roomName);
     }
@@ -91,7 +91,7 @@ class Server {
     @Public
     async login(user, api) {
         if (this.users.has(user)) {
-            throw new adone.exception.Exception("This name has been taken");
+            throw new adone.error.Exception("This name has been taken");
         }
         await this.post("server", `User ${user} joined`);
         this.users.set(user, { api, peer: this.netron.getPeerForInterface(api) });

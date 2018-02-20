@@ -920,7 +920,7 @@ describe("find", function () {
                     },
                     rejectOnEmpty: true
                 });
-            }, orm.exception.EmptyResultError);
+            }, orm.error.EmptyResultError);
         });
 
         it("throws error when record not found by findById", async function () {
@@ -928,7 +928,7 @@ describe("find", function () {
                 await this.User.findById(4732322332323333232344334354234, {
                     rejectOnEmpty: true
                 });
-            }, orm.exception.EmptyResultError);
+            }, orm.error.EmptyResultError);
         });
 
         it("throws error when record not found by find", async function () {
@@ -939,7 +939,7 @@ describe("find", function () {
                     },
                     rejectOnEmpty: true
                 });
-            }, orm.exception.EmptyResultError);
+            }, orm.error.EmptyResultError);
         });
 
         it("works from model options", async () => {
@@ -956,7 +956,7 @@ describe("find", function () {
                         username: "some-username-that-is-not-used-anywhere"
                     }
                 });
-            }, orm.exception.EmptyResultError);
+            }, orm.error.EmptyResultError);
         });
 
         it("resolve null when disabled", async () => {

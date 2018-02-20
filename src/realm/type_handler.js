@@ -6,14 +6,14 @@ export default class TypeHandler {
     }
 
     register(adoneConf, destPath) {
-        throw new adone.exception.NotImplemented("Method register() is not implemented");
+        throw new adone.error.NotImplemented("Method register() is not implemented");
     }
 
     unregister(adoneConf) {
-        throw new adone.exception.NotImplemented("Method register() is not implemented");
+        throw new adone.error.NotImplemented("Method register() is not implemented");
     }
 
     list() {
-        throw new adone.exception.NotImplemented("Method list() is not implemented");
+        throw new adone.error.NotImplemented("Method list() is not implemented");
     }
 }

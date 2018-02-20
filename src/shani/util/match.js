@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     util: { keys },
     shani: { util },
     lazify,
@@ -131,7 +131,7 @@ const match = (expectation, message) => {
 
 matcher.or = function (m2) {
     if (!arguments.length) {
-        throw new exception.InvalidArgument("Matcher expected");
+        throw new error.InvalidArgument("Matcher expected");
     } else if (!isMatcher(m2)) {
         m2 = match(m2);
     }
@@ -144,7 +144,7 @@ matcher.or = function (m2) {
 
 matcher.and = function (m2) {
     if (!arguments.length) {
-        throw new exception.InvalidArgument("Matcher expected");
+        throw new error.InvalidArgument("Matcher expected");
     } else if (!isMatcher(m2)) {
         m2 = match(m2);
     }

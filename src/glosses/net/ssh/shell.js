@@ -76,7 +76,7 @@ export default class Shell extends adone.event.Emitter {
         });
 
         this.on("data", is.function(this.options.onData) ? this.options.onData : adone.noop);
-        this.on("stderrData", is.function(this.options.onStderrData) ? this.options.onStderrData : (data) => adone.error(data));
+        this.on("stderrData", is.function(this.options.onStderrData) ? this.options.onStderrData : (data) => adone.logError(data));
     }
 
     connect(callback) {

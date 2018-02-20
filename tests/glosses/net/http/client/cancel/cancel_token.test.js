@@ -5,13 +5,13 @@ describe("net", "http", "client", "CancelToken", () => {
         it("throws when executor is not specified", () => {
             expect(() => {
                 new CancelToken();
-            }).to.throw(adone.exception.InvalidArgument, "executor must be a function.");
+            }).to.throw(adone.error.InvalidArgument, "executor must be a function.");
         });
 
         it("throws when executor is not a function", () => {
             expect(() => {
                 new CancelToken(123);
-            }).to.throw(adone.exception.InvalidArgument, "executor must be a function.");
+            }).to.throw(adone.error.InvalidArgument, "executor must be a function.");
         });
     });
 

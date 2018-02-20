@@ -106,7 +106,7 @@ describe("net", "amqp", () => {
                 const frames = new Frames(input);
                 let i = 0, ex;
                 frames.accept = function (f) {
-                    // A minor hack to make sure we get the assertion exception;
+                    // A minor hack to make sure we get the assertion error;
                     // otherwise, it's just a test that we reached the line
                     // incrementing `i` for each frame.
                     try {

@@ -1,5 +1,5 @@
 const {
-    exception,
+    error,
     is
 } = adone;
 
@@ -18,7 +18,7 @@ const not = (pattern, options) => new RegExp(not.create(pattern, options));
  */
 not.create = (pattern, options) => {
     if (!is.string(pattern)) {
-        throw new exception.InvalidArgument("expected a string");
+        throw new error.InvalidArgument("expected a string");
     }
 
     const opts = { ...options };

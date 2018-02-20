@@ -978,13 +978,13 @@ export const knownError = (err) => {
     }
     const name = err.constructor.name;
 
-    for (const Exc of adone.exception.adoneExceptions) {
+    for (const Exc of adone.error.adoneExceptions) {
         if (name === Exc.name) {
             return true;
         }
     }
 
-    for (const Exc of adone.exception.stdExceptions) {
+    for (const Exc of adone.error.stdExceptions) {
         if (name === Exc.name) {
             return true;
         }

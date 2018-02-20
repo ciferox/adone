@@ -45,7 +45,7 @@ describe("fast", "transform", "deleteLines", () => {
                 return x;
             }).deleteLines([]).dest(todir.path());
         } catch (error) {
-            assert.instanceOf(error, adone.exception.NotSupported);
+            assert.instanceOf(error, adone.error.NotSupported);
             return;
         } finally {
             files.map((x) => x.contents.close());

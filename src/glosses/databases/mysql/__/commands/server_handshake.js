@@ -1,5 +1,5 @@
 const {
-    exception,
+    error,
     database: { mysql }
 } = adone;
 
@@ -23,7 +23,7 @@ export default class ServerHandshake extends Command {
         this.serverHello = serverHelloPacket;
         serverHelloPacket.setScrambleData((err) => {
             if (err) {
-                connection.emit("error", new exception.Exception("Error generating random bytes"));
+                connection.emit("error", new error.Exception("Error generating random bytes"));
                 return;
             }
             connection.writePacket(serverHelloPacket.toPacket(0));
@@ -137,7 +137,7 @@ export default class ServerHandshake extends Command {
             connection.emit("packet", packet.clone(), knownCommand, commandCode);
         } else {
             if (!knownCommand) {
-                adone.error("mysql unknown command:", commandCode);
+                adone.logError("mysql unknown command:", commandCode);
             }
         }
 

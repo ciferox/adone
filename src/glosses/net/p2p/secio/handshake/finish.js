@@ -27,7 +27,7 @@ module.exports = function finish(state, cb) {
     shake.handshake.write(state.proposal.in.rand);
     shake.handshake.read(state.proposal.in.rand.length, (err, nonceBack) => {
         const fail = (err) => {
-            adone.error(err);
+            adone.logError(err);
             state.secure.resolve({
                 source: pull.error(err),
                 sink(read) {

@@ -2,7 +2,7 @@ const {
     is
 } = adone;
 
-class PouchError extends adone.exception.Exception {
+class PouchError extends adone.error.Exception {
     constructor(status, error, reason) {
         super(reason, false);
         this.status = status;

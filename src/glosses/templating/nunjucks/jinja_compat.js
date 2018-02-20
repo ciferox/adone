@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     util,
     templating: { nunjucks }
 } = adone;
@@ -109,7 +109,7 @@ export default function installCompat() {
             const node = new Slice(tok.lineno, tok.colno);
 
             // If we don't encounter a colon while parsing, this is not a slice,
-            // so re-raise the original exception.
+            // so re-raise the original error.
             let isSlice = false;
 
             for (let i = 0; i <= node.fields.length; i++) {
@@ -178,7 +178,7 @@ export default function installCompat() {
                 return this.pop();
             }
             if (index >= this.length || index < 0) {
-                throw new exception.Exception("KeyError");
+                throw new error.Exception("KeyError");
             }
             return this.splice(index, 1);
         },
@@ -191,7 +191,7 @@ export default function installCompat() {
                     return this.splice(i, 1);
                 }
             }
-            throw new exception.Exception("ValueError");
+            throw new error.Exception("ValueError");
         },
         count(element) {
             let count = 0;
@@ -205,7 +205,7 @@ export default function installCompat() {
         index(element) {
             const i = this.indexOf(element);
             if (i === -1) {
-                throw new exception.Exception("ValueError");
+                throw new error.Exception("ValueError");
             }
             return i;
         },
@@ -241,7 +241,7 @@ export default function installCompat() {
             if (is.undefined(output) && !is.undefined(def)) {
                 output = def;
             } else if (is.undefined(output)) {
-                throw new exception.Exception("KeyError");
+                throw new error.Exception("KeyError");
             } else {
                 delete this[key];
             }
@@ -254,7 +254,7 @@ export default function installCompat() {
                 delete this[k];
                 return [k, val];
             }
-            throw new exception.Exception("KeyError");
+            throw new error.Exception("KeyError");
         },
         setdefault(key, def) {
             if (key in this) {

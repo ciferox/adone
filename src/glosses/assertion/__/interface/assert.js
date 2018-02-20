@@ -9,7 +9,7 @@ export default function (lib, util) {
     };
 
     /**
-     * Throws an exception, like node.js
+     * Throws an error, like node.js
      */
     assert.fail = function (actual, expected, message, operator) {
         if (arguments.length < 2) {

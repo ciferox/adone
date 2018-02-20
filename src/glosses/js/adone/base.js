@@ -15,7 +15,7 @@ export default class XBase {
         type = "script"
     } = {}) {
         // if (is.nil(xModule) && !adone.js.adone.is.module(this)) {
-        //     throw new adone.exception.NotValid("XModule cannot be null");
+        //     throw new adone.error.NotValid("XModule cannot be null");
         // }
         this.xModule = xModule;
         this.parent = parent;
@@ -194,7 +194,7 @@ export default class XBase {
                     if (is.null(xObj)) {
                         xObj = this._tryJsNative({ ast, path, xModule });
                         if (is.null(xObj)) {
-                            throw new adone.exception.NotFound(`Variable '${ast.name}' not found in global scope`);
+                            throw new adone.error.NotFound(`Variable '${ast.name}' not found in global scope`);
                         }
                     } else {
                         xObj = xObj.value;
@@ -204,7 +204,7 @@ export default class XBase {
             }
             case "ImportDeclaration": xObj = new adone.js.adone.ImportDeclaration({ parent, ast, path, xModule }); break;
             default:
-                throw new adone.exception.Unknown(`Unknown type: ${ast.type}`);
+                throw new adone.error.Unknown(`Unknown type: ${ast.type}`);
         }
         return xObj;
     }

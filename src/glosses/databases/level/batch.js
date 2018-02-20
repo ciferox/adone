@@ -1,4 +1,4 @@
-const { exception } = adone;
+const { error } = adone;
 
 export default class Batch {
     constructor(db) {
@@ -12,7 +12,7 @@ export default class Batch {
         try {
             this.batch.put(key, value);
         } catch (err) {
-            throw new exception.DatabaseWrite(err);
+            throw new error.DatabaseWrite(err);
         }
         this.ops.push({ type: "put", key, value });
         this.length++;
@@ -24,7 +24,7 @@ export default class Batch {
         try {
             this.batch.del(key);
         } catch (err) {
-            throw new exception.DatabaseWrite(err);
+            throw new error.DatabaseWrite(err);
         }
         this.ops.push({ type: "del", key });
         this.length++;
@@ -36,7 +36,7 @@ export default class Batch {
         try {
             this.batch.clear();
         } catch (err) {
-            throw new exception.DatabaseWrite(err);
+            throw new error.DatabaseWrite(err);
         }
 
         this.ops = [];
@@ -52,7 +52,7 @@ export default class Batch {
             await this.batch.write();
             levelup.emit("batch", ops);
         } catch (err) {
-            err = new exception.DatabaseWrite(err);
+            err = new error.DatabaseWrite(err);
             levelup.emit("error", err);
             throw err;
         }

@@ -1,5 +1,5 @@
 const {
-    exception,
+    error,
     is
 } = adone;
 
@@ -210,7 +210,7 @@ const padding = (str) => /^-?(0+)\d/.exec(str);
 
 export default function toRegexRange(min, max, options) {
     if (!is.numeral(min)) {
-        throw new exception.InvalidArgument("toRegexRange: first argument is invalid.");
+        throw new error.InvalidArgument("toRegexRange: first argument is invalid.");
     }
 
     if (is.undefined(max) || min === max) {
@@ -218,7 +218,7 @@ export default function toRegexRange(min, max, options) {
     }
 
     if (!is.numeral(max)) {
-        throw new exception.InvalidArgument("toRegexRange: second argument is invalid.");
+        throw new error.InvalidArgument("toRegexRange: second argument is invalid.");
     }
 
     options = options || {};

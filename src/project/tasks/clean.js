@@ -40,7 +40,7 @@ export default class CleanTask extends adone.project.task.Base {
         });
 
         if (!this.manager.silent) {
-            adone.info(`[${params.id}] ${params.task}`);
+            adone.logInfo(`[${params.id}] ${params.task}`);
         }
     }
 }

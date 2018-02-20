@@ -60,24 +60,24 @@ export const delay = (ms, value, { unref = false } = {}) => {
  */
 export const timeout = (promise, ms) => {
     if (!is.promise(promise)) {
-        throw new adone.exception.InvalidArgument("The first argument must be a promise");
+        throw new adone.error.InvalidArgument("The first argument must be a promise");
     }
     return new Promise((resolve, reject) => {
         const timestamp = new adone.Date();
         const timer = adone.setTimeout(() => {
-            reject(new adone.exception.Timeout(`Timeout of ${ms}ms exceeded`));
+            reject(new adone.error.Timeout(`Timeout of ${ms}ms exceeded`));
         }, ms);
         promise.then((x) => {
             adone.clearTimeout(timer);
             if (new adone.Date() - timestamp >= ms) {
-                reject(new adone.exception.Timeout(`Timeout of ${ms}ms exceeded`));
+                reject(new adone.error.Timeout(`Timeout of ${ms}ms exceeded`));
             } else {
                 resolve(x);
             }
         }, (y) => {
             adone.clearTimeout(timer);
             if (new adone.Date() - timestamp >= ms) {
-                const err = new adone.exception.Timeout(`Timeout of ${ms}ms exceeded`);
+                const err = new adone.error.Timeout(`Timeout of ${ms}ms exceeded`);
                 err.original = y;
                 reject(err);
             } else {
@@ -95,7 +95,7 @@ export const timeout = (promise, ms) => {
  */
 export const nodeify = (promise, cb) => {
     if (!is.promise(promise)) {
-        throw new adone.exception.InvalidArgument("The first argument must be a promise");
+        throw new adone.error.InvalidArgument("The first argument must be a promise");
     }
     if (!is.function(cb)) {
         return promise;
@@ -116,7 +116,7 @@ export const nodeify = (promise, cb) => {
  */
 export const callbackify = (fn) => {
     if (!is.function(fn)) {
-        throw new adone.exception.InvalidArgument("The first argument must be a function");
+        throw new adone.error.InvalidArgument("The first argument must be a function");
     }
     return function (...args) {
         if (args.length && is.function(args[args.length - 1])) {
@@ -136,7 +136,7 @@ export const callbackify = (fn) => {
  */
 export const promisify = (fn, { context = null, promisifier = null } = {}) => {
     if (!is.function(fn)) {
-        throw new adone.exception.InvalidArgument("The first argument must be a function");
+        throw new adone.error.InvalidArgument("The first argument must be a function");
     }
 
     const { name } = fn;

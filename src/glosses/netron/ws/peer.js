@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     collection: { ByteArray },
     netron: { GenesisPeer },
     net,
@@ -30,7 +30,7 @@ export default class Peer extends GenesisPeer {
                     this.emit("disconnect");
                 };
                 ws.onerror = (errEvent) => {
-                    this.emit("error", new exception.Network(errEvent.data));
+                    this.emit("error", new error.Network(errEvent.data));
                 };
                 ws.onmessage = (msgEvent) => {
                     this._onMessage(msgEvent.data);
@@ -57,7 +57,7 @@ export default class Peer extends GenesisPeer {
             if (!is.null(ws) && ws.readyState === net.ws.Client.OPEN) {
                 ws.send(encoded.toBuffer(), { binary: true, compress: false }, resolve);
             } else {
-                reject(new exception.IllegalState("socket is not writable"));
+                reject(new error.IllegalState("socket is not writable"));
             }
         });
     }
@@ -103,7 +103,7 @@ export default class Peer extends GenesisPeer {
             if (packetSize === result.bytesConsumed) {
                 this._handler.call(this._handlerThisArg, this, result.value);
             } else {
-                adone.error("invalid packet");
+                adone.logError("invalid packet");
             }
         }
     }

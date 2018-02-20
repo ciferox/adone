@@ -1,7 +1,7 @@
 const {
     event,
     util: { memcpy },
-    exception,
+    error,
     is,
     net: { proxy: { shadowsocks } }
 } = adone;
@@ -74,7 +74,7 @@ export class Parser extends event.Emitter {
                             // unknown address type
                             this.stop();
                             this._state = Parser.STATE_ERROR;
-                            this.emit("error", new exception.IllegalState(`Unknown request type: ${type & 0x0F}`));
+                            this.emit("error", new error.IllegalState(`Unknown request type: ${type & 0x0F}`));
                             return;
                         }
                     }
@@ -182,20 +182,20 @@ export class Server extends event.Emitter {
             timeout = 30000
         } = options;
         if (!(is.string(password) || is.buffer(password)) || password.length === 0) {
-            throw new exception.InvalidArgument("Password must be a non-empty string/buffer");
+            throw new error.InvalidArgument("Password must be a non-empty string/buffer");
         }
         if (!shadowsocks.c.ciphers[cipher]) {
-            throw new exception.InvalidArgument("Unknown cipher");
+            throw new error.InvalidArgument("Unknown cipher");
         }
         if (!is.null(iv) && (!(is.string(iv) || is.buffer(iv)) || iv.lentgh === 0)) {
-            throw new exception.InvalidArgument("IV must be a non-empty string/buffer");
+            throw new error.InvalidArgument("IV must be a non-empty string/buffer");
         }
 
         this._cipher = cipher;
         ({ key: this._keyLength, iv: this._ivLength } = shadowsocks.c.ciphers[cipher]);
         this.cipherKey = adone.crypto.EVPBytesToKey(password, this._keyLength, this._ivLength).key;
         if (iv && iv.length !== this._ivLength) {
-            throw new exception.InvalidArgument(`Invalid iv length (${iv.length} != ${this._ivLength})`);
+            throw new error.InvalidArgument(`Invalid iv length (${iv.length} != ${this._ivLength})`);
         }
         this._iv = iv;
         this._server = new adone.std.net.Server((socket) => {

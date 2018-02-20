@@ -3,7 +3,7 @@ const {
     net,
     std,
     is,
-    exception,
+    error,
     compressor,
     event,
     text,
@@ -88,7 +88,7 @@ class Request extends event.Emitter {
 
     expect(fn) {
         if (!is.function(fn)) {
-            throw new exception.InvalidArgument("must be a function");
+            throw new error.InvalidArgument("must be a function");
         }
         this.expects.push(fn);
         return this;
@@ -253,7 +253,7 @@ class Request extends event.Emitter {
 
                 req.once("error", reject);
                 req.once("aborted", () => {
-                    reject(new exception.Exception("The request was aborted by the server"));
+                    reject(new error.Exception("The request was aborted by the server"));
                 });
 
                 if (body) {

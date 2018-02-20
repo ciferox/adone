@@ -1,6 +1,6 @@
 const {
     database: { redis },
-    exception,
+    error,
     is,
     noop
 } = adone;
@@ -19,7 +19,7 @@ export const readyHandler = (self) => {
                 if (__.Command.checkFlag("VALID_IN_MONITOR_MODE", command.name)) {
                     return sendCommand.call(self, command);
                 }
-                command.reject(new exception.Exception("Connection is in monitoring mode, can't process commands."));
+                command.reject(new error.Exception("Connection is in monitoring mode, can't process commands."));
                 return command.promise;
             };
             self.once("close", () => {
@@ -107,7 +107,7 @@ export const connectHandler = (self) => {
                     self.silentEmit("error", err);
                     self.disconnect(true);
                 } else {
-                    adone.warn("Redis server does not require a password, but a password was supplied.");
+                    adone.logWarn("Redis server does not require a password, but a password was supplied.");
                 }
             });
         }
@@ -132,7 +132,7 @@ export const connectHandler = (self) => {
                 }
             }, (err) => {
                 if (!flushed) {
-                    self.flushQueue(new exception.Exception(`Ready check failed: ${err.message}`));
+                    self.flushQueue(new error.Exception(`Ready check failed: ${err.message}`));
                     self.silentEmit("error", err);
                     self.disconnect(true);
                 }
@@ -144,7 +144,7 @@ export const connectHandler = (self) => {
 export const closeHandler = (self) => {
     const close = () => {
         self.setStatus("end");
-        self.flushQueue(new exception.Exception(__.util.CONNECTION_CLOSED_ERROR_MSG));
+        self.flushQueue(new error.Exception(__.util.CONNECTION_CLOSED_ERROR_MSG));
     };
 
     return () => {

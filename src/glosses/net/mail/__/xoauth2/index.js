@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     net: { mail: { __ } },
     std: { crypto, stream: { Stream } }
 } = adone;
@@ -42,7 +42,7 @@ export default class XOAuth2 extends Stream {
         if (options && options.serviceClient) {
             if (!options.privateKey || !options.user) {
                 setImmediate(() => {
-                    this.emit("error", new exception.InvalidArgument('Options "privateKey" and "user" are required for service account!'));
+                    this.emit("error", new error.InvalidArgument('Options "privateKey" and "user" are required for service account!'));
                 });
                 return;
             }
@@ -190,11 +190,11 @@ export default class XOAuth2 extends Stream {
             }
 
             if (!data || !is.object(data)) {
-                return callback(new exception.IllegalState("Invalid authentication response"));
+                return callback(new error.IllegalState("Invalid authentication response"));
             }
 
             if (data.error) {
-                return callback(new exception.IllegalState(data.error));
+                return callback(new error.IllegalState(data.error));
             }
 
             if (data.access_token) {
@@ -202,7 +202,7 @@ export default class XOAuth2 extends Stream {
                 return callback(null, this.accessToken);
             }
 
-            return callback(new exception.IllegalState("No access token"));
+            return callback(new error.IllegalState("No access token"));
         });
     }
 

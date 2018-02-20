@@ -241,7 +241,7 @@ export class Zone {
     }
 
     offset(mom) {
-        adone.error("zone.offset has been deprecated in favor of zone.utcOffset");
+        adone.logError("zone.offset has been deprecated in favor of zone.utcOffset");
         return this.offsets[this._index(mom)];
     }
 
@@ -411,7 +411,7 @@ const rebuildGuess = () => {
             if (name) {
                 return name;
             }
-            adone.error(`timezone found ${intlName} from the Intl api, but did not have that data loaded.`);
+            adone.logError(`timezone found ${intlName} from the Intl api, but did not have that data loaded.`);
         }
     } catch (e) {
         // Intl unavailable, fall back to manual guessing.

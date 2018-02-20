@@ -775,7 +775,7 @@ describe("shani", "util", "__", "SpyCall", () => {
             assert.equal(object.doIt.getCall(0).toString().replace(/ at.*/g, ""), "doIt(42, Hey) => (empty string)");
         });
 
-        it("includes exception", () => {
+        it("includes error", () => {
             const object = { doIt: sstub().throws("TypeError") };
 
             assert.throws(() => {
@@ -785,7 +785,7 @@ describe("shani", "util", "__", "SpyCall", () => {
             assert.equal(object.doIt.getCall(0).toString().replace(/ at.*/g, ""), "doIt() !TypeError");
         });
 
-        it("includes exception message if any", () => {
+        it("includes error message if any", () => {
             const object = { doIt: sstub().throws("TypeError", "Oh noes!") };
 
             assert.throws(() => {

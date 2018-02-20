@@ -1,5 +1,5 @@
 const {
-    exception: { IncompleteBufferError },
+    error: { IncompleteBufferError },
     data: { mpak: { Serializer, serializer } },
     math: { Long },
     std: { fs, path },
@@ -1189,7 +1189,7 @@ describe("data", "mpak", "Serializer", () => {
             func: noop
         };
 
-        assert.throws(() => serializer.decode(serializer.encode(toEncode)), adone.exception.NotSupported);
+        assert.throws(() => serializer.decode(serializer.encode(toEncode)), adone.error.NotSupported);
     });
 
     it("encode/decode undefined", () => {

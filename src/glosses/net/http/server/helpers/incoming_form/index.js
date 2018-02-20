@@ -2,7 +2,7 @@ const {
     std: { string_decoder: { StringDecoder }, stream: { Stream }, os, path, crypto },
     event,
     is,
-    exception
+    error
 } = adone;
 
 const dummyParser = (self) => {
@@ -140,7 +140,7 @@ export default class IncomingForm extends event.Emitter {
             return;
         }
         if (!this._parser) {
-            this._error(new exception.IllegalState("uninitialized parser"));
+            this._error(new error.IllegalState("uninitialized parser"));
             return;
         }
 
@@ -149,7 +149,7 @@ export default class IncomingForm extends event.Emitter {
 
         const bytesParsed = this._parser.write(buffer);
         if (bytesParsed !== buffer.length) {
-            this._error(new exception.IllegalState(`parser error, ${bytesParsed} of ${buffer.length} bytes parsed`));
+            this._error(new error.IllegalState(`parser error, ${bytesParsed} of ${buffer.length} bytes parsed`));
         }
 
         return bytesParsed;
@@ -178,7 +178,7 @@ export default class IncomingForm extends event.Emitter {
             part.on("data", (buffer) => {
                 this._fieldsSize += buffer.length;
                 if (this._fieldsSize > this.maxFieldsSize) {
-                    this._error(new exception.IllegalState(`maxFieldsSize exceeded, received ${this._fieldsSize} bytes of field data`));
+                    this._error(new error.IllegalState(`maxFieldsSize exceeded, received ${this._fieldsSize} bytes of field data`));
                     return;
                 }
                 value += decoder.write(buffer);
@@ -207,7 +207,7 @@ export default class IncomingForm extends event.Emitter {
         part.on("data", (buffer) => {
             this._fileSize += buffer.length;
             if (this._fileSize > this.maxFileSize) {
-                this._error(new exception.IllegalState(`maxFileSize exceeded, received ${this._fileSize} bytes of file data`));
+                this._error(new error.IllegalState(`maxFileSize exceeded, received ${this._fileSize} bytes of file data`));
                 return;
             }
             if (buffer.length === 0) {
@@ -235,7 +235,7 @@ export default class IncomingForm extends event.Emitter {
         }
 
         if (!this.headers["content-type"]) {
-            this._error(new exception.IllegalState("bad content-type header, no content-type"));
+            this._error(new error.IllegalState("bad content-type header, no content-type"));
             return;
         }
 
@@ -254,7 +254,7 @@ export default class IncomingForm extends event.Emitter {
             if (m) {
                 this._initMultipart(m[1] || m[2]);
             } else {
-                this._error(new exception.IllegalState("bad content-type header, no multipart boundary"));
+                this._error(new error.IllegalState("bad content-type header, no multipart boundary"));
             }
             return;
         }
@@ -264,7 +264,7 @@ export default class IncomingForm extends event.Emitter {
             return;
         }
 
-        this._error(new exception.Unknown(`bad content-type header, unknown content-type: ${this.headers["content-type"]}`));
+        this._error(new error.Unknown(`bad content-type header, unknown content-type: ${this.headers["content-type"]}`));
     }
 
     _error(err) {
@@ -390,7 +390,7 @@ export default class IncomingForm extends event.Emitter {
                     break;
                 }
                 default: {
-                    return this._error(new exception.Unknown(`unknown transfer-encoding: ${part.transferEncoding}`));
+                    return this._error(new error.Unknown(`unknown transfer-encoding: ${part.transferEncoding}`));
                 }
             }
 

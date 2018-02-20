@@ -281,7 +281,7 @@ export default class AbstractPouchDB extends event.Emitter {
             rev = null;
         }
         if (!type) {
-            adone.warn("Attachment", attachmentId, "on document", docId, "is missing content_type");
+            adone.logWarn("Attachment", attachmentId, "on document", docId, "is missing content_type");
         }
 
         const createAttachment = (doc) => {
@@ -857,7 +857,7 @@ export default class AbstractPouchDB extends event.Emitter {
                 Object.keys(doc._attachments).forEach((name) => {
                     attachmentError = attachmentError || attachmentNameError(name);
                     if (!doc._attachments[name].content_type) {
-                        adone.warn("Attachment", name, "on document", doc._id, "is missing content_type");
+                        adone.logWarn("Attachment", name, "on document", doc._id, "is missing content_type");
                     }
                 });
             }

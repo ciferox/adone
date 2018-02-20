@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     identity,
     fs
 } = adone;
@@ -35,7 +35,7 @@ export default class Storage {
         const closeError = await adone.fs.close(fd).then(() => null, identity);
 
         if (syncError || closeError) {
-            const e = new exception.Exception("Failed to flush to storage");
+            const e = new error.Exception("Failed to flush to storage");
             e.errorOnFsync = syncError;
             e.errorOnClose = closeError;
             return Promise.reject(e);

@@ -37,7 +37,7 @@ application.run({{ name }}Application);
 export default class ApplicationTask extends project.generator.task.Base {
     async run(input) {
         if (!is.string(input.name)) {
-            throw new adone.exception.NotValid("Name should be a valid string");
+            throw new adone.error.NotValid("Name should be a valid string");
         }
         return project.generator.helper.createFile(TEMPLATE, input);
     }

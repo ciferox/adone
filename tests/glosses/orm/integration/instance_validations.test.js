@@ -590,7 +590,7 @@ describe("instance validator", function () {
             }).validate();
         });
 
-        expect(err).to.be.instanceof(orm.exception.ValidationError);
+        expect(err).to.be.instanceof(orm.error.ValidationError);
     });
 
     it("raises an error for array on a STRING(20)", async function () {
@@ -604,7 +604,7 @@ describe("instance validator", function () {
             await User.build({
                 email: ["iama", "dummy.com"]
             }).validate();
-        }, orm.exception.ValidationError);
+        }, orm.error.ValidationError);
     });
 
     it("raises an error for array on a TEXT", async function () {
@@ -618,7 +618,7 @@ describe("instance validator", function () {
             await User.build({
                 email: ["iama", "dummy.com"]
             }).validate();
-        }, orm.exception.ValidationError);
+        }, orm.error.ValidationError);
     });
 
     it("raises an error for {} on a STRING", async function () {
@@ -632,7 +632,7 @@ describe("instance validator", function () {
             await User.build({
                 email: { lol: true }
             }).validate();
-        }, orm.exception.ValidationError);
+        }, orm.error.ValidationError);
     });
 
     it("raises an error for {} on a STRING(20)", async function () {
@@ -646,7 +646,7 @@ describe("instance validator", function () {
             await User.build({
                 email: { lol: true }
             }).validate();
-        }, orm.exception.ValidationError);
+        }, orm.error.ValidationError);
     });
 
     it("raises an error for {} on a TEXT", async function () {
@@ -660,7 +660,7 @@ describe("instance validator", function () {
             await User.build({
                 email: { lol: true }
             }).validate();
-        }, orm.exception.ValidationError);
+        }, orm.error.ValidationError);
     });
 
     it("does not raise an error for null on a STRING (where null is allowed)", async function () {

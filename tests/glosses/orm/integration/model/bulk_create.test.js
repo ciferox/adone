@@ -303,7 +303,7 @@ describe("bulkCreate", function () {
                 { code: "1234" },
                 { name: "bar", code: "1" }
             ], { validate: true });
-        }, adone.exception.AggregateException);
+        }, adone.error.AggregateException);
 
 
         expect(errors[0].record.code).to.equal("1234");

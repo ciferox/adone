@@ -89,7 +89,7 @@ describe("shani", "util", "__", "collection", () => {
             assert.throws(proto.method);
         });
 
-        it("throws exception for non function params", () => {
+        it("throws error for non function params", () => {
             const types = [{}, 3, "hi!"];
 
             for (let i = 0; i < types.length; i++) {

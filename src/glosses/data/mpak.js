@@ -147,7 +147,7 @@ export class Encoder {
                             return;
                         }
                     }
-                    throw new adone.exception.NotSupported(`Not supported: ${adone.meta.typeOf(x)}`);
+                    throw new adone.error.NotSupported(`Not supported: ${adone.meta.typeOf(x)}`);
                 }
             }
         }
@@ -225,7 +225,7 @@ export class Decoder {
         if (result) {
             return result.value;
         }
-        throw new adone.exception.IncompleteBufferError();
+        throw new adone.error.IncompleteBufferError();
     }
 
     tryDecode(buf) {
@@ -569,13 +569,13 @@ export const registerCommonTypesFor = (s) => {
         const id = buf.readUInt16BE();
         const stack = s.decode(buf);
         const message = s.decode(buf);
-        return adone.exception.create(id, message, stack);
+        return adone.error.create(id, message, stack);
     };
 
     // Adone exceptions should be registered before std errors in case of inheritance from Error class.
 
     // Adone exceptions encoders/decoders
-    s.register(127, adone.exception.Exception, (obj, buf) => {
+    s.register(127, adone.error.Exception, (obj, buf) => {
         buf.writeUInt16BE(obj.id);
         s.encode(obj.stack, buf);
 
@@ -593,7 +593,7 @@ export const registerCommonTypesFor = (s) => {
 
     // Std exceptions encoders/decoders
     s.register(126, Error, (obj, buf) => {
-        buf.writeUInt16BE(adone.exception.getStdId(obj));
+        buf.writeUInt16BE(adone.error.getStdId(obj));
         s.encode(obj.stack, buf);
         s.encode(obj.message, buf);
     }, decodeException);

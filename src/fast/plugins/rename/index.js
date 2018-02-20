@@ -1,5 +1,5 @@
 export default function plugin() {
-    const { std: { path }, is, exception } = adone;
+    const { std: { path }, is, error } = adone;
 
     return function rename(handler) {
         return this.throughSync(function (file) {
@@ -22,7 +22,7 @@ export default function plugin() {
                 const extname = "extname" in handler ? handler.extname : obj.extname;
                 p = path.join(dirname, prefix + basename + suffix + extname);
             } else {
-                throw new exception.InvalidArgument();
+                throw new error.InvalidArgument();
             }
             file.path = path.join(file.base, p);
 

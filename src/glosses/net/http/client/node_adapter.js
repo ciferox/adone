@@ -1,6 +1,6 @@
 const {
     is,
-    exception: x,
+    error: x,
     net: {
         http
     },

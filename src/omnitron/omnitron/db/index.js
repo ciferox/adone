@@ -7,7 +7,7 @@ const {
     omnitron: { STATUS },
     std,
     vault,
-    exception
+    error
 } = adone;
 
 const VALUABLES_SYMBOL = Symbol();
@@ -98,7 +98,7 @@ export default class DB {
         const services = await this.getMetaValuable("service");
 
         if (services.has(name)) {
-            throw new exception.Exists(`Service '${name}' is already registered`);
+            throw new error.Exists(`Service '${name}' is already registered`);
         }
 
         const servicePath = std.path.join(adone.realm.config.omnitron.servicesPath, name);
@@ -124,7 +124,7 @@ export default class DB {
         const services = await this.getMetaValuable("service");
 
         if (!services.has(name)) {
-            throw new exception.NotExists(`Service '${name}' does not exist`);
+            throw new error.NotExists(`Service '${name}' does not exist`);
         }
 
         return services.delete(name);

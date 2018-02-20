@@ -27,7 +27,7 @@ const constructJavascriptFunction = (data) => {
         ast.body[0].type !== "ExpressionStatement" ||
         ast.body[0].expression.type !== "FunctionExpression"
     ) {
-        throw new exception.InvalidArgument("Failed to resolve function");
+        throw new error.InvalidArgument("Failed to resolve function");
     }
 
     return vm.runInThisContext(source);

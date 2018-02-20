@@ -83,7 +83,7 @@ export default class Ping extends event.Emitter {
                         return;
                     }
                     if (err) {
-                        return adone.error(err);
+                        return adone.logError(err);
                     }
 
                     shake.write(buf);

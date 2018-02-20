@@ -20,7 +20,7 @@ export default class NCleanTask extends adone.project.task.Base {
             });
 
             if (!this.manager.silent) {
-                adone.info(`[${params.id}] nclean`);
+                adone.logInfo(`[${params.id}] nclean`);
             }
         } else {
             // Remove build directory from src

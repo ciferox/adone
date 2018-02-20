@@ -5,7 +5,7 @@ const {
 } = adone;
 
 const {
-    exception,
+    error,
     type
 } = orm;
 
@@ -101,23 +101,23 @@ export default class ConnectionManager extends AbstractConnectionManager {
                     if (err.code) {
                         switch (err.code) {
                             case "ECONNREFUSED":
-                                reject(new exception.ConnectionRefusedError(err));
+                                reject(new error.ConnectionRefusedError(err));
                                 break;
                             case "ENOTFOUND":
-                                reject(new exception.HostNotFoundError(err));
+                                reject(new error.HostNotFoundError(err));
                                 break;
                             case "EHOSTUNREACH":
-                                reject(new exception.HostNotReachableError(err));
+                                reject(new error.HostNotReachableError(err));
                                 break;
                             case "EINVAL":
-                                reject(new exception.InvalidConnectionError(err));
+                                reject(new error.InvalidConnectionError(err));
                                 break;
                             default:
-                                reject(new exception.ConnectionError(err));
+                                reject(new error.ConnectionError(err));
                                 break;
                         }
                     } else {
-                        reject(new exception.ConnectionError(err));
+                        reject(new error.ConnectionError(err));
                     }
                     return;
                 }
@@ -130,7 +130,7 @@ export default class ConnectionManager extends AbstractConnectionManager {
             connection.on("end", () => {
                 debug("connection timeout");
                 if (!responded) {
-                    reject(new exception.ConnectionTimedOutError(new Error("Connection timed out")));
+                    reject(new error.ConnectionTimedOutError(new Error("Connection timed out")));
                 }
             });
 

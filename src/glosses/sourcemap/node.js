@@ -1,5 +1,5 @@
 const {
-    exception,
+    error,
     is,
     util,
     sourcemap
@@ -119,7 +119,7 @@ export default class SourceNode {
                 this.children.push(chunk);
             }
         } else {
-            throw new exception.InvalidArgument(`Expected a SourceNode, string, or an array of SourceNodes and strings. Got ${chunk}`);
+            throw new error.InvalidArgument(`Expected a SourceNode, string, or an array of SourceNodes and strings. Got ${chunk}`);
         }
         return this;
     }
@@ -132,7 +132,7 @@ export default class SourceNode {
         } else if (chunk[isSourceNode] || is.string(chunk)) {
             this.children.unshift(chunk);
         } else {
-            throw new exception.InvalidArgument(`Expected a SourceNode, string, or an array of SourceNodes and strings. Got ${chunk}`);
+            throw new error.InvalidArgument(`Expected a SourceNode, string, or an array of SourceNodes and strings. Got ${chunk}`);
         }
         return this;
     }

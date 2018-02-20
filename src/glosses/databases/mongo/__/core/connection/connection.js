@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     database: { mongo },
     std: { crypto, tls, net },
     event
@@ -270,7 +270,7 @@ export default class Connection extends event.Emitter {
         this.id = _id++;
         // No bson parser passed in
         if (!options.bson) {
-            throw new exception.InvalidArgument("must pass in valid bson parser");
+            throw new error.InvalidArgument("must pass in valid bson parser");
         }
         // Get bson parser
         this.bson = options.bson;
@@ -483,7 +483,7 @@ export default class Connection extends event.Emitter {
             deleteConnection(this.id);
         }
         if (this.connection) {
-            // Catch posssible exception thrown by node 0.10.x
+            // Catch posssible error thrown by node 0.10.x
             try {
                 this.connection.end();
             } catch (err) {

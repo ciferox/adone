@@ -1,4 +1,4 @@
-const { is, exception } = adone;
+const { is, error } = adone;
 
 const MACHINE_ID = parseInt(Math.random() * 0xFFFFFF, 10);
 
@@ -29,7 +29,7 @@ export default class ObjectId {
 
         // Throw an error if it's not a valid setup
         if (!valid && !is.nil(id)) {
-            throw new exception.InvalidArgument("Argument passed in must be a single String of 12 bytes or a string of 24 hex characters");
+            throw new error.InvalidArgument("Argument passed in must be a single String of 12 bytes or a string of 24 hex characters");
         }
 
         if (!is.buffer(id) && (is.object(id) || id instanceof ObjectId)) {
@@ -42,7 +42,7 @@ export default class ObjectId {
             // assume 12 byte string
             this.id = !is.buffer(id) ? Buffer.from(id) : id;
         } else {
-            throw new exception.InvalidArgument("Argument passed in must be a single String of 12 bytes or a string of 24 hex characters");
+            throw new error.InvalidArgument("Argument passed in must be a single String of 12 bytes or a string of 24 hex characters");
         }
 
         if (ObjectId.cacheHexString) {
@@ -57,7 +57,7 @@ export default class ObjectId {
 
         let hexString = "";
         if (!this.id || !this.id.length) {
-            throw new exception.InvalidArgument(`invalid ObjectId, ObjectId.id must be either a string or a Buffer, but is [${JSON.stringify(this.id)}]`);
+            throw new error.InvalidArgument(`invalid ObjectId, ObjectId.id must be either a string or a Buffer, but is [${JSON.stringify(this.id)}]`);
         }
 
         if (is.buffer(this.id)) {
@@ -184,7 +184,7 @@ export default class ObjectId {
     static createFromHexString(string) {
         // Throw an error if it's not a valid setup
         if (is.undefined(string) || !is.nil(string) && string.length !== 24) {
-            throw new exception.InvalidArgument("Argument passed in must be a single String of 12 bytes or a string of 24 hex characters");
+            throw new error.InvalidArgument("Argument passed in must be a single String of 12 bytes or a string of 24 hex characters");
         }
 
         return new ObjectId(Buffer.from(string, "hex"));

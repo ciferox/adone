@@ -65,18 +65,18 @@ export default class Collection {
     }
 
     verifyAndRestore() {
-        let exception;
+        let error;
 
         try {
             this.verify();
         } catch (e) {
-            exception = e;
+            error = e;
         }
 
         this.restore();
 
-        if (exception) {
-            throw exception;
+        if (error) {
+            throw error;
         }
     }
 

@@ -74,7 +74,7 @@ describe("event", "Emitter", () => {
             const ee = new Emitter();
             expect(() => {
                 ee.on("foo", null);
-            }).to.throw(adone.exception.InvalidArgument, "\"listener\" argument must be a function");
+            }).to.throw(adone.error.InvalidArgument, "\"listener\" argument must be a function");
         });
     });
 
@@ -83,14 +83,14 @@ describe("event", "Emitter", () => {
             const EE = new Emitter();
             expect(() => {
                 EE.emit("error", "Accepts a string");
-            }).to.throw(adone.exception.Exception, /Accepts a string/);
+            }).to.throw(adone.error.Exception, /Accepts a string/);
         });
 
         it("should throw", () => {
             const EE = new Emitter();
             expect(() => {
                 EE.emit("error", { message: "Error!" });
-            }).to.throw(adone.exception.Exception, /object Object/);
+            }).to.throw(adone.error.Exception, /object Object/);
         });
     });
 
@@ -219,21 +219,21 @@ describe("event", "Emitter", () => {
             const ee = new Emitter();
             expect(() => {
                 ee.setMaxListeners(NaN);
-            }).to.throw(adone.exception.InvalidArgument, "\"n\" argument must be a positive number");
+            }).to.throw(adone.error.InvalidArgument, "\"n\" argument must be a positive number");
         });
 
         it("should throw if the argument is a negative number", () => {
             const ee = new Emitter();
             expect(() => {
                 ee.setMaxListeners(-1);
-            }).to.throw(adone.exception.InvalidArgument, "\"n\" argument must be a positive number");
+            }).to.throw(adone.error.InvalidArgument, "\"n\" argument must be a positive number");
         });
 
         it("should throw if the argument is not a number", () => {
             const ee = new Emitter();
             expect(() => {
                 ee.setMaxListeners("hello");
-            }).to.throw(adone.exception.InvalidArgument, "\"n\" argument must be a positive number");
+            }).to.throw(adone.error.InvalidArgument, "\"n\" argument must be a positive number");
         });
 
         it("should set the value", () => {
@@ -273,7 +273,7 @@ describe("event", "Emitter", () => {
             await adone.promise.delay(100);
             expect(s).to.have.been.calledOnce();
             const warning = s.args[0][0];
-            expect(warning).to.be.instanceOf(adone.exception.Exception);
+            expect(warning).to.be.instanceOf(adone.error.Exception);
             expect(warning.name).to.be.equal("MaxListenersExceededWarning");
             expect(warning.emitter).to.be.equal(e);
             expect(warning.count).to.be.equal(2);
@@ -286,7 +286,7 @@ describe("event", "Emitter", () => {
             e.setMaxListeners(1);
 
             process.once("warning", (warning) => {
-                expect(warning).to.be.instanceOf(adone.exception.Exception);
+                expect(warning).to.be.instanceOf(adone.error.Exception);
                 expect(warning.name).to.be.equal("MaxListenersExceededWarning");
                 expect(warning.emitter).to.be.equal(e);
                 expect(warning.count).to.be.equal(2);
@@ -306,7 +306,7 @@ describe("event", "Emitter", () => {
             e.setMaxListeners(1);
 
             process.once("warning", (warning) => {
-                expect(warning).to.be.instanceOf(adone.exception.Exception);
+                expect(warning).to.be.instanceOf(adone.error.Exception);
                 expect(warning.name).to.be.equal("MaxListenersExceededWarning");
                 expect(warning.emitter).to.be.equal(e);
                 expect(warning.count).to.be.equal(2);
@@ -436,7 +436,7 @@ describe("event", "Emitter", () => {
             const e = new Emitter();
             expect(() => {
                 e.once("foo", null);
-            }).to.throw(adone.exception.InvalidArgument, "\"listener\" argument must be a function");
+            }).to.throw(adone.error.InvalidArgument, "\"listener\" argument must be a function");
         });
 
         it("check that once support many arguments", () => {
@@ -482,7 +482,7 @@ describe("event", "Emitter", () => {
             const e = new Emitter();
             expect(() => {
                 e.prependListener("foo", null);
-            }).to.throw(adone.exception.InvalidArgument, "\"listener\" argument must be a function");
+            }).to.throw(adone.error.InvalidArgument, "\"listener\" argument must be a function");
         });
     });
 
@@ -693,7 +693,7 @@ describe("event", "Emitter", () => {
             const ee = new Emitter();
             expect(() => {
                 ee.removeListener("foo", null);
-            }).to.throw(adone.exception.InvalidArgument, "\"listener\" argument must be a function");
+            }).to.throw(adone.error.InvalidArgument, "\"listener\" argument must be a function");
         });
 
         it("should be fluent", () => {

@@ -1,5 +1,5 @@
 const {
-    exception: { Exception }
+    error: { Exception }
 } = adone;
 
 export default class YAMLException extends Exception {

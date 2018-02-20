@@ -1216,7 +1216,7 @@ describe("shani", "util", "spy", () => {
             });
         });
 
-        it("returns exception thrown by function", () => {
+        it("returns error thrown by function", () => {
             const err = new Error();
 
             const spy = createSpy.create(() => {
@@ -1366,7 +1366,7 @@ describe("shani", "util", "spy", () => {
             });
         });
 
-        it("contains exception thrown by function", function () {
+        it("contains error thrown by function", function () {
             assert.throws(this.spyWithTypeError);
 
             assert.deepEqual(this.spyWithTypeError.exceptions, [this.error]);
@@ -1815,7 +1815,7 @@ describe("shani", "util", "spy", () => {
 
         it("is tracked even if exceptions are thrown", () => {
             const spy = createSpy(() => {
-                throw "an exception";
+                throw "an error";
             });
 
             assert.throws(spy);
@@ -1834,7 +1834,7 @@ describe("shani", "util", "spy", () => {
             assert(spy.firstCall.returned(42));
         });
 
-        it("has correct exception", () => {
+        it("has correct error", () => {
             const err = new Error();
             const spy = createSpy(() => {
                 throw err;
@@ -1842,7 +1842,7 @@ describe("shani", "util", "spy", () => {
 
             assert.throws(spy);
 
-            assert.equal(spy.firstCall.exception, err);
+            assert.equal(spy.firstCall.error, err);
             assert(spy.firstCall.threw(err));
         });
 

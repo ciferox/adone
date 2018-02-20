@@ -1,6 +1,6 @@
 const {
     is,
-    exception
+    error
 } = adone;
 
 export default class Packet {
@@ -84,7 +84,7 @@ export default class Packet {
 
     static from(rawPacket) {
         if (!is.array(rawPacket) || rawPacket.length !== 4) {
-            throw new exception.NotValid("Bad packet");
+            throw new error.NotValid("Bad packet");
         }
 
         const packet = new Packet();

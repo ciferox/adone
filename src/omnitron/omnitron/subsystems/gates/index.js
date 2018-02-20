@@ -8,12 +8,12 @@ export default class Gates extends application.Subsystem {
         await runtime.netron.registerAdapter("ws", adone.netron.ws.Adapter);
 
         runtime.netron.on("peer online", (peer) => {
-            adone.info(`Peer '${peer.getRemoteAddress().full}' (uid: ${peer.uid}) connected`);
+            adone.logInfo(`Peer '${peer.getRemoteAddress().full}' (uid: ${peer.uid}) connected`);
         }).on("peer offline", (peer) => {
-            adone.info(`Peer '${peer.getRemoteAddress().full}' (uid: ${peer.uid}) disconnected`);
+            adone.logInfo(`Peer '${peer.getRemoteAddress().full}' (uid: ${peer.uid}) disconnected`);
         });
 
-        adone.info("Gates subsystem configured");
+        adone.logInfo("Gates subsystem configured");
     }
 
     async initialize() {
@@ -34,7 +34,7 @@ export default class Gates extends application.Subsystem {
             }
         }
 
-        adone.info("Gates subsystem initialized");
+        adone.logInfo("Gates subsystem initialized");
     }
 
     async uninitialize() {
@@ -45,10 +45,10 @@ export default class Gates extends application.Subsystem {
             // // Let netron gracefully complete all disconnects
             // await adone.promise.delay(500);
         } catch (err) {
-            adone.error(err);
+            adone.logError(err);
         }
 
-        adone.info("Gates subsystem uninitialized");
+        adone.logInfo("Gates subsystem uninitialized");
     }
 
     addGate(gate) {
@@ -57,7 +57,7 @@ export default class Gates extends application.Subsystem {
 
     deleteGate(name) {
         if (runtime.netron.gates.has(name)) {
-            throw new adone.exception.NotAllowed("Delete active gate is not allowed");
+            throw new adone.error.NotAllowed("Delete active gate is not allowed");
         }
         return this.config.deleteGate(name);
     }
@@ -65,20 +65,20 @@ export default class Gates extends application.Subsystem {
     async upGate(name) {
         const gate = await this.config.getGate(name);
         if (runtime.netron.gates.has(name)) {
-            throw new adone.exception.IllegalState(`Gate with name '${name}' already active`);
+            throw new adone.error.IllegalState(`Gate with name '${name}' already active`);
         }
         await runtime.netron.bind(gate);
     }
 
     async downGate(name) {
         if (name === "local") {
-            throw new adone.exception.NotAllowed("Down local gate is not allow");
+            throw new adone.error.NotAllowed("Down local gate is not allow");
         }
 
         // This call checks if gate is exist.
         const gate = await this.config.getGate(name);
         if (!runtime.netron.gates.has(name)) {
-            throw new adone.exception.IllegalState(`Gate with name '${name}' is not active`);
+            throw new adone.error.IllegalState(`Gate with name '${name}' is not active`);
         }
         await runtime.netron.unbind(gate.name);
     }

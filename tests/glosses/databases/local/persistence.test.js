@@ -292,7 +292,7 @@ describe("database", "local", "Persistence", () => {
             return s.substring(7, s.length - 6);
         };
 
-        it("Declaring only one hook will throw an exception to prevent data loss", async () => {
+        it("Declaring only one hook will throw an error to prevent data loss", async () => {
             const hookFile = await tmpdir.getFile("hookTest.db");
 
             await storage.ensureFileDoesntExist(hookFile.path());
@@ -323,7 +323,7 @@ describe("database", "local", "Persistence", () => {
             expect(await hookFile.contents()).to.be.equal("Some content");
         });
 
-        it.skip("Declaring two hooks that are not reverse of one another will cause an exception to prevent data loss", async () => {
+        it.skip("Declaring two hooks that are not reverse of one another will cause an error to prevent data loss", async () => {
             const hookFile = await tmpdir.getFile("hookTest.db");
             await storage.ensureFileDoesntExist(hookFile.path());
             await hookFile.write("Some content");

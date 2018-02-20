@@ -134,7 +134,7 @@ describe("util", "uuid", () => {
         assert.notEqual(uuid.v1({ msecs: TIME }), uuid.v1({ msecs: TIME }), "IDs created at same msec are different");
     });
 
-    it("exception thrown when > 10k ids created in 1ms", () => {
+    it("error thrown when > 10k ids created in 1ms", () => {
         // Verify throw if too many ids created
         let thrown = false;
         try {

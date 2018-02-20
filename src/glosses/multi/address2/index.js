@@ -37,7 +37,7 @@ export class Multiaddr {
         } else if (addr.buffer && addr.protos && addr.protoCodes) { // Multiaddr
             this.buffer = __.codec.fromBuffer(addr.buffer); // validate + copy buffer
         } else {
-            throw new adone.exception.Exception("Address must be a string, Buffer, or another Multiaddr");
+            throw new adone.error.Exception("Address must be a string, Buffer, or another Multiaddr");
         }
     }
 
@@ -379,10 +379,10 @@ export class Multiaddr {
  */
 export const fromNodeAddress = (addr, transport) => {
     if (!addr) {
-        throw new adone.exception.NotValid("Requires node address object");
+        throw new adone.error.NotValid("Requires node address object");
     }
     if (!transport) {
-        throw new adone.exception.NotValid("Requires transport protocol");
+        throw new adone.error.NotValid("Requires transport protocol");
     }
     const ip = (addr.family === "IPv6") ? "ip6" : "ip4";
     return new Multiaddr(`//${[ip, addr.address].join("/")}//${[transport, addr.port].join("/")}`);

@@ -78,7 +78,7 @@ for (const op of ["add", "sub", "mul", "div", "mod"]) {
             x = new BigNumber(num);
             return this[b](x);
         }
-        throw new adone.exception.Exception(`Unspecified operation for type ${typeof num} for ${op}`);
+        throw new adone.error.Exception(`Unspecified operation for type ${typeof num} for ${op}`);
     };
 }
 
@@ -281,7 +281,7 @@ BigNumber.fromBuffer = function (buf, opts = {}) {
     const size = opts.size === "auto" ? Math.ceil(buf.length) : (opts.size || 1);
 
     if (buf.length % size !== 0) {
-        throw new adone.exception.Exception(`Buffer length (${buf.length}) must be a multiple of size (${size})`);
+        throw new adone.error.Exception(`Buffer length (${buf.length}) must be a multiple of size (${size})`);
     }
 
     const hex = [];
@@ -341,7 +341,7 @@ BigNumber.prototype.toBuffer = function (opts = {}) {
 
     let hex = this.toString(16);
     if (hex.charAt(0) === "-") {
-        throw new adone.exception.Exception("converting negative numbers to Buffers not supported yet");
+        throw new adone.error.Exception("converting negative numbers to Buffers not supported yet");
     }
 
     const size = opts.size === "auto" ? Math.ceil(hex.length / 2) : (opts.size || 1);

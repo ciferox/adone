@@ -1,9 +1,9 @@
 const {
     std: { os },
-    exception: { cleanStack, AggregateException }
+    error: { cleanStack, AggregateException }
 } = adone;
 
-describe("x", () => {
+describe("error", () => {
     describe("cleanStack", () => {
         it("default", () => {
             const pre = "Error: foo\n    at Test.fn (/Users/sindresorhus/dev/clean-stack/test.js:6:15)";

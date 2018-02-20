@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     fs,
     crypto: { crc32 },
     compressor: { deflate },
@@ -166,7 +166,7 @@ class Entry {
     constructor(metadataPath, isDirectory, options) {
         this.utf8FileName = Buffer.from(metadataPath);
         if (this.utf8FileName.length > 0xffff) {
-            throw new exception.InvalidArgument(`utf8 file name too long. ${this.utf8FileName.length} > ${0xffff}`);
+            throw new error.InvalidArgument(`utf8 file name too long. ${this.utf8FileName.length} > ${0xffff}`);
         }
         this.isDirectory = isDirectory;
         this.state = Entry.WAITING_FOR_METADATA;
@@ -210,7 +210,7 @@ class Entry {
 
     setFileAttributesMode(mode) {
         if ((mode & 0xffff) !== mode) {
-            throw new exception.InvalidArgument(`invalid mode. expected: 0 <= ${mode} <= ${0xffff}`);
+            throw new error.InvalidArgument(`invalid mode. expected: 0 <= ${mode} <= ${0xffff}`);
         }
         // http://unix.stackexchange.com/questions/14705/the-zip-formats-external-file-attribute/14727#14727
         this.externalFileAttributes = (mode << 16) >>> 0;
@@ -537,14 +537,14 @@ const pumpFileDataReadStream = (self, entry, readStream) => {
 
 const validateMetadataPath = (metadataPath, isDirectory) => {
     if (metadataPath === "") {
-        throw new exception.IllegalState("empty metadataPath");
+        throw new error.IllegalState("empty metadataPath");
     }
     metadataPath = metadataPath.replace(/\\/g, "/");
     if (/^[a-zA-Z]:/.test(metadataPath) || /^\//.test(metadataPath)) {
-        throw new exception.IllegalState(`absolute path: ${metadataPath}`);
+        throw new error.IllegalState(`absolute path: ${metadataPath}`);
     }
     if (metadataPath.split("/").indexOf("..") !== -1) {
-        throw new exception.IllegalState(`invalid relative path: ${metadataPath}`);
+        throw new error.IllegalState(`invalid relative path: ${metadataPath}`);
     }
     const looksLikeDirectory = /\/$/.test(metadataPath);
     if (isDirectory) {
@@ -554,7 +554,7 @@ const validateMetadataPath = (metadataPath, isDirectory) => {
         }
     } else {
         if (looksLikeDirectory) {
-            throw new exception.IllegalState(`file path cannot end with '/': ${metadataPath}`);
+            throw new error.IllegalState(`file path cannot end with '/': ${metadataPath}`);
         }
     }
     return metadataPath;
@@ -579,7 +579,7 @@ export class ZipFile extends event.Emitter {
 
         fs.stat(realPath).then((stats) => {
             if (!stats.isFile()) {
-                return this.emit("error", new exception.IllegalState(`not a file: ${realPath}`));
+                return this.emit("error", new error.IllegalState(`not a file: ${realPath}`));
             }
             entry.uncompressedSize = stats.size;
             if (is.nil(options.mtime)) {
@@ -619,10 +619,10 @@ export class ZipFile extends event.Emitter {
     addBuffer(buffer, metadataPath, options = {}) {
         metadataPath = validateMetadataPath(metadataPath, false);
         if (buffer.length > 0x3fffffff) {
-            throw new exception.InvalidArgument(`buffer too large: ${buffer.length} > ${0x3fffffff}`);
+            throw new error.InvalidArgument(`buffer too large: ${buffer.length} > ${0x3fffffff}`);
         }
         if (!is.nil(options.size)) {
-            throw new exception.InvalidArgument("options.size not allowed");
+            throw new error.InvalidArgument("options.size not allowed");
         }
         const entry = new Entry(metadataPath, false, options);
         entry.uncompressedSize = buffer.length;
@@ -659,10 +659,10 @@ export class ZipFile extends event.Emitter {
     addEmptyDirectory(metadataPath, options = {}) {
         metadataPath = validateMetadataPath(metadataPath, true);
         if (!is.nil(options.size)) {
-            throw new exception.InvalidArgument("options.size not allowed");
+            throw new error.InvalidArgument("options.size not allowed");
         }
         if (!is.nil(options.compress)) {
-            throw new exception.InvalidArgument("options.compress not allowed");
+            throw new error.InvalidArgument("options.compress not allowed");
         }
         const entry = new Entry(metadataPath, true, options);
         this.entries.push(entry);

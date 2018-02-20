@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     util
 } = adone;
 
@@ -24,7 +24,7 @@ const lastStepModifierFunctions = {
         }
 
         if (!is.array(obj[field])) {
-            throw new exception.IllegalState("Can't $push an element on non-array values");
+            throw new error.IllegalState("Can't $push an element on non-array values");
         }
 
         const valueIsObject = is.object(value);
@@ -36,10 +36,10 @@ const lastStepModifierFunctions = {
         if (!is.null(value) && valueIsObject && value.$each) {
             const valueKeys = util.keys(value);
             if (valueKeys.length >= 3 || (valueKeys.length === 2 && is.undefined(value.$slice))) {
-                throw new exception.IllegalState("Can only use $slice in cunjunction with $each when $push to array");
+                throw new error.IllegalState("Can only use $slice in cunjunction with $each when $push to array");
             }
             if (!is.array(value.$each)) {
-                throw new exception.IllegalState("$each requires an array value");
+                throw new error.IllegalState("$each requires an array value");
             }
 
             for (let i = 0; i < value.$each.length; ++i) {
@@ -80,17 +80,17 @@ const lastStepModifierFunctions = {
         }
 
         if (!is.array(obj[field])) {
-            throw new exception.IllegalState("Can't $addToSet an element on non-array values");
+            throw new error.IllegalState("Can't $addToSet an element on non-array values");
         }
 
         let addToSet = true;
 
         if (!is.null(value) && is.object(value) && value.$each) {
             if (util.keys(value).length > 1) {
-                throw new exception.IllegalState("Can't use another field in conjunction with $each");
+                throw new error.IllegalState("Can't use another field in conjunction with $each");
             }
             if (!is.array(value.$each)) {
-                throw new exception.IllegalState("$each requires an array value");
+                throw new error.IllegalState("$each requires an array value");
             }
 
             for (let i = 0; i < value.$each.length; ++i) {
@@ -115,10 +115,10 @@ const lastStepModifierFunctions = {
      */
     $pop: (obj, field, value) => {
         if (!is.array(obj[field])) {
-            throw new exception.IllegalState("Can't $pop an element from non-array values");
+            throw new error.IllegalState("Can't $pop an element from non-array values");
         }
         if (!is.number(value)) {
-            throw new exception.IllegalState(`${value} isn't an integer, can't use it with $pop`);
+            throw new error.IllegalState(`${value} isn't an integer, can't use it with $pop`);
         }
         if (value === 0) {
             return;
@@ -135,7 +135,7 @@ const lastStepModifierFunctions = {
      */
     $pull: (obj, field, value) => {
         if (!is.array(obj[field])) {
-            throw new exception.IllegalState("Can't $pull an element from non-array values");
+            throw new error.IllegalState("Can't $pull an element from non-array values");
         }
 
         const arr = obj[field];
@@ -151,14 +151,14 @@ const lastStepModifierFunctions = {
      */
     $inc: (obj, field, value) => {
         if (!is.number(value)) {
-            throw new exception.IllegalState(`${value} must be a number`);
+            throw new error.IllegalState(`${value} must be a number`);
         }
 
         if (!is.number(obj[field])) {
             if (!is.propertyOwned(obj, field)) {
                 obj[field] = value;
             } else {
-                throw new exception.IllegalState("Don't use the $inc modifier on non-number fields");
+                throw new error.IllegalState("Don't use the $inc modifier on non-number fields");
             }
         } else {
             obj[field] += value;
@@ -220,7 +220,7 @@ const comparisonFunctions = {
     $ne: (a, b) => is.undefined(a) ? true : !Model.areThingsEqual(a, b), // eslint-disable-line no-use-before-define
     $in: (a, b) => {
         if (!is.array(b)) {
-            throw new exception.IllegalState("$in operator called with a non-array");
+            throw new error.IllegalState("$in operator called with a non-array");
         }
 
         for (let i = 0; i < b.length; ++i) {
@@ -233,14 +233,14 @@ const comparisonFunctions = {
     },
     $nin: (a, b) => {
         if (!is.array(b)) {
-            throw new exception.IllegalState("$nin operator called with a non-array");
+            throw new error.IllegalState("$nin operator called with a non-array");
         }
 
         return !comparisonFunctions.$in(a, b);
     },
     $regex: (a, b) => {
         if (!is.regexp(b)) {
-            throw new exception.IllegalState("$regex operator called with non regular expression");
+            throw new error.IllegalState("$regex operator called with non regular expression");
         }
 
         if (!is.string(a)) {
@@ -267,7 +267,7 @@ const comparisonFunctions = {
             return false;
         }
         if (!is.integer(value)) {
-            throw new exception.IllegalState("$size operator called without an integer");
+            throw new error.IllegalState("$size operator called without an integer");
         }
 
         return obj.length === value;
@@ -288,7 +288,7 @@ const comparisonFunctions = {
 const logicalOperators = {
     $or: (obj, query) => {
         if (!is.array(query)) {
-            throw new exception.IllegalState("$or operator used without an array");
+            throw new error.IllegalState("$or operator used without an array");
         }
 
         for (let i = 0; i < query.length; ++i) {
@@ -301,7 +301,7 @@ const logicalOperators = {
     },
     $and: (obj, query) => {
         if (!is.array(query)) {
-            throw new exception.IllegalState("$and operator used without an array");
+            throw new error.IllegalState("$and operator used without an array");
         }
 
         for (let i = 0; i < query.length; ++i) {
@@ -315,12 +315,12 @@ const logicalOperators = {
     $not: (obj, query) => !Model.match(obj, query),  // eslint-disable-line no-use-before-define
     $where: (obj, fn) => {
         if (!is.function(fn)) {
-            throw new exception.IllegalState("$where operator used without a function");
+            throw new error.IllegalState("$where operator used without a function");
         }
 
         const result = fn.call(obj);
         if (!is.boolean(result)) {
-            throw new exception.IllegalState("$where function must return boolean");
+            throw new error.IllegalState("$where function must return boolean");
         }
 
         return result;
@@ -368,14 +368,14 @@ const matchQueryPart = (obj, queryKey, queryValue, treatObjAsValue) => {
         const dollarFirstChars = firstChars.filter((c) => c === "$");
 
         if (dollarFirstChars.length !== 0 && dollarFirstChars.length !== firstChars.length) {
-            throw new exception.IllegalState("You cannot mix operators and normal fields");
+            throw new error.IllegalState("You cannot mix operators and normal fields");
         }
 
         // queryValue is an object of this form: { $comparisonOperator1: value1, ... }
         if (dollarFirstChars.length > 0) {
             for (let i = 0; i < keys.length; ++i) {
                 if (!comparisonFunctions[keys[i]]) {
-                    throw new exception.IllegalState(`Unknown comparison function ${keys[i]}`);
+                    throw new error.IllegalState(`Unknown comparison function ${keys[i]}`);
                 }
 
                 if (!comparisonFunctions[keys[i]](objValue, queryValue[keys[i]])) {
@@ -403,11 +403,11 @@ const checkKey = (k, v) => {
     }
 
     if (k[0] === "$" && !(k === "$$date" && is.number(v)) && !(k === "$$deleted" && v === true) && k !== "$$indexCreated" && k !== "$$indexRemoved") {
-        throw new exception.IllegalState("Field names cannot begin with the $ character");
+        throw new error.IllegalState("Field names cannot begin with the $ character");
     }
 
     if (k.indexOf(".") !== -1) {
-        throw new exception.IllegalState("Field names cannot contain a .");
+        throw new error.IllegalState("Field names cannot contain a .");
     }
 };
 
@@ -532,11 +532,11 @@ export default class Model {
         const dollarFirstChars = firstChars.filter((c) => c === "$");
 
         if (keys.indexOf("_id") !== -1 && updateQuery._id !== obj._id) {
-            throw new exception.IllegalState("You cannot change a document's _id");
+            throw new error.IllegalState("You cannot change a document's _id");
         }
 
         if (dollarFirstChars.length !== 0 && dollarFirstChars.length !== firstChars.length) {
-            throw new exception.IllegalState("You cannot mix modifiers and normal fields");
+            throw new error.IllegalState("You cannot mix modifiers and normal fields");
         }
 
         let newDoc;
@@ -551,11 +551,11 @@ export default class Model {
             for (let i = 0; i < keys.length; ++i) {
                 const modifier = keys[i];
                 if (!modifierFunctions[modifier]) {
-                    throw new exception.IllegalState(`Unknown modifier ${modifier}`);
+                    throw new error.IllegalState(`Unknown modifier ${modifier}`);
                 }
 
                 if (!is.object(updateQuery[modifier])) {
-                    throw new exception.IllegalState(`Modifier ${modifier}'s argument must be an object`);
+                    throw new error.IllegalState(`Modifier ${modifier}'s argument must be an object`);
                 }
 
                 const updateKeys = util.keys(updateQuery[modifier]);
@@ -571,7 +571,7 @@ export default class Model {
         Model.checkObject(newDoc);
 
         if (obj._id !== newDoc._id) {
-            throw new exception.IllegalState("You can't change a document's _id");
+            throw new error.IllegalState("You can't change a document's _id");
         }
         return newDoc;
     }
@@ -617,7 +617,7 @@ export default class Model {
 
             if (queryKey[0] === "$") {
                 if (!logicalOperators[queryKey]) {
-                    throw new exception.Unknown(`Unknown logical operator ${queryKey}`);
+                    throw new error.Unknown(`Unknown logical operator ${queryKey}`);
                 }
                 if (!logicalOperators[queryKey](obj, queryValue)) {
                     return false;

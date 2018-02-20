@@ -1588,7 +1588,7 @@ describe("findAll", function () {
                         username: "some-username-that-is-not-used-anywhere"
                     }
                 });
-            }, orm.exception.EmptyResultError);
+            }, orm.error.EmptyResultError);
         });
 
         it("throws custom error with initialized", async () => {
@@ -1596,7 +1596,7 @@ describe("findAll", function () {
             const Model = current.define("Test", {
                 username: new type.STRING(100)
             }, {
-                rejectOnEmpty: new orm.exception.ConnectionError("Some Error") //using custom error instance
+                rejectOnEmpty: new orm.error.ConnectionError("Some Error") //using custom error instance
             });
 
             await Model.sync({ force: true });
@@ -1606,7 +1606,7 @@ describe("findAll", function () {
                         username: "some-username-that-is-not-used-anywhere-for-sure-this-time"
                     }
                 });
-            }, orm.exception.ConnectionError);
+            }, orm.error.ConnectionError);
         });
 
         it("throws custom error with instance", async () => {
@@ -1614,7 +1614,7 @@ describe("findAll", function () {
             const Model = current.define("Test", {
                 username: new type.STRING(100)
             }, {
-                rejectOnEmpty: orm.exception.ConnectionError //using custom error instance
+                rejectOnEmpty: orm.error.ConnectionError //using custom error instance
             });
 
             await Model.sync({ force: true });
@@ -1624,7 +1624,7 @@ describe("findAll", function () {
                         username: "some-username-that-is-not-used-anywhere-for-sure-this-time"
                     }
                 });
-            }, orm.exception.ConnectionError);
+            }, orm.error.ConnectionError);
         });
     });
 });

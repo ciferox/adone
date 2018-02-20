@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     shani: { util },
     lazify
 } = adone;
@@ -212,7 +212,7 @@ const proto = {
 
         // Make call properties available from within the spied function:
         createCallProperties.call(this);
-        let exception;
+        let error;
         let returnValue;
         try {
             this.invoking = true;
@@ -230,15 +230,15 @@ const proto = {
                 returnValue = (this.func || func).apply(thisValue, args);
             }
         } catch (e) {
-            exception = e;
+            error = e;
         } finally {
             delete this.invoking;
         }
 
-        this.exceptions.push(exception);
+        this.exceptions.push(error);
         this.returnValues.push(returnValue);
         matchings.forEach((matching) => {
-            matching.exceptions.push(exception);
+            matching.exceptions.push(error);
             matching.returnValues.push(returnValue);
         });
 
@@ -254,7 +254,7 @@ const proto = {
             matching.errorsWithCallStack.push(err);
         });
 
-        // Make return value and exception available in the calls:
+        // Make return value and error available in the calls:
         createCallProperties.call(this);
         matchings.forEach((matching) => {
             createCallProperties.call(matching);
@@ -269,8 +269,8 @@ const proto = {
             }
         }
 
-        if (!is.undefined(exception)) {
-            throw exception;
+        if (!is.undefined(error)) {
+            throw error;
         }
 
         return returnValue;
@@ -485,29 +485,29 @@ delegateToCalls("alwaysReturned", false, "returned");
 delegateToCalls("calledWithNew", true);
 delegateToCalls("alwaysCalledWithNew", false, "calledWithNew");
 delegateToCalls("callArg", false, "callArgWith", function () {
-    throw new exception.IllegalState(`${this.toString()} cannot call arg since it was not yet invoked.`);
+    throw new error.IllegalState(`${this.toString()} cannot call arg since it was not yet invoked.`);
 });
 proto.callArgWith = proto.callArg;
 delegateToCalls("callArgOn", false, "callArgOnWith", function () {
-    throw new exception.IllegalState(`${this.toString()} cannot call arg since it was not yet invoked.`);
+    throw new error.IllegalState(`${this.toString()} cannot call arg since it was not yet invoked.`);
 });
 proto.callArgOnWith = proto.callArgOn;
 delegateToCalls("throwArg", false, "throwArg", function () {
-    throw new exception.IllegalState(`${this.toString()} cannot throw arg since it was not yet invoked.`);
+    throw new error.IllegalState(`${this.toString()} cannot throw arg since it was not yet invoked.`);
 });
 delegateToCalls("yield", false, "yield", function () {
-    throw new exception.IllegalState(`${this.toString()} cannot yield since it was not yet invoked.`);
+    throw new error.IllegalState(`${this.toString()} cannot yield since it was not yet invoked.`);
 });
 // "invokeCallback" is an alias for "yield" since "yield" is invalid in strict mode.
 proto.invokeCallback = proto.yield;
 delegateToCalls("yieldOn", false, "yieldOn", function () {
-    throw new exception.IllegalState(`${this.toString()} cannot yield since it was not yet invoked.`);
+    throw new error.IllegalState(`${this.toString()} cannot yield since it was not yet invoked.`);
 });
 delegateToCalls("yieldTo", false, "yieldTo", function (property) {
-    throw new exception.IllegalState(`${this.toString()} cannot yield to '${__.util.valueToString(property)}' since it was not yet invoked.`);
+    throw new error.IllegalState(`${this.toString()} cannot yield to '${__.util.valueToString(property)}' since it was not yet invoked.`);
 });
 delegateToCalls("yieldToOn", false, "yieldToOn", function (property) {
-    throw new exception.IllegalState(`${this.toString()} cannot yield to '${__.util.valueToString(property)}' since it was not yet invoked.`);
+    throw new error.IllegalState(`${this.toString()} cannot yield to '${__.util.valueToString(property)}' since it was not yet invoked.`);
 });
 
 export default function spy(object, property, types) {

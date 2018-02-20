@@ -1,7 +1,7 @@
 const {
     util: { iconv },
     std: { stream: { Transform } },
-    exception,
+    error,
     is
 } = adone;
 
@@ -14,7 +14,7 @@ export class EncodeStream extends Transform {
 
     _transform(chunk, encoding, done) {
         if (!is.string(chunk)) {
-            return done(new exception.IllegalState("Iconv encoding stream needs strings as its input."));
+            return done(new error.IllegalState("Iconv encoding stream needs strings as its input."));
         }
         try {
             const res = this.conv.write(chunk);
@@ -50,7 +50,7 @@ export class DecodeStream extends Transform {
 
     _transform(chunk, encoding, done) {
         if (!is.buffer(chunk)) {
-            return done(new exception.IllegalState("Iconv decoding stream needs buffers as its input."));
+            return done(new error.IllegalState("Iconv decoding stream needs buffers as its input."));
         }
         try {
             const res = this.conv.write(chunk);

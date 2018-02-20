@@ -39,7 +39,7 @@ describe("data", "basex/base58", () => {
                 }
 
                 base.decode(f.string);
-            }, new RegExp(f.exception));
+            }, new RegExp(f.error));
         });
     });
 

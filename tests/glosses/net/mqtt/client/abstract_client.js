@@ -1470,7 +1470,7 @@ module.exports = function (server, config) {
 
             client.on("connect", () => {
                 client.end();
-                done(); // it will raise an exception if called two times
+                done(); // it will raise an error if called two times
             });
         });
 

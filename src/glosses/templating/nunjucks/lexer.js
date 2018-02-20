@@ -1,5 +1,5 @@
 const {
-    exception,
+    error,
     is
 } = adone;
 
@@ -262,7 +262,7 @@ class Tokenizer {
                 return token(TOKEN_SYMBOL, tok, lineno, colno);
             }
 
-            throw new exception.IllegalState(`Unexpected value while parsing: ${tok}`);
+            throw new error.IllegalState(`Unexpected value while parsing: ${tok}`);
         }
 
         // Parse out the template text, breaking on tag
@@ -330,7 +330,7 @@ class Tokenizer {
                 break;
             } else if (this._matches(this.tags.COMMENT_END)) {
                 if (!inComment) {
-                    throw new exception.IllegalState("unexpected end of comment");
+                    throw new error.IllegalState("unexpected end of comment");
                 }
                 tok += this._extractString(this.tags.COMMENT_END);
                 break;
@@ -343,7 +343,7 @@ class Tokenizer {
         }
 
         if (is.null(data) && inComment) {
-            throw new exception.IllegalState("expected end of comment, got end of file");
+            throw new error.IllegalState("expected end of comment, got end of file");
         }
 
         return token(inComment ? TOKEN_COMMENT : TOKEN_DATA, tok, lineno, colno);

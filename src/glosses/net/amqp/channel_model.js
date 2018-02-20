@@ -224,7 +224,7 @@ Channel.prototype.qos = Channel.prototype.prefetch;
 // meaning sent messages will provoke a responding 'ack' or 'nack'
 // from the server. The upshot of this is that `publish` and
 // `sendToQueue` both take a callback, which will be called either
-// with `null` as its argument to signify 'ack', or an exception as
+// with `null` as its argument to signify 'ack', or an error as
 // its argument to signify 'nack'.
 class ConfirmChannel extends Channel {
     publish(exchange, routingKey, content, options, cb) {

@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     vendor: { lodash: _ },
     terminal
 } = adone;
@@ -86,7 +86,7 @@ export default class Choices {
      */
     getChoice(selector) {
         if (!is.number(selector)) {
-            throw new exception.InvalidArgument("Selector must be a number");
+            throw new error.InvalidArgument("Selector must be a number");
         }
         return this.realChoices[selector];
     }
@@ -98,7 +98,7 @@ export default class Choices {
      */
     get(selector) {
         if (!is.number(selector)) {
-            throw new exception.InvalidArgument("Selector must be a number");
+            throw new error.InvalidArgument("Selector must be a number");
         }
         return this.choices[selector];
     }

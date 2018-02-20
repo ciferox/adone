@@ -1,6 +1,6 @@
 const {
     is,
-    exception: x,
+    error: x,
     util,
     vendor: {
         lodash
@@ -46,7 +46,7 @@ Cancel.prototype[Symbol.for("adone:request:cancel")] = true;
 export class CancelToken {
     constructor(executor) {
         if (!is.function(executor)) {
-            throw new adone.exception.InvalidArgument("executor must be a function.");
+            throw new adone.error.InvalidArgument("executor must be a function.");
         }
         let resolvePromise;
         this.promise = new Promise((resolve) => resolvePromise = resolve);

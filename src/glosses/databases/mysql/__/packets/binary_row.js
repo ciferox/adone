@@ -1,5 +1,5 @@
 const {
-    exception,
+    error,
     database: { mysql }
 } = adone;
 
@@ -37,14 +37,14 @@ export default class BinaryRow {
     }
 
     toPacket() {
-        throw new exception.NotImplemented();
+        throw new error.NotImplemented();
     }
 
     static fromPacket(fields, packet) {
         const columns = new Array(fields.length);
         const ok = packet.readInt8();
         if (ok !== 0) {
-            throw new exception.IllegalState("not ok");
+            throw new error.IllegalState("not ok");
         }
         const nullBitmapLength = Math.floor((fields.length + 7 + 2) / 8);
         // TODO: read and interpret null bitmap

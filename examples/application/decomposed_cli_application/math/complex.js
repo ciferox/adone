@@ -1,5 +1,5 @@
 const {
-    exception,
+    error,
     application
 } = adone;
 
@@ -9,11 +9,11 @@ const {
 
 const parseComplexNumber = (str) => {
     if (!str) {
-        throw new exception.InvalidArgument("Number cannot be empty");
+        throw new error.InvalidArgument("Number cannot be empty");
     }
     const res = str.match(/^(-?\d+)((?:\+\d+|-\d+))i$/);
     if (!res) {
-        throw new exception.InvalidArgument("Numbers must have format a+bi, where a and b are real numbers");
+        throw new error.InvalidArgument("Numbers must have format a+bi, where a and b are real numbers");
     }
     const [, a, b] = res;
     return [Number(a), Number(b)];
@@ -108,7 +108,7 @@ export default class Complex extends application.Subsystem {
         const [x1, y1] = args.get("b");
         const d = x1 * x1 + y1 * y1;
         if (d === 0) {
-            adone.error("division by zero");
+            adone.logError("division by zero");
             return 1;
         }
         adone.log(formatComplexNumber((x0 * x1 + y0 * y1) / d, (y1 * x0 - x0 * y1) / d));

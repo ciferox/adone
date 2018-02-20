@@ -89,8 +89,8 @@ describe("fast", "transform", "notify", () => {
         expect(files).to.have.length(3);
     });
 
-    it("should emit error when sub-module throws exception/error and emitError flag is true", async () => {
-        const testString = "some exception";
+    it("should emit error when sub-module throws error/error and emitError flag is true", async () => {
+        const testString = "some error";
 
         const error = await assert.throws(async () => {
             await fast.src(srcPath).notify({
@@ -107,9 +107,9 @@ describe("fast", "transform", "notify", () => {
         expect(String(error.message)).to.be.equal(testString);
     });
 
-    it("should not emit error when sub-module throws exception/error if emitError flag is false (default)", async () => {
+    it("should not emit error when sub-module throws error/error if emitError flag is false (default)", async () => {
 
-        const testString = "some exception";
+        const testString = "some error";
         const expectedFile = getFile("1.txt");
 
         await new Stream([expectedFile]).notify({
@@ -323,7 +323,7 @@ describe("fast", "transform", "notify", () => {
             });
 
             fast.src(srcPath).through(() => {
-                throw new adone.exception.Exception(testMessage);
+                throw new adone.error.Exception(testMessage);
             }).on("error", onError).resume();
         });
 
@@ -345,7 +345,7 @@ describe("fast", "transform", "notify", () => {
             });
 
             new Stream([getFile("1.txt")]).through(() => {
-                throw new adone.exception.Exception("test");
+                throw new adone.error.Exception("test");
             }).on("error", onError).resume();
         });
     });

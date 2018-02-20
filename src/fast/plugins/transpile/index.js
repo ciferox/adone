@@ -18,7 +18,7 @@ const replacer = ({ file, base, map } = {}) => {
                     const fileBase = base(source, file);
                     const mappedRelative = path.resolve(mapTo, sourceRelative);
                     if (!is.string(fileBase)) {
-                        throw new adone.exception.IllegalState("`base` should be a string");
+                        throw new adone.error.IllegalState("`base` should be a string");
                     }
                     const mappedFilename = path.resolve(fileBase, file.relative);
                     p.node.source.value = `./${path.relative(path.dirname(mappedFilename), mappedRelative)}`;

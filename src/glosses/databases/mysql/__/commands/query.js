@@ -46,7 +46,7 @@ export default class Query extends Command {
 
     start(_, connection) {
         if (connection.config.debug) {
-            adone.debug("        Sending query command: %s", this.sql);
+            adone.logDebug("        Sending query command: %s", this.sql);
         }
         this._connection = connection;
         this.options = Object.assign({}, connection.config, this._queryOptions);
@@ -105,7 +105,7 @@ export default class Query extends Command {
         const rs = new packet.ResultSetHeader(p, connection);
         this._fieldCount = rs.fieldCount;
         if (connection.config.debug) {
-            adone.debug(`        Resultset header received, expecting ${rs.fieldCount} column definition packets`);
+            adone.logDebug(`        Resultset header received, expecting ${rs.fieldCount} column definition packets`);
         }
         if (this._fieldCount === 0) {
             return this.doneInsert(rs);
@@ -187,10 +187,10 @@ export default class Query extends Command {
             const field = new packet.ColumnDefinition(p, connection.clientEncoding);
             this._fields[this._resultIndex].push(field);
             if (connection.config.debug) {
-                adone.debug("        Column definition:");
-                adone.debug(`          name: ${field.name}`);
-                adone.debug(`          type: ${field.columnType}`);
-                adone.debug(`         flags: ${field.flags}`);
+                adone.logDebug("        Column definition:");
+                adone.logDebug(`          name: ${field.name}`);
+                adone.logDebug(`          type: ${field.columnType}`);
+                adone.logDebug(`         flags: ${field.flags}`);
             }
         }
 

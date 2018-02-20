@@ -12,7 +12,7 @@ const getDecoder = (encoding) => {
             throw e;
         }
 
-        throw http.exception.create(415, "specified encoding unsupported", {
+        throw http.error.create(415, "specified encoding unsupported", {
             encoding,
             type: "encoding.unsupported"
         });
@@ -39,7 +39,7 @@ const readStream = (stream, encoding, length, limit) => new Promise((resolve, re
     };
 
     if (!is.null(limit) && !is.null(length) && length > limit) {
-        return done(http.exception.create(413, "request entity too large", {
+        return done(http.error.create(413, "request entity too large", {
             expected: length,
             length,
             limit,
@@ -49,7 +49,7 @@ const readStream = (stream, encoding, length, limit) => new Promise((resolve, re
 
     if (stream._readableState.encoding) {
         // developer error
-        return done(http.exception.create(500, "stream encoding should not be set", {
+        return done(http.error.create(500, "stream encoding should not be set", {
             type: "stream.encoding.set"
         }));
     }
@@ -70,7 +70,7 @@ const readStream = (stream, encoding, length, limit) => new Promise((resolve, re
             return;
         }
 
-        done(http.exception.create(400, "request aborted", {
+        done(http.error.create(400, "request aborted", {
             code: "ECONNABORTED",
             expected: length,
             length,
@@ -92,7 +92,7 @@ const readStream = (stream, encoding, length, limit) => new Promise((resolve, re
         }
 
         if (!is.null(limit) && received > limit) {
-            done(http.exception.create(413, "request entity too large", {
+            done(http.error.create(413, "request entity too large", {
                 limit,
                 received,
                 type: "entity.too.large"
@@ -109,7 +109,7 @@ const readStream = (stream, encoding, length, limit) => new Promise((resolve, re
         }
 
         if (!is.null(length) && received !== length) {
-            done(http.exception.create(400, "request size did not match content length", {
+            done(http.error.create(400, "request size did not match content length", {
                 expected: length,
                 length,
                 received,

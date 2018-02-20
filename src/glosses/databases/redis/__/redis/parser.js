@@ -1,7 +1,7 @@
 const {
     database: { redis },
     is,
-    exception,
+    error,
     lazify
 } = adone;
 const __ = adone.private(redis);
@@ -23,7 +23,7 @@ export const initParser = function () {
         },
         returnFatalError: (err) => {
             this.flushQueue(err, { offlineQueue: false });
-            this.silentEmit("error", new exception.Exception(`Redis parser fatal error: ${err.stack}`));
+            this.silentEmit("error", new error.Exception(`Redis parser fatal error: ${err.stack}`));
             this.disconnect(true);
         }
     });
@@ -75,7 +75,7 @@ export const returnReply = function (reply) {
 
         // If not the reply to AUTH & MONITOR
         if (replyStr !== "OK") {
-            // Since commands sent in the monitoring mode will trigger an exception,
+            // Since commands sent in the monitoring mode will trigger an error,
             // any replies we received in the monitoring mode should consider to be
             // realtime monitor data instead of result of commands.
             const len = replyStr.indexOf(" ");
@@ -177,7 +177,7 @@ export const returnReply = function (reply) {
     } else {
         item = this.commandQueue.shift();
         if (!item) {
-            const err = new exception.Exception(`Command queue state error. Last reply: ${reply.toString()}`);
+            const err = new error.Exception(`Command queue state error. Last reply: ${reply.toString()}`);
             return this.emit("error", err);
         }
         if (__.Command.checkFlag("ENTER_SUBSCRIBER_MODE", item.command.name)) {

@@ -1,4 +1,4 @@
-const { data: { yaml }, is, exception } = adone;
+const { data: { yaml }, is, error } = adone;
 
 const YAML_DATE_REGEXP = new RegExp(
     "^([0-9][0-9][0-9][0-9])" + // [1] year
@@ -37,7 +37,7 @@ const constructYamlTimestamp = (data) => {
     }
 
     if (is.null(match)) {
-        throw new exception.InvalidArgument("Date resolve error");
+        throw new error.InvalidArgument("Date resolve error");
     }
 
     // match: [1] year [2] month [3] day

@@ -1,5 +1,5 @@
 const {
-    exception,
+    error,
     is,
     math: { Long },
     database: { mysql },
@@ -60,7 +60,7 @@ export default class Packet {
     }
 
     dump() {
-        adone.debug(
+        adone.logDebug(
             [this.buffer.asciiSlice(this.start, this.end)],
             this.buffer.slice(this.start, this.end),
             this.length(),
@@ -217,8 +217,8 @@ export default class Packet {
             return bigNumberStrings ? resString : res;
         }
 
-        adone.trace();
-        throw new exception.IllegalState(`Should not reach here: ${tag}`);
+        adone.logTrace();
+        throw new error.IllegalState(`Should not reach here: ${tag}`);
     }
 
     readFloat() {
@@ -402,7 +402,7 @@ export default class Packet {
         const end = this.offset + len;
         let sign = 1;
         if (len === 0) {
-            return 0; // TODO: assert? exception?
+            return 0; // TODO: assert? error?
         }
 
         if (this.buffer[this.offset] === minus) {
@@ -460,7 +460,7 @@ export default class Packet {
         const end = this.offset + len;
         let sign = 1;
         if (len === 0) {
-            return 0; // TODO: assert? exception?
+            return 0; // TODO: assert? error?
         }
 
         if (this.buffer[this.offset] === minus) {
@@ -609,7 +609,7 @@ export default class Packet {
         let pastDot = false;
         let charCode = 0;
         if (len === 0) {
-            return 0; // TODO: assert? exception?
+            return 0; // TODO: assert? error?
         }
 
         if (this.buffer[this.offset] === minus) {
@@ -683,7 +683,7 @@ export default class Packet {
             sqlState = this.readBuffer(5).toString();
         }
         const message = this.readString(undefined, encoding);
-        const err = new exception.Exception(message);
+        const err = new error.Exception(message);
         err.code = c.error[errorCode];
         err.errno = errorCode;
         err.sqlState = sqlState;

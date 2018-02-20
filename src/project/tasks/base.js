@@ -1,6 +1,6 @@
 const {
     task,
-    exception
+    error
 } = adone;
 
 export default class BaseTask extends task.Task {
@@ -15,7 +15,7 @@ export default class BaseTask extends task.Task {
             this.result = await this.main(...args);
             await this.uninitialize(...args);
         } catch (err) {
-            await this.exception(err);
+            await this.error(err);
         }
         return this.result;
     }
@@ -30,7 +30,7 @@ export default class BaseTask extends task.Task {
      * The method in which the common logic should be implemented.
      */
     main() {
-        throw new exception.NotImplemented("Method main() is not implemented");
+        throw new error.NotImplemented("Method main() is not implemented");
     }
 
     /**
@@ -44,7 +44,7 @@ export default class BaseTask extends task.Task {
      *
      * @param {Error} err
      */
-    exception(err) {
-        adone.error(err);
+    error(err) {
+        adone.logError(err);
     }
 }

@@ -237,7 +237,7 @@ describe("netron", "native", "functional tests", () => {
             propVal = await superNetron.call(null, defID, "getValue1");
             expect(propVal).to.be.equal("newProp1");
             const err = await assert.throws(async () => superNetron.call(null, defID, "getValue2"));
-            assert.instanceOf(err, adone.exception.NotExists);
+            assert.instanceOf(err, adone.error.NotExists);
         });
 
         it("remote - methods call", async () => {
@@ -252,7 +252,7 @@ describe("netron", "native", "functional tests", () => {
             propVal = await exNetron.call(peer.uid, defID, "getValue1");
             expect(propVal).to.be.equal("newProp1");
             const err = await assert.throws(async () => exNetron.call(peer.uid, defID, "getValue2"));
-            assert.instanceOf(err, adone.exception.NotExists);
+            assert.instanceOf(err, adone.error.NotExists);
         });
 
         it("local - properties access", async () => {
@@ -263,7 +263,7 @@ describe("netron", "native", "functional tests", () => {
             try {
                 propVal = await superNetron.get(null, defID, "prop1");
             } catch (err) {
-                isOK = err instanceof adone.exception.NotExists;
+                isOK = err instanceof adone.error.NotExists;
             }
             expect(isOK).to.be.true();
             propVal = await superNetron.get(null, defID, "prop2");
@@ -272,7 +272,7 @@ describe("netron", "native", "functional tests", () => {
             try {
                 await superNetron.set(null, defID, "prop2", "newProp2");
             } catch (err) {
-                isOK = err instanceof adone.exception.InvalidAccess;
+                isOK = err instanceof adone.error.InvalidAccess;
             }
             expect(isOK).to.be.true();
             await superNetron.set(null, defID, "prop3", "newProp3");
@@ -291,7 +291,7 @@ describe("netron", "native", "functional tests", () => {
             try {
                 propVal = await exNetron.get(peer.uid, defID, "prop1");
             } catch (err) {
-                isOK = err instanceof adone.exception.NotExists;
+                isOK = err instanceof adone.error.NotExists;
             }
             expect(isOK).to.be.true();
             propVal = await exNetron.get(peer.uid, defID, "prop2");
@@ -300,7 +300,7 @@ describe("netron", "native", "functional tests", () => {
             try {
                 await exNetron.set(peer.uid, defID, "prop2", "newProp2");
             } catch (err) {
-                isOK = err instanceof adone.exception.InvalidAccess;
+                isOK = err instanceof adone.error.InvalidAccess;
             }
             expect(isOK).to.be.true();
             await exNetron.set(peer.uid, defID, "prop3", "newProp3");
@@ -818,7 +818,7 @@ describe("netron", "native", "functional tests", () => {
                 assert.equal(await iWeak.doSomething(), 888);
                 await iStrong.releaseWeak();
                 const err = await assert.throws(async () => iWeak.doSomething());
-                assert.ok(err instanceof adone.exception.NotExists);
+                assert.ok(err instanceof adone.error.NotExists);
                 assert.equal(err.message, "Context not exists");
             });
 
@@ -1054,7 +1054,7 @@ describe("netron", "native", "functional tests", () => {
                         const peer = await exNetron.connect({ port: NETRON_PORT });
                         iA = peer.getInterfaceByName("a");
                     }
-                    const stdErrors = adone.exception.stdExceptions;
+                    const stdErrors = adone.error.stdExceptions;
                     for (const StdError of stdErrors) {
                         try {
                             await iA[`throw${StdError.prototype.name}`]();
@@ -1074,9 +1074,9 @@ describe("netron", "native", "functional tests", () => {
                     @Context()
                     class AdoneErrs { }
 
-                    const adoneErrors = adone.exception.adoneExceptions;
+                    const adoneErrors = adone.error.adoneExceptions;
                     for (const AdoneError of adoneErrors) {
-                        if (adone.exception.exceptionIdMap[AdoneError] < 1000) {
+                        if (adone.error.exceptionIdMap[AdoneError] < 1000) {
                             AdoneErrs.prototype[`throw${AdoneError.prototype.name}`] = function () {
                                 throw new AdoneError("description");
                             };
@@ -1237,10 +1237,10 @@ describe("netron", "native", "functional tests", () => {
             await adone.promise.delay(100);
             assert.throws(() => {
                 superNetron.getInterfaceById(aDefId);
-            }, adone.exception.Unknown);
+            }, adone.error.Unknown);
             assert.throws(() => {
                 peer.getInterfaceById(aDefId);
-            }, adone.exception.Unknown);
+            }, adone.error.Unknown);
         });
 
         it("obtain unknown interfaces after disconnect", async () => {
@@ -1258,7 +1258,7 @@ describe("netron", "native", "functional tests", () => {
             assert.throws(() => {
                 const iA = peer.getInterfaceById(aDefId);
                 iA.originateB();
-            }, adone.exception.Unknown);
+            }, adone.error.Unknown);
         });
 
         it("inverse object manupulation stub referencing", async () => {
@@ -1485,7 +1485,7 @@ describe("netron", "native", "functional tests", () => {
             assert.equal(await iA.method1(), "A1");
 
             const err = assert.throws(() => peer.getInterfaceByName("b"));
-            assert.instanceOf(err, adone.exception.Unknown);
+            assert.instanceOf(err, adone.error.Unknown);
         });
     });
 });

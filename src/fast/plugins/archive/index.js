@@ -12,7 +12,7 @@ export default function plugin() {
             case "zip":
                 return this.pack(type, packerOptions);
             default:
-                throw new adone.exception.Unknown(`Unknown archive type: ${type}`);
+                throw new adone.error.Unknown(`Unknown archive type: ${type}`);
         }        
     };
 }

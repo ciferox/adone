@@ -76,7 +76,7 @@ export const getPort = async ({ port, host, exclude = null, lbound = 1025, rboun
         }
         --rounds;
     }
-    throw new adone.exception.NotFound("No free port");
+    throw new adone.error.NotFound("No free port");
 };
 
 export const ignoredErrors = [

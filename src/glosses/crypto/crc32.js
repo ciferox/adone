@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     util
 } = adone;
 
@@ -72,7 +72,7 @@ const ensureBuffer = (input) => {
         return Buffer.from(input);
     }
 
-    throw new exception.InvalidArgument(`input must be buffer, number or string, received ${adone.meta.typeOf(input)}`);
+    throw new error.InvalidArgument(`input must be buffer, number or string, received ${adone.meta.typeOf(input)}`);
 };
 
 const _crc32 = (buf, previous) => {

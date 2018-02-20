@@ -4,7 +4,7 @@ const {
 } = adone;
 
 const {
-    exception
+    error
 } = orm;
 
 export default class Association {
@@ -22,7 +22,7 @@ export default class Association {
         this.associationType = "";
 
         if (source.hasAlias(options.as)) {
-            throw new exception.AssociationError(`You have used the alias ${options.as} in two separate associations. Aliased associations must have unique aliases.`);
+            throw new error.AssociationError(`You have used the alias ${options.as} in two separate associations. Aliased associations must have unique aliases.`);
         }
     }
     // Normalize input - may be array or single obj, instance or primary key - convert it to an array of built objects

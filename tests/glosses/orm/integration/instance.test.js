@@ -577,7 +577,7 @@ describe("instance", function () {
             await user.destroy();
             await assert.throws(async () => {
                 await user.reload();
-            }, orm.exception.InstanceError, "Instance could not be reloaded because it does not exist anymore (find call returned null)");
+            }, orm.error.InstanceError, "Instance could not be reloaded because it does not exist anymore (find call returned null)");
         });
 
         it("should set an association to null after deletion, 1-1", async function () {
@@ -981,7 +981,7 @@ describe("instance", function () {
                     await user.set({
                         name: "B"
                     }).save();
-                }, orm.exception.ValidationError);
+                }, orm.error.ValidationError);
 
                 const user2 = await User.findOne({});
 
@@ -1016,7 +1016,7 @@ describe("instance", function () {
                         name: "B",
                         email: "still.valid.email@gmail.com"
                     }).save();
-                }, orm.exception.ValidationError);
+                }, orm.error.ValidationError);
 
                 const user2 = await User.findOne({});
                 expect(user2.get("email")).to.equal("valid.email@gmail.com");

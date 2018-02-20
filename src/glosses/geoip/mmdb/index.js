@@ -1,4 +1,4 @@
-const { is, exception } = adone;
+const { is, error } = adone;
 
 export const __ = adone.lazify({
     helper: "./helpers",
@@ -20,7 +20,7 @@ export const open = async (filepath, opts) => {
 export const openSync = (filepath, opts) => {
     const database = adone.fs.readFileSync(filepath);
     if (is.null(database)) {
-        throw new exception.InvalidArgument("Invalid database file");
+        throw new error.InvalidArgument("Invalid database file");
     }
     return new __.Reader(database, opts);
 };

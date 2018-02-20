@@ -15,23 +15,23 @@ export default class OS {
     }
 
     getFileSystem() {
-        throw new adone.exception.NotImplemented("getFileSystem()");
+        throw new adone.error.NotImplemented("getFileSystem()");
     }
 
     getProcesses(limit, sort) {
-        throw new adone.exception.NotImplemented("getProcesses()");
+        throw new adone.error.NotImplemented("getProcesses()");
     }
 
     getProcess(pid) {
-        throw new adone.exception.NotImplemented("getProcess()");
+        throw new adone.error.NotImplemented("getProcess()");
     }
 
     getProcessCount() {
-        throw new adone.exception.NotImplemented("getProcessCount()");
+        throw new adone.error.NotImplemented("getProcessCount()");
     }
 
     getThreadCount() {
-        throw new adone.exception.NotImplemented("getThreadCount()");
+        throw new adone.error.NotImplemented("getThreadCount()");
     }
 
     sortProcesses(procs, limit, sortType) {

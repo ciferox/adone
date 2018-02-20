@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     diff: { util: { parsePatch }, _: { helper: { distanceIterator } } }
 } = adone;
 
@@ -11,7 +11,7 @@ export const applyPatch = (source, uniDiff, options = {}) => {
 
     if (is.array(uniDiff)) {
         if (uniDiff.length > 1) {
-            throw new exception.InvalidArgument("applyPatch only works with a single input.");
+            throw new error.InvalidArgument("applyPatch only works with a single input.");
         }
 
         [uniDiff] = uniDiff;

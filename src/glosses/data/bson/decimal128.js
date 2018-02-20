@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     data: { bson: { Long } }
 } = adone;
 
@@ -161,12 +161,12 @@ export default class Decimal128 {
 
         // Validate the string
         if (!stringMatch && !infMatch && !nanMatch || string.length === 0) {
-            throw new exception.InvalidArgument(`${String(string)} not a valid Decimal128 string`);
+            throw new error.InvalidArgument(`${String(string)} not a valid Decimal128 string`);
         }
 
         // Check if we have an illegal exponent format
         if (stringMatch && stringMatch[4] && is.undefined(stringMatch[2])) {
-            throw new exception.InvalidArgument(`${String(string)} not a valid Decimal128 string`);
+            throw new error.InvalidArgument(`${String(string)} not a valid Decimal128 string`);
         }
 
         // Get the negative or positive sign
@@ -224,7 +224,7 @@ export default class Decimal128 {
         }
 
         if (sawRadix && !nDigitsRead) {
-            throw new exception.InvalidArgument(`${String(string)} not a valid Decimal128 string`);
+            throw new error.InvalidArgument(`${String(string)} not a valid Decimal128 string`);
         }
 
         // Read exponent if exists

@@ -5,7 +5,7 @@ const {
 
 const x = {};
 
-class HttpError extends adone.exception.Exception {}
+class HttpError extends adone.error.Exception {}
 HttpError.prototype.name = "HttpError";
 
 for (const [code, statusMessage] of status.codes.entries()) {
@@ -62,7 +62,7 @@ const create = (statusCode = 500, message, properties) => {
 
     if (!err) {
         // create error
-        err = HttpError ? new HttpError(message) : new adone.exception.Exception(message || status.getMessageByCode(statusCode));
+        err = HttpError ? new HttpError(message) : new adone.error.Exception(message || status.getMessageByCode(statusCode));
         Error.captureStackTrace(err, create);
     }
 

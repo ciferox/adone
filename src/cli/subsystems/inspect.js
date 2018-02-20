@@ -169,12 +169,12 @@ export default class Inspection extends Subsystem {
                     adone.log(adone.meta.inspect(adone.vendor.lodash.get(ns, objectName), inspectOptions));
                 }
             } else {
-                throw new adone.exception.Unknown(`Unknown object: ${name}`);
+                throw new adone.error.Unknown(`Unknown object: ${name}`);
             }
             return 0;
         } catch (err) {
             adone.log(err);
-            // adone.error(err.message);
+            // adone.logError(err.message);
             return 1;
         }
     }

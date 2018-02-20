@@ -1,4 +1,4 @@
-const { is, exception } = adone;
+const { is, error } = adone;
 
 const ZEROS = "0".repeat(19);
 const SEVENS = "7".repeat(19);
@@ -321,7 +321,7 @@ export const decode = (buf) => {
 
     // valid checksum
     if (c !== decodeOct(buf, 148, 8)) {
-        throw new exception.IllegalState("Invalid tar header. Maybe the tar is corrupted or it needs to be gunzipped?");
+        throw new error.IllegalState("Invalid tar header. Maybe the tar is corrupted or it needs to be gunzipped?");
     }
 
     return {

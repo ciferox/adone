@@ -208,7 +208,7 @@ class VirtualBox {
 
     takeSnapshot(vmname, { name, description, live = false } = {}) {
         if (!name) {
-            throw new adone.exception.InvalidArgument("You must set some name");
+            throw new adone.error.InvalidArgument("You must set some name");
         }
         let cmd = `snapshot "${vmname}" take "${name}"`;
         if (description) {

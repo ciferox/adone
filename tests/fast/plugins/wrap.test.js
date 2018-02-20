@@ -180,13 +180,13 @@ describe("fast", "transform", "wrap", () => {
         expect(String(file.contents)).to.be.equal("name: foo");
     });
 
-    it("should throw exception object passed for template and no src property is set", () => {
+    it("should throw error object passed for template and no src property is set", () => {
         assert.throws(() => {
             new Stream().wrap({});
         }, "Expecting `src` option");
     });
 
-    it("should throw exception if data file parse is invalid", async () => {
+    it("should throw error if data file parse is invalid", async () => {
         const srcFile = new File({
             path: "data.json",
             contents: Buffer.from("This is an invalid JSON file.")
@@ -196,7 +196,7 @@ describe("fast", "transform", "wrap", () => {
         }, "Error parsing: data.json");
     });
 
-    it("should throw exception if template is invalid", async () => {
+    it("should throw error if template is invalid", async () => {
         const srcFile = new File({
             path: "data.json",
             contents: Buffer.from("{\"name\": \"foo\"}")

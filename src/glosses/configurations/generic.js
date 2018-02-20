@@ -1,5 +1,5 @@
 const {
-    exception,
+    error,
     is,
     std,
     fs,
@@ -114,14 +114,14 @@ export default class Generic extends adone.configuration.Base {
                     key: correctName
                 }, options));
             } catch (err) {
-                adone.error(err);
+                adone.logError(err);
                 if (err instanceof SyntaxError) {
-                    throw new exception.NotValid("Config is not valid");
+                    throw new error.NotValid("Config is not valid");
                 }
             }
 
             if (!is.object(confObj)) {
-                throw new exception.NotValid(`'${conf.path}' is not valid ${conf.ext}-configuration file`);
+                throw new error.NotValid(`'${conf.path}' is not valid ${conf.ext}-configuration file`);
             }
 
             if (correctName !== "") {
@@ -131,14 +131,14 @@ export default class Generic extends adone.configuration.Base {
                 this.assign(confObj);
             }
         } else {
-            throw new exception.NotExists(`${conf.path} not exists`);
+            throw new error.NotExists(`${conf.path} not exists`);
         }
     }
 
     loadSync(confPath, name, options) {
         const conf = this._checkPathSync(confPath, true);
         if (conf.st.isDirectory()) {
-            throw new adone.exception.NotSupported("Load directory is not supported in sync mode");
+            throw new adone.error.NotSupported("Load directory is not supported in sync mode");
         } else if (conf.st.isFile()) {
             let confObj = {};
 
@@ -151,14 +151,14 @@ export default class Generic extends adone.configuration.Base {
                     key: correctName
                 }, options));
             } catch (err) {
-                adone.error(err);
+                adone.logError(err);
                 if (err instanceof SyntaxError) {
-                    throw new exception.NotValid("Config is not valid");
+                    throw new error.NotValid("Config is not valid");
                 }
             }
 
             if (!is.object(confObj)) {
-                throw new exception.NotValid(`'${conf.path}' is not valid ${conf.ext}-configuration file`);
+                throw new error.NotValid(`'${conf.path}' is not valid ${conf.ext}-configuration file`);
             }
 
             if (correctName !== "") {
@@ -168,7 +168,7 @@ export default class Generic extends adone.configuration.Base {
                 this.assign(confObj);
             }
         } else {
-            throw new exception.NotExists(`${conf.path} not exists`);
+            throw new error.NotExists(`${conf.path} not exists`);
         }
     }
 
@@ -201,11 +201,11 @@ export default class Generic extends adone.configuration.Base {
 
         if (ext.length > 0) {
             if (!is.propertyOwned(this[SERIALIZER], ext)) {
-                throw new exception.NotSupported(`Unsupported format: ${ext}`);
+                throw new error.NotSupported(`Unsupported format: ${ext}`);
             }
             serializer = this[SERIALIZER][ext];
             if (!checkExists && !is.function(serializer.encode)) {
-                throw new exception.NotSupported(`Format '${ext}' is not saveable`);
+                throw new error.NotSupported(`Format '${ext}' is not saveable`);
             }
         }
 
@@ -218,7 +218,7 @@ export default class Generic extends adone.configuration.Base {
                     st: await fs.stat(path)
                 };
             } catch (err) {
-                throw new exception.NotExists(`${path} not exists`);
+                throw new error.NotExists(`${path} not exists`);
             }
         }
 
@@ -243,11 +243,11 @@ export default class Generic extends adone.configuration.Base {
 
         if (ext.length > 0) {
             if (!is.propertyOwned(this[SERIALIZER], ext)) {
-                throw new exception.NotSupported(`Unsupported format: ${ext}`);
+                throw new error.NotSupported(`Unsupported format: ${ext}`);
             }
             serializer = this[SERIALIZER][ext];
             if (!checkExists && !is.function(serializer.encode)) {
-                throw new exception.NotSupported(`Format '${ext}' is not saveable`);
+                throw new error.NotSupported(`Format '${ext}' is not saveable`);
             }
         }
 
@@ -260,7 +260,7 @@ export default class Generic extends adone.configuration.Base {
                     st: fs.statSync(path)
                 };
             } catch (err) {
-                throw new exception.NotExists(`${path} not exists`);
+                throw new error.NotExists(`${path} not exists`);
             }
         }
 

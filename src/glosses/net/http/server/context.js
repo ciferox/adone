@@ -1,7 +1,7 @@
 const {
     is,
     net: { http },
-    exception,
+    error,
     util
 } = adone;
 
@@ -26,7 +26,7 @@ export default class Context {
     }
 
     throw(statusCode, message, properties) {
-        throw http.exception.create(statusCode, message, properties);
+        throw http.error.create(statusCode, message, properties);
     }
 
     onerror(err) {
@@ -38,7 +38,7 @@ export default class Context {
         }
 
         if (!(err instanceof Error)) {
-            err = new exception.Exception(adone.std.util.format("Non-error thrown: %j", err));
+            err = new error.Exception(adone.std.util.format("Non-error thrown: %j", err));
         }
 
         let headerSent = false;

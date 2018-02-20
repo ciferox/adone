@@ -1,7 +1,7 @@
 const {
     collection,
     noop,
-    exception,
+    error,
     is
 } = adone;
 
@@ -126,10 +126,10 @@ export default class Transform {
      */
     write(value) {
         if (this._ending) {
-            throw new exception.IllegalState("Write after end");
+            throw new error.IllegalState("Write after end");
         }
         if (this._destroyed) {
-            throw new exception.IllegalState("destroyed");
+            throw new error.IllegalState("destroyed");
         }
         this._process(value);
         return true;

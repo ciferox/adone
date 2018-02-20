@@ -185,12 +185,12 @@ const emitError = (db, e) => {
     try {
         db.emit("error", e);
     } catch (err) {
-        adone.error(
+        adone.logError(
             "The user's map/reduce function threw an uncaught error.\n" +
             "You can debug this error by doing:\n" +
             "myDatabase.on('error', function (err) { debugger; });\n" +
             "Please double-check your map/reduce function.");
-        adone.error("error", e);
+        adone.logError("error", e);
     }
 };
 

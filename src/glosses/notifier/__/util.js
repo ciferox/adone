@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     std: { child_process: cp, path, url, os, fs, net }
 } = adone;
 
@@ -126,7 +126,7 @@ const notifierExists = async (notifier) => {
 export const immediateFileCommand = async (notifier, options) => {
     const exists = await notifierExists(notifier);
     if (!exists) {
-        throw new exception.NotExists(`Notifier (${notifier}) not found on system`);
+        throw new error.NotExists(`Notifier (${notifier}) not found on system`);
     }
     cp.execFile(notifier, options);
 };
@@ -349,7 +349,7 @@ export const mapToWin8 = (options) => {
     }
 
     if (options.message) {
-        // Remove escape char to debug "HRESULT : 0xC00CE508" exception
+        // Remove escape char to debug "HRESULT : 0xC00CE508" error
         options.m = options.message.replace(/\x1b/g, "");
         delete options.message;
     }

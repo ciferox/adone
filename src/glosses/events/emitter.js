@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     util: { spliceOne }
 } = adone;
 
@@ -14,7 +14,7 @@ let defaultMaxListeners = 10;
 
 const _addListener = (target, type, listener, prepend) => {
     if (!is.function(listener)) {
-        throw new exception.InvalidArgument("\"listener\" argument must be a function");
+        throw new error.InvalidArgument("\"listener\" argument must be a function");
     }
     let events = target[$events];
     if (!events) {
@@ -53,7 +53,7 @@ const _addListener = (target, type, listener, prepend) => {
             const m = target.getMaxListeners();
             if (m && m > 0 && existing.length > m) {
                 existing.warned = true;
-                const w = new exception.Exception(`Possible Emitter memory leak detected. ${existing.length} ${String(type)} listeners added. Use emitter.setMaxListeners() to increase limit`);
+                const w = new error.Exception(`Possible Emitter memory leak detected. ${existing.length} ${String(type)} listeners added. Use emitter.setMaxListeners() to increase limit`);
                 w.name = "MaxListenersExceededWarning";
                 w.emitter = target;
                 w.type = type;
@@ -234,7 +234,7 @@ export default class Emitter {
 
     setMaxListeners(n) {
         if (!is.number(n) || is.nan(n) || n < 0) {
-            throw new exception.InvalidArgument("\"n\" argument must be a positive number");
+            throw new error.InvalidArgument("\"n\" argument must be a positive number");
         }
         this[$maxListeners] = n;
     }
@@ -254,7 +254,7 @@ export default class Emitter {
                 throw er; // Unhandled 'error' event
             } else {
                 // At least give some kind of context to the user
-                const err = new exception.Exception(`Uncaught, unspecified "error" event. (${er})`);
+                const err = new error.Exception(`Uncaught, unspecified "error" event. (${er})`);
                 err.context = er;
                 throw err;
             }
@@ -304,7 +304,7 @@ export default class Emitter {
 
     once(type, listener) {
         if (!is.function(listener)) {
-            throw new exception.InvalidArgument("\"listener\" argument must be a function");
+            throw new error.InvalidArgument("\"listener\" argument must be a function");
         }
         this.on(type, _onceWrap(this, type, listener));
         return this;
@@ -312,7 +312,7 @@ export default class Emitter {
 
     prependOnceListener(type, listener) {
         if (!is.function(listener)) {
-            throw new exception.InvalidArgument("\"listener\" argument must be a function");
+            throw new error.InvalidArgument("\"listener\" argument must be a function");
         }
         this.prependListener(type, _onceWrap(this, type, listener));
         return this;
@@ -320,7 +320,7 @@ export default class Emitter {
 
     removeListener(type, listener) {
         if (!is.function(listener)) {
-            throw new exception.InvalidArgument("\"listener\" argument must be a function");
+            throw new error.InvalidArgument("\"listener\" argument must be a function");
         }
 
         const events = this[$events];

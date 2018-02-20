@@ -1547,9 +1547,9 @@ describe("uri", () => {
                     /**
                      * jshint sub:false
                      */
-                    assert.ok(caught, `${t.name} should throw exception`);
+                    assert.ok(caught, `${t.name} should throw error`);
                 } else {
-                    assert.ok(!caught, `${t.name} should not throw exception`);
+                    assert.ok(!caught, `${t.name} should not throw error`);
                     assert.equal(String(r), t.result, t.name);
 
                     const a = r.absoluteTo(t.base);

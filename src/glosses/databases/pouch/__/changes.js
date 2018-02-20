@@ -20,7 +20,7 @@ const tryCatchInChangeListener = (self, change, pending, lastSeq) => {
     try {
         self.emit("change", change, pending, lastSeq);
     } catch (e) {
-        adone.error('Error in .on("change", function):', e);
+        adone.logError('Error in .on("change", function):', e);
     }
 };
 
@@ -183,7 +183,7 @@ export default class Changes extends event.Emitter {
         } else {
             ["doc_ids", "filter", "selector", "view"].forEach((key) => {
                 if (key in opts) {
-                    adone.warn(
+                    adone.logWarn(
                         `The "${key}" option was passed in to changes/replicate, ` +
                         "but changes-filter plugin is not installed, so it " +
                         "was ignored. Please install the plugin to enable filtering."

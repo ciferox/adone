@@ -14,7 +14,7 @@ const {
     type,
     Transaction,
     queryType,
-    exception,
+    error,
     operator
 } = orm;
 
@@ -1087,10 +1087,10 @@ __.Hooks.applyTo(Sequelize.prototype);
 /**
  * Expose various errors available
  */
-for (const error of Object.keys(exception)) {
-    if (exception[error] === exception.BaseError) {
-        Sequelize.prototype.Error = Sequelize.Error = exception.BaseError;
+for (const error of Object.keys(error)) {
+    if (error[error] === error.BaseError) {
+        Sequelize.prototype.Error = Sequelize.Error = error.BaseError;
     } else {
-        Sequelize.prototype[error] = Sequelize[error] = exception[error];
+        Sequelize.prototype[error] = Sequelize[error] = error[error];
     }
 }

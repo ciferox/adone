@@ -70,7 +70,7 @@ class ServiceApplication extends application.Application {
         }
     }
 
-    async exception(error) {
+    async error(error) {
         if (!is.null(this.peer)) {
             await this.iMaintainer.notifyStatus({
                 pid: process.pid,
@@ -88,23 +88,23 @@ class ServiceApplication extends application.Application {
             await this.waitForState(application.STATE.INITIALIZED);
         }
         if (this.hasSubsystem(name)) {
-            throw new adone.exception.Exists(`Service ${name} already loaded`);
+            throw new adone.error.Exists(`Service ${name} already loaded`);
         }
 
         const mod = require(path);
         if (!mod.__esModule) {
-            throw new adone.exception.NotValid("Service module should be es6-module");
+            throw new adone.error.NotValid("Service module should be es6-module");
         }
         const ServiceClass = mod.default;
         if (!is.class(ServiceClass)) {
-            throw new adone.exception.NotValid("Service should be a class");
+            throw new adone.error.NotValid("Service should be a class");
         }
 
         const subsystem = new ServiceClass({ name });
         subsystem[Symbol.for("omnitron.Service#peer")] = this.peer;
 
         if (!(subsystem instanceof adone.omnitron.Service)) {
-            throw new adone.exception.NotValid("The class of service should inherit the class 'adone.omnitron.BaseService'");
+            throw new adone.error.NotValid("The class of service should inherit the class 'adone.omnitron.BaseService'");
         }
 
         this.addSubsystem({
@@ -144,7 +144,7 @@ class ServiceApplication extends application.Application {
     @Public()
     async unloadService(name) {
         if (!this.hasSubsystem(name)) {
-            throw new adone.exception.NotExists(`Service ${name} not loaded`);
+            throw new adone.error.NotExists(`Service ${name} not loaded`);
         }
 
         const service = this.getSubsystem(name);
@@ -166,9 +166,9 @@ class ServiceApplication extends application.Application {
                 }
             });
         } else if (service.state === application.STATE.UNINITIALIZING) {
-            throw new adone.exception.IllegalState(`Serivce '${name}' is being uninitialized`);
+            throw new adone.error.IllegalState(`Serivce '${name}' is being uninitialized`);
         } else {
-            throw new adone.exception.IllegalState(`Service '${name}' is in non stopable state: ${application.humanizeState(service.state)}`);
+            throw new adone.error.IllegalState(`Service '${name}' is in non stopable state: ${application.humanizeState(service.state)}`);
         }
     }
 }

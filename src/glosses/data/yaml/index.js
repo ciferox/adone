@@ -10,7 +10,7 @@ const yaml = adone.lazify({
     safeLoadAll: () => yaml.loader.safeLoadAll,
     dump: () => yaml.dumper.dump,
     safeDump: () => yaml.dumper.safeDump,
-    Exception: "./exception"
+    Exception: "./error"
 }, adone.asNamespace(exports), require);
 
 export const encode = (object, options) => Buffer.from(yaml.safeDump(object, options));

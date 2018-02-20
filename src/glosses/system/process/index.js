@@ -21,7 +21,7 @@ try {
         throw new TypeError("uv.errname is not a function");
     }
 } catch (err) {
-    adone.error("execa/lib/errname: unable to establish process.binding('uv')", err);
+    adone.logError("execa/lib/errname: unable to establish process.binding('uv')", err);
     uv = null;
 }
 
@@ -867,7 +867,7 @@ export const kill = (input, { force = false, ignoreCase = false, tree = true, wi
         });
     })).then(() => {
         if (errors.length > 0) {
-            throw new adone.exception.AggregateException(errors);
+            throw new adone.error.AggregateException(errors);
         }
     });
 };

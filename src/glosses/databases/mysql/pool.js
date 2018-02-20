@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     event,
     database: { mysql },
     collection
@@ -38,7 +38,7 @@ export default class Pool extends event.Emitter {
     getConnection(cb) {
         if (this._closed) {
             return process.nextTick(() => {
-                return cb(new exception.IllegalState("Pool is closed."));
+                return cb(new error.IllegalState("Pool is closed."));
             });
         }
 
@@ -62,7 +62,7 @@ export default class Pool extends event.Emitter {
 
             return connection.connect((err) => {
                 if (this._closed) {
-                    return cb(new exception.IllegalState("Pool is closed."));
+                    return cb(new error.IllegalState("Pool is closed."));
                 }
                 if (err) {
                     return cb(err);
@@ -75,12 +75,12 @@ export default class Pool extends event.Emitter {
 
         if (!this.config.waitForConnections) {
             return process.nextTick(() => {
-                return cb(new exception.Exception("No connections available."));
+                return cb(new error.Exception("No connections available."));
             });
         }
 
         if (this.config.queueLimit && this._connectionQueue.length >= this.config.queueLimit) {
-            return cb(new exception.Exception("Queue limit reached."));
+            return cb(new error.Exception("Queue limit reached."));
         }
 
         this.emit("enqueue");

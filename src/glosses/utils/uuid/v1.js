@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     util: { uuid }
 } = adone;
 
@@ -73,7 +73,7 @@ const v1 = (options, buf, offset) => {
 
     // Per 4.2.1.2 Throw error if too many uuids are requested
     if (nsecs >= 10000) {
-        throw new exception.IllegalState("Can't create more than 10M uuids/sec");
+        throw new error.IllegalState("Can't create more than 10M uuids/sec");
     }
 
     _lastMSecs = msecs;

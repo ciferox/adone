@@ -1,4 +1,4 @@
-const { std: { fs, path }, exception } = adone;
+const { std: { fs, path }, error } = adone;
 
 export const getCommentRegex = () => {
     return /^\s*\/(?:\/|\*)[@#]\s+sourceMappingURL=data:(?:application|text)\/json;(?:charset[:=]\S+;)?base64,(.*)$/mg;
@@ -22,7 +22,7 @@ const readFromFileMap = (sm, dir) => {
     try {
         return fs.readFileSync(filepath, "utf8");
     } catch (e) {
-        throw new exception.Exception(`An error occurred while trying to read the map file at ${filepath}\n${e}`);
+        throw new error.Exception(`An error occurred while trying to read the map file at ${filepath}\n${e}`);
     }
 };
 
@@ -64,7 +64,7 @@ class Converter {
 
     addProperty(key, value) {
         if (this.sourcemap.hasOwnProperty(key)) {
-            throw new exception.Exception("property %s already exists on the sourcemap, use set property instead");
+            throw new error.Exception("property %s already exists on the sourcemap, use set property instead");
         }
         return this.setProperty(key, value);
     }

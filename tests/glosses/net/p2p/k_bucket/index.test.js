@@ -267,7 +267,7 @@ describe("KBucket", () => {
             assert.true(kBucket.localNodeId.equals(localNodeId));
         });
 
-        it("throws exception if options.localNodeId is a String", () => {
+        it("throws error if options.localNodeId is a String", () => {
             assert.throws(() => {
                 return new KBucket({ localNodeId: "some identifier" });
             });
@@ -541,7 +541,7 @@ describe("KBucket", () => {
     });
 
     describe("update", () => {
-        it("invalid index results in exception", () => {
+        it("invalid index results in error", () => {
             const kBucket = new KBucket();
             const contact = { id: Buffer.from("a") };
             kBucket.add(contact);

@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     util: { keys },
     shani: { util }
 } = adone;
@@ -152,7 +152,7 @@ export default function stub(object, property, ...args) {
 
 stub.createStubInstance = function (constructor) {
     if (!is.function(constructor)) {
-        throw new exception.InvalidArgument("The constructor should be a function.");
+        throw new error.InvalidArgument("The constructor should be a function.");
     }
     return stub(Object.create(constructor.prototype));
 };

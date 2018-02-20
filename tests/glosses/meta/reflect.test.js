@@ -400,7 +400,7 @@ describe("meta", "reflect", () => {
 
     describe("getMetadataKeys", () => {
         it("KeysInvalidTarget", () => {
-            // 1. If Type(target) is not Object, throw a TypeError exception.
+            // 1. If Type(target) is not Object, throw a TypeError error.
             assert.throws(() => {
                 return reflect.getMetadataKeys(undefined, undefined);
             }, TypeError);
@@ -530,7 +530,7 @@ describe("meta", "reflect", () => {
 
     describe("getOwnMetadataKeys", () => {
         it("KeysKeysInvalidTarget", () => {
-            // 1. If Type(target) is not Object, throw a TypeError exception.
+            // 1. If Type(target) is not Object, throw a TypeError error.
             assert.throws(() => {
                 return reflect.getOwnMetadataKeys(undefined, undefined);
             }, TypeError);

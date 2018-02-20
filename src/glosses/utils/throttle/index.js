@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     collection
 } = adone;
 
@@ -90,7 +90,7 @@ const throttleNoInterval = (concurrency, drop, dropLast, fn, onDone) => {
     }
     return function (fn, ...args) {
         if (!is.function(fn)) {
-            throw new exception.InvalidArgument("The first argument must be a function");
+            throw new error.InvalidArgument("The first argument must be a function");
         }
         return run(fn, this, args);
     };
@@ -107,7 +107,7 @@ export const create = function (fn, opts = {}) {
 
     // Just for fun
     if (concurrency === Infinity) {
-        throw new exception.NotAllowed("Infinite concurrency is not allowed");
+        throw new error.NotAllowed("Infinite concurrency is not allowed");
     }
 
     if (!interval) {

@@ -17,7 +17,7 @@ const throwsException = (fake, error, message) => {
             return new Error("Error");
         };
     } else {
-        fake.exception = error;
+        fake.error = error;
     }
 };
 
@@ -33,7 +33,7 @@ const behaviors = {
     },
     callsArg(fake, pos) {
         if (!is.number(pos)) {
-            throw new exception.InvalidArgument("argument index is not number");
+            throw new error.InvalidArgument("argument index is not number");
         }
 
         fake.callArgAt = pos;
@@ -44,7 +44,7 @@ const behaviors = {
     },
     callsArgOn(fake, pos, context) {
         if (!is.number(pos)) {
-            throw new exception.InvalidArgument("argument index is not number");
+            throw new error.InvalidArgument("argument index is not number");
         }
 
         fake.callArgAt = pos;
@@ -55,7 +55,7 @@ const behaviors = {
     },
     callsArgWith(fake, pos, ...callbackArguments) {
         if (!is.number(pos)) {
-            throw new exception.InvalidArgument("argument index is not number");
+            throw new error.InvalidArgument("argument index is not number");
         }
 
         fake.callArgAt = pos;
@@ -66,7 +66,7 @@ const behaviors = {
     },
     callsArgOnWith(fake, pos, context, ...callbackArguments) {
         if (!is.number(pos)) {
-            throw new exception.InvalidArgument("argument index is not number");
+            throw new error.InvalidArgument("argument index is not number");
         }
 
         fake.callArgAt = pos;
@@ -94,7 +94,7 @@ const behaviors = {
     },
     yieldsOn(fake, context, ...callbackArguments) {
         if (!context) {
-            throw new exception.InvalidArgument("context is falsy");
+            throw new error.InvalidArgument("context is falsy");
         }
         fake.callArgAt = useLeftMostCallback;
         fake.callbackArguments = callbackArguments;
@@ -123,20 +123,20 @@ const behaviors = {
         fake.resolve = false;
         fake.reject = false;
         fake.returnValueDefined = true;
-        fake.exception = undefined;
+        fake.error = undefined;
         fake.exceptionCreator = undefined;
         fake.fakeFn = undefined;
     },
     returnsArg(fake, pos) {
         if (!is.number(pos)) {
-            throw new exception.InvalidArgument("argument index is not number");
+            throw new error.InvalidArgument("argument index is not number");
         }
 
         fake.returnArgAt = pos;
     },
     throwsArg(fake, pos) {
         if (!is.number(pos)) {
-            throw new exception.InvalidArgument("argument index is not number");
+            throw new error.InvalidArgument("argument index is not number");
         }
 
         fake.throwArgAt = pos;
@@ -150,17 +150,17 @@ const behaviors = {
         fake.resolveThis = false;
         fake.reject = false;
         fake.returnValueDefined = true;
-        fake.exception = undefined;
+        fake.error = undefined;
         fake.exceptionCreator = undefined;
         fake.fakeFn = undefined;
     },
     rejects(fake, error, message) {
         let reason;
         if (is.string(error)) {
-            reason = new exception.Exception(message || "");
+            reason = new error.Exception(message || "");
             reason.name = error;
         } else if (!error) {
-            reason = new exception.Exception("Error");
+            reason = new error.Exception("Error");
         } else {
             reason = error;
         }
@@ -169,7 +169,7 @@ const behaviors = {
         fake.resolveThis = false;
         fake.reject = true;
         fake.returnValueDefined = true;
-        fake.exception = undefined;
+        fake.error = undefined;
         fake.exceptionCreator = undefined;
         fake.fakeFn = undefined;
 
@@ -181,7 +181,7 @@ const behaviors = {
         fake.resolveThis = true;
         fake.reject = false;
         fake.returnValueDefined = false;
-        fake.exception = undefined;
+        fake.error = undefined;
         fake.exceptionCreator = undefined;
         fake.fakeFn = undefined;
     },

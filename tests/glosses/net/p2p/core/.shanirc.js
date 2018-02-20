@@ -56,7 +56,7 @@ export default async (ctx) => {
 //                     node.start().then(cb);
 //                     // cb();
 //                 } catch (err) {
-//                     adone.error(err);
+//                     adone.logError(err);
 //                     cb(err);
 //                 }
 //             }

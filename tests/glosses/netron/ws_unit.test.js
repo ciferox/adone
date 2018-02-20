@@ -77,7 +77,7 @@ describe("netron", "websocket", "unit tests", () => {
             });
 
             it("ping() unknown netron", async () => {
-                await assert.throws(async () => exNetron.ping(adone.util.uuid.v4()), adone.exception.Unknown);
+                await assert.throws(async () => exNetron.ping(adone.util.uuid.v4()), adone.error.Unknown);
             });
 
             it("ping remote netron should", async () => {
@@ -97,7 +97,7 @@ describe("netron", "websocket", "unit tests", () => {
 
         describe("getPeer", () => {
             it("getPeer(null)", () => {
-                assert.throws(() => exNetron.getPeer(null), adone.exception.InvalidArgument);
+                assert.throws(() => exNetron.getPeer(null), adone.error.InvalidArgument);
             });
 
             it("getPeer(uid)", async () => {
@@ -397,7 +397,7 @@ describe("netron", "websocket", "unit tests", () => {
                     const ctx = new A();
                     superNetron.attachContext(ctx, "a");
                     const err = assert.throws(() => superNetron.attachContext(ctx, "a"));
-                    assert.instanceOf(err, adone.exception.Exists);
+                    assert.instanceOf(err, adone.error.Exists);
                 });
             });
 
@@ -463,14 +463,14 @@ describe("netron", "websocket", "unit tests", () => {
 
                     await exNetron.attachContextRemote(peer.uid, ctx, "a");
                     const err = await assert.throws(async () => exNetron.attachContextRemote(peer.uid, ctx, "a"));
-                    assert.instanceOf(err, adone.exception.Exists);
+                    assert.instanceOf(err, adone.error.Exists);
                 });
             });
 
             describe("detachContext", () => {
                 it("detach not existing context", () => {
                     const e = assert.throws(() => superNetron.detachContext("this_context_not_exists"));
-                    assert.instanceOf(e, adone.exception.Unknown);
+                    assert.instanceOf(e, adone.error.Unknown);
                 });
 
                 it("valid way", async () => {
@@ -521,7 +521,7 @@ describe("netron", "websocket", "unit tests", () => {
                     const peer = await exNetron.connect({ port: NETRON_PORT });
 
                     const e = await assert.throws(async () => exNetron.detachContextRemote(peer.uid, "this_context_not_exists"));
-                    assert.instanceOf(e, adone.exception.NotExists);
+                    assert.instanceOf(e, adone.error.NotExists);
                 });
 
                 it("valid way", async () => {
@@ -597,7 +597,7 @@ describe("netron", "websocket", "unit tests", () => {
                 assert.instanceOf(def, adone.netron.Definition);
                 assert.equal(def.name, "A");
 
-                assert.throws(() => superNetron.getDefinitionByName("not_exists"), adone.exception.Unknown);
+                assert.throws(() => superNetron.getDefinitionByName("not_exists"), adone.error.Unknown);
             });
 
             it("remote", () => {
@@ -748,7 +748,7 @@ describe("netron", "websocket", "unit tests", () => {
                         }
                     });
 
-                    it("call - catch exception", async () => {
+                    it("call - catch error", async () => {
                         const e = await assert.throws(async () => netron.call(uid, defID, "errorMethod"));
                         assert.instanceOf(e, Error);
                         assert.equal(e.message, "I'm an error!");
@@ -804,7 +804,7 @@ describe("netron", "websocket", "unit tests", () => {
                 assert.ok(iface);
                 assert.instanceOf(iface, adone.netron.Interface);
 
-                assert.throws(() => superNetron.getInterfaceById(100500), adone.exception.Unknown);
+                assert.throws(() => superNetron.getInterfaceById(100500), adone.error.Unknown);
             });
 
             it("remote", () => {
@@ -813,7 +813,7 @@ describe("netron", "websocket", "unit tests", () => {
                 assert.ok(iface);
                 assert.instanceOf(iface, adone.netron.Interface);
 
-                assert.throws(() => exNetron.getInterfaceById(100500, superNetron.uid), adone.exception.Unknown);
+                assert.throws(() => exNetron.getInterfaceById(100500, superNetron.uid), adone.error.Unknown);
             });
         });
 
@@ -844,7 +844,7 @@ describe("netron", "websocket", "unit tests", () => {
                 assert.ok(iface);
                 assert.instanceOf(iface, adone.netron.Interface);
 
-                assert.throws(() => superNetron.getInterfaceByName("not_exists"), adone.exception.Unknown);
+                assert.throws(() => superNetron.getInterfaceByName("not_exists"), adone.error.Unknown);
             });
 
             it("remote", () => {
@@ -854,7 +854,7 @@ describe("netron", "websocket", "unit tests", () => {
 
                 assert.throws(() => {
                     exNetron.getInterfaceByName("not_exists", superNetron.uid);
-                }, adone.exception.Unknown);
+                }, adone.error.Unknown);
             });
         });
 
@@ -902,7 +902,7 @@ describe("netron", "websocket", "unit tests", () => {
 
             it("local", () => {
                 const iface = superNetron.getInterfaceByName("a");
-                assert.throws(() => superNetron.getPeerForInterface(iface), adone.exception.InvalidArgument);
+                assert.throws(() => superNetron.getPeerForInterface(iface), adone.error.InvalidArgument);
             });
 
             it("remote", () => {
@@ -914,7 +914,7 @@ describe("netron", "websocket", "unit tests", () => {
                 assert.equal(peerIface.uid, superNetron.uid);
                 assert.equal(peerIface, peer);
 
-                assert.throws(() => exNetron.getPeerForInterface(null), adone.exception.InvalidArgument);
+                assert.throws(() => exNetron.getPeerForInterface(null), adone.error.InvalidArgument);
             });
         });
 
@@ -1102,7 +1102,7 @@ describe("netron", "websocket", "unit tests", () => {
                                 }
                             });
 
-                            it("exception in function call", async () => {
+                            it("error in function call", async () => {
                                 const e = await assert.throws(async () => iface.errorMethod());
                                 assert.instanceOf(e, Error);
                                 assert.equal(e.message, "I'm an error!");
@@ -1192,7 +1192,7 @@ describe("netron", "websocket", "unit tests", () => {
                     });
 
                     const e = await assert.throws(async () => exNetron.connect({ port: NETRON_PORT }));
-                    // assert.instanceOf(e, adone.exception.Connect);
+                    // assert.instanceOf(e, adone.error.Connect);
                     // assert.include(e.message, "refused connection");
                     assert.equal(resolved, false);
                 });
@@ -1220,7 +1220,7 @@ describe("netron", "websocket", "unit tests", () => {
                     });
 
                     const e = await assert.throws(async () => exNetron.connect({ port: NETRON_PORT }));
-                    // assert.instanceOf(e, adone.exception.Connect);
+                    // assert.instanceOf(e, adone.error.Connect);
                     // assert.include(e.message, "refused connection");
                     assert.equal(resolved, false);
                 });
@@ -1272,7 +1272,7 @@ describe("netron", "websocket", "unit tests", () => {
                     });
 
                     const e = await assert.throws(async () => exNetron.connect({ port: NETRON_PORT }));
-                    assert.instanceOf(e, adone.exception.Connect);
+                    assert.instanceOf(e, adone.error.Connect);
                     assert.include(e.message, "refused connection");
                     await peerOffline;
                 });
@@ -1299,7 +1299,7 @@ describe("netron", "websocket", "unit tests", () => {
                     });
 
                     const e = await assert.throws(async () => exNetron.connect({ port: NETRON_PORT }));
-                    assert.instanceOf(e, adone.exception.Connect);
+                    assert.instanceOf(e, adone.error.Connect);
                     assert.include(e.message, "refused connection");
                     await peerOffline;
                 });
@@ -1364,7 +1364,7 @@ describe("netron", "websocket", "unit tests", () => {
                     await client.connect({ port: NETRON_PORT });
 
                     const e = await assert.throws(async () => hacker.connect({ port: NETRON_PORT }));
-                    assert.instanceOf(e, adone.exception.Connect);
+                    assert.instanceOf(e, adone.error.Connect);
                     assert.include(e.message, "refused connection");
                 });
             });

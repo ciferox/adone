@@ -847,7 +847,7 @@ describe("database", "local", "Datastore", () => {
                 expect(doc.bloup).to.be.equal(3);
             });
 
-            it("Performing upsert with badly formatted fields yields a standard error not an exception", async (done) => {
+            it("Performing upsert with badly formatted fields yields a standard error not an error", async (done) => {
                 try {
                     await d.update({ _id: "1234" }, { $set: { $$badfield: 5 } }, { upsert: true });
                     done(new Error("updated"));

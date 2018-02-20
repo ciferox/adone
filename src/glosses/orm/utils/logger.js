@@ -21,17 +21,17 @@ export default class Logger {
 
     deprecate(message) {
         // TODO
-        // adone.warn(`[${this.config.context}][DEPRECATED] ${message}`);
+        // adone.logWarn(`[${this.config.context}][DEPRECATED] ${message}`);
     }
 
     debug(message) {
         // TODO
-        // adone.debug(`[${this.config.context}] ${message}`);
+        // adone.logDebug(`[${this.config.context}] ${message}`);
     }
 
     warn(message) {
         // TODO
-        // adone.warn(`(${this.config.context}) Warning: ${message}`);
+        // adone.logWarn(`(${this.config.context}) Warning: ${message}`);
     }
 
     debugContext(childContext) {

@@ -1,6 +1,6 @@
 const {
     application,
-    exception,
+    error,
     is,
     fs,
     omnitron: { STATUS }
@@ -21,7 +21,7 @@ export default class Services extends application.Subsystem {
     }
 
     async configure() {
-        adone.info("Services subsystem configured");
+        adone.logInfo("Services subsystem configured");
     }
 
     async initialize() {
@@ -46,13 +46,13 @@ export default class Services extends application.Subsystem {
                 }
                 if (serviceData.status === STATUS.INACTIVE) {
                     maintainer.startService(serviceData.name).catch((err) => {
-                        adone.error(err);
+                        adone.logError(err);
                     });
                 }
             }
         }
 
-        adone.info("Services subsystem initialized");
+        adone.logInfo("Services subsystem initialized");
     }
 
     async uninitialize() {
@@ -65,7 +65,7 @@ export default class Services extends application.Subsystem {
 
         this.groupMaintainers.clear();
 
-        adone.info("Services subsystem uninitialized");
+        adone.logInfo("Services subsystem uninitialized");
     }
 
     async enumerate({ name, status } = {}) {
@@ -120,11 +120,11 @@ export default class Services extends application.Subsystem {
             name
         });
         if (services.length === 0) {
-            throw new adone.exception.Unknown(`Unknown service: ${name}`);
+            throw new adone.error.Unknown(`Unknown service: ${name}`);
         }
 
         if (services[0].status === adone.omnitron.STATUS.INVALID) {
-            throw new adone.exception.NotValid(`Service '${name}' is invalid`);
+            throw new adone.error.NotValid(`Service '${name}' is invalid`);
         }
 
         return services[0];
@@ -179,7 +179,7 @@ export default class Services extends application.Subsystem {
             serviceData.status = STATUS.INACTIVE;
             return this.services.set(name, serviceData);
         }
-        throw new exception.IllegalState("Service is not disabled");
+        throw new error.IllegalState("Service is not disabled");
     }
 
     async disableService(name) {
@@ -188,7 +188,7 @@ export default class Services extends application.Subsystem {
             if (serviceData.status === STATUS.ACTIVE) {
                 await this.stop(name);
             } else if (serviceData.status !== STATUS.INACTIVE) {
-                throw new exception.IllegalState(`Cannot disable service with '${serviceData.status}' status`);
+                throw new error.IllegalState(`Cannot disable service with '${serviceData.status}' status`);
             }
             serviceData.status = STATUS.DISABLED;
             return this.services.set(name, serviceData);
@@ -211,7 +211,7 @@ export default class Services extends application.Subsystem {
         const serviceData = await this.services.get(name);
 
         if (![STATUS.DISABLED, STATUS.INACTIVE].includes(serviceData.status)) {
-            throw new exception.NotAllowed("Cannot configure active service");
+            throw new error.NotAllowed("Cannot configure active service");
         }
 
         if (is.string(group)) {
@@ -234,7 +234,7 @@ export default class Services extends application.Subsystem {
             if (onlyExist) {
                 const inGroupServices = await this.enumerateByGroup(group);
                 if (inGroupServices.length === 0) {
-                    throw new exception.Unknown(`Unknown group: ${group}`);
+                    throw new error.Unknown(`Unknown group: ${group}`);
                 }
             }
             maintainer = new api.ServiceMaintainer(this, group);
@@ -259,7 +259,7 @@ export default class Services extends application.Subsystem {
     //         let defaulted = false;
     //         const checkDefault = () => {
     //             if (defaulted) {
-    //                 throw new exception.NotAllowed("Only one context of service can be default");
+    //                 throw new error.NotAllowed("Only one context of service can be default");
     //             }
     //             defaulted = true;
     //         };
@@ -308,7 +308,7 @@ export default class Services extends application.Subsystem {
     //             serviceConfig.status = ACTIVE;
     //         }
     //         this._.uninitOrder.unshift(serviceName);
-    //         adone.info(`Service '${serviceName}' attached`);
+    //         adone.logInfo(`Service '${serviceName}' attached`);
     //     }
     // }
 
@@ -324,7 +324,7 @@ export default class Services extends application.Subsystem {
     //         }
     //         service.contexts = [];
     //         service.config.status = ENABLED;
-    //         adone.info(`Service '${service.name}' detached`);
+    //         adone.logInfo(`Service '${service.name}' detached`);
     //     }
     // }
 
@@ -357,14 +357,14 @@ export default class Services extends application.Subsystem {
     //             if (is.undefined(depService)) {
     //                 const depConfig = this.config.omnitron.services[depName];
     //                 if (is.undefined(depConfig)) {
-    //                     throw new exception.Unknown(`Unknown service '${depName}' in dependency list of '${service.name}' service`);
+    //                     throw new error.Unknown(`Unknown service '${depName}' in dependency list of '${service.name}' service`);
     //                 }
     //                 config = depConfig;
     //             } else {
     //                 config = depService.config;
     //             }
     //             if (checkDisabled && config.status === DISABLED) {
-    //                 throw new exception.IllegalState(`Dependent service '${depName}' is disabled`);
+    //                 throw new error.IllegalState(`Dependent service '${depName}' is disabled`);
     //             }
     //             await handler(depName, config);
     //         }

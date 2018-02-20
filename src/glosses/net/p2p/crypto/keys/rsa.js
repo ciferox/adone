@@ -5,7 +5,7 @@ const {
     crypto,
     util,
     std,
-    exception
+    error
 } = adone;
 
 const pbm = protobuf.create(require("./keys.proto"));
@@ -25,7 +25,7 @@ const pkcs1ToJwk = function (bytes) {
     const { result } = crypto.asn1.fromBER(buf);
 
     if (result.error) {
-        throw new exception.IllegalState(result.error);
+        throw new error.IllegalState(result.error);
     }
 
     const key = crypto.pki.privateKeyFromAsn1(result);
@@ -67,7 +67,7 @@ const pkixToJwk = function (bytes) {
     const { result } = crypto.asn1.fromBER(buf);
 
     if (result.error) {
-        throw new exception.IllegalState(result.error);
+        throw new error.IllegalState(result.error);
     }
 
     const key = crypto.pki.publicKeyFromAsn1(result);
@@ -103,7 +103,7 @@ const generateKey = function (bits) {
 // Takes a jwk key
 const unmarshalPrivateKey = function (key) {
     if (!key) {
-        throw new exception.NotValid("Key is invalid");
+        throw new error.NotValid("Key is invalid");
     }
     return {
         privateKey: key,
@@ -122,7 +122,7 @@ const hashAndSign = function (key, msg) {
         const pem = crypto.pki.jwkToPem(key);
         return sign.sign(pem);
     } catch (err) {
-        throw new exception.NotValid(`Key or message is invalid!: ${err.message}`);
+        throw new error.NotValid(`Key or message is invalid!: ${err.message}`);
     }
 };
 
@@ -133,7 +133,7 @@ const hashAndVerify = function (key, sig, msg) {
         const pem = crypto.pki.jwkToPem(key);
         return verify.verify(pem, sig);
     } catch (err) {
-        throw new exception.NotValid(`Key or message is invalid!:${err.message}`);
+        throw new error.NotValid(`Key or message is invalid!:${err.message}`);
     }
 };
 

@@ -1,5 +1,5 @@
 const {
-    exception,
+    error,
     is,
     util
 } = adone;
@@ -74,11 +74,11 @@ const makeRe = (pattern, options) => {
     }
 
     if (!is.string(pattern)) {
-        throw new exception.InvalidArgument("expected a string");
+        throw new error.InvalidArgument("expected a string");
     }
 
     if (pattern.length > toRegex.MAX_LENGTH) {
-        throw new exception.LimitExceeded(`expected pattern to be less than ${toRegex.MAX_LENGTH} characters`);
+        throw new error.LimitExceeded(`expected pattern to be less than ${toRegex.MAX_LENGTH} characters`);
     }
 
     let key = pattern;

@@ -1,5 +1,5 @@
 const {
-    exception,
+    error,
     is,
     application
 } = adone;
@@ -10,7 +10,7 @@ const {
 
 const parseNumber = (str) => {
     if (!is.numeral(str)) {
-        throw new exception.InvalidArgument("Argument must be a real number");
+        throw new error.InvalidArgument("Argument must be a real number");
     }
     return Number(str);
 };
@@ -83,7 +83,7 @@ export default class Complex extends application.Subsystem {
     div(args) {
         const b = args.get("b");
         if (b === 0) {
-            adone.error("division by zero");
+            adone.logError("division by zero");
             return 1;
         }
         adone.log(args.get("a") / b);

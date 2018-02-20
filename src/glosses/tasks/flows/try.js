@@ -17,7 +17,7 @@ export default class TryFlow extends adone.task.Flow {
         });
 
         if (this.tasks.length === errors.length) {
-            throw new adone.exception.AggregateException(errors);
+            throw new adone.error.AggregateException(errors);
         }
 
         return result;

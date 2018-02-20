@@ -1,7 +1,7 @@
 const {
     is,
     meta: { reflect },
-    exception,
+    error,
     tag
 } = adone;
 
@@ -95,7 +95,7 @@ export class Definitions {
         for (let i = 0; i < args.length; i++) {
             const arg = args[i];
             if (!is.netron2Definition(arg) && !is.netron2Context(arg) && !is.netron2Interface(arg)) {
-                throw new exception.InvalidArgument(`Invalid argument ${i} (${typeof (arg)})`);
+                throw new error.InvalidArgument(`Invalid argument ${i} (${typeof (arg)})`);
             }
             ret = this._defs.push(arg);
         }
@@ -115,7 +115,7 @@ export class Definitions {
         for (let i = 0; i < args.length; i++) {
             const arg = args[i];
             if (!is.netron2Definition(arg) && !is.netron2Context(arg) && !is.netron2Interface(arg)) {
-                throw new exception.InvalidArgument(`Invalid argument ${i} (${typeof (arg)})`);
+                throw new error.InvalidArgument(`Invalid argument ${i} (${typeof (arg)})`);
             }
             ret = this._defs.unshift(arg);
         }

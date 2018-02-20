@@ -55,7 +55,7 @@ describe("collection", "LinkedList", () => {
             for (let i = 0; i < 10; ++i) {
                 list.push(1);
             }
-            expect(() => list.push(1)).to.throw(adone.exception.Exception, "Full");
+            expect(() => list.push(1)).to.throw(adone.error.Exception, "Full");
         });
     });
 
@@ -147,7 +147,7 @@ describe("collection", "LinkedList", () => {
             for (let i = 0; i < 10; ++i) {
                 list.push(1);
             }
-            expect(() => list.unshift(0)).to.throw(adone.exception.Exception, "Full");
+            expect(() => list.unshift(0)).to.throw(adone.error.Exception, "Full");
         });
     });
 

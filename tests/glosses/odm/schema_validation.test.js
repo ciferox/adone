@@ -1161,7 +1161,7 @@ describe("schema", () => {
             });
         });
 
-        it("sets path correctly when setter throws exception (gh-2832)", (done) => {
+        it("sets path correctly when setter throws error (gh-2832)", (done) => {
             const breakfast = new Schema({
                 description: {
                     type: String, set() {

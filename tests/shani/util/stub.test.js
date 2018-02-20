@@ -1,5 +1,5 @@
 describe("shani", "util", "stub", () => {
-    const { is, exception } = adone;
+    const { is, error } = adone;
     const {
         stub: createStub,
         spy: createSpy,
@@ -124,15 +124,15 @@ describe("shani", "util", "stub", () => {
 
         it("throws only on the first call", () => {
             const stub = createStub.create();
-            stub.returns("no exception");
+            stub.returns("no error");
             stub.onFirstCall().throws();
 
             assert.throws(() => {
                 stub();
             });
 
-            // on the second call there is no exception
-            assert.equal(stub(), "no exception");
+            // on the second call there is no error
+            assert.equal(stub(), "no error");
         });
     });
 
@@ -216,7 +216,7 @@ describe("shani", "util", "stub", () => {
             assert.equal(stub.rejects({}), stub);
         });
 
-        it("specifies exception message", () => {
+        it("specifies error message", () => {
             const stub = createStub.create();
             const message = "Oh no!";
             stub.rejects("Error", message);
@@ -228,7 +228,7 @@ describe("shani", "util", "stub", () => {
             });
         });
 
-        it("does not specify exception message if not provided", () => {
+        it("does not specify error message if not provided", () => {
             const stub = createStub.create();
             stub.rejects("Error");
 
@@ -348,7 +348,7 @@ describe("shani", "util", "stub", () => {
 
             assert.throws(() => {
                 stub.returnsArg();
-            }, exception.InvalidArgument);
+            }, error.InvalidArgument);
         });
     });
 
@@ -374,7 +374,7 @@ describe("shani", "util", "stub", () => {
 
             assert.throws(() => {
                 stub.throwsArg();
-            }, exception.InvalidArgument);
+            }, error.InvalidArgument);
         });
 
         it("should throw without enough arguments", () => {
@@ -385,7 +385,7 @@ describe("shani", "util", "stub", () => {
                 () => {
                     stub("only", "two arguments");
                 },
-                exception.InvalidArgument,
+                error.InvalidArgument,
                 "throwArgs failed: 3 arguments required but only 2 present"
             );
 
@@ -514,7 +514,7 @@ describe("shani", "util", "stub", () => {
     });
 
     describe(".throws", () => {
-        it("throws specified exception", () => {
+        it("throws specified error", () => {
             const stub = createStub.create();
             const error = new Error();
             stub.throws(error);
@@ -528,7 +528,7 @@ describe("shani", "util", "stub", () => {
             assert.equal(stub.throws({}), stub);
         });
 
-        it("sets type of exception to throw", () => {
+        it("sets type of error to throw", () => {
             const stub = createStub.create();
             stub.throws(TypeError);
 
@@ -537,7 +537,7 @@ describe("shani", "util", "stub", () => {
             }, TypeError);
         });
 
-        it("specifies exception message", () => {
+        it("specifies error message", () => {
             const stub = createStub.create();
             const message = "Oh no!";
             stub.throws("Error", message);
@@ -545,7 +545,7 @@ describe("shani", "util", "stub", () => {
             assert.throws(stub, message);
         });
 
-        it("does not specify exception message if not provided", () => {
+        it("does not specify error message if not provided", () => {
             const stub = createStub.create();
             stub.throws("Error");
 
@@ -568,7 +568,7 @@ describe("shani", "util", "stub", () => {
             assert.undefined(stub.invoking);
         });
 
-        it("throws an exception created using a function", () => {
+        it("throws an error created using a function", () => {
             const stub = createStub.create();
 
             stub.throws(() => {
@@ -576,7 +576,7 @@ describe("shani", "util", "stub", () => {
             });
 
             assert.throws(stub, "not implemented");
-            assert.equal(stub.firstCall.exception.message, "not implemented");
+            assert.equal(stub.firstCall.error.message, "not implemented");
             assert.include(stub.firstCall.toString(), "not implemented");
         });
 
@@ -594,7 +594,7 @@ describe("shani", "util", "stub", () => {
                 global.Error = this.originalError;
             });
 
-            it("uses a lazily created exception for the generic error", () => {
+            it("uses a lazily created error for the generic error", () => {
                 const stub = createStub.create();
                 stub.throws();
 
@@ -603,7 +603,7 @@ describe("shani", "util", "stub", () => {
                 assert.true(errorSpy.called);
             });
 
-            it("uses a lazily created exception for the named error", () => {
+            it("uses a lazily created error for the named error", () => {
                 const stub = createStub.create();
                 stub.throws("TypeError", "typeerror message");
 
@@ -612,7 +612,7 @@ describe("shani", "util", "stub", () => {
                 assert.true(errorSpy.called);
             });
 
-            it("uses a lazily created exception provided by a function", () => {
+            it("uses a lazily created error provided by a function", () => {
                 const stub = createStub.create();
 
                 stub.throws(() => {
@@ -624,13 +624,13 @@ describe("shani", "util", "stub", () => {
                 assert.true(errorSpy.called);
             });
 
-            it("does not use a lazily created exception if the error object is provided", () => {
+            it("does not use a lazily created error if the error object is provided", () => {
                 const stub = createStub.create();
-                const exception = new Error();
-                stub.throws(exception);
+                const error = new Error();
+                stub.throws(error);
 
                 assert.equal(errorSpy.callCount, 1);
-                assert.throws(stub, exception);
+                assert.throws(stub, error);
                 assert.equal(errorSpy.callCount, 1);
             });
         });
@@ -659,7 +659,7 @@ describe("shani", "util", "stub", () => {
 
             assert.throws(() => {
                 this.stub(1);
-            }, exception.InvalidArgument, "argument at index 0 is not a function: 1");
+            }, error.InvalidArgument, "argument at index 0 is not a function: 1");
         });
 
         it("throws if no index is specified", function () {
@@ -667,7 +667,7 @@ describe("shani", "util", "stub", () => {
 
             assert.throws(() => {
                 stub.callsArg();
-            }, exception.InvalidArgument);
+            }, error.InvalidArgument);
         });
 
         it("throws if index is not number", function () {
@@ -675,7 +675,7 @@ describe("shani", "util", "stub", () => {
 
             assert.throws(() => {
                 stub.callsArg({});
-            }, exception.InvalidArgument);
+            }, error.InvalidArgument);
         });
     });
 
@@ -725,7 +725,7 @@ describe("shani", "util", "stub", () => {
 
             assert.throws(() => {
                 stub.callsArgWith();
-            }, exception.InvalidArgument);
+            }, error.InvalidArgument);
         });
 
         it("throws if index is not number", function () {
@@ -733,7 +733,7 @@ describe("shani", "util", "stub", () => {
 
             assert.throws(() => {
                 stub.callsArgWith({});
-            }, exception.InvalidArgument);
+            }, error.InvalidArgument);
         });
     });
 
@@ -786,7 +786,7 @@ describe("shani", "util", "stub", () => {
 
             assert.throws(() => {
                 this.stub(1);
-            }, exception.InvalidArgument);
+            }, error.InvalidArgument);
         });
 
         it("throws if no index is specified", function () {
@@ -794,7 +794,7 @@ describe("shani", "util", "stub", () => {
 
             assert.throws(() => {
                 stub.callsArgOn();
-            }, exception.InvalidArgument);
+            }, error.InvalidArgument);
         });
 
         it("throws if index is not number", function () {
@@ -802,7 +802,7 @@ describe("shani", "util", "stub", () => {
 
             assert.throws(() => {
                 stub.callsArgOn(this.fakeContext, 2);
-            }, exception.InvalidArgument);
+            }, error.InvalidArgument);
         });
     });
 
@@ -900,7 +900,7 @@ describe("shani", "util", "stub", () => {
 
             assert.throws(() => {
                 stub.callsArgOnWith();
-            }, exception.InvalidArgument);
+            }, error.InvalidArgument);
         });
 
         it("throws if index is not number", function () {
@@ -908,7 +908,7 @@ describe("shani", "util", "stub", () => {
 
             assert.throws(() => {
                 stub.callsArgOnWith({});
-            }, exception.InvalidArgument);
+            }, error.InvalidArgument);
         });
     });
 
@@ -1384,7 +1384,7 @@ describe("shani", "util", "stub", () => {
         it("throws if no context is specified", function () {
             assert.throws(() => {
                 this.stub.yieldsOn();
-            }, exception.InvalidArgument);
+            }, error.InvalidArgument);
         });
 
         it("throws understandable error if no callback is passed", function () {
@@ -2379,7 +2379,7 @@ describe("shani", "util", "stub", () => {
             assert.throws(proto.method);
         });
 
-        it("throws exception for non function params", () => {
+        it("throws error for non function params", () => {
             const types = [{}, 3, "hi!"];
 
             for (let i = 0; i < types.length; i++) {

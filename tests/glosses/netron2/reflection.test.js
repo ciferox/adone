@@ -19,28 +19,28 @@ describe("Reflection", () => {
 
         it("not instance", () => {
             const err = assert.throws(() => Reflection.from("a"));
-            assert.instanceOf(err, adone.exception.NotValid);
+            assert.instanceOf(err, adone.error.NotValid);
         });
 
         it("class instead instance", () => {
             const err = assert.throws(() => Reflection.from(A));
-            assert.instanceOf(err, adone.exception.NotValid);
+            assert.instanceOf(err, adone.error.NotValid);
         });
 
         it("class without constructor", () => {
             class SomeClass { }
             const err = assert.throws(() => Reflection.from(new SomeClass()));
-            assert.instanceOf(err, adone.exception.NotValid);
+            assert.instanceOf(err, adone.error.NotValid);
         });
 
         it("Object instead instance", () => {
             const err = assert.throws(() => Reflection.from(Object));
-            assert.instanceOf(err, adone.exception.NotValid);
+            assert.instanceOf(err, adone.error.NotValid);
         });
 
         it("empty function instead instance", () => {
             const err = assert.throws(() => Reflection.from(adone.noop));
-            assert.instanceOf(err, adone.exception.NotValid);
+            assert.instanceOf(err, adone.error.NotValid);
         });
 
         it("instance of unnamed class", () => {
@@ -52,7 +52,7 @@ describe("Reflection", () => {
             );
 
             const err = assert.throws(() => Reflection.from(a));
-            assert.instanceOf(err, adone.exception.NotValid);
+            assert.instanceOf(err, adone.error.NotValid);
         });
 
         it("instance with no public methods", () => {
@@ -63,7 +63,7 @@ describe("Reflection", () => {
             }
 
             const err = assert.throws(() => Reflection.from(new A()));
-            assert.instanceOf(err, adone.exception.NotValid);
+            assert.instanceOf(err, adone.error.NotValid);
         });
 
         it("valid instance", () => {

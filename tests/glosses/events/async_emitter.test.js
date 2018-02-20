@@ -23,7 +23,7 @@ describe("AsyncEmitter", () => {
             assert.equal(values[1], "bar");
         });
 
-        it("if an exception occurs, it should throw an exception only the first one", async () => {
+        it("if an error occurs, it should throw an error only the first one", async () => {
             const emitter = new AsyncEmitter();
             emitter.on("foo", (action) => action);
             emitter.on("foo", () => new Promise(() => {
@@ -53,7 +53,7 @@ describe("AsyncEmitter", () => {
             }
         });
 
-        it("if throws exception, it should be handled as reject", async () => {
+        it("if throws error, it should be handled as reject", async () => {
             const emitter = new AsyncEmitter();
             emitter.on("foo", (action) => action);
             emitter.on("foo", () => {
@@ -97,7 +97,7 @@ describe("AsyncEmitter", () => {
             assert.sameMembers(expectedArray, values);
         });
 
-        it("if an exception occurs, it should throw an exception only the first one", async () => {
+        it("if an error occurs, it should throw an error only the first one", async () => {
             const delay = 100;
             const emitter = new AsyncEmitter();
             emitter.on("delay", (ms) => new Promise((resolve) => {
@@ -149,7 +149,7 @@ describe("AsyncEmitter", () => {
             );
         });
 
-        it("if an exception occurs, it should throw an exception only the first one", async () => {
+        it("if an error occurs, it should throw an error only the first one", async () => {
             const emitter = new AsyncEmitter();
             emitter.on("square", (keys, value1) => Promise.resolve([keys.concat(1), value1 * 2]));
             emitter.on("square", () => Promise.reject(new Error("foo")));
@@ -184,7 +184,7 @@ describe("AsyncEmitter", () => {
             assert.equal(values[0], undefined);
         });
 
-        it("if the argument isn't function, should throw an exception", async () => {
+        it("if the argument isn't function, should throw an error", async () => {
             const emitter = new AsyncEmitter();
             try {
                 await emitter.once("foo", "bad argument!");

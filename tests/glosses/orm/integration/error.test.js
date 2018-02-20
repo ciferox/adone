@@ -17,11 +17,11 @@ describe("errors", () => {
         it.skip("Sequelize Errors instances should be instances of Error", () => {
             const error = new Sequelize.Error();
             const errorMessage = "error message";
-            const validationError = new orm.exception.ValidationError(errorMessage, [
-                new orm.exception.ValidationErrorItem("<field name> cannot be null", "notNull Violation", "<field name>", null),
-                new orm.exception.ValidationErrorItem("<field name> cannot be an array or an object", "string violation", "<field name>", null)
+            const validationError = new orm.error.ValidationError(errorMessage, [
+                new orm.error.ValidationErrorItem("<field name> cannot be null", "notNull Violation", "<field name>", null),
+                new orm.error.ValidationErrorItem("<field name> cannot be an array or an object", "string violation", "<field name>", null)
             ]);
-            const optimisticLockError = new orm.exception.OptimisticLockError();
+            const optimisticLockError = new orm.error.OptimisticLockError();
 
             const sequelize = new Sequelize("mysql://user:pass@example.com:9821/dbname");
             const instError = new sequelize.Error();
@@ -32,29 +32,29 @@ describe("errors", () => {
             expect(error).to.be.instanceOf(Error);
             expect(error).to.have.property("name", "SequelizeBaseError");
 
-            expect(validationError).to.be.instanceOf(orm.exception.ValidationError);
+            expect(validationError).to.be.instanceOf(orm.error.ValidationError);
             expect(validationError).to.be.instanceOf(Error);
             expect(validationError).to.have.property("name", "ValidationError");
             expect(validationError.message).to.equal(errorMessage);
 
-            expect(optimisticLockError).to.be.instanceOf(orm.exception.OptimisticLockError);
+            expect(optimisticLockError).to.be.instanceOf(orm.error.OptimisticLockError);
             expect(optimisticLockError).to.be.instanceOf(Error);
             expect(optimisticLockError).to.have.property("name", "OptimisticLockError");
 
             expect(instError).to.be.instanceOf(Sequelize.Error);
             expect(instError).to.be.instanceOf(Error);
-            expect(instValidationError).to.be.instanceOf(orm.exception.ValidationError);
+            expect(instValidationError).to.be.instanceOf(orm.error.ValidationError);
             expect(instValidationError).to.be.instanceOf(Error);
-            expect(instOptimisticLockError).to.be.instanceOf(orm.exception.OptimisticLockError);
+            expect(instOptimisticLockError).to.be.instanceOf(orm.error.OptimisticLockError);
             expect(instOptimisticLockError).to.be.instanceOf(Error);
         });
 
         it("ValidationError should find errors by path", () => {
             const errorItems = [
-                new orm.exception.ValidationErrorItem("invalid", "type", "first_name", null),
-                new orm.exception.ValidationErrorItem("invalid", "type", "last_name", null)
+                new orm.error.ValidationErrorItem("invalid", "type", "first_name", null),
+                new orm.error.ValidationErrorItem("invalid", "type", "last_name", null)
             ];
-            const validationError = new orm.exception.ValidationError("Validation error", errorItems);
+            const validationError = new orm.error.ValidationError("Validation error", errorItems);
             expect(validationError).to.have.property("get");
             expect(validationError.get).to.be.a("function");
 
@@ -66,11 +66,11 @@ describe("errors", () => {
 
         it("ValidationError should override message property when message parameter is specified", () => {
             const errorItems = [
-                new orm.exception.ValidationErrorItem("invalid", "type", "first_name", null),
-                new orm.exception.ValidationErrorItem("invalid", "type", "last_name", null)
+                new orm.error.ValidationErrorItem("invalid", "type", "first_name", null),
+                new orm.error.ValidationErrorItem("invalid", "type", "last_name", null)
             ];
             const customErrorMessage = "Custom validation error message";
-            const validationError = new orm.exception.ValidationError(customErrorMessage, errorItems);
+            const validationError = new orm.error.ValidationError(customErrorMessage, errorItems);
 
             expect(validationError).to.have.property("name", "ValidationError");
             expect(validationError.message).to.equal(customErrorMessage);
@@ -78,26 +78,26 @@ describe("errors", () => {
 
         it("ValidationError should concatenate an error messages from given errors if no explicit message is defined", () => {
             const errorItems = [
-                new orm.exception.ValidationErrorItem("<field name> cannot be null", "notNull Violation", "<field name>", null),
-                new orm.exception.ValidationErrorItem("<field name> cannot be an array or an object", "string violation", "<field name>", null)
+                new orm.error.ValidationErrorItem("<field name> cannot be null", "notNull Violation", "<field name>", null),
+                new orm.error.ValidationErrorItem("<field name> cannot be an array or an object", "string violation", "<field name>", null)
             ];
-            const validationError = new orm.exception.ValidationError(null, errorItems);
+            const validationError = new orm.error.ValidationError(null, errorItems);
 
             expect(validationError).to.have.property("name", "ValidationError");
             expect(validationError.message).to.match(/notNull Violation: <field name> cannot be null,\nstring violation: <field name> cannot be an array or an object/);
         });
 
         it("ValidationErrorItem does not require instance & validator constructor parameters", () => {
-            const error = new orm.exception.ValidationErrorItem("error!", null, "myfield");
+            const error = new orm.error.ValidationErrorItem("error!", null, "myfield");
 
-            expect(error).to.be.instanceOf(orm.exception.ValidationErrorItem);
+            expect(error).to.be.instanceOf(orm.error.ValidationErrorItem);
         });
 
         it("ValidationErrorItem should have instance, key & validator properties when given to constructor", () => {
             const inst = { foo: "bar" };
             const vargs = [4];
 
-            const error = new orm.exception.ValidationErrorItem("error!", "FUNCTION", "foo", "bar", inst, "klen", "len", vargs);
+            const error = new orm.error.ValidationErrorItem("error!", "FUNCTION", "foo", "bar", inst, "klen", "len", vargs);
 
             expect(error).to.have.property("instance");
             expect(error.instance).to.equal(inst);
@@ -108,7 +108,7 @@ describe("errors", () => {
         });
 
         it("ValidationErrorItem.getValidatorKey() should return a string", () => {
-            const error = new orm.exception.ValidationErrorItem("error!", "FUNCTION", "foo", "bar", null, "klen", "len", [4]);
+            const error = new orm.error.ValidationErrorItem("error!", "FUNCTION", "foo", "bar", null, "klen", "len", [4]);
 
             expect(error).to.have.property("getValidatorKey");
             expect(error.getValidatorKey).to.be.a("function");
@@ -119,7 +119,7 @@ describe("errors", () => {
             expect(error.getValidatorKey(1, ":")).to.equal("function:klen");
             expect(error.getValidatorKey(true, "-:-")).to.equal("function-:-klen");
 
-            const empty = new orm.exception.ValidationErrorItem("error!", "FUNCTION", "foo", "bar");
+            const empty = new orm.error.ValidationErrorItem("error!", "FUNCTION", "foo", "bar");
 
             expect(empty.getValidatorKey()).to.equal("");
             expect(empty.getValidatorKey(false)).to.equal("");
@@ -129,7 +129,7 @@ describe("errors", () => {
         });
 
         it("ValidationErrorItem.getValidatorKey() should throw if namespace separator is invalid (only if NS is used & available)", () => {
-            const error = new orm.exception.ValidationErrorItem("error!", "FUNCTION", "foo", "bar", null, "klen", "len", [4]);
+            const error = new orm.error.ValidationErrorItem("error!", "FUNCTION", "foo", "bar", null, "klen", "len", [4]);
 
             expect(() => error.getValidatorKey(false, {})).to.not.throw();
             expect(() => error.getValidatorKey(false, [])).to.not.throw();
@@ -157,7 +157,7 @@ describe("errors", () => {
             };
 
             Object.keys(data).forEach((k) => {
-                const error = new orm.exception.ValidationErrorItem("error!", k, "foo", null);
+                const error = new orm.error.ValidationErrorItem("error!", k, "foo", null);
 
                 expect(error).to.have.property("origin", data[k]);
                 expect(error).to.have.property("type", k);
@@ -165,7 +165,7 @@ describe("errors", () => {
         });
 
         it("ValidationErrorItem.Origins is valid", () => {
-            const ORIGINS = orm.exception.ValidationErrorItem.Origins;
+            const ORIGINS = orm.error.ValidationErrorItem.Origins;
 
             expect(ORIGINS).to.have.property("CORE", "CORE");
             expect(ORIGINS).to.have.property("DB", "DB");
@@ -175,7 +175,7 @@ describe("errors", () => {
 
         it("DatabaseError should keep original message", () => {
             const orig = new Error("original database error message");
-            const databaseError = new orm.exception.DatabaseError(orig);
+            const databaseError = new orm.error.DatabaseError(orig);
 
             expect(databaseError).to.have.property("parent");
             expect(databaseError).to.have.property("original");
@@ -185,7 +185,7 @@ describe("errors", () => {
 
         it("ConnectionError should keep original message", () => {
             const orig = new Error("original connection error message");
-            const connectionError = new orm.exception.ConnectionError(orig);
+            const connectionError = new orm.error.ConnectionError(orig);
 
             expect(connectionError).to.have.property("parent");
             expect(connectionError).to.have.property("original");
@@ -195,7 +195,7 @@ describe("errors", () => {
 
         it("ConnectionRefusedError should keep original message", () => {
             const orig = new Error("original connection error message");
-            const connectionError = new orm.exception.ConnectionRefusedError(orig);
+            const connectionError = new orm.error.ConnectionRefusedError(orig);
 
             expect(connectionError).to.have.property("parent");
             expect(connectionError).to.have.property("original");
@@ -205,7 +205,7 @@ describe("errors", () => {
 
         it("AccessDeniedError should keep original message", () => {
             const orig = new Error("original connection error message");
-            const connectionError = new orm.exception.AccessDeniedError(orig);
+            const connectionError = new orm.error.AccessDeniedError(orig);
 
             expect(connectionError).to.have.property("parent");
             expect(connectionError).to.have.property("original");
@@ -215,7 +215,7 @@ describe("errors", () => {
 
         it("HostNotFoundError should keep original message", () => {
             const orig = new Error("original connection error message");
-            const connectionError = new orm.exception.HostNotFoundError(orig);
+            const connectionError = new orm.error.HostNotFoundError(orig);
 
             expect(connectionError).to.have.property("parent");
             expect(connectionError).to.have.property("original");
@@ -225,7 +225,7 @@ describe("errors", () => {
 
         it("HostNotReachableError should keep original message", () => {
             const orig = new Error("original connection error message");
-            const connectionError = new orm.exception.HostNotReachableError(orig);
+            const connectionError = new orm.error.HostNotReachableError(orig);
 
             expect(connectionError).to.have.property("parent");
             expect(connectionError).to.have.property("original");
@@ -235,7 +235,7 @@ describe("errors", () => {
 
         it("InvalidConnectionError should keep original message", () => {
             const orig = new Error("original connection error message");
-            const connectionError = new orm.exception.InvalidConnectionError(orig);
+            const connectionError = new orm.error.InvalidConnectionError(orig);
 
             expect(connectionError).to.have.property("parent");
             expect(connectionError).to.have.property("original");
@@ -245,7 +245,7 @@ describe("errors", () => {
 
         it("ConnectionTimedOutError should keep original message", () => {
             const orig = new Error("original connection error message");
-            const connectionError = new orm.exception.ConnectionTimedOutError(orig);
+            const connectionError = new orm.error.ConnectionTimedOutError(orig);
 
             expect(connectionError).to.have.property("parent");
             expect(connectionError).to.have.property("original");
@@ -258,11 +258,11 @@ describe("errors", () => {
         [
             {
                 type: "UniqueConstraintError",
-                exception: orm.exception.UniqueConstraintError
+                error: orm.error.UniqueConstraintError
             },
             {
                 type: "ValidationError",
-                exception: orm.exception.ValidationError
+                error: orm.error.ValidationError
             }
         ].forEach((constraintTest) => {
 
@@ -283,7 +283,7 @@ describe("errors", () => {
                 return this.sequelize.sync({ force: true }).then(() => {
                     return User.create(record);
                 }).then(() => {
-                    return User.create(record).catch(constraintTest.exception, s);
+                    return User.create(record).catch(constraintTest.error, s);
                 }).then(() => {
                     expect(s).to.have.been.calledOnce();
                 });

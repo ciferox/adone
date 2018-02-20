@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     event,
     net: { mail: { __ } },
     std: { util, url: urllib, net, dns, crypto }
@@ -264,7 +264,7 @@ export default class Mail extends event.Emitter {
                 case "socks4":
                 case "socks4a": {
                     if (!this.meta.has("proxy_socks_module")) {
-                        return callback(new exception.IllegalState("Socks module not loaded"));
+                        return callback(new error.IllegalState("Socks module not loaded"));
                     }
 
                     const connect = (ipaddress) => {
@@ -305,7 +305,7 @@ export default class Mail extends event.Emitter {
                     });
                 }
             }
-            callback(new exception.Unknown("Unknown proxy configuration"));
+            callback(new error.Unknown("Unknown proxy configuration"));
         };
     }
 

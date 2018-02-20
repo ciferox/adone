@@ -18,11 +18,11 @@ adone.application.run({
                 }
                 if (adone.is.promise(delayHalf)) {
                     await delayHalf;
-                    throw new adone.exception.Runtime(adone.text.random(adone.math.random(20, 80)));
+                    throw new adone.error.Runtime(adone.text.random(adone.math.random(20, 80)));
                 }
             } catch (err) {
-                adone.info(err);
-                adone.error(err);
+                adone.logInfo(err);
+                adone.logError(err);
             }
             await adone.promise.delay(tm);
             bar.complete(adone.math.random(0, 2) === 1);

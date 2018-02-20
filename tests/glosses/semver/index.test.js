@@ -1,5 +1,5 @@
 const {
-    exception,
+    error,
     semver
 } = adone;
 const eq = semver.eq;
@@ -640,7 +640,7 @@ describe("semver", () => {
             "Infinity.NaN.Infinity"
         ].forEach((v) => {
             const err = assert.throws(() => new SemVer(v));
-            assert.instanceOf(err, exception.InvalidArgument);
+            assert.instanceOf(err, error.InvalidArgument);
             assert.equal(err.message, `Invalid Version: ${v}`);
         });
     });

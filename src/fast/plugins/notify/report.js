@@ -1,5 +1,5 @@
 const {
-    exception,
+    error,
     std: { path },
     is,
     templating: { dot },
@@ -19,9 +19,9 @@ const defaults = {
 const log = (options, isError) => {
     const message = `[${options.title}] ${options.message}`;
     if (isError) {
-        adone.error(message);
+        adone.logError(message);
     } else {
-        adone.info(message);
+        adone.logInfo(message);
     }
 };
 
@@ -34,7 +34,7 @@ const createRenderFunction = (template) => {
             }
             return fn(obj);
         } catch (err) {
-            adone.warn(`Notify string rendering failed due to: ${err.message}`);
+            adone.logWarn(`Notify string rendering failed due to: ${err.message}`);
             return template;
         }
     };
@@ -153,7 +153,7 @@ const constructOptions = (options, object, templateOptions) => {
 
 export default async function report(reporter, message, options, templateOptions) {
     if (!reporter) {
-        throw new exception.InvalidArgument("No reporter specified");
+        throw new error.InvalidArgument("No reporter specified");
     }
 
     options = constructOptions(options, message, templateOptions);

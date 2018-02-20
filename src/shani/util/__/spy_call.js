@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     shani: { util }, lazify
 } = adone;
 const { __ } = util;
@@ -14,19 +14,19 @@ const throwYieldError = (proxy, text, args) => {
     if (args.length) {
         msg += ` Received [${args.join(", ")}]`;
     }
-    throw new exception.Exception(msg);
+    throw new error.Exception(msg);
 };
 
 export default class SpyCall {
-    constructor(spy, thisValue, args, returnValue, exception, id, errorWithCallStack) {
+    constructor(spy, thisValue, args, returnValue, error, id, errorWithCallStack) {
         if (!is.number(id)) {
-            throw new exception.InvalidArgument("Call id is not a number");
+            throw new error.InvalidArgument("Call id is not a number");
         }
         this.proxy = spy;
         this.thisValue = thisValue;
         this.args = args;
         this.returnValue = returnValue;
-        this.exception = exception;
+        this.error = error;
         this.callId = id;
         this.errorWithCallStack = errorWithCallStack;
     }
@@ -81,11 +81,11 @@ export default class SpyCall {
     }
 
     threw(error) {
-        if (is.undefined(error) || !this.exception) {
-            return Boolean(this.exception);
+        if (is.undefined(error) || !this.error) {
+            return Boolean(this.error);
         }
 
-        return this.exception === error || this.exception.name === error;
+        return this.error === error || this.error.name === error;
     }
 
     calledWithNew() {
@@ -126,7 +126,7 @@ export default class SpyCall {
 
     throwArg(pos) {
         if (pos > this.args.length) {
-            throw new exception.InvalidArgument(`Not enough arguments: ${pos} required but only ${this.args.length} present`);
+            throw new error.InvalidArgument(`Not enough arguments: ${pos} required but only ${this.args.length} present`);
         }
 
         throw this.args[pos];
@@ -177,11 +177,11 @@ export default class SpyCall {
             callStr += ` => ${__.util.format(this.returnValue)}`;
         }
 
-        if (this.exception) {
-            callStr += ` !${this.exception.name}`;
+        if (this.error) {
+            callStr += ` !${this.error.name}`;
 
-            if (this.exception.message) {
-                callStr += `(${this.exception.message})`;
+            if (this.error.message) {
+                callStr += `(${this.error.message})`;
             }
         }
         if (this.stack) {

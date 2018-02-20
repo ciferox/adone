@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     shani: { util },
     lazify
 } = adone;
@@ -24,14 +24,14 @@ const arrayEquals = (arr1, arr2, compareLength) => {
 class Mock {
     constructor(object) {
         if (!object) {
-            throw new exception.InvalidArgument("object is falsy");
+            throw new error.InvalidArgument("object is falsy");
         }
         this.object = object;
     }
 
     expects(method) {
         if (!method) {
-            throw new exception.InvalidArgument("method is falsy");
+            throw new error.InvalidArgument("method is falsy");
         }
 
         if (!this.expectations) {

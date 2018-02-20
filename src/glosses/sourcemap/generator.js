@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     data,
     collection,
     sourcemap
@@ -120,7 +120,7 @@ export class SourceMapGenerator {
     applySourceMap(consumer, sourceFile, sourcemapPath) {
         if (is.nil(sourceFile)) {
             if (is.nil(consumer.file)) {
-                throw new exception.InvalidArgument("requires either an explicit source file, or the source map's \"file\" property");
+                throw new error.InvalidArgument("requires either an explicit source file, or the source map's \"file\" property");
             }
             sourceFile = consumer.file;
         }
@@ -216,7 +216,7 @@ export class SourceMapGenerator {
             // Cases 2 and 3.
             return;
         }
-        throw new exception.Exception(`Invalid mapping: ${JSON.stringify({
+        throw new error.Exception(`Invalid mapping: ${JSON.stringify({
             generated,
             source,
             original,

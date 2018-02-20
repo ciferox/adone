@@ -2,7 +2,7 @@
 // Our codec supports UTF-16 surrogates, extensions for GB18030 and unicode sequences.
 const {
     is,
-    exception
+    error
 } = adone;
 
 const UNASSIGNED = -1;
@@ -257,7 +257,7 @@ class DBCSDecoder {
                 }
                 uCode = seq[seq.length - 1];
             } else {
-                throw new exception.IllegalState(`iconv internal error: invalid decoding table value ${uCode} at ${nodeIdx}/${curByte}`);
+                throw new error.IllegalState(`iconv internal error: invalid decoding table value ${uCode} at ${nodeIdx}/${curByte}`);
             }
 
             // Write the character to buffer, handling higher planes using surrogate pair.
@@ -309,10 +309,10 @@ export default class DBCSCodec {
     constructor(codecOptions, iconv) {
         this.encodingName = codecOptions.encodingName;
         if (!codecOptions) {
-            throw new exception.InvalidArgument("DBCS codec is called without the data.");
+            throw new error.InvalidArgument("DBCS codec is called without the data.");
         }
         if (!codecOptions.table) {
-            throw new exception.InvalidArgument(`Encoding '${this.encodingName}' has no data.`);
+            throw new error.InvalidArgument(`Encoding '${this.encodingName}' has no data.`);
         }
 
         // Load tables.
@@ -440,7 +440,7 @@ export default class DBCSCodec {
             } else if (val <= NODE_START) { // Existing node.
                 node = this.decodeTables[NODE_START - val];
             } else {
-                throw new exception.IllegalState(`Overwrite byte in ${this.encodingName}, addr: ${addr.toString(16)}`);
+                throw new error.IllegalState(`Overwrite byte in ${this.encodingName}, addr: ${addr.toString(16)}`);
             }
         }
         return node;
@@ -465,7 +465,7 @@ export default class DBCSCodec {
                         if (codeTrail >= 0xDC00 && codeTrail < 0xE000) {
                             writeTable[curAddr++] = 0x10000 + (code - 0xD800) * 0x400 + (codeTrail - 0xDC00);
                         } else {
-                            throw new exception.IllegalState(`Incorrect surrogate pair in ${this.encodingName} at chunk ${chunk[0]}`);
+                            throw new error.IllegalState(`Incorrect surrogate pair in ${this.encodingName} at chunk ${chunk[0]}`);
                         }
                     } else if (code > 0x0FF0 && code <= 0x0FFF) { // Character sequence (our own encoding used)
                         const len = 0xFFF - code + 2;
@@ -486,11 +486,11 @@ export default class DBCSCodec {
                     writeTable[curAddr++] = charCode++;
                 }
             } else {
-                throw new exception.IllegalState(`Incorrect type '${typeof part}' given in ${this.encodingName} at chunk ${chunk[0]}`);
+                throw new error.IllegalState(`Incorrect type '${typeof part}' given in ${this.encodingName} at chunk ${chunk[0]}`);
             }
         }
         if (curAddr > 0xFF) {
-            throw new exception.IllegalState(`Incorrect chunk in ${this.encodingName} at addr ${chunk[0]}: too long${curAddr}`);
+            throw new error.IllegalState(`Incorrect chunk in ${this.encodingName} at addr ${chunk[0]}: too long${curAddr}`);
         }
     }
 

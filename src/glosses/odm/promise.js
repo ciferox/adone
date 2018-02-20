@@ -282,7 +282,7 @@ Promise.prototype.addErrback = Promise.prototype.onReject;
  */
 
 /**
- * Signifies that this promise was the last in a chain of `then()s`: if a handler passed to the call to `then` which produced this promise throws, the exception will go uncaught.
+ * Signifies that this promise was the last in a chain of `then()s`: if a handler passed to the call to `then` which produced this promise throws, the error will go uncaught.
  *
  * ####Example:
  *

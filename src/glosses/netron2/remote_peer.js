@@ -3,7 +3,7 @@ const {
     collection: { TimedoutMap },
     netron2: { ACTION, AbstractPeer, packet, FastUniqueId, Reference },
     stream: { pull },
-    exception
+    error
 } = adone;
 
 const HEADER_BUFFER = Buffer.alloc(4);
@@ -20,7 +20,7 @@ export default class RemotePeer extends AbstractPeer {
         this._packetIdPool = new FastUniqueId();
         this._responseHandlers = new TimedoutMap(this.netron.options.responseTimeout, (id) => {
             const handler = this._deleteHandler(id);
-            !is.undefined(handler.error) && handler.error(new exception.NetronTimeout(`Response timeout ${this.netron.options.responseTimeout}ms exceeded`));
+            !is.undefined(handler.error) && handler.error(new error.NetronTimeout(`Response timeout ${this.netron.options.responseTimeout}ms exceeded`));
         });
 
         this._remoteEvents = new Map();
@@ -53,7 +53,7 @@ export default class RemotePeer extends AbstractPeer {
     get(defId, name, defaultData) {
         const ctxDef = this._defs.get(defId);
         if (is.undefined(ctxDef)) {
-            throw new exception.NotExists(`Context with definition id '${defId}' not exists`);
+            throw new error.NotExists(`Context with definition id '${defId}' not exists`);
         }
 
         let $ = ctxDef.$;
@@ -66,20 +66,20 @@ export default class RemotePeer extends AbstractPeer {
                 }, reject).catch(reject);
             });
         }
-        throw new exception.NotExists(`'${name}' not exists`);
+        throw new error.NotExists(`'${name}' not exists`);
     }
 
     set(defId, name, data) {
         const ctxDef = this._defs.get(defId);
         if (is.undefined(ctxDef)) {
-            throw new exception.NotExists(`Context with definition id '${defId}' not exists`);
+            throw new error.NotExists(`Context with definition id '${defId}' not exists`);
         }
 
         let $ = ctxDef.$;
         if (name in $) {
             $ = $[name];
             if (!$.method && $.readonly) {
-                throw new exception.InvalidAccess(`'${name}' is not writable`);
+                throw new error.InvalidAccess(`'${name}' is not writable`);
             }
             data = this._processArgs(ctxDef, $, data);
             return new Promise((resolve, reject) => {
@@ -88,7 +88,7 @@ export default class RemotePeer extends AbstractPeer {
                 }, reject).catch(reject);
             });
         }
-        throw new exception.NotExists(`'${name}' not exists`);
+        throw new error.NotExists(`'${name}' not exists`);
     }
 
     async subscribe(eventName, handler) {
@@ -124,7 +124,7 @@ export default class RemotePeer extends AbstractPeer {
     async attachContext(instance, ctxId = null) {
         const config = this.getTaskResult("config");
         if (config !== adone.null && !config.proxyContexts) {
-            throw new exception.NotSupported(`Context proxification feature is not enabled on remote netron (peer id: '${this.info.id.asBase58()}')`);
+            throw new error.NotSupported(`Context proxification feature is not enabled on remote netron (peer id: '${this.info.id.asBase58()}')`);
         }
 
         const stub = new adone.netron2.Stub(this.netron, instance);
@@ -133,7 +133,7 @@ export default class RemotePeer extends AbstractPeer {
         }
 
         if (this._proxifiedContexts.has(ctxId)) {
-            throw new exception.Exists(`Context '${ctxId}' already proxified on the peer '${this.info.id.asBase58()}' side`);
+            throw new error.Exists(`Context '${ctxId}' already proxified on the peer '${this.info.id.asBase58()}' side`);
         }
 
         const def = stub.definition;
@@ -150,11 +150,11 @@ export default class RemotePeer extends AbstractPeer {
     async detachContext(ctxId, releaseOriginated) {
         const config = this.getTaskResult("config");
         if (config !== adone.null && !config.proxyContexts) {
-            throw new exception.NotSupported(`Context proxification feature is not enabled on remote netron (peer id: '${this.info.id.asBase58()}')`);
+            throw new error.NotSupported(`Context proxification feature is not enabled on remote netron (peer id: '${this.info.id.asBase58()}')`);
         }
         const defId = this._proxifiedContexts.get(ctxId);
         if (is.undefined(defId)) {
-            throw new exception.NotExists(`Context '${ctxId}' not proxified on the peer '${this.info.id.asBase58()}' code`);
+            throw new error.NotExists(`Context '${ctxId}' not proxified on the peer '${this.info.id.asBase58()}' code`);
         }
         this.netron._stubs.delete(defId);
         this._proxifiedContexts.delete(ctxId);
@@ -191,7 +191,7 @@ export default class RemotePeer extends AbstractPeer {
                 this._writer.push(Buffer.concat([HEADER_BUFFER, rawPkt]));
                 resolve();
             } else {
-                reject(new adone.exception.IllegalState("No active connection for netron protocol"));
+                reject(new adone.error.IllegalState("No active connection for netron protocol"));
             }
         });
     }
@@ -241,7 +241,7 @@ export default class RemotePeer extends AbstractPeer {
         return new Promise((resolve, reject) => {
             this._sendRequest(ACTION.TASK, task, (result) => {
                 if (!is.plainObject(result)) {
-                    return reject(new adone.exception.NotValid(`Not valid result: ${adone.meta.typeOf(result)}`));
+                    return reject(new adone.error.NotValid(`Not valid result: ${adone.meta.typeOf(result)}`));
                 }
                 resolve(result);
             });
@@ -251,7 +251,7 @@ export default class RemotePeer extends AbstractPeer {
     _queryInterfaceByDefinition(defId) {
         const def = this._defs.get(defId);
         if (is.undefined(def)) {
-            throw new exception.Unknown(`Unknown definition '${defId}'`);
+            throw new error.Unknown(`Unknown definition '${defId}'`);
         }
         return this.netron.interfaceFactory.create(def, this);
     }
@@ -259,7 +259,7 @@ export default class RemotePeer extends AbstractPeer {
     _getContextDefinition(ctxId) {
         const def = this._ctxidDefs.get(ctxId);
         if (is.undefined(def)) {
-            throw new exception.NotExists(`Context '${ctxId}' not exists`);
+            throw new error.NotExists(`Context '${ctxId}' not exists`);
         }
         return def;
     }
@@ -303,12 +303,12 @@ export default class RemotePeer extends AbstractPeer {
                     const roffset = buffer.roffset;
                     const pkt = packet.decode(buffer);
                     if (packetSize !== (buffer.roffset - roffset)) {
-                        throw new exception.NotValid("Invalid packet");
+                        throw new error.NotValid("Invalid packet");
                     }
                     this.netron._processPacket(this, pkt);
                 } catch (err) {
                     buffer.reset(true);
-                    adone.error(err);
+                    adone.logError(err);
                 } finally {
                     lpsz = 0;
                 }
@@ -319,7 +319,7 @@ export default class RemotePeer extends AbstractPeer {
             this._writer,
             conn,
             pull.drain(handler, (err) => {
-                // adone.warn(err);
+                // adone.logWarn(err);
             })
         );
     }

@@ -93,7 +93,7 @@ export default class Logger {
                 this._pipeTransform(options);
             }
         } else {
-            throw new adone.exception.InvalidArgument(`Unsupported type of sinks: ${typeof (sinks)}`);
+            throw new adone.error.InvalidArgument(`Unsupported type of sinks: ${typeof (sinks)}`);
         }
         return this;
     }
@@ -206,7 +206,7 @@ export default class Logger {
                         definitions += `const origArg${i} = ${styleArg};`;
                         formatString += `" + this._parseStyle(this._styleObj${i}[origArg${i}]) + "`;
                     } else {
-                        throw new adone.exception.NotSupported(`Unsupported argument style for logger: ${typeof (argSchema.style)}`);
+                        throw new adone.error.NotSupported(`Unsupported argument style for logger: ${typeof (argSchema.style)}`);
                     }
                 }
                 if (is.propertyDefined(argSchema, "format")) {
@@ -252,14 +252,14 @@ export default class Logger {
             case "stderr": t.pipe(process.stderr); break;
             case "file": {
                 if (!is.string(filePath)) {
-                    throw new adone.exception.NotValid("For 'file' log channels you should specify 'filePath' option");
+                    throw new adone.error.NotValid("For 'file' log channels you should specify 'filePath' option");
                 }
                 t.pipe(adone.std.fs.createWriteStream(filePath, { flags }));
                 break;
             }
             case "stream": {
                 if (!is.stream(stream)) {
-                    throw new adone.exception.NotValid("For 'stream' log channels you should specify 'stream' option");
+                    throw new adone.error.NotValid("For 'stream' log channels you should specify 'stream' option");
                 }
                 t.pipe(stream);
                 break;

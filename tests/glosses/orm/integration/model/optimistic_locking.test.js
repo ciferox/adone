@@ -51,7 +51,7 @@ describe("optimistic locking", () => {
 
         await assert.throws(async () => {
             await accountB.save();
-        }, orm.exception.OptimisticLockError);
+        }, orm.error.OptimisticLockError);
     });
 
     it("increment() also increments the version", () => {

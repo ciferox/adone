@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     lazify,
     hrtime,
     util,
@@ -193,7 +193,7 @@ class Hook {
         const elapsed = s[0] * 1e3 + s[1] / 1e6;
         const timeout = this.timeout();
         if (timeout && elapsed >= timeout) {
-            this._failed = wrapError(new exception.Timeout(`Timeout of ${this.timeout()}ms exceeded`));
+            this._failed = wrapError(new error.Timeout(`Timeout of ${this.timeout()}ms exceeded`));
             if (err) {
                 this._failed.original = err.original || err;
             }
@@ -269,7 +269,7 @@ class Block {
                     break;
                 }
                 default: {
-                    throw new exception.InvalidArgument("skip: only functions and booleans are allowed");
+                    throw new error.InvalidArgument("skip: only functions and booleans are allowed");
                 }
             }
         }
@@ -279,7 +279,7 @@ class Block {
             switch (type) {
                 case "number": {
                     if (timeout < 0) {
-                        throw new exception.InvalidArgument("timeout: cannot be negative");
+                        throw new error.InvalidArgument("timeout: cannot be negative");
                     }
                     this.timeout(timeout);
                     break;
@@ -290,13 +290,13 @@ class Block {
                     }
                     const value = await timeout();
                     if (value < 0) {
-                        throw new exception.InvalidArgument("timeout: cannot be negative");
+                        throw new error.InvalidArgument("timeout: cannot be negative");
                     }
                     this.timeout(value);
                     break;
                 }
                 default: {
-                    throw new exception.InvalidArgument("timeout: only functions and numbers are allowed");
+                    throw new error.InvalidArgument("timeout: only functions and numbers are allowed");
                 }
             }
         }
@@ -506,7 +506,7 @@ class Test {
                     break;
                 }
                 default: {
-                    throw new exception.InvalidArgument("skip: only functions and booleans are allowed");
+                    throw new error.InvalidArgument("skip: only functions and booleans are allowed");
                 }
             }
         }
@@ -516,7 +516,7 @@ class Test {
             switch (type) {
                 case "number": {
                     if (timeout < 0) {
-                        throw new exception.InvalidArgument("timeout: cannot be negative");
+                        throw new error.InvalidArgument("timeout: cannot be negative");
                     }
                     this.timeout(timeout);
                     break;
@@ -527,13 +527,13 @@ class Test {
                     }
                     const value = await timeout();
                     if (value < 0) {
-                        throw new exception.InvalidArgument("timeout: cannot be negative");
+                        throw new error.InvalidArgument("timeout: cannot be negative");
                     }
                     this.timeout(value);
                     break;
                 }
                 default: {
-                    throw new exception.InvalidArgument("timeout: only functions and numbers are allowed");
+                    throw new error.InvalidArgument("timeout: only functions and numbers are allowed");
                 }
             }
         }
@@ -555,10 +555,10 @@ class Test {
                         // [[description, callback] or callback, ...]
                         const hookWithDescription = (item) => {
                             if (item.length !== 2) {
-                                throw new exception.IllegalState(`${hookType}: not enough arguments for [description, callback]`);
+                                throw new error.IllegalState(`${hookType}: not enough arguments for [description, callback]`);
                             }
                             if (!is.function(item[1])) {
-                                throw new exception.InvalidArgument(`${hookType}: callback must be a function for [description, callback]`);
+                                throw new error.InvalidArgument(`${hookType}: callback must be a function for [description, callback]`);
                             }
                             this[hookType](...item);
                         };
@@ -571,12 +571,12 @@ class Test {
                                         if (is.string(item[0])) {
                                             hookWithDescription(item);
                                         } else {
-                                            throw new exception.InvalidArgument(`${hookType}: invalid value, must be [description, callback]`);
+                                            throw new error.InvalidArgument(`${hookType}: invalid value, must be [description, callback]`);
                                         }
                                     } else if (is.function(item)) {
                                         this[hookType](item);
                                     } else {
-                                        throw new exception.InvalidArgument(`${hookType}: invalid value, must be callback or [description, callback]`);
+                                        throw new error.InvalidArgument(`${hookType}: invalid value, must be callback or [description, callback]`);
                                     }
                                 }
                             }
@@ -584,7 +584,7 @@ class Test {
                         break;
                     }
                     default: {
-                        throw new exception.InvalidArgument(`${hookType}: only functions and arrays are allowed`);
+                        throw new error.InvalidArgument(`${hookType}: only functions and arrays are allowed`);
                     }
                 }
             };
@@ -645,7 +645,7 @@ class Test {
         const elapsed = s[0] * 1e3 + s[1] / 1e6;
         const timeout = this.timeout();
         if (timeout && elapsed >= timeout) {
-            const _err = wrapError(new exception.Timeout(`Timeout of ${this.timeout()}ms exceeded`));
+            const _err = wrapError(new error.Timeout(`Timeout of ${this.timeout()}ms exceeded`));
             if (err) {
                 _err.original = err;
             }
@@ -949,13 +949,13 @@ export class Engine {
             const callback = args.pop();
 
             if (!is.function(callback)) {
-                throw new exception.InvalidArgument("The last argument must be a function");
+                throw new error.InvalidArgument("The last argument must be a function");
             }
 
             const options = args.length > 0 && is.plainObject(args[args.length - 1]) ? args.pop() : null;
 
             if (args.length === 0) {
-                throw new exception.InvalidArgument("A describe must have a name");
+                throw new error.InvalidArgument("A describe must have a name");
             }
             for (let i = 0; i < args.length - 1; ++i) {
                 const block = new Block(args[i], stack.top);
@@ -1599,7 +1599,7 @@ export class Engine {
             };
 
             stub.stub(console, "log", "error", "debug", "info", "dir", "warn");
-            stub.stub(adone, "log", "fatal", "error", "warn", "info", "debug", "trace");
+            stub.stub(adone, "log", "logFatal", "logError", "logWarn", "logInfo", "logDebug", "logTrace");
 
             for (const path of (await adone.fs.glob(paths)).sort()) {
                 const context = this.context();

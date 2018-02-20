@@ -42,7 +42,7 @@ export default class Omnitron extends application.Application {
             process.on("SIGILL", () => {
                 if (is.function(global.gc)) {
                     global.gc();
-                    adone.info("Forced garbage collector");
+                    adone.logInfo("Forced garbage collector");
                 }
             });
         }
@@ -50,10 +50,10 @@ export default class Omnitron extends application.Application {
 
     async initialize() {
         this.db = await omnitron.DB.open();
-        adone.info("Database opened");
+        adone.logInfo("Database opened");
 
         await runtime.netron.attachContext(this, "omnitron");
-        adone.info("Omnitron context attached");
+        adone.logInfo("Omnitron context attached");
 
         await this.createPidFile();
     }
@@ -65,7 +65,7 @@ export default class Omnitron extends application.Application {
             });
         }
 
-        adone.info(`Omnitron v${adone.package.version} started`);
+        adone.logInfo(`Omnitron v${adone.package.version} started`);
     }
 
     async uninitialize() {
@@ -79,26 +79,26 @@ export default class Omnitron extends application.Application {
             try {
                 await this.uninitializeSubsystem(name); // eslint-disable-line
             } catch (err) {
-                adone.error(err);
+                adone.logError(err);
             }
         }
 
         if (runtime.netron.hasContext("omnitron")) {
             await runtime.netron.detachContext("omnitron");
-            adone.info("Omnitron context detached");
+            adone.logInfo("Omnitron context detached");
         }
 
         await this.db.close();
-        adone.info("Database closed");
+        adone.logInfo("Database closed");
 
-        adone.info("Omnitron stopped");
+        adone.logInfo("Omnitron stopped");
     }
 
     async createPidFile() {
         try {
             await fs.writeFile(adone.realm.config.omnitron.pidFilePath, process.pid.toString());
         } catch (err) {
-            adone.error(err.message);
+            adone.logError(err.message);
         }
     }
 
@@ -106,15 +106,15 @@ export default class Omnitron extends application.Application {
         try {
             await fs.rm(adone.realm.config.omnitron.pidFilePath);
         } catch (err) {
-            adone.error(err.message);
+            adone.logError(err.message);
         }
     }
 
     _signalExit(sigName) {
         if (is.string(sigName)) {
-            adone.info(`Killed by signal '${sigName}'`);
+            adone.logInfo(`Killed by signal '${sigName}'`);
         } else {
-            adone.info("Killed using api");
+            adone.logInfo("Killed using api");
         }
         return super._signalExit(sigName);
     }
@@ -382,7 +382,7 @@ export default class Omnitron extends application.Application {
     @Public()
     async unloadSubsystem(name) {
         if (CORE_SUBSYSTEMS.includes(name)) {
-            throw new adone.exception.NotAllowed("Unload core subsystem is not possible");
+            throw new adone.error.NotAllowed("Unload core subsystem is not possible");
         }
         await super.unloadSubsystem(name);
     }

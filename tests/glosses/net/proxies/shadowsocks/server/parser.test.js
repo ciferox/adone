@@ -99,7 +99,7 @@ describe("net", "proxy", "shadowsocks", "server", "parser", () => {
                 expect(onError).to.have.been.calledOnce();
                 const { args } = onError.getCall(0);
                 expect(args).to.have.lengthOf(1);
-                expect(args[0]).to.be.instanceOf(adone.exception.IllegalState);
+                expect(args[0]).to.be.instanceOf(adone.error.IllegalState);
                 expect(args[0].message).to.match(/^Unknown request type/);
             });
         });

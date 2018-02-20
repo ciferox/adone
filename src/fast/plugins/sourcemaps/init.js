@@ -1,6 +1,6 @@
 export default function plugin({ __ }) {
     const {
-        exception,
+        error,
         is,
         util,
         sourcemap
@@ -15,7 +15,7 @@ export default function plugin({ __ }) {
             }
 
             if (file.isStream()) {
-                throw new exception.NotSupported("Streaming is not supported");
+                throw new error.NotSupported("Streaming is not supported");
             }
 
             let fileContent = file.contents.toString();

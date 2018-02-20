@@ -55,7 +55,7 @@ describe("Secret (integration)", () => {
                 const result = await secret.getValueAsync();
                 expect(result).to.eql(data);
             } catch (err) {
-                adone.error(err);
+                adone.logError(err);
             } finally {
                 if (secret) {
                     await secret.undefineAsync();

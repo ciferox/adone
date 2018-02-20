@@ -3,7 +3,7 @@ const {
         Subsystem
     },
     is,
-    exception,
+    error,
     std,
     netron,
     omnitron,
@@ -169,7 +169,7 @@ export default class Dispatcher extends Subsystem {
                             }
                             elapsed += 100;
                             if (elapsed >= 3000) {
-                                throw new exception.Timeout("Process is still alive");
+                                throw new error.Timeout("Process is still alive");
                             }
                             await adone.promise.delay(100); // eslint-disable-line
                         }

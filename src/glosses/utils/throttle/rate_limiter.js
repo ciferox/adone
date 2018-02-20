@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     promise
 } = adone;
 
@@ -62,7 +62,7 @@ class TokenBucket {
 
         // Make sure the bucket can hold the requested number of tokens
         if (count > this.bucketSize) {
-            throw new exception.LimitExceeded(`Requested tokens ${count} exceeds bucket size ${this.bucketSize}`);
+            throw new error.LimitExceeded(`Requested tokens ${count} exceeds bucket size ${this.bucketSize}`);
         }
 
         // Drip new tokens into this bucket
@@ -157,7 +157,7 @@ export default class RateLimiter {
     async removeTokens(count) {
         // Make sure the request isn't for more than we can handle
         if (count > this.tokenBucket.bucketSize) {
-            throw new exception.LimitExceeded(`Requested tokens ${count} exceeds maximum tokens per interval ${this.tokenBucket.bucketSize}`);
+            throw new error.LimitExceeded(`Requested tokens ${count} exceeds maximum tokens per interval ${this.tokenBucket.bucketSize}`);
         }
 
         const now = getMilliseconds();

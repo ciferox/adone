@@ -11,7 +11,7 @@ export default class Multi extends adone.terminal.ui.widget.Element {
     addPage(widget, index = Number.MAX_SAFE_INTEGER) {
         this.insert(widget, index);
         if (!widget.id) {
-            throw new adone.exception.NotValid("cannot add widget with empty id");
+            throw new adone.error.NotValid("cannot add widget with empty id");
         }
         this._pageMap.set(widget.id, widget);
         if (is.null(this._activePage)) {

@@ -64,7 +64,7 @@ describe("database", "redis", "auth", { skip: check }, () => {
         });
         stub(adone, "warn").callsFake((warn) => {
             if (warn.includes("but a password was supplied")) {
-                adone.warn.restore();
+                adone.logWarn.restore();
                 setTimeout(() => {
                     expect(errorEmited).to.eql(false);
                     redis.disconnect();

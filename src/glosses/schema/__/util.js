@@ -1,4 +1,4 @@
-const { is, exception } = adone;
+const { is, error } = adone;
 
 export const copy = (o, to) => {
     to = to || {};
@@ -221,26 +221,26 @@ export const getData = ($data, lvl, paths) => {
     let data;
     if ($data[0] === "/") {
         if (!JSON_POINTER.test($data)) {
-            throw new exception.Exception(`Invalid JSON-pointer: ${$data}`);
+            throw new error.Exception(`Invalid JSON-pointer: ${$data}`);
         }
         jsonPointer = $data;
         data = "rootData";
     } else {
         const matches = $data.match(RELATIVE_JSON_POINTER);
         if (!matches) {
-            throw new exception.Exception(`Invalid JSON-pointer: ${$data}`);
+            throw new error.Exception(`Invalid JSON-pointer: ${$data}`);
         }
         const up = Number(matches[1]);
         jsonPointer = matches[2];
         if (jsonPointer === "#") {
             if (up >= lvl) {
-                throw new exception.IllegalState(`Cannot access property/index ${up} levels up, current level is ${lvl}`);
+                throw new error.IllegalState(`Cannot access property/index ${up} levels up, current level is ${lvl}`);
             }
             return paths[lvl - up];
         }
 
         if (up > lvl) {
-            throw new exception.IllegalState(`Cannot access data ${up} levels up, current level is ${lvl}`);
+            throw new error.IllegalState(`Cannot access data ${up} levels up, current level is ${lvl}`);
         }
         data = `data${(lvl - up) || ""}`;
         if (!jsonPointer) {

@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     util: { keys },
     shani: { util }
 } = adone;
@@ -107,7 +107,7 @@ const assert = {
     },
     expose(target, options) {
         if (!target) {
-            throw new exception.InvalidArgument("target is null or undefined");
+            throw new error.InvalidArgument("target is null or undefined");
         }
 
         const o = options || {};
@@ -186,7 +186,7 @@ mirrorPropAsAssertion("calledWithExactly", "expected %n to be called with exact 
 mirrorPropAsAssertion("alwaysCalledWithExactly", "expected %n to always be called with exact arguments %D");
 mirrorPropAsAssertion("neverCalledWith", "expected %n to never be called with arguments %*%C");
 mirrorPropAsAssertion("neverCalledWithMatch", "expected %n to never be called with match %*%C");
-mirrorPropAsAssertion("threw", "%n did not throw exception%C");
-mirrorPropAsAssertion("alwaysThrew", "%n did not always throw exception%C");
+mirrorPropAsAssertion("threw", "%n did not throw error%C");
+mirrorPropAsAssertion("alwaysThrew", "%n did not always throw error%C");
 
 export default assert;

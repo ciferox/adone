@@ -1,6 +1,6 @@
 export default function plugin() {
     const {
-        exception,
+        error,
         std: { path }
     } = adone;
 
@@ -35,7 +35,7 @@ export default function plugin() {
             }
 
             if (file.isStream()) {
-                this.emit("error", new exception.NotSupported("Streaming is not supported"));
+                this.emit("error", new error.NotSupported("Streaming is not supported"));
                 return;
             }
             // Collect renames from reved files.

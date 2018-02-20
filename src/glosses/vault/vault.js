@@ -113,7 +113,7 @@ export default class Vault {
 
     async create(name, tags = []) {
         if (this.nameIdMap.has(name)) {
-            throw new adone.exception.Exists(`Already exists: '${name}'`);
+            throw new adone.error.Exists(`Already exists: '${name}'`);
         }
 
         const id = await this._getNextId(NEXT_VALUABLE_ID);
@@ -320,7 +320,7 @@ export default class Vault {
     _getVid(name) {
         const id = this.nameIdMap.get(name);
         if (is.undefined(id)) {
-            throw new adone.exception.NotExists(`Not exists: '${name}'`);
+            throw new adone.error.NotExists(`Not exists: '${name}'`);
         }
         return id;
     }
@@ -339,7 +339,7 @@ export default class Vault {
 
         for (const tag of tags) {
             if (!is.string(tag.name)) {
-                throw new adone.exception.NotValid("The tag must be a string or an object with at least one property: 'name'");
+                throw new adone.error.NotValid("The tag must be a string or an object with at least one property: 'name'");
             }
             let tagMetaData = this.tagsMap.get(tag.name);
             if (is.undefined(tagMetaData)) {

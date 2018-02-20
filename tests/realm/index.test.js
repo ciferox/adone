@@ -43,7 +43,7 @@ describe("realm", () => {
             const observer = await realmManager.install(std.path.join(__dirname));
             return observer.result;
         });
-        assert.instanceOf(err, adone.exception.InvalidArgument);
+        assert.instanceOf(err, adone.error.InvalidArgument);
     });
 
     it("lock/unlock", async () => {

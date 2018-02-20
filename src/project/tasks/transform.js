@@ -61,8 +61,8 @@ export default class TransformTask extends adone.project.task.Base {
                 try {
                     notify(err);
                 } catch (notifyErr) {
-                    adone.warn(`Could not notify about an error due to: ${notifyErr.message}`);
-                    adone.error(err.stack || err.message);
+                    adone.logWarn(`Could not notify about an error due to: ${notifyErr.message}`);
+                    adone.logError(err.stack || err.message);
                 }
             });
         }

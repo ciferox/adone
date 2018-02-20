@@ -2,7 +2,7 @@ const {
     is,
     math: { Long },
     util,
-    exception
+    error
 } = adone;
 
 const stringSource = (s) => {
@@ -211,7 +211,7 @@ export default class ByteArray {
         if (!noAssert) {
             capacity = capacity | 0;
             if (capacity < 0) {
-                throw new exception.InvalidArgument("Illegal capacity");
+                throw new error.InvalidArgument("Illegal capacity");
             }
             noAssert = Boolean(noAssert);
         }
@@ -301,11 +301,11 @@ export default class ByteArray {
         }
         if (!this.noAssert) {
             if (!is.number(offset) || offset % 1 !== 0) {
-                throw new exception.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
+                throw new error.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
             }
             offset >>>= 0;
             if (offset < 0 || offset + length > this.buffer.length) {
-                throw new exception.InvalidArgument(`Illegal offset: 0 <= ${offset} (${length}) <= ${this.buffer.length}`);
+                throw new error.InvalidArgument(`Illegal offset: 0 <= ${offset} (${length}) <= ${this.buffer.length}`);
             }
         }
         const slice = this.slice(offset, offset + length);
@@ -618,10 +618,10 @@ export default class ByteArray {
         const result = offset >>>= 0;
         if (!this.noAssert) {
             if (!is.number(offset) || offset % 1 !== 0) {
-                throw new exception.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
+                throw new error.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
             }
             if (offset < 0 || offset + 0 > this.buffer.length) {
-                throw new exception.NotValid(`Illegal offset: 0 <= ${offset} (0) <= ${this.buffer.length}`);
+                throw new error.NotValid(`Illegal offset: 0 <= ${offset} (0) <= ${this.buffer.length}`);
             }
         }
         // let length;
@@ -668,7 +668,7 @@ export default class ByteArray {
         }
         if (!this.noAssert) {
             if (!is.array(value)) {
-                throw new exception.InvalidArgument("Illegal BitSet: Not an array");
+                throw new error.InvalidArgument("Illegal BitSet: Not an array");
             }
             if (!is.number(offset) || offset % 1 !== 0) {
                 throw new TypeError(`Illegal offset: ${offset} (not an integer)`);
@@ -1050,10 +1050,10 @@ export default class ByteArray {
         }
         if (!this.noAssert) {
             if (!is.number(offset) || offset % 1 !== 0) {
-                throw new exception.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
+                throw new error.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
             }
             if (offset < 0 || offset + bytes > this.buffer.length) {
-                throw new exception.NotValid(`Illegal offset: 0 <= ${offset} (${bytes}) <= ${this.buffer.length}`);
+                throw new error.NotValid(`Illegal offset: 0 <= ${offset} (${bytes}) <= ${this.buffer.length}`);
             }
         }
         return offset;
@@ -1067,13 +1067,13 @@ export default class ByteArray {
         const result = offset >>>= 0;
         if (!this.noAssert) {
             if (!is.number(value) || (!isFloat && value % 1 !== 0)) {
-                throw new exception.InvalidArgument(`Illegal value: ${value} (not an integer)`);
+                throw new error.InvalidArgument(`Illegal value: ${value} (not an integer)`);
             }
             if (!is.number(offset) || offset % 1 !== 0) {
-                throw new exception.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
+                throw new error.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
             }
             if (offset < 0 || offset + 0 > this.buffer.length) {
-                throw new exception.NotValid(`Illegal offset: 0 <= ${offset} (0) <= ${this.buffer.length}`);
+                throw new error.NotValid(`Illegal offset: 0 <= ${offset} (0) <= ${this.buffer.length}`);
             }
         }
         offset += bytes;
@@ -1096,13 +1096,13 @@ export default class ByteArray {
             } else if (is.string(value)) {
                 value = Long.fromString(value);
             } else if (!(value && is.long(value))) {
-                throw new exception.InvalidArgument(`Illegal value: ${value} (not an integer or Long)`);
+                throw new error.InvalidArgument(`Illegal value: ${value} (not an integer or Long)`);
             }
             if (!is.number(offset) || offset % 1 !== 0) {
-                throw new exception.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
+                throw new error.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
             }
             if (offset < 0 || offset + 0 > this.buffer.length) {
-                throw new exception.NotValid(`Illegal offset: 0 <= ${offset} (0) <= ${this.buffer.length}`);
+                throw new error.NotValid(`Illegal offset: 0 <= ${offset} (0) <= ${this.buffer.length}`);
             }
         }
         if (is.number(value)) {
@@ -1133,15 +1133,15 @@ export default class ByteArray {
         }
         if (!this.noAssert) {
             if (!is.number(value) || value % 1 !== 0) {
-                throw new exception.InvalidArgument(`Illegal value: ${value} (not an integer)`);
+                throw new error.InvalidArgument(`Illegal value: ${value} (not an integer)`);
             }
             value |= 0;
             if (!is.number(offset) || offset % 1 !== 0) {
-                throw new exception.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
+                throw new error.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
             }
             offset >>>= 0;
             if (offset < 0 || offset + 0 > this.buffer.length) {
-                throw new exception.NotValid(`Illegal offset: 0 <= ${offset} (0) <= ${this.buffer.length}`);
+                throw new error.NotValid(`Illegal offset: 0 <= ${offset} (0) <= ${this.buffer.length}`);
             }
         }
         const size = ByteArray.calculateVarint32(value);
@@ -1191,11 +1191,11 @@ export default class ByteArray {
         }
         if (!this.noAssert) {
             if (!is.number(offset) || offset % 1 !== 0) {
-                throw new exception.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
+                throw new error.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
             }
             offset >>>= 0;
             if (offset < 0 || offset + 1 > this.buffer.length) {
-                throw new exception.NotValid(`Illegal offset: 0 <= ${offset} (1) <= ${this.buffer.length}`);
+                throw new error.NotValid(`Illegal offset: 0 <= ${offset} (1) <= ${this.buffer.length}`);
             }
         }
         let c = 0;
@@ -1203,7 +1203,7 @@ export default class ByteArray {
         let b;
         do {
             if (!this.noAssert && offset > this.buffer.length) {
-                const err = new exception.Exception("Truncated");
+                const err = new error.Exception("Truncated");
                 err.truncated = true;
                 throw err;
             }
@@ -1256,14 +1256,14 @@ export default class ByteArray {
             } else if (is.string(value)) {
                 value = Long.fromString(value);
             } else if (!(value && is.long(value))) {
-                throw new exception.InvalidArgument(`Illegal value: ${value} (not an integer or Long)`);
+                throw new error.InvalidArgument(`Illegal value: ${value} (not an integer or Long)`);
             }
             if (!is.number(offset) || offset % 1 !== 0) {
-                throw new exception.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
+                throw new error.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
             }
             offset >>>= 0;
             if (offset < 0 || offset + 0 > this.buffer.length) {
-                throw new exception.NotValid(`Illegal offset: 0 <= ${offset} (0) <= ${this.buffer.length}`);
+                throw new error.NotValid(`Illegal offset: 0 <= ${offset} (0) <= ${this.buffer.length}`);
             }
         }
         if (is.number(value)) {
@@ -1347,11 +1347,11 @@ export default class ByteArray {
         }
         if (!this.noAssert) {
             if (!is.number(offset) || offset % 1 !== 0) {
-                throw new exception.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
+                throw new error.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
             }
             offset >>>= 0;
             if (offset < 0 || offset + 1 > this.buffer.length) {
-                throw new exception.NotValid(`Illegal offset: 0 <= ${offset} (1) <= ${this.buffer.length}`);
+                throw new error.NotValid(`Illegal offset: 0 <= ${offset} (1) <= ${this.buffer.length}`);
             }
         }
         // ref: src/google/protobuf/io/coded_stream.cc
@@ -1390,7 +1390,7 @@ export default class ByteArray {
                                             b = this.buffer[offset++];
                                             part2 |= (b & 0x7F) << 7;
                                             if ((b & 0x80) || (this.noAssert && is.undefined(b))) {
-                                                throw new exception.NotValid("Buffer overrun");
+                                                throw new error.NotValid("Buffer overrun");
                                             }
                                         }
                                     }
@@ -1443,19 +1443,19 @@ export default class ByteArray {
         let k = str.length;
         if (!this.noAssert) {
             if (!is.string(str)) {
-                throw new exception.InvalidArgument("Illegal str: Not a string");
+                throw new error.InvalidArgument("Illegal str: Not a string");
             }
             for (i = 0; i < k; ++i) {
                 if (str.charCodeAt(i) === 0) {
-                    throw new exception.InvalidArgument("Illegal str: Contains NULL-characters");
+                    throw new error.InvalidArgument("Illegal str: Contains NULL-characters");
                 }
             }
             if (!is.number(offset) || offset % 1 !== 0) {
-                throw new exception.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
+                throw new error.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
             }
             offset >>>= 0;
             if (offset < 0 || offset + 0 > this.buffer.length) {
-                throw new exception.NotValid(`Illegal offset: 0 <= ${offset} (0) <= ${this.buffer.length}`);
+                throw new error.NotValid(`Illegal offset: 0 <= ${offset} (0) <= ${this.buffer.length}`);
             }
         }
         // UTF8 strings do not contain zero bytes in between except for the zero character, so:
@@ -1490,11 +1490,11 @@ export default class ByteArray {
         }
         if (!this.noAssert) {
             if (!is.number(offset) || offset % 1 !== 0) {
-                throw new exception.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
+                throw new error.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
             }
             offset >>>= 0;
             if (offset < 0 || offset + 1 > this.buffer.length) {
-                throw new exception.NotValid(`Illegal offset: 0 <= ${offset} (1) <= ${this.buffer.length}`);
+                throw new error.NotValid(`Illegal offset: 0 <= ${offset} (1) <= ${this.buffer.length}`);
             }
         }
         const start = offset;
@@ -1502,7 +1502,7 @@ export default class ByteArray {
         // UTF8 strings do not contain zero bytes in between except for the zero character itself, so:
         do {
             if (offset >= this.buffer.length) {
-                throw new exception.NotValid(`Index out of range: ${offset} <= ${this.buffer.length}`);
+                throw new error.NotValid(`Index out of range: ${offset} <= ${this.buffer.length}`);
             }
             temp = this.buffer[offset++];
         } while (temp !== 0);
@@ -1528,11 +1528,11 @@ export default class ByteArray {
         }
         if (!this.noAssert) {
             if (!is.number(offset) || offset % 1 !== 0) {
-                throw new exception.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
+                throw new error.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
             }
             offset >>>= 0;
             if (offset < 0 || offset + 0 > this.buffer.length) {
-                throw new exception.NotValid(`Illegal offset: 0 <= ${offset} (0) <= ${this.buffer.length}`);
+                throw new error.NotValid(`Illegal offset: 0 <= ${offset} (0) <= ${this.buffer.length}`);
             }
         }
         const k = Buffer.byteLength(str, "utf8");
@@ -1574,15 +1574,15 @@ export default class ByteArray {
         }
         if (!this.noAssert) {
             if (!is.number(length) || length % 1 !== 0) {
-                throw new exception.InvalidArgument(`Illegal length: ${length} (not an integer)`);
+                throw new error.InvalidArgument(`Illegal length: ${length} (not an integer)`);
             }
             length |= 0;
             if (!is.number(offset) || offset % 1 !== 0) {
-                throw new exception.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
+                throw new error.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
             }
             offset >>>= 0;
             if (offset < 0 || offset + 0 > this.buffer.length) {
-                throw new exception.NotValid(`Illegal offset: 0 <= ${offset} (0) <= ${this.buffer.length}`);
+                throw new error.NotValid(`Illegal offset: 0 <= ${offset} (0) <= ${this.buffer.length}`);
             }
         }
         let i = 0;
@@ -1596,7 +1596,7 @@ export default class ByteArray {
                 utfx.UTF8toUTF16(cp, sd);
             });
             if (i !== length) {
-                throw new exception.NotValid(`Illegal range: Truncated data, ${i} == ${length}`);
+                throw new error.NotValid(`Illegal range: Truncated data, ${i} == ${length}`);
             }
             if (relative) {
                 this.roffset = offset;
@@ -1606,11 +1606,11 @@ export default class ByteArray {
         } else if (metrics === ByteArray.METRICS_BYTES) {
             if (!this.noAssert) {
                 if (!is.number(offset) || offset % 1 !== 0) {
-                    throw new exception.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
+                    throw new error.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
                 }
                 offset >>>= 0;
                 if (offset < 0 || offset + length > this.buffer.length) {
-                    throw new exception.NotValid(`Illegal offset: 0 <= ${offset} (${length}) <= ${this.buffer.length}`);
+                    throw new error.NotValid(`Illegal offset: 0 <= ${offset} (${length}) <= ${this.buffer.length}`);
                 }
             }
             temp = this.buffer.toString("utf8", offset, offset + length);
@@ -1621,7 +1621,7 @@ export default class ByteArray {
             return { string: temp, length };
 
         }
-        throw new exception.NotSupported(`Unsupported metrics: ${metrics}`);
+        throw new error.NotSupported(`Unsupported metrics: ${metrics}`);
     }
 
     /**
@@ -1638,14 +1638,14 @@ export default class ByteArray {
         }
         if (!this.noAssert) {
             if (!is.string(str)) {
-                throw new exception.InvalidArgument("Illegal str: Not a string");
+                throw new error.InvalidArgument("Illegal str: Not a string");
             }
             if (!is.number(offset) || offset % 1 !== 0) {
-                throw new exception.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
+                throw new error.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
             }
             offset >>>= 0;
             if (offset < 0 || offset + 0 > this.buffer.length) {
-                throw new exception.NotValid(`Illegal offset: 0 <= ${offset} (0) <= ${this.buffer.length}`);
+                throw new error.NotValid(`Illegal offset: 0 <= ${offset} (0) <= ${this.buffer.length}`);
             }
         }
         const start = offset;
@@ -1680,11 +1680,11 @@ export default class ByteArray {
         }
         if (!this.noAssert) {
             if (!is.number(offset) || offset % 1 !== 0) {
-                throw new exception.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
+                throw new error.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
             }
             offset >>>= 0;
             if (offset < 0 || offset + 1 > this.buffer.length) {
-                throw new exception.NotValid(`Illegal offset: 0 <= ${offset} (1) <= ${this.buffer.length}`);
+                throw new error.NotValid(`Illegal offset: 0 <= ${offset} (1) <= ${this.buffer.length}`);
             }
         }
         const start = offset;
@@ -1768,15 +1768,15 @@ export default class ByteArray {
         end = is.undefined(end) ? this.buffer.length : end;
         if (!this.noAssert) {
             if (!is.number(begin) || begin % 1 !== 0) {
-                throw new exception.InvalidArgument("Illegal begin: Not an integer");
+                throw new error.InvalidArgument("Illegal begin: Not an integer");
             }
             begin >>>= 0;
             if (!is.number(end) || end % 1 !== 0) {
-                throw new exception.InvalidArgument("Illegal end: Not an integer");
+                throw new error.InvalidArgument("Illegal end: Not an integer");
             }
             end >>>= 0;
             if (begin < 0 || begin > end || end > this.buffer.length) {
-                throw new exception.NotValid(`Illegal range: 0 <= ${begin} <= ${end} <= ${this.buffer.length}`);
+                throw new error.NotValid(`Illegal range: 0 <= ${begin} <= ${end} <= ${this.buffer.length}`);
             }
         }
         if (begin === 0 && end === this.buffer.length) {
@@ -1809,15 +1809,15 @@ export default class ByteArray {
         end = is.undefined(end) ? this.woffset : end;
         if (!this.noAssert) {
             if (!is.number(begin) || begin % 1 !== 0) {
-                throw new exception.InvalidArgument("Illegal begin: Not an integer");
+                throw new error.InvalidArgument("Illegal begin: Not an integer");
             }
             begin >>>= 0;
             if (!is.number(end) || end % 1 !== 0) {
-                throw new exception.InvalidArgument("Illegal end: Not an integer");
+                throw new error.InvalidArgument("Illegal end: Not an integer");
             }
             end >>>= 0;
             if (begin < 0 || begin > end || end > this.buffer.length) {
-                throw new exception.NotValid(`Illegal range: 0 <= ${begin} <= ${end} <= ${this.buffer.length}`);
+                throw new error.NotValid(`Illegal range: 0 <= ${begin} <= ${end} <= ${this.buffer.length}`);
             }
         }
         if (begin === end) {
@@ -1845,7 +1845,7 @@ export default class ByteArray {
         let targetRelative;
         if (!this.noAssert) {
             if (!is.byteArray(target)) {
-                throw new exception.InvalidArgument("'target' is not a ByteArray");
+                throw new error.InvalidArgument("'target' is not a ByteArray");
             }
         }
         targetOffset = (targetRelative = is.undefined(targetOffset)) ? target.woffset : targetOffset | 0;
@@ -1853,10 +1853,10 @@ export default class ByteArray {
         sourceEnd = is.undefined(sourceEnd) ? this.woffset : sourceEnd | 0;
 
         if (targetOffset < 0 || targetOffset > target.buffer.length) {
-            throw new exception.NotValid(`Illegal target range: 0 <= ${targetOffset} <= ${target.buffer.length}`);
+            throw new error.NotValid(`Illegal target range: 0 <= ${targetOffset} <= ${target.buffer.length}`);
         }
         if (sourceStart < 0 || sourceEnd > this.buffer.length) {
-            throw new exception.NotValid(`Illegal source range: 0 <= ${sourceStart} <= ${this.buffer.length}`);
+            throw new error.NotValid(`Illegal source range: 0 <= ${sourceStart} <= ${this.buffer.length}`);
         }
 
         const len = sourceEnd - sourceStart;
@@ -1915,19 +1915,19 @@ export default class ByteArray {
         }
         if (!this.noAssert) {
             if (!is.number(value) || value % 1 !== 0) {
-                throw new exception.InvalidArgument(`Illegal value: ${value} (not an integer)`);
+                throw new error.InvalidArgument(`Illegal value: ${value} (not an integer)`);
             }
             value |= 0;
             if (!is.number(begin) || begin % 1 !== 0) {
-                throw new exception.InvalidArgument("Illegal begin: Not an integer");
+                throw new error.InvalidArgument("Illegal begin: Not an integer");
             }
             begin >>>= 0;
             if (!is.number(end) || end % 1 !== 0) {
-                throw new exception.InvalidArgument("Illegal end: Not an integer");
+                throw new error.InvalidArgument("Illegal end: Not an integer");
             }
             end >>>= 0;
             if (begin < 0 || begin > end || end > this.buffer.length) {
-                throw new exception.NotValid(`Illegal range: 0 <= ${begin} <= ${end} <= ${this.buffer.length}`);
+                throw new error.NotValid(`Illegal range: 0 <= ${begin} <= ${end} <= ${this.buffer.length}`);
             }
         }
         if (begin >= end) {
@@ -1962,11 +1962,11 @@ export default class ByteArray {
         }
         if (!this.noAssert) {
             if (!is.number(offset) || offset % 1 !== 0) {
-                throw new exception.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
+                throw new error.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
             }
             offset >>>= 0;
             if (offset < 0 || offset + 0 > this.buffer.length) {
-                throw new exception.NotValid(`Illegal offset: 0 <= ${offset} (0) <= ${this.buffer.length}`);
+                throw new error.NotValid(`Illegal offset: 0 <= ${offset} (0) <= ${this.buffer.length}`);
             }
         }
         if (!is.byteArray(source)) {
@@ -2018,11 +2018,11 @@ export default class ByteArray {
     resize(capacity) {
         if (!this.noAssert) {
             if (!is.number(capacity) || capacity % 1 !== 0) {
-                throw new exception.InvalidArgument(`'capacity' is not an integer: ${capacity}`);
+                throw new error.InvalidArgument(`'capacity' is not an integer: ${capacity}`);
             }
             capacity |= 0;
             if (capacity < 0) {
-                throw new exception.InvalidArgument(`Not valid capacity value: 0 <= ${capacity}`);
+                throw new error.InvalidArgument(`Not valid capacity value: 0 <= ${capacity}`);
             }
         }
         if (this.buffer.length < capacity) {
@@ -2045,15 +2045,15 @@ export default class ByteArray {
         end = is.undefined(end) ? this.woffset : end;
         if (!this.noAssert) {
             if (!is.number(begin) || begin % 1 !== 0) {
-                throw new exception.InvalidArgument("Illegal begin: Not an integer");
+                throw new error.InvalidArgument("Illegal begin: Not an integer");
             }
             begin >>>= 0;
             if (!is.number(end) || end % 1 !== 0) {
-                throw new exception.InvalidArgument("Illegal end: Not an integer");
+                throw new error.InvalidArgument("Illegal end: Not an integer");
             }
             end >>>= 0;
             if (begin < 0 || begin > end || end > this.buffer.length) {
-                throw new exception.NotValid(`Illegal range: 0 <= ${begin} <= ${end} <= ${this.buffer.length}`);
+                throw new error.NotValid(`Illegal range: 0 <= ${begin} <= ${end} <= ${this.buffer.length}`);
             }
         }
         if (begin === end) {
@@ -2072,14 +2072,14 @@ export default class ByteArray {
     skipRead(length) {
         if (!this.noAssert) {
             if (!is.number(length) || length % 1 !== 0) {
-                throw new exception.InvalidArgument(`Illegal length: ${length} (not an integer)`);
+                throw new error.InvalidArgument(`Illegal length: ${length} (not an integer)`);
             }
             length |= 0;
         }
         const offset = this.roffset + length;
         if (!this.noAssert) {
             if (offset < 0 || offset > this.buffer.length) {
-                throw new exception.NotValid(`Illegal length: 0 <= ${this.roffset} + ${length} <= ${this.buffer.length}`);
+                throw new error.NotValid(`Illegal length: 0 <= ${this.roffset} + ${length} <= ${this.buffer.length}`);
             }
         }
         this.roffset = offset;
@@ -2095,14 +2095,14 @@ export default class ByteArray {
     skipWrite(length) {
         if (!this.noAssert) {
             if (!is.number(length) || length % 1 !== 0) {
-                throw new exception.InvalidArgument(`Illegal length: ${length} (not an integer)`);
+                throw new error.InvalidArgument(`Illegal length: ${length} (not an integer)`);
             }
             length |= 0;
         }
         const offset = this.woffset + length;
         if (!this.noAssert) {
             if (offset < 0 || offset > this.buffer.length) {
-                throw new exception.NotValid(`Illegal length: 0 <= ${this.woffset} + ${length} <= ${this.buffer.length}`);
+                throw new error.NotValid(`Illegal length: 0 <= ${this.woffset} + ${length} <= ${this.buffer.length}`);
             }
         }
         this.woffset = offset;
@@ -2121,15 +2121,15 @@ export default class ByteArray {
         end = is.undefined(end) ? this.woffset : end;
         if (!this.noAssert) {
             if (!is.number(begin) || begin % 1 !== 0) {
-                throw new exception.InvalidArgument("Illegal begin: Not an integer");
+                throw new error.InvalidArgument("Illegal begin: Not an integer");
             }
             begin >>>= 0;
             if (!is.number(end) || end % 1 !== 0) {
-                throw new exception.InvalidArgument("Illegal end: Not an integer");
+                throw new error.InvalidArgument("Illegal end: Not an integer");
             }
             end >>>= 0;
             if (begin < 0 || begin > end || end > this.buffer.length) {
-                throw new exception.NotValid(`Illegal range: 0 <= ${begin} <= ${end} <= ${this.buffer.length}`);
+                throw new error.NotValid(`Illegal range: 0 <= ${begin} <= ${end} <= ${this.buffer.length}`);
             }
         }
         const bb = new ByteArray(end - begin);
@@ -2154,13 +2154,13 @@ export default class ByteArray {
         end >>>= 0;
         if (!this.noAssert) {
             if (!is.number(begin) || begin % 1 !== 0) {
-                throw new exception.InvalidArgument("Illegal begin: Not an integer");
+                throw new error.InvalidArgument("Illegal begin: Not an integer");
             }
             if (!is.number(end) || end % 1 !== 0) {
-                throw new exception.InvalidArgument("Illegal end: Not an integer");
+                throw new error.InvalidArgument("Illegal end: Not an integer");
             }
             if (begin < 0 || begin > end || end > this.buffer.length) {
-                throw new exception.NotValid(`Illegal range: 0 <= ${begin} <= ${end} <= ${this.buffer.length}`);
+                throw new error.NotValid(`Illegal range: 0 <= ${begin} <= ${end} <= ${this.buffer.length}`);
             }
         }
         if (forceCopy) {
@@ -2184,15 +2184,15 @@ export default class ByteArray {
         let limit = this.woffset;
         if (!this.noAssert) {
             if (!is.number(offset) || offset % 1 !== 0) {
-                throw new exception.InvalidArgument("Illegal offset: Not an integer");
+                throw new error.InvalidArgument("Illegal offset: Not an integer");
             }
             offset >>>= 0;
             if (!is.number(limit) || limit % 1 !== 0) {
-                throw new exception.InvalidArgument("Illegal limit: Not an integer");
+                throw new error.InvalidArgument("Illegal limit: Not an integer");
             }
             limit >>>= 0;
             if (offset < 0 || offset > limit || limit > this.buffer.length) {
-                throw new exception.NotValid(`Illegal range: 0 <= ${offset} <= ${limit} <= ${this.buffer.length}`);
+                throw new error.NotValid(`Illegal range: 0 <= ${offset} <= ${limit} <= ${this.buffer.length}`);
             }
         }
         const ab = new ArrayBuffer(limit - offset);
@@ -2227,7 +2227,7 @@ export default class ByteArray {
             case "columns":
                 return this.toColumns();
             default:
-                throw new exception.NotSupported(`Unsupported encoding: ${encoding}`);
+                throw new error.NotSupported(`Unsupported encoding: ${encoding}`);
         }
     }
 
@@ -2243,7 +2243,7 @@ export default class ByteArray {
         end = is.undefined(end) ? this.woffset : end;
         begin = begin | 0; end = end | 0;
         if (begin < 0 || end > this.buffer.length || begin > end) {
-            throw new exception.NotValid("begin, end");
+            throw new error.NotValid("begin, end");
         }
         return this.buffer.toString("base64", begin, end);
     }
@@ -2260,7 +2260,7 @@ export default class ByteArray {
         end = is.undefined(end) ? this.woffset : end;
         begin |= 0; end |= 0;
         if (begin < 0 || end > this.capacity || begin > end) {
-            throw new exception.NotValid("begin, end");
+            throw new error.NotValid("begin, end");
         }
         return this.buffer.toString("binary", begin, end);
     }
@@ -2346,15 +2346,15 @@ export default class ByteArray {
         end = is.undefined(end) ? this.woffset : end;
         if (!this.noAssert) {
             if (!is.number(begin) || begin % 1 !== 0) {
-                throw new exception.InvalidArgument("Illegal begin: Not an integer");
+                throw new error.InvalidArgument("Illegal begin: Not an integer");
             }
             begin >>>= 0;
             if (!is.number(end) || end % 1 !== 0) {
-                throw new exception.InvalidArgument("Illegal end: Not an integer");
+                throw new error.InvalidArgument("Illegal end: Not an integer");
             }
             end >>>= 0;
             if (begin < 0 || begin > end || end > this.buffer.length) {
-                throw new exception.NotValid(`Illegal range: 0 <= ${begin} <= ${end} <= ${this.buffer.length}`);
+                throw new error.NotValid(`Illegal range: 0 <= ${begin} <= ${end} <= ${this.buffer.length}`);
             }
         }
         return this.buffer.toString("hex", begin, end);
@@ -2372,15 +2372,15 @@ export default class ByteArray {
         end = is.undefined(end) ? this.woffset : end;
         if (!this.noAssert) {
             if (!is.number(begin) || begin % 1 !== 0) {
-                throw new exception.InvalidArgument("Illegal begin: Not an integer");
+                throw new error.InvalidArgument("Illegal begin: Not an integer");
             }
             begin >>>= 0;
             if (!is.number(end) || end % 1 !== 0) {
-                throw new exception.InvalidArgument("Illegal end: Not an integer");
+                throw new error.InvalidArgument("Illegal end: Not an integer");
             }
             end >>>= 0;
             if (begin < 0 || begin > end || end > this.buffer.length) {
-                throw new exception.NotValid(`Illegal range: 0 <= ${begin} <= ${end} <= ${this.buffer.length}`);
+                throw new error.NotValid(`Illegal range: 0 <= ${begin} <= ${end} <= ${this.buffer.length}`);
             }
         }
         return this.buffer.toString("utf8", begin, end);
@@ -2466,7 +2466,7 @@ export default class ByteArray {
                 case "debug":
                     return ByteArray.fromDebug(buffer);
                 default:
-                    throw new exception.NotSupported(`Unsupported encoding: ${encoding}`);
+                    throw new error.NotSupported(`Unsupported encoding: ${encoding}`);
             }
         }
 
@@ -2488,7 +2488,7 @@ export default class ByteArray {
             buffer = b;
         } else if (!(buffer instanceof Buffer)) { // Create from octets if it is an error, otherwise fail
             if (!is.array(buffer)) {
-                throw new exception.InvalidArgument("Illegal buffer");
+                throw new error.InvalidArgument("Illegal buffer");
             }
             buffer = Buffer.from(buffer);
         }
@@ -2629,7 +2629,7 @@ export default class ByteArray {
      */
     static calculateString(str) {
         if (!is.string(str)) {
-            throw new exception.InvalidArgument(`Illegal argument: ${typeof str}`);
+            throw new error.InvalidArgument(`Illegal argument: ${typeof str}`);
         }
         return Buffer.byteLength(str, "utf8");
     }
@@ -2773,22 +2773,22 @@ export default class ByteArray {
                     b = parseInt(ch + str.charAt(i++), 16);
                     if (!noAssert) {
                         if (isNaN(b) || b < 0 || b > 255) {
-                            throw new exception.NotValid("Not a debug encoded string");
+                            throw new error.NotValid("Not a debug encoded string");
                         }
                     }
                     bb.buffer[j++] = b;
                     rs = true;
             }
             if (fail) {
-                throw new exception.NotValid(`Invalid symbol at ${i}`);
+                throw new error.NotValid(`Invalid symbol at ${i}`);
             }
         }
         if (!noAssert) {
             if (!hr || !hw || !hl) {
-                throw new exception.NotValid(`Missing roffset or woffset or limit: ${str}`);
+                throw new error.NotValid(`Missing roffset or woffset or limit: ${str}`);
             }
             if (j < bb.buffer.length) {
-                throw new exception.NotValid(`Not a debug encoded string (is it hex?) ${j} < ${k}`);
+                throw new error.NotValid(`Not a debug encoded string (is it hex?) ${j} < ${k}`);
             }
         }
         return bb;
@@ -2803,10 +2803,10 @@ export default class ByteArray {
     static fromHex(str, noAssert) {
         if (!noAssert) {
             if (!is.string(str)) {
-                throw new exception.InvalidArgument("Illegal str: Not a string");
+                throw new error.InvalidArgument("Illegal str: Not a string");
             }
             if (str.length % 2 !== 0) {
-                throw new exception.InvalidArgument("Illegal str: Length not a multiple of 2");
+                throw new error.InvalidArgument("Illegal str: Length not a multiple of 2");
             }
         }
         const bb = new ByteArray(0, true);
@@ -2825,7 +2825,7 @@ export default class ByteArray {
     static fromUTF8(str, noAssert) {
         if (!noAssert) {
             if (!is.string(str)) {
-                throw new exception.InvalidArgument("Illegal str: Not a string");
+                throw new error.InvalidArgument("Illegal str: Not a string");
             }
         }
         const bb = new ByteArray(0, noAssert);

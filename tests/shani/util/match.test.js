@@ -1,7 +1,7 @@
 describe("shani", "util", "match", () => {
     const {
         is,
-        exception,
+        error,
         shani: { util: { match } }
     } = adone;
 
@@ -1169,7 +1169,7 @@ describe("shani", "util", "match", () => {
         it("requires matcher argument", () => {
             assert.throws(() => {
                 match.instanceOf(Error).or();
-            }, exception.InvalidArgument);
+            }, error.InvalidArgument);
         });
 
         it("will coerce argument to matcher", () => {
@@ -1214,7 +1214,7 @@ describe("shani", "util", "match", () => {
         it("requires matcher argument", () => {
             assert.throws(() => {
                 match.instanceOf(Error).and();
-            }, exception.InvalidArgument);
+            }, error.InvalidArgument);
         });
 
         it("will coerce to matcher", () => {

@@ -148,20 +148,20 @@ const QueryGenerator = {
             }
         }
 
-        if (this._dialect.supports.EXCEPTION && options.exception) {
+        if (this._dialect.supports.EXCEPTION && options.error) {
             // Mostly for internal use, so we expect the user to know what he's doing!
             // pg_temp functions are private per connection, so we never risk this function interfering with another one.
             if (adone.semver.gte(this.sequelize.options.databaseVersion, "9.2.0")) {
                 // >= 9.2 - Use a UUID but prefix with 'func_' (numbers first not allowed)
                 const delimiter = `$func_${adone.util.uuid.v4().replace(/-/g, "")}$`;
 
-                options.exception = "WHEN unique_violation THEN GET STACKED DIAGNOSTICS sequelize_caught_exception = PG_EXCEPTION_DETAIL;";
+                options.error = "WHEN unique_violation THEN GET STACKED DIAGNOSTICS sequelize_caught_exception = PG_EXCEPTION_DETAIL;";
                 valueQuery = `CREATE OR REPLACE FUNCTION pg_temp.testfunc(OUT response <%= table %>, OUT sequelize_caught_exception text) RETURNS RECORD AS ${delimiter}` +
-                    ` BEGIN ${valueQuery} INTO response; EXCEPTION ${options.exception} END ${delimiter}` +
+                    ` BEGIN ${valueQuery} INTO response; EXCEPTION ${options.error} END ${delimiter}` +
                     " LANGUAGE plpgsql; SELECT (testfunc.response).*, testfunc.sequelize_caught_exception FROM pg_temp.testfunc(); DROP FUNCTION IF EXISTS pg_temp.testfunc()";
             } else {
-                options.exception = "WHEN unique_violation THEN NULL;";
-                valueQuery = `CREATE OR REPLACE FUNCTION pg_temp.testfunc() RETURNS SETOF <%= table %> AS $body$ BEGIN RETURN QUERY ${valueQuery}; EXCEPTION ${options.exception} END; $body$ LANGUAGE plpgsql; SELECT * FROM pg_temp.testfunc(); DROP FUNCTION IF EXISTS pg_temp.testfunc();`;
+                options.error = "WHEN unique_violation THEN NULL;";
+                valueQuery = `CREATE OR REPLACE FUNCTION pg_temp.testfunc() RETURNS SETOF <%= table %> AS $body$ BEGIN RETURN QUERY ${valueQuery}; EXCEPTION ${options.error} END; $body$ LANGUAGE plpgsql; SELECT * FROM pg_temp.testfunc(); DROP FUNCTION IF EXISTS pg_temp.testfunc();`;
             }
         }
 

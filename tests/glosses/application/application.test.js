@@ -49,7 +49,7 @@ describe("application", "Application", () => {
         assert.equal(result.stdout, "ok");
     });
 
-    it("correct application exception handling during uninitialization", async () => {
+    it("correct application error handling during uninitialization", async () => {
         const err = await assert.throws(async () => forkProcess(fixture("exception_on_uninitialization")));
         assert.equal(err.code, 1);
         assert.match(err.stderr, /Something bad happend during uninitialization/);
@@ -92,7 +92,7 @@ describe("application", "Application", () => {
                     }
 
                     const err = assert.throws(() => new SubSys());
-                    assert.instanceOf(err, adone.exception.NotAllowed);
+                    assert.instanceOf(err, adone.error.NotAllowed);
                 });
 
                 it("should throw if a subsystem with the same name already exists", async () => {
@@ -401,7 +401,7 @@ describe("application", "Application", () => {
                     name: "s1",
                     subsystem: subSys
                 }));
-                assert.instanceOf(err, adone.exception.NotAllowed);
+                assert.instanceOf(err, adone.error.NotAllowed);
             });
         });
     });

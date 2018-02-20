@@ -151,7 +151,7 @@ describe("net", "Socket/Server", () => {
             it("double bind error", async () => {
                 await server.bind({ port: SERVER_PORT });
                 const err = await assert.throws(async () => server.bind({ port: SERVER_PORT }));
-                assert(err instanceof adone.exception.Bind);
+                assert(err instanceof adone.error.Bind);
                 await checkBind(server, SERVER_PORT);
             });
 
@@ -184,7 +184,7 @@ describe("net", "Socket/Server", () => {
                         await server.bind({ port: UNIX_SOCKET });
                         const anotherSock = new adone.net.Server();
                         const err = await assert.throws(async () => anotherSock.bind({ port: UNIX_SOCKET }));
-                        assert(err instanceof adone.exception.Bind);
+                        assert(err instanceof adone.error.Bind);
                         await checkBind(server, UNIX_SOCKET);
                     });
                 });
@@ -226,7 +226,7 @@ describe("net", "Socket/Server", () => {
                 });
 
                 const err = await assert.throws(async () => client.connect({ port: SERVER_PORT }));
-                assert(err instanceof adone.exception.Connect);
+                assert(err instanceof adone.error.Connect);
                 assert.equal(reconnects, 3);
             });
 
@@ -239,7 +239,7 @@ describe("net", "Socket/Server", () => {
                     });
 
                     const err = await assert.throws(async () => client.connect({ port: SERVER_PORT }));
-                    assert(err instanceof adone.exception.Connect);
+                    assert(err instanceof adone.error.Connect);
                     assert.equal(reconnects, 3);
                 };
 
@@ -491,7 +491,7 @@ describe("net", "Socket/Server", () => {
                 await client.connect({ port: SERVER_PORT });
                 client.disconnect();
                 const e = await assert.throws(async () => client.write(data));
-                assert(e instanceof adone.exception.IllegalState);
+                assert(e instanceof adone.error.IllegalState);
                 assert.equal(e.message, "Socket is not writable");
             });
 
@@ -598,7 +598,7 @@ describe("net", "Socket/Server", () => {
             it("double bind error", async () => {
                 await server.bind(Object.assign({ port: SERVER_PORT }, serverOptions));
                 const err = await assert.throws(async () => server.bind(Object.assign({ port: SERVER_PORT }, serverOptions)));
-                assert(err instanceof adone.exception.Bind);
+                assert(err instanceof adone.error.Bind);
                 await checkBind(server, SERVER_PORT);
             });
 
@@ -632,7 +632,7 @@ describe("net", "Socket/Server", () => {
                         await server.bind({ port: UNIX_SOCKET }, Object.assign(serverOptions));
                         const anotherSock = new adone.net.Server();
                         const err = await assert.throws(async () => anotherSock.bind({ port: UNIX_SOCKET }, Object.assign(serverOptions)));
-                        assert(err instanceof adone.exception.Bind);
+                        assert(err instanceof adone.error.Bind);
                         await checkBind(server, UNIX_SOCKET);
                     });
                 });
@@ -674,7 +674,7 @@ describe("net", "Socket/Server", () => {
                 });
 
                 const err = await assert.throws(async () => client.connect(Object.assign({ port: SERVER_PORT }, clientOptions)));
-                assert(err instanceof adone.exception.Connect);
+                assert(err instanceof adone.error.Connect);
                 assert.equal(reconnects, 3);
             });
 
@@ -687,7 +687,7 @@ describe("net", "Socket/Server", () => {
                     });
 
                     const err = await assert.throws(async () => client.connect(Object.assign({ port: SERVER_PORT }, clientOptions)));
-                    assert(err instanceof adone.exception.Connect);
+                    assert(err instanceof adone.error.Connect);
                     assert.equal(reconnects, 3);
                 };
 
@@ -939,7 +939,7 @@ describe("net", "Socket/Server", () => {
                 await client.connect(Object.assign({ port: SERVER_PORT }, clientOptions));
                 client.disconnect();
                 const e = await assert.throws(async () => client.write(data));
-                assert(e instanceof adone.exception.IllegalState);
+                assert(e instanceof adone.error.IllegalState);
                 assert.equal(e.message, "Socket is not writable");
             });
 

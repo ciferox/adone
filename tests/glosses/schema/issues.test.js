@@ -563,7 +563,7 @@ describe("schema", "issues", () => {
         });
     });
 
-    describe('issue #533, throwing missing ref exception with option missingRefs: "ignore"', () => {
+    describe('issue #533, throwing missing ref error with option missingRefs: "ignore"', () => {
         const schema = {
             type: "object",
             properties: {
@@ -572,14 +572,14 @@ describe("schema", "issues", () => {
             }
         };
 
-        it("should pass validation without throwing exception", () => {
+        it("should pass validation without throwing error", () => {
             const instance = new Validator({ missingRefs: "ignore" });
             const validate = instance.compile(schema);
             expect(validate({ foo: "anything" })).to.be.true();
             expect(validate({ foo: "anything", bar: "whatever" })).to.be.true();
         });
 
-        it("should throw exception during schema compilation with option missingRefs: true", () => {
+        it("should throw error during schema compilation with option missingRefs: true", () => {
             const instance = new Validator();
             expect(() => {
                 instance.compile(schema);

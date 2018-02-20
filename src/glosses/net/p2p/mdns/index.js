@@ -73,7 +73,7 @@ const gotResponse = (rsp, peerInfo, serviceTag, callback) => {
         callback(null, peerFound);
     } catch (err) {
         callback(err);
-        return adone.error("Error creating PeerInfo from new found peer", err);
+        return adone.logError("Error creating PeerInfo from new found peer", err);
     }
 };
 
@@ -173,7 +173,7 @@ export default class MulticastDNS extends adone.event.Emitter {
         mdns.on("response", (event) => {
             gotResponse(event, this.peerInfo, this.serviceTag, (err, foundPeer) => {
                 if (err) {
-                    return adone.error("Error processing peer response", err);
+                    return adone.logError("Error processing peer response", err);
                 }
 
                 self.emit("peer", foundPeer);

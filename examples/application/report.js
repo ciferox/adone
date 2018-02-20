@@ -14,7 +14,7 @@ class App extends application.CliApplication {
     }
 
     @DCliCommand()
-    exception() {
+    error() {
         setTimeout(() => {
             throw new Error("hello");
         }, 500);

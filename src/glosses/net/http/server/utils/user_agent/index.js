@@ -1,5 +1,5 @@
 const {
-    exception,
+    error,
     std: { path },
     fs,
     is
@@ -45,7 +45,7 @@ class Parser {
 
     createParsers() {
         if (is.null(this.regexes)) {
-            throw new exception.IllegalState("regexes must be loaded");
+            throw new error.IllegalState("regexes must be loaded");
         }
         const {
             pattern,
@@ -66,7 +66,7 @@ class Parser {
             this.regexes = adone.data.yaml.safeLoad(data);
             this.createParsers();
         } else {
-            throw new exception.InvalidArgument(`No such file: ${file}`);
+            throw new error.InvalidArgument(`No such file: ${file}`);
         }
     }
 
@@ -76,7 +76,7 @@ class Parser {
             this.regexes = adone.data.yaml.safeLoad(data);
             this.createParsers();
         } else {
-            throw new exception.InvalidArgument(`No such file: ${file}`);
+            throw new error.InvalidArgument(`No such file: ${file}`);
         }
     }
 }

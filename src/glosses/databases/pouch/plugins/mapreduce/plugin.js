@@ -5,13 +5,13 @@ const {
 } = adone;
 
 const {
-    exception,
+    error,
     plugin: { mapreduce }
 } = pouch;
 
 const createBuiltInError = (name) => {
     const message = `builtin ${name} function requires map values to be numbers or number arrays`;
-    return exception.createError(exception.BUILT_IN, message);
+    return error.createError(error.BUILT_IN, message);
 };
 
 // Inside of 'vm' for Node, we need a way to translate a pseudo-error
@@ -157,7 +157,7 @@ const reducer = (reduceFun) => {
 const ddocValidator = (ddoc, viewName) => {
     const fun = ddoc.views && ddoc.views[viewName];
     if (!is.string(fun.map)) {
-        throw exception.createError(exception.NOT_FOUND, `ddoc ${ddoc._id} has no string view named ${viewName}, instead found object of type: ${typeof fun.map}`);
+        throw error.createError(error.NOT_FOUND, `ddoc ${ddoc._id} has no string view named ${viewName}, instead found object of type: ${typeof fun.map}`);
     }
 };
 

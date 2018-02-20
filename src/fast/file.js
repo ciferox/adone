@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     std,
     util
 } = adone;
@@ -69,7 +69,7 @@ export default class File {
             value = Buffer.from(value);
         }
         if (!is.null(value) && !is.buffer(value) && !is.stream(value)) {
-            throw new exception.Exception("Invalid contents value");
+            throw new error.Exception("Invalid contents value");
         }
         this._.set("contents", value);
     }
@@ -77,7 +77,7 @@ export default class File {
     clone({ contents = false, deep = true } = {}) {
         if (contents) {
             if (this.isStream()) {
-                throw new exception.NotSupported("You cannot clone a stream yet");
+                throw new error.NotSupported("You cannot clone a stream yet");
             } else if (this.isBuffer()) {
                 contents = Buffer.from(this.contents);
             } else {
@@ -125,7 +125,7 @@ export default class File {
 
     set cwd(value) {
         if (!value || !is.string(value)) {
-            throw new exception.Exception("Invalid value");
+            throw new error.Exception("Invalid value");
         }
         this._.set("cwd", removeTrailingSep(path.normalize(value)));
     }
@@ -140,7 +140,7 @@ export default class File {
             return;
         }
         if (!is.string(value) || !value) {
-            throw new exception.Exception("Invalid value");
+            throw new error.Exception("Invalid value");
         }
         const base = removeTrailingSep(path.normalize(value));
         if (base !== this.cwd) {
@@ -164,7 +164,7 @@ export default class File {
     get relative() {
         const { path } = this;
         if (!path) {
-            throw new exception.Exception("No path - no relative path");
+            throw new error.Exception("No path - no relative path");
         }
         return std.path.relative(this.base, path);
     }
@@ -176,7 +176,7 @@ export default class File {
     get dirname() {
         const { path } = this;
         if (!path) {
-            throw new exception.Exception("No path - no dirname");
+            throw new error.Exception("No path - no dirname");
         }
         return std.path.dirname(path);
     }
@@ -188,7 +188,7 @@ export default class File {
     get basename() {
         const { path } = this;
         if (!path) {
-            throw new exception.Exception("No path - no basename");
+            throw new error.Exception("No path - no basename");
         }
         return std.path.basename(path);
     }
@@ -196,7 +196,7 @@ export default class File {
     set basename(value) {
         const { path } = this;
         if (!path) {
-            throw new exception.Exception("No path - no ability to set the basename");
+            throw new error.Exception("No path - no ability to set the basename");
         }
         this.path = std.path.join(this.dirname, value);
     }
@@ -204,7 +204,7 @@ export default class File {
     get extname() {
         const { path } = this;
         if (!path) {
-            throw new exception.Exception("No path - no extname");
+            throw new error.Exception("No path - no extname");
         }
         return std.path.extname(path);
     }
@@ -212,7 +212,7 @@ export default class File {
     set extname(value) {
         const { path } = this;
         if (!path) {
-            throw new exception.Exception("No path - no ability to set the extname");
+            throw new error.Exception("No path - no ability to set the extname");
         }
         const t = std.path.basename(path, std.path.extname(path)) + value;
         this.path = std.path.join(this.dirname, t);
@@ -221,7 +221,7 @@ export default class File {
     get stem() {
         const { path } = this;
         if (!path) {
-            throw new exception.Exception("No path - no stem");
+            throw new error.Exception("No path - no stem");
         }
         return std.path.basename(this.path, this.extname);
     }
@@ -229,7 +229,7 @@ export default class File {
     set stem(value) {
         const { path } = this;
         if (!path) {
-            throw new exception.Exception("No path - no ability to set the stem");
+            throw new error.Exception("No path - no ability to set the stem");
         }
         this.path = std.path.join(this.dirname, value + this.extname);
     }

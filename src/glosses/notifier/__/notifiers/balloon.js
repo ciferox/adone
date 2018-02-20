@@ -23,7 +23,7 @@
 
 const {
     is,
-    exception,
+    error,
     event,
     lazify,
     std: { path, os },
@@ -65,7 +65,7 @@ const doNotification = async (options, notifierOptions) => {
     const localNotifier = notifierOptions.customPath || fullNotifierPath;
 
     if (!options.m) {
-        throw new exception.InvalidArgument("Message is required");
+        throw new error.InvalidArgument("Message is required");
     }
 
     const argsList = __.util.constructArgumentList(options, {

@@ -7,13 +7,13 @@ describe("database", "redis", "unit", "parsers", () => {
 
     // Mock the not needed return functions
     const returnReply = () => {
-        throw new adone.exception.Exception("failed");
+        throw new adone.error.Exception("failed");
     };
     const returnError = () => {
-        throw new adone.exception.Exception("failed");
+        throw new adone.error.Exception("failed");
     };
     const returnFatalError = () => {
-        throw new adone.exception.Exception("failed");
+        throw new adone.error.Exception("failed");
     };
 
     describe("general parser functionality", () => {

@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     std
 } = adone;
 
@@ -35,7 +35,7 @@ const stringToFlockFlags = (flag) => {
             return b.LOCK_UN;
 
         default:
-            throw new exception.Unknown(`Unknown flock flag: ${flag}`);
+            throw new error.Unknown(`Unknown flock flag: ${flag}`);
     }
 };
 
@@ -362,7 +362,7 @@ export const copy = async (source, dest, options = {}) => {
     const currentPath = std.path.resolve(basePath, source);
     const targetPath = std.path.resolve(basePath, dest);
     if (currentPath === targetPath) {
-        throw new exception.NotAllowed("Source and destination must not be the same.");
+        throw new error.NotAllowed("Source and destination must not be the same.");
     }
 
     const stats = await fs.lstat(source);
@@ -605,7 +605,7 @@ export const copy = async (source, dest, options = {}) => {
             started++;
             if (filter) {
                 if (filter instanceof RegExp) {
-                    adone.warn("Warning: fs-extra: Passing a RegExp filter is deprecated, use a function");
+                    adone.logWarn("Warning: fs-extra: Passing a RegExp filter is deprecated, use a function");
                     if (!filter.test(source)) {
                         return doneOne(true);
                     }
@@ -783,7 +783,7 @@ export const lookup = async (path) => {
         }
     }
 
-    throw new adone.exception.NotFound(path);
+    throw new adone.error.NotFound(path);
 };
 
 export const chownr = async (path, uid, gid) => {

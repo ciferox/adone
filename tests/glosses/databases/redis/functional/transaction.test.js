@@ -135,7 +135,7 @@ describe("database", "redis", "transaction", { skip: check }, () => {
             redis.disconnect();
         });
 
-        it("should handle custom transformer exception", async () => {
+        it("should handle custom transformer error", async () => {
             const transformError = "transformer error";
             Command._transformer.reply.get = function () {
                 throw new Error(transformError);

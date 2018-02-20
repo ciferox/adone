@@ -1,5 +1,5 @@
 const {
-    exception,
+    error,
     is,
     util
 } = adone;
@@ -54,7 +54,7 @@ const __ = adone.private(extglob);
  */
 extglob.match = (list, pattern, options) => {
     if (!is.string(pattern)) {
-        throw new exception.InvalidArgument("expected pattern to be a string");
+        throw new error.InvalidArgument("expected pattern to be a string");
     }
 
     list = util.arrify(list);
@@ -78,7 +78,7 @@ extglob.match = (list, pattern, options) => {
 
     if (matches.length === 0) {
         if (options.failglob === true) {
-            throw new exception.IllegalState(`no matches found for "${pattern}"`);
+            throw new error.IllegalState(`no matches found for "${pattern}"`);
         }
         if (options.nonull === true || options.nullglob === true) {
             return [pattern.split("\\").join("")];
@@ -99,11 +99,11 @@ extglob.match = (list, pattern, options) => {
  */
 extglob.isMatch = (str, pattern, options) => {
     if (!is.string(pattern)) {
-        throw new exception.InvalidArgument("expected pattern to be a string");
+        throw new error.InvalidArgument("expected pattern to be a string");
     }
 
     if (!is.string(str)) {
-        throw new exception.InvalidArgument("expected a string");
+        throw new error.InvalidArgument("expected a string");
     }
 
     if (pattern === str) {
@@ -129,7 +129,7 @@ extglob.isMatch = (str, pattern, options) => {
  */
 extglob.contains = (str, pattern, options) => {
     if (!is.string(str)) {
-        throw new exception.InvalidArgument("expected a string");
+        throw new error.InvalidArgument("expected a string");
     }
 
     if (pattern === "" || pattern === " " || pattern === ".") {
@@ -154,7 +154,7 @@ extglob.contains = (str, pattern, options) => {
  */
 extglob.matcher = (pattern, options) => {
     if (!is.string(pattern)) {
-        throw new exception.InvalidArgument("expected pattern to be a string");
+        throw new error.InvalidArgument("expected pattern to be a string");
     }
 
     const matcher = () => {
@@ -175,7 +175,7 @@ extglob.matcher = (pattern, options) => {
  */
 extglob.create = (pattern, options) => {
     if (!is.string(pattern)) {
-        throw new exception.InvalidArgument("expected pattern to be a string");
+        throw new error.InvalidArgument("expected pattern to be a string");
     }
 
     const create = () => {
@@ -223,11 +223,11 @@ extglob.makeRe = (pattern, options) => {
     }
 
     if (!is.string(pattern)) {
-        throw new exception.InvalidArgument("expected pattern to be a string");
+        throw new error.InvalidArgument("expected pattern to be a string");
     }
 
     if (pattern.length > MAX_LENGTH) {
-        throw new exception.InvalidArgument(`expected pattern to be less than ${MAX_LENGTH} characters`);
+        throw new error.InvalidArgument(`expected pattern to be less than ${MAX_LENGTH} characters`);
     }
 
     const makeRe = () => {
@@ -241,7 +241,7 @@ extglob.makeRe = (pattern, options) => {
 
     const regex = memoize("makeRe", pattern, options, makeRe);
     if (regex.source.length > MAX_LENGTH) {
-        throw new exception.LimitExceeded("potentially malicious regex detected");
+        throw new error.LimitExceeded("potentially malicious regex detected");
     }
 
     return regex;

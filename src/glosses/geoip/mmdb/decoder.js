@@ -1,5 +1,5 @@
 const {
-    exception,
+    error,
     collection,
     geoip: { mmdb: { __: { helper: { concat2, concat3, concat4 } } } }
 } = adone;
@@ -31,7 +31,7 @@ const cursor = (value, offset) => ({ value, offset });
 export default class Decoder {
     constructor(db, baseOffset = 0, opts = {}) {
         if (!db) {
-            throw new exception.InvalidArguemnt("File stream is required");
+            throw new error.InvalidArguemnt("File stream is required");
         }
         this.db = db;
         this.baseOffset = baseOffset;

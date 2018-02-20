@@ -2,7 +2,7 @@ const {
     std: { path: { resolve, normalize: pNormalize }, url },
     net: { http: { server: { helper: { send } } } },
     is,
-    exception,
+    error,
     lazify,
     o
 } = adone;
@@ -27,7 +27,7 @@ const strip = (path, n) => {
 
 export default function serve(root, opts = {}) {
     if (!root) {
-        throw new exception.InvalidArgument("root directory is required to serve files");
+        throw new error.InvalidArgument("root directory is required to serve files");
     }
     opts = adone.o(opts);
 

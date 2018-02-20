@@ -78,11 +78,11 @@ describe("Stub", () => {
         });
 
         it("call sync throwable method", () => {
-            assert.throws(() => stub.get("syncErrorB", [], netron.peer), adone.exception.InvalidArgument);
+            assert.throws(() => stub.get("syncErrorB", [], netron.peer), adone.error.InvalidArgument);
         });
 
         it("call async throwable method", async () => {
-            await assert.throws(async () => stub.get("asyncErrorB", [], netron.peer), adone.exception.InvalidArgument);
+            await assert.throws(async () => stub.get("asyncErrorB", [], netron.peer), adone.error.InvalidArgument);
         });
 
         for (let c = 1; c < 10; c++) {
@@ -118,7 +118,7 @@ describe("Stub", () => {
         });
 
         it("set value of readonly property should have thrown", () => {
-            assert.throws(() => stub.set("rpropB", undefined, netron.peer), adone.exception.InvalidAccess);
+            assert.throws(() => stub.set("rpropB", undefined, netron.peer), adone.error.InvalidAccess);
         });
 
         it("set value of parent class property", () => {
@@ -138,11 +138,11 @@ describe("Stub", () => {
         });
 
         it("call sync throwable method", async () => {
-            assert.throws(() => stub.set("syncErrorB", [], netron.peer), adone.exception.InvalidArgument);
+            assert.throws(() => stub.set("syncErrorB", [], netron.peer), adone.error.InvalidArgument);
         });
 
         it("call async throwable method", async () => {
-            await assert.throws(async () => stub.set("asyncErrorB", [], netron.peer), adone.exception.InvalidArgument);
+            await assert.throws(async () => stub.set("asyncErrorB", [], netron.peer), adone.error.InvalidArgument);
         });
     });
 }); 

@@ -1,4 +1,4 @@
-const { exception } = adone;
+const { error } = adone;
 
 export default class Schema {
     constructor(bson) {
@@ -7,7 +7,7 @@ export default class Schema {
     }
 
     auth(/* server, connections, db, username, password, callback */) {
-        throw new exception.NotImplemented();
+        throw new error.NotImplemented();
     }
 
     logout(dbName) {

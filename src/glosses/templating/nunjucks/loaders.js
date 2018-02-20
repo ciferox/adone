@@ -43,7 +43,7 @@ export class FileSystemLoader extends Loader {
                 }
             });
             watcher.on("error", (error) => {
-                adone.error(`Watcher error: ${error}`);
+                adone.logError(`Watcher error: ${error}`);
             });
         }
     }

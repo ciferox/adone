@@ -5,7 +5,7 @@ import { FileSystemLoader } from "./loaders";
 import * as runtime from "./runtime";
 import globals from "./globals";
 import builtinTests from "./tests";
-const { std: { path, vm }, is, util, exception } = adone;
+const { std: { path, vm }, is, util, error } = adone;
 const { Frame } = runtime;
 
 class Context {
@@ -45,7 +45,7 @@ class Context {
 
     getBlock(name) {
         if (!this.blocks[name]) {
-            throw new exception.Unknown(`unknown block "${name}"`);
+            throw new error.Unknown(`unknown block "${name}"`);
         }
 
         return this.blocks[name][0];
@@ -57,7 +57,7 @@ class Context {
         const context = this;
 
         if (idx === -1 || !blk) {
-            throw new exception.IllegalState(`no super block available for "${name}"`);
+            throw new error.IllegalState(`no super block available for "${name}"`);
         }
 
         blk(env, context, frame, runtime, cb);
@@ -95,7 +95,7 @@ export class Template {
         } else if (is.string(src)) {
             this.tmplStr = src;
         } else {
-            throw new exception.InvalidArgument("src must be a string or an object describing the source");
+            throw new error.InvalidArgument("src must be a string or an object describing the source");
         }
 
         this.path = path;
@@ -341,7 +341,7 @@ export class Environment {
 
     getGlobal(name) {
         if (is.undefined(this.globals[name])) {
-            throw new exception.IllegalState(`global not found: ${name}`);
+            throw new error.IllegalState(`global not found: ${name}`);
         }
         return this.globals[name];
     }
@@ -358,7 +358,7 @@ export class Environment {
 
     getFilter(name) {
         if (!this.filters[name]) {
-            throw new exception.Unknown(`filter not found: ${name}`);
+            throw new error.Unknown(`filter not found: ${name}`);
         }
         return this.filters[name];
     }
@@ -402,7 +402,7 @@ export class Environment {
         if (name instanceof Template) {
             tmpl = name;
         } else if (!is.string(name)) {
-            throw new exception.InvalidArgument(`template names must be a string: ${name}`);
+            throw new error.InvalidArgument(`template names must be a string: ${name}`);
         } else {
             const { loaders } = this;
             for (let i = 0; i < loaders.length; i++) {
@@ -499,7 +499,7 @@ export class Environment {
                 this.defaultEngine = opts.defaultEngine;
                 this.ext = path.extname(name);
                 if (!this.ext && !this.defaultEngine) {
-                    throw new exception.IllegalState("No default engine was specified and no extension was provided.");
+                    throw new error.IllegalState("No default engine was specified and no extension was provided.");
                 }
                 if (!this.ext) {
                     this.name += (this.ext = (this.defaultEngine[0] !== "." ? "." : "") + this.defaultEngine);

@@ -2,7 +2,7 @@ import * as commands from "./commands";
 
 const {
     util,
-    exception,
+    error,
     is
 } = adone;
 
@@ -17,7 +17,7 @@ export const exists = (commandName) => flags.has(commandName);
 
 export const hasFlag = (commandName, flag) => {
     if (!exists(commandName)) {
-        throw new exception.InvalidArgument(`Unknown command ${commandName}`);
+        throw new error.InvalidArgument(`Unknown command ${commandName}`);
     }
     return flags.get(commandName).has(flag);
 };
@@ -33,11 +33,11 @@ const getExternalKeyNameLength = (key) => {
 export const getKeyIndexes = (commandName, args, options) => {
     const command = commands[commandName];
     if (!command) {
-        throw new exception.InvalidArgument(`Unknown command ${commandName}`);
+        throw new error.InvalidArgument(`Unknown command ${commandName}`);
     }
 
     if (!is.array(args)) {
-        throw new exception.InvalidArgument("Expect args to be an array");
+        throw new error.InvalidArgument("Expect args to be an array");
     }
 
     const keys = [];

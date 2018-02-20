@@ -2,7 +2,7 @@ import Dispatcher from "./dispatcher";
 
 describe("database", "mongo", function () {
     const {
-        exception,
+        error,
         database: { mongo }
     } = adone;
     const __ = adone.private(mongo);
@@ -46,13 +46,13 @@ describe("database", "mongo", function () {
 
     // before("mondodb check", async () => {
     //     // const version = await this.dispatcher.getVersion();
-    //     // adone.info(`Running tests against MongoDB version ${version}`);
+    //     // adone.logInfo(`Running tests against MongoDB version ${version}`);
     // });
 
     const initConnection = () => {
         beforeEach("open connection", async () => {
             if (!this.DB) {
-                throw new exception.IllegalState("There is no DB instance");
+                throw new error.IllegalState("There is no DB instance");
             }
             this.db = await this.DB.open();
         });

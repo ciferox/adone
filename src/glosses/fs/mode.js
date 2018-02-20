@@ -161,7 +161,7 @@ class Others {
 export default class Mode {
     constructor(stat) {
         if (!stat) {
-            throw new adone.exception.InvalidArgument("You must pass in a \"stat\" object");
+            throw new adone.error.InvalidArgument("You must pass in a \"stat\" object");
         }
         if (!adone.is.number(stat.mode)) {
             stat.mode = 0;

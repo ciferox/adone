@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     util,
     shani: { util: { __ } }
 } = adone;
@@ -67,7 +67,7 @@ const callCallback = (behavior, args) => {
         const func = getCallback(behavior, args);
 
         if (!is.function(func)) {
-            throw new exception.InvalidArgument(getCallbackError(behavior, func, args));
+            throw new error.InvalidArgument(getCallbackError(behavior, func, args));
         }
 
         if (behavior.callbackAsync) {
@@ -96,7 +96,7 @@ export const proto = {
     },
     isPresent() {
         return is.number(this.callArgAt)
-            || this.exception
+            || this.error
             || this.exceptionCreator
             || is.number(this.returnArgAt)
             || this.returnThis
@@ -108,19 +108,19 @@ export const proto = {
     invoke(context, args) {
         callCallback(this, args);
 
-        if (this.exception) {
-            throw this.exception;
+        if (this.error) {
+            throw this.error;
         } else if (this.exceptionCreator) {
-            this.exception = this.exceptionCreator();
+            this.error = this.exceptionCreator();
             this.exceptionCreator = undefined;
-            throw this.exception;
+            throw this.error;
         } else if (is.number(this.returnArgAt)) {
             return args[this.returnArgAt];
         } else if (this.returnThis) {
             return context;
         } else if (is.number(this.throwArgAt)) {
             if (args.length < this.throwArgAt) {
-                throw new exception.InvalidArgument(`throwArgs failed: ${this.throwArgAt} arguments required but only ${args.length} present`);
+                throw new error.InvalidArgument(`throwArgs failed: ${this.throwArgAt} arguments required but only ${args.length} present`);
             }
             throw args[this.throwArgAt];
         } else if (this.fakeFn) {

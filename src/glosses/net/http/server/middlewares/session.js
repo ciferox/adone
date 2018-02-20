@@ -33,7 +33,7 @@ class Store {
         try {
             this.sessions.set(sid, JSON.stringify(session));
         } catch (err) {
-            adone.error(`Set session error: ${err.message}`);
+            adone.logError(`Set session error: ${err.message}`);
         }
 
         return sid;

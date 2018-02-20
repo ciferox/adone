@@ -2,7 +2,7 @@
 const {
     std: { path: { sep, resolve, normalize } },
     net: { http },
-    exception,
+    error,
     is
 } = adone;
 
@@ -14,34 +14,34 @@ export default function resolvePath(root, path) {
     }
 
     if (is.nil(root)) {
-        throw new exception.InvalidArgument("argument rootPath is required");
+        throw new error.InvalidArgument("argument rootPath is required");
     }
 
     if (!is.string(root)) {
-        throw new exception.InvalidArgument("argument rootPath must be a string");
+        throw new error.InvalidArgument("argument rootPath must be a string");
     }
 
     if (is.nil(path)) {
-        throw new exception.InvalidArgument("argument relativePath is required");
+        throw new error.InvalidArgument("argument relativePath is required");
     }
 
     if (!is.string(path)) {
-        throw new exception.InvalidArgument("argument relativePath must be a string");
+        throw new error.InvalidArgument("argument relativePath must be a string");
     }
 
     // containing NULL bytes is malicious
     if (path.includes("\0")) {
-        throw http.exception.create(400, "Malicious Path");
+        throw http.error.create(400, "Malicious Path");
     }
 
     // path should never be absolute
     if (is.posixPathAbsolute(path) || is.win32PathAbsolute(path)) {
-        throw http.exception.create(400, "Malicious Path");
+        throw http.error.create(400, "Malicious Path");
     }
 
     // path outside root
     if (UP_PATH_REGEXP.test(normalize(`.${sep}${path}`))) {
-        throw http.exception.create(403);
+        throw http.error.create(403);
     }
 
     root = normalize(`${resolve(root)}${sep}`);

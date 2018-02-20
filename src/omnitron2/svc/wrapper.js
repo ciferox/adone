@@ -34,7 +34,7 @@ adone.application.runCli({
             const status = await omnitron.dispatcher.startOmnitron();
             return status;
         } catch (err) {
-            adone.error(err.message);
+            adone.logError(err.message);
             return 2;
         }
     },
@@ -43,7 +43,7 @@ adone.application.runCli({
             await omnitron.dispatcher.stopOmnitron();
             return 0;
         } catch (err) {
-            adone.error(err.message);
+            adone.logError(err.message);
             return 2;
         }
     },
@@ -52,7 +52,7 @@ adone.application.runCli({
             await omnitron.dispatcher.restartOmnitron();
             return 0;
         } catch (err) {
-            adone.error(err.message);
+            adone.logError(err.message);
             return 2;
         }
     }

@@ -15,7 +15,7 @@ adone.application.run({
 
         for (let i = 0; i < N; ++i) {
             bar.tick(1);
-            adone.info(`${i + 1}) hello ${bar.current} ${bar.total}`);
+            adone.logInfo(`${i + 1}) hello ${bar.current} ${bar.total}`);
             await adone.promise.delay(20);
         }
 

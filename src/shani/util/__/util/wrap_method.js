@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     shani: { util: { __ } }
 } = adone;
 
@@ -20,7 +20,7 @@ const restorable = Symbol.for("shani:restorable");
 
 export default function wrapMethod(object, property, method) {
     if (!object) {
-        throw new exception.InvalidArgument("Should wrap property of object");
+        throw new error.InvalidArgument("Should wrap property of object");
     }
 
     if (!is.function(method) && !is.object(method)) {

@@ -1,6 +1,6 @@
 const {
     is,
-    exception
+    error
 } = adone;
 
 const DUMMY_THROTTLE = (tsk) => tsk();
@@ -25,7 +25,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
      */
     addTask(name, task, options) {
         if (this._tasks.has(name)) {
-            throw new exception.Exists(`Task '${name}' already exists`);
+            throw new error.Exists(`Task '${name}' already exists`);
         }
         return this.setTask(name, task, options);
     }
@@ -296,17 +296,17 @@ export default class TaskManager extends adone.event.AsyncEmitter {
             const taskInstance = new task();
 
             if (!is.task(taskInstance)) {
-                throw new exception.NotValid("The task class should be inherited from 'adone.task.Task' class");
+                throw new error.NotValid("The task class should be inherited from 'adone.task.Task' class");
             }
         } else if (!is.function(task)) {
-            throw new exception.NotValid("Task should be a class or a function");
+            throw new error.NotValid("Task should be a class or a function");
         }
     }
 
     _getTaskInfo(name) {
         const taskInfo = this._tasks.get(name);
         if (is.undefined(taskInfo) || taskInfo.zombi === true) {
-            throw new exception.NotExists(`Task '${name}' not exists`);
+            throw new error.NotExists(`Task '${name}' not exists`);
         }
 
         return taskInfo;

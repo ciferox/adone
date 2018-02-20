@@ -423,7 +423,7 @@ const xz = {
     },
     // eslint-disable-next-line no-unused-vars
     compressSync: (buf, options = {}) => {
-        throw new adone.exception.NotImplemented();
+        throw new adone.error.NotImplemented();
     },
     decompress: (buf, options = {}) => {
         return xz.singleStringCoding(xz.decompressStream(options), buf);
@@ -433,7 +433,7 @@ const xz = {
     },
     // eslint-disable-next-line no-unused-vars
     decompressSync: (buf, options = {}) => {
-        throw new adone.exception.NotImplemented();
+        throw new adone.error.NotImplemented();
     }
 };
 

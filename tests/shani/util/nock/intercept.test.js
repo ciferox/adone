@@ -79,7 +79,7 @@ describe("shani", "util", "nock", "intercept", () => {
         nock.restore();
     });
 
-    it("double activation throws exception", () => {
+    it("double activation throws error", () => {
         nock.restore();
         expect(nock.isActive()).to.be.false();
         nock.activate();

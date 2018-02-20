@@ -1,7 +1,7 @@
 const {
     event,
     is,
-    exception,
+    error,
     util,
     database: { mysql },
     std: {
@@ -108,7 +108,7 @@ export default class Connection extends event.Emitter {
             }
 
             if (!this._protocolError) { // no particular error message before disconnect
-                this._protocolError = new exception.Exception("Connection lost: The server closed the connection.");
+                this._protocolError = new error.Exception("Connection lost: The server closed the connection.");
                 this._protocolError.fatal = true;
                 this._protocolError.code = "PROTOCOL_CONNECTION_LOST";
             }
@@ -147,7 +147,7 @@ export default class Connection extends event.Emitter {
     }
 
     _addCommandClosedState(cmd) {
-        const err = new exception.IllegalState("Can't add new command when connection is in closed state");
+        const err = new error.IllegalState("Can't add new command when connection is in closed state");
         err.fatal = true;
         if (cmd.onResult) {
             cmd.onResult(err);
@@ -162,7 +162,7 @@ export default class Connection extends event.Emitter {
         this.stream.removeAllListeners("data");
         this.addCommand = this._addCommandClosedState;
         this.write = () => {
-            this.emit("error", new exception.IllegalState("Can't write in closed state"));
+            this.emit("error", new error.IllegalState("Can't write in closed state"));
         };
         this._notifyError(err);
         this._fatalError = err;
@@ -180,7 +180,7 @@ export default class Connection extends event.Emitter {
 
         this.stream.destroy && this.stream.destroy();
 
-        const err = new exception.Timeout("connect ETIMEDOUT");
+        const err = new error.Timeout("connect ETIMEDOUT");
         err.errorno = "ETIMEDOUT";
         err.code = "ETIMEDOUT";
         err.syscall = "connect";
@@ -266,15 +266,15 @@ export default class Connection extends event.Emitter {
         if (length < MAX_PACKET_LENGTH) {
             packet.writeHeader(this.sequenceId);
             if (this.config.debug) {
-                adone.debug(`${this._internalId} ${this.connectionId} <== ${this._command._commandName}#${this._command.stateName()}(${this.sequenceId}, ${packet._name}, ${packet.length()})`);
-                adone.debug(`${this._internalId} ${this.connectionId} <== ${packet.buffer.toString("hex")}`);
+                adone.logDebug(`${this._internalId} ${this.connectionId} <== ${this._command._commandName}#${this._command.stateName()}(${this.sequenceId}, ${packet._name}, ${packet.length()})`);
+                adone.logDebug(`${this._internalId} ${this.connectionId} <== ${packet.buffer.toString("hex")}`);
             }
             this._bumpSequenceId(1);
             this.write(packet.buffer);
         } else {
             if (this.config.debug) {
-                adone.debug(`${this._internalId} ${this.connectionId} <== Writing large packet, raw content not written:`);
-                adone.debug(`${this._internalId} ${this.connectionId} <== ${this._command._commandName}#${this._command.stateName()}(${this.sequenceId}, ${packet._name}, ${packet.length()})`);
+                adone.logDebug(`${this._internalId} ${this.connectionId} <== Writing large packet, raw content not written:`);
+                adone.logDebug(`${this._internalId} ${this.connectionId} <== ${this._command._commandName}#${this._command.stateName()}(${this.sequenceId}, ${packet._name}, ${packet.length()})`);
             }
             for (let offset = 4; offset < 4 + length; offset += MAX_PACKET_LENGTH) {
                 const chunk = packet.buffer.slice(offset, offset + MAX_PACKET_LENGTH);
@@ -298,7 +298,7 @@ export default class Connection extends event.Emitter {
 
     startTLS(onSecure) {
         if (this.config.debug) {
-            adone.debug("Upgrading connection to TLS");
+            adone.logDebug("Upgrading connection to TLS");
         }
         const secureContext = tls.createSecureContext({
             ca: this.config.ssl.ca,
@@ -357,7 +357,7 @@ export default class Connection extends event.Emitter {
     }
 
     protocolError(message, code) {
-        const err = new exception.Exception(message);
+        const err = new error.Exception(message);
         err.fatal = true;
         err.code = code || "PROTOCOL_ERROR";
         this.emit("error", err);
@@ -370,18 +370,18 @@ export default class Connection extends event.Emitter {
         }
         if (packet) {
             if (this.sequenceId !== packet.sequenceId) {
-                adone.warn(`Warning: got packets out of order. Expected ${this.sequenceId} but received ${packet.sequenceId}`);
+                adone.logWarn(`Warning: got packets out of order. Expected ${this.sequenceId} but received ${packet.sequenceId}`);
             }
             this._bumpSequenceId(packet.numPackets);
         }
 
         if (this.config.debug) {
             if (packet) {
-                adone.debug(` raw: ${packet.buffer.slice(packet.offset, packet.offset + packet.length()).toString("hex")}`);
-                adone.trace();
+                adone.logDebug(` raw: ${packet.buffer.slice(packet.offset, packet.offset + packet.length()).toString("hex")}`);
+                adone.logTrace();
                 const commandName = this._command ? this._command._commandName : "(no command)";
                 const stateName = this._command ? this._command.stateName() : "(no command)";
-                adone.debug(`${this._internalId} ${this.connectionId} ==> ${commandName}#${stateName}(${packet.sequenceId}, ${packet.type()}, ${packet.length()})`);
+                adone.logDebug(`${this._internalId} ${this.connectionId} ==> ${commandName}#${stateName}(${packet.sequenceId}, ${packet.type()}, ${packet.length()})`);
             }
         }
         if (!this._command) {
@@ -403,7 +403,7 @@ export default class Connection extends event.Emitter {
 
     addCommand(cmd) {
         if (this.config.debug) {
-            adone.debug(`Add command: ${arguments.callee.caller.name}`);
+            adone.logDebug(`Add command: ${arguments.callee.caller.name}`);
             cmd._commandName = arguments.callee.caller.name;
         }
         if (!this._command) {

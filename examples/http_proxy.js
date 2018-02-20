@@ -44,7 +44,7 @@ const generateRootCA = () => {
 };
 
 const generateCertForHostname = (domain, rootCAConfig) => {
-    adone.info(`generate certificate for ${domain}`);
+    adone.logInfo(`generate certificate for ${domain}`);
     const keysAndCert = getKeysAndCert();
     const keys = keysAndCert.keys;
     const cert = keysAndCert.cert;
@@ -132,13 +132,13 @@ adone.application.run({
                 }
                 if (ctx.type === "websocket") {
                     const s = adone.sprintf("%s <-> %s:%s", ctx.localRequest.href, ctx.clientAddress, ctx.clientPort);
-                    adone.info("start websocket session %s", s);
+                    adone.logInfo("start websocket session %s", s);
                     ctx.incoming(async (ctx, next) => {
-                        adone.info("[WS] [%s] -> %s", s, ctx.data.toString());
+                        adone.logInfo("[WS] [%s] -> %s", s, ctx.data.toString());
                         return next();
                     });
                     ctx.outgoing(async (ctx, next) => {
-                        adone.info("[WS] [%s] <- %s", s, ctx.data.toString());
+                        adone.logInfo("[WS] [%s] <- %s", s, ctx.data.toString());
                         return next();
                     });
                 }
@@ -163,34 +163,34 @@ adone.application.run({
                 }
                 const err = await next().then(adone.noop, adone.identity);
                 if (ctx.type === "http") {
-                    adone.info(
+                    adone.logInfo(
                         "%s %s %s %s",
                         ctx.localRequest.method,
                         ctx.remoteResponse && ctx.remoteResponse.status,
                         ctx.localRequest.href,
                         pretty.time(new Date() - start)
                     );
-                    adone.info("request body");
+                    adone.logInfo("request body");
                     requestBody = requestBody.slice();
                     adone.log(requestBody.length, requestBody.toString("hex"));
-                    adone.info("response body");
+                    adone.logInfo("response body");
                     responseBody = responseBody.slice();
                     adone.log(responseBody.length, responseBody.toString("hex"));
                 } else if (ctx.type === "connect") {
-                    adone.info(
+                    adone.logInfo(
                         "%s %s %s",
                         ctx.localRequest.method,
                         ctx.localRequest.url,
                         pretty.time(new Date() - start)
                     );
                 } else if (ctx.type === "upgrade") {
-                    adone.info(
+                    adone.logInfo(
                         "%s upgrade to %s",
                         ctx.parent.localRequest.url,
                         ctx.protocol
                     );
                 } else if (ctx.type === "stream" && (ctx.parent.type === "connect" || ctx.parent.type === "upgrade")) {
-                    adone.info(
+                    adone.logInfo(
                         "stream %s %s:%s <-> %s:%s",
                         ctx.parent.type === "connect" ? ctx.parent.localRequest.url : ctx.parent.localRequest.href,
                         ctx.clientAddress,
@@ -199,18 +199,18 @@ adone.application.run({
                         ctx.remotePort,
                         pretty.time(new Date() - start)
                     );
-                    adone.info("incoming");
+                    adone.logInfo("incoming");
                     incoming = incoming.slice();
                     adone.log(incoming.length, incoming.toString("hex"));
-                    adone.info("outgoing");
+                    adone.logInfo("outgoing");
                     outgoing = outgoing.slice();
                     adone.log(outgoing.length, outgoing.toString("hex"));
                 } else if (ctx.type === "websocket") {
                     const s = adone.sprintf("%s <-> %s:%s", ctx.localRequest.href, ctx.clientAddress, ctx.clientPort);
-                    adone.info("end websocket session %s %s %s", s, ctx.localCloseCode, ctx.remoteCloseCode);
+                    adone.logInfo("end websocket session %s %s %s", s, ctx.localCloseCode, ctx.remoteCloseCode);
                 }
                 if (err) {
-                    adone.error(err.stack);
+                    adone.logError(err.stack);
                 }
             })
             .use(async (ctx) => {
@@ -238,6 +238,6 @@ adone.application.run({
             });
         await server.listen(opts.get("port"), "0.0.0.0");
         const address = server.address();
-        adone.info("listening on %s:%s", address.address, address.port);
+        adone.logInfo("listening on %s:%s", address.address, address.port);
     }
 });

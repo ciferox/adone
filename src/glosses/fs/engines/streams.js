@@ -1,14 +1,14 @@
 // just port of https://github.com/nodejs/node/blob/master/lib/fs.js
 
 const {
-    exception,
+    error,
     is,
     std: { stream }
 } = adone;
 
 const assertEncoding = (encoding) => {
     if (encoding && !Buffer.isEncoding(encoding)) {
-        throw new exception.InvalidArgument(`Invalid encoding: ${encoding}`);
+        throw new error.InvalidArgument(`Invalid encoding: ${encoding}`);
     }
 };
 
@@ -23,7 +23,7 @@ const getOptions = (options, defaultOptions) => {
         defaultOptions.encoding = options;
         options = defaultOptions;
     } else if (!is.object(options)) {
-        throw new exception.InvalidArgument("Invalid options object, must be string or object");
+        throw new error.InvalidArgument("Invalid options object, must be string or object");
     }
 
     if (options.encoding !== "buffer") {

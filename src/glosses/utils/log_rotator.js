@@ -4,7 +4,7 @@ const {
     util,
     fs,
     std,
-    exception,
+    error,
     compressor,
     noop
 } = adone;
@@ -32,11 +32,11 @@ export default class LogRotator extends event.Emitter {
         this.maxSize = util.parseSize(maxSize);
 
         if (!this.checkInterval) {
-            throw new exception.InvalidArgument("invalid checkInterval");
+            throw new error.InvalidArgument("invalid checkInterval");
         }
 
         if (!this.maxSize) {
-            throw new exception.InvalidArgument("invalid maxSize");
+            throw new error.InvalidArgument("invalid maxSize");
         }
 
         this.maxFiles = maxFiles;

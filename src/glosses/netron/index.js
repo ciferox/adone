@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     data: { mpak: { serializer } },
     lazify,
     tag,
@@ -149,7 +149,7 @@ export class Definitions {
         for (let i = 0; i < args.length; i++) {
             const arg = args[i];
             if (!is.netronDefinition(arg) && !is.netronContext(arg) && !is.netronInterface(arg)) {
-                throw new exception.InvalidArgument(`Invalid argument ${i} (${typeof(arg)})`);
+                throw new error.InvalidArgument(`Invalid argument ${i} (${typeof(arg)})`);
             }
             ret = this._defs.push(arg);
         }
@@ -169,7 +169,7 @@ export class Definitions {
         for (let i = 0; i < args.length; i++) {
             const arg = args[i];
             if (!is.netronDefinition(arg) && !is.netronContext(arg) && !is.netronInterface(arg)) {
-                throw new exception.InvalidArgument(`Invalid argument ${i} (${typeof(arg)})`);
+                throw new error.InvalidArgument(`Invalid argument ${i} (${typeof(arg)})`);
             }
             ret = this._defs.unshift(arg);
         }

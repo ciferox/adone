@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     math,
     std: { crypto }
 } = adone;
@@ -9,7 +9,7 @@ const iterations = 10000;
 
 export const hash = (password, salt) => {
     if (!is.string(password) || password === "") {
-        throw new exception.NotValid("'password' must be a non empty string");
+        throw new error.NotValid("'password' must be a non empty string");
     }
 
     if (is.string(salt)) {
@@ -49,10 +49,10 @@ export const verify = (password, hashedPassword) => {
 
         const key = hashedPassword.split("$");
         if (key.length !== 4 || !key[2] || !key[3]) {
-            throw new exception.NotValid("Hash not formatted correctly");
+            throw new error.NotValid("Hash not formatted correctly");
         }
         if (key[0] !== "pbkdf2" || key[1] !== iterations.toString()) {
-            throw new exception.NotValid("Wrong algorithm and/or iterations");
+            throw new error.NotValid("Wrong algorithm and/or iterations");
         }
 
         return hash(password, key[3]).catch(reject).then((newHash) => {
@@ -78,7 +78,7 @@ export const generate = (length = 10, memorable = true, pattern = /\w/, prefix =
         }
 
         if (!validChars.length) {
-            throw new exception.NotValid(`Could not find characters that match the pattern: ${pattern.toString()}`);
+            throw new error.NotValid(`Could not find characters that match the pattern: ${pattern.toString()}`);
         }
     }
 

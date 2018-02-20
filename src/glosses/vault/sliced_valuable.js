@@ -1,12 +1,12 @@
 const {
     is,
-    exception
+    error
 } = adone;
 
 export default class SlicedValuable {
     constructor(valuable, prefix, separator = ".") {
         if (!is.vaultValuable(valuable)) {
-            throw new exception.NotValid("Not valid parent valuable");
+            throw new error.NotValid("Not valid parent valuable");
         }
 
         if (is.string(prefix)) {
@@ -17,13 +17,13 @@ export default class SlicedValuable {
             for (let i = 0; i < prefix.length; i++) {
                 prefix[i] = prefix[i].trim();
                 if (prefix[i].length === 0 || prefix[i] === separator) {
-                    throw new exception.NotValid("Not valid prefix");
+                    throw new error.NotValid("Not valid prefix");
                 }
             }
 
             prefix = `${prefix.join(separator)}${separator}`;
         } else {
-            throw new exception.NotValid("Not valid prefix");
+            throw new error.NotValid("Not valid prefix");
         }
 
         this._valuable = valuable;

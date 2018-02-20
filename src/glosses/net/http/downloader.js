@@ -3,7 +3,7 @@ const {
     fs,
     is,
     stream,
-    exception,
+    error,
     std
 } = adone;
 
@@ -19,7 +19,7 @@ export default class Downlader extends adone.event.Emitter {
 
         this.url = url;
         if (!is.string(dest) && !is.writableStream(dest)) {
-            throw new exception.InvalidArgument("dest must be a string or writable stream");
+            throw new error.InvalidArgument("dest must be a string or writable stream");
         }
         this.dest = dest;
     }

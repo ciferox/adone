@@ -8,7 +8,7 @@ export const typedBuffer = (binString, buffType, type) => {
 export const atob = (str) => {
     const base64 = Buffer.from(str, "base64");
     // Node.js will just skip the characters it can't decode instead of
-    // throwing an exception
+    // throwing an error
     if (base64.toString("base64") !== str) {
         throw new Error("attachment is not a valid base64 string");
     }

@@ -1,6 +1,6 @@
 const {
     is,
-    exception
+    error
 } = adone;
 
 adone.asNamespace(exports);
@@ -11,7 +11,7 @@ export const encodeNumber = (number) => {
     if (number >= 0 && number < intToCharMap.length) {
         return intToCharMap[number];
     }
-    throw new exception.InvalidArgument(`Must be between 0 and 63: ${number}`);
+    throw new error.InvalidArgument(`Must be between 0 and 63: ${number}`);
 };
 
 export const decodeCharCode = (charCode) => {
@@ -85,12 +85,12 @@ export const decodeVLQ = (aStr, aIndex = 0, rest = false) => {
 
     do {
         if (aIndex >= length) {
-            throw new exception.IllegalState("Expected more digits in base 64 VLQ value.");
+            throw new error.IllegalState("Expected more digits in base 64 VLQ value.");
         }
 
         digit = decodeCharCode(aStr.charCodeAt(aIndex++));
         if (digit === -1) {
-            throw new exception.IllegalState(`Invalid base64 digit: ${aStr.charAt(aIndex - 1)}`);
+            throw new error.IllegalState(`Invalid base64 digit: ${aStr.charAt(aIndex - 1)}`);
         }
 
         continuation = Boolean(digit & VLQ_CONTINUATION_BIT);

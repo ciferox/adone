@@ -10,7 +10,7 @@ const {
 const {
     util,
     queryType,
-    exception,
+    error,
     type,
     operator
 } = orm;
@@ -287,7 +287,7 @@ export default class Model {
 
                 const types = validTypes[type];
                 if (!types) {
-                    throw new exception.EagerLoadingError(`include all '${type}' is not valid - must be BelongsTo, HasOne, HasMany, One, Has, Many or All`);
+                    throw new error.EagerLoadingError(`include all '${type}' is not valid - must be BelongsTo, HasOne, HasMany, One, Has, Many or All`);
                 }
 
                 if (types !== true) {
@@ -578,22 +578,22 @@ export default class Model {
         const associations = this.getAssociations(targetModel);
         let association = null;
         if (associations.length === 0) {
-            throw new exception.EagerLoadingError(`${targetModel.name} is not associated to ${this.name}!`);
+            throw new error.EagerLoadingError(`${targetModel.name} is not associated to ${this.name}!`);
         } else if (associations.length === 1) {
             association = this.getAssociationForAlias(targetModel, targetAlias);
             if (!association) {
                 if (targetAlias) {
-                    throw new exception.EagerLoadingError(`${targetModel.name} is associated to ${this.name} using an alias. ` +
+                    throw new error.EagerLoadingError(`${targetModel.name} is associated to ${this.name} using an alias. ` +
                         `You've included an alias (${targetAlias}), but it does not match the alias defined in your association.`);
                 } else {
-                    throw new exception.EagerLoadingError(`${targetModel.name} is associated to ${this.name} using an alias. ` +
+                    throw new error.EagerLoadingError(`${targetModel.name} is associated to ${this.name} using an alias. ` +
                         "You must use the 'as' keyword to specify the alias within your include statement.");
                 }
             }
         } else {
             association = this.getAssociationForAlias(targetModel, targetAlias);
             if (!association) {
-                throw new exception.EagerLoadingError(`${targetModel.name} is associated to ${this.name} multiple times. ` +
+                throw new error.EagerLoadingError(`${targetModel.name} is associated to ${this.name} multiple times. ` +
                     "To identify the correct association, you must use the 'as' keyword to specify the alias of the association you want to include.");
             }
         }
@@ -1413,7 +1413,7 @@ export default class Model {
                 });
                 self._scopeNames.push(scopeName ? scopeName : "defaultScope");
             } else {
-                throw new exception.ScopeError(`Invalid scope ${scopeName} called.`);
+                throw new error.ScopeError(`Invalid scope ${scopeName} called.`);
             }
         }
 
@@ -1528,12 +1528,12 @@ export default class Model {
      */
     static async findAll(options) {
         if (!is.undefined(options) && !_.isPlainObject(options)) {
-            throw new exception.QueryError("The argument passed to findAll must be an options object, use findById if you wish to pass a single primary key value");
+            throw new error.QueryError("The argument passed to findAll must be an options object, use findById if you wish to pass a single primary key value");
         }
 
         if (!is.undefined(options) && options.attributes) {
             if (!is.array(options.attributes) && !_.isPlainObject(options.attributes)) {
-                throw new exception.QueryError("The attributes option must be an array of column names or an object");
+                throw new error.QueryError("The attributes option must be an array of column names or an object");
             }
         }
 
@@ -1606,7 +1606,7 @@ export default class Model {
             } else if (typeof options.rejectOnEmpty === "object") {
                 throw options.rejectOnEmpty;
             } else {
-                throw new exception.EmptyResultError();
+                throw new error.EmptyResultError();
             }
         }
 
@@ -1623,7 +1623,7 @@ export default class Model {
         // so we stop throwing erroneous warnings when we shouldn't.
         const validQueryKeywords = ["where", "attributes", "paranoid", "include", "order", "limit", "offset",
             "transaction", "lock", "raw", "logging", "benchmark", "having", "searchPath", "rejectOnEmpty", "plain",
-            "scope", "group", "through", "defaults", "distinct", "primary", "exception", "type", "hooks", "force",
+            "scope", "group", "through", "defaults", "distinct", "primary", "error", "type", "hooks", "force",
             "name"];
 
         const unrecognizedOptions = _.difference(Object.keys(options), validQueryKeywords);
@@ -2114,7 +2114,7 @@ export default class Model {
                 values = util.defaults(values, options.where);
             }
 
-            options.exception = true;
+            options.error = true;
             instance = await this.create(values, options);
             if (is.null(instance.get(this.primaryKeyAttribute, { raw: true }))) {
                 // If the query returned an empty result for the primary key, we know that this was actually a unique constraint violation
@@ -2208,7 +2208,7 @@ export default class Model {
      * **Implementation details:**
      *
      * * MySQL - Implemented as a single query `INSERT values ON DUPLICATE KEY UPDATE values`
-     * * PostgreSQL - Implemented as a temporary function with exception handling: INSERT EXCEPTION WHEN unique_constraint UPDATE
+     * * PostgreSQL - Implemented as a temporary function with error handling: INSERT EXCEPTION WHEN unique_constraint UPDATE
      * * SQLite - Implemented as two queries `INSERT; UPDATE`. This means that the update is executed regardless of whether the row already existed or not
      * * MSSQL - Implemented as a single query using `MERGE` and `WHEN (NOT) MATCHED THEN`
      * **Note** that SQLite returns undefined for created, no matter if the row was created or updated. This is because SQLite always runs INSERT OR IGNORE + UPDATE, in a single query, so there is no way to know whether the row was inserted or not.
@@ -2375,7 +2375,7 @@ export default class Model {
 
             delete options.skip;
             if (errors.length) {
-                throw new adone.exception.AggregateException(errors);
+                throw new adone.error.AggregateException(errors);
             }
         }
 
@@ -3636,7 +3636,7 @@ export default class Model {
         if (versionAttr) {
             // Check to see that a row was updated, otherwise it's an optimistic locking error.
             if (rowsUpdated < 1) {
-                throw new exception.OptimisticLockError({
+                throw new error.OptimisticLockError({
                     modelName: this.constructor.name,
                     values,
                     where
@@ -3733,7 +3733,7 @@ export default class Model {
 
         const reload = await this.constructor.findOne(options);
         if (!reload) {
-            throw new exception.InstanceError(
+            throw new error.InstanceError(
                 "Instance could not be reloaded because it does not exist anymore (find call returned null)"
             );
         }
@@ -3840,7 +3840,7 @@ export default class Model {
             );
             const rowsUpdated = results[1];
             if (this.constructor._versionAttribute && rowsUpdated < 1) {
-                throw new exception.OptimisticLockError({
+                throw new error.OptimisticLockError({
                     modelName: this.constructor.name,
                     values,
                     where

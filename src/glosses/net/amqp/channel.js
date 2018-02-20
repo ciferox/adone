@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     net: { amqp },
     event,
     std: {
@@ -20,7 +20,7 @@ const {
 
 const invalidOp = (msg) => {
     return () => {
-        throw new exception.IllegalState(msg);
+        throw new error.IllegalState(msg);
     };
 };
 
@@ -28,7 +28,7 @@ const invalidateSend = (ch, msg, stack) => {
     ch.sendImmediately = ch.sendOrEnqueue = ch.sendMessage = invalidOp(msg, stack);
 };
 
-class UnexpectedFrame extends exception.Exception {}
+class UnexpectedFrame extends error.Exception {}
 
 
 // Kick off a message delivery given a BasicDeliver or BasicReturn
@@ -260,7 +260,7 @@ export class Channel extends event.Emitter {
                 if (k) {
                     k();
                 }
-                const s = exception.captureStack("ChannelCloseOk frame received");
+                const s = error.captureStack("ChannelCloseOk frame received");
                 this.toClosed(s);
             } else if (f.id === defs.ChannelClose) {
                 send(defs.ChannelCloseOk, {});
@@ -295,7 +295,7 @@ export class Channel extends event.Emitter {
             replyCode: code,
             methodId: 0, classId: 0
         });
-        const s = exception.captureStack(`closeBecause called: ${reason}`);
+        const s = error.captureStack(`closeBecause called: ${reason}`);
         this.toClosing(s, k);
     }
 
@@ -409,7 +409,7 @@ export class Channel extends event.Emitter {
                 error.code = f.fields.replyCode;
                 this.emit("error", error);
 
-                const s = exception.captureStack(emsg);
+                const s = error.captureStack(emsg);
                 this.toClosed(s);
                 return;
             }

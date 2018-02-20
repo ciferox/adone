@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     std,
     runtime: { term },
     tag,
@@ -48,7 +48,7 @@ export default class Application extends application.Subsystem {
         // Prevent double initialization of global application instance
         // (for cases where two or more Applications run in-process, the first app will be common).
         if (!is.null(adone.runtime.app)) {
-            throw new exception.IllegalState("It is impossible to have several main applications");
+            throw new error.IllegalState("It is impossible to have several main applications");
         }
         adone.runtime.app = this;
 
@@ -89,7 +89,7 @@ export default class Application extends application.Subsystem {
     }
 
     enableReport({
-        events = process.env.ADONE_REPORT_EVENTS || "exception+fatalerror+signal+apicall",
+        events = process.env.ADONE_REPORT_EVENTS || "error+fatalerror+signal+apicall",
         signal = process.env.ADONE_REPORT_SIGNAL,
         filename = process.env.ADONE_REPORT_FILENAME,
         directory = process.env.ADONE_REPORT_DIRECTORY
@@ -133,7 +133,7 @@ export default class Application extends application.Subsystem {
             if (this[ERROR_SCOPE]) {
                 return this._fireException(err);
             }
-            adone.error(err.stack || err.message || err);
+            adone.logError(err.stack || err.message || err);
             return this.exit(application.EXIT_ERROR);
         }
     }
@@ -174,7 +174,7 @@ export default class Application extends application.Subsystem {
             this.removeProcessHandlers();
             await this.emitParallel("exit", code);
         } catch (err) {
-            adone.error(err.stack || err.message || err);
+            adone.logError(err.stack || err.message || err);
             code = EXIT_ERROR;
         }
 
@@ -243,10 +243,10 @@ export default class Application extends application.Subsystem {
 
     async _fireException(err) {
         let errCode;
-        if (is.function(this.exception)) {
-            errCode = await this.exception(err);
+        if (is.function(this.error)) {
+            errCode = await this.error(err);
         } else {
-            adone.error(err.stack || err.message || err);
+            adone.logError(err.stack || err.message || err);
             errCode = adone.application.EXIT_ERROR;
         }
         if (!is.integer(errCode)) {

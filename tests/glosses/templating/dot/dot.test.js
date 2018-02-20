@@ -62,7 +62,7 @@ describe("templaing", "dot", () => {
     });
 
     describe("invalid JS in templates", () => {
-        it("should throw exception", () => {
+        it("should throw error", () => {
             assert.throws(() => {
                 doT.template("<div>{{= foo + }}</div>");
             });

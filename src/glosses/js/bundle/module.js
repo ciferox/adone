@@ -213,8 +213,8 @@ export default class Module {
             const name = isDefault
                 ? "default"
                 : isNamespace ? "*" : specifier.imported.name;
-            // adone.trace(isDefault, isNamespace, name, source);
-            // adone.trace(adone.util.omit(specifier, ["module", "loc", "scope", "parent"]));
+            // adone.logTrace(isDefault, isNamespace, name, source);
+            // adone.logTrace(adone.util.omit(specifier, ["module", "loc", "scope", "parent"]));
             this.imports[localName] = { source, specifier, name, module: null };
         });
     }

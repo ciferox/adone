@@ -2,7 +2,7 @@ const {
     is,
     util,
     meta: { reflect },
-    exception
+    error
 } = adone;
 
 export const CONTEXT_ANNOTATION = "netron::context";
@@ -266,7 +266,7 @@ export class Reflection {
 
     static from(instance) {
         if (!is.netron2Context(instance) || is.class(instance)) {
-            throw new exception.NotValid(`'${instance.__proto__.constructor.name}' is not valid instance of netron context`);
+            throw new error.NotValid(`'${instance.__proto__.constructor.name}' is not valid instance of netron context`);
         }
 
         const r = new Reflection(instance);
@@ -318,7 +318,7 @@ export class Reflection {
         }
 
         if (r.methods.size === 0 && r.properties.size === 0) {
-            throw new exception.NotValid("'instance' must have at least one method or property");
+            throw new error.NotValid("'instance' must have at least one method or property");
         }
 
         return r;

@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     util,
     event,
     database: { mysql }
@@ -38,7 +38,7 @@ class PoolNamespace {
         const clusterNode = this._getClusterNode();
 
         if (is.null(clusterNode)) {
-            return cb(new exception.NotExists("Pool does Not exists."));
+            return cb(new error.NotExists("Pool does Not exists."));
         }
 
         return this._cluster._getConnection(clusterNode, (err, connection) => {
@@ -204,7 +204,7 @@ export default class PoolCluster extends event.Emitter {
                 self._increaseErrorCount(node);
 
                 if (self._canRetry) {
-                    adone.warn(`[Error] PoolCluster : ${err}`);
+                    adone.logWarn(`[Error] PoolCluster : ${err}`);
                     return cb(null, "retry");
                 }
                 return cb(err);

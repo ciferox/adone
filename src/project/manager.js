@@ -45,7 +45,7 @@ export default class ProjectManager extends task.Manager {
 
     async load() {
         if (this._loaded) {
-            throw new adone.exception.IllegalState("Project already loaded");
+            throw new adone.error.IllegalState("Project already loaded");
         }
 
         this.config = await configuration.Adone.load({
@@ -202,7 +202,7 @@ export default class ProjectManager extends task.Manager {
     _getEntries(path) {
         const entries = this.config.getEntries(path);
         if (entries.length === 0 && !this.silent) {
-            adone.info(`No entries'${is.string(path) ? ` for ${path}` : ""}'`);
+            adone.logInfo(`No entries'${is.string(path) ? ` for ${path}` : ""}'`);
         }
 
         return entries.filter(checkEntry);
@@ -210,7 +210,7 @@ export default class ProjectManager extends task.Manager {
 
     _checkLoaded() {
         if (!this._loaded) {
-            throw new adone.exception.IllegalState("Project is not loaded");
+            throw new adone.error.IllegalState("Project is not loaded");
         }
     }
 

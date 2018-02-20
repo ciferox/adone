@@ -1,6 +1,6 @@
 adone.application.run({
     async main() {
-        adone.info("socket");
+        adone.logInfo("socket");
 
         await new Promise((resolve, reject) => {
             adone.net.proxy.shadowsocks.createConnection({
@@ -24,7 +24,7 @@ adone.application.run({
             });
         });
 
-        adone.info("agent");
+        adone.logInfo("agent");
 
         await new Promise((resolve, reject) => {
             adone.std.http.request({

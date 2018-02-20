@@ -304,7 +304,7 @@ describe("DataTypes", function () {
                             field: point
                         });
                     }).then(() => {
-                        //This case throw unhandled exception
+                        //This case throw unhandled error
                         return User.findAll();
                     }).then((users) => {
                         if (dialect === "mysql") {
@@ -335,7 +335,7 @@ describe("DataTypes", function () {
                     field: point
                 });
             }).then(() => {
-                //This case throw unhandled exception
+                //This case throw unhandled error
                 return User.findAll();
             }).then((users) => {
                 expect(users[0].field).to.be.eql(null);

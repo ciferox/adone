@@ -32,7 +32,7 @@ export default class LocalValueBlock extends LocalBaseBlock {
      * @returns {number}
      */
     fromBER(inputBuffer, inputOffset, inputLength) {
-        //region Throw an exception for a function which needs to be specified in extended classes
+        //region Throw an error for a function which needs to be specified in extended classes
         throw new TypeError("User need to make a specific function in a class which extends \"LocalValueBlock\"");
         //endregion
     }
@@ -43,7 +43,7 @@ export default class LocalValueBlock extends LocalBaseBlock {
      * @returns {ArrayBuffer}
      */
     toBER(sizeOnly = false) {
-        //region Throw an exception for a function which needs to be specified in extended classes
+        //region Throw an error for a function which needs to be specified in extended classes
         throw new TypeError("User need to make a specific function in a class which extends \"LocalValueBlock\"");
         //endregion
     }

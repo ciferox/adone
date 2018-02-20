@@ -180,7 +180,7 @@ export default class Module extends NodeModule {
 
     require(path, { cache = true, transform = this.transform } = {}) {
         if (!adone.is.string(path)) {
-            throw new adone.exception.InvalidArgument("`path` should be a string");
+            throw new adone.error.InvalidArgument("`path` should be a string");
         }
         return this.constructor._load(path, this, transform, cache);
     }

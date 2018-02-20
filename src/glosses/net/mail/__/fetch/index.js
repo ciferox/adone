@@ -1,5 +1,5 @@
 const {
-    exception,
+    error,
     is,
     util,
     net: { mail: { __ } },
@@ -126,7 +126,7 @@ export default function fetch(_url, options) {
             }
             finished = true;
             req.abort();
-            const err = new exception.Timeout("Request Timeout");
+            const err = new error.Timeout("Request Timeout");
             err.type = "FETCH";
             err.sourceUrl = _url;
             fetchRes.emit("error", err);
@@ -168,7 +168,7 @@ export default function fetch(_url, options) {
             options.redirects++;
             if (options.redirects > options.maxRedirects) {
                 finished = true;
-                const err = new exception.IllegalState("Maximum redirect count exceeded");
+                const err = new error.IllegalState("Maximum redirect count exceeded");
                 err.type = "FETCH";
                 err.sourceUrl = _url;
                 fetchRes.emit("error", err);
@@ -182,7 +182,7 @@ export default function fetch(_url, options) {
 
         if (res.statusCode >= 300 && !options.allowErrorResponse) {
             finished = true;
-            const err = new exception.IllegalState(`Invalid status code ${res.statusCode}`);
+            const err = new error.IllegalState(`Invalid status code ${res.statusCode}`);
             err.type = "FETCH";
             err.sourceUrl = _url;
             fetchRes.emit("error", err);

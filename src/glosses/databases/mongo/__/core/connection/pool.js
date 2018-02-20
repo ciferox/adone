@@ -2,7 +2,7 @@ const {
     database: { mongo },
     event,
     is,
-    exception,
+    error,
     lazify
 } = adone;
 const {
@@ -37,7 +37,7 @@ const stateTransition = (self, newState) => {
     if (legalStates && legalStates.includes(newState)) {
         self.state = newState;
     } else {
-        adone.error(`Pool with id [${self.id}] failed attempted illegal state transition from [${self.state}] to [${newState}] only following state allowed [${legalStates}]`);
+        adone.logError(`Pool with id [${self.id}] failed attempted illegal state transition from [${self.state}] to [${newState}] only following state allowed [${legalStates}]`);
     }
 };
 
@@ -783,7 +783,7 @@ export default class Pool extends event.Emitter {
                 && (!is.function(options.bson.serialize) || !is.function(options.bson.deserialize))
             )
         ) {
-            throw new exception.InvalidArgument("must pass in valid bson parser");
+            throw new error.InvalidArgument("must pass in valid bson parser");
         }
 
         // Pool state

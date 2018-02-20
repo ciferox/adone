@@ -52,7 +52,7 @@ export default class Service extends adone.application.Subsystem {
      * Initializes service.
      */
     initializeService() {
-        throw new adone.exception.NotImplemented("Method initialize() is not implemented");
+        throw new adone.error.NotImplemented("Method initialize() is not implemented");
     }
 
     async uninitialize() {

@@ -1,7 +1,7 @@
 const {
     is,
     util,
-    exception,
+    error,
     lazify,
     std: { http: { METHODS } },
     net: { http }
@@ -147,7 +147,7 @@ export class Router {
                             if (is.function(options.notImplemented)) {
                                 notImplementedThrowable = options.notImplemented();
                             } else {
-                                notImplementedThrowable = new http.exception.NotImplemented();
+                                notImplementedThrowable = new http.error.NotImplemented();
                             }
                             throw notImplementedThrowable;
                         } else {
@@ -165,7 +165,7 @@ export class Router {
                                 if (is.function(options.methodNotAllowed)) {
                                     notAllowedThrowable = options.methodNotAllowed();
                                 } else {
-                                    notAllowedThrowable = new http.exception.MethodNotAllowed();
+                                    notAllowedThrowable = new http.error.MethodNotAllowed();
                                 }
                                 throw notAllowedThrowable;
                             } else {
@@ -258,7 +258,7 @@ export class Router {
             return route.url(...args);
         }
 
-        return new exception.NotFound(`No route found for name: ${name}`);
+        return new error.NotFound(`No route found for name: ${name}`);
     }
 
     // Match given `path` and return corresponding routes.

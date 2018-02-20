@@ -75,7 +75,7 @@ export default class NodePath {
     }
 
     if (!parent) {
-      throw new adone.exception.Exception("To get a node path the parent needs to exist");
+      throw new adone.error.Exception("To get a node path the parent needs to exist");
     }
 
     const targetNode = container[key];

@@ -3,7 +3,7 @@ let hasNotifier = void 0;
 
 const {
     is,
-    exception,
+    error,
     event,
     notifier: { __ },
     std: { os }
@@ -43,15 +43,15 @@ export default class NotifySend extends event.Emitter {
         }
 
         if (!options.message) {
-            throw new exception.InvalidArgument("Message is required");
+            throw new error.InvalidArgument("Message is required");
         }
 
         if (os.type() !== "Linux" && !os.type().match(/BSD$/)) {
-            throw new exception.NotSupported("Only supported on Linux and *BSD systems");
+            throw new error.NotSupported("Only supported on Linux and *BSD systems");
         }
 
         if (hasNotifier === false) {
-            throw new exception.NotSupported("notify-send must be installed on the system");
+            throw new error.NotSupported("notify-send must be installed on the system");
         }
 
         if (hasNotifier || Boolean(this.options.suppressOsdCheck)) {

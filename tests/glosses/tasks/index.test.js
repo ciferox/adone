@@ -2,7 +2,7 @@ const {
     is,
     promise,
     task,
-    exception
+    error
 } = adone;
 
 describe("task", () => {
@@ -133,7 +133,7 @@ describe("task", () => {
 
         for (const InvalidTask of invalidTasks) {
             const err = await assert.throws(async () => manager.addTask("task", InvalidTask)); // eslint-disable-line
-            assert.instanceOf(err, exception.NotValid);
+            assert.instanceOf(err, error.NotValid);
         }
 
         await manager.addTask("task", ValidTask);
@@ -161,7 +161,7 @@ describe("task", () => {
     it("observer should contain correct error info for sync task", async () => {
         class TaskA extends task.Task {
             run() {
-                throw new adone.exception.Runtime("sad");
+                throw new adone.error.Runtime("sad");
             }
         }
 
@@ -169,15 +169,15 @@ describe("task", () => {
         const observer = await manager.run("a", adone.package.version);
         const err = await assert.throws(async () => observer.result);
         assert.true(observer.isFailed());
-        assert.instanceOf(observer.error, adone.exception.Runtime);
-        assert.instanceOf(err, adone.exception.Runtime);
+        assert.instanceOf(observer.error, adone.error.Runtime);
+        assert.instanceOf(err, adone.error.Runtime);
     });
 
     it("observer should contain correct error info for async task", async () => {
         class TaskA extends task.Task {
             async run() {
                 await promise.delay(10);
-                throw new adone.exception.Runtime("sad");
+                throw new adone.error.Runtime("sad");
             }
         }
 
@@ -185,8 +185,8 @@ describe("task", () => {
         const observer = await manager.run("a", adone.package.version);
         const err = await assert.throws(async () => observer.result);
         assert.true(observer.isFailed());
-        assert.instanceOf(observer.error, adone.exception.Runtime);
-        assert.instanceOf(err, adone.exception.Runtime);
+        assert.instanceOf(observer.error, adone.error.Runtime);
+        assert.instanceOf(err, adone.error.Runtime);
     });
 
     it("run async task", async () => {
@@ -206,7 +206,7 @@ describe("task", () => {
 
     it("delete nonexisting task", async () => {
         const err = await assert.throws(async () => manager.deleteTask("unknown"));
-        assert.instanceOf(err, adone.exception.NotExists);
+        assert.instanceOf(err, adone.error.NotExists);
     });
 
     it("delete existing task", async () => {
@@ -256,7 +256,7 @@ describe("task", () => {
         await manager.addTask("a", TaskA);
         const observer = await manager.run("a", adone.package.version);
         await manager.deleteTask("a");
-        await assert.throws(async () => manager.run("a", adone.package.version), adone.exception.NotExists);
+        await assert.throws(async () => manager.run("a", adone.package.version), adone.error.NotExists);
 
         assert.lengthOf(manager.getTaskNames(), 0);
         assert.true(observer.isRunning());
@@ -415,7 +415,7 @@ describe("task", () => {
             const observer = await manager.run("a", false, false);
             await promise.delay(200);
             const err = await assert.throws(async () => observer.cancel());
-            assert.instanceOf(err, adone.exception.NotAllowed);
+            assert.instanceOf(err, adone.error.NotAllowed);
             assert.equal(await observer.result, 100);
             assert.true(observer.isCompleted());
             assert.false(observer.isCancelled());
@@ -457,7 +457,7 @@ describe("task", () => {
         class TaskBadA extends task.Task {
             async run() {
                 await promise.delay(10);
-                throw new adone.exception.Exception("some error");
+                throw new adone.error.Exception("some error");
             }
         }
 
@@ -518,7 +518,7 @@ describe("task", () => {
 
                 class TaskB extends task.Task {
                     run() {
-                        throw new adone.exception.Runtime("Task error");
+                        throw new adone.error.Runtime("Task error");
                     }
                 }
 
@@ -535,7 +535,7 @@ describe("task", () => {
 
                 const observer = await manager.run("series", ["a", "b", "c"]);
                 const err = await assert.throws(async () => observer.result);
-                assert.instanceOf(err, adone.exception.Runtime);
+                assert.instanceOf(err, adone.error.Runtime);
 
                 assert.lengthOf(results, 1);
                 assert.equal(results[0], 666);
@@ -585,7 +585,7 @@ describe("task", () => {
                 assert.false(observer.isCancelable());
 
                 const err = await assert.throws(async () => observer.cancel());
-                assert.instanceOf(err, adone.exception.NotAllowed);
+                assert.instanceOf(err, adone.error.NotAllowed);
 
                 await adone.promise.delay(800);
 
@@ -656,7 +656,7 @@ describe("task", () => {
 
                 class TaskB extends task.Task {
                     run() {
-                        throw new adone.exception.Runtime("Task error");
+                        throw new adone.error.Runtime("Task error");
                     }
                 }
 
@@ -673,7 +673,7 @@ describe("task", () => {
 
                 const observer = await manager.run("parallel", ["a", "b", "c"]);
                 const err = await assert.throws(async () => observer.result);
-                assert.instanceOf(err, adone.exception.Runtime);
+                assert.instanceOf(err, adone.error.Runtime);
 
                 await adone.promise.delay(300);
 
@@ -724,13 +724,13 @@ describe("task", () => {
                 assert.false(observer.isCancelable());
 
                 let err = await assert.throws(async () => observer.cancel());
-                assert.instanceOf(err, adone.exception.NotAllowed);
+                assert.instanceOf(err, adone.error.NotAllowed);
 
                 await adone.promise.delay(1000);
 
                 assert.false(observer.isCancelable());
                 err = await assert.throws(async () => observer.cancel());
-                assert.instanceOf(err, adone.exception.NotAllowed);
+                assert.instanceOf(err, adone.error.NotAllowed);
 
                 const result = await observer.result;
                 assert.equal(result.a, 888);
@@ -766,7 +766,7 @@ describe("task", () => {
 
                 const observer = await manager.run("try", ["a", "b", "c"], null, "adone");
                 const err = await assert.throws(async () => observer.result);
-                assert.instanceOf(err, adone.exception.AggregateException);
+                assert.instanceOf(err, adone.error.AggregateException);
             });
         });
 
@@ -938,7 +938,7 @@ describe("task", () => {
                     data.push(1);
                     await promise.delay(100);
                     data.push(2);
-                    throw new adone.exception.Runtime("task error");
+                    throw new adone.error.Runtime("task error");
                 }
 
                 async undo() {
@@ -963,7 +963,7 @@ describe("task", () => {
                 run() {
                     data.push(1);
                     data.push(2);
-                    throw new adone.exception.Runtime("task error");
+                    throw new adone.error.Runtime("task error");
                 }
 
                 async undo() {

@@ -1,10 +1,10 @@
 const {
     is,
     vendor: { lodash: _ },
-    exception
+    error
 } = adone;
 
-export class ORMException extends exception.Exception {}
+export class ORMException extends error.Exception {}
 ORMException.prototype.name = "ORMException";
 
 /**

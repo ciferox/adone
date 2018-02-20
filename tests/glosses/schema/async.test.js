@@ -239,7 +239,7 @@ describe("schema", "compileAsync method", () => {
         }
     });
 
-    it("should throw exception if loadSchema is not passed", (done) => {
+    it("should throw error if loadSchema is not passed", (done) => {
         const schema = {
             id: "http://example.com/int2plus.json",
             type: "integer",
@@ -248,7 +248,7 @@ describe("schema", "compileAsync method", () => {
         instance = new Validator();
         expect(() => {
             instance.compileAsync(schema, () => {
-                done(new Error("it should have thrown exception"));
+                done(new Error("it should have thrown error"));
             });
         }).to.throw();
         setTimeout(() => {
@@ -302,7 +302,7 @@ describe("schema", "compileAsync method", () => {
             }
         });
 
-        it("if schema compilation throws some other exception", (done) => {
+        it("if schema compilation throws some other error", (done) => {
             instance.addKeyword("badkeyword", { compile: badCompile });
             const schema = { badkeyword: true };
             instance.compileAsync(schema, shouldFail(done));
@@ -366,7 +366,7 @@ describe("schema", "compileAsync method", () => {
             }
         });
 
-        it("if schema compilation throws some other exception", () => {
+        it("if schema compilation throws some other error", () => {
             instance.addKeyword("badkeyword", { compile: badCompile });
             const schema = { badkeyword: true };
             return shouldReject(instance.compileAsync(schema));

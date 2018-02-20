@@ -274,7 +274,7 @@ describe("update", function () {
                 await user.update({
                     name: "B"
                 });
-            }, orm.exception.ValidationError);
+            }, orm.error.ValidationError);
 
             const user2 = await User.findOne({});
             expect(user2.get("email")).to.equal("valid.email@gmail.com");
@@ -308,7 +308,7 @@ describe("update", function () {
                     name: "B",
                     email: "still.valid.email@gmail.com"
                 });
-            }, orm.exception.ValidationError);
+            }, orm.error.ValidationError);
 
             const user2 = await User.findOne({});
             expect(user2.get("email")).to.equal("valid.email@gmail.com");

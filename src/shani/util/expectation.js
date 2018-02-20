@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     shani: { util },
     lazify
 } = adone;
@@ -78,7 +78,7 @@ const expectation = {
     },
     atLeast(num) {
         if (!is.number(num)) {
-            throw new exception.InvalidArgument(`'${__.util.valueToString(num)}' is not number`);
+            throw new error.InvalidArgument(`'${__.util.valueToString(num)}' is not number`);
         }
 
         if (!this.limitsSet) {
@@ -92,7 +92,7 @@ const expectation = {
     },
     atMost(num) {
         if (!is.number(num)) {
-            throw new exception.InvalidArgument(`'${__.util.valueToString(num)}' is not number`);
+            throw new error.InvalidArgument(`'${__.util.valueToString(num)}' is not number`);
         }
 
         if (!this.limitsSet) {
@@ -118,7 +118,7 @@ const expectation = {
     },
     exactly(num) {
         if (!is.number(num)) {
-            throw new exception.InvalidArgument(`'${__.util.valueToString(num)}' is not a number`);
+            throw new error.InvalidArgument(`'${__.util.valueToString(num)}' is not a number`);
         }
 
         this.atLeast(num);
@@ -250,10 +250,10 @@ const expectation = {
         util.assert.pass(message);
     },
     fail(message) {
-        const exception = new exception.Exception(message);
-        exception.name = "ExpectationError";
+        const error = new error.Exception(message);
+        error.name = "ExpectationError";
 
-        throw exception;
+        throw error;
     }
 };
 

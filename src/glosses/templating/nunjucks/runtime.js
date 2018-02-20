@@ -3,7 +3,7 @@ import { TemplateError } from "./x";
 const {
     is,
     net: { http: { server: { helper } } },
-    exception,
+    error,
     util
 } = adone;
 
@@ -217,9 +217,9 @@ export const memberLookup = (obj = {}, val) => {
 
 export const callWrap = (obj, name, context, args) => {
     if (!obj) {
-        throw new exception.InvalidArgument(`Unable to call \`${name}\`, which is undefined or falsey`);
+        throw new error.InvalidArgument(`Unable to call \`${name}\`, which is undefined or falsey`);
     } else if (!is.function(obj)) {
-        throw new exception.InvalidArgument(`Unable to call \`${name}\`, which is not a function`);
+        throw new error.InvalidArgument(`Unable to call \`${name}\`, which is not a function`);
     }
 
     return obj.apply(context, args);
@@ -338,7 +338,7 @@ export const inOperator = (key, val) => {
         return key in val;
     }
 
-    throw new exception.IllegalState(`Cannot use "in" operator to search for "${key}" in unexpected types.`);
+    throw new error.IllegalState(`Cannot use "in" operator to search for "${key}" in unexpected types.`);
 };
 
 export const isArray = is.array;

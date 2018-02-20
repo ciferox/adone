@@ -1,5 +1,5 @@
 const {
-    exception,
+    error,
     collection
 } = adone;
 
@@ -14,7 +14,7 @@ export default class NSCache {
 
     _checkNs(ns) {
         if (!this._namesapces.has(ns)) {
-            throw new exception.Unknown(`There is no such cache namespace "${ns}"`);
+            throw new error.Unknown(`There is no such cache namespace "${ns}"`);
         }
     }
 

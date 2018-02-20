@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     std
 } = adone;
 
@@ -40,7 +40,7 @@ export const timeout = (callback, timeout) => {
             callback.apply(this, args);
         }
     };
-    timer = setTimeout(run, timeout, new exception.Timeout());
+    timer = setTimeout(run, timeout, new error.Timeout());
     return run;
 };
 

@@ -68,13 +68,13 @@ describe("shani", "util", "nock", "back", () => {
         nock.restore();
     });
 
-    it("nockBack throws an exception when fixtures is not set", () => {
+    it("nockBack throws an error when fixtures is not set", () => {
         assert.throws(() => {
             nockBack();
         });
     });
 
-    it("nockBack throws an exception when fixtureName is not a string", () => {
+    it("nockBack throws an error when fixtureName is not a string", () => {
         nockBack.fixtures = fixtures.path();
 
         assert.throws(() => {

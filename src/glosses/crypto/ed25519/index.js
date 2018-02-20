@@ -9,7 +9,7 @@ adone.asNamespace(exports);
 export const sign = native.Sign;
 export const verify = (msg, sig, key) => {
     if (!is.arrayLikeObject(msg) || !is.arrayLikeObject(sig) || !is.arrayLikeObject(key)) {
-        throw new adone.exception.InvalidArgument("Verify requires (Buffer, Buffer(64), Buffer(32)");
+        throw new adone.error.InvalidArgument("Verify requires (Buffer, Buffer(64), Buffer(32)");
     }
     return native.Verify(msg, sig, key);
 };

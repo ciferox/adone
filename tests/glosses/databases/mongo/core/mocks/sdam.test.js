@@ -24,7 +24,7 @@ describe("database", "mongo", "core", function () {
         this.timeout(999999999); // long enough
         // Kill any running MongoDB processes and `install $MONGODB_VERSION` || `use existing installation` || `install stable`
         const version = await promisify(mongodbVersionManager.current)();
-        adone.info(`Running tests against MongoDB version ${version}`);
+        adone.logInfo(`Running tests against MongoDB version ${version}`);
         return configuration.setup();
     });
 

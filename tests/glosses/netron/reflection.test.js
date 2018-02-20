@@ -449,9 +449,9 @@ describe("netron", "Reflection", () => {
     //         class A3 extends netron.Interface { }
     //         class A4 extends Interface { }
 
-    //         assert.throws(() => Twin(A1), adone.exception.NotValid);
-    //         assert.throws(() => Twin("class A1 { }"), adone.exception.NotValid);
-    //         assert.throws(() => Twin("class A1 extends Other { }"), adone.exception.NotValid);
+    //         assert.throws(() => Twin(A1), adone.error.NotValid);
+    //         assert.throws(() => Twin("class A1 { }"), adone.error.NotValid);
+    //         assert.throws(() => Twin("class A1 extends Other { }"), adone.error.NotValid);
 
     //         assert.doesNotThrow(() => Twin(A2));
     //         assert.doesNotThrow(() => Twin(A3));

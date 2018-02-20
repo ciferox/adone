@@ -1,5 +1,5 @@
 describe("shani", "util", "assert", () => {
-    const { exception } = adone;
+    const { error } = adone;
     const suitil = adone.shani.util;
     const { __: { color } } = suitil;
     const { stub: sstub } = suitil;
@@ -46,7 +46,7 @@ describe("shani", "util", "assert", () => {
             sassert.failException = this.exceptionName;
         });
 
-        it("throws exception", () => {
+        it("throws error", () => {
             assert.throws(
                 () => {
                     sassert.fail("Some message");
@@ -55,7 +55,7 @@ describe("shani", "util", "assert", () => {
             );
         });
 
-        it("throws configured exception type", () => {
+        it("throws configured error type", () => {
             sassert.failException = "RetardError";
 
             const e = assert.throws(() => {
@@ -1131,13 +1131,13 @@ describe("shani", "util", "assert", () => {
         it("throws if target is undefined", () => {
             assert.throws(() => {
                 sassert.expose();
-            }, exception.InvalidArgument);
+            }, error.InvalidArgument);
         });
 
         it("throws if target is null", () => {
             assert.throws(() => {
                 sassert.expose(null);
-            }, exception.InvalidArgument);
+            }, error.InvalidArgument);
         });
     });
 
@@ -1161,13 +1161,13 @@ describe("shani", "util", "assert", () => {
             };
         });
 
-        it("assert.called exception message", function () {
+        it("assert.called error message", function () {
             assert.equal(this.message("called", this.obj.doSomething),
                 "expected doSomething to have been called at " +
                 "least once but was never called");
         });
 
-        it("assert.notCalled exception message one call", function () {
+        it("assert.notCalled error message one call", function () {
             this.obj.doSomething();
 
             assert.equal(this.message("notCalled", this.obj.doSomething).replace(/ at.*/g, ""),
@@ -1175,7 +1175,7 @@ describe("shani", "util", "assert", () => {
                 "but was called once\n    doSomething()");
         });
 
-        it("assert.notCalled exception message four calls", function () {
+        it("assert.notCalled error message four calls", function () {
             this.obj.doSomething();
             this.obj.doSomething();
             this.obj.doSomething();
@@ -1187,7 +1187,7 @@ describe("shani", "util", "assert", () => {
                 "doSomething()\n    doSomething()\n    doSomething()");
         });
 
-        it("assert.notCalled exception message with calls with arguments", function () {
+        it("assert.notCalled error message with calls with arguments", function () {
             this.obj.doSomething();
             this.obj.doSomething(3);
             this.obj.doSomething(42, 1);
@@ -1199,7 +1199,7 @@ describe("shani", "util", "assert", () => {
                 "doSomething(3)\n    doSomething(42, 1)\n    doSomething()");
         });
 
-        it("assert.callOrder exception message", function () {
+        it("assert.callOrder error message", function () {
             const obj = { doop() { }, foo() { } };
             sspy(obj, "doop");
             sspy(obj, "foo");
@@ -1215,7 +1215,7 @@ describe("shani", "util", "assert", () => {
                 "order but were called as doop, doSomething, foo");
         });
 
-        it("assert.callOrder with missing first call exception message", function () {
+        it("assert.callOrder with missing first call error message", function () {
             const obj = { doop() { }, foo() { } };
             sspy(obj, "doop");
             sspy(obj, "foo");
@@ -1229,7 +1229,7 @@ describe("shani", "util", "assert", () => {
                 "order but were called as foo");
         });
 
-        it("assert.callOrder with missing last call exception message", function () {
+        it("assert.callOrder with missing last call error message", function () {
             const obj = { doop() { }, foo() { } };
             sspy(obj, "doop");
             sspy(obj, "foo");
@@ -1243,7 +1243,7 @@ describe("shani", "util", "assert", () => {
                 "order but were called as doop");
         });
 
-        it("assert.callCount exception message", function () {
+        it("assert.callCount error message", function () {
             this.obj.doSomething();
 
             assert.equal(this.message("callCount", this.obj.doSomething, 3).replace(/ at.*/g, ""),
@@ -1251,7 +1251,7 @@ describe("shani", "util", "assert", () => {
                 "once\n    doSomething()");
         });
 
-        it("assert.calledOnce exception message", function () {
+        it("assert.calledOnce error message", function () {
             this.obj.doSomething();
             this.obj.doSomething();
 
@@ -1266,7 +1266,7 @@ describe("shani", "util", "assert", () => {
                 "thrice\n    doSomething()\n    doSomething()\n    doSomething()");
         });
 
-        it("assert.calledTwice exception message", function () {
+        it("assert.calledTwice error message", function () {
             this.obj.doSomething();
 
             assert.equal(this.message("calledTwice", this.obj.doSomething).replace(/ at.*/g, ""),
@@ -1274,7 +1274,7 @@ describe("shani", "util", "assert", () => {
                 "once\n    doSomething()");
         });
 
-        it("assert.calledThrice exception message", function () {
+        it("assert.calledThrice error message", function () {
             this.obj.doSomething();
             this.obj.doSomething();
             this.obj.doSomething();
@@ -1287,7 +1287,7 @@ describe("shani", "util", "assert", () => {
             );
         });
 
-        it.skip("assert.calledOn exception message", function () {
+        it.skip("assert.calledOn error message", function () {
             this.obj.toString = function () {
                 return "[Oh yeah]";
             };
@@ -1311,7 +1311,7 @@ describe("shani", "util", "assert", () => {
             );
         });
 
-        it.skip("assert.alwaysCalledOn exception message", function () {
+        it.skip("assert.alwaysCalledOn error message", function () {
             this.obj.toString = function () {
                 return "[Oh yeah]";
             };
@@ -1338,14 +1338,14 @@ describe("shani", "util", "assert", () => {
             );
         });
 
-        it("assert.calledWithNew exception message", function () {
+        it("assert.calledWithNew error message", function () {
             this.obj.doSomething();
 
             assert.equal(this.message("calledWithNew", this.obj.doSomething),
                 "expected doSomething to be called with new");
         });
 
-        it("assert.alwaysCalledWithNew exception message", function () {
+        it("assert.alwaysCalledWithNew error message", function () {
             new this.obj.doSomething(); // eslint-disable-line no-new, new-cap
             this.obj.doSomething();
 
@@ -1353,7 +1353,7 @@ describe("shani", "util", "assert", () => {
                 "expected doSomething to always be called with new");
         });
 
-        it("assert.calledWith exception message", function () {
+        it("assert.calledWith error message", function () {
             this.obj.doSomething(4, 3, "hey");
 
             assert.equal(this.message("calledWith", this.obj.doSomething, 1, 3, "hey").replace(/ at.*/g, ""),
@@ -1363,7 +1363,7 @@ describe("shani", "util", "assert", () => {
                 "hey");
         });
 
-        it("assert.calledWith exception message with multiple calls", function () {
+        it("assert.calledWith error message with multiple calls", function () {
             this.obj.doSomething(4, 3, "hey");
             this.obj.doSomething(1, 3, "not");
 
@@ -1379,7 +1379,7 @@ describe("shani", "util", "assert", () => {
                     color.red("not")} ${color.green("hey")} `);
         });
 
-        it("assert.calledWith exception message with a missing argument", function () {
+        it("assert.calledWith error message with a missing argument", function () {
             this.obj.doSomething(4);
 
             assert.equal(this.message("calledWith", this.obj.doSomething, 1, 3).replace(/ at.*/g, ""),
@@ -1388,7 +1388,7 @@ describe("shani", "util", "assert", () => {
                     color.green("3")}`);
         });
 
-        it("assert.calledWith exception message with an excess argument", function () {
+        it("assert.calledWith error message with an excess argument", function () {
             this.obj.doSomething(4, 3);
 
             assert.equal(this.message("calledWith", this.obj.doSomething, 1).replace(/ at.*/g, ""),
@@ -1397,7 +1397,7 @@ describe("shani", "util", "assert", () => {
                     color.red("3")}`);
         });
 
-        it("assert.calledWith match.any exception message", function () {
+        it("assert.calledWith match.any error message", function () {
             this.obj.doSomething(true, true);
 
             assert.equal(
@@ -1407,7 +1407,7 @@ describe("shani", "util", "assert", () => {
                     color.red("true")} ${color.green("false")} `);
         });
 
-        it("assert.calledWith match.defined exception message", function () {
+        it("assert.calledWith match.defined error message", function () {
             this.obj.doSomething();
 
             assert.equal(
@@ -1415,7 +1415,7 @@ describe("shani", "util", "assert", () => {
                 `expected doSomething to be called with arguments \n ${color.red("defined")}`);
         });
 
-        it("assert.calledWith match.truthy exception message", function () {
+        it("assert.calledWith match.truthy error message", function () {
             this.obj.doSomething();
 
             assert.equal(
@@ -1423,7 +1423,7 @@ describe("shani", "util", "assert", () => {
                 `expected doSomething to be called with arguments \n ${color.red("truthy")}`);
         });
 
-        it("assert.calledWith match.falsy exception message", function () {
+        it("assert.calledWith match.falsy error message", function () {
             this.obj.doSomething(true);
 
             assert.equal(this.message("calledWith", this.obj.doSomething, smatch.falsy).replace(/ at.*/g, ""),
@@ -1431,7 +1431,7 @@ describe("shani", "util", "assert", () => {
                     color.green("true")} ${color.red("falsy")}`);
         });
 
-        it("assert.calledWith match.same exception message", function () {
+        it("assert.calledWith match.same error message", function () {
             this.obj.doSomething();
 
             assert.equal(
@@ -1439,7 +1439,7 @@ describe("shani", "util", "assert", () => {
                 `expected doSomething to be called with arguments \n ${color.red("same(1)")}`);
         });
 
-        it("assert.calledWith match.typeOf exception message", function () {
+        it("assert.calledWith match.typeOf error message", function () {
             this.obj.doSomething();
             const matcher = smatch.typeOf("string");
 
@@ -1448,7 +1448,7 @@ describe("shani", "util", "assert", () => {
                 `expected doSomething to be called with arguments \n ${color.red("typeOf(\"string\")")}`);
         });
 
-        it("assert.calledWith match.instanceOf exception message", function () {
+        it("assert.calledWith match.instanceOf error message", function () {
             this.obj.doSomething();
             const matcher = smatch.instanceOf(function CustomType() { });
 
@@ -1457,7 +1457,7 @@ describe("shani", "util", "assert", () => {
                 `expected doSomething to be called with arguments \n ${color.red("instanceOf(CustomType)")}`);
         });
 
-        it("assert.calledWith match object exception message", function () {
+        it("assert.calledWith match object error message", function () {
             this.obj.doSomething();
             const matcher = smatch({ some: "value", and: 123 });
 
@@ -1466,21 +1466,21 @@ describe("shani", "util", "assert", () => {
                 `expected doSomething to be called with arguments \n ${color.red("match(some: value, and: 123)")}`);
         });
 
-        it("assert.calledWith match boolean exception message", function () {
+        it("assert.calledWith match boolean error message", function () {
             this.obj.doSomething();
 
             assert.equal(this.message("calledWith", this.obj.doSomething, smatch(true)).replace(/ at.*/g, ""),
                 `expected doSomething to be called with arguments \n ${color.red("match(true)")}`);
         });
 
-        it("assert.calledWith match number exception message", function () {
+        it("assert.calledWith match number error message", function () {
             this.obj.doSomething();
 
             assert.equal(this.message("calledWith", this.obj.doSomething, smatch(123)).replace(/ at.*/g, ""),
                 `expected doSomething to be called with arguments \n ${color.red("match(123)")}`);
         });
 
-        it("assert.calledWith match string exception message", function () {
+        it("assert.calledWith match string error message", function () {
             this.obj.doSomething();
             const matcher = smatch("Sinon");
 
@@ -1488,7 +1488,7 @@ describe("shani", "util", "assert", () => {
                 `expected doSomething to be called with arguments \n ${color.red("match(\"Sinon\")")}`);
         });
 
-        it("assert.calledWith match regexp exception message", function () {
+        it("assert.calledWith match regexp error message", function () {
             this.obj.doSomething();
 
             assert.equal(
@@ -1496,7 +1496,7 @@ describe("shani", "util", "assert", () => {
                 `expected doSomething to be called with arguments \n ${color.red("match(/[a-z]+/)")}`);
         });
 
-        it("assert.calledWith match test function exception message", function () {
+        it("assert.calledWith match test function error message", function () {
             this.obj.doSomething();
             const matcher = smatch({ test: function custom() { } });
 
@@ -1505,7 +1505,7 @@ describe("shani", "util", "assert", () => {
                 `expected doSomething to be called with arguments \n ${color.red("match(custom)")}`);
         });
 
-        it("assert.calledWithMatch exception message", function () {
+        it("assert.calledWithMatch error message", function () {
             this.obj.doSomething(1, 3, "hey");
 
             assert.equal(this.message("calledWithMatch", this.obj.doSomething, 4, 3, "hey").replace(/ at.*/g, ""),
@@ -1515,7 +1515,7 @@ describe("shani", "util", "assert", () => {
                 "hey");
         });
 
-        it("assert.alwaysCalledWith exception message", function () {
+        it("assert.alwaysCalledWith error message", function () {
             this.obj.doSomething(1, 3, "hey");
             this.obj.doSomething(1, "hey");
 
@@ -1529,7 +1529,7 @@ describe("shani", "util", "assert", () => {
                 "hey");
         });
 
-        it("assert.alwaysCalledWithMatch exception message", function () {
+        it("assert.alwaysCalledWithMatch error message", function () {
             this.obj.doSomething(1, 3, "hey");
             this.obj.doSomething(1, "hey");
 
@@ -1544,7 +1544,7 @@ describe("shani", "util", "assert", () => {
                 "hey");
         });
 
-        it("assert.calledWithExactly exception message", function () {
+        it("assert.calledWithExactly error message", function () {
             this.obj.doSomething(1, 3, "hey");
 
             assert.equal(this.message("calledWithExactly", this.obj.doSomething, 1, 3).replace(/ at.*/g, ""),
@@ -1554,7 +1554,7 @@ describe("shani", "util", "assert", () => {
                     color.red("hey")}`);
         });
 
-        it("assert.alwaysCalledWithExactly exception message", function () {
+        it("assert.alwaysCalledWithExactly error message", function () {
             this.obj.doSomething(1, 3, "hey");
             this.obj.doSomething(1, 3);
 
@@ -1568,7 +1568,7 @@ describe("shani", "util", "assert", () => {
                 "3");
         });
 
-        it("assert.neverCalledWith exception message", function () {
+        it("assert.neverCalledWith error message", function () {
             this.obj.doSomething(1, 2, 3);
 
             assert.equal(this.message("neverCalledWith", this.obj.doSomething, 1, 2).replace(/ at.*/g, ""),
@@ -1576,7 +1576,7 @@ describe("shani", "util", "assert", () => {
                 "arguments 1, 2\n    doSomething(1, 2, 3)");
         });
 
-        it("assert.neverCalledWithMatch exception message", function () {
+        it("assert.neverCalledWithMatch error message", function () {
             this.obj.doSomething(1, 2, 3);
 
             assert.equal(this.message("neverCalledWithMatch", this.obj.doSomething, 1, 2).replace(/ at.*/g, ""),
@@ -1584,25 +1584,25 @@ describe("shani", "util", "assert", () => {
                 "1, 2\n    doSomething(1, 2, 3)");
         });
 
-        it("assert.threw exception message", function () {
+        it("assert.threw error message", function () {
             this.obj.doSomething(1, 3, "hey");
             this.obj.doSomething(1, 3);
 
             assert.equal(this.message("threw", this.obj.doSomething).replace(/ at.*/g, ""),
-                "doSomething did not throw exception\n" +
+                "doSomething did not throw error\n" +
                 "    doSomething(1, 3, hey)\n    doSomething(1, 3)");
         });
 
-        it("assert.alwaysThrew exception message", function () {
+        it("assert.alwaysThrew error message", function () {
             this.obj.doSomething(1, 3, "hey");
             this.obj.doSomething(1, 3);
 
             assert.equal(this.message("alwaysThrew", this.obj.doSomething).replace(/ at.*/g, ""),
-                "doSomething did not always throw exception\n" +
+                "doSomething did not always throw error\n" +
                 "    doSomething(1, 3, hey)\n    doSomething(1, 3)");
         });
 
-        it("assert.match exception message", function () {
+        it("assert.match error message", function () {
             assert.equal(this.message("match", { foo: 1 }, [1, 3]),
                 "expected value to match\n" +
                 "    expected = [ 1, 3 ]\n" +
@@ -1626,7 +1626,7 @@ describe("shani", "util", "assert", () => {
             }
         };
 
-        it("should use the symbol's description in exception messages", () => {
+        it("should use the symbol's description in error messages", () => {
             const symbol = Symbol("Something Symbolic");
             setupSymbol(symbol);
 
@@ -1636,7 +1636,7 @@ describe("shani", "util", "assert", () => {
         });
 
         it("should indicate that an assertion failure with a symbol method name " +
-           "occured in exception messages, even if the symbol has no description", () => {
+           "occured in error messages, even if the symbol has no description", () => {
             const symbol = Symbol();
             setupSymbol(symbol);
 

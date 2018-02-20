@@ -1,7 +1,7 @@
 const {
     is,
     net: { p2p: { crypto } },
-    exception
+    error
 } = adone;
 
 const toB64Opt = (val) => {
@@ -13,11 +13,11 @@ const toB64Opt = (val) => {
 export default class PeerId {
     constructor(id, privKey, pubKey) {
         if (!is.buffer(id)) {
-            throw new adone.exception.NotValid("Invalid id");
+            throw new adone.error.NotValid("Invalid id");
         }
 
         if (privKey && pubKey && !privKey.public.bytes.equals(pubKey.bytes)) {
-            throw new adone.exception.NotValid("Inconsistent arguments");
+            throw new adone.error.NotValid("Inconsistent arguments");
         }
 
         this._id = id;
@@ -31,7 +31,7 @@ export default class PeerId {
     }
 
     set id(val) {
-        throw new exception.NotAllowed("Id is immutable");
+        throw new error.NotAllowed("Id is immutable");
     }
 
     asBase58() {

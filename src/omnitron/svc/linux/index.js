@@ -81,15 +81,15 @@ export default class Service {
 
                 const script = await nunjucks.render(templatePath, context);
                 await adone.fs.writeFile(filePath, script);
-                adone.info(`Startup script '${filePath}' created`);
+                adone.logInfo(`Startup script '${filePath}' created`);
                 await adone.fs.chmod(filePath, "755");
-                adone.info("chmod => 755");
+                adone.logInfo("chmod => 755");
                 if (osFamily === "debian") {
                     await adone.system.process.exec("/usr/sbin/update-rc.d", ["omnitron", "defaults"]);
                 } else {
                     await adone.system.process.exec("/sbin/chkconfig", ["omnitron", "on"]);
                 }
-                adone.info("System startup enabled");
+                adone.logInfo("System startup enabled");
             } else if (this.config.mode === "sysd") {
                 context.execPath = process.execPath;
 
@@ -101,20 +101,20 @@ export default class Service {
                 }
                 const adoneHomePath = adone.std.path.join(pathPrefix, adone.realm.config.dirName);
                 if (!(await adone.fs.exists(adoneHomePath))) {
-                    throw new adone.exception.NotExists(`Adone home directory '${adoneHomePath}' not exists`);
+                    throw new adone.error.NotExists(`Adone home directory '${adoneHomePath}' not exists`);
                 }
 
                 context.pidPath = adone.std.path.join(adoneHomePath, "omnitron.pid");
 
                 const script = await nunjucks.render(path.join(this.templateRoot, "sysd"), context);
                 await adone.fs.writeFile(filePath, script);
-                adone.info(`Startup script '${filePath}' created`);
+                adone.logInfo(`Startup script '${filePath}' created`);
                 await adone.system.process.exec("systemctl", ["daemon-reload"]);
                 await adone.system.process.exec("systemctl", ["enable", "omnitron.service"]);
-                adone.info("System startup enabled");
+                adone.logInfo("System startup enabled");
             }
         } else {
-            adone.info(`Startup script '${filePath}' already exists`);
+            adone.logInfo(`Startup script '${filePath}' already exists`);
         }
 
         return exists;
@@ -135,12 +135,12 @@ export default class Service {
             } else if (this.config.mode === "sysd") {
                 await adone.system.process.exec("systemctl", ["disable", "omnitron.service"]);
             }
-            adone.info("System startup disabled");
+            adone.logInfo("System startup disabled");
 
             await adone.fs.unlink(filePath);
-            adone.info(`Startup script '${filePath}' deleted`);
+            adone.logInfo(`Startup script '${filePath}' deleted`);
             return;
         }
-        adone.info(`Startup script '${filePath}' not exists`);
+        adone.logInfo(`Startup script '${filePath}' not exists`);
     }
 }

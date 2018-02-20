@@ -1,4 +1,4 @@
-const { is, exception } = adone;
+const { is, error } = adone;
 
 export default class Binary {
     constructor(buffer, subType = 0) {
@@ -17,7 +17,7 @@ export default class Binary {
                 // Different ways of writing the length of the string for the different types
                 this.buffer = Buffer.from(buffer);
             } else {
-                throw new exception.InvalidArgument("only String, Buffer, Uint8Array or Array accepted");
+                throw new error.InvalidArgument("only String, Buffer, Uint8Array or Array accepted");
             }
             this.position = buffer.length;
         } else {
@@ -30,10 +30,10 @@ export default class Binary {
     put(byteValue) {
         // If it's a string and a has more than one character throw an error
         if (!is.nil(byteValue.length) && !is.number(byteValue) && byteValue.length !== 1) {
-            throw new exception.InvalidArgument("only accepts single character String, Uint8Array or Array");
+            throw new error.InvalidArgument("only accepts single character String, Uint8Array or Array");
         }
         if (!is.number(byteValue) && byteValue < 0 || byteValue > 255) {
-            throw new exception.InvalidArgument("only accepts number in a valid unsigned byte range 0-255");
+            throw new error.InvalidArgument("only accepts number in a valid unsigned byte range 0-255");
         }
 
         // Decode the byte value once

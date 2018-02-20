@@ -1,6 +1,6 @@
 const {
     is,
-    exception,
+    error,
     net: {
         mime: { contentType },
         http: {
@@ -44,13 +44,13 @@ export default class Response {
 
     set status(code) {
         if (this.res.headersSent) {
-            throw new exception.IllegalState("headers have already been sent");
+            throw new error.IllegalState("headers have already been sent");
         }
         if (!is.number(code)) {
-            throw new exception.InvalidArgument("status code must be a number");
+            throw new error.InvalidArgument("status code must be a number");
         }
         if (!status.codes.has(code)) {
-            throw new exception.InvalidArgument(`invalid status code: ${code}`);
+            throw new error.InvalidArgument(`invalid status code: ${code}`);
         }
         this._explicitStatus = true;
         this.res.statusCode = code;
