@@ -4,7 +4,7 @@ const {
     is,
     event,
     shani: { Engine },
-    std: { path }
+    std: { path, assert }
 } = adone;
 
 // a minimal engine
@@ -3128,7 +3128,7 @@ describe("Engine", () => {
 
                 await waitFor(emitter, "done");
 
-                expect(results).to.be.deep.equal([
+                assert.deepEqual(results, [
                     "before",
                     "beforeEach",
                     "a",
@@ -3161,7 +3161,7 @@ describe("Engine", () => {
 
                 await waitFor(emitter, "done");
 
-                expect(results).to.be.deep.equal([
+                assert.deepEqual(results, [
                     "before",
                     "beforeEach",
                     "a",
@@ -3194,7 +3194,7 @@ describe("Engine", () => {
 
                 await waitFor(emitter, "done");
 
-                expect(results).to.be.deep.equal([
+                assert.deepEqual(results, [
                     "first before",
                     "second before",
                     "first beforeEach",
@@ -3261,6 +3261,65 @@ describe("Engine", () => {
                 await waitFor(emitter, "done");
 
                 assert.deepEqual(results, ["a", "b"]);
+            });
+
+            it("should ignore files with no default export", async () => {
+                const engine = new Engine({ root: __dirname });
+                engine.include(script("rc_test", "no_default", "a.js"));
+
+                const results = [];
+                const emitter = engine.start();
+
+                emitter.on("start before hook", () => {
+                    results.push("before");
+                }).on("start before each hook", () => {
+                    results.push("beforeEach");
+                }).on("start after hook", () => {
+                    results.push("after");
+                }).on("start after each hook", () => {
+                    results.push("afterEach");
+                }).on("start test", ({ test }) => {
+                    results.push(test.description);
+                });
+
+                await waitFor(emitter, "done");
+
+                assert.deepEqual(results, [
+                    "a",
+                    "b"
+                ]);
+            });
+
+            it("should throw if default export is not a function", async () => {
+                const engine = new Engine({ root: __dirname });
+                const s = script("rc_test", "not_a_function", "a.js");
+                engine.include(s);
+
+                const results = [];
+                const emitter = engine.start();
+
+                const errs = [];
+
+                emitter.on("start before hook", () => {
+                    results.push("before");
+                }).on("start before each hook", () => {
+                    results.push("beforeEach");
+                }).on("start after hook", () => {
+                    results.push("after");
+                }).on("start after each hook", () => {
+                    results.push("afterEach");
+                }).on("start test", ({ test }) => {
+                    results.push(test.description);
+                }).on("error", (e) => {
+                    errs.push(e);
+                });
+
+                await waitFor(emitter, "done");
+
+                assert.deepEqual(results, []);
+                assert.equal(errs.length, 1);
+                const [e] = errs;
+                assert.equal(e.message, `Error while loading config for this file: ${s}\nFailed to load .shanirc.js file: ${script("rc_test", "not_a_function", ".shanirc.js")}. Expected default export to be a function or undefined, but got: number`);
             });
         });
     });

@@ -800,9 +800,10 @@ class ConfigLoader {
         if (!this.isExists(p)) {
             config = null;
         } else {
-            config = adone.require(p);
-            if (config.default) {
-                config = config.default;
+            const m = adone.require(p);
+            config = m.default;
+            if (!is.function(config) && !is.undefined(config)) {
+                throw new exception.IllegalState(`Failed to load .shanirc.js file: ${p}. Expected default export to be a function or undefined, but got: ${adone.meta.typeOf(config)}`);
             }
         }
         this._rcCache.set(dirname, config);
