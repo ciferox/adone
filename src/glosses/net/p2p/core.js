@@ -6,7 +6,7 @@ const {
     event,
     is,
     multi,
-    net: { p2p: { PeerId, PeerInfo, PeerBook, Ping, switch: { Switch } } },
+    net: { p2p: { PeerId, PeerInfo, PeerBook, Ping, switch: { Switch }, floodsub: { FloodSub } } },
     util
 } = adone;
 
@@ -155,12 +155,96 @@ export default class Core extends event.Emitter {
 
                 this._dht.get(key, callback);
             },
-            getMany(key, nVals, callback) {
+            getMany: (key, nVals, callback) => {
                 if (!this._dht) {
                     return callback(new Error("DHT is not available"));
                 }
 
                 this._dht.getMany(key, nVals, callback);
+            }
+        };
+
+        this._floodSub = new FloodSub(this);
+
+        this.pubsub = {
+            subscribe: (topic, options, handler, callback) => {
+                if (is.function(options)) {
+                    callback = handler;
+                    handler = options;
+                    options = {};
+                }
+
+                if (!this.started && !this._floodSub.started) {
+                    return setImmediate(() => callback(new Error(NOT_STARTED_ERROR_MESSAGE)));
+                }
+
+                const subscribe = (cb) => {
+                    if (this._floodSub.listenerCount(topic) === 0) {
+                        this._floodSub.subscribe(topic);
+                    }
+
+                    this._floodSub.on(topic, handler);
+                    setImmediate(cb);
+                };
+
+                subscribe(callback);
+            },
+
+            unsubscribe: (topic, handler) => {
+                if (!this.started && !this._floodSub.started) {
+                    throw new Error(NOT_STARTED_ERROR_MESSAGE);
+                }
+
+                this._floodSub.removeListener(topic, handler);
+
+                if (this._floodSub.listenerCount(topic) === 0) {
+                    this._floodSub.unsubscribe(topic);
+                }
+            },
+
+            publish: (topic, data, callback) => {
+                if (!this.started && !this._floodSub.started) {
+                    return setImmediate(() => callback(new Error(NOT_STARTED_ERROR_MESSAGE)));
+                }
+
+                if (!is.buffer(data)) {
+                    return setImmediate(() => callback(new Error("data must be a Buffer")));
+                }
+
+                this._floodSub.publish(topic, data);
+
+                setImmediate(() => callback());
+            },
+
+            ls: (callback) => {
+                if (!this.started && !this._floodSub.started) {
+                    return setImmediate(() => callback(new Error(NOT_STARTED_ERROR_MESSAGE)));
+                }
+
+                const subscriptions = Array.from(this._floodSub.subscriptions);
+
+                setImmediate(() => callback(null, subscriptions));
+            },
+
+            peers: (topic, callback) => {
+                if (!this.started && !this._floodSub.started) {
+                    return setImmediate(() => callback(new Error(NOT_STARTED_ERROR_MESSAGE)));
+                }
+
+                if (is.function(topic)) {
+                    callback = topic;
+                    topic = null;
+                }
+
+                const peers = Array.from(this._floodSub.peers.values())
+                    .filter((peer) => topic ? peer.topics.has(topic) : true)
+                    .map((peer) => peer.info.id.toB58String());
+
+                setImmediate(() => callback(null, peers));
+            },
+
+            setMaxListeners(n) {
+                return this._floodSub.setMaxListeners(n);
             }
         };
 
@@ -223,13 +307,23 @@ export default class Core extends event.Emitter {
                         cb();
                     },
                     (cb) => {
-                        // TODO: chicken-and-egg problem:
+                        // TODO: chicken-and-egg problem #1:
                         // have to set started here because DHT requires libp2p is already started
                         this.started = true;
                         if (this._dht) {
-                            return this._dht.start(cb);
+                            this._dht.start(cb);
+                        } else {
+                            cb();
                         }
-                        cb();
+                    },
+                    (cb) => {
+                        // TODO: chicken-and-egg problem #2:
+                        // have to set started here because FloodSub requires libp2p is already started
+                        if (this._options !== false) {
+                            this._floodSub.start().catch(cb).then(cb);
+                        } else {
+                            cb();
+                        }
                     },
                     (cb) => {
                         // detect which multiaddrs we don't have a transport for and remove them
@@ -272,6 +366,11 @@ export default class Core extends event.Emitter {
             return new Promise((resolve, reject) => {
                 series([
                     (cb) => {
+                        if (this._floodSub.started) {
+                            this._floodSub.stop().catch(cb).then(cb);
+                        }
+                    },
+                    (cb) => {
                         if (this._dht) {
                             return this._dht.stop(cb);
                         }
@@ -294,7 +393,7 @@ export default class Core extends event.Emitter {
     }
 
     async ping(peer) {
-        assert(this.isStarted(), NOT_STARTED_ERROR_MESSAGE);
+        assert(this.started, NOT_STARTED_ERROR_MESSAGE);
         const peerInfo = await this._getPeerInfo(peer);
         return new Ping(this.switch, peerInfo);
     }

@@ -1,11 +1,12 @@
 const chunky = require("chunky");
 
 const {
-    stream: { concat, Multiplex, through },
-    std: { net }
+    stream: { concat, through },
+    std: { net },
+    net: { p2p: { multiplex: { Multiplex } } }
 } = adone;
 
-describe("stream", "multiplex", () => {
+describe("muxer", "multiplex", "Multiplex", () => {
     it("one way piping work with 2 sub-streams", (done) => {
         const plex1 = new Multiplex();
         const stream1 = plex1.createStream();

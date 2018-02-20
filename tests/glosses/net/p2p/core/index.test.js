@@ -505,9 +505,9 @@ describe("core and all together", () => {
                     "/ip4/127.0.0.1/tcp/25011/ws",
                     "/ip4/127.0.0.1/tcp/24642/ws/p2p-websocket-star"
                 ], {
-                        transport: [wstar],
-                        discovery: [wstar.discovery]
-                    });
+                    transport: [wstar],
+                    discovery: [wstar.discovery]
+                });
                 wstar.lazySetId(netCoreAll.peerInfo.id);
                 netCoreAll.handle("/echo/1.0.0", echo);
                 await netCoreAll.start();
@@ -996,66 +996,66 @@ describe("core and all together", () => {
                 "/ip4/0.0.0.0/tcp/0/ws",
                 "/ip4/0.0.0.0/tcp/0"
             ], {
-                    relay: {
+                relay: {
+                    enabled: true,
+                    hop: {
                         enabled: true,
-                        hop: {
-                            enabled: true,
-                            active: false // passive relay
-                        }
+                        active: false // passive relay
                     }
-                });
+                }
+            });
 
             // setup active relay
             relayNode2 = await setupNetCore([
                 "/ip4/0.0.0.0/tcp/0/ws",
                 "/ip4/0.0.0.0/tcp/0"
             ], {
-                    relay: {
+                relay: {
+                    enabled: true,
+                    hop: {
                         enabled: true,
-                        hop: {
-                            enabled: true,
-                            active: false // passive relay
-                        }
+                        active: false // passive relay
                     }
-                });
+                }
+            });
 
             // setup netCore with WS
             netCoreWS1 = await setupNetCore([
                 "/ip4/0.0.0.0/tcp/0/ws"
             ], {
-                    relay: {
-                        enabled: true
-                    }
-                });
+                relay: {
+                    enabled: true
+                }
+            });
 
             // setup netCore with WS
             netCoreWS2 = await setupNetCore([
                 "/ip4/0.0.0.0/tcp/0/ws"
             ], {
-                    relay: {
-                        enabled: true
-                    }
-                });
+                relay: {
+                    enabled: true
+                }
+            });
 
             // set up netCore with TCP and listening on relay1
             netCoreTCP1 = await setupNetCore([
                 "/ip4/0.0.0.0/tcp/0",
                 `/ipfs/${relayNode1.peerInfo.id.asBase58()}/p2p-circuit`
             ], {
-                    relay: {
-                        enabled: true
-                    }
-                });
+                relay: {
+                    enabled: true
+                }
+            });
 
             // set up netCore with TCP and listening on relay2 over TCP transport
             netCoreTCP2 = await setupNetCore([
                 "/ip4/0.0.0.0/tcp/0",
                 `/ip4/0.0.0.0/tcp/0/ipfs/${relayNode2.peerInfo.id.asBase58()}/p2p-circuit`
             ], {
-                    relay: {
-                        enabled: true
-                    }
-                });
+                relay: {
+                    enabled: true
+                }
+            });
 
             await netCoreWS1.connect(relayNode1.peerInfo);
             await netCoreWS1.connect(relayNode2.peerInfo);
@@ -1101,7 +1101,7 @@ describe("core and all together", () => {
                 relayNode1.stop(),
                 relayNode2.stop(),
                 // netCoreWS1.stop(),
-                netCoreWS2.stop(),
+                netCoreWS2.stop()
                 // netCoreTCP1.stop(),
                 // netCoreTCP2.stop()
             ]);
@@ -1182,6 +1182,73 @@ describe("core and all together", () => {
             expect(multiaddrs.length).to.at.least(2);
             expect(multiaddrs[0].toString()).to.match(/^\/ip4\/127\.0\.0\.1\/tcp\/[0-9]+\/ws\/ipfs\/\w+$/);
             await netCore.stop();
+        });
+    });
+
+    describe("pubsub", () => {
+        const startTwo = async () => {
+            const nodes = [];
+
+            for (let n = 0; n < 2; n++) {
+                const netCore = createNetCore("/ip4/0.0.0.0/tcp/0", {
+                    mdns: false
+                });
+                await netCore.start(); // eslint-disable-line
+                nodes.push(netCore);
+            }
+
+            await nodes[0].connect(nodes[1].peerInfo);
+            return nodes;
+        };
+
+        const stopTwo = async (nodes) => {
+            await Promise.all([
+                nodes[0].stop(),
+                nodes[1].stop()
+            ]);
+        };
+
+        // There is a vast test suite on PubSub through js-ipfs
+        // https://github.com/ipfs/interface-ipfs-core/blob/master/js/src/pubsub.js
+        // and libp2p-floodsub itself
+        // https://github.com/libp2p/js-libp2p-floodsub/tree/master/test
+        // TODO: consider if all or some of those should come here
+        describe(".pubsub", () => {
+            describe(".pubsub on (default)", () => {
+                it("start two nodes and send one message", async () => {
+                    const nodes = await startTwo();
+                    await new Promise((resolve, reject) => {
+                        const data = Buffer.from("test");
+                        nodes[0].pubsub.subscribe("pubsub", (msg) => {
+                            expect(msg.data).to.eql(data);
+                            resolve(nodes);
+                        }, (err) => {
+                            expect(err).to.not.exist();
+                            setTimeout(() => nodes[1].pubsub.publish("pubsub", data, (err) => {
+                                expect(err).to.not.exist();
+                            }), 500);
+                        });
+                    });
+                    await stopTwo(nodes);
+                });
+            });
+
+            describe(".pubsub off", () => {
+                it("fail to use pubsub if disabled", async (done) => {
+                    const node = await createNetCore("/ip4/0.0.0.0/tcp/0", {
+                        mdns: false,
+                        pubsub: false
+                    });
+
+                    node.pubsub.subscribe("news",
+                        (msg) => { },
+                        (err) => {
+                            expect(err).to.exist();
+                            done();
+                        }
+                    );
+                });
+            });
         });
     });
 });

@@ -10,6 +10,10 @@ describe("stream", "pull", "pushable", () => {
         assert.equal("function", typeof buf);
         assert.equal(2, buf.length);
 
+        buf.push(1);
+
+        assert.deepEqual(buf.buffer, [1]);
+
         pull(
             buf,
             pull.collect((end, array) => {
@@ -20,17 +24,21 @@ describe("stream", "pull", "pushable", () => {
 
         // SOMETIMES YOU NEED PUSH!
 
-        buf.push(1);
         buf.push(2);
         buf.push(3);
         buf.end();
     });
 
     it("pushable with separated functions", (done) => {
-        const { push, end, source } = pushable(true);
+        const { push, end, source, buffer } = pushable(true);
 
         assert.equal(typeof source, "function", "is a function");
         assert.equal(source.length, 2, "is a source stream");
+
+        push(1);
+        push(2);
+
+        assert.deepEqual(buffer, [1, 2]);
 
         pull(
             source,
@@ -43,8 +51,6 @@ describe("stream", "pull", "pushable", () => {
             })
         );
 
-        push(1);
-        push(2);
         push(3);
         end();
     });

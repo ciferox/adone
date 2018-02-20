@@ -5,7 +5,7 @@
   "author": "Adone Core Team <info@adone.io>",
   "license": "Apache-2.0",
   "devDependencies": {
-    "@types/adone": "^0.6.5",
+    "@types/adone": "^0.6.11",
     "argsarray": "0.0.1",
     "array-from": "^2.1.1",
     "ascoltatori": "^3.0.0",
@@ -175,6 +175,7 @@
     "adone": "./bin/adone.js"
   },
   "dependencies": {
+    "@types/node": "^9.4.6",
     "ease-component": "^1.0.0",
     "memory-stream": "0.0.3",
     "nanotimer": "^0.3.15",

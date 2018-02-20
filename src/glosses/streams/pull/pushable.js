@@ -90,11 +90,12 @@ export default function pushable(separated, onClose) {
 
     // Return functions separated from source { push, end, source }
     if (separated) {
-        return { push, end, source: read };
+        return { push, end, source: read, buffer };
     }
 
     // Return normal
     read.push = push;
     read.end = end;
+    read.buffer = buffer;
     return read;
 }
