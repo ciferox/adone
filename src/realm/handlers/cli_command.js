@@ -21,6 +21,10 @@ export default class CliCommandHandler extends realm.TypeHandler {
             group: adoneConf.raw.group || "subsystem"
         };
 
+        if (adoneConf.raw.cliAlias && adoneConf.raw.cliAlias.length > 0) {
+            commandInfo.aliases = adone.util.arrify(adoneConf.raw.cliAlias);
+        }
+
         const cliConfig = await adone.cli.Configuration.load();
         if (!is.array(cliConfig.raw.commands)) {
             cliConfig.raw.commands = [];
@@ -63,6 +67,24 @@ export default class CliCommandHandler extends realm.TypeHandler {
             result.push(command.name);
         }
         return result;
+    }
+
+    async checkAndRemove(name) {
+        const cliConfig = await adone.cli.Configuration.load();
+        if (!is.array(cliConfig.raw.commands)) {
+            cliConfig.raw.commands = [];
+        }
+        const commands = cliConfig.raw.commands;
+
+        const shortName = name.startsWith("cli.command.") ? name.substring(12) : name;
+
+        const index = commands.findIndex((x) => x.name === shortName || x.name === name);
+        if (index >= 0) {
+            cliConfig.raw.commands.splice(index, 1);
+            await cliConfig.save();
+            return true;
+        }
+        return false;
     }
 
     _checkMainFile(path) {

@@ -47,7 +47,7 @@ class AdoneCLI extends application.CliApplication {
         // Expose cli interface for subsystems.
         this.exposeCliInterface();
 
-        // Add cli kit as subsystem
+        // Add cli kit as a subsystem
         this.addSubsystem({
             name: "kit",
             bind: true,
@@ -68,7 +68,8 @@ class AdoneCLI extends application.CliApplication {
         for (const ss of commands) {
             // eslint-disable-next-line
             await this.defineCommandFromSubsystem({
-                ...ss,
+                ...adone.util.omit(ss, "name"),
+                name: [ss.name, ...adone.util.arrify(ss.aliases)],
                 lazily: true
             });
         }
@@ -275,7 +276,7 @@ class AdoneCLI extends application.CliApplication {
                                 const color = item.isValid ? "{green-fg}" : "{red-fg}";
                                 const version = is.undefined(item.version) ? "" : ` ${item.version}`;
                                 const description = is.undefined(item.description) ? "" : ` {grey-fg}- ${item.description}{/grey-fg}`;
-                                const invalid = item.isValid ? "" : "{red-fg} (not valid){/}";
+                                const invalid = item.isValid ? "" : `{red-fg} (${item.errInfo}){/red-fg}`;
                                 const symlink = item.isSymlink ? " {yellow-fg}(symlink){/yellow-fg}" : "";
 
                                 return `${color}{bold}${item.name}{/bold}${version}{/}${symlink}${description}${invalid}`;

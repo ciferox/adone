@@ -267,13 +267,17 @@ describe("realm", () => {
         });
     });
 
-    describe("uninstall packages with broken symlinks", () => {
+    describe("uninstall broken packages", () => {
         afterEach(async () => {
             await fs.rm(FIXTURES_PATH);
         });
 
+        it.todo("uninstall non-existing package", async () => {
+
+        });
+
         // This is incomplete test
-        it("cli.command", async () => {
+        it("cli.command (broken symlinks)", async () => {
             const name = randomName("project");
             const cwd = fixture(name);
 
@@ -312,6 +316,10 @@ describe("realm", () => {
             await observer.result;
 
             await assert.throws(async () => fs.lstat(packagePath));
+        });
+
+        it.todo("cli.command (present in config but not installed)", async () => {
+
         });
     });
 });

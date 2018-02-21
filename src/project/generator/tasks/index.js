@@ -13,5 +13,8 @@ adone.lazify({
     CliCommandProject: "./cli_command_project",
     OmnitronService: "./omnitron_service",
     OmnitronServiceProject: "./omnitron_service_project",
+    Gloss: "./gloss",
+    GlossProject: "./gloss_project",
     Git: "./git"
 }, adone.asNamespace(exports), require);
+

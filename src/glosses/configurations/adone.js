@@ -106,21 +106,21 @@ export default class Configuration extends adone.configuration.Generic {
 
     getMainPath(absolute) {
         const path = is.string(this.raw.main) ? this.raw.main : "";
-        return is.string(absolute)
+        return adone.std.path.normalize(is.string(absolute)
             ? std.path.join(absolute, path)
             : absolute === true
                 ? std.path.join(this.getCwd(), path)
-                : path;
+                : path);
     }
 
     getCliMainPath(absolute) {
-        return is.string(this.raw.cliMain)
+        return adone.std.path.normalize(is.string(this.raw.cliMain)
             ? is.string(absolute)
                 ? std.path.join(absolute, this.raw.cliMain)
                 : absolute === true
                     ? std.path.join(this.getCwd(), this.raw.cliMain)
                     : this.raw.cliMain
-            : this.getMainPath(absolute);
+            : this.getMainPath(absolute));
     }
 
     getEntries(path) {

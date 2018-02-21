@@ -121,7 +121,9 @@ export default class Configuration extends adone.configuration.Generic {
     }
 
     static configName = CONFIG_NAME;
+
     static path = adone.std.path.join(adone.realm.config.configsPath, CONFIG_NAME);
+
     static default = {
         groups: [
             {

@@ -20,7 +20,7 @@ export default class RealmManager extends task.Manager {
     addTypeHandler(typeName, handler) {
     }
 
-    createTypeHandler(typeName) {
+    getTypeHandler(typeName) {
         const HandlerClass = this.typeHandler[typeName];
 
         if (!is.class(HandlerClass)) {
@@ -30,12 +30,19 @@ export default class RealmManager extends task.Manager {
         return new HandlerClass(this);
     }
 
+    getAllTypeHandlers() {
+        return Object.keys(this.typeHandler).map((name) => {
+            const THClass = this.typeHandler[name];
+            return new THClass();
+        });
+    }
+
     registerComponent(adoneConf, destPath) {
-        return this.createTypeHandler(adoneConf.raw.type).register(adoneConf, destPath);
+        return this.getTypeHandler(adoneConf.raw.type).register(adoneConf, destPath);
     }
 
     unregisterComponent(adoneConf) {
-        return this.createTypeHandler(adoneConf.raw.type).unregister(adoneConf);
+        return this.getTypeHandler(adoneConf.raw.type).unregister(adoneConf);
     }
 
     async install(options) {

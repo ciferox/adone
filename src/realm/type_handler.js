@@ -16,4 +16,8 @@ export default class TypeHandler {
     list() {
         throw new adone.error.NotImplemented("Method list() is not implemented");
     }
+
+    checkAndRemove(name) {
+        throw new adone.error.NotImplemented("Method checkAndRemove() is not implemented");
+    }
 }

@@ -36,4 +36,8 @@ export default class OmnitronServiceHandler extends realm.TypeHandler {
     list() {
         return fs.readdir(adone.realm.config.omnitron.servicesPath);
     }
+
+    checkAndRemove(name) {
+        return false;
+    }
 }

@@ -13,17 +13,21 @@ export default class InstallTask extends task.Task {
         this.name = name;
 
         try {
+            let isValid = true;
+
             this.destPath = std.path.join(adone.realm.config.packagesPath, this.name);
 
-            const lstat = await fs.lstat(this.destPath); // eslint-disable-line
-
-            let isValid = true;
-            if (lstat.isSymbolicLink()) {
-                try {
-                    const stat = await fs.stat(this.destPath); // eslint-disable-line
-                } catch (err) {
-                    if (err.code === "ENOENT") {
-                        isValid = false;
+            if (!await fs.exists(this.destPath)) {
+                isValid = false;
+            } else {
+                const lstat = await fs.lstat(this.destPath); // eslint-disable-line
+                if (lstat.isSymbolicLink()) {
+                    try {
+                        const stat = await fs.stat(this.destPath); // eslint-disable-line
+                    } catch (err) {
+                        if (err.code === "ENOENT") {
+                            isValid = false;
+                        }
                     }
                 }
             }
@@ -31,6 +35,23 @@ export default class InstallTask extends task.Task {
             if (!isValid) {
                 // This is not complete solution. Additionally it is necessary to notify all handlers,
                 // passing them path to pacakge with the damaged symlink.
+
+                const typeHandlers = this.manager.getAllTypeHandlers();
+                let found = false;
+                for (const typeHandler of typeHandlers) {
+                    const result = await typeHandler.checkAndRemove(name); // eslint-disable-line
+                    if (!found && result) {
+                        found = result;
+                    }
+                }
+
+                if (!found) {
+                    kit.updateProgress({
+                        message: `No package with name {green-fg}{bold}${this.name}{/bold}{/green-fg}`,
+                        result: false
+                    });
+                    return;
+                }
             } else {
                 if (!(await fs.exists(this.destPath))) {
                     throw new adone.error.NotExists(`Package ${this.name} is not exists`);
@@ -65,7 +86,7 @@ export default class InstallTask extends task.Task {
             });
         } catch (err) {
             kit.updateProgress({
-                message: "installation failed",
+                message: err.message,
                 result: false
             });
 

@@ -83,7 +83,7 @@ const _removeAllSchemas = (self, schemas, regex) => {
 
 const _getId = function (schema) {
     if (schema.$id) {
-        this.logger.warn("schema $id ignored", schema.$id);
+        this.logger.logWarn("schema $id ignored", schema.$id);
     }
     return schema.id;
 };
@@ -91,7 +91,7 @@ const _getId = function (schema) {
 
 const _get$Id = function (schema) {
     if (schema.id) {
-        this.logger.warn("schema id ignored", schema.id);
+        this.logger.logWarn("schema id ignored", schema.id);
     }
     return schema.$id;
 };
@@ -209,12 +209,12 @@ const patternGroups = (self) => {
 const setLogger = (self) => {
     let logger = self._opts.logger;
     if (logger === false) {
-        self.logger = { log: adone.noop, warn: adone.noop, error: adone.noop };
+        self.logger = { log: adone.noop, logWarn: adone.noop, logError: adone.noop };
     } else {
         if (is.undefined(logger)) {
             logger = adone;
         }
-        if (!(is.object(logger) && logger.log && logger.warn && logger.error)) {
+        if (!(is.object(logger) && logger.log && logger.logWarn && logger.logError)) {
             throw new Error("logger must implement log, warn and error methods");
         }
         self.logger = logger;
@@ -312,7 +312,7 @@ export class Validator {
         }
         $schema = $schema || this._opts.defaultMeta || defaultMeta(this);
         if (!$schema) {
-            this.logger.warn("meta-schema not available");
+            this.logger.logWarn("meta-schema not available");
             this.errors = null;
             return true;
         }
@@ -329,7 +329,7 @@ export class Validator {
         if (!valid && throwOrLogError) {
             const message = `schema is invalid: ${this.errorsText()}`;
             if (this._opts.validateSchema === "log") {
-                this.logger.error(message);
+                this.logger.logError(message);
             } else {
                 throw new error.Exception(message);
             }
