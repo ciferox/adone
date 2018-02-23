@@ -1,5 +1,5 @@
 const {
-    net: { p2p: { crypto } }
+    crypto
 } = adone;
 
 const hashes = ["SHA1", "SHA256", "SHA512"];

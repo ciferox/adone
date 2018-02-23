@@ -1,7 +1,8 @@
 const fixture = require("./fixtures/go-record.js");
 
 const {
-    net: { p2p: { PeerId, crypto, record } }
+    crypto,
+    net: { p2p: { record } }
 } = adone;
 
 const { Record } = record;
@@ -16,7 +17,7 @@ describe("record", () => {
     before(() => {
         otherKey = crypto.keys.generateKeyPair("rsa", 1024);
         key = crypto.keys.generateKeyPair("rsa", 1024);
-        id = PeerId.createFromPrivKey(key.bytes);
+        id = crypto.Identity.createFromPrivKey(key.bytes);
     });
 
     it("new", () => {

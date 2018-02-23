@@ -258,8 +258,8 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
 
             return runtime;
         },
-        rootPath: () => adone.std.path.join(__dirname, ".."),
-        etcPath: () => adone.std.path.join(adone.rootPath, "etc"),
+        ROOT_PATH: () => adone.std.path.join(__dirname, ".."),
+        ETC_PATH: () => adone.std.path.join(adone.ROOT_PATH, "etc"),
 
         EMPTY_BUFFER: () => Buffer.allocUnsafe(0),
         assert: () => adone.assertion.loadAssertInterface().assert,

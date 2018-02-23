@@ -1,6 +1,7 @@
 const {
     is,
-    net: { p2p: { PeerId, PeerInfo } },
+    crypto: { Identity },
+    net: { p2p: { PeerInfo } },
     netron2: { Netron, DContext, DPublic }
 } = adone;
 
@@ -21,11 +22,11 @@ describe("functional and complex cases", () => {
     let idClient;
     let peerS;
     let peerC;
-    const peerId = PeerId.create();
+    const peerId = Identity.create();
 
     before(() => {
-        idServer = PeerId.create();
-        idClient = PeerId.create();
+        idServer = Identity.create();
+        idClient = Identity.create();
     });
 
     beforeEach(async () => {

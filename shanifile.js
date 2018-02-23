@@ -1,8 +1,11 @@
-const { std: { path }, fs } = adone;
+const {
+    std: { path },
+    fs
+} = adone;
 
 export default {
     options: {
-        tests: "tests/{glosses,project,shani,fast,omnitron,realm,polyfills}/**/*.test.js",
+        tests: "tests/{cli,glosses,project,shani,fast,omnitron,realm,polyfills}/**/*.test.js",
         first: false,
         timeout: 30000,
         showHandles: false,

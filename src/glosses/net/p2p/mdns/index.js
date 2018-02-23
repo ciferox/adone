@@ -1,6 +1,7 @@
 const {
+    crypto: { Identity },
     multi,
-    net: { p2p: { PeerInfo, PeerId, transport: { TCP } } },
+    net: { p2p: { PeerInfo, transport: { TCP } } },
     std: { os }
 } = adone;
 
@@ -65,7 +66,7 @@ const gotResponse = (rsp, peerInfo, serviceTag, callback) => {
         return; // replied to myself, ignore
     }
 
-    const peerId = PeerId.createFromBase58(b58Id);
+    const peerId = Identity.createFromBase58(b58Id);
 
     try {
         const peerFound = PeerInfo.create(peerId);

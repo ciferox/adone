@@ -1,8 +1,8 @@
 const support = require("../support");
 
 const {
+    crypto,
     data: { protobuf },
-    net: { p2p: { PeerId, crypto } },
     std
 } = adone;
 
@@ -51,7 +51,7 @@ exports.identify = (state, msg) => {
     const pubkey = state.proposal.in.pubkey;
 
     state.key.remote = crypto.keys.unmarshalPublicKey(pubkey);
-    const remoteId = PeerId.createFromPubKey(pubkey.toString("base64"));
+    const remoteId = crypto.Identity.createFromPubKey(pubkey.toString("base64"));
     // If we know who we are dialing to, double check
     if (state.id.remote) {
         if (state.id.remote.asBase58() !== remoteId.asBase58()) {

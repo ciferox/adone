@@ -1,7 +1,8 @@
 const {
     is,
+    crypto: { Identity },
     multi,
-    net: { p2p: { PeerId, PeerInfo, PeerBook } }
+    net: { p2p: { PeerInfo, PeerBook } }
 } = adone;
 
 const createPeerInfo = function (multiaddrs) {
@@ -9,7 +10,7 @@ const createPeerInfo = function (multiaddrs) {
         multiaddrs = [multiaddrs];
     }
 
-    const peerId = PeerId.create({ bits: 1024 });
+    const peerId = Identity.create({ bits: 1024 });
     const peerInfo = PeerInfo.create(peerId);
     multiaddrs.map((ma) => peerInfo.multiaddrs.add(ma));
     return peerInfo;
@@ -50,7 +51,7 @@ describe("PeerBook", () => {
         expect(pb.getAllAsArray()).to.have.length(3);
     });
 
-    it("get() by PeerId", () => {
+    it("get() by Identity", () => {
         const peer = pb.get(p1.id);
         expect(peer).to.eql(p1);
     });

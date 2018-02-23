@@ -3,8 +3,9 @@ const multicodec = require("./multicodec");
 
 const {
     is,
+    crypto: { Identity },
     multi,
-    net: { p2p: { Connection, PeerId } },
+    net: { p2p: { Connection } },
     util: { once }
 } = adone;
 
@@ -181,7 +182,7 @@ export default class Dialer {
                             addrs: srcMas.map((addr) => addr.buffer)
                         },
                         dstPeer: {
-                            id: PeerId.createFromBase58(dstMa.getPeerId()).id,
+                            id: Identity.createFromBase58(dstMa.getPeerId()).id,
                             addrs: [dstMa.buffer]
                         }
                     }), cb);

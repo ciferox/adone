@@ -100,14 +100,17 @@ export default class RealmManager extends task.Manager {
     // }
 
     async lock() {
-        // Force create runtime directory.
-        await adone.realm.createDirs();
-        return lockfile.create(adone.realm.config.lockFilePath);
+        if (!(await adone.fs.exists(adone.realm.config.LOCKFILE_PATH))) {
+            // Create lockfile
+            await adone.fs.mkdirp(adone.realm.config.RUNTIME_PATH);
+            await adone.fs.writeFile(adone.realm.config.LOCKFILE_PATH, "");
+        }
+        return lockfile.create(adone.realm.config.LOCKFILE_PATH);
     }
 
     async unlock() {
-        if (await lockfile.check(adone.realm.config.lockFilePath)) {
-            return lockfile.release(adone.realm.config.lockFilePath);
+        if (await lockfile.check(adone.realm.config.LOCKFILE_PATH)) {
+            return lockfile.release(adone.realm.config.LOCKFILE_PATH);
         }
     }
 

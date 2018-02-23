@@ -10,12 +10,12 @@ const getB58Str = (peer) => {
         b58Str = peer;
     } else if (is.buffer(peer)) {
         b58Str = base58.encode(peer).toString();
-    } else if (is.p2pPeerId(peer)) {
+    } else if (is.identity(peer)) {
         b58Str = peer.asBase58();
     } else if (is.p2pPeerInfo(peer)) {
         b58Str = peer.id.asBase58();
     } else {
-        throw new Error("not valid PeerId or PeerInfo, or B58Str");
+        throw new Error("not valid Identity or PeerInfo, or B58Str");
     }
 
     return b58Str;
@@ -29,7 +29,7 @@ export default class PeerBook {
     /**
      * Checks if peer exists.
      * 
-     * @param {AbstractPeer|PeerId|PeerInfo|String|Buffer} peer
+     * @param {AbstractPeer|Identity|PeerInfo|String|Buffer} peer
      */
     has(peer) {
         return this._peers.has(getB58Str(peer));
@@ -74,9 +74,9 @@ export default class PeerBook {
     }
 
     /**
-     * Get the info to the given PeerId, PeerInfo or b58Str id
+     * Get the info to the given Identity, PeerInfo or b58Str id
      *
-     * @param {PeerId} peer
+     * @param {Identity} peer
      * @returns {PeerInfo}
      */
     get(peer) {

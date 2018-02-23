@@ -24,7 +24,7 @@ const CORE_SUBSYSTEMS = [
 export default class Omnitron extends application.Application {
     async configure() {
         // Force create home and runtime directories
-        await fs.mkdirp(adone.realm.config.runtimePath);
+        await fs.mkdirp(adone.realm.config.RUNTIME_PATH);
 
         // Add subsystems
         for (const name of CORE_SUBSYSTEMS) {
@@ -96,7 +96,7 @@ export default class Omnitron extends application.Application {
 
     async createPidFile() {
         try {
-            await fs.writeFile(adone.realm.config.omnitron.pidFilePath, process.pid.toString());
+            await fs.writeFile(adone.realm.config.omnitron.PIDFILE_PATH, process.pid.toString());
         } catch (err) {
             adone.logError(err.message);
         }
@@ -104,7 +104,7 @@ export default class Omnitron extends application.Application {
 
     async deletePidFile() {
         try {
-            await fs.rm(adone.realm.config.omnitron.pidFilePath);
+            await fs.rm(adone.realm.config.omnitron.PIDFILE_PATH);
         } catch (err) {
             adone.logError(err.message);
         }
@@ -191,8 +191,7 @@ export default class Omnitron extends application.Application {
 
         if (realm) {
             result.realm = {
-                uid: (await adone.realm.getManager()).id,
-                name: adone.realm.config.realm
+                uid: (await adone.realm.getManager()).id
             };
         }
 

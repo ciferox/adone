@@ -1,7 +1,7 @@
 const fixtures = require("../fixtures/secp256k1");
 
 const {
-    net: { p2p: { crypto } }
+    crypto
 } = adone;
 
 describe("crypto", "keys", "secp256k1", () => {

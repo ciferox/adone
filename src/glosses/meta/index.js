@@ -17,7 +17,7 @@ adone.lazify({
 }, adone.asNamespace(exports), require);
 
 const adoneConf = adone.configuration.Adone.loadSync({
-    cwd: adone.rootPath
+    cwd: adone.ROOT_PATH
 });
 
 const metaNamespace = adoneConf.getNamespace();

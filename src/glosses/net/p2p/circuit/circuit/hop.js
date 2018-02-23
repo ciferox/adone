@@ -2,9 +2,10 @@ const multicodec = require("../multicodec");
 
 const {
     is,
+    crypto: { Identity },
     multi,
     stream: { pull },
-    net: { p2p: { PeerInfo, PeerId } },
+    net: { p2p: { PeerInfo } },
     vendor: { lodash: { assignInWith } }
 } = adone;
 
@@ -55,12 +56,12 @@ export default class Hop extends adone.event.Emitter {
         }
 
         // This is a relay request - validate and create a circuit
-        const srcPeerId = PeerId.createFromBytes(message.dstPeer.id);
+        const srcPeerId = Identity.createFromBytes(message.dstPeer.id);
         if (srcPeerId.asBase58() === this.peerInfo.id.asBase58()) {
             return this.utils.writeResponse(streamHandler, __.protocol.CircuitRelay.Status.HOP_CANT_RELAY_TO_SELF);
         }
 
-        const dstPeerId = PeerId.createFromBytes(message.dstPeer.id).asBase58();
+        const dstPeerId = Identity.createFromBytes(message.dstPeer.id).asBase58();
         if (!message.dstPeer.addrs.length) {
             // TODO: use encapsulate here
             const addr = multi.address.create(`/p2p-circuit/ipfs/${dstPeerId}`).buffer;
@@ -168,7 +169,7 @@ export default class Hop extends adone.event.Emitter {
      * @private
      */
     _dialPeer(dstPeer, callback) {
-        const peerInfo = new PeerInfo(PeerId.createFromBytes(dstPeer.id));
+        const peerInfo = new PeerInfo(Identity.createFromBytes(dstPeer.id));
         dstPeer.addrs.forEach((a) => peerInfo.multiaddrs.add(a));
         this.switch.connect(peerInfo, multicodec.relay).catch(callback).then((conn) => callback(null, conn));
     }

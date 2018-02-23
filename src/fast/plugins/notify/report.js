@@ -9,10 +9,10 @@ const {
 
 const defaults = {
     error: {
-        icon: path.join(adone.etcPath, "media", "logo-err.png")
+        icon: path.join(adone.ETC_PATH, "media", "logo-err.png")
     },
     regular: {
-        icon: path.join(adone.etcPath, "media", "logo-norm.png")
+        icon: path.join(adone.ETC_PATH, "media", "logo-norm.png")
     }
 };
 

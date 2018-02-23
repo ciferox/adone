@@ -143,7 +143,7 @@ export default class Netron extends adone.task.Manager {
             if (!peerIdB58Str) {
                 throw new Error("Peer multiaddr instance or string must include peerId");
             }
-            peerInfo = new PeerInfo(adone.net.p2p.PeerId.createFromBase58(peerIdB58Str));
+            peerInfo = new PeerInfo(adone.crypto.Identity.createFromBase58(peerIdB58Str));
             peerInfo.multiaddrs.add(ma);
         } else {
             peerInfo = addr;
@@ -442,7 +442,7 @@ export default class Netron extends adone.task.Manager {
             }
         } else if (is.p2pPeerInfo(peerId)) {
             base58Id = peerId.id.asBase58();
-        } else if (is.p2pPeerId(peerId)) {
+        } else if (is.identity(peerId)) {
             base58Id = peerId.asBase58();
         } else if (is.string(peerId)) { // base58
             base58Id = peerId;

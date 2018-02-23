@@ -7,7 +7,7 @@ const utils = require("./utils");
 /**
  * Add a peer to the peers to be queried.
  *
- * @param {PeerId} next
+ * @param {Identity} next
  * @param {DHT} dht
  * @param {Object} run
  * @param {function(Error)} callback
@@ -24,7 +24,7 @@ const addPeerToQuery = function (next, dht, run) {
 /**
  * Execute a query on the `next` peer.
  *
- * @param {PeerId} next
+ * @param {Identity} next
  * @param {Query} query
  * @param {Object} run
  * @param {function(Error)} callback
@@ -124,7 +124,7 @@ class Query {
      *
      * @param {DHT} dht - DHT instance
      * @param {Buffer} key
-     * @param {function(PeerId, function(Error, Object))} query - The query function to exectue
+     * @param {function(Identity, function(Error, Object))} query - The query function to exectue
      *
      */
     constructor(dht, key, query) {
@@ -138,7 +138,7 @@ class Query {
     /**
      * Run this query, start with the given list of peers first.
      *
-     * @param {Array<PeerId>} peers
+     * @param {Array<Identity>} peers
      * @param {function(Error, Object)} callback
      * @returns {void}
      */

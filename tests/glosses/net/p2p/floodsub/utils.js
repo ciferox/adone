@@ -1,5 +1,6 @@
 const {
-    net: { p2p: { PeerId, PeerInfo, secio, Core } }
+    crypto: { Identity },
+    net: { p2p: { PeerInfo, secio, Core } }
 } = adone;
 
 exports.first = (map) => map.values().next().value;
@@ -9,7 +10,7 @@ exports.expectSet = (set, subs) => {
 };
 
 exports.createNetCore = async (maddr) => {
-    const id = PeerId.create({ bits: 1024 });
+    const id = Identity.create({ bits: 1024 });
     const peer = PeerInfo.create(id);
     peer.multiaddrs.add(maddr);
     const node = new Core({

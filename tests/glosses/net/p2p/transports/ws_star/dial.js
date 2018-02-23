@@ -2,8 +2,9 @@ const each = require("async/each");
 const pull = require("pull-stream");
 
 const {
+    crypto: { Identity },
     multi,
-    net: { p2p: { PeerId, transport: { WSStar } } }
+    net: { p2p: { transport: { WSStar } } }
 } = adone;
 
 describe("dial", () => {
@@ -56,7 +57,7 @@ describe("dial", () => {
         const jsons = require("./ids.json");
         const ids = [];
         for (const json of jsons) {
-            ids.push(PeerId.createFromJSON(json));
+            ids.push(Identity.createFromJSON(json));
         }
         ws1 = new WSStar({ id: ids[0], allowJoinWithDisabledChallenge: true });
         ws2 = new WSStar({ id: ids[1], allowJoinWithDisabledChallenge: true });

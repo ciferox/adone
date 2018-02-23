@@ -3,13 +3,13 @@ const {
     data: { protobuf }
 } = adone;
 
-export const keysPBM = protobuf.create(require("./keys.proto"));
-
 export const supportedKeys = adone.lazify({
     rsa: "./rsa",
     ed25519: "./ed25519",
-    secp256k1: () => adone.net.p2p.crypto.secp256k1(keysPBM)
+    secp256k1: "./secp256k1"
 }, null, require);
+
+export const keysPBM = protobuf.create(require("./keys.proto"));
 
 const isValidKeyType = (keyType) => {
     const key = supportedKeys[keyType];

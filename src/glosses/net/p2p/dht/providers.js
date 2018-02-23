@@ -3,9 +3,10 @@ const c = require("./constants");
 const utils = require("./utils");
 
 const {
+    crypto: { Identity },
     data: { varint },
     datastore: { Key },
-    net: { p2p: { PeerId, CID } },
+    net: { p2p: { CID } },
     stream: { pull }
 } = adone;
 
@@ -25,7 +26,7 @@ const makeProviderKey = (cid) => c.PROVIDERS_KEY_PREFIX + utils.encodeBase32(cid
  *
  * @param {Datastore} store
  * @param {CID} cid
- * @param {PeerId} peer
+ * @param {Identity} peer
  * @param {number} time
  * @param {function(Error)} callback
  * @returns {undefined}
@@ -49,7 +50,7 @@ const readTime = (buf) => varint.decode(buf);
  *
  * @param {Datastore} store
  * @param {CID} cid
- * @param {function(Error, Map<PeerId, Date>)} callback
+ * @param {function(Error, Map<Identity, Date>)} callback
  * @returns {undefined}
  *
  * @private
@@ -61,7 +62,7 @@ const loadProviders = (store, cid, callback) => {
             const parts = entry.key.toString().split("/");
             const lastPart = parts[parts.length - 1];
             const rawPeerId = utils.decodeBase32(lastPart);
-            return [new PeerId(rawPeerId), readTime(entry.value)];
+            return [new Identity(rawPeerId), readTime(entry.value)];
         }),
         pull.collect((err, res) => {
             if (err) {
@@ -88,7 +89,7 @@ const loadProviders = (store, cid, callback) => {
 class Providers {
     /**
      * @param {Object} datastore
-     * @param {PeerId} [self]
+     * @param {Identity} [self]
      * @param {number} [cacheSize=256]
      */
     constructor(datastore, self, cacheSize) {
@@ -219,7 +220,7 @@ class Providers {
      * Get the currently known provider maps for a given CID.
      *
      * @param {CID} cid
-     * @param {function(Error, Map<PeerId, Date>)} callback
+     * @param {function(Error, Map<Identity, Date>)} callback
      * @returns {undefined}
      *
      * @private
@@ -284,7 +285,7 @@ class Providers {
      * Add a new provider.
      *
      * @param {CID} cid
-     * @param {PeerId} provider
+     * @param {Identity} provider
      * @param {function(Error)} callback
      * @returns {undefined}
      */
@@ -317,7 +318,7 @@ class Providers {
      * Get a list of providers for the given CID.
      *
      * @param {CID} cid
-     * @param {function(Error, Array<PeerId>)} callback
+     * @param {function(Error, Array<Identity>)} callback
      * @returns {undefined}
      */
     getProviders(cid, callback) {

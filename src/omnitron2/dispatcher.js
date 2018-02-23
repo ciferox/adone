@@ -126,7 +126,7 @@ export default class Dispatcher extends Subsystem {
                 await adone.fs.mkdirp(std.path.dirname(omniConfig.logFilePath));
                 this.descriptors.stdout = std.fs.openSync(omniConfig.logFilePath, "a");
                 this.descriptors.stderr = std.fs.openSync(omniConfig.errorLogFilePath, "a");
-                const args = [std.path.resolve(adone.rootPath, "lib/omnitron/omnitron/index.js")];
+                const args = [std.path.resolve(adone.ROOT_PATH, "lib/omnitron/omnitron/index.js")];
                 if (gc) {
                     args.unshift("--expose-gc");
                 }

@@ -1,7 +1,8 @@
 const fixtures = require("./test_data/ids.json").infos;
 
 const {
-    net: { p2p: { PeerInfo, PeerId } },
+    crypto: { Identity },
+    net: { p2p: { PeerInfo } },
     stream: { pull }
 } = adone;
 
@@ -12,7 +13,7 @@ export const createInfos = (num) => {
     for (let i = 0; i < num; i++) {
         let peerInfo;
         if (fixtures[i]) {
-            peerInfo = new PeerInfo(PeerId.createFromJSON(fixtures[i].id));
+            peerInfo = new PeerInfo(Identity.createFromJSON(fixtures[i].id));
         } else {
             peerInfo = PeerInfo.create();
         }

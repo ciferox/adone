@@ -2,7 +2,8 @@ const proto = require("../protocol");
 
 const {
     is,
-    net: { p2p: { PeerInfo, PeerId } },
+    crypto: { Identity },
+    net: { p2p: { PeerInfo } },
     multi
 } = adone;
 
@@ -28,7 +29,7 @@ module.exports = function (sw) {
     /**
      * Helper to make a peer info from a multiaddrs
      *
-     * @param {Multiaddr|PeerInfo|PeerId} ma
+     * @param {Multiaddr|PeerInfo|Identity} ma
      * @param {Switch} sw
      * @return {PeerInfo}
      * @private
@@ -45,11 +46,11 @@ module.exports = function (sw) {
             try {
                 p = sw._peerBook.get(peerIdB58Str);
             } catch (err) {
-                p = new PeerInfo(PeerId.createFromBase58(peerIdB58Str));
+                p = new PeerInfo(Identity.createFromBase58(peerIdB58Str));
             }
             p.multiaddrs.add(peer);
-            // PeerId
-        } else if (is.p2pPeerId(peer)) {
+            // Identity
+        } else if (is.identity(peer)) {
             const peerIdB58Str = peer.asBase58();
             p = sw._peerBook.has(peerIdB58Str) ? sw._peerBook.get(peerIdB58Str) : peer;
         }

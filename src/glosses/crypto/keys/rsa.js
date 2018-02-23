@@ -62,7 +62,7 @@ const jwkToPkcs1 = function (jwk) {
 };
 
 // Convert a PKCIX in ASN1 DER format to a JWK key
-const pkixToJwk = function (bytes) {
+export const pkixToJwk = function (bytes) {
     const buf = util.buffer.toArrayBuffer(bytes);
     const { result } = crypto.asn1.fromBER(buf);
 
@@ -227,8 +227,7 @@ export class RsaPrivateKey {
      * The public key is a protobuf encoding containing a type and the DER encoding
      * of the PKCS SubjectPublicKeyInfo.
      *
-     * @param {function(Error, id)} callback
-     * @returns {undefined}
+     * @returns {string} id
      */
     id() {
         const hash = this.public.hash();

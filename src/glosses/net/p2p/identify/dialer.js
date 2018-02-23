@@ -2,8 +2,9 @@ const msg = require("./message");
 
 const {
     is,
+    crypto: { Identity },
     multi,
-    net: { p2p: { PeerId, PeerInfo } },
+    net: { p2p: { PeerInfo } },
     stream: { pull }
 } = adone;
 
@@ -41,7 +42,7 @@ module.exports = (conn, callback) => {
             const input = msg.decode(data[0]);
 
             try {
-                const id = PeerId.createFromPubKey(input.publicKey);
+                const id = Identity.createFromPubKey(input.publicKey);
 
                 const peerInfo = new PeerInfo(id);
                 input.listenAddrs.map(multi.address.create).forEach((ma) => peerInfo.multiaddrs.add(ma));

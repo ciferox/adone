@@ -24,7 +24,7 @@ export default class LimitDialer {
     /**
      * Dial a list of multiaddrs on the given transport.
      *
-     * @param {PeerId} peer
+     * @param {Identity} peer
      * @param {SwarmTransport} transport
      * @param {Array<Multiaddr>} addrs
      * @returns {void}
@@ -52,7 +52,7 @@ export default class LimitDialer {
     /**
      * Dial a single multiaddr on the given transport.
      *
-     * @param {PeerId} peer
+     * @param {Identity} peer
      * @param {SwarmTransport} transport
      * @param {Multiaddr} addr
      * @param {CancelToken} token

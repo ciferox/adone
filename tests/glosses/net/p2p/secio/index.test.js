@@ -2,7 +2,8 @@ const parallel = require("async/parallel");
 const series = require("async/series");
 
 const {
-    net: { p2p: { Connection, multistream, secio, PeerId } },
+    crypto: { Identity },
+    net: { p2p: { Connection, multistream, secio } },
     stream: { pull }
 } = adone;
 
@@ -15,9 +16,9 @@ describe("secio", () => {
     let peerC;
 
     before(async () => {
-        peerA = await PeerId.createFromJSON(require("./fixtures/peer-a"));
-        peerB = await PeerId.createFromJSON(require("./fixtures/peer-b"));
-        peerC = await PeerId.createFromJSON(require("./fixtures/peer-c"));
+        peerA = await Identity.createFromJSON(require("./fixtures/peer-a"));
+        peerB = await Identity.createFromJSON(require("./fixtures/peer-b"));
+        peerC = await Identity.createFromJSON(require("./fixtures/peer-c"));
     });
 
     it("exports a secio multicodec", () => {

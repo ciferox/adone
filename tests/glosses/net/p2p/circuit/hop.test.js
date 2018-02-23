@@ -1,8 +1,9 @@
 const nodes = require("./fixtures/nodes");
 
 const {
+    crypto: { Identity },
     multi,
-    net: { p2p: { Connection, PeerInfo, PeerId } },
+    net: { p2p: { Connection, PeerInfo } },
     stream: { pull }
 } = adone;
 const { StreamHandler, Hop, protocol } = adone.private(adone.net.p2p.circuit);
@@ -19,22 +20,22 @@ describe("circuit", "relay", () => {
             stream = pull.handshake({ timeout: 1000 * 60 });
             shake = stream.handshake;
             fromConn = new Connection(stream);
-            fromConn.setPeerInfo(new PeerInfo(PeerId.createFromBase58("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA")));
+            fromConn.setPeerInfo(new PeerInfo(Identity.createFromBase58("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA")));
 
             const peers = {
                 QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE:
-                    new PeerInfo(PeerId.createFromBase58("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE")),
+                    new PeerInfo(Identity.createFromBase58("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE")),
                 QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA:
-                    new PeerInfo(PeerId.createFromBase58("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA")),
+                    new PeerInfo(Identity.createFromBase58("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA")),
                 QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy:
-                    new PeerInfo(PeerId.createFromBase58("QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy"))
+                    new PeerInfo(Identity.createFromBase58("QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy"))
             };
 
             Object.keys(peers).forEach((key) => {
                 peers[key]._connectedMultiaddr = true;
             }); // make it truthy
 
-            const peerId = PeerId.createFromJSON(nodes.node4);
+            const peerId = Identity.createFromJSON(nodes.node4);
             const peer = PeerInfo.create(peerId);
             peer.multiaddrs.add("/p2p-circuit/ipfs/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE");
             sw = {
@@ -68,11 +69,11 @@ describe("circuit", "relay", () => {
             const relayMsg = {
                 type: protocol.CircuitRelay.Type.HOP,
                 srcPeer: {
-                    id: PeerId.createFromBase58("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE").id,
+                    id: Identity.createFromBase58("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE").id,
                     addrs: [multi.address.create("/ipfs/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE").buffer]
                 },
                 dstPeer: {
-                    id: PeerId.createFromBase58("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").id,
+                    id: Identity.createFromBase58("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").id,
                     addrs: [multi.address.create("/ipfs/QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").buffer]
                 }
             };
@@ -89,11 +90,11 @@ describe("circuit", "relay", () => {
             const relayMsg = {
                 type: protocol.CircuitRelay.Type.HOP,
                 srcPeer: {
-                    id: PeerId.createFromBase58("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").id,
+                    id: Identity.createFromBase58("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").id,
                     addrs: [multi.address.create("/ipfs/QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").buffer]
                 },
                 dstPeer: {
-                    id: PeerId.createFromBase58("QmYJjAri5soV8RbeQcHaYYcTAYTET17QTvcoFMyKvRDTXe").id,
+                    id: Identity.createFromBase58("QmYJjAri5soV8RbeQcHaYYcTAYTET17QTvcoFMyKvRDTXe").id,
                     addrs: [multi.address.create("/ipfs/QmYJjAri5soV8RbeQcHaYYcTAYTET17QTvcoFMyKvRDTXe").buffer]
                 }
             };
@@ -115,11 +116,11 @@ describe("circuit", "relay", () => {
             const relayMsg = {
                 type: protocol.CircuitRelay.Type.HOP,
                 srcPeer: {
-                    id: PeerId.createFromBase58("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").id,
+                    id: Identity.createFromBase58("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").id,
                     addrs: [multi.address.create("/ipfs/QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").buffer]
                 },
                 dstPeer: {
-                    id: PeerId.createFromBase58("QmYJjAri5soV8RbeQcHaYYcTAYTET17QTvcoFMyKvRDTXe").id,
+                    id: Identity.createFromBase58("QmYJjAri5soV8RbeQcHaYYcTAYTET17QTvcoFMyKvRDTXe").id,
                     addrs: [multi.address.create("/ipfs/QmYJjAri5soV8RbeQcHaYYcTAYTET17QTvcoFMyKvRDTXe").buffer]
                 }
             };
@@ -141,11 +142,11 @@ describe("circuit", "relay", () => {
             const relayMsg = {
                 type: protocol.CircuitRelay.Type.HOP,
                 srcPeer: {
-                    id: PeerId.createFromBase58("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE").id,
+                    id: Identity.createFromBase58("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE").id,
                     addrs: [multi.address.create("/ipfs/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE").buffer]
                 },
                 dstPeer: {
-                    id: PeerId.createFromBase58("QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy").id,
+                    id: Identity.createFromBase58("QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy").id,
                     addrs: [multi.address.create("/ipfs/QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy").buffer]
                 }
             };
@@ -170,7 +171,7 @@ describe("circuit", "relay", () => {
                     addrs: ["sdfkjsdnfkjdsb"]
                 },
                 dstPeer: {
-                    id: PeerId.createFromBase58("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").id,
+                    id: Identity.createFromBase58("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").id,
                     addrs: [multi.address.create("/ipfs/QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").buffer]
                 }
             };
@@ -191,11 +192,11 @@ describe("circuit", "relay", () => {
             const relayMsg = {
                 type: protocol.CircuitRelay.Type.HOP,
                 srcPeer: {
-                    id: PeerId.createFromBase58("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").id,
+                    id: Identity.createFromBase58("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").id,
                     addrs: [multi.address.create("/ipfs/QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").buffer]
                 },
                 dstPeer: {
-                    id: PeerId.createFromBase58("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE").id,
+                    id: Identity.createFromBase58("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE").id,
                     addrs: ["sdfkjsdnfkjdsb"]
                 }
             };

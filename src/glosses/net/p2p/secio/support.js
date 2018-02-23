@@ -1,5 +1,5 @@
 const {
-    net: { p2p: { crypto } },
+    crypto,
     stream: { pull },
     multi
 } = adone;

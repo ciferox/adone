@@ -147,7 +147,7 @@ class Network {
     /**
      * Send a request and record RTT for latency measurements.
      *
-     * @param {PeerId} to - The peer that should receive a message
+     * @param {Identity} to - The peer that should receive a message
      * @param {Message} msg - The message to send.
      * @param {function(Error, Message)} callback
      * @returns {void}
@@ -166,7 +166,7 @@ class Network {
     /**
      * Sends a message without expecting an answer.
      *
-     * @param {PeerId} to
+     * @param {Identity} to
      * @param {Message} msg
      * @param {function(Error)} callback
      * @returns {void}

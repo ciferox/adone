@@ -7,7 +7,6 @@ const {
     std
 } = adone;
 
-
 export default class Run extends Subsystem {
     @DMainCliCommand({
         blindMode: true,
@@ -99,9 +98,9 @@ export default class Run extends Subsystem {
 
             const runArgs = [
                 "--require",
-                std.path.join(adone.rootPath, "lib", "index.js"),
+                std.path.join(adone.ROOT_PATH, "lib", "index.js"),
                 "--require",
-                std.path.join(adone.rootPath, "lib", "glosses", "sourcemap", "support", "register.js"),
+                std.path.join(adone.ROOT_PATH, "lib", "glosses", "sourcemap", "support", "register.js"),
                 `--inspect=${opts.get("inspect")}`,
                 "--inspect-brk"
             ];
@@ -149,14 +148,20 @@ export default class Run extends Subsystem {
         m._compile(code, "index.js");
         let result = m.exports;
         if (result.__esModule) {
-            result = result.default;
+            if (is.propertyDefined(result, "default")) {
+                result = result.default;
+            }
         }
         if (is.asyncFunction(result)) {
-            await result();
+            adone.log(await result());
         } else if (is.function(result)) {
-            result();
-        } else if (!is.nil(result)) {
-            adone.log(result);
+            adone.log(result());
+        } else {
+            if (is.object(result)) {
+                adone.util.keys(result, { onlyEnumerable: false, all: true }).length > 0 && adone.log(result);
+            } else {
+                adone.log(result);
+            }
         }
     }
 

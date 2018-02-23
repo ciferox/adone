@@ -1,5 +1,6 @@
 const {
-    net: { p2p: { PeerId, PeerInfo } }
+    crypto: { Identity },
+    net: { p2p: { PeerInfo } }
 } = adone;
 
 export default class Railing extends adone.event.Emitter {
@@ -19,7 +20,7 @@ export default class Railing extends adone.event.Emitter {
             this.bootstrapers.forEach((candidate) => {
                 const ma = adone.multi.address.create(candidate);
 
-                const peerId = PeerId.createFromBase58(ma.getPeerId());
+                const peerId = Identity.createFromBase58(ma.getPeerId());
 
                 try {
                     const peerInfo = PeerInfo.create(peerId);

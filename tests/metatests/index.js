@@ -1,4 +1,4 @@
-const relPath = (p) => adone.std.path.relative(adone.rootPath, p);
+const relPath = (p) => adone.std.path.relative(adone.ROOT_PATH, p);
 
 describe("Meta tests", () => {
     it("is", async () => {

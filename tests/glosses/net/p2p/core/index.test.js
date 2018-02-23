@@ -3,15 +3,16 @@ const series = require("async/series");
 const wrtc = require("wrtc");
 
 const {
+    crypto: { Identity },
     multi,
     stream: { pull },
-    net: { p2p: { Core, secio, MulticastDNS, Railing, transport: { TCP, WS }, rendezvous, CID, circuit: { Circuit }, PeerInfo, PeerId, transport: { WebRTCStar, WSStar } } },
+    net: { p2p: { Core, secio, MulticastDNS, Railing, transport: { TCP, WS }, rendezvous, CID, circuit: { Circuit }, PeerInfo, transport: { WebRTCStar, WSStar } } },
     util
 } = adone;
 
 
 const createNetCore = function (multiaddrs, options = {}) {
-    const peerId = PeerId.create({ bits: 1024 });
+    const peerId = Identity.create({ bits: 1024 });
     const peer = PeerInfo.create(peerId);
     util.arrify(multiaddrs).map((ma) => peer.multiaddrs.add(ma));
 
@@ -193,7 +194,7 @@ describe("core and all together", () => {
                 setTimeout(check, 500);
             });
 
-            it("netCoreA.connect netCoreB using PeerId", async (done) => {
+            it("netCoreA.connect netCoreB using Identity", async (done) => {
                 const conn = await netCoreA.connect(netCoreB.peerInfo.id, "/echo/1.0.0");
                 // Some time for Identify to finish
 
@@ -227,7 +228,7 @@ describe("core and all together", () => {
                 setTimeout(check, 500);
             });
 
-            it("netCoreA.disconnect netCoreB using PeerId (third)", async (done) => {
+            it("netCoreA.disconnect netCoreB using Identity (third)", async (done) => {
                 await netCoreA.disconnect(netCoreB.peerInfo.multiaddrs.toArray()[0]);
 
                 const check = function () {
@@ -505,9 +506,9 @@ describe("core and all together", () => {
                     "/ip4/127.0.0.1/tcp/25011/ws",
                     "/ip4/127.0.0.1/tcp/24642/ws/p2p-websocket-star"
                 ], {
-                    transport: [wstar],
-                    discovery: [wstar.discovery]
-                });
+                        transport: [wstar],
+                        discovery: [wstar.discovery]
+                    });
                 wstar.lazySetId(netCoreAll.peerInfo.id);
                 netCoreAll.handle("/echo/1.0.0", echo);
                 await netCoreAll.start();
@@ -996,66 +997,66 @@ describe("core and all together", () => {
                 "/ip4/0.0.0.0/tcp/0/ws",
                 "/ip4/0.0.0.0/tcp/0"
             ], {
-                relay: {
-                    enabled: true,
-                    hop: {
+                    relay: {
                         enabled: true,
-                        active: false // passive relay
+                        hop: {
+                            enabled: true,
+                            active: false // passive relay
+                        }
                     }
-                }
-            });
+                });
 
             // setup active relay
             relayNode2 = await setupNetCore([
                 "/ip4/0.0.0.0/tcp/0/ws",
                 "/ip4/0.0.0.0/tcp/0"
             ], {
-                relay: {
-                    enabled: true,
-                    hop: {
+                    relay: {
                         enabled: true,
-                        active: false // passive relay
+                        hop: {
+                            enabled: true,
+                            active: false // passive relay
+                        }
                     }
-                }
-            });
+                });
 
             // setup netCore with WS
             netCoreWS1 = await setupNetCore([
                 "/ip4/0.0.0.0/tcp/0/ws"
             ], {
-                relay: {
-                    enabled: true
-                }
-            });
+                    relay: {
+                        enabled: true
+                    }
+                });
 
             // setup netCore with WS
             netCoreWS2 = await setupNetCore([
                 "/ip4/0.0.0.0/tcp/0/ws"
             ], {
-                relay: {
-                    enabled: true
-                }
-            });
+                    relay: {
+                        enabled: true
+                    }
+                });
 
             // set up netCore with TCP and listening on relay1
             netCoreTCP1 = await setupNetCore([
                 "/ip4/0.0.0.0/tcp/0",
                 `/ipfs/${relayNode1.peerInfo.id.asBase58()}/p2p-circuit`
             ], {
-                relay: {
-                    enabled: true
-                }
-            });
+                    relay: {
+                        enabled: true
+                    }
+                });
 
             // set up netCore with TCP and listening on relay2 over TCP transport
             netCoreTCP2 = await setupNetCore([
                 "/ip4/0.0.0.0/tcp/0",
                 `/ip4/0.0.0.0/tcp/0/ipfs/${relayNode2.peerInfo.id.asBase58()}/p2p-circuit`
             ], {
-                relay: {
-                    enabled: true
-                }
-            });
+                    relay: {
+                        enabled: true
+                    }
+                });
 
             await netCoreWS1.connect(relayNode1.peerInfo);
             await netCoreWS1.connect(relayNode2.peerInfo);

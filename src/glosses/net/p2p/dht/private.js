@@ -11,7 +11,8 @@ const Query = require("./query");
 
 const {
     is,
-    net: { p2p: { PeerInfo, PeerId, record: { Record, validator, selection } } },
+    crypto: { Identity },
+    net: { p2p: { PeerInfo, record: { Record, validator, selection } } },
     multi,
     std
 } = adone;
@@ -170,7 +171,7 @@ module.exports = (dht) => ({
      * Find close peers for a given peer
      *
      * @param {Buffer} key
-     * @param {PeerId} peer
+     * @param {Identity} peer
      * @param {function(Error)} callback
      * @returns {void}
      *
@@ -178,7 +179,7 @@ module.exports = (dht) => ({
      */
     _closerPeersSingle(key, peer, callback) {
         dht._log("_closerPeersSingle %s from %s", key, peer.asBase58());
-        dht._findPeerSingle(peer, new PeerId(key), (err, msg) => {
+        dht._findPeerSingle(peer, new Identity(key), (err, msg) => {
             if (err) {
                 return callback(err);
             }
@@ -193,7 +194,7 @@ module.exports = (dht) => ({
     /**
      * Is the given peer id the peer id?
      *
-     * @param {PeerId} other
+     * @param {Identity} other
      * @returns {bool}
      *
      * @private
@@ -204,8 +205,8 @@ module.exports = (dht) => ({
     /**
      * Ask peer `peer` if they know where the peer with id `target` is.
      *
-     * @param {PeerId} peer
-     * @param {PeerId} target
+     * @param {Identity} peer
+     * @param {Identity} target
      * @param {function(Error)} callback
      * @returns {void}
      *
@@ -221,7 +222,7 @@ module.exports = (dht) => ({
      *
      * @param {Buffer} key
      * @param {Buffer} rec - encoded record
-     * @param {PeerId} target
+     * @param {Identity} target
      * @param {function(Error)} callback
      * @returns {void}
      *
@@ -349,7 +350,7 @@ module.exports = (dht) => ({
      *
      * Note: The peerbook is updated with new addresses found for the given peer.
      *
-     * @param {PeerId} peer
+     * @param {Identity} peer
      * @param {Buffer} key
      * @param {function(Error, Redcord, Array<PeerInfo>)} callback
      * @returns {void}
@@ -386,7 +387,7 @@ module.exports = (dht) => ({
     /**
      * Get a value via rpc call for the given parameters.
      *
-     * @param {PeerId} peer
+     * @param {Identity} peer
      * @param {Buffer} key
      * @param {function(Error, Message)} callback
      * @returns {void}
@@ -438,7 +439,7 @@ module.exports = (dht) => ({
     /**
      * Get the public key directly from a node.
      *
-     * @param {PeerId} peer
+     * @param {Identity} peer
      * @param {function(Error, PublicKey)} callback
      * @returns {void}
      *
@@ -453,7 +454,7 @@ module.exports = (dht) => ({
                     return cb(new Error(`Node not responding with its public key: ${peer.asBase58()}`));
                 }
 
-                cb(null, PeerId.createFromPubKey(msg.record.value));
+                cb(null, Identity.createFromPubKey(msg.record.value));
             },
             (recPeer, cb) => {
                 // compare hashes of the pub key
@@ -541,7 +542,7 @@ module.exports = (dht) => ({
     /**
      * Check for providers from a single node.
      *
-     * @param {PeerId} peer
+     * @param {Identity} peer
      * @param {CID} key
      * @param {function(Error, Message)} callback
      * @returns {void}
@@ -580,7 +581,7 @@ module.exports = (dht) => ({
     /**
      * The query run during a bootstrap request.
      *
-     * @param {PeerId} id
+     * @param {Identity} id
      * @param {function(Error)} callback
      * @returns {void}
      *
@@ -604,13 +605,13 @@ module.exports = (dht) => ({
     /**
      * Generate a random peer id for bootstrapping purposes.
      *
-     * @param {function(Error, PeerId)} callback
+     * @param {function(Error, Identity)} callback
      * @returns {void}
      *
      * @private
      */
     _generateBootstrapId() {
         const digest = multi.hash.create(std.crypto.randomBytes(16), "sha2-256");
-        return new PeerId(digest);
+        return new Identity(digest);
     }
 });

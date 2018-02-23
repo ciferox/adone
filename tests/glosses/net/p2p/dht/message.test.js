@@ -1,6 +1,7 @@
 const {
     is,
-    net: { p2p: { PeerInfo, dht, PeerId, record: { Record } } },
+    crypto: { Identity },
+    net: { p2p: { PeerInfo, dht, record: { Record } } },
     vendor: { lodash: { range } },
     math: { random },
     std: { fs, path }
@@ -23,7 +24,7 @@ describe("dht", "KadDHT", "Message", () => {
         this.timeout(10 * 1000);
         const peers = [];
         for (let i = 0; i < 5; i++) {
-            peers.push(PeerId.create({ bits: 1024 }));
+            peers.push(Identity.create({ bits: 1024 }));
         }
 
         const closer = peers.slice(0, 5).map((p) => {
@@ -95,7 +96,7 @@ describe("dht", "KadDHT", "Message", () => {
             expect(msg.clusterLevel).to.gte(0);
             if (msg.record) {
                 expect(is.buffer(msg.record.key)).to.eql(true);
-                expect(is.p2pPeerId(msg.record.author)).to.eql(true);
+                expect(is.identity(msg.record.author)).to.eql(true);
             }
 
             if (msg.providerPeers.length > 0) {

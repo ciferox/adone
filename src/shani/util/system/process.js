@@ -14,7 +14,7 @@ export const fork = (script, args = [], opts = {}) => {
     ], util.assignDeep(opts, {
         env: {
             ADONE_REQUIRE_PATH: script,
-            ADONE_ROOT_PATH: adone.rootPath
+            ADONE_ROOT_PATH: adone.ROOT_PATH
         }
     }));
 };
@@ -27,7 +27,7 @@ export const forkSync = (script, args = [], opts = {}) => {
     ], util.assignDeep(opts, {
         env: {
             ADONE_REQUIRE_PATH: script,
-            ADONE_ROOT_PATH: adone.rootPath
+            ADONE_ROOT_PATH: adone.ROOT_PATH
         }
     }));
 };

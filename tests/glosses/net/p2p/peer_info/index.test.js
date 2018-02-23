@@ -2,19 +2,20 @@ const peerIdJSON = require("./peer-test.json");
 
 const {
     is,
+    crypto: { Identity },
     multi,
-    net: { p2p: { PeerId, PeerInfo } }
+    net: { p2p: { PeerInfo } }
 } = adone;
 
 describe("PeerInfo", () => {
     let pi;
 
     beforeEach(() => {
-        pi = new PeerInfo(PeerId.create({ bits: 512 }));
+        pi = new PeerInfo(Identity.create({ bits: 512 }));
     });
 
-    it("create with PeerId class", () => {
-        const id = PeerId.create({ bits: 512 });
+    it("create with Identity class", () => {
+        const id = Identity.create({ bits: 512 });
         const pi = new PeerInfo(id);
         const pi2 = new PeerInfo(id);
         assert.exists(pi.id);
@@ -24,7 +25,7 @@ describe("PeerInfo", () => {
         expect(pi2.id).to.eql(id);
     });
 
-    it("throws when not passing an PeerId", () => {
+    it("throws when not passing an Identity", () => {
         expect(() => new PeerInfo()).to.throw();
     });
 
@@ -40,14 +41,14 @@ describe("PeerInfo", () => {
         assert.exists(pi.id);
     });
 
-    it("create with PeerId as JSON", () => {
+    it("create with Identity as JSON", () => {
         const pi = PeerInfo.create(peerIdJSON);
         assert.exists(pi.id);
         expect(pi.id.toJSON()).to.eql(peerIdJSON);
     });
 
     it(".create with existing id", () => {
-        const id = PeerId.create({ bits: 512 });
+        const id = Identity.create({ bits: 512 });
         const pi = PeerInfo.create(id);
         assert.exists(pi.id);
         expect(pi.id.isEqual(id)).to.equal(true);

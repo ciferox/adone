@@ -1,7 +1,7 @@
 const fixtures = require("../fixtures/go-stretch-key");
 
 const {
-    net: { p2p: { crypto } }
+    crypto
 } = adone;
 
 describe("crypto", "keys", "keyStretcher", () => {

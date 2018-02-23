@@ -179,7 +179,7 @@ describe("terminal", "Chalk", () => {
         it("disable colors if they are not supported", async () => {
             const res = await adone.system.process.execStdout("node", {
                 input: new adone.collection.BufferList(`
-                    require("${adone.rootPath}");
+                    require("${adone.ROOT_PATH}");
                     console.log(adone.terminal.chalk.hex('#ff6159')('test'))
                 `)
             });

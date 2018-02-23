@@ -1,7 +1,8 @@
 const {
     is,
+    crypto: { Identity },
     data: { protobuf },
-    net: { p2p: { PeerInfo, PeerId, record: { Record } } }
+    net: { p2p: { PeerInfo, record: { Record } } }
 } = adone;
 
 const pbm = protobuf.create(require("./dht.proto"));
@@ -25,7 +26,7 @@ const toPbPeer = function (peer) {
 };
 
 const fromPbPeer = function (peer) {
-    const info = new PeerInfo(new PeerId(peer.id));
+    const info = new PeerInfo(new Identity(peer.id));
     peer.addrs.forEach((a) => info.multiaddrs.add(a));
 
     // TODO: upgrade protobuf to send the address connected on

@@ -17,7 +17,7 @@ const CONFIGURATION_SYMBOL = Symbol();
 export default class DB {
     constructor() {
         this.raw = new vault.Vault({
-            location: adone.realm.config.omnitron.dbPath
+            location: adone.realm.config.omnitron.DB_PATH
         });
         this[VALUABLES_SYMBOL] = new Map();
         this[SERVICE_VALUABLES_SYMBOL] = new Map();
@@ -25,7 +25,7 @@ export default class DB {
     }
 
     async open() {
-        await fs.mkdirp(adone.realm.config.omnitron.varPath);
+        await fs.mkdirp(adone.realm.config.omnitron.VAR_PATH);
         await this.raw.open();
     }
 
@@ -101,7 +101,7 @@ export default class DB {
             throw new error.Exists(`Service '${name}' is already registered`);
         }
 
-        const servicePath = std.path.join(adone.realm.config.omnitron.servicesPath, name);
+        const servicePath = std.path.join(adone.realm.config.omnitron.SERVICES_PATH, name);
         const adoneConf = await adone.configuration.Adone.load({
             cwd: servicePath
         });

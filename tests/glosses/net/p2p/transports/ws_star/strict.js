@@ -1,8 +1,9 @@
 const each = require("async/each");
 
 const {
+    crypto: { Identity },
     multi,
-    net: { p2p: { PeerId, transport: { WSStar } } },
+    net: { p2p: { transport: { WSStar } } },
     stream: { pull }
 } = adone;
 
@@ -23,7 +24,7 @@ describe("strict", () => {
         const jsons = require("./ids.json");
         const ids = [];
         for (const json of jsons) {
-            ids.push(PeerId.createFromJSON(json));
+            ids.push(Identity.createFromJSON(json));
         }
         id1 = ids.shift();
         id2 = ids.shift();

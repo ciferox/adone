@@ -13,7 +13,7 @@ class PeerQueue {
     /**
      * Create from a given peer id.
      *
-     * @param {PeerId} id
+     * @param {Identity} id
      * @param {function(Error, PeerQueue)} callback
      * @returns {void}
      */
@@ -44,9 +44,9 @@ class PeerQueue {
     }
 
     /**
-     * Add a new PeerId to the queue.
+     * Add a new Identity to the queue.
      *
-     * @param {PeerId} id
+     * @param {Identity} id
      * @param {function(Error)} callback
      * @returns {void}
      */
@@ -63,7 +63,7 @@ class PeerQueue {
     /**
      * Returns the closest peer to the `from` peer.
      *
-     * @returns {PeerId}
+     * @returns {Identity}
      */
     dequeue() {
         const el = this.heap.pop();

@@ -2,8 +2,8 @@ const utils = require("./utils");
 
 const {
     is,
-    data: { protobuf },
-    net: { p2p: { PeerId } }
+    crypto: { Identity },
+    data: { protobuf }
 } = adone;
 
 const pb = protobuf.create(require("./record.proto")).Record;
@@ -13,7 +13,7 @@ export default class Record {
     /**
      * @param {Buffer} [key]
      * @param {Buffer} [value]
-     * @param {PeerId} [author]
+     * @param {Identity} [author]
      * @param {Date} [recvtime]
      */
     constructor(key, value, author, recvtime) {
@@ -66,6 +66,7 @@ export default class Record {
             timeReceived: this.timeReceived && utils.toRFC3339(this.timeReceived)
         };
     }
+
     /**
      * @param {PrivateKey} privKey
      * @param {function(Error, Buffer)} callback
@@ -106,7 +107,7 @@ export default class Record {
 
         let author;
         if (obj.author) {
-            author = new PeerId(obj.author);
+            author = new Identity(obj.author);
         }
 
         const rec = new Record(
@@ -117,6 +118,7 @@ export default class Record {
 
         return rec;
     }
+
     /**
      * Verify the signature of a record against the given public key.
      *

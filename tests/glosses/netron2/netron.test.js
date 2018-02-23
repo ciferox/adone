@@ -3,7 +3,8 @@ import { createNetron } from "./common";
 
 const {
     is,
-    net: { p2p: { PeerId, PeerInfo } },
+    crypto: { Identity },
+    net: { p2p: {  PeerInfo } },
     netron2: { Netron }
 } = adone;
 
@@ -11,7 +12,7 @@ describe("Netron", () => {
     let peerId;
 
     before(() => {
-        peerId = PeerId.create();
+        peerId = Identity.create();
     });
 
     describe("initialization", () => {
@@ -36,7 +37,7 @@ describe("Netron", () => {
             assert.instanceOf(netron._defUniqueId, adone.netron2.FastUniqueId);
         });
 
-        it("with precreated PeerId", () => {
+        it("with precreated Identity", () => {
             const n = new Netron(peerId);
             assert.deepEqual(peerId, n.peer.info.id);
         });
@@ -61,7 +62,7 @@ describe("Netron", () => {
             assert.true(is.netron2Peer(peer1));
         });
 
-        it("should return own peer by PeerId instance", () => {
+        it("should return own peer by Identity instance", () => {
             const peer1 = netron.getPeer(peerId);
             assert.true(is.netron2Peer(peer1));
         });
@@ -299,8 +300,8 @@ describe("Netron", () => {
         let peerC = null;
 
         before(() => {
-            idServer = PeerId.create();
-            idClient = PeerId.create();
+            idServer = Identity.create();
+            idClient = Identity.create();
         });
 
         beforeEach(async () => {

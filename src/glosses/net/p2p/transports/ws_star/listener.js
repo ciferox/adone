@@ -10,9 +10,10 @@ const cleanUrlSIO = utils.cleanUrlSIO;
 
 const {
     is,
+    crypto,
     event,
     multi,
-    net: { p2p: { crypto, Connection } }
+    net: { p2p: { Connection } }
 } = adone;
 
 const noop = once(() => { });
@@ -26,7 +27,7 @@ const sioOptions = {
  * Listener for signalling server
  * @class
  * @param {Object} options - Options for the listener
- * @param {PeerId} options.id - Id for the crypto challenge
+ * @param {PeerIdentityId} options.id - Id for the crypto challenge
  * @param {function} options.handler - Incomming connection handler
  */
 class Listener extends event.Emitter {

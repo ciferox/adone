@@ -1,7 +1,8 @@
 const fixture = require("./fixtures/go-key-records.js");
 
 const {
-    net: { p2p: { PeerId, crypto, record } }
+    crypto,
+    net: { p2p: { record } }
 } = adone;
 
 const { Record, validator } = record;
@@ -46,7 +47,7 @@ describe("validator", () => {
     describe("verifyRecord", () => {
         it("calls matching validator", () => {
             const k = Buffer.from("/hello/you");
-            const rec = new Record(k, Buffer.from("world"), new PeerId(hash));
+            const rec = new Record(k, Buffer.from("world"), new crypto.Identity(hash));
 
             const validators = {
                 hello: {

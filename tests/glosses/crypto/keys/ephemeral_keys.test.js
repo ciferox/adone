@@ -1,7 +1,7 @@
 const fixtures = require("../fixtures/go-elliptic-key");
 
 const {
-    net: { p2p: { crypto } }
+    crypto
 } = adone;
 
 const curves = ["P-256", "P-384"]; // 'P-521' fails in tests :( no clue why

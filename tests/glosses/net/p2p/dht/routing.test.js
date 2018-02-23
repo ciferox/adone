@@ -1,13 +1,14 @@
 const {
+    crypto: { Identity },
     math: { random },
-    net: { p2p: { dht, PeerId } }
+    net: { p2p: { dht } }
 } = adone;
 const { RoutingTable, utils } = adone.private(dht);
 
 const createPeers = function (n) {
     const peers = [];
     for (let i = 0; i < n; i++) {
-        peers.push(PeerId.create({ bits: 1024 }));
+        peers.push(Identity.create({ bits: 1024 }));
     }
     return peers;
 };
@@ -18,7 +19,7 @@ describe("dht", "KadDHT", "RoutingTable", () => {
     beforeEach(function () {
         this.timeout(20 * 1000);
 
-        const id = PeerId.create();
+        const id = Identity.create();
         table = new RoutingTable(id, 20);
     });
 

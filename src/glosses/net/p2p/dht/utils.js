@@ -2,9 +2,10 @@ const debug = require("debug");
 const map = require("async/map");
 
 const {
+    crypto: { Identity },
     data: { base32 },
     datastore: { Key },
-    net: { p2p: { PeerId, record: { Record } } },
+    net: { p2p: { record: { Record } } },
     multi,
     util: { xorDistance }
 } = adone;
@@ -20,7 +21,7 @@ exports.convertBuffer = (buf) => multi.hash.digest(buf, "sha2-256");
 /**
  * Creates a DHT ID by hashing a Peer ID
  *
- * @param {PeerId} peer
+ * @param {Identity} peer
  * @returns {void}
  */
 exports.convertPeerId = (peer) => multi.hash.digest(peer.id, "sha2-256");
@@ -38,7 +39,7 @@ exports.bufferToKey = (buf) => {
 /**
  * Generate the key for a public key.
  *
- * @param {PeerId} peer
+ * @param {Identity} peer
  * @returns {Buffer}
  */
 exports.keyForPublicKey = (peer) => {
@@ -53,7 +54,7 @@ exports.isPublicKeyKey = (key) => {
 };
 
 exports.fromPublicKeyKey = (key) => {
-    return new PeerId(key.slice(4));
+    return new Identity(key.slice(4));
 };
 
 /**
@@ -88,7 +89,7 @@ exports.decodeBase32 = (raw) => {
 /**
  * Sort peers by distance to the given `id`.
  *
- * @param {Array<PeerId>} peers
+ * @param {Array<Identity>} peers
  * @param {Buffer} target
  * @param {function(Error, )} callback
  * @returns {void}
@@ -130,7 +131,7 @@ exports.xorCompare = (a, b) => {
  *
  * @param {Buffer} key
  * @param {Buffer} value
- * @param {PeerId} peer
+ * @param {Identity} peer
  * @param {bool} sign - Should the record be signed
  * @param {function(Error, Buffer)} callback
  * @returns {void}
@@ -148,7 +149,7 @@ exports.createPutRecord = (key, value, peer, sign) => {
 /**
  * Creates a logger for the given subsystem
  *
- * @param {PeerId} [id]
+ * @param {Identity} [id]
  * @param {string} [subsystem]
  * @returns {debug}
  *

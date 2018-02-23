@@ -58,7 +58,7 @@ export default class GitTask extends project.generator.task.Base {
         await fs.writeFile(std.path.join(context.project.cwd, ".gitignore"), GITIGNORE_CONTENT);
 
         // Initialize repository, add all files to git and create first commit.
-        const logoContent = await fs.readFile(std.path.join(adone.etcPath, "media", "adone.txt"), { encoding: "utf8" });
+        const logoContent = await fs.readFile(std.path.join(adone.ETC_PATH, "media", "adone.txt"), { encoding: "utf8" });
         const repository = await git.Repository.init(context.project.cwd, 0);
         const index = await repository.refreshIndex();
         await index.addAll();

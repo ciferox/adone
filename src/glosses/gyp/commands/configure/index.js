@@ -303,8 +303,8 @@ const configure = function (gyp, argv) {
                 argv.push("-Dlibrary=shared_library");
                 argv.push("-Dvisibility=default");
                 argv.push(`-Dnode_root_dir=${nodeDir}`);
-                argv.push(`-Dadone_native_dir=${path.join(adone.rootPath, "src", "native")}`);
-                argv.push(`-Dadone_root_dir=${adone.rootPath}`);
+                argv.push(`-Dadone_native_dir=${path.join(adone.ROOT_PATH, "src", "native")}`);
+                argv.push(`-Dadone_root_dir=${adone.ROOT_PATH}`);
                 if (is.string(gyp.opts.binding)) {
                     argv.push(`-Daddon_root_dir=${gyp.opts.binding}`);
                 }

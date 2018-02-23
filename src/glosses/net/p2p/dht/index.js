@@ -13,8 +13,9 @@ const Message = require("./message");
 
 const {
     is,
+    crypto: { Identity },
     datastore: { backend: { Memory: MemoryStore } },
-    net: { p2p: { PeerId, PeerInfo, crypto, record } }
+    net: { p2p: { PeerInfo, crypto, record } }
 } = adone;
 
 adone.lazifyPrivate({
@@ -157,7 +158,7 @@ export class KadDHT {
      * Kademlia 'node lookup' operation.
      *
      * @param {Buffer} key
-     * @param {function(Error, Array<PeerId>)} callback
+     * @param {function(Error, Array<Identity>)} callback
      * @returns {void}
      */
     getClosestPeers(key, callback) {
@@ -253,7 +254,7 @@ export class KadDHT {
      * @param {Buffer} key
      * @param {number} nvals
      * @param {number} [maxTimeout=60000]
-     * @param {function(Error, Array<{from: PeerId, val: Buffer}>)} callback
+     * @param {function(Error, Array<{from: Identity, val: Buffer}>)} callback
      * @returns {void}
      */
     getMany(key, nvals, maxTimeout, callback) {
@@ -342,7 +343,7 @@ export class KadDHT {
     /**
      * Get the public key for the given peer id.
      *
-     * @param {PeerId} peer
+     * @param {Identity} peer
      * @param {function(Error, PubKey)} callback
      * @returns {void}
      */
@@ -363,7 +364,7 @@ export class KadDHT {
         // try the node directly
         this._getPublicKeyFromNode(peer, (err, pk) => {
             if (!err) {
-                info.id = new PeerId(peer.id, null, pk);
+                info.id = new Identity(peer.id, null, pk);
                 this.peerBook.set(info);
 
                 return callback(null, pk);
@@ -377,7 +378,7 @@ export class KadDHT {
                 }
 
                 const pk = crypto.unmarshalPublicKey(value);
-                info.id = new PeerId(peer, null, pk);
+                info.id = new Identity(peer, null, pk);
                 this.peerBook.set(info);
 
                 callback(null, pk);
@@ -428,7 +429,7 @@ export class KadDHT {
     /**
      * Search for a peer with the given ID.
      *
-     * @param {PeerId} id
+     * @param {Identity} id
      * @param {number} [maxTimeout=60000]
      * @param {function(Error, PeerInfo)} callback
      * @returns {void}
@@ -513,7 +514,7 @@ export class KadDHT {
      * Look if we are connected to a peer with the given id.
      * Returns the `PeerInfo` for it, if found, otherwise `undefined`.
      *
-     * @param {PeerId} peer
+     * @param {Identity} peer
      * @param {function(Error, PeerInfo)} callback
      * @returns {void}
      */

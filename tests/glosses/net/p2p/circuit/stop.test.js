@@ -1,7 +1,8 @@
 const nodes = require("./fixtures/nodes");
 
 const {
-    net: { p2p: { Connection, PeerInfo, PeerId } },
+    crypto: { Identity },
+    net: { p2p: { Connection, PeerInfo } },
     stream: { pull }
 } = adone;
 
@@ -18,9 +19,9 @@ describe("circuit", "stop", () => {
         beforeEach(() => {
             stream = pull.handshake({ timeout: 1000 * 60 });
             conn = new Connection(stream);
-            conn.setPeerInfo(new PeerInfo(PeerId.createFromBase58("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE")));
+            conn.setPeerInfo(new PeerInfo(Identity.createFromBase58("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE")));
 
-            const peerId = PeerId.createFromJSON(nodes.node4);
+            const peerId = Identity.createFromJSON(nodes.node4);
             const peer = PeerInfo.create(peerId);
             peer.multiaddrs.add("/p2p-circuit/ipfs/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE");
             sw = {

@@ -1,5 +1,6 @@
 const {
-    net: { p2p: { PeerId, PeerInfo } },
+    crypto: { Identity },
+    net: { p2p: { PeerInfo } },
     netron2: { Definition, Definitions, Reference }
 } = adone;
 
@@ -50,7 +51,7 @@ s.register(109, Definition, (obj, buf) => {
 
 // }, (buf) => {
 
-// }).register(106, PeerId, (obj, buf) => {
+// }).register(106, Identity, (obj, buf) => {
 
 // }, (buf) => {
 

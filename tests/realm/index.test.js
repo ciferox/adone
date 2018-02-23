@@ -7,7 +7,7 @@ const {
     text
 } = adone;
 
-const ADONE_PATH = std.path.join(adone.rootPath, "bin", "adone.js");
+const ADONE_PATH = std.path.join(adone.ROOT_PATH, "bin", "adone.js");
 
 const PACKAGES_PATH = std.path.join(__dirname, "packages");
 const FIXTURES_PATH = std.path.join(__dirname, "fixtures");

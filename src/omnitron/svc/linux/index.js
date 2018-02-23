@@ -60,7 +60,7 @@ export default class Service {
             const context = {
                 script: this.scriptPath,
                 user: this.config.user,
-                pidfile: adone.realm.config.omnitron.pidFilePath
+                pidfile: adone.realm.config.omnitron.PIDFILE_PATH
             };
 
             // Configure nunjucks for render from any path.
@@ -99,7 +99,7 @@ export default class Service {
                 } else {
                     pathPrefix = adone.std.path.join("/home", context.user);
                 }
-                const adoneHomePath = adone.std.path.join(pathPrefix, adone.realm.config.dirName);
+                const adoneHomePath = adone.std.path.join(pathPrefix, adone.ROOT_PATH);
                 if (!(await adone.fs.exists(adoneHomePath))) {
                     throw new adone.error.NotExists(`Adone home directory '${adoneHomePath}' not exists`);
                 }

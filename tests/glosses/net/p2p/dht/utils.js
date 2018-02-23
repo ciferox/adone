@@ -1,6 +1,7 @@
 const {
+    crypto: { Identity },
     multi,
-    net: { p2p: { CID, PeerId, multiplex, dht, switch: { Switch }, PeerInfo, PeerBook, transport: { TCP } } },
+    net: { p2p: { CID, multiplex, dht, switch: { Switch }, PeerInfo, PeerBook, transport: { TCP } } },
     std
 } = adone;
 const { KadDHT } = dht;
@@ -9,7 +10,7 @@ const { KadDHT } = dht;
 export const makePeers = (n) => {
     const ids = [];
     for (let i = 0; i < n; i++) {
-        ids.push(new PeerInfo(PeerId.create({ bits: 1024 })));
+        ids.push(new PeerInfo(Identity.create({ bits: 1024 })));
     }
 
     return ids;

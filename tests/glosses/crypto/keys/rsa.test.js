@@ -2,7 +2,7 @@ const fixtures = require("../fixtures/go-key-rsa");
 const testGarbage = require("../helpers/test-garbage-error-handling");
 
 const {
-    net: { p2p: { crypto } }
+    crypto
 } = adone;
 
 const rsa = crypto.keys.supportedKeys.rsa;

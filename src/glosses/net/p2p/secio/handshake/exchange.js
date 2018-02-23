@@ -2,7 +2,6 @@ const waterfall = require("async/waterfall");
 const support = require("../support");
 const crypto = require("./crypto");
 
-
 // step 2. Exchange
 // -- exchange (signed) ephemeral keys. verify signatures.
 module.exports = function exchange(state, cb) {

@@ -2,7 +2,7 @@ const fixtures = require("../fixtures/go-key-ed25519");
 const testGarbage = require("../helpers/test-garbage-error-handling");
 
 const {
-    net: { p2p: { crypto } }
+    crypto
 } = adone;
 
 const ed25519 = crypto.keys.supportedKeys.ed25519;

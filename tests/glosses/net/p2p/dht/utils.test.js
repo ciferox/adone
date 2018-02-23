@@ -2,8 +2,9 @@ const waterfall = require("async/waterfall");
 const { makePeers } = require("./utils");
 
 const {
+    crypto: { Identity },
     data: { base32 },
-    net: { p2p: { dht, PeerId } },
+    net: { p2p: { dht } },
     util: { xorDistance }
 } = adone;
 const { utils } = adone.private(dht);
@@ -39,7 +40,7 @@ describe("dht", "KadDHT", "utils", () => {
             ];
 
             const ids = rawIds.map((raw) => {
-                return new PeerId(Buffer.from(raw));
+                return new Identity(Buffer.from(raw));
             });
 
             const input = [

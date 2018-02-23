@@ -77,7 +77,7 @@ export default class InstallTask extends task.Task {
             const adoneConf = this.rollbackData.adoneConf;
             if (is.configuration(adoneConf)) {
                 const name = adoneConf.getFullName();
-                const destPath = std.path.join(adone.realm.config.packagesPath, name);
+                const destPath = std.path.join(adone.realm.config.PACKAGES_PATH, name);
                 return fs.rm(destPath);
             }
         }
@@ -98,8 +98,11 @@ export default class InstallTask extends task.Task {
             throw new adone.error.NotValid("Package name is not specified");
         }
 
+        // Check and create packages path
+        await adone.fs.mkdirp(adone.realm.config.PACKAGES_PATH);
+
         this.name = adoneConf.getFullName();
-        this.destPath = std.path.join(adone.realm.config.packagesPath, this.name);
+        this.destPath = std.path.join(adone.realm.config.PACKAGES_PATH, this.name);
 
         if (this.build) {
             kit.updateProgress({

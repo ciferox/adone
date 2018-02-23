@@ -1,6 +1,6 @@
 const {
     is,
-    net: { p2p: { crypto } },
+    crypto,
     error
 } = adone;
 
@@ -10,7 +10,7 @@ const toB64Opt = (val) => {
     }
 };
 
-export default class PeerId {
+export default class Identity {
     constructor(id, privKey, pubKey) {
         if (!is.buffer(id)) {
             throw new adone.error.NotValid("Invalid id");
@@ -108,7 +108,7 @@ export default class PeerId {
     }
 
     /**
-     * Check if this PeerId instance is valid (privKey -> pubKey -> Id)
+     * Check if this Identity instance is valid (privKey -> pubKey -> Id)
      */
     isValid() {
         // TODO Needs better checking
@@ -121,19 +121,19 @@ export default class PeerId {
     static create({ bits = 2048 } = {}) {
         const privKey = crypto.keys.generateKeyPair("rsa", bits);
         const digest = privKey.public.hash();
-        return new PeerId(digest, privKey);
+        return new Identity(digest, privKey);
     }
 
     static createFromHexString(str) {
-        return new PeerId(adone.multi.hash.fromHexString(str));
+        return new Identity(adone.multi.hash.fromHexString(str));
     }
 
     static createFromBytes(buf) {
-        return new PeerId(buf);
+        return new Identity(buf);
     }
 
     static createFromBase58(str) {
-        return new PeerId(adone.multi.hash.fromB58String(str));
+        return new Identity(adone.multi.hash.fromB58String(str));
     }
 
     // Public Key input will be a buffer
@@ -150,7 +150,7 @@ export default class PeerId {
         const pubKey = crypto.keys.unmarshalPublicKey(buf);
 
         const digest = pubKey.hash();
-        return new PeerId(digest, null, pubKey);
+        return new Identity(digest, null, pubKey);
     }
 
     // Private key input will be a string
@@ -167,7 +167,7 @@ export default class PeerId {
 
         const privKey = crypto.keys.unmarshalPrivateKey(buf);
         const digest = privKey.public.hash();
-        return new PeerId(digest, privKey, privKey.public);
+        return new Identity(digest, privKey, privKey.public);
     }
 
     static createFromJSON(obj) {
@@ -192,9 +192,9 @@ export default class PeerId {
                 throw new Error("Id and private key do not match");
             }
 
-            return new PeerId(id, priv, pub);
+            return new Identity(id, priv, pub);
         }
-        return new PeerId(id, null, pub);
+        return new Identity(id, null, pub);
     }
 }
-adone.tag.add(PeerId, "P2P_PEER_ID");
+adone.tag.add(Identity, "CRYPTO_IDENTITY");

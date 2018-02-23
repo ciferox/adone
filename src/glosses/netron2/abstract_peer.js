@@ -36,7 +36,7 @@ export default class AbstractPeer extends AsyncEmitter {
     /**
      * Sets value of property or calls method with 'name' in context with 'defId' on peer side identified by 'peerInfo'.
      * 
-     * @param {string|PeerId|PeerInfo|nil} peerInfo - peer identity
+     * @param {string|Identity|PeerInfo|nil} peerInfo - peer identity
      * @param {number} defId definition id
      * @param {string} name property name
      * @param {any} data property data
@@ -49,7 +49,7 @@ export default class AbstractPeer extends AsyncEmitter {
     /**
      * Gets value of property or calls method with 'name' in context with 'defId' on peer side identified by 'peerInfo'.
      * 
-     * @param {string|PeerId|PeerInfo|nil} peerInfo - peer identity
+     * @param {string|Identity|PeerInfo|nil} peerInfo - peer identity
      * @param {number} defId definition id
      * @param {string} name property name
      * @param {any} data property data
@@ -203,7 +203,7 @@ export default class AbstractPeer extends AsyncEmitter {
      * Returns interface for context by definition id.
      * 
      * @param {number} defId 
-     * @param {string|PeerId|PeerInfo|Peer|nil} peerInfo 
+     * @param {string|Identity|PeerInfo|Peer|nil} peerInfo 
      */
     _queryInterfaceByDefinition(/*defId*/) {
         throw new adone.error.NotImplemented("Method _queryInterfaceByDefinition() is not implemented");

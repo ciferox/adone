@@ -15,3 +15,8 @@ test-fixtures/
 _fixtures/
 test-resources/
 **/native/build/**/*
+
+# realm files/dirs
+/configs/
+/packages/
+/runtime/

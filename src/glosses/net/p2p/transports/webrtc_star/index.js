@@ -13,10 +13,11 @@ const cleanMultiaddr = utils.cleanMultiaddr;
 const noop = once(() => { });
 
 const {
+    crypto: { Identity },
     event,
     is,
     multi,
-    net: { p2p: { PeerId, PeerInfo, Connection } }
+    net: { p2p: { PeerInfo, Connection } }
 } = adone;
 
 const sioOptions = {
@@ -232,7 +233,7 @@ class WebRTCStar {
 
         const split = maStr.split("/ipfs/");
         const peerIdStr = split[split.length - 1];
-        const peerId = PeerId.createFromBase58(peerIdStr);
+        const peerId = Identity.createFromBase58(peerIdStr);
         const peerInfo = new PeerInfo(peerId);
         peerInfo.multiaddrs.add(multi.address.create(maStr));
         this.discovery.emit("peer", peerInfo);

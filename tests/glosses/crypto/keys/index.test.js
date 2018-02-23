@@ -1,7 +1,7 @@
-const fixtures = require("./fixtures/go-key-rsa");
+const fixtures = require("../fixtures/go-key-rsa");
 
 const {
-    net: { p2p: { crypto } }
+    crypto
 } = adone;
 
 describe("crypto", function () {

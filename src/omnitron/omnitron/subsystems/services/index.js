@@ -6,7 +6,7 @@ const {
     omnitron: { STATUS }
 } = adone;
 
-const SERVICES_PATH = adone.realm.config.omnitron.servicesPath;
+const SERVICES_PATH = adone.realm.config.omnitron.SERVICES_PATH;
 
 const api = adone.lazify({
     ServiceMaintainer: "./service_maintainer"

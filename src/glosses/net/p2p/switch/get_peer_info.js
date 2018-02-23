@@ -1,7 +1,8 @@
 const {
     is,
+    crypto: { Identity },
     multi,
-    net: { p2p: { PeerId, PeerInfo } }
+    net: { p2p: { PeerInfo } }
 } = adone;
 
 /**
@@ -22,12 +23,12 @@ const getPeerInfo = function (peer, peerBook) {
         try {
             p = peerBook.get(peerIdB58Str);
         } catch (err) {
-            p = new PeerInfo(PeerId.createFromBase58(peerIdB58Str));
+            p = new PeerInfo(Identity.createFromBase58(peerIdB58Str));
         }
         p.multiaddrs.add(peer);
 
-        // PeerId
-    } else if (is.p2pPeerId(peer)) {
+        // Identity
+    } else if (is.identity(peer)) {
         const peerIdB58Str = peer.asBase58();
         try {
             p = peerBook.get(peerIdB58Str);

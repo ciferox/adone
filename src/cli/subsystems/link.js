@@ -36,7 +36,7 @@ export default class LinkManager extends application.Subsystem {
     }
 
     @DCliCommand({
-        name: "list",
+        name: ["list", "l"],
         help: "Show all links"
     })
     async listCommand() {
@@ -76,7 +76,7 @@ export default class LinkManager extends application.Subsystem {
     }
 
     @DCliCommand({
-        name: "create",
+        name: ["create", "c"],
         help: "Create link",
         arguments: [
             {
@@ -114,15 +114,15 @@ export default class LinkManager extends application.Subsystem {
                 const destPath = std.path.join(this.nodeModulesPath, linkName);
                 await fs.mkdirp(this.nodeModulesPath);
                 if (is.windows) {
-                    await fs.symlink(adone.rootPath, destPath, "junction");
+                    await fs.symlink(adone.ROOT_PATH, destPath, "junction");
                 } else {
-                    await fs.symlink(adone.rootPath, destPath);
+                    await fs.symlink(adone.ROOT_PATH, destPath);
                 }
             } else {
                 // It might be worth to check the existence of the commands chain...
             }
 
-            const path = std.path.join(adone.rootPath, "bin", "adone.js");
+            const path = std.path.join(adone.ROOT_PATH, "bin", "adone.js");
 
             if (isAdone) {
                 await fs.symlink(path, scriptPath);
@@ -157,7 +157,7 @@ export default class LinkManager extends application.Subsystem {
     }
 
     @DCliCommand({
-        name: "delete",
+        name: ["delete", "d"],
         help: "Delete link",
         arguments: [
             {

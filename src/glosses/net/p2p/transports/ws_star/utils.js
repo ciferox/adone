@@ -1,7 +1,7 @@
 const {
     is,
-    multi,
-    net: { p2p: { crypto, PeerId } }
+    crypto,
+    multi
 } = adone;
 
 const cleanUrlSIO = function (ma) {
@@ -93,7 +93,7 @@ const Protocol = function (log) {
 };
 
 const getIdAndValidate = function (pub, id) {
-    const _id = PeerId.createFromPubKey(Buffer.from(pub, "hex"));
+    const _id = crypto.Identity.createFromPubKey(Buffer.from(pub, "hex"));
     if (_id.asBase58() !== id) {
         throw new Error("Id is not matching");
     }

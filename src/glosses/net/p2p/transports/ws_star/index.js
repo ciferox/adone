@@ -3,10 +3,11 @@ const Listener = require("./listener");
 const cleanUrlSIO = utils.cleanUrlSIO;
 
 const {
+    crypto: { Identity },
     event,
     is,
     multi,
-    net: { p2p: { PeerId, PeerInfo, Connection } }
+    net: { p2p: { PeerInfo, Connection } }
 } = adone;
 
 class WebsocketStar {
@@ -14,7 +15,7 @@ class WebsocketStar {
      * WebsocketStar Transport
      * @class
      * @param {Object} options - Options for the listener
-     * @param {PeerId} options.id - Id for the crypto challenge
+     * @param {Identity} options.id - Id for the crypto challenge
      */
     constructor(options) {
         options = options || {};
@@ -36,7 +37,7 @@ class WebsocketStar {
 
     /**
      * Sets the id after transport creation (aka the lazy way)
-     * @param {PeerId} id
+     * @param {Identity} id
      * @returns {undefined}
      */
     lazySetId(id) {
@@ -115,7 +116,7 @@ class WebsocketStar {
      */
     _peerDiscovered(maStr) {
         const peerIdStr = maStr.split("/ipfs/").pop();
-        const peerId = PeerId.createFromBase58(peerIdStr);
+        const peerId = Identity.createFromBase58(peerIdStr);
         const peerInfo = new PeerInfo(peerId);
 
         peerInfo.multiaddrs.add(multi.address.create(maStr));

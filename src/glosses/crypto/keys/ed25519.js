@@ -17,7 +17,6 @@ const hashAndSign = (key, msg) => Buffer.from(ed25519.sign(msg, key));
 
 const hashAndVerify = (key, sig, msg) => ed25519.verify(msg, sig, key);
 
-
 const pbm = protobuf.create(require("./keys.proto"));
 
 const ensureKey = function (key, length) {

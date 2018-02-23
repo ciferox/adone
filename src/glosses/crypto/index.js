@@ -1,3 +1,7 @@
+adone.definePredicates({
+    identity: "CRYPTO_IDENTITY"
+});
+
 adone.lazify({
     stringCompare: "./string_compare",
     Keygrip: "./keygrip",
@@ -19,5 +23,10 @@ adone.lazify({
     pem: "./pem",
     pss: "./pss",
     ed25519: "./ed25519",
-    mgf: "./mgf"
+    mgf: "./mgf",
+    hmac: "./hmac",
+    aes: "./aes",
+    keys: "./keys",
+    pbkdf2: "./pbkdf2",
+    Identity: "./identity"
 }, adone.asNamespace(exports), require);

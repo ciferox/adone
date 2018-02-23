@@ -1,8 +1,9 @@
 const nodes = require("./fixtures/nodes");
 
 const {
+    crypto: { Identity },
     multi,
-    net: { p2p: { Connection, PeerInfo, PeerId } },
+    net: { p2p: { Connection, PeerInfo } },
     stream: { pull }
 } = adone;
 
@@ -21,9 +22,9 @@ describe("circuit", "listener", () => {
             stream = pull.handshake({ timeout: 1000 * 60 });
             shake = stream.handshake;
             conn = new Connection(stream);
-            conn.setPeerInfo(new PeerInfo(PeerId.createFromBase58("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE")));
+            conn.setPeerInfo(new PeerInfo(Identity.createFromBase58("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE")));
 
-            const peerId = PeerId.createFromJSON(nodes.node4);
+            const peerId = Identity.createFromJSON(nodes.node4);
             const peer = PeerInfo.create(peerId);
             sw = {
                 _peerInfo: peer,
@@ -192,7 +193,7 @@ describe("circuit", "listener", () => {
         let peerInfo = null;
 
         beforeEach(() => {
-            const peerId = PeerId.createFromJSON(nodes.node4);
+            const peerId = Identity.createFromJSON(nodes.node4);
             const peer = PeerInfo.create(peerId);
             sw = {
                 _peerInfo: peer

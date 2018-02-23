@@ -10,7 +10,7 @@ const {
  */
 class RoutingTable {
     /**
-     * @param {PeerId} self
+     * @param {Identity} self
      * @param {number} kBucketSize
      */
     constructor(self, kBucketSize) {
@@ -66,7 +66,7 @@ class RoutingTable {
     /**
      * Find a specific peer by id.
      *
-     * @param {PeerId} peer
+     * @param {Identity} peer
      * @returns {void}
      */
     find(peer) {
@@ -83,7 +83,7 @@ class RoutingTable {
      *
      * @param {Buffer} key
      * @param {number} count
-     * @returns {PeerId|undefined}
+     * @returns {Identity|undefined}
      */
     closestPeer(key, count) {
         const res = this.closestPeers(key, 1);
@@ -97,7 +97,7 @@ class RoutingTable {
      *
      * @param {Buffer} key
      * @param {number} count
-     * @returns {Array<PeerId>}
+     * @returns {Array<Identity>}
      */
     closestPeers(key, count) {
         return this.kb.closest(key, count).map((p) => p.peer);
@@ -106,7 +106,7 @@ class RoutingTable {
     /**
      * Add or update the routing table with the given peer.
      *
-     * @param {PeerId} peer
+     * @param {Identity} peer
      * @returns {undefined}
      */
     add(peer) {
@@ -117,7 +117,7 @@ class RoutingTable {
     /**
      * Remove a given peer from the table.
      *
-     * @param {PeerId} peer
+     * @param {Identity} peer
      * @returns {undefined}
      */
     remove(peer) {

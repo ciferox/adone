@@ -102,10 +102,10 @@ export default class CMake {
         }
 
         // NAN
-        incPaths.push(path.join(adone.rootPath, "src", "native", "nan"));
+        incPaths.push(path.join(adone.ROOT_PATH, "src", "native", "nan"));
 
         // ADONE
-        incPaths.push(path.join(adone.rootPath, "src", "native", "adone"));
+        incPaths.push(path.join(adone.ROOT_PATH, "src", "native", "adone"));
 
         // Includes:
         D.push({ CMAKE_JS_INC: incPaths.join(";") });

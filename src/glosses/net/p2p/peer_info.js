@@ -2,7 +2,7 @@ const {
     is,
     vendor: { lodash: { uniqBy } },
     multi,
-    net: { p2p: { PeerId } },
+    crypto: { Identity },
     util
 } = adone;
 
@@ -139,13 +139,13 @@ export default class PeerInfo {
 
     static create(val) {
         if (!val) {
-            return new PeerInfo(PeerId.create());
-        } else if (is.p2pPeerId(val)) {
+            return new PeerInfo(Identity.create());
+        } else if (is.identity(val)) {
             return new PeerInfo(val);
         } else if (is.p2pPeerInfo(val)) {
             return val;
         } else if (is.plainObject(val)) {
-            return new PeerInfo(PeerId.createFromJSON(val));
+            return new PeerInfo(Identity.createFromJSON(val));
         }
         throw new adone.error.NotValid(`Invalid type of input for PeerInfo: ${adone.meta.typeOf(val)}`);
     }

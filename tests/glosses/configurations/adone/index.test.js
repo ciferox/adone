@@ -213,7 +213,7 @@ describe("configuration", "Adone", () => {
 
         beforeEach(async () => {
             config = await configuration.Adone.load({
-                cwd: std.path.join(adone.rootPath)
+                cwd: std.path.join(adone.ROOT_PATH)
             });
             rawConfig = config.raw;
         });

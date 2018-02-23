@@ -2,7 +2,7 @@ const fixtures = require("./fixtures/aes");
 const goFixtures = require("./fixtures/go-aes");
 
 const {
-    net: { p2p: { crypto } }
+    crypto
 } = adone;
 
 const bytes = {
