@@ -1,5 +1,4 @@
-const asyncFilter = require("../utils").asyncFilter;
-const asyncSort = require("../utils").asyncSort;
+const { asyncFilter, asyncSort } = require("../utils");
 
 const {
     is,
@@ -11,7 +10,7 @@ export default class MemoryDatastore {
         this.data = {};
     }
 
-    open(callback /* : Callback<void> */) /* : void */ {
+    open(callback /* : Callback<void> */) {
         setImmediate(callback);
     }
 

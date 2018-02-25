@@ -1,20 +1,23 @@
-// INCOMPLETE!
+const {
+    fs
+} = adone;
 
 /**
- *
- * INIT script for realm.
- *
- * Should be running in adone root directory.
+ * Initialize realm.
  */
+export default async () => {
+    const rootPath = adone.ROOT_PATH;
 
-const init = async () => {
-    const path = process.cwd();
-
-    if (!(await adone.fs.exists(adone.realm.config.LOCKFILE_PATH))) {
+    if (!(await fs.exists(adone.realm.config.LOCKFILE_PATH))) {
         // Create lockfile
-        await adone.fs.mkdirp(adone.realm.config.runtimePath);
-       await adone.fs.writeFile(adone.realm.config.LOCKFILE_PATH, "");
+        await fs.mkdirp(adone.realm.config.RUNTIME_PATH);
+        await fs.writeFile(adone.realm.config.LOCKFILE_PATH, "");
+    }
+
+    if (!(await fs.exists(adone.realm.config.KEYS_PATH))) {
+        // Create realm identity
+        await fs.mkdirp(adone.realm.config.KEYS_PATH);
+
+        
     }
 };
-
-init();

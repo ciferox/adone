@@ -1,4 +1,10 @@
-const { is } = adone;
+const {
+    is
+} = adone;
+
+const hasOwnProperty = Object.prototype.hasOwnProperty;
+const isEmptyRangeOption = (v) => v === "" || is.nil(v) || is.buffer(v) && v.length === 0;
+const RANGE_KEYS = ["start", "end", "gt", "gte", "lt", "lte"];
 
 export class AbstractIterator {
     constructor(db) {
@@ -16,24 +22,16 @@ export class AbstractIterator {
         }
 
         this._nexting = true;
-        if (is.function(this._next)) {
-            return new Promise((resolve, reject) => {
-                return this._next((err, result) => {
-                    this._nexting = false;
-                    if (err) {
-                        return reject(err);
-                    }
-                    resolve(result);
-                });
-            });
-        }
-
-        return new Promise((resolve) => {
-            process.nextTick(() => {
+        return new Promise((resolve, reject) => {
+            return this._next((err, result) => {
                 this._nexting = false;
-                resolve();
+                return (err) ? reject(err) : resolve(result);
             });
         });
+    }
+
+    _next(callback) {
+        process.nextTick(callback);
     }
 
     end() {
@@ -43,18 +41,13 @@ export class AbstractIterator {
 
         this._ended = true;
 
-        if (is.function(this._end)) {
-            return new Promise((resolve, reject) => {
-                this._end((err) => {
-                    if (err) {
-                        return reject(err);
-                    }
-                    resolve();
-                });
-            });
-        }
+        return new Promise((resolve, reject) => {
+            this._end((err) => (err) ? reject(err) : resolve());
+        });
+    }
 
-        return new Promise((resolve) => process.nextTick(resolve));
+    _end(callback) {
+        process.nextTick(callback);
     }
 }
 
@@ -88,16 +81,13 @@ export class AbstractChainedBatch {
             throw err;
         }
 
-        key = this._serializeKey(key);
-        value = this._serializeValue(value);
-
-        if (is.function(this._put)) {
-            this._put(key, value);
-        } else {
-            this._operations.push({ type: "put", key, value });
-        }
+        this._put(this._serializeKey(key), this._serializeValue(value));
 
         return this;
+    }
+
+    _put(key, value) {
+        this._operations.push({ type: "put", key, value });
     }
 
     del(key) {
@@ -108,169 +98,145 @@ export class AbstractChainedBatch {
             throw err;
         }
 
-        key = this._serializeKey(key);
-
-        if (is.function(this._del)) {
-            this._del(key);
-        } else {
-            this._operations.push({ type: "del", key });
-        }
+        this._del(this._serializeKey(key));
 
         return this;
+    }
+
+    _del(key) {
+        this._operations.push({ type: "del", key });
     }
 
     clear() {
         this._checkWritten();
 
-        this._operations = [];
+        this._operations.length = 0;
 
-        if (is.function(this._clear)) {
-            this._clear();
-        }
+        this._clear();
 
         return this;
     }
 
+    _clear() {
+    }
+
     write(options = {}) {
         this._checkWritten();
-
         this._written = true;
 
-        if (is.function(this._write)) {
-            return new Promise((resolve, reject) => {
-                this._write((err) => {
-                    if (err) {
-                        return reject(err);
-                    }
-                    resolve();
-                });
-            });
-        }
-
-        if (is.function(this._db._batch)) {
-            return new Promise((resolve, reject) => {
-                this._db._batch(this._operations, options, (err) => {
-                    if (err) {
-                        return reject(err);
-                    }
-                    resolve();
-                });
-            });
-        }
+        return new Promise((resolve, reject) => {
+            const cb = (err) => (err) ? reject(err) : resolve();
+            if (is.function(this._write)) {
+                this._write(cb);
+            } else if (is.function(this._db._batch)) {
+                this._db._batch(this._operations, options, cb);
+            } else {
+                resolve();
+            }
+        });
     }
 }
 
 export class AbstractBackend {
     constructor(location) {
-        if (!arguments.length || is.undefined(location)) {
-            throw new Error("constructor requires at least a location argument");
-        }
-
         if (!is.string(location)) {
-            throw new Error("constructor requires a location string argument");
+            throw new adone.error.InvalidArgument("AbstractBackend constructor requires a location string argument");
         }
 
         this.location = location;
         this.status = "new";
     }
 
-    open(options) {
-        options = Object.assign({ createIfMissing: true, errorIfExists: false }, options);
+    open(options = {}) {
+        options.createIfMissing = options.createIfMissing !== false;
+        options.errorIfExists = Boolean(options.errorIfExists);
+
         const oldStatus = this.status;
-
-        if (is.function(this._open)) {
-            this.status = "opening";
-            return new Promise((resolve, reject) => {
-                this._open(options, (err) => {
-                    if (err) {
-                        this.status = oldStatus;
-                        return reject(err);
-                    }
-                    this.status = "open";
-                    resolve();
-                });
+        this.status = "opening";
+        return new Promise((resolve, reject) => {
+            this._open(options, (err) => {
+                if (err) {
+                    this.status = oldStatus;
+                    return reject(err);
+                }
+                this.status = "open";
+                resolve();
             });
-        }
-        this.status = "open";
+        });
+    }
 
+    _open(options, callback) {
+        process.nextTick(callback);
     }
 
     close() {
         const oldStatus = this.status;
-
-        if (is.function(this._close)) {
-            this.status = "closing";
-            return new Promise((resolve, reject) => {
-                this._close((err) => {
-                    if (err) {
-                        this.status = oldStatus;
-                        return reject(err);
-                    }
-                    this.status = "closed";
-                    resolve();
-                });
-            });
-        }
-        this.status = "closed";
-
-    }
-
-    get(key, options) {
-        options = Object.assign({ asBuffer: true }, options);
-        this._checkKey(key, "key");
-
-        key = this._serializeKey(key);
-
+        this.status = "closing";
         return new Promise((resolve, reject) => {
-            this._get(key, options, (err, value) => {
+            this._close((err) => {
                 if (err) {
+                    this.status = oldStatus;
                     return reject(err);
                 }
-                resolve(value);
+                this.status = "closed";
+                resolve();
             });
         });
+    }
+
+    _close(callback) {
+        process.nextTick(callback);
+    }
+
+    get(key, options = {}) {
+        this._checkKey(key, "key");
+        options.asBuffer = options.asBuffer !== false;
+
+        return new Promise((resolve, reject) => {
+            this._get(this._serializeKey(key), options, (err, value) => (err) ? reject(err) : resolve(value));
+        });
+    }
+
+    _get(key, options, callback) {
+        process.nextTick(() => callback(new adone.error.NotImplemented("Method AbstractBackend#_get() is not implemented")));
     }
 
     put(key, value, options = {}) {
         this._checkKey(key, "key");
 
-        key = this._serializeKey(key);
-        value = this._serializeValue(value);
-
         return new Promise((resolve, reject) => {
-            this._put(key, value, options, (err) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve();
-            });
+            this._put(this._serializeKey(key), this._serializeValue(value), options, (err) => (err) ? reject(err) : resolve());
         });
+    }
+
+    _put(key, value, options, callback) {
+        process.nextTick(callback);
     }
 
     del(key, options = {}) {
         this._checkKey(key, "key");
 
-        key = this._serializeKey(key);
-
         return new Promise((resolve, reject) => {
-            return this._del(key, options, (err) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve();
-            });
+            return this._del(this._serializeKey(key), options, (err) => (err) ? reject(err) : resolve());
         });
     }
 
-    chainedBatch() {
-        return new AbstractChainedBatch(this);
+    _del(key, options, callback) {
+        process.nextTick(callback);
     }
 
     batch(array, options) {
-        options = Object.assign({}, options);
+        if (arguments.length === 0) {
+            return this._chainedBatch();
+        }
+
         if (!is.array(array)) {
             throw new Error("batch(array) requires an array argument");
         }
+
+        options = {
+            ...options
+        };
 
         const serialized = new Array(array.length);
 
@@ -279,13 +245,14 @@ export class AbstractBackend {
                 throw new Error("batch(array) element must be an object and not `null`");
             }
 
-            const e = Object.assign({}, array[i]);
+            const e = {
+                ...array[i]
+            };
 
             if (e.type !== "put" && e.type !== "del") {
                 throw new Error("`type` must be 'put' or 'del'");
             }
             this._checkKey(e.key, "key");
-
             e.key = this._serializeKey(e.key);
 
             if (e.type === "put") {
@@ -295,60 +262,43 @@ export class AbstractBackend {
             serialized[i] = e;
         }
 
-        if (is.function(this._batch)) {
-            return new Promise((resolve, reject) => {
-                this._batch(serialized, options, (err) => {
-                    if (err) {
-                        return reject(err);
-                    }
-                    resolve();
-                });
-            });
-        }
-    }
-
-    //TODO: remove from here, not a necessary primitive
-    approximateSize(start, end, callback) {
-        if (is.nil(start) || is.nil(end) || is.function(start) || is.function(end)) {
-            throw new Error("approximateSize() requires valid `start`, `end` and `callback` arguments");
-        }
-
-        if (!is.function(callback)) {
-            throw new Error("approximateSize() requires a callback argument");
-        }
-
-        start = this._serializeKey(start);
-        end = this._serializeKey(end);
-
-        if (is.function(this._approximateSize)) {
-            return this._approximateSize(start, end, callback);
-        }
-
-        process.nextTick(() => {
-            callback(null, 0);
+        return new Promise((resolve, reject) => {
+            this._batch(serialized, options, (err) => (err) ? reject(err) : resolve());
         });
     }
 
-    iterator(options) {
-        options = Object.assign({}, options);
+    _batch(array, options, callback) {
+        process.nextTick(callback);
+    }
 
-        ["start", "end", "gt", "gte", "lt", "lte"].forEach((o) => {
-            if (options[o] && is.buffer(options[o]) && options[o].length === 0) {
-                delete options[o];
+    _chainedBatch() {
+        return new AbstractChainedBatch(this);
+    }
+
+    iterator(options = {}) {
+        return this._iterator(this._setupIteratorOptions(options));
+    }
+
+    _setupIteratorOptions(options) {
+        const normOptions = {};
+
+        for (const k in options) {
+            if (!hasOwnProperty.call(options, k) || (RANGE_KEYS.includes(k) && isEmptyRangeOption(options[k]))) {
+                continue;
             }
-        });
-
-        options.reverse = Boolean(options.reverse);
-        options.keys = options.keys !== false;
-        options.values = options.values !== false;
-        options.limit = "limit" in options ? options.limit : -1;
-        options.keyAsBuffer = options.keyAsBuffer !== false;
-        options.valueAsBuffer = options.valueAsBuffer !== false;
-
-        if (is.function(this._iterator)) {
-            return this._iterator(options);
+            normOptions[k] = options[k];
         }
 
+        normOptions.reverse = Boolean(normOptions.reverse);
+        normOptions.keys = normOptions.keys !== false;
+        normOptions.values = normOptions.values !== false;
+        normOptions.limit = "limit" in normOptions ? normOptions.limit : -1;
+        normOptions.keyAsBuffer = normOptions.keyAsBuffer !== false;
+        normOptions.valueAsBuffer = normOptions.valueAsBuffer !== false;
+        return normOptions;
+    }
+
+    _iterator() {
         return new AbstractIterator(this);
     }
 

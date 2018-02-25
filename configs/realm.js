@@ -17,6 +17,7 @@ const config = {
     CONFIGS_PATH,
     VAR_PATH,
     LOGS_PATH,
+    KEYS_PATH: join(HOME, "keys"),
     PACKAGES_PATH: join(HOME, "packages"),
     LOCKFILE_PATH: join(RUNTIME_PATH, "realm"),
     devmntPath: join(CONFIGS_PATH, "devmnt.json"),

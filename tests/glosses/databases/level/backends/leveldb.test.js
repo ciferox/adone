@@ -27,21 +27,21 @@ const makeTest = (name, testFn) => {
 };
 
 
-describe("database", "level", "backend", "default", () => {
+describe.todo("database", "level", "backend", "default", () => {
     const factory = (location, options) => new LevelDB(location, options);
 
-    require("../common/open").all(factory, testCommon);
-    require("../common/put").all(factory, testCommon);
-    require("../common/get").all(factory, testCommon);
-    require("../common/del").all(factory, testCommon);
-    require("../common/put_get_del").all(factory, testCommon, adone.std.fs.readFileSync(adone.std.path.join(__dirname, "../data/testdata.bin")));
-    require("../common/batch").all(factory, testCommon);
-    require("../common/chained_batch").all(factory, testCommon);
-    require("../common/ranges").all(factory, testCommon);
-    require("../common/backend").args(factory);
+    require("../abstract/common/open").all(factory, testCommon);
+    require("../abstract/common/put").all(factory, testCommon);
+    require("../abstract/common/get").all(factory, testCommon);
+    require("../abstract/common/del").all(factory, testCommon);
+    require("../abstract/common/put_get_del").all(factory, testCommon, adone.std.fs.readFileSync(adone.std.path.join(__dirname, "../data/testdata.bin")));
+    require("../abstract/common/batch").all(factory, testCommon);
+    // require("../abstract/common/chained_batch").all(factory, testCommon);
+    require("../abstract/common/ranges").all(factory, testCommon);
+    require("../abstract/common/backend").args(factory);
 
 
-    require("../common/iterator").all(factory, testCommon);
+    require("../abstract/common/iterator").all(factory, testCommon);
 
     const lexi = require("lexicographic-integer");
 

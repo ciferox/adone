@@ -636,7 +636,7 @@ describe("database", "level", () => {
             }
         });
 
-        it("batch() with chained interface", async () => {
+        it.todo("batch() with chained interface", async () => {
             const db = await manager.openTestDatabase();
             await db.put("1", "one");
             const batch = new Batch(db);
@@ -667,7 +667,7 @@ describe("database", "level", () => {
             await Manager.shouldThrows(() => db.get("k4"), error.NotFound);
         });
 
-        it("batch() exposes ops queue length", async () => {
+        it.todo("batch() exposes ops queue length", async () => {
             const db = await manager.openTestDatabase();
             const batch = new Batch(db);
             batch.put("one", "1")
@@ -726,7 +726,7 @@ describe("database", "level", () => {
             await Manager.shouldThrows(() => db.get("1"), error.NotFound);
         });
 
-        describe("chained batch() arguments", () => {
+        describe.todo("chained batch() arguments", () => {
             let _db;
             let _batch;
             beforeEach(async () => {

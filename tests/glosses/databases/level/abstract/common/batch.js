@@ -64,7 +64,7 @@ export const args = function () {
             await assert.throws(async () => db.batch([{ key: "key", value: "value", type: "foo" }]), "`type` must be 'put' or 'del'");
         });
 
-        it("batch() with missing array", async () => {
+        it.skip("batch() with missing array", async () => {
             try {
                 await db.batch();
             } catch (err) {
