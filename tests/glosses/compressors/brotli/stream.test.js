@@ -1,4 +1,7 @@
-const { std: { fs, path }, compressor: { brotli } } = adone;
+const {
+    std: { fs, path },
+    compressor: { brotli }
+} = adone;
 
 class BufferWriter extends adone.std.stream.Writable {
     constructor() {
@@ -15,12 +18,12 @@ class BufferWriter extends adone.std.stream.Writable {
 const testStream = (method, bufferFile, resultFile, done, params) => {
     const writeStream = new BufferWriter();
 
-    fs.createReadStream(path.join(__dirname, "/fixtures/", bufferFile))
+    fs.createReadStream(path.join(__dirname, "fixtures", bufferFile))
         .pipe(method(params))
         .pipe(writeStream);
 
     writeStream.on("finish", () => {
-        const result = fs.readFileSync(path.join(__dirname, "/fixtures/", resultFile));
+        const result = fs.readFileSync(path.join(__dirname, "fixtures", resultFile));
         expect(writeStream.data).to.deep.equal(result);
         done();
     });
@@ -30,10 +33,6 @@ describe("compressor", "brotli", "stream", () => {
     describe("compress", () => {
         it("should compress binary data", (done) => {
             testStream(brotli.compressStream, "data10k.bin", "data10k.bin.compressed", done);
-        });
-
-        it("should compress binary data", (done) => {
-            testStream(brotli.compressStream, "data10k.bin", "data10k.bin.compressed.dict", done, { dictionary: Buffer.from("0123456789") });
         });
 
         it("should compress text data", (done) => {
@@ -50,6 +49,11 @@ describe("compressor", "brotli", "stream", () => {
 
         it("should compress an empty buffer", (done) => {
             testStream(brotli.compressStream, "empty", "empty.compressed", done);
+        });
+
+        it("should compress a random buffer", function (done) {
+            this.timeout(30000);
+            testStream(brotli.compressStream, "rand", "rand.compressed", done);
         });
 
         it("should compress a large buffer", function (done) {
@@ -86,16 +90,16 @@ describe("compressor", "brotli", "stream", () => {
             testStream(brotli.decompressStream, "data10k.bin.compressed", "data10k.bin", done);
         });
 
-        it("should decompress binary data", (done) => {
-            testStream(brotli.decompressStream, "data10k.bin.compressed.dict", "data10k.bin", done, { dictionary: Buffer.from("0123456789") });
-        });
-
         it("should decompress text data", (done) => {
             testStream(brotli.decompressStream, "data.txt.compressed", "data.txt", done);
         });
 
         it("should decompress to an empty buffer", (done) => {
             testStream(brotli.decompressStream, "empty.compressed", "empty", done);
+        });
+
+        it("should decompress to a random buffer", (done) => {
+            testStream(brotli.decompressStream, "rand.compressed", "rand", done);
         });
 
         it("should decompress to a large buffer", function (done) {

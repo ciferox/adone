@@ -1,4 +1,8 @@
-const { is, std: { fs, path }, compressor: { brotli } } = adone;
+const {
+    is,
+    std: { fs, path },
+    compressor: { brotli }
+} = adone;
 
 const testBufferSync = (method, bufferFile, resultFile, params) => {
     params = params || {};
@@ -12,10 +16,6 @@ describe("compressor", "brotli", "sync", () => {
     describe("compress", () => {
         it("should compress binary data", () => {
             testBufferSync(brotli.compressSync, "data10k.bin", "data10k.bin.compressed");
-        });
-
-        it("should compress binary data with a custom dictionary", () => {
-            testBufferSync(brotli.compressSync, "data10k.bin", "data10k.bin.compressed.dict", { dictionary: Buffer.from("0123456789") });
         });
 
         it("should compress text data", () => {
@@ -34,28 +34,20 @@ describe("compressor", "brotli", "sync", () => {
             testBufferSync(brotli.compressSync, "empty", "empty.compressed");
         });
 
-        it("should compress a large buffer", function () {
-            if (process.env.SKIP_LARGE_BUFFER_TEST) {
-                this.skip();
-            }
-
+        it("should compress a random buffer", function () {
             this.timeout(30000);
-            testBufferSync(brotli.compressSync, "large.txt", "large.txt.compressed");
+            testBufferSync(brotli.compressSync, "rand", "rand.compressed");
         });
 
-        it("should compress a string", () => {
-            const a = brotli.compressSync("hello");
-            expect(is.buffer(a)).to.be.true();
+        it("should compress a large buffer", function () {
+            this.timeout(30000);
+            testBufferSync(brotli.compressSync, "large.txt", "large.txt.compressed");
         });
     });
 
     describe("decompress", () => {
         it("should decompress binary data", () => {
             testBufferSync(brotli.decompressSync, "data10k.bin.compressed", "data10k.bin");
-        });
-
-        it("should decompress binary data with a custom dictionary", () => {
-            testBufferSync(brotli.decompressSync, "data10k.bin.compressed.dict", "data10k.bin", { dictionary: Buffer.from("0123456789") });
         });
 
         it("should decompress text data", () => {
@@ -72,10 +64,6 @@ describe("compressor", "brotli", "sync", () => {
         });
 
         it("should decompress to another large buffer", function () {
-            if (process.env.SKIP_LARGE_BUFFER_TEST) {
-                this.skip();
-            }
-
             this.timeout(30000);
             testBufferSync(brotli.decompressSync, "large.txt.compressed", "large.txt");
         });

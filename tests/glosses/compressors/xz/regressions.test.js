@@ -1,11 +1,15 @@
-const { std: { fs, path }, compressor: { lzma }, collection: { BufferList } } = adone;
+const {
+    std: { fs, path },
+    compressor: { lzma },
+    collection: { BufferList }
+} = adone;
 
 describe("compressor", "xz", "regressions", () => {
-    const commonFixturePath = (relPath) => path.join(__dirname, "../..", "fixtures", relPath);
+    const fixture = (...args) => path.join(__dirname, "fixtures", ...args);
 
     describe("regression-#7", () => {
         it("should perform correctly", (done) => {
-            const input = fs.createReadStream(commonFixturePath("big"));
+            const input = fs.createReadStream(fixture("..", "..", "..", "fixtures", "big"));
             const compressor = lzma.compressStream({ sync: true });
 
             input.pipe(compressor).pipe(new BufferList(done));
@@ -24,6 +28,15 @@ describe("compressor", "xz", "regressions", () => {
                     }
                 });
             }
+        });
+    });
+
+    describe("regression-#53", () => {
+        it("should perform correctly", async () => {
+            const input = fs.readFileSync(fixture("invalid.xz"));
+
+            const err = await assert.throws(async () => lzma.decompress(input));
+            assert.strictEqual(err.name, "LZMA_FORMAT_ERROR");
         });
     });
 });

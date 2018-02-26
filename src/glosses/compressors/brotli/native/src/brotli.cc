@@ -91,22 +91,10 @@ Local<Array> StreamCoder::PendingChunksAsArray()
     return chunks;
 }
 
-StreamDecode::StreamDecode(Local<Object> params) : next_in(NULL), available_in(0)
+StreamDecode::StreamDecode() : next_in(NULL), available_in(0)
 {
     state = BrotliDecoderCreateInstance(Allocator::Alloc, Allocator::Free, &alloc);
     alloc.ReportMemoryToV8();
-
-    Local<String> key;
-
-    key = Nan::New<String>("dictionary").ToLocalChecked();
-    if (Nan::Has(params, key).FromJust())
-    {
-        Local<Object> dictionary = Nan::Get(params, key).ToLocalChecked()->ToObject();
-        const size_t dict_size = node::Buffer::Length(dictionary);
-        const char *dict_buffer = node::Buffer::Data(dictionary);
-
-        BrotliDecoderSetCustomDictionary(state, dict_size, (const uint8_t *)dict_buffer);
-    }
 }
 
 StreamDecode::~StreamDecode()
@@ -130,7 +118,7 @@ void StreamDecode::Init(Nan::ADDON_REGISTER_FUNCTION_ARGS_TYPE target)
 
 NAN_METHOD(StreamDecode::New)
 {
-    StreamDecode *obj = new StreamDecode(info[0]->ToObject());
+    StreamDecode *obj = new StreamDecode();
     obj->Wrap(info.This());
     info.GetReturnValue().Set(info.This());
 }
@@ -227,16 +215,6 @@ StreamEncode::StreamEncode(Local<Object> params)
         val = Nan::Get(params, key).ToLocalChecked()->Int32Value();
         BrotliEncoderSetParameter(state, BROTLI_PARAM_DISABLE_LITERAL_CONTEXT_MODELING, val);
     }
-
-    key = Nan::New<String>("dictionary").ToLocalChecked();
-    if (Nan::Has(params, key).FromJust())
-    {
-        Local<Object> dictionary = Nan::Get(params, key).ToLocalChecked()->ToObject();
-        const size_t dict_size = node::Buffer::Length(dictionary);
-        const char *dict_buffer = node::Buffer::Data(dictionary);
-
-        BrotliEncoderSetCustomDictionary(state, dict_size, (const uint8_t *)dict_buffer);
-    }
 }
 
 StreamEncode::~StreamEncode()
@@ -292,7 +270,9 @@ NAN_METHOD(StreamEncode::Flush)
     StreamEncode *obj = ObjectWrap::Unwrap<StreamEncode>(info.Holder());
 
     Nan::Callback *callback = new Nan::Callback(info[1].As<Function>());
-    BrotliEncoderOperation op = info[0]->BooleanValue() ? BROTLI_OPERATION_FINISH : BROTLI_OPERATION_FLUSH;
+    BrotliEncoderOperation op = info[0]->BooleanValue()
+                                    ? BROTLI_OPERATION_FINISH
+                                    : BROTLI_OPERATION_FLUSH;
     obj->next_in = nullptr;
     obj->available_in = 0;
     StreamEncodeWorker *worker = new StreamEncodeWorker(callback, obj, op);
@@ -322,29 +302,35 @@ void StreamEncodeWorker::Execute()
     do
     {
         size_t available_out = 0;
-        res = BrotliEncoderCompressStream(obj->state, op, &obj->available_in, &obj->next_in, &available_out, NULL, NULL);
+        res = BrotliEncoderCompressStream(obj->state,
+                                          op,
+                                          &obj->available_in,
+                                          &obj->next_in,
+                                          &available_out,
+                                          NULL,
+                                          NULL);
 
         if (res == BROTLI_FALSE)
         {
             return;
         }
-    } while (obj->available_in > 0);
 
-    while (BrotliEncoderHasMoreOutput(obj->state) == BROTLI_TRUE)
-    {
-        size_t size = 0;
-        const uint8_t *output = BrotliEncoderTakeOutput(obj->state, &size);
-
-        void *buf = obj->alloc.Alloc(size);
-        if (!buf)
+        if (BrotliEncoderHasMoreOutput(obj->state) == BROTLI_TRUE)
         {
-            res = BROTLI_FALSE;
-            return;
-        }
+            size_t size = 0;
+            const uint8_t *output = BrotliEncoderTakeOutput(obj->state, &size);
 
-        memcpy(buf, output, size);
-        obj->pending_output.push_back(static_cast<uint8_t *>(buf));
-    }
+            void *buf = obj->alloc.Alloc(size);
+            if (!buf)
+            {
+                res = BROTLI_FALSE;
+                return;
+            }
+
+            memcpy(buf, output, size);
+            obj->pending_output.push_back(static_cast<uint8_t *>(buf));
+        }
+    } while (obj->available_in > 0);
 }
 
 void StreamEncodeWorker::HandleOKCallback()

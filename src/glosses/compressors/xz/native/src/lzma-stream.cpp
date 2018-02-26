@@ -241,8 +241,8 @@ void LZMAStream::invokeBufferHandlers(bool hasLock)
     Local<Function> bufferHandler = Local<Function>::Cast(EmptyToUndefined(Nan::Get(handle(), NewString("bufferHandler"))));
     std::vector<uint8_t> outbuf;
 
-#define CALL_BUFFER_HANDLER_WITH_ARGV       \
-    POSSIBLY_UNLOCK_MX;                     \
+#define CALL_BUFFER_HANDLER_WITH_ARGV                    \
+    POSSIBLY_UNLOCK_MX;                                  \
     Nan::MakeCallback(handle(), bufferHandler, 5, argv); \
     POSSIBLY_LOCK_MX;
 

@@ -4,6 +4,9 @@
 #include "deps/include/brotli/encode.h"
 #include "deps/include/brotli/decode.h"
 
+#include <stddef.h>
+#include <stdint.h>
+
 struct Allocator
 {
     Allocator() : allocated_unreported_memory(0) {}
@@ -57,7 +60,7 @@ class StreamDecode : public StreamCoder
     BrotliDecoderState *state;
 
   private:
-    explicit StreamDecode(Local<Object> params);
+    explicit StreamDecode();
     ~StreamDecode();
 
     static NAN_METHOD(New);

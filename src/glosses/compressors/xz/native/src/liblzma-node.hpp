@@ -184,6 +184,7 @@ class FilterArray
     lzma_filter *array() { return filters.data(); }
     const lzma_filter *array() const { return filters.data(); }
     bool ok() const { return ok_; }
+
   private:
     FilterArray(const FilterArray &);
     FilterArray &operator=(const FilterArray &);
@@ -213,6 +214,7 @@ class MTOptions
     lzma_mt *opts() { return &opts_; }
     const lzma_mt *opts() const { return &opts_; }
     bool ok() const { return ok_; }
+
   private:
     MTOptions(const MTOptions &);
     MTOptions &operator=(const MTOptions &);

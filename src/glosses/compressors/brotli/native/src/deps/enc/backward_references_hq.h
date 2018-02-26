@@ -40,9 +40,9 @@ typedef struct ZopfliNode {
   /* best length to get up to this byte (not including this byte itself)
      highest 8 bit is used to reconstruct the length code */
   uint32_t length;
-  /* distance associated with the length
-     highest 7 bit contains distance short code + 1 (or zero if no short code)
-  */
+  /* distance associated with the length; highest 5 bits contain distance
+     short code + 1 (or zero if no short code); this way only distances shorter
+     than 128MiB are allowed here */
   uint32_t distance;
   /* number of literal inserts before this copy */
   uint32_t insert_length;
@@ -83,14 +83,11 @@ BROTLI_INTERNAL size_t BrotliZopfliComputeShortestPath(
     const BrotliEncoderParams* params, const size_t max_backward_limit,
     const int* dist_cache, HasherHandle hasher, ZopfliNode* nodes);
 
-BROTLI_INTERNAL void BrotliZopfliCreateCommands(const size_t num_bytes,
-                                                const size_t block_start,
-                                                const size_t max_backward_limit,
-                                                const ZopfliNode* nodes,
-                                                int* dist_cache,
-                                                size_t* last_insert_len,
-                                                Command* commands,
-                                                size_t* num_literals);
+BROTLI_INTERNAL void BrotliZopfliCreateCommands(
+    const size_t num_bytes, const size_t block_start,
+    const size_t max_backward_limit, const ZopfliNode* nodes,
+    int* dist_cache, size_t* last_insert_len, const BrotliEncoderParams* params,
+    Command* commands, size_t* num_literals);
 
 #if defined(__cplusplus) || defined(c_plusplus)
 }  /* extern "C" */

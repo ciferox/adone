@@ -139,8 +139,7 @@
                             "task": "transpile",
                             "native": {
                                 "src": "src/glosses/compressors/brotli/native",
-                                "dst": "lib/glosses/compressors/brotli/native",
-                                "type": "gyp"
+                                "dst": "lib/glosses/compressors/brotli/native"
                             }
                         },
                         "deflate": {

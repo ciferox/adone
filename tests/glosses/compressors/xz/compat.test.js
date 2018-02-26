@@ -5,7 +5,7 @@ const { is, std: { fs, path }, compressor: { xz } } = adone;
 describe("compressor", "xz", () => {
     const commonFixturePath = (relPath) => path.resolve(__dirname, "../..", "fixtures", relPath);
 
-    const fixturePath = (relPath) => path.join(__dirname, "fixtures", relPath);
+    const fixture = (name) => path.join(__dirname, "fixtures", name);
 
     describe("compress()/decompress() streams", () => {
         it("can compress", (done) => {
@@ -18,7 +18,7 @@ describe("compressor", "xz", () => {
         it("can round-trip", (done) => {
             const enc = xz.compressStream();
             const dec = xz.decompressStream();
-            const outfile = fixturePath("random.lzma.unlzma");
+            const outfile = fixture("random.lzma.unlzma");
             const outstream = helpers.fsCreateWriteStream(outfile);
 
             outstream.on("finish", () => {
