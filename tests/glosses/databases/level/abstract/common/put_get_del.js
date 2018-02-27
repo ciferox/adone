@@ -3,40 +3,28 @@ const {
 } = adone;
 
 let db;
-let testBuffer;
+const testBuffer = Buffer.from("testbuffer");
 const verifyNotFoundError = require("./util").verifyNotFoundError;
 
 const makeGetDelErrorTests = (type, key, expectedError) => {
     it(`get() with ${type} causes error`, async () => {
-        try {
-            await db.get(key);
-        } catch (err) {
-            assert.ok(err, "has error");
-            assert.ok(err instanceof Error);
-            assert.ok(err.message.match(expectedError), "correct error message");
-        }
+        const err = await assert.throws(async () => db.get(key));
+        assert.ok(err instanceof Error);
+        assert.ok(err.message.match(expectedError), "correct error message");
     });
 
     it(`del() with ${type} causes error`, async () => {
-        try {
-            await db.del(key);
-        } catch (err) {
-            assert.ok(err, "has error");
-            assert.ok(err instanceof Error);
-            assert.ok(err.message.match(expectedError), "correct error message");
-        }
+        const err = await assert.throws(async () => db.del(key));
+        assert.ok(err instanceof Error);
+        assert.ok(err.message.match(expectedError), "correct error message");
     });
 };
 
 const makePutErrorTest = (type, key, value, expectedError) => {
     it(`put() with ${type} causes error`, async () => {
-        try {
-            await db.put(key, value);
-        } catch (err) {
-            assert.ok(err, "has error");
-            assert.ok(err instanceof Error);
-            assert.ok(err.message.match(expectedError), "correct error message");
-        }
+        const err = await assert.throws(async () => db.put(key, value));
+        assert.ok(err instanceof Error);
+        assert.ok(err.message.match(expectedError), "correct error message");
     });
 };
 
@@ -59,13 +47,8 @@ const makePutGetDelSuccessfulTest = function (type, key, value, expectedResult) 
             assert.equal(result, value);
         }
         await db.del(key);
-        try {
-            await db.get(key);
-        } catch (err) {
-            assert.ok(verifyNotFoundError(err), "should have correct error message");
-            return;
-        }
-        assert.fail("Should have thrown");
+        const err = await assert.throws(async () => db.get(key));
+        assert.ok(verifyNotFoundError(err), "should have correct error message");
     });
 };
 
@@ -73,10 +56,6 @@ const makeErrorKeyTest = (type, key, expectedError) => {
     makeGetDelErrorTests(type, key, expectedError);
     makePutErrorTest(type, key, "foo", expectedError);
 };
-
-/**
- * ** SETUP ENVIRONMENT ***
- */
 
 export const setUp = function (leveldown, testCommon) {
     describe("put()/get()/del()", () => {
@@ -120,10 +99,6 @@ export const nonErrorKeys = function () {
     });
 };
 
-/**
- * ** TEST ERROR VALUES ***
- */
-
 export const errorValues = function () {
 };
 
@@ -157,10 +132,6 @@ export const nonErrorValues = function () {
     });
 };
 
-/**
- * ** CLEANUP ENVIRONMENT ***
- */
-
 export const tearDown = function (testCommon) {
     describe("put()/get()/del()", () => {
         it("tearDown", async () => {
@@ -170,8 +141,7 @@ export const tearDown = function (testCommon) {
     });
 };
 
-export const all = function (leveldown, testCommon, buffer) {
-    testBuffer = buffer;
+export const all = function (leveldown, testCommon) {
     setUp(leveldown, testCommon);
     errorKeys();
     nonErrorKeys();

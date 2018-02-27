@@ -3,8 +3,7 @@ const {
 } = adone;
 
 let db;
-const verifyNotFoundError = require("./util").verifyNotFoundError;
-const isTypedArray = require("./util").isTypedArray;
+const { isTypedArray, verifyNotFoundError } = require("./util");
 
 export const setUp = function (leveldown, testCommon) {
     describe("batch", () => {
@@ -27,33 +26,15 @@ export const args = function () {
         });
 
         it("batch() with missing `key`", async () => {
-            try {
-                await db.batch([{ type: "put", value: "foo1" }]);
-            } catch (err) {
-                assert.instanceOf(err, Error);
-                return;
-            }
-            assert.fail("Should have thrown");
+            await assert.throws(async () => db.batch([{ type: "put", value: "foo1" }]));
         });
 
         it("batch() with null `key`", async () => {
-            try {
-                await db.batch([{ type: "put", key: null, value: "foo1" }]);
-            } catch (err) {
-                assert.instanceOf(err, Error);
-                return;
-            }
-            assert.fail("Should have thrown");
+            await assert.throws(async () => db.batch([{ type: "put", key: null, value: "foo1" }]));
         });
 
         it("batch() with missing `key` and `value`", async () => {
-            try {
-                await db.batch([{ type: "put" }]);
-            } catch (err) {
-                assert.instanceOf(err, Error);
-                return;
-            }
-            assert.fail("Should have thrown");
+            await assert.throws(async () => db.batch([{ type: "put" }]));
         });
 
         it("batch() with missing `type`", async () => {
@@ -64,46 +45,28 @@ export const args = function () {
             await assert.throws(async () => db.batch([{ key: "key", value: "value", type: "foo" }]), "`type` must be 'put' or 'del'");
         });
 
-        it.skip("batch() with missing array", async () => {
-            try {
-                await db.batch();
-            } catch (err) {
-                assert.instanceOf(err, Error);
-                return;
-            }
-            assert.fail("Should have thrown");
-        });
+        // it("batch() with missing array", async () => {
+        //     await assert.throws(async () => db.batch());
+        // });
 
         it("batch() with undefined array", async () => {
-            try {
-                await db.batch(void 0);
-            } catch (err) {
-                assert.instanceOf(err, Error);
-                return;
-            }
-            assert.fail("Should have thrown");
+            await assert.throws(async () => db.batch(void 0));
         });
 
         it("batch() with null array", async () => {
-            try {
-                await db.batch(null);
-            } catch (err) {
-                assert.instanceOf(err, Error);
-                return;
-            }
-            assert.fail("Should have thrown");
+            await assert.throws(async () => db.batch(null));
         });
 
         it("batch() with null options", async () => {
             await db.batch([], null);
         });
-    });
 
-    [null, undefined, 1, true].forEach((element) => {
-        const type = is.null(element) ? "null" : typeof element;
+        [null, undefined, 1, true].forEach((element) => {
+            const type = is.null(element) ? "null" : typeof element;
 
-        it(`test batch() with ${type} element`, async () => {
-            await assert.throws(async () => db.batch([element], /batch(array) element must be an object and not `null`/));
+            it(`test batch() with ${type} element`, async () => {
+                await assert.throws(async () => db.batch([element], /batch(array) element must be an object and not `null`/));
+            });
         });
     });
 };
@@ -145,14 +108,8 @@ export const batch = function () {
             }
             assert.equal(result, "bar1");
 
-            try {
-                value = undefined;
-                value = await db.get("foobatch2");
-            } catch (err) {
-                assert.ok(err, "entry not found");
-                assert.ok(is.undefined(value), "value is undefined");
-                assert.ok(verifyNotFoundError(err), "NotFound error");
-            }
+            const err = await assert.throws(async () => db.get("foobatch2"));
+            assert.ok(verifyNotFoundError(err), "NotFound error");
 
             value = await db.get("foobatch3");
             if (isTypedArray(value)) {
@@ -169,31 +126,14 @@ export const batch = function () {
 export const atomic = function () {
     describe("batch", () => {
         it("multiple batch()", async () => {
-            try {
-                await db.batch([
-                    { type: "put", key: "foobah1", value: "bar1" },
-                    { type: "put", value: "bar2" },
-                    { type: "put", key: "foobah3", value: "bar3" }
-                ]);
+            await assert.throws(async () => db.batch([
+                { type: "put", key: "foobah1", value: "bar1" },
+                { type: "put", value: "bar2" },
+                { type: "put", key: "foobah3", value: "bar3" }
+            ]));
 
-            } catch (err) {
-                assert.ok(err, "should error");
-                let err_;
-                try {
-                    await db.get("foobah1");
-                } catch (err) {
-                    err_ = err;
-                }
-                assert.ok(err_, "should not be found");
-                try {
-                    err_ = undefined;
-                    await db.get("foobah3");
-                } catch (err) {
-                    err_ = err;
-                }
-
-                assert.ok(err, "should not be found");
-            }
+            await assert.throws(async () => db.get("foobah1"));
+            await assert.throws(async () => db.get("foobah3"));
         });
     });
 };

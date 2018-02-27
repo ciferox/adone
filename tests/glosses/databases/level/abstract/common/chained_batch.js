@@ -15,12 +15,12 @@ const collectBatchOps = (batch) => {
 
     batch._put = function (key, value) {
         _operations.push({ type: "put", key, value });
-        return _put.apply(this, arguments);
+        return _put.apply(batch, arguments);
     };
 
     batch._del = function (key) {
         _operations.push({ type: "del", key });
-        return _del.apply(this, arguments);
+        return _del.apply(batch, arguments);
     };
 
     return _operations;
@@ -38,128 +38,73 @@ export const setUp = function (leveldown, testCommon) {
 
 export const args = function () {
     describe("chained batch", () => {
-        it("test batch#put() with missing `value`", () => {
-            db.chainedBatch().put("foo1");
+        it("batch#put() with missing `value`", () => {
+            db.batch().put("foo1");
         });
 
-        it("test batch#put() with null `value`", () => {
-            db.chainedBatch().put("foo1", null);
+        it("batch#put() with null `value`", () => {
+            db.batch().put("foo1", null);
         });
 
-        it("test batch#put() with missing `key`", () => {
-            try {
-                db.chainedBatch().put(undefined, "foo1");
-            } catch (err) {
-                assert.instanceOf(err, Error);
-                return;
-            }
-            assert.fail("Should have thrown");
+        it("batch#put() with missing `key`", () => {
+            const err = assert.throws(() => db.batch().put(undefined, "foo1"));
+            assert.instanceOf(err, Error);
         });
 
-        it("test batch#put() with null `key`", () => {
-            try {
-                db.chainedBatch().put(null, "foo1");
-            } catch (err) {
-                assert.instanceOf(err, Error);
-                return;
-            }
-            assert.fail("should have thrown");
+        it("batch#put() with null `key`", () => {
+            const err = assert.throws(() => db.batch().put(null, "foo1"));
+            assert.instanceOf(err, Error);
         });
 
-        it("test batch#put() with missing `key` and `value`", () => {
-            try {
-                db.chainedBatch().put();
-            } catch (err) {
-                assert.instanceOf(err, Error);
-                return;
-            }
-            assert.fail("should have thrown");
+        it("batch#put() with missing `key` and `value`", () => {
+            const err = assert.throws(() => db.batch().put());
+            assert.instanceOf(err, Error);
         });
 
-        it("test batch#del() with missing `key`", () => {
-            try {
-                db.chainedBatch().del();
-            } catch (err) {
-                assert.instanceOf(err, Error);
-                return;
-            }
-            assert.fail("should have thrown");
+        it("batch#del() with missing `key`", () => {
+            const err = assert.throws(() => db.batch().del());
+            assert.instanceOf(err, Error);
         });
 
-        it("test batch#del() with null `key`", () => {
-            try {
-                db.chainedBatch().del(null);
-            } catch (err) {
-                assert.instanceOf(err, Error);
-                return;
-            }
-            assert.fail("should have thrown");
+        it("batch#del() with null `key`", () => {
+            const err = assert.throws(() => db.batch().del(null));
+            assert.instanceOf(err, Error);
         });
 
-        it("test batch#del() with null `key`", () => {
-            try {
-                db.chainedBatch().del(null);
-            } catch (err) {
-                assert.instanceOf(err, Error);
-                return;
-            }
-            assert.fail("should have thrown");
+        it("batch#clear() doesn't throw", () => {
+            db.batch().clear();
         });
 
-        it("test batch#clear() doesn't throw", () => {
-            db.chainedBatch().clear();
-        });
-
-        it("test batch#put() after write()", async () => {
-            const batch = db.chainedBatch().put("foo", "bar");
+        it("batch#put() after write()", async () => {
+            const batch = db.batch().put("foo", "bar");
             await batch.write();
-            try {
-                batch.put("boom", "bang");
-            } catch (err) {
-                assert.instanceOf(err, Error);
-                return;
-            }
-            assert.fail("should have thrown");
+            const err = assert.throws(() => batch.put("boom", "bang"));
+            assert.instanceOf(err, Error);
         });
 
-        it("test batch#del() after write()", async () => {
-            const batch = db.chainedBatch().put("foo", "bar");
+        it("batch#del() after write()", async () => {
+            const batch = db.batch().put("foo", "bar");
             await batch.write();
-            try {
-                batch.del("foo");
-            } catch (err) {
-                assert.instanceOf(err, Error);
-                return;
-            }
-            assert.fail("should have thrown");
+            const err = assert.throws(() => batch.del("foo"));
+            assert.instanceOf(err, Error);
         });
 
-        it("test batch#clear() after write()", async () => {
-            const batch = db.chainedBatch().put("foo", "bar");
+        it("batch#clear() after write()", async () => {
+            const batch = db.batch().put("foo", "bar");
             await batch.write();
-            try {
-                batch.clear();
-            } catch (err) {
-                assert.instanceOf(err, Error);
-                return;
-            }
-            assert.fail("should have thrown");
+            const err = assert.throws(() => batch.clear());
+            assert.instanceOf(err, Error);
         });
 
-        it("test batch#write() after write()", async () => {
-            const batch = db.chainedBatch().put("foo", "bar");
+        it("batch#write() after write()", async () => {
+            const batch = db.batch().put("foo", "bar");
             await batch.write();
-            try {
-                await batch.write();
-            } catch (err) {
-                assert.instanceOf(err, Error);
-                return;
-            }
-            assert.fail("should have thrown");
+            const err = await assert.throws(async () => batch.write());
+            assert.instanceOf(err, Error);
         });
 
-        it("test serialize object", () => {
-            const batch = db.chainedBatch();
+        it("serialize object", () => {
+            const batch = db.batch();
             const ops = collectBatchOps(batch);
 
             batch
@@ -173,13 +118,13 @@ export const args = function () {
             });
         });
 
-        it("test custom _serialize*", () => {
+        it("custom _serialize*", () => {
             const _db = Object.create(db);
             _db._serializeKey = _db._serializeValue = function (data) {
                 return data;
             };
 
-            const batch = _db.chainedBatch();
+            const batch = _db.batch();
             const ops = collectBatchOps(batch);
 
             batch
@@ -196,14 +141,14 @@ export const args = function () {
 
 export const batch = function (testCommon) {
     describe("chained batch", () => {
-        it("test basic batch", async () => {
+        it("basic batch", async () => {
             await db.batch([
                 { type: "put", key: "one", value: "1" },
                 { type: "put", key: "two", value: "2" },
                 { type: "put", key: "three", value: "3" }
             ]);
 
-            await db.chainedBatch()
+            await db.batch()
                 .put("1", "one")
                 .del("2", "two")
                 .put("3", "three")

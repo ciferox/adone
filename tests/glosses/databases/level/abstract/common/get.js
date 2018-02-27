@@ -84,24 +84,21 @@ export const get = function () {
             await db.put("hello", "world");
 
             for (let i = 0; i < 10; ++i) {
-                const value = await db.get("hello");
+                const value = await db.get("hello"); // eslint-disable-line
                 assert.equal(value.toString(), "world");
             }
 
             for (let j = 0; j < 10; ++j) {
-                try {
-                    await db.get("not found");
-                } catch (err) {
-                    assert.ok(verifyNotFoundError(err), "should have correct error message");
-                }
+                const err = await assert.throws(async () => db.get("not found")); // eslint-disable-line
+                assert.ok(verifyNotFoundError(err), "should have correct error message");
             }
         });
-    });
 
-    it("get() not found error is asynchronous", async () => {
-        await db.put("hello", "world");
-        const err = await assert.throws(async () => db.get("not found"));
-        assert.ok(verifyNotFoundError(err));
+        it("get() not found error is asynchronous", async () => {
+            await db.put("hello", "world");
+            const err = await assert.throws(async () => db.get("not found"));
+            assert.ok(verifyNotFoundError(err));
+        });
     });
 };
 

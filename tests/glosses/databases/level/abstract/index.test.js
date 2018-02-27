@@ -23,16 +23,17 @@ describe("database", "level", "abstract", () => {
 
     require("./common/put_get_del").setUp(factory, testCommon);
     require("./common/put_get_del").errorKeys();
-    //require('./common/put_get_del').nonErrorKeys(test, testCommon)
+    // require('./common/put_get_del').nonErrorKeys(test, testCommon)
     require("./common/put_get_del").errorValues();
-    //require('./abstract/test/put-get-del-test').nonErrorKeys(test, testCommon)
     require("./common/put_get_del").tearDown(testCommon);
 
     require("./common/batch").setUp(factory, testCommon);
     require("./common/batch").args();
 
-    // require("./common/chained_batch").setUp(factory, testCommon);
-    // require("./common/chained_batch").args();
+    require("./common/chained_batch").setUp(factory, testCommon);
+    require("./common/chained_batch").args();
+
+    require("./common/close").close(factory, testCommon);
 
     require("./common/iterator").setUp(factory, testCommon);
     require("./common/iterator").sequence();

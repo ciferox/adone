@@ -21,7 +21,7 @@ export const setUp = function (_leveldown, _testCommon) {
 
 export const args = function () {
     describe("del()", () => {
-        it("test custom _serialize*", async () => {
+        it("custom _serialize*", async () => {
             const db = leveldown(testCommon.location());
             db._serializeKey = function (data) {
                 return data;
@@ -32,25 +32,21 @@ export const args = function () {
             };
             await db.open();
             await db.del({ foo: "bar" });
-            await db.close();    
+            await db.close();
         });
     });
 };
 
 export const del = function () {
     describe("del()", () => {
-        it("test simple del()", async () => {
+        it("simple del()", async () => {
             await db.put("foo", "bar");
             await db.del("foo");
-            try {
-                await db.get("foo");
-            } catch (err) {
-                assert.ok(err, "entry propertly deleted");
-                assert.ok(verifyNotFoundError(err), "NotFound error");
-            }
+            const err = await assert.throws(async () => db.get("foo"));
+            assert.ok(verifyNotFoundError(err), "NotFound error");
         });
 
-        it("test del on non-existent key", async () => {
+        it("del on non-existent key", async () => {
             await db.del("blargh");
         });
     });

@@ -1,10 +1,11 @@
-const { Memory } = adone.database.level.backend;
+const {
+    database: { level: { backend: { Memory } } }
+} = adone;
 
 const testCommon = require("../testCommon");
-const testBuffer = require("./testdata_b64");
 
-describe.todo("database", "level", "backend", "memory", () => {
-    const factory = (location, options) => new Memory(location, options);
+describe("database", "level", "backend", "Memory", () => {
+    const factory = () => new Memory();
 
     require("../abstract/common/open").open(factory, testCommon);
 
@@ -14,49 +15,32 @@ describe.todo("database", "level", "backend", "memory", () => {
 
     require("../abstract/common/put").all(factory, testCommon);
 
-    require("../abstract/common/put_get_del").all(factory, testCommon, testBuffer);
+    require("../abstract/common/put_get_del").all(factory, testCommon);
 
     require("../abstract/common/batch").all(factory, testCommon);
-    // require("../abstract/common/chained_batch").all(factory, testCommon);
+    require("../abstract/common/chained_batch").all(factory, testCommon);
+
+    require("../abstract/common/close").close(factory, testCommon);
 
     require("../abstract/common/iterator").all(factory, testCommon);
-
-    require("../abstract/common/ranges").all(factory, testCommon);
-
-    it("test .destroy", async () => {
-        const db = new Memory("destroy-test");
-        const db2 = new Memory("other-db");
-        await db2.put("key2", "value2");
-        await db.put("key", "value");
-        let value = await db.get("key", { asBuffer: false });
-        assert.equal(value, "value", "should have value");
-        await db.close();
-        await db2.close();
-        await Memory.destroy("destroy-test");
-        const db3 = new Memory("destroy-test");
-        const db4 = new Memory("other-db");
-        try {
-            value = undefined;
-            await db3.get("key");
-        } catch (err) {
-        }
-        assert.undefined(value);
-        value = await db4.get("key2", { asBuffer: false });
-        assert.equal(value, "value2", "should have value2");
-    });
+    require("../abstract/common/iterator_range").all(factory, testCommon);
 
     it("unsorted entry, sorted iterator", async () => {
-        const db = new Memory("foo");
+        const db = new Memory();
+
         await db.open();
+
         await db.put("f", "F");
         await db.put("a", "A");
         await db.put("c", "C");
         await db.put("e", "E");
+
         await db.batch([
             { type: "put", key: "d", value: "D" },
             { type: "put", key: "b", value: "B" },
             { type: "put", key: "g", value: "G" }
         ]);
+
         const data = await testCommon.collectEntries(db.iterator({ keyAsBuffer: false, valueAsBuffer: false }));
         assert.equal(data.length, 7, "correct number of entries");
         const expected = [
@@ -72,55 +56,62 @@ describe.todo("database", "level", "backend", "memory", () => {
     });
 
     it("reading while putting", async () => {
-        const db = new Memory("foo2");
+        const db = new Memory();
+
         await db.open();
+
         await db.put("f", "F");
         await db.put("c", "C");
         await db.put("e", "E");
+
         const iterator = db.iterator({ keyAsBuffer: false, valueAsBuffer: false });
         let result = await iterator.next();
         assert.equal(result.key, "c");
         assert.equal(result.value, "C");
-        await db.put("a", "A");
+        const p = db.put("a", "A");
         result = await iterator.next();
         assert.equal(result.key, "e");
         assert.equal(result.value, "E");
+
+        await p;
     });
 
     it("reading while deleting", async () => {
-        const db = new Memory("foo3");
+        const db = new Memory();
+
         await db.open();
+
         await db.put("f", "F");
         await db.put("a", "A");
         await db.put("c", "C");
         await db.put("e", "E");
+
         const iterator = db.iterator({ keyAsBuffer: false, valueAsBuffer: false });
         let result = await iterator.next();
         assert.equal(result.key, "a");
         assert.equal(result.value, "A");
-        await db.del("a");
+        const p = db.del("a");
         result = await iterator.next();
         assert.equal(result.key, "c");
         assert.equal(result.value, "C");
+
+        await p;
     });
 
     it("reverse ranges", async () => {
         const db = new Memory("foo4");
-        await db.open();
-        await db.put("a", "A");
-        await db.put("c", "C");
-        const iterator = db.iterator({ keyAsBuffer: false, valueAsBuffer: false, start: "b", reverse: true });
-        const { key, value } = await iterator.next();
-        assert.equal(key, "a");
-        assert.equal(value, "A");
-    });
 
-    it("no location", async () => {
-        const db = new Memory();
         await db.open();
+
         await db.put("a", "A");
         await db.put("c", "C");
-        const iterator = await db.iterator({ keyAsBuffer: false, valueAsBuffer: false, start: "b", reverse: true });
+
+        const iterator = db.iterator({
+            keyAsBuffer: false,
+            valueAsBuffer: false,
+            lte: "b",
+            reverse: true
+        });
         const { key, value } = await iterator.next();
         assert.equal(key, "a");
         assert.equal(value, "A");
@@ -128,11 +119,18 @@ describe.todo("database", "level", "backend", "memory", () => {
 
     it("delete while iterating", async () => {
         const db = new Memory();
+
         await db.open();
+
         await db.put("a", "A");
         await db.put("b", "B");
         await db.put("c", "C");
-        const iterator = db.iterator({ keyAsBuffer: false, valueAsBuffer: false, start: "a" });
+
+        const iterator = db.iterator({
+            keyAsBuffer: false,
+            valueAsBuffer: false,
+            gte: "a"
+        });
         let result = await iterator.next();
         assert.equal(result.key, "a");
         assert.equal(result.value, "A");
@@ -148,11 +146,37 @@ describe.todo("database", "level", "backend", "memory", () => {
         await db.open();
         await db.put(Buffer.from("a0", "hex"), "A");
 
-        const iterator = db.iterator({ valueAsBuffer: false, lt: Buffer.from("ff", "hex") });
+        const iterator = db.iterator({
+            valueAsBuffer: false,
+            lt: Buffer.from("ff", "hex")
+        });
 
         const { key, value } = await iterator.next();
         assert.equal(key.toString("hex"), "a0");
         assert.equal(value, "A");
+    });
+
+    it("iterator does not clone buffers", async () => {
+        const db = new Memory();
+        const buf = Buffer.from("a");
+
+        await db.open();
+        await db.put(buf, buf);
+
+        const entries = await testCommon.collectEntries(db.iterator());
+        assert.strictEqual(entries[0].key, buf, "key is same buffer");
+        assert.strictEqual(entries[0].value, buf, "value is same buffer");
+    });
+
+    it("iterator stringifies buffer input", async () => {
+        const db = new Memory();
+
+        await db.open();
+        await db.put(1, 2);
+
+        const entries = await testCommon.collectEntries(db.iterator());
+        assert.deepEqual(entries[0].key, Buffer.from("1"), "key is stringified");
+        assert.deepEqual(entries[0].value, Buffer.from("2"), "value is stringified");
     });
 
     it("backing rbtree is buffer-aware", async () => {
@@ -163,8 +187,8 @@ describe.todo("database", "level", "backend", "memory", () => {
         const one = Buffer.from("80", "hex");
         const two = Buffer.from("c0", "hex");
 
-        assert.ok(two.toString() === one.toString(), "would be equal when not buffer-aware");
-        assert.ok(adone.util.ltgt.compare(two, one) > 0, "but greater when buffer-aware");
+        assert.true(two.toString() === one.toString(), "would be equal when not buffer-aware");
+        assert.true(adone.util.ltgt.compare(two, one) > 0, "but greater when buffer-aware");
 
         await db.put(one, "one");
         let value = await db.get(one, { asBuffer: false });
@@ -200,16 +224,11 @@ describe.todo("database", "level", "backend", "memory", () => {
 
         await db.open();
 
-        try {
-            await db.batch([{
-                type: "put",
-                key: Buffer.allocUnsafe(0),
-                value: ""
-            }]);
-        } catch (err) {
-            return;
-        }
-        assert.fail("Should have thrown");
+        await assert.throws(async () => db.batch([{
+            type: "put",
+            key: Buffer.allocUnsafe(0),
+            value: ""
+        }]));
     });
 
     it("buffer key in batch", async () => {
@@ -226,26 +245,6 @@ describe.todo("database", "level", "backend", "memory", () => {
         assert.deepEqual(val, "val1");
     });
 
-    it("array with holes in batch()", async () => {
-        const db = new Memory("holey");
-
-        await db.open();
-
-        await db.batch([{
-            type: "put",
-            key: "key1",
-            value: "val1"
-        }, void 0, {
-            type: "put",
-            key: "key2",
-            value: "val2"
-        }]);
-        let val = await db.get("key1", { asBuffer: false });
-        assert.deepEqual(val, "val1");
-        val = await db.get("key2", { asBuffer: false });
-        assert.deepEqual(val, "val2");
-    });
-
     it("put multiple times", async () => {
         const db = new Memory();
 
@@ -257,72 +256,56 @@ describe.todo("database", "level", "backend", "memory", () => {
         assert.deepEqual(val, "val2");
     });
 
-    it("global store", async () => {
-        const db = new Memory("foobar");
+    const stringBuffer = (value) => Buffer.from(String(value));
+    const putKey = (key) => {
+        return { type: "put", key, value: "value" };
+    };
+    const getKey = (entry) => entry.key;
+
+    it("number keys", async () => {
+        const db = new Memory();
+        const numbers = [2, 12];
+        const buffers = numbers.map(stringBuffer);
 
         await db.open();
+        await db.batch(numbers.map(putKey));
 
-        await db.put("key", "val");
-        let val = await db.get("key", { asBuffer: false });
-        assert.deepEqual(val, "val");
-        const db2 = new Memory("foobar");
-        await db2.open();
-        val = await db2.get("key", { asBuffer: false });
-        assert.deepEqual(val, "val");
-        Memory.clearGlobalStore();
-        const db3 = new Memory("foobar");
-        await db3.open();
-        try {
-            await db3.get("key", { asBuffer: false });
-        } catch (err) {
-            return;
-        }
-        assert.fail("Should have thrown");
+        const iterator1 = db.iterator({ keyAsBuffer: false });
+        const iterator2 = db.iterator({ keyAsBuffer: true });
+
+        let entries = await testCommon.collectEntries(iterator1);
+        assert.deepEqual(entries.map(getKey), numbers, "sorts naturally");
+
+        entries = await testCommon.collectEntries(iterator2);
+        assert.deepEqual(entries.map(getKey), buffers, "buffer input is stringified");
     });
 
-    it("global store, strict", async () => {
-        const db = new Memory("foobar");
+    it("date keys", async () => {
+        const db = new Memory();
+        const dates = [new Date(0), new Date(1)];
+        const buffers = dates.map(stringBuffer);
 
         await db.open();
+        await db.batch(dates.map(putKey));
 
-        await db.put("key", "val");
-        let val = await db.get("key", { asBuffer: false });
-        assert.deepEqual(val, "val");
-        const db2 = new Memory("foobar");
-        await db2.open();
-        val = await db2.get("key", { asBuffer: false });
-        assert.deepEqual(val, "val");
-        Memory.clearGlobalStore(true);
-        const db3 = new Memory("foobar");
-        await db3.open();
-        try {
-            await db3.get("key", { asBuffer: false });
-        } catch (err) {
-            return;
-        }
-        assert.fail("Should have thrown");
+        const iterator = db.iterator({ keyAsBuffer: false });
+        const iterator2 = db.iterator({ keyAsBuffer: true });
+
+        let entries = await testCommon.collectEntries(iterator);
+        assert.deepEqual(entries.map(getKey), dates, "sorts naturally");
+
+        entries = await testCommon.collectEntries(iterator2);
+        assert.deepEqual(entries.map(getKey), buffers, "buffer input is stringified");
     });
 
-    it("call .destroy twice", async () => {
-        const db = new Memory("destroy-test");
-        const db2 = new Memory("other-db");
-        await db2.put("key2", "value2");
-        await db.put("key", "value");
-        let value = await db.get("key", { asBuffer: false });
-        assert.equal(value, "value", "should have value");
-        await db.close();
-        await db2.close();
-        await Memory.destroy("destroy-test");
-        await Memory.destroy("destroy-test");
-        const db3 = new Memory("destroy-test");
-        const db4 = new Memory("other-db");
-        try {
-            value = await db3.get("key");
-        } catch (err) {
-            value = await db4.get("key2", { asBuffer: false });
-            assert.equal(value, "value2", "should have value2");
-            return;
-        }
-        assert.fail("Should have thrown");
+    it("object value", async () => {
+        const db = new Memory();
+        const obj = {};
+
+        await db.open();
+        await db.put("key", obj);
+
+        const value = await db.get("key", { asBuffer: false });
+        assert.true(value === obj, "same object");
     });
 });

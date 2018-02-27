@@ -1,8 +1,7 @@
 let db;
 let leveldown;
 let testCommon;
-const verifyNotFoundError = require("./util").verifyNotFoundError;
-const isTypedArray = require("./util").isTypedArray;
+const { isTypedArray, verifyNotFoundError } = require("./util");
 
 export const setUp = function (_leveldown, _testCommon) {
     describe("put()", () => {
@@ -56,28 +55,6 @@ export const put = function () {
         });
     });
 };
-
-// module.exports.sync = function (test) {
-//     it("sync put", (t) => {
-//         db.put("foo", "bar", { sync: true }, (err) => {
-//             assert.error(err);
-//             db.get("foo", (err, value) => {
-//                 assert.error(err);
-//                 assert.equal(value.toString(), "bar");
-//                 assert.end();
-//             });
-//         });
-//     });
-//     it("sync put just before close", (t) => {
-//         assert.plan(2);
-//         db.put("foo", "bar", { sync: true }, (err) => {
-//             assert.error(err);
-//         });
-//         db.close((err) => {
-//             assert.error(err);
-//         });
-//     });
-// };
 
 export const tearDown = function (testCommon) {
     describe("put()", () => {

@@ -1,23 +1,27 @@
-const { is, util: { ltgt }, database: { level: { AbstractBackend, AbstractIterator } } } = adone;
-let globalStore = {};
+const {
+    is,
+    util: { ltgt },
+    collection: { RedBlackTree },
+    database: { level: { AbstractBackend, AbstractIterator } }
+} = adone;
 
 const gt = function (value) {
-    return ltgt.compare(value, this._end) > 0;
+    return ltgt.compare(value, this._upperBound) > 0;
 };
 
 const gte = function (value) {
-    return ltgt.compare(value, this._end) >= 0;
+    return ltgt.compare(value, this._upperBound) >= 0;
 };
 
 const lt = function (value) {
-    return ltgt.compare(value, this._end) < 0;
+    return ltgt.compare(value, this._upperBound) < 0;
 };
 
 const lte = function (value) {
-    return ltgt.compare(value, this._end) <= 0;
+    return ltgt.compare(value, this._upperBound) <= 0;
 };
 
-class MemoryIterator extends AbstractIterator {
+class MemIterator extends AbstractIterator {
     constructor(db, options) {
         super(db);
         this._limit = options.limit;
@@ -26,7 +30,7 @@ class MemoryIterator extends AbstractIterator {
             this._limit = Infinity;
         }
 
-        const tree = db._store[db._location];
+        const tree = db._store;
 
         this.keyAsBuffer = options.keyAsBuffer !== false;
         this.valueAsBuffer = options.valueAsBuffer !== false;
@@ -36,18 +40,18 @@ class MemoryIterator extends AbstractIterator {
 
         if (!this._reverse) {
             this._incr = "next";
-            this._start = ltgt.lowerBound(options);
-            this._end = ltgt.upperBound(options);
+            this._lowerBound = ltgt.lowerBound(options);
+            this._upperBound = ltgt.upperBound(options);
 
-            if (is.undefined(this._start)) {
+            if (is.undefined(this._lowerBound)) {
                 this._tree = tree.begin;
             } else if (ltgt.lowerBoundInclusive(options)) {
-                this._tree = tree.ge(this._start);
+                this._tree = tree.ge(this._lowerBound);
             } else {
-                this._tree = tree.gt(this._start);
+                this._tree = tree.gt(this._lowerBound);
             }
 
-            if (this._end) {
+            if (this._upperBound) {
                 if (ltgt.upperBoundInclusive(options)) {
                     this._test = lte;
                 } else {
@@ -56,18 +60,18 @@ class MemoryIterator extends AbstractIterator {
             }
         } else {
             this._incr = "prev";
-            this._start = ltgt.upperBound(options);
-            this._end = ltgt.lowerBound(options);
+            this._lowerBound = ltgt.upperBound(options);
+            this._upperBound = ltgt.lowerBound(options);
 
-            if (is.undefined(this._start)) {
+            if (is.undefined(this._lowerBound)) {
                 this._tree = tree.end;
             } else if (ltgt.upperBoundInclusive(options)) {
-                this._tree = tree.le(this._start);
+                this._tree = tree.le(this._lowerBound);
             } else {
-                this._tree = tree.lt(this._start);
+                this._tree = tree.lt(this._lowerBound);
             }
 
-            if (this._end) {
+            if (this._upperBound) {
                 if (ltgt.lowerBoundInclusive(options)) {
                     this._test = gte;
                 } else {
@@ -82,31 +86,32 @@ class MemoryIterator extends AbstractIterator {
         let value;
 
         if (this._done++ >= this._limit) {
-            return callback(null);
+            return setImmediate(callback);
         }
-
         if (!this._tree.valid) {
-            return callback(null);
+            return setImmediate(callback);
         }
 
         key = this._tree.key;
         value = this._tree.value;
 
         if (!this._test(key)) {
-            return callback(null);
+            return setImmediate(callback);
         }
 
-        if (this.keyAsBuffer) {
-            key = Buffer.from(key);
+        if (this.keyAsBuffer && !is.buffer(key)) {
+            key = Buffer.from(String(key));
         }
 
-        if (this.valueAsBuffer) {
-            value = Buffer.from(value);
+        if (this.valueAsBuffer && !is.buffer(value)) {
+            value = Buffer.from(String(value));
         }
 
         this._tree[this._incr]();
 
-        callback(null, { key, value });
+        setImmediate(function callNext() {
+            callback(null, { key, value });
+        });
     }
 
     _test() {
@@ -114,42 +119,41 @@ class MemoryIterator extends AbstractIterator {
     }
 }
 
-export default class Memory extends AbstractBackend {
-    constructor(location) {
-        super(is.string(location) ? location : "");
 
-        this._location = this.location ? (`$${this.location}`) : "_tree";
-        this._store = this.location ? globalStore : this;
-        this._store[this._location] = this._store[this._location] || new adone.collection.RedBlackTree(ltgt.compare);
+export default class MemoryBackend extends AbstractBackend {
+    constructor() {
+        super("");
+
+        this._store = new RedBlackTree(ltgt.compare);
     }
 
-    _open(options, callback) {
-        setImmediate(() => callback(null, this));
+    _serializeKey(key) {
+        return key;
+    }
+
+    _serializeValue(value) {
+        return is.nil(value) ? "" : value;
     }
 
     _put(key, value, options, callback) {
-        if (is.nil(value)) {
-            value = "";
-        }
-
-        const iter = this._store[this._location].find(key);
+        const iter = this._store.find(key);
 
         if (iter.valid) {
-            this._store[this._location] = iter.update(value);
+            this._store = iter.update(value);
         } else {
-            this._store[this._location] = this._store[this._location].insert(key, value);
+            this._store = this._store.insert(key, value);
         }
 
         setImmediate(callback);
     }
 
     _get(key, options, callback) {
-        let value = this._store[this._location].get(key);
+        let value = this._store.get(key);
 
         if (is.undefined(value)) {
             // 'NotFound' error, consistent with LevelDOWN API
             return setImmediate(function callNext() {
-                callback(new Error("NotFound"));
+                callback(new adone.error.NotFound(`Key ${key} not found`));
             });
         }
 
@@ -163,7 +167,7 @@ export default class Memory extends AbstractBackend {
     }
 
     _del(key, options, callback) {
-        this._store[this._location] = this._store[this._location].remove(key);
+        this._store = this._store.remove(key);
         setImmediate(callback);
     }
 
@@ -173,52 +177,26 @@ export default class Memory extends AbstractBackend {
         let value;
         let iter;
         const len = array.length;
-        let tree = this._store[this._location];
+        let tree = this._store;
 
         while (++i < len) {
-            if (!array[i]) {
-                continue;
-            }
-
-            key = is.buffer(array[i].key) ? array[i].key : String(array[i].key);
+            key = array[i].key;
             iter = tree.find(key);
 
             if (array[i].type === "put") {
-                value = is.buffer(array[i].value) ? array[i].value : String(array[i].value);
+                value = array[i].value;
                 tree = iter.valid ? iter.update(value) : tree.insert(key, value);
             } else {
                 tree = iter.remove();
             }
         }
 
-        this._store[this._location] = tree;
+        this._store = tree;
 
         setImmediate(callback);
     }
 
     _iterator(options) {
-        return new MemoryIterator(this, options);
-    }
-
-    static clearGlobalStore(strict) {
-        if (strict) {
-            Object.keys(globalStore).forEach((key) => {
-                delete globalStore[key];
-            });
-        } else {
-            globalStore = {};
-        }
-    }
-
-    static destroy(name, callback) {
-        const key = `$${name}`;
-
-        if (key in globalStore) {
-            delete globalStore[key];
-        }
-        // to be compatible with the default store
-        if (is.function(callback)) {
-            callback();
-        }
+        return new MemIterator(this, options);
     }
 }
