@@ -171,8 +171,7 @@
                             "dst": "lib/glosses/compressors/snappy",
                             "native": {
                                 "src": "src/glosses/compressors/snappy/native",
-                                "dst": "lib/glosses/compressors/snappy/native",
-                                "type": "gyp"
+                                "dst": "lib/glosses/compressors/snappy/native"
                             }
                         },
                         "xz": {
