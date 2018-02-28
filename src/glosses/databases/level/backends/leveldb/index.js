@@ -5,12 +5,12 @@ const {
 
 const native = adone.nativeAddon(adone.std.path.join(__dirname, "native", "leveldown.node")).leveldown;
 
-const imports = adone.lazify({
-    ChainedBatch: "./chained-batch",
+const __ = adone.lazify({
+    ChainedBatch: "./chained_batch",
     Iterator: "./iterator"
 }, null, require);
 
-export default class LevelDB extends AbstractBackend {
+export default class LeveldbBackend extends AbstractBackend {
     constructor(location) {
         super(location);
         this.native = native(location);
@@ -37,11 +37,26 @@ export default class LevelDB extends AbstractBackend {
     }
 
     _chainedBatch() {
-        return new imports.ChainedBatch(this);
+        return new __.ChainedBatch(this);
     }
 
     _batch(operations, options, callback) {
         return this.native.batch(operations, options, callback);
+    }
+
+    approximateSize(start, end, callback) {
+        if (is.nil(start) || is.nil(end) || is.function(start) || is.function(end)) {
+            throw new Error("approximateSize() requires valid `start`, `end` and `callback` arguments");
+        }
+      
+        if (!is.function(callback)) {
+            throw new Error("approximateSize() requires a callback argument");
+        }
+      
+        start = this._serializeKey(start);
+        end = this._serializeKey(end);
+      
+        this.native.approximateSize(start, end, callback);
     }
 
     compactRange(start, end, callback) {
@@ -57,7 +72,7 @@ export default class LevelDB extends AbstractBackend {
     }
 
     _iterator(options) {
-        return new imports.Iterator(this, options);
+        return new __.Iterator(this, options);
     }
 
     static destroy(location, callback) {

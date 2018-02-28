@@ -1,4 +1,6 @@
-const { is } = adone;
+const {
+    is
+} = adone;
 
 export default class Iterator extends adone.database.level.AbstractIterator {
     constructor(db, options) {
@@ -54,4 +56,5 @@ export default class Iterator extends adone.database.level.AbstractIterator {
         delete this.cache;
         this.native.end(callback);
     }
+    
 }

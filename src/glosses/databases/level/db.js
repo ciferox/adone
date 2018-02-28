@@ -74,7 +74,7 @@ IteratorStream.prototype.destroy = IteratorStream.prototype._cleanup;
 const BINARY_CODECS = ["bson", "mpak"];
 
 export default class DB extends adone.event.Emitter {
-    constructor({ db = adone.database.level.backend.LevelDB, location, keyEncoding = "utf8", valueEncoding = "utf8", encryption } = {}) {
+    constructor({ db = adone.database.level.backend.Leveldb, location, keyEncoding = "utf8", valueEncoding = "utf8", encryption } = {}) {
         super();
 
         if (!is.class(db) || !is.string(location)) {

@@ -323,8 +323,7 @@
                                     "dst": "lib/glosses/databases/level/backends",
                                     "native": {
                                         "src": "src/glosses/databases/level/backends/leveldb/native",
-                                        "dst": "lib/glosses/databases/level/backends/leveldb/native",
-                                        "type": "gyp"
+                                        "dst": "lib/glosses/databases/level/backends/leveldb/native"
                                     }
                                 }
                             }

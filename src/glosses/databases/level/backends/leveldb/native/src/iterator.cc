@@ -144,12 +144,7 @@ bool Iterator::Read(std::string &key, std::string &value)
         std::string key_ = dbIterator->key().ToString();
         int isEnd = end == NULL ? 1 : end->compare(key_);
 
-        if ((limit < 0 || ++count <= limit) && (end == NULL || (reverse && (isEnd <= 0)) || (!reverse && (isEnd >= 0))) && (lt != NULL ? (lt->compare(key_) > 0)
-                                                                                                                                       : lte != NULL ? (lte->compare(key_) >= 0)
-                                                                                                                                                     : true) &&
-            (gt != NULL ? (gt->compare(key_) < 0)
-                        : gte != NULL ? (gte->compare(key_) <= 0)
-                                      : true))
+        if ((limit < 0 || ++count <= limit) && (end == NULL || (reverse && (isEnd <= 0)) || (!reverse && (isEnd >= 0))) && (lt != NULL ? (lt->compare(key_) > 0) : lte != NULL ? (lte->compare(key_) >= 0) : true) && (gt != NULL ? (gt->compare(key_) < 0) : gte != NULL ? (gte->compare(key_) <= 0) : true))
         {
             if (keys)
                 key.assign(dbIterator->key().data(), dbIterator->key().size());
@@ -367,7 +362,8 @@ NAN_METHOD(Iterator::Next)
         LD_RETURN_CALLBACK_OR_ERROR(callback, "iterator has ended");
     }
 
-    NextWorker *worker = new NextWorker(iterator, new Nan::Callback(callback), checkEndCallback);
+    NextWorker *worker = new NextWorker(
+        iterator, new Nan::Callback(callback), checkEndCallback);
     // persist to prevent accidental GC
     v8::Local<v8::Object> _this = info.This();
     worker->SaveToPersistent("iterator", _this);

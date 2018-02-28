@@ -1,5 +1,5 @@
 const { is } = adone;
-const { LevelDB } = adone.database.level.backend;
+const { Leveldb } = adone.database.level.backend;
 const testCommon = require("../testCommon");
 const cleanup = testCommon.cleanup;
 const location = testCommon.location;
@@ -8,7 +8,7 @@ const makeTest = (name, testFn) => {
     it(name, async () => {
         await cleanup();
         const loc = location();
-        const db = new LevelDB(loc);
+        const db = new Leveldb(loc);
         const done = async function (close) {
             if (close === false) {
                 return cleanup();
@@ -27,8 +27,8 @@ const makeTest = (name, testFn) => {
 };
 
 
-describe.todo("database", "level", "backend", "default", () => {
-    const factory = (location, options) => new LevelDB(location, options);
+describe("database", "level", "backend", "default", () => {
+    const factory = (location, options) => new Leveldb(location, options);
 
     require("../abstract/common/open").all(factory, testCommon);
     require("../abstract/common/put").all(factory, testCommon);
@@ -36,7 +36,7 @@ describe.todo("database", "level", "backend", "default", () => {
     require("../abstract/common/del").all(factory, testCommon);
     require("../abstract/common/put_get_del").all(factory, testCommon, adone.std.fs.readFileSync(adone.std.path.join(__dirname, "../data/testdata.bin")));
     require("../abstract/common/batch").all(factory, testCommon);
-    // require("../abstract/common/chained_batch").all(factory, testCommon);
+    require("../abstract/common/chained_batch").all(factory, testCommon);
     require("../abstract/common/ranges").all(factory, testCommon);
     require("../abstract/common/backend").args(factory);
 
@@ -135,7 +135,7 @@ describe.todo("database", "level", "backend", "default", () => {
     });
 
     makeTest("iterator optimized for seek", async (db, done) => {
-        const batch = db.chainedBatch();
+        const batch = db.batch();
         batch.put("a", 1);
         batch.put("b", 1);
         batch.put("c", 1);
@@ -279,7 +279,7 @@ describe.todo("database", "level", "backend", "default", () => {
         it("setUp common", testCommon.setUp);
 
         it("setUp db", async () => {
-            db = new LevelDB(testCommon.location());
+            db = new Leveldb(testCommon.location());
             await db.open();
         });
 
