@@ -1,49 +1,59 @@
 const {
-    is,
-    event
+    net: {
+        proxy: {
+            socks
+        }
+    }
 } = adone;
 
-export default class Agent extends event.Emitter {
-    constructor(options, secure, rejectUnauthorized) {
-        super();
-        this.options = options;
-        this.secure = secure || false;
-        this.rejectUnauthorized = rejectUnauthorized;
+export default class Agent extends adone.std.http.Agent {
+    constructor({
+        proxyHost = "localhost",
+        proxyPort = 1080,
+        auths = [socks.auth.None()],
+        localDNS = true,
+        strictLocalDNS = true,
+        https = false,
+        rejectUnauthorized = true,
 
-        if (is.undefined(this.rejectUnauthorized)) {
-            this.rejectUnauthorized = true;
-        }
+        keepAlive = false,
+        keepAliveMsecs = 1000,
+        maxSockets = 5,
+        maxFreeSockets = 256
+    }) {
+        super({
+            keepAlive,
+            keepAliveMsecs,
+            maxSockets,
+            maxFreeSockets
+        });
+
+        this.clientOptions = {
+            proxyHost,
+            proxyPort,
+            auths,
+            localDNS,
+            strictLocalDNS
+        };
+
+        this.rejectUnauthorized = rejectUnauthorized;
+        this.https = https;
+        this.protocol = this.https ? "https:" : "http:";
     }
 
     createConnection(req, opts, fn) {
         let handler = fn;
-        const self = this;
 
-        this.options.target = this.options.target || {};
-
-        if (!this.options.target.host) {
-            this.options.target.host = opts.host;
-        }
-
-        if (!this.options.target.port) {
-            this.options.target.port = opts.port;
-        }
-
-        const host = this.options.target.host;
-
-        if (this.secure) {
-            handler = function (err, socket, info) {
+        if (this.https) {
+            handler = (err, socket) => {
                 if (err) {
                     return fn(err);
                 }
 
-                // save encrypted socket
-                self.encryptedSocket = socket;
-
                 const options = {
                     socket,
-                    servername: host,
-                    rejectUnauthorized: self.rejectUnauthorized
+                    servername: opts.host,
+                    rejectUnauthorized: this.rejectUnauthorized
                 };
 
                 const cleartext = adone.std.tls.connect(options, function (err) {
@@ -55,28 +65,21 @@ export default class Agent extends event.Emitter {
             };
         }
 
-        adone.net.proxy.socks.Client.createConnection(this.options, handler);
+        const client = new socks.Client(this.clientOptions);
+
+        client.once("connect", (socket) => {
+            client.removeListener("error", handler);
+            handler(null, socket);
+        });
+        client.once("error", handler);
+
+        client.connect({
+            port: opts.port,
+            host: opts.host
+        });
     }
 
-    addRequest(req, host, port, localAddress) {
-        let opts;
-        if (is.object(host)) {
-            // >= v0.11.x API
-            opts = host;
-            if (opts.host && opts.path) {
-                // if both a `host` and `path` are specified then it's most likely the
-                // result of a `url.parse()` call... we need to remove the `path` portion so
-                // that `net.connect()` doesn't attempt to open that as a unix socket file.
-                delete opts.path;
-            }
-        } else {
-            // <= v0.10.x API
-            opts = { host, port };
-            if (!is.null(localAddress)) {
-                opts.localAddress = localAddress;
-            }
-        }
-
+    addRequest(req, opts) {
         let sync = true;
 
         this.createConnection(req, opts, (err, socket) => {

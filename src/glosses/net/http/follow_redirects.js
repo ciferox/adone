@@ -67,8 +67,8 @@ class RedirectableRequest extends Writable {
 
         // Create the native request
         const nativeProtocol = nativeProtocols[protocol];
-        const request = this._currentRequest =
-            nativeProtocol.request(this._options, this._onNativeResponse);
+
+        const request = this._currentRequest = nativeProtocol.request(this._options, this._onNativeResponse);
         this._currentUrl = url.format(this._options);
 
         // Set up event handlers

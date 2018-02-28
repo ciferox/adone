@@ -375,7 +375,7 @@ export default class Client extends adone.event.Emitter {
             throw new Error("Missing client authentication method(s)");
         }
 
-        const [port, host] = adone.net.util.normalizeAddr(options.port, options.host);
+        const [port, host] = adone.net.util.normalizeAddr(options);
 
         if (is.function(cb)) {
             this.once("connect", cb);
