@@ -44,7 +44,7 @@ describe("net", "http", "client", "headers", () => {
         request.post("http://example.org/foo", "fizz=buzz");
     });
 
-    it("should use application/json when posting an object", (done) => {
+    it("should use application/json posting an object with", (done) => {
         nock("http://example.org", {
             reqheaders: {
                 "Content-Type": "application/json;charset=utf-8"
@@ -58,6 +58,27 @@ describe("net", "http", "client", "headers", () => {
         request.post("http://example.org/foo/bar", {
             firstName: "foo",
             lastName: "bar"
+        });
+    });
+
+    it("should use qs.stringify object if content-type is application/x-www-form-urlencoded", (done) => {
+        nock("http://example.org", {
+            reqheaders: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            }
+        })
+            .post("/foo/bar", "firstName=foo&lastName=bar")
+            .reply(200, () => {
+                done();
+            });
+
+        request.post("http://example.org/foo/bar", {
+            firstName: "foo",
+            lastName: "bar"
+        }, {
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            }
         });
     });
 

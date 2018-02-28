@@ -118,16 +118,29 @@ export const defaults = {
             is.arrayBuffer(data) ||
             is.buffer(data) ||
             is.stream(data)) {
+            if (is.undefined(headers["Content-Type"])) {
+                headers["Content-Type"] = "application/x-www-form-urlencoded";
+            }
             return data;
         }
         if (is.arrayBufferView(data)) {
+            if (is.undefined(headers["Content-Type"])) {
+                headers["Content-Type"] = "application/x-www-form-urlencoded";
+            }
             return data.buffer;
         }
         if (is.object(data)) {
-            if (!is.undefined(headers) && is.undefined(headers["Content-Type"])) {
+            if (is.undefined(headers["Content-Type"])) {
                 headers["Content-Type"] = "application/json;charset=utf-8";
+            } else if (headers["Content-Type"].startsWith("application/x-www-form-urlencoded")) {
+                return adone.util.querystring.stringify(data);
             }
-            return JSON.stringify(data);
+            return JSON.stringify(data); // TODO: must it return json if there is no content-type header?
+        }
+
+        // TODO: must it preserve content-type if there is no data?
+        if (is.undefined(headers["Content-Type"])) {
+            headers["Content-Type"] = "application/x-www-form-urlencoded";
         }
         return data;
     }],
@@ -165,9 +178,7 @@ for (const method of ["delete", "get", "head"]) {
 }
 
 for (const method of ["post", "put", "patch"]) {
-    defaults.headers[method] = {
-        "Content-Type": "application/x-www-form-urlencoded"
-    };
+    defaults.headers[method] = {};
 }
 
 /**
@@ -231,9 +242,6 @@ export class Client {
                         throw new x.InvalidArgument(`responseType can be either buffer, json, stream or string, but got: ${options.responseType}`);
                 }
 
-                // Transform request data
-                options.data = transformData(options.data, options.headers, options, options.transformRequest);
-
                 // Flatten headers
                 options.headers = lodash.merge(
                     {},
@@ -241,6 +249,9 @@ export class Client {
                     options.headers[options.method] || {},
                     options.headers || {}
                 );
+
+                // Transform request data
+                options.data = transformData(options.data, options.headers, options, options.transformRequest);
 
                 for (const method of ["delete", "get", "head", "post", "put", "patch", "common"]) {
                     delete options.headers[method];
