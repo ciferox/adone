@@ -959,5 +959,47 @@ describe("net", "http", "follow-redirects ", () => {
                 .nodeify(done);
         });
     });
+
+    it("should resume streams when redirects", async () => {
+        const app1 = createHttpServer();
+        app1.use((ctx) => {
+            if (ctx.method !== "GET") {
+                ctx.throw(404);
+            }
+            switch (ctx.path) {
+                case "/a":
+                    return ctx.redirect("/b");
+                case "/b":
+                    return ctx.redirect("/c");
+                case "/c":
+                    return ctx.redirect("/d");
+                case "/d":
+                    return ctx.redirect("/e");
+                case "/e":
+                    return ctx.redirect("/f");
+                case "/f":
+                    ctx.body = { a: "b" };
+            }
+        });
+
+
+        await app1.bind();
+
+        const addr = app1.address();
+
+        const agent = new adone.std.http.Agent({
+            keepAlive: true
+        });
+
+        const s = spy();
+
+        agent.on("free", s);
+
+        await adone.net.http.client.request.get(`http://localhost:${addr.port}/a`, {
+            httpAgent: agent
+        });
+
+        expect(s).to.have.callCount(6); // it must free the socket, not "lock" it
+    });
 });
 

@@ -232,30 +232,41 @@ export class Server extends event.Emitter {
                     socket.write(cipherIV);
                     return { socket, cipher, decipher, head };
                 }
-                const remoteSocket = adone.std.net.connect(request.dstPort, request.dstAddr);
-                if (this.timeout) {
-                    remoteSocket.setTimeout(this.timeout, () => remoteSocket.end());
-                }
-                remoteSocket
-                    .once("error", (err) => {
-                        this.emit("error-remote", err);
-                        if (socket.writable) {
-                            socket.end();
+
+                adone.std.dns.lookup(request.dstAddr, (err, dstIP) => {
+
+                    const remoteSocket = new adone.std.net.Socket();
+
+                    let connected = false;
+
+                    const onError = (err) => {
+                        if (!connected) {
+                            this.emit("error-remote", err);
+                            if (socket.writable) {
+                                socket.destroy(err);
+                            }
                         }
-                    })
-                    .once("connect", () => {
-                        if (socket.writable) {
-                            const cipherIV = this._iv || adone.std.crypto.randomBytes(16);
-                            cipher = adone.std.crypto.createCipheriv(this._cipher, this.cipherKey, cipherIV);
-                            socket.write(cipherIV);
-                            remoteSocket.pipe(cipher).pipe(socket).pipe(decipher).pipe(remoteSocket);
-                            socket.resume();
-                            remoteSocket.write(head);
-                        } else if (remoteSocket.writable) {
-                            remoteSocket.end();
-                        }
-                    });
-                socket.remoteSocket = remoteSocket;
+                    };
+                    remoteSocket.setKeepAlive(false);
+                    remoteSocket
+                        .on("error", onError)
+                        .on("connect", () => {
+                            connected = true;
+                            if (socket.writable) {
+                                const cipherIV = this._iv || adone.std.crypto.randomBytes(16);
+                                cipher = adone.std.crypto.createCipheriv(this._cipher, this.cipherKey, cipherIV);
+                                socket.write(cipherIV);
+                                remoteSocket.pipe(cipher).pipe(socket).pipe(decipher).pipe(remoteSocket);
+                                socket.resume();
+                                remoteSocket.write(head);
+                            } else if (remoteSocket.writable) {
+                                remoteSocket.end();
+                            }
+                        })
+                        .connect(request.dstPort, dstIP);
+
+                    socket.remoteSocket = remoteSocket;
+                });
             };
 
             const deny = () => {

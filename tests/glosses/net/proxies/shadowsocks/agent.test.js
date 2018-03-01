@@ -1,9 +1,9 @@
-describe("net", "http", "proxy", "socks", "agent", "http", () => {
+describe("net", "http", "proxy", "shadowsocks", "agent", "http", () => {
     const {
         fs,
         net: {
             proxy: {
-                socks
+                shadowsocks
             },
             http: {
                 client: {
@@ -43,18 +43,25 @@ describe("net", "http", "proxy", "socks", "agent", "http", () => {
     });
 
     let proxyServer;
-    let proxyPort;
+    let agentOpts;
 
     before((done) => {
-        proxyServer = socks.createServer({
-            auths: [socks.auth.None()]
+        proxyServer = shadowsocks.createServer({
+            password: "hello world",
+            cipher: "aes-256-cfb"
         }, (reqInfo, accept) => {
             proxyServer.emit("info", reqInfo);
             accept();
         });
         proxyServer.listen(0, () => {
             const addr = proxyServer.address();
-            proxyPort = addr.port;
+            agentOpts = {
+                proxyHost: "localhost",
+                proxyPort: addr.port,
+                password: "hello world",
+                cipher: "aes-256-cfb",
+                rejectUnauthorized: false
+            };
             done();
         });
     });
@@ -74,10 +81,7 @@ describe("net", "http", "proxy", "socks", "agent", "http", () => {
         const s = spy();
         proxyServer.once("info", s);
         const res = await request.get(`http://localhost:${port}`, {
-            httpAgent: new socks.agent.Http({
-                proxyHost: "localhost",
-                proxyPort
-            })
+            httpAgent: new shadowsocks.agent.Http(agentOpts)
         });
         expect(res.data).to.be.equal("hello");
         expect(s).to.have.been.calledOnce();
@@ -99,11 +103,7 @@ describe("net", "http", "proxy", "socks", "agent", "http", () => {
         proxyServer.once("info", s);
         const res = await request.get(`https://localhost:${port}`, {
             rejectUnauthorized: false,
-            httpsAgent: new socks.agent.Https({
-                proxyHost: "localhost",
-                proxyPort,
-                rejectUnauthorized: false
-            })
+            httpsAgent: new shadowsocks.agent.Https(agentOpts)
         });
         expect(res.data).to.be.equal("hello");
         expect(s).to.have.been.calledOnce();
@@ -119,8 +119,8 @@ describe("net", "http", "proxy", "socks", "agent", "http", () => {
         const err = await assert.throws(async () => {
             await request.get("https://google.com", {
                 rejectUnauthorized: false,
-                httpsAgent: new socks.agent.Https({
-                    proxyHost: "localhost",
+                httpsAgent: new shadowsocks.agent.Https({
+                    ...agentOpts,
                     proxyPort: port
                 })
             });
@@ -137,10 +137,7 @@ describe("net", "http", "proxy", "socks", "agent", "http", () => {
         proxyServer.once("info", s);
         const err = await assert.throws(async () => {
             await request.get(`http://localhost:${port}`, {
-                httpAgent: new socks.agent.Http({
-                    proxyHost: "localhost",
-                    proxyPort
-                })
+                httpAgent: new shadowsocks.agent.Http(agentOpts)
             });
         });
         expect(err.message).to.be.equal("connection refused");
@@ -157,10 +154,9 @@ describe("net", "http", "proxy", "socks", "agent", "http", () => {
         const s = spy();
         proxyServer.once("info", s);
         const res = await request.get("http://ipecho.com", {
-            httpAgent: new socks.agent.Http({
-                localDNS: false,
-                proxyHost: "localhost",
-                proxyPort
+            httpAgent: new shadowsocks.agent.Http({
+                ...agentOpts,
+                localDNS: false
             })
         });
         expect(res.status).to.be.equal(200);
@@ -179,10 +175,9 @@ describe("net", "http", "proxy", "socks", "agent", "http", () => {
         proxyServer.on("info", s);
         const res = await request.get("https://google.com", {
             maxRedirects: 0,
-            httpsAgent: new socks.agent.Https({
-                localDNS: false,
-                proxyHost: "localhost",
-                proxyPort
+            httpsAgent: new shadowsocks.agent.Https({
+                ...agentOpts,
+                localDNS: false
             }),
             validateStatus: (x) => x === 302 || x === 200
         });
@@ -202,10 +197,8 @@ describe("net", "http", "proxy", "socks", "agent", "http", () => {
         await serv.bind(httpsOpts);
         const { port } = serv.address();
 
-        const agent = new socks.agent.Https({
-            proxyHost: "localhost",
-            proxyPort,
-            rejectUnauthorized: false,
+        const agent = new shadowsocks.agent.Https({
+            ...agentOpts,
             keepAlive: true
         });
 

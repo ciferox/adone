@@ -67,7 +67,6 @@ class RedirectableRequest extends Writable {
 
         // Create the native request
         const nativeProtocol = nativeProtocols[protocol];
-
         const request = this._currentRequest = nativeProtocol.request(this._options, this._onNativeResponse);
         this._currentUrl = url.format(this._options);
 
@@ -111,8 +110,8 @@ class RedirectableRequest extends Writable {
         // referenced by the Location field value,
         // even if the specific status code is not understood.
         const location = response.headers.location;
-        if (location && this._options.followRedirects !== false &&
-            response.statusCode >= 300 && response.statusCode < 400) {
+        if (location && this._options.followRedirects !== false && response.statusCode >= 300 && response.statusCode < 400) {
+            response.resume();
             // RFC7231§6.4: A client SHOULD detect and intervene
             // in cyclical redirections (i.e., "infinite" redirection loops).
             if (++this._redirectCount > this._options.maxRedirects) {

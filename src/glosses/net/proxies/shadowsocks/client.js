@@ -18,6 +18,12 @@ class SSocket extends stream.Duplex {
         this.once("finish", () => {
             this._writableStream.end();
         });
+        this._realSocket.once("close", () => {
+            if (!this._readableStream) {
+                this.emit("error", new Error("connection refused"));
+                this.emit("close", true);
+            }
+        });
         this.once("end", () => {
             this.emit("close", this._hadError);
         });
@@ -68,12 +74,12 @@ class SSocket extends stream.Duplex {
         this._realSocket.destroySoon();
     }
 
-    destroy() {
+    destroy(err) {
         if (this.destroyed) {
             return;
         }
         this.destroyed = true;
-        this._realSocket.destroy();
+        this._realSocket.destroy(err);
         if (this._readableStream) {
             this._readableStream.end();
         } else {

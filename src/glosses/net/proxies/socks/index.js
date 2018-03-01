@@ -14,7 +14,7 @@ const BUF_SUCCESS = Buffer.from([0x01, 0x00]);
 const BUF_FAILURE = Buffer.from([0x01, 0x01]);
 
 adone.lazify({
-    Agent: "./agent",
+    agent: "./agent",
     ServerParser: ["./server", (mod) => mod.Parser],
     Server: "./server",
     ClientParser: ["./client", (mod) => mod.Parser],
