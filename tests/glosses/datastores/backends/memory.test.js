@@ -5,11 +5,10 @@ const {
 describe("datastore", "backend", "Memory", () => {
     describe("interface", () => {
         require("../interface")({
-            setup(callback) {
-                callback(null, new Memory());
+            setup() {
+                return new Memory();
             },
-            teardown(callback) {
-                callback();
+            teardown() {
             }
         });
     });

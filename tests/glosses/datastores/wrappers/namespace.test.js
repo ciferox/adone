@@ -8,7 +8,7 @@ const {
     datastore: { Key, backend: { Memory }, wrapper: { Namespace } }
 } = adone;
 
-describe("datastore", "wrapper", "KeyTransform", () => {
+describe.todo("datastore", "wrapper", "KeyTransform", () => {
     const prefixes = [
         "abc",
         ""

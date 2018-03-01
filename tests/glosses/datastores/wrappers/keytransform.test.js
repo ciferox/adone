@@ -8,7 +8,7 @@ const {
     datastore: { Key, backend: { Memory }, wrapper: { Keytransform } }
 } = adone;
 
-describe("datastore", "wrapper", "KeyTransform", () => {
+describe.todo("datastore", "wrapper", "KeyTransform", () => {
     it("basic", (done) => {
         const mStore = new Memory();
         const transform = {

@@ -9,7 +9,7 @@ const {
     stream: { pull }
 } = adone;
 
-describe("datastore", "backend", "LevelDatastore", () => {
+describe.todo("datastore", "backend", "LevelDatastore", () => {
     describe("interface (memory)", () => {
         require("../../interface")({
             setup(callback) {

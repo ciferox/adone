@@ -243,7 +243,9 @@ const fs = adone.lazify({
     unlinkSync: () => (path) => std.fs.unlinkSync(path),
     createReadStream: () => (path, options) => std.fs.createReadStream(path, options),
     createWriteStream: () => (path, options) => std.fs.createWriteStream(path, options),
-    fuse: "./fuse"
+    fuse: "./fuse",
+    tmpName: "./tmp_name",
+    writeFileAtomic: "./write_file_atomic"
 }, adone.asNamespace(exports), require);
 
 const expandReadOptions = (options = {}) => is.string(options) ? { encoding: options } : options;
@@ -726,38 +728,6 @@ export const statVFS = (path) => new Promise((resolve, reject) => {
         resolve(result);
     });
 });
-
-const TEMPLATE_PATTERN = /XXXXXX/;
-const osTmpDir = std.os.tmpdir();
-export const tmpName = async ({ name = null, tries = 3, template = null, dir = osTmpDir, prefix = "tmp-", ext = "" } = {}) => {
-    if (is.nan(tries) || tries < 0) {
-        throw new Error("Invalid tries");
-    }
-
-    if (!is.null(template) && !template.match(TEMPLATE_PATTERN)) {
-        throw new Error("Invalid template provided");
-    }
-
-    for (let i = 0; i < tries; i++) {
-        if (!is.null(name)) {
-            return std.path.join(dir, name);
-        }
-
-        if (!is.null(template)) {
-            return template.replace(TEMPLATE_PATTERN, adone.text.random(6));
-        }
-
-        const path = std.path.join(dir, `${prefix}${process.pid}${adone.text.random(12)}${ext}`);
-
-        try {
-            await adone.fs.stat(path); // eslint-disable-line no-await-in-loop
-            continue;
-        } catch (err) {
-            return path;
-        }
-    }
-    throw new Error("Could not get a unique tmp filename, max tries reached");
-};
 
 /**
  * Note: On Debian 'HOME' variable is not preserved when using sudo.

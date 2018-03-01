@@ -10,72 +10,55 @@ export default class MemoryDatastore {
         this.data = {};
     }
 
-    open(callback /* : Callback<void> */) {
-        setImmediate(callback);
+    open() {
     }
 
-    put(key /* : Key */, val /* : Buffer */, callback /* : Callback<void> */) /* : void */ {
+    put(key, val) {
         this.data[key.toString()] = val;
-
-        setImmediate(callback);
     }
 
-    get(key /* : Key */, callback /* : Callback<Buffer> */) /* : void */ {
-        this.has(key, (err, exists) => {
-            if (err) {
-                return callback(err);
-            }
+    get(key) {
+        if (!this.has(key)) {
+            throw new Error("No value");
+        }
 
-            if (!exists) {
-                return callback(new Error("No value"));
-            }
-
-            callback(null, this.data[key.toString()]);
-        });
+        return this.data[key.toString()];
     }
 
-    has(key /* : Key */, callback /* : Callback<bool> */) /* : void */ {
-        setImmediate(() => {
-            callback(null, !is.undefined(this.data[key.toString()]));
-        });
+    has(key) {
+        return !is.undefined(this.data[key.toString()]);
     }
 
-    delete(key /* : Key */, callback /* : Callback<void> */) /* : void */ {
+    delete(key) {
         delete this.data[key.toString()];
-
-        setImmediate(() => {
-            callback();
-        });
     }
 
-    batch() /* : Batch<Buffer> */ {
+    batch() {
         let puts = [];
-        let dels = [];
+        let deletes = [];
 
         return {
-            put(key /* : Key */, value /* : Buffer */) /* : void */ {
+            put(key, value) {
                 puts.push([key, value]);
             },
-            delete(key /* : Key */) /* : void */ {
-                dels.push(key);
+            delete(key) {
+                deletes.push(key);
             },
-            commit: (callback /* : Callback<void> */) /* : void */ => {
+            commit: () => {
                 puts.forEach((v) => {
                     this.data[v[0].toString()] = v[1];
                 });
 
                 puts = [];
-                dels.forEach((key) => {
+                deletes.forEach((key) => {
                     delete this.data[key.toString()];
                 });
-                dels = [];
-
-                setImmediate(callback);
+                deletes = [];
             }
         };
     }
 
-    query(q /* : Query<Buffer> */) /* : QueryResult<Buffer> */ {
+    async query(q) {
         let tasks = [pull.keys(this.data), pull.map((k) => ({
             key: new adone.datastore.Key(k),
             value: this.data[k]
@@ -100,7 +83,6 @@ export default class MemoryDatastore {
 
         if (!is.nil(q.offset)) {
             let i = 0;
-            // $FlowFixMe
             tasks.push(pull.filter(() => i++ >= q.offset));
         }
 
@@ -115,7 +97,6 @@ export default class MemoryDatastore {
         return pull.apply(null, tasks);
     }
 
-    close(callback /* : Callback<void> */) /* : void */ {
-        setImmediate(callback);
+    close() {
     }
 }

@@ -10,28 +10,26 @@ const {
  * A datastore backed by leveldb.
  */
 export default class Level {
-    /* :: db: levelup */
-
-    constructor(path /* : string */, opts /* : ?LevelOptions */) {
+    constructor(path, opts) {
         this.db = levelup(path, Object.assign({}, opts, {
             compression: false, // same default as go
             valueEncoding: "binary"
         }));
     }
 
-    open(callback /* : Callback<void> */) /* : void */ {
+    open(callback) {
         this.db.open(callback);
     }
 
-    put(key /* : Key */, value /* : Buffer */, callback /* : Callback<void> */) /* : void */ {
+    put(key, value, callback) {
         this.db.put(key.toString(), value, callback);
     }
 
-    get(key /* : Key */, callback /* : Callback<Buffer> */) /* : void */ {
+    get(key, callback) {
         this.db.get(key.toString(), callback);
     }
 
-    has(key /* : Key */, callback /* : Callback<bool> */) /* : void */ {
+    has(key, callback) {
         this.db.get(key.toString(), (err, res) => {
             if (err) {
                 if (err.notFound) {
@@ -46,37 +44,37 @@ export default class Level {
         });
     }
 
-    delete(key /* : Key */, callback /* : Callback<void> */) /* : void */ {
+    delete(key, callback) {
         this.db.del(key.toString(), callback);
     }
 
-    close(callback /* : Callback<void> */) /* : void */ {
+    close(callback) {
         this.db.close(callback);
     }
 
-    batch() /* : Batch<Buffer> */ {
+    batch() {
         const ops = [];
         return {
-            put: (key /* : Key */, value /* : Buffer */) /* : void */ => {
+            put: (key, value) => {
                 ops.push({
                     type: "put",
                     key: key.toString(),
                     value
                 });
             },
-            delete: (key /* : Key */) /* : void */ => {
+            delete: (key) => {
                 ops.push({
                     type: "del",
                     key: key.toString()
                 });
             },
-            commit: (callback /* : Callback<void> */) /* : void */ => {
+            commit: (callback) => {
                 this.db.batch(ops, callback);
             }
         };
     }
 
-    query(q /* : Query<Buffer> */) /* : QueryResult<Buffer> */ {
+    query(q) {
         let values = true;
         if (!is.nil(q.keysOnly)) {
             values = !q.keysOnly;
@@ -106,7 +104,7 @@ export default class Level {
                     });
                 }
 
-                const res /* : QueryEntry<Buffer> */ = {
+                const res = {
                     key: new Key(key, false)
                 };
 

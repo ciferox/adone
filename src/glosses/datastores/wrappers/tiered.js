@@ -12,26 +12,28 @@ const {
  * last one first.
  *
  */
-export default class TieredDatastore /* :: <Value> */ {
-    /* :: stores: Array<Datastore<Value>> */
-
-    constructor(stores /* : Array<Datastore<Value>> */) {
+export default class TieredDatastore {
+    constructor(stores) {
         this.stores = stores.slice();
     }
 
-    open(callback /* : Callback<void> */) /* : void */ {
-        each(this.stores, (store, cb) => {
-            store.open(cb);
-        }, callback);
+    async open() {
+        const promises = [];
+        for (const store of this.stores) {
+            promises.push(store.open());
+        }
+        await Promise.all(promises);
     }
 
-    put(key /* : Key */, value /* : Value */, callback /* : Callback<void> */) /* : void */ {
-        each(this.stores, (store, cb) => {
-            store.put(key, value, cb);
-        }, callback);
+    async put(key, value) {
+        const promises = [];
+        for (const store of this.stores) {
+            promises.push(store.put(key, value));
+        }
+        await Promise.all(promises);
     }
 
-    get(key /* : Key */, callback /* : Callback<Value> */) /* : void */ {
+    get(key, callback) {
         const storeLength = this.stores.length;
         let done = false;
         let i = 0;
@@ -47,7 +49,7 @@ export default class TieredDatastore /* :: <Value> */ {
         }, callback);
     }
 
-    has(key /* : Key */, callback /* : Callback<bool> */) /* : void */ {
+    has(key, callback) {
         const storeLength = this.stores.length;
         let done = false;
         let i = 0;
@@ -63,29 +65,33 @@ export default class TieredDatastore /* :: <Value> */ {
         }, callback);
     }
 
-    delete(key /* : Key */, callback /* : Callback<void> */) /* : void */ {
-        each(this.stores, (store, cb) => {
-            store.delete(key, cb);
-        }, callback);
+    async delete(key) {
+        const promises = [];
+        for (const store of this.stores) {
+            promises.push(store.delete(key));
+        }
+        await Promise.all(promises);
     }
 
-    close(callback /* : Callback<void> */) /* : void */ {
-        each(this.stores, (store, cb) => {
-            store.close(cb);
-        }, callback);
+    async close() {
+        const promises = [];
+        for (const store of this.stores) {
+            promises.push(store.close());
+        }
+        await Promise.all(promises);
     }
 
-    batch() /* : Batch<Value> */ {
+    batch() {
         const batches = this.stores.map((store) => store.batch());
 
         return {
-            put: (key /* : Key */, value /* : Value */) /* : void */ => {
+            put: (key, value) => {
                 batches.forEach((b) => b.put(key, value));
             },
-            delete: (key /* : Key */) /* : void */ => {
+            delete: (key) => {
                 batches.forEach((b) => b.delete(key));
             },
-            commit: (callback /* : Callback<void> */) /* : void */ => {
+            commit: (callback) => {
                 each(batches, (b, cb) => {
                     b.commit(cb);
                 }, callback);
@@ -93,7 +99,7 @@ export default class TieredDatastore /* :: <Value> */ {
         };
     }
 
-    query(q /* : Query<Value> */) /* : QueryResult<Value> */ {
+    query(q) {
         return this.stores[this.stores.length - 1].query(q);
     }
 }

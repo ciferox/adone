@@ -1,7 +1,5 @@
 const series = require("async/series");
 const parallel = require("async/parallel");
-const map = require("async/map");
-const each = require("async/each");
 
 const {
     is,
@@ -10,14 +8,6 @@ const {
     std: { crypto }
 } = adone;
 
-/* ::
-import type {Datastore, Callback} from '../src'
-type Test = {
-  setup: (cb: Callback<Datastore<Buffer>>) => void;
-  teardown: (cb: Callback<void>) => void;
-}
-*/
-
 const check = (s) => {
     if (is.nil(s)) {
         throw new Error("missing store");
@@ -25,201 +15,162 @@ const check = (s) => {
     return s;
 };
 
-module.exports = (test/* : Test */) => {
-    const cleanup = (store, done) => {
-        series([
-            (cb) => check(store).close(cb),
-            (cb) => test.teardown(cb)
-        ], done);
+module.exports = (test) => {
+    const cleanup = async (store) => {
+        await check(store).close();
+        await test.teardown();
     };
 
     describe("put", () => {
         let store;
 
-        beforeEach((done) => {
-            test.setup((err, s) => {
-                if (err) {
-                    throw err;
-                }
-                store = s;
-                done();
-            });
+        beforeEach(async () => {
+            store = await test.setup();
         });
 
-        afterEach((done) => {
-            cleanup(store, done);
+        afterEach(async () => {
+            await cleanup(store);
         });
 
-        it("simple", (done) => {
+        it("simple", async () => {
             const k = new Key("/z/one");
-            check(store).put(k, Buffer.from("one"), done);
+            await check(store).put(k, Buffer.from("one"));
         });
 
-        it("parallel", (done) => {
+        it("parallel", async () => {
             const data = [];
-            for (let i = 0; i < 100; i++) {
+            let i;
+            for (i = 0; i < 100; i++) {
                 data.push([new Key(`/z/key${i}`), Buffer.from(`data${i}`)]);
             }
 
-            each(data, (d, cb) => {
-                check(store).put(d[0], d[1], cb);
-            }, (err) => {
-                assert.notExists(err);
-                map(data, (d, cb) => {
-                    check(store).get(d[0], cb);
-                }, (err, res) => {
-                    assert.notExists(err);
-                    res.forEach((res, i) => {
-                        expect(res).to.be.eql(data[i][1]);
-                    });
-                    done();
-                });
-            });
+            i = 0;
+            const promises = [];
+            for (const d of data) {
+                promises.push(check(store).put(d[0], d[1]));
+            }
+
+            await Promise.all(promises);
+
+            for (const d of data) {
+                const res = await check(store).get(d[0]); // eslint-disable-line
+                expect(res).to.be.eql(data[i][1]);
+                i++;
+            }
         });
     });
 
     describe("get", () => {
         let store;
 
-        beforeEach((done) => {
-            test.setup((err, s) => {
-                if (err) {
-                    throw err;
-                }
-                store = s;
-                done();
-            });
+        beforeEach(async () => {
+            store = await test.setup();
         });
 
-        afterEach((done) => {
-            cleanup(store, done);
+        afterEach(async () => {
+            await cleanup(store);
         });
 
-        it("simple", (done) => {
+        it("simple", async () => {
             const k = new Key("/z/one");
-            series([
-                (cb) => check(store).put(k, Buffer.from("hello"), cb),
-                (cb) => check(store).get(k, (err, res) => {
-                    assert.notExists(err);
-                    expect(res).to.be.eql(Buffer.from("hello"));
-                    cb();
-                })
-            ], done);
+            await check(store).put(k, Buffer.from("hello"));
+            const res = await check(store).get(k);
+            expect(res).to.be.eql(Buffer.from("hello"));
         });
     });
 
     describe("delete", () => {
         let store;
 
-        beforeEach((done) => {
-            test.setup((err, s) => {
-                if (err) {
-                    throw err;
-                }
-                store = s;
-                done();
-            });
+        beforeEach(async () => {
+            store = await test.setup();
         });
 
-        afterEach((done) => {
-            cleanup(store, done);
+        afterEach(async () => {
+            await cleanup(store);
         });
 
-        it("simple", (done) => {
+        it("simple", async () => {
             const k = new Key("/z/one");
-            series([
-                (cb) => check(store).put(k, Buffer.from("hello"), cb),
-                (cb) => check(store).get(k, (err, res) => {
-                    assert.notExists(err);
-                    expect(res).to.be.eql(Buffer.from("hello"));
-                    cb();
-                }),
-                (cb) => check(store).delete(k, cb),
-                (cb) => check(store).has(k, (err, exists) => {
-                    assert.notExists(err);
-                    expect(exists).to.be.eql(false);
-                    cb();
-                })
-            ], done);
+
+            await check(store).put(k, Buffer.from("hello"));
+
+            const res = await check(store).get(k);
+            expect(res).to.be.eql(Buffer.from("hello"));
+
+            await check(store).delete(k);
+
+            const exists = await check(store).has(k);
+            expect(exists).to.be.eql(false);
         });
 
-        it("parallel", (done) => {
+        it("parallel", async () => {
             const data = [];
             for (let i = 0; i < 100; i++) {
                 data.push([new Key(`/a/key${i}`), Buffer.from(`data${i}`)]);
             }
 
-            series([
-                (cb) => each(data, (d, cb) => {
-                    check(store).put(d[0], d[1], cb);
-                }, cb),
-                (cb) => map(data, (d, cb) => {
-                    check(store).has(d[0], cb);
-                }, (err, res) => {
-                    assert.notExists(err);
-                    res.forEach((res, i) => {
-                        expect(res).to.be.eql(true);
-                    });
-                    cb();
-                }),
-                (cb) => each(data, (d, cb) => {
-                    check(store).delete(d[0], cb);
-                }, cb),
-                (cb) => map(data, (d, cb) => {
-                    check(store).has(d[0], cb);
-                }, (err, res) => {
-                    assert.notExists(err);
-                    res.forEach((res, i) => {
-                        expect(res).to.be.eql(false);
-                    });
-                    cb();
-                })
-            ], done);
+            const promises = [];
+            for (const d of data) {
+                promises.push(check(store).put(d[0], d[1]));
+            }
+            await Promise.all(promises);
+
+            const checkExisting = async (val) => {
+                promises.length = 0;
+                for (const d of data) {
+                    promises.push(check(store).has(d[0]));
+                }
+
+                const results = await Promise.all(promises);
+                for (const res of results) {
+                    expect(res).to.be.eql(val);
+                }
+            };
+
+            await checkExisting(true);
+
+            promises.length = 0;
+            for (const d of data) {
+                promises.push(check(store).delete(d[0]));
+            }
+            await Promise.all(promises);
+
+            await checkExisting(false);
         });
     });
 
     describe("batch", () => {
         let store;
 
-        beforeEach((done) => {
-            test.setup((err, s) => {
-                if (err) {
-                    throw err;
-                }
-                store = s;
-                done();
-            });
+        beforeEach(async () => {
+            store = await test.setup();
         });
 
-        afterEach((done) => {
-            cleanup(store, done);
+        afterEach(async () => {
+            await cleanup(store);
         });
 
-        it("simple", (done) => {
+        it("simple", async () => {
             const b = check(store).batch();
 
-            series([
-                (cb) => check(store).put(new Key("/z/old"), Buffer.from("old"), cb),
-                (cb) => {
-                    b.put(new Key("/a/one"), Buffer.from("1"));
-                    b.put(new Key("/q/two"), Buffer.from("2"));
-                    b.put(new Key("/q/three"), Buffer.from("3"));
-                    b.delete(new Key("/z/old"));
-                    b.commit(cb);
-                },
-                (cb) => map(
-                    ["/a/one", "/q/two", "/q/three", "/z/old"],
-                    (k, cb) => check(store).has(new Key(k), cb),
-                    (err, res) => {
-                        assert.notExists(err);
-                        expect(res).to.be.eql([true, true, true, false]);
-                        cb();
-                    }
-                )
-            ], done);
+            await check(store).put(new Key("/z/old"), Buffer.from("old"));
+
+            b.put(new Key("/a/one"), Buffer.from("1"));
+            b.put(new Key("/q/two"), Buffer.from("2"));
+            b.put(new Key("/q/three"), Buffer.from("3"));
+            b.delete(new Key("/z/old"));
+            await b.commit();
+
+            const results = [];
+            for (const k of ["/a/one", "/q/two", "/q/three", "/z/old"]) {
+                results.push(await check(store).has(new Key(k))); // eslint-disable-line
+            }
+
+            expect(results).to.be.eql([true, true, true, false]);
         });
 
-        it("many (3 * 400)", function (done) {
+        it("many (3 * 400)", async function (done) {
             this.timeout(60 * 1000);
             const b = check(store).batch();
             const count = 400;
@@ -229,12 +180,13 @@ module.exports = (test/* : Test */) => {
                 b.put(new Key(`/z/hello${i}`), crypto.randomBytes(128));
             }
 
+            await b.commit();
+
             series([
-                (cb) => b.commit(cb),
                 (cb) => parallel([
-                    (cb) => pull(check(store).query({ prefix: "/a" }), pull.collect(cb)),
-                    (cb) => pull(check(store).query({ prefix: "/z" }), pull.collect(cb)),
-                    (cb) => pull(check(store).query({ prefix: "/q" }), pull.collect(cb))
+                    (cb) => check(store).query({ prefix: "/a" }).then((src) => pull(src, pull.collect(cb))),
+                    (cb) => check(store).query({ prefix: "/z" }).then((src) => pull(src, pull.collect(cb))),
+                    (cb) => check(store).query({ prefix: "/q" }).then((src) => pull(src, pull.collect(cb)))
                 ], (err, res) => {
                     assert.notExists(err);
                     expect(res[0]).to.have.length(count);
@@ -294,30 +246,24 @@ module.exports = (test/* : Test */) => {
             ["1 order (reverse 1)", { orders: [order2] }, [hello2, world, hello]]
         ];
 
-        before((done) => {
-            test.setup((err, s) => {
-                if (err) {
-                    throw err;
-                }
-                store = s;
+        before(async () => {
+            store = await test.setup();
+            const b = check(store).batch();
 
-                const b = check(store).batch();
+            b.put(hello.key, hello.value);
+            b.put(world.key, world.value);
+            b.put(hello2.key, hello2.value);
 
-                b.put(hello.key, hello.value);
-                b.put(world.key, world.value);
-                b.put(hello2.key, hello2.value);
-
-                b.commit(done);
-            });
+            await b.commit();
         });
 
-        after((done) => {
-            cleanup(store, done);
+        after(async () => {
+            await cleanup(store);
         });
 
-        tests.forEach((t) => it(t[0], (done) => {
+        tests.forEach((t) => it(t[0], async (done) => {
             pull(
-                check(store).query(t[1]),
+                await check(store).query(t[1]),
                 pull.collect((err, res) => {
                     assert.notExists(err);
                     const expected = t[2];
@@ -356,27 +302,19 @@ module.exports = (test/* : Test */) => {
 
     describe("lifecycle", () => {
         let store;
-        before((done) => {
-            test.setup((err, s) => {
-                if (err) {
-                    throw err;
-                }
-                store = s;
-                done();
-            });
+        before(async () => {
+            store = await test.setup();
         });
 
-        after((done) => {
-            cleanup(store, done);
+        after(async () => {
+            await cleanup(store);
         });
 
-        it("close and open", (done) => {
-            series([
-                (cb) => check(store).close(cb),
-                (cb) => check(store).open(cb),
-                (cb) => check(store).close(cb),
-                (cb) => check(store).open(cb)
-            ], done);
+        it("close and open", async () => {
+            await check(store).close();
+            await check(store).open();
+            await check(store).close();
+            await check(store).open();
         });
     });
 };

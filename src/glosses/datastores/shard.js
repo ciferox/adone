@@ -32,10 +32,6 @@ export const SHARDING_FN = "SHARDING";
 export const README_FN = "_README";
 
 class Shard {
-    /* :: name: string */
-    /* :: param: number */
-    /* :: _padding: string */
-
     constructor(param /* : number */) {
         this.param = param;
     }
@@ -132,22 +128,9 @@ export const parseShardFun = (str /* : string */) /* : ShardV1 */ => {
     }
 };
 
-export const readShardFun = (path /* : string */, store /* : Datastore<Buffer> */, callback /* : Callback<ShardV1> */) /* : void */ => {
+export const readShardFun = async (path, store) => {
     const key = new Key(path).child(new Key(SHARDING_FN));
     const get = is.function(store.getRaw) ? store.getRaw.bind(store) : store.get.bind(store);
-
-    get(key, (err, res) => {
-        if (err) {
-            return callback(err);
-        }
-
-        let shard;
-        try {
-            shard = parseShardFun((res || "").toString().trim());
-        } catch (err) {
-            return callback(err);
-        }
-
-        callback(null, shard);
-    });
+    const res = await get(key);
+    return parseShardFun((res || "").toString().trim());
 };

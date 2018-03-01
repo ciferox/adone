@@ -6,7 +6,7 @@ const {
     datastore: { Key, backend: { Memory }, wrapper: { Sharding }, shard }
 } = adone;
 
-describe("datastore", "wrapper", "Sharding", () => {
+describe.todo("datastore", "wrapper", "Sharding", () => {
     it("create", (done) => {
         const ms = new Memory();
         const sh = new shard.NextToLast(2);

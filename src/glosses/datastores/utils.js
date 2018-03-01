@@ -81,5 +81,3 @@ export const replaceStartWith = function (s, r) {
     const matcher = new RegExp(`^${r}`);
     return s.replace(matcher, "");
 };
-
-export const tmpdir = () => path.join(os.tmpdir(), uuid.v4());

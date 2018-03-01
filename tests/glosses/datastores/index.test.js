@@ -206,9 +206,5 @@ describe("datastore", () => {
 
             expect(datastore.utils.replaceStartWith("helloworld", "world")).to.eql("helloworld");
         });
-
-        it("provides a temp folder", () => {
-            expect(datastore.utils.tmpdir()).to.not.equal("");
-        });
     });
 });
