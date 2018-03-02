@@ -389,6 +389,30 @@ describe("net", "ws", "Client", () => {
             });
         });
 
+        it("does not re-emit `net.Socket` errors", (done) => {
+            const wss = new Server({ port: 0 }, () => {
+                const ws = new Client(`ws://localhost:${wss.address().port}`);
+
+                ws.on("open", () => {
+                    ws._socket.on("error", (err) => {
+                        assert.ok(err instanceof Error);
+                        assert.ok(err.message.startsWith("write E"));
+                        ws.on("close", (code, message) => {
+                            assert.strictEqual(message, "");
+                            assert.strictEqual(code, 1006);
+                            wss.close(done);
+                        });
+                    });
+
+                    for (const client of wss.clients) {
+                        client.terminate();
+                    }
+                    ws.send("foo");
+                    ws.send("bar");
+                });
+            });
+        });
+
         it("emits an 'upgrade' event", (done) => {
             const wss = new Server({ port: 0 }, () => {
                 const ws = new Client(`ws://localhost:${wss.address().port}`);
@@ -1160,36 +1184,6 @@ describe("net", "ws", "Client", () => {
                     );
 
                     wss.close(done);
-                });
-            });
-        });
-
-        it("emits an error if the close frame can not be sent", (done) => {
-            const wss = new Server({ port: 0 }, () => {
-                const socket = net.createConnection(wss.address().port, () => {
-                    socket.write(
-                        "GET / HTTP/1.1\r\n" +
-                        "Host: localhost\r\n" +
-                        "Upgrade: websocket\r\n" +
-                        "Connection: Upgrade\r\n" +
-                        "Sec-WebSocket-Key: qqFVFwaCnSMXiqfezY/AZQ==\r\n" +
-                        "Sec-WebSocket-Version: 13\r\n" +
-                        "\r\n"
-                    );
-                    socket.destroy();
-                });
-
-                wss.on("connection", (ws) => {
-                    ws.on("error", (err) => {
-                        assert.ok(err instanceof Error);
-                        assert.ok(err.message.startsWith("write E"));
-                        ws.on("close", (code, message) => {
-                            assert.strictEqual(message, "");
-                            assert.strictEqual(code, 1006);
-                            wss.close(done);
-                        });
-                    });
-                    ws.close();
                 });
             });
         });
@@ -2106,7 +2100,9 @@ describe("net", "ws", "Client", () => {
                     const messages = [];
 
                     ws.on("message", (message) => {
-                        if (messages.push(message) > 1) { return; }
+                        if (messages.push(message) > 1) {
+                            return;
+                        }
 
                         process.nextTick(() => {
                             assert.strictEqual(ws._receiver._state, 5);

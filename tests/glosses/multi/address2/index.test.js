@@ -61,8 +61,25 @@ describe("multi", "address2", () => {
             });
         }
 
-        it("throws on non string or buffer", () => {
-            assert.throws(() => address2.create({}), /Address must be a string/);
+        it("null/undefined construct still works", () => {
+            assert.equal(address2.create().toString(), "//");
+            assert.equal(address2.create(null).toString(), "//");
+            assert.equal(address2.create(undefined).toString(), "//");
+        });
+
+        it("throws on truthy non string or buffer", () => {
+            const errRegex = /Address must be a string/;
+            assert.throws(() => address2.create({}), errRegex);
+            assert.throws(() => address2.create([]), errRegex);
+            assert.throws(() => address2.create(138), errRegex);
+            assert.throws(() => address2.create(true), errRegex);
+        });
+
+        it("throws on falsy non string or buffer", () => {
+            const errRegex = /Address must be a string/;
+            assert.throws(() => address2.create(NaN), errRegex);
+            assert.throws(() => address2.create(false), errRegex);
+            assert.throws(() => address2.create(0), errRegex);
         });
     });
 
@@ -462,7 +479,7 @@ describe("multi", "address2", () => {
             });
         });
 
-        describe("address.isMultiaddr()", () => {
+        describe("address2.isMultiaddr()", () => {
             it("handles different inputs", () => {
                 expect(address2.isMultiaddr(address2.create("//"))).to.be.eql(true);
                 expect(address2.isMultiaddr("/")).to.be.eql(false);

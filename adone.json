@@ -664,8 +664,7 @@
                             "namespace": "ws",
                             "native": {
                                 "src": "src/glosses/net/ws/native",
-                                "dst": "lib/glosses/net/ws/native",
-                                "type": "gyp"
+                                "dst": "lib/glosses/net/ws/native"
                             }
                         }
                     }

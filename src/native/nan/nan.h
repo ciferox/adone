@@ -1,7 +1,7 @@
 /*********************************************************************
  * NAN - Native Abstractions for Node.js
  *
- * Copyright (c) 2017 NAN contributors:
+ * Copyright (c) 2018 NAN contributors:
  *   - Rod Vagg <https://github.com/rvagg>
  *   - Benjamin Byholm <https://github.com/kkoopa>
  *   - Trevor Norris <https://github.com/trevnorris>
@@ -13,7 +13,7 @@
  *
  * MIT License <https://github.com/nodejs/nan/blob/master/LICENSE.md>
  *
- * Version 2.8.0: current Node 9.2.0, Node 12: 0.12.18, Node 10: 0.10.48, iojs: 3.3.1
+ * Version 2.9.2: current Node 9.5.0, Node 12: 0.12.18, Node 10: 0.10.48, iojs: 3.3.1
  *
  * See https://github.com/nodejs/nan for the latest update to this file
  **********************************************************************************/
@@ -1275,90 +1275,90 @@ class Utf8String {
 
 // === AsyncResource ===========================================================
 
-  class AsyncResource {
-   public:
-    AsyncResource(
-        v8::Local<v8::String> name
-      , v8::Local<v8::Object> resource = New<v8::Object>()) {
-#if NODE_MODULE_VERSION >= NODE_8_0_MODULE_VERSION
-      v8::Isolate* isolate = v8::Isolate::GetCurrent();
+class AsyncResource {
+ public:
+  AsyncResource(
+      v8::Local<v8::String> name
+    , v8::Local<v8::Object> resource = New<v8::Object>()) {
+#if NODE_MODULE_VERSION >= NODE_9_0_MODULE_VERSION
+    v8::Isolate* isolate = v8::Isolate::GetCurrent();
 
-      if (resource.IsEmpty()) {
-        resource = New<v8::Object>();
-      }
-
-      context = node::EmitAsyncInit(isolate, resource, name);
-#endif
+    if (resource.IsEmpty()) {
+      resource = New<v8::Object>();
     }
 
-    AsyncResource(
-        const char* name
-      , v8::Local<v8::Object> resource = New<v8::Object>()) {
-#if NODE_MODULE_VERSION >= NODE_8_0_MODULE_VERSION
-      v8::Isolate* isolate = v8::Isolate::GetCurrent();
-
-      if (resource.IsEmpty()) {
-        resource = New<v8::Object>();
-      }
-
-      v8::Local<v8::String> name_string =
-          New<v8::String>(name).ToLocalChecked();
-      context = node::EmitAsyncInit(isolate, resource, name_string);
+    context = node::EmitAsyncInit(isolate, resource, name);
 #endif
+  }
+
+  AsyncResource(
+      const char* name
+    , v8::Local<v8::Object> resource = New<v8::Object>()) {
+#if NODE_MODULE_VERSION >= NODE_9_0_MODULE_VERSION
+    v8::Isolate* isolate = v8::Isolate::GetCurrent();
+
+    if (resource.IsEmpty()) {
+      resource = New<v8::Object>();
     }
 
-    ~AsyncResource() {
-#if NODE_MODULE_VERSION >= NODE_8_0_MODULE_VERSION
-      v8::Isolate* isolate = v8::Isolate::GetCurrent();
-      node::EmitAsyncDestroy(isolate, context);
+    v8::Local<v8::String> name_string =
+        New<v8::String>(name).ToLocalChecked();
+    context = node::EmitAsyncInit(isolate, resource, name_string);
 #endif
-    }
+  }
 
-    inline MaybeLocal<v8::Value> runInAsyncScope(
-        v8::Local<v8::Object> target
-      , v8::Local<v8::Function> func
-      , int argc
-      , v8::Local<v8::Value>* argv) {
-#if NODE_MODULE_VERSION < NODE_8_0_MODULE_VERSION
-      return MakeCallback(target, func, argc, argv);
+  ~AsyncResource() {
+#if NODE_MODULE_VERSION >= NODE_9_0_MODULE_VERSION
+    v8::Isolate* isolate = v8::Isolate::GetCurrent();
+    node::EmitAsyncDestroy(isolate, context);
+#endif
+  }
+
+  inline MaybeLocal<v8::Value> runInAsyncScope(
+      v8::Local<v8::Object> target
+    , v8::Local<v8::Function> func
+    , int argc
+    , v8::Local<v8::Value>* argv) {
+#if NODE_MODULE_VERSION < NODE_9_0_MODULE_VERSION
+    return MakeCallback(target, func, argc, argv);
 #else
-      return node::MakeCallback(
-          v8::Isolate::GetCurrent(), target, func, argc, argv, context);
+    return node::MakeCallback(
+        v8::Isolate::GetCurrent(), target, func, argc, argv, context);
 #endif
-    }
+  }
 
-    inline MaybeLocal<v8::Value> runInAsyncScope(
-        v8::Local<v8::Object> target
-      , v8::Local<v8::String> symbol
-      , int argc
-      , v8::Local<v8::Value>* argv) {
-#if NODE_MODULE_VERSION < NODE_8_0_MODULE_VERSION
-      return MakeCallback(target, symbol, argc, argv);
+  inline MaybeLocal<v8::Value> runInAsyncScope(
+      v8::Local<v8::Object> target
+    , v8::Local<v8::String> symbol
+    , int argc
+    , v8::Local<v8::Value>* argv) {
+#if NODE_MODULE_VERSION < NODE_9_0_MODULE_VERSION
+    return MakeCallback(target, symbol, argc, argv);
 #else
-      return node::MakeCallback(
-          v8::Isolate::GetCurrent(), target, symbol, argc, argv, context);
+    return node::MakeCallback(
+        v8::Isolate::GetCurrent(), target, symbol, argc, argv, context);
 #endif
-    }
+  }
 
-    inline MaybeLocal<v8::Value> runInAsyncScope(
-        v8::Local<v8::Object> target
-      , const char* method
-      , int argc
-      , v8::Local<v8::Value>* argv) {
-#if NODE_MODULE_VERSION < NODE_8_0_MODULE_VERSION
-      return MakeCallback(target, method, argc, argv);
+  inline MaybeLocal<v8::Value> runInAsyncScope(
+      v8::Local<v8::Object> target
+    , const char* method
+    , int argc
+    , v8::Local<v8::Value>* argv) {
+#if NODE_MODULE_VERSION < NODE_9_0_MODULE_VERSION
+    return MakeCallback(target, method, argc, argv);
 #else
-      return node::MakeCallback(
-          v8::Isolate::GetCurrent(), target, method, argc, argv, context);
+    return node::MakeCallback(
+        v8::Isolate::GetCurrent(), target, method, argc, argv, context);
 #endif
-    }
+  }
 
-   private:
-    NAN_DISALLOW_ASSIGN_COPY_MOVE(AsyncResource)
-#if NODE_MODULE_VERSION >= NODE_8_0_MODULE_VERSION
-    node::async_context context;
+ private:
+  NAN_DISALLOW_ASSIGN_COPY_MOVE(AsyncResource)
+#if NODE_MODULE_VERSION >= NODE_9_0_MODULE_VERSION
+  node::async_context context;
 #endif
-  };
+};
 
 typedef void (*FreeCallback)(char *data, void *hint);
 
@@ -1482,17 +1482,30 @@ class Callback {
   inline
   v8::Local<v8::Function> operator*() const { return GetFunction(); }
 
-  inline v8::Local<v8::Value> operator()(
+  NAN_DEPRECATED inline v8::Local<v8::Value> operator()(
       v8::Local<v8::Object> target
     , int argc = 0
     , v8::Local<v8::Value> argv[] = 0) const {
-    return this->Call(target, argc, argv);
+#if NODE_MODULE_VERSION > NODE_0_10_MODULE_VERSION
+    v8::Isolate *isolate = v8::Isolate::GetCurrent();
+    return Call_(isolate, target, argc, argv);
+#else
+    return Call_(target, argc, argv);
+#endif
   }
 
-  inline v8::Local<v8::Value> operator()(
+  NAN_DEPRECATED inline v8::Local<v8::Value> operator()(
       int argc = 0
     , v8::Local<v8::Value> argv[] = 0) const {
-    return this->Call(argc, argv);
+#if NODE_MODULE_VERSION > NODE_0_10_MODULE_VERSION
+    v8::Isolate *isolate = v8::Isolate::GetCurrent();
+    v8::EscapableHandleScope scope(isolate);
+    return scope.Escape(
+        Call_(isolate, isolate->GetCurrentContext()->Global(), argc, argv));
+#else
+    v8::HandleScope scope;
+    return scope.Close(Call_(v8::Context::GetCurrent()->Global(), argc, argv));
+#endif
   }
 
   inline MaybeLocal<v8::Value> operator()(
@@ -1531,7 +1544,11 @@ class Callback {
     return handle_.IsEmpty();
   }
 
-  inline v8::Local<v8::Value>
+  // Deprecated: For async callbacks Use the versions that accept an
+  // AsyncResource. If this callback does not correspond to an async resource,
+  // that is, it is a synchronous function call on a non-empty JS stack, you
+  // should Nan::Call instead.
+  NAN_DEPRECATED inline v8::Local<v8::Value>
   Call(v8::Local<v8::Object> target
      , int argc
      , v8::Local<v8::Value> argv[]) const {
@@ -1543,7 +1560,11 @@ class Callback {
 #endif
   }
 
-  inline v8::Local<v8::Value>
+  // Deprecated: For async callbacks Use the versions that accept an
+  // AsyncResource. If this callback does not correspond to an async resource,
+  // that is, it is a synchronous function call on a non-empty JS stack, you
+  // should Nan::Call instead.
+  NAN_DEPRECATED inline v8::Local<v8::Value>
   Call(int argc, v8::Local<v8::Value> argv[]) const {
 #if NODE_MODULE_VERSION > NODE_0_10_MODULE_VERSION
     v8::Isolate *isolate = v8::Isolate::GetCurrent();
@@ -1561,7 +1582,7 @@ class Callback {
      , int argc
      , v8::Local<v8::Value> argv[]
      , AsyncResource* resource) const {
-#if NODE_MODULE_VERSION >= NODE_8_0_MODULE_VERSION
+#if NODE_MODULE_VERSION >= NODE_9_0_MODULE_VERSION
     v8::Isolate* isolate = v8::Isolate::GetCurrent();
     return Call_(isolate, target, argc, argv, resource);
 #elif NODE_MODULE_VERSION > NODE_0_10_MODULE_VERSION
@@ -1574,7 +1595,7 @@ class Callback {
 
   inline MaybeLocal<v8::Value>
   Call(int argc, v8::Local<v8::Value> argv[], AsyncResource* resource) const {
-#if NODE_MODULE_VERSION >= NODE_8_0_MODULE_VERSION
+#if NODE_MODULE_VERSION >= NODE_9_0_MODULE_VERSION
     v8::Isolate* isolate = v8::Isolate::GetCurrent();
     return Call(isolate->GetCurrentContext()->Global(), argc, argv, resource);
 #elif NODE_MODULE_VERSION > NODE_0_10_MODULE_VERSION
@@ -1592,7 +1613,7 @@ class Callback {
   NAN_DISALLOW_ASSIGN_COPY_MOVE(Callback)
   Persistent<v8::Function> handle_;
 
-#if NODE_MODULE_VERSION >= NODE_8_0_MODULE_VERSION
+#if NODE_MODULE_VERSION >= NODE_9_0_MODULE_VERSION
   MaybeLocal<v8::Value> Call_(v8::Isolate *isolate
                             , v8::Local<v8::Object> target
                             , int argc
@@ -1649,6 +1670,14 @@ class Callback {
   }
 #endif
 };
+
+inline MaybeLocal<v8::Value> Call(
+    const Nan::Callback& callback
+  , v8::Local<v8::Object> recv
+  , int argc
+  , v8::Local<v8::Value> argv[]) {
+  return Call(*callback, recv, argc, argv);
+}
 
 /* abstract */ class AsyncWorker {
  public:

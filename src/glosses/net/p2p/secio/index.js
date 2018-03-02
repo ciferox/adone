@@ -41,7 +41,7 @@ module.exports = {
                 return callback(err);
             }
 
-            encryptedConnection.setInnerConn(state.secure);
+            encryptedConnection.setInnerConn(new Connection(state.secure, conn));
             try {
                 await conn.getPeerInfo();
             } catch (err) {

@@ -36,8 +36,25 @@ describe("multi", "address", () => {
             assert.equal(address.create("").toString(), "/");
         });
 
-        it("throws on non string or buffer", () => {
-            assert.throws(() => address.create({}), /addr must be a string/);
+        it("null/undefined construct still works", () => {
+            assert.equal(address.create().toString(), "/");
+            assert.equal(address.create(null).toString(), "/");
+            assert.equal(address.create(undefined).toString(), "/");
+        });
+
+        it("throws on truthy non string or buffer", () => {
+            const errRegex = /addr must be a string/;
+            assert.throws(() => address.create({}), errRegex);
+            assert.throws(() => address.create([]), errRegex);
+            assert.throws(() => address.create(138), errRegex);
+            assert.throws(() => address.create(true), errRegex);
+        });
+
+        it("throws on falsy non string or buffer", () => {
+            const errRegex = /addr must be a string/;
+            assert.throws(() => address.create(NaN), errRegex);
+            assert.throws(() => address.create(false), errRegex);
+            assert.throws(() => address.create(0), errRegex);
         });
     });
 

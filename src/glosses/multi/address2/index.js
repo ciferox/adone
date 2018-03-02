@@ -26,18 +26,18 @@ const NotImplemented = new Error("Sorry, Not Implemented Yet.");
  * // <Multiaddr 047f000001060fa1 - /ip4/127.0.0.1/tcp/4001>
  */
 export class Multiaddr {
-    constructor(addr = "") {
+    constructor(addr) {
+        if (is.nil(addr)) {
+            addr = "";
+        }
         if (addr instanceof Buffer) {
-            /**
-             * @type {Buffer} - The raw bytes representing this multiaddress
-             */
             this.buffer = __.codec.fromBuffer(addr);
         } else if (is.string(addr)) {
             this.buffer = __.codec.fromString(addr);
         } else if (addr.buffer && addr.protos && addr.protoCodes) { // Multiaddr
             this.buffer = __.codec.fromBuffer(addr.buffer); // validate + copy buffer
         } else {
-            throw new adone.error.Exception("Address must be a string, Buffer, or another Multiaddr");
+            throw new adone.error.NotValid("Address must be a string, Buffer, or another Multiaddr");
         }
     }
 

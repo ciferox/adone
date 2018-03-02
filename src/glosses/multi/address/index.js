@@ -26,11 +26,11 @@ const NotImplemented = new Error("Sorry, Not Implemented Yet.");
  * // <Multiaddr 047f000001060fa1 - /ip4/127.0.0.1/tcp/4001>
  */
 export class Multiaddr {
-    constructor(addr = "") {
+    constructor(addr) {
+        if (is.nil(addr)) {
+            addr = "";
+        }
         if (addr instanceof Buffer) {
-            /**
-             * @type {Buffer} - The raw bytes representing this multiaddress
-             */
             this.buffer = __.codec.fromBuffer(addr);
         } else if (is.string(addr) || addr instanceof String) {
             this.buffer = __.codec.fromString(addr);
@@ -381,9 +381,8 @@ export const fromNodeAddress = (addr, transport) => {
         throw new Error("requires node address object");
     }
     if (!transport) {
-        throw new Error("requires transport protocol")
-        ;
-    }
+        throw new Error("requires transport protocol");
+}
     const ip = (addr.family === "IPv6") ? "ip6" : "ip4";
     return new Multiaddr(`/${[ip, addr.address, transport, addr.port].join("/")}`);
 };

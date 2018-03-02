@@ -3,7 +3,7 @@ Native Abstractions for Node.js
 
 **A header file filled with macro and utility goodness for making add-on development for Node.js easier across versions 0.8, 0.10, 0.12, 1, 2, 3, 4, 5, 6, 7, 8 and 9.**
 
-***Current version: 2.8.0***
+***Current version: 2.9.2***
 
 *(See [CHANGELOG.md](https://github.com/nodejs/nan/blob/master/CHANGELOG.md) for complete ChangeLog)*
 
@@ -316,6 +316,7 @@ The hooks to access V8 internals—including GC and statistics—are different a
 
 ### Miscellaneous Node Helpers
 
+ - <a href="doc/node_misc.md#api_nan_asyncresource"><b><code>Nan::AsyncResource</code></b></a>
  - <a href="doc/node_misc.md#api_nan_make_callback"><b><code>Nan::MakeCallback()</code></b></a>
  - <a href="doc/node_misc.md#api_nan_module_init"><b><code>NAN_MODULE_INIT()</code></b></a>
  - <a href="doc/node_misc.md#api_nan_export"><b><code>Nan::Export()</code></b></a>
@@ -450,6 +451,6 @@ By making a contribution to this project, I certify that:
 
 ## Licence &amp; copyright
 
-Copyright (c) 2017 NAN WG Members / Collaborators (listed above).
+Copyright (c) 2018 NAN WG Members / Collaborators (listed above).
 
 Native Abstractions for Node.js is licensed under an MIT license. All rights not explicitly granted in the MIT license are reserved. See the included LICENSE file for more details.

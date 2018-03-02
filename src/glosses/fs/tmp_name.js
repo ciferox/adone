@@ -26,10 +26,7 @@ export default async ({ tries = 3, template, tmpRootPath = osTmpDir, subDirs, pr
             return template.replace(TEMPLATE_PATTERN, adone.text.random(6));
         }
 
-        const path = std.path.join(tmpRootPath, `${prefix}${nameGenerator({
-            prefix,
-            ext
-        })}${ext}`);
+        const path = std.path.join(tmpRootPath, `${prefix}${nameGenerator()}${ext}`);
 
         try {
             await adone.fs.stat(path); // eslint-disable-line no-await-in-loop

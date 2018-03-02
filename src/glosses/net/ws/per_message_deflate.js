@@ -8,13 +8,13 @@ const {
 const TRAILER = Buffer.from([0x00, 0x00, 0xff, 0xff]);
 const EMPTY_BLOCK = Buffer.from([0x00]);
 
+const kPerMessageDeflate = Symbol("permessage-deflate");
 const kWriteInProgress = Symbol("write-in-progress");
 const kPendingClose = Symbol("pending-close");
 const kTotalLength = Symbol("total-length");
 const kCallback = Symbol("callback");
 const kBuffers = Symbol("buffers");
 const kError = Symbol("error");
-const kOwner = Symbol("owner");
 
 //
 // We limit zlib concurrency, which prevents severe memory fragmentation
@@ -46,15 +46,15 @@ const inflateOnData = function (chunk) {
     this[kTotalLength] += chunk.length;
 
     if (
-        this[kOwner]._maxPayload < 1 ||
-        this[kTotalLength] <= this[kOwner]._maxPayload
+        this[kPerMessageDeflate]._maxPayload < 1 ||
+        this[kTotalLength] <= this[kPerMessageDeflate]._maxPayload
     ) {
         this[kBuffers].push(chunk);
         return;
     }
 
     this[kError] = new RangeError("Max payload size exceeded");
-    this[kError].closeCode = 1009;
+    this[kError][adone.net.ws.constants.kStatusCode] = 1009;
     this.removeListener("data", inflateOnData);
     this.reset();
 };
@@ -70,7 +70,8 @@ const inflateOnError = function (err) {
     // There is no need to call `Zlib#close()` as the handle is automatically
     // closed when an error is emitted.
     //
-    this[kOwner]._inflate = null;
+    this[kPerMessageDeflate]._inflate = null;
+    err[adone.net.ws.constants.kStatusCode] = 1007;
     this[kCallback](err);
 };
 
@@ -91,8 +92,8 @@ export default class PerMessageDeflate {
      *     use of a custom server window size
      * @param {(Boolean|Number)} options.clientMaxWindowBits Advertise support
      *     for, or request, a custom client window size
-     * @param {Number} options.level The value of zlib's `level` param
-     * @param {Number} options.memLevel The value of zlib's `memLevel` param
+     * @param {Object} options.zlibDeflateOptions Options to pass to zlib on deflate
+     * @param {Object} options.zlibInflateOptions Options to pass to zlib on inflate
      * @param {Number} options.threshold Size (in bytes) below which messages
      *     should not be compressed
      * @param {Number} options.concurrencyLimit The number of concurrent calls to
@@ -392,10 +393,14 @@ export default class PerMessageDeflate {
                 ? zlib.Z_DEFAULT_WINDOWBITS
                 : this.params[key];
 
-            this._inflate = zlib.createInflateRaw({ windowBits });
+            // this._inflate = zlib.createInflateRaw({ windowBits });
+            this._inflate = zlib.createInflateRaw({
+                ...this._options.zlibInflateOptions,
+                windowBits
+            });
+            this._inflate[kPerMessageDeflate] = this;
             this._inflate[kTotalLength] = 0;
             this._inflate[kBuffers] = [];
-            this._inflate[kOwner] = this;
             this._inflate.on("error", inflateOnError);
             this._inflate.on("data", inflateOnData);
         }
@@ -461,10 +466,11 @@ export default class PerMessageDeflate {
                 ? zlib.Z_DEFAULT_WINDOWBITS
                 : this.params[key];
 
+            // TODO deprecate memLevel/level and recommend zlibDeflateOptions instead
             this._deflate = zlib.createDeflateRaw({
                 memLevel: this._options.memLevel,
                 level: this._options.level,
-                flush: zlib.Z_SYNC_FLUSH,
+                ...this._options.zlibDeflateOptions,
                 windowBits
             });
 
