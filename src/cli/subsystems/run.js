@@ -165,7 +165,7 @@ export default class Run extends Subsystem {
         }
     }
 
-    _runScript(path, args, { sourcemaps } = {}) {
+    async _runScript(path, args, { sourcemaps } = {}) {
         let scriptPath = path;
         if (!std.path.isAbsolute(scriptPath)) {
             scriptPath = std.path.resolve(process.cwd(), scriptPath);
@@ -177,6 +177,14 @@ export default class Run extends Subsystem {
             adone.sourcemap.support(Error).install();
         }
 
-        adone.require(scriptPath);
+        const result = adone.require(scriptPath);
+        let fn;
+        if (is.function(result)) {
+            fn = result;
+        } else if (result.__esModule && is.function(result.default)) {
+            fn = result.default;
+        }
+
+        is.function(fn) && await fn();
     }
 }

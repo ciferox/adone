@@ -66,6 +66,8 @@ export const toString = (proto, buf) => {
         case 53: // dns
         case 54: // dns4
         case 55: // dns6
+        case 400: // unix
+        case 401: // winpipe
             return buf2str(buf);
 
         case 420:
@@ -95,6 +97,8 @@ export const toBuffer = (proto, str) => {
         case 53: // dns
         case 54: // dns4
         case 55: // dns6
+        case 400: // unix
+        case 401: // winpipe
             return str2buf(str);
 
         case 420:

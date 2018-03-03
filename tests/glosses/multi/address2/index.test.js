@@ -193,6 +193,20 @@ describe("multi", "address2", () => {
             expect(addr.toString()).to.equal(str);
         });
 
+        it("unix", () => {
+            const str = "//unix/home/user/inhost.sock";
+            const addr = address2.create(str);
+            expect(addr).to.have.property("buffer");
+            expect(addr.toString()).to.equal(str);
+        });
+
+        it("winpipe", () => {
+            const str = "//winpipe/\\\\.\\pipe\\realm\\inhost.sock";
+            const addr = address2.create(str);
+            expect(addr).to.have.property("buffer");
+            expect(addr.toString()).to.equal(str);
+        });
+
         it.skip("ip4 + dccp", () => { });
         it.skip("ip6 + dccp", () => { });
 
@@ -228,6 +242,20 @@ describe("multi", "address2", () => {
             expect(addr.toString()).to.equal(str);
         });
 
+        it("unix + http", () => {
+            const str = "//unix/home/user/inhost.sock//http";
+            const addr = address2.create(str);
+            expect(addr).to.have.property("buffer");
+            expect(addr.toString()).to.equal(str);
+        });
+
+        it("winpipe + http", () => {
+            const str = "//winpipe/\\\\.\\pipe\\realm\\inhost.sock//http";
+            const addr = address2.create(str);
+            expect(addr).to.have.property("buffer");
+            expect(addr.toString()).to.equal(str);
+        });
+
         it("ip4 + tcp + https", () => {
             const str = "//ip4/127.0.0.1//tcp/8000//https";
             const addr = address2.create(str);
@@ -237,6 +265,20 @@ describe("multi", "address2", () => {
 
         it("ip6 + tcp + https", () => {
             const str = "//ip6/2001:8a0:7ac5:4201:3ac9:86ff:fe31:7095//tcp/8000//https";
+            const addr = address2.create(str);
+            expect(addr).to.have.property("buffer");
+            expect(addr.toString()).to.equal(str);
+        });
+
+        it("unix + https", () => {
+            const str = "//unix/home/user/inhost.sock//https";
+            const addr = address2.create(str);
+            expect(addr).to.have.property("buffer");
+            expect(addr.toString()).to.equal(str);
+        });
+
+        it("winpipe + https", () => {
+            const str = "//winpipe/\\\\.\\pipe\\realm\\inhost.sock//https";
             const addr = address2.create(str);
             expect(addr).to.have.property("buffer");
             expect(addr.toString()).to.equal(str);
@@ -256,8 +298,36 @@ describe("multi", "address2", () => {
             expect(addr.toString()).to.equal(str);
         });
 
+        it("unix + websockets", () => {
+            const str = "//unix/home/user/inhost.sock//ws";
+            const addr = address2.create(str);
+            expect(addr).to.have.property("buffer");
+            expect(addr.toString()).to.equal(str);
+        });
+
+        it("winpipe + websockets", () => {
+            const str = "//winpipe/\\\\.\\pipe\\realm\\inhost.sock//ws";
+            const addr = address2.create(str);
+            expect(addr).to.have.property("buffer");
+            expect(addr.toString()).to.equal(str);
+        });
+
         it("ip6 + tcp + websockets + p2p", () => {
             const str = "//ip6/2001:8a0:7ac5:4201:3ac9:86ff:fe31:7095//tcp/8000//ws//p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC";
+            const addr = address2.create(str);
+            expect(addr).to.have.property("buffer");
+            expect(addr.toString()).to.equal(str);
+        });
+
+        it("unix + secure websockets + p2p", () => {
+            const str = "//unix/home/user/inhost.sock//wss//p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC";
+            const addr = address2.create(str);
+            expect(addr).to.have.property("buffer");
+            expect(addr.toString()).to.equal(str);
+        });
+
+        it("winpipe + secure websockets + p2p", () => {
+            const str = "//winpipe/\\\\.\\pipe\\realm\\inhost.sock//wss//p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC";
             const addr = address2.create(str);
             expect(addr).to.have.property("buffer");
             expect(addr.toString()).to.equal(str);
@@ -411,6 +481,18 @@ describe("multi", "address2", () => {
                     port: "1234"
                 });
             });
+
+            it("returns a node friendly address for unix socket", () => {
+                expect(address2.create("//unix/home/user/inhost.sock").nodeAddress()).to.be.eql({
+                    path: "/home/user/inhost.sock"
+                });
+            });
+
+            it("returns a node friendly address for windows pipe", () => {
+                expect(address2.create("//winpipe/\\\\.\\pipe\\realm\\inhost.sock").nodeAddress()).to.be.eql({
+                    path: "\\\\.\\pipe\\realm\\inhost.sock"
+                });
+            });
         });
 
         describe("fromNodeAddress()", () => {
@@ -430,6 +512,22 @@ describe("multi", "address2", () => {
                         port: "1234"
                     }, "tcp").toString()
                 ).to.be.eql("//ip4/192.168.0.1//tcp/1234");
+            });
+
+            it("parses a node address (unix socket)", () => {
+                expect(
+                    address2.fromNodeAddress({
+                        path: "/home/user/inhost.sock"
+                    }).toString()
+                ).to.be.eql("//unix/home/user/inhost.sock");
+            });
+
+            it("parses a node address (windows pipe)", () => {
+                expect(
+                    address2.fromNodeAddress({
+                        path: "\\\\.\\pipe\\realm\\inhost.sock"
+                    }).toString()
+                ).to.be.eql("//winpipe/\\\\.\\pipe\\realm\\inhost.sock");
             });
         });
 
@@ -579,7 +677,7 @@ describe("multi", "address2", () => {
     describe("codec", () => {
         describe("stringToStringTuples()", () => {
             it("throws on invalid addresses", () => {
-                expect(() => address2.codec.stringToStringTuples("//ip4/0.0.0.0//ip4") ).to.throw(/Invalid address/);
+                expect(() => address2.codec.stringToStringTuples("//ip4/0.0.0.0//ip4")).to.throw(/Invalid address/);
             });
         });
 

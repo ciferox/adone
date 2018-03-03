@@ -4,7 +4,16 @@ const {
 } = adone;
 
 adone.lazify({
-    config: () => require(std.path.join(adone.ROOT_PATH, "configs", "realm.js")),
+    config: () => {
+        const conf = {
+            ...require(std.path.join(adone.ROOT_PATH, "configs", "realm.js"))
+        };
+
+        adone.lazify({
+            identity: std.path.join(conf.CONFIGS_PATH, "identity.json")
+        }, conf);
+        return conf;
+    },
     TypeHandler: "./type_handler",
     Manager: "./manager",
     task: "./tasks",

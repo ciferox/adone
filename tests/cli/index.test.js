@@ -71,12 +71,19 @@ describe("cli", () => {
             assert.sameMembers(adone.data.json5.decode(result.stdout), ["use", "simple", "powerful", "tools"]);
         });
 
-        it.todo("run script with default function export ", async () => {
-
+        it("script with default function export ", async () => {
+            const result = await forkProcess(ADONE_CLI_PATH, ["run", fixture("function_export.js")]);
+            assert.strictEqual(result.stdout, `adone v${adone.package.version}`);
         });
 
-        it.todo("run script with default async function export ", async () => {
+        it("script with default async function export ", async () => {
+            const result = await forkProcess(ADONE_CLI_PATH, ["run", fixture("async_function_export.js")]);
+            assert.strictEqual(result.stdout, `adone v${adone.package.version}`);
+        });
 
+        it("script with commonjs function export ", async () => {
+            const result = await forkProcess(ADONE_CLI_PATH, ["run", fixture("commonjs_function_export.js")]);
+            assert.strictEqual(result.stdout, `adone v${adone.package.version}`);
         });
     });
 });

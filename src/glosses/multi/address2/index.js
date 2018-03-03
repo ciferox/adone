@@ -297,9 +297,19 @@ export class Multiaddr {
 
         const codes = this.protoCodes();
         const parts = this.toString().split("//").slice(1);
+        const commonProto = codes[0];
+        if (commonProto === 400) {
+            return {
+                path: `/${parts[0].split("/").slice(1).join("/")}`
+            };
+        } else if (commonProto === 401) {
+            return {
+                path: parts[0].split("/")[1]
+            };
+        }
 
         return {
-            family: (codes[0] === 6) ? "IPv6" : "IPv4",
+            family: (commonProto === 6) ? "IPv6" : "IPv4",
             address: parts[0].split("/")[1], // ip addr
             port: parts[1].split("/")[1] // tcp or udp port
         };
@@ -331,17 +341,21 @@ export class Multiaddr {
      */
     isThinWaistAddress(addr) {
         const protos = (addr || this).protos();
+        
+        if (protos[0].code === 400 || protos[0].code === 401) {
+            return true;
+        }
 
         if (protos.length !== 2) {
             return false;
         }
-
         if (protos[0].code !== 4 && protos[0].code !== 5) {
             return false;
         }
         if (protos[1].code !== 6 && protos[1].code !== 7) {
             return false;
         }
+        
         return true;
     }
 
@@ -381,6 +395,13 @@ export const fromNodeAddress = (addr, transport) => {
     if (!addr) {
         throw new adone.error.NotValid("Requires node address object");
     }
+    if (is.string(addr.path)) {
+        if (addr.path.startsWith("\\\\")) {
+            return new Multiaddr(`//winpipe/${addr.path}`);
+        }
+        return new Multiaddr(`//unix${addr.path}`);
+    }
+
     if (!transport) {
         throw new adone.error.NotValid("Requires transport protocol");
     }

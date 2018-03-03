@@ -81,10 +81,14 @@ export const stringToStringTuples = (str) => {
         if (proto.size === 0) {
             tuples.push([parts[0]]);
         } else {
-            if (parts.length !== 2) {
+            if (proto.code === 400) {
+                tuples.push([parts[0], parts.slice(1).join("/")]);
+                continue;
+            } else if (parts.length !== 2) {
                 throw parseError(`Invalid address: ${str}`);
+            } else {
+                tuples.push(parts);
             }
-            tuples.push(parts);
         }
     }
 
