@@ -140,7 +140,7 @@ export class AbstractChainedBatch {
 export class AbstractBackend {
     constructor(location) {
         if (!is.string(location)) {
-            throw new adone.error.InvalidArgument("AbstractBackend constructor requires a location string argument");
+            throw new adone.error.DatabaseInitialization("AbstractBackend constructor requires a location string argument");
         }
 
         this.location = location;

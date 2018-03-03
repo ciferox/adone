@@ -1,82 +1,88 @@
-const rimraf = require("rimraf");
 const each = require("async/each");
-const memdown = require("memdown");
 
 const {
+    is,
+    fs,
     net: { p2p: { CID } },
     datastore: { Key, backend: { Level }, utils, wrapper: { Mount } },
     std: { path },
     stream: { pull }
 } = adone;
 
-describe.todo("datastore", "backend", "LevelDatastore", () => {
+const tmpdir = () => adone.fs.tmpName({
+    prefix: "",
+    nameGenerator: adone.util.uuid.v4
+});
+
+
+describe("datastore", "backend", "LevelDatastore", () => {
     describe("interface (memory)", () => {
         require("../../interface")({
-            setup(callback) {
-                callback(null, new Level("hello", { db: memdown }));
+            async setup() {
+                const ds = new Level({
+                    db: adone.database.level.backend.Memory
+                });
+
+                await ds.open();
+                return ds;
             },
-            teardown(callback) {
-                memdown.clearGlobalStore();
-                callback();
+            teardown() {
             }
         });
     });
 
     describe("interface (leveldb)", () => {
-        const dir = utils.tmpdir();
+        let dir;
         require("../../interface")({
-            setup(callback) {
-                callback(null, new Level(dir));
+            async setup() {
+                if (is.undefined(dir)) {
+                    dir = await tmpdir();
+                }
+                const ds = new Level({
+                    location: dir
+                });
+                await ds.open();
+                return ds;
             },
-            teardown(callback) {
-                rimraf(dir, callback);
+            async teardown() {
+                await fs.rm(dir);
             }
         });
     });
 
     describe("interface (mount(leveldown, leveldown, leveldown))", () => {
-        const dirs = [
-            utils.tmpdir(),
-            utils.tmpdir(),
-            utils.tmpdir()
-        ];
+        const dirs = [];
 
         require("../../interface")({
-            setup(callback) {
-                callback(null, new Mount([{
+            async setup() {
+                if (dirs.length === 0) {
+                    dirs.push(await tmpdir(), await tmpdir(), await tmpdir());
+                }
+                const ds = new Mount([{
                     prefix: new Key("/a"),
-                    datastore: new Level(dirs[0])
+                    datastore: new Level({
+                        location: dirs[0]
+                    })
                 }, {
                     prefix: new Key("/q"),
-                    datastore: new Level(dirs[1])
+                    datastore: new Level({
+                        location: dirs[1]
+                    })
                 }, {
                     prefix: new Key("/z"),
-                    datastore: new Level(dirs[2])
-                }]));
+                    datastore: new Level({
+                        location: dirs[2]
+                    })
+                }]);
+
+                await ds.open();
+                return ds;
             },
-            teardown(callback) {
-                each(dirs, rimraf, callback);
+            async teardown() {
+                for (const dir of dirs) {
+                    await fs.rm(dir); // eslint-disable-line
+                }
             }
         });
-    });
-
-    it.skip("interop with go", (done) => {
-        const store = new Level(path.join(__dirname, "test-repo", "datastore"));
-
-        pull(
-            store.query({}),
-            pull.map((e) => {
-                // console.log('=======')
-                // console.log(e)
-                // console.log(e.key.toBuffer().toString())
-                return new CID(1, "dag-cbor", e.key.toBuffer());
-            }),
-            pull.collect((err, cids) => {
-                expect(err).to.not.exist();
-                expect(cids[0].version).to.be.eql(0);
-                expect(cids).to.have.length(4);
-                done();
-            })
-        );
     });
 });

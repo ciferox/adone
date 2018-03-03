@@ -1,7 +1,7 @@
 const utils = require("../../utils");
 
 const {
-    net: { p2p: { CID }}
+    net: { p2p: { CID } }
 } = adone;
 
 module.exports = (dht) => {

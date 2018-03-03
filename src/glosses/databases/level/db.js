@@ -74,14 +74,15 @@ IteratorStream.prototype.destroy = IteratorStream.prototype._cleanup;
 const BINARY_CODECS = ["bson", "mpak"];
 
 export default class DB extends adone.event.Emitter {
-    constructor({ db = adone.database.level.backend.Leveldb, location, keyEncoding = "utf8", valueEncoding = "utf8", encryption } = {}) {
+    constructor({ db = adone.database.level.backend.Leveldb, location, keyEncoding = "utf8", valueEncoding = "utf8", encryption, ...backendOptions } = {}) {
         super();
 
-        if (!is.class(db) || !is.string(location)) {
+        if (!is.class(db) && !is.string(location)) {
             throw new error.DatabaseInitialization("Must provide a location for the database");
         }
 
         this.options = {
+            ...backendOptions,
             location,
             keyEncoding,
             valueEncoding,

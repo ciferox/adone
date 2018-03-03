@@ -5,89 +5,75 @@ const {
     datastore: { Key, backend: { Memory }, wrapper: { Tiered } }
 } = adone;
 
-describe.todo("datastore", "wrapper", "Tiered", () => {
+describe("datastore", "wrapper", "Tiered", () => {
     describe("all stores", () => {
         const ms = [];
         let store;
-        beforeEach(() => {
+        beforeEach(async () => {
             ms.push(new Memory());
             ms.push(new Memory());
             store = new Tiered(ms);
+            await store.open();
         });
 
-        it("put", (done) => {
+        it("put", async () => {
             const k = new Key("hello");
             const v = Buffer.from("world");
-            series([
-                (cb) => store.put(k, v, cb),
-                (cb) => parallel([
-                    (cb) => ms[0].get(k, cb),
-                    (cb) => ms[1].get(k, cb)
-                ], (err, res) => {
-                    assert.notExists(err);
-                    res.forEach((val) => {
-                        expect(val).to.be.eql(v);
-                    });
-                    cb();
-                })
-            ], done);
+            await store.put(k, v);
+            const res = await Promise.all([
+                ms[0].get(k),
+                ms[1].get(k)
+            ]);
+            res.forEach((val) => {
+                expect(val).to.be.eql(v);
+            });
         });
 
-        it("get and has, where available", (done) => {
+        it("get and has, where available", async () => {
             const k = new Key("hello");
             const v = Buffer.from("world");
 
-            series([
-                (cb) => ms[1].put(k, v, cb),
-                (cb) => store.get(k, (err, val) => {
-                    assert.notExists(err);
-                    expect(val).to.be.eql(v);
-                    cb();
-                }),
-                (cb) => store.has(k, (err, exists) => {
-                    assert.notExists(err);
-                    expect(exists).to.be.eql(true);
-                    cb();
-                })
-            ], done);
+            await ms[1].put(k, v);
+
+            const val = await store.get(k);
+            expect(val).to.be.eql(v);
+
+            const exists = await store.has(k);
+            expect(exists).to.be.eql(true);
         });
 
-        it("has and delete", (done) => {
+        it("has and delete", async () => {
             const k = new Key("hello");
             const v = Buffer.from("world");
-            series([
-                (cb) => store.put(k, v, cb),
-                (cb) => parallel([
-                    (cb) => ms[0].has(k, cb),
-                    (cb) => ms[1].has(k, cb)
-                ], (err, res) => {
-                    assert.notExists(err);
-                    expect(res).to.be.eql([true, true]);
-                    cb();
-                }),
-                (cb) => store.delete(k, cb),
-                (cb) => parallel([
-                    (cb) => ms[0].has(k, cb),
-                    (cb) => ms[1].has(k, cb)
-                ], (err, res) => {
-                    assert.notExists(err);
-                    expect(res).to.be.eql([false, false]);
-                    cb();
-                })
-            ], done);
+
+            await store.put(k, v);
+
+            let res = await Promise.all([
+                ms[0].has(k),
+                ms[1].has(k)
+            ]);
+            expect(res).to.be.eql([true, true]);
+            await store.delete(k);
+
+            res = await Promise.all([
+                ms[0].has(k),
+                ms[1].has(k)
+            ]);
+            expect(res).to.be.eql([false, false]);
         });
     });
 
     describe("inteface", () => {
         require("../interface")({
-            setup(callback) {
-                callback(null, new Tiered([
+            async setup() {
+                const ds = new Tiered([
                     new Memory(),
                     new Memory()
-                ]));
+                ]);
+                await ds.open();
+                return ds;
             },
-            teardown(callback) {
-                callback();
+            teardown() {
             }
         });
     });

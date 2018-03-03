@@ -41,7 +41,7 @@ describe("dht", "KadDHT", "rpc - handlers - GetProviders", () => {
         const dsKey = utils.bufferToKey(v.cid.buffer);
 
         waterfall([
-            (cb) => dht.datastore.put(dsKey, v.value, cb),
+            (cb) => dht.datastore.put(dsKey, v.value).catch(cb).then(() => cb()),
             (cb) => getProviders(dht)(peers[0], msg, cb)
         ], (err, response) => {
             assert.notExists(err);

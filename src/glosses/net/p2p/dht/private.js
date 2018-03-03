@@ -81,19 +81,12 @@ module.exports = (dht) => ({
         const dsKey = utils.bufferToKey(key);
 
         // 2. fetch value from ds
-        dht.datastore.has(dsKey, (err, exists) => {
-            if (err) {
-                return callback(err);
-            }
+        dht.datastore.has(dsKey).catch(callback).then((exists) => {
             if (!exists) {
                 return callback();
             }
 
-            dht.datastore.get(dsKey, (err, res) => {
-                if (err) {
-                    return callback(err);
-                }
-
+            dht.datastore.get(dsKey).catch(callback).then((res) => {
                 const rawRecord = res;
 
                 // 4. create record from the returned bytes
@@ -119,7 +112,7 @@ module.exports = (dht) => ({
                 if (is.nil(record.timeReceived) ||
                     utils.now() - record.timeReceived > c.MAX_RECORD_AGE) {
                     // 6. if: record is bad delete it and return
-                    return dht.datastore.delete(key, callback);
+                    return dht.datastore.delete(key).catch(callback).then(() => callback());
                 }
 
                 //    else: return good record
@@ -254,7 +247,7 @@ module.exports = (dht) => ({
      * @private
      */
     _putLocal(key, rec, callback) {
-        dht.datastore.put(utils.bufferToKey(key), rec, callback);
+        dht.datastore.put(utils.bufferToKey(key), rec).catch(callback).then(() => callback());
     },
     /**
      * Get the value to the given key.
@@ -325,7 +318,7 @@ module.exports = (dht) => ({
         dht._log("getLocal %s", key);
 
         waterfall([
-            (cb) => dht.datastore.get(utils.bufferToKey(key), cb),
+            (cb) => dht.datastore.get(utils.bufferToKey(key)).catch(cb).then((val) => cb(null, val)),
             (raw, cb) => {
                 dht._log("found %s in local datastore", key);
                 let rec;

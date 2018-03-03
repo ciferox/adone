@@ -2,7 +2,6 @@ const timeout = require("async/timeout");
 const rpc = require("./rpc");
 const c = require("./constants");
 const Message = require("./message");
-const utils = require("./utils");
 
 const {
     stream: { pull }

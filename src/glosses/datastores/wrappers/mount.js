@@ -12,14 +12,14 @@ const { asyncFilter, asyncSort, replaceStartWith } = utils;
  * A datastore that can combine multiple stores inside various key prefixs.
  */
 export default class MountDatastore {
-    constructor(mounts /* : Array<Mount<Value>> */) {
+    constructor(mounts) {
         this.mounts = mounts.slice();
     }
 
-    open(callback /* : Callback<void> */) /* : void */ {
-        each(this.mounts, (m, cb) => {
-            m.datastore.open(cb);
-        }, callback);
+    async open() {
+        for (const m of this.mounts) {
+            await m.datastore.open(); // eslint-disable-line
+        }
     }
 
     /**
@@ -29,7 +29,7 @@ export default class MountDatastore {
      * @param {Key} key
      * @returns {{Datastore, Key, Key}}
      */
-    _lookup(key /* : Key */) /* : ?{datastore: Datastore<Value>, mountpoint: Key, rest: Key} */ {
+    _lookup(key) {
         for (const mount of this.mounts) {
             if (mount.prefix.toString() === key.toString() || mount.prefix.isAncestorOf(key)) {
                 const s = replaceStartWith(key.toString(), mount.prefix.toString());
@@ -42,55 +42,51 @@ export default class MountDatastore {
         }
     }
 
-    put(key /* : Key */, value /* : Value */, callback /* : Callback<void> */) /* : void */ {
+    put(key, value) {
         const match = this._lookup(key);
         if (is.nil(match)) {
-            callback(new Error("No datastore mounted for this key"));
-            return;
+            throw new Error("No datastore mounted for this key");
         }
 
-        match.datastore.put(match.rest, value, callback);
+        return match.datastore.put(match.rest, value);
     }
 
-    get(key /* : Key */, callback /* : Callback<Value> */) /* : void */ {
+    get(key) {
         const match = this._lookup(key);
         if (is.nil(match)) {
-            callback(new Error("No datastore mounted for this key"));
-            return;
+            throw new Error("No datastore mounted for this key");
         }
 
-        match.datastore.get(match.rest, callback);
+        return match.datastore.get(match.rest);
     }
 
-    has(key /* : Key */, callback /* : Callback<bool> */) /* : void */ {
+    has(key) {
         const match = this._lookup(key);
         if (is.nil(match)) {
-            callback(null, false);
-            return;
+            return false;
         }
 
-        match.datastore.has(match.rest, callback);
+        return match.datastore.has(match.rest);
     }
 
-    delete(key /* : Key */, callback /* : Callback<void> */) /* : void */ {
+    delete(key) {
         const match = this._lookup(key);
         if (is.nil(match)) {
-            callback(new Error("No datastore mounted for this key"));
-            return;
+            throw new Error("No datastore mounted for this key");
         }
 
-        match.datastore.delete(match.rest, callback);
+        return match.datastore.delete(match.rest);
     }
 
-    close(callback /* : Callback<void> */) /* : void */ {
-        each(this.mounts, (m, cb) => {
-            m.datastore.close(cb);
-        }, callback);
+    async close() {
+        for (const m of this.mounts) {
+            await m.datastore.close(); // eslint-disable-line
+        }
     }
 
-    batch() /* : Batch<Value> */ {
+    batch() {
         const batchMounts = {};
-        const lookup = (key /* : Key */) /* : {batch: Batch<Value>, rest: Key} */ => {
+        const lookup = (key) => {
             const match = this._lookup(key);
             if (is.nil(match)) {
                 throw new Error("No datastore mounted for this key");
@@ -108,29 +104,31 @@ export default class MountDatastore {
         };
 
         return {
-            put: (key /* : Key */, value /* : Value */) /* : void */ => {
+            put: (key, value) => {
                 const match = lookup(key);
                 match.batch.put(match.rest, value);
             },
-            delete: (key /* : Key */) /* : void */ => {
+            delete: (key) => {
                 const match = lookup(key);
                 match.batch.delete(match.rest);
             },
-            commit: (callback /* : Callback<void> */) /* : void */ => {
-                each(Object.keys(batchMounts), (p, cb) => {
-                    batchMounts[p].commit(cb);
-                }, callback);
+            commit: async () => {
+                for (const p of Object.keys(batchMounts)) {
+                    await batchMounts[p].commit(); // eslint-disable-line
+                }
             }
         };
     }
 
-    query(q /* : Query<Value> */) /* : QueryResult<Value> */ {
-        const qs = this.mounts.map((m) => {
+    async query(q) {
+        const qs = [];
+
+        for (const m of this.mounts) {
             const ks = new Keytransform(m.datastore, {
-                convert: (key /* : Key */) /* : Key */ => {
+                convert: (key) => {
                     throw new Error("should never be called");
                 },
-                invert: (key /* : Key */) /* : Key */ => {
+                invert: (key) => {
                     return m.prefix.child(key);
                 }
             });
@@ -140,12 +138,13 @@ export default class MountDatastore {
                 prefix = replaceStartWith(q.prefix, m.prefix.toString());
             }
 
-            return ks.query({
+            // eslint-disable-next-line
+            qs.push(await ks.query({
                 prefix,
                 filters: q.filters,
                 keysOnly: q.keysOnly
-            });
-        });
+            }));
+        }
 
         let tasks = [pull.many(qs)];
 

@@ -1,15 +1,10 @@
-const series = require("async/series");
-const each = require("async/each");
-const map = require("async/map");
-const parallel = require("async/parallel");
-
 const {
     stream: { pull },
     datastore: { Key, backend: { Memory }, wrapper: { Keytransform } }
 } = adone;
 
-describe.todo("datastore", "wrapper", "KeyTransform", () => {
-    it("basic", (done) => {
+describe("datastore", "wrapper", "KeyTransform", () => {
+    it("basic", async () => {
         const mStore = new Memory();
         const transform = {
             convert(key) {
@@ -25,6 +20,7 @@ describe.todo("datastore", "wrapper", "KeyTransform", () => {
         };
 
         const kStore = new Keytransform(mStore, transform);
+        await kStore.open();
 
         const keys = [
             "foo",
@@ -35,39 +31,39 @@ describe.todo("datastore", "wrapper", "KeyTransform", () => {
             "foo/bar/baz/barb"
         ].map((s) => new Key(s));
 
-        series([
-            (cb) => each(keys, (k, cb) => {
-                kStore.put(k, Buffer.from(k.toString()), cb);
-            }, cb),
-            (cb) => parallel([
-                (cb) => map(keys, (k, cb) => {
-                    kStore.get(k, cb);
-                }, cb),
-                (cb) => map(keys, (k, cb) => {
-                    mStore.get(new Key("abc").child(k), cb);
-                }, cb)
-            ], (err, res) => {
-                assert.notExists(err);
-                expect(res[0]).to.eql(res[1]);
-                cb();
-            }),
-            (cb) => parallel([
-                (cb) => pull(mStore.query({}), pull.collect(cb)),
-                (cb) => pull(kStore.query({}), pull.collect(cb))
-            ], (err, res) => {
-                assert.notExists(err);
-                expect(res[0]).to.have.length(res[1].length);
+        const promises = [];
+        for (const k of keys) {
+            promises.push(kStore.put(k, Buffer.from(k.toString())));
+        }
 
-                res[0].forEach((a, i) => {
-                    const kA = a.key;
-                    const kB = res[1][i].key;
-                    expect(transform.invert(kA)).to.eql(kB);
-                    expect(kA).to.eql(transform.convert(kB));
-                });
+        await Promise.all(promises);
 
-                cb();
+        promises.length = 0;
+        for (const k of keys) {
+            promises.push(kStore.get(k));
+            promises.push(mStore.get(new Key("abc").child(k)));
+        }
+
+        let res = await Promise.all(promises);
+        expect(res[0]).to.eql(res[1]);
+
+        res = await Promise.all([
+            new Promise(async (resolve, reject) => {
+                pull(await mStore.query({}), pull.collect((err, result) => err ? reject(err) : resolve(result)));
             }),
-            (cb) => kStore.close(cb)
-        ], done);
+            new Promise(async (resolve, reject) => {
+                pull(await kStore.query({}), pull.collect((err, result) => err ? reject(err) : resolve(result)));
+            })
+        ]);
+
+        expect(res[0]).to.have.length(res[1].length);
+
+        res[0].forEach((a, i) => {
+            const kA = a.key;
+            const kB = res[1][i].key;
+            expect(transform.invert(kA)).to.eql(kB);
+            expect(kA).to.eql(transform.convert(kB));
+        });
+        await kStore.close();
     });
 });

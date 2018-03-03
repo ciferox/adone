@@ -33,36 +33,34 @@ export default class TieredDatastore {
         await Promise.all(promises);
     }
 
-    get(key, callback) {
+    async get(key) {
         const storeLength = this.stores.length;
-        let done = false;
         let i = 0;
-        whilst(() => !done && i < storeLength, (cb) => {
+
+        while (i < storeLength) {
             const store = this.stores[i++];
-            store.get(key, (err, res) => {
-                if (is.nil(err)) {
-                    done = true;
-                    return cb(null, res);
-                }
-                cb();
-            });
-        }, callback);
+            try {
+                const res = await store.get(key); // eslint-disable-line
+                return res;
+            } catch (err) {
+                //
+            }
+        }
     }
 
-    has(key, callback) {
+    async has(key) {
         const storeLength = this.stores.length;
-        let done = false;
         let i = 0;
-        whilst(() => !done && i < storeLength, (cb) => {
+
+        while (i < storeLength) {
             const store = this.stores[i++];
-            store.has(key, (err, exists) => {
-                if (is.nil(err)) {
-                    done = true;
-                    return cb(null, exists);
-                }
-                cb();
-            });
-        }, callback);
+            try {
+                const exists = await store.has(key); // eslint-disable-line
+                return exists;
+            } catch (err) {
+                //
+            }
+        }
     }
 
     async delete(key) {
@@ -91,15 +89,15 @@ export default class TieredDatastore {
             delete: (key) => {
                 batches.forEach((b) => b.delete(key));
             },
-            commit: (callback) => {
-                each(batches, (b, cb) => {
-                    b.commit(cb);
-                }, callback);
+            commit: async () => {
+                for (const b of batches) {
+                    await b.commit(); // eslint-disable-line
+                }
             }
         };
     }
 
-    query(q) {
+    async query(q) {
         return this.stores[this.stores.length - 1].query(q);
     }
 }

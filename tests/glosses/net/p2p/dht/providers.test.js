@@ -26,7 +26,7 @@ describe("dht", "KadDHT", "Providers", function () {
         infos = util.makePeers(3);
     });
 
-    it("simple add and get of providers", (done) => {
+    it.only("simple add and get of providers", (done) => {
         const providers = new Providers(new MemoryStore(), infos[2].id);
 
         const cid = new CID("QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n");
@@ -110,11 +110,14 @@ describe("dht", "KadDHT", "Providers", function () {
     });
 
     // slooow so only run when you need to
-    it("many", (done) => {
+    it("many", async (done) => {
         const p = path.join(
             os.tmpdir(), (Math.random() * 100).toString()
         );
-        const store = new LevelStore(p);
+        const store = new LevelStore({
+            location: p
+        });
+        await store.open();
         const providers = new Providers(store, infos[2].id, 10);
 
         const peers = util.makePeers(600);

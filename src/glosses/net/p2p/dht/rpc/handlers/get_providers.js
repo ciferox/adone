@@ -31,12 +31,10 @@ module.exports = (dht) => {
         const dsKey = utils.bufferToKey(cid.buffer);
 
         parallel([
-            (cb) => dht.datastore.has(dsKey, (err, exists) => {
-                if (err) {
-                    log.error("Failed to check datastore existence", err);
-                    return cb(null, false);
-                }
-
+            (cb) => dht.datastore.has(dsKey).catch((err) => {
+                log.error("Failed to check datastore existence", err);
+                return cb(null, false);
+            }).then((exists) => {
                 cb(null, exists);
             }),
             (cb) => dht.providers.getProviders(cid, cb),

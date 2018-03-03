@@ -10,14 +10,14 @@ export default class MemoryDatastore {
         this.data = {};
     }
 
-    open() {
+    async open() {
     }
 
-    put(key, val) {
+    async put(key, val) {
         this.data[key.toString()] = val;
     }
 
-    get(key) {
+    async get(key) {
         if (!this.has(key)) {
             throw new Error("No value");
         }
@@ -25,11 +25,11 @@ export default class MemoryDatastore {
         return this.data[key.toString()];
     }
 
-    has(key) {
+    async has(key) {
         return !is.undefined(this.data[key.toString()]);
     }
 
-    delete(key) {
+    async delete(key) {
         delete this.data[key.toString()];
     }
 
@@ -44,7 +44,7 @@ export default class MemoryDatastore {
             delete(key) {
                 deletes.push(key);
             },
-            commit: () => {
+            commit: async () => {
                 puts.forEach((v) => {
                     this.data[v[0].toString()] = v[1];
                 });

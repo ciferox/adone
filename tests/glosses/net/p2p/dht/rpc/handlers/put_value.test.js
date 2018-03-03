@@ -43,7 +43,7 @@ describe("dht", "KadDHT", "rpc - handlers - PutValue", () => {
             expect(response).to.be.eql(msg);
 
             const key = utils.bufferToKey(Buffer.from("hello"));
-            dht.datastore.get(key, (err, res) => {
+            dht.datastore.get(key).then((res) => {
                 assert.notExists(err);
                 const rec = Record.deserialize(res);
 

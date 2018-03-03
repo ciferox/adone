@@ -1,81 +1,58 @@
-const series = require("async/series");
-const parallel = require("async/parallel");
-const waterfall = require("async/waterfall");
-
 const {
     datastore: { Key, backend: { Memory }, wrapper: { Sharding }, shard }
 } = adone;
 
-describe.todo("datastore", "wrapper", "Sharding", () => {
-    it("create", (done) => {
+describe("datastore", "wrapper", "Sharding", () => {
+    it("create", async () => {
         const ms = new Memory();
         const sh = new shard.NextToLast(2);
 
-        waterfall([
-            (cb) => Sharding.create(ms, sh, cb),
-            (cb) => parallel([
-                (cb) => ms.get(new Key(shard.SHARDING_FN), cb),
-                (cb) => ms.get(new Key(shard.README_FN), cb)
-            ], cb),
-            (res, cb) => {
-                expect(
-                    res[0].toString()
-                ).to.eql(`${sh.toString()}\n`);
-                expect(
-                    res[1].toString()
-                ).to.eql(shard.readme);
-                cb();
-            }
-        ], done);
+        await Sharding.create(ms, sh);
+
+        const res = await Promise.all([
+            ms.get(new Key(shard.SHARDING_FN)),
+            ms.get(new Key(shard.README_FN))
+        ]);
+
+        expect(
+            res[0].toString()
+        ).to.eql(`${sh.toString()}\n`);
+        expect(
+            res[1].toString()
+        ).to.eql(shard.readme);
     });
 
-    it("open - empty", (done) => {
+    it("open - empty", async () => {
         const ms = new Memory();
 
-        Sharding.open(ms, (err, ss) => {
-            assert.exists(err);
-            assert.notExists(ss);
-            done();
-        });
+        await assert.throws(async () => Sharding.open(ms));
     });
 
-    it("open - existing", (done) => {
+    it("open - existing", async () => {
         const ms = new Memory();
         const sh = new shard.NextToLast(2);
 
-        waterfall([
-            (cb) => Sharding.create(ms, sh, cb),
-            (cb) => Sharding.open(ms, cb)
-        ], done);
+        await Sharding.create(ms, sh);
+        await Sharding.open(ms);
     });
 
-    it("basics", (done) => {
+    it("basics", async () => {
         const ms = new Memory();
         const sh = new shard.NextToLast(2);
-        Sharding.createOrOpen(ms, sh, (err, ss) => {
-            assert.notExists(err);
-            assert.exists(ss);
-            const store = ss;
+        const store = await Sharding.createOrOpen(ms, sh);
 
-            series([
-                (cb) => store.put(new Key("hello"), Buffer.from("test"), cb),
-                (cb) => ms.get(new Key("ll").child(new Key("hello")), (err, res) => {
-                    assert.notExists(err);
-                    expect(res).to.eql(Buffer.from("test"));
-                    cb();
-                })
-            ], done);
-        });
+        await store.put(new Key("hello"), Buffer.from("test"));
+        const res = await ms.get(new Key("ll").child(new Key("hello")));
+        expect(res).to.eql(Buffer.from("test"));
     });
 
     describe("interface", () => {
         require("../interface")({
-            setup(callback) {
+            async setup() {
                 const sh = new shard.NextToLast(2);
-                Sharding.createOrOpen(new Memory(), sh, callback);
+                return Sharding.createOrOpen(new Memory(), sh);
             },
-            teardown(callback) {
-                callback();
+            teardown() {
             }
         });
     });

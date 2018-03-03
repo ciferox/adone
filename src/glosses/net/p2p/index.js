@@ -15,7 +15,6 @@ adone.lazify({
     dht: "./dht",
     switch: "./switch",
     Ping: "./ping",
-    crypto: "./crypto",
     transport: "./transports",
     multistream: "./multistream",
     multiplex: "./multiplex",

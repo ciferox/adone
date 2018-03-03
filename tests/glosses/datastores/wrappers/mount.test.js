@@ -1,140 +1,112 @@
-const series = require("async/series");
-
 const {
     stream: { pull },
     datastore: { Key, backend: { Memory }, wrapper: { Mount } }
 } = adone;
 
-describe.todo("datastore", "wrapper", "Mount", () => {
-    it("put - no mount", (done) => {
+describe("datastore", "wrapper", "Mount", () => {
+    it("put - no mount", async () => {
         const m = new Mount([]);
+        await m.open();
 
-        m.put(new Key("hello"), Buffer.from("foo"), (err) => {
-            expect(err).to.be.an("Error");
-            done();
-        });
+        await assert.throws(async () => m.put(new Key("hello"), Buffer.from("foo")));
     });
 
-    it("put - wrong mount", (done) => {
+    it("put - wrong mount", async () => {
         const m = new Mount([{
             datastore: new Memory(),
             prefix: new Key("cool")
         }]);
-
-        m.put(new Key("/fail/hello"), Buffer.from("foo"), (err) => {
-            expect(err).to.be.an("Error");
-            done();
-        });
+        await m.open();
+        await assert.throws(async () => m.put(new Key("/fail/hello"), Buffer.from("foo")));
     });
 
-    it("put", (done) => {
+    it("put", async () => {
         const mds = new Memory();
         const m = new Mount([{
             datastore: mds,
             prefix: new Key("cool")
         }]);
+        await m.open();
 
         const val = Buffer.from("hello");
-        series([
-            (cb) => m.put(new Key("/cool/hello"), val, cb),
-            (cb) => mds.get(new Key("/hello"), (err, res) => {
+        await m.put(new Key("/cool/hello"), val);
+        const res = await mds.get(new Key("/hello"));
+        expect(res).to.eql(val);
+    });
+
+    it("get", async () => {
+        const mds = new Memory();
+        const m = new Mount([{
+            datastore: mds,
+            prefix: new Key("cool")
+        }]);
+        await m.open();
+
+        const val = Buffer.from("hello");
+        await mds.put(new Key("/hello"), val);
+        const res = await m.get(new Key("/cool/hello"));
+        expect(res).to.eql(val);
+    });
+
+    it("has", async () => {
+        const mds = new Memory();
+        const m = new Mount([{
+            datastore: mds,
+            prefix: new Key("cool")
+        }]);
+        await m.open();
+
+        const val = Buffer.from("hello");
+        await mds.put(new Key("/hello"), val);
+        const exists = await m.has(new Key("/cool/hello"));
+        expect(exists).to.eql(true);
+    });
+
+    it("delete", async () => {
+        const mds = new Memory();
+        const m = new Mount([{
+            datastore: mds,
+            prefix: new Key("cool")
+        }]);
+        await m.open();
+
+        const val = Buffer.from("hello");
+        await m.put(new Key("/cool/hello"), val);
+        await m.delete(new Key("/cool/hello"));
+        let exists = await m.has(new Key("/cool/hello"));
+        expect(exists).to.eql(false);
+
+        exists = await mds.has(new Key("/hello"));
+        expect(exists).to.eql(false);
+    });
+
+    it("query simple", async (done) => {
+        const mds = new Memory();
+        const m = new Mount([{
+            datastore: mds,
+            prefix: new Key("cool")
+        }]);
+        await m.open();
+
+        const val = Buffer.from("hello");
+        await m.put(new Key("/cool/hello"), val);
+        pull(
+            await m.query({ prefix: "/cool" }),
+            pull.collect((err, res) => {
                 assert.notExists(err);
-                expect(res).to.eql(val);
-                cb();
+                expect(res).to.eql([{
+                    key: new Key("/cool/hello"),
+                    value: val
+                }]);
+                done();
             })
-        ], done);
-    });
-
-    it("get", (done) => {
-        const mds = new Memory();
-        const m = new Mount([{
-            datastore: mds,
-            prefix: new Key("cool")
-        }]);
-
-        const val = Buffer.from("hello");
-        series([
-            (cb) => mds.put(new Key("/hello"), val, cb),
-            (cb) => m.get(new Key("/cool/hello"), (err, res) => {
-                assert.notExists(err);
-                expect(res).to.eql(val);
-                cb();
-            })
-        ], done);
-    });
-
-    it("has", (done) => {
-        const mds = new Memory();
-        const m = new Mount([{
-            datastore: mds,
-            prefix: new Key("cool")
-        }]);
-
-        const val = Buffer.from("hello");
-        series([
-            (cb) => mds.put(new Key("/hello"), val, cb),
-            (cb) => m.has(new Key("/cool/hello"), (err, exists) => {
-                assert.notExists(err);
-                expect(exists).to.eql(true);
-                cb();
-            })
-        ], done);
-    });
-
-    it("delete", (done) => {
-        const mds = new Memory();
-        const m = new Mount([{
-            datastore: mds,
-            prefix: new Key("cool")
-        }]);
-
-        const val = Buffer.from("hello");
-        series([
-            (cb) => m.put(new Key("/cool/hello"), val, cb),
-            (cb) => m.delete(new Key("/cool/hello"), cb),
-            (cb) => m.has(new Key("/cool/hello"), (err, exists) => {
-                assert.notExists(err);
-                expect(exists).to.eql(false);
-                cb();
-            }),
-            (cb) => mds.has(new Key("/hello"), (err, exists) => {
-                assert.notExists(err);
-                expect(exists).to.eql(false);
-                cb();
-            })
-        ], done);
-    });
-
-    it("query simple", (done) => {
-        const mds = new Memory();
-        const m = new Mount([{
-            datastore: mds,
-            prefix: new Key("cool")
-        }]);
-
-        const val = Buffer.from("hello");
-        series([
-            (cb) => m.put(new Key("/cool/hello"), val, cb),
-            (cb) => {
-                pull(
-                    m.query({ prefix: "/cool" }),
-                    pull.collect((err, res) => {
-                        assert.notExists(err);
-                        expect(res).to.eql([{
-                            key: new Key("/cool/hello"),
-                            value: val
-                        }]);
-                        cb();
-                    })
-                );
-            }
-        ], done);
+        );
     });
 
     describe("interface", () => {
         require("../interface")({
-            setup(callback) {
-                callback(null, new Mount([{
+            async setup() {
+                const ds = new Mount([{
                     prefix: new Key("/a"),
                     datastore: new Memory()
                 }, {
@@ -143,10 +115,11 @@ describe.todo("datastore", "wrapper", "Mount", () => {
                 }, {
                     prefix: new Key("/q"),
                     datastore: new Memory()
-                }]));
+                }]);
+                await ds.open();
+                return ds;
             },
-            teardown(callback) {
-                callback();
+            teardown() {
             }
         });
     });
