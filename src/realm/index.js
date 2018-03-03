@@ -20,6 +20,20 @@ adone.lazify({
     Keychain: "./keychain"
 }, adone.asNamespace(exports), require);
 
+const REQUIRED_PATHS = [
+    adone.realm.config.RUNTIME_PATH,
+    adone.realm.config.VAR_PATH
+];
+
+export const check = async () => {
+    for (const p of REQUIRED_PATHS) {
+        // eslint-disable-next-line
+        if (!(await fs.exists(p))) {
+            throw new adone.error.IllegalState("Realm is not initialized");
+        }
+    }
+};
+
 export const getManager = async () => {
     if (is.null(adone.runtime.realm)) {
         adone.runtime.realm = await adone.realm.Manager.create();

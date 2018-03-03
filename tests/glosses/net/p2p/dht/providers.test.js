@@ -26,7 +26,7 @@ describe("dht", "KadDHT", "Providers", function () {
         infos = util.makePeers(3);
     });
 
-    it.only("simple add and get of providers", (done) => {
+    it("simple add and get of providers", (done) => {
         const providers = new Providers(new MemoryStore(), infos[2].id);
 
         const cid = new CID("QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n");

@@ -240,7 +240,7 @@ export class Switch extends adone.event.Emitter {
             if (!this.muxedConns[b58Id]) {
                 if (!this.conns[b58Id]) {
                     if (!this.hasTransports()) {
-                        return reject(new Error("No transports registered, connect not possible"));
+                        return reject(new adone.error.Connect("No transports registered, connect not possible"));
                     }
 
                     const tKeys = this.availableTransports(pi);
@@ -251,11 +251,11 @@ export class Switch extends adone.event.Emitter {
                         let transport = key;
                         if (is.undefined(transport)) {
                             if (circuitTried) {
-                                return reject(new Error("Circuit already tried!"));
+                                return reject(new adone.error.Connect("Circuit already tried!"));
                             }
 
                             if (!this.tm.transports[Circuit.tag]) {
-                                return reject(new Error("Circuit not enabled!"));
+                                return reject(new adone.error.Connect("Circuit not enabled!"));
                             }
 
                             // Falling back to dialing over circuit

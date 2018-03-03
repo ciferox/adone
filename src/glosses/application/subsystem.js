@@ -4,9 +4,11 @@ const {
     std,
     tag,
     error,
+    meta: { reflect },
     application: {
         humanizeState,
-        STATE
+        STATE,
+        SUBSYSTEM_ANNOTATION
     }
 } = adone;
 
@@ -16,6 +18,22 @@ const PARENT_SYMBOL = Symbol();
 const OWNED_SYMBOL = Symbol();
 const STATE_SYMBOL = Symbol.for("application.Subsystem#state");
 const SUBSYSTEMS_SYMBOL = Symbol.for("application.Subsystem#subsystems");
+
+const getSortedList = (subsystem) => {
+    const subsystems = subsystem[SUBSYSTEMS_SYMBOL].slice();
+    const edges = [];
+    for (const sysInfo of subsystems) {
+        const sysMeta = reflect.getMetadata(SUBSYSTEM_ANNOTATION, sysInfo.instance.constructor);
+        if (sysMeta) {
+            const deps = adone.util.arrify(sysMeta.dependencies);
+            for (const name of deps) {
+                edges.push([subsystem.getSubsystemInfo(name), sysInfo]);
+            }
+        }
+    }
+    return edges.length > 0 ? adone.util.toposort.array(subsystems, edges) : subsystems;
+};
+
 
 export default class Subsystem extends adone.event.AsyncEmitter {
     constructor({ name } = {}) {
@@ -140,7 +158,8 @@ export default class Subsystem extends adone.event.AsyncEmitter {
      * @returns {Promise<void>}
      */
     async configureSubsystems() {
-        for (const sysInfo of this[SUBSYSTEMS_SYMBOL]) {
+        const subsystems = getSortedList(this);
+        for (const sysInfo of subsystems) {
             await this._configureSubsystem(sysInfo); // eslint-disable-line
         }
     }
@@ -151,7 +170,8 @@ export default class Subsystem extends adone.event.AsyncEmitter {
      * @returns {Promise<void>}
      */
     async initializeSubsystems() {
-        for (const sysInfo of this[SUBSYSTEMS_SYMBOL]) {
+        const subsystems = getSortedList(this);
+        for (const sysInfo of subsystems) {
             await this._initializeSubsystem(sysInfo); // eslint-disable-line
         }
     }
@@ -161,12 +181,21 @@ export default class Subsystem extends adone.event.AsyncEmitter {
      *
      * @returns {Promise<void>}
      */
-    async uninitializeSubsystems() {
-        for (let i = this[SUBSYSTEMS_SYMBOL].length; --i >= 0;) {
-            await this._uninitializeSubsystem(this[SUBSYSTEMS_SYMBOL][i]); // eslint-disable-line
+    async uninitializeSubsystems({ ignoreErrors = false, errorLogger = adone.logError } = {}) {
+        const subsystems = getSortedList(this).reverse();
+        for (const sysInfo of subsystems) {
+            try {
+                await this._uninitializeSubsystem(sysInfo); // eslint-disable-line
+            } catch (err) {
+                if (ignoreErrors) {
+                    is.function(errorLogger) && errorLogger(err);
+                }
+                throw err;
+            }
         }
     }
 
+    // TODO: Incorrect implementation
     /**
      * Reinitializes all subsystems.
      *

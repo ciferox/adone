@@ -17,13 +17,15 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             Class.prototype[this[tagName]] = TAG_MARKER;
         },
         has(obj, tagName) {
-            return obj != null && typeof obj === "object" && obj[this[tagName]] === TAG_MARKER;
+            return obj != null && typeof obj === "object" && this[tagName] !== undefined && obj[this[tagName]] === TAG_MARKER;
         },
         define(tagName) {
             this[tagName] = Symbol();
         },
 
         // Common tags
+        EMITTER: Symbol(),
+        ASYNC_EMITTER: Symbol(),
         SUBSYSTEM: Symbol(),
         APPLICATION: Symbol(),
         CLI_APPLICATION: Symbol(),
@@ -247,13 +249,24 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
                     enumerable: true,
                     writable: true,
                     value: null
+                },
+                isOmnitron: {
+                    enumerable: true,
+                    writable: true,
+                    value: false
                 }
             });
 
             adone.lazify({
                 term: () => new adone.terminal.Terminal(),
                 logger: () => adone.application.Logger.default(),
-                netron: () => new adone.netron.Netron()
+                netron: () => new adone.netron.Netron(),
+                netron2: () => {
+                    const peerInfo = adone.runtime.isOmnitron
+                        ? adone.omnitron2.dispatcher.omnitronPeerInfo
+                        : adone.net.p2p.PeerInfo.create(adone.realm.config.identity.client);
+                    return new adone.netron.Netron(peerInfo);
+                }
             }, runtime);
 
             return runtime;

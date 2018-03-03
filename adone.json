@@ -574,11 +574,11 @@
                             "dst": "lib/glosses/multi/address",
                             "namespace": "address"
                         },
-                        "addr": {
+                        "address2": {
                             "description": "Multi address format implementation",
-                            "src": "src/glosses/multi/addr/**/*.js",
-                            "dst": "lib/glosses/multi/addr",
-                            "namespace": "addr"
+                            "src": "src/glosses/multi/address2/**/*.js",
+                            "dst": "lib/glosses/multi/address2",
+                            "namespace": "address2"
                         },
                         "base": {
                             "description": "Multibase implementation",

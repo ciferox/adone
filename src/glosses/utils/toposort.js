@@ -1,4 +1,6 @@
-const { is } = adone;
+const {
+    is
+} = adone;
 
 const uniqueNodes = (arr) => {
     const res = new Set();

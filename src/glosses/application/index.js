@@ -51,7 +51,7 @@ export const EXIT_SUCCESS = 0;
 export const EXIT_ERROR = 1;
 
 // Decorators
-const SUBSYSTEM_ANNOTATION = "subsystem";
+export const SUBSYSTEM_ANNOTATION = "subsystem";
 
 const SubsystemDecorator = (sysInfo = {}) => (target) => {
     const info = adone.meta.reflect.getMetadata(SUBSYSTEM_ANNOTATION, target);

@@ -5,8 +5,9 @@ const {
     is,
     error,
     std,
-    netron,
-    omnitron,
+    multi,
+    netron2,
+    omnitron2,
     runtime
 } = adone;
 
@@ -14,24 +15,40 @@ export default class Dispatcher extends Subsystem {
     constructor() {
         super();
 
-        this.peer = null;
-        this.descriptors = {
-            stodut: null,
-            stderr: null
-        };
-        
-        runtime.netron.on("peer offline", (peer) => {
-            if (!is.null(this.peer) && this.peer.uid === peer.uid) {
-                this.peer = null;
-            }
-        });
+        // this.peer = null;
+        // this.descriptors = {
+        //     stodut: null,
+        //     stderr: null
+        // };
+
+        // runtime.netron.on("peer offline", (peer) => {
+        //     if (!is.null(this.peer) && this.peer.uid === peer.uid) {
+        //         this.peer = null;
+        //     }
+        // });
+    }
+
+    get omnitronPeerInfo() {
+        if (is.undefined(this._peerInfo)) {
+            this._peerInfo = adone.net.p2p.PeerInfo.create(adone.realm.config.identity.server);
+            this._peerInfo.multiaddrs.add(multi.address2.fromNodeAddress(omnitron2.defaultAddress));
+        }
+        return this._peerInfo;
+    }
+
+    get netron() {
+        if (is.undefined(this._netron)) {
+            this._netron = new netron2.Netron(adone.net.p2p.PeerInfo.create(adone.realm.config.identity.client));
+            this._netron.createNetCore("default");
+        }
+        return this._netron;
     }
 
     async uninitialize() {
         if (this.db) {
             await this.db.close();
         }
-     
+
         return this.disconnect();
     }
 
@@ -71,7 +88,7 @@ export default class Dispatcher extends Subsystem {
             let peer = null;
             try {
                 peer = await runtime.netron.connect({
-                    port: omnitron.port
+                    port: omnitron2.port
                 });
                 status = _counter >= 1 ? 0 : 1;
             } catch (err) {
@@ -152,13 +169,13 @@ export default class Dispatcher extends Subsystem {
                 });
             });
         }
-        return adone.application.run(omnitron.Omnitron);
+        return adone.application.run(omnitron2.Omnitron);
     }
 
     async stopOmnitron() {
         const isActive = await this.isOmnitronActive();
         if (isActive) {
-            if (await adone.fs.exists(adone.realm.config.omnitron.pidFilePath)) {
+            if (await adone.fs.exists(adone.realm.config.omnitron2.pidFilePath)) {
                 try {
                     const checkAlive = async (pid) => {
                         let elapsed = 0;
@@ -174,7 +191,7 @@ export default class Dispatcher extends Subsystem {
                             await adone.promise.delay(100); // eslint-disable-line
                         }
                     };
-                    const pid = parseInt(std.fs.readFileSync(adone.realm.config.omnitron.pidFilePath).toString());
+                    const pid = parseInt(std.fs.readFileSync(adone.realm.config.omnitron2.pidFilePath).toString());
                     if (is.windows) {
                         try {
                             await this.connectLocal({
@@ -228,24 +245,17 @@ export default class Dispatcher extends Subsystem {
     }
 
     async isOmnitronActive() {
-        const n = new netron.Netron({
-            connect: {
-                retries: 1,
-                minTimeout: 10
-            }
-        });
-        let isOK = false;
         try {
-            await n.connect({
-                port: omnitron.port
-            });
-            await n.disconnect();
-            isOK = true;
+            const peer = await this.netron.connect("default", this.omnitronPeerInfo);
+            adone.logTrace(peer);
+            await this.netron.disconnectPeer(peer);
+            return true;
         } catch (err) {
-            // adone.log(err);
+            if (err instanceof adone.error.Connect) {
+                return false;
+            }
+            throw err;
         }
-
-        return isOK;
     }
 
     async ping() {
@@ -258,7 +268,7 @@ export default class Dispatcher extends Subsystem {
 
     async registerService(serviceName) {
         try {
-            const systemDb = new omnitron.DB();
+            const systemDb = new omnitron2.DB();
             await systemDb.open();
             await systemDb.registerService(serviceName);
             await systemDb.close();
@@ -272,7 +282,7 @@ export default class Dispatcher extends Subsystem {
 
     async unregisterService(serviceName) {
         try {
-            const systemDb = new omnitron.DB();
+            const systemDb = new omnitron2.DB();
             await systemDb.open();
             await systemDb.unregisterService(serviceName);
             await systemDb.close();
@@ -294,7 +304,7 @@ export default class Dispatcher extends Subsystem {
             });
             config = await this.getInterface("omnitron").getConfiguration();
         } else {
-            this.db = await adone.omnitron.DB.open();
+            this.db = await adone.omnitron2.DB.open();
             config = await this.db.getConfiguration();
         }
         return config;

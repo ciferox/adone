@@ -5,8 +5,8 @@ const {
     is,
     std,
     fs,
-    netron: { Context, Public },
-    omnitron,
+    netron2: { Context, Public },
+    realm,
     runtime
 } = adone;
 
@@ -23,19 +23,15 @@ const CORE_SUBSYSTEMS = [
 })
 export default class Omnitron extends application.Application {
     async configure() {
-        // Force create home and runtime directories
-        await fs.mkdirp(adone.realm.config.runtimePath);
+        // Declare omnitron environment
+        adone.runtime.isOmnitron = true;
 
-        // Add subsystems
-        for (const name of CORE_SUBSYSTEMS) {
-            // eslint-disable-next-line
-            this.addSubsystem({
-                subsystem: std.path.join(__dirname, "subsystems", name),
-                name,
-                bind: true,
-                group: "core"
-            });
-        }
+        await realm.check();
+
+        await this.addSubsystemsFrom(std.path.join(__dirname, "subsystems"), {
+            bind: true,
+            group: "core"
+        });
 
         if (!is.windows) {
             this.exitOnSignal("SIGQUIT", "SIGTERM", "SIGINT");
@@ -49,12 +45,7 @@ export default class Omnitron extends application.Application {
     }
 
     async initialize() {
-        this.db = await omnitron.DB.open();
-        adone.logInfo("Database opened");
-
-        await runtime.netron.attachContext(this, "omnitron");
-        adone.logInfo("Omnitron context attached");
-
+        await this.initializeSubsystems();
         await this.createPidFile();
     }
 
@@ -74,22 +65,9 @@ export default class Omnitron extends application.Application {
         // Unitialize services in omnitron group
         // ...
 
-        // Uninitialize managers in right order
-        for (const name of CORE_SUBSYSTEMS) {
-            try {
-                await this.uninitializeSubsystem(name); // eslint-disable-line
-            } catch (err) {
-                adone.logError(err);
-            }
-        }
-
-        if (runtime.netron.hasContext("omnitron")) {
-            await runtime.netron.detachContext("omnitron");
-            adone.logInfo("Omnitron context detached");
-        }
-
-        await this.db.close();
-        adone.logInfo("Database closed");
+        await this.uninitializeSubsystems({
+            ignoreErrors: true
+        });
 
         adone.logInfo("Omnitron stopped");
     }
