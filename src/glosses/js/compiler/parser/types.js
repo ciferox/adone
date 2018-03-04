@@ -326,6 +326,9 @@ export type VariableDeclarator = NodeBase & {
   type: "VariableDeclarator",
   id: Pattern,
   init: ?Expression,
+
+  // TypeScript only:
+  definite?: true,
 };
 
 // Misc
@@ -696,6 +699,7 @@ export type ClassProperty = ClassMemberBase & {
 
   // TypeScript only: (TODO: Not in spec)
   readonly?: true,
+  definite?: true,
 };
 
 export type ClassPrivateProperty = NodeBase & {
@@ -1064,6 +1068,8 @@ export type TsType =
   | TsArrayType
   | TsTupleType
   | TsUnionOrIntersectionType
+  | TsConditionalType
+  | TsInferType
   | TsParenthesizedType
   | TsTypeOperator
   | TsIndexedAccessType
@@ -1152,6 +1158,19 @@ export type TsUnionType = TsUnionOrIntersectionTypeBase & {
 
 export type TsIntersectionType = TsUnionOrIntersectionTypeBase & {
   type: "TSIntersectionType",
+};
+
+export type TsConditionalType = TsTypeBase & {
+  type: "TSConditionalType",
+  checkType: TsType,
+  extendsType: TsType,
+  trueType: TsType,
+  falseType: TsType,
+};
+
+export type TsInferType = TsTypeBase & {
+  type: "TSInferType",
+  typeParameter: TypeParameter,
 };
 
 export type TsParenthesizedType = TsTypeBase & {
@@ -1297,4 +1316,13 @@ export type TsTypeAssertion = TsTypeAssertionLikeBase & {
 export type TsNonNullExpression = NodeBase & {
   type: "TSNonNullExpression",
   expression: Expression,
+};
+
+// ================
+// Other
+// ================
+
+export type ParseSubscriptState = {
+  optionalChainMember: boolean,
+  stop: boolean,
 };

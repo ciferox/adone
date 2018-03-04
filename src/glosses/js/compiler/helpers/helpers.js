@@ -1,8 +1,6 @@
 /* eslint max-len: "off" */
 
-const {
-  js: { compiler: { template } }
-} = adone;
+import template from "@babel/template";
 
 const helpers = {};
 export default helpers;

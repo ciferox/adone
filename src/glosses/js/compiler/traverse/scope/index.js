@@ -8,6 +8,7 @@ const {
   vendor: { lodash: { includes, repeat, defaults } },
   util: { globals }
 } = adone;
+
 // Recursively gathers the identifying names of a node.
 function gatherNodeParts(node: Object, parts: Array) {
   if (t.isModuleDeclaration(node)) {
@@ -209,7 +210,7 @@ export default class Scope {
    * Generate a unique identifier and add it to the current scope.
    */
 
-  generateDeclaredUidIdentifier(name: string = "temp") {
+  generateDeclaredUidIdentifier(name?: string) {
     const id = this.generateUidIdentifier(name);
     this.push({ id });
     return t.cloneNode(id);
@@ -219,7 +220,7 @@ export default class Scope {
    * Generate a unique identifier.
    */
 
-  generateUidIdentifier(name: string = "temp") {
+  generateUidIdentifier(name?: string) {
     return t.identifier(this.generateUid(name));
   }
 

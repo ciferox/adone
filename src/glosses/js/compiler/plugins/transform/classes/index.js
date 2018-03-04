@@ -2,7 +2,7 @@ import LooseTransformer from "./loose";
 import VanillaTransformer from "./vanilla";
 
 const {
-    js: { compiler: { types: t, helper: { annotateAsPure, functionName } } },
+    js: { compiler: { types: t, helper: { annotateAsPure, functionName: nameFunction, splitExportDeclaration } } },
     util: { globals }
 } = adone;
 
@@ -24,22 +24,10 @@ export default function (api, options) {
     return {
         visitor: {
             ExportDefaultDeclaration(path) {
-                if (!path.get("declaration").isClassDeclaration()) {
-                    return;
+                if (!path.get("declaration").isClassDeclaration()) { 
+                    return; 
                 }
-
-                const { node } = path;
-                const ref =
-                    node.declaration.id || path.scope.generateUidIdentifier("class");
-                node.declaration.id = ref;
-
-                // Split the class declaration and the export into two separate statements.
-                path.replaceWith(node.declaration);
-                path.insertAfter(
-                    t.exportNamedDeclaration(null, [
-                        t.exportSpecifier(t.cloneNode(ref), t.identifier("default"))
-                    ]),
-                );
+                splitExportDeclaration(path);
             },
 
             ClassDeclaration(path) {
@@ -56,11 +44,11 @@ export default function (api, options) {
 
             ClassExpression(path, state) {
                 const { node } = path;
-                if (node[VISITED]) {
-                    return;
+                if (node[VISITED]) { 
+                    return; 
                 }
 
-                const inferred = functionName(path);
+                const inferred = nameFunction(path);
                 if (inferred && inferred !== node) {
                     path.replaceWith(inferred);
                     return;

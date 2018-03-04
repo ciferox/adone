@@ -15,6 +15,7 @@ import { makeWeakCache, type CacheConfigurator } from "./caching";
 import { getEnv } from "./helpers/environment";
 import { validate } from "./validation/options";
 import { validatePluginObject } from "./validation/plugins";
+import makeAPI from "./helpers/config-api";
 
 const {
   js: { compiler: { traverse } },
@@ -111,7 +112,7 @@ export default function loadConfig(inputOpts: mixed): ResolvedConfig | null {
           if (ignored) return true;
 
           preset.options.forEach(opts => {
-            merge(optionDefaults, opts);
+            mergeOptions(optionDefaults, opts);
           });
         }
       }
@@ -131,7 +132,7 @@ export default function loadConfig(inputOpts: mixed): ResolvedConfig | null {
     if (ignored) return null;
 
     configChain.options.forEach(opts => {
-      merge(options, opts);
+      mergeOptions(options, opts);
     });
   } catch (e) {
     // There are a few case where thrown errors will try to annotate themselves multiple times, so
@@ -143,7 +144,8 @@ export default function loadConfig(inputOpts: mixed): ResolvedConfig | null {
     throw e;
   }
 
-  const opts: Object = merge(optionDefaults, options);
+  const opts: Object = optionDefaults;
+  mergeOptions(opts, options);
 
   // Tack the passes onto the object itself so that, if this object is passed back to Babel a second time,
   // it will be in the right structure to not change behavior.
@@ -163,6 +165,33 @@ export default function loadConfig(inputOpts: mixed): ResolvedConfig | null {
   };
 }
 
+function mergeOptions(
+  target: ValidatedOptions,
+  source: ValidatedOptions,
+): void {
+  for (const k of Object.keys(source)) {
+    if (k === "parserOpts" && source.parserOpts) {
+      const parserOpts = source.parserOpts;
+      const targetObj = (target.parserOpts = target.parserOpts || {});
+      mergeDefaultFields(targetObj, parserOpts);
+    } else if (k === "generatorOpts" && source.generatorOpts) {
+      const generatorOpts = source.generatorOpts;
+      const targetObj = (target.generatorOpts = target.generatorOpts || {});
+      mergeDefaultFields(targetObj, generatorOpts);
+    } else {
+      const val = source[k];
+      if (val !== undefined) target[k] = (val: any);
+    }
+  }
+}
+
+function mergeDefaultFields<T: {}>(target: T, source: T) {
+  for (const k of Object.keys(source)) {
+    const val = source[k];
+    if (val !== undefined) target[k] = (val: any);
+  }
+}
+
 /**
  * Load a generic plugin/preset from the given descriptor loaded from the config object.
  */
@@ -178,11 +207,7 @@ const loadDescriptor = makeWeakCache(
 
     let item = value;
     if (typeof value === "function") {
-      const api = Object.assign(Object.create(context), {
-        cache: cache.simple(),
-        env: () => cache.using(data => data.envName),
-        async: () => false,
-      });
+      const api = Object.assign(Object.create(context), makeAPI(cache));
 
       try {
         item = value(api, options, dirname);
@@ -240,7 +265,7 @@ const instantiatePlugin = makeWeakCache(
 
     const plugin = Object.assign({}, pluginObj);
     if (plugin.visitor) {
-      plugin.visitor = traverse.explode(clone(plugin.visitor));
+      plugin.visitor = traverse.explode(Object.assign({}, plugin.visitor));
     }
 
     if (plugin.inherits) {

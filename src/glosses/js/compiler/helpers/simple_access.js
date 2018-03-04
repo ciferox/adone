@@ -8,13 +8,13 @@ const simpleAssignmentVisitor = {
             const { scope, bindingNames } = this;
 
             const arg = path.get("argument");
-            if (!arg.isIdentifier()) {
-                return;
+            if (!arg.isIdentifier()) { 
+                return; 
             }
             const localName = arg.node.name;
 
-            if (!bindingNames.has(localName)) {
-                return;
+            if (!bindingNames.has(localName)) { 
+                return; 
             }
 
             // redeclared in this scope
@@ -27,8 +27,9 @@ const simpleAssignmentVisitor = {
                 (path.parentPath.isExpressionStatement() && !path.isCompletionRecord())
             ) {
                 // ++i => (i += 1);
+                const operator = path.node.operator === "++" ? "+=" : "-=";
                 path.replaceWith(
-                    t.assignmentExpression("+=", arg.node, t.numericLiteral(1)),
+                    t.assignmentExpression(operator, arg.node, t.numericLiteral(1)),
                 );
             } else {
                 const varName = path.scope.generateDeclaredUidIdentifier("old").name;
@@ -55,26 +56,26 @@ const simpleAssignmentVisitor = {
         exit(path) {
             const { scope, seen, bindingNames } = this;
 
-            if (path.node.operator === "=") {
+            if (path.node.operator === "=") { 
                 return;
             }
 
-            if (seen.has(path.node)) {
+            if (seen.has(path.node)) { 
                 return;
             }
             seen.add(path.node);
 
             const left = path.get("left");
-            if (!left.isIdentifier()) {
-                return;
+            if (!left.isIdentifier()) { 
+                return; 
             }
 
             // Simple update-assign foo += 1;
             // =>   exports.foo =  (foo += 1);
             const localName = left.node.name;
 
-            if (!bindingNames.has(localName)) {
-                return;
+            if (!bindingNames.has(localName)) { 
+                return; 
             }
 
             // redeclared in this scope
@@ -92,7 +93,8 @@ const simpleAssignmentVisitor = {
     }
 };
 
-export default function simplifyAccess(path: NodePath, bindingNames) {
+
+export default function simplifyAccess(path, bindingNames) {
     path.traverse(simpleAssignmentVisitor, {
         scope: path.scope,
         bindingNames,

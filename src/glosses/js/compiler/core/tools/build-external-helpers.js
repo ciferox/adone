@@ -1,25 +1,24 @@
-// import * as helpers from "@babel/helpers";
-// import generator from "@babel/generator";
-// import template from "@babel/template";
-// import * as t from "@babel/types";
 
 const {
-  js: { compiler: { generate, template, types: t, helper } }
+  js: { compiler: { generate: generator, template, types: t, helper } }
 } = adone;
 
-const buildUmdWrapper = template(`
-  (function (root, factory) {
-    if (typeof define === "function" && define.amd) {
-      define(AMD_ARGUMENTS, factory);
-    } else if (typeof exports === "object") {
-      factory(COMMON_ARGUMENTS);
-    } else {
-      factory(BROWSER_ARGUMENTS);
-    }
-  })(UMD_ROOT, function (FACTORY_PARAMETERS) {
-    FACTORY_BODY
-  });
-`);
+// Wrapped to avoid wasting time parsing this when almost no-one uses
+// build-external-helpers.
+const buildUmdWrapper = replacements =>
+  template`
+    (function (root, factory) {
+      if (typeof define === "function" && define.amd) {
+        define(AMD_ARGUMENTS, factory);
+      } else if (typeof exports === "object") {
+        factory(COMMON_ARGUMENTS);
+      } else {
+        factory(BROWSER_ARGUMENTS);
+      }
+    })(UMD_ROOT, function (FACTORY_PARAMETERS) {
+      FACTORY_BODY
+    });
+  `(replacements);
 
 function buildGlobal(whitelist) {
   const namespace = t.identifier("babelHelpers");
@@ -162,5 +161,5 @@ export default function(
     throw new Error(`Unsupported output type ${outputType}`);
   }
 
-  return generate(tree).code;
+  return generator(tree).code;
 }

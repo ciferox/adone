@@ -1,6 +1,7 @@
 // @flow
 
 import { makeStrongCache, type CacheConfigurator } from "../caching";
+import makeAPI from "../helpers/config-api";
 
 const {
   std: { path, fs }
@@ -137,12 +138,7 @@ const readConfigJS = makeStrongCache(
     }
 
     if (typeof options === "function") {
-      options = options({
-        cache: cache.simple(),
-        // Expose ".env()" so people can easily get the same env that we expose using the "env" key.
-        env: () => cache.using(data => data.envName),
-        async: () => false,
-      });
+      options = options(makeAPI(cache));
 
       if (!cache.configured()) throwConfigError();
     }

@@ -1636,7 +1636,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         return this.finishOp(tt.relational, 1);
       } else if (isIteratorStart(code, next)) {
         this.state.isIterator = true;
-        return super.readWord(code);
+        return super.readWord();
       } else {
         return super.readToken(code);
       }
