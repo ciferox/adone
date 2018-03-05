@@ -65,7 +65,10 @@ export default class ProjectManager extends task.Manager {
         // Load custom tasks
         const tasksPath = std.path.join(this.cwd, ".adone", "tasks.js");
         if (await fs.exists(tasksPath)) {
-            const customTasks = adone.require(tasksPath).default;
+            let customTasks = adone.require(tasksPath);
+            if (customTasks.__esModule === true && is.plainObject(customTasks.default)) {
+                customTasks = customTasks.default;
+            }
 
             for (const [name, CustomTask] of Object.entries(customTasks)) {
                 await this.addTask(name, CustomTask); // eslint-disable-line

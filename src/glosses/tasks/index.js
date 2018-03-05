@@ -9,14 +9,6 @@ export const STATE = {
     COMPLETED: 7
 };
 
-adone.lazify({
-    Manager: "./manager",
-    Task: ["./task", (mod) => mod.Task],
-    TaskObserver: ["./task", (mod) => mod.TaskObserver],
-    Flow: "./flow",
-    flow: "./flows"
-}, adone.asNamespace(exports), require);
-
 // predicates
 adone.definePredicates({
     task: "TASK",
@@ -24,3 +16,14 @@ adone.definePredicates({
     taskObserver: "TASK_OBSERVER",
     taskManager: "TASK_MANAGER"
 });
+
+const __ = adone.lazify({
+    Manager: "./manager",
+    Task: ["./task", (mod) => mod.Task],
+    TaskObserver: ["./task", (mod) => mod.TaskObserver],
+    Flow: "./flow",
+    flow: "./flows",
+    manager: () => new __.Manager() // default task manager for running standalone tasks
+}, adone.asNamespace(exports), require);
+
+export const run = (task, ...args) => __.manager.runOnce(task, ...args);

@@ -6,12 +6,18 @@ const {
     omnitron: { STATUS }
 } = adone;
 
-const SERVICES_PATH = adone.realm.config.omnitron.servicesPath;
+const SERVICES_PATH = adone.realm.config.omnitron.SERVICES_PATH;
 
 const api = adone.lazify({
     ServiceMaintainer: "./service_maintainer"
 }, exports, require);
 
+@application.DSubsystem({
+    dependencies: [
+        "netron",
+        "database"
+    ]
+})
 export default class Services extends application.Subsystem {
     constructor(options) {
         super(options);
@@ -25,45 +31,45 @@ export default class Services extends application.Subsystem {
     }
 
     async initialize() {
-        this.config = await this.root.db.getConfiguration();
-        this.options = Object.assign({
-            startTimeout: 10000,
-            stopTimeout: 10000
-        }, await this.config.get("service"));
+    //     this.config = await this.root.db.getConfiguration();
+    //     this.options = Object.assign({
+    //         startTimeout: 10000,
+    //         stopTimeout: 10000
+    //     }, await this.config.get("service"));
     
-        this.services = await this.parent.db.getMetaValuable("service");
+    //     this.services = await this.parent.db.getMetaValuable("service");
 
-        const VALID_STATUSES = [STATUS.DISABLED, STATUS.INACTIVE];
+    //     const VALID_STATUSES = [STATUS.DISABLED, STATUS.INACTIVE];
 
-        const serviceGroups = await this.enumerateByGroup();
-        for (const [group, services] of Object.entries(serviceGroups)) {
-            const maintainer = await this.getMaintainer(group); // eslint-disable-line
-            for (const serviceData of services) {
-                // Check service status and fix if necessary
-                if (!VALID_STATUSES.includes(serviceData.status)) {
-                    serviceData.status = STATUS.INACTIVE;
-                    await this.services.set(serviceData.name, serviceData); // eslint-disable-line
-                }
-                if (serviceData.status === STATUS.INACTIVE) {
-                    maintainer.startService(serviceData.name).catch((err) => {
-                        adone.logError(err);
-                    });
-                }
-            }
-        }
+    //     const serviceGroups = await this.enumerateByGroup();
+    //     for (const [group, services] of Object.entries(serviceGroups)) {
+    //         const maintainer = await this.getMaintainer(group); // eslint-disable-line
+    //         for (const serviceData of services) {
+    //             // Check service status and fix if necessary
+    //             if (!VALID_STATUSES.includes(serviceData.status)) {
+    //                 serviceData.status = STATUS.INACTIVE;
+    //                 await this.services.set(serviceData.name, serviceData); // eslint-disable-line
+    //             }
+    //             if (serviceData.status === STATUS.INACTIVE) {
+    //                 maintainer.startService(serviceData.name).catch((err) => {
+    //                     adone.logError(err);
+    //                 });
+    //             }
+    //         }
+    //     }
 
         adone.logInfo("Services subsystem initialized");
     }
 
     async uninitialize() {
-        const promises = [];
-        for (const maintainer of this.groupMaintainers.values()) {
-            promises.push(maintainer.kill());
-        }
+    //     const promises = [];
+    //     for (const maintainer of this.groupMaintainers.values()) {
+    //         promises.push(maintainer.kill());
+    //     }
 
-        await Promise.all(promises);
+    //     await Promise.all(promises);
 
-        this.groupMaintainers.clear();
+    //     this.groupMaintainers.clear();
 
         adone.logInfo("Services subsystem uninitialized");
     }

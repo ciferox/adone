@@ -2,28 +2,18 @@ const {
     fs,
     is,
     configuration,
+    multi,
     std,
-    omnitron: { STATUS, dispatcher },
+    omnitron2,
     realm,
     error
 } = adone;
 
+const { STATUS, dispatcher } = omnitron2;
+
 describe("omnitron", () => {
     let iOmnitron;
     let realmManager;
-
-    before(async function () {
-        this.timeout(25000);
-        await realm.init(".adone_test");
-        await realm.clean();
-
-        realmManager = await realm.getManager();
-        adone.cli.kit.setSilent(true);
-    });
-
-    after(async () => {
-        // await realm.clean();
-    });
 
     const startOmnitron = async () => {
         await dispatcher.startOmnitron();
@@ -1046,6 +1036,21 @@ describe("omnitron", () => {
             it.skip("configure active gate should not be allowed", async () => {
                 // ???
             });
+        });
+    });
+
+    describe.only("Dispatcher", () => {
+        it("initialization", () => {
+            const d = new omnitron2.Dispatcher();
+            const omnitAddrs = d.omnitronPeerInfo.multiaddrs.toArray();
+            assert.lengthOf(omnitAddrs, 1);
+            assert.true(omnitAddrs[0].equals(multi.address2.fromNodeAddress(omnitron2.defaultAddress)));
+            assert.strictEqual(d.netron.peer.info.id.asBase58(), realm.config.identity.client.id);
+        });
+    
+        it("isOmnitronActive() should return false when omnitron is not active", async () => {
+            const d = omnitron2.dispatcher;
+            assert.false(await d.isOmnitronActive());
         });
     });
 });

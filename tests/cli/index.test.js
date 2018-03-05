@@ -85,5 +85,15 @@ describe("cli", () => {
             const result = await forkProcess(ADONE_CLI_PATH, ["run", fixture("commonjs_function_export.js")]);
             assert.strictEqual(result.stdout, `adone v${adone.package.version}`);
         });
+
+        it("run adone application in a path", async () => {
+            const result = await forkProcess(ADONE_CLI_PATH, ["run", fixture("app")]);
+            assert.strictEqual(result.stdout, "app running");
+        });
+
+        it("run task", async () => {
+            const result = await forkProcess(ADONE_CLI_PATH, ["run", fixture("task.js")]);
+            assert.strictEqual(result.stdout, `adone v${adone.package.version}`);
+        });
     });
 });

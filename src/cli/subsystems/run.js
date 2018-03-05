@@ -146,21 +146,22 @@ export default class Run extends Subsystem {
         });
 
         m._compile(code, "index.js");
-        let result = m.exports;
-        if (result.__esModule) {
-            if (is.propertyDefined(result, "default")) {
-                result = result.default;
+        let runnable = m.exports;
+        if (runnable.__esModule) {
+            if (is.propertyDefined(runnable, "default")) {
+                runnable = runnable.default;
             }
         }
-        if (is.asyncFunction(result)) {
-            adone.log(await result());
-        } else if (is.function(result)) {
-            adone.log(result());
+
+        if (is.asyncFunction(runnable)) {
+            adone.log(await runnable());
+        } else if (is.function(runnable)) {
+            adone.log(runnable());
         } else {
-            if (is.object(result)) {
-                adone.util.keys(result, { onlyEnumerable: false, all: true }).length > 0 && adone.log(result);
+            if (is.object(runnable)) {
+                adone.util.keys(runnable, { onlyEnumerable: false, all: true }).length > 0 && adone.log(runnable);
             } else {
-                adone.log(result);
+                adone.log(runnable);
             }
         }
     }
@@ -177,14 +178,17 @@ export default class Run extends Subsystem {
             adone.sourcemap.support(Error).install();
         }
 
-        const result = adone.require(scriptPath);
-        let fn;
-        if (is.function(result)) {
-            fn = result;
-        } else if (result.__esModule && is.function(result.default)) {
-            fn = result.default;
+        let result = adone.require(scriptPath);
+        if (result.__esModule && (is.function(result.default) || is.class(result.default))) {
+            result = result.default;
         }
 
-        is.function(fn) && await fn();
+        if (is.class(result)) {
+            // TODO: args
+            const observer = await adone.task.run(result);
+            await observer.result;
+        } else if (is.function(result)) {
+            await result();
+        }
     }
 }

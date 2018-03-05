@@ -12,20 +12,24 @@ const {
 } = adone;
 
 export default class Dispatcher extends Subsystem {
-    constructor() {
+    constructor(netron = adone.runtime.netron2) {
         super();
 
-        // this.peer = null;
-        // this.descriptors = {
-        //     stodut: null,
-        //     stderr: null
-        // };
+        this.netron = netron;
+        if (!netron.hasNetCore("default")) {
+            netron.createNetCore("default");
+        }
+        this.peer = null;
+        this.descriptors = {
+            stodut: null,
+            stderr: null
+        };
 
-        // runtime.netron.on("peer offline", (peer) => {
-        //     if (!is.null(this.peer) && this.peer.uid === peer.uid) {
-        //         this.peer = null;
-        //     }
-        // });
+        netron.on("peer:disconnect", (peer) => {
+            if (!is.null(this.peer) && this.peer.id === peer.id) {
+                this.peer = null;
+            }
+        });
     }
 
     get omnitronPeerInfo() {
@@ -36,14 +40,10 @@ export default class Dispatcher extends Subsystem {
         return this._peerInfo;
     }
 
-    get netron() {
-        if (is.undefined(this._netron)) {
-            this._netron = new netron2.Netron(adone.net.p2p.PeerInfo.create(adone.realm.config.identity.client));
-            this._netron.createNetCore("default");
-        }
-        return this._netron;
-    }
-
+    /**
+     * Subsystem overloaded method (should not be called directly).
+     * This method is only useful in case when dispatcher used as subsystem.
+     */
     async uninitialize() {
         if (this.db) {
             await this.db.close();
@@ -52,42 +52,43 @@ export default class Dispatcher extends Subsystem {
         return this.disconnect();
     }
 
-    bind(options) {
-        return runtime.netron.bind(options);
-    }
 
-    async bindGates(gates, { adapters = null } = {}) {
-        if (is.plainObject(adapters)) {
-            for (const [name, AdapterClass] of Object.entries(adapters)) {
-                runtime.netron.registerAdapter(name, AdapterClass);
-            }
-        }
+    // bind(options) {
+    //     return runtime.netron.bind(options);
+    // }
 
-        for (const gate of gates) {
-            // eslint-disable-next-line
-            await this.bind(gate);
-        }
-    }
+    // async bindGates(gates, { adapters = null } = {}) {
+    //     if (is.plainObject(adapters)) {
+    //         for (const [name, AdapterClass] of Object.entries(adapters)) {
+    //             runtime.netron.registerAdapter(name, AdapterClass);
+    //         }
+    //     }
+
+    //     for (const gate of gates) {
+    //         // eslint-disable-next-line
+    //         await this.bind(gate);
+    //     }
+    // }
 
     isConnected() {
         return is.netronPeer(this.peer);
     }
 
-    async connect(gate = null) {
-        if (is.nil(gate) || is.nil(gate.port)) {
-            return this.connectLocal();
-        }
+    // async connect(gate = null) {
+    //     if (is.nil(gate) || is.nil(gate.port)) {
+    //         return this.connectLocal();
+    //     }
 
-        this.peer = await runtime.netron.connect(gate);
-        return this.peer;
-    }
+    //     this.peer = await runtime.netron.connect(gate);
+    //     return this.peer;
+    // }
 
     async connectLocal({ forceStart = true } = {}, _counter = 0) {
         let status = 0;
         if (is.null(this.peer)) {
             let peer = null;
             try {
-                peer = await runtime.netron.connect({
+                peer = await this.netron.connect({
                     port: omnitron2.port
                 });
                 status = _counter >= 1 ? 0 : 1;
@@ -140,10 +141,9 @@ export default class Dispatcher extends Subsystem {
             }
             return new Promise(async (resolve, reject) => {
                 const omniConfig = adone.realm.config.omnitron;
-                await adone.fs.mkdirp(std.path.dirname(omniConfig.logFilePath));
-                this.descriptors.stdout = std.fs.openSync(omniConfig.logFilePath, "a");
-                this.descriptors.stderr = std.fs.openSync(omniConfig.errorLogFilePath, "a");
-                const args = [std.path.resolve(adone.ROOT_PATH, "lib/omnitron/omnitron/index.js")];
+                this.descriptors.stdout = std.fs.openSync(omniConfig.LOGFILE_PATH, "a");
+                this.descriptors.stderr = std.fs.openSync(omniConfig.ERRORLOGFILE_PATH, "a");
+                const args = [std.path.resolve(adone.ROOT_PATH, "lib/omnitron2/omnitron/index.js")];
                 if (gc) {
                     args.unshift("--expose-gc");
                 }

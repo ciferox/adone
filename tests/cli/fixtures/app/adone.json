@@ -1,0 +1,4 @@
+{
+    "name": "app",
+    "bin": "bin/app.js"
+}

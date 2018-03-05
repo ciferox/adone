@@ -177,11 +177,7 @@ export default class InstallTask extends task.Task {
             await fs.rm(this.destPath);
         }
 
-        if (is.windows) {
-            await fs.symlink(this.srcPath, this.destPath, "junction");
-        } else {
-            await fs.symlink(this.srcPath, this.destPath);
-        }
+        await fs.symlink(this.srcPath, this.destPath, is.windows ? "junction" : undefined);
     }
 
     async _copyFiles(adoneConf) {

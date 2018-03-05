@@ -127,6 +127,13 @@ export default class Netron extends adone.task.Manager {
     }
 
     /**
+     * Returns true if netcore with specified id already exist.
+     */
+    hasNetCore(netId) {
+        return this.networks.has(netId);
+    }
+
+    /**
      * Connects to peer using netcore identified by 'netId'.
      * 
      * @param {string} netId - network core name

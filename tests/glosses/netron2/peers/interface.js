@@ -29,6 +29,11 @@ export default (testInterface) => {
             await testInterface.afterEach();
         });
 
+        it.only("short path to peer id", () => {
+            assert.strictEqual(peer.id, peer.info.id.asBase58());
+            assert.strictEqual(netron.peer.id, netron.peer.info.id.asBase58());
+        });
+
         describe("_getContextDefinition()", () => {
             beforeEach(async () => {
                 await netron.attachContext(new A(), "a");

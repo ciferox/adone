@@ -19,6 +19,10 @@ export default class AbstractPeer extends AsyncEmitter {
         // this.options = Object.assign({}, options);
     }
 
+    get id() {
+        return this.info.id.asBase58();
+    }
+
     /**
      * Disconnects peer.
      */
