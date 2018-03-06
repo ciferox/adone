@@ -1,8 +1,10 @@
 const {
-    js: { compiler: { types: t, helper: { moduleImports } } }
+    js: { compiler: { types: t, helper: { moduleImports, remapAsyncToGenerator, pluginUtils } } }
 } = adone;
 
-export default function (api, options) {
+export default pluginUtils.declare((api, options) => {
+    api.assertVersion(7);
+
     const { method, module } = options;
 
     if (method && module) {
@@ -20,9 +22,7 @@ export default function (api, options) {
                         wrapAsync = state.methodWrapper = moduleImports.addNamed(path, method, module);
                     }
 
-                    adone.js.compiler.helper.remapAsyncToGenerator(path, state.file, {
-                        wrapAsync
-                    });
+                    remapAsyncToGenerator(path, { wrapAsync });
                 }
             }
         };
@@ -35,10 +35,10 @@ export default function (api, options) {
                     return;
                 }
 
-                adone.js.compiler.helper.remapAsyncToGenerator(path, state.file, {
+                remapAsyncToGenerator(path, {
                     wrapAsync: state.addHelper("asyncToGenerator")
                 });
             }
         }
     };
-}
+});

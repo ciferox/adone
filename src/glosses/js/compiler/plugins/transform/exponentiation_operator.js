@@ -1,12 +1,12 @@
 const {
-    js: { compiler: { types: t } }
+    js: { compiler: { types: t, helper: { pluginUtils, builderBinaryAssignmentOperatorVisitor } } }
 } = adone;
 
-export default function () {
-    return {
-        inherits: adone.js.compiler.plugin.syntax.exponentiationOperator,
+export default pluginUtils.declare((api) => {
+    api.assertVersion(7);
 
-        visitor: adone.js.compiler.helper.builderBinaryAssignmentOperatorVisitor({
+    return {
+        visitor: builderBinaryAssignmentOperatorVisitor({
             operator: "**",
 
             build(left, right) {
@@ -17,4 +17,4 @@ export default function () {
             }
         })
     };
-}
+});

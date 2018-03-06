@@ -1,6 +1,6 @@
 const {
     is,
-    js: { compiler: { template, types: t, helper: { simpleAccess: simplifyAccess, moduleTransforms: {
+    js: { compiler: { template, types: t, helper: { pluginUtils, simpleAccess: simplifyAccess, moduleTransforms: {
         isModule,
         rewriteModuleStatementsAndPrepareHeader,
         isSideEffectImport,
@@ -10,8 +10,9 @@ const {
     } } } }
 } = adone;
 
+export default pluginUtils.declare((api, options) => {
+    api.assertVersion(7);
 
-export default function (api, options) {
     const {
         loose,
         allowTopLevelThis,
@@ -33,7 +34,10 @@ export default function (api, options) {
 
     const getAssertion = (localName) => template.expression.ast`
     (function(){
-      throw new Error("The CommonJS '" + "${localName}" + "' variable is not available in ES6 modules.");
+      throw new Error(
+        "The CommonJS '" + "${localName}" + "' variable is not available in ES6 modules." +
+        "Consider setting setting sourceType:script or sourceType:unambiguous in your " +
+        "Babel config for this file.");
     })()
   `;
 
@@ -192,4 +196,4 @@ export default function (api, options) {
             }
         }
     };
-}
+});

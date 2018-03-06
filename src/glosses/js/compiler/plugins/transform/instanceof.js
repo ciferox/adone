@@ -1,8 +1,10 @@
 const {
-    js: { compiler: { types: t } }
+    js: { compiler: { types: t, helper: { pluginUtils } } }
 } = adone;
 
-export default function () {
+export default pluginUtils.declare((api) => {
+    api.assertVersion(7);
+
     return {
         visitor: {
             BinaryExpression(path) {
@@ -12,19 +14,19 @@ export default function () {
                     const isUnderHelper = path.findParent((path) => {
                         return (
                             (path.isVariableDeclarator() && path.node.id === helper) ||
-                (path.isFunctionDeclaration() &&
-                  path.node.id &&
-                  path.node.id.name === helper.name)
+                            (path.isFunctionDeclaration() &&
+                                path.node.id &&
+                                path.node.id.name === helper.name)
                         );
                     });
 
                     if (isUnderHelper) {
-                        return;
-                    }
-                    path.replaceWith(t.callExpression(helper, [node.left, node.right]));
 
+                    } else {
+                        path.replaceWith(t.callExpression(helper, [node.left, node.right]));
+                    }
                 }
             }
         }
     };
-}
+});

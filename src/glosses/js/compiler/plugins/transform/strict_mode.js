@@ -1,14 +1,16 @@
 const {
-    js: { compiler: { types: t } }
+    js: { compiler: { types: t, helper: { pluginUtils } } }
 } = adone;
 
-export default function () {
+export default pluginUtils.declare((api) => {
+    api.assertVersion(7);
+
     return {
         visitor: {
             Program(path) {
                 const { node } = path;
 
-                for (const directive of (node.directives: Array<Object>)) {
+                for (const directive of (node.directives)) {
                     if (directive.value.value === "use strict") {
                         return;
                     }
@@ -21,4 +23,4 @@ export default function () {
             }
         }
     };
-}
+});

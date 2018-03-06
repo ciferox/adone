@@ -22,7 +22,8 @@ adone.lazify({
     moduleImports: "./module_imports",
     annotateAsPure: "./annotate_as_pure",
     simpleAccess: "./simple_access",
-    splitExportDeclaration: "./split_export_declaration"
+    splitExportDeclaration: "./split_export_declaration",
+    pluginUtils: "./plugin_utils"
 }, exports, require);
 
 function makePath(path) {

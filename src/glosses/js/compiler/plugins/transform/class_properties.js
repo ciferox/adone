@@ -1,8 +1,10 @@
 const {
-    js: { compiler: { types: t, template, helper: { functionName } } }
+    js: { compiler: { types: t, template, helper: { functionName: nameFunction, pluginUtils } } }
 } = adone;
 
-export default function (api, options) {
+export default pluginUtils.declare((api, options) => {
+    api.assertVersion(7);
+
     const { loose } = options;
 
     const findBareSupers = {
@@ -99,13 +101,13 @@ export default function (api, options) {
                 }
 
                 if (!props.length) { 
-                    return;
+                    return; 
                 }
 
                 let ref;
 
                 if (path.isClassExpression() || !path.node.id) {
-                    functionName(path);
+                    nameFunction(path);
                     ref = path.scope.generateUidIdentifier("class");
                 } else {
                     // path.isClassDeclaration() && path.node.id
@@ -140,7 +142,7 @@ export default function (api, options) {
 
                 for (const prop of props) {
                     const propNode = prop.node;
-                    if (propNode.decorators && propNode.decorators.length > 0) { 
+                    if (propNode.decorators && propNode.decorators.length > 0) {
                         continue; 
                     }
 
@@ -184,7 +186,7 @@ export default function (api, options) {
                     for (const prop of props) {
                         prop.traverse(referenceVisitor, collisionState);
                         if (collisionState.collision) { 
-                            break; 
+                            break;
                         }
                     }
 
@@ -236,8 +238,8 @@ export default function (api, options) {
                     prop.remove();
                 }
 
-                if (computedNodes.length === 0 && afterNodes.length === 0) { 
-                    return; 
+                if (computedNodes.length === 0 && afterNodes.length === 0) {
+                    return;
                 }
 
                 if (path.isClassExpression()) {
@@ -255,4 +257,4 @@ export default function (api, options) {
             }
         }
     };
-}
+});

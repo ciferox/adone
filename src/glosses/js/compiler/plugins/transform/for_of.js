@@ -1,8 +1,10 @@
 const {
-    js: { compiler: { template, types: t } }
+    js: { compiler: { template, types: t, helper: { pluginUtils } } }
 } = adone;
 
-export default function (api, options) {
+export default pluginUtils.declare((api, options) => {
+    api.assertVersion(7);
+
     const { loose, assumeArray } = options;
 
     if (loose === true && assumeArray === true) {
@@ -62,6 +64,14 @@ export default function (api, options) {
         };
     }
 
+    const pushComputedProps = loose
+        ? pushComputedPropsLoose
+        : pushComputedPropsSpec;
+
+    const buildForOfArray = template(`
+    for (var KEY = 0; KEY < ARR.length; KEY++) BODY;
+  `);
+
     const buildForOfLoose = template(`
     for (var LOOP_OBJECT = OBJECT,
              IS_ARRAY = Array.isArray(LOOP_OBJECT),
@@ -104,13 +114,118 @@ export default function (api, options) {
       }
     }
   `);
+    /**
+     * eslint-enable max-len
+     */
 
-    const pushComputedPropsLoose = function (path, file) {
+    function _ForOfStatementArray(path) {
+        const { node, scope } = path;
+        const nodes = [];
+        let right = node.right;
+
+        if (!t.isIdentifier(right) || !scope.hasBinding(right.name)) {
+            const uid = scope.generateUid("arr");
+            nodes.push(
+                t.variableDeclaration("var", [
+                    t.variableDeclarator(t.identifier(uid), right)
+                ]),
+            );
+            right = t.identifier(uid);
+        }
+
+        const iterationKey = scope.generateUidIdentifier("i");
+
+        let loop = buildForOfArray({
+            BODY: node.body,
+            KEY: iterationKey,
+            ARR: right
+        });
+
+        t.inherits(loop, node);
+        t.ensureBlock(loop);
+
+        const iterationValue = t.memberExpression(
+            t.cloneNode(right),
+            t.cloneNode(iterationKey),
+            true,
+        );
+
+        const left = node.left;
+        if (t.isVariableDeclaration(left)) {
+            left.declarations[0].init = iterationValue;
+            loop.body.body.unshift(left);
+        } else {
+            loop.body.body.unshift(
+                t.expressionStatement(
+                    t.assignmentExpression("=", left, iterationValue),
+                ),
+            );
+        }
+
+        if (path.parentPath.isLabeledStatement()) {
+            loop = t.labeledStatement(path.parentPath.node.label, loop);
+        }
+
+        nodes.push(loop);
+
+        return nodes;
+    }
+
+    function replaceWithArray(path) {
+        if (path.parentPath.isLabeledStatement()) {
+            path.parentPath.replaceWithMultiple(_ForOfStatementArray(path));
+        } else {
+            path.replaceWithMultiple(_ForOfStatementArray(path));
+        }
+    }
+
+    return {
+        visitor: {
+            ForOfStatement(path, state) {
+                const right = path.get("right");
+                if (
+                    right.isArrayExpression() ||
+                    right.isGenericType("Array") ||
+                    t.isArrayTypeAnnotation(right.getTypeAnnotation())
+                ) {
+                    replaceWithArray(path);
+                    return;
+                }
+
+                const { node } = path;
+                const build = pushComputedProps(path, state);
+                const declar = build.declar;
+                const loop = build.loop;
+                const block = loop.body;
+
+                // ensure that it's a block so we can take all its statements
+                path.ensureBlock();
+
+                // add the value declaration to the new loop body
+                if (declar) {
+                    block.body.push(declar);
+                }
+
+                // push the rest of the original loop body onto our new body
+                block.body = block.body.concat(node.body.body);
+
+                t.inherits(loop, node);
+                t.inherits(loop.body, node.body);
+
+                if (build.replaceParent) {
+                    path.parentPath.replaceWithMultiple(build.node);
+                    path.remove();
+                } else {
+                    path.replaceWithMultiple(build.node);
+                }
+            }
+        }
+    };
+
+    function pushComputedPropsLoose(path, file) {
         const { node, scope, parent } = path;
         const { left } = node;
-        let declar;
-        let id;
-        let intermediate;
+        let declar, id, intermediate;
 
         if (
             t.isIdentifier(left) ||
@@ -162,9 +277,9 @@ export default function (api, options) {
             node: labeled || loop,
             loop
         };
-    };
+    }
 
-    const pushComputedPropsSpec = function (path, file) {
+    function pushComputedPropsSpec(path, file) {
         const { node, scope, parent } = path;
         const left = node.left;
         let declar;
@@ -224,119 +339,5 @@ export default function (api, options) {
             loop,
             node: template
         };
-    };
-
-    const pushComputedProps = loose ? pushComputedPropsLoose : pushComputedPropsSpec;
-
-    const buildForOfArray = template(`
-    for (var KEY = 0; KEY < ARR.length; KEY++) BODY;
-  `);
-
-    /**
-     * eslint-enable max-len
-     */
-
-    const _ForOfStatementArray = function (path) {
-        const { node, scope } = path;
-        const nodes = [];
-        let right = node.right;
-
-        if (!t.isIdentifier(right) || !scope.hasBinding(right.name)) {
-            const uid = scope.generateUid("arr");
-            nodes.push(
-                t.variableDeclaration("var", [
-                    t.variableDeclarator(t.identifier(uid), right)
-                ]),
-            );
-            right = t.identifier(uid);
-        }
-
-        const iterationKey = scope.generateUidIdentifier("i");
-
-        let loop = buildForOfArray({
-            BODY: node.body,
-            KEY: iterationKey,
-            ARR: right
-        });
-
-        t.inherits(loop, node);
-        t.ensureBlock(loop);
-
-        const iterationValue = t.memberExpression(
-            t.cloneNode(right),
-            t.cloneNode(iterationKey),
-            true,
-        );
-
-        const left = node.left;
-        if (t.isVariableDeclaration(left)) {
-            left.declarations[0].init = iterationValue;
-            loop.body.body.unshift(left);
-        } else {
-            loop.body.body.unshift(
-                t.expressionStatement(
-                    t.assignmentExpression("=", left, iterationValue),
-                ),
-            );
-        }
-
-        if (path.parentPath.isLabeledStatement()) {
-            loop = t.labeledStatement(path.parentPath.node.label, loop);
-        }
-
-        nodes.push(loop);
-
-        return nodes;
-    };
-
-    const replaceWithArray = function (path) {
-        if (path.parentPath.isLabeledStatement()) {
-            path.parentPath.replaceWithMultiple(_ForOfStatementArray(path));
-        } else {
-            path.replaceWithMultiple(_ForOfStatementArray(path));
-        }
-    };
-
-    return {
-        visitor: {
-            ForOfStatement(path, state) {
-                const right = path.get("right");
-                if (
-                    right.isArrayExpression() ||
-                    right.isGenericType("Array") ||
-                    t.isArrayTypeAnnotation(right.getTypeAnnotation())
-                ) {
-                    replaceWithArray(path);
-                    return;
-                }
-
-                const { node } = path;
-                const build = pushComputedProps(path, state);
-                const declar = build.declar;
-                const loop = build.loop;
-                const block = loop.body;
-
-                // ensure that it's a block so we can take all its statements
-                path.ensureBlock();
-
-                // add the value declaration to the new loop body
-                if (declar) {
-                    block.body.push(declar);
-                }
-
-                // push the rest of the original loop body onto our new body
-                block.body = block.body.concat(node.body.body);
-
-                t.inherits(loop, node);
-                t.inherits(loop.body, node.body);
-
-                if (build.replaceParent) {
-                    path.parentPath.replaceWithMultiple(build.node);
-                    path.remove();
-                } else {
-                    path.replaceWithMultiple(build.node);
-                }
-            }
-        }
-    };
-}
+    }
+});

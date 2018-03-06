@@ -1,12 +1,18 @@
-export default function () {
+const {
+    js: { compiler: { helper: { functionName: nameFunction, pluginUtils } } }
+} = adone;
+
+export default pluginUtils.declare((api) => {
+    api.assertVersion(7);
+
     return {
         visitor: {
             FunctionExpression: {
                 exit(path) {
                     if (path.key !== "value" && !path.parentPath.isObjectProperty()) {
-                        const replacement = adone.js.compiler.helper.functionName(path);
-                        if (replacement) { 
-                            path.replaceWith(replacement); 
+                        const replacement = nameFunction(path);
+                        if (replacement) {
+                            path.replaceWith(replacement);
                         }
                     }
                 }
@@ -15,12 +21,12 @@ export default function () {
             ObjectProperty(path) {
                 const value = path.get("value");
                 if (value.isFunction()) {
-                    const newNode = adone.js.compiler.helper.functionName(value);
-                    if (newNode) { 
-                        value.replaceWith(newNode); 
+                    const newNode = nameFunction(value);
+                    if (newNode) {
+                        value.replaceWith(newNode);
                     }
                 }
             }
         }
     };
-}
+});

@@ -1,9 +1,11 @@
 const {
     is,
-    js: { compiler: { types: t } }
+    js: { compiler: { types: t, helper: { pluginUtils } } }
 } = adone;
 
-export default function (api, opts) {
+export default pluginUtils.declare((api, opts) => {
+    api.assertVersion(7);
+
     const { useBuiltIns = false, loose = false } = opts;
 
     if (!is.boolean(loose)) {
@@ -416,4 +418,4 @@ export default function (api, opts) {
             }
         }
     };
-}
+});

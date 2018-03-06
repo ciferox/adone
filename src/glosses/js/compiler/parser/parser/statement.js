@@ -192,6 +192,9 @@ export default class StatementParser extends ExpressionParser {
       this.raise(
         node.start,
         `'import' and 'export' may appear only with 'sourceType: "module"'`,
+        {
+          code: "BABEL_PARSER_SOURCETYPE_MODULE_REQUIRED",
+        },
       );
     }
   }
@@ -364,8 +367,19 @@ export default class StatementParser extends ExpressionParser {
       this.finishNode(init, "VariableDeclaration");
 
       if (this.match(tt._in) || this.isContextual("of")) {
-        if (init.declarations.length === 1 && !init.declarations[0].init) {
-          return this.parseForIn(node, init, forAwait);
+        if (init.declarations.length === 1) {
+          const declaration = init.declarations[0];
+          const isForInInitializer =
+            varKind === tt._var &&
+            declaration.init &&
+            declaration.id.type != "ObjectPattern" &&
+            declaration.id.type != "ArrayPattern" &&
+            !this.isContextual("of");
+          if (this.state.strict && isForInInitializer) {
+            this.raise(this.state.start, "for-in initializer in strict mode");
+          } else if (isForInInitializer || !declaration.init) {
+            return this.parseForIn(node, init, forAwait);
+          }
         }
       }
       if (forAwait) {
@@ -1147,7 +1161,7 @@ export default class StatementParser extends ExpressionParser {
         );
       }
 
-      this.checkGetterSetterParamCount(publicMethod);
+      this.checkGetterSetterParams(publicMethod);
     } else if (this.isLineTerminator()) {
       // an uninitialized class property (due to ASI, since we don't otherwise recognize the next token)
       if (isPrivate) {

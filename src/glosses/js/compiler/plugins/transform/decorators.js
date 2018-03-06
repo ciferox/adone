@@ -1,7 +1,7 @@
 // Fork of https://github.com/loganfsmyth/babel-plugin-proposal-decorators-legacy
 
 const {
-    js: { compiler: { template, types: t } }
+    js: { compiler: { template, types: t, helper: { pluginUtils } } }
 } = adone;
 
 const buildClassDecorator = template(`
@@ -27,7 +27,9 @@ const buildGetObjectInitializer = template(`
     })
 `);
 
-export default function () {
+export default pluginUtils.declare((api) => {
+    api.assertVersion(7);
+
     const WARNING_CALLS = new WeakSet();
 
     /**
@@ -45,7 +47,7 @@ export default function () {
             (decorator) => !t.isIdentifier(decorator.expression),
         );
         if (identDecorators.length === 0) {
-            return;
+            return; 
         }
 
         return t.sequenceExpression(
@@ -71,7 +73,7 @@ export default function () {
      */
     const applyClassDecorators = function (classPath) {
         if (!hasClassDecorators(classPath.node)) {
-            return;
+            return; 
         }
 
         const decorators = classPath.node.decorators || [];
@@ -107,8 +109,8 @@ export default function () {
             const decorators = node.decorators || [];
             node.decorators = null;
 
-            if (decorators.length === 0) {
-                return acc;
+            if (decorators.length === 0) { 
+                return acc; 
             }
 
             if (node.computed) {
@@ -208,7 +210,7 @@ export default function () {
      */
     const applyMethodDecorators = function (path, state) {
         if (!hasMethodDecorators(path.node.body.body)) {
-            return;
+            return; 
         }
 
         return applyTargetDecorators(path, state, path.node.body.body);
@@ -220,7 +222,7 @@ export default function () {
      */
     const applyObjectDecorators = function (path, state) {
         if (!hasMethodDecorators(path.node.properties)) {
-            return;
+            return; 
         }
 
         return applyTargetDecorators(path, state, path.node.properties);
@@ -265,7 +267,7 @@ export default function () {
                     applyMethodDecorators(path, state);
 
                 if (decoratedClass) {
-                    path.replaceWith(decoratedClass);
+                    path.replaceWith(decoratedClass); 
                 }
             },
             ObjectExpression(path, state) {
@@ -273,13 +275,13 @@ export default function () {
                     applyEnsureOrdering(path) || applyObjectDecorators(path, state);
 
                 if (decoratedObject) {
-                    path.replaceWith(decoratedObject);
+                    path.replaceWith(decoratedObject); 
                 }
             },
 
             AssignmentExpression(path, state) {
                 if (!WARNING_CALLS.has(path.node.right)) {
-                    return;
+                    return; 
                 }
 
                 path.replaceWith(
@@ -293,4 +295,4 @@ export default function () {
             }
         }
     };
-}
+});

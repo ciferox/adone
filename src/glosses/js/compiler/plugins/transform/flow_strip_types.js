@@ -1,8 +1,10 @@
 const {
-    js: { compiler: { types: t } }
+    js: { compiler: { types: t, helper: { pluginUtils } } }
 } = adone;
 
-export default function () {
+export default pluginUtils.declare((api) => {
+    api.assertVersion(7);
+
     const FLOW_DIRECTIVE = "@flow";
 
     let skipStrip = false;
@@ -23,7 +25,7 @@ export default function () {
                         comment.value = comment.value.replace(FLOW_DIRECTIVE, "");
 
                         // remove the comment completely if it only consists of whitespace and/or stars
-                        if (!comment.value.replace(/\*/g, "").trim()) {
+                        if (!comment.value.replace(/\*/g, "").trim()) { 
                             comment.ignore = true;
                         }
                     }
@@ -34,7 +36,7 @@ export default function () {
                 }
             },
             ImportDeclaration(path) {
-                if (skipStrip) { 
+                if (skipStrip) {
                     return; 
                 }
                 if (!path.node.specifiers.length) { 
@@ -66,13 +68,13 @@ export default function () {
             },
 
             ClassProperty(path) {
-                if (skipStrip) {
-                    return;
+                if (skipStrip) { 
+                    return; 
                 }
                 path.node.variance = null;
                 path.node.typeAnnotation = null;
                 if (!path.node.value) { 
-                    path.remove(); 
+                    path.remove();
                 }
             },
 
@@ -103,7 +105,7 @@ export default function () {
 
             Function({ node }) {
                 if (skipStrip) { 
-                    return;
+                    return; 
                 }
                 for (let i = 0; i < node.params.length; i++) {
                     const param = node.params[i];
@@ -128,4 +130,4 @@ export default function () {
             }
         }
     };
-}
+});

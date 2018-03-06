@@ -1,8 +1,10 @@
 const {
-    js: { compiler: { types: t } }
+    js: { compiler: { types: t, helper: { pluginUtils } } }
 } = adone;
 
-export default function () {
+export default pluginUtils.declare((api) => {
+    api.assertVersion(7);
+
     const replaceNumberArg = function ({ node }) {
         if (node.callee.name !== "Number") {
             return;
@@ -30,4 +32,4 @@ export default function () {
             }
         }
     };
-}
+});

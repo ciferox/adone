@@ -1,8 +1,11 @@
 const {
-    js: { compiler: { types: t } }
+    js: { compiler: { types: t, helper: { pluginUtils } } }
 } = adone;
 
-export default function () {
+
+export default pluginUtils.declare((api) => {
+    api.assertVersion(7);
+
     return {
         visitor: {
             ObjectMethod(path) {
@@ -25,7 +28,7 @@ export default function () {
                 if (node.shorthand) {
                     node.shorthand = false;
                 }
-            },
-        },
+            }
+        }
     };
-}
+});

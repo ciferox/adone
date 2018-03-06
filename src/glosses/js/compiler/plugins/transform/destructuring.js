@@ -1,9 +1,11 @@
 const {
     is,
-    js: { compiler: { types: t } }
+    js: { compiler: { types: t, helper: { pluginUtils } } }
 } = adone;
 
-export default function (api, options) {
+export default pluginUtils.declare((api, options) => {
+    api.assertVersion(7);
+
     const { loose = false } = options;
     if (!is.boolean(loose)) {
         throw new Error(".loose must be a boolean or undefined");
@@ -15,27 +17,27 @@ export default function (api, options) {
      * Test if a VariableDeclaration's declarations contains any Patterns.
      */
 
-    const variableDeclarationHasPattern = function (node) {
-        for (const declar of (node.declarations: Array)) {
+    function variableDeclarationHasPattern(node) {
+        for (const declar of (node.declarations)) {
             if (t.isPattern(declar.id)) {
                 return true;
             }
         }
         return false;
-    };
+    }
 
     /**
      * Test if an ArrayPattern's elements contain any RestElements.
      */
 
-    const hasRest = function (pattern) {
-        for (const elem of (pattern.elements: Array)) {
+    function hasRest(pattern) {
+        for (const elem of (pattern.elements)) {
             if (t.isRestElement(elem)) {
                 return true;
             }
         }
         return false;
-    };
+    }
 
     const arrayUnpackVisitor = {
         ReferencedIdentifier(path, state) {
@@ -61,7 +63,7 @@ export default function (api, options) {
         buildVariableAssignment(id, init) {
             let op = this.operator;
             if (t.isMemberExpression(id)) {
-                op = "="; 
+                op = "=";
             }
 
             let node;
@@ -166,12 +168,12 @@ export default function (api, options) {
                 // we've exceeded the index of the spread property to all properties to the
                 // right need to be ignored
                 if (i >= spreadPropIndex) {
-                    break; 
+                    break;
                 }
 
                 // ignore other spread properties
                 if (t.isRestElement(prop)) {
-                    continue; 
+                    continue;
                 }
 
                 let key = prop.key;
@@ -194,7 +196,7 @@ export default function (api, options) {
 
         pushObjectProperty(prop, propRef) {
             if (t.isLiteral(prop.key)) {
-                prop.computed = true; 
+                prop.computed = true;
             }
 
             const pattern = prop.value;
@@ -249,387 +251,387 @@ export default function (api, options) {
         canUnpackArrayPattern(pattern, arr) {
             // not an array so there's no way we can deal with this
             if (!t.isArrayExpression(arr)) {
-                return false; 
+                return false;
             }
 
             // pattern has less elements than the array and doesn't have a rest so some
             // elements wont be evaluated
             if (pattern.elements.length > arr.elements.length) {
-                return; 
+                return;
             }
             if (pattern.elements.length < arr.elements.length && !hasRest(pattern)) {
                 return false;
             }
 
             for (const elem of (pattern.elements: Array)) {
-                // deopt on holes
-                if (!elem) {
-                    return false; 
-                }
+    // deopt on holes
+    if (!elem) {
+        return false;
+    }
 
-                // deopt on member expressions as they may be included in the RHS
-                if (t.isMemberExpression(elem)) {
-                    return false; 
-                }
-            }
+    // deopt on member expressions as they may be included in the RHS
+    if (t.isMemberExpression(elem)) {
+        return false;
+    }
+}
 
-            for (const elem of (arr.elements: Array)) {
-                // deopt on spread elements
-                if (t.isSpreadElement(elem)) {
-                    return false; 
-                }
+for (const elem of (arr.elements: Array)) {
+    // deopt on spread elements
+    if (t.isSpreadElement(elem)) {
+        return false;
+    }
 
-                // deopt call expressions as they might change values of LHS variables
-                if (t.isCallExpression(elem)) {
-                    return false; 
-                }
+    // deopt call expressions as they might change values of LHS variables
+    if (t.isCallExpression(elem)) {
+        return false;
+    }
 
-                // deopt on member expressions as they may be getter/setters and have side-effects
-                if (t.isMemberExpression(elem)) {
-                    return false; 
-                }
-            }
+    // deopt on member expressions as they may be getter/setters and have side-effects
+    if (t.isMemberExpression(elem)) {
+        return false;
+    }
+}
 
-            // deopt on reference to left side identifiers
-            const bindings = t.getBindingIdentifiers(pattern);
-            const state = { deopt: false, bindings };
-            this.scope.traverse(arr, arrayUnpackVisitor, state);
-            return !state.deopt;
+// deopt on reference to left side identifiers
+const bindings = t.getBindingIdentifiers(pattern);
+const state = { deopt: false, bindings };
+this.scope.traverse(arr, arrayUnpackVisitor, state);
+return !state.deopt;
         }
 
-        pushUnpackedArrayPattern(pattern, arr) {
-            for (let i = 0; i < pattern.elements.length; i++) {
-                const elem = pattern.elements[i];
-                if (t.isRestElement(elem)) {
-                    this.push(elem.argument, t.arrayExpression(arr.elements.slice(i)));
-                } else {
-                    this.push(elem, arr.elements[i]);
-                }
-            }
+pushUnpackedArrayPattern(pattern, arr) {
+    for (let i = 0; i < pattern.elements.length; i++) {
+        const elem = pattern.elements[i];
+        if (t.isRestElement(elem)) {
+            this.push(elem.argument, t.arrayExpression(arr.elements.slice(i)));
+        } else {
+            this.push(elem, arr.elements[i]);
+        }
+    }
+}
+
+pushArrayPattern(pattern, arrayRef) {
+    if (!pattern.elements) {
+        return;
+    }
+
+    // optimise basic array destructuring of an array expression
+    //
+    // we can't do this to a pattern of unequal size to it's right hand
+    // array expression as then there will be values that wont be evaluated
+    //
+    // eg: let [a, b] = [1, 2];
+
+    if (this.canUnpackArrayPattern(pattern, arrayRef)) {
+        return this.pushUnpackedArrayPattern(pattern, arrayRef);
+    }
+
+    // if we have a rest then we need all the elements so don't tell
+    // `scope.toArray` to only get a certain amount
+
+    const count = !hasRest(pattern) && pattern.elements.length;
+
+    // so we need to ensure that the `arrayRef` is an array, `scope.toArray` will
+    // return a locally bound identifier if it's been inferred to be an array,
+    // otherwise it'll be a call to a helper that will ensure it's one
+
+    const toArray = this.toArray(arrayRef, count);
+
+    if (t.isIdentifier(toArray)) {
+        // we've been given an identifier so it must have been inferred to be an
+        // array
+        arrayRef = toArray;
+    } else {
+        arrayRef = this.scope.generateUidIdentifierBasedOnNode(arrayRef);
+        this.arrays[arrayRef.name] = true;
+        this.nodes.push(this.buildVariableDeclaration(arrayRef, toArray));
+    }
+
+    //
+
+    for (let i = 0; i < pattern.elements.length; i++) {
+        let elem = pattern.elements[i];
+
+        // hole
+        if (!elem) {
+            continue;
         }
 
-        pushArrayPattern(pattern, arrayRef) {
-            if (!pattern.elements) {
-                return; 
-            }
+        let elemRef;
 
-            // optimise basic array destructuring of an array expression
-            //
-            // we can't do this to a pattern of unequal size to it's right hand
-            // array expression as then there will be values that wont be evaluated
-            //
-            // eg: let [a, b] = [1, 2];
+        if (t.isRestElement(elem)) {
+            elemRef = this.toArray(arrayRef);
+            elemRef = t.callExpression(
+                t.memberExpression(elemRef, t.identifier("slice")),
+                [t.numericLiteral(i)],
+            );
 
-            if (this.canUnpackArrayPattern(pattern, arrayRef)) {
-                return this.pushUnpackedArrayPattern(pattern, arrayRef);
-            }
-
-            // if we have a rest then we need all the elements so don't tell
-            // `scope.toArray` to only get a certain amount
-
-            const count = !hasRest(pattern) && pattern.elements.length;
-
-            // so we need to ensure that the `arrayRef` is an array, `scope.toArray` will
-            // return a locally bound identifier if it's been inferred to be an array,
-            // otherwise it'll be a call to a helper that will ensure it's one
-
-            const toArray = this.toArray(arrayRef, count);
-
-            if (t.isIdentifier(toArray)) {
-                // we've been given an identifier so it must have been inferred to be an
-                // array
-                arrayRef = toArray;
-            } else {
-                arrayRef = this.scope.generateUidIdentifierBasedOnNode(arrayRef);
-                this.arrays[arrayRef.name] = true;
-                this.nodes.push(this.buildVariableDeclaration(arrayRef, toArray));
-            }
-
-            //
-
-            for (let i = 0; i < pattern.elements.length; i++) {
-                let elem = pattern.elements[i];
-
-                // hole
-                if (!elem) {
-                    continue; 
-                }
-
-                let elemRef;
-
-                if (t.isRestElement(elem)) {
-                    elemRef = this.toArray(arrayRef);
-                    elemRef = t.callExpression(
-                        t.memberExpression(elemRef, t.identifier("slice")),
-                        [t.numericLiteral(i)],
-                    );
-
-                    // set the element to the rest element argument since we've dealt with it
-                    // being a rest already
-                    elem = elem.argument;
-                } else {
-                    elemRef = t.memberExpression(arrayRef, t.numericLiteral(i), true);
-                }
-
-                this.push(elem, elemRef);
-            }
+            // set the element to the rest element argument since we've dealt with it
+            // being a rest already
+            elem = elem.argument;
+        } else {
+            elemRef = t.memberExpression(arrayRef, t.numericLiteral(i), true);
         }
 
-        init(pattern, ref) {
-            // trying to destructure a value that we can't evaluate more than once so we
-            // need to save it to a variable
+        this.push(elem, elemRef);
+    }
+}
 
-            if (!t.isArrayExpression(ref) && !t.isMemberExpression(ref)) {
-                const memo = this.scope.maybeGenerateMemoised(ref, true);
-                if (memo) {
-                    this.nodes.push(
-                        this.buildVariableDeclaration(memo, t.cloneNode(ref)),
-                    );
-                    ref = memo;
-                }
-            }
+init(pattern, ref) {
+    // trying to destructure a value that we can't evaluate more than once so we
+    // need to save it to a variable
 
-            //
-
-            this.push(pattern, ref);
-
-            return this.nodes;
+    if (!t.isArrayExpression(ref) && !t.isMemberExpression(ref)) {
+        const memo = this.scope.maybeGenerateMemoised(ref, true);
+        if (memo) {
+            this.nodes.push(
+                this.buildVariableDeclaration(memo, t.cloneNode(ref)),
+            );
+            ref = memo;
         }
     }
 
-    return {
-        visitor: {
-            ExportNamedDeclaration(path) {
-                const declaration = path.get("declaration");
-                if (!declaration.isVariableDeclaration()) {
-                    return; 
-                }
-                if (!variableDeclarationHasPattern(declaration.node)) {
-                    return; 
-                }
+    //
 
-                const specifiers = [];
+    this.push(pattern, ref);
 
-                for (const name in path.getOuterBindingIdentifiers(path)) {
-                    specifiers.push(
-                        t.exportSpecifier(t.identifier(name), t.identifier(name)),
-                    );
-                }
+    return this.nodes;
+}
+    }
 
-                // Split the declaration and export list into two declarations so that the variable
-                // declaration can be split up later without needing to worry about not being a
-                // top-level statement.
-                path.replaceWith(declaration.node);
-                path.insertAfter(t.exportNamedDeclaration(null, specifiers));
-            },
+return {
+    visitor: {
+        ExportNamedDeclaration(path) {
+            const declaration = path.get("declaration");
+            if (!declaration.isVariableDeclaration()) {
+                return;
+            }
+            if (!variableDeclarationHasPattern(declaration.node)) {
+                return;
+            }
 
-            ForXStatement(path) {
-                const { node, scope } = path;
-                const left = node.left;
+            const specifiers = [];
 
-                if (t.isPattern(left)) {
-                    // for ({ length: k } in { abc: 3 });
+            for (const name in path.getOuterBindingIdentifiers(path)) {
+                specifiers.push(
+                    t.exportSpecifier(t.identifier(name), t.identifier(name)),
+                );
+            }
 
-                    const temp = scope.generateUidIdentifier("ref");
+            // Split the declaration and export list into two declarations so that the variable
+            // declaration can be split up later without needing to worry about not being a
+            // top-level statement.
+            path.replaceWith(declaration.node);
+            path.insertAfter(t.exportNamedDeclaration(null, specifiers));
+        },
 
-                    node.left = t.variableDeclaration("var", [
-                        t.variableDeclarator(temp)
-                    ]);
+        ForXStatement(path) {
+            const { node, scope } = path;
+            const left = node.left;
 
-                    path.ensureBlock();
+            if (t.isPattern(left)) {
+                // for ({ length: k } in { abc: 3 });
 
-                    node.body.body.unshift(
-                        t.variableDeclaration("var", [t.variableDeclarator(left, temp)]),
-                    );
+                const temp = scope.generateUidIdentifier("ref");
 
-                    return;
-                }
-
-                if (!t.isVariableDeclaration(left)) {
-                    return; 
-                }
-
-                const pattern = left.declarations[0].id;
-                if (!t.isPattern(pattern)) {
-                    return; 
-                }
-
-                const key = scope.generateUidIdentifier("ref");
-                node.left = t.variableDeclaration(left.kind, [
-                    t.variableDeclarator(key, null)
+                node.left = t.variableDeclaration("var", [
+                    t.variableDeclarator(temp)
                 ]);
-
-                const nodes = [];
-
-                const destructuring = new DestructuringTransformer({
-                    kind: left.kind,
-                    scope,
-                    nodes,
-                    arrayOnlySpread,
-                    addHelper: (name) => this.addHelper(name)
-                });
-
-                destructuring.init(pattern, key);
 
                 path.ensureBlock();
 
-                const block = node.body;
-                block.body = nodes.concat(block.body);
-            },
+                node.body.body.unshift(
+                    t.variableDeclaration("var", [t.variableDeclarator(left, temp)]),
+                );
 
-            CatchClause({ node, scope }) {
-                const pattern = node.param;
-                if (!t.isPattern(pattern)) {
-                    return; 
-                }
+                return;
+            }
 
-                const ref = scope.generateUidIdentifier("ref");
-                node.param = ref;
+            if (!t.isVariableDeclaration(left)) {
+                return;
+            }
 
-                const nodes = [];
+            const pattern = left.declarations[0].id;
+            if (!t.isPattern(pattern)) {
+                return;
+            }
 
-                const destructuring = new DestructuringTransformer({
-                    kind: "let",
-                    scope,
-                    nodes,
-                    arrayOnlySpread,
-                    addHelper: (name) => this.addHelper(name)
-                });
-                destructuring.init(pattern, ref);
+            const key = scope.generateUidIdentifier("ref");
+            node.left = t.variableDeclaration(left.kind, [
+                t.variableDeclarator(key, null)
+            ]);
 
-                node.body.body = nodes.concat(node.body.body);
-            },
+            const nodes = [];
 
-            AssignmentExpression(path) {
-                const { node, scope } = path;
-                if (!t.isPattern(node.left)) {
-                    return; 
-                }
+            const destructuring = new DestructuringTransformer({
+                kind: left.kind,
+                scope,
+                nodes,
+                arrayOnlySpread,
+                addHelper: (name) => this.addHelper(name)
+            });
 
-                const nodes = [];
+            destructuring.init(pattern, key);
 
-                const destructuring = new DestructuringTransformer({
-                    operator: node.operator,
-                    scope,
-                    nodes,
-                    arrayOnlySpread,
-                    addHelper: (name) => this.addHelper(name)
-                });
+            path.ensureBlock();
 
-                let ref;
-                if (
-                    path.isCompletionRecord() ||
-                    !path.parentPath.isExpressionStatement()
-                ) {
-                    ref = scope.generateUidIdentifierBasedOnNode(node.right, "ref");
+            const block = node.body;
+            block.body = nodes.concat(block.body);
+        },
 
-                    nodes.push(
-                        t.variableDeclaration("var", [
-                            t.variableDeclarator(ref, node.right)
-                        ]),
-                    );
+        CatchClause({ node, scope }) {
+            const pattern = node.param;
+            if (!t.isPattern(pattern)) {
+                return;
+            }
 
-                    if (t.isArrayExpression(node.right)) {
-                        destructuring.arrays[ref.name] = true;
-                    }
-                }
+            const ref = scope.generateUidIdentifier("ref");
+            node.param = ref;
 
-                destructuring.init(node.left, ref || node.right);
+            const nodes = [];
 
-                if (ref) {
-                    nodes.push(t.expressionStatement(t.cloneNode(ref)));
-                }
+            const destructuring = new DestructuringTransformer({
+                kind: "let",
+                scope,
+                nodes,
+                arrayOnlySpread,
+                addHelper: (name) => this.addHelper(name)
+            });
+            destructuring.init(pattern, ref);
 
-                path.replaceWithMultiple(nodes);
-            },
+            node.body.body = nodes.concat(node.body.body);
+        },
 
-            VariableDeclaration(path) {
-                const { node, scope, parent } = path;
-                if (t.isForXStatement(parent)) {
-                    return; 
-                }
-                if (!parent || !path.container) {
-                    return; 
-                } // i don't know why this is necessary - TODO
-                if (!variableDeclarationHasPattern(node)) {
-                    return; 
-                }
+        AssignmentExpression(path) {
+            const { node, scope } = path;
+            if (!t.isPattern(node.left)) {
+                return;
+            }
 
-                const nodeKind = node.kind;
-                const nodes = [];
-                let declar;
+            const nodes = [];
 
-                for (let i = 0; i < node.declarations.length; i++) {
-                    declar = node.declarations[i];
+            const destructuring = new DestructuringTransformer({
+                operator: node.operator,
+                scope,
+                nodes,
+                arrayOnlySpread,
+                addHelper: (name) => this.addHelper(name)
+            });
 
-                    const patternId = declar.init;
-                    const pattern = declar.id;
+            let ref;
+            if (
+                path.isCompletionRecord() ||
+                !path.parentPath.isExpressionStatement()
+            ) {
+                ref = scope.generateUidIdentifierBasedOnNode(node.right, "ref");
 
-                    const destructuring = new DestructuringTransformer({
-                        blockHoist: node._blockHoist,
-                        nodes,
-                        scope,
-                        kind: node.kind,
-                        arrayOnlySpread,
-                        addHelper: (name) => this.addHelper(name)
-                    });
+                nodes.push(
+                    t.variableDeclaration("var", [
+                        t.variableDeclarator(ref, node.right)
+                    ]),
+                );
 
-                    if (t.isPattern(pattern)) {
-                        destructuring.init(pattern, patternId);
-
-                        if (Number(i) !== node.declarations.length - 1) {
-                            // we aren't the last declarator so let's just make the
-                            // last transformed node inherit from us
-                            t.inherits(nodes[nodes.length - 1], declar);
-                        }
-                    } else {
-                        nodes.push(
-                            t.inherits(
-                                destructuring.buildVariableAssignment(
-                                    declar.id,
-                                    t.cloneNode(declar.init),
-                                ),
-                                declar,
-                            ),
-                        );
-                    }
-                }
-
-                let tail = null;
-                const nodesOut = [];
-                for (const node of nodes) {
-                    if (!is.null(tail) && t.isVariableDeclaration(node)) {
-                        // Create a single compound declarations
-                        tail.declarations.push(...node.declarations);
-                    } else {
-                        // Make sure the original node kind is used for each compound declaration
-                        node.kind = nodeKind;
-                        nodesOut.push(node);
-                        tail = t.isVariableDeclaration(node) ? node : null;
-                    }
-                }
-
-                // Need to unmark the current binding to this var as a param, or other hoists
-                // could be placed above this ref.
-                // https://github.com/babel/babel/issues/4516
-                for (const nodeOut of nodesOut) {
-                    if (!nodeOut.declarations) {
-                        continue; 
-                    }
-                    for (const declaration of nodeOut.declarations) {
-                        const { name } = declaration.id;
-                        if (scope.bindings[name]) {
-                            scope.bindings[name].kind = nodeOut.kind;
-                        }
-                    }
-                }
-
-                if (nodesOut.length === 1) {
-                    path.replaceWith(nodesOut[0]);
-                } else {
-                    path.replaceWithMultiple(nodesOut);
+                if (t.isArrayExpression(node.right)) {
+                    destructuring.arrays[ref.name] = true;
                 }
             }
+
+            destructuring.init(node.left, ref || node.right);
+
+            if (ref) {
+                nodes.push(t.expressionStatement(t.cloneNode(ref)));
+            }
+
+            path.replaceWithMultiple(nodes);
+        },
+
+        VariableDeclaration(path) {
+            const { node, scope, parent } = path;
+            if (t.isForXStatement(parent)) {
+                return;
+            }
+            if (!parent || !path.container) {
+                return;
+            } // i don't know why this is necessary - TODO
+            if (!variableDeclarationHasPattern(node)) {
+                return;
+            }
+
+            const nodeKind = node.kind;
+            const nodes = [];
+            let declar;
+
+            for (let i = 0; i < node.declarations.length; i++) {
+                declar = node.declarations[i];
+
+                const patternId = declar.init;
+                const pattern = declar.id;
+
+                const destructuring = new DestructuringTransformer({
+                    blockHoist: node._blockHoist,
+                    nodes,
+                    scope,
+                    kind: node.kind,
+                    arrayOnlySpread,
+                    addHelper: (name) => this.addHelper(name)
+                });
+
+                if (t.isPattern(pattern)) {
+                    destructuring.init(pattern, patternId);
+
+                    if (Number(i) !== node.declarations.length - 1) {
+                        // we aren't the last declarator so let's just make the
+                        // last transformed node inherit from us
+                        t.inherits(nodes[nodes.length - 1], declar);
+                    }
+                } else {
+                    nodes.push(
+                        t.inherits(
+                            destructuring.buildVariableAssignment(
+                                declar.id,
+                                t.cloneNode(declar.init),
+                            ),
+                            declar,
+                        ),
+                    );
+                }
+            }
+
+            let tail = null;
+            const nodesOut = [];
+            for (const node of nodes) {
+                if (!is.null(tail) && t.isVariableDeclaration(node)) {
+                    // Create a single compound declarations
+                    tail.declarations.push(...node.declarations);
+                } else {
+                    // Make sure the original node kind is used for each compound declaration
+                    node.kind = nodeKind;
+                    nodesOut.push(node);
+                    tail = t.isVariableDeclaration(node) ? node : null;
+                }
+            }
+
+            // Need to unmark the current binding to this var as a param, or other hoists
+            // could be placed above this ref.
+            // https://github.com/babel/babel/issues/4516
+            for (const nodeOut of nodesOut) {
+                if (!nodeOut.declarations) {
+                    continue;
+                }
+                for (const declaration of nodeOut.declarations) {
+                    const { name } = declaration.id;
+                    if (scope.bindings[name]) {
+                        scope.bindings[name].kind = nodeOut.kind;
+                    }
+                }
+            }
+
+            if (nodesOut.length === 1) {
+                path.replaceWith(nodesOut[0]);
+            } else {
+                path.replaceWithMultiple(nodesOut);
+            }
         }
-    };
-}
+    }
+};
+});

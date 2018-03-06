@@ -1,11 +1,13 @@
 const {
-    js: { compiler: { types: t } }
+    js: { compiler: { types: t, helper: { pluginUtils } } }
 } = adone;
 
-export default function () {
+export default pluginUtils.declare((api) => {
+    api.assertVersion(7);
+
     const getTempId = function (scope) {
         let id = scope.path.getData("functionBind");
-        if (id) { 
+        if (id) {
             return id;
         }
 
@@ -20,8 +22,8 @@ export default function () {
 
     const inferBindContext = function (bind, scope) {
         const staticContext = getStaticContext(bind, scope);
-        if (staticContext) { 
-            return t.cloneNode(staticContext); 
+        if (staticContext) {
+            return t.cloneNode(staticContext);
         }
 
         const tempId = getTempId(scope);
@@ -46,8 +48,8 @@ export default function () {
         visitor: {
             CallExpression({ node, scope }) {
                 const bind = node.callee;
-                if (!t.isBindExpression(bind)) { 
-                    return; 
+                if (!t.isBindExpression(bind)) {
+                    return;
                 }
 
                 const context = inferBindContext(bind, scope);
@@ -67,4 +69,4 @@ export default function () {
             }
         }
     };
-}
+});

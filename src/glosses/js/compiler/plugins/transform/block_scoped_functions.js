@@ -1,10 +1,12 @@
 const {
-    js: { compiler: { types: t } }
+    js: { compiler: { types: t, helper: { pluginUtils } } }
 } = adone;
 
-export default function () {
+export default pluginUtils.declare((api) => {
+    api.assertVersion(7);
+
     const statementList = function (key, path) {
-        const paths: Array = path.get(key);
+        const paths = path.get(key);
 
         for (const path of paths) {
             const func = path.node;
@@ -45,4 +47,4 @@ export default function () {
             }
         }
     };
-}
+});

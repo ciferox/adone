@@ -1,16 +1,13 @@
 const {
-    util: {
-        braces,
-        Snapdragon
-    }
+    util
 } = adone;
 
 const {
     Node
-} = adone.private(Snapdragon);
+} = adone.private(util.Snapdragon);
 const {
     util: _util
-} = adone.private(braces);
+} = adone.private(util.braces);
 
 /**
  * Returns true if the character is an extglob character.

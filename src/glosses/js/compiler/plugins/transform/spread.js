@@ -1,8 +1,10 @@
 const {
-    js: { compiler: { types: t } }
+    js: { compiler: { types: t, helper: { pluginUtils } } }
 } = adone;
 
-export default function (api, options) {
+export default pluginUtils.declare((api, options) => {
+    api.assertVersion(7);
+
     const { loose } = options;
 
     const getSpreadLiteral = function (spread, scope) {
@@ -167,4 +169,4 @@ export default function (api, options) {
             }
         }
     };
-}
+});

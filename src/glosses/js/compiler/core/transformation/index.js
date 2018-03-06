@@ -1,7 +1,4 @@
 // @flow
-// import traverse from "@babel/traverse";
-// import type { SourceMap } from "convert-source-map";
-
 import type { ResolvedConfig, PluginPasses } from "../config";
 
 import PluginPass from "./plugin-pass";
@@ -71,6 +68,7 @@ export function runSync(
     ast: opts.ast === true ? file.ast : null,
     code: outputCode === undefined ? null : outputCode,
     map: outputMap === undefined ? null : outputMap,
+    sourceType: file.ast.program.sourceType,
   };
 }
 

@@ -12,21 +12,21 @@ import type NodePath from "../path";
  */
 
 export default class Binding {
-    constructor({ identifier, scope, path, kind }) {
-        this.identifier = identifier;
-        this.scope = scope;
-        this.path = path;
-        this.kind = kind;
+  constructor({ identifier, scope, path, kind }) {
+    this.identifier = identifier;
+    this.scope = scope;
+    this.path = path;
+    this.kind = kind;
 
-        this.constantViolations = [];
-        this.constant = true;
+    this.constantViolations = [];
+    this.constant = true;
 
-        this.referencePaths = [];
-        this.referenced = false;
-        this.references = 0;
+    this.referencePaths = [];
+    this.referenced = false;
+    this.references = 0;
 
-        this.clearValue();
-    }
+    this.clearValue();
+  }
 
   constantViolations: Array<NodePath>;
   constant: boolean;
@@ -40,22 +40,20 @@ export default class Binding {
   value: any;
 
   deoptValue() {
-      this.clearValue();
-      this.hasDeoptedValue = true;
+    this.clearValue();
+    this.hasDeoptedValue = true;
   }
 
   setValue(value: any) {
-      if (this.hasDeoptedValue) { 
-          return; 
-      }
-      this.hasValue = true;
-      this.value = value;
+    if (this.hasDeoptedValue) return;
+    this.hasValue = true;
+    this.value = value;
   }
 
   clearValue() {
-      this.hasDeoptedValue = false;
-      this.hasValue = false;
-      this.value = null;
+    this.hasDeoptedValue = false;
+    this.hasValue = false;
+    this.value = null;
   }
 
   /**
@@ -63,11 +61,11 @@ export default class Binding {
    */
 
   reassign(path: Object) {
-      this.constant = false;
-      if (this.constantViolations.indexOf(path) !== -1) {
-          return;
-      }
-      this.constantViolations.push(path);
+    this.constant = false;
+    if (this.constantViolations.indexOf(path) !== -1) {
+      return;
+    }
+    this.constantViolations.push(path);
   }
 
   /**
@@ -75,12 +73,12 @@ export default class Binding {
    */
 
   reference(path: NodePath) {
-      if (this.referencePaths.indexOf(path) !== -1) {
-          return;
-      }
-      this.referenced = true;
-      this.references++;
-      this.referencePaths.push(path);
+    if (this.referencePaths.indexOf(path) !== -1) {
+      return;
+    }
+    this.referenced = true;
+    this.references++;
+    this.referencePaths.push(path);
   }
 
   /**
@@ -88,7 +86,7 @@ export default class Binding {
    */
 
   dereference() {
-      this.references--;
-      this.referenced = Boolean(this.references);
+    this.references--;
+    this.referenced = !!this.references;
   }
 }

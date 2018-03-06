@@ -2,7 +2,7 @@ import LooseTransformer from "./loose";
 import VanillaTransformer from "./vanilla";
 
 const {
-    js: { compiler: { types: t, helper: { annotateAsPure, functionName: nameFunction, splitExportDeclaration } } },
+    js: { compiler: { types: t, helper: { annotateAsPure, functionName: nameFunction, splitExportDeclaration, pluginUtils } } },
     util: { globals }
 } = adone;
 
@@ -14,7 +14,9 @@ const builtinClasses = new Set([
     ...getBuiltinClasses("browser")
 ]);
 
-export default function (api, options) {
+export default pluginUtils.declare((api, options) => {
+    api.assertVersion(7);
+
     const { loose } = options;
     const Constructor = loose ? LooseTransformer : VanillaTransformer;
 
@@ -24,8 +26,8 @@ export default function (api, options) {
     return {
         visitor: {
             ExportDefaultDeclaration(path) {
-                if (!path.get("declaration").isClassDeclaration()) { 
-                    return; 
+                if (!path.get("declaration").isClassDeclaration()) {
+                    return;
                 }
                 splitExportDeclaration(path);
             },
@@ -44,8 +46,8 @@ export default function (api, options) {
 
             ClassExpression(path, state) {
                 const { node } = path;
-                if (node[VISITED]) { 
-                    return; 
+                if (node[VISITED]) {
+                    return;
                 }
 
                 const inferred = nameFunction(path);
@@ -69,4 +71,4 @@ export default function (api, options) {
             }
         }
     };
-}
+});
