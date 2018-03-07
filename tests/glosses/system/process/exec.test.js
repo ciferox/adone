@@ -126,8 +126,8 @@ describe("system", "process", () => {
         assert.throws(() => {
             execSync("foo");
         }, is.windows
-            ? /^('|")foo('|")/ // ?
-            : "spawnSync foo ENOENT"
+                ? /^('|")foo('|")/ // ?
+                : "spawnSync foo ENOENT"
         );
     });
 
@@ -498,6 +498,21 @@ describe("system", "process", () => {
         await adone.promise.delay(3000);
 
         assert.equal(await adone.fs.readFile(file, "utf8"), "foo\n");
+    });
+
+    it.todo("removes exit handler on exit", async () => {
+        // FIXME: This relies on `signal-exit` internals
+        const ee = process.process.__signal_exit_emitter__;
+
+        const child = exec("noop");
+        const listener = ee.listeners("exit").pop();
+
+        await new Promise((resolve, reject) => {
+            child.on("error", reject);
+            child.on("exit", resolve);
+        });
+
+        assert.false(ee.listeners("exit").includes(listener));
     });
 
     it("stdio", () => {

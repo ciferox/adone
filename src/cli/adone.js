@@ -35,6 +35,12 @@ const baseSubsystem = (name) => std.path.join(__dirname, "..", "lib", "cli", "su
             group: "dev",
             description: "Inspect adone namespace/object",
             subsystem: baseSubsystem("inspect")
+        },
+        {
+            name: "realm",
+            group: "realm",
+            description: "Realm management",
+            subsystem: baseSubsystem("realm")
         }
     ]
 })
@@ -72,38 +78,6 @@ class AdoneCLI extends application.CliApplication {
                 name: [ss.name, ...adone.util.arrify(ss.aliases)],
                 lazily: true
             });
-        }
-    }
-
-    @DCliCommand({
-        name: "initrealm",
-        group: "realm",
-        help: "Initialize new realm",
-        arguments: [
-            {
-                name: "name",
-                type: String,
-                default: "dev",
-                help: "Name of realm"
-            }
-        ],
-        options: [
-            {
-                name: "--path",
-                type: String,
-                help: "Path where realm will be initialized (home directory by default)"
-            }
-        ]
-    })
-    async initrealmCommand(args, opts) {
-        const name = args.get("name");
-        try {
-            const path = await adone.realm.init(name, opts.has("path") ? opts.get("path") : null);
-            term.print(`Realm {green-fg}'${path}'{/green-fg} successfully initialized\n`);
-            return 0;
-        } catch (err) {
-            term.print(`{red-fg}${err.message}{/}\n`);
-            return 1;
         }
     }
 

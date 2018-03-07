@@ -1,11 +1,11 @@
 const urljoin = require("url-join");
-const _ = require("lodash");
 import runtimePaths from "./runtime_paths";
 
 const {
     fs,
     cmake: { environment, TargetOptions, Downloader, CMLog },
-    std: { path }
+    std: { path },
+    vendor: { lodash: _ }
 } = adone;
 
 const testSum = function (sums, sum, fPath) {

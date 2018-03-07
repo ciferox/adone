@@ -10,17 +10,14 @@ const {
 } = std.path;
 
 export default class RealmInitTask extends task.Task {
-    async run({ rootPath = adone.ROOT_PATH, bits = 2048, keys = false } = {}) {
-        const HOME = rootPath;
-        const RUNTIME_PATH = join(HOME, "runtime");
-        const VAR_PATH = join(HOME, "var");
-        const CONFIGS_PATH = join(HOME, "configs");
-        const omnitronVarPath = join(VAR_PATH, "omnitron");
-        const omnitronDataPath = join(omnitronVarPath, "data");
+    async run({ cwd = adone.ROOT_PATH, bits = 2048, keys = false } = {}) {
+        const CWD = cwd;
+        const RUNTIME_PATH = join(CWD, "runtime");
+        const VAR_PATH = join(CWD, "var");
+        const CONFIGS_PATH = join(CWD, "configs");
         const LOGS_PATH = join(VAR_PATH, "logs");
-        const omnitronLogsPath = join(LOGS_PATH, "omnitron");
-        const KEYS_PATH = join(HOME, "keys");
-        const PACKAGES_PATH = join(HOME, "packages");
+        const KEYS_PATH = join(CWD, "keys");
+        const PACKAGES_PATH = join(CWD, "packages");
         const LOCKFILE_PATH = join(RUNTIME_PATH, "realm");
 
         // runtime dir + lockfile
@@ -38,6 +35,11 @@ export default class RealmInitTask extends task.Task {
         // logs dir
         if (!(await fs.exists(LOGS_PATH))) {
             await fs.mkdirp(LOGS_PATH);
+        }
+
+        // packages dir
+        if (!(await fs.exists(PACKAGES_PATH))) {
+            await fs.mkdirp(PACKAGES_PATH);
         }
 
         // keys dir

@@ -1,5 +1,5 @@
 const which = require("which");
-const processHelpers = require("./processHelpers");
+import { run } from "./processHelpers";
 const npmconf = adone.promise.promisifyAll(require("npmconf"));
 
 const {
@@ -69,7 +69,7 @@ export default class CMake {
 
     _run(command) {
         this.log.info("RUN", command);
-        return processHelpers.run(command, { silent: this.silent });
+        return run(command, { silent: this.silent });
     }
 
     async getConfigureCommand() {

@@ -171,7 +171,7 @@
     "fsevents": "^1.0.0"
   },
   "engines": {
-    "node": ">=9.0.0"
+    "node": ">=9.7.0"
   },
   "main": "lib",
   "repository": "https://github.com/ciferox/adone",

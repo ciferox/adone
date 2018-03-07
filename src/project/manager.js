@@ -66,7 +66,7 @@ export default class ProjectManager extends task.Manager {
         const tasksPath = std.path.join(this.cwd, ".adone", "tasks.js");
         if (await fs.exists(tasksPath)) {
             let customTasks = adone.require(tasksPath);
-            if (customTasks.__esModule === true && is.plainObject(customTasks.default)) {
+            if (customTasks.__esModule === true && is.object(customTasks.default)) {
                 customTasks = customTasks.default;
             }
 
@@ -224,5 +224,11 @@ export default class ProjectManager extends task.Manager {
             await this.generator.loadCustomTasks();
         }
         return this.generator;
+    }
+
+    static async load(options) {
+        const pm = new ProjectManager(options);
+        await pm.load();
+        return pm;
     }
 }

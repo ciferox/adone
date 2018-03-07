@@ -1,50 +1,87 @@
-"use strict";
-let Bluebird = require("bluebird");
-let splitargs = require("splitargs");
-let _ = require("lodash");
-let spawn = require("child_process").spawn;
-let exec = require("child_process").exec;
+const {
+    std: { child_process: { spawn, exec: stdExec } },
+    vendor: { lodash: _ }
+} = adone;
 
-let processHelpers = {
-    run: function (command, options) {
-        options = _.defaults(options, {silent: false});
-        return new Bluebird(function (resolve, reject) {
-            let args = splitargs(command);
-            let name = args[0];
-            args.splice(0, 1);
-            let child = spawn(name, args, {stdio: options.silent ? "ignore" : "inherit"});
-            let ended = false;
-            child.on("error", function (e) {
-                if (!ended) {
-                    reject(e);
-                    ended = true;
-                }
-            });
-            child.on("exit", function (code, signal) {
-                if (!ended) {
-                    if (code === 0) {
-                        resolve();
-                    }
-                    else {
-                        reject(new Error("Process terminated: " + code || signal));
-                    }
-                    ended = true;
-                }
-            });
-        });
-    },
-    exec: function(command) {
-        return new Bluebird(function (resolve, reject) {
-            exec(command, function (err, stdout, stderr) {
-                if (err) {
-                    reject(new Error(err.message + "\n" + (stdout || stderr)));
-                }
-                else {
-                   resolve(stdout);
-                }
-            });
-        });
+const splitargs = (input, sep, keepQuotes) => {
+    const separator = sep || /\s/g;
+    let singleQuoteOpen = false;
+    let doubleQuoteOpen = false;
+    let tokenBuffer = [];
+    const ret = [];
+
+    const arr = input.split("");
+    for (let i = 0; i < arr.length; ++i) {
+        const element = arr[i];
+        const matches = element.match(separator);
+        if (element === "'" && !doubleQuoteOpen) {
+            if (keepQuotes === true) {
+                tokenBuffer.push(element);
+            }
+            singleQuoteOpen = !singleQuoteOpen;
+            continue;
+        } else if (element === '"' && !singleQuoteOpen) {
+            if (keepQuotes === true) {
+                tokenBuffer.push(element);
+            }
+            doubleQuoteOpen = !doubleQuoteOpen;
+            continue;
+        }
+
+        if (!singleQuoteOpen && !doubleQuoteOpen && matches) {
+            if (tokenBuffer.length > 0) {
+                ret.push(tokenBuffer.join(""));
+                tokenBuffer = [];
+            } else if (sep) {
+                ret.push(element);
+            }
+        } else {
+            tokenBuffer.push(element);
+        }
     }
+    if (tokenBuffer.length > 0) {
+        ret.push(tokenBuffer.join(""));
+    } else if (sep) {
+        ret.push("");
+    }
+    return ret;
 };
 
-module.exports = processHelpers;
+export const run = (command, options) => {
+    options = _.defaults(options, { silent: false });
+    return new Promise((resolve, reject) => {
+        const args = splitargs(command);
+        const name = args[0];
+        args.splice(0, 1);
+        const child = spawn(name, args, { stdio: options.silent ? "ignore" : "inherit" });
+        let ended = false;
+        child.on("error", (e) => {
+            if (!ended) {
+                reject(e);
+                ended = true;
+            }
+        });
+        child.on("exit", (code, signal) => {
+            if (!ended) {
+                if (code === 0) {
+                    resolve();
+                } else {
+                    reject(new Error(`Process terminated: ${code}` || signal));
+                }
+                ended = true;
+            }
+        });
+    });
+};
+
+export const exec = (command) => {
+    return new Promise((resolve, reject) => {
+        stdExec(command, (err, stdout, stderr) => {
+            if (err) {
+                reject(new Error(`${err.message}\n${stdout || stderr}`));
+            } else {
+                resolve(stdout);
+            }
+        });
+    });
+};

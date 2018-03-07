@@ -5,48 +5,7 @@ const {
 
 adone.asNamespace(exports);
 
-
-let errname;
-
-if (is.function(adone.std.util.getSystemErrorName)) {
-    errname = (code) => adone.std.util.getSystemErrorName(code);
-} else {
-    // The Node team wants to deprecate `process.bind(...)`.
-    //   https://github.com/nodejs/node/pull/2768
-    //
-    // However, we need the 'uv' binding for errname support.
-    // This is a defensive wrapper around it so `execa` will not fail entirely if it stops working someday.
-    //
-    // If this ever stops working. See: https://github.com/sindresorhus/execa/issues/31#issuecomment-215939939 for another possible solution.
-    let uv;
-
-    try {
-        uv = process.binding("uv");
-
-        if (!is.function(uv.errname)) {
-            throw new TypeError("uv.errname is not a function");
-        }
-    } catch (err) {
-        adone.logError("execa/lib/errname: unable to establish process.binding('uv')", err);
-        uv = null;
-    }
-
-    const uvErrname = (uv, code) => {
-        if (uv) {
-            return uv.errname(code);
-        }
-
-        if (!(code < 0)) {
-            throw new Error("err >= 0");
-        }
-
-        return `Unknown system error ${code}`;
-    };
-
-    errname = (code) => uvErrname(uv, code);
-}
-
-export { errname };
+export const errname = (code) => adone.std.util.getSystemErrorName(code);
 
 const alias = ["stdin", "stdout", "stderr"];
 
@@ -569,10 +528,14 @@ export const exec = (cmd, args, opts) => {
     let timeoutId = null;
     let timedOut = false;
 
-    const cleanupTimeout = () => {
+    const cleanup = () => {
         if (timeoutId) {
             clearTimeout(timeoutId);
             timeoutId = null;
+        }
+
+        if (removeExitHandler) {
+            removeExitHandler();
         }
     };
 
@@ -586,18 +549,18 @@ export const exec = (cmd, args, opts) => {
 
     const processDone = new Promise((resolve) => {
         spawned.on("exit", (code, signal) => {
-            cleanupTimeout();
+            cleanup();
             resolve({ code, signal });
         });
 
         spawned.on("error", (err) => {
-            cleanupTimeout();
+            cleanup();
             resolve({ error: err });
         });
 
         if (spawned.stdin) {
             spawned.stdin.on("error", (err) => {
-                cleanupTimeout();
+                cleanup();
                 resolve({ error: err });
             });
         }
@@ -621,10 +584,6 @@ export const exec = (cmd, args, opts) => {
         const result = arr[0];
         result.stdout = arr[1];
         result.stderr = arr[2];
-
-        if (removeExitHandler) {
-            removeExitHandler();
-        }
 
         if (result.error || result.code !== 0 || !is.null(result.signal)) {
             const err = makeError(result, {

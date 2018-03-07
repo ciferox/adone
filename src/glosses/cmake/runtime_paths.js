@@ -1,8 +1,7 @@
-const _ = require("lodash");
-const assert = require("assert");
-
 const {
-    semver
+    assert,
+    semver,
+    vendor: { lodash: _ }
 } = adone;
 
 const runtimePaths = {

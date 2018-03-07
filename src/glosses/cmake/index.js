@@ -6,6 +6,5 @@ adone.lazify({
     Dist: "./dist",
     CMake: "./cmake",
     Downloader: "./downloader",
-    Toolset: "./toolset",
-    // processHelpers: "./processHelpers"
+    Toolset: "./toolset"
 }, adone.asNamespace(exports), require);

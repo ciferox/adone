@@ -1,7 +1,7 @@
-const assert = require("assert");
 import * as vsDetect from "./vs_detect";
 
 const {
+    assert,
     cmake: { environment, TargetOptions, CMLog }
 } = adone;
 
