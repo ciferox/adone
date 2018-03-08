@@ -1,8 +1,7 @@
-const which = require("which");
-
 const {
     is,
-    std: { os }
+    std: { os },
+    shell
 } = adone;
 
 export default {
@@ -28,7 +27,8 @@ export default {
         if (is.null(this._isNinjaAvailable)) {
             this._isNinjaAvailable = false;
             try {
-                if (which.sync("ninja")) {
+                shell.which("ninja");
+                if (is.null(shell.error())) {
                     this._isNinjaAvailable = true;
                 }
             } catch (e) {
@@ -42,7 +42,8 @@ export default {
         if (is.null(this._isMakeAvailable)) {
             this._isMakeAvailable = false;
             try {
-                if (which.sync("make")) {
+                shell.which("make");
+                if (is.null(shell.error())) {
                     this._isMakeAvailable = true;
                 }
             } catch (e) {
@@ -56,7 +57,8 @@ export default {
         if (is.null(this._isGPPAvailable)) {
             this._isGPPAvailable = false;
             try {
-                if (which.sync("g++")) {
+                shell.which("g++");
+                if (is.null(shell.error())) {
                     this._isGPPAvailable = true;
                 }
             } catch (e) {
@@ -70,7 +72,8 @@ export default {
         if (is.null(this._isClangAvailable)) {
             this._isClangAvailable = false;
             try {
-                if (which.sync("clang++")) {
+                shell.which("clang++");
+                if (is.null(shell.error())) {
                     this._isClangAvailable = true;
                 }
             } catch (e) {

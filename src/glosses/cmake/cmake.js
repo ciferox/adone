@@ -1,4 +1,3 @@
-const which = require("which");
 import { run } from "./processHelpers";
 const npmconf = adone.promise.promisifyAll(require("npmconf"));
 
@@ -8,7 +7,8 @@ const {
     cmake: { environment, Toolset, TargetOptions, CMLog, Dist },
     std: { path },
     system: { process: { execStdout } },
-    vendor: { lodash: _ }
+    vendor: { lodash: _ },
+    shell
 } = adone;
 
 export default class CMake {
@@ -253,11 +253,10 @@ export default class CMake {
                 return !stat.isDirectory();
             }
 
-            which.sync("cmake");
-            return true;
-
+            shell.which("cmake");
+            return is.null(shell.error());
         } catch (e) {
-            _.noop(e);
+            //
         }
         return false;
     }

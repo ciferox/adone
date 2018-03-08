@@ -1,41 +1,43 @@
-const { is } = adone;
+const os = require("os");
+const common = require("../common");
 
-export class Command extends adone.shell.Base {
-    constructor() {
-        super("cd");
-    }
-    _execute(options, dir) {
-        if (!dir) {
-            dir = adone.std.os.homedir();
-        }
+common.register("cd", _cd, {});
 
-        if (dir === "-") {
-            if (!is.string(process.env.OLDPWD)) {
-                this.error("Could not find previous directory");
-            } else {
-                dir = process.env.OLDPWD;
-            }
-        }
-
-        try {
-            const curDir = process.cwd();
-            process.chdir(dir);
-            process.env.OLDPWD = curDir;
-        } catch (err) {
-            let msg;
-            switch (err.code) {
-                case "ENOENT":
-                    msg = `The directory '${dir}' does not exist`;
-                    break;
-                case "EACCES":
-                    msg = `Permission denied: '${dir}'`;
-                    break;
-                default:
-                    msg = err.message;
-                    break;
-            }
-            this.error(msg);
-        }
-        return "";
-    }
+//@
+//@ ### cd([dir])
+//@
+//@ Changes to directory `dir` for the duration of the script. Changes to home
+//@ directory if no argument is supplied.
+function _cd(options, dir) {
+    if (!dir) {
+ dir = os.homedir(); 
 }
+
+    if (dir === "-") {
+        if (!process.env.OLDPWD) {
+            common.error("could not find previous directory");
+        } else {
+            dir = process.env.OLDPWD;
+        }
+    }
+
+    try {
+        const curDir = process.cwd();
+        process.chdir(dir);
+        process.env.OLDPWD = curDir;
+    } catch (e) {
+        // something went wrong, let's figure out the error
+        let err;
+        try {
+            common.statFollowLinks(dir); // if this succeeds, it must be some sort of file
+            err = `not a directory: ${  dir}`;
+        } catch (e2) {
+            err = `no such file or directory: ${  dir}`;
+        }
+        if (err) {
+ common.error(err); 
+}
+    }
+    return "";
+}
+module.exports = _cd;

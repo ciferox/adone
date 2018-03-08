@@ -1,9 +1,16 @@
-export class Command extends adone.shell.Base {
-    constructor() {
-        super("pwd", { allowGlobbing: false });
-    }
+const path = require("path");
+const common = require("../common");
 
-    _execute() {
-        return adone.std.path.resolve(process.cwd());
-    }
+common.register("pwd", _pwd, {
+    allowGlobbing: false
+});
+
+//@
+//@ ### pwd()
+//@
+//@ Returns the current directory.
+function _pwd() {
+    const pwd = path.resolve(process.cwd());
+    return pwd;
 }
+module.exports = _pwd;

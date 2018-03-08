@@ -1,76 +1,103 @@
-const { is, std } = adone;
+const common = require("../common");
+const fs = require("fs");
+const path = require("path");
 
-const splitPath = (p) => (is.string(p) ? p.split(std.path.delimiter) : []);
-const checkPath = async (pathName) => {
-    try {
-        return await adone.fs.is.file(pathName);
-    } catch (err) {
-        return false;
+common.register("which", _which, {
+    allowGlobbing: false,
+    cmdOptions: {
+        a: "all"
     }
-};
+});
 
-export class Command extends adone.shell.Base {
-    constructor() {
-        super("which", {
-            allowGlobbing: false,
-            cmdOptions: {
-                a: "all"
-            }
-        });
+// XP's system default value for `PATHEXT` system variable, just in case it's not
+// set on Windows.
+const XP_DEFAULT_PATHEXT = ".com;.exe;.bat;.cmd;.vbs;.vbe;.js;.jse;.wsf;.wsh";
+
+// Cross-platform method for splitting environment `PATH` variables
+function splitPath(p) {
+    return p ? p.split(path.delimiter) : [];
+}
+
+function checkPath(pathName) {
+    return fs.existsSync(pathName) && !common.statFollowLinks(pathName).isDirectory();
+}
+
+//@
+//@ ### which(command)
+//@
+//@ Examples:
+//@
+//@ ```javascript
+//@ var nodeExec = which('node');
+//@ ```
+//@
+//@ Searches for `command` in the system's `PATH`. On Windows, this uses the
+//@ `PATHEXT` variable to append the extension if it's not already executable.
+//@ Returns string containing the absolute path to `command`.
+function _which(options, cmd) {
+    if (!cmd) {
+        common.error("must specify command");
     }
 
-    async _execute(options, cmd) {
-        if (!cmd) {
-            this.error("Must specify command");
+    const isWindows = process.platform === "win32";
+    const pathEnv = process.env.path || process.env.Path || process.env.PATH;
+    const pathArray = splitPath(pathEnv);
+
+    const queryMatches = [];
+
+    // No relative/absolute paths provided?
+    if (cmd.indexOf("/") === -1) {
+        // Assume that there are no extensions to append to queries (this is the
+        // case for unix)
+        let pathExtArray = [""];
+        if (isWindows) {
+            // In case the PATHEXT variable is somehow not set (e.g.
+            // child_process.spawn with an empty environment), use the XP default.
+            const pathExtEnv = process.env.PATHEXT || XP_DEFAULT_PATHEXT;
+            pathExtArray = splitPath(pathExtEnv.toUpperCase());
         }
 
-        const pathEnv = process.env.path || process.env.Path || process.env.PATH;
-        const pathArray = splitPath(pathEnv);
-
-        const queryMatches = [];
-
-        if (cmd.indexOf("/") === -1) {
-            let pathExtArray = [""];
-            if (is.windows) {
-                const pathExtEnv = process.env.PATHEXT || ".com;.exe;.bat;.cmd;.vbs;.vbe;.js;.jse;.wsf;.wsh";
-                pathExtArray = splitPath(pathExtEnv.toUpperCase());
+        // Search for command in PATH
+        for (let k = 0; k < pathArray.length; k++) {
+            // already found it
+            if (queryMatches.length > 0 && !options.all) {
+                break;
             }
 
-            for (let k = 0; k < pathArray.length; k++) {
-                if (queryMatches.length > 0 && !options.all) {
+            let attempt = path.resolve(pathArray[k], cmd);
+
+            if (isWindows) {
+                attempt = attempt.toUpperCase();
+            }
+
+            const match = attempt.match(/\.[^<>:"/\|?*.]+$/);
+            if (match && pathExtArray.indexOf(match[0]) >= 0) { // this is Windows-only
+                // The user typed a query with the file extension, like
+                // `which('node.exe')`
+                if (checkPath(attempt)) {
+                    queryMatches.push(attempt);
                     break;
                 }
-
-                let attempt = std.path.resolve(pathArray[k], cmd);
-
-                if (is.windows) {
-                    attempt = attempt.toUpperCase();
-                }
-
-                const match = attempt.match(/\.[^<>:"/\|?*.]+$/);
-                if (match && pathExtArray.indexOf(match[0]) >= 0) {
-                    if (await checkPath(attempt)) {
-                        queryMatches.push(attempt);
+            } else { // All-platforms
+                // Cycle through the PATHEXT array, and check each extension
+                // Note: the array is always [''] on Unix
+                for (let i = 0; i < pathExtArray.length; i++) {
+                    const ext = pathExtArray[i];
+                    const newAttempt = attempt + ext;
+                    if (checkPath(newAttempt)) {
+                        queryMatches.push(newAttempt);
                         break;
-                    }
-                } else {
-                    for (let i = 0; i < pathExtArray.length; i++) {
-                        const ext = pathExtArray[i];
-                        const newAttempt = attempt + ext;
-                        if (await checkPath(newAttempt)) {
-                            queryMatches.push(newAttempt);
-                            break;
-                        }
                     }
                 }
             }
-        } else if (await checkPath(cmd)) {
-            queryMatches.push(std.path.resolve(cmd));
         }
-
-        if (queryMatches.length > 0) {
-            return options.all ? queryMatches : queryMatches[0];
-        }
-        return options.all ? [] : null;
+    } else if (checkPath(cmd)) { // a valid absolute or relative path
+        queryMatches.push(path.resolve(cmd));
     }
+
+    if (queryMatches.length > 0) {
+        return options.all ? queryMatches : queryMatches[0];
+    }
+    return options.all ? [] : null;
 }
+module.exports = _which;

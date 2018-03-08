@@ -1,38 +1,40 @@
-const commands = {
-    Base: "./commands/base"
-};
+export const common = require("./common");
 
-[
+const commands = [
     "cat",
     "cd",
-    // "chmod",
-    // "cp",
-    // "dirs",
+    "chmod",
+    "cp",
+    "dirs",
     "echo",
-    // "exec",
-    // "find",
-    // "grep",
-    // "head",
-    // "ln",
-    // "ls",
-    // "mkdir",
-    // "mv",
+    "exec",
+    "find",
+    "grep",
+    "head",
+    "ln",
+    "ls",
+    "mkdir",
+    "mv",
     "pwd",
-    // "rm",
-    // "sed",
-    // "set",
-    // "sort",
-    // "tail",
-    // "tempdir",
-    // "test",
-    // "to",
-    // "toEnd",
-    // "touch",
-    // "uniq",
-    "which",
-    "whoami"
-].forEach((command) => {
-    commands[command] = [`./commands/${command}`, (mod) => (...args) => (new mod.Command()).execute(...args)];
+    "rm",
+    "sed",
+    "set",
+    "sort",
+    "tail",
+    "tempdir",
+    "test",
+    "to",
+    "toEnd",
+    "touch",
+    "uniq",
+    "which"
+];
+
+// Load all default commands
+commands.forEach((command) => {
+    require(`./commands/${command}`);
 });
 
-adone.lazify(commands, exports, require);
+export const error = require("./error");
+export const ShellString = common.ShellString;
+export const config = common.config;
