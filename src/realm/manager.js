@@ -119,6 +119,8 @@ export default class RealmManager extends task.Manager {
         await manager.addTask("mount", realm.task.Mount);
         await manager.addTask("unmount", realm.task.Unmount);
         await manager.addTask("list", realm.task.List);
+        await manager.addTask("create", realm.task.Create);
+        await manager.addTask("fork", realm.task.Fork);
 
         // Add default type handlers
         const handlerNames = adone.std.fs.readdirSync(std.path.join(__dirname, "handlers")).filter((name) => name.endsWith(".js"));

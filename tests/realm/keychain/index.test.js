@@ -11,7 +11,7 @@ const {
 
 const { Identity } = crypto;
 
-describe("realm", "Keychain", () => {
+describe.skip("realm", "Keychain", () => {
     const store1 = path.join(os.tmpdir(), "test-keystore-1");
     const store2 = path.join(os.tmpdir(), "test-keystore-2");
     const datastore1 = new datastore.backend.Fs(store1);

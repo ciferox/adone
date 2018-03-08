@@ -683,18 +683,6 @@
                     "dst": "lib/glosses/netron2",
                     "namespace": "netron2"
                 },
-                "netscan": {
-                    "description": "Network scanning tool",
-                    "task": "transpile",
-                    "src": "src/glosses/netscan/**/*.js",
-                    "dst": "lib/glosses/netscan",
-                    "namespace": "netscan",
-                    "native": {
-                        "src": "src/glosses/netscan/native",
-                        "dst": "lib/glosses/netscan/native",
-                        "type": "gyp"
-                    }
-                },
                 "notifier": {
                     "description": "Implementation of system notifier",
                     "task": "transpile",
@@ -921,34 +909,6 @@
                                 "dst": "lib/glosses/vcs/git/native",
                                 "type": "gyp"
                             }
-                        }
-                    }
-                },
-                "virtualization": {
-                    "description": "Some stuff for virtualization",
-                    "task": "transpile",
-                    "src": "src/glosses/virtualization/**/*.js",
-                    "dst": "lib/glosses/virtualization",
-                    "namespace": "virtualization",
-                    "struct": {
-                        "libvirt": {
-                            "description": "libvirt",
-                            "namespace": "libvirt",
-                            "task": "transpile",
-                            "src": "src/glosses/virtualization/libvirt/**/*.js",
-                            "dst": "lib/glosses/virtualization/libvirt",
-                            "native": {
-                                "src": "src/glosses/virtualization/libvirt/native",
-                                "dst": "lib/glosses/virtualization/libvirt/native",
-                                "type": "gyp"
-                            }
-                        },
-                        "virtualbox": {
-                            "description": "VirtualBox",
-                            "namespace": "virtualbox",
-                            "task": "transpile",
-                            "src": "src/glosses/virtualization/virtualbox/**/*.js",
-                            "dst": "lib/glosses/virtualization/virtualbox"
                         }
                     }
                 },
