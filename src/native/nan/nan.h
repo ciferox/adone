@@ -1679,6 +1679,24 @@ inline MaybeLocal<v8::Value> Call(
   return Call(*callback, recv, argc, argv);
 }
 
+inline MaybeLocal<v8::Value> Call(
+    const Nan::Callback& callback
+  , int argc
+  , v8::Local<v8::Value> argv[]) {
+#if NODE_MODULE_VERSION > NODE_0_10_MODULE_VERSION
+  v8::Isolate* isolate = v8::Isolate::GetCurrent();
+  v8::EscapableHandleScope scope(isolate);
+  return scope.Escape(
+      Call(*callback, isolate->GetCurrentContext()->Global(), argc, argv)
+          .FromMaybe(v8::Local<v8::Value>()));
+#else
+  EscapableHandleScope scope;
+  return scope.Escape(
+      Call(*callback, v8::Context::GetCurrent()->Global(), argc, argv)
+          .FromMaybe(v8::Local<v8::Value>()));
+#endif
+}
+
 /* abstract */ class AsyncWorker {
  public:
   explicit AsyncWorker(Callback *callback_,

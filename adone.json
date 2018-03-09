@@ -90,8 +90,7 @@
                             "task": "transpile",
                             "native": {
                                 "src": "src/glosses/application/report/native",
-                                "dst": "lib/glosses/application/report/native",
-                                "type": "gyp"
+                                "dst": "lib/glosses/application/report/native"
                             }
                         }
                     }

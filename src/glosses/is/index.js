@@ -823,9 +823,13 @@ export const linux = platform === "linux";
 
 export const freebsd = platform === "freebsd";
 
+export const openbsd = platform === "openbsd";
+
 export const darwin = platform === "darwin";
 
 export const sunos = platform === "sunos";
+
+export const aix = platform === "aix";
 
 export const uppercase = (str) => {
     for (const i of str) {

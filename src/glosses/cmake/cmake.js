@@ -119,7 +119,9 @@ export default class CMake {
             // Win
             const libs = this.dist.winLibs;
             if (libs.length) {
-                D.push({ CMAKE_JS_LIB: libs.join(";") });
+                D.push({
+                    CMAKE_JS_LIB: libs.join(";")
+                });
             }
         }
 
@@ -135,19 +137,29 @@ export default class CMake {
             command += ` -G"${this.toolset.generator}"`;
         }
         if (this.toolset.cppCompilerPath) {
-            D.push({ CMAKE_CXX_COMPILER: this.toolset.cppCompilerPath });
+            D.push({
+                CMAKE_CXX_COMPILER: this.toolset.cppCompilerPath
+            });
         }
         if (this.toolset.cCompilerPath) {
-            D.push({ CMAKE_C_COMPILER: this.toolset.cCompilerPath });
+            D.push({
+                CMAKE_C_COMPILER: this.toolset.cCompilerPath
+            });
         }
         if (this.toolset.compilerFlags.length) {
-            D.push({ CMAKE_CXX_FLAGS: this.toolset.compilerFlags.join(" ") });
+            D.push({
+                CMAKE_CXX_FLAGS: this.toolset.compilerFlags.join(" ")
+            });
         }
         if (this.toolset.linkerFlags.length) {
-            D.push({ CMAKE_SHARED_LINKER_FLAGS: this.toolset.linkerFlags.join(" ") });
+            D.push({
+                CMAKE_SHARED_LINKER_FLAGS: this.toolset.linkerFlags.join(" ")
+            });
         }
         if (this.toolset.makePath) {
-            D.push({ CMAKE_MAKE_PROGRAM: this.toolset.makePath });
+            D.push({
+                CMAKE_MAKE_PROGRAM: this.toolset.makePath
+            });
         }
 
         // Load NPM config
