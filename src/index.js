@@ -371,8 +371,6 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         task: "./glosses/tasks",
         odm: "./glosses/odm",
         orm: "./glosses/orm",
-        gyp: "./glosses/gyp",
-        cmake: "./glosses/cmake",
         fake: "./glosses/fake",
 
         // components
@@ -384,6 +382,8 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         fast: "./fast",
         shani: "./shani",
         specter: "./specter",
+        gyp: "./gyp",
+        cmake: "./cmake",
 
         // third parties
         dev: () => {

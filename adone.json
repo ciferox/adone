@@ -111,8 +111,8 @@
                 },
                 "cmake": {
                     "description": "Node.js native addon build tool",
-                    "src": "src/glosses/cmake/**/*.js",
-                    "dst": "lib/glosses/cmake",
+                    "src": "src/cmake/**/*.js",
+                    "dst": "lib/cmake",
                     "task": "transpile",
                     "namespace": "cmake"
                 },
@@ -419,14 +419,14 @@
                         "js": {
                             "task": "transpile",
                             "src": [
-                                "src/glosses/gyp/**/*.js",
-                                "!src/glosses/gyp/gyp/**/*"
+                                "src/gyp/**/*.js",
+                                "!src/gyp/gyp/**/*"
                             ],
-                            "dst": "lib/glosses/gyp"
+                            "dst": "lib/gyp"
                         },
                         "native-gyp": {
-                            "src": "src/glosses/gyp/gyp/**/*",
-                            "dst": "lib/glosses/gyp/gyp"
+                            "src": "src/gyp/gyp/**/*",
+                            "dst": "lib/gyp/gyp"
                         }
                     }
                 },

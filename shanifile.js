@@ -5,7 +5,7 @@ const {
 
 export default {
     options: {
-        tests: "tests/{cli,glosses,project,shani,fast,omnitron,realm,polyfills}/**/*.test.js",
+        tests: "tests/{cli,glosses,project,shani,fast,omnitron,realm,cmake,gyp,polyfills}/**/*.test.js",
         first: false,
         timeout: 30000,
         showHandles: false,
