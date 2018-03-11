@@ -140,6 +140,44 @@ describe("task", () => {
         assert.sameMembers(manager.getTaskNames(), ["task"]);
     });
 
+    it("task's manager property should be immutable", async () => {
+        class TaskA extends task.Task {
+            run() {
+            }
+        }
+
+        await manager.addTask("task", TaskA);
+        const taskA = await manager.getTaskInstance("task");
+        assert.strictEqual(taskA.manager, manager);
+        assert.throws(() => taskA.manager = new task.Manager(), adone.error.NotAllowed);
+    });
+
+    it("task's 'name' property should be immutable", async () => {
+        class TaskA extends task.Task {
+            run() {
+            }
+        }
+
+        await manager.addTask("qua", TaskA);
+        const taskA = await manager.getTaskInstance("qua");
+        assert.strictEqual(taskA.name, "qua");
+        assert.throws(() => taskA.name = "aaa", adone.error.NotAllowed);
+    });
+
+    it("task's 'observer' property should be immutable", async () => {
+        class TaskA extends task.Task {
+            run() {
+            }
+        }
+
+        await manager.addTask("qua", TaskA);
+        const observer = await manager.run("qua");
+        const t = observer.task;
+        assert.strictEqual(t.observer, observer);
+        assert.throws(() => t.observer = {}, adone.error.NotAllowed);
+    });
+
+
     it("run task", async () => {
         await manager.addTask("a", SimpleTask);
         const observer = await manager.run("a", adone.package.version);
@@ -979,6 +1017,145 @@ describe("task", () => {
             } catch (err) {
                 assert.lengthOf(data, 0);
             }
+        });
+    });
+
+    describe("task notifications", () => {
+        class Task1 extends task.Task {
+            async run() {
+                this.manager.notify(this, "progress", {
+                    value: 0.1,
+                    message: "step1"
+                });
+
+                await promise.delay(1);
+
+                this.manager.notify(this, "progress", {
+                    value: 0.5,
+                    message: "step2"
+                });
+
+                await promise.delay(1);
+
+                this.manager.notify(this, "progress", {
+                    value: 1.0,
+                    message: "step3"
+                });
+            }
+        }
+
+        class Task2 extends task.Task {
+            async run() {
+                this.manager.notify(this, "p", {
+                    value: 0.2,
+                    message: "bam1"
+                });
+
+                await promise.delay(1);
+
+                this.manager.notify(this, "pro", {
+                    value: 0.6,
+                    message: "bam2"
+                });
+
+                await promise.delay(1);
+
+                this.manager.notify(this, "progre", {
+                    value: 0.8,
+                    message: "bam3"
+                });
+            }
+        }
+
+        it("observe all notifications", async () => {
+            await manager.addTask("1", Task1);
+
+            let i = 1;
+            const values = [0.1, 0.5, 1.0];
+
+            manager.onNotification("progress", (task, name, data) => {
+                assert.true(is.task(task));
+                assert.strictEqual(name, "progress");
+                assert.strictEqual(values[i - 1], data.value);
+                assert.strictEqual(`step${i++}`, data.message);
+            });
+
+            const observer = await manager.run("1");
+            await observer.result;
+
+            assert.strictEqual(i, 4);
+        });
+
+        it("observe notifications from specific task", async () => {
+            await manager.addTask("1", Task1);
+            await manager.addTask("2", Task2);
+
+            let i = 1;
+            const values = [0.1, 0.5, 1.0];
+
+            manager.onNotification({
+                name: "progress",
+                tasks: "1"
+            }, (task, name, data) => {
+                assert.true(is.task(task));
+                assert.strictEqual(name, "progress");
+                assert.strictEqual(values[i - 1], data.value);
+                assert.strictEqual(`step${i++}`, data.message);
+            });
+
+            await Promise.all([
+                (await manager.run("1")).result,
+                (await manager.run("2")).result
+            ]);
+
+            assert.strictEqual(i, 4);
+        });
+
+        it("observe all notifications", async () => {
+            await manager.addTask("1", Task1);
+            await manager.addTask("2", Task2);
+
+            let i = 0;
+            const values = [0.1, 0.5, 1.0, 0.2, 0.6, 0.8];
+            const messages = ["step1", "step2", "step3", "bam1", "bam2", "bam3"];
+
+            manager.onNotification(null, (task, name, data) => {
+                assert.true(is.task(task));
+                assert.true(values.includes(data.value));
+                assert.true(messages.includes(data.message));
+                i++;
+            });
+
+            await Promise.all([
+                (await manager.run("1")).result,
+                (await manager.run("2")).result
+            ]);
+
+            assert.strictEqual(i, 6);
+        });
+
+        it("observe notification accepts by function selector", async () => {
+            await manager.addTask("1", Task1);
+            await manager.addTask("2", Task2);
+
+            let i = 0;
+            const values = [0.2, 0.6, 0.8];
+            const messages = ["bam1", "bam2", "bam3"];
+
+            manager.onNotification((task) => task.name === "2", (task, name, data) => {
+                assert.true(is.task(task));
+                assert.true(task.name === "2");
+                assert.true(values.includes(data.value));
+                assert.true(messages.includes(data.message));
+                i++;
+            });
+
+            await Promise.all([
+                (await manager.run("1")).result,
+                (await manager.run("2")).result
+            ]);
+
+            assert.strictEqual(i, 3);
         });
     });
 });

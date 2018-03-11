@@ -113,11 +113,7 @@ export default class LinkManager extends application.Subsystem {
                 // Create global link to adone root path
                 const destPath = std.path.join(this.nodeModulesPath, linkName);
                 await fs.mkdirp(this.nodeModulesPath);
-                if (is.windows) {
-                    await fs.symlink(adone.ROOT_PATH, destPath, "junction");
-                } else {
-                    await fs.symlink(adone.ROOT_PATH, destPath);
-                }
+                await fs.symlink(adone.ROOT_PATH, destPath, is.windows ? "junction" : undefined);
             } else {
                 // It might be worth to check the existence of the commands chain...
             }

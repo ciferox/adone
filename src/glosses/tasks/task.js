@@ -1,12 +1,39 @@
 const {
     is,
+    error,
     task: { STATE }
 } = adone;
 
+const { MANAGER_SYMBOL, TASKNAME_SYMBOL, OBSERVER_SYMBOL } = adone.private(adone.task);
+
 export class Task {
     constructor() {
-        this.data = this._ = null;
-        this.manager = null;
+        this[MANAGER_SYMBOL] = null;
+        this[OBSERVER_SYMBOL] = null;
+    }
+
+    get name() {
+        return this[TASKNAME_SYMBOL];
+    }
+
+    set name(val) {
+        throw new error.NotAllowed("Task's 'name' is immutable");
+    }
+
+    get observer() {
+        return this[OBSERVER_SYMBOL];
+    }
+
+    set observer(val) {
+        throw new error.NotAllowed("Task's 'observer' is immutable");
+    }
+
+    get manager() {
+        return this[MANAGER_SYMBOL];
+    }
+
+    set manager(val) {
+        throw new error.NotAllowed("Task's 'manager' is immutable");
     }
 
     /**
@@ -15,7 +42,7 @@ export class Task {
      * @return {any}
      */
     run() {
-        throw new adone.error.NotImplemented("Method run() is not implemented");
+        throw new error.NotImplemented("Method run() is not implemented");
     }
 
     /**
@@ -55,6 +82,7 @@ adone.tag.add(Task, "TASK");
 export class TaskObserver {
     constructor(task, name) {
         this.task = task;
+        this.task[OBSERVER_SYMBOL] = this;
         this.name = name;
         this.state = STATE.IDLE;
         this.result = undefined;
@@ -66,11 +94,11 @@ export class TaskObserver {
      */
     async cancel() {
         if (!this.task.isCancelable()) {
-            throw new adone.error.NotAllowed(`Task '${this.name}' is not cancelable`);
+            throw new error.NotAllowed(`Task '${this.name}' is not cancelable`);
         }
         if (this.state === STATE.RUNNING) {
             this.state = STATE.CANCELLING;
-            const defer = adone.promise.defer();            
+            const defer = adone.promise.defer();
             await this.task.cancel(defer);
             await defer.promise;
         }

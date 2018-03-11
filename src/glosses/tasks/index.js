@@ -26,4 +26,10 @@ const __ = adone.lazify({
     manager: () => new __.Manager() // default task manager for running standalone tasks
 }, adone.asNamespace(exports), require);
 
+adone.lazifyPrivate({
+    TASKNAME_SYMBOL: () => Symbol(),
+    MANAGER_SYMBOL: () => Symbol(),
+    OBSERVER_SYMBOL: () => Symbol()
+}, exports, require);
+
 export const run = (task, ...args) => __.manager.runOnce(task, ...args);

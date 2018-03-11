@@ -3,6 +3,11 @@ const {
     error
 } = adone;
 
+const { MANAGER_SYMBOL, TASKNAME_SYMBOL } = adone.private(adone.task);
+const TASKS_SYMBOL = Symbol();
+const NOTIFICATIONS_SYMBOL = Symbol();
+const ANY_NOTIFICATION = Symbol();
+
 const DUMMY_THROTTLE = (tsk) => tsk();
 
 /**
@@ -13,7 +18,9 @@ const DUMMY_THROTTLE = (tsk) => tsk();
 export default class TaskManager extends adone.event.AsyncEmitter {
     constructor() {
         super();
-        this._tasks = new Map();
+        this[TASKS_SYMBOL] = new Map();
+        this[NOTIFICATIONS_SYMBOL] = new Map();
+        this[NOTIFICATIONS_SYMBOL].set(ANY_NOTIFICATION, []);
     }
 
     /**
@@ -24,7 +31,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
      * @param {object} options 
      */
     addTask(name, task, options) {
-        if (this._tasks.has(name)) {
+        if (this[TASKS_SYMBOL].has(name)) {
             throw new error.Exists(`Task '${name}' already exists`);
         }
         return this.setTask(name, task, options);
@@ -92,7 +99,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
      * @param {string} name 
      */
     hasTask(name) {
-        return this._tasks.has(name);
+        return this[TASKS_SYMBOL].has(name);
     }
 
     /**
@@ -113,7 +120,89 @@ export default class TaskManager extends adone.event.AsyncEmitter {
      * Returns list of task names.
      */
     getTaskNames() {
-        return [...this._tasks.entries()].filter((entry) => !entry[1].zombi).map((entry) => entry[0]);
+        return [...this[TASKS_SYMBOL].entries()].filter((entry) => !entry[1].zombi).map((entry) => entry[0]);
+    }
+
+    /**
+     * Register notification observer.
+     */
+    onNotification(selector, observer) {
+        let name;
+        let filter = adone.truly;
+
+        if (is.string(selector)) {
+            name = selector;
+        } else if (is.function(selector)) {
+            filter = selector;
+        } else if (is.plainObject(selector)) {
+            if (is.string(selector.name)) {
+                name = selector.name;
+            }
+
+            if (is.string(selector.tasks)) {
+                filter = (task) => task.name === selector.tasks;
+            } else if (is.array(selector.tasks)) {
+                filter = (task) => selector.tasks.includes(task.name);
+            }
+        }
+
+        if (is.string(name)) {
+            let observers = this[NOTIFICATIONS_SYMBOL].get(name);
+            if (is.undefined(observers)) {
+                observers = [{
+                    filter,
+                    observer
+                }];
+                this[NOTIFICATIONS_SYMBOL].set(name, observers);
+            } else {
+                const exists = observers.findIndex((info) => info.observer === observer) >= 0;
+                if (exists) {
+                    throw new error.Exists("Observer already exists");
+                }
+
+                observers.push({
+                    filter,
+                    observer
+                });
+            }
+        } else {
+            const anyNotif = this[NOTIFICATIONS_SYMBOL].get(ANY_NOTIFICATION);
+            anyNotif.push({
+                filter,
+                observer
+            });
+        }
+    }
+
+    /**
+     * Emit notification from task
+     * 
+     * @param {adone.task.Task} task - task instance
+     * @param {string} name - notification name
+     * @param {array} args - notification arguments
+     */
+    notify(task, name, ...args) {
+        if (!is.task(task)) {
+            throw new error.NotValid("Invalid task instance");
+        } else if (task.manager !== this) {
+            throw new error.NotAllowed("Post notification is not allowed from tasks owned by other manager");
+        }
+
+        const observers = this[NOTIFICATIONS_SYMBOL].get(name);
+        if (is.array(observers)) {
+            for (const info of observers) {
+                if (info.filter(task, name)) {
+                    info.observer(task, name, ...args);
+                }
+            }
+        }
+
+        const any = this[NOTIFICATIONS_SYMBOL].get(ANY_NOTIFICATION);
+        for (const info of any) {
+            if (info.filter(task, name)) {
+                info.observer(task, name, ...args);
+            }
+        }
     }
 
     /**
@@ -211,7 +300,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
 
     async _createTaskRunner(context, taskInfo) {
         return async (args) => {
-            const instance = this._createTaskInstance(taskInfo);
+            const instance = await this._createTaskInstance(taskInfo);
 
             const taskObserver = new adone.task.TaskObserver(instance, taskInfo.name);
             taskObserver.state = adone.task.STATE.RUNNING;
@@ -257,8 +346,9 @@ export default class TaskManager extends adone.event.AsyncEmitter {
         } else {
             instance = new taskInfo.Class();
         }
-        
-        instance.manager = this;
+
+        instance[TASKNAME_SYMBOL] = taskInfo.name;
+        instance[MANAGER_SYMBOL] = this;
         return instance;
     }
 
@@ -284,11 +374,11 @@ export default class TaskManager extends adone.event.AsyncEmitter {
     }
 
     _installTask(taskInfo) {
-        this._tasks.set(taskInfo.name, taskInfo);
+        this[TASKS_SYMBOL].set(taskInfo.name, taskInfo);
     }
 
     _uninstallTask(taskInfo) {
-        this._tasks.delete(taskInfo.name);
+        this[TASKS_SYMBOL].delete(taskInfo.name);
     }
 
     _checkTask(task) {
@@ -304,7 +394,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
     }
 
     _getTaskInfo(name) {
-        const taskInfo = this._tasks.get(name);
+        const taskInfo = this[TASKS_SYMBOL].get(name);
         if (is.undefined(taskInfo) || taskInfo.zombi === true) {
             throw new error.NotExists(`Task '${name}' not exists`);
         }
