@@ -1,6 +1,6 @@
 describe("update", function () {
     const current = this.sequelize;
-    const { orm, vendor: { lodash: _ } } = adone;
+    const { orm, lodash: _ } = adone;
     const { type } = orm;
 
     beforeEach(function () {

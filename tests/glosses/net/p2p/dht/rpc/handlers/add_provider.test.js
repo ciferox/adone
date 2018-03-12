@@ -3,7 +3,7 @@ import { setupDHT, makePeers, makeValues, teardown } from "../../utils";
 
 const {
     net: { p2p: { dht } },
-    vendor: { lodash: _ }
+    lodash: _
 } = adone;
 const { rpcHandler: { addProvider }, Message } = adone.private(dht);
 

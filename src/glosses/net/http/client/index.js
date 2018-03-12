@@ -2,9 +2,7 @@ const {
     is,
     error: x,
     util,
-    vendor: {
-        lodash
-    }
+    lodash
 } = adone;
 
 adone.lazify({

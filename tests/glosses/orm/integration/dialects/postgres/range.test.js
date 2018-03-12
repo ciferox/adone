@@ -1,6 +1,6 @@
 
 describe("[POSTGRES Specific] range datatype", () => {
-    const { vendor: { lodash: _ } } = adone;
+    const { lodash: _ } = adone;
     const { type } = adone.orm;
 
     const pg = require("pg");

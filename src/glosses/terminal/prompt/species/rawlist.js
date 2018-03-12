@@ -1,6 +1,6 @@
 const {
     is,
-    vendor: { lodash: _ },
+    lodash: _,
     terminal
 } = adone;
 

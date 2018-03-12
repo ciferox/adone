@@ -4,7 +4,7 @@ const {
     util: { keys },
     shani: { util },
     lazify,
-    vendor
+    lodash
 } = adone;
 const { __ } = util;
 
@@ -217,10 +217,10 @@ match.hasNested = (...args) => {
     }
     message += ")";
     return match((actual) => {
-        if (is.nil(actual) || is.undefined(vendor.lodash.get(actual, property))) {
+        if (is.nil(actual) || is.undefined(lodash.get(actual, property))) {
             return false;
         }
-        return onlyProperty || lazy.deepEqual(value, vendor.lodash.get(actual, property));
+        return onlyProperty || lazy.deepEqual(value, lodash.get(actual, property));
     }, message);
 };
 

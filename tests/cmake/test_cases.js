@@ -2,7 +2,7 @@ const {
     fs,
     cmake: { BuildSystem },
     std: { path },
-    vendor: { lodash: _ }
+    lodash: _
 } = adone;
 
 export default {

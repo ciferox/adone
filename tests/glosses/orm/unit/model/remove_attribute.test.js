@@ -1,6 +1,6 @@
 describe("removeAttribute", function () {
     const current = this.sequelize;
-    const { vendor: { lodash: _ } } = adone;
+    const { lodash: _ } = adone;
     const { orm } = adone;
     const { type } = orm;
 

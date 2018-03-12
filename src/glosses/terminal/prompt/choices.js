@@ -1,7 +1,7 @@
 const {
     is,
     error,
-    vendor: { lodash: _ },
+    lodash: _,
     terminal
 } = adone;
 

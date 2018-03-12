@@ -67,7 +67,7 @@ class TunnelingAgent extends event.Emitter {
         const placeholder = {};
         this.sockets.push(placeholder);
 
-        const connectOptions = adone.vendor.lodash.merge({}, this.proxyOptions, {
+        const connectOptions = adone.lodash.merge({}, this.proxyOptions, {
             method: "CONNECT",
             path: `${options.host}:${options.port}`,
             agent: false
@@ -122,7 +122,7 @@ class TunnelingAgent extends event.Emitter {
 
 const createSecureSocket = function (options, cb) {
     TunnelingAgent.prototype.createSocket.call(this, options, (socket) => {
-        const secureSocket = tls.connect(0, adone.vendor.lodash.merge({}, this.options, {
+        const secureSocket = tls.connect(0, adone.lodash.merge({}, this.options, {
             servername: options.host,
             socket
         }));

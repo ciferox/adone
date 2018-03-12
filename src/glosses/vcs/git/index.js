@@ -294,4 +294,4 @@ adone.lazify({
 // https://github.com/facebook/jest/issues/3552
 // https://github.com/facebook/jest/issues/3550
 // https://github.com/nodejs/node/issues/5016
-exports.__proto__ = adone.vendor.lodash.cloneDeep(native);
+exports.__proto__ = adone.lodash.cloneDeep(native);

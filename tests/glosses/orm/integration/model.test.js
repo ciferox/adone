@@ -2,7 +2,7 @@ describe("model", function () {
     const { orm } = adone;
     const { type, operator } = orm;
 
-    const { vendor: { lodash: _ } } = adone;
+    const { lodash: _ } = adone;
     const dialect = this.getTestDialect();
     const current = this.sequelize;
 

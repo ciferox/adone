@@ -1,6 +1,6 @@
 const {
     js: { compiler: { parse, traverse } },
-    vendor: { lodash: { cloneDeep } }
+    lodash: { cloneDeep }
 } = adone;
 
 describe("js", "compiler", "traverse", "traverse", () => {

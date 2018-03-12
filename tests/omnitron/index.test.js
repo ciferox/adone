@@ -261,7 +261,7 @@ describe("omnitron", () => {
             result = await iOmnitron.enumerate();
             assert.lengthOf(result, 1);
 
-            assert.deepEqual(adone.vendor.lodash.omit(result[0], ["group"]), {
+            assert.deepEqual(adone.lodash.omit(result[0], ["group"]), {
                 name: service1Config.raw.name,
                 author: service1Config.raw.author,
                 description: service1Config.raw.description,

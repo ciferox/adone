@@ -1,23 +1,23 @@
 const {
-    fs,
-    cli,
-    realm,
+    // fs,
+    // cli,
+    // realm,
     std,
-    system: { process: { exec } },
+    // system: { process: { exec } },
     text
 } = adone;
 
-const ADONE_PATH = std.path.join(adone.ROOT_PATH, "bin", "adone.js");
+// const ADONE_PATH = std.path.join(adone.ROOT_PATH, "bin", "adone.js");
 
-const PACKAGES_PATH = std.path.join(__dirname, "packages");
-const FIXTURES_PATH = std.path.join(__dirname, "fixtures");
-const fixture = (...args) => std.path.join(FIXTURES_PATH, ...args);
+// const PACKAGES_PATH = std.path.join(__dirname, "packages");
+// const FIXTURES_PATH = std.path.join(__dirname, "fixtures");
+// const fixture = (...args) => std.path.join(FIXTURES_PATH, ...args);
 
 describe("realm", () => {
-    let realmManager;
-    let cliConfig;
+    // let realmManager;
+    // let cliConfig;
 
-    const randomName = (prefix = "test") => `${prefix}${text.random(4)}_${text.random(5)}_${text.random(6)}`;
+    // const randomName = (prefix = "test") => `${prefix}${text.random(4)}_${text.random(5)}_${text.random(6)}`;
 
     // before(async () => {
     //     await realm.init(".adone_test");

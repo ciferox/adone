@@ -1,7 +1,7 @@
 
 const {
     std: { path },
-    vendor: { lodash: _ },
+    lodash: _,
     vcs: { git: { Repository, Clone, Cred } }
 } = adone;
 

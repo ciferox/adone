@@ -1,6 +1,6 @@
 const {
     is,
-    vendor: { lodash: _ },
+    lodash: _,
     orm
 } = adone;
 const debug = orm.util.getLogger().debugContext("sql:pg");

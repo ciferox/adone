@@ -1,4 +1,4 @@
-export default {
+export default adone.asNamespace({
     builtin: {
         Array: false,
         ArrayBuffer: false,
@@ -221,6 +221,8 @@ export default {
         WeakSet: false
     },
     browser: {
+        AbortController: false,
+        AbortSignal: false,
         addEventListener: false,
         alert: false,
         AnalyserNode: false,
@@ -706,13 +708,19 @@ export default {
         RTCCertificate: false,
         RTCDataChannel: false,
         RTCDataChannelEvent: false,
+        RTCDtlsTransport: false,
         RTCIceCandidate: false,
+        RTCIceGatherer: false,
+        RTCIceTransport: false,
         RTCPeerConnection: false,
         RTCPeerConnectionIceEvent: false,
         RTCRtpContributingSource: false,
         RTCRtpReceiver: false,
+        RTCRtpSender: false,
+        RTCSctpTransport: false,
         RTCSessionDescription: false,
         RTCStatsReport: false,
+        RTCTrackEvent: false,
         screen: false,
         Screen: false,
         screenLeft: false,
@@ -1453,4 +1461,4 @@ export default {
         unmonitorEvents: false,
         values: false
     }
-};
+});

@@ -2,15 +2,21 @@ const {
     crypto,
     error,
     is,
+    fast,
     fs,
     task,
-    std
+    std,
+    util
 } = adone;
 
 const { path: { join } } = std;
 
 export default class ForkTask extends task.Task {
-    async run({ cwd = process.cwd(), name, bits = 2048, keys = false } = {}) {
+    async run({ cwd = process.cwd(), name, bits = 2048, withSrc = false, keys = false } = {}) {
+        this.manager.notify(this, "progress", {
+            message: "checking"
+        });
+
         if (!is.string(cwd)) {
             throw new error.NotValid(`Invalid type of 'cwd': ${adone.math.typeOf(cwd)}`);
         }
@@ -18,6 +24,16 @@ export default class ForkTask extends task.Task {
         if (!is.string(name)) {
             throw new error.NotValid(`Invalid type of 'name': ${adone.math.typeOf(name)}`);
         }
+
+        this.destPath = std.path.resolve(cwd, name);
+        if (await fs.exists(this.destPath)) {
+            throw new error.Exists(`Path '${this.destPath}' already exists`);
+        }
+        await fs.mkdirp(this.destPath);
+
+        this.manager.notify(this, "progress", {
+            message: "initializing common realm structure"
+        });
 
         const CWD = cwd;
         const RUNTIME_PATH = join(CWD, "runtime");
@@ -89,109 +105,42 @@ export default class ForkTask extends task.Task {
             });
         }
 
-        let destPath;
-        try {
-            this.root.kit.createProgress("checking");
+        this.manager.notify(this, "progress", {
+            message: "copying files"
+        });
 
-            destPath = std.path.resolve(cwd, name);
-            if (await fs.exists(destPath)) {
-                throw new error.Exists(`Path '${destPath}' already exists`);
-            }
+        const targets = [
+            "!**/*.map",
+            "package.json",
+            "adone.json",
+            "README*",
+            "LICENSE*",
+            ...[".adone", "bin", "lib", "etc"].map((x) => util.globize(x, { recursive: true }))
+        ];
 
-            this.root.kit.updateProgress({
-                message: "initializing realm"
-            });
-
-            await fs.mkdirp(destPath);
-
-            const projManager = await project.Manager.load({
-                cwd: adone.ROOT_PATH
-            });
-
-            let observer = await projManager.run("realmInit", {
-                cwd: destPath,
-                bits: opts.get("bits")
-            });
-            await observer.result;
-
-            this.root.kit.updateProgress({
-                message: "copying files"
-            });
-
-            const targets = [
-                "!**/*.map",
-                "package.json",
-                "adone.json",
-                "README*",
-                "LICENSE*",
-                ...[".adone", "bin", "src", "etc"].map((x) => util.globize(x, { recursive: true }))
-            ];
-
+        if (withSrc) {
+            targets.push("src");
             targets.push("!src/**/native/build/**/*");
+        }
 
-            await fast.src(targets, { base: adone.ROOT_PATH }).dest(destPath, {
-                produceFiles: true
-            });
+        await fast.src(targets, { base: adone.ROOT_PATH }).dest(this.destPath, {
+            produceFiles: true
+        });
 
-            const targetProjManager = await project.Manager.load({
-                cwd: destPath
-            });
-            targetProjManager.setSilent(true);
+        this.manager.notify(this, "progress", {
+            message: `Realm {green-fg}{bold}${name}{/} succescfully forked!`,
+            result: true
+        });
+    }
 
-            const entries = targetProjManager.getProjectEntries();
-            const entriesWithNative = targetProjManager.getProjectEntries({
-                onlyNative: true
-            }).map((entry) => entry.id);
+    async undo(err) {
+        this.manager.notify(this, "progress", {
+            message: err.message,
+            result: false
+        });
 
-            for (const entry of entries) {
-                this.root.kit.updateProgress({
-                    message: `transpiling: ${entry.id}`
-                });
-                const entryId = new RegExp(`${entry.id}$`);
-                /* eslint-disable */
-                observer = await targetProjManager.build(entryId);
-                await observer.result;
-
-                if (entriesWithNative.includes(entry.id)) {
-                    this.root.kit.updateProgress({
-                        message: `addon building: ${entry.id}`
-                    });
-
-                    observer = await targetProjManager.nbuild(entryId, {
-                        clean: true
-                    });
-                    await observer.result;
-                }
-                /* eslint-enable */
-            }
-
-            if (!opts.has("src")) {
-                this.root.kit.updateProgress({
-                    message: "deleting unnecessary files"
-                });
-
-                await fs.rm(std.path.join(destPath, "src"));
-                await fs.rm(util.globize(std.path.join(destPath, "lib"), {
-                    recursive: true,
-                    ext: ".js.map"
-                }));
-            }
-
-            this.root.kit.updateProgress({
-                message: `Realm {green-fg}{bold}${name}{/} succescfully created!`,
-                result: true
-            });
-            return 0;
-        } catch (err) {
-            this.root.kit.updateProgress({
-                message: err.message,
-                result: false
-            });
-
-            if (!(err instanceof error.Exists)) {
-                is.string(destPath) && await fs.rm(destPath);
-            }
-            return 1;
+        if (!(err instanceof error.Exists)) {
+            is.string(this.destPath) && await fs.rm(this.destPath);
         }
     }
 }

@@ -111,7 +111,7 @@ export default class Configuration extends adone.configuration.Generic {
         if (await adone.fs.exists(Configuration.path)) {
             // assign config from home
             await config.load(CONFIG_NAME);
-            adone.vendor.lodash.defaultsDeep(config.raw, Configuration.default);
+            adone.lodash.defaultsDeep(config.raw, Configuration.default);
         } else {
             config.raw = Configuration.default;
             await config.save();

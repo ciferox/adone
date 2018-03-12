@@ -3,7 +3,7 @@ import VanillaTransformer from "./vanilla";
 
 const {
     js: { compiler: { types: t, helper: { annotateAsPure, functionName: nameFunction, splitExportDeclaration, pluginUtils } } },
-    util: { globals }
+    globals
 } = adone;
 
 const getBuiltinClasses = (category) =>

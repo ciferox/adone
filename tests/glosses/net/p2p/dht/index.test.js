@@ -9,7 +9,7 @@ import { makePeers, setupDHT, makeValues, teardown } from "./utils";
 const {
     math: { random },
     net: { p2p: { multiplex, dht, switch: { Switch }, PeerBook, record: { Record }, transport: { TCP } } },
-    vendor: { lodash: _ }
+    lodash: _
 } = adone;
 const { KadDHT } = dht;
 const { utils: kadUtils, constants: c } = adone.private(dht);

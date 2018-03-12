@@ -1,5 +1,10 @@
 export default function plugin() {
-    const { is, error, std: { fs }, vendor: { lodash: _ } } = adone;
+    const {
+        is,
+        error,
+        std: { fs },
+        lodash: _
+    } = adone;
 
     return function wrap(template, data, options) {
         if (is.object(template) && !is.function(template)) {

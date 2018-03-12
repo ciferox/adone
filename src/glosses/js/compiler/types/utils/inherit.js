@@ -1,6 +1,6 @@
 // @flow
 const {
-  vendor: { lodash: { uniq } }
+  lodash: { uniq }
 } = adone;
 
 export default function inherit(

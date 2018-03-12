@@ -5,7 +5,7 @@ export default (ctx) => {
 
     let tmp;
 
-    const { vendor: { lodash: _ } } = adone;
+    const { lodash: _ } = adone;
     const is = adone.is;
     const { orm } = adone;
     const { type } = orm;

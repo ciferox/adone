@@ -13,7 +13,7 @@ import {
 } from "../builders/generated";
 
 const {
-  vendor: { lodash: { isPlainObject, isRegExp } }
+  lodash: { isPlainObject, isRegExp }
 } = adone;
 
 export default function valueToNode(value: any): Object {

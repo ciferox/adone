@@ -147,7 +147,7 @@ export default class Configuration extends Valuable {
 
     async _setVal(key, path, val) {
         const result = await super.get(key);
-        adone.vendor.lodash.set(result, path, val);
+        adone.lodash.set(result, path, val);
         return result;
     }
 
@@ -181,7 +181,7 @@ export default class Configuration extends Valuable {
                     gates = adone.util.arrify(val);
                 } else {
                     gates = this.gates;
-                    adone.vendor.lodash.set(gates, path, val);
+                    adone.lodash.set(gates, path, val);
                 }
                 for (const gate of gates) {
                     if (this.validateService && !this.validateGate(gate)) {
@@ -212,7 +212,7 @@ export default class Configuration extends Valuable {
             return object;
         }
 
-        const result = adone.vendor.lodash.get(object, path);
+        const result = adone.lodash.get(object, path);
         if (is.undefined(result)) {
             throw new adone.error.NotExists(`Key not exist: ${key}`);
         }
@@ -237,7 +237,7 @@ export default class Configuration extends Valuable {
         if (path.length === 0) {
             subObject = result;
         } else {
-            subObject = adone.vendor.lodash.get(result, path);    
+            subObject = adone.lodash.get(result, path);    
         }
 
         if (is.array(subObject)) {

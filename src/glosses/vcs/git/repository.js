@@ -34,7 +34,7 @@ const {
         Signature,
         Utils: { normalizeOptions, shallowClone } }
     },
-    vendor: { lodash: _ }
+    lodash: _
 } = adone;
 
 const Repository = native.Repository;

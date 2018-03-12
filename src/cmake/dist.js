@@ -5,7 +5,7 @@ const {
     fs,
     cmake: { environment, TargetOptions, Downloader, CMLog },
     std: { path },
-    vendor: { lodash: _ }
+    lodash: _
 } = adone;
 
 const testSum = function (sums, sum, fPath) {

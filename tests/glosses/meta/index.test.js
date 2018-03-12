@@ -38,8 +38,8 @@ describe("meta", () => {
                 globals: ["global", "adone"]
             },
             {
-                code: "const { is, vendor: { lodash }, netron: { decorator: { Public, Private } } } = adone",
-                result: ["global", "adone", "adone.is", "adone.netron", "adone.netron.decorator", "adone.vendor", "adone.vendor.lodash"],
+                code: "const { is, lodash, netron: { decorator: { Public, Private } } } = adone",
+                result: ["global", "adone", "adone.is", "adone.netron", "adone.netron.decorator", "adone.lodash"],
                 globals: ["global", "adone", "is", "lodash"]
             }
         ];

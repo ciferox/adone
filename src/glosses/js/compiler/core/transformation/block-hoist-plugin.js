@@ -48,7 +48,7 @@ const blockHoistPlugin = {
         }
         if (!hasChange) return;
 
-        node.body = adone.vendor.lodash.sortBy(node.body, function(bodyNode) {
+        node.body = adone.lodash.sortBy(node.body, function(bodyNode) {
           let priority = bodyNode && bodyNode._blockHoist;
           if (priority == null) priority = 1;
           if (priority === true) priority = 2;

@@ -20,7 +20,7 @@ export default class InstallTask extends task.Task {
     async run({ name = "", build = false, symlink = false } = {}) {
         kit.createProgress("preparing");
 
-        this.name = name;
+        this.packageName = name;
         this.build = build;
         this.symlink = symlink;
 
@@ -48,7 +48,7 @@ export default class InstallTask extends task.Task {
             }
             const version = is.string(adoneConf.raw.version) ? ` ${adoneConf.raw.version}` : "";
             kit.updateProgress({
-                message: `{green-fg}{bold}${this.name}{/bold}${version}{/green-fg} successfully installed`,
+                message: `{green-fg}{bold}${this.packageName}{/bold}${version}{/green-fg} successfully installed`,
                 result: true
             });
 
@@ -101,8 +101,8 @@ export default class InstallTask extends task.Task {
         // Check and create packages path
         await adone.fs.mkdirp(adone.realm.config.PACKAGES_PATH);
 
-        this.name = adoneConf.getFullName();
-        this.destPath = std.path.join(adone.realm.config.PACKAGES_PATH, this.name);
+        this.packageName = adoneConf.getFullName();
+        this.destPath = std.path.join(adone.realm.config.PACKAGES_PATH, this.packageName);
 
         if (this.build) {
             kit.updateProgress({
@@ -154,13 +154,13 @@ export default class InstallTask extends task.Task {
 
     async _installFromGit() {
         kit.updateProgress({
-            message: `cloning {green-fg}${this.name}{/green-fg}`
+            message: `cloning {green-fg}${this.packageName}{/green-fg}`
         });
 
         this.srcPath = await fs.tmpName();
         await fs.mkdirp(std.path.dirname(this.srcPath));
 
-        await adone.vcs.git.Clone(this.name, this.srcPath);
+        await adone.vcs.git.Clone(this.packageName, this.srcPath);
 
         this.build = true;
         this.symlink = false;
@@ -172,7 +172,7 @@ export default class InstallTask extends task.Task {
         if (await fs.exists(this.destPath)) {
             const stat = fs.lstatSync(this.destPath);
             if (!stat.isSymbolicLink()) {
-                throw new error.Exists(`Package ${this.name} already installed, please uninstall it and try again`);
+                throw new error.Exists(`Package ${this.packageName} already installed, please uninstall it and try again`);
             }
             await fs.rm(this.destPath);
         }

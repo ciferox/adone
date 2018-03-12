@@ -1,7 +1,7 @@
 const testCommon = require("./testCommon");
 
 const newDB = (opts) => {
-    opts = adone.vendor.lodash.defaults(opts, {
+    opts = adone.lodash.defaults(opts, {
         location: testCommon.location(),
         keyEncoding: "binary",
         valueEncoding: "mpak"

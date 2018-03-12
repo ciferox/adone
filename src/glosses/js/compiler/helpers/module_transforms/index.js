@@ -8,7 +8,7 @@ import normalizeAndLoadModuleMetadata, {
 const {
     assert,
     js: { compiler: { types: t, template, helper: { moduleImports: { isModule } } } },
-    vendor: { lodash: { chunk } }
+    lodash: { chunk }
 } = adone;
 
 export { hasExports, isSideEffectImport, isModule };

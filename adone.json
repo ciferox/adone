@@ -52,6 +52,10 @@
                     "namespace": "dev",
                     "virtual": true
                 },
+                "vendor": {
+                    "namespace": "vendor",
+                    "virtual": true
+                },
                 "cli": {
                     "description": "Adone CLI stuff",
                     "src": [
@@ -411,6 +415,13 @@
                     "dst": "lib/glosses/geoip",
                     "namespace": "geoip"
                 },
+                "globals": {
+                    "description": "Global identifiers from different JavaScript environments",
+                    "task": "transpile",
+                    "src": "src/glosses/globals/index.js",
+                    "dst": "lib/glosses/globals",
+                    "namespace": "globals"
+                },
                 "gyp": {
                     "description": "Node.js native addon build tool",
                     "namespace": "gyp",
@@ -518,6 +529,12 @@
                             "namespace": "bundle"
                         }
                     }
+                },
+                "lodash": {
+                    "description": "Lodash - A modern JavaScript utility library delivering modularity, performance & extras",
+                    "src": "src/lodash/index.js",
+                    "dst": "lib/lodash",
+                    "namespace": "lodash"
                 },
                 "math": {
                     "description": "Implementation of common math classes and primitives",
@@ -911,11 +928,11 @@
                         }
                     }
                 },
-                "vendor": {
-                    "description": "Vendor virtual namespace",
-                    "src": "src/vendor/**/*.js",
-                    "dst": "lib/vendor",
-                    "namespace": "vendor"
+                "benchmark": {
+                    "description": "A benchmarking library",
+                    "src": "src/benchmark/index.js",
+                    "dst": "lib/benchmark",
+                    "namespace": "benchmark"
                 },
                 "npm": {
                     "description": "Adone based npm packages",

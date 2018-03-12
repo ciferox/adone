@@ -1,6 +1,6 @@
 const {
     std: { child_process: { spawn, exec: stdExec } },
-    vendor: { lodash: _ }
+    lodash: _
 } = adone;
 
 const splitargs = (input, sep, keepQuotes) => {

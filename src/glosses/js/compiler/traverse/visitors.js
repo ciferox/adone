@@ -3,7 +3,7 @@ import * as virtualTypes from "./path/lib/virtual-types";
 const {
   is,
   js: { compiler: { types: t } },
-  vendor: { lodash: { clone } }
+  lodash: { clone }
 } = adone;
 /**
  * explode() will take a visitor object with all of the various shorthands

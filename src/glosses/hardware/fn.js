@@ -1,6 +1,6 @@
 const Fn = {
-    debounce: adone.vendor.lodash.debounce,
-    cloneDeep: adone.vendor.lodash.clonedeep
+    debounce: adone.lodash.debounce,
+    cloneDeep: adone.lodash.clonedeep
 };
 
 /**

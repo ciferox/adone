@@ -1,5 +1,5 @@
 describe("create", function () {
-    const { orm, vendor: { lodash: _ } } = adone;
+    const { orm, lodash: _ } = adone;
     const { type } = orm;
     const dialect = this.getTestDialect();
     const current = this.sequelize;

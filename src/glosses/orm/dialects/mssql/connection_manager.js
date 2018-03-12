@@ -1,6 +1,6 @@
 const {
     orm,
-    vendor: { lodash: _ }
+    lodash: _
 } = adone;
 
 const {

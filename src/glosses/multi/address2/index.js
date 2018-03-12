@@ -1,7 +1,7 @@
 const {
     data: { base58, varint },
     is,
-    vendor: { lodash: { map } }
+    lodash: { map }
 } = adone;
 
 const __ = adone.lazify({

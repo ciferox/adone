@@ -1,6 +1,6 @@
 // Notice: [] will be replaced by dialect specific tick/quote character when there is not dialect specific expectation but only a default expectation
 describe("generateJoin", function () {
-    const { is, orm, std: { util }, vendor: { lodash: _ } } = adone;
+    const { is, orm, std: { util }, lodash: _ } = adone;
     const { type } = orm;
     const { Model } = adone.private(orm);
     const expectsql = this.expectsql;

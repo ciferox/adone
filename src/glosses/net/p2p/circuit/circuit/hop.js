@@ -6,7 +6,7 @@ const {
     multi,
     stream: { pull },
     net: { p2p: { PeerInfo } },
-    vendor: { lodash: { assignInWith } }
+    lodash: { assignInWith }
 } = adone;
 
 const __ = adone.private(adone.net.p2p.circuit);

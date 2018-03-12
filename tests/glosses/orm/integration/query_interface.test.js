@@ -2,7 +2,7 @@ describe("QueryInterface", function () {
     const { orm } = adone;
     const { type } = orm;
 
-    const { vendor: { lodash: _ } } = adone;
+    const { lodash: _ } = adone;
     const dialect = this.getTestDialect();
     const current = this.sequelize;
     let count = 0;

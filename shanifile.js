@@ -49,7 +49,7 @@ export default {
             }, "omnitron"]
         ],
         compact: false,
-        ignore: [/glosses.vendor/]
+        ignore: [/vendor/]
     },
     mapping: async (p) => {
         if (await fs.exists(p)) {

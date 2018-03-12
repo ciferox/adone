@@ -1,5 +1,5 @@
 describe("belongsTo", function () {
-    const { vendor: { lodash: _ } } = adone;
+    const { lodash: _ } = adone;
     const current = this.sequelize;
 
     it("should not override custom methods with association mixin", () => {

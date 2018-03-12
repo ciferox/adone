@@ -1,6 +1,6 @@
 const {
     is,
-    vendor: { lodash: { map } }
+    lodash: { map }
 } = adone;
 
 const V = -1;

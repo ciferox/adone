@@ -1,7 +1,7 @@
 const {
     is,
     util,
-    vendor: { lodash: _ },
+    lodash: _,
     orm
 } = adone;
 

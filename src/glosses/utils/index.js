@@ -819,7 +819,7 @@ export const omit = (obj, props) => {
     if (is.function(props)) {
         isShouldOmit = props;
     } else if (is.array(props)) {
-        isShouldOmit = props.includes.bind(props);
+        isShouldOmit = (name) => props.includes(name);
     } else if (is.string(props)) {
         isShouldOmit = (val) => val === props;
     } else {

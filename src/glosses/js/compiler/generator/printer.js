@@ -5,7 +5,7 @@ import * as generatorFunctions from "./generators";
 
 const {
   js: { compiler: { types: t } },
-  vendor: { lodash: { isInteger, repeat } }
+  lodash: { isInteger, repeat }
 } = adone;
 
 const SCIENTIFIC_NOTATION = /e/i;

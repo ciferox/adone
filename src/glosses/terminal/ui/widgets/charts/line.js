@@ -1,4 +1,7 @@
-const { is, vendor: { lodash: _ } } = adone;
+const {
+    is,
+    lodash: _
+} = adone;
 
 function getColorCode(color) {
     if (is.array(color) && color.length === 3) {

@@ -4,7 +4,7 @@ import type NodePath from "./index";
 
 const { 
     js: { compiler: { types: t } },
-    vendor: { lodash: { includes } }
+    lodash: { includes }
 } = adone;
 
 

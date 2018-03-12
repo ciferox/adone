@@ -1,5 +1,5 @@
 describe("belongsToMany", function () {
-    const { vendor: { lodash: _ } } = adone;
+    const { lodash: _ } = adone;
     const { type, Transaction } = adone.orm;
     const current = this.sequelize;
     const dialect = this.getTestDialect();

@@ -97,12 +97,12 @@ export default class DB extends adone.event.Emitter {
             this.options.valueEncoding = BINARY_CODECS.includes(this.options.valueEncoding) ? this.options.valueEncoding : "binary";
 
             if (is.buffer(encryption.key)) {
-                adone.vendor.lodash.defaults(this.options.encryption, {
+                adone.lodash.defaults(this.options.encryption, {
                     algorithm: "aes-256-cbc",
                     ivBytes: 16
                 });
             } else {
-                adone.vendor.lodash.defaults(this.options.encryption, {
+                adone.lodash.defaults(this.options.encryption, {
                     saltBytes: 32,
                     digest: "sha256",
                     keyBytes: 32,

@@ -5,7 +5,7 @@ describe("createTable", function () {
     const expectsql = this.expectsql;
     const current = this.sequelize;
     const sql = current.dialect.QueryGenerator;
-    const { vendor: { lodash: _ } } = adone;
+    const { lodash: _ } = adone;
 
     const FooUser = current.define("user", {
         mood: new type.ENUM("happy", "sad")

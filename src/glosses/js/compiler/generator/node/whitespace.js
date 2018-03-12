@@ -1,7 +1,7 @@
 const {
     is,
     js: { compiler: { types: t } },
-    vendor: { lodash: { map } }
+    lodash: { map }
 } = adone;
 
 type WhitespaceObject = {

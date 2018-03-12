@@ -4,7 +4,7 @@ const {
     net: { p2p: { Connection } },
     std: { os },
     stream: { pull },
-    vendor: { lodash: { includes } }
+    lodash: { includes }
 } = adone;
 
 export default class Listener extends pull.ws.Server {

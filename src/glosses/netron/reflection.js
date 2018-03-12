@@ -286,7 +286,7 @@ export class Reflection {
 
                 const exMethodMeta = reflect.getMetadata(methodAnnotation(key), r.class);
                 if (!is.undefined(exMethodMeta)) {
-                    adone.vendor.lodash.merge(methodInfo, Reflection.getMethodInfo(null, exMethodMeta));
+                    adone.lodash.merge(methodInfo, Reflection.getMethodInfo(null, exMethodMeta));
                 }
 
                 if (!is.undefined(methodMeta) || !is.undefined(exMethodMeta)) {
@@ -301,7 +301,7 @@ export class Reflection {
 
                 const exPropertyMeta = reflect.getMetadata(propertyAnnotation(key), r.class);
                 if (!is.undefined(exPropertyMeta)) {
-                    adone.vendor.lodash.merge(propertyInfo, Reflection.getPropertyInfo(null, exPropertyMeta));
+                    adone.lodash.merge(propertyInfo, Reflection.getPropertyInfo(null, exPropertyMeta));
                 }
 
                 if (is.nil(propertyInfo.readonly)) {

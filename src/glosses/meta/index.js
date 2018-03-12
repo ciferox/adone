@@ -45,7 +45,7 @@ const collectNamespace = (namespaceMap, prefix) => {
         const nsName = is.null(prefix) ? name : `${prefix}.${name}`;
         namespaces.push(Object.assign({
             name: nsName
-        }, adone.vendor.lodash.omit(val, ["namespace"])));
+        }, adone.util.omit(val, ["namespace"])));
         collectNamespace(val.namespace, nsName);
     }
 };
@@ -83,7 +83,7 @@ export const parseName = (name) => {
         for (i = 0; i < parts.length; i++) {
             const part = parts[i];
             const subPath = `${namespace}.${part}`;
-            const obj = adone.vendor.lodash.get(adone, subPath);
+            const obj = adone.lodash.get(adone, subPath);
             if (!is.namespace(obj)) {
                 break;
             }
@@ -117,7 +117,7 @@ export const listNamespaces = (keyword = "", { threshold = 0.3 } = {}) => {
         result = fuzzy.search(keyword);
     }
 
-    return adone.vendor.lodash.cloneDeep(result.sort((a, b) => a.name.localeCompare(b.name)));
+    return adone.lodash.cloneDeep(result.sort((a, b) => a.name.localeCompare(b.name)));
 };
 
 export const search = (keyword, nsName = "adone", { threshold = 0.3 } = {}) => {
@@ -134,7 +134,7 @@ export const search = (keyword, nsName = "adone", { threshold = 0.3 } = {}) => {
     } else if (namespace === "adone") {
         ns = adone;
     } else {
-        ns = adone.vendor.lodash.get(adone, skipAdoneNs(namespace));
+        ns = adone.lodash.get(adone, skipAdoneNs(namespace));
     }
 
     const keys = Object.getOwnPropertyNames(ns);
@@ -162,9 +162,9 @@ export const search = (keyword, nsName = "adone", { threshold = 0.3 } = {}) => {
 export const getValue = (name) => {
     let obj;
     if (name.startsWith("global.")) {
-        obj = adone.vendor.lodash.get(global, adone.meta.skipGlobalNs(name));
+        obj = adone.lodash.get(global, adone.meta.skipGlobalNs(name));
     } else {
-        obj = adone.vendor.lodash.get(adone, adone.meta.skipAdoneNs(name));
+        obj = adone.lodash.get(adone, adone.meta.skipAdoneNs(name));
     }
     return obj;
 };

@@ -1,7 +1,7 @@
 describe("QueryGenerator", () => {
     const { orm } = adone;
 
-    const { vendor: { lodash: _ } } = adone;
+    const { lodash: _ } = adone;
 
     const {
         dialect: {

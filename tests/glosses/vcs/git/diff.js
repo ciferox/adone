@@ -2,7 +2,7 @@ const {
     fs,
     std: { path },
     vcs: { git: { Blob, Diff, Repository, DiffOptions } },
-    vendor: { lodash: _ }
+    lodash: _
 } = adone;
 
 const local = path.join.bind(path, __dirname, "fixtures");

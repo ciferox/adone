@@ -1,5 +1,5 @@
 describe("include", function () {
-    const { orm, vendor: { lodash: _ }, promise } = adone;
+    const { orm, lodash: _, promise } = adone;
     const { type } = orm;
     const dialect = this.getTestDialect();
 

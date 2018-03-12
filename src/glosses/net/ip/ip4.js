@@ -2,7 +2,7 @@ const {
     is,
     math: { BigNumber },
     net: { ip },
-    vendor: { lodash: { repeat, padStart } }
+    lodash: { repeat, padStart }
 } = adone;
 
 const constants4 = {

@@ -41,7 +41,7 @@ export default class Buffer {
         const result = {
             // Whatever trim is used here should not execute a regex against the
             // source string since it may be arbitrarily large after all transformations
-            code: adone.vendor.lodash.trimEnd(this._buf.join("")),
+            code: adone.lodash.trimEnd(this._buf.join("")),
             map: null,
             rawMappings: map && map.getRawMappings()
         };

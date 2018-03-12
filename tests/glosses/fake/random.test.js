@@ -1,7 +1,7 @@
 const {
     is,
     fake,
-    vendor: { lodash: _ }
+    lodash: _
 } = adone;
 
 describe("fake", "random", () => {

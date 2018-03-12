@@ -3,7 +3,7 @@ describe("Sequelize", function () {
     const { orm } = adone;
     const { type, Transaction } = orm;
 
-    const { vendor: { lodash: _ } } = adone;
+    const { lodash: _ } = adone;
     const dialect = this.getTestDialect();
     const current = this.sequelize;
     const config = this.config;

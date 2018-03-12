@@ -3,7 +3,7 @@ const log = require("npmlog");
 const {
     cmake: { environment },
     std: { util },
-    vendor: { lodash: _ }
+    lodash: _
 } = adone;
 
 const generateRuntimeOptions = function* () {

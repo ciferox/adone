@@ -1,4 +1,8 @@
-const { is, vendor: { lodash }, net: { ssh: { Client } } } = adone;
+const {
+    is,
+    lodash,
+    net: { ssh: { Client } }
+} = adone;
 
 export default class Session {
     constructor(client, options) {

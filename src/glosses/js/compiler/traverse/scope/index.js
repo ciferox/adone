@@ -5,8 +5,8 @@ import { scope as scopeCache } from "../cache";
 
 const {
   js: { compiler: { types: t, traverse } },
-  vendor: { lodash: { includes, repeat, defaults } },
-  util: { globals }
+  lodash: { includes, repeat, defaults },
+  globals
 } = adone;
 
 // Recursively gathers the identifying names of a node.

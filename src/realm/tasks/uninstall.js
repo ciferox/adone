@@ -10,12 +10,12 @@ export default class InstallTask extends task.Task {
     async run({ name = "" } = {}) {
         kit.createProgress("preparing");
 
-        this.name = name;
+        this.packageName = name;
 
         try {
             let isValid = true;
 
-            this.destPath = std.path.join(adone.realm.config.packagesPath, this.name);
+            this.destPath = std.path.join(adone.realm.config.packagesPath, this.packageName);
 
             if (!await fs.exists(this.destPath)) {
                 isValid = false;
@@ -47,22 +47,22 @@ export default class InstallTask extends task.Task {
 
                 if (!found) {
                     kit.updateProgress({
-                        message: `No package with name {green-fg}{bold}${this.name}{/bold}{/green-fg}`,
+                        message: `No package with name {green-fg}{bold}${this.packageName}{/bold}{/green-fg}`,
                         result: false
                     });
                     return;
                 }
             } else {
                 if (!(await fs.exists(this.destPath))) {
-                    throw new adone.error.NotExists(`Package ${this.name} is not exists`);
+                    throw new adone.error.NotExists(`Package ${this.packageName} is not exists`);
                 }
 
                 const adoneConf = await adone.configuration.Adone.load({
                     cwd: this.destPath
                 });
 
-                this.fullName = this.name;
-                this.name = adoneConf.getFullName();
+                this.fullName = this.packageName;
+                this.packageName = adoneConf.getFullName();
 
                 if (is.string(adoneConf.raw.type)) {
                     await this.manager.unregisterComponent(adoneConf);

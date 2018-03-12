@@ -1,7 +1,7 @@
 const {
     data: { varint },
     is,
-    vendor: { lodash: { map, filter } }
+    lodash: { map, filter }
 } = adone;
 
 export const parseError = (str) => new Error(`Error parsing address: ${str}`);

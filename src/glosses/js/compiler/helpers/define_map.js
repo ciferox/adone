@@ -1,6 +1,6 @@
 const {
     js: { compiler: { types: t } },
-    vendor: { lodash: { has } }
+    lodash: { has }
 } = adone;
 
 function toKind(node: Object) {

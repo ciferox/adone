@@ -1,5 +1,5 @@
 describe("DataTypes", function () {
-    const { orm, vendor: { lodash: _ } } = adone;
+    const { orm, lodash: _ } = adone;
     const { type } = orm;
     const current = this.sequelize;
     const dialect = this.getTestDialect();

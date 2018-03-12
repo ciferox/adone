@@ -4,7 +4,7 @@ const {
     is,
     semver,
     std: { fs, path },
-    vendor: { lodash: { cloneDeep, trimEnd, clone, extend } }
+    lodash: { cloneDeep, trimEnd, clone, extend }
 } = adone;
 
 const nodeVersion = semver.clean(process.version.slice(1));

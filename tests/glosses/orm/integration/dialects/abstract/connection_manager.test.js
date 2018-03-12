@@ -1,5 +1,5 @@
 describe("Connection Manager", function () {
-    const { vendor: { lodash: _ } } = adone;
+    const { lodash: _ } = adone;
     const { ConnectionManager } = adone.private(adone.orm).dialect.abstract;
 
     const baseConf = this.config[this.getTestDialect()];

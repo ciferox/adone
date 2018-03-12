@@ -2,7 +2,7 @@ import RepoUtils from "./utils/repository_setup";
 const {
     std: { path, fs },
     vcs: { git: { Revert, RevertOptions } },
-    vendor: { lodash: _ }
+    lodash: _
 } = adone;
 
 const local = path.join.bind(path, __dirname, "fixtures");

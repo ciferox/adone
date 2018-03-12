@@ -25,7 +25,7 @@ const utils = require("./utils");
 const {
     event,
     is,
-    vendor: { lodash: { get } }
+    lodash: { get }
 } = adone;
 
 const VERSION_WHERE = 1;

@@ -57,7 +57,7 @@ export default function prettyTable(data, {
     for (const m of model) {
         !noHeader && head.push(m.header);
         colAligns.push(is.string(m.align) ? m.align : null);
-        map[m.id] = adone.vendor.lodash.omit(m, "id");
+        map[m.id] = adone.lodash.omit(m, "id");
         map[m.id].col = col++;
 
         if (m.wordwrap) {

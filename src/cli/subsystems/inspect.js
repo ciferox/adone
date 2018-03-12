@@ -7,6 +7,16 @@ const {
     runtime: { term }
 } = adone;
 
+const VIRTUAL_NAMESAPCES = [
+    "global",
+    "std",
+    "dev",
+    "vendor",
+    "npm"
+];
+
+const ADONE_GLOBAL = ["adone", "global"];
+
 export default class Inspection extends Subsystem {
     @DMainCliCommand({
         arguments: [
@@ -32,8 +42,6 @@ export default class Inspection extends Subsystem {
     })
     async inspect(args, opts) {
         try {
-            const name = args.get("name");
-            const { namespace, objectName } = adone.meta.parseName(name);
             const inspectOptions = {
                 style: "color",
                 depth: opts.get("depth"),
@@ -43,15 +51,53 @@ export default class Inspection extends Subsystem {
                 proto: true
             };
 
+            let name = args.get("name");
+
+            if (name.length === 0) {
+                adone.log("Possible keys:");
+                adone.log(adone.pretty.json([...VIRTUAL_NAMESAPCES, "adone"].sort()));
+                return 0;
+            }
+
+            const parts = name.split(".");
+            let namespace;
+            let objectName;
+
+            // Reduce 'adone' + 'global' chain...
+            while (parts.length > 1) {
+                if (ADONE_GLOBAL.includes(parts[0]) && ADONE_GLOBAL.includes(parts[1])) {
+                    parts.shift();
+                    name = parts.join(".");
+                } else {
+                    break;
+                }
+            }
+
+            const isVirtual = VIRTUAL_NAMESAPCES.includes(parts[0]);
+
+            if (parts[0] === "adone" || isVirtual) {
+                if (isVirtual && parts[0] !== "adone") {
+                    name = `adone.${name}`;
+                }
+                const result = adone.meta.parseName(name);
+                namespace = result.namespace;
+                objectName = result.objectName;
+            } else if (parts[0] in global) {
+                namespace = "global";
+                objectName = (parts.length === 1)
+                    ? (parts[0] === "global" ? "" : parts[0])
+                    : parts[0] === "global"
+                        ? parts.slice(1).join(".")
+                        : parts.slice().join(".");
+            } else {
+                throw new adone.error.Unknown(`Unknown key: ${name}`);
+            }
+
             let ns;
             if (namespace === "global" || namespace === "") {
                 ns = global;
             } else {
-                if (namespace === "adone") {
-                    ns = adone;
-                } else {
-                    ns = adone.vendor.lodash.get(adone, namespace.substring("adone".length + 1));
-                }
+                ns = (namespace === "adone") ? adone : adone.lodash.get(adone, namespace.substring("adone".length + 1));
             }
 
             if (objectName === "") {
@@ -160,21 +206,22 @@ export default class Inspection extends Subsystem {
                     term.print("\n");
                 }
                 // adone.log(adone.meta.inspect(ns, inspectOptions));
-            } else if (adone.vendor.lodash.has(ns, objectName)) {
-                const obj = adone.vendor.lodash.get(ns, objectName);
+            } else if (adone.lodash.has(ns, objectName)) {
+                const obj = adone.lodash.get(ns, objectName);
                 const type = adone.meta.typeOf(obj);
+
                 if (type === "function") {
                     adone.log(adone.js.highlight(obj.toString()));
                 } else {
-                    adone.log(adone.meta.inspect(adone.vendor.lodash.get(ns, objectName), inspectOptions));
+                    adone.log(adone.meta.inspect(adone.lodash.get(ns, objectName), inspectOptions));
                 }
             } else {
                 throw new adone.error.Unknown(`Unknown object: ${name}`);
             }
+
             return 0;
         } catch (err) {
-            adone.log(err);
-            // adone.logError(err.message);
+            adone.logError(err.message);
             return 1;
         }
     }

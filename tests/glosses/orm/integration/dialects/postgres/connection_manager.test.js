@@ -1,5 +1,5 @@
 describe("Connection manager", function () {
-    const { orm, vendor: { lodash: _ } } = adone;
+    const { orm, lodash: _ } = adone;
     const { type } = orm;
     const checkTimezoneParsing = (baseOptions) => {
         const options = _.extend({}, baseOptions, { timezone: "Asia/Kolkata", timestamps: true });

@@ -1,5 +1,5 @@
 describe("QueryInterface", () => {
-    const { orm, vendor: { lodash: _ } } = adone;
+    const { orm, lodash: _ } = adone;
     const { type } = orm;
 
     beforeEach(function () {

@@ -1,7 +1,7 @@
 const {
     is,
     promise,
-    vendor: { lodash: _ },
+    lodash: _,
     orm,
     std: {
         url,

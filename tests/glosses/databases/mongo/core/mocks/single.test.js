@@ -3,7 +3,7 @@ import mockupdb from "../mock";
 import configuration from "../configuration";
 
 const {
-    vendor: { lodash }
+    lodash
 } = adone;
 const promisify = adone.promise.promisify;
 const waitFor = (emitter, event) => new Promise((resolve) => emitter.once(event, (...args) => {

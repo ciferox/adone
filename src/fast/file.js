@@ -93,7 +93,7 @@ export default class File {
         });
         for (const prop of Object.keys(this)) {
             if (this.constructor.isCustomProp(prop)) {
-                file[prop] = deep ? adone.vendor.lodash.cloneDeep(this[prop]) : this[prop];
+                file[prop] = deep ? adone.lodash.cloneDeep(this[prop]) : this[prop];
             }
         }
         return file;

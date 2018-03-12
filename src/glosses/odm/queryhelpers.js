@@ -3,7 +3,7 @@ const utils = require("./utils");
 
 const {
     is,
-    vendor: { lodash: { get } }
+    lodash: { get }
 } = adone;
 
 /*!

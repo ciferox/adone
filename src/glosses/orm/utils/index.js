@@ -2,7 +2,7 @@ import Logger from "./logger";
 
 const {
     is,
-    vendor: { lodash: _ },
+    lodash: _,
     orm
 } = adone;
 

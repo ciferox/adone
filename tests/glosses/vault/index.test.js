@@ -13,7 +13,7 @@ describe("Vault", () => {
 
     const openVault = async (loc, options = {}) => {
         location = loc || adone.std.path.join(__dirname, `_vault_${vaultIndex++}`);
-        vInstance = await vault.open(adone.vendor.lodash.defaults(options, {
+        vInstance = await vault.open(adone.lodash.defaults(options, {
             location
         }));
         return vInstance;

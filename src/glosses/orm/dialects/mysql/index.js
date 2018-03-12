@@ -1,7 +1,7 @@
 import defineDataTypes from "./data_types";
 
 const {
-    vendor: { lodash: _ },
+    lodash: _,
     orm
 } = adone;
 

@@ -290,7 +290,7 @@ export default class Services extends application.Subsystem {
 
     //                 let options = { serviceName, id, omnitron: this, netron: this._.netron };
     //                 if (is.plainObject(contextConfig.options)) {
-    //                     options = adone.vendor.lodash.defaults(options, contextConfig.options);
+    //                     options = adone.lodash.defaults(options, contextConfig.options);
     //                 }
     //                 instance = new ServiceClass(options);
     //                 if (is.function(instance.initialize)) {

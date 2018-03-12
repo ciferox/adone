@@ -1,5 +1,5 @@
 describe("hasMany", function () {
-    const { vendor: { lodash: _ } } = adone;
+    const { lodash: _ } = adone;
     const { type } = adone.orm;
     const current = this.sequelize;
     const dialect = this.getTestDialect();

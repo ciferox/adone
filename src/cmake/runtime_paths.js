@@ -1,7 +1,7 @@
 const {
     assert,
     semver,
-    vendor: { lodash: _ }
+    lodash: _
 } = adone;
 
 const runtimePaths = {

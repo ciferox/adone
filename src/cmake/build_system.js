@@ -3,7 +3,7 @@ import appCMakeJSConfig from "./appCMakeJSConfig";
 const {
     std: { path },
     cmake: { CMLog, Toolset, CMake, Dist },
-    vendor: { lodash: _ }
+    lodash: _
 } = adone;
 
 export default class BuildSystem {

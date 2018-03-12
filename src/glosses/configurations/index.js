@@ -17,22 +17,22 @@ export class Base {
 
     get(key) {
         this._checkKey(key);
-        return adone.vendor.lodash.get(this.raw, key);
+        return adone.lodash.get(this.raw, key);
     }
 
     has(key) {
         this._checkKey(key);
-        return adone.vendor.lodash.has(this.raw, key);
+        return adone.lodash.has(this.raw, key);
     }
 
     set(key, value) {
         this._checkKey(key);
-        return adone.vendor.lodash.set(this.raw, key, value);
+        return adone.lodash.set(this.raw, key, value);
     }
 
     delete(key) {
         this._checkKey(key);
-        return adone.vendor.lodash.unset(this.raw, key);
+        return adone.lodash.unset(this.raw, key);
     }
 
     clear() {
@@ -50,7 +50,7 @@ export class Base {
         }
         const obj = this.getObject(key);
         if (!is.object(obj)) {
-            return this.set(key, adone.vendor.lodash.assign(...args));
+            return this.set(key, adone.lodash.assign(...args));
         }
         
         for (let i = args.length; --i >= 0; ) {
@@ -59,7 +59,7 @@ export class Base {
             }
         }
 
-        return adone.vendor.lodash.assign(obj, ...args);
+        return adone.lodash.assign(obj, ...args);
     }
 
     merge(...args) {
@@ -73,7 +73,7 @@ export class Base {
         }
         const obj = this.getObject(key);
         if (!is.object(obj)) {
-            return this.set(key, adone.vendor.lodash.assign(...args));
+            return this.set(key, adone.lodash.assign(...args));
         }
         
         for (let i = args.length; --i >= 0; ) {
@@ -82,19 +82,19 @@ export class Base {
             }
         }
         
-        return adone.vendor.lodash.merge(obj, ...args);
+        return adone.lodash.merge(obj, ...args);
     }
 
     keys(key) {
-        return adone.vendor.lodash.keys(this.getObject(key));
+        return adone.lodash.keys(this.getObject(key));
     }
 
     values(key) {
-        return adone.vendor.lodash.values(this.getObject(key));
+        return adone.lodash.values(this.getObject(key));
     }
 
     entries(key) {
-        return adone.vendor.lodash.toPairs(this.getObject(key));
+        return adone.lodash.toPairs(this.getObject(key));
     }
 
     getObject(key) {

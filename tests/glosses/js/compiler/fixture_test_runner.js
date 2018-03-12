@@ -5,7 +5,7 @@ const {
     js: { compiler: { core, codeFrameColumns } },
     sourcemap,
     std: { vm, path, fs },
-    vendor: { lodash: { defaults, includes, extend, merge } }
+    lodash: { defaults, includes, extend, merge }
 } = adone;
 
 const { buildExternalHelpers } = core;

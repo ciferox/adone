@@ -35,7 +35,7 @@ export function loadPlugin(
 
   // return { filepath, value };
   return {
-    value: adone.vendor.lodash.get(adone.js.compiler.plugin, name)
+    value: adone.lodash.get(adone.js.compiler.plugin, name)
   };
 }
 

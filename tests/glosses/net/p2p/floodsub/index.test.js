@@ -4,7 +4,7 @@ const { first, createNetCore, expectSet } = utils;
 const {
     is,
     net: { p2p: { floodsub: { FloodSub, utils: floodUtils } } },
-    vendor: { lodash: { times: _times } }
+    lodash: { times: _times }
 } = adone;
 
 describe("floodsub", () => {

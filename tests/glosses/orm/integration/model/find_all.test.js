@@ -1,6 +1,6 @@
 describe("findAll", function () {
     const { promise } = adone;
-    const { vendor: { lodash: _ } } = adone;
+    const { lodash: _ } = adone;
     const { orm } = adone;
     const { type } = orm;
     const dialect = this.getTestDialect();

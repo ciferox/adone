@@ -1,5 +1,5 @@
 describe("QueryGenerator", function () {
-    const { vendor: { lodash: _ } } = adone;
+    const { lodash: _ } = adone;
     const expectsql = this.expectsql;
     const current = this.sequelize;
     const { operator } = adone.orm;

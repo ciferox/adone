@@ -12,7 +12,7 @@ describe("QueryGenerator", () => {
         type
     } = orm;
 
-    const { vendor: { lodash: _ } } = adone;
+    const { lodash: _ } = adone;
 
     beforeEach(function () {
         this.User = this.sequelize.define("User", {

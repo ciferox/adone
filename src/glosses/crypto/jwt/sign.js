@@ -3,7 +3,7 @@ const xtend = require("xtend");
 const {
     crypto: { jws },
     is,
-    vendor: { lodash: { once, includes } }
+    lodash: { once, includes }
 } = adone;
 
 const signOptionsSchema = {

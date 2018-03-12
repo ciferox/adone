@@ -3,7 +3,7 @@ import { garbageCollect } from "./utils/garbage_collect.js";
 const {
     std: { path },
     vcs: { git: { Repository, Remote, Enums, Cred } },
-    vendor: { lodash: _ }
+    lodash: _
 } = adone;
 
 const local = path.join.bind(path, __dirname, "fixtures");

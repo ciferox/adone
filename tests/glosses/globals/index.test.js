@@ -1,9 +1,9 @@
 const {
     is,
-    util: { globals }
+    globals
 } = adone;
 
-describe("util", "globals", () => {
+describe("globals", () => {
     it("main", () => {
         assert.true(is.plainObject(globals));
         assert.true(Object.keys(globals).length > 10 && Object.keys(globals).length < 1000);

@@ -2,7 +2,7 @@ const {
     is,
     crypto: { Identity },
     net: { p2p: { PeerInfo, dht, record: { Record } } },
-    vendor: { lodash: { range } },
+    lodash: { range },
     math: { random },
     std: { fs, path }
 } = adone;

@@ -10,7 +10,7 @@ const {
     datastore: { backend: { Memory: MemoryStore, Level: LevelStore } },
     multi,
     net: { p2p: { dht, CID } },
-    vendor: { lodash: { range } },
+    lodash: { range },
     std: { os, path }
 } = adone;
 const { Providers } = adone.private(dht);

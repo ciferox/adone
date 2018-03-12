@@ -12,7 +12,7 @@ describe("QueryGenerator", function () {
         type
     } = orm;
 
-    const { vendor: { lodash: _ } } = adone;
+    const { lodash: _ } = adone;
     const current = this.sequelize;
 
 

@@ -4,7 +4,7 @@ import * as cache from "./cache";
 
 const {
   js: { compiler: { types: t } },
-  vendor: { lodash: { includes } }
+  lodash: { includes }
 } = adone;
 
 

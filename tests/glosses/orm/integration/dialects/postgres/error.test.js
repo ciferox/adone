@@ -1,6 +1,6 @@
 
 describe("error", () => {
-    const { orm, vendor: { lodash: _ } } = adone;
+    const { orm, lodash: _ } = adone;
     const { type } = orm;
 
     const constraintName = "overlap_period";

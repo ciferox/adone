@@ -365,6 +365,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         netscan: "./glosses/netscan",
         schema: "./glosses/schema",
         geoip: "./glosses/geoip",
+        globals: "./glosses/globals",
         notifier: "./glosses/notifier",
         vcs: "./glosses/vcs",
         regex: "./glosses/regex",
@@ -384,6 +385,8 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         specter: "./specter",
         gyp: "./gyp",
         cmake: "./cmake",
+        lodash: "./lodash",
+        benchmark: "./benchmark",
 
         // third parties
         dev: () => {
@@ -396,7 +399,10 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
 
             return adone.asNamespace(adone.lazify(mounts, null));
         },
-        vendor: "./vendor",
+        vendor: () => {
+            // TODO
+            return {};
+        },
         npm: "./npm"
     }, adone);
     if (process.env.ADONE_SOURCEMAPS) {

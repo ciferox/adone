@@ -1,5 +1,5 @@
 const {
-    vendor: { lodash: _ }
+    lodash: _
 } = adone;
 
 export default function defineMssqlTypes(BaseTypes) {

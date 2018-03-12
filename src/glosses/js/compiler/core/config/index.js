@@ -19,7 +19,7 @@ import makeAPI from "./helpers/config-api";
 
 const {
   js: { compiler: { traverse } },
-  vendor: { lodash: { merge, clone } }
+  lodash: { merge, clone }
 } = adone;
 
 type LoadedDescriptor = {

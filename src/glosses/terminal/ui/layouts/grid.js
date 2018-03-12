@@ -23,7 +23,7 @@ export default class Grid {
 
         //var options = JSON.parse(JSON.stringify(opts));   
         let options = {};
-        options = adone.vendor.lodash.merge(options, opts);
+        options = adone.lodash.merge(options, opts);
         options.top = `${top}%`;
         options.left = `${left}%`;
         options.width = `${this.cellWidth * colSpan - widgetSpacing}%`;

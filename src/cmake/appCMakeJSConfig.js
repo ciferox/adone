@@ -1,7 +1,7 @@
 const {
     is,
     std: { path },
-    vendor: { lodash: _ }
+    lodash: _
 } = adone;
 
 const getConfig = function (lookPath, log) {

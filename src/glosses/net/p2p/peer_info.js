@@ -1,6 +1,6 @@
 const {
     is,
-    vendor: { lodash: { uniqBy } },
+    lodash: { uniqBy },
     multi,
     crypto: { Identity },
     util

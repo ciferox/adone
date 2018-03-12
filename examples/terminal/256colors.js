@@ -1,4 +1,7 @@
-const { terminal, vendor: { lodash: _ } } = adone;
+const {
+    terminal,
+    lodash: _
+} = adone;
 
 adone.application.run({
     main() {
