@@ -11,18 +11,18 @@ const {
 
 const { path: { join } } = std;
 
-export default class ForkTask extends task.Task {
-    async run({ cwd = process.cwd(), name, bits = 2048, withSrc = false, keys = false } = {}) {
+export default class ForkRealmTask extends task.Task {
+    async run({ cwd, name, bits = 2048, withSrc = false, keys = false } = {}) {
         this.manager.notify(this, "progress", {
             message: "checking"
         });
 
         if (!is.string(cwd)) {
-            throw new error.NotValid(`Invalid type of 'cwd': ${adone.math.typeOf(cwd)}`);
+            throw new error.NotValid(`Invalid type of 'cwd': ${adone.meta.typeOf(cwd)}`);
         }
 
         if (!is.string(name)) {
-            throw new error.NotValid(`Invalid type of 'name': ${adone.math.typeOf(name)}`);
+            throw new error.NotValid(`Invalid type of 'name': ${adone.meta.typeOf(name)}`);
         }
 
         this.destPath = std.path.resolve(cwd, name);
@@ -35,7 +35,7 @@ export default class ForkTask extends task.Task {
             message: "initializing common realm structure"
         });
 
-        const CWD = cwd;
+        const CWD = this.destPath;
         const RUNTIME_PATH = join(CWD, "runtime");
         const VAR_PATH = join(CWD, "var");
         const CONFIGS_PATH = join(CWD, "configs");
@@ -131,6 +131,14 @@ export default class ForkTask extends task.Task {
             message: `Realm {green-fg}{bold}${name}{/} succescfully forked!`,
             result: true
         });
+
+        const realmManager = new adone.realm.Manager({
+            cwd: this.destPath
+        });
+
+        await realmManager.initialize();
+
+        return realmManager;
     }
 
     async undo(err) {

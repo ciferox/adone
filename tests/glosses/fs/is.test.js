@@ -27,21 +27,21 @@ describe("fs", "is", () => {
 
         if (!is.windows) {
             it("meow async", async () => {
-                assert.true(await adone.fs.is.executable(meow));
+                assert.true(await adone.fs.isExecutable(meow));
             });
         }
 
         it("fail async", async () => {
-            assert.false(await adone.fs.is.executable(fail));
+            assert.false(await adone.fs.isExecutable(fail));
         });
 
         it("noent async", async () => {
-            const err = await assert.throws(async () => adone.fs.is.executable(noent));
+            const err = await assert.throws(async () => adone.fs.isExecutable(noent));
             assert.instanceOf(err, Error);
         });
 
         it("noent ignore async", async () => {
-            await assert.doesNotThrow(async () => adone.fs.is.executable(noent, { ignoreErrors: true }));
+            await assert.doesNotThrow(async () => adone.fs.isExecutable(noent, { ignoreErrors: true }));
         });
 
         const runTest = async (options) => {
@@ -64,24 +64,24 @@ describe("fs", "is", () => {
             assert.throws(() => adone.fs.is.executableSync(noent, options));
 
             if (!options) {
-                assert.true(await adone.fs.is.executable(meow));
+                assert.true(await adone.fs.isExecutable(meow));
             } else {
-                assert.true(await adone.fs.is.executable(meow, options));
+                assert.true(await adone.fs.isExecutable(meow, options));
             }
 
-            assert.true(await adone.fs.is.executable(mine, options));
+            assert.true(await adone.fs.isExecutable(mine, options));
 
-            assert.true(await adone.fs.is.executable(ours, options));
+            assert.true(await adone.fs.isExecutable(ours, options));
 
             if (!options || !options.skipFail) {
-                assert.false(await adone.fs.is.executable(fail, options));
+                assert.false(await adone.fs.isExecutable(fail, options));
             }
 
-            await assert.throws(async () => adone.fs.is.executable(noent, options));
+            await assert.throws(async () => adone.fs.isExecutable(noent, options));
 
-            assert.false(await adone.fs.is.executable(noent, optionsIgnore));
+            assert.false(await adone.fs.isExecutable(noent, optionsIgnore));
 
-            assert.false(await adone.fs.is.executable(__dirname, options));
+            assert.false(await adone.fs.isExecutable(__dirname, options));
         };
 
         if (!is.windows) {

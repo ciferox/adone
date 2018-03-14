@@ -7,7 +7,7 @@ const {
     runtime: { term }
 } = adone;
 
-const VIRTUAL_NAMESAPCES = [
+const VIRTUAL_NAMESPACES = [
     "global",
     "std",
     "dev",
@@ -55,7 +55,7 @@ export default class Inspection extends Subsystem {
 
             if (name.length === 0) {
                 adone.log("Possible keys:");
-                adone.log(adone.pretty.json([...VIRTUAL_NAMESAPCES, "adone"].sort()));
+                adone.log(adone.pretty.json([...VIRTUAL_NAMESPACES, "adone"].sort()));
                 return 0;
             }
 
@@ -73,7 +73,7 @@ export default class Inspection extends Subsystem {
                 }
             }
 
-            const isVirtual = VIRTUAL_NAMESAPCES.includes(parts[0]);
+            const isVirtual = VIRTUAL_NAMESPACES.includes(parts[0]);
 
             if (parts[0] === "adone" || isVirtual) {
                 if (isVirtual && parts[0] !== "adone") {

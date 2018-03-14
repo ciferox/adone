@@ -1,5 +1,4 @@
 const {
-    cli: { kit },
     fs,
     is,
     std,
@@ -10,7 +9,9 @@ const {
 export default class MountTask extends task.Task {
     async run({ name, path } = {}) {
         try {
-            kit.createProgress("mounting");
+            this.manager.notify(this, "progress", {
+                message: "mounting"
+            });
             const devmntPath = adone.realm.config.devmntPath;
 
             if (!is.string(name)) {
@@ -49,12 +50,12 @@ export default class MountTask extends task.Task {
                 space: "    "
             });
 
-            kit.updateProgress({
+            this.manager.notify(this, "progress", {
                 message: `{green-fg}{bold}adone.dev.${name}{/} successfully mounted`,
                 result: true
             });
         } catch (err) {
-            kit.updateProgress({
+            this.manager.notify(this, "progress", {
                 message: err.message,
                 result: false
             });

@@ -4,8 +4,8 @@ const {
 } = adone;
 
 export default class CliCommandHandler extends realm.TypeHandler {
-    constructor(pkg) {
-        super(pkg, "Adone cli commands", "cli.command");
+    constructor(manager) {
+        super(manager, "Adone cli commands", "cli.command");
     }
 
     async register(adoneConf, destPath) {
@@ -25,7 +25,9 @@ export default class CliCommandHandler extends realm.TypeHandler {
             commandInfo.aliases = adone.util.arrify(adoneConf.raw.cliAlias);
         }
 
-        const cliConfig = await adone.cli.Configuration.load();
+        const cliConfig = await adone.cli.Configuration.load({
+            cwd: this.manager.config.CONFIGS_PATH
+        });
         if (!is.array(cliConfig.raw.commands)) {
             cliConfig.raw.commands = [];
         }
@@ -50,7 +52,9 @@ export default class CliCommandHandler extends realm.TypeHandler {
     }
 
     async unregister(adoneConf) {
-        const cliConfig = await adone.cli.Configuration.load();
+        const cliConfig = await adone.cli.Configuration.load({
+            cwd: this.manager.config.CONFIGS_PATH
+        });
         const index = cliConfig.raw.commands.findIndex((x) => adoneConf.raw.name === x.name);
         if (index >= 0) {
             cliConfig.raw.commands.splice(index, 1);
@@ -60,7 +64,9 @@ export default class CliCommandHandler extends realm.TypeHandler {
 
     async list() {
         const result = [];
-        const cliConfig = await adone.cli.Configuration.load();
+        const cliConfig = await adone.cli.Configuration.load({
+            cwd: this.manager.config.CONFIGS_PATH
+        });
         const commands = cliConfig.raw.commands;
 
         for (const command of commands) {
@@ -70,7 +76,9 @@ export default class CliCommandHandler extends realm.TypeHandler {
     }
 
     async checkAndRemove(name) {
-        const cliConfig = await adone.cli.Configuration.load();
+        const cliConfig = await adone.cli.Configuration.load({
+            cwd: this.manager.config.CONFIGS_PATH
+        });
         if (!is.array(cliConfig.raw.commands)) {
             cliConfig.raw.commands = [];
         }

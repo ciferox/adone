@@ -34,7 +34,7 @@ export default class Dispatcher extends Subsystem {
 
     get omnitronPeerInfo() {
         if (is.undefined(this._peerInfo)) {
-            this._peerInfo = adone.net.p2p.PeerInfo.create(adone.realm.config.identity.server);
+            this._peerInfo = adone.net.p2p.PeerInfo.create(adone.runtime.realm.manager.config.identity.server);
             this._peerInfo.multiaddrs.add(multi.address2.fromNodeAddress(omnitron2.defaultAddress));
         }
         return this._peerInfo;
@@ -140,7 +140,7 @@ export default class Dispatcher extends Subsystem {
                 return result.process.id;
             }
             return new Promise(async (resolve, reject) => {
-                const omniConfig = adone.realm.config.omnitron;
+                const omniConfig = adone.runtime.realm.manager.config.omnitron;
                 this.descriptors.stdout = std.fs.openSync(omniConfig.LOGFILE_PATH, "a");
                 this.descriptors.stderr = std.fs.openSync(omniConfig.ERRORLOGFILE_PATH, "a");
                 const args = [std.path.resolve(adone.ROOT_PATH, "lib/omnitron2/omnitron/index.js")];

@@ -1,5 +1,4 @@
 const {
-    cli: { kit },
     fast,
     fs,
     is,
@@ -18,7 +17,9 @@ const DEST_OPTIONS = {
 
 export default class InstallTask extends task.Task {
     async run({ name = "", build = false, symlink = false } = {}) {
-        kit.createProgress("preparing");
+        this.manager.notify(this, "progress", {
+            message: "preparing"
+        });
 
         this.packageName = name;
         this.build = build;
@@ -47,14 +48,14 @@ export default class InstallTask extends task.Task {
                 }
             }
             const version = is.string(adoneConf.raw.version) ? ` ${adoneConf.raw.version}` : "";
-            kit.updateProgress({
+            this.manager.notify(this, "progress", {
                 message: `{green-fg}{bold}${this.packageName}{/bold}${version}{/green-fg} successfully installed`,
                 result: true
             });
 
             return adoneConf;
         } catch (err) {
-            kit.updateProgress({
+            this.manager.notify(this, "progress", {
                 message: "installation failed",
                 result: false
             });
@@ -64,9 +65,12 @@ export default class InstallTask extends task.Task {
     }
 
     async undo(err) {
+        adone.logError(err);
         if (is.plainObject(this.rollbackData)) {
             if (is.array(this.rollbackData.subProjects)) {
-                const cliConfig = await adone.cli.Configuration.load();
+                const cliConfig = await adone.cli.Configuration.load({
+                    cwd: this.manager.config.CONFIGS_PATH
+                });
                 for (const subInfo of this.rollbackData.subProjects) {
                     cliConfig.deleteCommand(subInfo.adoneConf.raw.name);
                 }
@@ -77,14 +81,14 @@ export default class InstallTask extends task.Task {
             const adoneConf = this.rollbackData.adoneConf;
             if (is.configuration(adoneConf)) {
                 const name = adoneConf.getFullName();
-                const destPath = std.path.join(adone.realm.config.PACKAGES_PATH, name);
+                const destPath = std.path.join(this.manager.config.PACKAGES_PATH, name);
                 return fs.rm(destPath);
             }
         }
     }
 
     async _installFromLocal() {
-        kit.updateProgress({
+        this.manager.notify(this, "progress", {
             message: `installing from {green-fg}${this.srcPath}{/green-fg}`
         });
 
@@ -99,19 +103,19 @@ export default class InstallTask extends task.Task {
         }
 
         // Check and create packages path
-        await adone.fs.mkdirp(adone.realm.config.PACKAGES_PATH);
+        await adone.fs.mkdirp(this.manager.config.PACKAGES_PATH);
 
         this.packageName = adoneConf.getFullName();
-        this.destPath = std.path.join(adone.realm.config.PACKAGES_PATH, this.packageName);
+        this.destPath = std.path.join(this.manager.config.PACKAGES_PATH, this.packageName);
 
         if (this.build) {
-            kit.updateProgress({
+            this.manager.notify(this, "progress", {
                 message: "building project"
             });
             await this._buildProject();
         }
 
-        kit.updateProgress({
+        this.manager.notify(this, "progress", {
             message: "copying files"
         });
 
@@ -121,7 +125,7 @@ export default class InstallTask extends task.Task {
             await this._copyFiles(adoneConf);
         }
 
-        kit.updateProgress({
+        this.manager.notify(this, "progress", {
             message: "registering components"
         });
 
@@ -153,7 +157,7 @@ export default class InstallTask extends task.Task {
     }
 
     async _installFromGit() {
-        kit.updateProgress({
+        this.manager.notify(this, "progress", {
             message: `cloning {green-fg}${this.packageName}{/green-fg}`
         });
 

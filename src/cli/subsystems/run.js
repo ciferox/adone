@@ -42,7 +42,7 @@ export default class Run extends Subsystem {
 
         let path = std.path.resolve(process.cwd(), args.get("path"));
 
-        if (await adone.fs.exists(path) && await adone.fs.is.directory(path)) {
+        if (await adone.fs.exists(path) && await adone.fs.isDirectory(path)) {
             // adone application
             const conf = await adone.configuration.Adone.load({
                 cwd: path

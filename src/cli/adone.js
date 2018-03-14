@@ -107,6 +107,7 @@ class AdoneCLI extends application.CliApplication {
     async installCommand(args, opts) {
         try {
             const realmManager = await adone.realm.getManager();
+            adone.cli.kit.observeProgress(realmManager);
             const observer = await realmManager.install({
                 name: args.get("name"),
                 symlink: opts.has("symlink"),
@@ -138,6 +139,7 @@ class AdoneCLI extends application.CliApplication {
     async uninstallCommand(args) {
         try {
             const realmManager = await adone.realm.getManager();
+            adone.cli.kit.observeProgress(realmManager);
             const observer = await realmManager.uninstall({
                 name: args.get("name")
             });
@@ -172,6 +174,7 @@ class AdoneCLI extends application.CliApplication {
     async mountCommand(args) {
         try {
             const realmManager = await adone.realm.getManager();
+            adone.cli.kit.observeProgress(realmManager);
             const observer = await realmManager.mount({
                 name: args.get("name"),
                 path: args.get("path")
@@ -201,6 +204,7 @@ class AdoneCLI extends application.CliApplication {
     async unmountCommand(args) {
         try {
             const realmManager = await adone.realm.getManager();
+            adone.cli.kit.observeProgress(realmManager);
             const observer = await realmManager.unmount({
                 name: args.get("name")
             });
@@ -229,6 +233,7 @@ class AdoneCLI extends application.CliApplication {
     async listCommand(args) {
         try {
             const realmManager = await adone.realm.getManager();
+            adone.cli.kit.observeProgress(realmManager);
             const observer = await realmManager.list({
                 keyword: args.get("keyword")
             });

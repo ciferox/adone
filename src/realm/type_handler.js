@@ -1,8 +1,8 @@
 export default class TypeHandler {
-    constructor(pkg, name, type) {
+    constructor(manager, name, type) {
         this.name = name;
         this.type = type;
-        this.package = pkg;
+        this.manager = manager;
     }
 
     register(adoneConf, destPath) {

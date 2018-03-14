@@ -21,6 +21,13 @@ class CliKit extends application.Subsystem {
         this._silent = silent;
     }
 
+    observeProgress(taskManager) {
+        this.createProgress("initializing");
+        taskManager.onNotification("progress", (task, name, info) => {
+            this.updateProgress(info);
+        });
+    }
+
     async connect() {
         if (!adone.omnitron.dispatcher.isConnected()) {
             await adone.omnitron.dispatcher.connectLocal({

@@ -260,7 +260,7 @@ describe("project", function () {
                     assert.deepEqual(util.pick(adoneConfig.raw, ["name", "description", "version", "author"]), util.pick(projectConfig, ["name", "description", "version", "author"]));
                     assert.sameMembers(await fs.readdir(cwd), files);
                     if (!skipGit) {
-                        assert.true(await fs.is.directory(std.path.join(cwd, ".git")));
+                        assert.true(await fs.isDirectory(std.path.join(cwd, ".git")));
                     }
 
                     if (await fs.exists(std.path.join(cwd, adone.configuration.Npm.name))) {
@@ -316,9 +316,9 @@ describe("project", function () {
                     }
 
                     assert.sameMembers(await fs.readdir(cwd), ["adone.json", ".git", ".gitignore", ".eslintrc.js", "package.json", "package-lock.json", "node_modules", "jsconfig.json", "src"]);
-                    assert.true(await fs.is.directory(std.path.join(cwd, ".git")));
-                    assert.true(await fs.is.directory(std.path.join(cwd, "node_modules")));
-                    assert.true(await fs.is.directory(std.path.join(cwd, "src")));
+                    assert.true(await fs.isDirectory(std.path.join(cwd, ".git")));
+                    assert.true(await fs.isDirectory(std.path.join(cwd, "node_modules")));
+                    assert.true(await fs.isDirectory(std.path.join(cwd, "src")));
                     if (["cli.command", "omnitron.service"].includes(type)) {
                         assert.true(await fs.exists(std.path.join(cwd, "src", "index.js")));
                     } else {
@@ -371,7 +371,7 @@ describe("project", function () {
 
                     const subCwd = std.path.join(cwd, "service");
                     assert.sameMembers(await fs.readdir(subCwd), ["adone.json", "src"]);
-                    assert.true(await fs.is.directory(std.path.join(subCwd, "src")));
+                    assert.true(await fs.isDirectory(std.path.join(subCwd, "src")));
                     assert.true(await fs.exists(std.path.join(subCwd, "src", "index.js")));
 
                     assert.equal(manager.config.raw.struct.service, "service");

@@ -222,14 +222,12 @@ const fs = adone.lazify({
     glob: "./glob",
     Watcher: "./watcher",
     watch: () => (paths, options) => new adone.fs.Watcher(options || {}).add(paths),
-    is: () => adone.lazify({
-        file: () => (path) => adone.fs.stat(path).then((st) => st.isFile()),
-        fileSync: () => (path) => adone.fs.statSync(path).isFile(),
-        directory: () => (path) => adone.fs.stat(path).then((st) => st.isDirectory()),
-        directorySync: () => (path) => adone.fs.statSync(path).isDirectory(),
-        executable: ["./is_executable", (mod) => mod.isExecutable],
-        executableSync: ["./is_executable", (mod) => mod.isExecutableSync]
-    }, null, require),
+    isFile: () => (path) => adone.fs.stat(path).then((st) => st.isFile()),
+    isFileSync: () => (path) => adone.fs.statSync(path).isFile(),
+    isDirectory: () => (path) => adone.fs.stat(path).then((st) => st.isDirectory()),
+    isDirectorySync: () => (path) => adone.fs.statSync(path).isDirectory(),
+    isExecutable: ["./is_executable", (mod) => mod.isExecutable],
+    isExecutableSync: ["./is_executable", (mod) => mod.isExecutableSync],
     which: ["./which", (mod) => mod.which],
     whichSync: ["./which", (mod) => mod.whichSync],
     TailWatcher: "./tail_watcher",
@@ -256,7 +254,7 @@ export const readFile = async (filepath, options) => {
         encoding = null,
         flags = "r"
     } = expandReadOptions(options);
-    if (check && !await adone.fs.is.file(filepath)) {
+    if (check && !await adone.fs.isFile(filepath)) {
         return null;
     }
     return new Promise((resolve, reject) => std.fs.readFile(filepath, { encoding, flags }, (err, data) => err ? reject(err) : resolve(data)));
@@ -269,7 +267,7 @@ export const readFileSync = (filepath, options) => {
         flags = "r"
     } = expandReadOptions(options);
     if (check) {
-        if (!adone.fs.is.fileSync(filepath)) {
+        if (!adone.fs.isFileSync(filepath)) {
             return null;
         }
     }

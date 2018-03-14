@@ -1,5 +1,4 @@
 const {
-    cli: { kit },
     fs,
     is,
     std,
@@ -8,14 +7,16 @@ const {
 
 export default class InstallTask extends task.Task {
     async run({ name = "" } = {}) {
-        kit.createProgress("preparing");
+        this.manager.notify(this, "progress", {
+            message: "preparing"
+        });
 
         this.packageName = name;
 
         try {
             let isValid = true;
 
-            this.destPath = std.path.join(adone.realm.config.packagesPath, this.packageName);
+            this.destPath = std.path.join(this.manager.config.PACKAGES_PATH, this.packageName);
 
             if (!await fs.exists(this.destPath)) {
                 isValid = false;
@@ -46,7 +47,7 @@ export default class InstallTask extends task.Task {
                 }
 
                 if (!found) {
-                    kit.updateProgress({
+                    this.manager.notify(this, "progress", {
                         message: `No package with name {green-fg}{bold}${this.packageName}{/bold}{/green-fg}`,
                         result: false
                     });
@@ -80,12 +81,12 @@ export default class InstallTask extends task.Task {
 
             await fs.rm(this.destPath);
 
-            kit.updateProgress({
+            this.manager.notify(this, "progress", {
                 message: `{green-fg}{bold}${this.fullName}{/bold}{/green-fg} successfully uninstalled`,
                 result: true
             });
         } catch (err) {
-            kit.updateProgress({
+            this.manager.notify(this, "progress", {
                 message: err.message,
                 result: false
             });

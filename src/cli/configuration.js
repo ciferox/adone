@@ -5,6 +5,13 @@ const {
 const CONFIG_NAME = "cli.json";
 
 export default class Configuration extends adone.configuration.Generic {
+    /**
+     * Returns absolute path of configuration.
+     */
+    getPath() {
+        return adone.std.path.join(this.getCwd(), CONFIG_NAME);
+    }
+
     getGroups() {
         return adone.util.arrify(this.raw.groups);
     }
@@ -103,12 +110,17 @@ export default class Configuration extends adone.configuration.Generic {
         });
     }
 
-    static async load() {
+    static async load({ cwd } = {}) {
+        if (!is.string(cwd)) {
+            const realmManager = await adone.realm.getManager();
+            cwd = realmManager.config.CONFIGS_PATH;
+        }
+
         const config = new Configuration({
-            cwd: adone.realm.config.CONFIGS_PATH
+            cwd
         });
 
-        if (await adone.fs.exists(Configuration.path)) {
+        if (await adone.fs.exists(config.getPath())) {
             // assign config from home
             await config.load(CONFIG_NAME);
             adone.lodash.defaultsDeep(config.raw, Configuration.default);
@@ -116,13 +128,11 @@ export default class Configuration extends adone.configuration.Generic {
             config.raw = Configuration.default;
             await config.save();
         }
-    
+
         return config;
     }
 
     static configName = CONFIG_NAME;
-
-    static path = adone.std.path.join(adone.realm.config.CONFIGS_PATH, CONFIG_NAME);
 
     static default = {
         groups: [

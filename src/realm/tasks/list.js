@@ -1,5 +1,4 @@
 const {
-    cli: { kit },
     fs,
     std,
     task,
@@ -8,16 +7,18 @@ const {
 
 export default class ListTask extends task.Task {
     async run({ keyword = "", threshold = 0.2 } = {}) {
-        kit.createProgress("obtaining");
+        this.manager.notify(this, "progress", {
+            message: "obtaining"
+        });
 
-        await fs.mkdirp(adone.realm.config.packagesPath);
-        const packages = await fs.readdir(adone.realm.config.packagesPath);
+        await fs.mkdirp(this.manager.config.PACKAGES_PATH);
+        const packages = await fs.readdir(this.manager.config.PACKAGES_PATH);
 
         const result = [];
         for (const name of packages) {
             let isValid = true;
             let errInfo = "not valid";
-            const packagePath = std.path.join(adone.realm.config.packagesPath, name);
+            const packagePath = std.path.join(this.manager.config.PACKAGES_PATH, name);
             const lstat = await fs.lstat(packagePath); // eslint-disable-line
 
             if (lstat.isSymbolicLink()) {
@@ -53,10 +54,12 @@ export default class ListTask extends task.Task {
         }
 
         // Reading commands from cli configuration and check
-        const cliConfig = await adone.cli.Configuration.load();
+        const cliConfig = await adone.cli.Configuration.load({
+            cwd: this.manager.config.CONFIGS_PATH
+        });
 
         for (const cmd of cliConfig.raw.commands) {
-            const name = std.path.relative(adone.realm.config.packagesPath, cmd.subsystem).split(std.path.sep)[0];
+            const name = std.path.relative(this.manager.config.PACKAGES_PATH, cmd.subsystem).split(std.path.sep)[0];
             const index = result.findIndex((x) => x.name === name);
             if (index === -1) {
                 result.push({
@@ -70,7 +73,7 @@ export default class ListTask extends task.Task {
         // Sort in ascending order.
         result.sort((a, b) => a.name > b.name);
 
-        kit.updateProgress({
+        this.manager.notify(this, "progress", {
             schema: "",
             result: true,
             clean: true

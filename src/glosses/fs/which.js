@@ -63,7 +63,7 @@ export const which = async (cmd, opt = {}) => {
             const cur = p + pathExt[j];
             let is;
             try {
-                is = await adone.fs.is.executable(cur, {
+                is = await adone.fs.isExecutable(cur, {
                     pathExt: pathExtExe
                 });
                 if (is) {
