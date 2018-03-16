@@ -5,27 +5,47 @@ const {
     multi,
     std,
     omnitron2,
-    realm,
+    runtime,
     error
 } = adone;
 
-const { STATUS, dispatcher } = omnitron2;
+const { STATUS } = omnitron2;
 
 describe("omnitron", () => {
     let iOmnitron;
     let realmManager;
 
+    before(function () {
+        realmManager = this.realmManager;
+    });
+
     const startOmnitron = async () => {
-        await dispatcher.startOmnitron();
-        await dispatcher.connectLocal({
+        await omnitron2.dispatcher.startOmnitron();
+        await omnitron2.dispatcher.connectLocal({
             forceStart: false
         });
-        iOmnitron = dispatcher.getInterface("omnitron");
+        iOmnitron = omnitron2.dispatcher.getInterface("omnitron");
     };
 
     const stopOmnitron = async () => {
-        await dispatcher.stopOmnitron();
+        await omnitron2.dispatcher.stopOmnitron();
     };
+
+    describe.only("Dispatcher", () => {
+        it("initialization", () => {
+            const d = new omnitron2.Dispatcher();
+            const omnitAddrs = d.omnitronPeerInfo.multiaddrs.toArray();
+            assert.lengthOf(omnitAddrs, 1);
+            assert.true(omnitAddrs[0].equals(multi.address2.fromNodeAddress(omnitron2.defaultAddress)));
+            assert.strictEqual(d.netron.peer.info.id.asBase58(), runtime.realm.config.identity.client.id);
+        });
+    
+        it("isOmnitronActive() should return false when omnitron is not active", async () => {
+            const d = omnitron2.dispatcher;
+            assert.false(await d.isOmnitronActive());
+        });
+    });
+
 
     describe("basics", () => {
         beforeEach(async () => {
@@ -1036,21 +1056,6 @@ describe("omnitron", () => {
             it.skip("configure active gate should not be allowed", async () => {
                 // ???
             });
-        });
-    });
-
-    describe.only("Dispatcher", () => {
-        it("initialization", () => {
-            const d = new omnitron2.Dispatcher();
-            const omnitAddrs = d.omnitronPeerInfo.multiaddrs.toArray();
-            assert.lengthOf(omnitAddrs, 1);
-            assert.true(omnitAddrs[0].equals(multi.address2.fromNodeAddress(omnitron2.defaultAddress)));
-            assert.strictEqual(d.netron.peer.info.id.asBase58(), realm.config.identity.client.id);
-        });
-    
-        it("isOmnitronActive() should return false when omnitron is not active", async () => {
-            const d = omnitron2.dispatcher;
-            assert.false(await d.isOmnitronActive());
         });
     });
 });

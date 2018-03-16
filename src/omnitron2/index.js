@@ -28,12 +28,13 @@ adone.definePredicates({
 });
 
 const __ = lazify({
+    Configuration: "./configuration",
     Service: "./service",
     Omnitron: "./omnitron",
     DB: "./omnitron/db",
     Dispatcher: "./dispatcher",
     dispatcher: () => new __.Dispatcher(),
     defaultAddress: () => ({
-        path: (is.windows ? `\\\\.\\pipe\\${adone.realm.config.identity.server.id}\\omnitron.sock` : adone.std.path.join(adone.realm.config.RUNTIME_PATH, "omnitron.sock"))
+        path: (is.windows ? `\\\\.\\pipe\\${adone.runtime.realm.identity.id}\\omnitron.sock` : adone.std.path.join(adone.runtime.realm.config.RUNTIME_PATH, "omnitron.sock"))
     })
 }, adone.asNamespace(exports), require);

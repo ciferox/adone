@@ -13,12 +13,23 @@ export default class extends application.Subsystem {
             adone.logInfo(`Peer '${peer.id}' disconnected`);
         });
 
+        // redefine 'inhost' netcore config
+        this.root.config.netCores.inhost = {
+            
+        };
+
+        for (const [netId, netCoreConfig] of Object.entries(this.root.config.netCores)) {
+            runtime.netron2.createNetCore(netId, netCoreConfig);
+        }
+
         adone.logInfo(`${NAME} configured`);
     }
 
     async initialize() {
         await runtime.netron2.attachContext(this.root, "omnitron");
         adone.logInfo("Omnitron context attached");
+
+        await runtime.netron2.start();
 
         adone.logInfo(`${NAME} initialized`);
     }

@@ -42,6 +42,7 @@ describe("realm", () => {
         assert.strictEqual(runtimeRealmManager, adone.runtime.realm.manager);
         assert.strictEqual(runtimeRealmManager.cwd, runtimeRealmManager.config.ROOT_PATH);
         assert.deepEqual(runtimeRealmManager.config.identity.server, adone.runtime.realm.identity);
+        assert.deepEqual(runtimeRealmManager.config, adone.runtime.realm.config);
     });
 
     it("fork without 'cwd' should throw", async () => {

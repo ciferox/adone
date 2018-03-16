@@ -1,5 +1,6 @@
 import structs from "./fixtures/structs";
 import namespaces from "./fixtures/namespaces";
+import interfaceSuite from "../interface";
 
 const {
     is,
@@ -31,7 +32,7 @@ describe("configuration", "Adone", () => {
         assert.deepEqual(conf.raw, {});
     });
 
-    describe.only("getMainPath()/getCliMainPath()", () => {
+    describe("getMainPath()/getCliMainPath()", () => {
         let cwd;
         let conf;
 
@@ -328,4 +329,6 @@ describe("configuration", "Adone", () => {
             });
         }
     });
+
+    interfaceSuite(configuration.Adone);
 });

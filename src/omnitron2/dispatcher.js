@@ -3,10 +3,10 @@ const {
         Subsystem
     },
     is,
+    fs,
     error,
     std,
     multi,
-    netron2,
     omnitron2,
     runtime
 } = adone;
@@ -34,7 +34,7 @@ export default class Dispatcher extends Subsystem {
 
     get omnitronPeerInfo() {
         if (is.undefined(this._peerInfo)) {
-            this._peerInfo = adone.net.p2p.PeerInfo.create(adone.runtime.realm.manager.config.identity.server);
+            this._peerInfo = adone.net.p2p.PeerInfo.create(adone.runtime.realm.identity);
             this._peerInfo.multiaddrs.add(multi.address2.fromNodeAddress(omnitron2.defaultAddress));
         }
         return this._peerInfo;
@@ -140,14 +140,14 @@ export default class Dispatcher extends Subsystem {
                 return result.process.id;
             }
             return new Promise(async (resolve, reject) => {
-                const omniConfig = adone.runtime.realm.manager.config.omnitron;
-                this.descriptors.stdout = std.fs.openSync(omniConfig.LOGFILE_PATH, "a");
-                this.descriptors.stderr = std.fs.openSync(omniConfig.ERRORLOGFILE_PATH, "a");
-                const args = [std.path.resolve(adone.ROOT_PATH, "lib/omnitron2/omnitron/index.js")];
+                const omniConfig = adone.runtime.realm.config.omnitron;
+                this.descriptors.stdout = await fs.open(omniConfig.LOGFILE_PATH, "a");
+                this.descriptors.stderr = await fs.open(omniConfig.ERRORLOGFILE_PATH, "a");
+                const args = [std.path.resolve(__dirname, "omnitron/index.js")];
                 if (gc) {
                     args.unshift("--expose-gc");
                 }
-                const child = std.child_process.spawn(process.execPath || "node", args, {
+                const child = std.child_process.spawn(process.execPath, args, {
                     detached: true,
                     cwd: process.cwd(),
                     stdio: ["ipc", this.descriptors.stdout, this.descriptors.stderr]
@@ -175,7 +175,7 @@ export default class Dispatcher extends Subsystem {
     async stopOmnitron() {
         const isActive = await this.isOmnitronActive();
         if (isActive) {
-            if (await adone.fs.exists(adone.realm.config.omnitron2.pidFilePath)) {
+            if (await fs.exists(adone.realm.config.omnitron2.pidFilePath)) {
                 try {
                     const checkAlive = async (pid) => {
                         let elapsed = 0;
@@ -227,11 +227,11 @@ export default class Dispatcher extends Subsystem {
         }
 
         if (!is.nil(this.descriptors.stdout)) {
-            await adone.fs.close(this.descriptors.stdout);
+            await fs.close(this.descriptors.stdout);
             this.descriptors.stdout = null;
         }
         if (!is.nil(this.descriptors.stderr)) {
-            await adone.fs.close(this.descriptors.stderr);
+            await fs.close(this.descriptors.stderr);
             this.descriptors.stderr = null;
         }
     }
@@ -247,7 +247,6 @@ export default class Dispatcher extends Subsystem {
     async isOmnitronActive() {
         try {
             const peer = await this.netron.connect("default", this.omnitronPeerInfo);
-            adone.logTrace(peer);
             await this.netron.disconnectPeer(peer);
             return true;
         } catch (err) {

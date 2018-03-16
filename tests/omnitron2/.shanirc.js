@@ -1,36 +1,31 @@
 const {
-    is,
     fs,
-    std
+    realm
 } = adone;
 
-const SYM_LINKS = [
-    "bin",
-    "lib",
-    "etc"
-];
-
 export default async (ctx) => {
-    let tmpPath;
+    let realmPath;
     ctx.before(async () => {
-        tmpPath = await fs.tmpName({
+        const runtimeRealmManager = await realm.getManager();
+
+        realmPath = await fs.tmpName({
             prefix: "realm-"
         });
-        await fs.mkdirp(tmpPath);
 
-        for (const sl of SYM_LINKS) {
-            await fs.symlink(std.path.join(adone.ROOT_PATH, sl), std.path.join(tmpPath, sl), is.windows ? "junction" : undefined); // eslint-disable-line
-        }
+        const observer = await runtimeRealmManager.forkRealm({
+            cwd: realmPath,
+            name: "test"
+        });
+        const realmManager = await observer.result;
 
-        // await realm.init(".adone_test");
-        // await realm.clean();
-
-        // realmManager = await realm.getManager();
-        // adone.cli.kit.setSilent(true);
+        // hijacking realm
+        ctx.runtime.realmManager = realmManager;
+        adone.runtime.realm.manager = realmManager;
+        adone.runtime.realm.config = realmManager.config;
+        adone.runtime.realm.identity = realmManager.config.identity.server;
     });
 
     ctx.after(async () => {
-        // await fs.rm(tmpPath);
-        // await realm.clean();
+        // await fs.rm(realmPath);
     });
 };

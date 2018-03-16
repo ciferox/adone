@@ -4,7 +4,7 @@ const {
 
 const CONFIG_NAME = "cli.json";
 
-export default class Configuration extends adone.configuration.Generic {
+export default class CliConfiguration extends adone.configuration.Generic {
     /**
      * Returns absolute path of configuration.
      */
@@ -116,16 +116,16 @@ export default class Configuration extends adone.configuration.Generic {
             cwd = realmManager.config.CONFIGS_PATH;
         }
 
-        const config = new Configuration({
+        const config = new CliConfiguration({
             cwd
         });
 
         if (await adone.fs.exists(config.getPath())) {
             // assign config from home
             await config.load(CONFIG_NAME);
-            adone.lodash.defaultsDeep(config.raw, Configuration.default);
+            adone.lodash.defaultsDeep(config.raw, CliConfiguration.default);
         } else {
-            config.raw = Configuration.default;
+            config.raw = CliConfiguration.default;
             await config.save();
         }
 

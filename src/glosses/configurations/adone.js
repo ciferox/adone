@@ -55,7 +55,7 @@ export default class Configuration extends adone.configuration.Generic {
      * Returns absolute path of configuration.
      */
     getPath() {
-        return std.path.join(this.cwd, Configuration.configName);
+        return std.path.join(this.getCwd(), Configuration.configName);
     }
 
     /**
@@ -410,4 +410,6 @@ export default class Configuration extends adone.configuration.Generic {
     }
 
     static configName = "adone.json";
+
+    static default = {};
 }

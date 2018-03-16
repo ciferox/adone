@@ -147,7 +147,7 @@ describe("project", function () {
                         assert.true(await fs.exists(filePath));
                         const moduleExport = adone.require(filePath);
                         assert.true(is.class(moduleExport.default));
-                        assert.equal(moduleExport.default.name, "_default");
+                        assert.true(moduleExport.default.name.startsWith("_class") || moduleExport.default.name.startsWith("_default"));
                         await type.check(moduleExport);
                     }
                 });
@@ -236,7 +236,8 @@ describe("project", function () {
             ];
 
             for (const { skipGit, skipJsconfig, skipEslint, skipNpm, files } of defaultProjects) {
-                it(`default project (skipGit=${skipGit}, skipJsconfig=${skipJsconfig}, skipEslint=${skipEslint})`, async () => {
+                it(`default project (skipGit=${skipGit}, skipJsconfig=${skipJsconfig}, skipEslint=${skipEslint})`, async function () {
+                    this.timeout(120000);
                     const name = randomName("project");
                     const cwd = getPathFor(name);
                     await fs.mkdir(cwd);

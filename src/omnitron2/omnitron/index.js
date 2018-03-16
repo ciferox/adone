@@ -5,8 +5,7 @@ const {
     is,
     std,
     fs,
-    netron2: { Context, Public },
-    realm,
+    netron2: { DContext, DPublic },
     runtime
 } = adone;
 
@@ -18,7 +17,7 @@ const CORE_SUBSYSTEMS = [
     "gates"
 ];
 
-@Context({
+@DContext({
     description: "Omnitron"
 })
 export default class Omnitron extends application.Application {
@@ -26,7 +25,9 @@ export default class Omnitron extends application.Application {
         // Declare omnitron environment
         adone.runtime.isOmnitron = true;
 
-        await realm.check();
+        this.config = await adone.omnitron2.Configuration.load({
+            cwd: adone.runtime.realm.config.CONFIGS_PATH
+        });
 
         await this.addSubsystemsFrom(std.path.join(__dirname, "subsystems"), {
             bind: true,
@@ -99,7 +100,7 @@ export default class Omnitron extends application.Application {
 
     // Omnitron interface
 
-    @Public({
+    @DPublic({
         description: "Force garbage collector"
     })
     gc() {
@@ -110,7 +111,7 @@ export default class Omnitron extends application.Application {
         return "none";
     }
 
-    @Public({
+    @DPublic({
         description: "Kill omnitron"
     })
     kill() {
@@ -119,7 +120,7 @@ export default class Omnitron extends application.Application {
         });
     }
 
-    @Public({
+    @DPublic({
         description: "Returns information about omnitron",
         type: Object
     })
@@ -185,7 +186,7 @@ export default class Omnitron extends application.Application {
         return result;
     }
 
-    @Public({
+    @DPublic({
         description: "Updates omnitron's environment variables"
     })
     setEnvs(envs) {
@@ -194,7 +195,7 @@ export default class Omnitron extends application.Application {
         }
     }
 
-    @Public({
+    @DPublic({
         description: "Updates omnitron's environment variables"
     })
     updateEnvs(envs) {
@@ -209,21 +210,21 @@ export default class Omnitron extends application.Application {
         }
     }
 
-    @Public({
+    @DPublic({
         description: "Register new service"
     })
     registerService(name) {
         return this.db.registerService(name);
     }
 
-    @Public({
+    @DPublic({
         description: "Register existing service"
     })
     unregisterService(name) {
         return this.db.unregisterService(name);
     }
 
-    @Public({
+    @DPublic({
         description: "Return list of services",
         type: Array
     })
@@ -231,7 +232,7 @@ export default class Omnitron extends application.Application {
         return this.services.enumerate(filter);
     }
 
-    @Public({
+    @DPublic({
         description: "Return object of grouped services",
         type: Array
     })
@@ -239,7 +240,7 @@ export default class Omnitron extends application.Application {
         return this.services.enumerateByGroup(group);
     }
 
-    @Public({
+    @DPublic({
         description: "Return list of groups",
         type: Array
     })
@@ -247,47 +248,47 @@ export default class Omnitron extends application.Application {
         return this.services.enumerateGroups();
     }
 
-    @Public({})
+    @DPublic({})
     getMaintainer(group) {
         return this.services.getMaintainer(group, true);
     }
 
-    @Public({
+    @DPublic({
         description: "Enables service"
     })
     enableService(name, options) {
         return this.services.enableService(name, options);
     }
 
-    @Public({
+    @DPublic({
         description: "Disables service"
     })
     disableService(name, options) {
         return this.services.disableService(name, options);
     }
 
-    @Public({
+    @DPublic({
         description: "Starts service"
     })
     startService(name) {
         return this.services.startService(name);
     }
 
-    @Public({
+    @DPublic({
         description: "Stops service"
     })
     stopService(name) {
         return this.services.stopService(name);
     }
 
-    @Public({
+    @DPublic({
         description: "Configures service"
     })
     configureService(name, options) {
         return this.services.configureService(name, options);
     }
 
-    @Public({
+    @DPublic({
         description: "Returns valuable used as service configuration store"
     })
     async getServiceConfiguration(name) {
@@ -295,7 +296,7 @@ export default class Omnitron extends application.Application {
         return this.db.getServiceConfiguration(name);
     }
 
-    @Public({
+    @DPublic({
         description: "Restarts service"
     })
     async restart(serviceName) {
@@ -303,14 +304,14 @@ export default class Omnitron extends application.Application {
         return this.start(serviceName);
     }
 
-    @Public({
+    @DPublic({
         description: "Reports about omnitron process"
     })
     getReport() {
         return adone.application.report.getReport();
     }
 
-    @Public({
+    @DPublic({
         description: "Returns connected peer UIDs"
     })
     getPeers() {
@@ -325,7 +326,7 @@ export default class Omnitron extends application.Application {
         });
     }
 
-    @Public({
+    @DPublic({
         description: "Returns list of attached contexts"
     })
     getContexts() {
@@ -342,7 +343,7 @@ export default class Omnitron extends application.Application {
     }
 
     // Subsystems
-    @Public()
+    @DPublic()
     getSubsystems() {
         return super.getSubsystems().map((ss) => ({
             name: ss.name,
@@ -352,12 +353,12 @@ export default class Omnitron extends application.Application {
         }));
     }
 
-    @Public()
+    @DPublic()
     async loadSubsystem(path, options) {
         await super.loadSubsystem(path, options);
     }
 
-    @Public()
+    @DPublic()
     async unloadSubsystem(name) {
         if (CORE_SUBSYSTEMS.includes(name)) {
             throw new adone.error.NotAllowed("Unload core subsystem is not possible");
@@ -366,38 +367,38 @@ export default class Omnitron extends application.Application {
     }
 
     // Configuration
-    @Public()
+    @DPublic()
     getConfiguration() {
         return this.db.getConfiguration();
     }
 
     // Gates
-    @Public()
+    @DPublic()
     addGate(gate) {
         return this.gates.addGate(gate);
     }
 
-    @Public()
+    @DPublic()
     deleteGate(gate) {
         return this.gates.deleteGate(gate);
     }
 
-    @Public()
+    @DPublic()
     upGate(name) {
         return this.gates.upGate(name);
     }
 
-    @Public()
+    @DPublic()
     downGate(name) {
         return this.gates.downGate(name);
     }
 
-    @Public()
+    @DPublic()
     getGates(options) {
         return this.gates.getGates(options);
     }
 
-    @Public()
+    @DPublic()
     configureGate(name, options) {
         return this.gates.configureGate(name, options);
     }
