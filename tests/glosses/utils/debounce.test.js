@@ -108,4 +108,17 @@ describe("util", "debounce", () => {
         await delay(120);
         expect(f()).to.be.equal(1);
     });
+
+    it("should cancel cancel a scheduled call via cancel", async () => {
+        const s = spy();
+        const f = debounce(s, 100);
+        f();
+        f.cancel();
+        await adone.promise.delay(500);
+        expect(s).to.have.not.been.called();
+        f();
+        await adone.promise.delay(10);
+        f.cancel();
+        expect(s).to.have.not.been.called();
+    });
 });

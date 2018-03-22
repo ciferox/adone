@@ -8,7 +8,7 @@
  * @param {boolean} [options.leading=false] whether to invoke on the leading edge
  * @param {boolean} [options.trailing=true] whether to invoke on the trailing edge, if both are true the trailing call is performed only if the function is invoked more that once during the interval
  */
-export default function debounce(fn, timeout, { leading = false, trailing = !leading } = {}) {
+export default function debounce(fn, timeout, { leading = false, trailing = !leading, unref = false } = {}) {
     let timer = null;
     let doubleCall = false;
 
@@ -33,6 +33,10 @@ export default function debounce(fn, timeout, { leading = false, trailing = !lea
             doubleCall = false;
         }, timeout);
 
+        if (unref) {
+            timer.unref();
+        }
+
         if (call) {
             lastCallResult = fn.apply(this, args);
             ignored = 0;
@@ -45,6 +49,10 @@ export default function debounce(fn, timeout, { leading = false, trailing = !lea
             return ignored;
         }
     });
+
+    f.cancel = () => {
+        clearTimeout(timer);
+    };
 
     return f;
 }
