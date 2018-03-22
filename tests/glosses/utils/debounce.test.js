@@ -109,7 +109,7 @@ describe("util", "debounce", () => {
         expect(f()).to.be.equal(1);
     });
 
-    it("should cancel cancel a scheduled call via cancel", async () => {
+    it("should cancel a scheduled call via cancel", async () => {
         const s = spy();
         const f = debounce(s, 100);
         f();
