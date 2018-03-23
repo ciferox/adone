@@ -43,8 +43,8 @@ export default class TCP {
                 return false;
             }
 
-            if (ma.protoNames().includes("ipfs")) {
-                ma = ma.decapsulate("ipfs");
+            if (ma.protoNames().includes("p2p")) {
+                ma = ma.decapsulate("p2p");
             }
 
             return multi.address.validator.TCP.matches(ma);

@@ -119,7 +119,7 @@ export default class PeerInfo {
     // only stores the current multiaddr being used
     connect(ma) {
         ma = ensureMultiaddr(ma);
-        if (!this.multiaddrs.has(ma) && ma.toString() !== `/ipfs/${this.id.asBase58()}`) {
+        if (!this.multiaddrs.has(ma) && ma.toString() !== `//p2p/${this.id.asBase58()}`) {
             throw new Error("can't be connected to missing multiaddr from set");
         }
         this._connectedMultiaddr = ma;

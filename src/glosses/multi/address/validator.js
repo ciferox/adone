@@ -154,13 +154,13 @@ export const HTTP = or(
 );
 
 export const WebRTCStar = or(
-    and(WebSocket, base("p2p-webrtc-star"), base("ipfs")),
-    and(WebSocketSecure, base("p2p-webrtc-star"), base("ipfs"))
+    and(WebSocket, base("p2p-webrtc-star"), base("p2p")),
+    and(WebSocketSecure, base("p2p-webrtc-star"), base("p2p"))
 );
 
 export const WebSocketStar = or(
-    and(WebSocket, base("p2p-websocket-star"), base("ipfs")),
-    and(WebSocketSecure, base("p2p-websocket-star"), base("ipfs")),
+    and(WebSocket, base("p2p-websocket-star"), base("p2p")),
+    and(WebSocketSecure, base("p2p-websocket-star"), base("p2p")),
     and(WebSocket, base("p2p-websocket-star")),
     and(WebSocketSecure, base("p2p-websocket-star"))
 );
@@ -178,9 +178,9 @@ export const Reliable = or(
 );
 
 const _IPFS = or(
-    and(Reliable, base("ipfs")),
+    and(Reliable, base("p2p")),
     WebRTCStar,
-    base("ipfs")
+    base("p2p")
 );
 
 const _Circuit = or(

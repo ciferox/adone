@@ -29,9 +29,9 @@ describe("dht", "KadDHT", "Message", () => {
 
         const closer = peers.slice(0, 5).map((p) => {
             const info = new PeerInfo(p);
-            const addr = `/ip4/198.176.1.${random(0, 198)}/tcp/1234`;
+            const addr = `//ip4/198.176.1.${random(0, 198)}//tcp/1234`;
             info.multiaddrs.add(addr);
-            info.multiaddrs.add(`/ip4/100.176.1.${random(0, 198)}`);
+            info.multiaddrs.add(`//ip4/100.176.1.${random(0, 198)}`);
             info.connect(addr);
 
             return info;
@@ -39,8 +39,8 @@ describe("dht", "KadDHT", "Message", () => {
 
         const provider = peers.slice(0, 5).map((p) => {
             const info = new PeerInfo(p);
-            info.multiaddrs.add(`/ip4/98.176.1.${random(0, 198)}/tcp/1234`);
-            info.multiaddrs.add(`/ip4/10.176.1.${random(0, 198)}`);
+            info.multiaddrs.add(`//ip4/98.176.1.${random(0, 198)}//tcp/1234`);
+            info.multiaddrs.add(`//ip4/10.176.1.${random(0, 198)}`);
 
             return info;
         });

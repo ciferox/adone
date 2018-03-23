@@ -61,11 +61,11 @@ describe("core and all together", () => {
             let netCoreB;
 
             before(async () => {
-                netCoreA = createNetCore("/ip4/0.0.0.0/tcp/0");
+                netCoreA = createNetCore("//ip4/0.0.0.0//tcp/0");
                 netCoreA.handle("/echo/1.0.0", echo);
                 await netCoreA.start();
 
-                netCoreB = createNetCore("/ip4/0.0.0.0/tcp/0");
+                netCoreB = createNetCore("//ip4/0.0.0.0//tcp/0");
                 netCoreB.handle("/echo/1.0.0", echo);
                 await netCoreB.start();
             });
@@ -258,13 +258,13 @@ describe("core and all together", () => {
             let netCoreWS;
 
             before(async () => {
-                netCoreTCP = createNetCore(["/ip4/0.0.0.0/tcp/0"]);
+                netCoreTCP = createNetCore(["//ip4/0.0.0.0//tcp/0"]);
                 netCoreTCP.handle("/echo/1.0.0", echo);
                 await netCoreTCP.start();
-                netCoreTCPnWS = createNetCore(["/ip4/0.0.0.0/tcp/0", "/ip4/127.0.0.1/tcp/25011/ws"]);
+                netCoreTCPnWS = createNetCore(["//ip4/0.0.0.0//tcp/0", "//ip4/127.0.0.1//tcp/25011//ws"]);
                 netCoreTCPnWS.handle("/echo/1.0.0", echo);
                 await netCoreTCPnWS.start();
-                netCoreWS = createNetCore(["/ip4/127.0.0.1/tcp/25022/ws"]);
+                netCoreWS = createNetCore(["//ip4/127.0.0.1//tcp/25022//ws"]);
                 netCoreWS.handle("/echo/1.0.0", echo);
                 await netCoreWS.start();
             });
@@ -398,24 +398,24 @@ describe("core and all together", () => {
                 });
 
                 const wstar = new WebRTCStar({ wrtc });
-                netCoreAll = createNetCore(["/ip4/0.0.0.0/tcp/0", "/ip4/127.0.0.1/tcp/25011/ws", "/ip4/127.0.0.1/tcp/24642/ws/p2p-webrtc-star"], {
+                netCoreAll = createNetCore(["//ip4/0.0.0.0//tcp/0", "//ip4/127.0.0.1//tcp/25011//ws", "//ip4/127.0.0.1//tcp/24642//ws//p2p-webrtc-star"], {
                     transport: [wstar],
                     discovery: [wstar.discovery]
                 });
                 netCoreAll.handle("/echo/1.0.0", echo);
                 await netCoreAll.start();
 
-                netCoreTCP = createNetCore(["/ip4/0.0.0.0/tcp/0"]);
+                netCoreTCP = createNetCore(["//ip4/0.0.0.0//tcp/0"]);
                 netCoreTCP.handle("/echo/1.0.0", echo);
                 await netCoreTCP.start();
 
-                netCoreWS = createNetCore(["/ip4/127.0.0.1/tcp/25022/ws"]);
+                netCoreWS = createNetCore(["//ip4/127.0.0.1//tcp/25022//ws"]);
                 netCoreWS.handle("/echo/1.0.0", echo);
                 await netCoreWS.start();
 
                 const wstar2 = new WebRTCStar({ wrtc });
 
-                netCoreWStar = createNetCore(["/ip4/127.0.0.1/tcp/24642/ws/p2p-webrtc-star"], {
+                netCoreWStar = createNetCore(["//ip4/127.0.0.1//tcp/24642//ws//p2p-webrtc-star"], {
                     transport: [wstar2],
                     discovery: [wstar2.discovery]
                 });
@@ -502,28 +502,28 @@ describe("core and all together", () => {
 
                 const wstar = new WSStar();
                 netCoreAll = createNetCore([
-                    "/ip4/0.0.0.0/tcp/0",
-                    "/ip4/127.0.0.1/tcp/25011/ws",
-                    "/ip4/127.0.0.1/tcp/24642/ws/p2p-websocket-star"
+                    "//ip4/0.0.0.0//tcp/0",
+                    "//ip4/127.0.0.1//tcp/25011//ws",
+                    "//ip4/127.0.0.1//tcp/24642//ws//p2p-websocket-star"
                 ], {
-                        transport: [wstar],
-                        discovery: [wstar.discovery]
-                    });
+                    transport: [wstar],
+                    discovery: [wstar.discovery]
+                });
                 wstar.lazySetId(netCoreAll.peerInfo.id);
                 netCoreAll.handle("/echo/1.0.0", echo);
                 await netCoreAll.start();
 
-                netCoreTCP = createNetCore(["/ip4/0.0.0.0/tcp/0"]);
+                netCoreTCP = createNetCore(["//ip4/0.0.0.0//tcp/0"]);
                 netCoreTCP.handle("/echo/1.0.0", echo);
                 await netCoreTCP.start();
 
-                netCoreWS = createNetCore(["/ip4/127.0.0.1/tcp/25022/ws"]);
+                netCoreWS = createNetCore(["//ip4/127.0.0.1//tcp/25022//ws"]);
                 netCoreWS.handle("/echo/1.0.0", echo);
                 await netCoreWS.start();
 
                 const wstar2 = new WSStar({});
 
-                netCoreWStar = createNetCore(["/ip4/127.0.0.1/tcp/24642/ws/p2p-websocket-star"], {
+                netCoreWStar = createNetCore(["//ip4/127.0.0.1//tcp/24642//ws//p2p-websocket-star"], {
                     transport: [wstar2],
                     discovery: [wstar2.discovery]
                 });
@@ -620,14 +620,14 @@ describe("core and all together", () => {
             let netCoreB;
 
             const setup = async () => {
-                netCoreA = createNetCore("/ip4/0.0.0.0/tcp/0", {
+                netCoreA = createNetCore("//ip4/0.0.0.0//tcp/0", {
                     muxer: ["spdy"]
                 });
 
                 netCoreA.handle("/echo/1.0.0", echo);
                 await netCoreA.start();
 
-                netCoreB = createNetCore("/ip4/0.0.0.0/tcp/0", {
+                netCoreB = createNetCore("//ip4/0.0.0.0//tcp/0", {
                     muxer: ["spdy"]
                 });
                 netCoreB.handle("/echo/1.0.0", echo);
@@ -644,13 +644,13 @@ describe("core and all together", () => {
             let netCoreB;
 
             const setup = async () => {
-                netCoreA = createNetCore("/ip4/0.0.0.0/tcp/0", {
+                netCoreA = createNetCore("//ip4/0.0.0.0//tcp/0", {
                     muxer: ["multiplex"]
                 });
                 netCoreA.handle("/echo/1.0.0", echo);
                 await netCoreA.start();
 
-                netCoreB = createNetCore("/ip4/0.0.0.0/tcp/0", {
+                netCoreB = createNetCore("//ip4/0.0.0.0//tcp/0", {
                     muxer: ["multiplex"]
                 });
                 netCoreB.handle("/echo/1.0.0", echo);
@@ -669,13 +669,13 @@ describe("core and all together", () => {
             let netCoreB;
 
             const setup = async () => {
-                netCoreA = createNetCore("/ip4/0.0.0.0/tcp/0", {
+                netCoreA = createNetCore("//ip4/0.0.0.0//tcp/0", {
                     muxer: ["spdy", "multiplex"]
                 });
                 netCoreA.handle("/echo/1.0.0", echo);
                 await netCoreA.start();
 
-                netCoreB = createNetCore("/ip4/0.0.0.0/tcp/0", {
+                netCoreB = createNetCore("//ip4/0.0.0.0//tcp/0", {
                     muxer: ["spdy", "multiplex"]
                 });
                 netCoreB.handle("/echo/1.0.0", echo);
@@ -694,13 +694,13 @@ describe("core and all together", () => {
             let netCoreB;
 
             const setup = async () => {
-                netCoreA = createNetCore("/ip4/0.0.0.0/tcp/0", {
+                netCoreA = createNetCore("//ip4/0.0.0.0//tcp/0", {
                     muxer: ["spdy", "multiplex"]
                 });
                 netCoreA.handle("/echo/1.0.0", echo);
                 await netCoreA.start();
 
-                netCoreB = createNetCore("/ip4/0.0.0.0/tcp/0", {
+                netCoreB = createNetCore("//ip4/0.0.0.0//tcp/0", {
                     muxer: ["multiplex", "spdy"]
                 });
                 netCoreB.handle("/echo/1.0.0", echo);
@@ -719,13 +719,13 @@ describe("core and all together", () => {
             let netCoreB;
 
             const setup = async () => {
-                netCoreA = createNetCore("/ip4/0.0.0.0/tcp/0", {
+                netCoreA = createNetCore("//ip4/0.0.0.0//tcp/0", {
                     muxer: ["spdy"]
                 });
                 netCoreA.handle("/echo/1.0.0", echo);
                 await netCoreA.start();
 
-                netCoreB = createNetCore("/ip4/0.0.0.0/tcp/0", {
+                netCoreB = createNetCore("//ip4/0.0.0.0//tcp/0", {
                     muxer: ["multiplex"]
                 });
                 netCoreB.handle("/echo/1.0.0", echo);
@@ -763,21 +763,21 @@ describe("core and all together", () => {
                     });
                 });
 
-                netCoreA = createNetCore(["/ip4/0.0.0.0/tcp/0", `/ip4/127.0.0.1/tcp/${port}/ws/p2p-webrtc-star`], options);
+                netCoreA = createNetCore(["//ip4/0.0.0.0//tcp/0", `//ip4/127.0.0.1//tcp/${port}//ws//p2p-webrtc-star`], options);
                 netCoreA.handle("/echo/1.0.0", echo);
                 await netCoreA.start();
 
-                netCoreB = createNetCore(["/ip4/0.0.0.0/tcp/0", `/ip4/127.0.0.1/tcp/${port}/ws/p2p-webrtc-star`], options);
+                netCoreB = createNetCore(["//ip4/0.0.0.0//tcp/0", `//ip4/127.0.0.1//tcp/${port}//ws//p2p-webrtc-star`], options);
                 netCoreB.handle("/echo/1.0.0", echo);
                 await netCoreB.start();
             });
 
             after(async (done) => {
                 await Promise.all([
-                    netCoreA.stop(),
-                    netCoreB.stop()
+                    netCoreA && netCoreA.stop(),
+                    netCoreB && netCoreB.stop()
                 ]);
-                ss.stop(done);
+                ss && ss.stop(done);
             });
         };
 
@@ -836,7 +836,7 @@ describe("core and all together", () => {
             this.timeout(5 * 1000);
 
             const getNetCore = async () => {
-                const netCore = createNetCore("/ip4/0.0.0.0/tcp/0", {
+                const netCore = createNetCore("//ip4/0.0.0.0//tcp/0", {
                     mdns: false,
                     dht: true
                 });
@@ -906,7 +906,7 @@ describe("core and all together", () => {
         before(async function () {
             this.timeout(5 * 1000);
             const getNetCore = async () => {
-                const netCore = createNetCore("/ip4/0.0.0.0/tcp/0", {
+                const netCore = createNetCore("//ip4/0.0.0.0//tcp/0", {
                     mdns: false,
                     dht: true
                 });
@@ -994,69 +994,69 @@ describe("core and all together", () => {
 
             // set up passive relay
             relayNode1 = await setupNetCore([
-                "/ip4/0.0.0.0/tcp/0/ws",
-                "/ip4/0.0.0.0/tcp/0"
+                "//ip4/0.0.0.0//tcp/0//ws",
+                "//ip4/0.0.0.0//tcp/0"
             ], {
-                    relay: {
+                relay: {
+                    enabled: true,
+                    hop: {
                         enabled: true,
-                        hop: {
-                            enabled: true,
-                            active: false // passive relay
-                        }
+                        active: false // passive relay
                     }
-                });
+                }
+            });
 
             // setup active relay
             relayNode2 = await setupNetCore([
-                "/ip4/0.0.0.0/tcp/0/ws",
-                "/ip4/0.0.0.0/tcp/0"
+                "//ip4/0.0.0.0//tcp/0//ws",
+                "//ip4/0.0.0.0//tcp/0"
             ], {
-                    relay: {
+                relay: {
+                    enabled: true,
+                    hop: {
                         enabled: true,
-                        hop: {
-                            enabled: true,
-                            active: false // passive relay
-                        }
+                        active: false // passive relay
                     }
-                });
+                }
+            });
 
             // setup netCore with WS
             netCoreWS1 = await setupNetCore([
-                "/ip4/0.0.0.0/tcp/0/ws"
+                "//ip4/0.0.0.0//tcp/0//ws"
             ], {
-                    relay: {
-                        enabled: true
-                    }
-                });
+                relay: {
+                    enabled: true
+                }
+            });
 
             // setup netCore with WS
             netCoreWS2 = await setupNetCore([
-                "/ip4/0.0.0.0/tcp/0/ws"
+                "//ip4/0.0.0.0//tcp/0//ws"
             ], {
-                    relay: {
-                        enabled: true
-                    }
-                });
+                relay: {
+                    enabled: true
+                }
+            });
 
             // set up netCore with TCP and listening on relay1
             netCoreTCP1 = await setupNetCore([
-                "/ip4/0.0.0.0/tcp/0",
-                `/ipfs/${relayNode1.peerInfo.id.asBase58()}/p2p-circuit`
+                "//ip4/0.0.0.0//tcp/0",
+                `//p2p/${relayNode1.peerInfo.id.asBase58()}//p2p-circuit`
             ], {
-                    relay: {
-                        enabled: true
-                    }
-                });
+                relay: {
+                    enabled: true
+                }
+            });
 
             // set up netCore with TCP and listening on relay2 over TCP transport
             netCoreTCP2 = await setupNetCore([
-                "/ip4/0.0.0.0/tcp/0",
-                `/ip4/0.0.0.0/tcp/0/ipfs/${relayNode2.peerInfo.id.asBase58()}/p2p-circuit`
+                "//ip4/0.0.0.0//tcp/0",
+                `//ip4/0.0.0.0//tcp/0//p2p/${relayNode2.peerInfo.id.asBase58()}//p2p-circuit`
             ], {
-                    relay: {
-                        enabled: true
-                    }
-                });
+                relay: {
+                    enabled: true
+                }
+            });
 
             await netCoreWS1.connect(relayNode1.peerInfo);
             await netCoreWS1.connect(relayNode2.peerInfo);
@@ -1101,10 +1101,10 @@ describe("core and all together", () => {
             await Promise.all([
                 relayNode1.stop(),
                 relayNode2.stop(),
-                // netCoreWS1.stop(),
-                netCoreWS2.stop()
-                // netCoreTCP1.stop(),
-                // netCoreTCP2.stop()
+                netCoreWS1.stop(),
+                netCoreWS2.stop(),
+                netCoreTCP1.stop(),
+                netCoreTCP2.stop()
             ]);
         });
 
@@ -1143,7 +1143,7 @@ describe("core and all together", () => {
                         expect(result[0].toString()).to.equal("hello");
 
                         const addr = multi.address.create(handlerSpies[0].args[2][0].dstPeer.addrs[0]).toString();
-                        expect(addr).to.equal(`/ipfs/${netCoreTCP1.peerInfo.id.asBase58()}`);
+                        expect(addr).to.equal(`//p2p/${netCoreTCP1.peerInfo.id.asBase58()}`);
                         done();
                     })
                 );
@@ -1159,7 +1159,7 @@ describe("core and all together", () => {
                         expect(result[0].toString()).to.equal("hello");
 
                         const addr = multi.address.create(handlerSpies[1].args[2][0].dstPeer.addrs[0]).toString();
-                        expect(addr).to.equal(`/ipfs/${netCoreTCP2.peerInfo.id.asBase58()}`);
+                        expect(addr).to.equal(`//p2p/${netCoreTCP2.peerInfo.id.asBase58()}`);
                         done();
                     })
                 );
@@ -1169,7 +1169,7 @@ describe("core and all together", () => {
 
     describe("multiaddr trim", () => {
         it("non used multiaddrs get trimmed", async () => {
-            const netCore = createNetCore(["/ip4/0.0.0.0/tcp/999/wss/p2p-webrtc-direct", "/ip4/127.0.0.1/tcp/55555/ws", "/ip4/0.0.0.0/tcp/0/"
+            const netCore = createNetCore(["//ip4/0.0.0.0//tcp/999//wss//p2p-webrtc-direct", "//ip4/127.0.0.1//tcp/55555//ws", "//ip4/0.0.0.0//tcp/0"
             ]);
             let multiaddrs = netCore.peerInfo.multiaddrs.toArray();
             // multiaddrs.forEach((ma) => console.log(ma.toString()))
@@ -1181,7 +1181,7 @@ describe("core and all together", () => {
             // multiaddrs.forEach((ma) => console.log(ma.toString()))
 
             expect(multiaddrs.length).to.at.least(2);
-            expect(multiaddrs[0].toString()).to.match(/^\/ip4\/127\.0\.0\.1\/tcp\/[0-9]+\/ws\/ipfs\/\w+$/);
+            expect(multiaddrs[0].toString()).to.match(/^\/\/ip4\/127\.0\.0\.1\/\/tcp\/[0-9]+\/\/ws\/\/p2p\/\w+$/);
             await netCore.stop();
         });
     });
@@ -1191,7 +1191,7 @@ describe("core and all together", () => {
             const nodes = [];
 
             for (let n = 0; n < 2; n++) {
-                const netCore = createNetCore("/ip4/0.0.0.0/tcp/0", {
+                const netCore = createNetCore("//ip4/0.0.0.0//tcp/0", {
                     mdns: false
                 });
                 await netCore.start(); // eslint-disable-line
@@ -1236,7 +1236,7 @@ describe("core and all together", () => {
 
             describe(".pubsub off", () => {
                 it("fail to use pubsub if disabled", async (done) => {
-                    const node = await createNetCore("/ip4/0.0.0.0/tcp/0", {
+                    const node = await createNetCore("//ip4/0.0.0.0//tcp/0", {
                         mdns: false,
                         pubsub: false
                     });

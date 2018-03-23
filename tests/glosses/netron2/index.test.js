@@ -31,8 +31,8 @@ describe("functional and complex cases", () => {
 
     beforeEach(async () => {
         peerS = new PeerInfo(idServer);
-        peerS.multiaddrs.add("/ip4/0.0.0.0/tcp/0");
+        peerS.multiaddrs.add("//ip4/0.0.0.0//tcp/0");
         peerC = new PeerInfo(idClient);
-        peerC.multiaddrs.add("/ip4/0.0.0.0/tcp/0");
+        peerC.multiaddrs.add("//ip4/0.0.0.0//tcp/0");
     });
 });

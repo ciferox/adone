@@ -8,10 +8,10 @@ const {
 
 describe("disconnect", () => {
     let ws1;
-    const ma1 = multi.address.create("/ip4/127.0.0.1/tcp/15001/ws/p2p-websocket-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSooo5a");
+    const ma1 = multi.address.create("//ip4/127.0.0.1//tcp/15001//ws//p2p-websocket-star//p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSooo5a");
 
     let ws2;
-    const ma2 = multi.address.create("/ip4/127.0.0.1/tcp/15001/ws/p2p-websocket-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSooo5b");
+    const ma2 = multi.address.create("//ip4/127.0.0.1//tcp/15001//ws//p2p-websocket-star//p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSooo5b");
 
     let conn;
     let otherConn;

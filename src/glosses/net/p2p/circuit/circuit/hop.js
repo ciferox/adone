@@ -64,7 +64,7 @@ export default class Hop extends adone.event.Emitter {
         const dstPeerId = Identity.createFromBytes(message.dstPeer.id).asBase58();
         if (!message.dstPeer.addrs.length) {
             // TODO: use encapsulate here
-            const addr = multi.address.create(`/p2p-circuit/ipfs/${dstPeerId}`).buffer;
+            const addr = multi.address.create(`//p2p-circuit//p2p/${dstPeerId}`).buffer;
             message.dstPeer.addrs.push(addr);
         }
 

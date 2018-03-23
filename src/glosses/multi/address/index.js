@@ -32,12 +32,12 @@ export class Multiaddr {
         }
         if (addr instanceof Buffer) {
             this.buffer = __.codec.fromBuffer(addr);
-        } else if (is.string(addr) || addr instanceof String) {
+        } else if (is.string(addr)) {
             this.buffer = __.codec.fromString(addr);
         } else if (addr.buffer && addr.protos && addr.protoCodes) { // Multiaddr
             this.buffer = __.codec.fromBuffer(addr.buffer); // validate + copy buffer
         } else {
-            throw new Error("addr must be a string, Buffer, or another Multiaddr");
+            throw new adone.error.NotValid("Address must be a string, Buffer, or another Multiaddr");
         }
     }
 
@@ -46,8 +46,8 @@ export class Multiaddr {
      *
      * @returns {String}
      * @example
-     * Multiaddr('/ip4/127.0.0.1/tcp/4001').toString()
-     * // '/ip4/127.0.0.1/tcp/4001'
+     * Multiaddr('//ip4/127.0.0.1//tcp/4001').toString()
+     * // '//ip4/127.0.0.1//tcp/4001'
      */
     toString() {
         return __.codec.bufferToString(this.buffer);
@@ -58,16 +58,18 @@ export class Multiaddr {
      *
      * @returns {{family: String, host: String, transport: String, port: String}}
      * @example
-     * Multiaddr('/ip4/127.0.0.1/tcp/4001').toOptions()
+     * Multiaddr('//ip4/127.0.0.1//tcp/4001').toOptions()
      * // { family: 'ipv4', host: '127.0.0.1', transport: 'tcp', port: '4001' }
      */
     toOptions() {
         const opts = {};
-        const parsed = this.toString().split("/");
-        opts.family = parsed[1] === "ip4" ? "ipv4" : "ipv6";
-        opts.host = parsed[2];
-        opts.transport = parsed[3];
-        opts.port = parsed[4];
+        const parsed = this.toString().split("//");
+        let parts = parsed[1].split("/");
+        opts.family = parts[0] === "ip4" ? "ipv4" : "ipv6";
+        opts.host = parts[1];
+        parts = parsed[2].split("/");
+        opts.transport = parts[0];
+        opts.port = parts[1];
         return opts;
     }
 
@@ -138,13 +140,11 @@ export class Multiaddr {
      *
      * @return {Array.<String>} protocol names
      * @example
-     * Multiaddr('/ip4/127.0.0.1/tcp/4001').protoNames()
+     * Multiaddr('//ip4/127.0.0.1//tcp/4001').protoNames()
      * // [ 'ip4', 'tcp' ]
      */
     protoNames() {
-        return map(this.protos(), (proto) => {
-            return proto.name;
-        });
+        return map(this.protos(), (proto) => proto.name);
     }
 
     /**
@@ -154,7 +154,7 @@ export class Multiaddr {
      * @return {Number} tuples[].0 code of protocol
      * @return {Buffer} tuples[].1 contents of address
      * @example
-     * Multiaddr("/ip4/127.0.0.1/tcp/4001").tuples()
+     * Multiaddr("//ip4/127.0.0.1//tcp/4001").tuples()
      * // [ [ 4, <Buffer 7f 00 00 01> ], [ 6, <Buffer 0f a1> ] ]
      */
     tuples() {
@@ -168,7 +168,7 @@ export class Multiaddr {
      * @return {Number} tuples[].0 code of protocol
      * @return {(String|Number)} tuples[].1 contents of address
      * @example
-     * Multiaddr("/ip4/127.0.0.1/tcp/4001").stringTuples()
+     * Multiaddr("//ip4/127.0.0.1//tcp/4001").stringTuples()
      * // [ [ 4, '127.0.0.1' ], [ 6, 4001 ] ]
      */
     stringTuples() {
@@ -182,17 +182,17 @@ export class Multiaddr {
      * @param {Multiaddr} addr - Multiaddr to add into this Multiaddr
      * @return {Multiaddr}
      * @example
-     * const mh1 = Multiaddr('/ip4/8.8.8.8/tcp/1080')
-     * // <Multiaddr 0408080808060438 - /ip4/8.8.8.8/tcp/1080>
+     * const mh1 = Multiaddr('//ip4/8.8.8.8//tcp/1080')
+     * // <Multiaddr 0408080808060438 - //ip4/8.8.8.8//tcp/1080>
      *
-     * const mh2 = Multiaddr('/ip4/127.0.0.1/tcp/4001')
-     * // <Multiaddr 047f000001060fa1 - /ip4/127.0.0.1/tcp/4001>
+     * const mh2 = Multiaddr('//ip4/127.0.0.1//tcp/4001')
+     * // <Multiaddr 047f000001060fa1 - //ip4/127.0.0.1//tcp/4001>
      *
      * const mh3 = mh1.encapsulate(mh2)
-     * // <Multiaddr 0408080808060438047f000001060fa1 - /ip4/8.8.8.8/tcp/1080/ip4/127.0.0.1/tcp/4001>
+     * // <Multiaddr 0408080808060438047f000001060fa1 - //ip4/8.8.8.8//tcp/1080//ip4/127.0.0.1//tcp/4001>
      *
      * mh3.toString()
-     * // '/ip4/8.8.8.8/tcp/1080/ip4/127.0.0.1/tcp/4001'
+     * // '//ip4/8.8.8.8//tcp/1080//ip4/127.0.0.1//tcp/4001'
      */
     encapsulate(addr) {
         addr = new Multiaddr(addr);
@@ -205,17 +205,17 @@ export class Multiaddr {
      * @param {Multiaddr} addr - Multiaddr to remove from this Multiaddr
      * @return {Multiaddr}
      * @example
-     * const mh1 = Multiaddr('/ip4/8.8.8.8/tcp/1080')
-     * // <Multiaddr 0408080808060438 - /ip4/8.8.8.8/tcp/1080>
+     * const mh1 = Multiaddr('//ip4/8.8.8.8//tcp/1080')
+     * // <Multiaddr 0408080808060438 - //ip4/8.8.8.8//tcp/1080>
      *
-     * const mh2 = Multiaddr('/ip4/127.0.0.1/tcp/4001')
-     * // <Multiaddr 047f000001060fa1 - /ip4/127.0.0.1/tcp/4001>
+     * const mh2 = Multiaddr('//ip4/127.0.0.1//tcp/4001')
+     * // <Multiaddr 047f000001060fa1 - //ip4/127.0.0.1//tcp/4001>
      *
      * const mh3 = mh1.encapsulate(mh2)
-     * // <Multiaddr 0408080808060438047f000001060fa1 - /ip4/8.8.8.8/tcp/1080/ip4/127.0.0.1/tcp/4001>
+     * // <Multiaddr 0408080808060438047f000001060fa1 - //ip4/8.8.8.8//tcp/1080//ip4/127.0.0.1//tcp/4001>
      *
      * mh3.decapsulate(mh2).toString()
-     * // '/ip4/8.8.8.8/tcp/1080'
+     * // '//ip4/8.8.8.8//tcp/1080'
      */
     decapsulate(addr) {
         addr = addr.toString();
@@ -232,8 +232,8 @@ export class Multiaddr {
      *
      * @return {String|null} peerId - The id of the peer or null if invalid or missing from the ma
      * @example
-     * const mh1 = Multiaddr('/ip4/8.8.8.8/tcp/1080/ipfs/QmValidBase58string')
-     * // <Multiaddr 0408080808060438 - /ip4/8.8.8.8/tcp/1080/ipfs/QmValidBase58string>
+     * const mh1 = Multiaddr('//ip4/8.8.8.8//tcp/1080//p2p/QmValidBase58string')
+     * // <Multiaddr 0408080808060438 - //ip4/8.8.8.8//tcp/1080//p2p/QmValidBase58string>
      *
      * // should return QmValidBase58string or null if the id is missing or invalid
      * const peerId = mh1.getPeerId()
@@ -242,7 +242,7 @@ export class Multiaddr {
         let b58str = null;
         try {
             b58str = this.stringTuples().filter((tuple) => {
-                if (tuple[0] === __.protocols.names.ipfs.code) {
+                if (tuple[0] === __.protocols.names.p2p.code) {
                     return true;
                 }
             })[0][1];
@@ -287,7 +287,7 @@ export class Multiaddr {
      * @returns {{family: String, address: String, port: String}}
      * @throws {Error} Throws error if Multiaddr is not a Thin Waist address
      * @example
-     * Multiaddr('/ip4/127.0.0.1/tcp/4001').nodeAddress()
+     * Multiaddr('//ip4/127.0.0.1//tcp/4001').nodeAddress()
      * // {family: 'IPv4', address: '127.0.0.1', port: '4001'}
      */
     nodeAddress() {
@@ -296,11 +296,22 @@ export class Multiaddr {
         }
 
         const codes = this.protoCodes();
-        const parts = this.toString().split("/").slice(1);
+        const parts = this.toString().split("//").slice(1);
+        const commonProto = codes[0];
+        if (commonProto === 400) {
+            return {
+                path: `/${parts[0].split("/").slice(1).join("/")}`
+            };
+        } else if (commonProto === 401) {
+            return {
+                path: parts[0].split("/")[1]
+            };
+        }
+
         return {
-            family: (codes[0] === 41) ? "IPv6" : "IPv4",
-            address: parts[1], // ip addr
-            port: parts[3] // tcp or udp port
+            family: (commonProto === 6) ? "IPv6" : "IPv4",
+            address: parts[0].split("/")[1], // ip addr
+            port: parts[1].split("/")[1] // tcp or udp port
         };
     }
 
@@ -330,17 +341,21 @@ export class Multiaddr {
      */
     isThinWaistAddress(addr) {
         const protos = (addr || this).protos();
+        
+        if (protos[0].code === 400 || protos[0].code === 401) {
+            return true;
+        }
 
         if (protos.length !== 2) {
             return false;
         }
-
-        if (protos[0].code !== 4 && protos[0].code !== 41) {
+        if (protos[0].code !== 4 && protos[0].code !== 5) {
             return false;
         }
-        if (protos[1].code !== 6 && protos[1].code !== 17) {
+        if (protos[1].code !== 6 && protos[1].code !== 7) {
             return false;
         }
+        
         return true;
     }
 
@@ -378,13 +393,20 @@ export class Multiaddr {
  */
 export const fromNodeAddress = (addr, transport) => {
     if (!addr) {
-        throw new Error("requires node address object");
+        throw new adone.error.NotValid("Requires node address object");
     }
+    if (is.string(addr.path)) {
+        if (addr.path.startsWith("\\\\")) {
+            return new Multiaddr(`//winpipe/${addr.path}`);
+        }
+        return new Multiaddr(`//unix${addr.path}`);
+    }
+
     if (!transport) {
-        throw new Error("requires transport protocol");
-}
+        throw new adone.error.NotValid("Requires transport protocol");
+    }
     const ip = (addr.family === "IPv6") ? "ip6" : "ip4";
-    return new Multiaddr(`/${[ip, addr.address, transport, addr.port].join("/")}`);
+    return new Multiaddr(`//${[ip, addr.address].join("/")}//${[transport, addr.port].join("/")}`);
 };
 
 /**

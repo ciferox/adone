@@ -115,7 +115,7 @@ class WebsocketStar {
      * @private
      */
     _peerDiscovered(maStr) {
-        const peerIdStr = maStr.split("/ipfs/").pop();
+        const peerIdStr = maStr.split("//p2p/").pop();
         const peerId = Identity.createFromBase58(peerIdStr);
         const peerInfo = new PeerInfo(peerId);
 

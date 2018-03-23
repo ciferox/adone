@@ -20,14 +20,14 @@ describe("dial", () => {
     const peerId1 = "QmS8BL7M8jrXYhHo2ofEVeiq5aDKTr29ksmpcqWxjZGvpX";
     const peerId2 = "QmeJGHUQ4hsMvPzAoXCdkT1Z9NBgjT7BenVPENUgpufENP";
 
-    const maDNS = "/dns/ws-star-signal-3.servep2p.com";
-    const maDNS6 = "/dns6/ws-star-signal-2.servep2p.com";
-    const maRemoteIP4 = "/ip4/148.251.206.162/tcp/9090";
-    const maRemoteIP6 = "/ip6/2a01:4f8:212:e0::1/tcp/4287";
+    const maDNS = "//dns/ws-star-signal-3.servep2p.com";
+    const maDNS6 = "//dns6/ws-star-signal-2.servep2p.com";
+    const maRemoteIP4 = "//ip4/148.251.206.162//tcp/9090";
+    const maRemoteIP6 = "//ip6/2a01:4f8:212:e0::1//tcp/4287";
 
-    const maLocalIP4 = "/ip4/127.0.0.1/tcp/15001";
+    const maLocalIP4 = "//ip4/127.0.0.1//tcp/15001";
     // const maLocalIP6 = '/ip6/::1/tcp/15003'
-    const maGen = (base, id, sec) => multi.address.create(`/${base}/${sec ? "wss" : "ws"}/p2p-websocket-star/ipfs/${id}`);
+    const maGen = (base, id, sec) => multi.address.create(`${base}//${sec ? "wss" : "ws"}//p2p-websocket-star//p2p/${id}`);
 
     if (process.env.REMOTE_DNS) {
         // test with deployed signalling server using DNS
@@ -90,7 +90,7 @@ describe("dial", () => {
     });
 
     it("dial offline / non-exist()ent node on IPv4, check callback", (done) => {
-        const maOffline = multi.address.create("/ip4/127.0.0.1/tcp/40404/ws/p2p-websocket-star/ipfs/ABCD");
+        const maOffline = multi.address.create("//ip4/127.0.0.1//tcp/40404//ws//p2p-websocket-star//p2p/ABCD");
 
         ws1.dial(maOffline, (err) => {
             assert.exists(err);

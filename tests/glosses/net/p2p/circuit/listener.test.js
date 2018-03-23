@@ -51,11 +51,11 @@ describe("circuit", "listener", () => {
                 type: protocol.CircuitRelay.Type.HOP,
                 srcPeer: {
                     id: "QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE",
-                    addrs: ["/ipfs/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE"]
+                    addrs: ["//p2p/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE"]
                 },
                 dstPeer: {
                     id: "QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy",
-                    addrs: ["/ipfs/QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy"]
+                    addrs: ["//p2p/QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy"]
                 }
             };
 
@@ -88,11 +88,11 @@ describe("circuit", "listener", () => {
                 type: protocol.CircuitRelay.Type.STOP,
                 srcPeer: {
                     id: "QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE",
-                    addrs: ["/ipfs/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE"]
+                    addrs: ["//p2p/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE"]
                 },
                 dstPeer: {
                     id: "QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy",
-                    addrs: ["/ipfs/QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy"]
+                    addrs: ["//p2p/QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy"]
                 }
             };
 
@@ -125,11 +125,11 @@ describe("circuit", "listener", () => {
                 type: protocol.CircuitRelay.Type.CAN_HOP,
                 srcPeer: {
                     id: "QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE",
-                    addrs: ["/ipfs/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE"]
+                    addrs: ["//p2p/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE"]
                 },
                 dstPeer: {
                     id: "QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy",
-                    addrs: ["/ipfs/QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy"]
+                    addrs: ["//p2p/QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy"]
                 }
             };
 
@@ -162,11 +162,11 @@ describe("circuit", "listener", () => {
                 type: 100000,
                 srcPeer: {
                     id: Buffer.from("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE"),
-                    addrs: [multi.address.create("/ipfs/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE").buffer]
+                    addrs: [multi.address.create("//p2p/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE").buffer]
                 },
                 dstPeer: {
                     id: Buffer.from("QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy"),
-                    addrs: [multi.address.create("/ipfs/QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy").buffer]
+                    addrs: [multi.address.create("//p2p/QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy").buffer]
                 }
             };
 
@@ -208,21 +208,21 @@ describe("circuit", "listener", () => {
         });
 
         it("should return correct addrs", () => {
-            peerInfo.multiaddrs.add("/ip4/0.0.0.0/tcp/4002");
-            peerInfo.multiaddrs.add("/ip4/127.0.0.1/tcp/4003/ws");
+            peerInfo.multiaddrs.add("//ip4/0.0.0.0//tcp/4002");
+            peerInfo.multiaddrs.add("//ip4/127.0.0.1//tcp/4003//ws");
 
             const addrs = listener.getAddrs();
             expect(addrs).to.deep.equal([
-                multi.address.create("/p2p-circuit/ip4/0.0.0.0/tcp/4002/ipfs/QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy"),
-                multi.address.create("/p2p-circuit/ip4/127.0.0.1/tcp/4003/ws/ipfs/QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy")
+                multi.address.create("//p2p-circuit//ip4/0.0.0.0//tcp/4002//p2p/QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy"),
+                multi.address.create("//p2p-circuit//ip4/127.0.0.1//tcp/4003//ws//p2p/QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy")
             ]);
         });
 
         it("don't return default addrs in an explicit p2p-circuit addres", () => {
-            peerInfo.multiaddrs.add("/ip4/127.0.0.1/tcp/4003/ws");
-            peerInfo.multiaddrs.add("/p2p-circuit/ip4/0.0.0.0/tcp/4002");
+            peerInfo.multiaddrs.add("//ip4/127.0.0.1//tcp/4003//ws");
+            peerInfo.multiaddrs.add("//p2p-circuit//ip4/0.0.0.0//tcp/4002");
             const addrs = listener.getAddrs();
-            expect(addrs[0].toString()).to.equal("/p2p-circuit/ip4/0.0.0.0/tcp/4002/ipfs/QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy");
+            expect(addrs[0].toString()).to.equal("//p2p-circuit//ip4/0.0.0.0//tcp/4002//p2p/QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy");
         });
     });
 });

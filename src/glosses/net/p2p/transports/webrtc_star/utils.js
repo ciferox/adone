@@ -31,13 +31,13 @@ const cleanMultiaddr = function (maStr) {
     if (maStr.indexOf(legacy) !== -1) {
         maStr = maStr.substring(legacy.length, maStr.length);
         let ma = multi.address.create(maStr);
-        const tuppleIPFS = ma.stringTuples().filter((tupple) => {
+        const tuppleP2p = ma.stringTuples().filter((tupple) => {
             return tupple[0] === 421; // ipfs code
         })[0];
 
         ma = ma.decapsulate("ipfs");
         ma = ma.encapsulate("p2p-webrtc-star");
-        ma = ma.encapsulate(`/ipfs/${tuppleIPFS[1]}`);
+        ma = ma.encapsulate(`//p2p/${tuppleP2p[1]}`);
         maStr = ma.toString();
     }
 

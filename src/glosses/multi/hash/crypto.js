@@ -24,5 +24,6 @@ module.exports = {
     keccak512: toBuf(sha3.keccak_512),
     murmur3128: toBuf(fromString(murmur3.x64.hash128)),
     murmur332: fromNumberTo32BitBuf(fromString(murmur3.x86.hash32)),
-    addBlake: require("./blake")
+    addBlake: require("./blake"),
+    dblSha2256: (buf) => sha256((Buffer.from(sha256(buf))))
 };

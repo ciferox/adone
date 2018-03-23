@@ -244,7 +244,6 @@ export class Switch extends adone.event.Emitter {
                     }
 
                     const tKeys = this.availableTransports(pi);
-
                     let circuitTried = false;
 
                     const nextTransport = async (key) => {
@@ -259,7 +258,7 @@ export class Switch extends adone.event.Emitter {
                             }
 
                             // Falling back to dialing over circuit
-                            pi.multiaddrs.add(`/p2p-circuit/ipfs/${pi.id.asBase58()}`);
+                            pi.multiaddrs.add(`//p2p-circuit//p2p/${pi.id.asBase58()}`);
                             circuitTried = true;
                             transport = Circuit.tag;
                         }

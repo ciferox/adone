@@ -3,6 +3,27 @@ const {
     is
 } = adone;
 
+/**
+ * @param {!Uint8Array} array1
+ * @param {!Uint8Array} array2
+ *
+ * @return {boolean}
+ */
+const arrayEquals = function (array1, array2) {
+    if (array1 === array2) {
+        return true;
+    }
+    if (array1.length !== array2.length) {
+        return false;
+    }
+    for (let i = 0, length = array1.length; i < length; ++i) {
+        if (array1[i] !== array2[i]) {
+            return false;
+        }
+    }
+    return true;
+};
+
 const createNode = () => {
     return { contacts: [], dontSplit: false, left: null, right: null };
 };
@@ -11,16 +32,15 @@ const createNode = () => {
  * `options`:
  * `distance`: _Function_
  * `function (firstId, secondId) { return distance }` An optional
- * `distance` function that gets two `id` Buffers
+ * `distance` function that gets two `id` Uint8Arrays
  * and return distance (as number) between them.
  * `arbiter`: _Function_ _(Default: vectorClock arbiter)_
  * `function (incumbent, candidate) { return contact; }` An optional
  * `arbiter` function that givent two `contact` objects with the same `id`
  * returns the desired object to be used for updating the k-bucket. For
  * more details, see [arbiter function](#arbiter-function).
- * `localNodeId`: _Buffer_ An optional Buffer representing the local node id.
- * If not provided, a local node id will be created via
- * `crypto.randomBytes(20)`.
+ * `localNodeId`: _Uint8Array_ An optional Uint8Array representing the local node id.
+ * If not provided, a local node id will be created via `randomBytes(20)`.
  * `metadata`: _Object_ _(Default: {})_ Optional satellite data to include
  * with the k-bucket. `metadata` property is guaranteed not be altered by,
  * it is provided as an explicit container for users of k-bucket to store
@@ -38,8 +58,8 @@ export default class KBucket extends event.Emitter {
         options = options || {};
 
         this.localNodeId = options.localNodeId || adone.std.crypto.randomBytes(20);
-        if (!is.buffer(this.localNodeId)) {
-            throw new TypeError("localNodeId is not a Buffer");
+        if (!(this.localNodeId instanceof Uint8Array)) {
+            throw new TypeError("localNodeId is not a Uint8Array");
         }
         this.numberOfNodesPerKBucket = options.numberOfNodesPerKBucket || 20;
         this.numberOfNodesToPing = options.numberOfNodesToPing || 3;
@@ -72,8 +92,8 @@ export default class KBucket extends event.Emitter {
 
     // contact: *required* the contact object to add
     add(contact) {
-        if (!contact || !is.buffer(contact.id)) {
-            throw new TypeError("contact.id is not a Buffer");
+        if (!contact || !(contact.id instanceof Uint8Array)) {
+            throw new TypeError("contact.id is not a Uint8Array");
         }
         let bitIndex = 0;
 
@@ -113,12 +133,12 @@ export default class KBucket extends event.Emitter {
         return this.add(contact);
     }
 
-    // id: Buffer *required* node id
+    // id: Uint8Array *required* node id
     // n: Integer (Default: Infinity) maximum number of closest contacts to return
     // Return: Array of maximum of `n` closest contacts to the node id
     closest(id, n) {
-        if (!is.buffer(id)) {
-            throw new TypeError("id is not a Buffer");
+        if (!(id instanceof Uint8Array)) {
+            throw new TypeError("id is not a Uint8Array");
         }
         if (is.undefined(n)) {
             n = Infinity;
@@ -165,10 +185,10 @@ export default class KBucket extends event.Emitter {
     // Determines whether the id at the bitIndex is 0 or 1.
     // Return left leaf if `id` at `bitIndex` is 0, right leaf otherwise
     // node: internal object that has 2 leafs: left and right
-    // id: a Buffer to compare localNodeId with
-    // bitIndex: the bitIndex to which bit to check in the id Buffer
+    // id: a Uint8Array to compare localNodeId with
+    // bitIndex: the bitIndex to which bit to check in the id Uint8Array
     _determineNode(node, id, bitIndex) {
-        // **NOTE** remember that id is a Buffer and has granularity of
+        // **NOTE** remember that id is a Uint8Array and has granularity of
         // bytes (8 bits), whereas the bitIndex is the _bit_ index (not byte)
 
         // id's that are too short are put in low bucket (1 byte = 8 bits)
@@ -204,10 +224,10 @@ export default class KBucket extends event.Emitter {
     // If this is a leaf, loop through the bucket contents and return the correct
     // contact if we have it or null if not. If this is an inner node, determine
     // which branch of the tree to traverse and repeat.
-    // id: Buffer *required* The ID of the contact to fetch.
+    // id: Uint8Array *required* The ID of the contact to fetch.
     get(id) {
-        if (!is.buffer(id)) {
-            throw new TypeError("id is not a Buffer");
+        if (!(id instanceof Uint8Array)) {
+            throw new TypeError("id is not a Uint8Array");
         }
         let bitIndex = 0;
 
@@ -221,11 +241,11 @@ export default class KBucket extends event.Emitter {
     }
 
     // node: internal object that has 2 leafs: left and right
-    // id: Buffer Contact node id.
+    // id: Uint8Array Contact node id.
     // Returns the index of the contact with the given id if it exists
     _indexOf(node, id) {
         for (let i = 0; i < node.contacts.length; ++i) {
-            if (node.contacts[i].id.equals(id)) {
+            if (arrayEquals(node.contacts[i].id, id)) {
                 return i;
             }
         }
@@ -233,10 +253,10 @@ export default class KBucket extends event.Emitter {
         return -1;
     }
 
-    // id: Buffer *required* The ID of the contact to remove.
+    // id: Uint8Array *required* The ID of the contact to remove.
     remove(id) {
-        if (!is.buffer(id)) {
-            throw new TypeError("id is not a Buffer");
+        if (!(id instanceof Uint8Array)) {
+            throw new TypeError("id is not a Uint8Array");
         }
         let bitIndex = 0;
 
@@ -258,7 +278,7 @@ export default class KBucket extends event.Emitter {
     // node that was split as an inner node of the binary tree of nodes by
     // setting this.root.contacts = null
     // node: *required* node for splitting
-    // bitIndex: *required* the bitIndex to which byte to check in the Buffer
+    // bitIndex: *required* the bitIndex to which byte to check in the Uint8Array
     //          for navigating the binary tree
     _split(node, bitIndex) {
         node.left = createNode();
@@ -311,7 +331,7 @@ export default class KBucket extends event.Emitter {
     //        (index has already been computed in a previous calculation)
     _update(node, index, contact) {
         // sanity check
-        if (!node.contacts[index].id.equals(contact.id)) {
+        if (!arrayEquals(node.contacts[index].id, contact.id)) {
             throw new Error("wrong index for _update");
         }
 

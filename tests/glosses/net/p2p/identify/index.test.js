@@ -4,7 +4,7 @@ const {
     stream: { pull }
 } = adone;
 
-describe("net", "identify", () => {
+describe("identify", () => {
     it("multicodec", () => {
         expect(identify.multicodec).to.eql("/ipfs/id/1.0.0");
     });
@@ -18,13 +18,13 @@ describe("net", "identify", () => {
 
         it("works", (done) => {
             const p = pull.pair.duplex();
-            original.multiaddrs.add(multi.address.create("/ip4/127.0.0.1/tcp/5002"));
+            original.multiaddrs.add(multi.address.create("//ip4/127.0.0.1//tcp/5002"));
             const input = identify.message.encode({
                 protocolVersion: "ipfs/0.1.0",
                 agentVersion: "na",
                 publicKey: original.id.pubKey.bytes,
-                listenAddrs: [multi.address.create("/ip4/127.0.0.1/tcp/5002").buffer],
-                observedAddr: multi.address.create("/ip4/127.0.0.1/tcp/5001").buffer
+                listenAddrs: [multi.address.create("//ip4/127.0.0.1//tcp/5002").buffer],
+                observedAddr: multi.address.create("//ip4/127.0.0.1//tcp/5001").buffer
             });
 
             pull(
@@ -42,7 +42,7 @@ describe("net", "identify", () => {
                     .to.eql(original.multiaddrs.toArray());
 
                 expect(observedAddrs)
-                    .to.eql([multi.address.create("/ip4/127.0.0.1/tcp/5001")]);
+                    .to.eql([multi.address.create("//ip4/127.0.0.1//tcp/5001")]);
 
                 done();
             });
@@ -59,7 +59,7 @@ describe("net", "identify", () => {
 
         it("works", (done) => {
             const p = pull.pair.duplex();
-            info.multiaddrs.add(multi.address.create("/ip4/127.0.0.1/tcp/5002"));
+            info.multiaddrs.add(multi.address.create("//ip4/127.0.0.1//tcp/5002"));
             pull(
                 p[1],
                 pull.lengthPrefixed.decode(),
@@ -73,8 +73,8 @@ describe("net", "identify", () => {
                         protocolVersion: "ipfs/0.1.0",
                         agentVersion: "na",
                         publicKey: info.id.pubKey.bytes,
-                        listenAddrs: [multi.address.create("/ip4/127.0.0.1/tcp/5002").buffer],
-                        observedAddr: multi.address.create("/ip4/127.0.0.1/tcp/5001").buffer,
+                        listenAddrs: [multi.address.create("//ip4/127.0.0.1//tcp/5002").buffer],
+                        observedAddr: multi.address.create("//ip4/127.0.0.1//tcp/5001").buffer,
                         protocols: []
                     });
                     done();
@@ -83,7 +83,7 @@ describe("net", "identify", () => {
 
             const conn = p[0];
             conn.getObservedAddrs = (cb) => {
-                cb(null, [multi.address.create("/ip4/127.0.0.1/tcp/5001")]);
+                cb(null, [multi.address.create("//ip4/127.0.0.1//tcp/5001")]);
             };
 
             identify.listener(conn, info);

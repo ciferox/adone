@@ -1,7 +1,7 @@
 const {
     data: { varint },
     is,
-    lodash: { map, filter }
+    lodash: { map }
 } = adone;
 
 export const parseError = (str) => new Error(`Error parsing address: ${str}`);
@@ -59,7 +59,7 @@ export const validateBuffer = (buf) => {
 
 export const isValidBuffer = (buf) => is.undefined(validateBuffer(buf));
 
-export const cleanPath = (str) => `/${filter(str.trim().split("/")).join("/")}`;
+export const cleanPath = (str) => `//${str.trim().split("//").filter(adone.identity).join("//")}`;
 
 export const protoFromTuple = (tup) => {
     const proto = adone.multi.address.protocols(tup[0]);
@@ -69,26 +69,27 @@ export const protoFromTuple = (tup) => {
 // string -> [[str name, str addr]... ]
 export const stringToStringTuples = (str) => {
     const tuples = [];
-    const parts = str.split("/").slice(1); // skip first empty elem
-    if (parts.length === 1 && parts[0] === "") {
+    const protos = str.split("//").filter(adone.identity);
+    if (protos.length === 1 && protos[0] === "") {
         return [];
     }
 
-    for (let p = 0; p < parts.length; p++) {
-        const part = parts[p];
-        const proto = adone.multi.address.protocols(part);
+    for (let p = 0; p < protos.length; p++) {
+        const parts = protos[p].split("/").filter(adone.identity);
 
+        const proto = adone.multi.address.protocols(parts[0]);
         if (proto.size === 0) {
-            tuples.push([part]);
-            continue;
+            tuples.push([parts[0]]);
+        } else {
+            if (proto.code === 400) {
+                tuples.push([parts[0], parts.slice(1).join("/")]);
+                continue;
+            } else if (parts.length !== 2) {
+                throw parseError(`Invalid address: ${str}`);
+            } else {
+                tuples.push(parts);
+            }
         }
-
-        p++; // advance addr part
-        if (p >= parts.length) {
-            throw parseError(`invalid address: ${str}`);
-        }
-
-        tuples.push([part, parts[p]]);
     }
 
     return tuples;
@@ -96,24 +97,23 @@ export const stringToStringTuples = (str) => {
 
 // [[str name, str addr]... ] -> string
 export const stringTuplesToString = (tuples) => {
-    const parts = [];
+    const protos = [];
     map(tuples, (tup) => {
         const proto = protoFromTuple(tup);
-        parts.push(proto.name);
+        const parts = [proto.name];
         if (tup.length > 1) {
             parts.push(tup[1]);
         }
+        protos.push(parts.join("/"));
     });
 
-    return `/${parts.join("/")}`;
+    return `//${protos.join("//")}`;
 };
 
 // [[str name, str addr]... ] -> [[int code, Buffer]... ]
 export const stringTuplesToTuples = (tuples) => {
     return map(tuples, (tup) => {
-        if (!is.array(tup)) {
-            tup = [tup];
-        }
+        tup = adone.util.arrify(tup);
         const proto = protoFromTuple(tup);
         if (tup.length > 1) {
             return [proto.code, adone.multi.address.toBuffer(proto.code, tup[1])];
@@ -168,7 +168,6 @@ export const stringToBuffer = (str) => {
     str = cleanPath(str);
     const a = stringToStringTuples(str);
     const b = stringTuplesToTuples(a);
-
     return tuplesToBuffer(b);
 };
 

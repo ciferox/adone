@@ -29,10 +29,10 @@ class NetworkInfo {
 }
 
 export default class Netron extends adone.task.Manager {
-    constructor(peerInfo, options) {
+    constructor(peerId, options) {
         super();
 
-        this.peer = new OwnPeer(PeerInfo.create(peerInfo), this);
+        this.peer = new OwnPeer(PeerInfo.create(peerId), this);
 
         this.options = {
             responseTimeout: 60000 * 3,
@@ -81,9 +81,20 @@ export default class Netron extends adone.task.Manager {
 
         config.muxer = "spdy";
 
+        const peerInfo = PeerInfo.create(this.peer.info.id);
+        if (is.string(config.addrs)) {
+            config.addrs = [config.addrs];
+        }
+        
+        if (is.array(config.addrs)) {
+            for (const ma of config.addrs) {
+                peerInfo.multiaddrs.add(ma);
+            }
+        }
+
         const netCore = new adone.net.p2p.Core({
-            ...config,
-            peer: this.peer.info
+            ...adone.util.omit(config, "addrs"),
+            peer: peerInfo
         });
 
         netCore.on("peer:disconnect", (peerInfo) => {
@@ -205,14 +216,13 @@ export default class Netron extends adone.task.Manager {
 
         const netCore = this.getNetCore(netId);
         if (!netCore.started) {
-            await netCore.start();
-
             netCore.handle(adone.netron2.NETRON_PROTOCOL, async (protocol, conn) => {
                 const peerInfo = await conn.getPeerInfo();
                 const peer = new adone.netron2.RemotePeer(peerInfo, this, netCore);
                 peer._setConnInfo(conn);
                 await this._peerConnected(peer, protocol);
             });
+            await netCore.start();
         }
     }
 
@@ -274,7 +284,6 @@ export default class Netron extends adone.task.Manager {
 
         const netCore = this.getNetCore(netId);
         if (netCore.started) {
-
             await netCore.stop();
         }
     }

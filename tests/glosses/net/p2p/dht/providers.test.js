@@ -4,7 +4,7 @@ const map = require("async/map");
 const timesSeries = require("async/timesSeries");
 const each = require("async/each");
 const eachSeries = require("async/eachSeries");
-const util = require("./utils");
+import { makePeers, makeValues } from "./utils";
 
 const {
     datastore: { backend: { Memory: MemoryStore, Level: LevelStore } },
@@ -22,11 +22,10 @@ describe("dht", "KadDHT", "Providers", function () {
     let infos;
 
     before(() => {
-
-        infos = util.makePeers(3);
+        infos = makePeers(3);
     });
 
-    it("simple add and get of providers", (done) => {
+    it.only("simple add and get of providers", (done) => {
         const providers = new Providers(new MemoryStore(), infos[2].id);
 
         const cid = new CID("QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n");
@@ -35,6 +34,7 @@ describe("dht", "KadDHT", "Providers", function () {
             (cb) => providers.addProvider(cid, infos[0].id, cb),
             (cb) => providers.addProvider(cid, infos[1].id, cb)
         ], (err) => {
+            assert.notExists(err);
             providers.getProviders(cid, (err, provs) => {
                 assert.notExists(err);
                 expect(provs).to.be.eql([infos[0].id, infos[1].id]);
@@ -120,8 +120,8 @@ describe("dht", "KadDHT", "Providers", function () {
         await store.open();
         const providers = new Providers(store, infos[2].id, 10);
 
-        const peers = util.makePeers(600);
-        const values = util.makeValues(100);
+        const peers = makePeers(600);
+        const values = makeValues(100);
         eachSeries(values, (v, cb) => {
             eachSeries(peers, (p, cb) => {
                 providers.addProvider(v.cid, p.id, cb);

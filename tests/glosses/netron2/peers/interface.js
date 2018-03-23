@@ -29,7 +29,7 @@ export default (testInterface) => {
             await testInterface.afterEach();
         });
 
-        it.only("short path to peer id", () => {
+        it("short path to peer id", () => {
             assert.strictEqual(peer.id, peer.info.id.asBase58());
             assert.strictEqual(netron.peer.id, netron.peer.info.id.asBase58());
         });
@@ -106,7 +106,7 @@ export default (testInterface) => {
                 await promise.delay(500);
 
                 const netron2 = createNetron();
-                const remotePeer = await netron2.connect("default", netron.peer.info);
+                const remotePeer = await netron2.connect("default", netron.getNetCore("default").peerInfo);
                 assert.true(remotePeer.isConnected());
 
                 assert.include(netron.getContextNames(), "a");
@@ -121,7 +121,7 @@ export default (testInterface) => {
 
             it("attached contexts (after connect) should be accessible from other peer", async () => {
                 const netron2 = createNetron();
-                const remotePeer = await netron2.connect("default", netron.peer.info);
+                const remotePeer = await netron2.connect("default", netron.getNetCore("default").peerInfo);
                 assert.true(remotePeer.isConnected());
 
                 await peer.attachContext(new A(), "a");
@@ -149,7 +149,7 @@ export default (testInterface) => {
 
             it("detach contexts", async () => {
                 const netron2 = createNetron();
-                const remotePeer = await netron2.connect("default", netron.peer.info);
+                const remotePeer = await netron2.connect("default", netron.getNetCore("default").peerInfo);
                 assert.true(remotePeer.isConnected());
 
                 await promise.delay(500);
@@ -193,7 +193,7 @@ export default (testInterface) => {
 
                 it("should return interface for valid context (remote)", async () => {
                     const netron2 = createNetron();
-                    const remotePeer = await netron2.connect("default", netron.peer.info);
+                    const remotePeer = await netron2.connect("default", netron.getNetCore("default").peerInfo);
                     const def = remotePeer._getContextDefinition("a");
                     const iface = remotePeer._queryInterfaceByDefinition(def.id);
                     assert.true(is.netron2Interface(iface));
@@ -216,7 +216,7 @@ export default (testInterface) => {
 
             it("query interface (remote)", async () => {
                 const netron2 = createNetron();
-                const remotePeer = await netron2.connect("default", netron.peer.info);
+                const remotePeer = await netron2.connect("default", netron.getNetCore("default").peerInfo);
 
                 await peer.attachContext(new A(), "a");
                 await promise.delay(500);
@@ -245,7 +245,7 @@ export default (testInterface) => {
 
             it("release interface (remote)", async () => {
                 const netron2 = createNetron();
-                const remotePeer = await netron2.connect("default", netron.peer.info);
+                const remotePeer = await netron2.connect("default", netron.getNetCore("default").peerInfo);
 
                 await peer.attachContext(new A(), "a");
                 await promise.delay(500);
@@ -339,7 +339,7 @@ export default (testInterface) => {
                 beforeEach(async () => {
                     await peer.attachContext(new CommonTypes(), "ct");
 
-                    remotePeer = await netron2.connect("default", netron.peer.info);
+                    remotePeer = await netron2.connect("default", netron.getNetCore("default").peerInfo);
 
                     iCt = remotePeer.queryInterface("ct");
                     assert.true(is.netron2Interface(iCt));
@@ -386,7 +386,7 @@ export default (testInterface) => {
 
                 await promise.delay(500);
 
-                const remotePeer = await netron2.connect("default", netron.peer.info);
+                const remotePeer = await netron2.connect("default", netron.getNetCore("default").peerInfo);
 
                 const iA = remotePeer.queryInterface("a");
                 assert.true(is.netron2Interface(iA));
@@ -421,7 +421,7 @@ export default (testInterface) => {
 
                 await promise.delay(500);
 
-                const remotePeer = await netron2.connect("default", netron.peer.info);
+                const remotePeer = await netron2.connect("default", netron.getNetCore("default").peerInfo);
 
                 const iA = remotePeer.queryInterface("a");
                 assert.true(is.netron2Interface(iA));
@@ -438,7 +438,7 @@ export default (testInterface) => {
                 it("query strong interface", async () => {
                     const storage = new ObjectStorage("unknown", 1024);
                     const netron2 = createNetron();
-                    const remotePeer = await netron2.connect("default", netron.peer.info);
+                    const remotePeer = await netron2.connect("default", netron.getNetCore("default").peerInfo);
                     await peer.attachContext(storage, "storage");
                     await promise.delay(300);
                     const iStorage = remotePeer.queryInterface("storage");
@@ -461,7 +461,7 @@ export default (testInterface) => {
                     storage.addDocument("idea", new Document(idea, DocumentTypes.string));
                     await peer.attachContext(storage, "storage");
                     const netron2 = createNetron();
-                    const remotePeer = await netron2.connect("default", netron.peer.info);
+                    const remotePeer = await netron2.connect("default", netron.getNetCore("default").peerInfo);
                     const iStorage = remotePeer.queryInterface("storage");
                     const size = await iStorage.getSize();
                     assert.strictEqual(size, 1);
@@ -476,7 +476,7 @@ export default (testInterface) => {
                     const storage = new ObjectStorage("simplestore", 3);
                     await peer.attachContext(storage, "storage");
                     const netron2 = createNetron();
-                    const remotePeer = await netron2.connect("default", netron.peer.info);
+                    const remotePeer = await netron2.connect("default", netron.getNetCore("default").peerInfo);
                     const iStorage = remotePeer.queryInterface("storage");
                     const iDoc = await iStorage.createDocument(idea, DocumentTypes.string);
                     await iStorage.addDocument("idea", iDoc);
@@ -494,7 +494,7 @@ export default (testInterface) => {
                         const devil = new Devil();
                         await peer.attachContext(devil, "devil");
                         const netron2 = createNetron();
-                        const remotePeer = await netron2.connect("default", netron.peer.info);
+                        const remotePeer = await netron2.connect("default", netron.getNetCore("default").peerInfo);
                         const iDevil = remotePeer.queryInterface("devil");
 
                         await iDevil.sellSoul(peter.name, peter);
@@ -514,7 +514,7 @@ export default (testInterface) => {
                         const devil = new Devil();
                         await peer.attachContext(devil, "devil");
                         const netron2 = createNetron();
-                        const remotePeer = await netron2.connect("default", netron.peer.info);
+                        const remotePeer = await netron2.connect("default", netron.getNetCore("default").peerInfo);
                         const iDevil = remotePeer.queryInterface("devil");
 
                         await iDevil.sellSoul(peter.name, peter);
@@ -539,7 +539,7 @@ export default (testInterface) => {
                     this.timeout(600 * 10000);
                     await peer.attachContext(new Strong(peer.netron), "strong");
                     const netron2 = createNetron();
-                    const remotePeer = await netron2.connect("default", netron.peer.info);
+                    const remotePeer = await netron2.connect("default", netron.getNetCore("default").peerInfo);
                     const iStrong = remotePeer.queryInterface("strong");
                     const iWeak = await iStrong.getWeak();
                     assert.equal(await iWeak.doSomething(), 888);
@@ -552,7 +552,7 @@ export default (testInterface) => {
                 it("deep weak contexting", async () => {
                     await peer.attachContext(new CounterKeeper(), "keeper");
                     const netron2 = createNetron();
-                    const remotePeer = await netron2.connect("default", netron.peer.info);
+                    const remotePeer = await netron2.connect("default", netron.getNetCore("default").peerInfo);
                     let keeper = remotePeer.queryInterface("keeper");
                     let counter = 1;
                     assert.strictEqual(await keeper.getCounter(), counter);
@@ -572,7 +572,7 @@ export default (testInterface) => {
                     const numSet = new NumSet();
                     await peer.attachContext(numSet, "numset");
                     const netron2 = createNetron();
-                    const remotePeer = await netron2.connect("default", netron.peer.info);
+                    const remotePeer = await netron2.connect("default", netron.getNetCore("default").peerInfo);
                     const iNumSet = remotePeer.queryInterface("numset");
                     const defs = await iNumSet.getFields(0, 8);
                     expect(defs.length).to.be.equal(8);
@@ -586,7 +586,7 @@ export default (testInterface) => {
                     const numSet = new NumSet();
                     await peer.attachContext(numSet, "numset");
                     const netron2 = createNetron();
-                    const remotePeer = await netron2.connect("default", netron.peer.info);
+                    const remotePeer = await netron2.connect("default", netron.getNetCore("default").peerInfo);
                     const iNumSet = remotePeer.queryInterface("numset");
                     const fields = new adone.netron2.Definitions();
                     for (let i = 0; i < 10; i++) {
@@ -606,7 +606,7 @@ export default (testInterface) => {
                     let okCount = 0;
                     await peer.attachContext(new StdErrs(), "a");
                     const netron2 = createNetron();
-                    const remotePeer = await netron2.connect("default", netron.peer.info);
+                    const remotePeer = await netron2.connect("default", netron.getNetCore("default").peerInfo);
                     const iA = remotePeer.queryInterface("a");
                     const stdErrors = adone.error.stdExceptions;
                     for (const StdError of stdErrors) {
@@ -624,7 +624,7 @@ export default (testInterface) => {
 
                     await peer.attachContext(new AdoneErrs(), "a");
                     const netron2 = createNetron();
-                    const remotePeer = await netron2.connect("default", netron.peer.info);
+                    const remotePeer = await netron2.connect("default", netron.getNetCore("default").peerInfo);
                     const iA = remotePeer.queryInterface("a");
 
                     for (const AdoneError of adoneErrors) {
@@ -645,7 +645,7 @@ export default (testInterface) => {
                     let okCount = 0;
                     await peer.attachContext(new NodeErrs(), "a");
                     const netron2 = createNetron();
-                    const remotePeer = await netron2.connect("default", netron.peer.info);
+                    const remotePeer = await netron2.connect("default", netron.getNetCore("default").peerInfo);
                     const iA = remotePeer.queryInterface("a");
                     for (const [name, Exc] of Object.entries(nodeErrors)) {
                         try {
@@ -663,7 +663,7 @@ export default (testInterface) => {
                     await peer.attachContext(new NonStdErr(), "a");
 
                     const netron2 = createNetron();
-                    const remotePeer = await netron2.connect("default", netron.peer.info);
+                    const remotePeer = await netron2.connect("default", netron.getNetCore("default").peerInfo);
                     const iA = remotePeer.queryInterface("a");
 
                     await assert.throws(async () => {

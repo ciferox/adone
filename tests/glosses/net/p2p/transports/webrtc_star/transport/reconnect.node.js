@@ -12,7 +12,7 @@ module.exports = (create) => {
         let sigS;
 
         const base = (id) => {
-            return `/ip4/127.0.0.1/tcp/15555/ws/p2p-webrtc-star/ipfs/${id}`;
+            return `//ip4/127.0.0.1//tcp/15555//ws//p2p-webrtc-star//p2p/${id}`;
         };
 
         let ws1;

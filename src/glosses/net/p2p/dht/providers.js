@@ -97,8 +97,6 @@ class Providers {
     constructor(datastore, self, cacheSize) {
         this.datastore = datastore;
 
-        this._log = utils.logger(self, "providers");
-
         /**
          * How often invalid records are cleaned. (in seconds)
          *
@@ -146,7 +144,7 @@ class Providers {
     _cleanup() {
         this._getProviderCids((err, cids) => {
             if (err) {
-                return this._log.error("Failed to get cids", err);
+                return adone.logError(err);
             }
 
             each(cids, (cid, cb) => {
@@ -156,7 +154,6 @@ class Providers {
                     }
 
                     provs.forEach((time, provider) => {
-                        this._log("comparing: %s - %s > %s", Date.now(), time, this.provideValidity);
                         if (Date.now() - time > this.provideValidity) {
                             provs.delete(provider);
                         }
@@ -170,10 +167,8 @@ class Providers {
                 });
             }, (err) => {
                 if (err) {
-                    return this._log.error("Failed to cleanup", err);
+                    return adone.logError(err);
                 }
-
-                this._log("Cleanup successfull");
             });
         });
     }
@@ -193,23 +188,21 @@ class Providers {
                 pull.map((entry) => {
                     const parts = entry.key.toString().split("/");
                     if (parts.length !== 4) {
-                        this._log.error("incorrectly formatted provider entry in datastore: %s", entry.key);
-                        return;
+                        return undefined;
                     }
 
                     let decoded;
                     try {
                         decoded = utils.decodeBase32(parts[2]);
                     } catch (err) {
-                        this._log.error("error decoding base32 provider key: %s", parts[2]);
-                        return;
+                        return undefined;
                     }
 
                     let cid;
                     try {
                         cid = new CID(decoded);
                     } catch (err) {
-                        this._log.error("error converting key to cid from datastore: %s", err.message);
+                        adone.logError(err.message);
                     }
 
                     return cid;
@@ -297,7 +290,6 @@ class Providers {
      * @returns {undefined}
      */
     addProvider(cid, provider, callback) {
-        this._log("addProvider %s", cid.toBaseEncodedString());
         const dsKey = makeProviderKey(cid);
         const provs = this.providers.get(dsKey);
 
@@ -306,7 +298,6 @@ class Providers {
                 return callback(err);
             }
 
-            this._log("loaded %s provs", provs.size);
             const now = Date.now();
             provs.set(provider, now);
 
@@ -329,7 +320,6 @@ class Providers {
      * @returns {undefined}
      */
     getProviders(cid, callback) {
-        this._log("getProviders %s", cid.toBaseEncodedString());
         this._getProvidersMap(cid, (err, provs) => {
             if (err) {
                 return callback(err);

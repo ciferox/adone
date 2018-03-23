@@ -43,7 +43,9 @@ const __ = adone.lazify({
             // murmur3-128
             0x22: __.crypto.murmur3128,
             // murmur3-32
-            0x23: __.crypto.murmur332
+            0x23: __.crypto.murmur332,
+            // dbl-sha2-256
+            0x56: __.crypto.dblSha2256
         };
 
         // add blake functions

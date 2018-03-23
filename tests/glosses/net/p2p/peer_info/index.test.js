@@ -55,19 +55,19 @@ describe("PeerInfo", () => {
     });
 
     it("add multiaddr", () => {
-        const ma = multi.address.create("/ip4/127.0.0.1/tcp/5001");
+        const ma = multi.address.create("//ip4/127.0.0.1//tcp/5001");
         pi.multiaddrs.add(ma);
         expect(pi.multiaddrs.size).to.equal(1);
     });
 
     it("add multiaddr that are buffers", () => {
-        const ma = multi.address.create("/ip4/127.0.0.1/tcp/5001");
+        const ma = multi.address.create("//ip4/127.0.0.1//tcp/5001");
         pi.multiaddrs.add(ma.buffer);
         expect(pi.multiaddrs.has(ma)).to.equal(true);
     });
 
     it("add repeated multiaddr", () => {
-        const ma = multi.address.create("/ip4/127.0.0.1/tcp/5001");
+        const ma = multi.address.create("//ip4/127.0.0.1//tcp/5001");
         pi.multiaddrs.add(ma);
         expect(pi.multiaddrs.size).to.equal(1);
         pi.multiaddrs.add(ma);
@@ -75,7 +75,7 @@ describe("PeerInfo", () => {
     });
 
     it("delete multiaddr", () => {
-        const ma = multi.address.create("/ip4/127.0.0.1/tcp/5001");
+        const ma = multi.address.create("//ip4/127.0.0.1//tcp/5001");
         pi.multiaddrs.add(ma);
         expect(pi.multiaddrs.size).to.equal(1);
         pi.multiaddrs.delete(ma);
@@ -83,9 +83,9 @@ describe("PeerInfo", () => {
     });
 
     it("addSafe - avoid multiaddr explosion", () => {
-        const ma = multi.address.create("/ip4/127.0.0.1/tcp/5001");
-        const ma2 = multi.address.create("/ip4/127.0.0.1/tcp/9002");
-        const ma3 = multi.address.create("/ip4/127.0.0.1/tcp/9009");
+        const ma = multi.address.create("//ip4/127.0.0.1//tcp/5001");
+        const ma2 = multi.address.create("//ip4/127.0.0.1//tcp/9002");
+        const ma3 = multi.address.create("//ip4/127.0.0.1//tcp/9009");
         pi.multiaddrs.addSafe(ma);
         expect(pi.multiaddrs.size).to.equal(0);
         pi.multiaddrs.addSafe(ma);
@@ -96,19 +96,19 @@ describe("PeerInfo", () => {
     });
 
     it("addSafe - multiaddr that are buffers", () => {
-        const ma = multi.address.create("/ip4/127.0.0.1/tcp/5001");
+        const ma = multi.address.create("//ip4/127.0.0.1//tcp/5001");
         pi.multiaddrs.addSafe(ma.buffer);
         pi.multiaddrs.addSafe(ma.buffer);
         expect(pi.multiaddrs.has(ma)).to.equal(true);
     });
 
     it("replace multiaddr", () => {
-        const ma1 = multi.address.create("/ip4/127.0.0.1/tcp/5001");
-        const ma2 = multi.address.create("/ip4/127.0.0.1/tcp/5002");
-        const ma3 = multi.address.create("/ip4/127.0.0.1/tcp/5003");
-        const ma4 = multi.address.create("/ip4/127.0.0.1/tcp/5004");
-        const ma5 = multi.address.create("/ip4/127.0.0.1/tcp/5005");
-        const ma6 = multi.address.create("/ip4/127.0.0.1/tcp/5006");
+        const ma1 = multi.address.create("//ip4/127.0.0.1//tcp/5001");
+        const ma2 = multi.address.create("//ip4/127.0.0.1//tcp/5002");
+        const ma3 = multi.address.create("//ip4/127.0.0.1//tcp/5003");
+        const ma4 = multi.address.create("//ip4/127.0.0.1//tcp/5004");
+        const ma5 = multi.address.create("//ip4/127.0.0.1//tcp/5005");
+        const ma6 = multi.address.create("//ip4/127.0.0.1//tcp/5006");
 
         pi.multiaddrs.add(ma1);
         pi.multiaddrs.add(ma2);
@@ -126,11 +126,11 @@ describe("PeerInfo", () => {
     });
 
     it("replace multiaddr (no arrays)", () => {
-        const ma1 = multi.address.create("/ip4/127.0.0.1/tcp/5001");
-        const ma2 = multi.address.create("/ip4/127.0.0.1/tcp/5002");
-        const ma3 = multi.address.create("/ip4/127.0.0.1/tcp/5003");
-        const ma4 = multi.address.create("/ip4/127.0.0.1/tcp/5004");
-        const ma5 = multi.address.create("/ip4/127.0.0.1/tcp/5005");
+        const ma1 = multi.address.create("//ip4/127.0.0.1//tcp/5001");
+        const ma2 = multi.address.create("//ip4/127.0.0.1//tcp/5002");
+        const ma3 = multi.address.create("//ip4/127.0.0.1//tcp/5003");
+        const ma4 = multi.address.create("//ip4/127.0.0.1//tcp/5004");
+        const ma5 = multi.address.create("//ip4/127.0.0.1//tcp/5005");
 
         pi.multiaddrs.add(ma1);
         pi.multiaddrs.add(ma2);
@@ -148,10 +148,10 @@ describe("PeerInfo", () => {
     });
 
     it.todo("get distinct multiaddr same transport multiple different ports", () => {
-        const ma1 = multi.address.create("/ip4/127.0.0.1/tcp/5001");
-        const ma2 = multi.address.create("/ip4/127.0.0.1/tcp/5002");
-        const ma3 = multi.address.create("/ip4/127.0.0.1/tcp/5003");
-        const ma4 = multi.address.create("/ip4/127.0.0.1/tcp/5004");
+        const ma1 = multi.address.create("//ip4/127.0.0.1//tcp/5001");
+        const ma2 = multi.address.create("//ip4/127.0.0.1//tcp/5002");
+        const ma3 = multi.address.create("//ip4/127.0.0.1//tcp/5003");
+        const ma4 = multi.address.create("//ip4/127.0.0.1//tcp/5004");
 
         pi.multiaddrs.add(ma1);
         pi.multiaddrs.add(ma2);
@@ -163,8 +163,8 @@ describe("PeerInfo", () => {
     });
 
     it.todo("get distinct multiaddr same transport different port", () => {
-        const ma1 = multi.address.create("/ip4/127.0.0.1/tcp/5001");
-        const ma2 = multi.address.create("/ip4/127.0.0.1/tcp/5002");
+        const ma1 = multi.address.create("//ip4/127.0.0.1//tcp/5001");
+        const ma2 = multi.address.create("//ip4/127.0.0.1//tcp/5002");
 
         pi.multiaddrs.add(ma1);
         pi.multiaddrs.add(ma2);
@@ -174,8 +174,8 @@ describe("PeerInfo", () => {
     });
 
     it.todo("get distinct multiaddr same transport same port", () => {
-        const ma1 = multi.address.create("/ip4/127.0.0.1/tcp/5001");
-        const ma2 = multi.address.create("/ip4/127.0.0.1/tcp/5001");
+        const ma1 = multi.address.create("//ip4/127.0.0.1//tcp/5001");
+        const ma2 = multi.address.create("//ip4/127.0.0.1//tcp/5001");
 
         pi.multiaddrs.add(ma1);
         pi.multiaddrs.add(ma2);
@@ -185,8 +185,8 @@ describe("PeerInfo", () => {
     });
 
     it.todo("get distinct multiaddr different transport same port", () => {
-        const ma1 = multi.address.create("/ip4/127.0.0.1/tcp/5001");
-        const ma2 = multi.address.create("/ip4/127.0.0.1/udp/5001");
+        const ma1 = multi.address.create("//ip4/127.0.0.1//tcp/5001");
+        const ma2 = multi.address.create("//ip4/127.0.0.1/udp/5001");
 
         pi.multiaddrs.add(ma1);
         pi.multiaddrs.add(ma2);
@@ -196,8 +196,8 @@ describe("PeerInfo", () => {
     });
 
     it.todo("get distinct multiaddr different family same port same transport", () => {
-        const ma1 = multi.address.create("/ip4/127.0.0.1/tcp/5001");
-        const ma2 = multi.address.create("/ip6/::/tcp/5001");
+        const ma1 = multi.address.create("//ip4/127.0.0.1//tcp/5001");
+        const ma2 = multi.address.create("//ip6/:://tcp/5001");
 
         pi.multiaddrs.add(ma1);
         pi.multiaddrs.add(ma2);
@@ -207,10 +207,10 @@ describe("PeerInfo", () => {
     });
 
     it.todo("get distinct multiaddr different family same port multiple transports", () => {
-        const ma1 = multi.address.create("/ip4/127.0.0.1/tcp/5001");
-        const ma2 = multi.address.create("/ip6/::/tcp/5001");
-        const ma3 = multi.address.create("/ip6/::/udp/5002");
-        const ma4 = multi.address.create("/ip4/127.0.0.1/udp/5002");
+        const ma1 = multi.address.create("//ip4/127.0.0.1//tcp/5001");
+        const ma2 = multi.address.create("//ip6/:://tcp/5001");
+        const ma3 = multi.address.create("//ip6/:://udp/5002");
+        const ma4 = multi.address.create("//ip4/127.0.0.1//udp/5002");
 
         pi.multiaddrs.add(ma1);
         pi.multiaddrs.add(ma2);
@@ -225,32 +225,32 @@ describe("PeerInfo", () => {
     });
 
     it("multiaddrs.has", () => {
-        pi.multiaddrs.add("/ip4/127.0.0.1/tcp/5001");
-        expect(pi.multiaddrs.has("/ip4/127.0.0.1/tcp/5001")).to.equal(true);
-        expect(pi.multiaddrs.has("/ip4/127.0.0.1/tcp/5001/ws")).to.equal(false);
+        pi.multiaddrs.add("//ip4/127.0.0.1//tcp/5001");
+        expect(pi.multiaddrs.has("//ip4/127.0.0.1//tcp/5001")).to.equal(true);
+        expect(pi.multiaddrs.has("//ip4/127.0.0.1//tcp/5001//ws")).to.equal(false);
     });
 
     it("multiaddrs.forEach", () => {
-        pi.multiaddrs.add("/ip4/127.0.0.1/tcp/5001");
+        pi.multiaddrs.add("//ip4/127.0.0.1//tcp/5001");
         pi.multiaddrs.forEach((ma) => {
             expect(pi.multiaddrs.has(ma)).to.equal(true);
         });
     });
 
     it("multiaddrs.toArray", () => {
-        pi.multiaddrs.add("/ip4/127.0.0.1/tcp/5001");
+        pi.multiaddrs.add("//ip4/127.0.0.1//tcp/5001");
         pi.multiaddrs.toArray().forEach((ma) => {
             expect(pi.multiaddrs.has(ma)).to.equal(true);
         });
     });
 
     it(".connect .disconnect", () => {
-        pi.multiaddrs.add("/ip4/127.0.0.1/tcp/5001");
-        pi.connect("/ip4/127.0.0.1/tcp/5001");
+        pi.multiaddrs.add("//ip4/127.0.0.1//tcp/5001");
+        pi.connect("//ip4/127.0.0.1//tcp/5001");
         assert.exists(pi.isConnected());
         pi.disconnect();
         assert.notExists(pi.isConnected());
-        expect(() => pi.connect("/ip4/127.0.0.1/tcp/5001/ws")).to.throw();
+        expect(() => pi.connect("//ip4/127.0.0.1//tcp/5001/ws")).to.throw();
     });
 
     it("multiaddrs.clear", () => {

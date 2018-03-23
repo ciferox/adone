@@ -1,5 +1,4 @@
-const utils = require("./utils");
-const { first, createNetCore, expectSet } = utils;
+import { first, createNetCore, expectSet } from "./utils";
 
 const {
     is,
@@ -20,8 +19,8 @@ describe("floodsub", () => {
             let fsB;
 
             before(async () => {
-                nodeA = await createNetCore("/ip4/127.0.0.1/tcp/0");
-                nodeB = await createNetCore("/ip4/127.0.0.1/tcp/0");
+                nodeA = await createNetCore("//ip4/127.0.0.1//tcp/0");
+                nodeB = await createNetCore("//ip4/127.0.0.1//tcp/0");
             });
 
             after(async () => {
@@ -188,8 +187,8 @@ describe("floodsub", () => {
             let fsB;
 
             before(async () => {
-                nodeA = await createNetCore("/ip4/127.0.0.1/tcp/0");
-                nodeB = await createNetCore("/ip4/127.0.0.1/tcp/0");
+                nodeA = await createNetCore("//ip4/127.0.0.1//tcp/0");
+                nodeB = await createNetCore("//ip4/127.0.0.1//tcp/0");
 
                 fsA = new FloodSub(nodeA);
                 fsB = new FloodSub(nodeB);
@@ -244,8 +243,8 @@ describe("floodsub", () => {
             let fsB;
 
             before(async () => {
-                nodeA = await createNetCore("/ip4/127.0.0.1/tcp/0");
-                nodeB = await createNetCore("/ip4/127.0.0.1/tcp/0");
+                nodeA = await createNetCore("//ip4/127.0.0.1//tcp/0");
+                nodeB = await createNetCore("//ip4/127.0.0.1//tcp/0");
 
                 fsA = new FloodSub(nodeA);
                 fsB = new FloodSub(nodeB);
@@ -297,8 +296,8 @@ describe("floodsub", () => {
             let fsB;
 
             before(async () => {
-                nodeA = await createNetCore("/ip4/127.0.0.1/tcp/0");
-                nodeB = await createNetCore("/ip4/127.0.0.1/tcp/0");
+                nodeA = await createNetCore("//ip4/127.0.0.1//tcp/0");
+                nodeB = await createNetCore("//ip4/127.0.0.1//tcp/0");
                 await nodeA.connect(nodeB.peerInfo);
                 await adone.promise.delay(1000);
             });
@@ -332,7 +331,7 @@ describe("floodsub", () => {
 
     describe("multiple nodes (more than 2)", () => {
         const spawnPubSubNode = async () => {
-            const netCore = await createNetCore("/ip4/127.0.0.1/tcp/0");
+            const netCore = await createNetCore("//ip4/127.0.0.1//tcp/0");
             const ps = new FloodSub(netCore);
             await ps.start();
             return {

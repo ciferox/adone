@@ -4,7 +4,7 @@ import { createNetron } from "./common";
 const {
     is,
     crypto: { Identity },
-    net: { p2p: {  PeerInfo } },
+    net: { p2p: { PeerInfo } },
     netron2: { Netron }
 } = adone;
 
@@ -305,11 +305,11 @@ describe("Netron", () => {
         });
 
         beforeEach(async () => {
-            netronS = createNetron(idServer, "/ip4/0.0.0.0/tcp/6789");
-            peerS = netronS.peer.info;
+            netronS = createNetron(idServer, "//ip4/0.0.0.0//tcp/6789");
+            peerS = netronS.getNetCore("default").peerInfo;
 
             netronC = createNetron(idClient);
-            peerC = netronC.peer.info;
+            peerC = netronC.getNetCore("default").peerInfo;
         });
 
         afterEach(async () => {
@@ -431,7 +431,7 @@ describe("Netron", () => {
         it("connects using different addresses of the remote netron should return same peer", async () => {
             await netronS.start();
 
-            const addrs = netronS.peer.info.multiaddrs.toArray();
+            const addrs = peerS.multiaddrs.toArray();
 
             const remotePeer1 = await netronC.connect("default", addrs[0]);
             assert.true(remotePeer1.isConnected());

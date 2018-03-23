@@ -25,10 +25,7 @@ describe("netron", "RemotePeer", () => {
 
         before() {
             this.peerInfoS = PeerInfo.create();
-            this.peerInfoS.multiaddrs.add("/ip4/0.0.0.0/tcp/0");
-
             this.peerInfoC = PeerInfo.create();
-            this.peerInfoC.multiaddrs.add("/ip4/0.0.0.0/tcp/0");
         }
 
         after() {
@@ -43,12 +40,16 @@ describe("netron", "RemotePeer", () => {
             this.netronC = new Netron(this.peerInfoC);
             this.peerC = this.netronC.peer;
 
-            this.netronS.createNetCore("default");
-            this.netronC.createNetCore("default");
+            const netCoreS = this.netronS.createNetCore("default", {
+                addrs: "//ip4/0.0.0.0//tcp/0"
+            });
+            this.netronC.createNetCore("default", {
+                addrs: "//ip4/0.0.0.0//tcp/0"
+            });
 
             await this.netronS.start();
             this.netron = this.netronS;
-            this.peer = await this.netronC.connect("default", this.peerInfoS);
+            this.peer = await this.netronC.connect("default", netCoreS.peerInfo);
 
             return [this.netron, this.peer];
         }

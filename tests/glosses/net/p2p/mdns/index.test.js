@@ -16,18 +16,18 @@ describe("MulticastDNS", () => {
         this.timeout(25000);
 
         pA = PeerInfo.create();
-        pA.multiaddrs.add(multi.address.create("/ip4/127.0.0.1/tcp/20001"));
+        pA.multiaddrs.add(multi.address.create("//ip4/127.0.0.1//tcp/20001"));
 
         pB = PeerInfo.create();
-        pB.multiaddrs.add(multi.address.create("/ip4/127.0.0.1/tcp/20002"));
-        pB.multiaddrs.add(multi.address.create("/ip6/::1/tcp/20002"));
+        pB.multiaddrs.add(multi.address.create("//ip4/127.0.0.1//tcp/20002"));
+        pB.multiaddrs.add(multi.address.create("//ip6/::1//tcp/20002"));
 
         pC = PeerInfo.create();
-        pC.multiaddrs.add(multi.address.create("/ip4/127.0.0.1/tcp/20003"));
-        pC.multiaddrs.add(multi.address.create("/ip4/127.0.0.1/tcp/30003/ws"));
+        pC.multiaddrs.add(multi.address.create("//ip4/127.0.0.1//tcp/20003"));
+        pC.multiaddrs.add(multi.address.create("//ip4/127.0.0.1//tcp/30003//ws"));
 
         pD = PeerInfo.create();
-        pD.multiaddrs.add(multi.address.create("/ip4/127.0.0.1/tcp/30003/ws"));
+        pD.multiaddrs.add(multi.address.create("//ip4/127.0.0.1//tcp/30003//ws"));
     });
 
     it("find another peer", (done) => {

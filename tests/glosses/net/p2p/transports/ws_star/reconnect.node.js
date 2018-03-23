@@ -10,13 +10,13 @@ describe.todo("reconnect to signaling server", function () {
 
     let r;
     let ws1;
-    const ma1 = multi.address.create("/ip4/127.0.0.1/tcp/13580/ws/p2p-websocket-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSooo6A");
+    const ma1 = multi.address.create("//ip4/127.0.0.1//tcp/13580//ws//p2p-websocket-star//p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSooo6A");
 
     let ws2;
-    const ma2 = multi.address.create("/ip4/127.0.0.1/tcp/13580/ws/p2p-websocket-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSooo6B");
+    const ma2 = multi.address.create("//ip4/127.0.0.1//tcp/13580//ws//p2p-websocket-star//p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSooo6B");
 
     let ws3;
-    const ma3 = multi.address.create("/ip4/127.0.0.1/tcp/13580/ws/p2p-websocket-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSooo6C");
+    const ma3 = multi.address.create("//ip4/127.0.0.1//tcp/13580//ws//p2p-websocket-star//p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSooo6C");
 
     before((done) => {
         r = rendezvous.start({

@@ -73,7 +73,7 @@ export default class ConnectionManager {
                     } else {
                         // for the case of websockets in the browser, where peers have
                         // no addr, use just their IPFS id
-                        peerInfo.connect(`/ipfs/${b58Str}`);
+                        peerInfo.connect(`//p2p/${b58Str}`);
                     }
                     peerInfo = this.switch._peerBook.set(peerInfo);
 

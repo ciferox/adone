@@ -8,7 +8,7 @@ const {
 } = adone;
 
 const maToUrl = function (ma) {
-    const maStrSplit = ma.toString().split("/");
+    const maStrAddr = ma.toString().split("//")[1].split("/")[1];
 
     let proto;
     try {
@@ -32,7 +32,7 @@ const maToUrl = function (ma) {
         //
     }
 
-    const url = `${proto}://${maStrSplit[2]}${(port && (port !== 80 || port !== 443) ? `:${port}` : "")}`;
+    const url = `${proto}://${maStrAddr}${(port && (port !== 80 || port !== 443) ? `:${port}` : "")}`;
 
     return url;
 };
@@ -71,8 +71,8 @@ export default class WS {
                 return false;
             }
 
-            if (ma.protoNames().includes("ipfs")) {
-                ma = ma.decapsulate("ipfs");
+            if (ma.protoNames().includes("p2p")) {
+                ma = ma.decapsulate("p2p");
             }
 
             return multi.address.validator.WebSocket.matches(ma) || multi.address.validator.WebSocketSecure.matches(ma);

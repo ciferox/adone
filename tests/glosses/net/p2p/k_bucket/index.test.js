@@ -10,13 +10,13 @@ describe("KBucket", () => {
         it("throws TypeError if contact has not property id", () => {
             assert.throws(() => {
                 (new KBucket()).add(null);
-            }, /^contact.id is not a Buffer$/);
+            }, /^contact.id is not a Uint8Array$/);
         });
 
-        it("throws TypeError if contact.id is not a Buffer", () => {
+        it("throws TypeError if contact.id is not a Uint8Array", () => {
             assert.throws(() => {
                 (new KBucket()).add({ id: "foo" });
-            }, /^contact.id is not a Buffer$/);
+            }, /^contact.id is not a Uint8Array$/);
         });
 
         it("adding a contact places it in root node", () => {
@@ -138,7 +138,7 @@ describe("KBucket", () => {
         it("throws TypeError if contact.id is not a Buffer", () => {
             assert.throws(() => {
                 (new KBucket()).closest("foo", 4);
-            }, /^id is not a Buffer$/);
+            }, /^id is not a Uint8Array$/);
         });
 
         it("throw TypeError if n is not number", () => {

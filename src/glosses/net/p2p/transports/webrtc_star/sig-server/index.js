@@ -38,7 +38,9 @@ exports.start = (options, callback) => {
 
             log(`signaling server has started on: ${http.info.uri}`);
 
-            http.peers = require("./routes-ws")(http, options.metrics).peers;
+            const routesWs = require("./routes-ws");
+            routesWs(http, options.metrics);
+            http.peers = routesWs.peers;
 
             http.route({
                 method: "GET",

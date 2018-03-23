@@ -13,9 +13,9 @@ describe("ping", function () {
     before(async function () {
         this.timeout(25000);
         peerA = PeerInfo.create();
-        peerA.multiaddrs.add("/ip4/127.0.0.1/tcp/0");
+        peerA.multiaddrs.add("//ip4/127.0.0.1//tcp/0");
         peerB = PeerInfo.create();
-        peerB.multiaddrs.add("/ip4/127.0.0.1/tcp/0");
+        peerB.multiaddrs.add("//ip4/127.0.0.1//tcp/0");
         switchA = new Switch(peerA, new PeerBook());
         switchB = new Switch(peerB, new PeerBook());
         switchA.tm.add("tcp", new TCP());

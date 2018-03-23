@@ -18,7 +18,7 @@ describe("transport", "tcp", () => {
         });
 
         it("close listener with connections, through timeout", async (done) => {
-            const mh = multi.address.create("/ip4/127.0.0.1/tcp/9191/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
+            const mh = multi.address.create("//ip4/127.0.0.1//tcp/9191//p2p/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
             const listener = tcp.createListener((conn) => {
                 pull(conn, conn);
             });
@@ -37,28 +37,28 @@ describe("transport", "tcp", () => {
         });
 
         it("listen on port 0", async () => {
-            const mh = multi.address.create("/ip4/127.0.0.1/tcp/0");
+            const mh = multi.address.create("//ip4/127.0.0.1//tcp/0");
             const listener = tcp.createListener();
             await listener.listen(mh);
             await listener.close();
         });
 
         it("listen on IPv6 addr", async () => {
-            const mh = multi.address.create("/ip6/::/tcp/9191");
+            const mh = multi.address.create("//ip6/:://tcp/9191");
             const listener = tcp.createListener();
             await listener.listen(mh);
             await listener.close();
         });
 
         it("listen on any Interface", async () => {
-            const mh = multi.address.create("/ip4/0.0.0.0/tcp/9191");
+            const mh = multi.address.create("//ip4/0.0.0.0//tcp/9191");
             const listener = tcp.createListener();
             await listener.listen(mh);
             await listener.close();
         });
 
         it("getAddrs", async () => {
-            const mh = multi.address.create("/ip4/127.0.0.1/tcp/9191");
+            const mh = multi.address.create("//ip4/127.0.0.1//tcp/9191");
             const listener = tcp.createListener();
             await listener.listen(mh);
             const multiaddrs = await listener.getAddrs();
@@ -68,7 +68,7 @@ describe("transport", "tcp", () => {
         });
 
         it("getAddrs on port 0 listen", async () => {
-            const mh = multi.address.create("/ip4/127.0.0.1/tcp/0");
+            const mh = multi.address.create("//ip4/127.0.0.1//tcp/0");
             const listener = tcp.createListener();
             await listener.listen(mh);
             const multiaddrs = await listener.getAddrs();
@@ -77,7 +77,7 @@ describe("transport", "tcp", () => {
         });
 
         it("getAddrs from listening on 0.0.0.0", async () => {
-            const mh = multi.address.create("/ip4/0.0.0.0/tcp/9191");
+            const mh = multi.address.create("//ip4/0.0.0.0//tcp/9191");
             const listener = tcp.createListener();
             await listener.listen(mh);
             const multiaddrs = await listener.getAddrs();
@@ -87,7 +87,7 @@ describe("transport", "tcp", () => {
         });
 
         it("getAddrs from listening on 0.0.0.0 and port 0", async () => {
-            const mh = multi.address.create("/ip4/0.0.0.0/tcp/0");
+            const mh = multi.address.create("//ip4/0.0.0.0//tcp/0");
             const listener = tcp.createListener();
             await listener.listen(mh);
             const multiaddrs = await listener.getAddrs();
@@ -97,7 +97,7 @@ describe("transport", "tcp", () => {
         });
 
         it("getAddrs preserves IPFS Id", async () => {
-            const mh = multi.address.create("/ip4/127.0.0.1/tcp/9191/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
+            const mh = multi.address.create("//ip4/127.0.0.1//tcp/9191//p2p/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
             const listener = tcp.createListener();
             await listener.listen(mh);
             const multiaddrs = await listener.getAddrs();
@@ -110,7 +110,7 @@ describe("transport", "tcp", () => {
     describe("connect", () => {
         let tcp;
         let listener;
-        const ma = multi.address.create("/ip4/127.0.0.1/tcp/9191");
+        const ma = multi.address.create("//ip4/127.0.0.1//tcp/9191");
 
         beforeEach(async () => {
             tcp = new TCP();
@@ -142,12 +142,12 @@ describe("transport", "tcp", () => {
         });
 
         it("connect to non existent listener", async () => {
-            const ma = multi.address.create("/ip4/127.0.0.1/tcp/8989");
+            const ma = multi.address.create("//ip4/127.0.0.1//tcp/8989");
             await assert.throws(async () => tcp.connect(ma));
         });
 
         it("connect on IPv6", async (done) => {
-            const ma = multi.address.create("/ip6/::/tcp/9066");
+            const ma = multi.address.create("//ip6/:://tcp/9066");
             const listener = tcp.createListener((conn) => {
                 pull(conn, conn);
             });
@@ -175,7 +175,7 @@ describe("transport", "tcp", () => {
 
             const closed = () => ++count === 2 ? finish() : null;
 
-            const ma = multi.address.create("/ip6/::/tcp/9067");
+            const ma = multi.address.create("//ip6/:://tcp/9067");
 
             listener = tcp.createListener((conn) => {
                 pull(
@@ -199,7 +199,7 @@ describe("transport", "tcp", () => {
             };
             const destroyed = () => ++count === 2 ? finish() : null;
 
-            const ma = multi.address.create("/ip6/::/tcp/9068");
+            const ma = multi.address.create("//ip6/:://tcp/9068");
 
             listener = tcp.createListener((conn) => {
                 pull(conn, pull.onEnd(destroyed));
@@ -215,7 +215,7 @@ describe("transport", "tcp", () => {
         });
 
         it("connect on IPv4 with IPFS Id", async (done) => {
-            const ma = multi.address.create("/ip4/127.0.0.1/tcp/9191/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
+            const ma = multi.address.create("//ip4/127.0.0.1//tcp/9191//p2p/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
             const conn = await tcp.connect(ma);
 
             pull(
@@ -232,20 +232,20 @@ describe("transport", "tcp", () => {
 
     describe("filter addrs", () => {
         let tcp;
-        const base = "/ip4/127.0.0.1";
-        const ipfs = "/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw";
+        const base = "//ip4/127.0.0.1";
+        const ipfs = "//p2p/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw";
 
         before(() => {
             tcp = new TCP();
         });
 
         it("filter valid addrs for this transport", () => {
-            const ma1 = multi.address.create(`${base}/tcp/9090`);
-            const ma2 = multi.address.create(`${base}/udp/9090`);
-            const ma3 = multi.address.create(`${base}/tcp/9090/http`);
-            const ma4 = multi.address.create(`${base}/tcp/9090/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw`);
-            const ma5 = multi.address.create(`${base}/tcp/9090/http${ipfs}`);
-            const ma6 = multi.address.create(`/ip4/127.0.0.1/tcp/9090/p2p-circuit${ipfs}`);
+            const ma1 = multi.address.create(`${base}//tcp/9090`);
+            const ma2 = multi.address.create(`${base}//udp/9090`);
+            const ma3 = multi.address.create(`${base}//tcp/9090//http`);
+            const ma4 = multi.address.create(`${base}//tcp/9090//p2p/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw`);
+            const ma5 = multi.address.create(`${base}//tcp/9090//http${ipfs}`);
+            const ma6 = multi.address.create(`//ip4/127.0.0.1//tcp/9090//p2p-circuit${ipfs}`);
 
             const valid = tcp.filter([ma1, ma2, ma3, ma4, ma5, ma6]);
             expect(valid.length).to.equal(2);
@@ -254,7 +254,7 @@ describe("transport", "tcp", () => {
         });
 
         it("filter a single addr for this transport", () => {
-            const ma1 = multi.address.create(`${base}/tcp/9090`);
+            const ma1 = multi.address.create(`${base}//tcp/9090`);
 
             const valid = tcp.filter(ma1);
             expect(valid.length).to.equal(1);
@@ -269,7 +269,7 @@ describe("transport", "tcp", () => {
             tcp = new TCP();
         });
 
-        const ma = multi.address.create("/ip4/127.0.0.1/tcp/9191");
+        const ma = multi.address.create("//ip4/127.0.0.1//tcp/9191");
 
         it("get observed addrs", async (done) => {
             let dialerObsAddrs;
@@ -358,7 +358,7 @@ describe("transport", "tcp", () => {
     describe("Connection wrap", () => {
         let tcp;
         let listener;
-        const ma = multi.address.create("/ip4/127.0.0.1/tcp/9191");
+        const ma = multi.address.create("//ip4/127.0.0.1//tcp/9191");
 
         beforeEach(async () => {
             tcp = new TCP();
@@ -425,7 +425,7 @@ describe("transport", "tcp", () => {
         });
 
         it("connect error", async () => {
-            await assert.throws(async () => tcp.connect(multi.address.create("/ip4/999.0.0.1/tcp/1234")));
+            await assert.throws(async () => tcp.connect(multi.address.create("//ip4/999.0.0.1//tcp/1234")));
         });
 
         it("matryoshka wrap", async (done) => {

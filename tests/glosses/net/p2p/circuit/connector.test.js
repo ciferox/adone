@@ -25,12 +25,12 @@ describe("circuit", "Connector", () => {
         });
 
         it("fail on non circuit addr", async () => {
-            const dstMa = multi.address.create(`/ipfs/${nodes.node4.id}`);
+            const dstMa = multi.address.create(`//p2p/${nodes.node4.id}`);
             await assert.throws(async () => connector.connect(dstMa), /invalid circuit address/);
         });
 
         it("connect a peer", async () => {
-            const dstMa = multi.address.create(`/p2p-circuit/ipfs/${nodes.node3.id}`);
+            const dstMa = multi.address.create(`//p2p-circuit//p2p/${nodes.node3.id}`);
             connector._dialPeer.callsFake((dstMa, relay, callback) => {
                 return callback(null, connector.relayPeers.get(nodes.node3.id));
             });
@@ -40,9 +40,9 @@ describe("circuit", "Connector", () => {
         });
 
         it("connect a peer over the specified relay", async () => {
-            const dstMa = multi.address.create(`/ipfs/${nodes.node3.id}/p2p-circuit/ipfs/${nodes.node4.id}`);
+            const dstMa = multi.address.create(`//p2p/${nodes.node3.id}//p2p-circuit//p2p/${nodes.node4.id}`);
             connector._dialPeer.callsFake((dstMa, relay, callback) => {
-                expect(relay.toString()).to.equal(`/ipfs/${nodes.node3.id}`);
+                expect(relay.toString()).to.equal(`//p2p/${nodes.node3.id}`);
                 return callback(null, new Connection());
             });
 
@@ -134,7 +134,7 @@ describe("circuit", "Connector", () => {
         });
 
         it("should connect a peer over any relay", (done) => {
-            const dstMa = multi.address.create(`/ipfs/${nodes.node4.id}`);
+            const dstMa = multi.address.create(`//p2p/${nodes.node4.id}`);
             dialer._negotiateRelay.callsFake((conn, dstMa, callback) => {
                 if (conn === dialer.relayPeers.get(nodes.node3.id)) {
                     return callback(null, dialer.relayPeers.get(nodes.node3.id));
@@ -152,7 +152,7 @@ describe("circuit", "Connector", () => {
         });
 
         it("should fail dialing a peer over any relay", (done) => {
-            const dstMa = multi.address.create(`/ipfs/${nodes.node4.id}`);
+            const dstMa = multi.address.create(`//p2p/${nodes.node4.id}`);
             dialer._negotiateRelay.callsFake((conn, dstMa, callback) => {
                 callback(new Error("error"));
             });
@@ -168,7 +168,7 @@ describe("circuit", "Connector", () => {
 
     describe("_negotiateRelay()", () => {
         const dialer = stub.createStubInstance(Connector);
-        const dstMa = multi.address.create(`/ipfs/${nodes.node4.id}`);
+        const dstMa = multi.address.create(`//p2p/${nodes.node4.id}`);
 
         let conn;
         let stream;
@@ -178,7 +178,7 @@ describe("circuit", "Connector", () => {
         beforeEach(() => {
             const peerId = Identity.createFromJSON(nodes.node4);
             const peer = PeerInfo.create(peerId);
-            peer.multiaddrs.add("/p2p-circuit/ipfs/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE");
+            peer.multiaddrs.add("//p2p-circuit//p2p/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE");
             dialer.switch = {
                 _peerInfo: peer
             };

@@ -37,7 +37,7 @@ describe("circuit", "relay", () => {
 
             const peerId = Identity.createFromJSON(nodes.node4);
             const peer = PeerInfo.create(peerId);
-            peer.multiaddrs.add("/p2p-circuit/ipfs/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE");
+            peer.multiaddrs.add("//p2p-circuit//p2p/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE");
             sw = {
                 _peerInfo: peer,
                 conns: {
@@ -70,11 +70,11 @@ describe("circuit", "relay", () => {
                 type: protocol.CircuitRelay.Type.HOP,
                 srcPeer: {
                     id: Identity.createFromBase58("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE").id,
-                    addrs: [multi.address.create("/ipfs/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE").buffer]
+                    addrs: [multi.address.create("//p2p/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE").buffer]
                 },
                 dstPeer: {
                     id: Identity.createFromBase58("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").id,
-                    addrs: [multi.address.create("/ipfs/QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").buffer]
+                    addrs: [multi.address.create("//p2p/QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").buffer]
                 }
             };
 
@@ -91,11 +91,11 @@ describe("circuit", "relay", () => {
                 type: protocol.CircuitRelay.Type.HOP,
                 srcPeer: {
                     id: Identity.createFromBase58("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").id,
-                    addrs: [multi.address.create("/ipfs/QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").buffer]
+                    addrs: [multi.address.create("//p2p/QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").buffer]
                 },
                 dstPeer: {
                     id: Identity.createFromBase58("QmYJjAri5soV8RbeQcHaYYcTAYTET17QTvcoFMyKvRDTXe").id,
-                    addrs: [multi.address.create("/ipfs/QmYJjAri5soV8RbeQcHaYYcTAYTET17QTvcoFMyKvRDTXe").buffer]
+                    addrs: [multi.address.create("//p2p/QmYJjAri5soV8RbeQcHaYYcTAYTET17QTvcoFMyKvRDTXe").buffer]
                 }
             };
 
@@ -117,11 +117,11 @@ describe("circuit", "relay", () => {
                 type: protocol.CircuitRelay.Type.HOP,
                 srcPeer: {
                     id: Identity.createFromBase58("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").id,
-                    addrs: [multi.address.create("/ipfs/QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").buffer]
+                    addrs: [multi.address.create("//p2p/QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").buffer]
                 },
                 dstPeer: {
                     id: Identity.createFromBase58("QmYJjAri5soV8RbeQcHaYYcTAYTET17QTvcoFMyKvRDTXe").id,
-                    addrs: [multi.address.create("/ipfs/QmYJjAri5soV8RbeQcHaYYcTAYTET17QTvcoFMyKvRDTXe").buffer]
+                    addrs: [multi.address.create("//p2p/QmYJjAri5soV8RbeQcHaYYcTAYTET17QTvcoFMyKvRDTXe").buffer]
                 }
             };
 
@@ -143,11 +143,11 @@ describe("circuit", "relay", () => {
                 type: protocol.CircuitRelay.Type.HOP,
                 srcPeer: {
                     id: Identity.createFromBase58("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE").id,
-                    addrs: [multi.address.create("/ipfs/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE").buffer]
+                    addrs: [multi.address.create("//p2p/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE").buffer]
                 },
                 dstPeer: {
                     id: Identity.createFromBase58("QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy").id,
-                    addrs: [multi.address.create("/ipfs/QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy").buffer]
+                    addrs: [multi.address.create("//p2p/QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy").buffer]
                 }
             };
 
@@ -172,7 +172,7 @@ describe("circuit", "relay", () => {
                 },
                 dstPeer: {
                     id: Identity.createFromBase58("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").id,
-                    addrs: [multi.address.create("/ipfs/QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").buffer]
+                    addrs: [multi.address.create("//p2p/QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").buffer]
                 }
             };
 
@@ -193,7 +193,7 @@ describe("circuit", "relay", () => {
                 type: protocol.CircuitRelay.Type.HOP,
                 srcPeer: {
                     id: Identity.createFromBase58("QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").id,
-                    addrs: [multi.address.create("/ipfs/QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").buffer]
+                    addrs: [multi.address.create("//p2p/QmQWqGdndSpAkxfk8iyiJyz3XXGkrDNujvc8vEst3baubA").buffer]
                 },
                 dstPeer: {
                     id: Identity.createFromBase58("QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE").id,

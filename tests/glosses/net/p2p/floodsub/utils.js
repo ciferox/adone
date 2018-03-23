@@ -3,22 +3,21 @@ const {
     net: { p2p: { PeerInfo, secio, Core } }
 } = adone;
 
-exports.first = (map) => map.values().next().value;
+export const first = (map) => map.values().next().value;
 
-exports.expectSet = (set, subs) => {
+export const expectSet = (set, subs) => {
     expect(Array.from(set.values())).to.eql(subs);
 };
 
-exports.createNetCore = async (maddr) => {
-    const id = Identity.create({ bits: 1024 });
-    const peer = PeerInfo.create(id);
+export const createNetCore = async (maddr) => {
+    const peer = PeerInfo.create(Identity.create({ bits: 1024 }));
     peer.multiaddrs.add(maddr);
-    const node = new Core({
+    const netCore = new Core({
         peer,
         transport: "tcp",
         muxer: "spdy",
         crypto: [secio]
     });
-    await node.start();
-    return node;
+    await netCore.start();
+    return netCore;
 };

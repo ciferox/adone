@@ -36,7 +36,7 @@ describe("omnitron", () => {
             const d = new omnitron2.Dispatcher();
             const omnitAddrs = d.omnitronPeerInfo.multiaddrs.toArray();
             assert.lengthOf(omnitAddrs, 1);
-            assert.true(omnitAddrs[0].equals(multi.address2.fromNodeAddress(omnitron2.defaultAddress)));
+            assert.true(omnitAddrs[0].equals(multi.address.fromNodeAddress(omnitron2.defaultAddress)));
             assert.strictEqual(d.netron.peer.info.id.asBase58(), runtime.realm.config.identity.client.id);
         });
     

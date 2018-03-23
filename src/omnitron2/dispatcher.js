@@ -35,7 +35,7 @@ export default class Dispatcher extends Subsystem {
     get omnitronPeerInfo() {
         if (is.undefined(this._peerInfo)) {
             this._peerInfo = adone.net.p2p.PeerInfo.create(adone.runtime.realm.identity);
-            this._peerInfo.multiaddrs.add(multi.address2.fromNodeAddress(omnitron2.defaultAddress));
+            this._peerInfo.multiaddrs.add(multi.address.fromNodeAddress(omnitron2.defaultAddress));
         }
         return this._peerInfo;
     }

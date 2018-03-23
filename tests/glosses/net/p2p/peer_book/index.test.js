@@ -25,10 +25,10 @@ describe("PeerBook", () => {
     let p4;
 
     before(() => {
-        p1 = createPeerInfo(["/tcp/1000", "/tcp/1001"]);
-        p2 = createPeerInfo(["/tcp/2000", "/tcp/2001"]);
-        p3 = createPeerInfo(["/tcp/3000", "/tcp/3001"]);
-        p4 = createPeerInfo(["/tcp/4000", "/tcp/4001"]);
+        p1 = createPeerInfo(["//tcp/1000", "//tcp/1001"]);
+        p2 = createPeerInfo(["//tcp/2000", "//tcp/2001"]);
+        p3 = createPeerInfo(["//tcp/3000", "//tcp/3001"]);
+        p4 = createPeerInfo(["//tcp/4000", "//tcp/4001"]);
     });
 
     it("create PeerBook", () => {
@@ -92,7 +92,7 @@ describe("PeerBook", () => {
 
     it("set() peerInfo and merge info", () => {
         const peer3A = new PeerInfo(p3.id);
-        peer3A.multiaddrs.add(new multi.address.Multiaddr("/ip4/127.0.0.1/tcp/4001"));
+        peer3A.multiaddrs.add(new multi.address.Multiaddr("//ip4/127.0.0.1//tcp/4001"));
 
         pb.set(peer3A);
         const peer3B = pb.get(p3.id.toBytes());
@@ -102,7 +102,7 @@ describe("PeerBook", () => {
 
     it("set() peerInfo and replace info", () => {
         const peer3A = new PeerInfo(p3.id);
-        peer3A.multiaddrs.add(new multi.address.Multiaddr("/ip4/188.0.0.1/tcp/5001"));
+        peer3A.multiaddrs.add(new multi.address.Multiaddr("//ip4/188.0.0.1//tcp/5001"));
 
         pb.set(peer3A, true);
         const peer3B = pb.get(p3.id.asBase58());
@@ -112,7 +112,7 @@ describe("PeerBook", () => {
     it("getMultiaddrs()", () => {
         const pb = new PeerBook();
         const peer = new PeerInfo(p3.id);
-        peer.multiaddrs.add(new multi.address.Multiaddr("/ip4/127.0.0.1/tcp/1234"));
+        peer.multiaddrs.add(new multi.address.Multiaddr("//ip4/127.0.0.1//tcp/1234"));
 
         pb.set(peer);
         expect(pb.getMultiaddrs(p3.id)).to.be.eql(peer.multiaddrs.toArray());

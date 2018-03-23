@@ -13,17 +13,17 @@ describe("circuit", "protocol", () => {
             srcPeer: {
                 id: Buffer.from("QmSource"),
                 addrs: [
-                    multi.address.create("/p2p-circuit/ipfs/QmSource").buffer,
-                    multi.address.create("/p2p-circuit/ip4/0.0.0.0/tcp/9000/ipfs/QmSource").buffer,
-                    multi.address.create("/ip4/0.0.0.0/tcp/9000/ipfs/QmSource").buffer
+                    multi.address.create("//p2p-circuit//p2p/QmSource").buffer,
+                    multi.address.create("//p2p-circuit//ip4/0.0.0.0//tcp/9000//p2p/QmSource").buffer,
+                    multi.address.create("//ip4/0.0.0.0//tcp/9000//p2p/QmSource").buffer
                 ]
             },
             dstPeer: {
                 id: Buffer.from("QmDest"),
                 addrs: [
-                    multi.address.create("/p2p-circuit/ipfs/QmDest").buffer,
-                    multi.address.create("/p2p-circuit/ip4/1.1.1.1/tcp/9000/ipfs/QmDest").buffer,
-                    multi.address.create("/ip4/1.1.1.1/tcp/9000/ipfs/QmDest").buffer
+                    multi.address.create("//p2p-circuit//p2p/QmDest").buffer,
+                    multi.address.create("//p2p-circuit//ip4/1.1.1.1//tcp/9000//p2p/QmDest").buffer,
+                    multi.address.create("//ip4/1.1.1.1//tcp/9000//p2p/QmDest").buffer
                 ]
             }
         };

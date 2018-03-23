@@ -4,15 +4,15 @@ const {
 } = adone;
 
 describe("utils", () => {
-    const modernMultiaddrStringDNS = "/dns4/star-signal.cloud.ipfs.team/tcp/443/wss/p2p-websocket-star/ipfs/QmWxLfixekyv6GAzvDEtXfXjj7gb1z3G8i5aQNHLhw1zA1";
+    const modernMultiaddrStringDNS = "//dns4/star-signal.cloud.ipfs.team//tcp/443//wss//p2p-websocket-star//p2p/QmWxLfixekyv6GAzvDEtXfXjj7gb1z3G8i5aQNHLhw1zA1";
 
-    const modernMultiaddrStringDNS2 = "/dns4/star-signal.cloud.ipfs.team/tcp/9999/wss/p2p-websocket-star/ipfs/QmWxLfixekyv6GAzvDEtXfXjj7gb1z3G8i5aQNHLhw1zA1";
-    const modernMultiaddrStringDNS3 = "/dns4/star-signal.cloud.ipfs.team/tcp/80/ws/p2p-websocket-star/ipfs/QmWxLfixekyv6GAzvDEtXfXjj7gb1z3G8i5aQNHLhw1zA1";
-    const modernMultiaddrStringDNS4 = "/dns4/star-signal.cloud.ipfs.team/tcp/8080/ws/p2p-websocket-star/ipfs/QmWxLfixekyv6GAzvDEtXfXjj7gb1z3G8i5aQNHLhw1zA1";
+    const modernMultiaddrStringDNS2 = "//dns4/star-signal.cloud.ipfs.team//tcp/9999//wss//p2p-websocket-star//p2p/QmWxLfixekyv6GAzvDEtXfXjj7gb1z3G8i5aQNHLhw1zA1";
+    const modernMultiaddrStringDNS3 = "//dns4/star-signal.cloud.ipfs.team//tcp/80/ws//p2p-websocket-star//p2p/QmWxLfixekyv6GAzvDEtXfXjj7gb1z3G8i5aQNHLhw1zA1";
+    const modernMultiaddrStringDNS4 = "//dns4/star-signal.cloud.ipfs.team//tcp/8080/ws//p2p-websocket-star//p2p/QmWxLfixekyv6GAzvDEtXfXjj7gb1z3G8i5aQNHLhw1zA1";
 
-    const invalidMultiaddrStringDNS = "/dns4/star-signal.cloud.ipfs.team/udp/8080/wss/p2p-websocket-star/ipfs/QmWxLfixekyv6GAzvDEtXfXjj7gb1z3G8i5aQNHLhw1zA1";
-    const invalidMultiaddrStringDNS2 = "/dns4/star-signal.cloud.ipfs.team/tcp/8080/p2p-websocket-star/ipfs/QmWxLfixekyv6GAzvDEtXfXjj7gb1z3G8i5aQNHLhw1zA1";
-    const invalidMultiaddrStringDNS3 = "/dns4/star-signal.cloud.ipfs.team/ws/p2p-websocket-star/ipfs/QmWxLfixekyv6GAzvDEtXfXjj7gb1z3G8i5aQNHLhw1zA1";
+    const invalidMultiaddrStringDNS = "//dns4/star-signal.cloud.ipfs.team/udp/8080//wss//p2p-websocket-star//p2p/QmWxLfixekyv6GAzvDEtXfXjj7gb1z3G8i5aQNHLhw1zA1";
+    const invalidMultiaddrStringDNS2 = "//dns4/star-signal.cloud.ipfs.team//tcp/8080//p2p-websocket-star//p2p/QmWxLfixekyv6GAzvDEtXfXjj7gb1z3G8i5aQNHLhw1zA1";
+    const invalidMultiaddrStringDNS3 = "//dns4/star-signal.cloud.ipfs.team/ws//p2p-websocket-star//p2p/QmWxLfixekyv6GAzvDEtXfXjj7gb1z3G8i5aQNHLhw1zA1";
 
     // Create actual multiaddrs
     const modernMultiaddrDNS = multi.address.create(modernMultiaddrStringDNS);

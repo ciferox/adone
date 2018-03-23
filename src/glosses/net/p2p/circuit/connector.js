@@ -36,7 +36,7 @@ export default class Dialer {
      */
     connect(ma) {
         const strMa = ma.toString();
-        if (!strMa.includes("/p2p-circuit")) {
+        if (!strMa.includes("//p2p-circuit")) {
             throw new Error("invalid circuit address");
         }
 

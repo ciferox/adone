@@ -73,8 +73,8 @@ export default class Listener extends adone.event.Emitter {
      * NOTE: This method will grab the peers multiaddrs and expand them such that:
      *
      * a) If it's an existing /p2p-circuit address for a specific relay i.e.
-     *    `/ip4/0.0.0.0/tcp/0/ipfs/QmRelay/p2p-circuit` this method will expand the
-     *    address to `/ip4/0.0.0.0/tcp/0/ipfs/QmRelay/p2p-circuit/ipfs/QmPeer` where
+     *    `//ip4/0.0.0.0//tcp/0//p2p/QmRelay/p2p-circuit` this method will expand the
+     *    address to `//ip4/0.0.0.0//tcp/0//p2p/QmRelay//p2p-circuit//p2p/QmPeer` where
      *    `QmPeer` is this peers id
      * b) If it's not a /p2p-circuit address, it will encapsulate the address as a /p2p-circuit
      *    addr such that dials a relay uses that address to connect this peer
@@ -96,7 +96,7 @@ export default class Listener extends adone.event.Emitter {
 
         const listenAddrs = [];
         addrs.forEach((addr) => {
-            const peerMa = `/p2p-circuit/ipfs/${this.switch._peerInfo.id.asBase58()}`;
+            const peerMa = `//p2p-circuit//p2p/${this.switch._peerInfo.id.asBase58()}`;
             if (addr.toString() === peerMa) {
                 listenAddrs.push(multi.address.create(peerMa));
                 return;
@@ -105,12 +105,12 @@ export default class Listener extends adone.event.Emitter {
             if (!multi.address.validator.Circuit.matches(addr)) {
                 if (addr.getPeerId()) {
                     // by default we're reachable over any relay
-                    listenAddrs.push(multi.address.create("/p2p-circuit").encapsulate(addr));
+                    listenAddrs.push(multi.address.create("//p2p-circuit").encapsulate(addr));
                 } else {
-                    listenAddrs.push(multi.address.create("/p2p-circuit").encapsulate(`${addr}/ipfs/${this.switch._peerInfo.id.asBase58()}`));
+                    listenAddrs.push(multi.address.create("//p2p-circuit").encapsulate(`${addr}//p2p/${this.switch._peerInfo.id.asBase58()}`));
                 }
             } else {
-                listenAddrs.push(addr.encapsulate(`/ipfs/${this.switch._peerInfo.id.asBase58()}`));
+                listenAddrs.push(addr.encapsulate(`//p2p/${this.switch._peerInfo.id.asBase58()}`));
             }
         });
 

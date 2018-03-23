@@ -6,7 +6,7 @@ const {
     stream: { pull }
 } = adone;
 
-const IPFS_CODE = 421;
+const P2P_CODE = 420;
 const CLOSE_TIMEOUT = 2000;
 
 const getMultiaddr = (socket) => {
@@ -17,21 +17,21 @@ const getMultiaddr = (socket) => {
 
         if (addr.v4) {
             const ip4 = addr.to4().correctForm();
-            ma = multi.address.create(`/ip4/${ip4}/tcp/${socket.remotePort}`);
+            ma = multi.address.create(`//ip4/${ip4}//tcp/${socket.remotePort}`);
         } else {
-            ma = multi.address.create(`/ip6/${socket.remoteAddress}/tcp/${socket.remotePort}`);
+            ma = multi.address.create(`//ip6/${socket.remoteAddress}//tcp/${socket.remotePort}`);
         }
     } else {
-        ma = multi.address.create(`/ip4/${socket.remoteAddress}/tcp/${socket.remotePort}`);
+        ma = multi.address.create(`//ip4/${socket.remoteAddress}//tcp/${socket.remotePort}`);
     }
 
     return ma;
 };
 
 
-const getIpfsId = (ma) => {
+const getP2pId = (ma) => {
     return ma.stringTuples().filter((tuple) => {
-        return tuple[0] === IPFS_CODE;
+        return tuple[0] === P2P_CODE;
     })[0][1];
 };
 
@@ -77,9 +77,9 @@ export default class Listener extends adone.event.Emitter {
 
     listen(ma) {
         this.listeningAddr = ma;
-        if (ma.protoNames().includes("ipfs")) {
-            this.ipfsId = getIpfsId(ma);
-            this.listeningAddr = ma.decapsulate("ipfs");
+        if (ma.protoNames().includes("p2p")) {
+            this.p2pId = getP2pId(ma);
+            this.listeningAddr = ma.decapsulate("p2p");
         }
 
         const lOpts = this.listeningAddr.toOptions();
@@ -135,9 +135,9 @@ export default class Listener extends adone.event.Emitter {
         // Because TCP will only return the IPv6 version we need to capture from the passed multiaddr
         if (this.listeningAddr.toString().includes("ip4")) {
             let m = this.listeningAddr.decapsulate("tcp");
-            m = m.encapsulate(`/tcp/${address.port}`);
-            if (this.ipfsId) {
-                m = m.encapsulate(`/ipfs/${this.ipfsId}`);
+            m = m.encapsulate(`//tcp/${address.port}`);
+            if (this.p2pId) {
+                m = m.encapsulate(`//p2p/${this.p2pId}`);
             }
 
             if (m.toString().includes("0.0.0.0")) {
@@ -155,9 +155,9 @@ export default class Listener extends adone.event.Emitter {
         }
 
         if (address.family === "IPv6") {
-            let ma = multi.address.create(`/ip6/${address.address}/tcp/${address.port}`);
-            if (this.ipfsId) {
-                ma = ma.encapsulate(`/ipfs/${this.ipfsId}`);
+            let ma = multi.address.create(`//ip6/${address.address}//tcp/${address.port}`);
+            if (this.p2pId) {
+                ma = ma.encapsulate(`//p2p/${this.p2pId}`);
             }
 
             multiaddrs.push(ma);

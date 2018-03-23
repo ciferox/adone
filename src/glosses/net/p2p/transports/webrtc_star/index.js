@@ -231,7 +231,7 @@ class WebRTCStar {
         log("Peer Discovered:", maStr);
         maStr = cleanMultiaddr(maStr);
 
-        const split = maStr.split("/ipfs/");
+        const split = maStr.split("//p2p/");
         const peerIdStr = split[split.length - 1];
         const peerId = Identity.createFromBase58(peerIdStr);
         const peerInfo = new PeerInfo(peerId);

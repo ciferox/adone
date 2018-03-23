@@ -19,10 +19,10 @@ describe.todo("rendezvous", () => {
     let c3;
     let c4;
 
-    const c1mh = multi.address.create("/ip4/127.0.0.1/tcp/9090/ws/p2p-websocket-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo1");
-    const c2mh = multi.address.create("/ip4/127.0.0.1/tcp/9090/ws/p2p-websocket-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo2");
-    const c3mh = multi.address.create("/ip4/127.0.0.1/tcp/9090/ws/p2p-websocket-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo3");
-    const c4mh = multi.address.create("/ip4/127.0.0.1/tcp/9090/ws/p2p-websocket-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4");
+    const c1mh = multi.address.create("//ip4/127.0.0.1//tcp/9090//ws//p2p-websocket-star//p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo1");
+    const c2mh = multi.address.create("//ip4/127.0.0.1//tcp/9090//ws//p2p-websocket-star//p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo2");
+    const c3mh = multi.address.create("//ip4/127.0.0.1//tcp/9090//ws//p2p-websocket-star//p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo3");
+    const c4mh = multi.address.create("//ip4/127.0.0.1//tcp/9090//ws//p2p-websocket-star//p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo4");
 
     it("start and stop signalling server (default port)", (done) => {
         rendezvous.start((err, server) => {
@@ -168,8 +168,8 @@ describe.todo("rendezvous", () => {
 
         c1 = io.connect(sioUrl, sioOptions);
         c2 = io.connect(sioUrl, sioOptions);
-        c1.emit("ss-join", "/ip4/0.0.0.0", "", (err) => assert.notExists(err));
-        c2.emit("ss-join", "/ip4/127.0.0.1", "", (err) => assert.notExists(err));
+        c1.emit("ss-join", "//ip4/0.0.0.0", "", (err) => assert.notExists(err));
+        c2.emit("ss-join", "//ip4/127.0.0.1", "", (err) => assert.notExists(err));
 
         const check = function () {
             if (++peersEmitted === 2) {
@@ -178,7 +178,7 @@ describe.todo("rendezvous", () => {
         };
 
         c1.on("ws-peer", (p) => {
-            expect(p).to.be.equal("/ip4/127.0.0.1");
+            expect(p).to.be.equal("//ip4/127.0.0.1");
             check();
         });
     }).timeout(4000);

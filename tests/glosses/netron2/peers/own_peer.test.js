@@ -39,7 +39,7 @@ describe("netron", "OwnPeer", () => {
         }
 
         async beforeEach() {
-            this.netron = createNetron(this.peerInfo, "/ip4/0.0.0.0/tcp/0");
+            this.netron = createNetron(this.peerInfo, "//ip4/0.0.0.0//tcp/0");
             this.peer = this.netron.peer;
 
             await this.netron.start();

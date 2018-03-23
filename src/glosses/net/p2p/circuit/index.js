@@ -37,7 +37,7 @@ export class Circuit {
 
         // if no explicit relays, add a default relay addr
         if (this.relays.length === 0) {
-            this.peerInfo.multiaddrs.add(`/p2p-circuit/ipfs/${this.peerInfo.id.asBase58()}`);
+            this.peerInfo.multiaddrs.add(`//p2p-circuit//p2p/${this.peerInfo.id.asBase58()}`);
         }
 
         this.connector = new __.Connector(sw, options);

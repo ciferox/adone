@@ -47,7 +47,7 @@ export default async (ctx) => {
     //                     const peerId = Identity.createFromJSON(rawPeer);
     //                     const peer = new PeerInfo(peerId);
 
-    //                     peer.multiaddrs.add("/ip4/127.0.0.1/tcp/9200/ws");
+    //                     peer.multiaddrs.add("//ip4/127.0.0.1//tcp/9200//ws");
 
     //                     node = new Core({
     //                         peer,

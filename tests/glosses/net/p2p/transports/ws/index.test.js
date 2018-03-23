@@ -14,7 +14,7 @@ describe("trasnport", "ws", () => {
 
     describe("listen", () => {
         let ws;
-        const ma = multi.address.create("/ip4/127.0.0.1/tcp/9595/ws");
+        const ma = multi.address.create("//ip4/127.0.0.1//tcp/9595//ws");
 
         beforeEach(() => {
             ws = new WS();
@@ -48,8 +48,8 @@ describe("trasnport", "ws", () => {
             listener.listen(ma);
         });
 
-        it("listen on addr with /ipfs/QmHASH", async () => {
-            const ma = multi.address.create("/ip4/127.0.0.1/tcp/9595/ws/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
+        it("listen on addr with //p2p/QmHASH", async () => {
+            const ma = multi.address.create("//ip4/127.0.0.1//tcp/9595//ws//p2p/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
 
             const listener = ws.createListener();
 
@@ -83,7 +83,7 @@ describe("trasnport", "ws", () => {
         });
 
         it("getAddrs on port 0 listen", async () => {
-            const addr = multi.address.create("/ip4/127.0.0.1/tcp/0/ws");
+            const addr = multi.address.create("//ip4/127.0.0.1//tcp/0//ws");
             const listener = ws.createListener();
             await listener.listen(addr);
             const addrs = await listener.getAddrs();
@@ -93,7 +93,7 @@ describe("trasnport", "ws", () => {
         });
 
         it("getAddrs from listening on 0.0.0.0", async () => {
-            const addr = multi.address.create("/ip4/0.0.0.0/tcp/9003/ws");
+            const addr = multi.address.create("//ip4/0.0.0.0//tcp/9003//ws");
             const listener = ws.createListener();
             await listener.listen(addr);
             const addrs = await listener.getAddrs();
@@ -102,7 +102,7 @@ describe("trasnport", "ws", () => {
         });
 
         it("getAddrs from listening on 0.0.0.0 and port 0", async () => {
-            const addr = multi.address.create("/ip4/0.0.0.0/tcp/0/ws");
+            const addr = multi.address.create("//ip4/0.0.0.0//tcp/0//ws");
             const listener = ws.createListener();
             await listener.listen(addr);
             const addrs = await listener.getAddrs();
@@ -112,7 +112,7 @@ describe("trasnport", "ws", () => {
         });
 
         it("getAddrs preserves IPFS Id", async () => {
-            const ma = multi.address.create("/ip4/127.0.0.1/tcp/9595/ws/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
+            const ma = multi.address.create("//ip4/127.0.0.1//tcp/9595//ws//p2p/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
             const listener = ws.createListener();
             await listener.listen(ma);
             const addrs = await listener.getAddrs();
@@ -125,7 +125,7 @@ describe("trasnport", "ws", () => {
     describe("connect", () => {
         let ws;
         let listener;
-        const ma = multi.address.create("/ip4/127.0.0.1/tcp/9596/ws");
+        const ma = multi.address.create("//ip4/127.0.0.1//tcp/9596//ws");
 
         beforeEach(async () => {
             ws = new WS();
@@ -160,7 +160,7 @@ describe("trasnport", "ws", () => {
         });
 
         it("connect on IPv4 with IPFS Id", async (done) => {
-            const ma = multi.address.create("/ip4/127.0.0.1/tcp/9596/ws/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
+            const ma = multi.address.create("//ip4/127.0.0.1//tcp/9596//ws//p2p/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
             const conn = await ws.connect(ma);
 
             const s = pull.goodbye({
@@ -186,18 +186,18 @@ describe("trasnport", "ws", () => {
 
         describe("filter valid addrs for this transport", () => {
             it("should fail invalid WS addresses", () => {
-                const ma1 = multi.address.create("/ip4/127.0.0.1/tcp/9595");
-                const ma2 = multi.address.create("/ip4/127.0.0.1/udp/9595");
-                const ma3 = multi.address.create("/ip6/::1/tcp/80");
-                const ma4 = multi.address.create("/dns/ipfs.io/tcp/80");
+                const ma1 = multi.address.create("//ip4/127.0.0.1//tcp/9595");
+                const ma2 = multi.address.create("//ip4/127.0.0.1//udp/9595");
+                const ma3 = multi.address.create("//ip6/::1//tcp/80");
+                const ma4 = multi.address.create("//dns/p2p.io//tcp/80");
 
                 const valid = ws.filter([ma1, ma2, ma3, ma4]);
                 expect(valid.length).to.equal(0);
             });
 
             it("should filter correct ipv4 addresses", () => {
-                const ma1 = multi.address.create("/ip4/127.0.0.1/tcp/80/ws");
-                const ma2 = multi.address.create("/ip4/127.0.0.1/tcp/443/wss");
+                const ma1 = multi.address.create("//ip4/127.0.0.1//tcp/80//ws");
+                const ma2 = multi.address.create("//ip4/127.0.0.1//tcp/443//wss");
 
                 const valid = ws.filter([ma1, ma2]);
                 expect(valid.length).to.equal(2);
@@ -206,8 +206,8 @@ describe("trasnport", "ws", () => {
             });
 
             it("should filter correct ipv4 addresses with ipfs id", () => {
-                const ma1 = multi.address.create("/ip4/127.0.0.1/tcp/80/ws/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
-                const ma2 = multi.address.create("/ip4/127.0.0.1/tcp/80/wss/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
+                const ma1 = multi.address.create("//ip4/127.0.0.1//tcp/80//ws//p2p/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
+                const ma2 = multi.address.create("//ip4/127.0.0.1//tcp/80//wss//p2p/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
 
                 const valid = ws.filter([ma1, ma2]);
                 expect(valid.length).to.equal(2);
@@ -216,8 +216,8 @@ describe("trasnport", "ws", () => {
             });
 
             it("should filter correct ipv6 address", () => {
-                const ma1 = multi.address.create("/ip6/::1/tcp/80/ws");
-                const ma2 = multi.address.create("/ip6/::1/tcp/443/wss");
+                const ma1 = multi.address.create("//ip6/::1//tcp/80//ws");
+                const ma2 = multi.address.create("//ip6/::1//tcp/443//wss");
 
                 const valid = ws.filter([ma1, ma2]);
                 expect(valid.length).to.equal(2);
@@ -226,8 +226,8 @@ describe("trasnport", "ws", () => {
             });
 
             it("should filter correct ipv6 addresses with ipfs id", () => {
-                const ma1 = multi.address.create("/ip6/::1/tcp/80/ws/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
-                const ma2 = multi.address.create("/ip6/::1/tcp/443/wss/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
+                const ma1 = multi.address.create("//ip6/::1//tcp/80//ws//p2p/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
+                const ma2 = multi.address.create("//ip6/::1//tcp/443//wss//p2p/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
 
                 const valid = ws.filter([ma1, ma2]);
                 expect(valid.length).to.equal(2);
@@ -236,9 +236,9 @@ describe("trasnport", "ws", () => {
             });
 
             it("should filter correct dns address", () => {
-                const ma1 = multi.address.create("/dns/ipfs.io/ws");
-                const ma2 = multi.address.create("/dns/ipfs.io/tcp/80/ws");
-                const ma3 = multi.address.create("/dns/ipfs.io/tcp/80/wss");
+                const ma1 = multi.address.create("//dns/p2p.io//ws");
+                const ma2 = multi.address.create("//dns/p2p.io//tcp/80//ws");
+                const ma3 = multi.address.create("//dns/p2p.io//tcp/80//wss");
 
                 const valid = ws.filter([ma1, ma2, ma3]);
                 expect(valid.length).to.equal(3);
@@ -248,8 +248,8 @@ describe("trasnport", "ws", () => {
             });
 
             it("should filter correct dns address with ipfs id", () => {
-                const ma1 = multi.address.create("/dns/ipfs.io/tcp/80/ws/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
-                const ma2 = multi.address.create("/dns/ipfs.io/tcp/443/wss/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
+                const ma1 = multi.address.create("//dns/p2p.io//tcp/80//ws//p2p/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
+                const ma2 = multi.address.create("//dns/p2p.io//tcp/443//wss//p2p/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
 
                 const valid = ws.filter([ma1, ma2]);
                 expect(valid.length).to.equal(2);
@@ -258,8 +258,8 @@ describe("trasnport", "ws", () => {
             });
 
             it("should filter correct dns4 address", () => {
-                const ma1 = multi.address.create("/dns4/ipfs.io/tcp/80/ws");
-                const ma2 = multi.address.create("/dns4/ipfs.io/tcp/443/wss");
+                const ma1 = multi.address.create("//dns4/p2p.io//tcp/80//ws");
+                const ma2 = multi.address.create("//dns4/p2p.io//tcp/443//wss");
 
                 const valid = ws.filter([ma1, ma2]);
                 expect(valid.length).to.equal(2);
@@ -268,8 +268,8 @@ describe("trasnport", "ws", () => {
             });
 
             it("should filter correct dns6 address", () => {
-                const ma1 = multi.address.create("/dns6/ipfs.io/tcp/80/ws");
-                const ma2 = multi.address.create("/dns6/ipfs.io/tcp/443/wss");
+                const ma1 = multi.address.create("//dns6/p2p.io//tcp/80//ws");
+                const ma2 = multi.address.create("//dns6/p2p.io//tcp/443//wss");
 
                 const valid = ws.filter([ma1, ma2]);
                 expect(valid.length).to.equal(2);
@@ -278,8 +278,8 @@ describe("trasnport", "ws", () => {
             });
 
             it("should filter correct dns6 address with ipfs id", () => {
-                const ma1 = multi.address.create("/dns6/ipfs.io/tcp/80/ws/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
-                const ma2 = multi.address.create("/dns6/ipfs.io/tcp/443/wss/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
+                const ma1 = multi.address.create("//dns6/p2p.io//tcp/80//ws//p2p/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
+                const ma2 = multi.address.create("//dns6/p2p.io//tcp/443//wss//p2p/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
 
                 const valid = ws.filter([ma1, ma2]);
                 expect(valid.length).to.equal(2);
@@ -288,12 +288,12 @@ describe("trasnport", "ws", () => {
             });
 
             it("should filter mixed addresses", () => {
-                const ma1 = multi.address.create("/dns6/ipfs.io/tcp/80/ws/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
-                const ma2 = multi.address.create("/ip4/127.0.0.1/tcp/9595");
-                const ma3 = multi.address.create("/ip4/127.0.0.1/udp/9595");
-                const ma4 = multi.address.create("/dns6/ipfs.io/ws");
-                const mh5 = multi.address.create("/ip4/127.0.0.1/tcp/9595/ws/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw" +
-                    "/p2p-circuit/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
+                const ma1 = multi.address.create("//dns6/p2p.io//tcp/80//ws//p2p/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
+                const ma2 = multi.address.create("//ip4/127.0.0.1//tcp/9595");
+                const ma3 = multi.address.create("//ip4/127.0.0.1//udp/9595");
+                const ma4 = multi.address.create("//dns6/p2p.io//ws");
+                const mh5 = multi.address.create("//ip4/127.0.0.1//tcp/9595//ws//p2p/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw" +
+                    "//p2p-circuit//p2p/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
 
                 const valid = ws.filter([ma1, ma2, ma3, ma4, mh5]);
                 expect(valid.length).to.equal(2);
@@ -303,7 +303,7 @@ describe("trasnport", "ws", () => {
         });
 
         it("filter a single addr for this transport", (done) => {
-            const ma = multi.address.create("/ip4/127.0.0.1/tcp/9595/ws/ipfs/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
+            const ma = multi.address.create("//ip4/127.0.0.1//tcp/9595//ws//p2p/Qmb6owHp6eaWArVbcJJbQSyifyJBttMMjYV76N2hMbf5Vw");
 
             const valid = ws.filter(ma);
             expect(valid.length).to.equal(1);
@@ -313,7 +313,7 @@ describe("trasnport", "ws", () => {
     });
 
     describe("valid Connection", () => {
-        const ma = multi.address.create("/ip4/127.0.0.1/tcp/9092/ws");
+        const ma = multi.address.create("//ip4/127.0.0.1//tcp/9092//ws");
 
         it("get observed addrs", async (done) => {
             let dialerObsAddrs;
@@ -414,19 +414,19 @@ describe("trasnport", "ws", () => {
 
     describe("ma-to-url test", () => {
         it("should convert ipv4 ma to url", () => {
-            expect(WS.maToUrl(multi.address.create("/ip4/127.0.0.1/ws"))).to.equal("ws://127.0.0.1");
+            expect(WS.maToUrl(multi.address.create("//ip4/127.0.0.1//ws"))).to.equal("ws://127.0.0.1");
         });
 
         it("should convert ipv4 ma with port to url", () => {
-            expect(WS.maToUrl(multi.address.create("/ip4/127.0.0.1/tcp/80/ws"))).to.equal("ws://127.0.0.1:80");
+            expect(WS.maToUrl(multi.address.create("//ip4/127.0.0.1//tcp/80//ws"))).to.equal("ws://127.0.0.1:80");
         });
 
         it("should convert dns ma to url", () => {
-            expect(WS.maToUrl(multi.address.create("/dns4/ipfs.io/ws"))).to.equal("ws://ipfs.io");
+            expect(WS.maToUrl(multi.address.create("//dns4/p2p.io//ws"))).to.equal("ws://p2p.io");
         });
 
         it("should convert dns ma  with port to url", () => {
-            expect(WS.maToUrl(multi.address.create("/dns4/ipfs.io/tcp/80/ws"))).to.equal("ws://ipfs.io:80");
+            expect(WS.maToUrl(multi.address.create("//dns4/p2p.io//tcp/80//ws"))).to.equal("ws://p2p.io:80");
         });
     });
 

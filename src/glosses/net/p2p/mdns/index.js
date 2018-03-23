@@ -55,11 +55,11 @@ const gotResponse = (rsp, peerInfo, serviceTag, callback) => {
     const multiaddrs = [];
 
     answers.a.forEach((a) => {
-        multiaddrs.push(new multi.address.Multiaddr(`/ip4/${a.data}/tcp/${port}`));
+        multiaddrs.push(new multi.address.Multiaddr(`//ip4/${a.data}//tcp/${port}`));
     });
 
     answers.aaaa.forEach((a) => {
-        multiaddrs.push(new multi.address.Multiaddr(`/ip6/${a.data}/tcp/${port}`));
+        multiaddrs.push(new multi.address.Multiaddr(`//ip6/${a.data}//tcp/${port}`));
     });
 
     if (peerInfo.id.asBase58() === b58Id) {
@@ -101,7 +101,7 @@ const gotQuery = (qry, mdns, peerInfo, serviceTag, broadcast) => {
         });
 
         // Only announce TCP multiaddrs for now
-        const port = multiaddrs[0].toString().split("/")[4];
+        const port = multiaddrs[0].toString().split("//").filter(adone.identity)[1].split("/")[1];
 
         answers.push({
             name: `${peerInfo.id.asBase58()}.${serviceTag}`,
@@ -125,13 +125,14 @@ const gotQuery = (qry, mdns, peerInfo, serviceTag, broadcast) => {
         });
 
         multiaddrs.forEach((ma) => {
+            const data = ma.toString().split("//").filter(adone.identity)[1].split("/")[1];
             if (ma.protoNames()[0] === "ip4") {
                 answers.push({
                     name: os.hostname(),
                     type: "A",
                     class: "IN",
                     ttl: 120,
-                    data: ma.toString().split("/")[2]
+                    data
                 });
                 return;
             }
@@ -141,7 +142,7 @@ const gotQuery = (qry, mdns, peerInfo, serviceTag, broadcast) => {
                     type: "AAAA",
                     class: "IN",
                     ttl: 120,
-                    data: ma.toString().split("/")[2]
+                    data
                 });
             }
         });

@@ -49,9 +49,9 @@ describe("dht", "KadDHT", "rpc - handlers - AddProvider", () => {
 
         const msg = new Message(Message.TYPES.ADD_PROVIDER, cid.buffer, 0);
         const sender = peers[0];
-        sender.multiaddrs.add("/ip4/127.0.0.1/tcp/1234");
+        sender.multiaddrs.add("//ip4/127.0.0.1//tcp/1234");
         const other = peers[1];
-        other.multiaddrs.add("/ip4/127.0.0.1/tcp/2345");
+        other.multiaddrs.add("//ip4/127.0.0.1//tcp/2345");
         msg.providerPeers = [
             sender,
             other

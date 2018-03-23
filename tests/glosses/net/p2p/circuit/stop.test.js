@@ -23,7 +23,7 @@ describe("circuit", "stop", () => {
 
             const peerId = Identity.createFromJSON(nodes.node4);
             const peer = PeerInfo.create(peerId);
-            peer.multiaddrs.add("/p2p-circuit/ipfs/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE");
+            peer.multiaddrs.add("//p2p-circuit//p2p/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE");
             sw = {
                 _peerInfo: peer,
                 conns: {
@@ -39,11 +39,11 @@ describe("circuit", "stop", () => {
                 type: protocol.CircuitRelay.Type.STOP,
                 srcPeer: {
                     id: "QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE",
-                    addrs: ["/ipfs/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE"]
+                    addrs: ["//p2p/QmSswe1dCFRepmhjAMR5VfHeokGLcvVggkuDJm7RMfJSrE"]
                 },
                 dstPeer: {
                     id: "QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy",
-                    addrs: ["/ipfs/QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy"]
+                    addrs: ["//p2p/QmQvM2mpqkjyXWbTHSUidUAWN26GgdMphTh9iGDdjgVXCy"]
                 }
             }, new StreamHandler(conn), (conn) => { // multistream handler doesn't expect errors...
                 expect(conn).to.be.instanceOf(Connection);

@@ -19,12 +19,12 @@ describe("switch", () => {
     describe("transports", () => {
         const transports = [
             {
-                name: "TCP", C: TCP, maGen: (port) => `/ip4/127.0.0.1/tcp/${port}`
+                name: "TCP", C: TCP, maGen: (port) => `//ip4/127.0.0.1//tcp/${port}`
             },
             {
-                name: "WS", C: WS, maGen: (port) => `/ip4/127.0.0.1/tcp/${port}/ws`
+                name: "WS", C: WS, maGen: (port) => `//ip4/127.0.0.1//tcp/${port}//ws`
             }
-            // { n: 'UTP', C: UTP, maGen: (port) => { return `/ip4/127.0.0.1/udp/${port}/utp` } }
+            // { n: 'UTP', C: UTP, maGen: (port) => { return `//ip4/127.0.0.1//udp/${port}//utp` } }
         ];
 
         for (const t of transports) {
@@ -87,7 +87,7 @@ describe("switch", () => {
                     peer.multiaddrs.add(t.maGen(9309));
 
                     // addr not supported added on purpose
-                    peer.multiaddrs.add("/ip4/1.2.3.4/tcp/3456/ws/p2p-webrtc-star");
+                    peer.multiaddrs.add("//ip4/1.2.3.4//tcp/3456//ws//p2p-webrtc-star");
 
                     const conn = await switchA.tm.connect(t.name, peer);
 
@@ -99,7 +99,7 @@ describe("switch", () => {
                     peer.multiaddrs.add(t.maGen(9359));
                     peer.multiaddrs.add(t.maGen(9329));
                     // addr not supported added on purpose
-                    peer.multiaddrs.add("/ip4/1.2.3.4/tcp/3456/ws/p2p-webrtc-star");
+                    peer.multiaddrs.add("//ip4/1.2.3.4//tcp/3456//ws//p2p-webrtc-star");
 
                     const err = await assert.throws(async () => switchA.tm.connect(t.name, peer));
                     expect(err.errors).to.have.length(2);
@@ -122,7 +122,7 @@ describe("switch", () => {
                     sw.tm.add(t.name, new t.C());
                     await sw.tm.listen(t.name, {}, (conn) => pull(conn, conn));
                     expect(peer.multiaddrs.size).to.equal(1);
-                    // should not have /tcp/0 anymore
+                    // should not have //tcp/0 anymore
                     expect(peer.multiaddrs.has(ma)).to.equal(false);
                     await sw.stop();
                 });
@@ -200,8 +200,8 @@ describe("switch", () => {
             const peerB = infos[1];
             const peerC = infos[2];
 
-            peerA.multiaddrs.add("/ip4/127.0.0.1/tcp/9001");
-            peerB.multiaddrs.add("/ip4/127.0.0.1/tcp/9002/ws");
+            peerA.multiaddrs.add("//ip4/127.0.0.1//tcp/9001");
+            peerB.multiaddrs.add("//ip4/127.0.0.1//tcp/9002//ws");
 
             switchA = new Switch(peerA, new PeerBook());
             switchB = new Switch(peerB, new PeerBook());
@@ -249,7 +249,7 @@ describe("switch", () => {
 
         it("should connect circuit ony once", async () => {
             switchA._peerInfo.multiaddrs.clear();
-            switchA._peerInfo.multiaddrs.add("/dns4/wrtc-star.discovery.libp2p.io/tcp/443/wss/p2p-webrtc-star");
+            switchA._peerInfo.multiaddrs.add("//dns4/wrtc-star.discovery.libp2p.io//tcp/443//wss//p2p-webrtc-star");
             await assert.throws(async () => switchA.connect(switchC._peerInfo), /Circuit already tried!/);
             expect(connectSpyA.callCount).to.be.eql(1);
         });
@@ -257,9 +257,9 @@ describe("switch", () => {
         it("connect circuit last", async () => {
             const peerC = switchC._peerInfo;
             peerC.multiaddrs.clear();
-            peerC.multiaddrs.add("/p2p-circuit/ipfs/ABCD");
-            peerC.multiaddrs.add("/ip4/127.0.0.1/tcp/9998/ipfs/ABCD");
-            peerC.multiaddrs.add("/ip4/127.0.0.1/tcp/9999/ws/ipfs/ABCD");
+            peerC.multiaddrs.add("//p2p-circuit//p2p/ABCD");
+            peerC.multiaddrs.add("//ip4/127.0.0.1//tcp/9998//p2p/ABCD");
+            peerC.multiaddrs.add("//ip4/127.0.0.1//tcp/9999//ws//p2p/ABCD");
 
             await assert.throws(async () => switchA.connect(peerC));
             expect(connectSpyA.lastCall.args[0]).to.be.eql("Circuit");
@@ -281,7 +281,7 @@ describe("switch", () => {
             spdy
         ];
 
-        const maGen = (port) => `/ip4/127.0.0.1/tcp/${port}`;
+        const maGen = (port) => `//ip4/127.0.0.1//tcp/${port}`;
 
         for (const muxer of muxers) {
             describe(muxer.multicodec, () => {
@@ -403,8 +403,8 @@ describe("switch", () => {
             const peerA = infos[0];
             const peerB = infos[1];
 
-            peerA.multiaddrs.add("/ip4/127.0.0.1/tcp/9001");
-            peerB.multiaddrs.add("/ip4/127.0.0.1/tcp/9002/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC");
+            peerA.multiaddrs.add("//ip4/127.0.0.1//tcp/9001");
+            peerB.multiaddrs.add("//ip4/127.0.0.1//tcp/9002//p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSupNKC");
 
             switchA = new Switch(peerA, new PeerBook());
             switchB = new Switch(peerB, new PeerBook());
@@ -495,9 +495,9 @@ describe("switch", () => {
         });
 
         it("add tcp", async () => {
-            switchA._peerInfo.multiaddrs.add("/ip4/127.0.0.1/tcp/10100");
-            switchB._peerInfo.multiaddrs.add("/ip4/127.0.0.1/tcp/10200");
-            switchC._peerInfo.multiaddrs.add("/ip4/127.0.0.1/tcp/10300");
+            switchA._peerInfo.multiaddrs.add("//ip4/127.0.0.1//tcp/10100");
+            switchB._peerInfo.multiaddrs.add("//ip4/127.0.0.1//tcp/10200");
+            switchC._peerInfo.multiaddrs.add("//ip4/127.0.0.1//tcp/10300");
 
             switchA.tm.add("tcp", new TCP());
             switchB.tm.add("tcp", new TCP());
@@ -510,10 +510,10 @@ describe("switch", () => {
         });
 
         it("add websockets", async () => {
-            switchB._peerInfo.multiaddrs.add("/ip4/127.0.0.1/tcp/9012/ws");
-            switchC._peerInfo.multiaddrs.add("/ip4/127.0.0.1/tcp/9022/ws");
-            switchD._peerInfo.multiaddrs.add("/ip4/127.0.0.1/tcp/9032/ws");
-            switchE._peerInfo.multiaddrs.add("/ip4/127.0.0.1/tcp/9042/ws");
+            switchB._peerInfo.multiaddrs.add("//ip4/127.0.0.1//tcp/9012//ws");
+            switchC._peerInfo.multiaddrs.add("//ip4/127.0.0.1//tcp/9022//ws");
+            switchD._peerInfo.multiaddrs.add("//ip4/127.0.0.1//tcp/9032//ws");
+            switchE._peerInfo.multiaddrs.add("//ip4/127.0.0.1//tcp/9042//ws");
 
             switchB.tm.add("ws", new WS());
             switchC.tm.add("ws", new WS());
@@ -676,9 +676,9 @@ describe("switch", () => {
             const peerB = infos[1];
             const peerC = infos[2];
 
-            peerA.multiaddrs.add("/ip4/127.0.0.1/tcp/9001");
-            peerB.multiaddrs.add("/ip4/127.0.0.1/tcp/9002");
-            peerC.multiaddrs.add("/ip4/127.0.0.1/tcp/9003");
+            peerA.multiaddrs.add("//ip4/127.0.0.1//tcp/9001");
+            peerB.multiaddrs.add("//ip4/127.0.0.1//tcp/9002");
+            peerC.multiaddrs.add("//ip4/127.0.0.1//tcp/9003");
 
             switchA = new Switch(peerA, new PeerBook());
             switchB = new Switch(peerB, new PeerBook());
@@ -757,9 +757,9 @@ describe("switch", () => {
             peers = infos;
 
             peers.forEach((peer, i) => {
-                peer.multiaddrs.add(multi.address.create(`/ip4/191.0.0.1/tcp/123${i}`));
-                peer.multiaddrs.add(multi.address.create(`/ip4/192.168.0.1/tcp/923${i}`));
-                peer.multiaddrs.add(multi.address.create(`/ip4/193.168.0.99/tcp/923${i}`));
+                peer.multiaddrs.add(multi.address.create(`//ip4/191.0.0.1//tcp/123${i}`));
+                peer.multiaddrs.add(multi.address.create(`//ip4/192.168.0.1//tcp/923${i}`));
+                peer.multiaddrs.add(multi.address.create(`//ip4/193.168.0.99//tcp/923${i}`));
             });
         });
 
@@ -806,7 +806,7 @@ describe("switch", () => {
 
             const success = await dialer.dialMany(peers[0].id, t1, peers[0].multiaddrs.toArray());
             const conn = success.conn;
-            expect(success.multiaddr.toString()).to.equal("/ip4/192.168.0.1/tcp/9230");
+            expect(success.multiaddr.toString()).to.equal("//ip4/192.168.0.1//tcp/9230");
             pull(
                 conn,
                 pull.collect((err, res) => {

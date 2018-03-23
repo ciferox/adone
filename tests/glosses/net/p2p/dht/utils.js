@@ -8,12 +8,12 @@ const { KadDHT } = dht;
 
 // Creates multiple PeerInfos
 export const makePeers = (n) => {
-    const ids = [];
+    const peerInfos = [];
     for (let i = 0; i < n; i++) {
-        ids.push(new PeerInfo(Identity.create({ bits: 1024 })));
+        peerInfos.push(new PeerInfo(Identity.create({ bits: 1024 })));
     }
 
-    return ids;
+    return peerInfos;
 };
 
 // TODO break this setupDHT to be a self contained thing.
@@ -23,7 +23,7 @@ export const setupDHT = async () => {
     const peers = makePeers(1);
 
     const p = peers[0];
-    p.multiaddrs.add("/ip4/0.0.0.0/tcp/0");
+    p.multiaddrs.add("//ip4/0.0.0.0//tcp/0");
 
     const sw = new Switch(p, new PeerBook());
     sw.tm.add("tcp", new TCP());

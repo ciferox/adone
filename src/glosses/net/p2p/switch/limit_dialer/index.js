@@ -1,9 +1,4 @@
-const map = require("async/map");
 import DialQueue from "./queue";
-
-const {
-    util: { once }
-} = adone;
 
 /**
  * Track dials per peer and limited them.

@@ -51,21 +51,26 @@ export const toString = (proto, buf) => {
     proto = adone.multi.address.protocols(proto);
     switch (proto.code) {
         case 4: // ipv4
-        case 41: // ipv6
+        case 5: // ipv6
             return ip.toString(buf);
 
         case 6: // tcp
-        case 17: // udp
-        case 33: // dccp
-        case 132: // sctp
+        case 7: // udp
+        case 8: // sctp
+        case 9: // dccp
+        case 17: // udt
+        case 18: // utp
+        case 19: // quic
             return buf2port(buf);
 
         case 53: // dns
         case 54: // dns4
         case 55: // dns6
+        case 400: // unix
+        case 401: // winpipe
             return buf2str(buf);
 
-        case 421: // ipfs
+        case 420:
             return buf2mh(buf);
         default:
             return buf.toString("hex"); // no clue. convert to hex
@@ -76,21 +81,26 @@ export const toBuffer = (proto, str) => {
     proto = adone.multi.address.protocols(proto);
     switch (proto.code) {
         case 4: // ipv4
-        case 41: // ipv6
+        case 5: // ipv6
             return ip.toBuffer(str);
 
         case 6: // tcp
-        case 17: // udp
-        case 33: // dccp
-        case 132: // sctp
+        case 7: // udp
+        case 8: // sctp
+        case 9: // dccp
+        case 17: // udt
+        case 18: // utp
+        case 19: // quic
             return port2buf(parseInt(str, 10));
 
         case 53: // dns
         case 54: // dns4
         case 55: // dns6
+        case 400: // unix
+        case 401: // winpipe
             return str2buf(str);
 
-        case 421: // ipfs
+        case 420:
             return mh2buf(str);
         default:
             return Buffer.from(str, "hex"); // no clue. convert from hex

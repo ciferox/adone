@@ -28,8 +28,8 @@ describe("strict", () => {
         }
         id1 = ids.shift();
         id2 = ids.shift();
-        ma1 = multi.address.create(`/ip4/127.0.0.1/tcp/${SERVER_PORT}/ws/p2p-websocket-star/ipfs/${id1.asBase58()}`);
-        ma2 = multi.address.create(`/ip4/127.0.0.1/tcp/${SERVER_PORT}/ws/p2p-websocket-star/ipfs/${id2.asBase58()}`);
+        ma1 = multi.address.create(`//ip4/127.0.0.1//tcp/${SERVER_PORT}//ws//p2p-websocket-star//p2p/${id1.asBase58()}`);
+        ma2 = multi.address.create(`//ip4/127.0.0.1//tcp/${SERVER_PORT}//ws//p2p-websocket-star//p2p/${id2.asBase58()}`);
     });
 
     it("listen on the server", (done) => {

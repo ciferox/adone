@@ -256,7 +256,7 @@ export default class Core extends event.Emitter {
             this.peerInfo.multiaddrs.toArray().forEach((ma) => {
                 if (!ma.getPeerId()) {
                     maOld.push(ma);
-                    maNew.push(ma.encapsulate(`/ipfs/${this.peerInfo.id.asBase58()}`));
+                    maNew.push(ma.encapsulate(`//p2p/${this.peerInfo.id.asBase58()}`));
                 }
             });
             this.peerInfo.multiaddrs.replace(maOld, maNew);
@@ -331,7 +331,7 @@ export default class Core extends event.Emitter {
                         const multiaddrs = this.peerInfo.multiaddrs.toArray();
                         transports.forEach((transport) => {
                             multiaddrs.forEach((multiaddr) => {
-                                if (!multiaddr.toString().match(/\/p2p-circuit($|\/)/) &&
+                                if (!multiaddr.toString().match(/\/\/p2p-circuit($|\/)/) &&
                                     !transports.find((transport) => transport.filter(multiaddr).length > 0)) {
                                     this.peerInfo.multiaddrs.delete(multiaddr);
                                 }

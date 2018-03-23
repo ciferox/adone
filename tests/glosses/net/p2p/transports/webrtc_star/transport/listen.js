@@ -6,7 +6,7 @@ module.exports = (create) => {
     describe("listen", () => {
         let ws;
 
-        const ma = multi.address.create("/ip4/127.0.0.1/tcp/15555/ws/p2p-webrtc-star/ipfs/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSooooA");
+        const ma = multi.address.create("//ip4/127.0.0.1//tcp/15555//ws//p2p-webrtc-star//p2p/QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSooooA");
 
         before(() => {
             ws = create();

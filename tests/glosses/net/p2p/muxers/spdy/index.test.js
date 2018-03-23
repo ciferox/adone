@@ -77,7 +77,7 @@ describe("muxer", "spdy", () => {
         before(async () => {
             const dtcp = new TCP();
             const ltcp = new TCP();
-            const ma = multi.address.create("/ip4/127.0.0.1/tcp/9876");
+            const ma = multi.address.create("//ip4/127.0.0.1//tcp/9876");
             listener = ltcp.createListener((conn) => {
                 lMuxer = spdy.listener(conn);
                 lMuxer.on("stream", (conn) => {
@@ -206,7 +206,7 @@ describe("muxer", "spdy", () => {
         let dialer;
 
         let tcp;
-        const mh = multi.address.create("/ip4/127.0.0.1/tcp/9090");
+        const mh = multi.address.create("//ip4/127.0.0.1//tcp/9090");
 
         before(() => {
             tcp = new TCP();
@@ -308,7 +308,7 @@ describe("muxer", "spdy", () => {
     });
 
     describe("spdy-over-ws", () => {
-        const mh = multi.address.create("/ip4/127.0.0.1/tcp/9091/ws");
+        const mh = multi.address.create("//ip4/127.0.0.1//tcp/9091//ws");
 
         let listener;
         let dialer;

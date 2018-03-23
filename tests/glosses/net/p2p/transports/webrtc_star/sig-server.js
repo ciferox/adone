@@ -20,7 +20,7 @@ describe("signalling", () => {
     let c4;
 
     const base = (id) => {
-        return `/ip4/127.0.0.1/tcp/9090/ws/p2p-webrtc-star/ipfs/${id}`;
+        return `//ip4/127.0.0.1//tcp/9090//ws//p2p-webrtc-star//p2p/${id}`;
     };
 
     const c1mh = multi.address.create(base("QmcgpsyWgH8Y8ajJz1Cu72KnS5uo2Aa2LpzU7kinSoooo1"));

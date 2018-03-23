@@ -263,7 +263,7 @@ export default (common) => {
     describe("close", () => {
         let muxer;
 
-        const mh = multi.address.create("/ip4/127.0.0.1/tcp/10000");
+        const mh = multi.address.create("//ip4/127.0.0.1//tcp/10000");
 
         const closeAndWait = function (stream, callback) {
             pull(
