@@ -5,7 +5,7 @@ const {
 
 class TestApp extends adone.application.Application {
     async configure() {
-        await this.addSubsystemsFrom(std.path.join(__dirname, "subsystem"), {
+        await this.addSubsystemsFrom(std.path.join(__dirname, "subsystems"), {
             useFilename: true,
             transpile: true
         });

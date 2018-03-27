@@ -128,7 +128,11 @@ export const _DNS = or(
 );
 
 export const IP = or(base("ip4"), base("ip6"));
-export const TCP = and(IP, base("tcp"));
+export const TCP = or(
+    base("unix"),
+    base("winpipe"),
+    and(IP, base("tcp"))
+);
 export const UDP = and(IP, base("udp"));
 export const UTP = and(UDP, base("utp"));
 

@@ -60,7 +60,7 @@ export default class Service {
             const context = {
                 script: this.scriptPath,
                 user: this.config.user,
-                pidfile: adone.realm.config.omnitron.pidFilePath
+                pidfile: adone.runtime.realm.config.omnitron.PIDFILE_PATH
             };
 
             // Configure nunjucks for render from any path.

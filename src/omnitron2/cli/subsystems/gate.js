@@ -5,7 +5,7 @@ const {
     },
     is,
     cli: { kit },
-    omnitron
+    omnitron2
 } = adone;
 
 export default class Gate extends Subsystem {
@@ -24,14 +24,14 @@ export default class Gate extends Subsystem {
             kit.createProgress("obtaining");
             const options = opts.getAll();
             let gates;
-            if (await omnitron.dispatcher.isOmnitronActive()) {
+            if (await omnitron2.dispatcher.isOmnitronActive()) {
                 await kit.connect();
-                gates = await omnitron.dispatcher.getGates(options);
+                gates = await omnitron2.dispatcher.getGates(options);
             } else {
                 if (options.active) {
                     gates = [];
                 } else {
-                    const config = await omnitron.dispatcher.getConfiguration();
+                    const config = await omnitron2.dispatcher.getConfiguration();
                     gates = await config.getGates();
                 }
             }
@@ -86,7 +86,7 @@ export default class Gate extends Subsystem {
         try {
             kit.createProgress("adding");
 
-            const config = await omnitron.dispatcher.getConfiguration();
+            const config = await omnitron2.dispatcher.getConfiguration();
             await config.addGate({
                 name: args.get("name"),
                 ...opts.getAll()
@@ -122,11 +122,11 @@ export default class Gate extends Subsystem {
             kit.createProgress("deleting");
 
             const name = args.get("name");
-            if (await omnitron.dispatcher.isOmnitronActive()) {
+            if (await omnitron2.dispatcher.isOmnitronActive()) {
                 await kit.connect();
-                await omnitron.dispatcher.deleteGate(name);
+                await omnitron2.dispatcher.deleteGate(name);
             } else {
-                const config = await omnitron.dispatcher.getConfiguration();
+                const config = await omnitron2.dispatcher.getConfiguration();
                 await config.deleteGate(name);
             }            
 
@@ -161,7 +161,7 @@ export default class Gate extends Subsystem {
             kit.createProgress(`activating gate {green-fg}${name}{/green-fg}`);
 
             await kit.connect();
-            await omnitron.dispatcher.upGate(name);
+            await omnitron2.dispatcher.upGate(name);
 
             kit.updateProgress({
                 message: "done",
@@ -194,7 +194,7 @@ export default class Gate extends Subsystem {
             kit.createProgress(`deactivating gate {green-fg}${name}{/green-fg}`);
 
             await kit.connect();
-            await omnitron.dispatcher.downGate(name);
+            await omnitron2.dispatcher.downGate(name);
 
             kit.updateProgress({
                 message: "done",
@@ -246,7 +246,7 @@ export default class Gate extends Subsystem {
         try {
             kit.createProgress("configuring");
 
-            const config = await omnitron.dispatcher.getConfiguration();
+            const config = await omnitron2.dispatcher.getConfiguration();
             if (!opts.hasSomething()) {
                 kit.updateProgress({
                     message: "done",

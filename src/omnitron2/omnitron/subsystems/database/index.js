@@ -11,13 +11,13 @@ export default class extends application.Subsystem {
     }
 
     async initialize() {
-        this.db = await omnitron2.DB.open();
+        this.root.db = await omnitron2.DB.open();
 
         adone.logInfo(`${NAME} initialized`);
     }
 
     async uninitialize() {
-        await this.db.close();
+        await this.root.db.close();
 
         adone.logInfo(`${NAME} uninitialized`);
     }

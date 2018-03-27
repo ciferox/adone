@@ -1,7 +1,10 @@
 const {
     application: { Subsystem, DSubsystem },
-    error
+    error,
+    std
 } = adone;
+
+const fixture = (name) => std.path.join(__dirname, "fixtures", name);
 
 describe("application", "Subsystem", () => {
     const create = (name) => new Subsystem({ name });
@@ -41,6 +44,27 @@ describe("application", "Subsystem", () => {
         assert.throws(() => {
             ss.root = new Subsystem();
         }, error.NotAllowed);
+    });
+
+    describe("load subsystems", () => {
+        it("load subsystems from path, when name is equal to class name", async () => {
+            const ss = create("ss");
+            await ss.addSubsystemsFrom(fixture("subsystems"), {
+                transpile: true
+            });
+
+            assert.sameMembers(ss.getSubsystems().map((ssInfo) => ssInfo.name), ["Sub0", "Sub1", "Sub2", "Sub3"]);
+        });
+
+        it("load subsystems from path, when name is equal to file/dir name", async () => {
+            const ss = create("ss");
+            await ss.addSubsystemsFrom(fixture("subsystems"), {
+                useFilename: true,
+                transpile: true
+            });
+
+            assert.sameMembers(ss.getSubsystems().map((ssInfo) => ssInfo.name), ["sub0", "sub1", "sub2", "sub3"]);
+        });
     });
 
     describe("dependencies", () => {

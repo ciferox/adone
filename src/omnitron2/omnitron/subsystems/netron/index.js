@@ -14,12 +14,13 @@ export default class extends application.Subsystem {
         });
 
         // redefine 'inhost' netcore config
-        this.root.config.netCores.inhost = {
-            
+        this.root.config.raw.netCores.inhost = {
+            addrs: adone.omnitron2.DEFAULT_ADDRESS            
         };
 
-        for (const [netId, netCoreConfig] of Object.entries(this.root.config.netCores)) {
+        for (const [netId, netCoreConfig] of Object.entries(this.root.config.raw.netCores)) {
             runtime.netron2.createNetCore(netId, netCoreConfig);
+            adone.logInfo(`Netcore '${netId}' created`);
         }
 
         adone.logInfo(`${NAME} configured`);
@@ -39,6 +40,9 @@ export default class extends application.Subsystem {
             await runtime.netron2.detachContext("omnitron");
             adone.logInfo("Omnitron context detached");
         }
+
+        await runtime.netron2.stop();
+
         adone.logInfo(`${NAME} uninitialized`);
     }
 }

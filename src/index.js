@@ -263,7 +263,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
                 netron: () => new adone.netron.Netron(),
                 netron2: () => {
                     const peerInfo = adone.runtime.isOmnitron
-                        ? adone.omnitron2.dispatcher.omnitronPeerInfo
+                        ? adone.omnitron2.LOCAL_PEER_INFO
                         : adone.net.p2p.PeerInfo.create(adone.runtime.realm.config.identity.client);
                     return new adone.netron2.Netron(peerInfo);
                 }

@@ -2,7 +2,7 @@ import Valuable from "./valuable";
 
 const {
     is,
-    netron: { Context, Public }
+    netron2: { DContext, DPublic }
 } = adone;
 
 const NETRON_SCHEMA = {
@@ -101,7 +101,9 @@ const rePropName = RegExp(
     "(?=(?:\\.|\\[\\])(?:\\.|\\[\\]|$))"
     , "g");
 
-/** Used to match property names within property paths. */
+/**
+ *  Used to match property names within property paths.
+ */
 const reIsDeepProp = /\.|\[(?:[^[\]]*|(["'])(?:(?!\1)[^\\]|\\.)*?\1)\]/;
 const reIsPlainProp = /^\w*$/;
 
@@ -132,11 +134,11 @@ const castPath = (path) => {
 };
 
 
-@Context({
+@DContext({
     description: "Omnitron configuration"
 })
 export default class Configuration extends Valuable {
-    @Public()
+    @DPublic()
     async getAll() {
         const json = await super.toJSON({
             tags: "none"
@@ -151,7 +153,7 @@ export default class Configuration extends Valuable {
         return result;
     }
 
-    @Public()
+    @DPublic()
     async set(key, val) {
         const path = castPath(key);
         key = path.shift();
@@ -199,7 +201,7 @@ export default class Configuration extends Valuable {
         return super.set(key, val);
     }
 
-    @Public()
+    @DPublic()
     async get(key) {
         const path = castPath(key);
 
@@ -219,7 +221,7 @@ export default class Configuration extends Valuable {
         return result;
     }
 
-    @Public()
+    @DPublic()
     async delete(key) {
         const path = castPath(key);
         key = path.shift();
@@ -248,12 +250,12 @@ export default class Configuration extends Valuable {
         return super.set(key, result);
     }
 
-    @Public()
+    @DPublic()
     hasGate(name) {
         return this.gates.findIndex((g) => g.name === name) >= 0;
     }
 
-    @Public()
+    @DPublic()
     getGate(name) {
         const index = this.gates.findIndex((g) => g.name === name);
         if (index < 0) {
@@ -263,12 +265,12 @@ export default class Configuration extends Valuable {
         return this.gates[index];
     }
 
-    @Public()
+    @DPublic()
     getGates() {
         return this.gates;
     }
 
-    @Public()
+    @DPublic()
     addGate(gate) {
         if (!this.validateGate(gate)) {
             throw new adone.error.AggregateException(this.validateGate.errors);
@@ -283,7 +285,7 @@ export default class Configuration extends Valuable {
         return super.set("gates", this.gates);
     }
 
-    @Public()
+    @DPublic()
     deleteGate(name) {
         const index = this.gates.findIndex((g) => g.name === name);
         if (index < 0) {
@@ -294,7 +296,7 @@ export default class Configuration extends Valuable {
         return this.set("gates", this.gates);
     }
 
-    @Public()
+    @DPublic()
     configureGate(name, options) {
         const gate = this.getGate(name);
 

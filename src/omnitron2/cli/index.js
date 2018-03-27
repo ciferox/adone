@@ -7,11 +7,11 @@ const {
     is,
     cli: { kit },
     pretty,
-    omnitron,
+    omnitron2,
     std
 } = adone;
 
-const { STATUSES } = omnitron;
+const { STATUSES } = omnitron2;
 
 const subsystemPath = (name) => std.path.resolve(__dirname, "subsystems", name);
 
@@ -74,7 +74,7 @@ export default class Omnitron extends Subsystem {
     async upCommand() {
         try {
             kit.createProgress("starting up omnitron");
-            const pid = await omnitron.dispatcher.startOmnitron();
+            const pid = await omnitron2.dispatcher.startOmnitron();
             if (is.number(pid)) {
                 kit.updateProgress({
                     message: `done (pid: ${pid})`,
@@ -87,6 +87,7 @@ export default class Omnitron extends Subsystem {
             }
             return 0;
         } catch (err) {
+            adone.logError(err);
             kit.updateProgress({
                 message: err.message,
                 result: false
@@ -103,7 +104,7 @@ export default class Omnitron extends Subsystem {
     async downCommand() {
         try {
             kit.createProgress("shutting down omnitron");
-            const result = await omnitron.dispatcher.stopOmnitron();
+            const result = await omnitron2.dispatcher.stopOmnitron();
             switch (result) {
                 case 0:
                     kit.updateProgress({
@@ -147,7 +148,7 @@ export default class Omnitron extends Subsystem {
             //
         }
 
-        const result = await omnitron.dispatcher.ping();
+        const result = await omnitron2.dispatcher.ping();
         kit.updateProgress({
             message: result ? "done" : "failed",
             result
@@ -164,7 +165,7 @@ export default class Omnitron extends Subsystem {
         try {
             kit.createProgress("trying");
             await kit.connect();
-            const message = await omnitron.dispatcher.gc();
+            const message = await omnitron2.dispatcher.gc();
             kit.updateProgress({
                 message,
                 result: true
@@ -197,7 +198,7 @@ export default class Omnitron extends Subsystem {
         try {
             kit.createProgress("obtaining");
             await kit.connect();
-            const result = await omnitron.dispatcher.getInfo(args.get("param"));
+            const result = await omnitron2.dispatcher.getInfo(args.get("param"));
             kit.updateProgress({
                 message: "done",
                 result: true,
@@ -223,7 +224,7 @@ export default class Omnitron extends Subsystem {
         try {
             kit.createProgress("obtaining");
             await kit.connect();
-            const result = await omnitron.dispatcher.getReport();
+            const result = await omnitron2.dispatcher.getReport();
             kit.updateProgress({
                 message: "done",
                 result: true,
@@ -257,7 +258,7 @@ export default class Omnitron extends Subsystem {
             kit.createProgress("enabling");
             const name = args.get("service");
             await kit.connect();
-            await omnitron.dispatcher.enableService(name);
+            await omnitron2.dispatcher.enableService(name);
             kit.updateProgress({
                 message: "done",
                 result: true
@@ -289,7 +290,7 @@ export default class Omnitron extends Subsystem {
             kit.createProgress("disabling");
             const name = args.get("service");
             await kit.connect();
-            await omnitron.dispatcher.disableService(name);
+            await omnitron2.dispatcher.disableService(name);
             kit.updateProgress({
                 message: "done",
                 result: true
@@ -321,7 +322,7 @@ export default class Omnitron extends Subsystem {
             kit.createProgress("starting");
             const name = args.get("service");
             await kit.connect();
-            await omnitron.dispatcher.startService(name);
+            await omnitron2.dispatcher.startService(name);
             kit.updateProgress({
                 message: "done",
                 result: true
@@ -353,7 +354,7 @@ export default class Omnitron extends Subsystem {
             kit.createProgress("stopping");
             const name = args.get("service");
             await kit.connect();
-            await omnitron.dispatcher.stopService(name);
+            await omnitron2.dispatcher.stopService(name);
             kit.updateProgress({
                 message: "done",
                 result: true
@@ -386,7 +387,7 @@ export default class Omnitron extends Subsystem {
             kit.createProgress("restarting");
             const name = args.get("service");
             await kit.connect();
-            await omnitron.dispatcher.restart(name);
+            await omnitron2.dispatcher.restart(name);
             kit.updateProgress({
                 message: "done",
                 result: true
@@ -432,7 +433,7 @@ export default class Omnitron extends Subsystem {
             }
 
             if (Object.keys(config).length > 0) {
-                await omnitron.dispatcher.configureService(name, config);
+                await omnitron2.dispatcher.configureService(name, config);
                 kit.updateProgress({
                     message: "done",
                     result: true
@@ -478,7 +479,7 @@ export default class Omnitron extends Subsystem {
         try {
             kit.createProgress("obtaining");
             await kit.connect();
-            const services = await omnitron.dispatcher.enumerate({
+            const services = await omnitron2.dispatcher.enumerate({
                 name: opts.get("name"),
                 status: opts.get("status")
             });
@@ -551,7 +552,7 @@ export default class Omnitron extends Subsystem {
         try {
             kit.createProgress("obtaining");
             await kit.connect();
-            const peers = await omnitron.dispatcher.getPeers();
+            const peers = await omnitron2.dispatcher.getPeers();
 
             kit.updateProgress({
                 message: "done",
@@ -610,7 +611,7 @@ export default class Omnitron extends Subsystem {
         try {
             kit.createProgress("obtaining");
             await kit.connect();
-            const peers = await omnitron.dispatcher.getContexts();
+            const peers = await omnitron2.dispatcher.getContexts();
 
             kit.updateProgress({
                 message: "done",
@@ -654,7 +655,7 @@ export default class Omnitron extends Subsystem {
         try {
             kit.createProgress("obtaining");
             await kit.connect();
-            const peers = await omnitron.dispatcher.getSubsystems();
+            const peers = await omnitron2.dispatcher.getSubsystems();
 
             kit.updateProgress({
                 message: "done",
@@ -741,7 +742,7 @@ export default class Omnitron extends Subsystem {
             }
 
             await kit.connect();
-            await omnitron.dispatcher.loadSubsystem(path, {
+            await omnitron2.dispatcher.loadSubsystem(path, {
                 name: opts.has("name") ? opts.get("name") : null,
                 group: opts.get("group"),
                 description: opts.get("description"),
@@ -778,7 +779,7 @@ export default class Omnitron extends Subsystem {
             kit.createProgress("unloading");
             const name = args.get("name");
             await kit.connect();
-            await omnitron.dispatcher.unloadSubsystem(name);
+            await omnitron2.dispatcher.unloadSubsystem(name);
             kit.updateProgress({
                 message: "done",
                 result: true

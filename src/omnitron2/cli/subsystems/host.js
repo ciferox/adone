@@ -5,7 +5,7 @@ const {
     },
     is,
     cli: { kit },
-    omnitron
+    omnitron2
 } = adone;
 
 export default class Host extends Subsystem {

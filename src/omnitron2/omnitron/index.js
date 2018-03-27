@@ -25,12 +25,16 @@ export default class Omnitron extends application.Application {
         // Declare omnitron environment
         adone.runtime.isOmnitron = true;
 
+        // Initialize realm
+        await adone.realm.getManager();
+
         this.config = await adone.omnitron2.Configuration.load({
             cwd: adone.runtime.realm.config.CONFIGS_PATH
         });
 
         await this.addSubsystemsFrom(std.path.join(__dirname, "subsystems"), {
             bind: true,
+            useFilename: true,
             group: "core"
         });
 
@@ -75,7 +79,7 @@ export default class Omnitron extends application.Application {
 
     async createPidFile() {
         try {
-            await fs.writeFile(adone.realm.config.omnitron.pidFilePath, process.pid.toString());
+            await fs.writeFile(adone.runtime.realm.config.omnitron.PIDFILE_PATH, process.pid.toString());
         } catch (err) {
             adone.logError(err.message);
         }
@@ -83,7 +87,7 @@ export default class Omnitron extends application.Application {
 
     async deletePidFile() {
         try {
-            await fs.rm(adone.realm.config.omnitron.pidFilePath);
+            await fs.rm(adone.runtime.realm.config.omnitron.PIDFILE_PATH);
         } catch (err) {
             adone.logError(err.message);
         }

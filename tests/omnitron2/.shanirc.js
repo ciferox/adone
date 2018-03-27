@@ -5,6 +5,7 @@ const {
 
 export default async (ctx) => {
     let realmPath;
+    
     ctx.before(async () => {
         const runtimeRealmManager = await realm.getManager();
 

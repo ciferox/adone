@@ -305,7 +305,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
 
     /**
      * Checks whether subsystem exists.
-     * @param {*} name name of subsystem
+     * @param {string} name name of subsystem
      */
     hasSubsystem(name) {
         return this[SUBSYSTEMS_SYMBOL].findIndex((s) => s.name === name) >= 0;
@@ -327,9 +327,10 @@ export default class Subsystem extends adone.event.AsyncEmitter {
      * @param {string} group Group of subsystem.
      * @param {array} configureArgs Arguments sending to configure() method of subsystem.
      * @param {boolean} transpile Whether the code must be transpiled
+     * @param {boolean} useFilename Resolve subsystem name from filename instead of class name.
      * @returns {null|Promise<object>}
      */
-    addSubsystem({ subsystem, name = null, useFilename = false, description = "", group = "subsystem", configureArgs = [], transpile, bind } = {}) {
+    addSubsystem({ subsystem, name = null, useFilename = false, description = "", group = "subsystem", configureArgs = [], transpile, bind, _basePath } = {}) {
         const instance = this.instantiateSubsystem(subsystem, { transpile });
 
         if (instance[OWNED_SYMBOL] === true) {
@@ -337,7 +338,15 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         }
 
         if (is.string(subsystem) && useFilename) {
-            name = std.path.basename(subsystem, ".js");
+            if (is.string(_basePath)) {
+                const relPath = std.path.normalize(std.path.relative(_basePath, subsystem));
+                const dirName = std.path.dirname(relPath);
+                name = dirName !== "."
+                    ? dirName
+                    : std.path.basename(relPath, ".js");
+            } else {
+                name = std.path.basename(subsystem, ".js");
+            }
         }
 
         if (!is.string(name)) {
@@ -420,7 +429,8 @@ export default class Subsystem extends adone.event.AsyncEmitter {
             if (await filter(file)) { // eslint-disable-line
                 const systemInfo = {
                     ...options,
-                    subsystem: fullPath
+                    subsystem: fullPath,
+                    _basePath: path
                 };
 
                 // eslint-disable-next-line

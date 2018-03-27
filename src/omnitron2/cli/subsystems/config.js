@@ -29,7 +29,7 @@ export default class Config extends Subsystem {
             const key = args.get("key");
             const value = args.get("value");
 
-            const config = await adone.omnitron.dispatcher.getConfiguration();
+            const config = await adone.omnitron2.dispatcher.getConfiguration();
             await config.set(key, value);
 
             kit.updateProgress({
@@ -63,7 +63,7 @@ export default class Config extends Subsystem {
             kit.createProgress("getting");
             const key = args.get("key");
 
-            const config = await adone.omnitron.dispatcher.getConfiguration();
+            const config = await adone.omnitron2.dispatcher.getConfiguration();
             const value = await config.get(key);
 
             kit.updateProgress({
@@ -99,7 +99,7 @@ export default class Config extends Subsystem {
             kit.createProgress("deleting");
             const key = args.get("key");
 
-            const config = await adone.omnitron.dispatcher.getConfiguration();
+            const config = await adone.omnitron2.dispatcher.getConfiguration();
             await config.delete(key);
 
             kit.updateProgress({
@@ -124,7 +124,7 @@ export default class Config extends Subsystem {
     async allCommand() {
         try {
             kit.createProgress("obtaining");
-            const config = await adone.omnitron.dispatcher.getConfiguration();
+            const config = await adone.omnitron2.dispatcher.getConfiguration();
             kit.updateProgress({
                 message: "done",
                 result: true,
@@ -155,9 +155,9 @@ export default class Config extends Subsystem {
         ]
     })
     async editCommand(args, opts) {
-        const config = await adone.omnitron.dispatcher.getConfiguration();
+        const config = await adone.omnitron2.dispatcher.getConfiguration();
         // await (new adone.util.Editor({
-        //     path: omnitron.Configuration.path,
+        //     path: omnitron2.Configuration.path,
         //     editor: opts.get("editor")
         // })).spawn({
         //     detached: true

@@ -1,8 +1,8 @@
 const {
-    netron: { Context, Public }
+    netron2: { DContext, DPublic }
 } = adone;
 
-@Context({
+@DContext({
     description: "Service valuable used for storing service runtime configuration"
 })
 export default class ServiceValuable {
@@ -10,102 +10,102 @@ export default class ServiceValuable {
         this._valuable = valuable;
     }
 
-    @Public()
+    @DPublic()
     name() {
         return this._valuable.name();
     }
 
-    @Public()
+    @DPublic()
     internalId() {
         return this._valuable.internalId();
     }
 
-    @Public()
+    @DPublic()
     getNotes() {
         return this._valuable.getNotes();
     }
 
-    @Public()
+    @DPublic()
     setNotes(notes) {
         return this._valuable.setNotes(notes);
     }
 
-    @Public()
+    @DPublic()
     set(name, value, type) {
         return this._valuable.set(name, value, type);
     }
 
-    @Public()
+    @DPublic()
     setMulti(entries) {
         return this._valuable.setMulti(entries);
     }
 
-    @Public()
+    @DPublic()
     get(name) {
         return this._valuable.get(name);
     }
 
-    @Public()
+    @DPublic()
     type(name) {
         return this._valuable.type(name);
     }
 
-    @Public()
+    @DPublic()
     has(name) {
         return this._valuable.has(name);
     }
 
-    @Public()
+    @DPublic()
     keys() {
         return this._valuable.keys();
     }
 
-    @Public()
+    @DPublic()
     entries(options) {
         this._valuable.entries(options);
     }
 
-    @Public()
+    @DPublic()
     delete(name) {
         return this._valuable.delete(name);
     }
 
-    @Public()
+    @DPublic()
     clear(options) {
         return this._valuable.clear(options);
     }
 
-    @Public()
+    @DPublic()
     toJSON(options) {
         return this._valuable.toJSON(options);
     }
 
-    @Public()
+    @DPublic()
     fromJSON(json) {
         return this._valuable.fromJSON(json);
     }
 
-    @Public()
+    @DPublic()
     addTag(tag, _isWeak) {
         return this._valuable.addTag(tag, _isWeak);
     }
 
-    @Public()
+    @DPublic()
     hasTag(tag) {
         return this._valuable.hasTag(tag);
     }
 
-    @Public()
+    @DPublic()
     deleteTag(tag) {
         return this._valuable.deleteTag(tag);
     }
 
-    @Public()
+    @DPublic()
     deleteAllTags() {
         return this._valuable.deleteAllTags();
     }
 
-    @Public()
+    @DPublic()
     tags() {
         return this._valuable.tags();
     }

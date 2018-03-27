@@ -32,14 +32,6 @@ export default class Dispatcher extends Subsystem {
         });
     }
 
-    get omnitronPeerInfo() {
-        if (is.undefined(this._peerInfo)) {
-            this._peerInfo = adone.net.p2p.PeerInfo.create(adone.runtime.realm.identity);
-            this._peerInfo.multiaddrs.add(multi.address.fromNodeAddress(omnitron2.defaultAddress));
-        }
-        return this._peerInfo;
-    }
-
     /**
      * Subsystem overloaded method (should not be called directly).
      * This method is only useful in case when dispatcher used as subsystem.
@@ -88,9 +80,7 @@ export default class Dispatcher extends Subsystem {
         if (is.null(this.peer)) {
             let peer = null;
             try {
-                peer = await this.netron.connect({
-                    port: omnitron2.port
-                });
+                peer = await this.netron.connect("default", omnitron2.LOCAL_PEER_INFO);
                 status = _counter >= 1 ? 0 : 1;
             } catch (err) {
                 if (!forceStart || _counter >= 3) {
@@ -175,7 +165,7 @@ export default class Dispatcher extends Subsystem {
     async stopOmnitron() {
         const isActive = await this.isOmnitronActive();
         if (isActive) {
-            if (await fs.exists(adone.realm.config.omnitron2.pidFilePath)) {
+            if (await fs.exists(adone.runtime.realm.config.omnitron.PIDFILE_PATH)) {
                 try {
                     const checkAlive = async (pid) => {
                         let elapsed = 0;
@@ -191,7 +181,7 @@ export default class Dispatcher extends Subsystem {
                             await adone.promise.delay(100); // eslint-disable-line
                         }
                     };
-                    const pid = parseInt(std.fs.readFileSync(adone.realm.config.omnitron2.pidFilePath).toString());
+                    const pid = parseInt(std.fs.readFileSync(adone.runtime.realm.config.omnitron.PIDFILE_PATH).toString());
                     if (is.windows) {
                         try {
                             await this.connectLocal({
@@ -246,7 +236,7 @@ export default class Dispatcher extends Subsystem {
 
     async isOmnitronActive() {
         try {
-            const peer = await this.netron.connect("default", this.omnitronPeerInfo);
+            const peer = await this.netron.connect("default", omnitron2.LOCAL_PEER_INFO);
             await this.netron.disconnectPeer(peer);
             return true;
         } catch (err) {

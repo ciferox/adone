@@ -69,7 +69,7 @@ describe("application", "Application", () => {
 
             it("valid subsystems from path", async () => {
                 const result = await forkProcess(fixture("add_valid_subsystems_from_path.js"));
-                assert.equal(result.stdout, "hello configure\nhello configure\nhello configure\nhello init\nhello init\nhello init\nhello uninit\nhello uninit\nhello uninit");
+                assert.equal(result.stdout, "sub0 configure\nsub1 configure\nsub2 configure\nsub3 configure\nsub0 init\nsub1 init\nsub2 init\nsub3 init\nsub3 uninit\nsub2 uninit\nsub1 uninit\nsub0 uninit");
             });
 
             it("not valid subsystem", async () => {
@@ -253,19 +253,19 @@ describe("application", "Application", () => {
         describe("loadSubsystem", () => {
             it("should add, configure and initialize a new subsystem using an absolute path", async () => {
                 const result = await forkProcess(fixture("load_external_subsystem.js"), [
-                    fixture("subsystem", "hello.js")
+                    fixture("subsystems", "sub1.js")
                 ]);
                 assert.equal(result.stdout, [
                     "main",
-                    "hello configure",
-                    "hello init",
-                    "hello uninit"
+                    "sub1 configure",
+                    "sub1 init",
+                    "sub1 uninit"
                 ].join("\n"));
             });
 
             it("should add and initialize a new subsystem using a Subsystem instance", async () => {
                 const result = await forkProcess(fixture("load_local_subsystem.js"));
-                assert.equal(result.stdout, [
+                assert.strictEqual(result.stdout, [
                     "main",
                     "hello configure",
                     "hello init",
@@ -276,7 +276,7 @@ describe("application", "Application", () => {
             it("should not transpile by default", async () => {
                 const err = await assert.throws(async () => {
                     await forkProcess(fixture("load_external_subsystem.js"), [
-                        fixture("subsystem", "hello_need_transpile.js")
+                        fixture("subsystems", "sub3.js")
                     ]);
                 });
                 assert.match(err.stderr, /Unexpected token/);
@@ -284,61 +284,61 @@ describe("application", "Application", () => {
 
             it("should transpile if transpile = true", async () => {
                 const result = await forkProcess(fixture("load_external_subsystem.js"), [
-                    fixture("subsystem", "hello_need_transpile.js"),
+                    fixture("subsystems", "sub3.js"),
                     "--transpile"
                 ]);
                 assert.equal(result.stdout, [
                     "main",
-                    "hello configure",
-                    "hello init",
-                    "hello uninit"
+                    "sub3 configure",
+                    "sub3 init",
+                    "sub3 uninit"
                 ].join("\n"));
             });
 
             it("should set name to the subsystem class name by default", async () => {
                 const result = await forkProcess(fixture("load_external_subsystem.js"), [
-                    fixture("subsystem", "hello.js"),
+                    fixture("subsystems", "sub1.js"),
                     "--print-meta"
                 ]);
                 assert.equal(result.stdout, [
                     "main",
-                    "hello configure",
-                    "hello init",
-                    "name Hello",
+                    "sub1 configure",
+                    "sub1 init",
+                    "name Sub1",
                     "description ",
-                    "hello uninit"
+                    "sub1 uninit"
                 ].join("\n"));
             });
 
             it("should set a custom name if defined", async () => {
                 const result = await forkProcess(fixture("load_external_subsystem.js"), [
-                    fixture("subsystem", "hello.js"),
+                    fixture("subsystems", "sub1.js"),
                     "--name", "hellosubsystem",
                     "--print-meta"
                 ]);
                 assert.equal(result.stdout, [
                     "main",
-                    "hello configure",
-                    "hello init",
+                    "sub1 configure",
+                    "sub1 init",
                     "name hellosubsystem",
                     "description ",
-                    "hello uninit"
+                    "sub1 uninit"
                 ].join("\n"));
             });
 
             it("should set a custom description if defined", async () => {
                 const result = await forkProcess(fixture("load_external_subsystem.js"), [
-                    fixture("subsystem", "hello.js"),
+                    fixture("subsystems", "sub1.js"),
                     "--description", "Description",
                     "--print-meta"
                 ]);
                 assert.equal(result.stdout, [
                     "main",
-                    "hello configure",
-                    "hello init",
-                    "name Hello",
+                    "sub1 configure",
+                    "sub1 init",
+                    "name Sub1",
                     "description Description",
-                    "hello uninit"
+                    "sub1 uninit"
                 ].join("\n"));
             });
 

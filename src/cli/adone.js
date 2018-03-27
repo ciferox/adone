@@ -46,6 +46,9 @@ const baseSubsystem = (name) => std.path.join(__dirname, "..", "lib", "cli", "su
 })
 class AdoneCLI extends application.CliApplication {
     async configure() {
+        // Initialize realm
+        await adone.realm.getManager();
+
         !is.windows && this.exitOnSignal("SIGINT");
 
         this.config = await adone.cli.Configuration.load();

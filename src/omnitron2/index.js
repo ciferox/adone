@@ -34,7 +34,12 @@ const __ = lazify({
     DB: "./omnitron/db",
     Dispatcher: "./dispatcher",
     dispatcher: () => new __.Dispatcher(),
-    defaultAddress: () => ({
-        path: (is.windows ? `\\\\.\\pipe\\${adone.runtime.realm.identity.id}\\omnitron.sock` : adone.std.path.join(adone.runtime.realm.config.RUNTIME_PATH, "omnitron.sock"))
-    })
+    LOCAL_PEER_INFO: () => {
+        const peerInfo = adone.net.p2p.PeerInfo.create(adone.runtime.realm.identity);
+        peerInfo.multiaddrs.add(__.DEFAULT_ADDRESS);
+        return peerInfo;
+    },
+    DEFAULT_ADDRESS: () => is.windows
+        ? `//winpipe/\\\\.\\pipe\\${adone.runtime.realm.identity.id}\\omnitron.sock`
+        : `//unix${adone.std.path.join(adone.runtime.realm.config.RUNTIME_PATH, "omnitron.sock")}`
 }, adone.asNamespace(exports), require);

@@ -1,10 +1,18 @@
 const {
-    is
+    is,
+    std
 } = adone;
 
 const CONFIG_NAME = "omnitron.json";
 
 export default class OmnitronConfiguration extends adone.configuration.Generic {
+    /**
+     * Returns absolute path of configuration.
+     */
+    getPath() {
+        return std.path.join(this.getCwd(), CONFIG_NAME);
+    }
+
     load() {
         return super.load(CONFIG_NAME);
     }

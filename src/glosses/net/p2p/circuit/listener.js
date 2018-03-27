@@ -73,12 +73,16 @@ export default class Listener extends adone.event.Emitter {
      * NOTE: This method will grab the peers multiaddrs and expand them such that:
      *
      * a) If it's an existing /p2p-circuit address for a specific relay i.e.
-     *    `//ip4/0.0.0.0//tcp/0//p2p/QmRelay/p2p-circuit` this method will expand the
-     *    address to `//ip4/0.0.0.0//tcp/0//p2p/QmRelay//p2p-circuit//p2p/QmPeer` where
+     *    `/ip4/0.0.0.0/tcp/0/ipfs/QmRelay/p2p-circuit` this method will expand the
+     *    address to `/ip4/0.0.0.0/tcp/0/ipfs/QmRelay/p2p-circuit/ipfs/QmPeer` where
      *    `QmPeer` is this peers id
      * b) If it's not a /p2p-circuit address, it will encapsulate the address as a /p2p-circuit
-     *    addr such that dials a relay uses that address to connect this peer
+     *    addr, such when dialing over a relay with this address, it will create the circuit using
+     *    the encapsulated transport address. This is useful when for example, a peer should only
+     *    be dialed over TCP rather than any other transport
      *
+     * @param {Function} callback
+     * @return {void}
      */
     getAddrs() {
         let addrs = this.switch._peerInfo.multiaddrs.toArray();

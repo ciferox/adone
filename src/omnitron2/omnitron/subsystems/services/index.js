@@ -6,8 +6,6 @@ const {
     omnitron: { STATUS }
 } = adone;
 
-const SERVICES_PATH = adone.realm.config.omnitron.SERVICES_PATH;
-
 const api = adone.lazify({
     ServiceMaintainer: "./service_maintainer"
 }, exports, require);
@@ -31,15 +29,15 @@ export default class Services extends application.Subsystem {
     }
 
     async initialize() {
-    //     this.config = await this.root.db.getConfiguration();
-    //     this.options = Object.assign({
-    //         startTimeout: 10000,
-    //         stopTimeout: 10000
-    //     }, await this.config.get("service"));
+        this.config = await this.root.db.getConfiguration();
+        // this.options = Object.assign({
+        //     startTimeout: 10000,
+        //     stopTimeout: 10000
+        // }, await this.config.get("service"));
     
-    //     this.services = await this.parent.db.getMetaValuable("service");
+        // this.services = await this.root.db.getMetaValuable("service");
 
-    //     const VALID_STATUSES = [STATUS.DISABLED, STATUS.INACTIVE];
+        // const VALID_STATUSES = [STATUS.DISABLED, STATUS.INACTIVE];
 
     //     const serviceGroups = await this.enumerateByGroup();
     //     for (const [group, services] of Object.entries(serviceGroups)) {
@@ -82,8 +80,8 @@ export default class Services extends application.Subsystem {
 
         let existingNames;
 
-        if (await fs.exists(SERVICES_PATH)) {
-            existingNames = await fs.readdir(SERVICES_PATH);
+        if (await fs.exists(adone.realm.config.omnitron2.SERVICES_PATH)) {
+            existingNames = await fs.readdir(adone.realm.config.omnitron2.SERVICES_PATH);
         } else {
             existingNames = [];
         }

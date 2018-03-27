@@ -65,11 +65,18 @@ export class Multiaddr {
         const opts = {};
         const parsed = this.toString().split("//");
         let parts = parsed[1].split("/");
-        opts.family = parts[0] === "ip4" ? "ipv4" : "ipv6";
-        opts.host = parts[1];
-        parts = parsed[2].split("/");
-        opts.transport = parts[0];
-        opts.port = parts[1];
+        if (parts[0] === "unix") {
+            opts.path = `/${parts.slice(1).join("/")}`;
+        } else if (parts[0] === "winpipe") {
+            opts.path = parts[1];
+        } else {
+            opts.family = parts[0] === "ip4" ? "ipv4" : "ipv6";
+            opts.host = parts[1];
+            parts = parsed[2].split("/");
+            opts.transport = parts[0];
+            opts.port = parts[1];
+        }
+
         return opts;
     }
 
@@ -341,7 +348,7 @@ export class Multiaddr {
      */
     isThinWaistAddress(addr) {
         const protos = (addr || this).protos();
-        
+
         if (protos[0].code === 400 || protos[0].code === 401) {
             return true;
         }
@@ -355,7 +362,7 @@ export class Multiaddr {
         if (protos[1].code !== 6 && protos[1].code !== 7) {
             return false;
         }
-        
+
         return true;
     }
 

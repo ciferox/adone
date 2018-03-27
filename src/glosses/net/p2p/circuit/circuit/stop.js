@@ -1,10 +1,21 @@
 const series = require("async/series");
 
 const {
+    is,
+    crypto: { Identity },
     net: { p2p: { Connection, PeerInfo } }
 } = adone;
 
 const __ = adone.private(adone.net.p2p.circuit);
+
+
+const peerIdFromId = function (id) {
+    if (is.string(id)) {
+        return Identity.createFromB58String(id);
+    }
+
+    return Identity.createFromBytes(id);
+};
 
 export default class Stop extends adone.event.Emitter {
     constructor(sw) {
@@ -25,7 +36,7 @@ export default class Stop extends adone.event.Emitter {
                 return;
             }
 
-            const peerInfo = new PeerInfo(message.srcPeer.id);
+            const peerInfo = new PeerInfo(peerIdFromId(message.srcPeer.id));
             message.srcPeer.addrs.forEach((addr) => peerInfo.multiaddrs.add(addr));
             const newConn = new Connection(streamHandler.rest());
             newConn.setPeerInfo(peerInfo);

@@ -11,18 +11,28 @@ const CLOSE_TIMEOUT = 2000;
 
 const getMultiaddr = (socket) => {
     let ma;
+    adone.logTrace(socket.remoteFamily);
+    adone.logTrace(socket.remoteAddress);
+    adone.logTrace(socket.remotePort);
+    adone.logTrace(socket.remotePath);
+    adone.logTrace(adone.meta.inspect(socket, { all: true }));
 
-    if (socket.remoteFamily === "IPv6") {
-        const addr = new adone.net.ip.IP6(socket.remoteAddress);
-
-        if (addr.v4) {
-            const ip4 = addr.to4().correctForm();
-            ma = multi.address.create(`//ip4/${ip4}//tcp/${socket.remotePort}`);
-        } else {
-            ma = multi.address.create(`//ip6/${socket.remoteAddress}//tcp/${socket.remotePort}`);
-        }
+    if (is.undefined(socket.remoteFamily) && is.string(socket.server._pipeName)) {
+        const protoName = is.windows ? "winpipe" : "unix";
+        ma = multi.address.create(`//${protoName}${socket.server._pipeName}`);
     } else {
-        ma = multi.address.create(`//ip4/${socket.remoteAddress}//tcp/${socket.remotePort}`);
+        if (socket.remoteFamily === "IPv6") {
+            const addr = new adone.net.ip.IP6(socket.remoteAddress);
+
+            if (addr.v4) {
+                const ip4 = addr.to4().correctForm();
+                ma = multi.address.create(`//ip4/${ip4}//tcp/${socket.remotePort}`);
+            } else {
+                ma = multi.address.create(`//ip6/${socket.remoteAddress}//tcp/${socket.remotePort}`);
+            }
+        } else {
+            ma = multi.address.create(`//ip4/${socket.remoteAddress}//tcp/${socket.remotePort}`);
+        }
     }
 
     return ma;
@@ -83,12 +93,20 @@ export default class Listener extends adone.event.Emitter {
         }
 
         const lOpts = this.listeningAddr.toOptions();
+
         return new Promise((resolve, reject) => {
             this.on("error", reject);
-            this.server.listen(lOpts.port, lOpts.host, () => {
-                this.removeListener("error", reject);
-                resolve();
-            });
+            if (is.string(lOpts.path)) {
+                this.server.listen(lOpts.path, () => {
+                    this.removeListener("error", reject);
+                    resolve();
+                });
+            } else {
+                this.server.listen(lOpts.port, lOpts.host, () => {
+                    this.removeListener("error", reject);
+                    resolve();
+                });
+            }
         });
     }
 
