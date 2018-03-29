@@ -639,19 +639,19 @@ describe("core and all together", () => {
             await teardown(netCoreA, netCoreB);
         });
 
-        it("multiplex only", async () => {
+        it("mplex only", async () => {
             let netCoreA;
             let netCoreB;
 
             const setup = async () => {
                 netCoreA = createNetCore("//ip4/0.0.0.0//tcp/0", {
-                    muxer: ["multiplex"]
+                    muxer: ["mplex"]
                 });
                 netCoreA.handle("/echo/1.0.0", echo);
                 await netCoreA.start();
 
                 netCoreB = createNetCore("//ip4/0.0.0.0//tcp/0", {
-                    muxer: ["multiplex"]
+                    muxer: ["mplex"]
                 });
                 netCoreB.handle("/echo/1.0.0", echo);
                 await netCoreB.start();
@@ -662,7 +662,7 @@ describe("core and all together", () => {
             await teardown(netCoreA, netCoreB);
         });
 
-        it("spdy + multiplex", async function () {
+        it("spdy + mplex", async function () {
             this.timeout(5000);
 
             let netCoreA;
@@ -670,13 +670,13 @@ describe("core and all together", () => {
 
             const setup = async () => {
                 netCoreA = createNetCore("//ip4/0.0.0.0//tcp/0", {
-                    muxer: ["spdy", "multiplex"]
+                    muxer: ["spdy", "mplex"]
                 });
                 netCoreA.handle("/echo/1.0.0", echo);
                 await netCoreA.start();
 
                 netCoreB = createNetCore("//ip4/0.0.0.0//tcp/0", {
-                    muxer: ["spdy", "multiplex"]
+                    muxer: ["spdy", "mplex"]
                 });
                 netCoreB.handle("/echo/1.0.0", echo);
                 await netCoreB.start();
@@ -687,7 +687,7 @@ describe("core and all together", () => {
             await teardown(netCoreA, netCoreB);
         });
 
-        it("spdy + multiplex switched order", async function () {
+        it("spdy + mplex switched order", async function () {
             this.timeout(5000);
 
             let netCoreA;
@@ -695,13 +695,13 @@ describe("core and all together", () => {
 
             const setup = async () => {
                 netCoreA = createNetCore("//ip4/0.0.0.0//tcp/0", {
-                    muxer: ["spdy", "multiplex"]
+                    muxer: ["spdy", "mplex"]
                 });
                 netCoreA.handle("/echo/1.0.0", echo);
                 await netCoreA.start();
 
                 netCoreB = createNetCore("//ip4/0.0.0.0//tcp/0", {
-                    muxer: ["multiplex", "spdy"]
+                    muxer: ["mplex", "spdy"]
                 });
                 netCoreB.handle("/echo/1.0.0", echo);
                 await netCoreB.start();
@@ -726,7 +726,7 @@ describe("core and all together", () => {
                 await netCoreA.start();
 
                 netCoreB = createNetCore("//ip4/0.0.0.0//tcp/0", {
-                    muxer: ["multiplex"]
+                    muxer: ["mplex"]
                 });
                 netCoreB.handle("/echo/1.0.0", echo);
                 await netCoreB.start();

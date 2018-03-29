@@ -710,7 +710,11 @@ const create = function (rawConn, isListener) {
     });
     pump(stream, mpx, stream);
 
-    return new Muxer(rawConn, mpx);
+    const muxer = new Muxer(rawConn, mpx);
+    // Avoid uncaught errors cause by unstable connections
+    muxer.on("error", adone.noop);
+
+    return muxer;
 };
 
 export const dialer = (conn) => create(conn, false);

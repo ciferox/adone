@@ -79,7 +79,9 @@ export default class Netron extends adone.task.Manager {
             config.transport = "tcp";
         }
 
-        config.muxer = "spdy";
+        if (!config.muxer) {
+            config.muxer = "spdy";
+        }
 
         const peerInfo = PeerInfo.create(this.peer.info.id);
         if (is.string(config.addrs)) {
@@ -198,6 +200,15 @@ export default class Netron extends adone.task.Manager {
     async disconnectPeer(peerId) {
         const peer = this.getPeer(peerId);
         await peer.netCore.disconnect(peer.info);
+
+        const base58Str = peer.info.id.asBase58();
+        return new Promise((resolve) => {
+            this.on("peer:disconnect", (peerData) => {
+                if (base58Str === peerData.id) {
+                    resolve();
+                }
+            });
+        });
     }
 
     /**

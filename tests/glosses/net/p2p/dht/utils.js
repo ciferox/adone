@@ -1,7 +1,7 @@
 const {
     crypto: { Identity },
     multi,
-    net: { p2p: { CID, multiplex, dht, switch: { Switch }, PeerInfo, PeerBook, transport: { TCP } } },
+    net: { p2p: { CID, muxer: { mplex }, dht, switch: { Switch }, PeerInfo, PeerBook, transport: { TCP } } },
     std
 } = adone;
 const { KadDHT } = dht;
@@ -27,7 +27,7 @@ export const setupDHT = async () => {
 
     const sw = new Switch(p, new PeerBook());
     sw.tm.add("tcp", new TCP());
-    sw.connection.addStreamMuxer(multiplex);
+    sw.connection.addStreamMuxer(mplex);
     sw.connection.reuse();
 
     const dht = new KadDHT(sw);

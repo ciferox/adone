@@ -1,7 +1,7 @@
 const { makePeers } = require("./utils");
 
 const {
-    net: { p2p: { multiplex, dht, switch: { Switch }, PeerBook, Connection, transport: { TCP } } },
+    net: { p2p: { muxer: { mplex }, dht, switch: { Switch }, PeerBook, Connection, transport: { TCP } } },
     stream: { pull }
 } = adone;
 const { KadDHT } = dht;
@@ -16,7 +16,7 @@ describe("dht", "KadDHT", "Network", () => {
         peerInfos = makePeers(3);
         const sw = new Switch(peerInfos[0], new PeerBook());
         sw.tm.add("tcp", new TCP());
-        sw.connection.addStreamMuxer(multiplex);
+        sw.connection.addStreamMuxer(mplex);
         sw.connection.reuse();
         dht = new KadDHT(sw);
 

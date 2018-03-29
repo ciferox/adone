@@ -383,6 +383,20 @@ describe("Netron", () => {
             assert.false(remotePeerC.isConnected());
         });
 
+        it("disconnect() and completion of all internal stuff during peer disconnection", async () => {
+            await netronS.start();
+            const remotePeerS = await netronC.connect("default", peerS);
+            await adone.promise.delay(500);
+
+            const remotePeerC = netronS.getPeer(netronC.peer.info.id.asBase58());
+            assert.true(remotePeerS.isConnected());
+            assert.true(remotePeerC.isConnected());
+            const p = remotePeerS.disconnect();
+            assert.true(is.netron2Peer(netronC.getPeer(remotePeerS.info.id.asBase58())));
+            await p;
+            assert.throws(() => netronC.getPeer(remotePeerS.info.id.asBase58()));
+        });
+
         it("connect to already connected peer should return same instance of peer", async () => {
             await netronS.start("default");
             const remotePeer1 = await netronC.connect("default", peerS);

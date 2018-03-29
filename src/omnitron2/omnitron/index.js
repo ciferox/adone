@@ -22,11 +22,12 @@ const CORE_SUBSYSTEMS = [
 })
 export default class Omnitron extends application.Application {
     async configure() {
-        // Declare omnitron environment
-        adone.runtime.isOmnitron = true;
-
         // Initialize realm
         await adone.realm.getManager();
+
+        this.enableReport({
+            directory: adone.runtime.realm.config.omnitron.LOGS_PATH
+        });
 
         this.config = await adone.omnitron2.Configuration.load({
             cwd: adone.runtime.realm.config.CONFIGS_PATH
@@ -174,8 +175,8 @@ export default class Omnitron extends application.Application {
 
         if (realm) {
             result.realm = {
-                uid: (await adone.realm.getManager()).id,
-                name: adone.realm.config.realm
+                id: adone.runtime.realm.identity.id,
+                config: adone.util.omit(adone.runtime.realm.config, "identity")
             };
         }
 
@@ -184,7 +185,7 @@ export default class Omnitron extends application.Application {
         }
 
         if (netron) {
-            result.netron = adone.util.omit(adone.runtime.netron.options, (key, val) => is.function(val));
+            result.netron = adone.util.omit(adone.runtime.netron2.options, (key, val) => is.function(val));
         }
 
         return result;
@@ -413,5 +414,7 @@ if (require.main === module) {
         console.log(adone.terminal.chalk.red("Omnitron cannot be launched directly"));
         process.exit(application.EXIT_ERROR);
     }
+    // Declare omnitron environment
+    adone.runtime.isOmnitron = true;
     application.run(Omnitron);
 }

@@ -23,7 +23,11 @@ const create = function (rawConn, isServer) {
         isServer
     });
 
-    return new Muxer(rawConn, spdyMuxer);
+    const muxer = new Muxer(rawConn, spdyMuxer);
+    // Avoid uncaught errors cause by unstable connections
+    muxer.on("error", adone.noop);
+
+    return muxer;
 };
 
 exports = module.exports = create;

@@ -11,7 +11,7 @@ module.exports = class Muxer extends event.Emitter {
 
         this.spdy = spdy;
         this.conn = conn;
-        this.multicodec = adone.net.p2p.spdy.multicodec;
+        this.multicodec = adone.net.p2p.muxer.spdy.multicodec;
 
         spdy.start(3.1);
 

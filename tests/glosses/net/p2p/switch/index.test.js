@@ -2,7 +2,7 @@ import { createInfos, tryEcho } from "./utils";
 
 const {
     multi,
-    net: { p2p: { spdy, secio, multiplex, switch: { Switch }, PeerInfo, PeerBook, transport: { TCP, WS } } },
+    net: { p2p: { secio, muxer: { mplex, spdy }, switch: { Switch }, PeerInfo, PeerBook, transport: { TCP, WS } } },
     stream: { pull }
 } = adone;
 
@@ -277,7 +277,7 @@ describe("switch", () => {
 
     describe("stream multiplexing", () => {
         const muxers = [
-            multiplex,
+            mplex,
             spdy
         ];
 
@@ -323,9 +323,9 @@ describe("switch", () => {
                 });
 
                 it("switch.connection.addStreamMuxer()", () => {
-                    switchA.connection.addStreamMuxer(multiplex);
-                    switchB.connection.addStreamMuxer(multiplex);
-                    switchC.connection.addStreamMuxer(multiplex);
+                    switchA.connection.addStreamMuxer(mplex);
+                    switchB.connection.addStreamMuxer(mplex);
+                    switchC.connection.addStreamMuxer(mplex);
                 });
 
                 it("handle + connect on protocol", async (done) => {
@@ -692,9 +692,9 @@ describe("switch", () => {
             switchB.connection.crypto(secio.tag, secio.encrypt);
             switchC.connection.crypto(secio.tag, secio.encrypt);
 
-            switchA.connection.addStreamMuxer(multiplex);
-            switchB.connection.addStreamMuxer(multiplex);
-            switchC.connection.addStreamMuxer(multiplex);
+            switchA.connection.addStreamMuxer(mplex);
+            switchB.connection.addStreamMuxer(mplex);
+            switchC.connection.addStreamMuxer(mplex);
 
             await Promise.all([
                 switchA.tm.listen("tcp", {}, null),

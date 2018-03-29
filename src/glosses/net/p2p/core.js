@@ -15,14 +15,14 @@ const NOT_STARTED_ERROR_MESSAGE = "The netcore is not started yet";
 
 const getMuxers = (muxers) => {
     if (!muxers) {
-        return [adone.net.p2p.multiplex, adone.net.p2p.spdy];
+        return [adone.net.p2p.muxer.mplex, adone.net.p2p.muxer.spdy];
     }
 
     return util.arrify(muxers).map((muxer) => {
         if (is.string(muxer)) {
             switch (muxer.trim().toLowerCase()) {
-                case "spdy": return adone.net.p2p.spdy;
-                case "multiplex": return adone.net.p2p.multiplex;
+                case "spdy": return adone.net.p2p.muxer.spdy;
+                case "mplex": return adone.net.p2p.muxer.mplex;
                 default:
                     throw new Error(`${muxer} muxer not available`);
             }

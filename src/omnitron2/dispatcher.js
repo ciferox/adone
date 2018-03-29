@@ -6,9 +6,7 @@ const {
     fs,
     error,
     std,
-    multi,
-    omnitron2,
-    runtime
+    omnitron2
 } = adone;
 
 export default class Dispatcher extends Subsystem {
@@ -41,7 +39,7 @@ export default class Dispatcher extends Subsystem {
             await this.db.close();
         }
 
-        return this.disconnect();
+        return this.disconnectPeer();
     }
 
 
@@ -63,7 +61,7 @@ export default class Dispatcher extends Subsystem {
     // }
 
     isConnected() {
-        return is.netronPeer(this.peer);
+        return is.netron2Peer(this.peer);
     }
 
     // async connect(gate = null) {
@@ -100,10 +98,9 @@ export default class Dispatcher extends Subsystem {
         return status;
     }
 
-    async disconnect() {
+    async disconnectPeer() {
         if (!is.null(this.peer)) {
-            await runtime.netron.disconnect();
-            await runtime.netron.unbind();
+            await this.peer.disconnect();
             this.peer = null;
         }
     }
@@ -119,12 +116,13 @@ export default class Dispatcher extends Subsystem {
                         forceStart: false
                     });
                 }
+
                 const result = await this.getInfo({
                     process: true
                 });
 
                 if (shouldDisconnect) {
-                    await this.disconnect();
+                    await this.disconnectPeer();
                 }
 
                 return result.process.id;
@@ -174,11 +172,11 @@ export default class Dispatcher extends Subsystem {
                             if (!(await adone.system.process.exists(pid))) {
                                 return;
                             }
-                            elapsed += 100;
+                            elapsed += 50;
                             if (elapsed >= 3000) {
                                 throw new error.Timeout("Process is still alive");
                             }
-                            await adone.promise.delay(100); // eslint-disable-line
+                            await adone.promise.delay(50); // eslint-disable-line
                         }
                     };
                     const pid = parseInt(std.fs.readFileSync(adone.runtime.realm.config.omnitron.PIDFILE_PATH).toString());
@@ -236,8 +234,10 @@ export default class Dispatcher extends Subsystem {
 
     async isOmnitronActive() {
         try {
-            const peer = await this.netron.connect("default", omnitron2.LOCAL_PEER_INFO);
-            await this.netron.disconnectPeer(peer);
+            if (!this.isConnected()) {
+                const peer = await this.netron.connect("default", omnitron2.LOCAL_PEER_INFO);
+                await this.netron.disconnectPeer(peer);
+            }
             return true;
         } catch (err) {
             if (err instanceof adone.error.Connect) {
@@ -251,8 +251,8 @@ export default class Dispatcher extends Subsystem {
         return !is.null(this.peer) && is.null(await this.peer.ping());
     }
 
-    getInterface(name) {
-        return this.peer.getInterfaceByName(name);
+    queryInterface(name) {
+        return this.peer.queryInterface(name);
     }
 
     async registerService(serviceName) {
@@ -265,7 +265,7 @@ export default class Dispatcher extends Subsystem {
             await this.connectLocal({
                 forceStart: false
             });
-            await this.getInterface("omnitron").registerService(serviceName);
+            await this.queryInterface("omnitron").registerService(serviceName);
         }
     }
 
@@ -279,7 +279,7 @@ export default class Dispatcher extends Subsystem {
             await this.connectLocal({
                 firceStart: false
             });
-            await this.getInterface("omnitron").unregisterService(serviceName);
+            await this.queryInterface("omnitron").unregisterService(serviceName);
         }
     }
 
@@ -291,7 +291,7 @@ export default class Dispatcher extends Subsystem {
             await this.connectLocal({
                 forceStart: false
             });
-            config = await this.getInterface("omnitron").getConfiguration();
+            config = await this.queryInterface("omnitron").getConfiguration();
         } else {
             this.db = await adone.omnitron2.DB.open();
             config = await this.db.getConfiguration();
@@ -300,102 +300,102 @@ export default class Dispatcher extends Subsystem {
     }
 
     kill() {
-        return this.getInterface("omnitron").kill();
+        return this.queryInterface("omnitron").kill();
     }
 
-    getInfo(options) {
-        return this.getInterface("omnitron").getInfo(options);
+    async getInfo(options) {
+        return this.queryInterface("omnitron").getInfo(options);
     }
 
     setEnvs(envs) {
-        return this.getInterface("omnitron").setEnvs(envs);
+        return this.queryInterface("omnitron").setEnvs(envs);
     }
 
     updateEnvs(envs) {
-        return this.getInterface("omnitron").updateEnvs(envs);
+        return this.queryInterface("omnitron").updateEnvs(envs);
     }
 
     startService(serviceName) {
-        return this.getInterface("omnitron").startService(serviceName);
+        return this.queryInterface("omnitron").startService(serviceName);
     }
 
     stopService(serviceName) {
-        return this.getInterface("omnitron").stopService(serviceName);
+        return this.queryInterface("omnitron").stopService(serviceName);
     }
 
     configureService(serviceName, options) {
-        return this.getInterface("omnitron").configureService(serviceName, options);
+        return this.queryInterface("omnitron").configureService(serviceName, options);
     }
 
     restart(serviceName = "") {
-        return (serviceName === "") ? this.restartOmnitron() : this.getInterface("omnitron").restart(serviceName);
+        return (serviceName === "") ? this.restartOmnitron() : this.queryInterface("omnitron").restart(serviceName);
     }
 
     status(serviceName) {
-        return this.getInterface("omnitron").status(serviceName);
+        return this.queryInterface("omnitron").status(serviceName);
     }
 
     enableService(serviceName, options) {
-        return this.getInterface("omnitron").enableService(serviceName, options);
+        return this.queryInterface("omnitron").enableService(serviceName, options);
     }
 
     disableService(serviceName, options) {
-        return this.getInterface("omnitron").disableService(serviceName, options);
+        return this.queryInterface("omnitron").disableService(serviceName, options);
     }
 
     enumerate(filter) {
-        return this.getInterface("omnitron").enumerate(filter);
+        return this.queryInterface("omnitron").enumerate(filter);
     }
 
     getPeers() {
-        return this.getInterface("omnitron").getPeers();
+        return this.queryInterface("omnitron").getPeers();
     }
 
     getContexts() {
-        return this.getInterface("omnitron").getContexts();
+        return this.queryInterface("omnitron").getContexts();
     }
 
     getReport() {
-        return this.getInterface("omnitron").getReport();
+        return this.queryInterface("omnitron").getReport();
     }
 
     getSubsystems() {
-        return this.getInterface("omnitron").getSubsystems();
+        return this.queryInterface("omnitron").getSubsystems();
     }
 
     loadSubsystem(subsystem, options) {
-        return this.getInterface("omnitron").loadSubsystem(subsystem, options);
+        return this.queryInterface("omnitron").loadSubsystem(subsystem, options);
     }
 
     unloadSubsystem(name) {
-        return this.getInterface("omnitron").unloadSubsystem(name);
+        return this.queryInterface("omnitron").unloadSubsystem(name);
     }
 
     gc() {
-        return this.getInterface("omnitron").gc();
+        return this.queryInterface("omnitron").gc();
     }
 
     addGate(gate) {
-        return this.getInterface("omnitron").addGate(gate);
+        return this.queryInterface("omnitron").addGate(gate);
     }
 
     deleteGate(name) {
-        return this.getInterface("omnitron").deleteGate(name);
+        return this.queryInterface("omnitron").deleteGate(name);
     }
 
     getGates(options) {
-        return this.getInterface("omnitron").getGates(options);
+        return this.queryInterface("omnitron").getGates(options);
     }
 
     upGate(name) {
-        return this.getInterface("omnitron").upGate(name);
+        return this.queryInterface("omnitron").upGate(name);
     }
 
     downGate(name) {
-        return this.getInterface("omnitron").downGate(name);
+        return this.queryInterface("omnitron").downGate(name);
     }
 
     configureGate(name, options) {
-        return this.getInterface("omnitron").configureGate(name, options);
+        return this.queryInterface("omnitron").configureGate(name, options);
     }
 }

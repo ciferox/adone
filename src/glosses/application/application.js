@@ -89,7 +89,7 @@ export default class Application extends application.Subsystem {
     }
 
     enableReport({
-        events = process.env.ADONE_REPORT_EVENTS || "error+fatalerror+signal+apicall",
+        events = process.env.ADONE_REPORT_EVENTS || "exception+fatalerror+signal+apicall",
         signal = process.env.ADONE_REPORT_SIGNAL,
         filename = process.env.ADONE_REPORT_FILENAME,
         directory = process.env.ADONE_REPORT_DIRECTORY

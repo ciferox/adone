@@ -29,8 +29,8 @@ class CliKit extends application.Subsystem {
     }
 
     async connect() {
-        if (!adone.omnitron.dispatcher.isConnected()) {
-            await adone.omnitron.dispatcher.connectLocal({
+        if (!adone.omnitron2.dispatcher.isConnected()) {
+            await adone.omnitron2.dispatcher.connectLocal({
                 forceStart: false
             });
 
@@ -38,7 +38,7 @@ class CliKit extends application.Subsystem {
             this.addSubsystem({
                 name: "dispatcher",
                 bind: true,
-                subsystem: adone.omnitron.dispatcher
+                subsystem: adone.omnitron2.dispatcher
             });
             await this.configureSubsystem("dispatcher");
             await this.initializeSubsystem("dispatcher");

@@ -8,7 +8,7 @@ import { makePeers, setupDHT, makeValues, teardown } from "./utils";
 
 const {
     math: { random },
-    net: { p2p: { multiplex, dht, switch: { Switch }, PeerBook, record: { Record }, transport: { TCP } } },
+    net: { p2p: { muxer: { mplex }, dht, switch: { Switch }, PeerBook, record: { Record }, transport: { TCP } } },
     lodash: _
 } = adone;
 const { KadDHT } = dht;
@@ -117,7 +117,7 @@ describe("dht", "KadDHT", () => {
     it("create", () => {
         const sw = new Switch(peerInfos[0], new PeerBook());
         sw.tm.add("tcp", new TCP());
-        sw.connection.addStreamMuxer(multiplex);
+        sw.connection.addStreamMuxer(mplex);
         sw.connection.reuse();
         const dht = new KadDHT(sw, { kBucketSize: 5 });
 
@@ -365,7 +365,7 @@ describe("dht", "KadDHT", () => {
     it("_nearestPeersToQuery", () => {
         const sw = new Switch(peerInfos[0], new PeerBook());
         sw.tm.add("tcp", new TCP());
-        sw.connection.addStreamMuxer(multiplex);
+        sw.connection.addStreamMuxer(mplex);
         sw.connection.reuse();
         const dht = new KadDHT(sw);
 
@@ -378,7 +378,7 @@ describe("dht", "KadDHT", () => {
     it("_betterPeersToQuery", () => {
         const sw = new Switch(peerInfos[0], new PeerBook());
         sw.tm.add("tcp", new TCP());
-        sw.connection.addStreamMuxer(multiplex);
+        sw.connection.addStreamMuxer(mplex);
         sw.connection.reuse();
         const dht = new KadDHT(sw);
 
@@ -396,7 +396,7 @@ describe("dht", "KadDHT", () => {
         it("invalid record (missing public key)", () => {
             const sw = new Switch(peerInfos[0], new PeerBook());
             sw.tm.add("tcp", new TCP());
-            sw.connection.addStreamMuxer(multiplex);
+            sw.connection.addStreamMuxer(mplex);
             sw.connection.reuse();
             const dht = new KadDHT(sw);
 
@@ -416,7 +416,7 @@ describe("dht", "KadDHT", () => {
         it("valid record - signed", () => {
             const sw = new Switch(peerInfos[0], new PeerBook());
             sw.tm.add("tcp", new TCP());
-            sw.connection.addStreamMuxer(multiplex);
+            sw.connection.addStreamMuxer(mplex);
             sw.connection.reuse();
             const dht = new KadDHT(sw);
 
@@ -435,7 +435,7 @@ describe("dht", "KadDHT", () => {
         it("valid record - not signed", () => {
             const sw = new Switch(peerInfos[0], new PeerBook());
             sw.tm.add("tcp", new TCP());
-            sw.connection.addStreamMuxer(multiplex);
+            sw.connection.addStreamMuxer(mplex);
             sw.connection.reuse();
             const dht = new KadDHT(sw);
 

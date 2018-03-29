@@ -28,15 +28,15 @@ describe("Stream Priority tree", () => {
         assert.deepEqual([1, 2, 3, 4, 5].map((id) => {
             return tree.get(id).getPriorityRange();
         }), [
-                // First level
-                { from: 0.0, to: 0.25 },
-                { from: 0.5, to: 1.0 },
-                { from: 0.25, to: 0.5 },
+            // First level
+            { from: 0.0, to: 0.25 },
+            { from: 0.5, to: 1.0 },
+            { from: 0.25, to: 0.5 },
 
-                // Second level
-                { from: 0, to: 0.125 },
-                { from: 0.125, to: 0.25 }
-            ]);
+            // Second level
+            { from: 0, to: 0.125 },
+            { from: 0.125, to: 0.25 }
+        ]);
     });
 
     it("should create default node on error", () => {

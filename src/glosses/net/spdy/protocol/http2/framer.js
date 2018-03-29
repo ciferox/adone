@@ -257,8 +257,8 @@ export default class Framer extends base.Framer {
                     return;
                 }
 
-                buf.writeUInt32BE((priority.exclusive ? 0x80000000 : 0) |
-                    priority.parent);
+                buf.writeUInt32BE(((priority.exclusive ? 0x80000000 : 0) |
+                    priority.parent) >>> 0);
                 buf.writeUInt8((priority.weight | 0) - 1);
             }, callback);
         });

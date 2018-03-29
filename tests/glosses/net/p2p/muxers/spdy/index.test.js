@@ -2,7 +2,7 @@ const parallel = require("run-parallel");
 
 const {
     multi,
-    net: { p2p: { spdy, Connection, transport: { TCP, WS } } },
+    net: { p2p: { muxer: { spdy }, Connection, transport: { TCP, WS } } },
     stream: { pull },
     std: { fs, path }
 } = adone;

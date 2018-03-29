@@ -277,7 +277,11 @@ export default class RemotePeer extends AbstractPeer {
             return;
         }
 
-        this._writer = pull.pushable();
+        this._writer = pull.pushable((err) => {
+            if (err) {
+                adone.logError(err);
+            }
+        });
 
         // receive data from remote netron
         const permBuffer = new adone.collection.ByteArray(0);
@@ -319,7 +323,9 @@ export default class RemotePeer extends AbstractPeer {
             this._writer,
             conn,
             pull.drain(handler, (err) => {
-                // adone.logWarn(err);
+                if (err) {
+                    adone.logError(err);
+                }
             })
         );
     }

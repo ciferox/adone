@@ -11,11 +11,6 @@ const CLOSE_TIMEOUT = 2000;
 
 const getMultiaddr = (socket) => {
     let ma;
-    adone.logTrace(socket.remoteFamily);
-    adone.logTrace(socket.remoteAddress);
-    adone.logTrace(socket.remotePort);
-    adone.logTrace(socket.remotePath);
-    adone.logTrace(adone.meta.inspect(socket, { all: true }));
 
     if (is.undefined(socket.remoteFamily) && is.string(socket.server._pipeName)) {
         const protoName = is.windows ? "winpipe" : "unix";
@@ -96,16 +91,16 @@ export default class Listener extends adone.event.Emitter {
 
         return new Promise((resolve, reject) => {
             this.on("error", reject);
+
+            const done = () => {
+                this.removeListener("error", reject);
+                resolve();
+            };
+
             if (is.string(lOpts.path)) {
-                this.server.listen(lOpts.path, () => {
-                    this.removeListener("error", reject);
-                    resolve();
-                });
+                this.server.listen(lOpts.path, done);
             } else {
-                this.server.listen(lOpts.port, lOpts.host, () => {
-                    this.removeListener("error", reject);
-                    resolve();
-                });
+                this.server.listen(lOpts.port, lOpts.host, done);
             }
         });
     }

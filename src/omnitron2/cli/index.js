@@ -87,7 +87,6 @@ export default class Omnitron extends Subsystem {
             }
             return 0;
         } catch (err) {
-            adone.logError(err);
             kit.updateProgress({
                 message: err.message,
                 result: false

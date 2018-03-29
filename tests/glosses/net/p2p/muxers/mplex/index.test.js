@@ -1,9 +1,9 @@
 const {
-    net: { p2p: { multiplex } },
+    net: { p2p: { muxer: { mplex } } },
     stream: { pull }
 } = adone;
 
-describe("muxer", "multiplex", () => {
+describe("muxer", "mplex", () => {
     let listenerSocket;
     let dialerSocket;
 
@@ -17,16 +17,16 @@ describe("muxer", "multiplex", () => {
     });
 
     it("attach to a duplex stream, as listener", () => {
-        listener = multiplex.listener(listenerSocket);
+        listener = mplex.listener(listenerSocket);
         assert.exists(listener);
     });
 
     it("attach to a duplex stream, as dialer", () => {
-        dialer = multiplex.dialer(dialerSocket);
+        dialer = mplex.dialer(dialerSocket);
         assert.exists(dialer);
     });
 
-    it("open a multiplex stream from client", (done) => {
+    it("open a mplex stream from client", (done) => {
         listener.once("stream", (conn) => {
             pull(conn, conn);
         });
@@ -44,7 +44,7 @@ describe("muxer", "multiplex", () => {
         );
     });
 
-    it("open a multiplex stream from listener", (done) => {
+    it("open a mplex stream from listener", (done) => {
         dialer.once("stream", (conn) => {
             pull(conn, conn);
         });

@@ -1,13 +1,13 @@
 import testInterface from "../interface";
 
 const {
-    net: { p2p: { multiplex } }
+    net: { p2p: { muxer: { mplex } } }
 } = adone;
 
-describe("muxer", "multiplex", "compliance", () => {
+describe("muxer", "mplex", "compliance", () => {
     testInterface({
         setup() {
-            return multiplex;
+            return mplex;
         },
         teardown() {
         }
