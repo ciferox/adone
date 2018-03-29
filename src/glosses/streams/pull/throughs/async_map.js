@@ -16,9 +16,13 @@ export default function asyncMap(map) {
             if (abort) {
                 aborted = abort;
                 if (!busy) {
-                    read(abort, cb);
+                    read(abort, (err) => {
+                        //incase the source has already ended normally,
+                        //we should pass our own error.
+                        cb(abort);
+                    });
                 } else {
-                    read(abort, () => {
+                    read(abort, (err) => {
                         //if we are still busy, wait for the mapper to complete.
                         if (busy) {
                             abortCb = cb;

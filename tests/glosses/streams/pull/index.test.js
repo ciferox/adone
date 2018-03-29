@@ -227,8 +227,7 @@ describe("stream", "pull", () => {
 
             read(null, (end) => {
                 if (!end) {
-                    throw new Error("expected read to end")
-                    ;
+                    throw new Error("expected read to end");
                 }
                 assert.ok(end, "read's callback");
             });
@@ -264,8 +263,7 @@ describe("stream", "pull", () => {
 
             read(null, (end) => {
                 if (!end) {
-                    throw new Error("expected read to end")
-                    ;
+                    throw new Error("expected read to end");
                 }
                 assert.ok(end, "read's callback");
             });
@@ -291,6 +289,31 @@ describe("stream", "pull", () => {
                 }),
                 pull.collect((err) => {
                     assert.equal(err, ERR, "collect gets error");
+                })
+            );
+        });
+
+        it("async map should pass it's own error", (done) => {
+            let i = 0;
+            const error = new Error("error on last call");
+
+            pull(
+                (end, cb) => {
+                    end ? cb(true) : cb(null, i + 1);
+                },
+                pull.asyncMap((data, cb) => {
+                    setTimeout(() => {
+                        if (++i < 5) {
+                            cb(null, data);
+                        } else {
+                            cb(error);
+                        }
+                    }, 100);
+                }),
+                pull.collect((err, five) => {
+                    assert.equal(err, error, "should return err");
+                    assert.deepEqual(five, [1, 2, 3, 4], "should skip failed item");
+                    done();
                 })
             );
         });
@@ -954,6 +977,33 @@ describe("stream", "pull", () => {
                     });
                 });
             });
+        });
+
+        it("take should throw error on last read", (done) => {
+            let i = 0;
+            const error = new Error("error on last call");
+
+            pull(
+                pull.values([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]),
+                pull.take((n) => {
+                    return n < 5;
+                }, { last: true }),
+                // pull.take(5),
+                pull.asyncMap((data, cb) => {
+                    setTimeout(() => {
+                        if (++i < 5) {
+                            cb(null, data);
+                        } else {
+                            cb(error);
+                        }
+                    }, 100);
+                }),
+                pull.collect((err, five) => {
+                    assert.equal(err, error, "should return err");
+                    assert.deepEqual(five, [1, 2, 3, 4], "should skip failed item");
+                    done();
+                })
+            );
         });
     });
 

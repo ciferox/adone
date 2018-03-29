@@ -18,18 +18,18 @@ const readMessage = (reader, size, cb) => {
     });
 };
 
-const readFixedMessage = (reader, byteLength, maxLength, cb) => {
+const readFixedMessage = (reader, maxLength, cb) => {
     if (is.function(maxLength)) {
         cb = maxLength;
         maxLength = MAX_LENGTH;
     }
 
-    reader.read(byteLength, (err, bytes) => {
+    reader.read(4, (err, bytes) => {
         if (err) {
             return cb(err);
         }
 
-        const msgSize = bytes.readInt32BE(0);
+        const msgSize = bytes.readInt32BE(0); // reads exactly 4 bytes
         if (msgSize > maxLength) {
             return cb(`size longer than max permitted length of ${maxLength}!`);
         }
@@ -85,13 +85,13 @@ const decodeFromReader = (reader, opts, cb) => {
         opts = {};
     }
 
-    opts = Object.assign({
+    opts = {
         fixed: false,
-        bytes: 4
-    }, opts || {});
+        ...opts
+    };
 
     if (opts.fixed) {
-        readFixedMessage(reader, opts.bytes, opts.maxLength, cb);
+        readFixedMessage(reader, opts.maxLength, cb);
     } else {
         readVarintMessage(reader, opts.maxLength, cb);
     }

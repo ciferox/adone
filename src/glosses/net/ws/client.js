@@ -2,7 +2,7 @@ const {
     is,
     event,
     net: { ws: { constants, extension, Receiver, Sender, PerMessageDeflate } },
-    std: { crypto, http, https, url }
+    std: { crypto, http, https, url, net, tls }
 } = adone;
 
 /**
@@ -297,13 +297,13 @@ const socketOnEnd = function () {
 };
 
 /**
- * The listener of the `Receiver` `'close'` event.
+ * The listener of the `Receiver` `'conclude'` event.
  *
  * @param {Number} code The status code
  * @param {String} reason The reason for closing
  * @private
  */
-const receiverOnClose = function (code, reason) {
+const receiverOnConclude = function (code, reason) {
     const websocket = this[kWebSocket];
 
     websocket._socket.removeListener("data", socketOnData);
@@ -375,58 +375,57 @@ const socketOnError = function () {
 };
 
 /**
+ * Create a `net.Socket` and initiate a connection.
+ *
+ * @param {Object} options Connection options
+ * @return {net.Socket} The newly created socket used to start the connection
+ * @private
+ */
+const netConnect = function (options) {
+    options.path = options.socketPath || options._socketPath || undefined;
+    return net.connect(options);
+};
+
+/**
+ * Create a `tls.TLSSocket` and initiate a connection.
+ *
+ * @param {Object} options Connection options
+ * @return {tls.TLSSocket} The newly created socket used to start the connection
+ * @private
+ */
+const tlsConnect = function (options) {
+    options.path = options.socketPath || options._socketPath || undefined;
+    return tls.connect(options);
+};
+
+/**
  * Initialize a WebSocket client.
  *
- * @param {String} address The URL to which to connect
- * @param {String[]} protocols The list of subprotocols
+ * @param {(String|url.Url|url.URL)} address The URL to which to connect
+ * @param {String} protocols The subprotocols
  * @param {Object} options Connection options
- * @param {String} options.protocol Value of the `Sec-WebSocket-Protocol` header
  * @param {(Boolean|Object)} options.perMessageDeflate Enable/disable permessage-deflate
  * @param {Number} options.handshakeTimeout Timeout in milliseconds for the handshake request
- * @param {String} options.localAddress Local interface to bind for network connections
  * @param {Number} options.protocolVersion Value of the `Sec-WebSocket-Version` header
- * @param {Object} options.headers An object containing request headers
  * @param {String} options.origin Value of the `Origin` or `Sec-WebSocket-Origin` header
- * @param {http.Agent} options.agent Use the specified Agent
- * @param {String} options.host Value of the `Host` header
- * @param {Number} options.family IP address family to use during hostname lookup (4 or 6).
- * @param {Function} options.checkServerIdentity A function to validate the server hostname
- * @param {Boolean} options.rejectUnauthorized Verify or not the server certificate
- * @param {String} options.passphrase The passphrase for the private key or pfx
- * @param {String} options.ciphers The ciphers to use or exclude
- * @param {String} options.ecdhCurve The curves for ECDH key agreement to use or exclude
- * @param {(String|String[]|Buffer|Buffer[])} options.cert The certificate key
- * @param {(String|String[]|Buffer|Buffer[])} options.key The private key
- * @param {(String|Buffer)} options.pfx The private key, certificate, and CA certs
- * @param {(String|String[]|Buffer|Buffer[])} options.ca Trusted certificates
  * @private
  */
 const initAsClient = function (address, protocols, options) {
-    options = Object.assign({
+    options = {
         protocolVersion: protocolVersions[1],
-        protocol: protocols.join(","),
         perMessageDeflate: true,
-        handshakeTimeout: null,
-        localAddress: null,
-        headers: null,
-        family: null,
-        origin: null,
-        agent: null,
-        host: null,
-
-        //
-        // SSL options.
-        //
-        checkServerIdentity: null,
-        rejectUnauthorized: null,
-        passphrase: null,
-        ciphers: null,
-        ecdhCurve: null,
-        cert: null,
-        key: null,
-        pfx: null,
-        ca: null
-    }, options);
+        ...options,
+        createConnection: undefined,
+        socketPath: undefined,
+        hostname: undefined,
+        protocol: undefined,
+        timeout: undefined,
+        method: undefined,
+        auth: undefined,
+        host: undefined,
+        path: undefined,
+        port: undefined
+    };
 
     if (protocolVersions.indexOf(options.protocolVersion) === -1) {
         throw new RangeError(
@@ -436,138 +435,85 @@ const initAsClient = function (address, protocols, options) {
     }
 
     this._isServer = false;
-    this.url = address;
 
-    const serverUrl = url.parse(address);
-    const isUnixSocket = serverUrl.protocol === "ws+unix:";
+    let parsedUrl;
 
-    if (!serverUrl.host && (!isUnixSocket || !serverUrl.path)) {
-        throw new Error(`Invalid URL: ${address}`);
+    if (typeof address === "object" && !is.undefined(address.href)) {
+        parsedUrl = address;
+        this.url = address.href;
+    } else {
+        parsedUrl = url.parse(address);
+        this.url = address;
     }
 
-    const isSecure = serverUrl.protocol === "wss:" || serverUrl.protocol === "https:";
+    const isUnixSocket = parsedUrl.protocol === "ws+unix:";
+
+    if (!parsedUrl.host && (!isUnixSocket || !parsedUrl.pathname)) {
+        throw new Error(`Invalid URL: ${this.url}`);
+    }
+
+    const isSecure = parsedUrl.protocol === "wss:" || parsedUrl.protocol === "https:";
     const key = crypto.randomBytes(16).toString("base64");
     const httpObj = isSecure ? https : http;
+    const path = parsedUrl.search
+        ? `${parsedUrl.pathname || "/"}${parsedUrl.search}`
+        : parsedUrl.pathname || "/";
     let perMessageDeflate;
 
-    const requestOptions = {
-        port: serverUrl.port || (isSecure ? 443 : 80),
-        host: serverUrl.hostname,
-        path: "/",
-        headers: {
-            "Sec-WebSocket-Version": options.protocolVersion,
-            "Sec-WebSocket-Key": key,
-            Connection: "Upgrade",
-            Upgrade: "websocket"
-        }
+    options.createConnection = isSecure ? tlsConnect : netConnect;
+    options.port = parsedUrl.port || (isSecure ? 443 : 80);
+    options.host = parsedUrl.hostname;
+    options.headers = {
+        "Sec-WebSocket-Version": options.protocolVersion,
+        "Sec-WebSocket-Key": key,
+        Connection: "Upgrade",
+        Upgrade: "websocket",
+        ...options.headers
     };
+    options.path = path;
 
-    if (options.headers) {
-        Object.assign(requestOptions.headers, options.headers);
-    }
     if (options.perMessageDeflate) {
         perMessageDeflate = new PerMessageDeflate(
             options.perMessageDeflate !== true ? options.perMessageDeflate : {},
             false
         );
-        requestOptions.headers["Sec-WebSocket-Extensions"] = extension.format({
+        options.headers["Sec-WebSocket-Extensions"] = extension.format({
             [PerMessageDeflate.extensionName]: perMessageDeflate.offer()
         });
     }
-    if (options.protocol) {
-        requestOptions.headers["Sec-WebSocket-Protocol"] = options.protocol;
+    if (protocols) {
+        options.headers["Sec-WebSocket-Protocol"] = protocols;
     }
     if (options.origin) {
         if (options.protocolVersion < 13) {
-            requestOptions.headers["Sec-WebSocket-Origin"] = options.origin;
+            options.headers["Sec-WebSocket-Origin"] = options.origin;
         } else {
-            requestOptions.headers.Origin = options.origin;
+            options.headers.Origin = options.origin;
         }
     }
-    if (options.host) {
-        requestOptions.headers.Host = options.host;
-    }
-    if (serverUrl.auth) {
-        requestOptions.auth = serverUrl.auth;
-    }
-
-    if (options.localAddress) {
-        requestOptions.localAddress = options.localAddress;
-    }
-    if (options.family) {
-        requestOptions.family = options.family;
+    if (parsedUrl.auth) {
+        options.auth = parsedUrl.auth;
+    } else if (parsedUrl.username || parsedUrl.password) {
+        options.auth = `${parsedUrl.username}:${parsedUrl.password}`;
     }
 
     if (isUnixSocket) {
-        const parts = serverUrl.path.split(":");
-
-        requestOptions.socketPath = parts[0];
-        requestOptions.path = parts[1];
-    } else if (serverUrl.path) {
-        //
-        // Make sure that path starts with `/`.
-        //
-        if (serverUrl.path.charAt(0) !== "/") {
-            requestOptions.path = `/${serverUrl.path}`;
+        const parts = path.split(":");
+        if (is.nil(options.agent) && process.versions.modules < 57) {
+            //
+            // Setting `socketPath` in conjunction with `createConnection` without an
+            // agent throws an error on Node.js < 8. Work around the issue by using a
+            // different property.
+            //
+            options._socketPath = parts[0];
         } else {
-            requestOptions.path = serverUrl.path;
+            options.socketPath = parts[0];
         }
+
+        options.path = parts[1];
     }
 
-    let agent = options.agent;
-
-    //
-    // A custom agent is required for these options.
-    //
-    if (
-        !is.nil(options.rejectUnauthorized) ||
-        options.checkServerIdentity ||
-        options.passphrase ||
-        options.ciphers ||
-        options.ecdhCurve ||
-        options.cert ||
-        options.key ||
-        options.pfx ||
-        options.ca
-    ) {
-        if (options.passphrase) {
-            requestOptions.passphrase = options.passphrase;
-        }
-        if (options.ciphers) {
-            requestOptions.ciphers = options.ciphers;
-        }
-        if (options.ecdhCurve) {
-            requestOptions.ecdhCurve = options.ecdhCurve;
-        }
-        if (options.cert) {
-            requestOptions.cert = options.cert;
-        }
-        if (options.key) {
-            requestOptions.key = options.key;
-        }
-        if (options.pfx) {
-            requestOptions.pfx = options.pfx;
-        }
-        if (options.ca) {
-            requestOptions.ca = options.ca;
-        }
-        if (options.checkServerIdentity) {
-            requestOptions.checkServerIdentity = options.checkServerIdentity;
-        }
-        if (!is.nil(options.rejectUnauthorized)) {
-            requestOptions.rejectUnauthorized = options.rejectUnauthorized;
-        }
-
-        if (!agent) {
-            agent = new httpObj.Agent(requestOptions);
-        }
-    }
-
-    if (agent) {
-        requestOptions.agent = agent;
-    }
-
-    let req = this._req = httpObj.get(requestOptions);
+    let req = this._req = httpObj.get(options);
 
     if (options.handshakeTimeout) {
         req.setTimeout(
@@ -618,12 +564,12 @@ const initAsClient = function (address, protocols, options) {
         }
 
         const serverProt = res.headers["sec-websocket-protocol"];
-        const protList = (options.protocol || "").split(/, */);
+        const protList = (protocols || "").split(/, */);
         let protError;
 
-        if (!options.protocol && serverProt) {
+        if (!protocols && serverProt) {
             protError = "Server sent a subprotocol but none was requested";
-        } else if (options.protocol && !serverProt) {
+        } else if (protocols && !serverProt) {
             protError = "Server sent no subprotocol";
         } else if (serverProt && protList.indexOf(serverProt) === -1) {
             protError = "Server sent an invalid subprotocol";
@@ -669,7 +615,7 @@ export default class Client extends event.Emitter {
     /**
      * Create a new `WebSocket`.
      *
-     * @param {String} address The URL to which to connect
+     * @param {(String|url.Url|url.URL)} address The URL to which to connect
      * @param {(String|String[])} protocols The subprotocols
      * @param {Object} options Connection options
      */
@@ -692,13 +638,11 @@ export default class Client extends event.Emitter {
         this._socket = null;
 
         if (!is.null(address)) {
-            if (!protocols) {
-                protocols = [];
-            } else if (is.string(protocols)) {
-                protocols = [protocols];
-            } else if (!is.array(protocols)) {
+            if (is.array(protocols)) {
+                protocols = protocols.join(", ");
+            } else if (typeof protocols === "object" && !is.null(protocols)) {
                 options = protocols;
-                protocols = [];
+                protocols = undefined;
             }
 
             initAsClient.call(this, address, protocols, options);
@@ -777,9 +721,9 @@ export default class Client extends event.Emitter {
      */
     setSocket(socket, head, maxPayload) {
         const receiver = new Receiver(
+            this._binaryType,
             this._extensions,
-            maxPayload,
-            this._binaryType
+            maxPayload
         );
 
         this._sender = new Sender(socket, this._extensions);
@@ -789,7 +733,7 @@ export default class Client extends event.Emitter {
         receiver[kWebSocket] = this;
         socket[kWebSocket] = this;
 
-        receiver.on("close", receiverOnClose);
+        receiver.on("conclude", receiverOnConclude);
         receiver.on("drain", receiverOnDrain);
         receiver.on("error", receiverOnError);
         receiver.on("message", receiverOnMessage);

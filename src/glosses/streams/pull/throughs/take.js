@@ -23,7 +23,7 @@ export default function take(test, opts) {
         };
 
         return function (end, cb) {
-            if (ended) {
+            if (ended && !end) {
                 last ? terminate(cb) : cb(ended);
                 return;
             }

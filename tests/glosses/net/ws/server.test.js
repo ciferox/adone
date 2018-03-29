@@ -497,10 +497,7 @@ describe("net", "ws", "Server", () => {
                 const wss = new Server({
                     verifyClient: (info) => {
                         assert.strictEqual(info.origin, "https://example.com");
-                        assert.strictEqual(
-                            info.req.headers["sec-websocket-key"],
-                            "dGhlIHNhbXBsZSBub25jZQ=="
-                        );
+                        assert.strictEqual(info.req.headers.foo, "bar");
                         assert.ok(info.secure, true);
                         return true;
                     },
@@ -514,10 +511,7 @@ describe("net", "ws", "Server", () => {
 
                 server.listen(0, () => {
                     const ws = new Client(`wss://localhost:${server.address().port}`, {
-                        headers: {
-                            "Sec-WebSocket-Key": "dGhlIHNhbXBsZSBub25jZQ==",
-                            Origin: "https://example.com"
-                        },
+                        headers: { Origin: "https://example.com", foo: "bar" },
                         rejectUnauthorized: false
                     });
                 });
@@ -649,7 +643,7 @@ describe("net", "ws", "Server", () => {
         });
 
         describe("`handleProtocols`", () => {
-            it("can select the last protocol", (done) => {
+            it("allows to select a subprotocol", (done) => {
                 const handleProtocols = (protocols, request) => {
                     assert.ok(request instanceof http.IncomingMessage);
                     assert.strictEqual(request.url, "/");
@@ -663,28 +657,6 @@ describe("net", "ws", "Server", () => {
 
                     ws.on("open", () => {
                         assert.strictEqual(ws.protocol, "bar");
-                        wss.close(done);
-                    });
-                });
-            });
-
-            it("closes the connection if return value is `false`", (done) => {
-                const wss = new Server({
-                    handleProtocols: (protocols) => false,
-                    port: 0
-                }, () => {
-                    const req = http.get({
-                        port: wss.address().port,
-                        headers: {
-                            Connection: "Upgrade",
-                            Upgrade: "websocket",
-                            "Sec-WebSocket-Key": "dGhlIHNhbXBsZSBub25jZQ==",
-                            "Sec-WebSocket-Version": 13
-                        }
-                    });
-
-                    req.on("response", (res) => {
-                        assert.strictEqual(res.statusCode, 401);
                         wss.close(done);
                     });
                 });

@@ -73,11 +73,11 @@ export default class Receiver extends stream.Writable {
     /**
      * Creates a Receiver instance.
      *
+     * @param {String} binaryType The type for binary data
      * @param {Object} extensions An object containing the negotiated extensions
      * @param {Number} maxPayload The maximum allowed message length
-     * @param {String} binaryType The type for binary data
      */
-    constructor(extensions, maxPayload, binaryType) {
+    constructor(binaryType, extensions, maxPayload) {
         super();
 
         this._binaryType = binaryType || constants.BINARY_TYPES[0];
@@ -295,7 +295,7 @@ export default class Receiver extends stream.Writable {
             return;
         }
 
-        this._payloadLength = this.consume(2).readUInt16BE(0, true);
+        this._payloadLength = this.consume(2).readUInt16BE(0);
         return this.haveLength();
     }
 
@@ -312,7 +312,7 @@ export default class Receiver extends stream.Writable {
         }
 
         const buf = this.consume(8);
-        const num = buf.readUInt32BE(0, true);
+        const num = buf.readUInt32BE(0);
 
         //
         // The maximum safe integer in JavaScript is 2^53 - 1. An error is returned
@@ -328,7 +328,7 @@ export default class Receiver extends stream.Writable {
             );
         }
 
-        this._payloadLength = num * Math.pow(2, 32) + buf.readUInt32BE(4, true);
+        this._payloadLength = num * Math.pow(2, 32) + buf.readUInt32BE(4);
         return this.haveLength();
     }
 
@@ -501,12 +501,12 @@ export default class Receiver extends stream.Writable {
             this._loop = false;
 
             if (data.length === 0) {
-                this.emit("close", 1005, "");
+                this.emit("conclude", 1005, "");
                 this.end();
             } else if (data.length === 1) {
                 return error(RangeError, "invalid payload length 1", true, 1002);
             } else {
-                const code = data.readUInt16BE(0, true);
+                const code = data.readUInt16BE(0);
 
                 if (!util.isValidStatusCode(code)) {
                     return error(RangeError, `invalid status code ${code}`, true, 1002);
@@ -518,7 +518,7 @@ export default class Receiver extends stream.Writable {
                     return error(Error, "invalid UTF-8 sequence", true, 1007);
                 }
 
-                this.emit("close", code, buf.toString());
+                this.emit("conclude", code, buf.toString());
                 this.end();
             }
 

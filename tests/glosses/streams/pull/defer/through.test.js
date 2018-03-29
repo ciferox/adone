@@ -100,7 +100,7 @@ describe("stream", "pull", "defer", "through", () => {
     });
 
     it("peek with resume", (done) => {
-
+        let first;
         const defer = gate();
 
         pull(

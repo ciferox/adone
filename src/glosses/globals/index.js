@@ -1384,6 +1384,7 @@ export default adone.asNamespace({
         currentURL: false,
         fillIn: false,
         find: false,
+        findAll: false,
         findWithAssert: false,
         keyEvent: false,
         pauseTest: false,
