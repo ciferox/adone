@@ -33,5 +33,5 @@ lazify({
     DB: "./omnitron/db",
     Dispatcher: "./dispatcher",
     dispatcher: () => new adone.omnitron.Dispatcher(),
-    port: () => (is.windows ? `\\\\.\\pipe\\${adone.realm.config.realm}\\omnitron.sock` : adone.std.path.join(adone.realm.config.runtimePath, "omnitron.sock"))
+    port: () => (is.windows ? `\\\\.\\pipe\\${adone.realm.config.realm}\\omnitron.sock` : adone.std.path.join(adone.realm.config.RUNTIME_PATH, "omnitron.sock"))
 }, adone.asNamespace(exports), require);

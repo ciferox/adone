@@ -8,7 +8,7 @@
     ],
     "include": [
         "src/**/*",
-        "tests",
+        // "tests",
         "benchmarks",
         "examples"
     ]

@@ -202,7 +202,6 @@ function createDescriptor(
   if (typeof value === "string") {
     ({ filepath, value } = resolver(value, dirname));
   }
-
   if (!value) {
     throw new Error(`Unexpected falsy value: ${String(value)}`);
   }

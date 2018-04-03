@@ -19,7 +19,7 @@ export default class Dispatcher extends Subsystem {
             stodut: null,
             stderr: null
         };
-        
+
         runtime.netron.on("peer offline", (peer) => {
             if (!is.null(this.peer) && this.peer.uid === peer.uid) {
                 this.peer = null;
@@ -31,7 +31,7 @@ export default class Dispatcher extends Subsystem {
         if (this.db) {
             await this.db.close();
         }
-     
+
         return this.disconnect();
     }
 
@@ -123,9 +123,9 @@ export default class Dispatcher extends Subsystem {
             }
             return new Promise(async (resolve, reject) => {
                 const omniConfig = adone.realm.config.omnitron;
-                await adone.fs.mkdirp(std.path.dirname(omniConfig.logFilePath));
-                this.descriptors.stdout = std.fs.openSync(omniConfig.logFilePath, "a");
-                this.descriptors.stderr = std.fs.openSync(omniConfig.errorLogFilePath, "a");
+                await adone.fs.mkdirp(std.path.dirname(omniConfig.LOGFILE_PATH));
+                this.descriptors.stdout = std.fs.openSync(omniConfig.LOGFILE_PATH, "a");
+                this.descriptors.stderr = std.fs.openSync(omniConfig.ERRORLOGFILE_PATH, "a");
                 const args = [std.path.resolve(adone.ROOT_PATH, "lib/omnitron/omnitron/index.js")];
                 if (gc) {
                     args.unshift("--expose-gc");
@@ -194,7 +194,7 @@ export default class Dispatcher extends Subsystem {
                         }
 
                         try {
-                            await adone.system.process.kill(pid);
+                            await adone.system.process.kill(pid, { tree: false });
                             await checkAlive(pid);
                         } catch (err) {
                             return 0;

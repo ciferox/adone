@@ -111,7 +111,7 @@ export const whichSync = (cmd, opt = {}) => {
             const cur = p + pathExt[j];
             let is;
             try {
-                is = adone.fs.is.executableSync(cur, { pathExt: pathExtExe });
+                is = adone.fs.isExecutableSync(cur, { pathExt: pathExtExe });
                 if (is) {
                     if (opt.all) {
                         found.push(cur);

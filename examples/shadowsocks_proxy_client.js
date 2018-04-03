@@ -1,4 +1,4 @@
-adone.application.run({
+adone.application.runCli({
     async main() {
         adone.logInfo("socket");
 
