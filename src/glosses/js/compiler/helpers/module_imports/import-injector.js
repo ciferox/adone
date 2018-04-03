@@ -1,5 +1,5 @@
-import ImportBuilder from "./import_builder";
-import isModule from "./is_module";
+import ImportBuilder from "./import-builder";
+import isModule from "./is-module";
 
 const {
   assert,
