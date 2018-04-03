@@ -1,7 +1,7 @@
 // This file contains methods that convert the path node into another node or some other type of data.
 
 const {
-  js: { compiler: { types: t, helper: { functionName } } }
+  js: { compiler: { types: t, helper: { functionName: nameFunction } } }
 } = adone;
 
 export function toComputedKey(): Object {
@@ -146,7 +146,7 @@ export function arrowFunctionToExpression({
     this.replaceWith(
       t.callExpression(
         t.memberExpression(
-          functionName(this, true) || this.node,
+          nameFunction(this, true) || this.node,
           t.identifier("bind"),
         ),
         [checkBinding ? t.identifier(checkBinding.name) : t.thisExpression()],

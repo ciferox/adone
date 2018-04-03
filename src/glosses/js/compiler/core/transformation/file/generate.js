@@ -1,10 +1,5 @@
 // @flow
 
-import type { PluginPasses } from "../../config";
-// import convertSourceMap, { type SourceMap } from "convert-source-map";
-// import sourceMap from "source-map";
-// import generate from "@babel/generator";
-
 import type File from "./file";
 
 const {

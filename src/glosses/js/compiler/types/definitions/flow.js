@@ -252,13 +252,17 @@ defineType("NumberTypeAnnotation", {
 defineType("ObjectTypeAnnotation", {
   visitor: ["properties", "indexers", "callProperties"],
   aliases: ["Flow", "FlowType"],
+  builder: ["properties", "indexers", "callProperties", "exact"],
   fields: {
     properties: validate(
       arrayOfType(["ObjectTypeProperty", "ObjectTypeSpreadProperty"]),
     ),
     indexers: validateOptional(arrayOfType("ObjectTypeIndexer")),
     callProperties: validateOptional(arrayOfType("ObjectTypeCallProperty")),
-    exact: validate(assertValueType("boolean")),
+    exact: {
+      validate: assertValueType("boolean"),
+      default: false,
+    },
   },
 });
 
@@ -287,7 +291,7 @@ defineType("ObjectTypeProperty", {
   visitor: ["key", "value", "variance"],
   aliases: ["Flow", "UserWhitespacable"],
   fields: {
-    key: validateType("Identifier"),
+    key: validateType(["Identifier", "StringLiteral"]),
     value: validateType("FlowType"),
     kind: validate(assertOneOf("init", "get", "set")),
     static: validate(assertValueType("boolean")),

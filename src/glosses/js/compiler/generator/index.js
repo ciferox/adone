@@ -1,4 +1,4 @@
-import SourceMap from "./source_map";
+import SourceMap from "./source-map";
 import Printer, { type Format } from "./printer";
 
 /**

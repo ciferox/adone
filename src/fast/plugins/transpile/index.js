@@ -63,8 +63,7 @@ export default function transpilePlugin() {
                     filename: file.path,
                     filenameRelative: file.relative,
                     sourceMap: Boolean(file.sourceMap),
-                    sourceFileName: file.relative,
-                    sourceMapTarget: file.relative
+                    sourceFileName: file.relative
                 }));
 
                 if (file.sourceMap && result.map) {

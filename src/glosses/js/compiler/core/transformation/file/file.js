@@ -1,13 +1,7 @@
 // @flow
 
-// import * as helpers from "@babel/helpers";
-// import { NodePath, Hub, Scope } from "@babel/traverse";
-// import { codeFrameColumns } from "@babel/code-frame";
-// import traverse from "@babel/traverse";
-// import * as t from "@babel/types";
-
 const {
-  js: { compiler: { traverse, types: t, codeFrameColumns, helper } }
+  js: { compiler: { traverse, types: t, codeFrameColumns, helper: helpers } }
 } = adone;
 
 const { NodePath, Hub, Scope } = traverse;
@@ -145,11 +139,11 @@ export default class File {
     ));
 
     const dependencies = {};
-    for (const dep of helper.getDependencies(name)) {
+    for (const dep of helpers.getDependencies(name)) {
       dependencies[dep] = this.addHelper(dep);
     }
 
-    const { nodes, globals } = helper.get(
+    const { nodes, globals } = helpers.get(
       name,
       dep => dependencies[dep],
       uid,

@@ -1,4 +1,4 @@
-import helpers from "./common_helpers";
+import helpers from "./helpers";
 
 const {
     is,

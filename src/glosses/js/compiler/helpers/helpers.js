@@ -1,6 +1,6 @@
-/* eslint max-len: "off" */
-
-import template from "@babel/template";
+const {
+  js: { compiler: { template } }
+} = adone;
 
 const helpers = {};
 export default helpers;
@@ -26,7 +26,9 @@ helpers.jsx = () => template.program.ast`
 
   export default function _createRawReactElement(type, props, key, children) {
     if (!REACT_ELEMENT_TYPE) {
-      REACT_ELEMENT_TYPE = (typeof Symbol === "function" && Symbol.for && Symbol.for("react.element")) || 0xeac7;
+      REACT_ELEMENT_TYPE = (
+        typeof Symbol === "function" && Symbol.for && Symbol.for("react.element")
+      ) || 0xeac7;
     }
 
     var defaultProps = type && type.defaultProps;
@@ -431,7 +433,8 @@ helpers.inherits = () => template.program.ast`
         configurable: true
       }
     });
-    if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+    if (superClass)
+      Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
   }
 `;
 
@@ -445,46 +448,57 @@ helpers.inheritsLoose = () => template.program.ast`
 
 // Based on https://github.com/WebReflection/babel-plugin-transform-builtin-classes
 helpers.wrapNativeSuper = () => template.program.ast`
-  var _gPO = Object.getPrototypeOf || function _gPO(o) { return o.__proto__ };
-  var _sPO = Object.setPrototypeOf || function _sPO(o, p) { o.__proto__ = p; return o };
-  var _construct = (typeof Reflect === "object" && Reflect.construct) ||
-    function _construct(Parent, args, Class) {
-      var Constructor, a = [null];
-      a.push.apply(a, args);
-      Constructor = Parent.bind.apply(Parent, a);
-      return _sPO(new Constructor, Class.prototype);
-    };
-
-  var _cache = typeof Map === "function" && new Map();
+  function _gPO(o) {
+    _gPO = Object.getPrototypeOf || function _gPO(o) { return o.__proto__ };
+    return _gPO(o);
+  }
+  function _sPO(o, p) {
+    _sPO = Object.setPrototypeOf || function _sPO(o, p) { o.__proto__ = p; return o };
+    return _sPO(o, p);
+  }
+  function _construct(Parent, args, Class) {
+    _construct = (typeof Reflect === "object" && Reflect.construct) ||
+      function _construct(Parent, args, Class) {
+        var Constructor, a = [null];
+        a.push.apply(a, args);
+        Constructor = Parent.bind.apply(Parent, a);
+        return _sPO(new Constructor, Class.prototype);
+      };
+    return _construct(Parent, args, Class);
+  }
 
   export default function _wrapNativeSuper(Class) {
-    if (typeof Class !== "function") {
-      throw new TypeError("Super expression must either be null or a function");
-    }
+    var _cache = typeof Map === "function" ? new Map() : undefined;
 
-    if (typeof _cache !== "undefined") {
-      if (_cache.has(Class)) return _cache.get(Class);
-      _cache.set(Class, Wrapper);
-    }
-
-    function Wrapper() {}
-    Wrapper.prototype = Object.create(Class.prototype, {
-      constructor: {
-        value: Wrapper,
-        enumerable: false,
-        writeable: true,
-        configurable: true,
+    _wrapNativeSuper = function _wrapNativeSuper(Class) {
+      if (typeof Class !== "function") {
+        throw new TypeError("Super expression must either be null or a function");
       }
-    });
-    return _sPO(
-      Wrapper,
-      _sPO(
-        function Super() {
-          return _construct(Class, arguments, _gPO(this).constructor);
-        },
-        Class
-      )
-    );
+      if (typeof _cache !== "undefined") {
+        if (_cache.has(Class)) return _cache.get(Class);
+        _cache.set(Class, Wrapper);
+      }
+      function Wrapper() {}
+      Wrapper.prototype = Object.create(Class.prototype, {
+        constructor: {
+          value: Wrapper,
+          enumerable: false,
+          writable: true,
+          configurable: true,
+        }
+      });
+      return _sPO(
+        Wrapper,
+        _sPO(
+          function Super() {
+            return _construct(Class, arguments, _gPO(this).constructor);
+          },
+          Class
+        )
+      );
+    }
+
+    return _wrapNativeSuper(Class)
   }
 `;
 
@@ -582,17 +596,13 @@ helpers.assertThisInitialized = () => template.program.ast`
 `;
 
 helpers.possibleConstructorReturn = () => template.program.ast`
+  import assertThisInitialized from "assertThisInitialized";
+
   export default function _possibleConstructorReturn(self, call) {
     if (call && (typeof call === "object" || typeof call === "function")) {
       return call;
     }
-    // TODO: Should just be
-    //   import assertThisInitialized from "assertThisInitialized";
-    //   return assertThisInitialized(self);
-    if (self === void 0) {
-      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-    }
-    return self;
+    return assertThisInitialized(self);
   }
 `;
 
@@ -617,70 +627,6 @@ helpers.set = () => template.program.ast`
     }
 
     return value;
-  }
-`;
-
-helpers.slicedToArray = () => template.program.ast`
-  // Broken out into a separate function to avoid deoptimizations due to the try/catch for the
-  // array iterator case.
-  function _sliceIterator(arr, i) {
-    // this is an expanded form of \`for...of\` that properly supports abrupt completions of
-    // iterators etc. variable names have been minimised to reduce the size of this massive
-    // helper. sometimes spec compliancy is annoying :(
-    //
-    // _n = _iteratorNormalCompletion
-    // _d = _didIteratorError
-    // _e = _iteratorError
-    // _i = _iterator
-    // _s = _step
-
-    var _arr = [];
-    var _n = true;
-    var _d = false;
-    var _e = undefined;
-    try {
-      for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
-        _arr.push(_s.value);
-        if (i && _arr.length === i) break;
-      }
-    } catch (err) {
-      _d = true;
-      _e = err;
-    } finally {
-      try {
-        if (!_n && _i["return"] != null) _i["return"]();
-      } finally {
-        if (_d) throw _e;
-      }
-    }
-    return _arr;
-  }
-
-  export default function _slicedToArray(arr, i) {
-    if (Array.isArray(arr)) {
-      return arr;
-    } else if (Symbol.iterator in Object(arr)) {
-      return _sliceIterator(arr, i);
-    } else {
-      throw new TypeError("Invalid attempt to destructure non-iterable instance");
-    }
-  }
-`;
-
-helpers.slicedToArrayLoose = () => template.program.ast`
-  export default function _slicedToArrayLoose(arr, i) {
-    if (Array.isArray(arr)) {
-      return arr;
-    } else if (Symbol.iterator in Object(arr)) {
-      var _arr = [];
-      for (var _iterator = arr[Symbol.iterator](), _step; !(_step = _iterator.next()).done;) {
-        _arr.push(_step.value);
-        if (i && _arr.length === i) break;
-      }
-      return _arr;
-    } else {
-      throw new TypeError("Invalid attempt to destructure non-iterable instance");
-    }
   }
 `;
 
@@ -729,20 +675,125 @@ helpers.temporalUndefined = () => template.program.ast`
   export default {};
 `;
 
+helpers.slicedToArray = () => template.program.ast`
+  import arrayWithHoles from "arrayWithHoles";
+  import iterableToArrayLimit from "iterableToArrayLimit";
+  import nonIterableRest from "nonIterableRest";
+
+  export default function _slicedToArray(arr, i) {
+    return arrayWithHoles(arr) || iterableToArrayLimit(arr, i) || nonIterableRest();
+  }
+`;
+
+helpers.slicedToArrayLoose = () => template.program.ast`
+  import arrayWithHoles from "arrayWithHoles";
+  import iterableToArrayLimitLoose from "iterableToArrayLimitLoose";
+  import nonIterableRest from "nonIterableRest";
+
+  export default function _slicedToArrayLoose(arr, i) {
+    return arrayWithHoles(arr) || iterableToArrayLimitLoose(arr, i) || nonIterableRest();
+  }
+`;
+
 helpers.toArray = () => template.program.ast`
+  import arrayWithHoles from "arrayWithHoles";
+  import iterableToArray from "iterableToArray";
+  import nonIterableRest from "nonIterableRest";
+
   export default function _toArray(arr) {
-    return Array.isArray(arr) ? arr : Array.from(arr);
+    return arrayWithHoles(arr) || iterableToArray(arr) || nonIterableRest();
   }
 `;
 
 helpers.toConsumableArray = () => template.program.ast`
+  import arrayWithoutHoles from "arrayWithoutHoles";
+  import iterableToArray from "iterableToArray";
+  import nonIterableSpread from "nonIterableSpread";
+
   export default function _toConsumableArray(arr) {
+    return arrayWithoutHoles(arr) || iterableToArray(arr) || nonIterableSpread();
+  }
+`;
+
+helpers.arrayWithoutHoles = () => template.program.ast`
+  export default function _arrayWithoutHoles(arr) {
     if (Array.isArray(arr)) {
       for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
       return arr2;
-    } else {
-      return Array.from(arr);
     }
+  }
+`;
+
+helpers.arrayWithHoles = () => template.program.ast`
+  export default function _arrayWithoutHoles(arr) {
+    if (Array.isArray(arr)) return arr;
+  }
+`;
+
+helpers.iterableToArray = () => template.program.ast`
+  export default function _iterableToArray(iter) {
+    if (
+      Symbol.iterator in Object(iter) ||
+      Object.prototype.toString.call(iter) === "[object Arguments]"
+    ) return Array.from(iter);
+  }
+`;
+
+helpers.iterableToArrayLimit = () => template.program.ast`
+  export default function _iterableToArrayLimit(arr, i) {
+    // this is an expanded form of \`for...of\` that properly supports abrupt completions of
+    // iterators etc. variable names have been minimised to reduce the size of this massive
+    // helper. sometimes spec compliancy is annoying :(
+    //
+    // _n = _iteratorNormalCompletion
+    // _d = _didIteratorError
+    // _e = _iteratorError
+    // _i = _iterator
+    // _s = _step
+
+    var _arr = [];
+    var _n = true;
+    var _d = false;
+    var _e = undefined;
+    try {
+      for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
+        _arr.push(_s.value);
+        if (i && _arr.length === i) break;
+      }
+    } catch (err) {
+      _d = true;
+      _e = err;
+    } finally {
+      try {
+        if (!_n && _i["return"] != null) _i["return"]();
+      } finally {
+        if (_d) throw _e;
+      }
+    }
+    return _arr;
+  }
+`;
+
+helpers.iterableToArrayLimitLoose = () => template.program.ast`
+  export default function _iterableToArrayLimitLoose(arr, i) {
+    var _arr = [];
+    for (var _iterator = arr[Symbol.iterator](), _step; !(_step = _iterator.next()).done;) {
+      _arr.push(_step.value);
+      if (i && _arr.length === i) break;
+    }
+    return _arr;
+  }
+`;
+
+helpers.nonIterableSpread = () => template.program.ast`
+  export default function _nonIterableSpread() {
+    throw new TypeError("Invalid attempt to spread non-iterable instance");
+  }
+`;
+
+helpers.nonIterableRest = () => template.program.ast`
+  export default function _nonIterableRest() {
+    throw new TypeError("Invalid attempt to destructure non-iterable instance");
   }
 `;
 

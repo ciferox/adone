@@ -1,5 +1,3 @@
-/* eslint max-len: 0 */
-
 // @flow
 
 import * as N from "../types";
@@ -146,8 +144,25 @@ export default class StatementParser extends ExpressionParser {
         let result;
         if (starttype == tt._import) {
           result = this.parseImport(node);
+
+          if (
+            result.type === "ImportDeclaration" &&
+            (!result.importKind || result.importKind === "value")
+          ) {
+            this.sawUnambiguousESM = true;
+          }
         } else {
           result = this.parseExport(node);
+
+          if (
+            (result.type === "ExportNamedDeclaration" &&
+              (!result.exportKind || result.exportKind === "value")) ||
+            (result.type === "ExportAllDeclaration" &&
+              (!result.exportKind || result.exportKind === "value")) ||
+            result.type === "ExportDefaultDeclaration"
+          ) {
+            this.sawUnambiguousESM = true;
+          }
         }
 
         this.assertModuleNodeAllowed(node);
@@ -155,7 +170,7 @@ export default class StatementParser extends ExpressionParser {
         return result;
       }
       case tt.name:
-        if (this.state.value === "async") {
+        if (this.isContextual("async")) {
           // peek ahead and see if next token is a function
           const state = this.state.clone();
           this.next();
@@ -229,7 +244,8 @@ export default class StatementParser extends ExpressionParser {
       } else {
         this.raise(
           this.state.start,
-          "Using the export keyword between a decorator and a class is not allowed. Please use `export @dec class` instead",
+          "Using the export keyword between a decorator and a class is not allowed. " +
+            "Please use `export @dec class` instead",
         );
       }
     }
@@ -758,7 +774,8 @@ export default class StatementParser extends ExpressionParser {
           kind === tt._const &&
           !(this.match(tt._in) || this.isContextual("of"))
         ) {
-          // `const` with no initializer is allowed in TypeScript. It could be a declaration `const x: number;`.
+          // `const` with no initializer is allowed in TypeScript.
+          // It could be a declaration like `const x: number;`.
           if (!this.hasPlugin("typescript")) {
             this.unexpected();
           }
@@ -970,8 +987,11 @@ export default class StatementParser extends ExpressionParser {
     state: { hadConstructor: boolean },
   ): void {
     let isStatic = false;
+    const containsEsc = this.state.containsEsc;
+
     if (this.match(tt.name) && this.state.value === "static") {
       const key = this.parseIdentifier(true); // eats 'static'
+
       if (this.isClassMethod()) {
         const method: N.ClassMethod = (member: any);
 
@@ -997,7 +1017,10 @@ export default class StatementParser extends ExpressionParser {
         prop.static = false;
         classBody.body.push(this.parseClassProperty(prop));
         return;
+      } else if (containsEsc) {
+        throw this.unexpected();
       }
+
       // otherwise something static
       isStatic = true;
     }
@@ -1685,7 +1708,8 @@ export default class StatementParser extends ExpressionParser {
         if (this.eat(tt.colon)) {
           this.unexpected(
             null,
-            "ES2015 named imports do not destructure. Use another statement for destructuring after the import.",
+            "ES2015 named imports do not destructure. " +
+              "Use another statement for destructuring after the import.",
           );
         }
 

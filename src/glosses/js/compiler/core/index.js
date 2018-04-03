@@ -17,26 +17,9 @@ const {
   js: { compiler: { types, traverse, template } }
 } = adone;
 
-export {
-  types,
-  traverse,
-  template
-};
+export { loadPartialConfig, loadOptions, OptionManager } from "./config";
 
-import loadConfig from "./config";
-
-export function loadOptions(opts: {}): Object | null {
-  const config = loadConfig(opts);
-
-  return config ? config.options : null;
-}
-
-// For easier backward-compatibility, provide an API like the one we exposed in Babel 6.
-export class OptionManager {
-  init(opts: {}) {
-    return loadOptions(opts);
-  }
-}
+export { createConfigItem } from "./config/item";
 
 export function Plugin(alias: string) {
   throw new Error(
