@@ -77,68 +77,6 @@ class CliKit extends application.Subsystem {
 
         }
     }
-
-    async progressOperation(schema, operation) {
-        let options;
-        if (is.string(schema.init)) {
-            options = {
-                schema: ` :spinner ${schema.init}`
-            };
-        } else {
-            options = schema.init;
-        }
-        const bar = adone.runtime.term.progress(options);
-        bar.update(0);
-
-        const prepareSchema = (obj) => {
-            if (is.string(obj)) {
-                return {
-                    schema: ` :spinner ${obj}`,
-                    clean: false
-                };
-            }
-            return {
-                clean: false,
-                schema: " :spinner",
-                ...obj
-            };
-        };
-
-        try {
-            const result = await operation(bar);
-            const successSchema = prepareSchema(schema.success);
-            bar.setSchema(successSchema.schema);
-            if (successSchema.clean) {
-                bar.clean = true;
-            }
-            bar.complete(true);
-            return result;
-        } catch (err) {
-            const failedSchema = prepareSchema(schema.fail);
-            bar.setSchema(failedSchema.schema);
-            if (failedSchema.clean) {
-                bar.clean = true;
-            }
-            bar.complete(false);
-            throw err;
-        }
-    }
-
-    async progressOperations(...operations) {
-        await Promise.all(operations.map((x) => {
-            return this.progressOperation(...x).then((result) => {
-                return {
-                    result,
-                    failed: false
-                };
-            }, (error) => {
-                return {
-                    error,
-                    failed: true
-                };
-            });
-        }));
-    }
 }
 
 export default new CliKit();
