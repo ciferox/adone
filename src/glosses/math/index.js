@@ -7,7 +7,8 @@ adone.lazify({
     BitSet: "./bitset",
     BigNumber: "./bignumber",
     simd: "./simd",
-    matrix: "./matrix"
+    matrix: "./matrix",
+    Decimal: "./decimal"
 }, adone.asNamespace(exports), require);
 
 export const random = (min = 0, max = 0xFFFFFFFF) => {
