@@ -1,5 +1,3 @@
-const protocolMuxer = require("./protocol_muxer");
-
 const {
     util: { arrify }
 } = adone;
@@ -51,7 +49,7 @@ export default class TransportManager {
 
         // if no handler is passed, we pass conns to protocolMuxer
         if (!handler) {
-            handler = protocolMuxer.bind(null, this.switch.protocols);
+            handler = this.switch.protocolMuxer(key);
         }
 
         for (const ma of multiaddrs) {

@@ -1,6 +1,9 @@
 const getPeerInfo = require("./get_peer_info");
 const protocolMuxer = require("./protocol_muxer");
 const plaintext = require("./plaintext");
+const observeConnection = require("./observe_connection");
+const Observer = require("./observer");
+const Stats = require("./stats");
 
 const {
     is,
@@ -14,7 +17,7 @@ const __ = adone.lazifyPrivate({
 }, exports, require);
 
 export class Switch extends adone.event.Emitter {
-    constructor(peerInfo, peerBook) {
+    constructor(peerInfo, peerBook, options) {
         super();
 
         if (!peerInfo) {
@@ -27,6 +30,7 @@ export class Switch extends adone.event.Emitter {
 
         this._peerInfo = peerInfo;
         this._peerBook = peerBook;
+        this._options = options || {};
 
         // connections --
         // { peerIdB58: { conn: <conn> }}
@@ -55,10 +59,14 @@ export class Switch extends adone.event.Emitter {
         this.tm = new __.TransportManager(this);
         this.connection = new __.ConnectionManager(this);
 
+        this.observer = Observer(this);
+        this.stats = Stats(this.observer, this._options.stats);
+        this.protocolMuxer = protocolMuxer(this.protocols, this.observer);
+
         this.handle(this.crypto.tag, (protocol, conn) => {
             const peerId = this._peerInfo.id;
             const wrapped = this.crypto.encrypt(peerId, conn, undefined, () => { });
-            return protocolMuxer(this.protocols, wrapped);
+            return this.protocolMuxer(null)(wrapped);
         });
 
         this.setMaxListeners(Infinity);
@@ -86,6 +94,8 @@ export class Switch extends adone.event.Emitter {
     }
 
     async stop() {
+        this.stats.stop();
+
         for (const conn of Object.values(this.muxedConns)) {
             /* eslint-disable */
             await new Promise((resolve, reject) => {
@@ -127,6 +137,7 @@ export class Switch extends adone.event.Emitter {
             const pi = getPeerInfo(peer, this._peerBook);
 
             const proxyConn = new Connection();
+            proxyConn.setPeerInfo(pi);
 
             const b58Id = pi.id.asBase58();
 
@@ -140,6 +151,7 @@ export class Switch extends adone.event.Emitter {
                         if (err) {
                             return reject(err);
                         }
+                        proxyConn.setPeerInfo(pi);
                         proxyConn.setInnerConn(conn);
 
                         resolve(proxyConn);
@@ -214,12 +226,14 @@ export class Switch extends adone.event.Emitter {
                             const b58Str = pi.id.asBase58();
                             delete this.muxedConns[b58Str];
                             pi.disconnect();
+                            this._peerBook.get(b58Str).disconnect();
                             setImmediate(() => this.emit("peer:mux:closed", pi));
                         });
 
                         // For incoming streams, in case identify is on
                         muxedConn.on("stream", (conn) => {
-                            protocolMuxer(this.protocols, conn);
+                            conn.setPeerInfo(pi);
+                            this.protocolMuxer(null)(conn);
                         });
 
                         setImmediate(() => this.emit("peer:mux:established", pi));
@@ -265,7 +279,8 @@ export class Switch extends adone.event.Emitter {
 
                         let conn;
                         try {
-                            conn = await this.tm.connect(transport, pi); // eslint-disable-line
+                            const _conn = await this.tm.connect(transport, pi); // eslint-disable-line
+                            conn = observeConnection(transport, null, _conn, this.observer);
                         } catch (err) {
                             nextTransport(tKeys.shift());
                         }
@@ -277,10 +292,12 @@ export class Switch extends adone.event.Emitter {
                             }
 
                             const myId = this._peerInfo.id;
-                            ms.select(this.crypto.tag, (err, conn) => {
+                            ms.select(this.crypto.tag, (err, _conn) => {
                                 if (err) {
                                     return reject(err);
                                 }
+
+                                const conn = observeConnection(null, this.crypto.tag, _conn, this.observer);
 
                                 const wrapped = this.crypto.encrypt(myId, conn, pi.id, (err) => {
                                     if (err) {

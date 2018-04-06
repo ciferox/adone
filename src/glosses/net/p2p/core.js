@@ -52,7 +52,7 @@ const getTransports = (transports) => {
 };
 
 export default class Core extends event.Emitter {
-    constructor({ peer, transport, muxer, crypto, discovery, dht, relay } = {}) {
+    constructor({ peer, transport, muxer, crypto, discovery, dht, relay, switch: _switch } = {}) {
         super();
 
         if (!is.p2pPeerInfo(peer)) {
@@ -72,7 +72,8 @@ export default class Core extends event.Emitter {
 
         this.started = false;
 
-        this.switch = new Switch(this.peerInfo, this.peerBook);
+        this.switch = new Switch(this.peerInfo, this.peerBook, _switch);
+        this.stats = this.switch.stats;
 
         // Attach stream multiplexers
         if (this.muxers) {
@@ -239,7 +240,7 @@ export default class Core extends event.Emitter {
 
                 const peers = Array.from(this._floodSub.peers.values())
                     .filter((peer) => topic ? peer.topics.has(topic) : true)
-                    .map((peer) => peer.info.id.toB58String());
+                    .map((peer) => peer.info.id.asBase58());
 
                 setImmediate(() => callback(null, peers));
             },

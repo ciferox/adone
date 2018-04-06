@@ -817,4 +817,218 @@ describe("switch", () => {
             );
         });
     });
+
+    describe("stats", () => {
+        const selectOther = function (array, index) {
+            const useIndex = (index + 1) % array.length;
+            return array[useIndex];
+        };
+
+        const setup = async () => {
+            const infos = createInfos(2);
+            const options = {
+                stats: {
+                    computeThrottleTimeout: 100
+                }
+            };
+
+            const peerA = infos[0];
+            const peerB = infos[1];
+
+            peerA.multiaddrs.add("//ip4/127.0.0.1//tcp/0");
+            peerB.multiaddrs.add("//ip4/127.0.0.1//tcp/0");
+
+            const switchA = new Switch(peerA, new PeerBook(), options);
+            const switchB = new Switch(peerB, new PeerBook(), options);
+
+            switchA.tm.add("tcp", new TCP());
+            switchB.tm.add("tcp", new TCP());
+
+            switchA.connection.crypto(secio.tag, secio.encrypt);
+            switchB.connection.crypto(secio.tag, secio.encrypt);
+
+            switchA.connection.addStreamMuxer(mplex);
+            switchB.connection.addStreamMuxer(mplex);
+
+            await switchA.tm.listen("tcp", {}, null);
+            await switchB.tm.listen("tcp", {}, null);
+
+            const echo = (protocol, conn) => pull(conn, conn);
+            switchB.handle("/echo/1.0.0", echo);
+            switchA.handle("/echo/1.0.0", echo);
+
+            await Promise.all([
+                new Promise(async (resolve) => {
+                    const conn = await switchA.connect(switchB._peerInfo, "/echo/1.0.0");
+                    tryEcho(conn, resolve);
+                }),
+                new Promise(async (resolve) => {
+                    const conn = await switchB.connect(switchA._peerInfo, "/echo/1.0.0");
+                    tryEcho(conn, resolve);
+                })
+            ]);
+
+            return new Promise((resolve) => {
+                // wait until stats are processed
+                let pending = 12;
+
+                const waitForUpdate = function () {
+                    if (--pending === 0) {
+                        switchA.stats.removeListener("update", waitForUpdate);
+                        switchB.stats.removeListener("update", waitForUpdate);
+                        resolve([switchA, switchB]);
+                    }
+                };
+
+                switchA.stats.on("update", waitForUpdate);
+                switchB.stats.on("update", waitForUpdate);
+            });
+        };
+
+        const teardown = async (switches) => {
+            for (const swtch of switches) {
+                await swtch.stop(); // eslint-disable-line
+            }
+        };
+
+        it("both nodes have some global stats", async () => {
+            const switches = await setup();
+
+            switches.forEach((swtch) => {
+                const snapshot = swtch.stats.global.snapshot;
+                expect(snapshot.dataReceived.toFixed()).to.equal("2426");
+                expect(snapshot.dataSent.toFixed()).to.equal("2426");
+            });
+
+            await teardown(switches);
+        });
+
+        it("both nodes know the transports", async () => {
+            const switches = await setup();
+            const expectedTransports = [
+                "tcp"
+            ];
+
+            switches.forEach((swtch) => expect(swtch.stats.transports().sort()).to.deep.equal(expectedTransports));
+            await teardown(switches);
+        });
+
+        it("both nodes know the protocols", async () => {
+            const switches = await setup();
+            const expectedProtocols = [
+                "/echo/1.0.0",
+                "/mplex/6.7.0",
+                "/secio/1.0.0"
+            ];
+
+            switches.forEach((swtch) => {
+                expect(swtch.stats.protocols().sort()).to.deep.equal(expectedProtocols);
+            });
+
+            await teardown(switches);
+        });
+
+        it("both nodes know about each other", async () => {
+            const switches = await setup();
+            switches.forEach(
+                (swtch, index) => {
+                    const otherSwitch = selectOther(switches, index);
+                    expect(swtch.stats.peers().sort()).to.deep.equal([otherSwitch._peerInfo.id.asBase58()]);
+                });
+            await teardown(switches);
+        });
+
+        it("both have transport-specific stats", async () => {
+            const switches = await setup();
+            switches.forEach((swtch) => {
+                const snapshot = swtch.stats.forTransport("tcp").snapshot;
+                expect(snapshot.dataReceived.toFixed()).to.equal("2426");
+                expect(snapshot.dataSent.toFixed()).to.equal("2426");
+            });
+            await teardown(switches);
+        });
+
+        it("both have protocol-specific stats", async () => {
+            const switches = await setup();
+            switches.forEach((swtch) => {
+                const snapshot = swtch.stats.forProtocol("/echo/1.0.0").snapshot;
+                expect(snapshot.dataReceived.toFixed()).to.equal("4");
+                expect(snapshot.dataSent.toFixed()).to.equal("4");
+            });
+            await teardown(switches);
+        });
+
+        it("both have peer-specific stats", async () => {
+            const switches = await setup();
+            switches.forEach((swtch, index) => {
+                const other = selectOther(switches, index);
+                const snapshot = swtch.stats.forPeer(other._peerInfo.id.asBase58()).snapshot;
+                expect(snapshot.dataReceived.toFixed()).to.equal("2426");
+                expect(snapshot.dataSent.toFixed()).to.equal("2426");
+            });
+            await teardown(switches);
+        });
+
+        it("both have moving average stats for peer", async () => {
+            const switches = await setup();
+            switches.forEach((swtch, index) => {
+                const other = selectOther(switches, index);
+                const ma = swtch.stats.forPeer(other._peerInfo.id.asBase58()).movingAverages;
+                const intervals = [60000, 300000, 900000];
+                intervals.forEach((interval) => {
+                    const average = ma.dataReceived[interval].movingAverage();
+                    expect(average).to.be.above(0).below(100);
+                });
+            });
+            await teardown(switches);
+        });
+
+        it("retains peer after disconnect", async () => {
+            const switches = await setup();
+            let index = -1;
+            for (const swtch of switches) {
+                // swtch.once("peer-mux-closed", () => cb());
+                index++;
+                await swtch.disconnect(selectOther(switches, index)._peerInfo);
+            }
+
+            switches.forEach((swtch, index) => {
+                const other = selectOther(switches, index);
+                const snapshot = swtch.stats.forPeer(other._peerInfo.id.asBase58()).snapshot;
+                expect(snapshot.dataReceived.toFixed()).to.equal("2426");
+                expect(snapshot.dataSent.toFixed()).to.equal("2426");
+            });
+
+            await teardown(switches);
+        });
+
+        it("retains peer after reconnect", async () => {
+            const switches = await setup();
+
+            let index = -1;
+            for (const swtch of switches) {
+                // swtch.once("peer-mux-closed", () => cb());
+                index++;
+                await swtch.disconnect(selectOther(switches, index)._peerInfo);
+            }
+
+            index = -1;
+            for (const swtch of switches) {
+                index++;
+                const other = selectOther(switches, index);
+                const conn = await swtch.connect(other._peerInfo, "/echo/1.0.0");
+                await new Promise((resolve) => tryEcho(conn, resolve));
+            }
+
+            await adone.promise.delay(1000);
+
+            switches.forEach((swtch, index) => {
+                const other = selectOther(switches, index);
+                const snapshot = swtch.stats.forPeer(other._peerInfo.id.asBase58()).snapshot;
+                expect(snapshot.dataReceived.toFixed()).to.equal("4852");
+                expect(snapshot.dataSent.toFixed()).to.equal("4852");
+            });
+            await teardown(switches);
+        });
+    });
 });

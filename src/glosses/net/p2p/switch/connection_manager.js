@@ -1,6 +1,6 @@
-const identify = require("../identify");
 const waterfall = require("async/waterfall");
-const protocolMuxer = require("./protocol_muxer");
+
+const identify = require("../identify");
 const plaintext = require("./plaintext");
 
 const {
@@ -13,7 +13,6 @@ export default class ConnectionManager {
     }
 
     addUpgrade() {
-
     }
 
     addStreamMuxer(muxer) {
@@ -24,9 +23,7 @@ export default class ConnectionManager {
         this.switch.handle(muxer.multicodec, async (protocol, conn) => {
             const muxedConn = muxer.listener(conn);
 
-            muxedConn.on("stream", (conn) => {
-                protocolMuxer(this.switch.protocols, conn);
-            });
+            muxedConn.on("stream", this.switch.protocolMuxer(null));
 
             // If identify is enabled
             //   1. overload getPeerInfo
@@ -53,6 +50,7 @@ export default class ConnectionManager {
                             if (err) {
                                 reject(err);
                             }
+                            conn.setPeerInfo(peerInfo);
                             resolve(peerInfo);
                         });
                     });
@@ -124,7 +122,7 @@ export default class ConnectionManager {
         this.switch.handle(tag, (protocol, conn) => {
             const myId = this.switch._peerInfo.id;
             const secure = encrypt(myId, conn, undefined, () => {
-                protocolMuxer(this.switch.protocols, secure);
+                this.switch.protocolMuxer(null)(secure);
             });
         });
 
