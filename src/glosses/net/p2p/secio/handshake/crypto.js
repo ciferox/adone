@@ -1,4 +1,4 @@
-const support = require("../support");
+import { exchanges, ciphers, hashes, selectBest, makeMacAndCipher } from "../support";
 
 const {
     crypto,
@@ -11,20 +11,20 @@ const pbm = protobuf.create(require("./secio.proto"));
 // nonceSize is the size of our nonces (in bytes)
 const nonceSize = 16;
 
-exports.createProposal = (state) => {
+export const createProposal = (state) => {
     state.proposal.out = {
         rand: std.crypto.randomBytes(nonceSize),
         pubkey: state.key.local.public.bytes,
-        exchanges: support.exchanges.join(","),
-        ciphers: support.ciphers.join(","),
-        hashes: support.hashes.join(",")
+        exchanges: exchanges.join(","),
+        ciphers: ciphers.join(","),
+        hashes: hashes.join(",")
     };
 
     state.proposalEncoded.out = pbm.Propose.encode(state.proposal.out);
     return state.proposalEncoded.out;
 };
 
-exports.createExchange = (state) => {
+export const createExchange = (state) => {
     const res = crypto.keys.generateEphemeralKeyPair(state.protocols.local.curveT);
     state.ephemeralKey.local = res.key;
     state.shared.generate = res.genSharedKey;
@@ -45,7 +45,7 @@ exports.createExchange = (state) => {
     return pbm.Exchange.encode(state.exchange.out);
 };
 
-exports.identify = (state, msg) => {
+export const identify = (state, msg) => {
     state.proposalEncoded.in = msg;
     state.proposal.in = pbm.Propose.decode(msg);
     const pubkey = state.proposal.in.pubkey;
@@ -62,12 +62,12 @@ exports.identify = (state, msg) => {
     }
 };
 
-exports.selectProtocols = (state) => {
+export const selectProtocols = (state) => {
     const local = {
         pubKeyBytes: state.key.local.public.bytes,
-        exchanges: support.exchanges,
-        hashes: support.hashes,
-        ciphers: support.ciphers,
+        exchanges,
+        hashes,
+        ciphers,
         nonce: state.proposal.out.rand
     };
 
@@ -79,7 +79,7 @@ exports.selectProtocols = (state) => {
         nonce: state.proposal.in.rand
     };
 
-    const selected = support.selectBest(local, remote);
+    const selected = selectBest(local, remote);
     // we use the same params for both directions (must choose same curve)
     // WARNING: if they dont SelectBest the same way, this won't work...
     state.protocols.remote = {
@@ -97,7 +97,7 @@ exports.selectProtocols = (state) => {
     };
 };
 
-exports.verify = (state, msg) => {
+export const verify = (state, msg) => {
     state.exchange.in = pbm.Exchange.decode(msg);
     state.ephemeralKey.remote = state.exchange.in.epubkey;
 
@@ -113,7 +113,7 @@ exports.verify = (state, msg) => {
     }
 };
 
-exports.generateKeys = (state) => {
+export const generateKeys = (state) => {
     const secret = state.shared.generate(state.exchange.in.epubkey);
     state.shared.secret = secret;
 
@@ -132,12 +132,12 @@ exports.generateKeys = (state) => {
     }
 
     return [
-        support.makeMacAndCipher(state.protocols.local),
-        support.makeMacAndCipher(state.protocols.remote)
+        makeMacAndCipher(state.protocols.local),
+        makeMacAndCipher(state.protocols.remote)
     ];
 };
 
-exports.verifyNonce = (state, n2) => {
+export const verifyNonce = (state, n2) => {
     const n1 = state.proposal.out.rand;
 
     if (!n1.equals(n2)) {

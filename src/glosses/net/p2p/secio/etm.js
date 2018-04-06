@@ -18,7 +18,7 @@ const ensureBuffer = function () {
     });
 };
 
-exports.createBoxStream = (cipher, mac) => {
+export const createBoxStream = (cipher, mac) => {
     return pull(
         ensureBuffer(),
         pull.asyncMap((chunk, cb) => {
@@ -34,7 +34,7 @@ exports.createBoxStream = (cipher, mac) => {
     );
 };
 
-exports.createUnboxStream = (decipher, mac) => {
+export const createUnboxStream = (decipher, mac) => {
     return pull(
         ensureBuffer(),
         pull.lengthPrefixed.decode(lpOpts),

@@ -13,30 +13,34 @@ const { STATUS } = omnitron2;
 
 describe("omnitron", () => {
     let iOmnitron;
+    let adoneRootPath;
     let realmManager;
 
     before(function () {
+        adoneRootPath = this.adoneRootPath;
         realmManager = this.realmManager;
     });
 
     const startOmnitron = async () => {
-        await omnitron2.dispatcher.startOmnitron();
+        await omnitron2.dispatcher.startOmnitron({
+            adoneRootPath
+        });
         await omnitron2.dispatcher.connectLocal({
             forceStart: false
         });
-        iOmnitron = omnitron2.dispatcher.getInterface("omnitron");
+        iOmnitron = omnitron2.dispatcher.queryInterface("omnitron");
     };
 
     const stopOmnitron = async () => {
         await omnitron2.dispatcher.stopOmnitron();
     };
 
-    describe.only("Dispatcher", () => {
+    describe("Dispatcher", () => {
         it("initialization", () => {
             const d = new omnitron2.Dispatcher();
             const omnitAddrs = omnitron2.LOCAL_PEER_INFO.multiaddrs.toArray();
             assert.lengthOf(omnitAddrs, 1);
-            assert.true(omnitAddrs[0].equals(multi.address.fromNodeAddress(omnitron2.defaultAddress)));
+            assert.true(omnitAddrs[0].equals(multi.address.create(omnitron2.DEFAULT_ADDRESS)));
             assert.strictEqual(d.netron.peer.info.id.asBase58(), runtime.realm.config.identity.client.id);
         });
     
@@ -46,8 +50,7 @@ describe("omnitron", () => {
         });
     });
 
-
-    describe("basics", () => {
+    describe.only("basics", () => {
         beforeEach(async () => {
             await startOmnitron();
         });
@@ -56,10 +59,10 @@ describe("omnitron", () => {
             await stopOmnitron();
         });
 
-        it("pidfile and log files should exist", async () => {
-            assert.true(await fs.exists(adone.realm.config.omnitron.pidFilePath));
-            assert.true(await fs.exists(adone.realm.config.omnitron.logFilePath));
-            assert.true(await fs.exists(adone.realm.config.omnitron.errorLogFilePath));
+        it.only("pidfile and log files should exist", async () => {
+            assert.true(await fs.exists(adone.realm.config.omnitron.PIDFILE_PATH));
+            assert.true(await fs.exists(adone.realm.config.omnitron.LOGFILE_PATH));
+            assert.true(await fs.exists(adone.realm.config.omnitron.ERRORLOGFILE_PATH));
         });
 
         it("correct omnitron information", async () => {

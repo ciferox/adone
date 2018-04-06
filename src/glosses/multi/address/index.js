@@ -385,6 +385,7 @@ export class Multiaddr {
         throw NotImplemented;
     }
 }
+adone.tag.add(Multiaddr, "MULTI_ADDRESS");
 
 /**
  * Creates a Multiaddr from a node-friendly address object
@@ -417,35 +418,13 @@ export const fromNodeAddress = (addr, transport) => {
 };
 
 /**
- * Returns if something is a Multiaddr or not
- *
- * @param {Multiaddr} addr
- * @return {Bool} isMultiaddr
- * @example
- * Multiaddr.isMultiaddr(Multiaddr('/ip4/127.0.0.1/tcp/4001'))
- * // true
- * Multiaddr.isMultiaddr('/ip4/127.0.0.1/tcp/4001')
- * // false
- */
-export const isMultiaddr = (addr) => {
-    if (addr.constructor && addr.constructor.name) {
-        return addr.constructor.name === "Multiaddr";
-    }
-
-    return Boolean(
-        addr.fromStupidString &&
-        addr.protos
-    );
-};
-
-/**
  * Returns if something is a Multiaddr that is a name
  *
  * @param {Multiaddr} addr
  * @return {Bool} isName
  */
 export const isName = (addr) => {
-    if (!isMultiaddr(addr)) {
+    if (!is.multiAddress(addr)) {
         return false;
     }
 
@@ -462,7 +441,7 @@ export const isName = (addr) => {
  * @return {Bool} isName
  */
 export const resolve = (addr, callback) => {
-    if (!isMultiaddr(addr) || !isName(addr)) {
+    if (!is.multiAddress(addr) || !isName(addr)) {
         return callback(new Error("not a valid name"));
     }
 

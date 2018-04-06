@@ -105,7 +105,7 @@ export default class Dispatcher extends Subsystem {
         }
     }
 
-    async startOmnitron({ spiritualWay = true, gc = false } = {}) {
+    async startOmnitron({ spiritualWay = true, gc = false, adoneRootPath } = {}) {
         if (spiritualWay) {
             const isActive = await this.isOmnitronActive();
             if (isActive) {
@@ -129,9 +129,22 @@ export default class Dispatcher extends Subsystem {
             }
             return new Promise(async (resolve, reject) => {
                 const omniConfig = adone.runtime.realm.config.omnitron;
+                // Force create logs directory
+                await adone.fs.mkdirp(std.path.dirname(omniConfig.LOGFILE_PATH));
                 this.descriptors.stdout = await fs.open(omniConfig.LOGFILE_PATH, "a");
                 this.descriptors.stderr = await fs.open(omniConfig.ERRORLOGFILE_PATH, "a");
-                const args = [std.path.resolve(__dirname, "omnitron/index.js")];
+                let scriptPath;
+                if (is.string(adoneRootPath)) {
+                    scriptPath = std.path.resolve(adoneRootPath, "lib", "omnitron2", "omnitron", "index.js");
+                } else {
+                    scriptPath = std.path.join(__dirname, "omnitron", "index,js");
+                }
+                const args = [scriptPath];
+                if (is.string(adoneRootPath)) {
+                    args.unshift(adoneRootPath);
+                    args.unshift("--require");
+                }
+
                 if (gc) {
                     args.unshift("--expose-gc");
                 }

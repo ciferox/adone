@@ -426,7 +426,7 @@ export default class Core extends event.Emitter {
         if (is.p2pPeerInfo(peer)) {
             p = peer;
             // Multiaddr instance or Multiaddr String
-        } else if (multi.address.isMultiaddr(peer) || is.string(peer)) {
+        } else if (is.multiAddress(peer) || is.string(peer)) {
             if (is.string(peer)) {
                 peer = multi.address.create(peer);
             }

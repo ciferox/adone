@@ -8,8 +8,8 @@ const {
 } = adone;
 
 export default class Listener extends pull.ws.Server {
-    constructor(handler) {
-        super((socket) => {
+    constructor(handler, options) {
+        super(options, (socket) => {
             socket.getObservedAddrs = (callback) => {
                 // TODO research if we can reuse the address in anyway
                 return callback(null, []);

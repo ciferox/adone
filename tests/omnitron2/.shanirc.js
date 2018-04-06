@@ -20,7 +20,9 @@ export default async (ctx) => {
         const realmManager = await observer.result;
 
         // hijacking realm
+        ctx.runtime.adoneRootPath = adone.std.path.join(realmPath, "test");
         ctx.runtime.realmManager = realmManager;
+        
         adone.runtime.realm.manager = realmManager;
         adone.runtime.realm.config = realmManager.config;
         adone.runtime.realm.identity = realmManager.config.identity.server;

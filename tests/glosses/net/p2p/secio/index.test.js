@@ -127,4 +127,34 @@ describe("secio", () => {
         secio.encrypt(peerA, new Connection(p[0]), peerC, check);
         secio.encrypt(peerB, new Connection(p[1]), peerA, check);
     });
+
+    it("bubbles errors from handshake failures properly", (done) => {
+        const {
+            State,
+            handshake
+        } = adone.private(adone.net.p2p.secio);
+        const p = pull.pair.duplex();
+        const timeout = 60 * 1000 * 5;
+        const stateA = new State(peerA, peerC, timeout, () => { });
+        const stateB = new State(peerB, peerA, timeout, () => { });
+        const connA = new Connection(p[0]);
+        const connB = new Connection(p[1]);
+
+        const finish = (err) => {
+            assert.exists(err);
+            done();
+        };
+
+        pull(
+            connA,
+            handshake(stateA, finish),
+            connA
+        );
+
+        pull(
+            connB,
+            handshake(stateB, finish),
+            connB
+        );
+    });
 });

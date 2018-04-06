@@ -29,8 +29,8 @@ export default class TCP {
         });
     }
 
-    createListener(handler) {
-        return new Listener(handler);
+    createListener(options, handler) {
+        return new Listener(options, handler);
     }
 
     filter(multiaddrs) {

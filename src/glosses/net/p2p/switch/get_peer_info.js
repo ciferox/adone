@@ -15,7 +15,7 @@ const getPeerInfo = function (peer, peerBook) {
     if (is.p2pPeerInfo(peer)) {
         p = peer;
         // Multiaddr instance (not string)
-    } else if (adone.multi.address.isMultiaddr(peer) || is.string(peer)) {
+    } else if (is.multiAddress(peer) || is.string(peer)) {
         if (is.string(peer)) {
             peer = multi.address.create(peer);
         }

@@ -154,7 +154,7 @@ export default class Netron extends adone.task.Manager {
      */
     async connect(netId, addr) {
         let peerInfo;
-        if (adone.multi.address.isMultiaddr(addr) || is.string(addr)) {
+        if (is.multiAddress(addr) || is.string(addr)) {
             let ma = addr;
             if (is.string(addr)) {
                 ma = adone.multi.address.create(addr);

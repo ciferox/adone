@@ -817,6 +817,8 @@ export const cliApplication = (obj) => adone.tag.has(obj, "CLI_APPLICATION");
 export const configuration = (obj) => adone.tag.has(obj, "CONFIGURATION");
 export const datetime = (obj) => adone.tag.has(obj, "DATETIME");
 
+export const multiAddress = (obj) => adone.tag.has(obj, "MULTI_ADDRESS");
+
 export const windows = platform === "win32";
 
 export const linux = platform === "linux";

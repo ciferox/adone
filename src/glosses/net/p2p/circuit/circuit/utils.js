@@ -16,7 +16,7 @@ module.exports = function (sw) {
      */
     const getB58String = function (peer) {
         let b58Id = null;
-        if (multi.address.isMultiaddr(peer)) {
+        if (is.multiAddress(peer)) {
             const relayMa = multi.address.create(peer);
             b58Id = relayMa.getPeerId();
         } else if (is.p2pPeerInfo(peer)) {
@@ -41,7 +41,7 @@ module.exports = function (sw) {
         if (is.p2pPeerInfo(peer)) {
             p = peer;
             // Multiaddr instance (not string)
-        } else if (multi.address.isMultiaddr(peer)) {
+        } else if (is.multiAddress(peer)) {
             const peerIdB58Str = peer.getPeerId();
             try {
                 p = sw._peerBook.get(peerIdB58Str);

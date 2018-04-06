@@ -1,18 +1,18 @@
 const waterfall = require("async/waterfall");
 
-const support = require("../support");
-const crypto = require("./crypto");
+import { read, write } from "../support";
+import { createProposal, identify, selectProtocols } from "./crypto";
 
 // step 1. Propose
 // -- propose cipher suite + send pubkeys + nonce
-module.exports = function propose(state, cb) {
-    support.write(state, crypto.createProposal(state));
+export default function (state, callback) {
+    write(state, createProposal(state));
 
     waterfall([
-        (cb) => support.read(state.shake, cb),
+        (cb) => read(state.shake, cb),
         (msg, cb) => {
             try {
-                crypto.identify(state, msg);
+                identify(state, msg);
             } catch (err) {
                 return cb(err);
             }
@@ -20,7 +20,7 @@ module.exports = function propose(state, cb) {
         },
         (cb) => {
             try {
-                crypto.selectProtocols(state);
+                selectProtocols(state);
                 cb();
             } catch (err) {
                 return cb(err);
@@ -28,9 +28,8 @@ module.exports = function propose(state, cb) {
         }
     ], (err) => {
         if (err) {
-            return cb(err);
+            return callback(err);
         }
-
-        cb();
+        callback();
     });
-};
+}

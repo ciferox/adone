@@ -57,8 +57,8 @@ export default class WS {
         });
     }
 
-    createListener(handler) {
-        return new Listener(handler);
+    createListener(handler, options) {
+        return new Listener(handler, options);
     }
 
     filter(multiaddrs) {

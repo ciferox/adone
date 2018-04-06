@@ -34,7 +34,8 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         BYTE_ARRAY: Symbol(),
         LONG: Symbol(),
         BIGNUMBER: Symbol(),
-        DATETIME: Symbol()
+        DATETIME: Symbol(),
+        MULTI_ADDRESS: Symbol()
     };
 
     const adone = Object.create({

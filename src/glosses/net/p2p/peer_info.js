@@ -7,7 +7,7 @@ const {
 } = adone;
 
 const ensureMultiaddr = (ma) => {
-    if (multi.address.isMultiaddr(ma)) {
+    if (is.multiAddress(ma)) {
         return ma;
     }
 

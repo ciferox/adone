@@ -1,7 +1,6 @@
-const ip = require("ip");
-
 const {
-    data: { varint, base58 }
+    data: { varint, base58 },
+    net: { ip }
 } = adone;
 
 const port2buf = (port) => {
@@ -47,13 +46,19 @@ const buf2mh = (buf) => {
     return base58.encode(address);
 };
 
+const ip2buf = (ipaddr) => {
+    if (!ipaddr.isValid()) {
+        throw new adone.error.NotValid("Invalid ip address");
+    }
+    return ip.toBuffer(ipaddr.address);
+};
+
 export const toString = (proto, buf) => {
     proto = adone.multi.address.protocols(proto);
     switch (proto.code) {
         case 4: // ipv4
         case 5: // ipv6
             return ip.toString(buf);
-
         case 6: // tcp
         case 7: // udp
         case 8: // sctp
@@ -81,8 +86,9 @@ export const toBuffer = (proto, str) => {
     proto = adone.multi.address.protocols(proto);
     switch (proto.code) {
         case 4: // ipv4
+            return ip2buf(new ip.IP4(str));
         case 5: // ipv6
-            return ip.toBuffer(str);
+            return ip2buf(new ip.IP6(str));
 
         case 6: // tcp
         case 7: // udp
@@ -113,4 +119,4 @@ export const convert = (proto, a) => {
         return toString(proto, a);
     }
     return toBuffer(proto, a);
-}
+};

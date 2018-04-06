@@ -3,7 +3,7 @@ const {
     stream: { pull }
 } = adone;
 
-class State {
+export default class State {
     constructor(localId, remoteId, timeout, callback) {
         if (is.function(timeout)) {
             callback = timeout;
@@ -43,5 +43,3 @@ class State {
         this.exchange = { in: null, out: null };
     }
 }
-
-module.exports = State;

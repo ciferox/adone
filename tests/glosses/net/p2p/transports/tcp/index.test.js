@@ -425,7 +425,7 @@ describe("transport", "tcp", () => {
         });
 
         it("connect error", async () => {
-            await assert.throws(async () => tcp.connect(multi.address.create("//ip4/999.0.0.1//tcp/1234")));
+            await assert.throws(async () => tcp.connect(multi.address.create("//ip4/127.0.0.1//tcp/22234")));
         });
 
         it("matryoshka wrap", async (done) => {

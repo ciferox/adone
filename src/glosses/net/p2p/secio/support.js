@@ -4,24 +4,24 @@ const {
     multi
 } = adone;
 
-exports.exchanges = [
+export const exchanges = [
     "P-256",
     "P-384",
     "P-521"
 ];
 
-exports.ciphers = [
+export const ciphers = [
     "AES-256",
     "AES-128"
 ];
 
-exports.hashes = [
+export const hashes = [
     "SHA256",
     "SHA512"
 ];
 
 // Determines which algorithm to use.  Note:  f(a, b) = f(b, a)
-exports.theBest = (order, p1, p2) => {
+export const theBest = (order, p1, p2) => {
     let first;
     let second;
 
@@ -59,14 +59,16 @@ const makeCipher = function (cipherType, iv, key) {
     throw new Error(`unrecognized cipher type: ${cipherType}`);
 };
 
-exports.makeMacAndCipher = (target) => {
+export const makeMacAndCipher = (target) => {
     target.mac = makeMac(target.hashT, target.keys.macKey);
     target.cipher = makeCipher(target.cipherT, target.keys.iv, target.keys.cipherKey);
 };
 
-exports.selectBest = (local, remote) => {
-    const oh1 = exports.digest(Buffer.concat([remote.pubKeyBytes, local.nonce]));
-    const oh2 = exports.digest(Buffer.concat([local.pubKeyBytes, remote.nonce]));
+export const digest = (buf) => multi.hash.digest(buf, "sha2-256", buf.length);
+
+export const selectBest = (local, remote) => {
+    const oh1 = digest(Buffer.concat([remote.pubKeyBytes, local.nonce]));
+    const oh2 = digest(Buffer.concat([local.pubKeyBytes, remote.nonce]));
     const order = Buffer.compare(oh1, oh2);
 
     if (order === 0) {
@@ -74,16 +76,14 @@ exports.selectBest = (local, remote) => {
     }
 
     return {
-        curveT: exports.theBest(order, local.exchanges, remote.exchanges),
-        cipherT: exports.theBest(order, local.ciphers, remote.ciphers),
-        hashT: exports.theBest(order, local.hashes, remote.hashes),
+        curveT: theBest(order, local.exchanges, remote.exchanges),
+        cipherT: theBest(order, local.ciphers, remote.ciphers),
+        hashT: theBest(order, local.hashes, remote.hashes),
         order
     };
 };
 
-exports.digest = (buf) => multi.hash.digest(buf, "sha2-256", buf.length);
-
-exports.write = function write(state, msg, cb) {
+export const write = function write(state, msg, cb) {
     cb = cb || (() => { });
     pull(
         pull.values([
@@ -100,6 +100,6 @@ exports.write = function write(state, msg, cb) {
     );
 };
 
-exports.read = function read(reader, cb) {
+export const read = function read(reader, cb) {
     pull.lengthPrefixed.decodeFromReader(reader, { fixed: true, bytes: 4 }, cb);
 };

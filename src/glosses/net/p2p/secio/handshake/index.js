@@ -1,11 +1,12 @@
 const series = require("async/series");
-const propose = require("./propose");
-const exchange = require("./exchange");
-const finish = require("./finish");
+
+import propose from "./propose";
+import exchange from "./exchange";
+import finish from "./finish";
 
 // Performs initial communication over insecure channel to share keys, IDs,
 // and initiate communication, assigning all necessary params.
-module.exports = function handshake(state, callback) {
+export default function (state, callback) {
     series([
         (cb) => propose(state, cb),
         (cb) => exchange(state, cb),
@@ -21,8 +22,8 @@ module.exports = function handshake(state, callback) {
         }
 
         // signal when the handshake is finished so that plumbing can happen
-        callback();
+        callback(err);
     });
 
     return state.stream;
-};
+}

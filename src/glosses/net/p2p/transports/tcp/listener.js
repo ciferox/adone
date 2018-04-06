@@ -50,7 +50,7 @@ const trackSocket = (server, socket) => {
 };
 
 export default class Listener extends adone.event.Emitter {
-    constructor(handler) {
+    constructor(handler, options) {
         super();
 
         this.server = net.createServer((socket) => {

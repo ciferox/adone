@@ -101,7 +101,7 @@ export const toBuffer = function (ip, buff, offset) {
     }
 
     if (!result) {
-        throw Error(`Invalid ip address: ${ip}`);
+        throw new adone.error.NotValid(`Invalid ip address: ${ip}`);
     }
 
     return result;
@@ -203,7 +203,7 @@ export const cidr = function (cidrString) {
 
     const addr = cidrParts[0];
     if (cidrParts.length !== 2) {
-        throw new Error(`invalid CIDR subnet: ${addr}`);
+        throw new adone.error.NotValid(`Invalid CIDR subnet: ${addr}`);
     }
 
     const msk = fromPrefixLen(parseInt(cidrParts[1], 10));
@@ -273,7 +273,7 @@ export const cidrSubnet = function (cidrString) {
 
     const addr = cidrParts[0];
     if (cidrParts.length !== 2) {
-        throw new Error(`invalid CIDR subnet: ${addr}`);
+        throw new adone.error.NotValid(`Invalid CIDR subnet: ${addr}`);
     }
 
     const msk = fromPrefixLen(parseInt(cidrParts[1], 10));
@@ -391,7 +391,7 @@ export const loopback = function (family) {
     family = _normalizeFamily(family);
 
     if (family !== "ipv4" && family !== "ipv6") {
-        throw new Error("family must be ipv4 or ipv6");
+        throw new Error("Family must be ipv4 or ipv6");
     }
 
     return family === "ipv4" ? "127.0.0.1" : "fe80::1";

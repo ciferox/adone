@@ -1,5 +1,5 @@
-const etm = require("../etm");
-const crypto = require("./crypto");
+import { createUnboxStream, createBoxStream } from "../etm";
+import { verifyNonce } from "./crypto";
 
 const {
     stream: { pull }
@@ -7,7 +7,7 @@ const {
 
 // step 3. Finish
 // -- send expected message to verify encryption works (send local nonce)
-module.exports = function finish(state, cb) {
+export default function (state, callback) {
     const proto = state.protocols;
     const stream = state.shake.rest();
     const shake = pull.handshake({ timeout: state.timeout }, (err) => {
@@ -18,9 +18,9 @@ module.exports = function finish(state, cb) {
 
     pull(
         stream,
-        etm.createUnboxStream(proto.remote.cipher, proto.remote.mac),
+        createUnboxStream(proto.remote.cipher, proto.remote.mac),
         shake,
-        etm.createBoxStream(proto.local.cipher, proto.local.mac),
+        createBoxStream(proto.local.cipher, proto.local.mac),
         stream
     );
 
@@ -33,7 +33,7 @@ module.exports = function finish(state, cb) {
                 sink(read) {
                 }
             });
-            cb(err);
+            callback(err);
         };
 
         if (err) {
@@ -41,13 +41,13 @@ module.exports = function finish(state, cb) {
         }
 
         try {
-            crypto.verifyNonce(state, nonceBack);
+            verifyNonce(state, nonceBack);
         } catch (err) {
             return fail(err);
         }
 
         // Awesome that's all folks.
         state.secure.resolve(shake.handshake.rest());
-        cb();
+        callback();
     });
-};
+}

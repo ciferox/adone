@@ -577,13 +577,13 @@ describe("multi", "address", () => {
             });
         });
 
-        describe("address.isMultiaddr()", () => {
+        describe("is.multiAddress()", () => {
             it("handles different inputs", () => {
-                expect(address.isMultiaddr(address.create("//"))).to.be.eql(true);
-                expect(address.isMultiaddr("/")).to.be.eql(false);
-                expect(address.isMultiaddr(123)).to.be.eql(false);
+                expect(is.multiAddress(address.create("//"))).to.be.eql(true);
+                expect(is.multiAddress("/")).to.be.eql(false);
+                expect(is.multiAddress(123)).to.be.eql(false);
 
-                expect(address.isMultiaddr(Buffer.from("//hello"))).to.be.eql(false);
+                expect(is.multiAddress(Buffer.from("//hello"))).to.be.eql(false);
             });
         });
 
@@ -646,12 +646,28 @@ describe("multi", "address", () => {
     });
 
     describe("convert", () => {
-        it("handles buffers", () => {
+        it("handles ip4 buffers", () => {
             expect(address.convert("ip4", Buffer.from("c0a80001", "hex"))).to.be.eql("192.168.0.1");
         });
 
-        it("handles strings", () => {
+        it("handles ip6 buffers", () => {
+            expect(address.convert("ip6", Buffer.from("abcd0000000100020003000400050006", "hex"))).to.eql("abcd:0:1:2:3:4:5:6");
+        });
+
+        it("handles ipv6 strings", () => {
+            expect(address.convert("ip6", "ABCD::1:2:3:4:5:6")).to.eql(Buffer.from("ABCD0000000100020003000400050006", "hex"));
+        });
+
+        it("handles ip4 strings", () => {
             expect(address.convert("ip4", "192.168.0.1")).to.be.eql(Buffer.from("c0a80001", "hex"));
+        });
+
+        it("throws on invalid ip4 conversion", () => {
+            expect(() => address.convert("ip4", "555.168.0.1")).to.throw(/Invalid ip address/);
+        });
+
+        it("throws on invalid ip6 conversion", () => {
+            expect(() => address.convert("ip6", "FFFF::GGGG")).to.throw(/Invalid ip address/);
         });
 
         describe("toBuffer()", () => {
