@@ -1,4 +1,4 @@
-const { makePeers } = require("./utils");
+import createPeerInfo from "./utils/create_peer_info";
 
 const {
     net: { p2p: { muxer: { mplex }, dht, switch: { Switch }, PeerBook, Connection, transport: { TCP } } },
@@ -13,7 +13,7 @@ describe("dht", "KadDHT", "Network", () => {
 
     before(async function () {
         this.timeout(10 * 1000);
-        peerInfos = makePeers(3);
+        peerInfos = createPeerInfo(3);
         const sw = new Switch(peerInfos[0], new PeerBook());
         sw.tm.add("tcp", new TCP());
         sw.connection.addStreamMuxer(mplex);

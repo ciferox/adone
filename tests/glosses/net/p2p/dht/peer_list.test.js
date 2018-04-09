@@ -1,4 +1,4 @@
-const { makePeers } = require("./utils");
+import createPeerInfo from "./utils/create_peer_info";
 
 const { PeerList } = adone.private(adone.net.p2p.dht);
 
@@ -6,7 +6,7 @@ describe("dht", "KadDHT", "PeerList", () => {
     let peers;
 
     before(() => {
-        peers = makePeers(3);
+        peers = createPeerInfo(3);
     });
 
     it("basics", () => {

@@ -3,6 +3,7 @@ const c = require("./constants");
 const utils = require("./utils");
 
 const {
+    is,
     crypto: { Identity },
     data: { varint },
     datastore: { Key },
@@ -55,22 +56,23 @@ const readTime = (buf) => varint.decode(buf);
  *
  * @private
  */
-const loadProviders = (store, cid, callback) => {
-    store.query({ prefix: makeProviderKey(cid) }).then((src) => {
+const loadProviders = async (store, cid) => {
+    const src = await store.query({ prefix: makeProviderKey(cid) });
+    return new Promise((resolve, reject) => {
         pull(
             src,
             pull.map((entry) => {
                 const parts = entry.key.toString().split("/");
                 const lastPart = parts[parts.length - 1];
                 const rawPeerId = utils.decodeBase32(lastPart);
-                return [new Identity(rawPeerId), readTime(entry.value)];
+                return [new Identity(rawPeerId), entry.value ? readTime(entry.value) : undefined];
             }),
             pull.collect((err, res) => {
                 if (err) {
-                    return callback(err);
+                    return reject(err);
                 }
 
-                return callback(null, new Map(res));
+                return resolve(new Map(res));
             })
         );
     });
@@ -102,7 +104,7 @@ class Providers {
          *
          * @type {number}
          */
-        this.cleanupInterval = c.PROVIDERS_CLEANUP_INTERVAL;
+        this._cleanupInterval = c.PROVIDERS_CLEANUP_INTERVAL;
 
         /**
          * How long is a provider valid for. (in seconds)
@@ -226,7 +228,7 @@ class Providers {
         const provs = this.providers.get(makeProviderKey(cid));
 
         if (!provs) {
-            return loadProviders(this.datastore, cid, callback);
+            return loadProviders(this.datastore, cid).catch((err) => callback(err)).then((result) => callback(null, result));
         }
 
         callback(null, provs);
@@ -275,10 +277,7 @@ class Providers {
             clearInterval(this._cleaner);
         }
 
-        this._cleaner = setInterval(
-            () => this._cleanup(),
-            this.cleanupInterval
-        );
+        this._cleaner = setInterval(() => this._cleanup(), this._cleanupInterval);
     }
 
     /**
@@ -306,7 +305,11 @@ class Providers {
         };
 
         if (!provs) {
-            loadProviders(this.datastore, cid, next);
+            const promise = loadProviders(this.datastore, cid);
+            this.providers.set(dsKey, promise);
+            promise.catch(next).then((result) => next(null, result));
+        } else if (is.promise(provs)) {
+            provs.catch(next).then((result) => next(null, result));
         } else {
             next(null, provs);
         }

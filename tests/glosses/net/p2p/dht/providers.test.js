@@ -4,7 +4,8 @@ const map = require("async/map");
 const timesSeries = require("async/timesSeries");
 const each = require("async/each");
 const eachSeries = require("async/eachSeries");
-import { makePeers, makeValues } from "./utils";
+import createPeerInfo from "./utils/create_peer_info";
+import createValues from "./utils/create_values";
 
 const {
     datastore: { backend: { Memory: MemoryStore, Level: LevelStore } },
@@ -22,10 +23,10 @@ describe("dht", "KadDHT", "Providers", function () {
     let infos;
 
     before(() => {
-        infos = makePeers(3);
+        infos = createPeerInfo(3);
     });
 
-    it.only("simple add and get of providers", (done) => {
+    it("simple add and get of providers", (done) => {
         const providers = new Providers(new MemoryStore(), infos[2].id);
 
         const cid = new CID("QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n");
@@ -120,8 +121,8 @@ describe("dht", "KadDHT", "Providers", function () {
         await store.open();
         const providers = new Providers(store, infos[2].id, 10);
 
-        const peers = makePeers(600);
-        const values = makeValues(100);
+        const peers = createPeerInfo(600);
+        const values = createValues(100);
         eachSeries(values, (v, cb) => {
             eachSeries(peers, (p, cb) => {
                 providers.addProvider(v.cid, p.id, cb);
@@ -136,9 +137,8 @@ describe("dht", "KadDHT", "Providers", function () {
                     cb();
                 });
             }, () => {
-                store.close(done);
+                store.close().then(done);
             });
         });
-
     });
 });

@@ -39,7 +39,6 @@ describe("dht", "KadDHT", "RoutingTable", () => {
         }
     });
 
-
     it("remove", function () {
         this.timeout(20 * 1000);
 

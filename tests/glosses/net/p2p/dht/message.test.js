@@ -76,8 +76,9 @@ describe("dht", "KadDHT", "Message", () => {
             expect(peer.multiaddrs.toArray())
                 .to.eql(msg.providerPeers[i].multiaddrs.toArray());
         });
+        
     });
-
+    
     it("clusterlevel", () => {
         const msg = new Message(Message.TYPES.PING, Buffer.from("hello"), 0);
 
