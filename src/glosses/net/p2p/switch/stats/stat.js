@@ -1,12 +1,11 @@
-const Big = require("big.js");
-const MovingAverage = require("moving-average");
-
 const {
     is,
-    event: { Emitter }
+    math: { BigNumber },
+    event: { Emitter },
+    util: { movingAverage }
 } = adone;
 
-class Stats extends Emitter {
+export default class Stats extends Emitter {
     constructor(initialCounters, options) {
         super();
 
@@ -21,10 +20,10 @@ class Stats extends Emitter {
         this._update = this._update.bind(this);
 
         initialCounters.forEach((key) => {
-            this._stats[key] = Big(0);
+            this._stats[key] = new BigNumber(0);
             this._movingAverages[key] = {};
             this._options.movingAverageIntervals.forEach((interval) => {
-                const ma = this._movingAverages[key][interval] = MovingAverage(interval);
+                const ma = this._movingAverages[key][interval] = movingAverage(interval);
                 ma.push(this._frequencyLastTime, 0);
             });
         });
@@ -106,7 +105,7 @@ class Stats extends Emitter {
         this._options.movingAverageIntervals.forEach((movingAverageInterval) => {
             let movingAverage = movingAverages[movingAverageInterval];
             if (!movingAverage) {
-                movingAverage = movingAverages[movingAverageInterval] = MovingAverage(movingAverageInterval);
+                movingAverage = movingAverages[movingAverageInterval] = movingAverage(movingAverageInterval);
             }
             movingAverage.push(latestTime, hz);
         });
@@ -123,11 +122,11 @@ class Stats extends Emitter {
         let n;
 
         if (!this._stats.hasOwnProperty(key)) {
-            n = this._stats[key] = Big(0);
+            n = this._stats[key] = new BigNumber(0);
         } else {
             n = this._stats[key];
         }
-        this._stats[key] = n.plus(inc);
+        this._stats[key] = n.add(inc);
 
         if (!this._frequencyAccumulators[key]) {
             this._frequencyAccumulators[key] = 0;
@@ -135,5 +134,3 @@ class Stats extends Emitter {
         this._frequencyAccumulators[key] += inc;
     }
 }
-
-module.exports = Stats;

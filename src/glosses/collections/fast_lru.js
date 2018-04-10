@@ -5,10 +5,10 @@ const { collection } = adone;
  */
 export default class FastLRU {
     /**
-     * @param {number} size Cache size, unlimited by default
+     * @param {number} maxSize Cache size, unlimited by default
      */
-    constructor(size, { dispose = null, primitiveKeys = true } = {}) {
-        this.queue = new collection.LinkedList(size);
+    constructor({ maxSize, dispose = null, primitiveKeys = true } = {}) {
+        this.queue = new collection.LinkedList(maxSize);
         this.cache = primitiveKeys ? new collection.MapCache() : new Map();
         this.dispose = dispose;
     }

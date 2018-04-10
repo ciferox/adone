@@ -120,7 +120,9 @@ class Providers {
          */
         this.lruCacheSize = cacheSize || c.PROVIDERS_LRU_CACHE_SIZE;
 
-        this.providers = new adone.collection.FastLRU(this.lruCacheSize);
+        this.providers = new adone.collection.FastLRU({
+            maxSize: this.lruCacheSize
+        });
     }
 
     /**

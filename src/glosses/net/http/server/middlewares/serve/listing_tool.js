@@ -220,8 +220,8 @@ export default class ListingTool {
         this.env = getEnvironment(options);
         this.loadIcon = options.loadIcon || loadIcon;
         this.getIconClass = options.getIconClass || getIconClass;
-        this.listingCache = new collection.TimedoutMap(options.ttl ? options.ttl : 1000);
-        this.statCache = new collection.TimedoutMap(options.ttl ? options.ttl : 1000);
+        this.listingCache = new collection.TimeMap(options.ttl ? options.ttl : 1000);
+        this.statCache = new collection.TimeMap(options.ttl ? options.ttl : 1000);
         this.sortFiles = options.sortFiles || sortFiles;
     }
 

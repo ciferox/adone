@@ -1,5 +1,5 @@
 adone.lazify({
-    TimedoutMap: "./timedout_map",
+    TimeMap: "./timedout_map",
     DefaultMap: "./default_map",
     FastLRU: "./fast_lru",
     LRU: "./lru",

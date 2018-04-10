@@ -1,4 +1,7 @@
-const { is, std: { util } } = adone;
+const {
+    is,
+    std: { util }
+} = adone;
 
 // use symbols if possible, otherwise just _props
 const symbols = {};
@@ -76,17 +79,16 @@ const get = (self, key, doUse) => {
             }
         }
         if (hit) {
-            hit = hit.value
-            ;
+            hit = hit.value;
         }
     }
     return hit;
 };
 
 const trim = (self) => {
-    if (priv(self, "length") > priv(self, "max")) {
+    if (priv(self, "length") > priv(self, "maxSize")) {
         for (let walker = priv(self, "lruList").tail;
-            priv(self, "length") > priv(self, "max") && !is.null(walker);) {
+            priv(self, "length") > priv(self, "maxSize") && !is.null(walker);) {
             // We know that we're about to delete this one, and also
             // what the next least recently used key will be, so just
             // go ahead and set it now.
@@ -115,7 +117,7 @@ class Entry {
 /**
  * @typedef ConstructorOptions
  *
- * @property {number} [max] The maximum size of the cache
+ * @property {number} [maxSize] The maximum size of the cache
  * @property {number} [maxAge]  Maximum age in ms
  * @property {LengthCalculator} [length] Function that is used to calculate the length of stored items
  * @property {(key, value) => void} [dispose] Function that is called on items when they are dropped from the cache
@@ -148,53 +150,45 @@ export default class LRU {
      *
      * @param {number | ConstructorOptions} options number is treated as max
      */
-    constructor(options) {
-        if (is.number(options)) {
-            options = { max: options };
-        }
-
-        if (!is.object(options)) {
-            options = {};
-        }
-
-        const max = priv(this, "max", options.max);
+    constructor({ maxSize, length, dispose, stale = false, maxAge = 0 } = {}) {
+        const max = priv(this, "maxSize", maxSize);
         // Kind of weird to have a default max of Infinity, but oh well.
         if (!max || !(is.number(max)) || max <= 0) {
-            priv(this, "max", Infinity);
+            priv(this, "maxSize", Infinity);
         }
 
-        let lc = options.length || naiveLength;
+        let lc = length || naiveLength;
         if (!is.function(lc)) {
             lc = naiveLength;
         }
         priv(this, "lengthCalculator", lc);
 
-        priv(this, "allowStale", options.stale || false);
-        priv(this, "maxAge", options.maxAge || 0);
-        priv(this, "dispose", options.dispose);
+        priv(this, "allowStale", Boolean(stale));
+        priv(this, "maxAge", maxAge);
+        priv(this, "dispose", dispose);
         this.reset();
     }
 
     /**
-     * max option setter
+     * maxSize option setter
      *
      * @param {number} mL
      */
-    set max(mL) {
+    set maxSize(mL) {
         if (!mL || !(is.number(mL)) || mL <= 0) {
             mL = Infinity;
         }
-        priv(this, "max", mL);
+        priv(this, "maxSize", mL);
         trim(this);
     }
 
     /**
-     * max option getter
+     * maxSize option getter
      *
      * @returns {number}
      */
-    get max() {
-        return priv(this, "max");
+    get maxSize() {
+        return priv(this, "maxSize");
     }
 
     /**
@@ -399,12 +393,12 @@ export default class LRU {
             extras = true;
         }
 
-        const max = priv(this, "max");
-        if (max && max !== Infinity) {
+        const maxSize = priv(this, "maxSize");
+        if (maxSize && maxSize !== Infinity) {
             if (extras) {
                 str += ",";
             }
-            str += `\n  max: ${util.inspect(max, opts)}`;
+            str += `\n  maxSize: ${util.inspect(maxSize, opts)}`;
             extras = true;
         }
 
@@ -475,7 +469,7 @@ export default class LRU {
         const len = priv(this, "lengthCalculator").call(this, value, key);
 
         if (priv(this, "cache").has(key)) {
-            if (len > priv(this, "max")) {
+            if (len > priv(this, "maxSize")) {
                 del(this, priv(this, "cache").get(key));
                 return false;
             }
@@ -501,7 +495,7 @@ export default class LRU {
         const hit = new Entry(key, value, len, now, maxAge);
 
         // oversized objects fall out of cache automatically.
-        if (hit.length > priv(this, "max")) {
+        if (hit.length > priv(this, "maxSize")) {
             if (priv(this, "dispose")) {
                 priv(this, "dispose").call(this, key, value);
             }

@@ -1,16 +1,13 @@
-const TimeCache = require("time-cache");
-
-const Peer = require("./peer");
+import Peer from "./peer";
+import { rpc as rpcProto } from "./message";
+import { multicodec } from "./config";
 export const utils = require("./utils");
-const pb = require("./message");
-const config = require("./config");
 
-const log = config.log;
-const multicodec = config.multicodec;
-const ensureArray = utils.ensureArray;
+const { ensureArray } = utils;
 
 const {
     event,
+    collection: { TimeMap },
     stream: { pull }
 } = adone;
 
@@ -29,9 +26,9 @@ export class FloodSub extends event.Emitter {
         /**
          * Time based cache for sequence numbers.
          *
-         * @type {TimeCache}
+         * @type {TimeMap}
          */
-        this.cache = new TimeCache();
+        this.cache = new TimeMap(30000);
 
         /**
          * Map of peers.
@@ -62,7 +59,6 @@ export class FloodSub extends event.Emitter {
          */
         let existing = this.peers.get(id);
         if (!existing) {
-            log("new peer", id);
             this.peers.set(id, peer);
             existing = peer;
 
@@ -76,10 +72,8 @@ export class FloodSub extends event.Emitter {
     _removePeer(peer) {
         const id = peer.info.id.asBase58();
 
-        log("remove", id, peer._references);
         // Only delete when no one else is referencing this peer.
         if (--peer._references === 0) {
-            log("delete peer", id);
             this.peers.delete(id);
         }
 
@@ -104,9 +98,6 @@ export class FloodSub extends event.Emitter {
     }
 
     _onDial(peerInfo, conn) {
-        const idB58Str = peerInfo.id.asBase58();
-        log("connected", idB58Str);
-
         const peer = this._addPeer(new Peer(peerInfo));
         peer.attachConnection(conn);
 
@@ -121,7 +112,6 @@ export class FloodSub extends event.Emitter {
             const peer = this._addPeer(new Peer(peerInfo));
             this._processConnection(idB58Str, conn, peer);
         } catch (err) {
-            log.err("Failed to identify incomming conn", err);
             return pull(pull.empty(), conn);
         }
     }
@@ -130,7 +120,7 @@ export class FloodSub extends event.Emitter {
         pull(
             conn,
             pull.lengthPrefixed.decode(),
-            pull.map((data) => pb.rpc.RPC.decode(data)),
+            pull.map((data) => rpcProto.RPC.decode(data)),
             pull.drain(
                 (rpc) => this._onRpc(idB58Str, rpc),
                 (err) => this._onConnectionEnd(idB58Str, peer, err)
@@ -143,7 +133,6 @@ export class FloodSub extends event.Emitter {
             return;
         }
 
-        log("rpc from", idB58Str);
         const subs = rpc.subscriptions;
         const msgs = rpc.msgs;
 
@@ -167,7 +156,7 @@ export class FloodSub extends event.Emitter {
                 return;
             }
 
-            this.cache.put(seqno);
+            this.cache.set(seqno);
 
             // 2. emit to self
             this._emitMessages(msg.topicIDs, [msg]);
@@ -180,10 +169,9 @@ export class FloodSub extends event.Emitter {
     _onConnectionEnd(idB58Str, peer, err) {
         // socket hang up, means the one side canceled
         if (err && err.message !== "socket hang up") {
-            log.err(err);
+            // adone.logError(err);
         }
 
-        log("connection ended", idB58Str, err ? err.message : "");
         this._removePeer(peer);
     }
 
@@ -206,8 +194,6 @@ export class FloodSub extends event.Emitter {
             }
 
             peer.sendMessages(utils.normalizeOutRpcMessages(messages));
-
-            log("publish msgs on topics", topics, peer.info.id.asBase58());
         });
     }
 
@@ -265,8 +251,6 @@ export class FloodSub extends event.Emitter {
             throw new adone.error.IllegalState("FloodSub is not started");
         }
 
-        log("publish", topics, messages);
-
         topics = ensureArray(topics);
         messages = ensureArray(messages);
 
@@ -274,7 +258,7 @@ export class FloodSub extends event.Emitter {
 
         const buildMessage = (msg) => {
             const seqno = utils.randomSeqno();
-            this.cache.put(utils.msgId(from, seqno));
+            this.cache.set(utils.msgId(from, seqno));
 
             return {
                 from,

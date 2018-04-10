@@ -3,7 +3,7 @@ const { is } = adone;
 /**
  * Represents a Map that keeps keys only for a specified interval of time
  */
-export default class TimedoutMap extends Map {
+export default class TimeMap extends Map {
     /**
      * @param {number} [timeout = number] maximum age of the keys, 1000 by default
      * @param {Function} [callback] callback that is called with each key when the timeout is passed

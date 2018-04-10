@@ -4,11 +4,11 @@ const {
 } = adone;
 
 export default class NSCache {
-    constructor(size, namespaces) {
+    constructor(maxSize, namespaces) {
         this._caches = {};
         this._namesapces = new Set(namespaces);
         for (const namespace of namespaces) {
-            this._caches[namespace] = new collection.FastLRU(size);
+            this._caches[namespace] = new collection.FastLRU({ maxSize });
         }
     }
 

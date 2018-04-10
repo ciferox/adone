@@ -2,7 +2,7 @@ import { createInfos, tryEcho } from "./utils";
 
 const {
     multi,
-    net: { p2p: { secio, muxer: { mplex, spdy }, switch: { Switch }, PeerInfo, PeerBook, transport: { TCP, WS } } },
+    net: { p2p: { secio, muxer: { mplex, spdy }, switch: { Switch }, PeerBook, transport: { TCP, WS } } },
     stream: { pull }
 } = adone;
 
@@ -896,8 +896,8 @@ describe("switch", () => {
 
             switches.forEach((swtch) => {
                 const snapshot = swtch.stats.global.snapshot;
-                expect(snapshot.dataReceived.toFixed()).to.equal("2426");
-                expect(snapshot.dataSent.toFixed()).to.equal("2426");
+                expect(snapshot.dataReceived.toString()).to.equal("2426");
+                expect(snapshot.dataSent.toString()).to.equal("2426");
             });
 
             await teardown(switches);
@@ -942,8 +942,8 @@ describe("switch", () => {
             const switches = await setup();
             switches.forEach((swtch) => {
                 const snapshot = swtch.stats.forTransport("tcp").snapshot;
-                expect(snapshot.dataReceived.toFixed()).to.equal("2426");
-                expect(snapshot.dataSent.toFixed()).to.equal("2426");
+                expect(snapshot.dataReceived.toString()).to.equal("2426");
+                expect(snapshot.dataSent.toString()).to.equal("2426");
             });
             await teardown(switches);
         });
@@ -952,8 +952,8 @@ describe("switch", () => {
             const switches = await setup();
             switches.forEach((swtch) => {
                 const snapshot = swtch.stats.forProtocol("/echo/1.0.0").snapshot;
-                expect(snapshot.dataReceived.toFixed()).to.equal("4");
-                expect(snapshot.dataSent.toFixed()).to.equal("4");
+                expect(snapshot.dataReceived.toString()).to.equal("4");
+                expect(snapshot.dataSent.toString()).to.equal("4");
             });
             await teardown(switches);
         });
@@ -963,8 +963,8 @@ describe("switch", () => {
             switches.forEach((swtch, index) => {
                 const other = selectOther(switches, index);
                 const snapshot = swtch.stats.forPeer(other._peerInfo.id.asBase58()).snapshot;
-                expect(snapshot.dataReceived.toFixed()).to.equal("2426");
-                expect(snapshot.dataSent.toFixed()).to.equal("2426");
+                expect(snapshot.dataReceived.toString()).to.equal("2426");
+                expect(snapshot.dataSent.toString()).to.equal("2426");
             });
             await teardown(switches);
         });
@@ -995,8 +995,8 @@ describe("switch", () => {
             switches.forEach((swtch, index) => {
                 const other = selectOther(switches, index);
                 const snapshot = swtch.stats.forPeer(other._peerInfo.id.asBase58()).snapshot;
-                expect(snapshot.dataReceived.toFixed()).to.equal("2426");
-                expect(snapshot.dataSent.toFixed()).to.equal("2426");
+                expect(snapshot.dataReceived.toString()).to.equal("2426");
+                expect(snapshot.dataSent.toString()).to.equal("2426");
             });
 
             await teardown(switches);
@@ -1025,8 +1025,8 @@ describe("switch", () => {
             switches.forEach((swtch, index) => {
                 const other = selectOther(switches, index);
                 const snapshot = swtch.stats.forPeer(other._peerInfo.id.asBase58()).snapshot;
-                expect(snapshot.dataReceived.toFixed()).to.equal("4852");
-                expect(snapshot.dataSent.toFixed()).to.equal("4852");
+                expect(snapshot.dataReceived.toString()).to.equal("4852");
+                expect(snapshot.dataSent.toString()).to.equal("4852");
             });
             await teardown(switches);
         });

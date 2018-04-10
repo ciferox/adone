@@ -1,4 +1,4 @@
-const rpc = require("./message").rpc.RPC;
+import { rpc } from "./message";
 
 const {
     event,
@@ -8,7 +8,7 @@ const {
 /**
  * The known state of a connected peer.
  */
-class Peer extends event.Emitter {
+export default class Peer extends event.Emitter {
     /**
      * @param {PeerInfo} info
      */
@@ -106,7 +106,7 @@ class Peer extends event.Emitter {
             });
         });
 
-        this.write(rpc.encode({
+        this.write(rpc.RPC.encode({
             subscriptions: subs
         }));
     }
@@ -136,7 +136,7 @@ class Peer extends event.Emitter {
      * @returns {undefined}
      */
     sendMessages(msgs) {
-        this.write(rpc.encode({
+        this.write(rpc.RPC.encode({
             msgs
         }));
     }
@@ -174,5 +174,3 @@ class Peer extends event.Emitter {
         this.emit("close");
     }
 }
-
-module.exports = Peer;

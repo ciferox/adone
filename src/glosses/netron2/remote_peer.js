@@ -1,6 +1,6 @@
 const {
     is,
-    collection: { TimedoutMap },
+    collection: { TimeMap },
     netron2: { ACTION, AbstractPeer, packet, FastUniqueId, Reference },
     stream: { pull },
     error
@@ -18,7 +18,7 @@ export default class RemotePeer extends AbstractPeer {
         this.protocol = adone.netron2.NETRON_PROTOCOL;
 
         this._packetIdPool = new FastUniqueId();
-        this._responseHandlers = new TimedoutMap(this.netron.options.responseTimeout, (id) => {
+        this._responseHandlers = new TimeMap(this.netron.options.responseTimeout, (id) => {
             const handler = this._deleteHandler(id);
             !is.undefined(handler.error) && handler.error(new error.NetronTimeout(`Response timeout ${this.netron.options.responseTimeout}ms exceeded`));
         });

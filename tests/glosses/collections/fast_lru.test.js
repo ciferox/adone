@@ -8,7 +8,9 @@ describe("collection", "FastLRU", () => {
     };
 
     it("should work", () => {
-        const cache = new FastLRU(50);
+        const cache = new FastLRU({
+            maxSize: 50
+        });
         cache.set(1, "one");
         cache.set(2, "two");
         cache.set(3, "three");
@@ -20,7 +22,9 @@ describe("collection", "FastLRU", () => {
     });
 
     it("should move the key to the head", () => {
-        const cache = new FastLRU(50);
+        const cache = new FastLRU({
+            maxSize: 50
+        });
         cache.set(1, "one");
         cache.set(2, "two");
         cache.set(3, "three");
@@ -31,7 +35,9 @@ describe("collection", "FastLRU", () => {
     });
 
     it("should update the value and move to the head", () => {
-        const cache = new FastLRU(50);
+        const cache = new FastLRU({
+            maxSize: 50
+        });
         cache.set(1, "one");
         cache.set(2, "two");
         cache.set(3, "three");
@@ -41,7 +47,10 @@ describe("collection", "FastLRU", () => {
     });
 
     it("should pop the lru element", () => {
-        const cache = new FastLRU(5);
+        const cache = new FastLRU({
+            maxSize:
+                5
+        });
 
         cache.set(1, "1");
         cache.set(2, "2");
@@ -58,7 +67,8 @@ describe("collection", "FastLRU", () => {
 
     it("should call the dispose callback", () => {
         const dropped = [];
-        const cache = new FastLRU(5, {
+        const cache = new FastLRU({
+            maxSize: 5,
             dispose: (key, value) => {
                 dropped.push([key, value]);
             }
@@ -79,7 +89,9 @@ describe("collection", "FastLRU", () => {
 
     context("delete", () => {
         it("should delete keys", () => {
-            const cache = new FastLRU(5);
+            const cache = new FastLRU({
+                maxSize: 5
+            });
             cache.set(1, "1");
             cache.delete(1);
             expect(cache.has(1)).to.be.false();
@@ -93,19 +105,26 @@ describe("collection", "FastLRU", () => {
         });
 
         it("should return true if it was really deleted", () => {
-            const cache = new FastLRU(5);
+            const cache = new FastLRU({
+                maxSize: 5
+            });
             cache.set(1, "1");
             expect(cache.delete(1)).to.be.true();
         });
 
         it("should return false if there was no such key", () => {
-            const cache = new FastLRU(5);
+            const cache = new FastLRU({
+                maxSize: 5
+            });
             expect(cache.delete(2)).to.be.false();
         });
 
         it("should call the dispose callback", () => {
             const dispose = spy();
-            const cache = new FastLRU(5, { dispose });
+            const cache = new FastLRU({
+                maxSize: 5,
+                dispose
+            });
             cache.set(1, 2);
             cache.delete(1);
             expect(dispose).to.have.been.calledWith(1, 2);
@@ -114,7 +133,9 @@ describe("collection", "FastLRU", () => {
 
     describe("size", () => {
         it("should return the cache size", () => {
-            const cache = new FastLRU(5);
+            const cache = new FastLRU({
+                maxSize: 5
+            });
             expect(cache.size).to.be.equal(0);
             cache.set(1, "1");
             expect(cache.size).to.be.equal(1);
@@ -137,7 +158,9 @@ describe("collection", "FastLRU", () => {
 
     describe("clear", () => {
         it("should clear the cache", () => {
-            const cache = new FastLRU(5);
+            const cache = new FastLRU({
+                maxSize: 5
+            });
             cache.set(1, "1");
             cache.set(2, "2");
             cache.set(3, "3");
@@ -149,7 +172,9 @@ describe("collection", "FastLRU", () => {
 
     describe("resize", () => {
         it("should resize the cache", () => {
-            const cache = new FastLRU(5);
+            const cache = new FastLRU({
+                maxSize: 5
+            });
             cache.set(1, "1");
             cache.set(2, "2");
             cache.set(3, "3");

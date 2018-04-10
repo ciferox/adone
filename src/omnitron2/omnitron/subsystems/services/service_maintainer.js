@@ -27,7 +27,7 @@ export default class ServiceMaintainer extends AsyncEmitter {
         this.procStatus = PROCESS_STATUS.NULL;
         this.pid = null;
         this.iServiceApp = null;
-        this._awaiters = new collection.TimedoutMap(adone.math.max([this.manager.options.startTimeout, this.manager.options.stopTimeout]));
+        this._awaiters = new collection.TimeMap(adone.math.max([this.manager.options.startTimeout, this.manager.options.stopTimeout]));
     }
 
     @Public({

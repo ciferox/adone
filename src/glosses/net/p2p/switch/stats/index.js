@@ -1,5 +1,4 @@
-const Stat = require("./stat");
-const OldPeers = require("./old-peers");
+import Stat from "./stat";
 
 const {
     event: { Emitter }
@@ -30,7 +29,9 @@ module.exports = (observer, _options) => {
     const options = Object.assign({}, defaultOptions, _options);
     const globalStats = new Stat(initialCounters, options);
 
-    const oldPeers = OldPeers(options.maxOldPeersRetention);
+    const oldPeers = new adone.collection.FastLRU({
+        maxSize: options.maxOldPeersRetention
+    });
     const peerStats = new Map();
     const transportStats = new Map();
     const protocolStats = new Map();

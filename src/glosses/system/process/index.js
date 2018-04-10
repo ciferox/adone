@@ -48,7 +48,10 @@ export const stdio = (opts) => {
     return result;
 };
 
-const commandCache = new adone.collection.LRU({ max: 50, maxAge: 30 * 1000 }); // Cache just for 30sec
+const commandCache = new adone.collection.LRU({
+    maxSize: 50,
+    maxAge: 30 * 1000
+}); // Cache just for 30sec
 
 const resolveCommand = (command, noExtension) => {
     let resolved;
@@ -119,7 +122,10 @@ const escapeCommand = (command) => {
 
 
 
-const shebangCache = new adone.collection.LRU({ max: 50, maxAge: 30 * 1000 }); // Cache just for 30sec
+const shebangCache = new adone.collection.LRU({
+    maxSize: 50,
+    maxAge: 30 * 1000
+}); // Cache just for 30sec
 
 const readShebang = (command) => {
     let fd;

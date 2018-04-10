@@ -3,16 +3,18 @@ describe("collection", "LRU", () => {
 
     describe("basic", () => {
         it("basic", () => {
-            const cache = new LRU({ max: 10 });
+            const cache = new LRU({ maxSize: 10 });
             cache.set("key", "value");
             assert.equal(cache.get("key"), "value");
             assert.equal(cache.get("nada"), undefined);
             assert.equal(cache.length, 1);
-            assert.equal(cache.max, 10);
+            assert.equal(cache.maxSize, 10);
         });
 
         it("least recently set", () => {
-            const cache = new LRU(2);
+            const cache = new LRU({
+                maxSize: 2
+            });
             cache.set("a", "A");
             cache.set("b", "B");
             cache.set("c", "C");
@@ -22,7 +24,9 @@ describe("collection", "LRU", () => {
         });
 
         it("lru recently gotten", () => {
-            const cache = new LRU(2);
+            const cache = new LRU({
+                maxSize: 2
+            });
             cache.set("a", "A");
             cache.set("b", "B");
             cache.get("a");
@@ -33,17 +37,21 @@ describe("collection", "LRU", () => {
         });
 
         it("del", () => {
-            const cache = new LRU(2);
+            const cache = new LRU({
+                maxSize: 2
+            });
             cache.set("a", "A");
             cache.del("a");
             assert.equal(cache.get("a"), undefined);
         });
 
-        it("max", () => {
-            const cache = new LRU(3);
+        it("maxSize", () => {
+            const cache = new LRU({
+                maxSize: 3
+            });
 
-            // test changing the max, verify that the LRU items get dropped.
-            cache.max = 100;
+            // test changing the maxSize, verify that the LRU items get dropped.
+            cache.maxSize = 100;
             let i;
             for (i = 0; i < 100; i++) {
                 cache.set(i, i);
@@ -52,7 +60,7 @@ describe("collection", "LRU", () => {
             for (i = 0; i < 100; i++) {
                 assert.equal(cache.get(i), i);
             }
-            cache.max = 3;
+            cache.maxSize = 3;
             assert.equal(cache.length, 3);
             for (i = 0; i < 97; i++) {
                 assert.equal(cache.get(i), undefined);
@@ -61,8 +69,8 @@ describe("collection", "LRU", () => {
                 assert.equal(cache.get(i), i);
             }
 
-            // now remove the max restriction, and try again.
-            cache.max = "hello";
+            // now remove the maxSize restriction, and try again.
+            cache.maxSize = "hello";
             for (i = 0; i < 100; i++) {
                 cache.set(i, i);
             }
@@ -71,7 +79,7 @@ describe("collection", "LRU", () => {
                 assert.equal(cache.get(i), i);
             }
             // should trigger an immediate resize
-            cache.max = 3;
+            cache.maxSize = 3;
             assert.equal(cache.length, 3);
             for (i = 0; i < 97; i++) {
                 assert.equal(cache.get(i), undefined);
@@ -82,19 +90,21 @@ describe("collection", "LRU", () => {
         });
 
         it("reset", () => {
-            const cache = new LRU(10);
+            const cache = new LRU({
+                maxSize: 10
+            });
             cache.set("a", "A");
             cache.set("b", "B");
             cache.reset();
             assert.equal(cache.length, 0);
-            assert.equal(cache.max, 10);
+            assert.equal(cache.maxSize, 10);
             assert.equal(cache.get("a"), undefined);
             assert.equal(cache.get("b"), undefined);
         });
 
         it("basic with weighed length", () => {
             const cache = new LRU({
-                max: 100,
+                maxSize: 100,
                 length(item, key) {
                     assert.typeOf(key, "string");
                     return item.size;
@@ -105,17 +115,17 @@ describe("collection", "LRU", () => {
             assert.equal(cache.get("nada"), undefined);
             assert.equal(cache.lengthCalculator(cache.get("key"), "key"), 50);
             assert.equal(cache.length, 50);
-            assert.equal(cache.max, 100);
+            assert.equal(cache.maxSize, 100);
         });
 
         it("weighed length item too large", () => {
             const cache = new LRU({
-                max: 10,
+                maxSize: 10,
                 length(item) {
                     return item.size;
                 }
             });
-            assert.equal(cache.max, 10);
+            assert.equal(cache.maxSize, 10);
 
             // should fall out immediately
             cache.set("key", { val: "value", size: 50 });
@@ -126,7 +136,7 @@ describe("collection", "LRU", () => {
 
         it("least recently set with weighed length", () => {
             const cache = new LRU({
-                max: 8,
+                maxSize: 8,
                 length(item) {
                     return item.length;
                 }
@@ -143,7 +153,7 @@ describe("collection", "LRU", () => {
 
         it("lru recently gotten with weighed length", () => {
             const cache = new LRU({
-                max: 8,
+                maxSize: 8,
                 length(item) {
                     return item.length;
                 }
@@ -162,7 +172,7 @@ describe("collection", "LRU", () => {
 
         it("lru recently updated with weighed length", () => {
             const cache = new LRU({
-                max: 8,
+                maxSize: 8,
                 length(item) {
                     return item.length;
                 }
@@ -189,7 +199,7 @@ describe("collection", "LRU", () => {
 
         it("set returns proper booleans", () => {
             const cache = new LRU({
-                max: 5,
+                maxSize: 5,
                 length(item) {
                     return item.length;
                 }
@@ -206,7 +216,7 @@ describe("collection", "LRU", () => {
 
         it("drop the old items", (done) => {
             const cache = new LRU({
-                max: 5,
+                maxSize: 5,
                 maxAge: 50
             });
 
@@ -236,7 +246,7 @@ describe("collection", "LRU", () => {
 
         it("manual pruning", (done) => {
             const cache = new LRU({
-                max: 5,
+                maxSize: 5,
                 maxAge: 50
             });
 
@@ -257,7 +267,7 @@ describe("collection", "LRU", () => {
 
         it("individual item can have its own maxAge", (done) => {
             const cache = new LRU({
-                max: 5,
+                maxSize: 5,
                 maxAge: 50
             });
 
@@ -270,7 +280,7 @@ describe("collection", "LRU", () => {
 
         it("individual item can have its own maxAge > cache", (done) => {
             const cache = new LRU({
-                max: 5,
+                maxSize: 5,
                 maxAge: 20
             });
 
@@ -284,7 +294,7 @@ describe("collection", "LRU", () => {
         it("disposal function", () => {
             let disposed = false;
             const cache = new LRU({
-                max: 1,
+                maxSize: 1,
                 dispose(k, n) {
                     disposed = n;
                 }
@@ -304,7 +314,7 @@ describe("collection", "LRU", () => {
         it("disposal function on too big of item", () => {
             let disposed = false;
             const cache = new LRU({
-                max: 1,
+                maxSize: 1,
                 length(k) {
                     return k.length;
                 },
@@ -321,7 +331,7 @@ describe("collection", "LRU", () => {
 
         it("has()", (done) => {
             const cache = new LRU({
-                max: 1,
+                maxSize: 1,
                 maxAge: 10
             });
 
@@ -356,7 +366,9 @@ describe("collection", "LRU", () => {
         });
 
         it("lru update via set", () => {
-            const cache = new LRU({ max: 2 });
+            const cache = new LRU({
+                maxSize: 2
+            });
 
             cache.set("foo", 1);
             cache.set("bar", 2);
@@ -371,7 +383,9 @@ describe("collection", "LRU", () => {
         });
 
         it("least recently set w/ peek", () => {
-            const cache = new LRU(2);
+            const cache = new LRU({
+                maxSize: 2
+            });
             cache.set("a", "A");
             cache.set("b", "B");
             assert.equal(cache.peek("a"), "A");
@@ -382,7 +396,9 @@ describe("collection", "LRU", () => {
         });
 
         it("pop the least used item", () => {
-            const cache = new LRU(3);
+            const cache = new LRU({
+                maxSize: 3
+            });
             let last;
 
             cache.set("a", "A");
@@ -390,7 +406,7 @@ describe("collection", "LRU", () => {
             cache.set("c", "C");
 
             assert.equal(cache.length, 3);
-            assert.equal(cache.max, 3);
+            assert.equal(cache.maxSize, 3);
 
             // Ensure we pop a, c, b
             cache.get("b", "B");
@@ -399,24 +415,24 @@ describe("collection", "LRU", () => {
             assert.equal(last.key, "a");
             assert.equal(last.value, "A");
             assert.equal(cache.length, 2);
-            assert.equal(cache.max, 3);
+            assert.equal(cache.maxSize, 3);
 
             last = cache.pop();
             assert.equal(last.key, "c");
             assert.equal(last.value, "C");
             assert.equal(cache.length, 1);
-            assert.equal(cache.max, 3);
+            assert.equal(cache.maxSize, 3);
 
             last = cache.pop();
             assert.equal(last.key, "b");
             assert.equal(last.value, "B");
             assert.equal(cache.length, 0);
-            assert.equal(cache.max, 3);
+            assert.equal(cache.maxSize, 3);
 
             last = cache.pop();
             assert.equal(last, null);
             assert.equal(cache.length, 0);
-            assert.equal(cache.max, 3);
+            assert.equal(cache.maxSize, 3);
         });
 
         it("get and set only accepts strings and numbers as keys", () => {
@@ -453,7 +469,9 @@ describe("collection", "LRU", () => {
         });
 
         it("change length calculator recalculates", () => {
-            const l = new LRU({ max: 3 });
+            const l = new LRU({
+                maxSize: 3
+            });
             l.set(2, 2);
             l.set(1, 1);
             l.lengthCalculator = function (key, val) {
@@ -473,7 +491,9 @@ describe("collection", "LRU", () => {
         });
 
         it("delete non-existent item has no effect", () => {
-            const l = new LRU({ max: 2 });
+            const l = new LRU({
+                maxSize: 2
+            });
             l.set("foo", 1);
             l.set("bar", 2);
             l.del("baz");
@@ -483,7 +503,9 @@ describe("collection", "LRU", () => {
         });
 
         it("maxAge on list, cleared in forEach", () => {
-            const l = new LRU({ stale: true });
+            const l = new LRU({
+                stale: true
+            });
             l.set("foo", 1);
 
             // hacky.  make it seem older.
@@ -510,7 +532,9 @@ describe("collection", "LRU", () => {
 
     describe("forEach", () => {
         it("forEach", () => {
-            const l = new LRU(5);
+            const l = new LRU({
+                maxSize: 5
+            });
             let i;
             for (i = 0; i < 10; i++) {
                 l.set(i, i.toString(2));
@@ -551,7 +575,9 @@ describe("collection", "LRU", () => {
         });
 
         it("keys() and values()", () => {
-            const l = new LRU(5);
+            const l = new LRU({
+                maxSize: 5
+            });
             let i;
             for (i = 0; i < 10; i++) {
                 l.set(i, i.toString(2));
@@ -569,7 +595,9 @@ describe("collection", "LRU", () => {
         });
 
         it("all entries are iterated over", () => {
-            const l = new LRU(5);
+            const l = new LRU({
+                maxSize: 5
+            });
             let i;
             for (i = 0; i < 10; i++) {
                 l.set(i.toString(), i.toString(2));
@@ -588,7 +616,11 @@ describe("collection", "LRU", () => {
         });
 
         it("all stale entries are removed", () => {
-            const l = new LRU({ max: 5, maxAge: -5, stale: true });
+            const l = new LRU({
+                maxSize: 5,
+                maxAge: -5,
+                stale: true
+            });
             let i;
             for (i = 0; i < 10; i++) {
                 l.set(i.toString(), i.toString(2));
@@ -605,7 +637,7 @@ describe("collection", "LRU", () => {
 
         it("expires", (done) => {
             const l = new LRU({
-                max: 10,
+                maxSize: 10,
                 maxAge: 50
             });
             let i;
@@ -646,35 +678,35 @@ describe("collection", "LRU", () => {
 
         inspect("LRUCache {}");
 
-        l.max = 10;
-        inspect("LRUCache {\n  max: 10\n}");
+        l.maxSize = 10;
+        inspect("LRUCache {\n  maxSize: 10\n}");
 
         l.maxAge = 50;
-        inspect("LRUCache {\n  max: 10,\n  maxAge: 50\n}");
+        inspect("LRUCache {\n  maxSize: 10,\n  maxAge: 50\n}");
 
         l.set({ foo: "bar" }, "baz");
-        inspect("LRUCache {\n  max: 10,\n  maxAge: 50,\n\n  { foo: 'bar' } => { value: 'baz' }\n}");
+        inspect("LRUCache {\n  maxSize: 10,\n  maxAge: 50,\n\n  { foo: 'bar' } => { value: 'baz' }\n}");
 
         l.maxAge = 0;
         l.set(1, { a: { b: { c: { d: { e: { f: {} } } } } } });
-        inspect("LRUCache {\n  max: 10,\n\n  1 => { value: { a: { b: [Object] } } },\n  { foo: 'bar' } => { value: 'baz', maxAge: 50 }\n}");
+        inspect("LRUCache {\n  maxSize: 10,\n\n  1 => { value: { a: { b: [Object] } } },\n  { foo: 'bar' } => { value: 'baz', maxAge: 50 }\n}");
 
         l.allowStale = true;
-        inspect("LRUCache {\n  allowStale: true,\n  max: 10,\n\n  1 => { value: { a: { b: [Object] } } },\n  { foo: 'bar' } => { value: 'baz', maxAge: 50 }\n}");
+        inspect("LRUCache {\n  allowStale: true,\n  maxSize: 10,\n\n  1 => { value: { a: { b: [Object] } } },\n  { foo: 'bar' } => { value: 'baz', maxAge: 50 }\n}");
 
         setTimeout(() => {
-            inspect("LRUCache {\n  allowStale: true,\n  max: 10,\n\n  1 => { value: { a: { b: [Object] } } },\n  { foo: 'bar' } => { value: 'baz', maxAge: 50, stale: true }\n}");
+            inspect("LRUCache {\n  allowStale: true,\n  maxSize: 10,\n\n  1 => { value: { a: { b: [Object] } } },\n  { foo: 'bar' } => { value: 'baz', maxAge: 50, stale: true }\n}");
 
             // prune stale items
             l.forEach(() => { });
-            inspect("LRUCache {\n  allowStale: true,\n  max: 10,\n\n  1 => { value: { a: { b: [Object] } } }\n}");
+            inspect("LRUCache {\n  allowStale: true,\n  maxSize: 10,\n\n  1 => { value: { a: { b: [Object] } } }\n}");
 
             l.lengthCalculator = function () {
                 return 5;
             };
-            inspect("LRUCache {\n  allowStale: true,\n  max: 10,\n  length: 5,\n\n  1 => { value: { a: { b: [Object] } }, length: 5 }\n}");
+            inspect("LRUCache {\n  allowStale: true,\n  maxSize: 10,\n  length: 5,\n\n  1 => { value: { a: { b: [Object] } }, length: 5 }\n}");
 
-            l.max = 0;
+            l.maxSize = 0;
             inspect("LRUCache {\n  allowStale: true,\n  length: 5,\n\n  1 => { value: { a: { b: [Object] } }, length: 5 }\n}");
 
             l.maxAge = 100;
@@ -731,7 +763,7 @@ describe("collection", "LRU", () => {
 
         it("do not dump stale items", (done) => {
             const cache = new LRU({
-                max: 5,
+                maxSize: 5,
                 maxAge: 50
             });
 
@@ -817,8 +849,8 @@ describe("collection", "LRU", () => {
         });
 
         it("load to other size cache", () => {
-            const cache = new LRU({ max: 2 });
-            const copy = new LRU({ max: 1 });
+            const cache = new LRU({ maxSize: 2 });
+            const copy = new LRU({ maxSize: 1 });
 
             cache.set("a", "A");
             cache.set("b", "B");

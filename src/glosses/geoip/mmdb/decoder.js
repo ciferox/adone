@@ -37,7 +37,9 @@ export default class Decoder {
         this.baseOffset = baseOffset;
         opts.cache = opts.cache || {};
         opts.cache.max = opts.cache.max || 6000;
-        this.cache = new collection.FastLRU(opts.cache.max);
+        this.cache = new collection.FastLRU({
+            maxSize: opts.cache.max
+        });
     }
 
     decode(offset) {

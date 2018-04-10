@@ -3,7 +3,7 @@ const {
     error,
     util,
     event: { AsyncEmitter },
-    collection: { TimedoutMap },
+    collection: { TimeMap },
     netron: { PEER_STATUS, ACTION, RemoteStub, SequenceId, Stream }
 } = adone;
 
@@ -14,7 +14,7 @@ export default class GenesisPeer extends AsyncEmitter {
 
         this.netron = this.options.netron;
         this.streamId = new SequenceId();
-        this._responseAwaiters = new TimedoutMap(this.options.responseTimeout, (streamId) => {
+        this._responseAwaiters = new TimeMap(this.options.responseTimeout, (streamId) => {
             const awaiter = this._removeAwaiter(streamId);
             awaiter([1, new error.NetronTimeout(`Response timeout ${this.options.responseTimeout}ms exceeded`)]);
         });
