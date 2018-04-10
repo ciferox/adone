@@ -1,5 +1,3 @@
-const proto = require("../protocol");
-
 const {
     is,
     crypto: { Identity },
@@ -7,7 +5,11 @@ const {
     multi
 } = adone;
 
-module.exports = function (sw) {
+const {
+    protocol
+} = adone.private(adone.net.p2p.circuit);
+
+export default function (sw) {
     /**
      * Get b58 string from multiaddr or peerinfo
      *
@@ -22,10 +24,8 @@ module.exports = function (sw) {
         } else if (is.p2pPeerInfo(peer)) {
             b58Id = peer.id.asBase58();
         }
-
         return b58Id;
     };
-
     /**
      * Helper to make a peer info from a multiaddrs
      *
@@ -54,10 +54,8 @@ module.exports = function (sw) {
             const peerIdB58Str = peer.asBase58();
             p = sw._peerBook.has(peerIdB58Str) ? sw._peerBook.get(peerIdB58Str) : peer;
         }
-
         return p;
     };
-
     /**
      * Checks if peer has an existing connection
      *
@@ -68,24 +66,19 @@ module.exports = function (sw) {
     const isPeerConnected = function (peerId) {
         return sw.muxedConns[peerId] || sw.conns[peerId];
     };
-
     /**
      * Write a response
      *
      * @param {StreamHandler} streamHandler
      * @param {CircuitRelay.Status} status
-     * @param {Function} cb
      * @returns {*}
      */
-    const writeResponse = function (streamHandler, status, cb) {
-        cb = cb || (() => { });
-        streamHandler.write(proto.CircuitRelay.encode({
-            type: proto.CircuitRelay.Type.STATUS,
+    const writeResponse = function (streamHandler, status) {
+        streamHandler.write(protocol.CircuitRelay.encode({
+            type: protocol.CircuitRelay.Type.STATUS,
             code: status
         }));
-        return cb();
     };
-
     /**
      * Validate incomming HOP/STOP message
      *
@@ -95,32 +88,28 @@ module.exports = function (sw) {
      * @returns {*}
      * @param {Function} cb
      */
-    const validateAddrs = function (msg, streamHandler, type, cb) {
+    const validateAddrs = function (msg, streamHandler, type) {
         try {
             msg.dstPeer.addrs.forEach((addr) => {
                 return multi.address.create(addr);
             });
         } catch (err) {
-            writeResponse(streamHandler, type === proto.CircuitRelay.Type.HOP
-                ? proto.CircuitRelay.Status.HOP_DST_MULTIADDR_INVALID
-                : proto.CircuitRelay.Status.STOP_DST_MULTIADDR_INVALID);
-            return cb(err);
+            writeResponse(streamHandler, type === protocol.CircuitRelay.Type.HOP
+                ? protocol.CircuitRelay.Status.HOP_DST_MULTIADDR_INVALID
+                : protocol.CircuitRelay.Status.STOP_DST_MULTIADDR_INVALID);
+            throw err;
         }
-
         try {
             msg.srcPeer.addrs.forEach((addr) => {
                 return multi.address.create(addr);
             });
         } catch (err) {
-            writeResponse(streamHandler, type === proto.CircuitRelay.Type.HOP
-                ? proto.CircuitRelay.Status.HOP_SRC_MULTIADDR_INVALID
-                : proto.CircuitRelay.Status.STOP_SRC_MULTIADDR_INVALID);
-            return cb(err);
+            writeResponse(streamHandler, type === protocol.CircuitRelay.Type.HOP
+                ? protocol.CircuitRelay.Status.HOP_SRC_MULTIADDR_INVALID
+                : protocol.CircuitRelay.Status.STOP_SRC_MULTIADDR_INVALID);
+            throw err;
         }
-
-        return cb(null);
     };
-
     return {
         getB58String,
         peerInfoFromMa,
@@ -128,4 +117,4 @@ module.exports = function (sw) {
         validateAddrs,
         writeResponse
     };
-};
+}

@@ -1,6 +1,5 @@
-const series = require("async/series");
-
 const {
+    async: { series },
     multi,
     net: { p2p: { transport: { WSStar } } },
     stream: { pull }

@@ -1,6 +1,3 @@
-const waterfall = require("async/waterfall");
-const each = require("async/each");
-const timeout = require("async/timeout");
 const RoutingTable = require("./routing");
 const utils = require("./utils");
 const c = require("./constants");
@@ -13,6 +10,7 @@ const Message = require("./message");
 const RandomWalk = require("./random_walk");
 
 const {
+    async: { waterfall, each, timeout },
     is,
     crypto: { Identity },
     datastore: { backend: { Memory: MemoryStore } },

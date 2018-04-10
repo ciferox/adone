@@ -1,5 +1,3 @@
-const multicodec = require("../multicodec");
-
 const {
     is,
     crypto: { Identity },
@@ -9,7 +7,12 @@ const {
     lodash: { assignInWith }
 } = adone;
 
-const __ = adone.private(adone.net.p2p.circuit);
+const {
+    utils,
+    protocol,
+    multicodec,
+    StreamHandler
+} = adone.private(adone.net.p2p.circuit);
 
 export default class Hop extends adone.event.Emitter {
     /**
@@ -26,7 +29,7 @@ export default class Hop extends adone.event.Emitter {
         super();
         this.switch = sw;
         this.peerInfo = this.switch._peerInfo;
-        this.utils = __.utils(sw);
+        this.utils = utils(sw);
         this.config = assignInWith(
             {
                 active: false,
@@ -47,18 +50,18 @@ export default class Hop extends adone.event.Emitter {
      */
     handle(message, streamHandler) {
         if (!this.config.enabled) {
-            return this.utils.writeResponse(streamHandler, __.protocol.CircuitRelay.Status.HOP_CANT_SPEAK_RELAY);
+            return this.utils.writeResponse(streamHandler, protocol.CircuitRelay.Status.HOP_CANT_SPEAK_RELAY);
         }
 
         // check if message is `CAN_HOP`
-        if (message.type === __.protocol.CircuitRelay.Type.CAN_HOP) {
-            return this.utils.writeResponse(streamHandler, __.protocol.CircuitRelay.Status.SUCCESS);
+        if (message.type === protocol.CircuitRelay.Type.CAN_HOP) {
+            return this.utils.writeResponse(streamHandler, protocol.CircuitRelay.Status.SUCCESS);
         }
 
         // This is a relay request - validate and create a circuit
         const srcPeerId = Identity.createFromBytes(message.dstPeer.id);
         if (srcPeerId.asBase58() === this.peerInfo.id.asBase58()) {
-            return this.utils.writeResponse(streamHandler, __.protocol.CircuitRelay.Status.HOP_CANT_RELAY_TO_SELF);
+            return this.utils.writeResponse(streamHandler, protocol.CircuitRelay.Status.HOP_CANT_RELAY_TO_SELF);
         }
 
         const dstPeerId = Identity.createFromBytes(message.dstPeer.id).asBase58();
@@ -68,10 +71,8 @@ export default class Hop extends adone.event.Emitter {
             message.dstPeer.addrs.push(addr);
         }
 
-        this.utils.validateAddrs(message, streamHandler, __.protocol.CircuitRelay.Type.HOP, (err) => {
-            if (err) {
-                return;
-            }
+        try {
+            this.utils.validateAddrs(message, streamHandler, protocol.CircuitRelay.Type.HOP);
 
             let dstPeer;
             try {
@@ -82,7 +83,7 @@ export default class Hop extends adone.event.Emitter {
             } catch (err) {
                 if (!this.active) {
                     setImmediate(() => this.emit("circuit:error", err));
-                    return this.utils.writeResponse(streamHandler, __.protocol.CircuitRelay.Status.HOP_NO_CONN_TO_DST);
+                    return this.utils.writeResponse(streamHandler, protocol.CircuitRelay.Status.HOP_NO_CONN_TO_DST);
                 }
             }
 
@@ -92,7 +93,9 @@ export default class Hop extends adone.event.Emitter {
                 }
                 setImmediate(() => this.emit("circuit:success"));
             });
-        });
+        } catch (err) {
+            //
+        }
     }
 
     /**
@@ -106,26 +109,24 @@ export default class Hop extends adone.event.Emitter {
      */
     _circuit(conn, message, cb) {
         this._dialPeer(message.dstPeer, (err, dstConn) => {
-            const srcStreamHandler = new __.StreamHandler(conn);
+            const srcStreamHandler = new StreamHandler(conn);
             if (err) {
-                this.utils.writeResponse(srcStreamHandler, __.protocol.CircuitRelay.Status.HOP_CANT_DIAL_DST);
+                this.utils.writeResponse(srcStreamHandler, protocol.CircuitRelay.Status.HOP_CANT_DIAL_DST);
                 pull(pull.empty(), srcStreamHandler.rest());
                 return cb(err);
             }
 
-            return this.utils.writeResponse(srcStreamHandler, __.protocol.CircuitRelay.Status.SUCCESS, (err) => {
-                if (err) {
-                    return cb(err);
-                }
+            try {
+                this.utils.writeResponse(srcStreamHandler, protocol.CircuitRelay.Status.SUCCESS);
 
-                const streamHandler = new __.StreamHandler(dstConn);
+                const streamHandler = new StreamHandler(dstConn);
                 const stopMsg = Object.assign({}, message, {
-                    type: __.protocol.CircuitRelay.Type.STOP // change the message type
+                    type: protocol.CircuitRelay.Type.STOP // change the message type
                 });
-                streamHandler.write(__.protocol.CircuitRelay.encode(stopMsg), (err) => {
+                streamHandler.write(protocol.CircuitRelay.encode(stopMsg), (err) => {
                     if (err) {
-                        const errStreamHandler = new __.StreamHandler(conn);
-                        this.utils.writeResponse(errStreamHandler, __.protocol.CircuitRelay.Status.HOP_CANT_OPEN_DST_STREAM);
+                        const errStreamHandler = new StreamHandler(conn);
+                        this.utils.writeResponse(errStreamHandler, protocol.CircuitRelay.Status.HOP_CANT_OPEN_DST_STREAM);
                         pull(pull.empty(), errStreamHandler.rest());
 
                         return cb(err);
@@ -136,9 +137,9 @@ export default class Hop extends adone.event.Emitter {
                             return cb(err);
                         }
 
-                        const message = __.protocol.CircuitRelay.decode(msg);
+                        const message = protocol.CircuitRelay.decode(msg);
                         const srcConn = srcStreamHandler.rest();
-                        if (message.code === __.protocol.CircuitRelay.Status.SUCCESS) {
+                        if (message.code === protocol.CircuitRelay.Status.SUCCESS) {
                             // circuit the src and dst streams
                             pull(
                                 srcConn,
@@ -156,7 +157,9 @@ export default class Hop extends adone.event.Emitter {
                         }
                     });
                 });
-            });
+            } catch (err) {
+                return cb(err);
+            }
         });
     }
 

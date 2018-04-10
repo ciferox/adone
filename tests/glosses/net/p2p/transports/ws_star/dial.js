@@ -1,10 +1,9 @@
-const each = require("async/each");
-const pull = require("pull-stream");
-
 const {
+    async: { each },
     crypto: { Identity },
     multi,
-    net: { p2p: { transport: { WSStar } } }
+    net: { p2p: { transport: { WSStar } } },
+    stream: { pull }
 } = adone;
 
 describe("dial", () => {

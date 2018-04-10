@@ -113,6 +113,12 @@
                     "task": "transpile",
                     "namespace": "assertion"
                 },
+                "async": {
+                    "description": "Higher-order functions and common patterns for asynchronous code",
+                    "src": "src/async/index.js",
+                    "dst": "lib/async",
+                    "namespace": "async"
+                },
                 "cmake": {
                     "description": "Node.js native addon build tool",
                     "src": "src/cmake/**/*.js",

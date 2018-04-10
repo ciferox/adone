@@ -63,6 +63,14 @@ class MultiaddrSet {
         return this._multiaddrs.forEach(fn);
     }
 
+    filterBy(maFmt) {
+        if (typeof maFmt !== "object" || !is.function(maFmt.matches) || !is.function(maFmt.partialMatch) || !is.function(maFmt.toString)) {
+            return [];
+        }
+
+        return this._multiaddrs.filter((ma) => maFmt.matches(ma));
+    }
+
     has(ma) {
         ma = ensureMultiaddr(ma);
         return this._multiaddrs.some((m) => m.equals(ma));

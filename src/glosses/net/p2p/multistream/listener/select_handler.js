@@ -1,7 +1,7 @@
 const writeEncoded = require("../util.js").writeEncoded;
-const some = require("async/some");
 
 const {
+    async: { some },
     net: { p2p: { Connection } },
     stream: { pull }
 } = adone;

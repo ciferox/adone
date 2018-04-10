@@ -5,10 +5,10 @@ import SchemaType from "./schematype";
 const utils = require("./utils");
 let MongooseTypes;
 const Kareem = require("kareem");
-const each = require("async/each");
 const mpath = require("mpath");
 
 const {
+    async: { each },
     is
 } = adone;
 
@@ -681,7 +681,7 @@ export default class Schema extends EventEmitter {
 
         if (undefined == MongooseTypes[name]) {
             throw new TypeError(`Undefined type \`${name}\` at \`${path
-            }\`\n  Did you try nesting Schemas? ` +
+                }\`\n  Did you try nesting Schemas? ` +
                 "You can only nest using refs or arrays.");
         }
 

@@ -1,8 +1,6 @@
-const each = require("async/each");
-const series = require("async/series");
-
 const {
     assert,
+    async: { each, series },
     crypto: { Identity },
     event,
     is,

@@ -1,9 +1,8 @@
-const waterfall = require("async/waterfall");
-
 const identify = require("../identify");
 const plaintext = require("./plaintext");
 
 const {
+    async: { waterfall },
     net: { p2p: { circuit: { Circuit }, multistream } }
 } = adone;
 

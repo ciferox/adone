@@ -1,8 +1,6 @@
-const each = require("async/each");
-
-/*!
- * ignore
- */
+const {
+    async: { each }
+} = adone;
 
 module.exports = function (schema) {
     schema.callQueue.unshift(["pre", ["save", function (next) {

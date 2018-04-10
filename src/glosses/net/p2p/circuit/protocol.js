@@ -1,4 +1,4 @@
-module.exports = `
+const proto = `
 message CircuitRelay {
 
   enum Status {
@@ -40,3 +40,5 @@ message CircuitRelay {
   optional Status code = 4;   // Status code, used when Type is STATUS
 }
 `;
+
+export default adone.data.protobuf.create(proto);

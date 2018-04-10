@@ -1,7 +1,5 @@
-const waterfall = require("async/waterfall");
-const multicodec = require("./multicodec");
-
 const {
+    async: { waterfall },
     is,
     crypto: { Identity },
     multi,
@@ -9,7 +7,12 @@ const {
     util: { once }
 } = adone;
 
-const __ = adone.private(adone.net.p2p.circuit);
+const {
+    utils,
+    protocol,
+    multicodec,
+    StreamHandler
+} = adone.private(adone.net.p2p.circuit);
 
 export default class Dialer {
     /**
@@ -23,7 +26,7 @@ export default class Dialer {
         this.switch = sw;
         this.relayPeers = new Map();
         this.options = options;
-        this.utils = __.utils(sw);
+        this.utils = utils(sw);
     }
 
     /**
@@ -75,14 +78,14 @@ export default class Dialer {
                     streamHandler = sh;
                     wCb();
                 },
-                (wCb) => streamHandler.write(__.protocol.CircuitRelay.encode({
-                    type: __.protocol.CircuitRelay.Type.CAN_HOP
+                (wCb) => streamHandler.write(protocol.CircuitRelay.encode({
+                    type: protocol.CircuitRelay.Type.CAN_HOP
                 }), wCb),
                 (wCb) => streamHandler.read(wCb),
                 (msg, wCb) => {
-                    const response = __.protocol.CircuitRelay.decode(msg);
+                    const response = protocol.CircuitRelay.decode(msg);
 
-                    if (response.code !== __.protocol.CircuitRelay.Status.SUCCESS) {
+                    if (response.code !== protocol.CircuitRelay.Status.SUCCESS) {
                         // HOP not supported, skipping
                         return;
                     }
@@ -164,7 +167,7 @@ export default class Dialer {
         waterfall([
             (cb) => {
                 if (relay instanceof Connection) {
-                    return cb(null, new __.StreamHandler(relay));
+                    return cb(null, new StreamHandler(relay));
                 }
                 return this._dialRelay(this.utils.peerInfoFromMa(relay), cb);
             },
@@ -175,8 +178,8 @@ export default class Dialer {
             (cb) => {
                 // negotiating relay for peer dstMa
                 streamHandler.write(
-                    __.protocol.CircuitRelay.encode({
-                        type: __.protocol.CircuitRelay.Type.HOP,
+                    protocol.CircuitRelay.encode({
+                        type: protocol.CircuitRelay.Type.HOP,
                         srcPeer: {
                             id: this.switch._peerInfo.id.id,
                             addrs: srcMas.map((addr) => addr.buffer)
@@ -189,13 +192,13 @@ export default class Dialer {
             },
             (cb) => streamHandler.read(cb),
             (msg, cb) => {
-                const message = __.protocol.CircuitRelay.decode(msg);
-                if (message.type !== __.protocol.CircuitRelay.Type.STATUS) {
+                const message = protocol.CircuitRelay.decode(msg);
+                if (message.type !== protocol.CircuitRelay.Type.STATUS) {
                     return cb(new Error("Got invalid message type - " +
-                        `expected ${__.protocol.CircuitRelay.Type.STATUS} got ${message.type}`));
+                        `expected ${protocol.CircuitRelay.Type.STATUS} got ${message.type}`));
                 }
 
-                if (message.code !== __.protocol.CircuitRelay.Status.SUCCESS) {
+                if (message.code !== protocol.CircuitRelay.Status.SUCCESS) {
                     return cb(new Error(`Got ${message.code} error code trying to connect over relay`));
                 }
 
@@ -215,6 +218,6 @@ export default class Dialer {
     _dialRelay(peer, cb) {
         cb = once(cb || (() => { }));
 
-        this.switch.connect(peer, multicodec.relay).catch(cb).then((conn) => cb(null, new __.StreamHandler(conn)));
+        this.switch.connect(peer, multicodec.relay).catch(cb).then((conn) => cb(null, new StreamHandler(conn)));
     }
 }

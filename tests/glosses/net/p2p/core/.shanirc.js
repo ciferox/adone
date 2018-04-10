@@ -1,7 +1,7 @@
-const parallel = require("async/parallel");
 const rawPeer = require("./test-peer.json");
 
 const {
+    async: { parallel} ,
     crypto: { Identity },
     net: { p2p: { Core, rendezvous, transport: { WebRTCStar } } },
     stream: { pull }

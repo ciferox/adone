@@ -6,12 +6,12 @@ const {
 const __ = adone.lazifyPrivate({
     Connector: "./connector",
     Listener: "./listener",
+    protocol: "./protocol",
+    multicodec: "./multicodec",
     StreamHandler: "./circuit/stream_handler",
     Hop: "./circuit/hop",
     Stop: "./circuit/stop",
-    protocol: "./protocol",
-    utils: "./circuit/utils",
-    multicodec: "./multicodec"
+    utils: "./circuit/utils"
 }, exports, require);
 
 export class Circuit {

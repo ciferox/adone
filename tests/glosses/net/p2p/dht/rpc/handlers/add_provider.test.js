@@ -1,7 +1,7 @@
-const waterfall = require("async/waterfall");
 import { setupDHT, makePeers, makeValues, teardown } from "../../utils";
 
 const {
+    async: { waterfall },
     net: { p2p: { dht } },
     lodash: _
 } = adone;

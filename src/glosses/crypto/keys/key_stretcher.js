@@ -1,4 +1,3 @@
-// const whilst = require("async/whilst");
 const hmac = require("../hmac");
 
 const cipherMap = {

@@ -1,8 +1,9 @@
-const waterfall = require("async/waterfall");
-const each = require("async/each");
-const queue = require("async/queue");
 const c = require("./constants");
 const utils = require("./utils");
+
+const {
+    async: { waterfall, each, queue }
+} = adone;
 
 /**
  * Add a peer to the peers to be queried.

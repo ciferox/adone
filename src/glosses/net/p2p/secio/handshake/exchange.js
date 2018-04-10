@@ -1,6 +1,9 @@
-const waterfall = require("async/waterfall");
 import { read, write } from "../support";
 import { createExchange, verify, generateKeys } from "./crypto";
+
+const {
+    async: { waterfall }
+} = adone;
 
 // step 2. Exchange
 // -- exchange (signed) ephemeral keys. verify signatures.

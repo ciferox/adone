@@ -1,15 +1,9 @@
-const series = require("async/series");
-const times = require("async/times");
-const timeout = require("async/timeout");
-const retry = require("async/retry");
-const each = require("async/each");
-const waterfall = require("async/waterfall");
-
 import createPeerInfo from "./utils/create_peer_info";
 import createValues from "./utils/create_values";
 import TestDHT from "./utils/test_dht";
 
 const {
+    async: { series, times, timeout, retry, each, waterfall },
     math: { random },
     net: { p2p: { muxer: { mplex }, dht, switch: { Switch }, PeerBook, record: { Record }, transport: { TCP } } },
     lodash: _

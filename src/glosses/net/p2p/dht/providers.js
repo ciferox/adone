@@ -1,8 +1,8 @@
-const each = require("async/each");
 const c = require("./constants");
 const utils = require("./utils");
 
 const {
+    async: { each },
     is,
     crypto: { Identity },
     data: { varint },

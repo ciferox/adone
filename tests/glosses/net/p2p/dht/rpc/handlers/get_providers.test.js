@@ -1,7 +1,7 @@
-const waterfall = require("async/waterfall");
 import { makePeers, makeValues, teardown, setupDHT } from "../../utils";
 
 const {
+    async: { waterfall },
     net: { p2p: { dht } }
 } = adone;
 const { utils, rpcHandler: { getProviders }, Message } = adone.private(dht);

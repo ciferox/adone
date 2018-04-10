@@ -1,7 +1,3 @@
-const waterfall = require("async/waterfall");
-const series = require("async/series");
-const each = require("async/each");
-const timeout = require("async/timeout");
 const utils = require("./utils");
 const errors = require("./errors");
 const Message = require("./message");
@@ -9,6 +5,7 @@ const c = require("./constants");
 const Query = require("./query");
 
 const {
+    async: { waterfall, series, each, timeout },
     is,
     crypto: { Identity },
     net: { p2p: { PeerInfo, record: { Record, validator, selection } } }

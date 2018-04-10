@@ -1,10 +1,7 @@
-const each = require("async/each");
-const series = require("async/series");
-const times = require("async/times");
-
 import createPeerInfo from "./create_peer_info";
 
 const {
+    async: { each, series, times },
     net: { p2p: { muxer: { mplex }, dht: { KadDHT }, switch: { Switch }, PeerBook, transport: { TCP } } },
 } = adone;
 

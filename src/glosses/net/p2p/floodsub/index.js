@@ -1,5 +1,4 @@
 const TimeCache = require("time-cache");
-const asyncEach = require("async/each");
 
 const Peer = require("./peer");
 export const utils = require("./utils");

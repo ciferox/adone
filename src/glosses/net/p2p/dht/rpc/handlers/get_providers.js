@@ -1,9 +1,8 @@
-const parallel = require("async/parallel");
-
 const Message = require("../../message");
 const utils = require("../../utils");
 
 const {
+    async: { parallel },
     net: { p2p: { PeerInfo, CID } }
 } = adone;
 

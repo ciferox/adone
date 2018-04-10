@@ -388,6 +388,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         cmake: "./cmake",
         lodash: "./lodash",
         benchmark: "./benchmark",
+        async: "./async",
 
         // third parties
         dev: () => {

@@ -1,12 +1,7 @@
-const each = require("async/each");
-
 const {
     is,
     fs,
-    net: { p2p: { CID } },
-    datastore: { Key, backend: { Level }, utils, wrapper: { Mount } },
-    std: { path },
-    stream: { pull }
+    datastore: { Key, backend: { Level }, wrapper: { Mount } }
 } = adone;
 
 const tmpdir = () => adone.fs.tmpName({

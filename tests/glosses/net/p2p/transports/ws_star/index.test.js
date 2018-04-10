@@ -1,6 +1,5 @@
-const parallel = require("async/parallel");
-
 const {
+    async: { parallel },
     net: { p2p: { rendezvous } }
 } = adone;
 

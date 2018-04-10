@@ -1,13 +1,8 @@
-const parallel = require("async/parallel");
-const waterfall = require("async/waterfall");
-const map = require("async/map");
-const timesSeries = require("async/timesSeries");
-const each = require("async/each");
-const eachSeries = require("async/eachSeries");
 import createPeerInfo from "./utils/create_peer_info";
 import createValues from "./utils/create_values";
 
 const {
+    async: { parallel, waterfall, map, timesSeries, each, eachSeries },
     datastore: { backend: { Memory: MemoryStore, Level: LevelStore } },
     multi,
     net: { p2p: { dht, CID } },

@@ -1,10 +1,3 @@
-const each = require("async/each");
-const whilst = require("async/whilst");
-
-const {
-    is
-} = adone;
-
 /**
  * A datastore that can combine multiple stores. Puts and deletes
  * will write through to all datastores. Has and get will

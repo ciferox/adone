@@ -3,12 +3,12 @@ const log = debug("libp2p:websocket-star:listener");
 const io = require("socket.io-client");
 const sp = require("socket.io-pull-stream");
 const uuid = require("uuid");
-const series = require("async/series");
 const once = require("once");
 const utils = require("./utils");
 const cleanUrlSIO = utils.cleanUrlSIO;
 
 const {
+    async: { series },
     is,
     crypto,
     event,

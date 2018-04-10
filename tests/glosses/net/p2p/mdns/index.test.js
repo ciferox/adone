@@ -1,7 +1,5 @@
-const parallel = require("async/parallel");
-const series = require("async/series");
-
 const {
+    async: { parallel, series },
     multi,
     net: { p2p: { MulticastDNS, PeerInfo } }
 } = adone;

@@ -1,6 +1,5 @@
-const each = require("async/each");
-
 const {
+    async: { each },
     crypto: { Identity },
     multi,
     net: { p2p: { transport: { WSStar } } },

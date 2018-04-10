@@ -1,8 +1,7 @@
-const parallel = require("async/parallel");
-const series = require("async/series");
 const wrtc = require("wrtc");
 
 const {
+    async: { parallel, series },
     crypto: { Identity },
     multi,
     stream: { pull },

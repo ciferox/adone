@@ -1,8 +1,11 @@
 import Mixed from "../schema/mixed";
 const ValidationError = require("../error/validation");
-const parallel = require("async/parallel");
 const flatten = require("./common").flatten;
 const modifiedPaths = require("./common").modifiedPaths;
+
+const {
+    async: { parallel }
+} = adone;
 
 /**
  * Applies validators and defaults to update and findOneAndUpdate operations,

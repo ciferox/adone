@@ -1,7 +1,7 @@
-const waterfall = require("async/waterfall");
 import createPeerInfo from "./utils/create_peer_info";
 
 const {
+    async: { waterfall },
     crypto: { Identity },
     data: { base32 },
     net: { p2p: { dht } },

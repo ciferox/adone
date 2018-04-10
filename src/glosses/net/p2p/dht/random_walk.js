@@ -1,10 +1,8 @@
-const times = require("async/times");
-const waterfall = require("async/waterfall");
-const timeout = require("async/timeout");
 const errors = require("./errors");
 const c = require("./constants");
 
 const {
+    async: { times, waterfall, timeout },
     assert,
     is,
     multi,

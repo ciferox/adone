@@ -1,6 +1,3 @@
-const series = require("async/series");
-const parallel = require("async/parallel");
-
 const {
     datastore: { Key, backend: { Memory }, wrapper: { Tiered } }
 } = adone;

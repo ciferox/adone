@@ -1,7 +1,7 @@
 const debug = require("debug");
-const map = require("async/map");
 
 const {
+    async: { map },
     crypto: { Identity },
     data: { base32 },
     datastore: { Key },

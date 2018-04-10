@@ -1,9 +1,5 @@
-const parallel = require("async/parallel");
-const series = require("async/series");
-const each = require("async/each");
-const eachLimit = require("async/eachLimit");
-
 const {
+    async: { parallel, series, each, eachLimit },
     multi,
     net: { p2p: { transport: { TCP } } },
     stream: { pull }

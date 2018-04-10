@@ -1,5 +1,3 @@
-const each = require("async/each");
-
 const {
     is,
     stream: { pull },

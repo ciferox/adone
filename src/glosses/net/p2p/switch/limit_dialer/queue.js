@@ -1,6 +1,5 @@
-const queue = require("async/queue");
-
 const {
+    async: { queue },
     stream: { pull }
 } = adone;
 

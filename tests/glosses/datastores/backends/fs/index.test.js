@@ -1,7 +1,5 @@
-const waterfall = require("async/waterfall");
-const parallel = require("async/parallel");
-
 const {
+    async: { waterfall, parallel },
     is,
     fs,
     stream: { pull },

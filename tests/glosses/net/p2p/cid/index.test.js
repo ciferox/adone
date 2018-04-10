@@ -60,6 +60,15 @@ describe("CID", () => {
             const cid = new CID(0, "dag-pb", hash);
             expect(cid.prefix.toString("hex")).to.equal("00701220");
         });
+
+        it(".buffer", () => {
+            const codec = "dag-pb";
+            const cid = new CID(0, codec, hash);
+            const buffer = cid.buffer;
+            expect(buffer).to.exist();
+            const str = buffer.toString("hex");
+            expect(str).to.equals("1220ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+        });
     });
 
     describe("v1", () => {
@@ -122,6 +131,15 @@ describe("CID", () => {
         it(".prefix", () => {
             const cid = new CID(1, "dag-cbor", hash);
             expect(cid.prefix.toString("hex")).to.equal("01711220");
+        });
+
+        it(".buffer", () => {
+            const codec = "dag-cbor"; // Invalid codec will cause an error: Issue #46
+            const cid = new CID(1, codec, hash);
+            const buffer = cid.buffer;
+            expect(buffer).to.exist();
+            const str = buffer.toString("hex");
+            expect(str).to.equals("01711220ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
         });
     });
 
@@ -188,6 +206,68 @@ describe("CID", () => {
         it("constructor accept constructed instance", () => {
             expect(cid1.equals(cid2)).to.equal(true);
             expect(cid1 === cid2).to.equal(false);
+        });
+    });
+
+    describe("utils", () => {
+        let hash;
+
+        const {
+            checkCIDComponents
+        } = adone.private(CID);
+
+        before(() => {
+            hash = multi.hash.create(Buffer.from("abc"), "sha2-256");
+        });
+
+        describe("checkCIDComponents()", () => {
+            describe("returns undefined on valid CID", () => {
+                it("create from B58Str multihash", () => {
+                    expect(() => {
+                        const mhStr = "QmdfTbBqBPQ7VNxZEYEj14VmRuZBkqFbiwReogJgS1zR1n";
+                        const cid = new CID(mhStr);
+                        const errMsg = checkCIDComponents(cid);
+                        expect(errMsg).to.not.exist();
+                    }).to.not.throw();
+                });
+                it("create by parts", () => {
+                    expect(() => {
+                        const cid = new CID(1, "dag-cbor", hash);
+                        const errMsg = checkCIDComponents(cid);
+                        expect(errMsg).to.not.exist();
+                    }).to.not.throw();
+                });
+            });
+
+            describe("returns non-null error message on invalid inputs", () => {
+                const invalid = [
+                    "hello world",
+                    "QmaozNR7DZHQK1ZcU9p7QdrshMvXqWK6gpu5rmrkPdT3L",
+                    Buffer.from("hello world"),
+                    Buffer.from("QmaozNR7DZHQK1ZcU9p7QdrshMvXqWK6gpu5rmrkPdT")
+                ];
+
+                invalid.forEach((i) => it(`new CID(${is.buffer(i) ? "buffer" : "string"}<${i.toString()}>)`, () => {
+                    expect(() => {
+                        const errMsg = checkCIDComponents(i);
+                        expect(errMsg).to.exist();
+                    }).to.not.throw();
+                }));
+
+                invalid.forEach((i) => it(`new CID(0, 'dag-pb', ${is.buffer(i) ? "buffer" : "string"}<${i.toString()}>)`, () => {
+                    expect(() => {
+                        const errMsg = checkCIDComponents(0, "dag-pb", i);
+                        expect(errMsg).to.exist();
+                    }).to.not.throw();
+                }));
+
+                invalid.forEach((i) => it(`new CID(1, 'dag-pb', ${is.buffer(i) ? "buffer" : "string"}<${i.toString()}>)`, () => {
+                    expect(() => {
+                        const errMsg = checkCIDComponents(1, "dag-pb", i);
+                        expect(errMsg).to.exist();
+                    }).to.not.throw();
+                }));
+            });
         });
     });
 });

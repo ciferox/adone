@@ -16,13 +16,12 @@ const castUpdate = require("./services/query/castUpdate");
 const discriminator = require("./services/model/discriminator");
 const isPathSelectedInclusive = require("./services/projection/isPathSelectedInclusive");
 const mpath = require("mpath");
-const parallel = require("async/parallel");
-const parallelLimit = require("async/parallelLimit");
 const setDefaultsOnInsert = require("./services/setDefaultsOnInsert");
 const util = require("util");
 const utils = require("./utils");
 
 const {
+    async: { parallel, parallelLimit },
     event,
     is,
     lodash: { get }

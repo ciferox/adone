@@ -1,7 +1,9 @@
-const waterfall = require("async/waterfall");
-
 import { read, write } from "../support";
 import { createProposal, identify, selectProtocols } from "./crypto";
+
+const {
+    async: { waterfall }
+} = adone;
 
 // step 1. Propose
 // -- propose cipher suite + send pubkeys + nonce

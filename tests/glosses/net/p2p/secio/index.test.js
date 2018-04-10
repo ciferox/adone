@@ -1,7 +1,5 @@
-const parallel = require("async/parallel");
-const series = require("async/series");
-
 const {
+    async: { parallel, series },
     crypto: { Identity },
     net: { p2p: { Connection, multistream, secio } },
     stream: { pull }

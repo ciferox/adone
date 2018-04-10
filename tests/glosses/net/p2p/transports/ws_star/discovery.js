@@ -1,6 +1,5 @@
-const each = require("async/each");
-
 const {
+    async: { each },
     multi,
     net: { p2p: { transport: { WSStar } } }
 } = adone;

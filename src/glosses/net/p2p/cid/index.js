@@ -4,6 +4,42 @@ const {
 } = adone;
 
 /**
+ * Test if the given input is a valid CID object.
+ * Returns an error message if it is not.
+ * Returns undefined if it is a valid CID.
+ *
+ * @param {any} other
+ * @returns {string}
+ */
+const checkCIDComponents = (other) => {
+    if (is.nil(other)) {
+        return "null values are not valid CIDs";
+    }
+
+    if (!(other.version === 0 || other.version === 1)) {
+        return "Invalid version, must be a number equal to 1 or 0";
+    }
+
+    if (!is.string(other.codec)) {
+        return "codec must be string";
+    }
+
+    if (!is.buffer(other.multihash)) {
+        return "multihash must be a Buffer";
+    }
+
+    try {
+        multi.hash.validate(other.multihash);
+    } catch (err) {
+        let errorMsg = err.message;
+        if (!errorMsg) { // Just in case mh.validate() throws an error with empty error message
+            errorMsg = "Multihash validation failed";
+        }
+        return errorMsg;
+    }
+};
+
+/**
  * @typedef {Object} SerializedCID
  * @param {string} codec
  * @param {number} version
@@ -214,13 +250,7 @@ export default class CID {
      * @returns {bool}
      */
     static isCID(other) {
-        try {
-            CID.validateCID(other);
-        } catch (err) {
-            return false;
-        }
-
-        return true;
+        return !checkCIDComponents(other);
     }
 
     /**
@@ -231,24 +261,16 @@ export default class CID {
      * @returns {void}
      */
     static validateCID(other) {
-        if (is.nil(other)) {
-            throw new Error("null values are not valid CIDs");
+        const errorMsg = checkCIDComponents(other);
+        if (errorMsg) {
+            throw new Error(errorMsg);
         }
-
-        if (!(other.version === 0 || other.version === 1)) {
-            throw new Error("Invalid version, must be a number equal to 1 or 0");
-        }
-
-        if (!is.string(other.codec)) {
-            throw new Error("codec must be string");
-        }
-
-        if (!is.buffer(other.multihash)) {
-            throw new Error("multihash must be a Buffer");
-        }
-
-        multi.hash.validate(other.multihash);
     }
 }
 
 CID.codecs = multi.codec.baseTable;
+
+// for tests
+adone.lazifyPrivate({
+    checkCIDComponents: () => checkCIDComponents
+}, CID);

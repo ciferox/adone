@@ -1,7 +1,7 @@
 const io = require("socket.io-client");
-const parallel = require("async/parallel");
 
 const {
+    async: { parallel },
     multi,
     net: { p2p: { transport: { WebRTCStar: { sigServer } } } }
 } = adone;

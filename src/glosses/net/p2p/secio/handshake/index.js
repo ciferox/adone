@@ -1,8 +1,10 @@
-const series = require("async/series");
-
 import propose from "./propose";
 import exchange from "./exchange";
 import finish from "./finish";
+
+const {
+    async: { series }
+} = adone;
 
 // Performs initial communication over insecure channel to share keys, IDs,
 // and initiate communication, assigning all necessary params.

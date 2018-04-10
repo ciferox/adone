@@ -1,7 +1,5 @@
-const series = require("async/series");
-const parallel = require("async/parallel");
-
 const {
+    async: { series, parallel },
     is,
     stream: { pull },
     datastore: { Key },
