@@ -1,5 +1,5 @@
 const waterfall = require("async/waterfall");
-const { makePeers } = require("./utils");
+import createPeerInfo from "./utils/create_peer_info";
 
 const {
     crypto: { Identity },
@@ -84,7 +84,7 @@ describe("dht", "KadDHT", "utils", () => {
 
     describe("keyForPublicKey", () => {
         it("works", () => {
-            const peers = makePeers(1);
+            const peers = createPeerInfo(1);
             expect(utils.keyForPublicKey(peers[0].id)).to.eql(Buffer.concat([Buffer.from("/pk/"), peers[0].id.id]));
         });
     });
@@ -93,7 +93,7 @@ describe("dht", "KadDHT", "utils", () => {
         it("round trips", function () {
             this.timeout(40 * 1000);
 
-            const peers = makePeers(50);
+            const peers = createPeerInfo(50);
             peers.forEach((p, i) => {
                 const id = p.id;
                 expect(utils.isPublicKeyKey(utils.keyForPublicKey(id))).to.eql(true);

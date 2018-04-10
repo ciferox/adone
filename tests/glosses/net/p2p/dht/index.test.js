@@ -1,10 +1,13 @@
 const series = require("async/series");
+const times = require("async/times");
 const timeout = require("async/timeout");
 const retry = require("async/retry");
 const each = require("async/each");
 const waterfall = require("async/waterfall");
-import { makePeers, setupDHT, makeValues, teardown } from "./utils";
 
+import createPeerInfo from "./utils/create_peer_info";
+import createValues from "./utils/create_values";
+import TestDHT from "./utils/test_dht";
 
 const {
     math: { random },
@@ -14,13 +17,8 @@ const {
 const { KadDHT } = dht;
 const { utils: kadUtils, constants: c } = adone.private(dht);
 
-const setupDHTs = async (n) => {
-    const dhts = await Promise.all(_.times(n, setupDHT));
-    return [dhts, dhts.map((d) => d.peerInfo.multiaddrs.toArray()[0]), dhts.map((d) => d.peerInfo.id)];
-};
-
 // connect two dhts
-const connectNoSync = (a, b) => {
+const connectNoSync = function (a, b) {
     const target = _.cloneDeep(b.peerInfo);
     target.id._pubKey = target.id.pubKey;
     target.id._privKey = null;
@@ -51,8 +49,9 @@ const find = (a, b) => {
     });
 };
 
-// connect two dhts and wait for them to have each other
-// in their routing table
+
+
+// connect two dhts and wait for them to have each other in their routing table
 const connect = async (a, b) => {
     await connectNoSync(a, b);
     await find(a, b);
@@ -61,7 +60,7 @@ const connect = async (a, b) => {
 
 const bootstrap = function (dhts) {
     dhts.forEach((dht) => {
-        dht._bootstrap(3, 10000);
+        dht.randomWalk._walk(3, 10000);
     });
 };
 
@@ -91,11 +90,10 @@ const waitForWellFormedTables = function (dhts, minPeers, avgPeers, maxTimeout, 
 
 const countDiffPeers = function (a, b) {
     const s = new Set();
-    a.forEach((p) => s.add(p.asBase58()));
+    a.forEach((p) => s.add(p.toB58String()));
 
-    return b.filter((p) => !s.has(p.asBase58())).length;
+    return b.filter((p) => !s.has(p.toB58String())).length;
 };
-
 
 describe("dht", "KadDHT", () => {
     let peerInfos;
@@ -103,15 +101,9 @@ describe("dht", "KadDHT", () => {
 
     before(function () {
         this.timeout(10 * 1000);
-        peerInfos = makePeers(3);
-        values = makeValues(20);
-    });
 
-    // Give the nodes some time to finish request
-    afterEach(async function () {
-        this.timeout(10 * 1000);
-
-        await teardown();
+        peerInfos = createPeerInfo(3);
+        values = createValues(20);
     });
 
     it("create", () => {
@@ -127,242 +119,329 @@ describe("dht", "KadDHT", () => {
         expect(dht).to.have.property("routingTable");
     });
 
-    it("put - get", async function (done) {
+    it("put - get", function (done) {
         this.timeout(10 * 1000);
+        const tdht = new TestDHT();
 
-        const dhts = await Promise.all(_.times(2, setupDHT));
-        const dhtA = dhts[0];
-        const dhtB = dhts[1];
+        tdht.spawn(2, async (err, dhts) => {
+            expect(err).to.not.exist();
+            const dhtA = dhts[0];
+            const dhtB = dhts[1];
 
-        await connect(dhtA, dhtB);
-        waterfall([
-            (cb) => dhtA.put(Buffer.from("/v/hello"), Buffer.from("world"), cb),
-            (cb) => dhtB.get(Buffer.from("/v/hello"), 1000, cb),
-            (res, cb) => {
-                expect(res).to.eql(Buffer.from("world"));
-                cb();
-            }
-        ], done);
+            await connect(dhtA, dhtB);
+            waterfall([
+                (cb) => dhtA.put(Buffer.from("/v/hello"), Buffer.from("world"), cb),
+                (cb) => dhtB.get(Buffer.from("/v/hello"), 1000, cb),
+                (res, cb) => {
+                    expect(res).to.eql(Buffer.from("world"));
+                    cb();
+                }
+            ], (err) => {
+                expect(err).to.not.exist();
+
+                tdht.teardown(done);
+            });
+        });
     });
 
-    it("provides", async function (done) {
-        this.timeout(60 * 1000);
+    it("provides", function (done) {
+        this.timeout(20 * 1000);
 
-        const [dhts, addrs, ids] = await setupDHTs(4);
-        await connect(dhts[0], dhts[1]);
-        await connect(dhts[1], dhts[2]);
-        await connect(dhts[2], dhts[3]);
+        const tdht = new TestDHT();
 
-        waterfall([
-            (cb) => each(values, (v, cb) => {
-                dhts[3].provide(v.cid, cb);
-            }, cb),
-            (cb) => {
-                let n = 0;
-                each(values, (v, cb) => {
-                    n = (n + 1) % 3;
-                    dhts[n].findProviders(v.cid, 5000, (err, provs) => {
-                        assert.notExists(err);
-                        expect(provs).to.have.length(1);
-                        expect(provs[0].id.id).to.be.eql(ids[3].id);
-                        expect(
-                            provs[0].multiaddrs.toArray()[0].toString()
-                        ).to.be.eql(addrs[3].toString());
-                        cb();
-                    });
-                }, cb);
-            }
-        ], done);
+        tdht.spawn(4, async (err, dhts) => {
+            expect(err).to.not.exist();
+            const addrs = dhts.map((d) => d.peerInfo.multiaddrs.toArray()[0]);
+            const ids = dhts.map((d) => d.peerInfo.id);
+
+            await connect(dhts[0], dhts[1]);
+            await connect(dhts[1], dhts[2]);
+            await connect(dhts[2], dhts[3]);
+
+            series([
+                (cb) => each(values, (v, cb) => {
+                    dhts[3].provide(v.cid, cb);
+                }, cb),
+                (cb) => {
+                    let n = 0;
+                    each(values, (v, cb) => {
+                        n = (n + 1) % 3;
+                        dhts[n].findProviders(v.cid, 5000, (err, provs) => {
+                            expect(err).to.not.exist();
+                            expect(provs).to.have.length(1);
+                            expect(provs[0].id.id).to.be.eql(ids[3].id);
+                            expect(
+                                provs[0].multiaddrs.toArray()[0].toString()
+                            ).to.equal(
+                                addrs[3].toString()
+                            );
+                            cb();
+                        });
+                    }, cb);
+                }
+            ], (err) => {
+                expect(err).to.not.exist();
+                tdht.teardown(done);
+            });
+        });
     });
 
-    it.todo("bootstrap", async function (done) {
+    it("random-walk", function (done) {
         this.timeout(40 * 1000);
 
         const nDHTs = 20;
+        const tdht = new TestDHT();
 
-        const [dhts] = await setupDHTs(nDHTs);
-        await Promise.all(_.times(nDHTs, (i) => connect(dhts[i], dhts[(i + 1) % nDHTs])));
+        tdht.spawn(nDHTs, async (err, dhts) => {
+            expect(err).to.not.exist();
 
-        // ring connect
-        bootstrap(dhts);
-        waitForWellFormedTables(dhts, 7, 0, 20 * 1000, done);
-        done(); // WTF ???
+            // ring connect
+            for (let i = 0; i < nDHTs; i++) {
+                await connect(dhts[i], dhts[(i + 1) % nDHTs]); // eslint-disable-line
+            }
+            series([
+                (cb) => {
+                    bootstrap(dhts);
+                    waitForWellFormedTables(dhts, 7, 0, 20 * 1000, cb);
+                    cb();
+                }
+            ], (err) => {
+                expect(err).to.not.exist();
+                tdht.teardown(done);
+            });
+        });
     });
 
-    it("layered get", async function (done) {
+    it("layered get", function (done) {
         this.timeout(40 * 1000);
 
-        const [dhts] = await setupDHTs(4);
-        await connect(dhts[0], dhts[1]);
-        await connect(dhts[1], dhts[2]);
-        await connect(dhts[2], dhts[3]);
+        const nDHTs = 4;
+        const tdht = new TestDHT();
 
-        waterfall([
-            (cb) => dhts[3].put(
-                Buffer.from("/v/hello"),
-                Buffer.from("world"),
-                cb
-            ),
-            (cb) => dhts[0].get(Buffer.from("/v/hello"), 1000, cb),
-            (res, cb) => {
-                expect(res).to.be.eql(Buffer.from("world"));
-                cb();
-            }
-        ], done);
+        tdht.spawn(nDHTs, async (err, dhts) => {
+            expect(err).to.not.exist();
+
+            await connect(dhts[0], dhts[1]);
+            await connect(dhts[1], dhts[2]);
+            await connect(dhts[2], dhts[3]);
+
+            waterfall([
+                (cb) => dhts[3].put(
+                    Buffer.from("/v/hello"),
+                    Buffer.from("world"),
+                    cb
+                ),
+                (cb) => dhts[0].get(Buffer.from("/v/hello"), 1000, cb),
+                (res, cb) => {
+                    expect(res).to.eql(Buffer.from("world"));
+                    cb();
+                }
+            ], (err) => {
+                expect(err).to.not.exist();
+                tdht.teardown(done);
+            });
+        });
     });
 
-    it.skip("findPeer", async function (done) {
+    it.skip("findPeer", function (done) {
         this.timeout(40 * 1000);
 
-        const [dhts, addrs, ids] = await setupDHTs(4);
-        await connect(dhts[0], dhts[1]);
-        await connect(dhts[1], dhts[2]);
-        await connect(dhts[2], dhts[3]);
+        const nDHTs = 4;
+        const tdht = new TestDHT();
 
-        waterfall([
-            (cb) => dhts[0].findPeer(ids[3], 1000, cb),
-            (res, cb) => {
-                expect(res.id.isEqual(ids[3])).to.eql(true);
-                cb();
-            }
-        ], done);
+        tdht.spawn(nDHTs, async (err, dhts) => {
+            expect(err).to.not.exist();
+
+            const ids = dhts.map((d) => d.peerInfo.id);
+
+            await connect(dhts[0], dhts[1]);
+            await connect(dhts[1], dhts[2]);
+            await connect(dhts[2], dhts[3]);
+
+            waterfall([
+                (cb) => dhts[0].findPeer(ids[3], 1000, cb),
+                (res, cb) => {
+                    expect(res.id.isEqual(ids[3])).to.eql(true);
+                    cb();
+                }
+            ], (err) => {
+                expect(err).to.not.exist();
+                tdht.teardown(done);
+            });
+        });
     });
 
-    it("connect by id to with address in the peerbook ", async function () {
+    it("connect by id to with address in the peerbook ", function (done) {
         this.timeout(20 * 1000);
 
-        const dhts = await Promise.all([
-            setupDHT(),
-            setupDHT()
-        ]);
+        const nDHTs = 2;
+        const tdht = new TestDHT();
 
-        const dhtA = dhts[0];
-        const dhtB = dhts[1];
+        tdht.spawn(nDHTs, async (err, dhts) => {
+            expect(err).to.not.exist();
+            const dhtA = dhts[0];
+            const dhtB = dhts[1];
 
-        const peerA = dhtA.peerInfo;
-        const peerB = dhtB.peerInfo;
-        dhtA.peerBook.set(peerB);
-        dhtB.peerBook.set(peerA);
+            const peerA = dhtA.peerInfo;
+            const peerB = dhtB.peerInfo;
+            dhtA.peerBook.set(peerB);
+            dhtB.peerBook.set(peerA);
 
-        await Promise.all([
-            dhtA.switch.connect(peerB.id),
-            dhtB.switch.connect(peerA.id)
-        ]);
+            await Promise.all([
+                dhtA.switch.connect(peerB.id),
+                dhtB.switch.connect(peerA.id)
+            ]);
+            tdht.teardown(done);
+        });
     });
 
-    // // TODO fix this
-    // it.skip("find peer query", function (done) {
-    //     this.timeout(40 * 1000);
+    // TODO fix this
+    it.skip("find peer query", function (done) {
+        this.timeout(40 * 1000);
 
-    //     setupDHTs(101, (err, dhts, addrs, ids) => {
-    //         assert.notExists(err);
+        const nDHTs = 101;
+        const tdht = new TestDHT();
 
-    //         const guy = dhts[0];
-    //         const others = dhts.slice(1);
-    //         const val = Buffer.from("foobar");
+        tdht.spawn(nDHTs, (err, dhts) => {
+            expect(err).to.not.exist();
 
-    //         series([
-    //             (cb) => times(20, (i, cb) => {
-    //                 times(16, (j, cb) => {
-    //                     const t = 20 + random(0, 79);
-    //                     connect(others[i], others[t], cb);
-    //                 }, cb);
-    //             }, cb),
-    //             (cb) => times(20, (i, cb) => {
-    //                 connect(guy, others[i], cb);
-    //             }, cb),
-    //             (cb) => {
-    //                 const rtval = kadUtils.convertBuffer(val);
-    //                 const rtablePeers = guy.routingTable.closestPeers(rtval, c.ALPHA);
-    //                 expect(rtablePeers).to.have.length(3);
+            const ids = dhts.map((d) => d.peerInfo.id);
 
-    //                 const netPeers = guy.peerBook.getAllAsArray().filter((p) => p.isConnected());
-    //                 expect(netPeers).to.have.length(20);
+            const guy = dhts[0];
+            const others = dhts.slice(1);
+            const val = Buffer.from("foobar");
 
-    //                 const rtableSet = {};
-    //                 rtablePeers.forEach((p) => {
-    //                     rtableSet[p.asBase58()] = true;
-    //                 });
+            series([
+                (cb) => times(20, (i, cb) => {
+                    times(16, (j, cb) => {
+                        const t = 20 + random(79);
+                        connect(others[i], others[t], cb);
+                    }, cb);
+                }, cb),
+                (cb) => times(20, (i, cb) => {
+                    connect(guy, others[i], cb);
+                }, cb),
+                (cb) => kadUtils.convertBuffer(val, (err, rtval) => {
+                    expect(err).to.not.exist();
+                    const rtablePeers = guy.routingTable.closestPeers(rtval, c.ALPHA);
+                    expect(rtablePeers).to.have.length(3);
 
-    //                 series([
-    //                     (cb) => guy.getClosestPeers(val, cb),
-    //                     (cb) => kadUtils.sortClosestPeers(ids.slice(1), rtval, cb)
-    //                 ], (err, res) => {
-    //                     assert.notExists(err);
-    //                     const out = res[0];
-    //                     const actualClosest = res[1];
+                    const netPeers = guy.peerBook.getAllArray().filter((p) => p.isConnected());
+                    expect(netPeers).to.have.length(20);
 
-    //                     expect(out.filter((p) => !rtableSet[p.asBase58()]))
-    //                         .to.not.be.empty();
+                    const rtableSet = {};
+                    rtablePeers.forEach((p) => {
+                        rtableSet[p.toB58String()] = true;
+                    });
 
-    //                     expect(out).to.have.length(20);
-    //                     const exp = actualClosest.slice(0, 20);
+                    series([
+                        (cb) => guy.getClosestPeers(val, cb),
+                        (cb) => kadUtils.sortClosestPeers(ids.slice(1), rtval, cb)
+                    ], (err, res) => {
+                        expect(err).to.not.exist();
+                        const out = res[0];
+                        const actualClosest = res[1];
 
-    //                     kadUtils.sortClosestPeers(out, rtval, (err, got) => {
-    //                         assert.notExists(err);
-    //                         expect(countDiffPeers(exp, got)).to.eql(0);
+                        expect(out.filter((p) => !rtableSet[p.toB58String()]))
+                            .to.not.be.empty();
 
-    //                         cb();
-    //                     });
-    //                 });
-    //             }
-    //         ], done);
-    //     });
-    // });
+                        expect(out).to.have.length(20);
+                        const exp = actualClosest.slice(0, 20);
 
-    it.todo("getClosestPeers", async function (done) {
+                        kadUtils.sortClosestPeers(out, rtval, (err, got) => {
+                            expect(err).to.not.exist();
+                            expect(countDiffPeers(exp, got)).to.eql(0);
+
+                            cb();
+                        });
+                    });
+                })
+            ], (err) => {
+                expect(err).to.not.exist();
+                tdht.teardown(done);
+            });
+        });
+    });
+
+    it.todo("getClosestPeers", function (done) {
         this.timeout(40 * 1000);
 
         const nDHTs = 30;
-        const [dhts] = await setupDHTs(nDHTs);
+        const tdht = new TestDHT();
 
-        // ring connect
-        await Promise.all(_.times(dhts.length, (i) => connect(dhts[i], dhts[(i + 1) % dhts.length])));
+        tdht.spawn(nDHTs, async (err, dhts) => {
+            expect(err).to.not.exist();
 
-        series([
-            (cb) => dhts[1].getClosestPeers(Buffer.from("foo"), cb)
-        ], (err, res) => {
-            assert.notExists(err);
-            expect(res[1]).to.have.length(c.K);
-            done();
+            // ring connect
+            for (let i = 0; i < dhts.length; i++) {
+                await connect(dhts[i], dhts[(i + 1) % dhts.length]); // eslint-disable-line
+            }
+
+            series([
+                (cb) => dhts[1].getClosestPeers(Buffer.from("foo"), cb)
+            ], (err, res) => {
+                expect(err).to.not.exist();
+                expect(res[1]).to.have.length(c.K);
+                tdht.teardown(done);
+            });
         });
     });
 
     describe("getPublicKey", () => {
-        it("already known", async function (done) {
+        it("already known", function (done) {
             this.timeout(20 * 1000);
 
-            const [dhts, addrs, ids] = await setupDHTs(2);
-            dhts[0].peerBook.set(dhts[1].peerInfo);
-            dhts[0].getPublicKey(ids[1], (err, key) => {
-                assert.notExists(err);
-                expect(key).to.be.eql(dhts[1].peerInfo.id.pubKey);
-                done();
+            const nDHTs = 2;
+            const tdht = new TestDHT();
+
+            tdht.spawn(nDHTs, (err, dhts) => {
+                expect(err).to.not.exist();
+
+                const ids = dhts.map((d) => d.peerInfo.id);
+
+                dhts[0].peerBook.set(dhts[1].peerInfo);
+                dhts[0].getPublicKey(ids[1], (err, key) => {
+                    expect(err).to.not.exist();
+                    expect(key).to.eql(dhts[1].peerInfo.id.pubKey);
+                    tdht.teardown(done);
+                });
             });
         });
 
-        it("connected node", async function (done) {
-            this.timeout(40 * 1000);
+        it("connected node", function (done) {
+            this.timeout(30 * 1000);
 
-            const [dhts, addrs, ids] = await setupDHTs(2);
-            await connect(dhts[0], dhts[1]);
-            waterfall([
-                (cb) => {
-                    // remove the pub key to be sure it is fetched
-                    const p = dhts[0].peerBook.get(ids[1]);
-                    p.id._pubKey = null;
-                    dhts[0].peerBook.set(p, true);
-                    dhts[0].getPublicKey(ids[1], cb);
-                },
-                (key, cb) => {
-                    expect(key.equals(dhts[1].peerInfo.id.pubKey)).to.eql(true);
-                    cb();
-                }
-            ], done);
+            const nDHTs = 2;
+            const tdht = new TestDHT();
+
+            tdht.spawn(nDHTs, async (err, dhts) => {
+                expect(err).to.not.exist();
+
+                const ids = dhts.map((d) => d.peerInfo.id);
+
+                await connect(dhts[0], dhts[1]);
+
+                waterfall([
+                    (cb) => {
+                        // remove the pub key to be sure it is fetched
+                        const p = dhts[0].peerBook.get(ids[1]);
+                        p.id._pubKey = null;
+                        dhts[0].peerBook.set(p, true);
+                        dhts[0].getPublicKey(ids[1], cb);
+                    },
+                    (key, cb) => {
+                        expect(key.equals(dhts[1].peerInfo.id.pubKey)).to.eql(true);
+                        cb();
+                    }
+                ], (err) => {
+                    expect(err).to.not.exist();
+                    tdht.teardown(done);
+                });
+            });
         });
     });
 
-    it("_nearestPeersToQuery", () => {
+    it.todo("_nearestPeersToQuery", (done) => {
         const sw = new Switch(peerInfos[0], new PeerBook());
         sw.tm.add("tcp", new TCP());
         sw.connection.addStreamMuxer(mplex);
@@ -370,12 +449,17 @@ describe("dht", "KadDHT", () => {
         const dht = new KadDHT(sw);
 
         dht.peerBook.set(peerInfos[1]);
-        dht._add(peerInfos[1]);
-        const res = dht._nearestPeersToQuery({ key: "hello" });
-        expect(res).to.be.eql([peerInfos[1]]);
+        series([
+            (cb) => dht._add(peerInfos[1], cb),
+            (cb) => dht._nearestPeersToQuery({ key: "hello" }, cb)
+        ], (err, res) => {
+            expect(err).to.not.exist();
+            expect(res[1]).to.be.eql([peerInfos[1]]);
+            done();
+        });
     });
 
-    it("_betterPeersToQuery", () => {
+    it.todo("_betterPeersToQuery", (done) => {
         const sw = new Switch(peerInfos[0], new PeerBook());
         sw.tm.add("tcp", new TCP());
         sw.connection.addStreamMuxer(mplex);
@@ -385,11 +469,15 @@ describe("dht", "KadDHT", () => {
         dht.peerBook.set(peerInfos[1]);
         dht.peerBook.set(peerInfos[2]);
 
-        dht._add(peerInfos[1]);
-        dht._add(peerInfos[2]);
-
-        const res = dht._betterPeersToQuery({ key: "hello" }, peerInfos[1]);
-        expect(res).to.be.eql([peerInfos[2]]);
+        series([
+            (cb) => dht._add(peerInfos[1], cb),
+            (cb) => dht._add(peerInfos[2], cb),
+            (cb) => dht._betterPeersToQuery({ key: "hello" }, peerInfos[1], cb)
+        ], (err, res) => {
+            expect(err).to.not.exist();
+            expect(res[2]).to.be.eql([peerInfos[2]]);
+            done();
+        });
     });
 
     describe("_verifyRecordLocally", () => {
@@ -446,7 +534,9 @@ describe("dht", "KadDHT", () => {
                 Buffer.from("world"),
                 peerInfos[1].id
             );
-            dht._verifyRecordLocally(Record.deserialize(record.serialize()));
+
+            const enc = record.serialize();
+            dht._verifyRecordLocally(Record.deserialize(enc));
         });
     });
 });

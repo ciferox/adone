@@ -10,6 +10,7 @@ const errors = require("./errors");
 const privateApi = require("./private");
 const Providers = require("./providers");
 const Message = require("./message");
+const RandomWalk = require("./random_walk");
 
 const {
     is,
@@ -105,6 +106,13 @@ export class KadDHT {
         Object.keys(pa).forEach((name) => {
             this[name] = pa[name];
         });
+
+        /**
+         * Provider management
+         *
+         * @type {RandomWalk}
+         */
+        this.randomWalk = new RandomWalk(this);
     }
 
     /**
@@ -136,7 +144,7 @@ export class KadDHT {
      */
     stop(callback) {
         this._running = false;
-        this.bootstrapStop();
+        this.randomWalk.stop();
         this.providers.stop();
         this.network.stop(callback);
     }
@@ -152,49 +160,6 @@ export class KadDHT {
 
     get peerBook() {
         return this.switch._peerBook;
-    }
-
-    /**
-     * Kademlia 'node lookup' operation.
-     *
-     * @param {Buffer} key
-     * @param {function(Error, Array<Identity>)} callback
-     * @returns {void}
-     */
-    getClosestPeers(key, callback) {
-        try {
-            const id = utils.convertBuffer(key);
-
-            const tablePeers = this.routingTable.closestPeers(id, c.ALPHA);
-
-            const q = new Query(this, key, (peer, callback) => {
-                waterfall([
-                    (cb) => this._closerPeersSingle(key, peer, cb),
-                    (closer, cb) => {
-                        cb(null, {
-                            closerPeers: closer
-                        });
-                    }
-                ], callback);
-            });
-
-            q.run(tablePeers, (err, res) => {
-                if (err) {
-                    return callback(err);
-                }
-
-                if (!res || !res.finalSet) {
-                    return callback(null, []);
-                }
-
-                waterfall([
-                    (cb) => utils.sortClosestPeers(Array.from(res.finalSet), id, cb),
-                    (sorted, cb) => cb(null, sorted.slice(0, c.K))
-                ], callback);
-            });
-        } catch (err) {
-            return callback(err);
-        }
     }
 
     /**
@@ -326,9 +291,7 @@ export class KadDHT {
                     });
 
                     // run our query
-                    timeout((cb) => {
-                        query.run(rtp, cb);
-                    }, maxTimeout)(cb);
+                    timeout((cb) => query.run(rtp, cb), maxTimeout)(cb);
                 }
             ], (err) => {
                 if (err && vals.length === 0) {
@@ -339,6 +302,50 @@ export class KadDHT {
             });
         });
     }
+
+    /**
+     * Kademlia 'node lookup' operation.
+     *
+     * @param {Buffer} key
+     * @param {function(Error, Array<Identity>)} callback
+     * @returns {void}
+     */
+    getClosestPeers(key, callback) {
+        try {
+            const id = utils.convertBuffer(key);
+
+            const tablePeers = this.routingTable.closestPeers(id, c.ALPHA);
+
+            const q = new Query(this, key, (peer, callback) => {
+                waterfall([
+                    (cb) => this._closerPeersSingle(key, peer, cb),
+                    (closer, cb) => {
+                        cb(null, {
+                            closerPeers: closer
+                        });
+                    }
+                ], callback);
+            });
+
+            q.run(tablePeers, (err, res) => {
+                if (err) {
+                    return callback(err);
+                }
+
+                if (!res || !res.finalSet) {
+                    return callback(null, []);
+                }
+
+                waterfall([
+                    (cb) => utils.sortClosestPeers(Array.from(res.finalSet), id, cb),
+                    (sorted, cb) => cb(null, sorted.slice(0, c.K))
+                ], callback);
+            });
+        } catch (err) {
+            return callback(err);
+        }
+    }
+
 
     /**
      * Get the public key for the given peer id.
@@ -387,6 +394,21 @@ export class KadDHT {
     }
 
     /**
+     * Look if we are connected to a peer with the given id.
+     * Returns the `PeerInfo` for it, if found, otherwise `undefined`.
+     *
+     * @param {Identity} peer
+     * @param {function(Error, PeerInfo)} callback
+     * @returns {void}
+     */
+    findPeerLocal(peer) {
+        const p = this.routingTable.find(peer);
+        if (p && this.peerBook.has(p)) {
+            return this.peerBook.get(p);
+        }
+    }
+
+    /**
      * Announce to the network that a node can provide the given key.
      * This is what Coral and MainlineDHT do to store large values
      * in a DHT.
@@ -396,8 +418,6 @@ export class KadDHT {
      * @returns {void}
      */
     provide(key, callback) {
-        this._log("provide: %s", key.toBaseEncodedString());
-
         waterfall([
             (cb) => this.providers.addProvider(key, this.peerInfo.id, cb),
             (cb) => this.getClosestPeers(key.buffer, cb),
@@ -406,7 +426,6 @@ export class KadDHT {
                 msg.providerPeers = peers.map((p) => new PeerInfo(p));
 
                 each(peers, (peer, cb) => {
-                    this._log("putProvider %s to %s", key.toBaseEncodedString(), peer.asBase58());
                     this.network.sendMessage(peer, msg, cb);
                 }, cb);
             }
@@ -422,9 +441,10 @@ export class KadDHT {
      * @returns {void}
      */
     findProviders(key, timeout, callback) {
-        this._log("findProviders %s", key.toBaseEncodedString());
         this._findNProviders(key, timeout, c.K, callback);
     }
+
+    // ----------- Peer Routing
 
     /**
      * Search for a peer with the given ID.
@@ -443,8 +463,6 @@ export class KadDHT {
         if (is.nil(maxTimeout)) {
             maxTimeout = c.minute;
         }
-
-        this._log("findPeer %s", id.asBase58());
 
         try {
             const pi = this.findPeerLocal(id);
@@ -507,64 +525,6 @@ export class KadDHT {
             ], callback);
         } catch (err) {
             return callback(err);
-        }
-    }
-
-    /**
-     * Look if we are connected to a peer with the given id.
-     * Returns the `PeerInfo` for it, if found, otherwise `undefined`.
-     *
-     * @param {Identity} peer
-     * @param {function(Error, PeerInfo)} callback
-     * @returns {void}
-     */
-    findPeerLocal(peer) {
-        this._log("findPeerLocal %s", peer.asBase58());
-        const p = this.routingTable.find(peer);
-        if (p && this.peerBook.has(p)) {
-            return this.peerBook.get(p);
-        }
-    }
-
-    /**
-     * Start the bootstrap process. This means running a number of queries every interval requesting random data.
-     * This is done to keep the dht healthy over time.
-     *
-     * @param {number} [queries=1] - how many queries to run per period
-     * @param {number} [period=300000] - how often to run the the bootstrap process, in milliseconds (5min)
-     * @param {number} [maxTimeout=10000] - how long to wait for the the bootstrap query to run, in milliseconds (10s)
-     * @returns {void}
-     */
-    bootstrapStart(queries, period, maxTimeout) {
-        if (is.nil(queries)) {
-            queries = 1;
-        }
-        if (is.nil(period)) {
-            period = 5 * c.minute;
-        }
-        if (is.nil(maxTimeout)) {
-            maxTimeout = 10 * c.second;
-        }
-
-        // Don't run twice
-        if (this._bootstrapRunning) {
-            return;
-        }
-
-        this._bootstrapRunning = setInterval(
-            () => this._bootstrap(queries, maxTimeout),
-            period
-        );
-    }
-
-    /**
-     * Stop the bootstrap process.
-     *
-     * @returns {void}
-     */
-    bootstrapStop() {
-        if (this._bootstrapRunning) {
-            clearInterval(this._bootstrapRunning);
         }
     }
 }

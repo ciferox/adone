@@ -1253,7 +1253,7 @@ describe("core and all together", () => {
         });
     });
 
-    describe.only("stats", () => {
+    describe("stats", () => {
         it("has stats", async () => {
             const node = await createNetCore("//ip4/127.0.0.1//tcp/0", {
                 mdns: false,

@@ -70,4 +70,4 @@ message Message {
   // Used to return Providers
   // GET_VALUE, ADD_PROVIDER, GET_PROVIDERS
   repeated Peer providerPeers = 9;
-}`
+}`;

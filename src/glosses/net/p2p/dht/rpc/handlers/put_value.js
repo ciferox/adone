@@ -1,8 +1,6 @@
 const utils = require("../../utils");
 
 module.exports = (dht) => {
-    const log = utils.logger(dht.peerInfo.id, "rpc:put-value");
-
     /**
      * Process `PutValue` DHT messages.
      *
@@ -12,13 +10,9 @@ module.exports = (dht) => {
      * @returns {undefined}
      */
     return function putValue(peer, msg, callback) {
-        const key = msg.key;
-        log("key: %s", key);
-
         const record = msg.record;
 
         if (!record) {
-            log.error("Got empty record from: %s", peer.id.asBase58());
             return callback(new Error("Empty record"));
         }
         try {
@@ -31,7 +25,6 @@ module.exports = (dht) => {
                 callback(null, msg);
             });
         } catch (err) {
-            log.error(err.message);
             return callback(err);
         }
     };

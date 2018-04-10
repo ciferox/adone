@@ -18,6 +18,7 @@ const writeReadMessage = function (conn, msg, callback) {
             if (err) {
                 return callback(err);
             }
+
             if (res.length === 0) {
                 return callback(new Error("No message received"));
             }
@@ -192,10 +193,7 @@ class Network {
      * @private
      */
     _writeReadMessage(conn, msg, callback) {
-        timeout(
-            writeReadMessage,
-            this.readMessageTimeout
-        )(conn, msg, callback);
+        timeout(writeReadMessage, this.readMessageTimeout)(conn, msg, callback);
     }
 
     /**

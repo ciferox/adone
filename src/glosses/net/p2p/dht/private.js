@@ -2,7 +2,6 @@ const waterfall = require("async/waterfall");
 const series = require("async/series");
 const each = require("async/each");
 const timeout = require("async/timeout");
-const times = require("async/times");
 const utils = require("./utils");
 const errors = require("./errors");
 const Message = require("./message");
@@ -12,9 +11,7 @@ const Query = require("./query");
 const {
     is,
     crypto: { Identity },
-    net: { p2p: { PeerInfo, record: { Record, validator, selection } } },
-    multi,
-    std
+    net: { p2p: { PeerInfo, record: { Record, validator, selection } } }
 } = adone;
 
 module.exports = (dht) => ({
@@ -143,7 +140,6 @@ module.exports = (dht) => ({
      * @private
      */
     _verifyRecordLocally(record) {
-        dht._log("verifyRecordLocally");
         if (record.signature) {
             const peer = record.author;
             let info;
@@ -545,66 +541,5 @@ module.exports = (dht) => ({
     _findProvidersSingle(peer, key, callback) {
         const msg = new Message(Message.TYPES.GET_PROVIDERS, key.buffer, 0);
         dht.network.sendRequest(peer, msg, callback);
-    },
-    /**
-     * Do the bootstrap work.
-     *
-     * @param {number} queries
-     * @param {number} maxTimeout
-     * @returns {void}
-     *
-     * @private
-     */
-    _bootstrap(queries, maxTimeout) {
-        dht._log("bootstrap:start");
-        times(queries, (i, cb) => {
-            waterfall([
-                (cb) => this._generateBootstrapId(cb),
-                (id, cb) => timeout((cb) => {
-                    this._bootstrapQuery(id, cb);
-                }, maxTimeout)(cb)
-            ], (err) => {
-                if (err) {
-                    dht._log.error("bootstrap:error", err);
-                }
-                dht._log("bootstrap:done");
-            });
-        });
-    },
-    /**
-     * The query run during a bootstrap request.
-     *
-     * @param {Identity} id
-     * @param {function(Error)} callback
-     * @returns {void}
-     *
-     * @private
-     */
-    _bootstrapQuery(id, callback) {
-        dht._log("bootstrap:query:%s", id.asBase58());
-        this.findPeer(id, (err, peer) => {
-            if (err instanceof errors.NotFoundError) {
-                // expected case, we asked for random stuff after all
-                return callback();
-            }
-            if (err) {
-                return callback(err);
-            }
-            dht._log("bootstrap:query:found", err, peer);
-            // wait what, there was something found?
-            callback(new Error(`Bootstrap peer: ACTUALLY FOUND PEER: ${peer}, ${id.asBase58()}`));
-        });
-    },
-    /**
-     * Generate a random peer id for bootstrapping purposes.
-     *
-     * @param {function(Error, Identity)} callback
-     * @returns {void}
-     *
-     * @private
-     */
-    _generateBootstrapId() {
-        const digest = multi.hash.create(std.crypto.randomBytes(16), "sha2-256");
-        return new Identity(digest);
     }
 });

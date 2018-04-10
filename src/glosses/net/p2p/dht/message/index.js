@@ -42,10 +42,10 @@ const fromPbPeer = function (peer) {
  */
 class Message {
     /**
-   * @param {MessageType} type
-   * @param {Buffer} key
-   * @param {number} level
-   */
+     * @param {MessageType} type
+     * @param {Buffer} key
+     * @param {number} level
+     */
     constructor(type, key, level) {
         if (key) {
             if (!is.buffer(key)) {
@@ -62,8 +62,8 @@ class Message {
     }
 
     /**
-   * @type {number}
-   */
+     * @type {number}
+     */
     get clusterLevel() {
         const level = this._clusterLevelRaw - 1;
         if (level < 0) {
@@ -78,9 +78,9 @@ class Message {
     }
 
     /**
-   * Encode into protobuf
-   * @returns {Buffer}
-   */
+     * Encode into protobuf
+     * @returns {Buffer}
+     */
     serialize() {
         const obj = {
             key: this.key,
@@ -102,11 +102,11 @@ class Message {
     }
 
     /**
-   * Decode from protobuf
-   *
-   * @param {Buffer} raw
-   * @returns {Message}
-   */
+     * Decode from protobuf
+     *
+     * @param {Buffer} raw
+     * @returns {Message}
+     */
     static deserialize(raw) {
         const dec = pbm.Message.decode(raw);
 
