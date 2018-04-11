@@ -612,7 +612,7 @@ describe("core and all together", () => {
             await netCoreB.stop();
         };
 
-        it("spdy only", async function () {
+        it.skip("spdy only", async function () {
             this.timeout(5 * 1000);
 
             let netCoreA;
@@ -661,7 +661,7 @@ describe("core and all together", () => {
             await teardown(netCoreA, netCoreB);
         });
 
-        it("spdy + mplex", async function () {
+        it.skip("spdy + mplex", async function () {
             this.timeout(5000);
 
             let netCoreA;
@@ -686,7 +686,7 @@ describe("core and all together", () => {
             await teardown(netCoreA, netCoreB);
         });
 
-        it("spdy + mplex switched order", async function () {
+        it.skip("spdy + mplex switched order", async function () {
             this.timeout(5000);
 
             let netCoreA;
@@ -711,7 +711,7 @@ describe("core and all together", () => {
             await teardown(netCoreA, netCoreB);
         });
 
-        it("one without the other fails to establish a muxedConn", async function () {
+        it.skip("one without the other fails to establish a muxedConn", async function () {
             this.timeout(5000);
 
             let netCoreA;

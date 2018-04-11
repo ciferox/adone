@@ -3,7 +3,7 @@ const {
     stream: { pull }
 } = adone;
 
-const lsHandler = function (self, conn) {
+export default function (self, conn) {
     const protos = Object.keys(self.handlers).filter((key) => key !== "ls");
 
     const nProtos = protos.length;
@@ -30,6 +30,4 @@ const lsHandler = function (self, conn) {
         pull.lengthPrefixed.encode(),
         conn
     );
-};
-
-module.exports = lsHandler;
+}

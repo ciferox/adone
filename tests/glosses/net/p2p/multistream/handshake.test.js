@@ -4,13 +4,13 @@ const util = require("./util");
 const createPair = util.createPair;
 
 const {
-    net: { p2p: { muxer: { spdy, mplex }, multistream } },
+    net: { p2p: { muxer: { /*spdy, */mplex }, multistream } },
     stream: { pull }
 } = adone;
 
 const options = [
     { name: "over pull-pair" },
-    { name: "over spdy", muxer: spdy },
+    // { name: "over spdy", muxer: spdy },
     { name: "over mplex", muxer: mplex }
 ];
 

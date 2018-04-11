@@ -1,4 +1,4 @@
 adone.lazify({
     mplex: "./mplex",
-    spdy: "./spdy"
+    // spdy: "./spdy"
 }, exports, require);

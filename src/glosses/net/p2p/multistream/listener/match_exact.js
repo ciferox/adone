@@ -7,9 +7,7 @@
  * @returns {undefined}
  * @type {matchHandler}
  */
-const matchExact = function (myProtocol, senderProtocol, callback) {
+export default function (myProtocol, senderProtocol, callback) {
     const result = myProtocol === senderProtocol;
     callback(null, result);
-};
-
-module.exports = matchExact;
+}

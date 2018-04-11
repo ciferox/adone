@@ -1,7 +1,7 @@
-const select = require("../select");
-const selectHandler = require("./select_handler");
-const lsHandler = require("./ls_handler");
-const matchExact = require("./match_exact");
+import select from "../select";
+import selectHandler from "./select_handler";
+import lsHandler from "./ls_handler";
+import matchExact from "./match_exact";
 
 const {
     is,

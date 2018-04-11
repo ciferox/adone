@@ -404,6 +404,22 @@ export default class ByteArray {
     }
 
     /**
+     * Reads a 24bit unsigned be integer
+     *
+     * @param {number} [offset] Offset to read from
+     * @returns {number}
+     */
+    readUInt24BE(offset) {
+        offset = this._checkRead(offset, 3);
+        let value = 0;
+        value = this.buffer[offset] << 16;
+        value |= this.buffer[offset + 1] << 8;
+        value |= this.buffer[offset + 2];
+        value |= 0; // Cast to signed
+        return value;
+    }
+
+    /**
      * Reads a 32bit signed le integer
      *
      * @param {number} [offset] Offset to read from
@@ -828,6 +844,22 @@ export default class ByteArray {
 
         this.buffer[offset] = value >>> 8;
         this.buffer[offset + 1] = value;
+        return this;
+    }
+
+    /**
+     * Writes a 24bit unsigned be integer
+     *
+     * @param {number} value
+     * @param {number} [offset] Offset to write to
+     * @returns {this}
+     */
+    writeUInt24BE(value, offset) {
+        value >>>= 0;
+        offset = this._checkWrite(value, offset, 3);
+        this.buffer[offset] = value >>> 16;
+        this.buffer[offset + 1] = value >>> 8;
+        this.buffer[offset + 2] = value;
         return this;
     }
 

@@ -15,7 +15,7 @@ export const createNetCore = async (maddr) => {
     const netCore = new Core({
         peer,
         transport: "tcp",
-        muxer: "spdy",
+        muxer: "mplex",
         crypto: [secio]
     });
     await netCore.start();

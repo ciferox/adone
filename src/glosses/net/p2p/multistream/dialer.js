@@ -1,4 +1,4 @@
-const select = require("../select");
+import select from "./select";
 
 const {
     data: { varint },

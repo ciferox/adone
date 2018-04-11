@@ -1,13 +1,7 @@
-const debug = require("debug");
-
 const {
     is,
     stream: { pull }
 } = adone;
-
-exports = module.exports;
-
-const randomId = () => ((~~(Math.random() * 1e9)).toString(36));
 
 // prefixes a message with a varint
 // TODO this is a pull-stream 'creep' (pull stream to add a byte?')
@@ -26,7 +20,7 @@ const encode = function (msg, callback) {
     );
 };
 
-exports.writeEncoded = (writer, msg, callback) => {
+export const writeEncoded = (writer, msg, callback) => {
     encode(msg, (err, msg) => {
         if (err) {
             return callback(err);

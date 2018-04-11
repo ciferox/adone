@@ -1,4 +1,4 @@
-const writeEncoded = require("../util.js").writeEncoded;
+import { writeEncoded } from "../util.js";
 
 const {
     async: { some },
@@ -28,7 +28,7 @@ const matcher = function (protocol, handlers, callback) {
     });
 };
 
-const selectHandler = function (rawConn, handlersMap) {
+export default function (rawConn, handlersMap) {
     const cb = (err) => {
         // incoming errors are irrelevant for the app
     };
@@ -65,6 +65,4 @@ const selectHandler = function (rawConn, handlersMap) {
 
     next();
     return stream;
-};
-
-module.exports = selectHandler;
+}

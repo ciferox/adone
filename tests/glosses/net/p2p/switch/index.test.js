@@ -2,7 +2,7 @@ import { createInfos, tryEcho } from "./utils";
 
 const {
     multi,
-    net: { p2p: { secio, muxer: { mplex, spdy }, switch: { Switch }, PeerBook, transport: { TCP, WS } } },
+    net: { p2p: { secio, muxer: { mplex/*, spdy*/ }, switch: { Switch }, PeerBook, transport: { TCP, WS } } },
     stream: { pull }
 } = adone;
 
@@ -278,7 +278,7 @@ describe("switch", () => {
     describe("stream multiplexing", () => {
         const muxers = [
             mplex,
-            spdy
+            // spdy
         ];
 
         const maGen = (port) => `//ip4/127.0.0.1//tcp/${port}`;
@@ -531,12 +531,13 @@ describe("switch", () => {
             await switchC.start();
         });
 
-        it("add spdy and enable identify", () => {
-            switchA.connection.addStreamMuxer(spdy);
-            switchB.connection.addStreamMuxer(spdy);
-            switchC.connection.addStreamMuxer(spdy);
-            switchD.connection.addStreamMuxer(spdy);
-            switchE.connection.addStreamMuxer(spdy);
+        // it("add spdy and enable identify", () => {
+        it("add mplex and enable identify", () => {
+            switchA.connection.addStreamMuxer(mplex);
+            switchB.connection.addStreamMuxer(mplex);
+            switchC.connection.addStreamMuxer(mplex);
+            switchD.connection.addStreamMuxer(mplex);
+            switchE.connection.addStreamMuxer(mplex);
 
             switchA.connection.reuse();
             switchB.connection.reuse();

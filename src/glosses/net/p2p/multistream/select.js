@@ -1,11 +1,10 @@
-const util = require("./util");
-const writeEncoded = util.writeEncoded;
+import { writeEncoded } from "./util";
 
 const {
     stream: { pull }
 } = adone;
 
-const select = (multicodec, callback) => {
+export default (multicodec, callback) => {
     const stream = pull.handshake({
         timeout: 60 * 1000
     }, callback);
@@ -28,6 +27,4 @@ const select = (multicodec, callback) => {
     });
 
     return stream;
-};
-
-module.exports = select;
+}

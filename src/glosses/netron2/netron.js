@@ -80,7 +80,7 @@ export default class Netron extends adone.task.Manager {
         }
 
         if (!config.muxer) {
-            config.muxer = "spdy";
+            config.muxer = "mplex";
         }
 
         const peerInfo = PeerInfo.create(this.peer.info.id);
