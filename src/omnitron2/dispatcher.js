@@ -137,7 +137,7 @@ export default class Dispatcher extends Subsystem {
                 if (is.string(adoneRootPath)) {
                     scriptPath = std.path.resolve(adoneRootPath, "lib", "omnitron2", "omnitron", "index.js");
                 } else {
-                    scriptPath = std.path.join(__dirname, "omnitron", "index,js");
+                    scriptPath = std.path.join(__dirname, "omnitron", "index.js");
                 }
                 const args = [scriptPath];
                 if (is.string(adoneRootPath)) {

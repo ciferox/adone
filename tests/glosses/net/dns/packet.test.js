@@ -337,7 +337,6 @@ describe("net", "dns", "packet", () => {
         const val2 = packet.streamDecode(buf);
 
         assert.deepEqual(buf.length, packet.streamEncode.bytes, "streamEncode.bytes was set correctly");
-        assert.deepEqual(packet.streamDecode.bytes, packet.streamEncode.bytes, "streamDecode.bytes was set correctly");
         assert.ok(compare(val2.type, val.type), "streamDecoded type match");
         assert.ok(compare(val2.id, val.id), "streamDecoded id match");
         assert.ok(parseInt(val2.flags) === parseInt(val.flags & 0x7FFF), "streamDecoded flags match");
@@ -346,5 +345,73 @@ describe("net", "dns", "packet", () => {
         assert.ok(compare(answer.type, answer2.type), "streamDecoded RR type match");
         assert.ok(compare(answer.name, answer2.name), "streamDecoded RR name match");
         assert.ok(compare(answer.data, answer2.data), "streamDecoded RR rdata match");
+    });
+
+    it("opt", () => {
+        const val = {
+            type: "query",
+            questions: [{
+                type: "A",
+                name: "hello.a.com"
+            }],
+            additionals: [{
+                type: "OPT",
+                name: ".",
+                udpPayloadSize: 4096
+            }]
+        };
+        testEncoder(packet, val);
+        let buf = packet.encode(val);
+        let val2 = packet.decode(buf);
+        const additional1 = val.additionals[0];
+        let additional2 = val2.additionals[0];
+        assert.ok(compare(additional1.name, additional2.name), "name matches");
+        assert.ok(compare(additional1.udpPayloadSize, additional2.udpPayloadSize), "udp payload size matches");
+        assert.ok(compare(0, additional2.flags), "flags match");
+        additional1.flags = packet.DNSSEC_OK;
+        additional1.extendedRcode = 0x80;
+        // padding, see RFC 7830
+        additional1.options = [{
+            code: 12,
+            data: Buffer.alloc(31)
+        }];
+        buf = packet.encode(val);
+        val2 = packet.decode(buf);
+        additional2 = val2.additionals[0];
+        assert.ok(compare(1 << 15, additional2.flags), "DO bit set in flags");
+        assert.ok(compare(true, additional2.flag_do), "DO bit set");
+        assert.ok(compare(additional1.extendedRcode, additional2.extendedRcode), "extended rcode matches");
+        assert.ok(compare(additional1.options, additional2.options), "options match");
+    });
+
+    it("unpack", () => {
+        const buf = Buffer.from([
+            0x00, 0x79,
+            0xde, 0xad, 0x85, 0x00, 0x00, 0x01, 0x00, 0x01,
+            0x00, 0x02, 0x00, 0x02, 0x02, 0x6f, 0x6a, 0x05,
+            0x62, 0x61, 0x6e, 0x67, 0x6a, 0x03, 0x63, 0x6f,
+            0x6d, 0x00, 0x00, 0x01, 0x00, 0x01, 0xc0, 0x0c,
+            0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x0e, 0x10,
+            0x00, 0x04, 0x81, 0xfa, 0x0b, 0xaa, 0xc0, 0x0f,
+            0x00, 0x02, 0x00, 0x01, 0x00, 0x00, 0x0e, 0x10,
+            0x00, 0x05, 0x02, 0x63, 0x6a, 0xc0, 0x0f, 0xc0,
+            0x0f, 0x00, 0x02, 0x00, 0x01, 0x00, 0x00, 0x0e,
+            0x10, 0x00, 0x02, 0xc0, 0x0c, 0xc0, 0x3a, 0x00,
+            0x01, 0x00, 0x01, 0x00, 0x00, 0x0e, 0x10, 0x00,
+            0x04, 0x45, 0x4d, 0x9b, 0x9c, 0xc0, 0x0c, 0x00,
+            0x1c, 0x00, 0x01, 0x00, 0x00, 0x0e, 0x10, 0x00,
+            0x10, 0x20, 0x01, 0x04, 0x18, 0x00, 0x00, 0x50,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xf9
+        ]);
+        const val = packet.streamDecode(buf);
+        const answer = val.answers[0];
+        const authority = val.authorities[1];
+        assert.ok(val.rcode === "NOERROR", "decode rcode");
+        assert.ok(compare(answer.type, "A"), "streamDecoded RR type match");
+        assert.ok(compare(answer.name, "oj.bangj.com"), "streamDecoded RR name match");
+        assert.ok(compare(answer.data, "129.250.11.170"), "streamDecoded RR rdata match");
+        assert.ok(compare(authority.type, "NS"), "streamDecoded RR type match");
+        assert.ok(compare(authority.name, "bangj.com"), "streamDecoded RR name match");
+        assert.ok(compare(authority.data, "oj.bangj.com"), "streamDecoded RR rdata match");
     });
 });

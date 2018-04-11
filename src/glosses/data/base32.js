@@ -57,11 +57,10 @@ base32hex.charmap = charmap(base32hex.alphabet, base32hex.charmap);
 /**
  * Create a new `Decoder` with the given options.
  *
- * @param {object} [options]
- *   @param {string} [type] Supported Base-32 variants are "rfc4648" and
- *     "crockford".
- *   @param {object} [charmap] Override the character map used in decoding.
- * @constructor
+ * @param {DecoderOptions} [options]
+ *   @param {string} [options.type] Supported Base-32 variants are:
+ *     "rfc4648", "base32hex", and "crockford".
+ *   @param {CharacterMap} [options.charmap] Override the character map used in decoding. * @constructor
  */
 export class Decoder {
     constructor(options) {
@@ -148,7 +147,7 @@ export class Decoder {
      * Finish decoding.
      *
      * @param {string} [str] The final string to decode.
-     * @return {Array} Decoded byte array.
+     * @return {ByteArray} Decoded byte array.
      */
     finalize(str) {
         if (str) {
@@ -164,17 +163,18 @@ export class Decoder {
 }
 
 /**
- * The default character map coresponds to RFC4648.
+ * The default character map corresponds to RFC4648.
  */
 Decoder.prototype.charmap = rfc4648.charmap;
 
 /**
  * Create a new `Encoder` with the given options.
  *
- * @param {object} [options]
- *   @param {string} [type] Supported Base-32 variants are "rfc4648" and
- *     "crockford".
- *   @param {object} [alphabet] Override the alphabet used in encoding.
+ * @param {EncoderOptions} [options]
+ *   @param {string} [options.type] Supported Base-32 variants are:
+ *     "rfc4648", "base32hex", and "crockford".
+ *   @param {string} [options.alphabet] Override the alphabet used in encoding.
+ *   @param {boolean} [options.lc] Use lower-case alphabet.
  * @constructor
  */
 
@@ -211,7 +211,7 @@ export class Encoder {
     /**
      * Encode a byte array, continuing from the previous state.
      *
-     * @param {byte[]} buf The byte array to encode.
+     * @param {ByteArray} buf The byte array to encode.
      * @return {Encoder} this
      */
     write(buf) {
@@ -275,7 +275,7 @@ export class Encoder {
 }
 
 /**
- * The default alphabet coresponds to RFC4648.
+ * The default alphabet corresponds to RFC4648.
  */
 
 Encoder.prototype.alphabet = rfc4648.alphabet;
@@ -283,8 +283,8 @@ Encoder.prototype.alphabet = rfc4648.alphabet;
 /**
  * Convenience encoder.
  *
- * @param {byte[]} buf The byte array to encode.
- * @param {object} [options] Options to pass to the encoder.
+ * @param {ByteArray} buf The byte array to encode.
+ * @param {DecoderOptions} [options] Options to pass to the encoder.
  * @return {string} The encoded string.
  */
 
@@ -294,7 +294,7 @@ export const encode = (buf, options) => new Encoder(options).finalize(buf);
  * Convenience decoder.
  *
  * @param {string} str The string to decode.
- * @param {object} [options] Options to pass to the decoder.
- * @return {byte[]} The decoded byte array.
+ * @param {DecoderOptions} [options] Options to pass to the decoder.
+ * @return {ByteArray} The decoded byte array.
  */
 export const decode = (str, options) => new Decoder(options).finalize(str);

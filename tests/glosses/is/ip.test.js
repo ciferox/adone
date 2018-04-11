@@ -289,40 +289,40 @@ describe("is", "ip", () => {
             ]
         });
 
-        test("ip", {
-            args: [6],
-            valid: validIp6,
-            invalid: [
-                ...validIp4,
-                ...invalidIp6
-            ]
-        });
+        // test("ip", {
+        //     args: [6],
+        //     valid: validIp6,
+        //     invalid: [
+        //         ...validIp4,
+        //         ...invalidIp6
+        //     ]
+        // });
 
-        test("ip", {
-            args: [4],
-            valid: validIp4,
-            invalid: [
-                ...invalidIp4,
-                ...validIp6
-            ]
-        });
+        // test("ip", {
+        //     args: [4],
+        //     valid: validIp4,
+        //     invalid: [
+        //         ...invalidIp4,
+        //         ...validIp6
+        //     ]
+        // });
 
-        test("ip", {
-            args: ["6"],
-            valid: validIp6,
-            invalid: [
-                ...validIp4,
-                ...invalidIp6
-            ]
-        });
+        // test("ip", {
+        //     args: ["6"],
+        //     valid: validIp6,
+        //     invalid: [
+        //         ...validIp4,
+        //         ...invalidIp6
+        //     ]
+        // });
 
-        test("ip", {
-            args: ["4"],
-            valid: validIp4,
-            invalid: [
-                ...invalidIp4,
-                ...validIp6
-            ]
-        });
+        // test("ip", {
+        //     args: ["4"],
+        //     valid: validIp4,
+        //     invalid: [
+        //         ...invalidIp4,
+        //         ...validIp6
+        //     ]
+        // });
     });
 });

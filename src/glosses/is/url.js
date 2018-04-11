@@ -103,7 +103,7 @@ export default function isURL(url, options) {
         }
     }
 
-    if (!is.ip(host) && !is.fqdn(host, options) && (!ipv6 || !is.ip(ipv6, 6))) {
+    if (!is.ip(host) && !is.fqdn(host, options) && (!ipv6 || !is.ip6(ipv6))) {
         return false;
     }
 

@@ -59,22 +59,17 @@ describe("omnitron", () => {
             await stopOmnitron();
         });
 
-        it.only("pidfile and log files should exist", async () => {
-            assert.true(await fs.exists(adone.realm.config.omnitron.PIDFILE_PATH));
-            assert.true(await fs.exists(adone.realm.config.omnitron.LOGFILE_PATH));
-            assert.true(await fs.exists(adone.realm.config.omnitron.ERRORLOGFILE_PATH));
+        it("pidfile and log files should exist", async () => {
+            assert.true(await fs.exists(adone.runtime.realm.config.omnitron.PIDFILE_PATH));
+            assert.true(await fs.exists(adone.runtime.realm.config.omnitron.LOGFILE_PATH));
+            assert.true(await fs.exists(adone.runtime.realm.config.omnitron.ERRORLOGFILE_PATH));
         });
 
-        it("correct omnitron information", async () => {
+        it.only("correct omnitron information", async () => {
             const info = await iOmnitron.getInfo();
 
             assert.equal(info.version.adone, adone.package.version);
-
-            assert.equal(info.realm.name, ".adone_test");
-            assert.equal(info.realm.uid, (await realm.getManager()).id);
-
-            assert.equal(info.env.ADONE_REALM, info.realm.name);
-            assert.ok(info.env.ADONE_HOME.endsWith(".adone_test"));
+            assert.equal(info.realm.id, adone.runtime.realm.identity.id);
         });
 
         it("should not be any services initially", async () => {

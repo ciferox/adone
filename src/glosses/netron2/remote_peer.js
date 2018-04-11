@@ -279,7 +279,7 @@ export default class RemotePeer extends AbstractPeer {
 
         this._writer = pull.pushable((err) => {
             if (err) {
-                adone.logError(err);
+                // adone.logError(err);
             }
         });
 
@@ -312,7 +312,7 @@ export default class RemotePeer extends AbstractPeer {
                     this.netron._processPacket(this, pkt);
                 } catch (err) {
                     buffer.reset(true);
-                    adone.logError(err);
+                    // adone.logError(err);
                 } finally {
                     lpsz = 0;
                 }
@@ -324,7 +324,7 @@ export default class RemotePeer extends AbstractPeer {
             conn,
             pull.drain(handler, (err) => {
                 if (err) {
-                    adone.logError(err);
+                    // adone.logError(err);
                 }
             })
         );
