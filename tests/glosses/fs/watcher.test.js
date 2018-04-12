@@ -604,7 +604,7 @@ describe("fs", "watcher", function watcherTests() {
                     .on("ready", ready);
                 await ready.waitForCall();
                 await sleep();
-                all.reset();
+                all.resetHistory();
                 await Promise.all([
                     sleep(100)
                         .then(() => add.write(Date.now()))
@@ -658,7 +658,7 @@ describe("fs", "watcher", function watcherTests() {
                 await sleep();
                 expect(all.callCount).to.be.equal(1);
                 expect(all.getCall(0).args.slice(0, 2)).to.be.deep.equal(["add", change.relativePath(fixtures)]);
-                all.reset();
+                all.resetHistory();
                 await Promise.all([
                     sleep()
                         .then(() => add.write(Date.now()))
@@ -693,7 +693,7 @@ describe("fs", "watcher", function watcherTests() {
                 expect(all.callCount).to.be.equal(2);
                 expect(all).to.have.been.calledWith("add", change.path());
                 expect(all).to.have.been.calledWith("add", unlink.path());
-                all.reset();
+                all.resetHistory();
                 await Promise.all([
                     sleep()
                         .then(() => add.write(Date.now()))
@@ -856,7 +856,7 @@ describe("fs", "watcher", function watcherTests() {
                 await sleep();
                 expect(all).to.have.been
                     .calledWith("addDir", fixtures.getDirectory("subdir").path());
-                all.reset();
+                all.resetHistory();
                 await Promise.all([
                     sleep().then(() => deepDir.create())
                         .then(() => deepFile.write(Date.now()))
@@ -1793,7 +1793,7 @@ describe("fs", "watcher", function watcherTests() {
                     stdWatcher().on("all", all).on("ready", ready);
                     await ready.waitForCall();
                     await sleep();
-                    all.reset();
+                    all.resetHistory();
                     await Promise.all([
                         file.write("hello"),
                         sleep(400)
@@ -2022,7 +2022,7 @@ describe("fs", "watcher", function watcherTests() {
                 watcher = watch(fixtures.path(), options).on("add", add).on("ready", ready);
                 await ready.waitForCall();
                 await sleep();
-                add.reset();
+                add.resetHistory();
                 watcher.close();
                 await addFile.write("hello");
                 await sleep(900);
@@ -2043,7 +2043,7 @@ describe("fs", "watcher", function watcherTests() {
                         .on("unlinkDir", unlinkDir);
                     await ready.waitForCall();
                     await sleep();
-                    addDir.reset();
+                    addDir.resetHistory();
                     const [dir] = await Promise.all([
                         fixtures.addDirectory("testing_directory"),
                         addDir.waitForCall()

@@ -8,21 +8,18 @@ const {
     fs
 } = adone;
 
-// let's do some magic
-process.binding("natives").native_module = ""; // eslint-disable-line
+const natives = process.binding("natives");
 const preserveSymlinks = Boolean(process.binding("config").preserveSymlinks);
-const NativeModule = require("native_module");
-const internalFS = NativeModule.require("internal/fs");
 
 // In order to minimize unnecessary lstat() calls,
 // this cache is a list of known-real paths.
 // Set to an empty Map to reset.
-const realpathCache = new Map();
+// const realpathCache = new Map();
 
 const toRealPath = (requestPath) => {
-    return fs.realpathSync(requestPath, {
+    return fs.realpathSync(requestPath/*, {
         [internalFS.realpathCacheKey]: realpathCache
-    });
+    }*/);
 };
 
 const caller = () => {
@@ -255,7 +252,7 @@ export default class Module extends NodeModule {
     }
 
     static _resolveFilename(request, parent, isMain) {
-        if (NativeModule.nonInternalExists(request)) {
+        if (natives.hasOwnProperty(request)) {
             return request;
         }
 

@@ -28,7 +28,7 @@ const {
     std,
     util,
     noop,
-    emptyBuffer
+    EMPTY_BUFFER
 } = adone;
 
 // limit to detect symlink loops
@@ -288,7 +288,7 @@ class AbstractFile extends event.Emitter {
 class File extends AbstractFile {
     constructor({
         size = 0,
-        contents = adone.EMPTY_BUFFER,
+        contents = EMPTY_BUFFER,
         beforeHook = noop,
         afterHook = noop,
         mtime,
@@ -919,7 +919,7 @@ class VFS {
                     this.throw("EISDIR", path, "open");
                 }
                 // must be a file
-                node.contents = emptyBuffer;
+                node.contents = EMPTY_BUFFER;
             }
         } else {
             if (!(flags & O_CREAT)) {

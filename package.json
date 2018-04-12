@@ -7,7 +7,6 @@
   "devDependencies": {
     "@types/adone": "^0.6.13",
     "@types/node": "^9.4.6",
-    "argsarray": "0.0.1",
     "array-from": "^2.1.1",
     "ascoltatori": "^3.0.0",
     "babel-eslint": "^8.1.2",
@@ -24,14 +23,9 @@
     "bagpipe": "^0.3.5",
     "bash-match": "^1.0.2",
     "benchmark": "^2.1.4",
-    "big.js": "^5.0.3",
     "binary-search-tree": "^0.2.6",
-    "bower-config": "^1.4.0",
-    "brfs": "~1.4.2",
     "chai": "^4.1.2",
     "chunky": "0.0.0",
-    "cids": "^0.5.2",
-    "claire": "0.4.1",
     "clone": "^1.0.2",
     "commander": "~2.9.0",
     "cont": "^1.0.3",
@@ -121,7 +115,6 @@
     "pg-hstore": "^2.3.2",
     "picture-tube": "^1.0.0",
     "pino": "^2.4.2",
-    "pre-commit": "^1.2.2",
     "protocol-buffers": "^3.2.1",
     "pull-json-doubleline": "^2.0.0",
     "pull-randomly-split": "^1.0.4",
@@ -135,10 +128,8 @@
     "run-parallel": "^1.1.6",
     "run-series": "^1.1.4",
     "sanitize-filename": "^1.6.1",
-    "seedrandom": "2.4.3",
     "segfault-handler": "^1.0.0",
     "self-path": "^1.0.0",
-    "shortid": "^2.2.4",
     "simple-peer": "^8.2.0",
     "sliced": "^1.0.1",
     "smtp-server": "^1.17.0",
@@ -177,7 +168,7 @@
     "fsevents": "^1.0.0"
   },
   "engines": {
-    "node": ">=9.7.0"
+    "node": ">=9.11.1"
   },
   "main": "lib",
   "repository": "https://github.com/ciferox/adone",
