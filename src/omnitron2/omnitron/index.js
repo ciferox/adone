@@ -11,32 +11,25 @@ const {
 
 const previousUsage = process.cpuUsage();
 
-// The order of the subsystems is significant.
-const CORE_SUBSYSTEMS = [
-    "services",
-    "gates"
-];
+const CORE_GROUP = "core";
 
 @DContext({
     description: "Omnitron"
 })
 export default class Omnitron extends application.Application {
     async configure() {
-        // Initialize realm
-        await adone.realm.getManager();
-
         this.enableReport({
-            directory: adone.runtime.realm.config.omnitron.LOGS_PATH
+            directory: adone.runtime.config.omnitron.LOGS_PATH
         });
 
         this.config = await adone.omnitron2.Configuration.load({
-            cwd: adone.runtime.realm.config.CONFIGS_PATH
+            cwd: adone.runtime.config.CONFIGS_PATH
         });
 
         await this.addSubsystemsFrom(std.path.join(__dirname, "subsystems"), {
             bind: true,
             useFilename: true,
-            group: "core"
+            group: CORE_GROUP
         });
 
         if (!is.windows) {
@@ -80,7 +73,7 @@ export default class Omnitron extends application.Application {
 
     async createPidFile() {
         try {
-            await fs.writeFile(adone.runtime.realm.config.omnitron.PIDFILE_PATH, process.pid.toString());
+            await fs.writeFile(adone.runtime.config.omnitron.PIDFILE_PATH, process.pid.toString());
         } catch (err) {
             adone.logError(err.message);
         }
@@ -88,7 +81,7 @@ export default class Omnitron extends application.Application {
 
     async deletePidFile() {
         try {
-            await fs.rm(adone.runtime.realm.config.omnitron.PIDFILE_PATH);
+            await fs.rm(adone.runtime.config.omnitron.PIDFILE_PATH);
         } catch (err) {
             adone.logError(err.message);
         }
@@ -176,7 +169,7 @@ export default class Omnitron extends application.Application {
         if (realm) {
             result.realm = {
                 id: adone.runtime.realm.identity.id,
-                config: adone.util.omit(adone.runtime.realm.config, "identity")
+                config: adone.util.omit(adone.runtime.config, "identity")
             };
         }
 
@@ -320,7 +313,7 @@ export default class Omnitron extends application.Application {
         description: "Returns connected peer UIDs"
     })
     getPeers() {
-        const peers = [...runtime.netron.getPeers().values()];
+        const peers = [...runtime.netron2.getPeers().values()];
 
         return peers.map((peer) => {
             return {
@@ -337,7 +330,7 @@ export default class Omnitron extends application.Application {
     getContexts() {
         const result = [];
 
-        for (const [name, stub] of runtime.netron.contexts.entries()) {
+        for (const [name, stub] of runtime.netron2.contexts.entries()) {
             result.push({
                 name,
                 description: stub.definition.description
@@ -365,7 +358,8 @@ export default class Omnitron extends application.Application {
 
     @DPublic()
     async unloadSubsystem(name) {
-        if (CORE_SUBSYSTEMS.includes(name)) {
+        const sysInfo = this.getSubsystemInfo(name);
+        if (sysInfo.group === CORE_GROUP) {
             throw new adone.error.NotAllowed("Unload core subsystem is not possible");
         }
         await super.unloadSubsystem(name);

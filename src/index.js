@@ -241,16 +241,25 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         // Runtime stuff
         runtime: () => {
             const runtime = Object.create(null, {
+                // Main application instance
                 app: {
                     enumerable: true,
                     writable: true,
                     value: null
                 },
+                // Realm instance
                 realm: {
                     enumerable: true,
                     writable: true,
                     value: {}
                 },
+                // Realm configuration (same as 'adone.runtime.realm.config')
+                config: {
+                    enumerable: true,
+                    writable: true,
+                    value: null
+                },
+                // true - if omnitron process
                 isOmnitron: {
                     enumerable: true,
                     writable: true,
@@ -265,7 +274,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
                 netron2: () => {
                     const peerInfo = adone.runtime.isOmnitron
                         ? adone.omnitron2.LOCAL_PEER_INFO
-                        : adone.net.p2p.PeerInfo.create(adone.runtime.realm.config.identity.client);
+                        : adone.net.p2p.PeerInfo.create(adone.runtime.config.identity.client);
                     return new adone.netron2.Netron(peerInfo);
                 }
             }, runtime);
@@ -393,8 +402,8 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         // third parties
         dev: () => {
             let mounts;
-            if (adone.fs.existsSync(adone.runtime.realm.config.devmntPath)) {
-                mounts = require(adone.runtime.realm.config.devmntPath);
+            if (adone.fs.existsSync(adone.runtime.config.devmntPath)) {
+                mounts = require(adone.runtime.config.devmntPath);
             } else {
                 mounts = {};
             }

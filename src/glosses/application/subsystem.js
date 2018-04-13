@@ -314,8 +314,37 @@ export default class Subsystem extends adone.event.AsyncEmitter {
     /**
      * Return true if at least there is one subsystem.
      */
-    hasSubsystems() {
-        return this[SUBSYSTEMS_SYMBOL].length > 0;
+    hasSubsystems(group) {
+        let subsystems = this[SUBSYSTEMS_SYMBOL];
+        if (is.string(group)) {
+            subsystems = subsystems.filter((ss) => ss.group === group);
+        }
+        return subsystems.length > 0;
+    }
+
+    /**
+     * Returns subsystem info by name.
+     *
+     * @param {Subsystem} name Name of subsystem
+     */
+    getSubsystemInfo(name) {
+        const sysInfo = this[SUBSYSTEMS_SYMBOL].find((s) => s.name === name);
+        if (is.undefined(sysInfo)) {
+            throw new error.Unknown(`Unknown subsystem: ${name}`);
+        }
+        return sysInfo;
+    }
+
+    /**
+     * Returns list of all subsystem.
+     */
+    getSubsystems(group) {
+        const subsystems = this[SUBSYSTEMS_SYMBOL];
+        if (is.string(group)) {
+            return subsystems.filter((ss) => ss.group === group);
+        }
+
+        return subsystems;
     }
 
     /**
@@ -494,26 +523,6 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         instance[ROOT_SYMBOL] = undefined;
         instance[PARENT_SYMBOL] = undefined;
 
-    }
-
-    /**
-     * Returns subsystem info by name.
-     *
-     * @param {Subsystem} name Name of subsystem
-     */
-    getSubsystemInfo(name) {
-        const sysInfo = this[SUBSYSTEMS_SYMBOL].find((s) => s.name === name);
-        if (is.undefined(sysInfo)) {
-            throw new error.Unknown(`Unknown subsystem: ${name}`);
-        }
-        return sysInfo;
-    }
-
-    /**
-     * Returns list of all subsystem.
-     */
-    getSubsystems() {
-        return this[SUBSYSTEMS_SYMBOL];
     }
 
     async _configureSubsystem(sysInfo) {

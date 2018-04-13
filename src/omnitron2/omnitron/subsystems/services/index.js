@@ -3,7 +3,7 @@ const {
     error,
     is,
     fs,
-    omnitron: { STATUS }
+    omnitron2: { STATUS }
 } = adone;
 
 const api = adone.lazify({
@@ -30,44 +30,44 @@ export default class Services extends application.Subsystem {
 
     async initialize() {
         this.config = await this.root.db.getConfiguration();
-        // this.options = Object.assign({
-        //     startTimeout: 10000,
-        //     stopTimeout: 10000
-        // }, await this.config.get("service"));
+        this.options = Object.assign({
+            startTimeout: 10000,
+            stopTimeout: 10000
+        }, await this.config.get("service"));
     
-        // this.services = await this.root.db.getMetaValuable("service");
+        this.services = await this.root.db.getMetaValuable("service");
 
-        // const VALID_STATUSES = [STATUS.DISABLED, STATUS.INACTIVE];
+        const VALID_STATUSES = [STATUS.DISABLED, STATUS.INACTIVE];
 
-    //     const serviceGroups = await this.enumerateByGroup();
-    //     for (const [group, services] of Object.entries(serviceGroups)) {
-    //         const maintainer = await this.getMaintainer(group); // eslint-disable-line
-    //         for (const serviceData of services) {
-    //             // Check service status and fix if necessary
-    //             if (!VALID_STATUSES.includes(serviceData.status)) {
-    //                 serviceData.status = STATUS.INACTIVE;
-    //                 await this.services.set(serviceData.name, serviceData); // eslint-disable-line
-    //             }
-    //             if (serviceData.status === STATUS.INACTIVE) {
-    //                 maintainer.startService(serviceData.name).catch((err) => {
-    //                     adone.logError(err);
-    //                 });
-    //             }
-    //         }
-    //     }
+        const serviceGroups = await this.enumerateByGroup();
+        for (const [group, services] of Object.entries(serviceGroups)) {
+            const maintainer = await this.getMaintainer(group); // eslint-disable-line
+            for (const serviceData of services) {
+                // Check service status and fix if necessary
+                if (!VALID_STATUSES.includes(serviceData.status)) {
+                    serviceData.status = STATUS.INACTIVE;
+                    await this.services.set(serviceData.name, serviceData); // eslint-disable-line
+                }
+                if (serviceData.status === STATUS.INACTIVE) {
+                    maintainer.startService(serviceData.name).catch((err) => {
+                        adone.logError(err);
+                    });
+                }
+            }
+        }
 
         adone.logInfo("Services subsystem initialized");
     }
 
     async uninitialize() {
-    //     const promises = [];
-    //     for (const maintainer of this.groupMaintainers.values()) {
-    //         promises.push(maintainer.kill());
-    //     }
+        const promises = [];
+        for (const maintainer of this.groupMaintainers.values()) {
+            promises.push(maintainer.kill());
+        }
 
-    //     await Promise.all(promises);
+        await Promise.all(promises);
 
-    //     this.groupMaintainers.clear();
+        this.groupMaintainers.clear();
 
         adone.logInfo("Services subsystem uninitialized");
     }
@@ -80,8 +80,8 @@ export default class Services extends application.Subsystem {
 
         let existingNames;
 
-        if (await fs.exists(adone.realm.config.omnitron2.SERVICES_PATH)) {
-            existingNames = await fs.readdir(adone.realm.config.omnitron2.SERVICES_PATH);
+        if (await fs.exists(adone.runtime.config.omnitron.SERVICES_PATH)) {
+            existingNames = await fs.readdir(adone.runtime.config.omnitron.SERVICES_PATH);
         } else {
             existingNames = [];
         }
@@ -127,7 +127,7 @@ export default class Services extends application.Subsystem {
             throw new adone.error.Unknown(`Unknown service: ${name}`);
         }
 
-        if (services[0].status === adone.omnitron.STATUS.INVALID) {
+        if (services[0].status === STATUS.INVALID) {
             throw new adone.error.NotValid(`Service '${name}' is invalid`);
         }
 

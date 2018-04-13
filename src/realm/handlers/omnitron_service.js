@@ -2,7 +2,7 @@ const {
     is,
     fs,
     std,
-    omnitron: { dispatcher },
+    omnitron2,
     realm
 } = adone;
 
@@ -25,11 +25,11 @@ export default class OmnitronServiceHandler extends realm.TypeHandler {
             await fs.symlink(destPath, servicePath);
         }
 
-        await dispatcher.registerService(adoneConf.raw.name);
+        await omnitron2.dispatcher.registerService(adoneConf.raw.name);
     }
 
     async unregister(adoneConf) {
-        await dispatcher.unregisterService(adoneConf.raw.name);
+        await omnitron2.dispatcher.unregisterService(adoneConf.raw.name);
         return fs.rm(std.path.join(this.manager.config.omnitron.SERVICES_PATH, adoneConf.raw.name));
     }
 

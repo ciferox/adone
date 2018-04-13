@@ -73,7 +73,7 @@ export default class Dispatcher extends Subsystem {
     //     return this.peer;
     // }
 
-    async connectLocal({ forceStart = true } = {}, _counter = 0) {
+    async connectLocal({ forceStart = false } = {}, _counter = 0) {
         let status = 0;
         if (is.null(this.peer)) {
             let peer = null;
@@ -112,9 +112,7 @@ export default class Dispatcher extends Subsystem {
                 let shouldDisconnect = false;
                 if (is.null(this.peer)) {
                     shouldDisconnect = true;
-                    await this.connectLocal({
-                        forceStart: false
-                    });
+                    await this.connectLocal();
                 }
 
                 const result = await this.getInfo({
@@ -128,7 +126,7 @@ export default class Dispatcher extends Subsystem {
                 return result.process.id;
             }
             return new Promise(async (resolve, reject) => {
-                const omniConfig = adone.runtime.realm.config.omnitron;
+                const omniConfig = adone.runtime.config.omnitron;
                 // Force create logs directory
                 await adone.fs.mkdirp(std.path.dirname(omniConfig.LOGFILE_PATH));
                 this.descriptors.stdout = await fs.open(omniConfig.LOGFILE_PATH, "a");
@@ -176,7 +174,7 @@ export default class Dispatcher extends Subsystem {
     async stopOmnitron() {
         const isActive = await this.isOmnitronActive();
         if (isActive) {
-            if (await fs.exists(adone.runtime.realm.config.omnitron.PIDFILE_PATH)) {
+            if (await fs.exists(adone.runtime.config.omnitron.PIDFILE_PATH)) {
                 try {
                     const checkAlive = async (pid) => {
                         let elapsed = 0;
@@ -192,12 +190,10 @@ export default class Dispatcher extends Subsystem {
                             await adone.promise.delay(50); // eslint-disable-line
                         }
                     };
-                    const pid = parseInt(std.fs.readFileSync(adone.runtime.realm.config.omnitron.PIDFILE_PATH).toString());
+                    const pid = parseInt(std.fs.readFileSync(adone.runtime.config.omnitron.PIDFILE_PATH).toString());
                     if (is.windows) {
                         try {
-                            await this.connectLocal({
-                                forceStart: false
-                            });
+                            await this.connectLocal();
                             await this.kill();
                             await this.peer.disconnect();
                             this.peer = null;
@@ -240,9 +236,7 @@ export default class Dispatcher extends Subsystem {
     async restartOmnitron(spiritualWay = true) {
         await this.stopOmnitron();
         await this.startOmnitron(spiritualWay);
-        await this.connectLocal({
-            forceStart: false
-        });
+        await this.connectLocal();
     }
 
     async isOmnitronActive() {
@@ -264,6 +258,10 @@ export default class Dispatcher extends Subsystem {
         return !is.null(this.peer) && is.null(await this.peer.ping());
     }
 
+    waitForContext(name) {
+        return this.peer.waitForContext(name);
+    }
+
     queryInterface(name) {
         return this.peer.queryInterface(name);
     }
@@ -275,9 +273,7 @@ export default class Dispatcher extends Subsystem {
             await systemDb.registerService(serviceName);
             await systemDb.close();
         } catch (err) {
-            await this.connectLocal({
-                forceStart: false
-            });
+            await this.connectLocal();
             await this.queryInterface("omnitron").registerService(serviceName);
         }
     }
@@ -289,9 +285,7 @@ export default class Dispatcher extends Subsystem {
             await systemDb.unregisterService(serviceName);
             await systemDb.close();
         } catch (err) {
-            await this.connectLocal({
-                firceStart: false
-            });
+            await this.connectLocal();
             await this.queryInterface("omnitron").unregisterService(serviceName);
         }
     }
@@ -301,9 +295,7 @@ export default class Dispatcher extends Subsystem {
     async getConfiguration() {
         let config;
         if (await this.isOmnitronActive()) {
-            await this.connectLocal({
-                forceStart: false
-            });
+            await this.connectLocal();
             config = await this.queryInterface("omnitron").getConfiguration();
         } else {
             this.db = await adone.omnitron2.DB.open();

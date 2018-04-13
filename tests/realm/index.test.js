@@ -294,9 +294,7 @@ describe("realm", () => {
 
             it("install/uninstall with active omnitron", async () => {
                 await adone.omnitron.dispatcher.startOmnitron();
-                await adone.omnitron.dispatcher.connectLocal({
-                    forceStart: false
-                });
+                await adone.omnitron.dispatcher.connectLocal();
                 assert.true(await adone.omnitron.dispatcher.ping());
 
                 const omnitronServicePath = std.path.join(__dirname, "packages", "omnitron_service_good");

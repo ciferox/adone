@@ -41,5 +41,5 @@ const __ = lazify({
     },
     DEFAULT_ADDRESS: () => is.windows
         ? `//winpipe/\\\\.\\pipe\\${adone.runtime.realm.identity.id}\\omnitron.sock`
-        : `//unix${adone.std.path.join(adone.runtime.realm.config.RUNTIME_PATH, "omnitron.sock")}`
+        : `//unix${adone.std.path.join(adone.runtime.config.RUNTIME_PATH, "omnitron.sock")}`
 }, adone.asNamespace(exports), require);

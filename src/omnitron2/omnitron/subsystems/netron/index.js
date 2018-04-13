@@ -7,6 +7,8 @@ const NAME = "Netron subsystem";
 
 export default class extends application.Subsystem {
     async configure() {
+        runtime.netron2.options.proxyContexts = true;
+
         runtime.netron2.on("peer:connect", (peer) => {
             adone.logInfo(`Peer ${peer.id}) connected`);
         }).on("peer:disconnect", (peer) => {
@@ -44,6 +46,16 @@ export default class extends application.Subsystem {
         await runtime.netron2.stop();
 
         adone.logInfo(`${NAME} uninitialized`);
+    }
+
+    async attachContext(instance, ctxId) {
+        await runtime.netron2.attachContext(instance, ctxId);
+        adone.logInfo(`Attached context '${ctxId}'`);
+    }
+
+    async detachContext(ctxId, releaseOriginated) {
+        await runtime.netron2.detachContext(ctxId, releaseOriginated);
+        adone.logInfo(`Detached context ${ctxId}`);
     }
 }
 

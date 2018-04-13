@@ -46,6 +46,64 @@ describe("application", "Subsystem", () => {
         }, error.NotAllowed);
     });
 
+    it("check presence and get all of subsystems", () => {
+        const ss = create("root");
+        assert.false(ss.hasSubsystems());
+
+        ss.addSubsystem({
+            name: "ss1",
+            subsystem: create("ss1")
+        });
+
+        ss.addSubsystem({
+            name: "ss2",
+            subsystem: create("ss2")
+        });
+
+        assert.true(ss.hasSubsystems());
+        assert.lengthOf(ss.getSubsystems(), 2);
+    });
+
+    describe("groups", () => {
+        it("check presence and get all of subsystems", () => {
+            const ss = create("root");
+            assert.false(ss.hasSubsystems());
+    
+            ss.addSubsystem({
+                name: "ss1",
+                subsystem: create("ss1")
+            });
+    
+            ss.addSubsystem({
+                name: "ss2-1",
+                subsystem: create("ss2-1"),
+                group: "2"
+            });
+
+            ss.addSubsystem({
+                name: "ss2-2",
+                subsystem: create("ss2-1"),
+                group: "2"
+            });
+
+            ss.addSubsystem({
+                name: "ss3",
+                subsystem: create("ss3"),
+                group: "3"
+            });
+    
+            assert.false(ss.hasSubsystems("1"));
+            assert.true(ss.hasSubsystems());
+            assert.true(ss.hasSubsystems("2"));
+            assert.true(ss.hasSubsystems("3"));
+            
+            assert.lengthOf(ss.getSubsystems("1"), 0);
+            assert.lengthOf(ss.getSubsystems("2"), 2);
+            assert.lengthOf(ss.getSubsystems("3"), 1);
+            assert.lengthOf(ss.getSubsystems(), 4);
+        });
+    });
+
     describe("load subsystems", () => {
         it("load subsystems from path, when name is equal to class name", async () => {
             const ss = create("ss");

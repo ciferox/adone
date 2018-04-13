@@ -15,24 +15,24 @@ describe("omnitron", () => {
     let iOmnitron;
     let adoneRootPath;
     let realmManager;
+    let dispatcher;
 
     before(function () {
         adoneRootPath = this.adoneRootPath;
         realmManager = this.realmManager;
+        dispatcher = omnitron2.dispatcher;
     });
 
     const startOmnitron = async () => {
-        await omnitron2.dispatcher.startOmnitron({
+        await dispatcher.startOmnitron({
             adoneRootPath
         });
-        await omnitron2.dispatcher.connectLocal({
-            forceStart: false
-        });
-        iOmnitron = omnitron2.dispatcher.queryInterface("omnitron");
+        await dispatcher.connectLocal();
+        iOmnitron = dispatcher.queryInterface("omnitron");
     };
 
     const stopOmnitron = async () => {
-        await omnitron2.dispatcher.stopOmnitron();
+        await dispatcher.stopOmnitron();
     };
 
     describe("Dispatcher", () => {
@@ -45,12 +45,11 @@ describe("omnitron", () => {
         });
     
         it("isOmnitronActive() should return false when omnitron is not active", async () => {
-            const d = omnitron2.dispatcher;
-            assert.false(await d.isOmnitronActive());
+            assert.false(await dispatcher.isOmnitronActive());
         });
     });
 
-    describe.only("basics", () => {
+    describe("basics", () => {
         beforeEach(async () => {
             await startOmnitron();
         });
@@ -60,12 +59,12 @@ describe("omnitron", () => {
         });
 
         it("pidfile and log files should exist", async () => {
-            assert.true(await fs.exists(adone.runtime.realm.config.omnitron.PIDFILE_PATH));
-            assert.true(await fs.exists(adone.runtime.realm.config.omnitron.LOGFILE_PATH));
-            assert.true(await fs.exists(adone.runtime.realm.config.omnitron.ERRORLOGFILE_PATH));
+            assert.true(await fs.exists(adone.runtime.config.omnitron.PIDFILE_PATH));
+            assert.true(await fs.exists(adone.runtime.config.omnitron.LOGFILE_PATH));
+            assert.true(await fs.exists(adone.runtime.config.omnitron.ERRORLOGFILE_PATH));
         });
 
-        it.only("correct omnitron information", async () => {
+        it("correct omnitron information", async () => {
             const info = await iOmnitron.getInfo();
 
             assert.equal(info.version.adone, adone.package.version);
@@ -77,12 +76,22 @@ describe("omnitron", () => {
             assert.lengthOf(result, 0);
         });
 
-        it("start/stop omnitron", async () => {
+        it("stop/start omnitron", async () => {
+            const ma = adone.multi.address.create(omnitron2.DEFAULT_ADDRESS);
+            const socketPath = ma.nodeAddress().path;
+            
             assert.true(await dispatcher.isOmnitronActive());
+            assert.true(await adone.fs.exists(socketPath));
+            
             await dispatcher.stopOmnitron();
             assert.false(await dispatcher.isOmnitronActive());
-            await dispatcher.startOmnitron();
+            assert.false(await adone.fs.exists(socketPath));
+            
+            await dispatcher.startOmnitron({
+                adoneRootPath
+            });
             assert.true(await dispatcher.isOmnitronActive());
+            assert.true(await adone.fs.exists(socketPath));
         });
     });
 
@@ -236,11 +245,11 @@ describe("omnitron", () => {
         };
 
         beforeEach(async () => {
-            await dispatcher.startOmnitron();
-            await dispatcher.connectLocal({
-                forceStart: false
+            await dispatcher.startOmnitron({
+                adoneRootPath
             });
-            iOmnitron = dispatcher.getInterface("omnitron");
+            await dispatcher.connectLocal();
+            iOmnitron = dispatcher.queryInterface("omnitron");
 
             await runProjectsTask("build");
         });
@@ -276,7 +285,7 @@ describe("omnitron", () => {
                 version: service1Config.raw.version,
                 status: STATUS.DISABLED,
                 pid: "",
-                mainPath: std.path.join(adone.realm.config.omnitron.servicesPath, "test1", service1Config.getMainPath())
+                mainPath: std.path.join(adone.runtime.config.omnitron.SERVICES_PATH, "test1", service1Config.getMainPath())
             });
 
             assert.true(result[0].group.startsWith("group-"));
@@ -296,7 +305,7 @@ describe("omnitron", () => {
                     status: STATUS.DISABLED,
                     group: (result[0].name === service1Config.raw.name) ? result[0].group : result[1].group,
                     pid: "",
-                    mainPath: std.path.join(adone.realm.config.omnitron.servicesPath, "test1", service1Config.getMainPath())
+                    mainPath: std.path.join(adone.runtime.config.omnitron.SERVICES_PATH, "test1", service1Config.getMainPath())
                 },
                 {
                     name: service2Config.raw.name,
@@ -306,7 +315,7 @@ describe("omnitron", () => {
                     status: "disabled",
                     group: (result[0].name === service2Config.raw.name) ? result[0].group : result[1].group,
                     pid: "",
-                    mainPath: std.path.join(adone.realm.config.omnitron.servicesPath, "test2", service2Config.getMainPath())
+                    mainPath: std.path.join(adone.runtime.config.omnitron.SERVICES_PATH, "test2", service2Config.getMainPath())
                 }
             ]);
 
@@ -351,7 +360,7 @@ describe("omnitron", () => {
             await startServices(["test1"]);
 
             await dispatcher.peer.waitForContext("test1");
-            const iTest1 = await dispatcher.getInterface("test1");
+            const iTest1 = await dispatcher.queryInterface("test1");
 
             const info = await iTest1.getInfo();
 
@@ -369,15 +378,15 @@ describe("omnitron", () => {
             await enableServices(["test1"]);
 
             await dispatcher.stopOmnitron();
-            await dispatcher.startOmnitron();
-            await dispatcher.connectLocal({
-                forceStart: false
+            await dispatcher.startOmnitron({
+                adoneRootPath
             });
-            iOmnitron = dispatcher.getInterface("omnitron");
+            await dispatcher.connectLocal();
+            iOmnitron = dispatcher.queryInterface("omnitron");
 
             await waitForServiceStatus("test1", STATUS.ACTIVE);
 
-            const iTest1 = dispatcher.getInterface("test1");
+            const iTest1 = dispatcher.queryInterface("test1");
             const info = await iTest1.getInfo();
             const list = await iOmnitron.enumerate("test1");
 
@@ -389,8 +398,8 @@ describe("omnitron", () => {
         it("log files should be created for service", async () => {
             await installService(std.path.join(__dirname, "services", "test2"));
             const serviceInfo = (await iOmnitron.enumerate())[0];
-            const stdoutPath = std.path.join(adone.realm.config.omnitron.logsPath, `${serviceInfo.group}.log`);
-            const stderrPath = std.path.join(adone.realm.config.omnitron.logsPath, `${serviceInfo.group}-err.log`);
+            const stdoutPath = std.path.join(adone.runtime.config.omnitron.LOGS_PATH, `${serviceInfo.group}.log`);
+            const stderrPath = std.path.join(adone.runtime.config.omnitron.LOGS_PATH, `${serviceInfo.group}-err.log`);
 
             await enableServices(["test2"]);
             await startServices(["test2"]);
@@ -414,7 +423,7 @@ describe("omnitron", () => {
             await installService(std.path.join(__dirname, "services", "test3"));
             await enableServices(["test3"]);
             await startServices(["test3"]);
-            const iTest3 = await dispatcher.getInterface("test3");
+            const iTest3 = await dispatcher.queryInterface("test3");
             await iTest3.check("test3");
             await stopServices(["test3"]);
         });
@@ -440,7 +449,7 @@ describe("omnitron", () => {
         describe("subsystems", () => {
             it("list subsystems", async () => {
                 const subsystems = await iOmnitron.getSubsystems();
-                assert.sameMembers(subsystems.map((s) => s.name), ["gates", "services"]);
+                assert.sameMembers(subsystems.map((s) => s.name), ["netron", "database", "services"]);
             });
 
             it("load/unload subsystem", async () => {
@@ -450,7 +459,7 @@ describe("omnitron", () => {
                 });
                 let contexts = await iOmnitron.getContexts();
                 assert.sameMembers(contexts.map((x) => x.name), ["omnitron", "payload"]);
-                const iPayload = dispatcher.getInterface("payload");
+                const iPayload = dispatcher.queryInterface("payload");
                 assert.deepEqual(await iOmnitron.getInfo({
                     env: true,
                     realm: true,
@@ -466,11 +475,14 @@ describe("omnitron", () => {
                 assert.sameMembers(contexts.map((x) => x.name), ["omnitron"]);
 
                 const err = await assert.throws(async () => iPayload.getInfo());
-                assert.instanceOf(err, adone.error.Unknown);
+                assert.instanceOf(err, adone.error.NotExists);
             });
 
             it("should not allow unload core subsystems", async () => {
-                let err = await assert.throws(async () => iOmnitron.unloadSubsystem("gates"));
+                let err = await assert.throws(async () => iOmnitron.unloadSubsystem("netron"));
+                assert.instanceOf(err, adone.error.NotAllowed);
+
+                err = await assert.throws(async () => iOmnitron.unloadSubsystem("database"));
                 assert.instanceOf(err, adone.error.NotAllowed);
 
                 err = await assert.throws(async () => iOmnitron.unloadSubsystem("services"));
@@ -593,8 +605,8 @@ describe("omnitron", () => {
             it("new log files should be created after change service group", async () => {
                 await installService(std.path.join(__dirname, "services", "test2"));
                 const serviceInfo = (await iOmnitron.enumerate())[0];
-                let stdoutPath = std.path.join(adone.realm.config.omnitron.logsPath, `${serviceInfo.group}.log`);
-                let stderrPath = std.path.join(adone.realm.config.omnitron.logsPath, `${serviceInfo.group}-err.log`);
+                let stdoutPath = std.path.join(adone.runtime.config.omnitron.LOGS_PATH, `${serviceInfo.group}.log`);
+                let stderrPath = std.path.join(adone.runtime.config.omnitron.LOGS_PATH, `${serviceInfo.group}-err.log`);
 
                 await enableServices(["test2"]);
                 await startServices(["test2"]);
@@ -611,8 +623,8 @@ describe("omnitron", () => {
                 assert.true(await fs.exists(stdoutPath));
                 assert.true(await fs.exists(stderrPath));
 
-                stdoutPath = std.path.join(adone.realm.config.omnitron.logsPath, "test2.log");
-                stderrPath = std.path.join(adone.realm.config.omnitron.logsPath, "test2-err.log");
+                stdoutPath = std.path.join(adone.runtime.config.omnitron.LOGS_PATH, "test2.log");
+                stderrPath = std.path.join(adone.runtime.config.omnitron.LOGS_PATH, "test2-err.log");
 
                 assert.true(await fs.exists(stdoutPath));
                 assert.true(await fs.exists(stderrPath));
@@ -663,8 +675,8 @@ describe("omnitron", () => {
 
             await dispatcher.peer.waitForContext("test1");
             await dispatcher.peer.waitForContext("test2");
-            const iTest1 = await dispatcher.getInterface("test1");
-            const iTest2 = await dispatcher.getInterface("test2");
+            const iTest1 = await dispatcher.queryInterface("test1");
+            const iTest2 = await dispatcher.queryInterface("test2");
 
             const info1 = await iTest1.getInfo();
             assert.equal(info1.name, "test1");
@@ -683,7 +695,7 @@ describe("omnitron", () => {
             await installService(std.path.join(__dirname, "services", "test3"));
             await enableServices(["test3"]);
             await startServices(["test3"]);
-            const iTest3 = await dispatcher.getInterface("test3");
+            const iTest3 = await dispatcher.queryInterface("test3");
             await iTest3.saveConfig("test3");
             await stopServices(["test3"]);
 
@@ -715,7 +727,7 @@ describe("omnitron", () => {
         describe("configuration", () => {
             let iConfig;
             beforeEach(async () => {
-                iConfig = await adone.omnitron.dispatcher.getConfiguration();
+                iConfig = await dispatcher.getConfiguration();
             });
 
             it("default service subsystem configuration", async () => {
@@ -740,9 +752,9 @@ describe("omnitron", () => {
                 });
             });
 
-            it("no gates", async () => {
-                assert.lengthOf(await iConfig.get("gates"), 0);
-            });
+            // it("no gates", async () => {
+            //     assert.lengthOf(await iConfig.get("gates"), 0);
+            // });
 
             it("no hosts", async () => {
                 assert.lengthOf(await iConfig.get("hosts"), 0);
@@ -826,234 +838,234 @@ describe("omnitron", () => {
             });
         });
 
-        describe("gates", () => {
-            afterEach(async () => {
-                const iConfig = await iOmnitron.getConfiguration();
-                await iConfig.set("gates", []);
-            });
+        // describe("gates", () => {
+        //     afterEach(async () => {
+        //         const iConfig = await iOmnitron.getConfiguration();
+        //         await iConfig.set("gates", []);
+        //     });
 
-            it("no gates on initial", async () => {
-                assert.lengthOf(await iOmnitron.getGates(), 0);
-            });
+        //     it("no gates on initial", async () => {
+        //         assert.lengthOf(await iOmnitron.getGates(), 0);
+        //     });
 
-            const addGateAndCheck = async (gate, restart = true) => {
-                await iOmnitron.addGate(gate);
+        //     const addGateAndCheck = async (gate, restart = true) => {
+        //         await iOmnitron.addGate(gate);
 
-                if (is.undefined(gate.startup)) {
-                    gate.startup = true;
-                }
+        //         if (is.undefined(gate.startup)) {
+        //             gate.startup = true;
+        //         }
 
-                if (restart) {
-                    await stopOmnitron();
-                    await startOmnitron();
+        //         if (restart) {
+        //             await stopOmnitron();
+        //             await startOmnitron();
 
-                    gate.active = gate.startup ? true : false;
-                } else {
-                    gate.active = false;
-                }
+        //             gate.active = gate.startup ? true : false;
+        //         } else {
+        //             gate.active = false;
+        //         }
 
-                const gates = await iOmnitron.getGates();
-                assert.sameDeepMembers(gates, [gate]);
-            };
+        //         const gates = await iOmnitron.getGates();
+        //         assert.sameDeepMembers(gates, [gate]);
+        //     };
 
-            it("add gate with default status", async () => {
-                await addGateAndCheck({
-                    name: "gate1",
-                    port: 32768
-                });
-            });
+        //     it("add gate with default status", async () => {
+        //         await addGateAndCheck({
+        //             name: "gate1",
+        //             port: 32768
+        //         });
+        //     });
 
-            it("add gate with startup=false", async () => {
-                await addGateAndCheck({
-                    name: "gate1",
-                    port: 32768,
-                    startup: false
-                });
-            });
+        //     it("add gate with startup=false", async () => {
+        //         await addGateAndCheck({
+        //             name: "gate1",
+        //             port: 32768,
+        //             startup: false
+        //         });
+        //     });
 
-            it("add gate without name", async () => {
-                const err = await assert.throws(async () => addGateAndCheck({
-                    port: 32768
-                }));
-                assert.instanceOf(err, adone.error.AggregateException);
-            });
+        //     it("add gate without name", async () => {
+        //         const err = await assert.throws(async () => addGateAndCheck({
+        //             port: 32768
+        //         }));
+        //         assert.instanceOf(err, adone.error.AggregateException);
+        //     });
 
-            it("delete gate", async () => {
-                await addGateAndCheck({
-                    name: "gate1",
-                    port: 32768
-                }, false);
+        //     it("delete gate", async () => {
+        //         await addGateAndCheck({
+        //             name: "gate1",
+        //             port: 32768
+        //         }, false);
 
-                await iOmnitron.deleteGate("gate1");
-                await stopOmnitron();
-                await startOmnitron();
-                assert.lengthOf(await iOmnitron.getGates(), 0);
-            });
+        //         await iOmnitron.deleteGate("gate1");
+        //         await stopOmnitron();
+        //         await startOmnitron();
+        //         assert.lengthOf(await iOmnitron.getGates(), 0);
+        //     });
 
-            it("delete active gate is not allowed", async () => {
-                await addGateAndCheck({
-                    name: "gate1",
-                    port: 32768
-                });
+        //     it("delete active gate is not allowed", async () => {
+        //         await addGateAndCheck({
+        //             name: "gate1",
+        //             port: 32768
+        //         });
 
-                const err = await assert.throws(async () => iOmnitron.deleteGate("gate1"));
-                assert.instanceOf(err, adone.error.NotAllowed);
-            });
+        //         const err = await assert.throws(async () => iOmnitron.deleteGate("gate1"));
+        //         assert.instanceOf(err, adone.error.NotAllowed);
+        //     });
 
-            it("up/down gate", async (done) => {
-                const gate = {
-                    name: "gate1",
-                    port: await adone.net.util.getPort()
-                };
-                await addGateAndCheck(gate, false);
+        //     it("up/down gate", async (done) => {
+        //         const gate = {
+        //             name: "gate1",
+        //             port: await adone.net.util.getPort()
+        //         };
+        //         await addGateAndCheck(gate, false);
 
-                await iOmnitron.upGate("gate1");
+        //         await iOmnitron.upGate("gate1");
 
-                const netron = new adone.netron.Netron();
-                const options = adone.util.pick(gate, ["port"]);
-                const peer = await netron.connect(options);
-                const iOmni = peer.getInterface("omnitron");
-                assert.deepEqual(await iOmnitron.getInfo({
-                    env: true
-                }), await iOmni.getInfo({
-                    env: true
-                }));
+        //         const netron = new adone.netron.Netron();
+        //         const options = adone.util.pick(gate, ["port"]);
+        //         const peer = await netron.connect(options);
+        //         const iOmni = peer.getInterface("omnitron");
+        //         assert.deepEqual(await iOmnitron.getInfo({
+        //             env: true
+        //         }), await iOmni.getInfo({
+        //             env: true
+        //         }));
 
-                netron.on("peer offline", (p) => {
-                    if (peer.uid === p.uid) {
-                        done();
-                    }
-                });
+        //         netron.on("peer offline", (p) => {
+        //             if (peer.uid === p.uid) {
+        //                 done();
+        //             }
+        //         });
 
-                await iOmnitron.downGate("gate1");
-            });
+        //         await iOmnitron.downGate("gate1");
+        //     });
 
-            it("up active gate should have thrown", async () => {
-                const gate = {
-                    name: "gate1",
-                    port: await adone.net.util.getPort()
-                };
-                await addGateAndCheck(gate, false);
+        //     it("up active gate should have thrown", async () => {
+        //         const gate = {
+        //             name: "gate1",
+        //             port: await adone.net.util.getPort()
+        //         };
+        //         await addGateAndCheck(gate, false);
 
-                await iOmnitron.upGate("gate1");
+        //         await iOmnitron.upGate("gate1");
 
-                const err = await assert.throws(async () => iOmnitron.upGate("gate1"));
-                assert.instanceOf(err, adone.error.IllegalState);
-            });
+        //         const err = await assert.throws(async () => iOmnitron.upGate("gate1"));
+        //         assert.instanceOf(err, adone.error.IllegalState);
+        //     });
 
-            it("down inactive gate should have thrown", async () => {
-                const gate = {
-                    name: "gate1",
-                    port: await adone.net.util.getPort()
-                };
-                await addGateAndCheck(gate, false);
+        //     it("down inactive gate should have thrown", async () => {
+        //         const gate = {
+        //             name: "gate1",
+        //             port: await adone.net.util.getPort()
+        //         };
+        //         await addGateAndCheck(gate, false);
 
-                const err = await assert.throws(async () => iOmnitron.downGate("gate1"));
-                assert.instanceOf(err, adone.error.IllegalState);
-            });
+        //         const err = await assert.throws(async () => iOmnitron.downGate("gate1"));
+        //         assert.instanceOf(err, adone.error.IllegalState);
+        //     });
 
-            it("should not bind disabled gates on startup", async () => {
-                const gate = {
-                    name: "gate1",
-                    port: await adone.net.util.getPort(),
-                    startup: false
-                };
-                await addGateAndCheck(gate);
+        //     it("should not bind disabled gates on startup", async () => {
+        //         const gate = {
+        //             name: "gate1",
+        //             port: await adone.net.util.getPort(),
+        //             startup: false
+        //         };
+        //         await addGateAndCheck(gate);
 
-                let gates = await iOmnitron.getGates({
-                    active: true
-                });
+        //         let gates = await iOmnitron.getGates({
+        //             active: true
+        //         });
 
-                assert.lengthOf(gates, 0);
+        //         assert.lengthOf(gates, 0);
 
-                await iOmnitron.upGate("gate1");
+        //         await iOmnitron.upGate("gate1");
 
-                gates = await iOmnitron.getGates({
-                    active: true
-                });
+        //         gates = await iOmnitron.getGates({
+        //             active: true
+        //         });
 
-                assert.lengthOf(gates, 1);
+        //         assert.lengthOf(gates, 1);
 
-                await stopOmnitron();
-                await startOmnitron();
+        //         await stopOmnitron();
+        //         await startOmnitron();
 
-                gates = await iOmnitron.getGates({
-                    active: true
-                });
+        //         gates = await iOmnitron.getGates({
+        //             active: true
+        //         });
 
-                assert.lengthOf(gates, 0);
-            });
+        //         assert.lengthOf(gates, 0);
+        //     });
 
-            it("configure port", async () => {
-                let port = await adone.net.util.getPort();
-                const gate = {
-                    name: "gate1",
-                    port,
-                    startup: false
-                };
-                await addGateAndCheck(gate);
+        //     it("configure port", async () => {
+        //         let port = await adone.net.util.getPort();
+        //         const gate = {
+        //             name: "gate1",
+        //             port,
+        //             startup: false
+        //         };
+        //         await addGateAndCheck(gate);
 
-                let gates = await iOmnitron.getGates();
-                assert.deepEqual(gates[0], {
-                    ...gate,
-                    port
-                });
+        //         let gates = await iOmnitron.getGates();
+        //         assert.deepEqual(gates[0], {
+        //             ...gate,
+        //             port
+        //         });
 
-                port = port - 1;
-                await iOmnitron.configureGate("gate1", {
-                    port
-                });
+        //         port = port - 1;
+        //         await iOmnitron.configureGate("gate1", {
+        //             port
+        //         });
 
-                gates = await iOmnitron.getGates();
-                assert.deepEqual(gates[0], {
-                    ...gate,
-                    port
-                });
-            });
+        //         gates = await iOmnitron.getGates();
+        //         assert.deepEqual(gates[0], {
+        //             ...gate,
+        //             port
+        //         });
+        //     });
 
-            it("configure startup", async () => {
-                const gate = {
-                    name: "gate1",
-                    port: await adone.net.util.getPort(),
-                    startup: false
-                };
-                await addGateAndCheck(gate);
+        //     it("configure startup", async () => {
+        //         const gate = {
+        //             name: "gate1",
+        //             port: await adone.net.util.getPort(),
+        //             startup: false
+        //         };
+        //         await addGateAndCheck(gate);
 
-                let gates = await iOmnitron.getGates();
-                assert.deepEqual(gates[0], {
-                    ...gate,
-                    startup: false
-                });
+        //         let gates = await iOmnitron.getGates();
+        //         assert.deepEqual(gates[0], {
+        //             ...gate,
+        //             startup: false
+        //         });
 
-                await iOmnitron.configureGate("gate1", {
-                    startup: true
-                });
+        //         await iOmnitron.configureGate("gate1", {
+        //             startup: true
+        //         });
 
-                gates = await iOmnitron.getGates();
-                assert.deepEqual(gates[0], {
-                    ...gate,
-                    startup: true
-                });
-            });
+        //         gates = await iOmnitron.getGates();
+        //         assert.deepEqual(gates[0], {
+        //             ...gate,
+        //             startup: true
+        //         });
+        //     });
 
-            it("configure with undefined options should only return gate configuration", async () => {
-                const gate = {
-                    name: "gate1",
-                    port: await adone.net.util.getPort(),
-                    startup: false
-                };
-                await addGateAndCheck(gate);
+        //     it("configure with undefined options should only return gate configuration", async () => {
+        //         const gate = {
+        //             name: "gate1",
+        //             port: await adone.net.util.getPort(),
+        //             startup: false
+        //         };
+        //         await addGateAndCheck(gate);
 
-                const gateConfig = await iOmnitron.configureGate("gate1");
-                assert.deepEqual(gateConfig, adone.util.omit(gate, ["active"]));
+        //         const gateConfig = await iOmnitron.configureGate("gate1");
+        //         assert.deepEqual(gateConfig, adone.util.omit(gate, ["active"]));
 
-                const gates = await iOmnitron.getGates();
-                assert.sameDeepMembers(gates, [gate]);
-            });
+        //         const gates = await iOmnitron.getGates();
+        //         assert.sameDeepMembers(gates, [gate]);
+        //     });
 
-            it.skip("configure active gate should not be allowed", async () => {
-                // ???
-            });
-        });
+        //     it.skip("configure active gate should not be allowed", async () => {
+        //         // ???
+        //     });
+        // });
     });
 });

@@ -4,7 +4,7 @@ const {
     is,
     event: { AsyncEmitter },
     netron: { Context, Public },
-    omnitron: { STATUS },
+    omnitron2: { STATUS },
     std,
     error
 } = adone;
@@ -239,8 +239,8 @@ export default class ServiceMaintainer extends AsyncEmitter {
         if (this.procStatus === PROCESS_STATUS.NULL) {
             this.procStatus = PROCESS_STATUS.SPAWNING;
             return new Promise((resolve, reject) => {
-                const stdout = std.fs.openSync(std.path.join(adone.runtime.realm.config.omnitron.LOGS_PATH, `${this.group}.log`), "a");
-                const stderr = std.fs.openSync(std.path.join(adone.runtime.realm.config.omnitron.LOGS_PATH, `${this.group}-err.log`), "a");
+                const stdout = std.fs.openSync(std.path.join(adone.runtime.config.omnitron.LOGS_PATH, `${this.group}.log`), "a");
+                const stderr = std.fs.openSync(std.path.join(adone.runtime.config.omnitron.LOGS_PATH, `${this.group}-err.log`), "a");
 
                 const child = std.child_process.spawn(process.execPath, [SERVICE_APP_PATH], {
                     detached: true,

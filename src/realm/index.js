@@ -18,7 +18,7 @@ export const getManager = async () => {
         // Load default tasks and handlers
         await defaultManager.initialize();
         adone.runtime.realm.manager = defaultManager;
-        adone.runtime.realm.config = defaultManager.config;
+        adone.runtime.realm.config = adone.runtime.config = defaultManager.config;
         adone.runtime.realm.identity = defaultManager.config.identity.server;
     }
 

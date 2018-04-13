@@ -43,7 +43,7 @@ export default class Application extends application.Subsystem {
         return this[IS_MAIN];
     }
 
-    _setupMain() {
+    async _setupMain() {
         // setup the main application
         // Prevent double initialization of global application instance
         // (for cases where two or more Applications run in-process, the first app will be common).
@@ -81,6 +81,9 @@ export default class Application extends application.Subsystem {
         process.on("rejectionHandled", rejectionHandled);
         process.on("beforeExit", beforeExit);
         this[IS_MAIN] = true;
+
+        // Initialize realm
+        await adone.realm.getManager();
 
         // Track cursor if interactive application (by default) and if tty mode
         if (this[INTERACTIVE] && term.output.isTTY) {

@@ -1,16 +1,15 @@
 const {
     application,
-    netron: { Context, Public },
-    runtime
+    netron2: { DContext, DPublic }
 } = adone;
 
-@Context()
+@DContext()
 class Payload {
     constructor(service) {
         this.service = service;
     }
 
-    @Public()
+    @DPublic()
     getInfo(options) {
         return this.service.parent.getInfo(options);
     }
@@ -19,10 +18,10 @@ class Payload {
 export default class extends application.Subsystem {
     async initialize() {
         const payload = new Payload(this);
-        await runtime.netron.attachContext(payload, "payload");
+        await this.root.netron.attachContext(payload, "payload");
     }
 
     async uninitialize() {
-        await runtime.netron.detachContext("payload");
+        await this.root.netron.detachContext("payload");
     }
 }
