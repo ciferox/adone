@@ -1,28 +1,30 @@
-const {
-    is,
-    std: { stream, path, fs },
-    system: { process: { exists, exec, execSync, execStdout, execStderr, shell, shellSync, stdio, errname, errnameFallback } }
-} = adone;
+describe("system", "process", "exec", () => {
+    const {
+        is,
+        std: { stream, path, fs },
+        system: { process: { exists, exec, execSync, execStdout, execStderr, shell, shellSync, stdio, errname, errnameFallback } }
+    } = adone;
 
-const macro = (input, expected) => {
-    if (expected instanceof Error) {
-        assert.throws(() => stdio(input), expected.message);
-        return;
-    }
+    const macro = (input, expected) => {
+        if (expected instanceof Error) {
+            assert.throws(() => stdio(input), expected.message);
+            return;
+        }
 
-    const result = stdio(input);
+        const result = stdio(input);
 
-    if (is.object(expected) && !is.null(expected)) {
-        assert.deepEqual(result, expected);
-    } else {
-        assert.equal(result, expected);
-    }
-};
+        if (is.object(expected) && !is.null(expected)) {
+            assert.deepEqual(result, expected);
+        } else {
+            assert.equal(result, expected);
+        }
+    };
 
-macro.title = (providedTitle, input) => providedTitle || adone.std.util.inspect(input, { colors: true });
+    macro.title = (providedTitle, input) => providedTitle || adone.std.util.inspect(input, { colors: true });
 
-describe("system", "process", () => {
-    process.env.PATH = path.join(__dirname, "fixtures") + path.delimiter + process.env.PATH;
+    const fixture = (name = "") => adone.std.path.join(__dirname, "fixtures", name);
+
+    process.env.PATH = fixture() + path.delimiter + process.env.PATH;
     process.env.FOO = "foo";
 
     it("exec()", async () => {
@@ -60,55 +62,55 @@ describe("system", "process", () => {
     });
 
     it("include stdout and stderr in errors for improved debugging", async () => {
-        const err = await assert.throws(async () => exec(adone.std.path.join(__dirname, "fixtures/error-message.js")));
+        const err = await assert.throws(async () => exec(fixture("error-message.js")));
         assert.match(err.message, /stdout/);
         assert.match(err.message, /stderr/);
         assert.equal(err.code, 1);
     });
 
     it("do not include in errors when `stdio` is set to `inherit`", async () => {
-        const err = await assert.throws(async () => exec(adone.std.path.join(__dirname, "fixtures/error-message.js"), { stdio: "inherit" }));
+        const err = await assert.throws(async () => exec(fixture("error-message.js"), { stdio: "inherit" }));
         assert.notMatch(err.message, /\n/);
     });
 
     it("do not include `stderr` and `stdout` in errors when set to `inherit`", async () => {
-        const err = await assert.throws(async () => exec(adone.std.path.join(__dirname, "fixtures/error-message.js"), { stdout: "inherit", stderr: "inherit" }));
+        const err = await assert.throws(async () => exec(fixture("error-message.js"), { stdout: "inherit", stderr: "inherit" }));
         assert.notMatch(err.message, /\n/);
     });
 
     it("do not include `stderr` and `stdout` in errors when `stdio` is set to `inherit`", async () => {
-        const err = await assert.throws(async () => exec(adone.std.path.join(__dirname, "fixtures/error-message.js"), { stdio: [null, "inherit", "inherit"] }));
+        const err = await assert.throws(async () => exec(fixture("error-message.js"), { stdio: [null, "inherit", "inherit"] }));
         assert.notMatch(err.message, /\n/);
     });
 
     it("do not include `stdout` in errors when set to `inherit`", async () => {
-        const err = await assert.throws(async () => exec(adone.std.path.join(__dirname, "fixtures/error-message.js"), { stdout: "inherit" }));
+        const err = await assert.throws(async () => exec(fixture("error-message.js"), { stdout: "inherit" }));
         assert.notMatch(err.message, /stdout/);
         assert.match(err.message, /stderr/);
     });
 
     it("do not include `stderr` in errors when set to `inherit`", async () => {
-        const err = await assert.throws(async () => exec(adone.std.path.join(__dirname, "fixtures/error-message.js"), { stderr: "inherit" }));
+        const err = await assert.throws(async () => exec(fixture("error-message.js"), { stderr: "inherit" }));
         assert.match(err.message, /stdout/);
         assert.notMatch(err.message, /stderr/);
     });
 
     it("pass `stdout` to a file descriptor", async () => {
         const file = await adone.fs.tmpName({ ext: ".txt" });
-        await exec(adone.std.path.join(__dirname, "fixtures/noop"), ["foo bar"], { stdout: fs.openSync(file, "w") });
+        await exec(fixture("noop"), ["foo bar"], { stdout: fs.openSync(file, "w") });
         assert.equal(fs.readFileSync(file, "utf8"), "foo bar\n");
         await adone.fs.rm(file);
     });
 
     it("pass `stderr` to a file descriptor", async () => {
         const file = await adone.fs.tmpName({ ext: ".txt" });
-        await exec(adone.std.path.join(__dirname, "fixtures/noop-err"), ["foo bar"], { stderr: fs.openSync(file, "w") });
+        await exec(fixture("noop-err"), ["foo bar"], { stderr: fs.openSync(file, "w") });
         assert.equal(fs.readFileSync(file, "utf8"), "foo bar\n");
         await adone.fs.rm(file);
     });
 
     it("exec.shell()", async () => {
-        const { stdout } = await shell(`node ${adone.std.path.join(__dirname, "fixtures/noop")} foo`);
+        const { stdout } = await shell(`node ${fixture("noop")} foo`);
         assert.equal(stdout, "foo");
     });
 
@@ -126,13 +128,13 @@ describe("system", "process", () => {
         assert.throws(() => {
             execSync("foo");
         }, is.windows
-                ? /^('|")foo('|")/ // ?
-                : "spawnSync foo ENOENT"
+            ? /^('|")foo('|")/ // ?
+            : "spawnSync foo ENOENT"
         );
     });
 
     it("shellSync()", () => {
-        const { stdout } = shellSync(`node ${adone.std.path.join(__dirname, "fixtures/noop")} foo`);
+        const { stdout } = shellSync(`node ${fixture("noop")} foo`);
         assert.equal(stdout, "foo");
     });
 
@@ -158,7 +160,7 @@ describe("system", "process", () => {
     });
 
     it("localDir option", async () => {
-        const cwd = path.join(__dirname, "fixtures/local-dir");
+        const cwd = fixture("local-dir");
         const bin = path.resolve(cwd, "node_modules/.bin/self-path");
 
         await exec("npm", ["install", "--no-package-lock"], { cwd });
@@ -419,8 +421,8 @@ describe("system", "process", () => {
             // Give everybody some time to breath and kill things
             await adone.promise.delay(200);
 
-            assert.false(exists(cp.pid));
-            assert.equal(exists(pid), !cleanup);
+            assert.false(await exists(cp.pid));
+            assert.equal(await exists(pid), !cleanup);
         });
     };
 

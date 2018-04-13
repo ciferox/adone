@@ -5,6 +5,11 @@ const {
 
 adone.asNamespace(exports);
 
+const __ = adone.lazify({
+    list: "./list",
+    kill: "./kill"
+}, exports, require);
+
 export const errname = (code) => adone.std.util.getSystemErrorName(code);
 
 const alias = ["stdin", "stdout", "stderr"];
@@ -665,9 +670,32 @@ export const execSync = (cmd, args, opts) => {
 
 export const shellSync = (cmd, opts) => handleShell(execSync, cmd, opts);
 
-export const exists = (pid) => {
+const privateApi = adone.lazifyPrivate({
+    platformGetList: () => {
+        return is.darwin
+            ? () => execStdout("netstat", ["-anv", "-p", "tcp"])
+                .then((data) => Promise.all([data, execStdout("netstat", ["-anv", "-p", "udp"])]))
+                .then((data) => data.join("\n"))
+            : is.linux
+                ? () => execStdout("ss", ["-tunlp"])
+                : () => execStdout("netstat", ["-ano"]);
+    },
+    checkProc: () => (proc, x) => {
+        if (is.string(proc)) {
+            return x.name === proc;
+        }
+
+        return x.pid === proc;
+    }
+}, exports);
+
+export const exists = (proc) => {
     try {
-        return process.kill(pid, 0);
+        if (is.number(proc)) {
+            return process.kill(proc, 0);
+        }
+
+        return __.list().then((list) => list.some((x) => privateApi.checkProc(proc, x)));
     } catch (e) {
         return e.code === "EPERM";
     }
@@ -774,75 +802,70 @@ export const getChildPids = async (pid) => {
     return childPids;
 };
 
-export const kill = (input, { force = false, ignoreCase = false, tree = true, windows } = {}) => {
-    const fn = is.windows ? (input) => {
-        const args = [];
+const cols = is.darwin ? [3, 8] : is.linux ? [4, 6] : [1, 4];
+const isProtocol = (x) => /^\s*(tcp|udp)/i.test(x);
 
-        if (is.plainObject(windows)) {
-            if (windows.system && windows.username && windows.password) {
-                args.push("/s", windows.system, "/u", windows.username, "/p", windows.password);
+const parsePid = (input) => {
+    if (!is.string(input)) {
+        return null;
+    }
+
+    const match = input.match(/(?:^|",|",pid=)(\d+)/);
+    return match ? parseInt(match[1], 10) : null;
+};
+
+const getPort = (input, list) => {
+    const regex = new RegExp(`[.:]${input}$`);
+    const port = list.find((x) => regex.test(x[cols[0]]));
+
+    if (!port) {
+        throw new Error(`Couldn't find a process with port \`${input}\``);
+    }
+
+    return parsePid(port[cols[1]]);
+};
+
+const getList = async () => {
+    return (await privateApi.platformGetList())
+        .split("\n")
+        .reduce((result, x) => {
+            if (isProtocol(x)) {
+                result.push(x.match(/\S+/g) || []);
             }
 
-            if (windows.filter) {
-                args.push("/fi", windows.filter);
-            }
+            return result;
+        }, []);
+};
+
+export const getPidByPort = (input) => {
+    if (!is.number(input)) {
+        return Promise.reject(new TypeError(`Expected a number, got ${adone.meta.typeOf(input)}`));
+    }
+
+    return getList().then((list) => getPort(input, list));
+};
+
+export const getPidsByPorts = async (input) => {
+    if (!is.array(input)) {
+        return Promise.reject(new TypeError(`Expected an array, got ${adone.meta.typeOf(input)}`));
+    }
+
+    let list = await getList();
+    list = await Promise.all(input.map((x) => [x, getPort(x, list)]));
+    return new Map(list);
+};
+
+export const getAllPidsByPorts = async () => {
+    const list = await getList();
+    const ret = new Map();
+
+    for (const x of list) {
+        const match = x[cols[0]].match(/[^]*[.:](\d+)$/);
+
+        if (match) {
+            ret.set(parseInt(match[1], 10), parsePid(x[cols[1]]));
         }
+    }
 
-        if (force) {
-            args.push("/f");
-        }
-
-        if (tree) {
-            args.push("/t");
-        }
-
-        args.push(is.numeral(input) ? "/pid" : "/im", input);
-
-        return exec("taskkill", args);
-    } : (input) => {
-        let cmd;
-        const args = [input];
-
-        const isNumeral = is.numeral(input);
-        if (is.darwin) {
-            cmd = isNumeral ? "kill" : "pkill";
-
-            if (!isNumeral && ignoreCase) {
-                args.unshift("-i");
-            }
-        } else {
-            cmd = isNumeral ? "kill" : "killall";
-
-            if (!isNumeral && ignoreCase) {
-                args.unshift("-I");
-            }
-        }
-
-        if (force) {
-            args.unshift("-9");
-        }
-
-        if (tree && is.numeral(input)) {
-            return getChildPids(input).then((children) => {
-                const pids = children.map((child) => child.pid);
-                return exec(cmd, [...pids, ...args]);
-            });
-        }
-
-        return exec(cmd, args);
-    };
-    const errors = [];
-
-    // Don't kill ourselves
-    input = adone.util.arrify(input).filter((x) => x !== process.pid);
-
-    return Promise.all(input.map((val) => {
-        return fn(val).catch((err) => {
-            errors.push(`Killing process ${val} failed: ${err.message.replace(/.*\n/, "").replace(/kill: \d+: /, "").trim()}`);
-        });
-    })).then(() => {
-        if (errors.length > 0) {
-            throw new adone.error.AggregateException(errors);
-        }
-    });
+    return ret;
 };

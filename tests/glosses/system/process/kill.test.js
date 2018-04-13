@@ -1,65 +1,66 @@
-const {
-    is,
-    promise,
-    system: { process: { kill, exists, getChildPids } },
-    std: { child_process: childProcess }
-} = adone;
-// import noopProcess from "noop-process";
+describe("system", "process", "kill", () => {
+    const {
+        is,
+        promise,
+        system: { process: { kill, exists, getChildPids } },
+        std: { child_process: childProcess }
+    } = adone;
 
-// Ensure the noop process has time to exit
-const noopProcessKilled = async (pid) => {
     // Ensure the noop process has time to exit
-    await promise.delay(100);
-    assert.false(await exists(pid));
-};
+    const noopProcessKilled = async (pid) => {
+        // Ensure the noop process has time to exit
+        await promise.delay(100);
+        assert.false(await exists(pid));
+    };
 
-const cleanupPids = new Set();
-const exitPids = new Set();
+    const cleanupPids = new Set();
+    const exitPids = new Set();
 
-const killAll = (pids) => {
-    for (const pid of pids) {
-        try {
-            process.kill(pid, "SIGKILL");
-        } catch (err) {
-            //
-        }
-    }
-};
-
-const noopProcess = ({ title, persistent } = {}) => {
-    if (title && title.length > 15) {
-        return Promise.reject(new Error("The title can be maximum 15 characters"));
-    }
-
-    const setTitleCode = title ? `process.title = '${title}';` : "";
-    const code = `${setTitleCode} setInterval(() => {}, 1000 * 1000);console.log('ok');`;
-
-    return new Promise((resolve, reject) => {
-        const cp = childProcess.spawn("node", ["-e", code], {
-            detached: true
-        });
-
-        cp.on("error", reject);
-        cp.stdout.setEncoding("utf8");
-
-        cp.stdout.on("data", (data) => {
-            if (data.trim() === "ok") {
-                cp.stdio = ["ignore", "ignore", "ignore"];
-                resolve(cp.pid);
+    const killAll = (pids) => {
+        for (const pid of pids) {
+            try {
+                process.kill(pid, "SIGKILL");
+            } catch (err) {
+                //
             }
-        });
+        }
+    };
 
-        cp.unref();
-
-        if (!persistent) {
-            exitPids.add(cp.pid);
+    const noopProcess = ({ title, persistent } = {}) => {
+        if (title && title.length > 15) {
+            return Promise.reject(new Error("The title can be maximum 15 characters"));
         }
 
-        cleanupPids.add(cp.pid);
-    });
-};
+        const setTitleCode = title ? `process.title = '${title}';` : "";
+        const code = `${setTitleCode} setInterval(() => {}, 1000 * 1000);console.log('ok');`;
 
-describe("system", "process", () => {
+        return new Promise((resolve, reject) => {
+            const cp = childProcess.spawn("node", ["-e", code], {
+                detached: true
+            });
+
+            cp.on("error", reject);
+            cp.stdout.setEncoding("utf8");
+
+            cp.stdout.on("data", (data) => {
+                if (data.trim() === "ok") {
+                    cp.stdio = ["ignore", "ignore", "ignore"];
+                    resolve(cp.pid);
+                }
+            });
+
+            cp.unref();
+
+            if (!persistent) {
+                exitPids.add(cp.pid);
+            }
+
+            cleanupPids.add(cp.pid);
+        });
+    };
+
+    const fixture = (name = "") => adone.std.path.join(__dirname, "fixtures", name);
+
     after(() => {
         killAll(exitPids);
     });
@@ -157,5 +158,17 @@ describe("system", "process", () => {
                 child.kill();
             }
         });
+    });
+
+    it("by port", async () => {
+        const port = await adone.net.util.getPort();
+        const pid = childProcess.spawn("node", [fixture("pid_by_port.js"), port]).pid;
+        await kill(pid, { force: true });
+        await noopProcessKilled(pid);
+        assert.equal(await adone.net.util.getPort({ port }), port);
+    });
+
+    it("error when process is not found", async () => {
+        await assert.throws(async () => kill(["notFoundProcess"]), /Killing process notFoundProcess failed: Process doesn't exist/);
     });
 });

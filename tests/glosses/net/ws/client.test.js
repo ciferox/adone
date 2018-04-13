@@ -38,17 +38,18 @@ describe("net", "ws", "Client", () => {
 
             const agent = new CustomAgent();
 
-            agent.addRequest = (req) => {
+            agent.addRequest = (req, opts) => {
+                assert.strictEqual(opts.host, "::1");
                 assert.strictEqual(req.path, "/");
                 done();
             };
 
-            const ws = new Client(new url.URL("ws://localhost"), { agent });
+            const ws = new Client(new url.URL("ws://[::1]"), { agent });
         });
 
         describe("options", () => {
+            const agent = new CustomAgent();
             it("accepts the `options` object as 3rd argument", () => {
-                const agent = new CustomAgent();
                 let count = 0;
                 let ws;
 
@@ -1756,7 +1757,7 @@ describe("net", "ws", "Client", () => {
         });
 
         it("adds the authorization header if the url has userinfo (2/2)", function (done) {
-            if (!url.URL) { 
+            if (!url.URL) {
                 return this.skip();
             }
 

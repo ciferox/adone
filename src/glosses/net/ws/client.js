@@ -395,6 +395,7 @@ const netConnect = function (options) {
  */
 const tlsConnect = function (options) {
     options.path = options.socketPath || options._socketPath || undefined;
+    options.servername = options.servername || options.host;
     return tls.connect(options);
 };
 
@@ -462,7 +463,9 @@ const initAsClient = function (address, protocols, options) {
 
     options.createConnection = isSecure ? tlsConnect : netConnect;
     options.port = parsedUrl.port || (isSecure ? 443 : 80);
-    options.host = parsedUrl.hostname;
+    options.host = parsedUrl.hostname.startsWith("[")
+        ? parsedUrl.hostname.slice(1, -1)
+        : parsedUrl.hostname;
     options.headers = {
         "Sec-WebSocket-Version": options.protocolVersion,
         "Sec-WebSocket-Key": key,

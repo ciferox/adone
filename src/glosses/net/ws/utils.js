@@ -39,8 +39,53 @@ const isValidStatusCode = (code) => {
     );
 };
 
+/**
+ * Masks a buffer using the given mask.
+ *
+ * @param {Buffer} source The buffer to mask
+ * @param {Buffer} mask The mask to use
+ * @param {Buffer} output The buffer where to store the result
+ * @param {Number} offset The offset at which to start writing
+ * @param {Number} length The number of bytes to mask.
+ * @public
+ */
+const _mask = function (source, mask, output, offset, length) {
+    for (let i = 0; i < length; i++) {
+        output[offset + i] = source[i] ^ mask[i & 3];
+    }
+};
+
+/**
+ * Unmasks a buffer using the given mask.
+ *
+ * @param {Buffer} buffer The buffer to unmask
+ * @param {Buffer} mask The mask to use
+ * @public
+ */
+const _unmask = function (buffer, mask) {
+    // Required until https://github.com/nodejs/node/issues/9006 is resolved.
+    const length = buffer.length;
+    for (let i = 0; i < length; i++) {
+        buffer[i] ^= mask[i & 3];
+    }
+};
+
 export default {
     concat,
     isValidStatusCode,
-    ...native
+    mask(source, mask, output, offset, length) {
+        if (length < 48) {
+            _mask(source, mask, output, offset, length);
+        } else {
+            native.mask(source, mask, output, offset, length);
+        }
+    },
+    unmask(buffer, mask) {
+        if (buffer.length < 32) {
+            _unmask(buffer, mask);
+        } else {
+            native.unmask(buffer, mask);
+        }
+    },
+    isValidUTF8: native.isValidUTF8
 };
