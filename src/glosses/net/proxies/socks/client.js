@@ -253,13 +253,13 @@ export default class Client extends adone.event.Emitter {
 
         this._parser = undefined;
 
-        this._proxyAddr = options.proxyHost;
-        this._proxyport = options.proxyPort;
+        this._proxyHost = options.proxyHost;
+        this._proxyPort = options.proxyPort;
 
-        if (!is.string(this._proxyAddr)) {
-            this._proxyAddr = "localhost";
-        } else if (!is.number(this._proxyport)) {
-            this._proxyport = 1080;
+        if (!is.string(this._proxyHost)) {
+            this._proxyHost = "localhost";
+        } else if (!is.number(this._proxyPort)) {
+            this._proxyPort = 1080;
         }
 
         this._dstaddr = undefined;
@@ -391,10 +391,10 @@ export default class Client extends adone.event.Emitter {
             this._strictLocalDNS = options.strictLocalDNS;
         }
         if (is.string(options.proxyHost)) {
-            this._proxyhost = options.proxyHost;
+            this._proxyHost = options.proxyHost;
         }
         if (is.string(options.proxyPort)) {
-            this._proxyport = options.proxyPort;
+            this._proxyPort = options.proxyPort;
         }
 
         if (this._parser) {
@@ -405,8 +405,8 @@ export default class Client extends adone.event.Emitter {
         this._hadError = this._ready = false;
 
         const realOptions = {
-            host: this._proxyhost,
-            port: this._proxyport,
+            host: this._proxyHost,
+            port: this._proxyPort,
             localAddress: options.localAddress // TODO: remove?
         };
 

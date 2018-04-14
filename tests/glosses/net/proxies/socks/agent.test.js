@@ -43,24 +43,49 @@ describe("net", "http", "proxy", "socks", "agent", "http", () => {
     });
 
     let proxyServer;
+    let authProxyServer;
     let proxyPort;
+    let authProxyPort;
 
-    before((done) => {
+    before(async () => {
         proxyServer = socks.createServer({
             auths: [socks.auth.None()]
         }, (reqInfo, accept) => {
             proxyServer.emit("info", reqInfo);
             accept();
         });
-        proxyServer.listen(0, () => {
-            const addr = proxyServer.address();
-            proxyPort = addr.port;
-            done();
+        authProxyServer = socks.createServer({
+            auths: [socks.auth.UserPassword((u, p, cb) => {
+                cb(u === "hello" && p === "world");
+            })]
+        }, (reqInfo, accept) => {
+            authProxyServer.emit("info", reqInfo);
+            accept();
         });
+
+        await Promise.all([
+            new Promise((resolve) => {
+                proxyServer.listen(0, () => {
+                    const addr = proxyServer.address();
+                    proxyPort = addr.port;
+                    resolve();
+                });
+            }),
+            new Promise((resolve) => {
+                authProxyServer.listen(0, () => {
+                    const addr = authProxyServer.address();
+                    authProxyPort = addr.port;
+                    resolve();
+                });
+            })
+        ]);
     });
 
-    after((done) => {
-        proxyServer.close(done);
+    after(async () => {
+        await Promise.all([
+            new Promise((resolve) => proxyServer.close(resolve)),
+            new Promise((resolve) => authProxyServer.close(resolve))
+        ]);
     });
 
     it("should make a http request through proxy", async () => {
@@ -184,7 +209,7 @@ describe("net", "http", "proxy", "socks", "agent", "http", () => {
                 proxyHost: "localhost",
                 proxyPort
             }),
-            validateStatus: (x) => x === 302 || x === 200
+            validateStatus: (x) => x === 302 || x === 301 || x === 200
         });
         expect(res.data.length).to.be.gt(0);
         expect(s).to.have.been.calledOnce();
@@ -226,5 +251,101 @@ describe("net", "http", "proxy", "socks", "agent", "http", () => {
             httpsAgent: agent
         });
         expect(s).to.have.been.calledThrice();
+    });
+
+    it("should connect with auth", async () => {
+        const serv = createHttpServer();
+        serv.use((ctx) => {
+            ctx.body = "hello";
+        });
+        await serv.bind();
+        const { port } = serv.address();
+
+        const agent = new socks.agent.Http({
+            proxyHost: "localhost",
+            proxyPort: authProxyPort,
+            auths: [socks.auth.UserPassword("hello", "world")]
+        });
+
+        const s = spy();
+        authProxyServer.once("info", s);
+
+        const resp = await request.get(`http://localhost:${port}`, {
+            httpAgent: agent
+        });
+
+        expect(s).to.have.been.calledOnce();
+        expect(resp.data).to.be.equal("hello");
+    });
+
+    it("should connect with auth (https)", async () => {
+        const serv = createHttpServer();
+        serv.use((ctx) => {
+            ctx.body = "hello";
+        });
+        await serv.bind(httpsOpts);
+        const { port } = serv.address();
+
+        const agent = new socks.agent.Https({
+            proxyHost: "localhost",
+            proxyPort: authProxyPort,
+            rejectUnauthorized: false,
+            auths: [socks.auth.UserPassword("hello", "world")]
+        });
+
+        const s = spy();
+        authProxyServer.once("info", s);
+
+        const resp = await request.get(`https://localhost:${port}`, {
+            httpsAgent: agent,
+            rejectUnauthorized: false
+        });
+
+        expect(s).to.have.been.calledOnce();
+        expect(resp.data).to.be.equal("hello");
+    });
+
+    it("should throw for wrong creds", async () => {
+        const serv = createHttpServer();
+        serv.use((ctx) => {
+            ctx.body = "hello";
+        });
+        await serv.bind();
+        const { port } = serv.address();
+
+        const agent = new socks.agent.Http({
+            proxyHost: "localhost",
+            proxyPort: authProxyPort,
+            auths: [socks.auth.UserPassword("world", "hello")]
+        });
+
+        await assert.throws(async () => {
+            await request.get(`http://localhost:${port}`, {
+                httpAgent: agent
+            });
+        }, "Authentication failed");
+    });
+
+    it("should throw for wrong creds (https)", async () => {
+        const serv = createHttpServer();
+        serv.use((ctx) => {
+            ctx.body = "hello";
+        });
+        await serv.bind(httpsOpts);
+        const { port } = serv.address();
+
+        const agent = new socks.agent.Https({
+            proxyHost: "localhost",
+            proxyPort: authProxyPort,
+            rejectUnauthorized: false,
+            auths: [socks.auth.UserPassword("world", "hello")]
+        });
+
+        await assert.throws(async () => {
+            await request.get(`https://localhost:${port}`, {
+                httpsAgent: agent,
+                rejectUnauthorized: false
+            });
+        }, "Authentication failed");
     });
 });
