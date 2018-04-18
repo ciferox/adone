@@ -254,10 +254,6 @@ export default class Dispatcher extends Subsystem {
         }
     }
 
-    async ping() {
-        return !is.null(this.peer) && is.null(await this.peer.ping());
-    }
-
     waitForContext(name) {
         return this.peer.waitForContext(name);
     }

@@ -11,11 +11,11 @@ const {
 export default class Gate extends Subsystem {
     @DCliCommand({
         name: "list",
-        help: "Show gates",
+        help: "List all networks",
         options: [
             {
                 name: "--active",
-                help: "Only active gates"
+                help: "Only active natworks"
             }
         ]
     })
@@ -23,17 +23,14 @@ export default class Gate extends Subsystem {
         try {
             kit.createProgress("obtaining");
             const options = opts.getAll();
-            let gates;
-            if (await omnitron2.dispatcher.isOmnitronActive()) {
-                await kit.connect();
-                gates = await omnitron2.dispatcher.getGates(options);
+            let networks;
+            const isOmnitronActive = await omnitron2.dispatcher.isOmnitronActive();
+
+            if (isOmnitronActive && options.active) {
+                networks = [];
             } else {
-                if (options.active) {
-                    gates = [];
-                } else {
-                    const config = await omnitron2.dispatcher.getConfiguration();
-                    gates = await config.getGates();
-                }
+                const config = await omnitron2.dispatcher.getConfiguration();
+                networks = await config.getNetworks();
             }
 
             kit.updateProgress({
@@ -41,10 +38,10 @@ export default class Gate extends Subsystem {
                 result: true,
                 clean: true
             });
-            if (gates.length > 0) {
-                adone.log(adone.pretty.json(gates));
+            if (networks.length > 0) {
+                adone.log(adone.pretty.json(networks));
             } else {
-                adone.runtime.term.print("{white-fg}No gates{/}\n");
+                adone.runtime.term.print("{white-fg}No networks{/}\n");
             }
             return 0;
         } catch (err) {

@@ -582,6 +582,13 @@
                         "type": "gyp"
                     }
                 },
+                "model": {
+                    "description": "Model definition and validation",
+                    "task": "transpile",
+                    "src": "src/glosses/models/**/*.js",
+                    "dst": "lib/glosses/models",
+                    "namespace": "model"
+                },
                 "multi": {
                     "description": "Multiformats",
                     "task": "transpile",

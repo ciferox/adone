@@ -52,10 +52,10 @@ const subsystemPath = (name) => std.path.resolve(__dirname, "subsystems", name);
             subsystem: subsystemPath("config")
         },
         {
-            name: "gate",
+            name: ["net", "network"],
             group: "config",
-            description: "Gates management",
-            subsystem: subsystemPath("gate")
+            description: "Networks management",
+            subsystem: subsystemPath("network")
         },
         {
             name: "host",
@@ -132,27 +132,6 @@ export default class Omnitron extends Subsystem {
             });
             return 1;
         }
-    }
-
-    @DCliCommand({
-        name: "ping",
-        group: "common",
-        help: "Ping the omnitron"
-    })
-    async pingCommand() {
-        kit.createProgress("checking");
-        try {
-            await kit.connect();
-        } catch (err) {
-            //
-        }
-
-        const result = await omnitron2.dispatcher.ping();
-        kit.updateProgress({
-            message: result ? "done" : "failed",
-            result
-        });
-        return 0;
     }
 
     @DCliCommand({
@@ -542,64 +521,64 @@ export default class Omnitron extends Subsystem {
         }
     }
 
-    @DCliCommand({
-        name: "peers",
-        group: "inspect",
-        help: "Show connected peers"
-    })
-    async peersCommand() {
-        try {
-            kit.createProgress("obtaining");
-            await kit.connect();
-            const peers = await omnitron2.dispatcher.getPeers();
+    // @DCliCommand({
+    //     name: "peers",
+    //     group: "inspect",
+    //     help: "Show connected peers"
+    // })
+    // async peersCommand() {
+    //     try {
+    //         kit.createProgress("obtaining");
+    //         await kit.connect();
+    //         const peers = await omnitron2.dispatcher.getPeers();
 
-            kit.updateProgress({
-                message: "done",
-                result: true,
-                clean: true
-            });
+    //         kit.updateProgress({
+    //             message: "done",
+    //             result: true,
+    //             clean: true
+    //         });
 
-            adone.log(pretty.table(peers, {
-                width: "100%",
-                style: {
-                    head: ["gray"],
-                    compact: true
-                },
-                model: [
-                    {
-                        id: "uid",
-                        header: "UID",
-                        handle: (val) => {
-                            if (adone.runtime.netron.uid === val.uid) {
-                                return `{green-fg}{bold}${val.uid}{/green-fg}{/bold}`;
-                            }
-                            return `{green-fg}${val.uid}{/green-fg}`;
-                        },
-                        width: 38
-                    },
-                    {
-                        id: "address",
-                        header: "Address"
-                    },
-                    {
-                        id: "connectedTime",
-                        header: "Connected time",
-                        handle: (val) => {
-                            return adone.datetime.unix(val.connectedTime / 1000).format("L LTS");
-                        },
-                        width: 24
-                    }
-                ]
-            }));
-            return 0;
-        } catch (err) {
-            kit.updateProgress({
-                message: err.message,
-                result: false
-            });
-            return 1;
-        }
-    }
+    //         adone.log(pretty.table(peers, {
+    //             width: "100%",
+    //             style: {
+    //                 head: ["gray"],
+    //                 compact: true
+    //             },
+    //             model: [
+    //                 {
+    //                     id: "uid",
+    //                     header: "UID",
+    //                     handle: (val) => {
+    //                         if (adone.runtime.netron.uid === val.uid) {
+    //                             return `{green-fg}{bold}${val.uid}{/green-fg}{/bold}`;
+    //                         }
+    //                         return `{green-fg}${val.uid}{/green-fg}`;
+    //                     },
+    //                     width: 38
+    //                 },
+    //                 {
+    //                     id: "address",
+    //                     header: "Address"
+    //                 },
+    //                 {
+    //                     id: "connectedTime",
+    //                     header: "Connected time",
+    //                     handle: (val) => {
+    //                         return adone.datetime.unix(val.connectedTime / 1000).format("L LTS");
+    //                     },
+    //                     width: 24
+    //                 }
+    //             ]
+    //         }));
+    //         return 0;
+    //     } catch (err) {
+    //         kit.updateProgress({
+    //             message: err.message,
+    //             result: false
+    //         });
+    //         return 1;
+    //     }
+    // }
 
     @DCliCommand({
         name: "contexts",

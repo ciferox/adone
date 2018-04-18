@@ -177,20 +177,20 @@ export default class Configuration extends Valuable {
                 }
                 break;
             }
-            case "gates": {
-                let gates;
+            case "networks": {
+                let networks;
                 if (path.length === 0) {
-                    gates = adone.util.arrify(val);
+                    networks = adone.util.arrify(val);
                 } else {
-                    gates = this.gates;
-                    adone.lodash.set(gates, path, val);
+                    networks = this.networks;
+                    adone.lodash.set(networks, path, val);
                 }
-                for (const gate of gates) {
+                for (const gate of networks) {
                     if (this.validateService && !this.validateGate(gate)) {
                         throw new adone.error.AggregateException(this.validateGate.errors);
                     }
                 }
-                return super.set("gates", gates);
+                return super.set("networks", networks);
             }
             case "hosts": {
                 break;
@@ -252,22 +252,22 @@ export default class Configuration extends Valuable {
 
     @DPublic()
     hasGate(name) {
-        return this.gates.findIndex((g) => g.name === name) >= 0;
+        return this.networks.findIndex((g) => g.name === name) >= 0;
     }
 
     @DPublic()
     getGate(name) {
-        const index = this.gates.findIndex((g) => g.name === name);
+        const index = this.networks.findIndex((g) => g.name === name);
         if (index < 0) {
             throw new adone.error.NotExists(`Gate with name '${name}' is not exist`);
         }
 
-        return this.gates[index];
+        return this.networks[index];
     }
 
     @DPublic()
-    getGates() {
-        return this.gates;
+    getNetworks() {
+        return this.networks;
     }
 
     @DPublic()
@@ -280,20 +280,20 @@ export default class Configuration extends Valuable {
             throw new adone.error.Exists(`Gate with name '${gate.name}' is already exist`);
         }
 
-        this.gates.push(gate);
+        this.networks.push(gate);
 
-        return super.set("gates", this.gates);
+        return super.set("networks", this.networks);
     }
 
     @DPublic()
     deleteGate(name) {
-        const index = this.gates.findIndex((g) => g.name === name);
+        const index = this.networks.findIndex((g) => g.name === name);
         if (index < 0) {
             throw new adone.error.NotExists(`Gate with name '${name}' is not exist`);
         }
 
-        this.gates.splice(index, 1);
-        return this.set("gates", this.gates);
+        this.networks.splice(index, 1);
+        return this.set("networks", this.networks);
     }
 
     @DPublic()
@@ -311,15 +311,15 @@ export default class Configuration extends Valuable {
         }
 
         Object.assign(gate, options);
-        return this.set("gates", this.gates);
+        return this.set("networks", this.networks);
     }
 
     static async load(valuable) {
         const config = new Configuration(valuable);
 
         // Defaults
-        if (!config.has("gates")) {
-            await config.set("gates", []);
+        if (!config.has("networks")) {
+            await config.set("networks", []);
         }
 
         if (!config.has("hosts")) {
@@ -357,7 +357,7 @@ export default class Configuration extends Valuable {
         config.validateService = validator.compile(SERVICE_SCHEMA);
 
         // Cache some values
-        config.gates = await config.get("gates");
+        config.networks = await config.get("networks");
         config.hosts = await config.get("hosts");
 
         return config;

@@ -310,21 +310,6 @@ export default class Omnitron extends application.Application {
     }
 
     @DPublic({
-        description: "Returns connected peer UIDs"
-    })
-    getPeers() {
-        const peers = [...runtime.netron2.getPeers().values()];
-
-        return peers.map((peer) => {
-            return {
-                uid: peer.uid,
-                address: peer.getRemoteAddress().full,
-                connectedTime: peer.connectedTime
-            };
-        });
-    }
-
-    @DPublic({
         description: "Returns list of attached contexts"
     })
     getContexts() {
