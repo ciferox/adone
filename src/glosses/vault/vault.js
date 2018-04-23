@@ -3,8 +3,6 @@ const {
     vault
 } = adone;
 
-const __ = adone.private(vault);
-
 const VIDS = "vids";
 const TIDS = "tids";
 const CREATED = "created";
@@ -12,6 +10,17 @@ const UPDATED = "updated";
 const NOTES = "notes";
 const NEXT_TAG_ID = "nextTagId";
 const NEXT_VALUABLE_ID = "nextValuableId";
+
+const {
+    vkey,
+    tagId,
+    hasTag,
+    normalizeTag,
+    normalizeTags,
+    valuableId,
+    VALUABLE_ID,
+    VALUABLE_KEYS
+} = adone.private(vault);
 
 /**
  * Vault main class
@@ -41,7 +50,7 @@ export default class Vault {
         try {
             this.vids = await this._getMeta(VIDS);
             for (const id of this.vids) {
-                const metaData = await this._getMeta(__.valuable(id));
+                const metaData = await this._getMeta(valuableId(id));
                 this.nameIdMap.set(metaData.name, id);
             }
         } catch (err) {
@@ -52,7 +61,7 @@ export default class Vault {
         try {
             this.tids = await this._getMeta(TIDS);
             for (const id of this.tids) {
-                const tagMetaData = await this._getMeta(__.tag(id));
+                const tagMetaData = await this._getMeta(tagId(id));
                 this.tagsMap.set(tagMetaData.tag.name, tagMetaData);
             }
         } catch (err) {
@@ -111,7 +120,7 @@ export default class Vault {
         return this.backend.location;
     }
 
-    async create(name, tags = []) {
+    async create(name, { Valuable = this.Valuable, tags = [] } = {}) {
         if (this.nameIdMap.has(name)) {
             throw new adone.error.Exists(`Already exists: '${name}'`);
         }
@@ -120,7 +129,7 @@ export default class Vault {
         this.vids.push(id);
         await this._setMeta(VIDS, this.vids);
         this.nameIdMap.set(name, id);
-        const normTags = __.normalizeTags(tags);
+        const normTags = normalizeTags(tags);
         const metaData = {
             name,
             notes: "",
@@ -128,24 +137,23 @@ export default class Vault {
             kids: [],
             nextKeyId: 1
         };
-        await this._setMeta(__.valuable(id), metaData);
+        await this._setMeta(valuableId(id), metaData);
 
-        const valuable = new this.Valuable(this, id, metaData, normTags);
+        const valuable = new Valuable(this, id, metaData, normTags);
         this._vcache.set(id, valuable);
         return valuable;
     }
 
-    async get(name) {
+    async get(name, { Valuable = this.Valuable } = {}) {
         const id = this._getVid(name);
-
         let valuable = this._vcache.get(id);
         if (is.undefined(valuable)) {
-            const metaData = await this._getMeta(__.valuable(id));
-            valuable = new this.Valuable(this, id, metaData, await this.tags(metaData.tids));
+            const metaData = await this._getMeta(valuableId(id));
+            valuable = new Valuable(this, id, metaData, await this.tags(metaData.tids));
 
             for (const kid of metaData.kids) {
-                const keyMeta = await this._getMeta(__.vkey(id, kid)); // eslint-disable-line
-                valuable._keys.set(keyMeta.name, keyMeta);
+                const keyMeta = await this._getMeta(vkey(id, kid)); // eslint-disable-line
+                valuable[VALUABLE_KEYS].set(keyMeta.name, keyMeta);
             }
             this._vcache.set(id, valuable);
         }
@@ -160,10 +168,10 @@ export default class Vault {
     async delete(name) {
         const val = await this.get(name);
         await val.clear();
-        this.vids.splice(this.vids.indexOf(val.id), 1);
+        this.vids.splice(this.vids.indexOf(val[VALUABLE_ID]), 1);
         this.nameIdMap.delete(name);
         await this._setMeta(VIDS, this.vids); // TODO: do it in one batch somehow?
-        await this._deleteMeta(__.valuable(val.id));
+        await this._deleteMeta(valuableId(val[VALUABLE_ID]));
     }
 
     async clear({ hosts = true, tags = false } = {}) {
@@ -234,8 +242,8 @@ export default class Vault {
 
     async addTag(tag, vid = null) {
         const tags = this._getTags();
-        if (!__.hasTag(tags, tag)) {
-            const tagIds = await this._getTids([__.normalizeTag(tag)], vid);
+        if (!hasTag(tags, tag)) {
+            const tagIds = await this._getTids([normalizeTag(tag)], vid);
             return tagIds[0];
         }
         return null;
@@ -243,18 +251,18 @@ export default class Vault {
 
     async deleteTag(tag) {
         const tags = this._getTags();
-        if (__.hasTag(tags, tag)) {
+        if (hasTag(tags, tag)) {
             const valuables = await this.values();
             for (const val of valuables) {
                 await val.deleteTag(tag);
             }
-            tag = __.normalizeTag(tag);
-            const tagId = this.tagsMap.get(tag.name).id;
-            this.tids.splice(this.tids.indexOf(tagId), 1);
+            tag = normalizeTag(tag);
+            const tid = this.tagsMap.get(tag.name).id;
+            this.tids.splice(this.tids.indexOf(tid), 1);
             await this._setMeta(TIDS, this.tids);
 
             this.tagsMap.delete(tag.name);
-            await this._deleteMeta(__.tag(tagId));
+            await this._deleteMeta(tagId(tid));
             return true;
         }
         return false;
@@ -355,7 +363,7 @@ export default class Vault {
                     tagMetaData.vids.push(vid);
                 }
                 this.tagsMap.set(tag.name, tagMetaData);
-                await this._setMeta(__.tag(id), tagMetaData);
+                await this._setMeta(tagId(id), tagMetaData);
             }
             ids.push(tagMetaData.id);
         }

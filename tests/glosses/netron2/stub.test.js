@@ -2,7 +2,7 @@ import { B } from "./contexts";
 
 const {
     is,
-    netron2: { Netron, Reflection, Stub, Definition }
+    netron2: { Netron, meta: { Reflection }, Stub, Definition }
 } = adone;
 
 describe("Stub", () => {

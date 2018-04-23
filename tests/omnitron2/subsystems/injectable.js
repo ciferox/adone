@@ -1,15 +1,15 @@
 const {
     application,
-    netron2: { DContext, DPublic }
+    netron2: { meta: { Context, Public } }
 } = adone;
 
-@DContext()
+@Context()
 class Payload {
     constructor(service) {
         this.service = service;
     }
 
-    @DPublic()
+    @Public()
     getInfo(options) {
         return this.service.parent.getInfo(options);
     }

@@ -4,32 +4,54 @@ const {
     vault
 } = adone;
 
-const __ = adone.private(vault);
+const {
+    vkey,
+    vvalue,
+    hasTag,
+    normalizeTag,
+    valuableId,
+    VALUABLE_VAULT,
+    VALUABLE_ID,
+    VALUABLE_META,
+    VALUABLE_TAGS,
+    VALUABLE_KEYS
+} = adone.private(vault);
+
+const VALUABLE_STR_ID = Symbol();
 
 export default class Valuable {
     constructor(vault, id, metaData, tags) {
-        this.vault = vault;
-        this.id = id;
-        this.meta = metaData;
-        this._tags = tags;
-        this._keys = new Map();
+        this[VALUABLE_VAULT] = vault;
+        this[VALUABLE_ID] = id;
+        this[VALUABLE_STR_ID] = valuableId(id);
+        this[VALUABLE_META] = metaData;
+        this[VALUABLE_TAGS] = tags;
+        this[VALUABLE_KEYS] = new Map();
     }
 
     name() {
-        return this.meta.name;
+        return this[VALUABLE_META].name;
     }
 
     internalId() {
-        return this.id;
+        return this[VALUABLE_ID];
+    }
+
+    getVault() {
+        return this[VALUABLE_VAULT];
     }
 
     getNotes() {
-        return this.meta.notes;
+        return this[VALUABLE_META].notes;
     }
 
     setNotes(notes) {
-        this.meta.notes = notes;
+        this[VALUABLE_META].notes = notes;
         return this._updateMeta();
+    }
+
+    slice(prefix, separator) {
+        return vault.slice(this, prefix, separator);
     }
 
     async set(name, value, type) {
@@ -38,15 +60,15 @@ export default class Valuable {
         let shouldUpdateMeta = false;
         type = (is.undefined(type) ? adone.meta.typeOf(value) : type);
         if (is.undefined(keyMeta)) {
-            id = this.meta.nextKeyId++;
+            id = this[VALUABLE_META].nextKeyId++;
             keyMeta = {
                 id,
                 name,
                 type
             };
-            this.meta.kids.push(id);
+            this[VALUABLE_META].kids.push(id);
             await this._updateMeta();
-            this._keys.set(name, keyMeta);
+            this[VALUABLE_KEYS].set(name, keyMeta);
             if (value && is.number(value.length)) {
                 keyMeta.size = value.length;
             }
@@ -64,10 +86,18 @@ export default class Valuable {
         }
 
         if (shouldUpdateMeta) {
-            await this.vault._setMeta(__.vkey(this.id, id), keyMeta);
+            await this[VALUABLE_VAULT]._setMeta(vkey(this[VALUABLE_ID], id), keyMeta);
         }
-        await this.vault._setMeta(__.vvalue(this.id, id), value);
+        await this[VALUABLE_VAULT]._setMeta(vvalue(this[VALUABLE_ID], id), value);
         return id;
+    }
+
+    async add(name, value, type) {
+        if (this.has(name)) {
+            throw new error.Exists(`Key already exists: ${name}`);
+        }
+
+        return this.set(name, value, type);
     }
 
     async setMulti(entries) {
@@ -77,7 +107,7 @@ export default class Valuable {
     }
 
     get(name) {
-        return this.vault._getMeta(__.vvalue(this.id, this._getKey(name).id));
+        return this[VALUABLE_VAULT]._getMeta(vvalue(this[VALUABLE_ID], this._getKey(name).id));
     }
 
     type(name) {
@@ -85,11 +115,15 @@ export default class Valuable {
     }
 
     has(name) {
-        return this._keys.has(name);
+        return this[VALUABLE_KEYS].has(name);
     }
 
     keys() {
-        return [...this._keys.keys()];
+        return [...this[VALUABLE_KEYS].keys()];
+    }
+
+    size() {
+        return this[VALUABLE_KEYS].size;
     }
 
     async entries({ includeEntryId = false, entriesAsArray = false } = {}) {
@@ -137,7 +171,7 @@ export default class Valuable {
         }
 
         if (includeNotes) {
-            this.meta.notes = "";
+            this[VALUABLE_META].notes = "";
         }
 
         return this._updateMeta();
@@ -160,13 +194,13 @@ export default class Valuable {
 
         switch (tags) {
             case "normal":
-                result.tags = this._tags;
+                result.tags = this[VALUABLE_TAGS];
                 break;
             case "onlyName":
-                result.tags = this._tags.map((t) => t.name);
+                result.tags = this[VALUABLE_TAGS].map((t) => t.name);
                 break;
             case "onlyId":
-                result.tags = this.meta.tids;
+                result.tags = this[VALUABLE_META].tids;
                 break;
         }
 
@@ -175,8 +209,8 @@ export default class Valuable {
 
     async fromJSON(json) {
         await this.clear();
-        if (is.string(json.notes) && json.notes !== this.meta.notes) {
-            this.meta.notes = json.notes;
+        if (is.string(json.notes) && json.notes !== this[VALUABLE_META].notes) {
+            this[VALUABLE_META].notes = json.notes;
         }
 
         if (is.array(json.entries)) {
@@ -185,7 +219,7 @@ export default class Valuable {
                 const id = await this.set(entry.name, entry.value); // eslint-disable-line
                 order.push(id);
             }
-            this.meta.order = order;
+            this[VALUABLE_META].order = order;
         } else if (is.plainObject(json.entries)) {
             await this.setMulti(json.entries);
         }
@@ -203,16 +237,16 @@ export default class Valuable {
         if (is.array(tag)) {
             const result = [];
             for (const t of tag) {
-                if (!__.hasTag(this._tags, t)) {
+                if (!hasTag(this[VALUABLE_TAGS], t)) {
                     result.push(await this.addTag(t)); // eslint-disable-line
                 }
             }
             return result;
         }
-        if (!__.hasTag(this._tags, tag)) {
-            const tagId = await this.vault.addTag(tag, this.id);
-            this.meta.tids.push(tagId);
-            this._tags.push(__.normalizeTag(tag));
+        if (!hasTag(this[VALUABLE_TAGS], tag)) {
+            const tagId = await this[VALUABLE_VAULT].addTag(tag, this[VALUABLE_ID]);
+            this[VALUABLE_META].tids.push(tagId);
+            this[VALUABLE_TAGS].push(normalizeTag(tag));
             if (!_isWeak) {
                 await this._updateMeta();
             }
@@ -222,15 +256,15 @@ export default class Valuable {
     }
 
     hasTag(tag) {
-        return __.hasTag(this._tags, tag);
+        return hasTag(this[VALUABLE_TAGS], tag);
     }
 
     async deleteTag(tag) {
-        if (__.hasTag(this._tags, tag)) {
-            tag = __.normalizeTag(tag);
-            const index = this._tags.findIndex((t) => t.name === tag.name);
-            this._tags.splice(index, 1);
-            this.meta.tids.splice(this.meta.tids.indexOf(this.vault.tagsMap.get(tag.name).id), 1);
+        if (hasTag(this[VALUABLE_TAGS], tag)) {
+            tag = normalizeTag(tag);
+            const index = this[VALUABLE_TAGS].findIndex((t) => t.name === tag.name);
+            this[VALUABLE_TAGS].splice(index, 1);
+            this[VALUABLE_META].tids.splice(this[VALUABLE_META].tids.indexOf(this[VALUABLE_VAULT].tagsMap.get(tag.name).id), 1);
             await this._updateMeta();
             return true;
         }
@@ -243,29 +277,29 @@ export default class Valuable {
     }
 
     tags() {
-        return this._tags;
+        return this[VALUABLE_TAGS];
     }
 
     async _delete(name) {
         const keyMeta = this._getKey(name);
-        const index = this.meta.kids.indexOf(keyMeta.id);
-        this.meta.kids.splice(index, 1);
-        this._keys.delete(name);
+        const index = this[VALUABLE_META].kids.indexOf(keyMeta.id);
+        this[VALUABLE_META].kids.splice(index, 1);
+        this[VALUABLE_KEYS].delete(name);
 
         // Delete key meta and value from db.
-        await this.vault._deleteMeta(__.vkey(this.id, keyMeta.id));
-        await this.vault._deleteMeta(__.vvalue(this.id, keyMeta.id));
+        await this[VALUABLE_VAULT]._deleteMeta(vkey(this[VALUABLE_ID], keyMeta.id));
+        await this[VALUABLE_VAULT]._deleteMeta(vvalue(this[VALUABLE_ID], keyMeta.id));
     }
 
     _deleteAllTags() {
-        for (let i = this._tags.length; --i >= 0;) {
-            this.meta.tids.splice(this.meta.tids.indexOf(this.vault.tagsMap.get(this._tags[i].name).id), 1);
-            this._tags.splice(i, 1);
+        for (let i = this[VALUABLE_TAGS].length; --i >= 0;) {
+            this[VALUABLE_META].tids.splice(this[VALUABLE_META].tids.indexOf(this[VALUABLE_VAULT].tagsMap.get(this[VALUABLE_TAGS][i].name).id), 1);
+            this[VALUABLE_TAGS].splice(i, 1);
         }
     }
 
     _getKeyUnsafe(name) {
-        return this._keys.get(name);
+        return this[VALUABLE_KEYS].get(name);
     }
 
     _getKey(name) {
@@ -277,7 +311,7 @@ export default class Valuable {
     }
 
     _updateMeta() {
-        return this.vault._setMeta(__.valuable(this.id), this.meta);
+        return this[VALUABLE_VAULT]._setMeta(this[VALUABLE_STR_ID], this[VALUABLE_META]);
     }
 }
 adone.tag.add(Valuable, "VAULT_VALUABLE");

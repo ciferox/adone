@@ -1,4 +1,4 @@
-import { A, B, commonTypes, CommonTypes, ObjectStorage, Document, DocumentTypes, Soul, Devil, BodyStatuses, Strong, CounterKeeper, NumSet, NumField, StdErrs, AdoneErrs, adoneErrors, netronErrors, NonStdErr, NodeErrs, nodeErrors } from "../contexts";
+import { A, B, commonTypes, CommonTypes, ObjectStorage, Document, DocumentTypes, Soul, Devil, BodyStatuses, Strong, CounterKeeper, NumSet, NumField, StdErrs, AdoneErrs, adoneErrors, netronErrors, NonStdErr/*, NodeErrs, nodeErrors*/ } from "../contexts";
 import { createNetron } from "../common";
 
 const {
@@ -641,7 +641,7 @@ export default (testInterface) => {
                     assert.strictEqual(okCount, adoneErrors.length - netronErrors.length);
                 });
 
-                it("node internal errors", async () => {
+                it.todo("node internal errors", async () => {
                     let okCount = 0;
                     await peer.attachContext(new NodeErrs(), "a");
                     const netron2 = createNetron();

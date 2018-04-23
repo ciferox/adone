@@ -35,10 +35,13 @@ adone.defineCustomPredicate("netron2Context", (obj) => {
     if (is.class(obj)) {
         target = obj;
     } else if (is.propertyDefined(obj, "__proto__") && is.propertyOwned(obj.__proto__, "constructor")) {
+        if (adone.netron2.meta.isDynamicContext(obj)) {
+            return true;
+        }
         target = obj.__proto__.constructor;
     }
     if (!is.undefined(target)) {
-        isContex = is.object(reflect.getMetadata(adone.netron2.CONTEXT_ANNOTATION, target));
+        isContex = is.object(reflect.getMetadata(adone.netron2.meta.CONTEXT_ANNOTATION, target));
     }
     return isContex;
 });
@@ -153,7 +156,8 @@ export class FastUniqueId {
     }
 }
 
-adone.lazify({
+const __ = adone.lazify({
+    contextify: () => __.meta.contextify,
     UniqueId: () => {
         const { math: { Long } } = adone;
         const ONE_LONG = new Long(1, 0, true);
@@ -181,13 +185,7 @@ adone.lazify({
 
         return UniqueId;
     },
-    Reflection: ["./reflection", (mod) => mod.Reflection],
-    DContext: ["./reflection", (mod) => mod.DContext], // decorator
-    DPublic: ["./reflection", (mod) => mod.DPublic], // decorator
-    DMethod: ["./reflection", (mod) => mod.DMethod], // decorator
-    DProperty: ["./reflection", (mod) => mod.DProperty], // decorator
-    CONTEXT_ANNOTATION: ["./reflection", (mod) => mod.CONTEXT_ANNOTATION],
-    PUBLIC_ANNOTATION: ["./reflection", (mod) => mod.PUBLIC_ANNOTATION],
+    meta: "./meta",
     Stub: "./stub",
     RemoteStub: "./remote_stub",
     Netron: "./netron",

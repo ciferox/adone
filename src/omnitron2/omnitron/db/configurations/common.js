@@ -1,8 +1,8 @@
-import Valuable from "./valuable";
-
 const {
     is,
-    netron2: { DContext, DPublic }
+    model,
+    netron2: { meta: { Context, Public } },
+    vault
 } = adone;
 
 const NETRON_SCHEMA = {
@@ -51,20 +51,11 @@ const NETRON_SCHEMA = {
     }
 };
 
-const SERVICE_SCHEMA = {
-    type: "object",
-    additionalProperties: false,
-    properties: {
-        startTimeout: {
-            type: "number",
-            minimum: 1000
-        },
-        stopTimeout: {
-            type: "number",
-            minimum: 1000
-        }
-    }
-};
+
+const serviceSchema = model.object({
+    startTimeout: model.number().min(1000),
+    stopTimeout: model.number().min(1000)
+});
 
 const GATE_SCHEMA = {
     type: "object",
@@ -134,11 +125,13 @@ const castPath = (path) => {
 };
 
 
-@DContext({
+@Context({
+    public: true,
+    private: ["initialize", "uninitialize"],
     description: "Omnitron configuration"
 })
-export default class Configuration extends Valuable {
-    @DPublic()
+export default class Configuration extends vault.Valuable {
+    @Public()
     async getAll() {
         const json = await super.toJSON({
             tags: "none"
@@ -153,7 +146,7 @@ export default class Configuration extends Valuable {
         return result;
     }
 
-    @DPublic()
+    @Public()
     async set(key, val) {
         const path = castPath(key);
         key = path.shift();
@@ -172,9 +165,7 @@ export default class Configuration extends Valuable {
                     val = await this._setVal(key, path, val);
                     adone.log(val);
                 }
-                if (this.validateService && !this.validateService(val)) {
-                    throw new adone.error.AggregateException(this.validateService.errors);
-                }
+                val = await serviceSchema.validate(val);
                 break;
             }
             case "networks": {
@@ -186,7 +177,7 @@ export default class Configuration extends Valuable {
                     adone.lodash.set(networks, path, val);
                 }
                 for (const gate of networks) {
-                    if (this.validateService && !this.validateGate(gate)) {
+                    if (this.validateGate && !this.validateGate(gate)) {
                         throw new adone.error.AggregateException(this.validateGate.errors);
                     }
                 }
@@ -201,7 +192,7 @@ export default class Configuration extends Valuable {
         return super.set(key, val);
     }
 
-    @DPublic()
+    @Public()
     async get(key) {
         const path = castPath(key);
 
@@ -221,7 +212,7 @@ export default class Configuration extends Valuable {
         return result;
     }
 
-    @DPublic()
+    @Public()
     async delete(key) {
         const path = castPath(key);
         key = path.shift();
@@ -239,7 +230,7 @@ export default class Configuration extends Valuable {
         if (path.length === 0) {
             subObject = result;
         } else {
-            subObject = adone.lodash.get(result, path);    
+            subObject = adone.lodash.get(result, path);
         }
 
         if (is.array(subObject)) {
@@ -250,91 +241,20 @@ export default class Configuration extends Valuable {
         return super.set(key, result);
     }
 
-    @DPublic()
-    hasGate(name) {
-        return this.networks.findIndex((g) => g.name === name) >= 0;
-    }
-
-    @DPublic()
-    getGate(name) {
-        const index = this.networks.findIndex((g) => g.name === name);
-        if (index < 0) {
-            throw new adone.error.NotExists(`Gate with name '${name}' is not exist`);
+    async initialize() {
+        if (!this.has("hosts")) {
+            await this.set("hosts", []);
         }
 
-        return this.networks[index];
-    }
-
-    @DPublic()
-    getNetworks() {
-        return this.networks;
-    }
-
-    @DPublic()
-    addGate(gate) {
-        if (!this.validateGate(gate)) {
-            throw new adone.error.AggregateException(this.validateGate.errors);
-        }
-
-        if (this.hasGate(gate.name)) {
-            throw new adone.error.Exists(`Gate with name '${gate.name}' is already exist`);
-        }
-
-        this.networks.push(gate);
-
-        return super.set("networks", this.networks);
-    }
-
-    @DPublic()
-    deleteGate(name) {
-        const index = this.networks.findIndex((g) => g.name === name);
-        if (index < 0) {
-            throw new adone.error.NotExists(`Gate with name '${name}' is not exist`);
-        }
-
-        this.networks.splice(index, 1);
-        return this.set("networks", this.networks);
-    }
-
-    @DPublic()
-    configureGate(name, options) {
-        const gate = this.getGate(name);
-
-        if (is.undefined(options)) {
-            return gate;
-        }
-
-        options.name = name;
-
-        if (!this.validateGate(gate)) {
-            throw new adone.error.AggregateException(this.validateGate.errors);
-        }
-
-        Object.assign(gate, options);
-        return this.set("networks", this.networks);
-    }
-
-    static async load(valuable) {
-        const config = new Configuration(valuable);
-
-        // Defaults
-        if (!config.has("networks")) {
-            await config.set("networks", []);
-        }
-
-        if (!config.has("hosts")) {
-            await config.set("hosts", []);
-        }
-
-        if (!config.has("service")) {
-            await config.set("service", {
+        if (!this.has("service")) {
+            await this.set("service", {
                 startTimeout: 10000,
                 stopTimeout: 10000
             });
         }
 
-        if (!config.has("netron")) {
-            await config.set("netron", {
+        if (!this.has("netron")) {
+            await this.set("netron", {
                 responseTimeout: 30000,
                 isSuper: true,
                 connect: {
@@ -352,14 +272,16 @@ export default class Configuration extends Valuable {
             coerceTypes: true,
             useDefaults: true
         });
-        config.validateGate = validator.compile(GATE_SCHEMA);
-        config.validateNetron = validator.compile(NETRON_SCHEMA);
-        config.validateService = validator.compile(SERVICE_SCHEMA);
+        this.validateGate = validator.compile(GATE_SCHEMA);
+        this.validateNetron = validator.compile(NETRON_SCHEMA);
 
         // Cache some values
-        config.networks = await config.get("networks");
-        config.hosts = await config.get("hosts");
+        this.hosts = await this.get("hosts");
 
-        return config;
+        return this;
+    }
+
+    uninitialize() {
+
     }
 }    

@@ -56,7 +56,7 @@ describe("Vault", () => {
         assert.lengthOf(vInstance.vids, 0);
         assert.equal(vInstance.nextValuableId, 1);
         let valuable = await vInstance.create("v1");
-        assert.equal(valuable.id, 1);
+        assert.equal(valuable.internalId(), 1);
         assert.equal(valuable.name(), "v1");
         assert.lengthOf(valuable.tags(), 0);
         await vInstance.close();
@@ -67,7 +67,7 @@ describe("Vault", () => {
         assert.equal(vInstance.nextValuableId, 2);
         assert.true(vInstance.has("v1"));
         valuable = await vInstance.get("v1");
-        assert.equal(valuable.id, 1);
+        assert.equal(valuable.internalId(), 1);
         assert.equal(valuable.name(), "v1");
         assert.lengthOf(valuable.tags(), 0);
     });
@@ -97,8 +97,8 @@ describe("Vault", () => {
         assert.equal(vInstance.nextValuableId, 1);
         const tags = ["tag1", "tag3"];
         const normTags = __.normalizeTags(tags);
-        let valuable = await vInstance.create("v1", tags);
-        assert.equal(valuable.id, 1);
+        let valuable = await vInstance.create("v1", { tags });
+        assert.equal(valuable.internalId(), 1);
         assert.equal(valuable.name(), "v1");
         assert.sameDeepMembers(valuable.tags(), normTags);
         await vInstance.close();
@@ -109,7 +109,7 @@ describe("Vault", () => {
         assert.equal(vInstance.nextValuableId, 2);
         assert.true(vInstance.has("v1"));
         valuable = await vInstance.get("v1");
-        assert.equal(valuable.id, 1);
+        assert.equal(valuable.internalId(), 1);
         assert.equal(valuable.name(), "v1");
         assert.sameDeepMembers(valuable.tags(), normTags);
     });
@@ -121,13 +121,13 @@ describe("Vault", () => {
         const normTags1 = __.normalizeTags(tags1);
         const tags2 = ["tag2", "tag3"];
         const normTags2 = __.normalizeTags(tags2);
-        let valuable1 = await vInstance.create("v1", tags1);
-        assert.equal(valuable1.id, 1);
+        let valuable1 = await vInstance.create("v1", { tags: tags1 });
+        assert.equal(valuable1.internalId(), 1);
         assert.equal(valuable1.name(), "v1");
         assert.sameDeepMembers(valuable1.tags(), normTags1);
 
-        let valuable2 = await vInstance.create("v2", tags2);
-        assert.equal(valuable2.id, 2);
+        let valuable2 = await vInstance.create("v2", { tags: tags2 });
+        assert.equal(valuable2.internalId(), 2);
         assert.equal(valuable2.name(), "v2");
         assert.sameDeepMembers(valuable2.tags(), normTags2);
         assert.lengthOf(vInstance.tids, 3);
@@ -139,11 +139,11 @@ describe("Vault", () => {
         assert.true(vInstance.has("v1"));
         assert.true(vInstance.has("v2"));
         valuable1 = await vInstance.get("v1");
-        assert.equal(valuable1.id, 1);
+        assert.equal(valuable1.internalId(), 1);
         assert.equal(valuable1.name(), "v1");
         assert.sameDeepMembers(valuable1.tags(), normTags1);
         valuable2 = await vInstance.get("v2");
-        assert.equal(valuable2.id, 2);
+        assert.equal(valuable2.internalId(), 2);
         assert.equal(valuable2.name(), "v2");
         assert.sameDeepMembers(valuable2.tags(), normTags2);
     });
@@ -189,7 +189,7 @@ describe("Vault", () => {
     it("valuable add/delete simple tags", async () => {
         await openVault();
         const tags = ["tag1", "tag3"];
-        let val = await vInstance.create("val", tags);
+        let val = await vInstance.create("val", { tags });
         await val.set("num", 17);
         const allNormTags = __.normalizeTags(["tag1", "tag2", "tag3", "tag4"]);
         assert.equal(await val.get("num"), 17);
@@ -226,7 +226,7 @@ describe("Vault", () => {
         };
         const allNormTags = __.normalizeTags([tag1, tag2, tag3, tag4]);
         const tags = [tag1, tag3];
-        let val = await vInstance.create("val", tags);
+        let val = await vInstance.create("val", { tags });
         await val.set("num", 17);
         assert.equal(await val.get("num"), 17);
         assert.number(await val.addTag(tag2));
@@ -259,7 +259,7 @@ describe("Vault", () => {
             name: "tag3"
         };
         const tags = [tag1, tag2, tag3];
-        let val = await vInstance.create("val", tags);
+        let val = await vInstance.create("val", { tags });
         assert.sameDeepMembers(await val.tags(), tags);
         assert.sameDeepMembers(await vInstance.tags(), tags);
         assert.true(await vInstance.deleteTag("tag2"));
@@ -427,6 +427,48 @@ describe("Vault", () => {
         for (const [name, v] of Object.entries(entries)) {
             assert.equal(await v.get(`k${name}`), `v${name}`); // eslint-disable-line
         }
+    });
+
+    it("add nonexisting key to valuable", async () => {
+        await openVault();
+        const val = await vInstance.create("val");
+
+        assert.false(val.has("key"));
+        await val.add("key", {
+            a: 1,
+            b: 2
+        });
+
+        assert.true(val.has("key"));
+    });
+
+    it("add existing key to valuable", async () => {
+        await openVault();
+        const val = await vInstance.create("val");
+
+        assert.false(val.has("key"));
+        await val.set("key", "adone");
+        await assert.throws(async () => {
+            await val.add("key", {
+                a: 1,
+                b: 2
+            });
+        }, adone.error.Exists);
+    });
+
+    it("create()/get() with custom Valuable class", async () => {
+        class MyValuable extends vault.Valuable {
+            getExtra() {
+                return "done";
+            }
+        }
+        await openVault();
+        const val = await vInstance.create("val1", {
+            Valuable: MyValuable
+        });
+
+        assert.true(is.vaultValuable(val));
+        assert.strictEqual(await val.getExtra(), "done");
     });
 
     describe("Valuable#toJSON()", () => {
@@ -784,6 +826,8 @@ describe("Vault", () => {
             assert.equal(val.name(), slicedVal.name());
             assert.equal(val.internalId(), slicedVal.internalId());
             assert.equal(val.getNotes(), slicedVal.getNotes());
+            assert.strictEqual(val.getVault(), vInstance);
+            assert.strictEqual(slicedVal.getVault(), val.getVault());
         });
 
         it("enumerate sliced keys", async () => {

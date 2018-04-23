@@ -6,6 +6,8 @@ const {
 export default async (ctx) => {
     let realmPath;
 
+    ctx.timeout(70000);
+    
     ctx.before(async () => {
         const runtimeRealmManager = await realm.getManager();
 
@@ -29,6 +31,6 @@ export default async (ctx) => {
     });
 
     ctx.after(async () => {
-        await fs.rm(realmPath);
+        // await fs.rm(realmPath);
     });
 };

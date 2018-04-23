@@ -5,32 +5,40 @@ const {
 
 const NAME = "Netron subsystem";
 
+@application.DSubsystem({
+    dependencies: [
+        "database"
+    ]
+})
 export default class extends application.Subsystem {
     async configure() {
         runtime.netron2.options.proxyContexts = true;
 
         runtime.netron2.on("peer:connect", (peer) => {
-            adone.logInfo(`Peer ${peer.id}) connected`);
+            adone.logInfo(`Peer '${peer.id}' connected`);
         }).on("peer:disconnect", (peer) => {
             adone.logInfo(`Peer '${peer.id}' disconnected`);
         });
-
-        // redefine 'inhost' netcore config
-        this.root.config.raw.netCores.inhost = {
-            addrs: adone.omnitron2.DEFAULT_ADDRESS            
-        };
-
-        for (const [netId, netCoreConfig] of Object.entries(this.root.config.raw.netCores)) {
-            runtime.netron2.createNetCore(netId, netCoreConfig);
-            adone.logInfo(`Netcore '${netId}' created`);
-        }
-
+        
         adone.logInfo(`${NAME} configured`);
     }
 
     async initialize() {
         await runtime.netron2.attachContext(this.root, "omnitron");
         adone.logInfo("Omnitron context attached");
+
+        this.networks = await this.root.db.getConfiguration("networks");
+        const networks = await this.networks.entries();
+        Object.assign(networks, {
+            inhost: {
+                addrs: adone.omnitron2.DEFAULT_ADDRESS            
+            }
+        });
+
+        for (const [netId, netConfig] of Object.entries(networks)) {
+            runtime.netron2.createNetCore(netId, netConfig);
+            adone.logInfo(`Netcore '${netId}' created`);
+        }
 
         await runtime.netron2.start();
 

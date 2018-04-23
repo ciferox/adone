@@ -93,8 +93,8 @@ export default class ServiceMaintainer extends AsyncEmitter {
     }
 
     @Public()
-    getServiceConfiguration(name) {
-        return this.manager.parent.db.getServiceConfiguration(name);
+    async getServiceConfiguration(name) {
+        return this.manager.getServiceConfiguration(name);
     }
 
     onServiceStopped(name) {
@@ -112,7 +112,7 @@ export default class ServiceMaintainer extends AsyncEmitter {
     }
 
     async startService(name) {
-        const serviceData = await this.manager.services.get(name);
+        const serviceData = await this.manager.servicesRegistry.get(name);
 
         if (serviceData.group !== this.group) {
             throw new error.NotAllowed(`Service '${name}' is not in group '${this.group}'`);
@@ -185,7 +185,7 @@ export default class ServiceMaintainer extends AsyncEmitter {
     }
 
     async stopService(name) {
-        const serviceData = await this.manager.services.get(name);
+        const serviceData = await this.manager.servicesRegistry.get(name);
         if (serviceData.group !== this.group) {
             throw new error.NotAllowed(`Service '${name}' is not in group '${this.group}'`);
         }
@@ -230,9 +230,9 @@ export default class ServiceMaintainer extends AsyncEmitter {
     }
 
     async setServiceStatus(name, status) {
-        const serviceData = await this.manager.services.get(name);
+        const serviceData = await this.manager.servicesRegistry.get(name);
         serviceData.status = status;
-        await this.manager.services.set(name, serviceData);
+        await this.manager.servicesRegistry.set(name, serviceData);
     }
 
     spawn() {

@@ -17,7 +17,7 @@ export default class extends application.Subsystem {
     }
 
     async uninitialize() {
-        await this.root.db.close();
+        await omnitron2.DB.close();
 
         adone.logInfo(`${NAME} uninitialized`);
     }

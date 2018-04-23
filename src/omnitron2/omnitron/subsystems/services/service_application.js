@@ -3,13 +3,13 @@ import "adone";
 const {
     is,
     application,
-    netron2: { DContext, DPublic },
+    netron2: { meta: { Context, Public } },
     omnitron2
 } = adone;
 
-@DContext()
+@Context()
 class ServiceApplication extends application.Application {
-    async configure() {        
+    async configure() {
         this.group = process.env.OMNITRON2_SERVICE_GROUP;
 
         this.exitOnSignal("SIGTERM");
@@ -19,8 +19,10 @@ class ServiceApplication extends application.Application {
 
         // Waiting for omnitron context is available.
         await this.peer.waitForContext("omnitron");
+
         this.iOmnitron = this.peer.queryInterface("omnitron");
         this.iMaintainer = await this.iOmnitron.getMaintainer(this.group);
+
         await this.iMaintainer.link(this);
 
         await this.iMaintainer.notifyStatus({
@@ -70,7 +72,9 @@ class ServiceApplication extends application.Application {
     }
 
     async error(error) {
-        if (!is.null(this.peer)) {
+        adone.logError(error);
+
+        if (!is.nil(this.iMaintainer)) {
             await this.iMaintainer.notifyStatus({
                 pid: process.pid,
                 status: adone.application.STATE.FAILED,
@@ -80,7 +84,7 @@ class ServiceApplication extends application.Application {
         }
     }
 
-    @DPublic()
+    @Public()
     async loadService({ name, description, path } = {}) {
         // It's important that application should be fully initialized before any service can be loaded.
         if (this.state <= application.STATE.INITIALIZED) {
@@ -140,7 +144,7 @@ class ServiceApplication extends application.Application {
         });
     }
 
-    @DPublic()
+    @Public()
     async unloadService(name) {
         if (!this.hasSubsystem(name)) {
             throw new adone.error.NotExists(`Service ${name} not loaded`);

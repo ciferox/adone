@@ -1,15 +1,15 @@
 const {
     is,
-    netron2: { DContext, DPublic }
+    netron2: { meta: { Context, Public } }
 } = adone;
 
-@DContext()
+@Context()
 class Test3 {
     constructor(service) {
         this.service = service;
     }
 
-    @DPublic()
+    @Public()
     check(name) {
         if (name !== this.service.name) {
             throw new adone.error.NotValid(`Invalid service name: ${this.service.name}`);
@@ -19,7 +19,7 @@ class Test3 {
         }
     }
 
-    @DPublic()
+    @Public()
     async saveConfig() {
         const config = await this.service.getConfiguration();
         await config.set("key1", "adone");

@@ -3,7 +3,7 @@ import { A } from "./contexts";
 const {
     is,
     net: { p2p: { PeerInfo } },
-    netron2: { Netron, RemotePeer, Reflection, Stub, Definitions, Reference }
+    netron2: { Netron, RemotePeer, meta: { Reflection }, Stub, Definitions, Reference }
 } = adone;
 
 describe("common stuff", () => {

@@ -17,8 +17,13 @@ adone.lazifyPrivate({
 }, exports, require);
 
 adone.definePrivate({
-    valuable: (id) => `v:${id}`,
-    tag: (id) => `t:${id}`,
+    VALUABLE_VAULT: Symbol("vault"),
+    VALUABLE_ID: Symbol("id"),
+    VALUABLE_META: Symbol("meta"),
+    VALUABLE_TAGS: Symbol("tags"),
+    VALUABLE_KEYS: Symbol("keys"),
+    valuableId: (id) => `v:${id}`,
+    tagId: (id) => `t:${id}`,
     vkey: (vid, kid) => `v:${vid}:${kid}`,
     vvalue: (vid, kid) => `v:${vid}:${kid}:`,
     hasTag(tags, tag) {

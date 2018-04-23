@@ -2,7 +2,7 @@ const {
     is,
     error,
     net: { p2p: { PeerInfo } },
-    netron2: { Reflection, Stub, FastUniqueId, OwnPeer, ACTION },
+    netron2: { meta: { Reflection }, Stub, FastUniqueId, OwnPeer, ACTION },
     tag
 } = adone;
 
@@ -87,7 +87,7 @@ export default class Netron extends adone.task.Manager {
         if (is.string(config.addrs)) {
             config.addrs = [config.addrs];
         }
-        
+
         if (is.array(config.addrs)) {
             for (const ma of config.addrs) {
                 peerInfo.multiaddrs.add(ma);
@@ -535,7 +535,7 @@ export default class Netron extends adone.task.Manager {
                     const defId = data[0];
                     const name = data[1];
                     const stub = this._stubs.get(defId);
-                    
+
                     try {
                         if (is.undefined(stub)) {
                             return peer._sendErrorResponse(packet, new error.NotExists(`Context with definition id '${defId}' not exists`));

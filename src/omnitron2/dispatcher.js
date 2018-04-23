@@ -9,6 +9,12 @@ const {
     omnitron2
 } = adone;
 
+/**
+ * Implementation of local omnitron dispatcher.
+ * 
+ * Use this class only for 'inhost'-omnitron interaction.
+ * 
+ */
 export default class Dispatcher extends Subsystem {
     constructor(netron = adone.runtime.netron2) {
         super();
@@ -18,6 +24,7 @@ export default class Dispatcher extends Subsystem {
             netron.createNetCore("default");
         }
         this.peer = null;
+        this.db = null;
         this.descriptors = {
             stodut: null,
             stderr: null
@@ -35,10 +42,9 @@ export default class Dispatcher extends Subsystem {
      * This method is only useful in case when dispatcher used as subsystem.
      */
     async uninitialize() {
-        if (this.db) {
-            await this.db.close();
+        if (this.db instanceof omnitron2.DB) {
+            await omnitron2.DB.close();
         }
-
         return this.disconnectPeer();
     }
 
@@ -127,8 +133,11 @@ export default class Dispatcher extends Subsystem {
             }
             return new Promise(async (resolve, reject) => {
                 const omniConfig = adone.runtime.config.omnitron;
-                // Force create logs directory
-                await adone.fs.mkdirp(std.path.dirname(omniConfig.LOGFILE_PATH));
+                // Force create common directory
+                await fs.mkdirp([
+                    adone.runtime.config.omnitron.LOGS_PATH,
+                    adone.runtime.config.omnitron.VAR_PATH
+                ]);
                 this.descriptors.stdout = await fs.open(omniConfig.LOGFILE_PATH, "a");
                 this.descriptors.stderr = await fs.open(omniConfig.ERRORLOGFILE_PATH, "a");
                 let scriptPath;
@@ -266,7 +275,8 @@ export default class Dispatcher extends Subsystem {
         try {
             const systemDb = new omnitron2.DB();
             await systemDb.open();
-            await systemDb.registerService(serviceName);
+            const registry = await systemDb.getConfiguration("registry");
+            await registry.registerService(serviceName);
             await systemDb.close();
         } catch (err) {
             await this.connectLocal();
@@ -278,7 +288,8 @@ export default class Dispatcher extends Subsystem {
         try {
             const systemDb = new omnitron2.DB();
             await systemDb.open();
-            await systemDb.unregisterService(serviceName);
+            const registry = await systemDb.getConfiguration("registry");
+            await registry.unregisterService(serviceName);
             await systemDb.close();
         } catch (err) {
             await this.connectLocal();
@@ -288,17 +299,47 @@ export default class Dispatcher extends Subsystem {
 
     // Omnitron interface
 
-    async getConfiguration() {
-        let config;
-        if (await this.isOmnitronActive()) {
-            await this.connectLocal();
-            config = await this.queryInterface("omnitron").getConfiguration();
-        } else {
-            this.db = await adone.omnitron2.DB.open();
-            config = await this.db.getConfiguration();
+    async getDB() {
+        let db = this.db;
+        if (is.null(db)) {
+            if (await this.isOmnitronActive()) {
+                await this.connectLocal();
+                db = await this.queryInterface("omnitron").getDB();
+            } else {
+                db = await adone.omnitron2.DB.open();
+                db.backend.on("closed", () => {
+                    this.db = null;
+                });
+            }
+            this.db = db;
         }
-        return config;
+
+        return db;
     }
+
+    // Networks management
+
+    addGate(gate) {
+        return this.queryInterface("omnitron").addGate(gate);
+    }
+
+    deleteGate(name) {
+        return this.queryInterface("omnitron").deleteGate(name);
+    }
+
+    upGate(name) {
+        return this.queryInterface("omnitron").upGate(name);
+    }
+
+    downGate(name) {
+        return this.queryInterface("omnitron").downGate(name);
+    }
+
+    configureGate(name, options) {
+        return this.queryInterface("omnitron").configureGate(name, options);
+    }
+
+    // Common api
 
     kill() {
         return this.queryInterface("omnitron").kill();
@@ -374,29 +415,5 @@ export default class Dispatcher extends Subsystem {
 
     gc() {
         return this.queryInterface("omnitron").gc();
-    }
-
-    addGate(gate) {
-        return this.queryInterface("omnitron").addGate(gate);
-    }
-
-    deleteGate(name) {
-        return this.queryInterface("omnitron").deleteGate(name);
-    }
-
-    getGates(options) {
-        return this.queryInterface("omnitron").getGates(options);
-    }
-
-    upGate(name) {
-        return this.queryInterface("omnitron").upGate(name);
-    }
-
-    downGate(name) {
-        return this.queryInterface("omnitron").downGate(name);
-    }
-
-    configureGate(name, options) {
-        return this.queryInterface("omnitron").configureGate(name, options);
     }
 }

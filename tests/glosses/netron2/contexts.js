@@ -1,28 +1,28 @@
 const {
     is,
-    netron2: { DContext, DPublic }
+    netron2: { meta: { Context, Public } }
 } = adone;
 
-@DContext()
+@Context()
 export class Simple {
-    @DPublic()
+    @Public()
     simple() {
         return 888;
     }
 }
 
-@DContext()
+@Context()
 export class A {
-    @DPublic()
+    @Public()
     methodA() {
         return this.propA;
     }
 
-    @DPublic()
+    @Public()
     propA = "aaa";
 }
 
-@DContext({
+@Context({
     description: "class b extends a"
 })
 export class B extends A {
@@ -30,22 +30,22 @@ export class B extends A {
         super();
         this.val = "bbb";
     }
-    @DPublic()
+    @Public()
     methodB() {
         return this.val;
     }
 
-    @DPublic()
+    @Public()
     echoB(...args) {
         return args;
     }
 
-    @DPublic()
+    @Public()
     syncErrorB() {
         throw new adone.error.InvalidArgument("Invalid argument");
     }
 
-    @DPublic()
+    @Public()
     asyncErrorB() {
         return new Promise(async (resolve, reject) => {
             await adone.promise.delay(1);
@@ -53,7 +53,7 @@ export class B extends A {
         });
     }
 
-    @DPublic()
+    @Public()
     asyncB() {
         return new Promise(async (resolve) => {
             await adone.promise.delay(1);
@@ -61,24 +61,24 @@ export class B extends A {
         });
     }
 
-    @DPublic()
+    @Public()
     propB = 2;
 
-    @DPublic({
+    @Public({
         readonly: true
     })
     rpropB = 777;
 }
 
 
-@DContext()
+@Context()
 export class C extends B {
-    @DPublic()
+    @Public()
     methodC() {
         return "ccc";
     }
 
-    @DPublic()
+    @Public()
     propC = 3;
 }
 
@@ -205,23 +205,23 @@ export const commonTypes = [
     }
 ];
 
-@DContext()
+@Context()
 export class CommonTypes { }
 
 for (const ct of commonTypes) {
     CommonTypes.prototype[`_${ct.name}`] = ct.value;
-    adone.meta.reflect.defineMetadata(adone.netron2.PUBLIC_ANNOTATION, {}, CommonTypes.prototype, `_${ct.name}`);
+    adone.meta.reflect.defineMetadata(adone.netron2.meta.PUBLIC_ANNOTATION, {}, CommonTypes.prototype, `_${ct.name}`);
 
     CommonTypes.prototype[ct.name] = function () {
         return this[`_${ct.name}`];
     };
-    adone.meta.reflect.defineMetadata(adone.netron2.PUBLIC_ANNOTATION, {}, CommonTypes.prototype, ct.name);
+    adone.meta.reflect.defineMetadata(adone.netron2.meta.PUBLIC_ANNOTATION, {}, CommonTypes.prototype, ct.name);
 
     CommonTypes.prototype[`set_${ct.name}`] = function (val) {
         this[`_${ct.name}`] = val;
         return val;
     };
-    adone.meta.reflect.defineMetadata(adone.netron2.PUBLIC_ANNOTATION, {}, CommonTypes.prototype, `set_${ct.name}`);
+    adone.meta.reflect.defineMetadata(adone.netron2.meta.PUBLIC_ANNOTATION, {}, CommonTypes.prototype, `set_${ct.name}`);
 }
 
 export const DocumentTypes = {
@@ -235,16 +235,16 @@ export const DocumentTypes = {
     date: 8
 };
 
-@DContext({
+@Context({
     description: "Object document"
 })
 export class Document {
-    @DPublic({
+    @Public({
         readonly: true
     })
     data = undefined;
 
-    @DPublic({
+    @Public({
         readonly: true
     })
     type = undefined;
@@ -254,7 +254,7 @@ export class Document {
         this.type = type;
     }
 
-    @DPublic({
+    @Public({
         description: "Returns string representation of document",
         type: String,
         args: [Object]
@@ -264,11 +264,11 @@ export class Document {
     }
 }
 
-@DContext({
+@Context({
     description: "Simple object storage"
 })
 export class ObjectStorage {
-    @DPublic({
+    @Public({
         decsription: "Name of the storage"
     })
     name = undefined;
@@ -280,7 +280,7 @@ export class ObjectStorage {
         this._totalSize = size;
     }
 
-    @DPublic({
+    @Public({
         description: "Returns total size of storage",
         type: Number
     })
@@ -288,7 +288,7 @@ export class ObjectStorage {
         return this._totalSize;
     }
 
-    @DPublic({
+    @Public({
         description: "Sets new size of storage",
         type: Number,
         args: [Number]
@@ -297,7 +297,7 @@ export class ObjectStorage {
         this._totalSize = size;
     }
 
-    @DPublic({
+    @Public({
         description: "Returns supported document types",
         type: Object
     })
@@ -305,14 +305,14 @@ export class ObjectStorage {
         return DocumentTypes;
     }
 
-    @DPublic({
+    @Public({
         type: Number
     })
     getSize() {
         return this._docs.size;
     }
 
-    @DPublic({
+    @Public({
         description: "Adds document. Returns 'true' if document added to storage, otherwise 'false'",
         type: Boolean,
         args: [String, Document]
@@ -326,7 +326,7 @@ export class ObjectStorage {
         return true;
     }
 
-    @DPublic({
+    @Public({
         description: "Returns document by name",
         type: Document,
         args: [String]
@@ -335,7 +335,7 @@ export class ObjectStorage {
         return this._docs.get(name) || null;
     }
 
-    @DPublic()
+    @Public()
     createDocument(data, type) {
         return new Document(data, type);
     }
@@ -348,13 +348,13 @@ export const BodyStatuses = {
     Alive: 1
 };
 
-@DContext()
+@Context()
 export class Soul {
     constructor(name) {
         this.name = name;
     }
 
-    @DPublic()
+    @Public()
     eatVitality(percentage) {
         this.vitality -= percentage;
         if (this.vitality <= 0) {
@@ -362,21 +362,21 @@ export class Soul {
         }
     }
 
-    @DPublic()
+    @Public()
     doEvil(otherSoul, percentage) {
         return otherSoul.eatVitality(percentage);
     }
 
-    @DPublic()
+    @Public()
     vitality = 100;
 
-    @DPublic()
+    @Public()
     bodyStatus = BodyStatuses.Alive;
 }
 
-@DContext()
+@Context()
 export class Devil {
-    @DPublic()
+    @Public()
     sellSoul(manName, iSoul) {
         if (this.souls.has(manName)) {
             return false;
@@ -385,7 +385,7 @@ export class Devil {
         return true;
     }
 
-    @DPublic()
+    @Public()
     possess(manName) {
         const iSoul = this.souls.get(manName);
         if (!is.undefined(iSoul)) {
@@ -393,50 +393,50 @@ export class Devil {
         }
     }
 
-    @DPublic()
+    @Public()
     takeVitality(percentage) {
         if (!is.undefined(this.possessedSoul)) {
             return this.possessedSoul.eatVitality(percentage);
         }
     }
 
-    @DPublic()
+    @Public()
     doEvil(manName, percentage) {
         if (!is.undefined(this.possessedSoul)) {
             return this.possessedSoul.doEvil(this.souls.get(manName), percentage);
         }
     }
 
-    @DPublic({
+    @Public({
         type: Map
     })
     souls = new Map();
 
-    @DPublic()
+    @Public()
     possessedSoul = null;
 }
 
-@DContext()
+@Context()
 export class Weak {
-    @DPublic()
+    @Public()
     doSomething() {
         return 888;
     }
 }
 
-@DContext()
+@Context()
 export class Strong {
     constructor(netron) {
         this.netron = netron;
         this.weak = new Weak();
     }
 
-    @DPublic()
+    @Public()
     getWeak() {
         return this.weak;
     }
 
-    @DPublic()
+    @Public()
     releaseWeak() {
         this.netron.releaseContext(this.weak);
         this.weak = null;
@@ -445,13 +445,13 @@ export class Strong {
 
 let depthCounter;
 
-@DContext()
+@Context()
 export class CounterKeeper {
     constructor(keeper = null) {
         this.keeper = keeper;
     }
 
-    @DPublic()
+    @Public()
     async getCounter() {
         if (this.keeper) {
             depthCounter++;
@@ -461,7 +461,7 @@ export class CounterKeeper {
 
     }
 
-    @DPublic()
+    @Public()
     async getNextKeeper(keeper) {
         return new CounterKeeper(keeper);
     }
@@ -475,21 +475,21 @@ export class CounterKeeper {
     }
 }
 
-@DContext()
+@Context()
 export class NumField {
     constructor(val) {
         this._val = val;
     }
 
-    @DPublic()
+    @Public()
     getValue() {
         return this._val;
     }
 }
 
-@DContext()
+@Context()
 export class NumSet {
-    @DPublic()
+    @Public()
     getFields(start, end) {
         const defs = new adone.netron2.Definitions();
         for (let i = start; i < end; i++) {
@@ -498,52 +498,52 @@ export class NumSet {
         return defs;
     }
 
-    @DPublic()
+    @Public()
     setFields(fields) {
         this._fields = fields;
     }
 }
 
-@DContext()
+@Context()
 export class StdErrs {
-    @DPublic()
+    @Public()
     throwError() {
         throw new Error("description");
     }
 
-    @DPublic()
+    @Public()
     throwEvalError() {
         throw new EvalError("description");
     }
 
-    @DPublic()
+    @Public()
     throwRangeError() {
         throw new RangeError("description");
     }
 
-    @DPublic()
+    @Public()
     throwReferenceError() {
         throw new ReferenceError("description");
     }
 
-    @DPublic()
+    @Public()
     throwSyntaxError() {
         throw new SyntaxError("description");
     }
 
-    @DPublic()
+    @Public()
     throwTypeError() {
         throw new TypeError("description");
     }
 
-    @DPublic()
+    @Public()
     throwURIError() {
         throw new URIError("description");
     }
 }
 
 
-@DContext()
+@Context()
 export class AdoneErrs { }
 
 export const adoneErrors = adone.error.adoneExceptions;
@@ -563,7 +563,7 @@ for (const AdoneError of adoneErrors) {
                     throw new AdoneError("description");
                 };
             }
-            adone.meta.reflect.defineMetadata(adone.netron2.PUBLIC_ANNOTATION, {}, AdoneErrs.prototype, fnName);
+            adone.meta.reflect.defineMetadata(adone.netron2.meta.PUBLIC_ANNOTATION, {}, AdoneErrs.prototype, fnName);
         }
     }
 }
@@ -571,32 +571,32 @@ for (const AdoneError of adoneErrors) {
 
 class MyError extends Error { }
 
-@DContext()
+@Context()
 export class NonStdErr {
-    @DPublic()
+    @Public()
     throw() {
         throw new MyError("Hello World!");
     }
 }
 
-process.binding("natives").native_module = "";
-const nm = nodeRequire("native_module");
-export const nodeErrors = adone.util.omit(nm.require("internal/errors"), ["message", "E"]);
+// process.binding("natives").native_module = "";
+// const nm = nodeRequire("native_module");
+// export const nodeErrors = adone.util.omit(nm.require("internal/errors"), ["message", "E"]);
 
-@DContext()
-export class NodeErrs {
-}
+// @Context()
+// export class NodeErrs {
+// }
 
-for (const [name, Exc] of Object.entries(nodeErrors)) {
-    const fnName = `throw${name}`;
-    NodeErrs.prototype[fnName] = function () {
-        if (Exc.name === "AssertionError") {
-            throw new Exc({
-                message: "Hello World!"
-            });
-        }
-        throw new Exc("Hello World!");
-    };
-    adone.meta.reflect.defineMetadata(adone.netron2.PUBLIC_ANNOTATION, {}, NodeErrs.prototype, fnName);
-    
-}
+// for (const [name, Exc] of Object.entries(nodeErrors)) {
+//     const fnName = `throw${name}`;
+//     NodeErrs.prototype[fnName] = function () {
+//         if (Exc.name === "AssertionError") {
+//             throw new Exc({
+//                 message: "Hello World!"
+//             });
+//         }
+//         throw new Exc("Hello World!");
+//     };
+//     adone.meta.reflect.defineMetadata(adone.netron2.meta.PUBLIC_ANNOTATION, {}, NodeErrs.prototype, fnName);
+
+// }

@@ -1,10 +1,10 @@
-@adone.netron2.DContext()
+@adone.netron2.meta.Context()
 class Test2 {
     constructor(subsystem) {
         this.subsystem = subsystem;
     }
 
-    @adone.netron2.DPublic()
+    @adone.netron2.meta.Public()
     getInfo() {
         return {
             name: this.subsystem.name,

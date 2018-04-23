@@ -23,7 +23,7 @@ const subsystemPath = (name) => std.path.resolve(__dirname, "subsystems", name);
         },
         {
             name: "inspect",
-            description: "Inspection and metrics"
+            description: "Information, inspection and metrics"
         },
         {
             name: "services",
@@ -435,7 +435,7 @@ export default class Omnitron extends Subsystem {
 
     @DCliCommand({
         name: "services",
-        group: "services",
+        group: "inspect",
         help: "Show services",
         options: [
             {
@@ -625,8 +625,8 @@ export default class Omnitron extends Subsystem {
     }
 
     @DCliCommand({
-        name: ["subsystems", "ss"],
-        group: "subsystems",
+        name: "subsystems",
+        group: "inspect",
         help: "Show omnitron subsystems"
     })
     async subsystemsCommand() {

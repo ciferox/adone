@@ -2,19 +2,19 @@ const {
     is,
     crypto: { Identity },
     net: { p2p: { PeerInfo } },
-    netron2: { Netron, DContext, DPublic }
+    netron2: { Netron, meta: { Context, Public } }
 } = adone;
 
 describe("functional and complex cases", () => {
-    @DContext()
+    @Context()
     class A {
-        @DPublic()
+        @Public()
         method() { }
     }
 
-    @DContext()
+    @Context()
     class B {
-        @DPublic()
+        @Public()
         method() { }
     }
 

@@ -28,7 +28,6 @@ adone.definePredicates({
 });
 
 const __ = lazify({
-    Configuration: "./configuration",
     Service: "./service",
     Omnitron: "./omnitron",
     DB: "./omnitron/db",

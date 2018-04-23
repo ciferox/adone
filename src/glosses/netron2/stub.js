@@ -1,7 +1,7 @@
 const {
     is,
     error,
-    netron2: { Definition, Definitions, Reflection }
+    netron2: { Definition, Definitions, meta: netronMeta }
 } = adone;
 
 export default class Stub {
@@ -9,7 +9,7 @@ export default class Stub {
         this.netron = netron;
         if (is.netron2Context(obj)) {
             this.instance = obj;
-            this.reflection = Reflection.from(obj);
+            this.reflection = netronMeta.Reflection.from(obj);
         } else {
             this.instance = obj.instance;
             this.reflection = obj;
@@ -35,11 +35,11 @@ export default class Stub {
             for (const [method, meta] of methods) {
                 const args = [];
                 for (const arg of meta.args) {
-                    args.push([Reflection.getNameOfType(arg[0]), arg[1]]);
+                    args.push([netronMeta.getNameOfType(arg[0]), arg[1]]);
                 }
                 $[method] = {
                     method: true,
-                    type: Reflection.getNameOfType(meta.type),
+                    type: netronMeta.getNameOfType(meta.type),
                     args,
                     description: meta.description
                 };
@@ -47,7 +47,7 @@ export default class Stub {
             const properties = r.getProperties();
             for (const [prop, meta] of properties) {
                 $[prop] = {
-                    type: Reflection.getNameOfType(meta.type),
+                    type: netronMeta.getNameOfType(meta.type),
                     readonly: meta.readonly,
                     description: meta.description
                 };
