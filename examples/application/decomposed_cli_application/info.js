@@ -1,14 +1,14 @@
 const {
-    application
+    app
 } = adone;
 
 const {
     DMainCliCommand,
     DCliCommand
-} = application;
+} = app;
 
 
-export default class Info extends application.Subsystem {
+export default class Info extends app.Subsystem {
     @DMainCliCommand()
     main() {
         adone.logInfo(`Node: ${process.version}`);

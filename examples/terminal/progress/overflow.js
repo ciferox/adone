@@ -1,4 +1,4 @@
-adone.application.run({
+adone.app.run({
     async main() {
         const bars = adone.util.range(100).map(() => adone.runtime.term.progress({
             schema: "hello"

@@ -1,5 +1,5 @@
 const {
-    application,
+    app,
     fast,
     fs,
     is,
@@ -11,9 +11,9 @@ const {
 
 const {
     DCliCommand
-} = application;
+} = app;
 
-export default class RealmManager extends application.Subsystem {
+export default class RealmManager extends app.Subsystem {
     @DCliCommand({
         name: "new",
         help: "Create new realm",

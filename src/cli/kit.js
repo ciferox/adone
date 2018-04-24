@@ -1,9 +1,9 @@
 const {
     is,
-    application
+    app
 } = adone;
 
-class CliKit extends application.Subsystem {
+class CliKit extends app.Subsystem {
     constructor() {
         super();
         this._bar = null;

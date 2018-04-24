@@ -72,29 +72,29 @@
                     "dst": "lib",
                     "task": "transpile"
                 },
-                "application": {
+                "app": {
                     "description": "Application framework",
-                    "src": "src/glosses/application/**/*.js",
-                    "dst": "lib/glosses/application",
+                    "src": "src/glosses/app/**/*.js",
+                    "dst": "lib/glosses/app",
                     "task": "transpile",
-                    "namespace": "application",
+                    "namespace": "app",
                     "struct": {
                         "lockfile": {
                             "description": "Inter-process file locking implementation",
-                            "src": "src/glosses/application/lockfile.js",
-                            "dst": "lib/glosses/application",
+                            "src": "src/glosses/app/lockfile.js",
+                            "dst": "lib/glosses/app",
                             "task": "transpile",
                             "namespace": "lockfile"
                         },
                         "report": {
                             "description": "Delivers a human-readable diagnostic summary, written to file",
                             "namespace": "report",
-                            "src": "src/glosses/application/report/**/*.js",
-                            "dst": "lib/glosses/application/report",
+                            "src": "src/glosses/app/report/**/*.js",
+                            "dst": "lib/glosses/app/report",
                             "task": "transpile",
                             "native": {
-                                "src": "src/glosses/application/report/native",
-                                "dst": "lib/glosses/application/report/native"
+                                "src": "src/glosses/app/report/native",
+                                "dst": "lib/glosses/app/report/native"
                             }
                         }
                     }

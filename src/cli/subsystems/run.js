@@ -1,6 +1,6 @@
 const {
     is,
-    application: {
+    app: {
         Subsystem,
         DMainCliCommand
     },

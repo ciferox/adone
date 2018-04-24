@@ -1,4 +1,4 @@
-module.exports = class Sub0 extends adone.application.Subsystem {
+module.exports = class Sub0 extends adone.app.Subsystem {
     configure() {
         adone.log("sub0 configure");
     }

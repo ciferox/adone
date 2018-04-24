@@ -1,4 +1,4 @@
-adone.application.run({
+adone.app.run({
     main() {
         const questions = [
             {

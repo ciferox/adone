@@ -1,12 +1,12 @@
 const {
-    application
+    app
 } = adone;
 
 const {
     DMainCliCommand
-} = application;
+} = app;
 
-class MyApp extends application.CliApplication {
+class MyApp extends app.CliApplication {
     @DMainCliCommand({
         arguments: [{
             name: "a",
@@ -31,4 +31,4 @@ class MyApp extends application.CliApplication {
     main() {}
 }
 
-application.runCli(MyApp);
+app.runCli(MyApp);

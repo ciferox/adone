@@ -1,9 +1,9 @@
 const {
-    application,
+    app,
     std
 } = adone;
 
-class TestApp extends adone.application.Application {
+class TestApp extends adone.app.Application {
     async configure() {
         try {
             this.addSubsystem({
@@ -19,4 +19,4 @@ class TestApp extends adone.application.Application {
     }
 }
 
-application.run(TestApp);
+app.run(TestApp);

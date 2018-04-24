@@ -5,7 +5,7 @@ const {
     tag,
     error,
     meta: { reflect },
-    application: {
+    app: {
         humanizeState,
         STATE,
         SUBSYSTEM_ANNOTATION
@@ -16,8 +16,8 @@ const NAME_SYMBOL = Symbol();
 const ROOT_SYMBOL = Symbol();
 const PARENT_SYMBOL = Symbol();
 const OWNED_SYMBOL = Symbol();
-const STATE_SYMBOL = Symbol.for("application.Subsystem#state");
-const SUBSYSTEMS_SYMBOL = Symbol.for("application.Subsystem#subsystems");
+const STATE_SYMBOL = Symbol.for("app.Subsystem#state");
+const SUBSYSTEMS_SYMBOL = Symbol.for("app.Subsystem#subsystems");
 
 const getSortedList = (subsystem) => {
     const subsystems = subsystem[SUBSYSTEMS_SYMBOL].slice();
@@ -221,7 +221,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
     /**
      * Loads subsystem and performs configuration and initialization phases.
      * 
-     * @param {adone.application.Subsystem|string} subsystem instance of subsystem or path.
+     * @param {adone.app.Subsystem|string} subsystem instance of subsystem or path.
      * @param {object} options 
      */
     async loadSubsystem(subsystem, { name = null, description = "", group, transpile = false } = {}) {
@@ -296,7 +296,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
      * Returns subsystem instance by name.
      *
      * @param {string} name Name of subsystem
-     * @returns {adone.application.Subsystem}
+     * @returns {adone.app.Subsystem}
      */
     getSubsystem(name) {
         const sysInfo = this.getSubsystemInfo(name);
@@ -350,7 +350,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
     /**
      * Adds a new subsystem to the application.
      *
-     * @param {string|adone.application.Subsystem} subsystem Subsystem instance or absolute path.
+     * @param {string|adone.app.Subsystem} subsystem Subsystem instance or absolute path.
      * @param {string} name Name of subsystem.
      * @param {string} description Description of subsystem.
      * @param {string} group Group of subsystem.
@@ -471,7 +471,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
     /**
      * Returns instance of subsystem.
      * 
-     * @param {adone.application.Subsystem|string} subsystem
+     * @param {adone.app.Subsystem|string} subsystem
      * @param {object} options 
      */
     instantiateSubsystem(subsystem, { transpile = false } = {}) {
@@ -491,7 +491,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
         }
 
         if (!is.subsystem(instance)) {
-            throw new error.NotValid("'subsystem' should be path or instance of adone.application.Subsystem");
+            throw new error.NotValid("'subsystem' should be path or instance of adone.app.Subsystem");
         }
 
         return instance;

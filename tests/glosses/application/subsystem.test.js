@@ -1,5 +1,5 @@
 const {
-    application: { Subsystem, DSubsystem },
+    app: { Subsystem, DSubsystem },
     error,
     std
 } = adone;
@@ -35,7 +35,7 @@ describe("application", "Subsystem", () => {
     it("should throw on changing state", () => {
         const ss = create("ss");
         assert.throws(() => {
-            ss.state = adone.application.STATE.RUNNING;
+            ss.state = adone.app.STATE.RUNNING;
         }, error.NotAllowed);
     });
 

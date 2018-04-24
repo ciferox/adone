@@ -1,11 +1,11 @@
 const {
-    application,
+    app,
     omnitron2
 } = adone;
 
 const NAME = "Database subsystem";
 
-export default class extends application.Subsystem {
+export default class extends app.Subsystem {
     async configure() {
         adone.logInfo(`${NAME} configured`);
     }

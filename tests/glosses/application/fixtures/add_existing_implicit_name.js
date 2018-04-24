@@ -1,8 +1,8 @@
 const {
-    application
+    app
 } = adone;
 
-class AppSubsystem extends application.Subsystem {
+class AppSubsystem extends app.Subsystem {
     configure() {
         adone.log("configure");
     }
@@ -16,7 +16,7 @@ class AppSubsystem extends application.Subsystem {
     }
 }
 
-class Hello extends application.Subsystem {
+class Hello extends app.Subsystem {
     configure() {
         adone.log("hello configure");
     }
@@ -30,7 +30,7 @@ class Hello extends application.Subsystem {
     }
 }
 
-class TestApp extends adone.application.Application {
+class TestApp extends adone.app.Application {
     async configure() {
         this.addSubsystem({
             subsystem: new AppSubsystem(),
@@ -46,4 +46,4 @@ class TestApp extends adone.application.Application {
     }
 }
 
-application.run(TestApp);
+app.run(TestApp);

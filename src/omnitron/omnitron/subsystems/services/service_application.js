@@ -2,13 +2,13 @@ import "adone";
 
 const {
     is,
-    application,
+    app,
     netron: { Context, Public },
     runtime
 } = adone;
 
 @Context()
-class ServiceApplication extends application.Application {
+class ServiceApplication extends app.Application {
     async configure() {
         this.group = process.env.OMNITRON_SERVICE_GROUP;
 
@@ -26,14 +26,14 @@ class ServiceApplication extends application.Application {
 
         await this.iMaintainer.notifyStatus({
             pid: process.pid,
-            status: adone.application.STATE.CONFIGURED
+            status: adone.app.STATE.CONFIGURED
         });
     }
 
     async initialize() {
         return this.iMaintainer.notifyStatus({
             pid: process.pid,
-            status: adone.application.STATE.INITIALIZED
+            status: adone.app.STATE.INITIALIZED
         });
     }
 
@@ -48,7 +48,7 @@ class ServiceApplication extends application.Application {
                 // eslint-disable-next-line
                 await this.iMaintainer.notifyServiceStatus({
                     name: sysInfo.name,
-                    status: application.STATE.FAILED,
+                    status: app.STATE.FAILED,
                     error
                 });
             }
@@ -56,7 +56,7 @@ class ServiceApplication extends application.Application {
 
         await this.iMaintainer.notifyStatus({
             pid: process.pid,
-            status: application.STATE.UNINITIALIZED
+            status: app.STATE.UNINITIALIZED
         });
 
         if (!is.null(this.peer)) {
@@ -74,7 +74,7 @@ class ServiceApplication extends application.Application {
         if (!is.null(this.peer)) {
             await this.iMaintainer.notifyStatus({
                 pid: process.pid,
-                status: adone.application.STATE.FAILED,
+                status: adone.app.STATE.FAILED,
                 error
             });
             await this.peer.disconnect();
@@ -84,8 +84,8 @@ class ServiceApplication extends application.Application {
     @Public()
     async loadService({ name, description, path } = {}) {
         // It's important that application should be fully initialized before any service can be loaded.
-        if (this.state <= application.STATE.INITIALIZED) {
-            await this.waitForState(application.STATE.INITIALIZED);
+        if (this.state <= app.STATE.INITIALIZED) {
+            await this.waitForState(app.STATE.INITIALIZED);
         }
         if (this.hasSubsystem(name)) {
             throw new adone.error.Exists(`Service ${name} already loaded`);
@@ -120,7 +120,7 @@ class ServiceApplication extends application.Application {
                 this.deleteSubsystem(name, true);
                 await this.iMaintainer.notifyServiceStatus({
                     name,
-                    status: application.STATE.FAILED,
+                    status: app.STATE.FAILED,
                     error
                 });
                 if (!this.hasSubsystems()) {
@@ -148,14 +148,14 @@ class ServiceApplication extends application.Application {
         }
 
         const service = this.getSubsystem(name);
-        if (service.state === application.STATE.INITIALIZED) {
+        if (service.state === app.STATE.INITIALIZED) {
             process.nextTick(async () => {
                 try {
                     await this.uninitializeSubsystem(name);
                 } catch (error) {
                     this.iMaintainer.notifyServiceStatus({
                         name,
-                        status: application.STATE.FAILED,
+                        status: app.STATE.FAILED,
                         error
                     });
                 } finally {
@@ -165,12 +165,12 @@ class ServiceApplication extends application.Application {
                     }
                 }
             });
-        } else if (service.state === application.STATE.UNINITIALIZING) {
+        } else if (service.state === app.STATE.UNINITIALIZING) {
             throw new adone.error.IllegalState(`Serivce '${name}' is being uninitialized`);
         } else {
-            throw new adone.error.IllegalState(`Service '${name}' is in non stopable state: ${application.humanizeState(service.state)}`);
+            throw new adone.error.IllegalState(`Service '${name}' is in non stopable state: ${app.humanizeState(service.state)}`);
         }
     }
 }
 
-application.run(ServiceApplication);
+app.run(ServiceApplication);

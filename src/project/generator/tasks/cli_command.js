@@ -4,14 +4,14 @@ const {
 
 const TEMPLATE =
 `const {
-    application
+    app
 } = adone;
 
 const {
     DCliCommand
-} = application;
+} = app;
 
-export default class {{ name }} extends application.Subsystem {
+export default class {{ name }} extends app.Subsystem {
     async configure() {
     }
 

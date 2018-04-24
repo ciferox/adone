@@ -96,7 +96,7 @@ const httpsHandler = () => {
     return { getCertificate, getInternalCert };
 };
 
-adone.application.run({
+adone.app.run({
     async initialize() {
         this.defineArguments({
             options: [

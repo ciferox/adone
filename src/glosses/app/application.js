@@ -4,7 +4,7 @@ const {
     std,
     runtime: { term },
     tag,
-    application,
+    app,
     util
 } = adone;
 
@@ -12,18 +12,18 @@ const {
     EXIT_SUCCESS,
     EXIT_ERROR,
     STATE
-} = application;
+} = app;
 
 // const INTERNAL = Symbol();
 const REPORT = Symbol();
-const ERROR_SCOPE = Symbol.for("adone.application.Application#errorScope");
+const ERROR_SCOPE = Symbol.for("adone.app.Application#errorScope");
 const HANDLERS = Symbol();
 const EXITING = Symbol();
 const IS_MAIN = Symbol();
 const INTERACTIVE = Symbol();
 const EXIT_SIGNALS = Symbol();
 
-export default class Application extends application.Subsystem {
+export default class Application extends app.Subsystem {
     constructor({ name = std.path.basename(process.argv[1], std.path.extname(process.argv[1])), interactive = true } = {}) {
         super({ name });
 
@@ -97,7 +97,7 @@ export default class Application extends application.Subsystem {
         filename = process.env.ADONE_REPORT_FILENAME,
         directory = process.env.ADONE_REPORT_DIRECTORY
     } = {}) {
-        this[REPORT] = application.report;
+        this[REPORT] = app.report;
         if (events) {
             this[REPORT].setEvents(events);
         }
@@ -137,7 +137,7 @@ export default class Application extends application.Subsystem {
                 return this._fireException(err);
             }
             adone.logError(err.stack || err.message || err);
-            return this.exit(application.EXIT_ERROR);
+            return this.exit(app.EXIT_ERROR);
         }
     }
 
@@ -219,11 +219,11 @@ export default class Application extends application.Subsystem {
         }
 
         // Remove acquired locks on exit
-        const locks = adone.private(application).locks;
+        const locks = adone.private(app).locks;
         const lockFiles = Object.keys(locks);
         for (const file of lockFiles) {
             try {
-                await locks[file].options.fs.rm(application.lockfile.getLockFile(file)); // eslint-disable-line
+                await locks[file].options.fs.rm(app.lockfile.getLockFile(file)); // eslint-disable-line
             } catch (e) {
                 //
             }
@@ -250,10 +250,10 @@ export default class Application extends application.Subsystem {
             errCode = await this.error(err);
         } else {
             adone.logError(err.stack || err.message || err);
-            errCode = adone.application.EXIT_ERROR;
+            errCode = adone.app.EXIT_ERROR;
         }
         if (!is.integer(errCode)) {
-            errCode = adone.application.EXIT_ERROR;
+            errCode = adone.app.EXIT_ERROR;
         }
         return this.exit(errCode);
     }

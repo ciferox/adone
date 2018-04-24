@@ -9,10 +9,10 @@ const TEMPLATE =
 import "adone";
 
 const {
-    application
+    app
 } = adone;
 
-class {{ name }}Application extends application.Application {
+class {{ name }}Application extends app.Application {
     async configure() {
 
     }
@@ -31,7 +31,7 @@ class {{ name }}Application extends application.Application {
     }
 }
 
-application.run({{ name }}Application);
+app.run({{ name }}Application);
 `;
 
 export default class ApplicationTask extends project.generator.task.Base {

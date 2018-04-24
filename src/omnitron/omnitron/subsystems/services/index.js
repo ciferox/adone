@@ -1,5 +1,5 @@
 const {
-    application,
+    app,
     error,
     is,
     fs,
@@ -12,7 +12,7 @@ const api = adone.lazify({
     ServiceMaintainer: "./service_maintainer"
 }, exports, require);
 
-export default class Services extends application.Subsystem {
+export default class Services extends app.Subsystem {
     constructor(options) {
         super(options);
 

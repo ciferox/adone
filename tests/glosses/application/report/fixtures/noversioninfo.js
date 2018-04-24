@@ -2,4 +2,4 @@
 delete process.version;
 delete process.versions;
 
-adone.application.report.triggerReport();
+adone.app.report.triggerReport();

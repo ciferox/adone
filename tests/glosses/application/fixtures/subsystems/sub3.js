@@ -1,4 +1,4 @@
-export default class Sub3 extends adone.application.Subsystem {
+export default class Sub3 extends adone.app.Subsystem {
     configure() {
         adone.log("sub3 configure");
     }

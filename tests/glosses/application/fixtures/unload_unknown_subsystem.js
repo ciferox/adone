@@ -1,8 +1,8 @@
 const {
-    application
+    app
 } = adone;
 
-class TestApp extends application.Application {
+class TestApp extends app.Application {
     async main() {
         adone.log("main");
         await this.unloadSubsystem("hello");
@@ -10,4 +10,4 @@ class TestApp extends application.Application {
     }
 }
 
-application.run(TestApp);
+app.run(TestApp);

@@ -1,5 +1,5 @@
 const {
-    application: {
+    app: {
         Subsystem
     },
     is,
@@ -152,7 +152,7 @@ export default class Dispatcher extends Subsystem {
                 });
             });
         }
-        return adone.application.run(omnitron.Omnitron);
+        return adone.app.run(omnitron.Omnitron);
     }
 
     async stopOmnitron() {

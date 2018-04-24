@@ -68,7 +68,7 @@ export const DMainCliCommand = (mainCommand = {}) => (target, key, descriptor) =
     let sysMeta = adone.meta.reflect.getMetadata(SUBSYSTEM_ANNOTATION, target.constructor);
     mainCommand.handler = descriptor.value;
     if (is.undefined(sysMeta)) {
-        if (target instanceof adone.application.CliApplication) {
+        if (target instanceof adone.app.CliApplication) {
             sysMeta = {
                 mainCommand
             };
@@ -77,7 +77,7 @@ export const DMainCliCommand = (mainCommand = {}) => (target, key, descriptor) =
         }
         adone.meta.reflect.defineMetadata(SUBSYSTEM_ANNOTATION, sysMeta, target.constructor);
     } else {
-        if (target instanceof adone.application.CliApplication) {
+        if (target instanceof adone.app.CliApplication) {
             sysMeta.mainCommand = mainCommand;
         } else {
             Object.assign(sysMeta, mainCommand);
@@ -115,14 +115,14 @@ adone.lazify({
 }, adone.asNamespace(exports), require);
 
 adone.definePrivate({
-    locks: {} // used by adone.application.lockfile
+    locks: {} // used by adone.app.lockfile
 }, exports);
 
 export const run = async (App) => {
     if (is.null(adone.runtime.app) && is.class(App)) {
         const app = new App();
         if (!is.application(app)) {
-            console.error(`${adone.terminal.esc.red.open}Invalid application class (should be derivative of 'adone.application.Application')${adone.terminal.esc.red.close}`);
+            console.error(`${adone.terminal.esc.red.open}Invalid application class (should be derivative of 'adone.app.Application')${adone.terminal.esc.red.close}`);
             process.exit(1);
             return;
         }
@@ -138,7 +138,7 @@ export const run = async (App) => {
         adone.runtime.app = null;
     }
 
-    class XApplication extends adone.application.Application { }
+    class XApplication extends adone.app.Application { }
 
     const props = [];
 
@@ -167,7 +167,7 @@ export const runCli = async (App, ignoreArgs = false) => {
     if (is.null(adone.runtime.app) && is.class(App)) {
         const app = new App();
         if (!is.cliApplication(app)) {
-            console.error(`${adone.terminal.esc.red.open}Invalid application class (should be derivative of 'adone.application.Application')${adone.terminal.esc.red.close}`);
+            console.error(`${adone.terminal.esc.red.open}Invalid application class (should be derivative of 'adone.app.Application')${adone.terminal.esc.red.close}`);
             process.exit(1);
             return;
         }
@@ -189,7 +189,7 @@ export const runCli = async (App, ignoreArgs = false) => {
         delete adone.__argv__;
     }
 
-    class XApplication extends adone.application.CliApplication { }
+    class XApplication extends adone.app.CliApplication { }
 
     const props = [];
 

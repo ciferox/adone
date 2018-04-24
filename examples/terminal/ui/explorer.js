@@ -1,6 +1,6 @@
 const { std: { fs } } = adone;
 
-adone.application.run({
+adone.app.run({
     main() {
         const screen = new adone.terminal.ui.Screen();
 

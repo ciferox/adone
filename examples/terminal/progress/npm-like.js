@@ -1,4 +1,4 @@
-adone.application.run({
+adone.app.run({
     main() {
         const bar = adone.runtime.term.progress({
             schema: "╢:bar╟ :current/:total :percent :elapsed :eta",

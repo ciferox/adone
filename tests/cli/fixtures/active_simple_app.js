@@ -1,4 +1,4 @@
-adone.application.run({
+adone.app.run({
     configure() {
         adone.log("0");
     },

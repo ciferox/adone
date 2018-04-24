@@ -1,12 +1,12 @@
 const {
-    application
+    app
 } = adone;
 
 const {
     DCliCommand,
     DMainCliCommand,
     DApplication
-} = application;
+} = app;
 
 @DApplication({
     commandsGroups: [
@@ -19,7 +19,7 @@ const {
         }
     ]
 })
-class MyApp extends application.CliApplication {
+class MyApp extends app.CliApplication {
     @DMainCliCommand()
     main() {
         console.log("hello");
@@ -55,4 +55,4 @@ class MyApp extends application.CliApplication {
     }
 }
 
-application.runCli(MyApp);
+app.runCli(MyApp);

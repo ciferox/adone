@@ -1,4 +1,4 @@
-adone.application.run({
+adone.app.run({
     main() {
         const choices = Array.apply(0, new Array(26)).map((x, y) => {
             return String.fromCharCode(y + 65);

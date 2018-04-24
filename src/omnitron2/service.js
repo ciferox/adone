@@ -1,12 +1,12 @@
 const {
-    application: { STATE },
+    app: { STATE },
     is
 } = adone;
 
 const PEER_SYMBOL = Symbol.for("omnitron.Service#peer");
 const CONFIGURATION_SYMBOL = Symbol();
 
-export default class Service extends adone.application.Subsystem {
+export default class Service extends adone.app.Subsystem {
     constructor() {
         super();
         this[PEER_SYMBOL] = null;

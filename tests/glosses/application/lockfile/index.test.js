@@ -1,5 +1,5 @@
 const {
-    application: { lockfile },
+    app: { lockfile },
     fs,
     std: { path, fs: stdFs }
 } = adone;

@@ -1,9 +1,9 @@
 const {
-    application,
+    app,
     std
 } = adone;
 
-class TestApp extends adone.application.Application {
+class TestApp extends adone.app.Application {
     async configure() {
         this.addSubsystem({
             subsystem: std.path.join(__dirname, "valid_subsystem.js")
@@ -15,4 +15,4 @@ class TestApp extends adone.application.Application {
     }
 }
 
-application.run(TestApp);
+app.run(TestApp);

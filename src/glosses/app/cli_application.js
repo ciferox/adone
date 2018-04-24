@@ -8,14 +8,14 @@ const {
     runtime: { term },
     tag,
     terminal: { chalk },
-    application,
+    app,
     meta: { reflect }
 } = adone;
 
 const {
     EXIT_SUCCESS,
     STATE
-} = application;
+} = app;
 
 // Temporary here...
 const {
@@ -95,8 +95,8 @@ const INTERNAL = Symbol();
 const UNNAMED = Symbol();
 const EMPTY_VALUE = Symbol();
 const COMMAND = Symbol();
-const ERROR_SCOPE = Symbol.for("adone.application.Application#errorScope");
-const MAIN_COMMAND = Symbol.for("adone.application.CliApplication#mainCommand");
+const ERROR_SCOPE = Symbol.for("adone.app.Application#errorScope");
+const MAIN_COMMAND = Symbol.for("adone.app.CliApplication#mainCommand");
 const VERSION = Symbol();
 
 const escape = (x) => x.replace(/%/g, "%%");
@@ -1504,7 +1504,7 @@ const mergeGroupsLists = (a, b) => {
     return result;
 };
 
-export default class CliApplication extends application.Application {
+export default class CliApplication extends app.Application {
     constructor({ name, interactive, argv = process.argv.slice(2) } = {}) {
         super({ name, interactive });
 
@@ -1596,7 +1596,7 @@ export default class CliApplication extends application.Application {
             for (const error of errors) {
                 adone.log(escape(error.message));
             }
-            await this.exit(application.EXIT_ERROR);
+            await this.exit(app.EXIT_ERROR);
         }
 
         return [command, match, rest];
@@ -1633,7 +1633,7 @@ export default class CliApplication extends application.Application {
                 return this._fireException(err);
             }
             adone.logError(err.stack || err.message || err);
-            return this.exit(application.EXIT_ERROR);
+            return this.exit(app.EXIT_ERROR);
         }
     }
 

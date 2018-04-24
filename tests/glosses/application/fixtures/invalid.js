@@ -5,4 +5,4 @@ class TestApp {
     }
 }
 
-adone.application.run(TestApp);
+adone.app.run(TestApp);

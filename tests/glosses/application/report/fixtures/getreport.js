@@ -1,1 +1,1 @@
-console.log(adone.application.report.getReport());
+console.log(adone.app.report.getReport());

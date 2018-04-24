@@ -4,7 +4,7 @@ const {
     omnitron
 } = adone;
 
-adone.application.runCli({
+adone.app.runCli({
     configure() {
         this.defineArguments({
             commands: [

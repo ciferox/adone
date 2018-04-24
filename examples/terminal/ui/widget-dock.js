@@ -1,4 +1,4 @@
-adone.application.run({
+adone.app.run({
     main() {
         const screen = new adone.terminal.ui.Screen({
             dump: `${__dirname}/logs/dock.log`,

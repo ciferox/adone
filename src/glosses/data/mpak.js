@@ -147,7 +147,9 @@ export class Encoder {
                             return;
                         }
                     }
-                    throw new adone.error.NotSupported(`Not supported: ${adone.meta.typeOf(x)}`);
+                    throw new adone.error.NotSupported(`Not supported: ${(x.__proto__ && x.__proto__.constructor && is.string(x.__proto__.constructor.name))
+                        ? x.__proto__.constructor.name
+                        : adone.meta.typeOf(x)}`);
                 }
             }
         }

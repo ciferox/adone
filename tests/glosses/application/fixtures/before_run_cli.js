@@ -1,12 +1,12 @@
 const {
-    application
+    app
 } = adone;
 
 const {
     DCliCommand
-} = application;
+} = app;
 
-class TestApp extends application.CliApplication {
+class TestApp extends app.CliApplication {
     configure() {
         this.on("before run", async (command) => {
             if (command.names[0] === "failed") {
@@ -38,4 +38,4 @@ class TestApp extends application.CliApplication {
     }
 }
 
-application.runCli(TestApp);
+app.runCli(TestApp);

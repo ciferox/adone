@@ -1,8 +1,8 @@
-class TestApp extends adone.application.CliApplication {
+class TestApp extends adone.app.CliApplication {
     main() {
         adone.log(this.argv.join(" "));
         return 0;
     }
 }
 
-adone.application.runCli(TestApp, true);
+adone.app.runCli(TestApp, true);

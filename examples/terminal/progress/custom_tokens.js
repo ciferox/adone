@@ -1,4 +1,4 @@
-adone.application.run({
+adone.app.run({
     async main() {
         const bar = adone.runtime.term.progress({
             schema: ":spinner hello :custom (:elapsed)"

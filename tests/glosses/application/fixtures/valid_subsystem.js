@@ -1,7 +1,7 @@
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.default = class AppSubsystem extends adone.application.Subsystem {
+exports.default = class AppSubsystem extends adone.app.Subsystem {
     configure() {
         adone.log("configure");
     }

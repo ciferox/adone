@@ -2,7 +2,7 @@ const {
     is
 } = adone;
 
-class TestApp extends adone.application.CliApplication {
+class TestApp extends adone.app.CliApplication {
     main() {
         const getters = ["name", "parent", "root", "state"];
         let counter = 0;
@@ -36,4 +36,4 @@ class TestApp extends adone.application.CliApplication {
     }
 }
 
-adone.application.runCli(TestApp);
+adone.app.runCli(TestApp);

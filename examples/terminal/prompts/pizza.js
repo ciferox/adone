@@ -1,6 +1,6 @@
 const { is } = adone;
 
-adone.application.run({
+adone.app.run({
     main() {
         adone.log("Hi, welcome to Node Pizza");
 

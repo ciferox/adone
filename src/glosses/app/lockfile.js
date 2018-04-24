@@ -5,7 +5,7 @@ const {
     util: { retry }
 } = adone;
 
-const { locks } = adone.private(adone.application);
+const { locks } = adone.private(adone.app);
 
 adone.asNamespace(exports);
 

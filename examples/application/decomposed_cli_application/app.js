@@ -1,12 +1,12 @@
 const {
-    application,
+    app,
     std: { path }
 } = adone;
 
 const {
     DMainCliCommand,
     DApplication
-} = application;
+} = app;
 
 @DApplication({
     subsystems: [
@@ -24,11 +24,11 @@ const {
         }
     ]
 })
-class MyCLI extends application.CliApplication {
+class MyCLI extends app.CliApplication {
     @DMainCliCommand()
     main() {
         console.log("hello");
     }
 }
 
-application.runCli(MyCLI);
+app.runCli(MyCLI);

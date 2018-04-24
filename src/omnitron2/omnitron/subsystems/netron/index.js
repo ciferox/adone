@@ -1,16 +1,16 @@
 const {
-    application,
+    app,
     runtime
 } = adone;
 
 const NAME = "Netron subsystem";
 
-@application.DSubsystem({
+@app.DSubsystem({
     dependencies: [
         "database"
     ]
 })
-export default class extends application.Subsystem {
+export default class extends app.Subsystem {
     async configure() {
         runtime.netron2.options.proxyContexts = true;
 
@@ -67,7 +67,7 @@ export default class extends application.Subsystem {
     }
 }
 
-// export default class Gates extends application.Subsystem {
+// export default class Gates extends app.Subsystem {
 
 //     async initialize() {
 //         this.config = await this.root.db.getConfiguration();

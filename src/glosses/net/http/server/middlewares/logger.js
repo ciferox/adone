@@ -2,7 +2,8 @@
 const {
     net: { http: { server: { helper: { status: { isEmptyBody } } } } },
     pretty,
-    is, application: { Logger }
+    is,
+    app: { Logger }
 } = adone;
 
 class Counter extends adone.std.stream.Transform {

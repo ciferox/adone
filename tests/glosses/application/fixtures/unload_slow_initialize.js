@@ -1,9 +1,9 @@
 const {
-    application,
+    app,
     promise
 } = adone;
 
-class Hello extends application.Subsystem {
+class Hello extends app.Subsystem {
     configure() {
         adone.log("hello configure");
     }
@@ -18,7 +18,7 @@ class Hello extends application.Subsystem {
     }
 }
 
-class TestApp extends application.Application {
+class TestApp extends app.Application {
     async main() {
         adone.log("main");
         await Promise.all([
@@ -30,4 +30,4 @@ class TestApp extends application.Application {
     }
 }
 
-application.run(TestApp);
+app.run(TestApp);

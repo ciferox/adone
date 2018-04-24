@@ -3,7 +3,7 @@ const {
     error
 } = adone;
 
-class TestApp extends adone.application.Application {
+class TestApp extends adone.app.Application {
     main() {
         const getters = ["name", "parent", "root", "state"];
         let counter = 0;
@@ -33,4 +33,4 @@ class TestApp extends adone.application.Application {
     }
 }
 
-adone.application.run(TestApp);
+adone.app.run(TestApp);

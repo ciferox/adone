@@ -1,11 +1,11 @@
 const {
     error,
-    application
+    app
 } = adone;
 
 const {
     DCliCommand
-} = application;
+} = app;
 
 const parseComplexNumber = (str) => {
     if (!str) {
@@ -32,7 +32,7 @@ const formatComplexNumber = (a, b) => {
     return `${a} + ${b}i`;
 };
 
-export default class Complex extends application.Subsystem {
+export default class Complex extends app.Subsystem {
     @DCliCommand({
         name: "add",
         description: "Adds two complex numbers",

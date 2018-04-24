@@ -269,7 +269,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
 
             adone.lazify({
                 term: () => new adone.terminal.Terminal(),
-                logger: () => adone.application.Logger.default(),
+                logger: () => adone.app.Logger.default(),
                 netron: () => new adone.netron.Netron(),
                 netron2: () => {
                     const peerInfo = adone.runtime.isOmnitron
@@ -335,7 +335,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         event: "./glosses/events",
         is: "./glosses/is",
         error: "./glosses/errors",
-        application: "./glosses/application",
+        app: "./glosses/app",
         configuration: "./glosses/configurations",
         collection: "./glosses/collections",
         compressor: "./glosses/compressors",

@@ -1,9 +1,9 @@
 const {
-    application,
+    app,
     std
 } = adone;
 
-class TestApp extends adone.application.Application {
+class TestApp extends adone.app.Application {
     async configure() {
         await this.addSubsystemsFrom(std.path.join(__dirname, "subsystems"), {
             useFilename: true,
@@ -16,4 +16,4 @@ class TestApp extends adone.application.Application {
     }
 }
 
-application.run(TestApp);
+app.run(TestApp);

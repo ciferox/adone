@@ -1,9 +1,9 @@
 const {
-    application,
+    app,
     runtime
 } = adone;
 
-export default class Gates extends application.Subsystem {
+export default class Gates extends app.Subsystem {
     async configure() {
         await runtime.netron.registerAdapter("ws", adone.netron.ws.Adapter);
 

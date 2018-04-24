@@ -1,4 +1,4 @@
-adone.application.run({
+adone.app.run({
     main() {
         const bar1 = adone.runtime.term.progress({
             schema: "progress: \n[:bar]",

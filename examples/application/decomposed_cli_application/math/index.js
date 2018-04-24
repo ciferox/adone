@@ -1,11 +1,11 @@
 const {
-    application,
+    app,
     std: { path }
 } = adone;
 
 const {
     DSubsystem
-} = application;
+} = app;
 
 @DSubsystem({
     subsystems: [
@@ -23,5 +23,5 @@ const {
         }
     ]
 })
-export default class MathCLI extends application.Subsystem {
+export default class MathCLI extends app.Subsystem {
 }

@@ -1,4 +1,4 @@
-adone.application.run({
+adone.app.run({
     status: "non configured",
     configure() {
         adone.log(this.status);

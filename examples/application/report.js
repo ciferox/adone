@@ -1,12 +1,12 @@
 const {
-    application
+    app
 } = adone;
 
 const {
     DCliCommand
-} = application;
+} = app;
 
-class App extends application.CliApplication {
+class App extends app.CliApplication {
     configure() {
         this.enableReport({
             directory: adone.std.os.tmpdir()
@@ -29,4 +29,4 @@ class App extends application.CliApplication {
     }
 }
 
-application.runCli(App);
+app.runCli(App);

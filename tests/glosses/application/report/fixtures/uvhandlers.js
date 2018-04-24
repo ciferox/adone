@@ -40,7 +40,7 @@ udp_socket.bind({});
 const server = http.createServer((req, res) => {
     req.on("end", () => {
         // Generate the report while the connection is active.
-        console.log(adone.application.report.getReport());
+        console.log(adone.app.report.getReport());
         child_process.kill();
 
         res.writeHead(200, { "Content-Type": "text/plain" });

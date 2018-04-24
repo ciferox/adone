@@ -1,5 +1,5 @@
 const {
-    application,
+    app,
     collection,
     is,
     event: { AsyncEmitter },
@@ -42,8 +42,8 @@ export default class ServiceMaintainer extends AsyncEmitter {
     })
     async notifyStatus(data) {
         switch (data.status) {
-            case application.STATE.UNINITIALIZED:
-            case application.STATE.FAILED:
+            case app.STATE.UNINITIALIZED:
+            case app.STATE.FAILED:
                 this.pid = null;
                 this.procStatus = PROCESS_STATUS.NULL;
                 this.iServiceApp = null;
@@ -57,15 +57,15 @@ export default class ServiceMaintainer extends AsyncEmitter {
     })
     async notifyServiceStatus(data) {
         switch (data.status) {
-            case application.STATE.INITIALIZED:
+            case app.STATE.INITIALIZED:
                 await this.setServiceStatus(data.name, STATUS.ACTIVE);
                 adone.logInfo(`Service '${data.name}' started`);
                 break;
-            case application.STATE.UNINITIALIZED:
+            case app.STATE.UNINITIALIZED:
                 await this.setServiceStatus(data.name, STATUS.INACTIVE);
                 adone.logInfo(`Service '${data.name}' successfully stopped`);
                 break;
-            case application.STATE.FAILED:
+            case app.STATE.FAILED:
                 await this.setServiceStatus(data.name, STATUS.INACTIVE);
                 adone.logError(`Service '${data.name}' stopped unsuccessfully`);
                 adone.logError(data.error);
@@ -101,7 +101,7 @@ export default class ServiceMaintainer extends AsyncEmitter {
         return new Promise((resolve) => {
             const onService = (data) => {
                 if (data.name === name) {
-                    if ([application.STATE.UNINITIALIZED, application.STATE.FAILED].includes(data.status)) {
+                    if ([app.STATE.UNINITIALIZED, app.STATE.FAILED].includes(data.status)) {
                         this.removeListener("service", onService);
                         resolve(data);
                     }
@@ -134,11 +134,11 @@ export default class ServiceMaintainer extends AsyncEmitter {
                 await new Promise((resolve, reject) => {
                     const onProcess = (data) => {
                         switch (data.status) {
-                            case application.STATE.INITIALIZED:
+                            case app.STATE.INITIALIZED:
                                 this.removeListener("process", onProcess);
                                 resolve();
                                 break;
-                            case application.STATE.FAILED:
+                            case app.STATE.FAILED:
                                 this.removeListener("process", onProcess);
                                 onError(reject);
                                 break;
@@ -158,12 +158,12 @@ export default class ServiceMaintainer extends AsyncEmitter {
                     (data) => {
                         let err;
                         switch (data.status) {
-                            case application.STATE.CONFIGURED:
+                            case app.STATE.CONFIGURED:
                                 return false;
-                            case application.STATE.INITIALIZED:
+                            case app.STATE.INITIALIZED:
                                 resolve();
                                 return true;
-                            case application.STATE.FAILED:
+                            case app.STATE.FAILED:
                                 err = data.error;
                                 break;
                             default:
@@ -200,9 +200,9 @@ export default class ServiceMaintainer extends AsyncEmitter {
                     (result) => {
                         let err;
                         switch (result.status) {
-                            case application.STATE.UNINITIALIZED:
+                            case app.STATE.UNINITIALIZED:
                                 return resolve();
-                            case application.STATE.FAILED:
+                            case app.STATE.FAILED:
                                 err = result.error;
                                 break;
                             default:
@@ -265,7 +265,7 @@ export default class ServiceMaintainer extends AsyncEmitter {
                 child.once("exit", onExit);
 
                 const onInitialized = (data) => {
-                    if (data.status === application.STATE.INITIALIZED) {
+                    if (data.status === app.STATE.INITIALIZED) {
                         this.pid = child.pid;
                         this.procStatus = PROCESS_STATUS.ALIVE;
                         child.removeListener("exit", onExit);
@@ -286,7 +286,7 @@ export default class ServiceMaintainer extends AsyncEmitter {
 
             return new Promise((resolve) => {
                 const onProcess = (data) => {
-                    if ([application.STATE.UNINITIALIZED, application.STATE.FAILED].includes(data.status)) {
+                    if ([app.STATE.UNINITIALIZED, app.STATE.FAILED].includes(data.status)) {
                         this.removeListener("process", onProcess);
                         this.pid = null;
                         this.procStatus = PROCESS_STATUS.NULL;

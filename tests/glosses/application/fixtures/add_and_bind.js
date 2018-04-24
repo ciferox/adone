@@ -1,15 +1,15 @@
 const {
-    application,
+    app,
     is
 } = adone;
 
-class AppSubsystem extends application.Subsystem {
+class AppSubsystem extends app.Subsystem {
     getData() {
         return "some_data";
     }
 }
 
-class TestApp extends adone.application.Application {
+class TestApp extends adone.app.Application {
     async configure() {
         this.addSubsystem({
             name: "sys1",
@@ -30,4 +30,4 @@ class TestApp extends adone.application.Application {
     }
 }
 
-application.run(TestApp);
+app.run(TestApp);

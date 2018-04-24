@@ -1,4 +1,4 @@
-class ScanApp extends adone.application.Application {
+class ScanApp extends adone.app.Application {
     async main() {
         const scanner = new adone.netscan.MasscanScanner({
             ports: "22",
@@ -43,4 +43,4 @@ class ScanApp extends adone.application.Application {
     }
 }
 
-adone.application.run(ScanApp, true);
+adone.app.run(ScanApp, true);

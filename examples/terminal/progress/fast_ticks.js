@@ -1,4 +1,4 @@
-adone.application.run({
+adone.app.run({
     async main() {
         const N = 5000;
 

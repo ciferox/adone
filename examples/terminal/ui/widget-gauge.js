@@ -1,4 +1,4 @@
-adone.application.run({
+adone.app.run({
     main() {
         const screen = new adone.terminal.ui.Screen();
         const gauge = new adone.terminal.ui.widget.Gauge({ label: "Progress" });

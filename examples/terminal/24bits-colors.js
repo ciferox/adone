@@ -3,7 +3,7 @@ const {
     lodash: _
 } = adone;
 
-adone.application.run({
+adone.app.run({
     main() {
         const fromRange = (start, end, fn) => {
             _.range(start, end).forEach(fn);

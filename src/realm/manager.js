@@ -1,5 +1,5 @@
 const {
-    application: { lockfile },
+    app: { lockfile },
     is,
     task,
     std

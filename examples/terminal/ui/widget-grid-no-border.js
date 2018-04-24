@@ -1,4 +1,4 @@
-adone.application.run({
+adone.app.run({
     main() {
         const screen = new adone.terminal.ui.Screen();
         const grid = new adone.terminal.ui.layout.Grid({ rows: 12, cols: 12, hideBorder: true, screen });

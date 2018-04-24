@@ -1,14 +1,15 @@
 const {
-    application
+    app
 } = adone;
 
-class TestApp extends adone.application.Application {
+class TestApp extends adone.app.Application {
     main() {
         return 0;
     }
+
     async uninitialize() {
         throw new adone.error.Runtime("Something bad happend during uninitialization");
     }
 }
 
-application.run(TestApp);
+app.run(TestApp);

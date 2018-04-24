@@ -2,7 +2,7 @@ require(process.argv[2]); // the main process passes adone's absolute path
 
 adone.sourcemap.support(Error).install();
 
-// if i use adone.application.runCli sometimes it requires "Enter" in console after exit
+// if i use adone.app.runCli sometimes it requires "Enter" in console after exit
 
 const main = async () => {
     const p = new Promise((resolve) => {

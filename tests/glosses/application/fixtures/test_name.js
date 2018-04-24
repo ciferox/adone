@@ -1,8 +1,8 @@
-class TestApp extends adone.application.Application {
+class TestApp extends adone.app.Application {
     main() {
         adone.log(this.name);
         return 0;
     }
 }
 
-adone.application.run(TestApp);
+adone.app.run(TestApp);

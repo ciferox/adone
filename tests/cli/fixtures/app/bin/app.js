@@ -1,11 +1,11 @@
 const {
-    application
+    app
 } = adone;
 
-class App extends application.Application {
+class App extends app.Application {
     main() {
         adone.log("app running");
     }
 }
 
-application.run(App);
+app.run(App);

@@ -1,10 +1,10 @@
 const {
-    application,
+    app,
     fs
 } = adone;
 
 const subsystemCode = (index) => `
-module.exports = class Hello extends adone.application.Subsystem {
+module.exports = class Hello extends adone.app.Subsystem {
     configure() {
         adone.log("hello${index} configure");
     }
@@ -18,7 +18,7 @@ module.exports = class Hello extends adone.application.Subsystem {
     }
 }`;
 
-class TestApp extends application.Application {
+class TestApp extends app.Application {
     async configure() {
         this.tmpdir = await fs.Directory.createTmp();
         this.tmpfile = await this.tmpdir.addFile("test.js", {
@@ -53,4 +53,4 @@ class TestApp extends application.Application {
     }
 }
 
-application.run(TestApp);
+app.run(TestApp);

@@ -422,7 +422,7 @@ export class Reflection {
     }
 
     static from(instance) {
-        if ((!is.netron2Context(instance) && !is.plainObject(instance[CONTEXTIFY_SYMBOL])) || is.class(instance)) {
+        if (!is.netron2Context(instance) || is.class(instance)) {
             throw new error.NotValid(`'${instance.__proto__.constructor.name}' is not valid instance of netron context`);
         }
 

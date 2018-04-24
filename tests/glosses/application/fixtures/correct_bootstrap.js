@@ -1,4 +1,4 @@
-class TestApp extends adone.application.Application {
+class TestApp extends adone.app.Application {
     constructor() {
         super();
 
@@ -27,4 +27,4 @@ class TestApp extends adone.application.Application {
     }
 }
 
-adone.application.run(TestApp);
+adone.app.run(TestApp);

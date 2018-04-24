@@ -1,7 +1,7 @@
 import "adone";
 
 const {
-    application,
+    app,
     is,
     std,
     fs,
@@ -21,7 +21,7 @@ const CORE_SUBSYSTEMS = [
 @Context({
     description: "Omnitron"
 })
-export default class Omnitron extends application.Application {
+export default class Omnitron extends app.Application {
     async configure() {
         // Force create home and runtime directories
         await fs.mkdirp(adone.realm.config.RUNTIME_PATH);
@@ -328,7 +328,7 @@ export default class Omnitron extends application.Application {
         description: "Reports about omnitron process"
     })
     getReport() {
-        return adone.application.report.getReport();
+        return adone.app.report.getReport();
     }
 
     @Public({
@@ -427,7 +427,7 @@ export default class Omnitron extends application.Application {
 if (require.main === module) {
     if (!is.function(process.send)) {
         console.log(`${adone.terminal.esc.red.open}Omnitron cannot be launched directly${adone.terminal.esc.red.close}`);
-        process.exit(application.EXIT_ERROR);
+        process.exit(app.EXIT_ERROR);
     }
-    application.run(Omnitron);
+    app.run(Omnitron);
 }

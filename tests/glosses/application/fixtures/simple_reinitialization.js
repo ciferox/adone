@@ -1,4 +1,4 @@
-class TestApp extends adone.application.Application {
+class TestApp extends adone.app.Application {
     constructor(options) {
         super(options);
         adone.log("non configured");
@@ -24,4 +24,4 @@ class TestApp extends adone.application.Application {
     }
 }
 
-adone.application.run(TestApp);
+adone.app.run(TestApp);

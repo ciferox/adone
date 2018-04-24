@@ -1,6 +1,6 @@
 const {
     std,
-    application: { Application }
+    app: { Application }
 } = adone;
 
 const fixture = std.path.join.bind(std.path, __dirname, "fixtures");
@@ -36,7 +36,7 @@ describe("application", "Application", () => {
     it("Should not run invalid application", async () => {
         const err = await assert.throws(async () => forkProcess(fixture("invalid.js")));
         assert.equal(err.code, 1);
-        assert.equal(err.stderr, "\u001b[31mInvalid application class (should be derivative of 'adone.application.Application')\u001b[39m\n");
+        assert.equal(err.stderr, "\u001b[31mInvalid application class (should be derivative of 'adone.app.Application')\u001b[39m\n");
     });
 
     it("no public properties instead of application's reserved", async () => {
@@ -84,7 +84,7 @@ describe("application", "Application", () => {
 
             describe("subsystem name and name collisions", () => {
                 it("it's impossible to set name", () => {
-                    class SubSys extends adone.application.Subsystem {
+                    class SubSys extends adone.app.Subsystem {
                         constructor() {
                             super();
                             this.name = "ownname";
@@ -351,15 +351,15 @@ describe("application", "Application", () => {
             it("should throw if neither a subsystem nor an absolute path is provided", async () => {
                 await assert.throws(async () => {
                     await forkProcess(fixture("load_invalid_argument.js"));
-                }, "'subsystem' should be path or instance of adone.application.Subsystem");
+                }, "'subsystem' should be path or instance of adone.app.Subsystem");
             });
         });
 
         describe("owning", () => {
-            class Sys extends adone.application.Subsystem {
+            class Sys extends adone.app.Subsystem {
             }
 
-            class SubSys extends adone.application.Subsystem {
+            class SubSys extends adone.app.Subsystem {
             }
 
             it("by default subsystem should not be owned", () => {

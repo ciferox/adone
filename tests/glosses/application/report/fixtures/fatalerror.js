@@ -1,5 +1,5 @@
 const {
-    application: { report }
+    app: { report }
 } = adone;
 
 report.setEvents("exception+fatalerror+signal+apicall");

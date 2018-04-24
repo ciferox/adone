@@ -1,4 +1,4 @@
-const { is, application: { Application } } = adone;
+const { is, app: { Application } } = adone;
 
 class TestApp extends Application {
 }

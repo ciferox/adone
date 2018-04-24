@@ -1,7 +1,7 @@
-class TestApp extends adone.application.Application {
+class TestApp extends adone.app.Application {
     main() {
         return 7;
     }
 }
 
-adone.application.run(TestApp);
+adone.app.run(TestApp);

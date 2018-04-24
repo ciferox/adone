@@ -9,16 +9,16 @@ const TEMPLATE =
 import "adone";
 
 const {
-    application,
+    app,
     runtime: { term }
 } = adone;
 
 const {
     DCliCommand,
     DMainCliCommand
-} = application;
+} = app;
 
-class {{ name }}Application extends application.CliApplication {
+class {{ name }}Application extends app.CliApplication {
     async configure() {
     
     }
@@ -55,7 +55,7 @@ class {{ name }}Application extends application.CliApplication {
 
 }
 
-application.runCli({{ name }}Application);
+app.runCli({{ name }}Application);
 `;
 
 export default class CliApplicationTask extends project.generator.task.Base {

@@ -115,9 +115,9 @@ describe("realm", () => {
     it("lock/unlock", async () => {
         const lockPath = std.path.join(realmManager.config.RUNTIME_PATH, "realm");
         await realmManager.lock();
-        assert.true(await adone.application.lockfile.check(lockPath));
+        assert.true(await adone.app.lockfile.check(lockPath));
         await realmManager.unlock();
-        assert.false(await adone.application.lockfile.check(lockPath));
+        assert.false(await adone.app.lockfile.check(lockPath));
     });
 
     it("default tasks", async () => {

@@ -1,4 +1,4 @@
-adone.application.run({
+adone.app.run({
     async main() {
         const progressFormat = "%s:spinner {gray-fg}%s{/} (:elapsed)";
 

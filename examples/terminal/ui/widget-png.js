@@ -1,6 +1,6 @@
 const { std: { fs } } = adone;
 
-adone.application.run({
+adone.app.run({
     main() {
         const argv = {};
 

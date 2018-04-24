@@ -1,4 +1,4 @@
-adone.application.run({
+adone.app.run({
     main() {
         const bar0 = adone.runtime.term.progress({
             current: 0

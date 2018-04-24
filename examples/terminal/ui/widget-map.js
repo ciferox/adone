@@ -1,4 +1,4 @@
-adone.application.run({
+adone.app.run({
     main() {
         const screen = new adone.terminal.ui.Screen();
         const map = new adone.terminal.ui.widget.WorldMap({ label: "World Map" });

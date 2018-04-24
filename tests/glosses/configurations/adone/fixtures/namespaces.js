@@ -99,20 +99,20 @@ export default [
                             task: "adoneTranspile",
                             namespace: "cli"
                         },
-                        application: {
-                            src: "src/glosses/application/**/*.js",
-                            dst: "lib/glosses/application",
+                        app: {
+                            src: "src/glosses/app/**/*.js",
+                            dst: "lib/glosses/app",
                             task: "transpile",
                             namespace: "application",
                             struct: {
                                 report: {
                                     namespace: "report",
-                                    src: "src/glosses/application/report/**/*.js",
-                                    dst: "lib/glosses/application/report",
+                                    src: "src/glosses/app/report/**/*.js",
+                                    dst: "lib/glosses/app/report",
                                     task: "transpile",
                                     native: {
-                                        src: "src/glosses/application/report/native",
-                                        dst: "lib/glosses/application/report/native",
+                                        src: "src/glosses/app/report/native",
+                                        dst: "lib/glosses/app/report/native",
                                         type: "gyp"
                                     }
                                 }
@@ -135,16 +135,16 @@ export default [
                             dst: "lib/cli/index.js"
                         }
                     },
-                    application: {
+                    app: {
                         index: {
-                            src: "src/glosses/application/index.js",
-                            dst: "lib/glosses/application/index.js"
+                            src: "src/glosses/app/index.js",
+                            dst: "lib/glosses/app/index.js"
                         },
                         namespace: {
                             report: {
                                 index: {
-                                    src: "src/glosses/application/report/index.js",
-                                    dst: "lib/glosses/application/report/index.js"
+                                    src: "src/glosses/app/report/index.js",
+                                    dst: "lib/glosses/app/report/index.js"
                                 }
                             }
                         }

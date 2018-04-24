@@ -2,7 +2,7 @@ const {
     fs: { engine }
 } = adone;
 
-adone.application.run({
+adone.app.run({
     configure() {
         this.exitOnSignal("SIGINT");
     },

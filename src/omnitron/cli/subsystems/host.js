@@ -1,5 +1,5 @@
 const {
-    application: {
+    app: {
         Subsystem,
         DCliCommand
     },

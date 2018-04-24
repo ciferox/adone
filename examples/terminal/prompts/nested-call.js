@@ -1,4 +1,4 @@
-adone.application.run({
+adone.app.run({
     main() {
         adone.runtime.term.prompt().run({
             type: "list",

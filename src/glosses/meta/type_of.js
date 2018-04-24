@@ -130,9 +130,5 @@ export default function typeOf(obj) {
         return "Object";
     }
 
-    if (obj.__proto__ && obj.__proto__.constructor && is.string(obj.__proto__.constructor.name)) {
-        return obj.__proto__.constructor.name;
-    }
-
     return Object.prototype.toString.call(obj).slice(8, -1);
 }

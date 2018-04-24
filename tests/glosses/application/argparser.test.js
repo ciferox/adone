@@ -1,7 +1,7 @@
 describe("application", () => {
     const {
         error,
-        application: { CliApplication }
+        app: { CliApplication }
     } = adone;
 
     describe("argv handling", () => {
@@ -10,8 +10,8 @@ describe("application", () => {
         const parse = async (...args) => {
             const { command, errors, rest, match } = await app._parseArgs(args);
             return {
-                args: app[Symbol.for("adone.application.CliApplication#mainCommand")].getArgumentsMap(),
-                opts: app[Symbol.for("adone.application.CliApplication#mainCommand")].getOptionsMap(),
+                args: app[Symbol.for("adone.app.CliApplication#mainCommand")].getArgumentsMap(),
+                opts: app[Symbol.for("adone.app.CliApplication#mainCommand")].getOptionsMap(),
                 command,
                 errors,
                 rest,

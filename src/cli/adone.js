@@ -5,14 +5,14 @@ import "adone";
 const {
     is,
     std,
-    application,
+    app,
     runtime: { term }
 } = adone;
 
 const {
     DApplication,
     DCliCommand
-} = application;
+} = app;
 
 const baseSubsystem = (name) => std.path.join(__dirname, "..", "lib", "cli", "subsystems", name);
 
@@ -44,7 +44,7 @@ const baseSubsystem = (name) => std.path.join(__dirname, "..", "lib", "cli", "su
         }
     ]
 })
-class AdoneCLI extends application.CliApplication {
+class AdoneCLI extends app.CliApplication {
     async configure() {
         !is.windows && this.exitOnSignal("SIGINT");
 
@@ -503,4 +503,4 @@ class AdoneCLI extends application.CliApplication {
     }
 }
 
-application.runCli(AdoneCLI);
+app.runCli(AdoneCLI);

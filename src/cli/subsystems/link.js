@@ -1,5 +1,5 @@
 const {
-    application,
+    app,
     fs,
     is,
     runtime: { term },
@@ -9,7 +9,7 @@ const {
 
 const {
     DCliCommand
-} = application;
+} = app;
 
 let SCRIPT_TEMPLATE;
 
@@ -23,7 +23,7 @@ ret=$?
 exit $ret`;
 }
 
-export default class LinkManager extends application.Subsystem {
+export default class LinkManager extends app.Subsystem {
     constructor() {
         super();
 

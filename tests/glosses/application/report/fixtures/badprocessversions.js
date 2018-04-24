@@ -5,4 +5,4 @@ Object.defineProperty(process.versions, "uv", {
     }
 });
 
-adone.application.report.triggerReport();
+adone.app.report.triggerReport();

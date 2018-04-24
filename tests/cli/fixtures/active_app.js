@@ -1,4 +1,4 @@
-class TestApp extends adone.application.Application {
+class TestApp extends adone.app.Application {
     configure() {
         adone.log("0");
     }
@@ -17,4 +17,4 @@ class TestApp extends adone.application.Application {
     }
 }
 
-adone.application.run(TestApp);
+adone.app.run(TestApp);
