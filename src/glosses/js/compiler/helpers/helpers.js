@@ -74,13 +74,15 @@ helpers.jsx = () => template.program.ast`
 
 helpers.asyncIterator = () => template.program.ast`
   export default function _asyncIterator(iterable) {
+    var method
     if (typeof Symbol === "function") {
       if (Symbol.asyncIterator) {
-        var method = iterable[Symbol.asyncIterator];
+        method = iterable[Symbol.asyncIterator]
         if (method != null) return method.call(iterable);
       }
       if (Symbol.iterator) {
-        return iterable[Symbol.iterator]();
+        method = iterable[Symbol.iterator]
+        if (method != null) return method.call(iterable);
       }
     }
     throw new TypeError("Object is not async iterable");
@@ -392,80 +394,71 @@ helpers.objectSpread = () => template.program.ast`
   }
 `;
 
-helpers.get = () => template.program.ast`
-  export default function _get(object, property, receiver) {
-    if (object === null) object = Function.prototype;
-
-    var desc = Object.getOwnPropertyDescriptor(object, property);
-
-    if (desc === undefined) {
-      var parent = Object.getPrototypeOf(object);
-
-      if (parent === null) {
-        return undefined;
-      } else {
-        return _get(parent, property, receiver);
-      }
-    } else if ("value" in desc) {
-      return desc.value;
-    } else {
-      var getter = desc.get;
-
-      if (getter === undefined) {
-        return undefined;
-      }
-
-      return getter.call(receiver);
-    }
-  }
-`;
-
 helpers.inherits = () => template.program.ast`
+  import setPrototypeOf from "setPrototypeOf";
+
   export default function _inherits(subClass, superClass) {
     if (typeof superClass !== "function" && superClass !== null) {
       throw new TypeError("Super expression must either be null or a function");
     }
-    subClass.prototype = Object.create(superClass && superClass.prototype, {
-      constructor: {
-        value: subClass,
-        enumerable: false,
-        writable: true,
-        configurable: true
-      }
-    });
-    if (superClass)
-      Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+    setPrototypeOf(subClass.prototype, superClass && superClass.prototype);
+    if (superClass) setPrototypeOf(subClass, superClass);
   }
 `;
 
 helpers.inheritsLoose = () => template.program.ast`
   export default function _inheritsLoose(subClass, superClass) {
-    subClass.prototype = Object.create(superClass.prototype);
-    subClass.prototype.constructor = subClass;
+    subClass.prototype.__proto__ = superClass && superClass.prototype;
     subClass.__proto__ = superClass;
+  }
+`;
+
+helpers.getPrototypeOf = () => template.program.ast`
+  export default function _getPrototypeOf(o) {
+    _getPrototypeOf = Object.getPrototypeOf || function _getPrototypeOf(o) {
+      return o.__proto__;
+    };
+    return _getPrototypeOf(o);
+  }
+`;
+
+helpers.setPrototypeOf = () => template.program.ast`
+  export default function _setPrototypeOf(o, p) {
+    _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) {
+      o.__proto__ = p;
+      return o;
+    };
+    return _setPrototypeOf(o, p);
+  }
+`;
+
+helpers.construct = () => template.program.ast`
+  import setPrototypeOf from "setPrototypeOf";
+
+  export default function _construct(Parent, args, Class) {
+    if (typeof Reflect !== "undefined" && Reflect.construct) {
+      _construct = Reflect.construct;
+    } else {
+      _construct = function _construct(Parent, args, Class) {
+        var a = [null];
+        a.push.apply(a, args);
+        var Constructor = Parent.bind.apply(Parent, a);
+        var instance = new Constructor();
+        if (Class) setPrototypeOf(instance, Class.prototype);
+        return instance;
+      };
+    }
+    // Avoid issues with Class being present but undefined when it wasn't
+    // present in the original call.
+    return _construct.apply(null, arguments);
   }
 `;
 
 // Based on https://github.com/WebReflection/babel-plugin-transform-builtin-classes
 helpers.wrapNativeSuper = () => template.program.ast`
-  function _gPO(o) {
-    _gPO = Object.getPrototypeOf || function _gPO(o) { return o.__proto__ };
-    return _gPO(o);
-  }
-  function _sPO(o, p) {
-    _sPO = Object.setPrototypeOf || function _sPO(o, p) { o.__proto__ = p; return o };
-    return _sPO(o, p);
-  }
-  function _construct(Parent, args, Class) {
-    _construct = (typeof Reflect === "object" && Reflect.construct) ||
-      function _construct(Parent, args, Class) {
-        var Constructor, a = [null];
-        a.push.apply(a, args);
-        Constructor = Parent.bind.apply(Parent, a);
-        return _sPO(new Constructor, Class.prototype);
-      };
-    return _construct(Parent, args, Class);
-  }
+  import _gPO from "getPrototypeOf";
+  import _sPO from "setPrototypeOf";
+  import construct from "construct";
 
   export default function _wrapNativeSuper(Class) {
     var _cache = typeof Map === "function" ? new Map() : undefined;
@@ -491,7 +484,7 @@ helpers.wrapNativeSuper = () => template.program.ast`
         Wrapper,
         _sPO(
           function Super() {
-            return _construct(Class, arguments, _gPO(this).constructor);
+            return construct(Class, arguments, _gPO(this).constructor);
           },
           Class
         )
@@ -606,24 +599,96 @@ helpers.possibleConstructorReturn = () => template.program.ast`
   }
 `;
 
-helpers.set = () => template.program.ast`
-  export default function _set(object, property, value, receiver) {
-    var desc = Object.getOwnPropertyDescriptor(object, property);
+helpers.superPropBase = () => template.program.ast`
+  import getPrototypeOf from "getPrototypeOf";
 
-    if (desc === undefined) {
-      var parent = Object.getPrototypeOf(object);
+  export default function _superPropBase(object, property) {
+    // Yes, this throws if object is null to being with, that's on purpose.
+    while (!Object.prototype.hasOwnProperty.call(object, property)) {
+      object = getPrototypeOf(object);
+      if (object === null) break;
+    }
+    return object;
+  }
+`;
 
-      if (parent !== null) {
-        _set(parent, property, value, receiver);
-      }
-    } else if ("value" in desc && desc.writable) {
-      desc.value = value;
+helpers.get = () => template.program.ast`
+  import getPrototypeOf from "getPrototypeOf";
+  import superPropBase from "superPropBase";
+
+  export default function _get(target, property, receiver) {
+    if (typeof Reflect !== "undefined" && Reflect.get) {
+      _get = Reflect.get;
     } else {
-      var setter = desc.set;
+      _get = function _get(target, property, receiver) {
+        var base = superPropBase(target, property);
 
-      if (setter !== undefined) {
-        setter.call(receiver, value);
-      }
+        if (!base) return;
+
+        var desc = Object.getOwnPropertyDescriptor(base, property);
+        if (desc.get) {
+          return desc.get.call(receiver);
+        }
+
+        return desc.value;
+      };
+    }
+    return _get(target, property, receiver || target);
+  }
+`;
+
+helpers.set = () => template.program.ast`
+  import getPrototypeOf from "getPrototypeOf";
+  import superPropBase from "superPropBase";
+  import defineProperty from "defineProperty";
+
+  function set(target, property, value, receiver) {
+    if (typeof Reflect !== "undefined" && Reflect.set) {
+      set = Reflect.set;
+    } else {
+      set = function set(target, property, value, receiver) {
+        var base = superPropBase(target, property);
+        var desc;
+
+        if (base) {
+          desc = Object.getOwnPropertyDescriptor(base, property);
+          if (desc.set) {
+            desc.set.call(receiver, value);
+            return true;
+          } else if (!desc.writable) {
+            // Both getter and non-writable fall into this.
+            return false;
+          }
+        }
+
+        // Without a super that defines the property, spec boils down to
+        // "define on receiver" for some reason.
+        desc = Object.getOwnPropertyDescriptor(receiver, property);
+        if (desc) {
+          if (!desc.writable) {
+            // Setter, getter, and non-writable fall into this.
+            return false;
+          }
+
+          desc.value = value;
+          Object.defineProperty(receiver, property, desc);
+        } else {
+          // Avoid setters that may be defined on Sub's prototype, but not on
+          // the instance.
+          defineProperty(receiver, property, value);
+        }
+
+        return true;
+      };
+    }
+
+    return set(target, property, value, receiver);
+  }
+
+  export default function _set(target, property, value, receiver, isStrict) {
+    const s = set(target, property, value, receiver || target);
+    if (!s && isStrict) {
+      throw new Error('failed to set property');
     }
 
     return value;
@@ -725,7 +790,7 @@ helpers.arrayWithoutHoles = () => template.program.ast`
 `;
 
 helpers.arrayWithHoles = () => template.program.ast`
-  export default function _arrayWithoutHoles(arr) {
+  export default function _arrayWithHoles(arr) {
     if (Array.isArray(arr)) return arr;
   }
 `;

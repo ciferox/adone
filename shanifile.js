@@ -24,7 +24,7 @@ export default {
     transpiler: {
         plugins: [
             "transform.flowStripTypes",
-            "transform.decorators",
+            ["transform.decorators", { legacy: true }],
             ["transform.classProperties", { loose: true }],
             "transform.modulesCommonjs",
             "transform.functionBind",

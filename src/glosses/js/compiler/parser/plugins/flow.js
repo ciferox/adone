@@ -406,6 +406,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
       }
 
       node.extends = [];
+      node.implements = [];
       node.mixins = [];
 
       if (this.eat(tt._extends)) {
@@ -418,6 +419,13 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         this.next();
         do {
           node.mixins.push(this.flowParseInterfaceExtends());
+        } while (this.eat(tt.comma));
+      }
+
+      if (this.isContextual("implements")) {
+        this.next();
+        do {
+          node.implements.push(this.flowParseInterfaceExtends());
         } while (this.eat(tt.comma));
       }
 

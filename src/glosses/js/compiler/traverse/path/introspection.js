@@ -28,11 +28,11 @@ export function matchesPattern(
 
 export function has(key): boolean {
   const val = this.node && this.node[key];
-  if (val && adone.is.array(val)) {
-    return Boolean(val.length);
+  if (val && Array.isArray(val)) {
+    return !!val.length;
+  } else {
+    return !!val;
   }
-  return Boolean(val);
-
 }
 
 /**
@@ -125,14 +125,14 @@ export function isCompletionRecord(allowInsideFunction?) {
 
     // we're in a function so can't be a completion record
     if (path.isFunction() && !first) {
-      return Boolean(allowInsideFunction);
+      return !!allowInsideFunction;
     }
 
     first = false;
 
     // check to see if we're the last item in the container and if we are
     // we're a completion record!
-    if (is.array(container) && path.key !== container.length - 1) {
+    if (Array.isArray(container) && path.key !== container.length - 1) {
       return false;
     }
   } while ((path = path.parentPath) && !path.isProgram());
@@ -151,9 +151,9 @@ export function isStatementOrBlock() {
     t.isBlockStatement(this.container)
   ) {
     return false;
+  } else {
+    return includes(t.STATEMENT_OR_BLOCK_KEYS, this.key);
   }
-  return includes(t.STATEMENT_OR_BLOCK_KEYS, this.key);
-
 }
 
 /**
@@ -161,26 +161,18 @@ export function isStatementOrBlock() {
  */
 
 export function referencesImport(moduleSource, importName) {
-  if (!this.isReferencedIdentifier()) {
-    return false;
-  }
+  if (!this.isReferencedIdentifier()) return false;
 
   const binding = this.scope.getBinding(this.node.name);
-  if (!binding || binding.kind !== "module") {
-    return false;
-  }
+  if (!binding || binding.kind !== "module") return false;
 
   const path = binding.path;
   const parent = path.parentPath;
-  if (!parent.isImportDeclaration()) {
-    return false;
-  }
+  if (!parent.isImportDeclaration()) return false;
 
   // check moduleSource
   if (parent.node.source.value === moduleSource) {
-    if (!importName) {
-      return true;
-    }
+    if (!importName) return true;
   } else {
     return false;
   }
@@ -208,9 +200,9 @@ export function getSource() {
   const node = this.node;
   if (node.end) {
     return this.hub.file.code.slice(node.start, node.end);
+  } else {
+    return "";
   }
-  return "";
-
 }
 
 export function willIMaybeExecuteBefore(target) {
@@ -239,13 +231,13 @@ export function _guessExecutionStatusRelativeTo(target) {
     );
     if (status) {
       return status;
+    } else {
+      target = targetFuncParent.path;
     }
-    target = targetFuncParent.path;
-
   }
 
   const targetPaths = target.getAncestry();
-  if (targetPaths.indexOf(this) >= 0) { return "after"; }
+  if (targetPaths.indexOf(this) >= 0) return "after";
 
   const selfPaths = this.getAncestry();
 
@@ -291,9 +283,7 @@ export function _guessExecutionStatusRelativeToDifferentFunctions(
   targetFuncParent,
 ) {
   const targetFuncPath = targetFuncParent.path;
-  if (!targetFuncPath.isFunctionDeclaration()) {
-    return;
-  }
+  if (!targetFuncPath.isFunctionDeclaration()) return;
 
   // so we're in a completely different function, if this is a function declaration
   // then we can be a bit smarter and handle cases where the function is either
@@ -302,9 +292,7 @@ export function _guessExecutionStatusRelativeToDifferentFunctions(
   const binding = targetFuncPath.scope.getBinding(targetFuncPath.node.id.name);
 
   // no references!
-  if (!binding.references) {
-    return "before";
-  }
+  if (!binding.references) return "before";
 
   const referencePaths: Array<NodePath> = binding.referencePaths;
 
@@ -321,19 +309,15 @@ export function _guessExecutionStatusRelativeToDifferentFunctions(
   for (const path of referencePaths) {
     // if a reference is a child of the function we're checking against then we can
     // safelty ignore it
-    const childOfFunction = Boolean(path.find(
-      (path) => path.node === targetFuncPath.node,
-    ));
-    if (childOfFunction) {
-      continue;
-    }
+    const childOfFunction = !!path.find(
+      path => path.node === targetFuncPath.node,
+    );
+    if (childOfFunction) continue;
 
     const status = this._guessExecutionStatusRelativeTo(path);
 
     if (allStatus) {
-      if (allStatus !== status) {
-        return;
-      }
+      if (allStatus !== status) return;
     } else {
       allStatus = status;
     }
@@ -353,7 +337,7 @@ export function resolve(dangerous, resolved) {
 export function _resolve(dangerous?, resolved?): ?NodePath {
   // detect infinite recursion
   // todo: possibly have a max length on this just to be safe
-  if (resolved && resolved.indexOf(this) >= 0) { return; }
+  if (resolved && resolved.indexOf(this) >= 0) return;
 
   // we store all the paths we've "resolved" in this array to prevent infinite recursion
   resolved = resolved || [];
@@ -362,23 +346,23 @@ export function _resolve(dangerous?, resolved?): ?NodePath {
   if (this.isVariableDeclarator()) {
     if (this.get("id").isIdentifier()) {
       return this.get("init").resolve(dangerous, resolved);
+    } else {
+      // otherwise it's a request for a pattern and that's a bit more tricky
     }
-    // otherwise it's a request for a pattern and that's a bit more tricky
-
   } else if (this.isReferencedIdentifier()) {
     const binding = this.scope.getBinding(this.node.name);
-    if (!binding) { return; }
+    if (!binding) return;
 
     // reassigned so we can't really resolve it
-    if (!binding.constant) { return; }
+    if (!binding.constant) return;
 
     // todo - lookup module in dependency graph
-    if (binding.kind === "module") { return; }
+    if (binding.kind === "module") return;
 
     if (binding.path !== this) {
       const ret = binding.path.resolve(dangerous, resolved);
       // If the identifier resolves to parent node then we can't really resolve it.
-      if (this.find((parent) => parent.node === ret.node)) { return; }
+      if (this.find(parent => parent.node === ret.node)) return;
       return ret;
     }
   } else if (this.isTypeCastExpression()) {
@@ -388,7 +372,7 @@ export function _resolve(dangerous?, resolved?): ?NodePath {
     // making this resolution inaccurate
 
     const targetKey = this.toComputedKey();
-    if (!t.isLiteral(targetKey)) { return; }
+    if (!t.isLiteral(targetKey)) return;
 
     const targetName = targetKey.value;
 
@@ -397,7 +381,7 @@ export function _resolve(dangerous?, resolved?): ?NodePath {
     if (target.isObjectExpression()) {
       const props = target.get("properties");
       for (const prop of (props: Array)) {
-        if (!prop.isProperty()) { continue; }
+        if (!prop.isProperty()) continue;
 
         const key = prop.get("key");
 
@@ -408,12 +392,12 @@ export function _resolve(dangerous?, resolved?): ?NodePath {
         // { "foo": "obj" } or { ["foo"]: "obj" }
         match = match || key.isLiteral({ value: targetName });
 
-        if (match) { return prop.get("value").resolve(dangerous, resolved); }
+        if (match) return prop.get("value").resolve(dangerous, resolved);
       }
-    } else if (target.isArrayExpression() && !isNaN(Number(targetName))) {
+    } else if (target.isArrayExpression() && !isNaN(+targetName)) {
       const elems = target.get("elements");
       const elem = elems[targetName];
-      if (elem) { return elem.resolve(dangerous, resolved); }
+      if (elem) return elem.resolve(dangerous, resolved);
     }
   }
 }
@@ -433,7 +417,7 @@ export function isConstantExpression() {
     }
 
     if (this.isTemplateLiteral()) {
-      return this.get("expressions").every((expression) =>
+      return this.get("expressions").every(expression =>
         expression.isConstantExpression(),
       );
     }
@@ -457,4 +441,34 @@ export function isConstantExpression() {
   }
 
   return false;
+}
+
+export function isInStrictMode() {
+  const start = this.isProgram() ? this : this.parentPath;
+
+  const strictParent = start.find(path => {
+    if (path.isProgram({ sourceType: "module" })) return true;
+
+    if (path.isClass()) return true;
+
+    if (!path.isProgram() && !path.isFunction()) return false;
+
+    if (
+      path.isArrowFunctionExpression() &&
+      !path.get("body").isBlockStatement()
+    ) {
+      return false;
+    }
+
+    let { node } = path;
+    if (path.isFunction()) node = node.body;
+
+    for (const directive of node.directives) {
+      if (directive.value.value === "use strict") {
+        return true;
+      }
+    }
+  });
+
+  return !!strictParent;
 }

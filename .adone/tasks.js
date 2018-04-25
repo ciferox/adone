@@ -35,7 +35,5 @@ class AdoneTranspileExeTask extends project.task.TranspileExe {
 adone.lazify({
     adoneTranspile: () => AdoneTranspileTask,
     adoneTranspileExe: () => AdoneTranspileExeTask,
-    adoneDotCompiler: "./tasks/dot_compiler",
-    realmInit: "./tasks/realm_init",
-    realmClean: "./tasks/realm_clean"
+    adoneDotCompiler: "./tasks/dot_compiler"
 }, exports, require);

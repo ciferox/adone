@@ -201,8 +201,10 @@ export function FunctionTypeAnnotation(node: Object, parent: Object) {
 export function FunctionTypeParam(node: Object) {
   this.print(node.name, node);
   if (node.optional) this.token("?");
-  this.token(":");
-  this.space();
+  if (node.name) {
+    this.token(":");
+    this.space();
+  }
   this.print(node.typeAnnotation, node);
 }
 
@@ -230,6 +232,12 @@ export function _interfaceish(node: Object) {
     this.word("mixins");
     this.space();
     this.printList(node.mixins, node);
+  }
+  if (node.implements && node.implements.length) {
+    this.space();
+    this.word("implements");
+    this.space();
+    this.printList(node.implements, node);
   }
   this.space();
   this.print(node.body, node);

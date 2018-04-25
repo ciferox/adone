@@ -9,6 +9,32 @@ import defineType, {
   validateType,
 } from "./utils";
 
+const defineInterfaceishType = (
+  name: string,
+  typeParameterType: string = "TypeParameterDeclaration",
+) => {
+  defineType(name, {
+    builder: ["id", "typeParameters", "extends", "body"],
+    visitor: [
+      "id",
+      "typeParameters",
+      "extends",
+      "mixins",
+      "implements",
+      "body",
+    ],
+    aliases: ["Flow", "FlowDeclaration", "Statement", "Declaration"],
+    fields: {
+      id: validateType("Identifier"),
+      typeParameters: validateOptionalType(typeParameterType),
+      extends: validateOptional(arrayOfType("InterfaceExtends")),
+      mixins: validateOptional(arrayOfType("InterfaceExtends")),
+      implements: validateOptional(arrayOfType("ClassImplements")),
+      body: validateType("ObjectTypeAnnotation"),
+    },
+  });
+};
+
 defineType("AnyTypeAnnotation", {
   aliases: ["Flow", "FlowType", "FlowBaseAnnotation"],
 });
@@ -26,6 +52,7 @@ defineType("BooleanTypeAnnotation", {
 });
 
 defineType("BooleanLiteralTypeAnnotation", {
+  builder: ["value"],
   aliases: ["Flow", "FlowType"],
   fields: {
     value: validate(assertValueType("boolean")),
@@ -45,17 +72,7 @@ defineType("ClassImplements", {
   },
 });
 
-defineType("DeclareClass", {
-  visitor: ["id", "typeParameters", "extends", "body"],
-  aliases: ["Flow", "FlowDeclaration", "Statement", "Declaration"],
-  fields: {
-    id: validateType("Identifier"),
-    typeParameters: validateOptionalType("TypeParameterInstantiation"),
-    extends: validateOptional(arrayOfType("InterfaceExtends")),
-    mixins: validateOptional(arrayOfType("InterfaceExtends")),
-    body: validateType("ObjectTypeAnnotation"),
-  },
-});
+defineInterfaceishType("DeclareClass", "TypeParameterInstantiation");
 
 defineType("DeclareFunction", {
   visitor: ["id"],
@@ -66,17 +83,7 @@ defineType("DeclareFunction", {
   },
 });
 
-defineType("DeclareInterface", {
-  visitor: ["id", "typeParameters", "extends", "body"],
-  aliases: ["Flow", "FlowDeclaration", "Statement", "Declaration"],
-  fields: {
-    id: validateType("Identifier"),
-    typeParameters: validateOptionalType("TypeParameterDeclaration"),
-    extends: validateOptionalType("InterfaceExtends"),
-    mixins: validateOptional(arrayOfType("Flow")),
-    body: validateType("ObjectTypeAnnotation"),
-  },
-});
+defineInterfaceishType("DeclareInterface");
 
 defineType("DeclareModule", {
   builder: ["id", "body", "kind"],
@@ -202,17 +209,7 @@ defineType("InterfaceExtends", {
   },
 });
 
-defineType("InterfaceDeclaration", {
-  visitor: ["id", "typeParameters", "extends", "body"],
-  aliases: ["Flow", "FlowDeclaration", "Statement", "Declaration"],
-  fields: {
-    id: validateType("Identifier"),
-    typeParameters: validateOptionalType("TypeParameterDeclaration"),
-    extends: validate(arrayOfType("InterfaceExtends")),
-    mixins: validate(arrayOfType("InterfaceExtends")),
-    body: validateType("ObjectTypeAnnotation"),
-  },
-});
+defineInterfaceishType("InterfaceDeclaration");
 
 defineType("IntersectionTypeAnnotation", {
   visitor: ["types"],
@@ -239,6 +236,7 @@ defineType("NullableTypeAnnotation", {
 });
 
 defineType("NumberLiteralTypeAnnotation", {
+  builder: ["value"],
   aliases: ["Flow", "FlowType"],
   fields: {
     value: validate(assertValueType("number")),
@@ -329,6 +327,7 @@ defineType("QualifiedTypeIdentifier", {
 });
 
 defineType("StringLiteralTypeAnnotation", {
+  builder: ["value"],
   aliases: ["Flow", "FlowType"],
   fields: {
     value: validate(assertValueType("string")),

@@ -177,7 +177,10 @@ const loadDescriptor = makeWeakCache(
 
     let item = value;
     if (typeof value === "function") {
-      const api = Object.assign({}, context, makeAPI(cache));
+      const api = {
+        ...context,
+        ...makeAPI(cache),
+      };
       try {
         item = value(api, options, dirname);
       } catch (e) {
@@ -232,9 +235,13 @@ const instantiatePlugin = makeWeakCache(
   ): Plugin => {
     const pluginObj = validatePluginObject(value);
 
-    const plugin = Object.assign({}, pluginObj);
+    const plugin = {
+      ...pluginObj,
+    };
     if (plugin.visitor) {
-      plugin.visitor = traverse.explode(Object.assign({}, plugin.visitor));
+      plugin.visitor = traverse.explode({
+        ...plugin.visitor,
+      });
     }
 
     if (plugin.inherits) {

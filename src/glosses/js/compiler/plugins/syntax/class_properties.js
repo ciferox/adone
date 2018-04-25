@@ -1,13 +1,13 @@
 const {
-    js: { compiler: { helper: { pluginUtils } } }
+    js: { compiler: { helper: { pluginUtils: { declare } } } }
 } = adone;
 
-export default pluginUtils.declare((api) => {
+export default declare((api) => {
     api.assertVersion(7);
 
     return {
         manipulateOptions(opts, parserOpts) {
-            parserOpts.plugins.push("classProperties");
+            parserOpts.plugins.push("classProperties", "classPrivateProperties");
         }
     };
 });
