@@ -1,6 +1,6 @@
 const Terraformer = adone.util.terraformer;
 
-describe("Spatial Reference Converters", () => {
+describe("util", "terraformer", "Spatial Reference Converters", () => {
     it("should convert a GeoJSON Point to Web Mercator", () => {
         const input = {
             type: "Point",

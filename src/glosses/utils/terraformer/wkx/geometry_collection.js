@@ -7,9 +7,10 @@ const {
 } = adone;
 
 export default class GeometryCollection extends WKX.Geometry {
-    constructor(geometries) {
+    constructor(geometries, srid) {
         super();
         this.geometries = geometries || [];
+        this.srid = srid;
 
         if (this.geometries.length > 0) {
             this.hasZ = this.geometries[0].hasZ;
@@ -17,20 +18,20 @@ export default class GeometryCollection extends WKX.Geometry {
         }
     }
 
-    static Z(geometries) {
-        const geometryCollection = new GeometryCollection(geometries);
+    static Z(geometries, srid) {
+        const geometryCollection = new GeometryCollection(geometries, srid);
         geometryCollection.hasZ = true;
         return geometryCollection;
     }
 
-    static M(geometries) {
-        const geometryCollection = new GeometryCollection(geometries);
+    static M(geometries, srid) {
+        const geometryCollection = new GeometryCollection(geometries, srid);
         geometryCollection.hasM = true;
         return geometryCollection;
     }
 
-    static ZM(geometries) {
-        const geometryCollection = new GeometryCollection(geometries);
+    static ZM(geometries, srid) {
+        const geometryCollection = new GeometryCollection(geometries, srid);
         geometryCollection.hasZ = true;
         geometryCollection.hasM = true;
         return geometryCollection;
@@ -94,7 +95,7 @@ export default class GeometryCollection extends WKX.Geometry {
         const geometryCollection = new GeometryCollection();
 
         for (let i = 0; i < value.geometries.length; i++) {
-            geometryCollection.geometries.push(WKX.Geometry.parseGeoJSON(value.geometries[i]));
+            geometryCollection.geometries.push(WKX.Geometry._parseGeoJSON(value.geometries[i], true));
         }
 
         if (geometryCollection.geometries.length > 0) {

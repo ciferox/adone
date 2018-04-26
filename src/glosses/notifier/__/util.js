@@ -275,6 +275,10 @@ export const constructArgumentList = (options, extra = {}) => {
             return removeNewLines(arg.join(","));
         }
 
+        if (!is.string(arg)) {
+            arg = `${arg}`;
+        }
+
         if (!noEscape) {
             arg = escapeQuotes(arg);
         }
@@ -362,8 +366,6 @@ export const mapToWin8 = (options) => {
     if (options.appName) {
         options.appID = options.appName;
         delete options.appName;
-    } else if (is.undefined(options.appID)) {
-        options.appID = " ";
     }
 
     if (!is.undefined(options.remove)) {

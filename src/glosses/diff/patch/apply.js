@@ -36,8 +36,8 @@ export const applyPatch = (source, uniDiff, options = {}) => {
      */
     const hunkFits = (hunk, toPos) => {
         for (const line of hunk.lines) {
-            const [operation] = line;
-            const content = line.substr(1);
+            const operation = line.length > 0 ? line[0] : " ";
+            const content = line.length > 0 ? line.substr(1) : line;
 
             if (operation === " " || operation === "-") {
                 // Context sanity check
@@ -91,8 +91,8 @@ export const applyPatch = (source, uniDiff, options = {}) => {
 
         for (let j = 0; j < hunk.lines.length; j++) {
             const line = hunk.lines[j];
-            const operation = line[0];
-            const content = line.substr(1);
+            const operation = line.length > 0 ? line[0] : " ";
+            const content = line.length > 0 ? line.substr(1) : line;
             const delimiter = hunk.linedelimiters[j];
 
             if (operation === " ") {

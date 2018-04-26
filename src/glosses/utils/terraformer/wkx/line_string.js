@@ -7,9 +7,10 @@ const {
 } = adone;
 
 export default class LineString extends WKX.Geometry {
-    constructor(points) {
+    constructor(points, srid) {
         super();
         this.points = points || [];
+        this.srid = srid;
 
         if (this.points.length > 0) {
             this.hasZ = this.points[0].hasZ;
@@ -17,20 +18,20 @@ export default class LineString extends WKX.Geometry {
         }
     }
 
-    static Z(points) {
-        const lineString = new LineString(points);
+    static Z(points, srid) {
+        const lineString = new LineString(points, srid);
         lineString.hasZ = true;
         return lineString;
     }
 
-    static M(points) {
-        const lineString = new LineString(points);
+    static M(points, srid) {
+        const lineString = new LineString(points, srid);
         lineString.hasM = true;
         return lineString;
     }
 
-    static ZM(points) {
-        const lineString = new LineString(points);
+    static ZM(points, srid) {
+        const lineString = new LineString(points, srid);
         lineString.hasZ = true;
         lineString.hasM = true;
         return lineString;

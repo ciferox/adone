@@ -138,7 +138,7 @@ export default class FormData extends CombinedStream {
 
             // not that fast snoopy
             } else {
-            // still need to fetch file size from fs
+                // still need to fetch file size from fs
                 fs.stat(value.path, (err, stat) => {
                     if (err) {
                         callback(err);

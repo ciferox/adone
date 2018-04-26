@@ -7,9 +7,10 @@ const {
 } = adone;
 
 export default class MultiPoint extends WKX.Geometry {
-    constructor(points) {
+    constructor(points, srid) {
         super();
         this.points = points || [];
+        this.srid = srid;
 
         if (this.points.length > 0) {
             this.hasZ = this.points[0].hasZ;
@@ -17,20 +18,20 @@ export default class MultiPoint extends WKX.Geometry {
         }
     }
 
-    static Z(points) {
-        const multiPoint = new MultiPoint(points);
+    static Z(points, srid) {
+        const multiPoint = new MultiPoint(points, srid);
         multiPoint.hasZ = true;
         return multiPoint;
     }
 
-    static M(points) {
-        const multiPoint = new MultiPoint(points);
+    static M(points, srid) {
+        const multiPoint = new MultiPoint(points, srid);
         multiPoint.hasM = true;
         return multiPoint;
     }
 
-    static ZM(points) {
-        const multiPoint = new MultiPoint(points);
+    static ZM(points, srid) {
+        const multiPoint = new MultiPoint(points, srid);
         multiPoint.hasZ = true;
         multiPoint.hasM = true;
         return multiPoint;

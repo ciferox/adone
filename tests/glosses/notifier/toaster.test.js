@@ -9,11 +9,18 @@ describe("notifier", "WindowsToaster", () => {
         }
     };
 
-    beforeEach(function () {
-        this.original = util.fileCommand;
-        this.originalType = os.type;
-        this.originalArch = os.arch;
-        this.originalRelease = os.release;
+    const argsListHas = (args, field) => {
+        return args.filter((item) => {
+            return item === field;
+        }).length > 0;
+    };
+
+    const original = util.fileCommand;
+    const originalType = os.type;
+    const originalArch = os.arch;
+    const originalRelease = os.release;
+
+    beforeEach(() => {
         os.release = function () {
             return "6.2.9200";
         };
@@ -22,11 +29,11 @@ describe("notifier", "WindowsToaster", () => {
         };
     });
 
-    afterEach(function () {
-        util.fileCommand = this.original;
-        os.type = this.originalType;
-        os.arch = this.originalArch;
-        os.release = this.originalRelease;
+    afterEach(() => {
+        util.fileCommand = original;
+        os.type = originalType;
+        os.arch = originalArch;
+        os.release = originalRelease;
     });
 
     it("should only pass allowed options and proper named properties", async () => {
@@ -80,7 +87,7 @@ describe("notifier", "WindowsToaster", () => {
 
     it("should default to empty app name", async () => {
         util.fileCommand = function (notifier, argsList) {
-            expect(getOptionValue(argsList, "-appID")).to.be.equal(" ");
+            expect(argsListHas(argsList, "-appId")).to.be.false();
         };
         const notifier = new Notify();
 

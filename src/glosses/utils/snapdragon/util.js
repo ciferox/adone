@@ -12,14 +12,18 @@ const _append = (compiler, val, node) => {
     return compiler.append(val, node);
 };
 
-/**
- * Simplified assertion. Throws an error is `val` is falsey.
- */
 
-const assert = (val, message) => {
-    if (!val) {
+/**
+ * Simplified assertion. Throws an error is `value` is falsey.
+ */
+const assert = (value, message) => {
+    if (!value) {
         throw new Error(message);
     }
+};
+const expect = (node, name, Node) => {
+    const isNode = (Node && Node.isNode) ? Node.isNode : exports.isNode; // TODO: avoid exports
+    assert(isNode(node), `expected ${name} to be an instance of Node`);
 };
 
 /**
@@ -43,6 +47,27 @@ export const noop = function (node) {
 };
 
 /**
+ * Returns `node.value` or `node.val`.
+ *
+ * ```js
+ * const star = new Node({type: 'star', value: '*'});
+ * const slash = new Node({type: 'slash', val: '/'});
+ * console.log(utils.value(star)) //=> '*'
+ * console.log(utils.value(slash)) //=> '/'
+ * ```
+ * @param {Object} `node` Instance of [snapdragon-node][]
+ * @returns {String} returns
+ * @api public
+ */
+
+export const value = function (node) {
+    if (is.string(node.value)) {
+        return node.value;
+    }
+    return node.val;
+};
+
+/**
  * Appdend `node.val` to `compiler.output`, exactly as it was created
  * by the parser.
  *
@@ -50,7 +75,7 @@ export const noop = function (node) {
  * @returns {undefined}
  */
 export const identity = function (node) {
-    _append(this, node.val, node);
+    _append(this, value(node), node);
 };
 
 /**
@@ -62,9 +87,9 @@ export const identity = function (node) {
  * @param {object} `node` Instance of [snapdragon-node][]
  * @returns {Function} Returns a compiler middleware function.
  */
-export const append = function (val) {
+export const append = (value) => {
     return function (node) {
-        _append(this, val, node);
+        _append(this, value, node);
     };
 };
 
@@ -84,7 +109,7 @@ export const toNoop = function (node, nodes) {
     } else {
         delete node.nodes;
         node.type = "text";
-        node.val = "";
+        node.value = "";
     }
 };
 
@@ -98,8 +123,8 @@ export const toNoop = function (node, nodes) {
  * @returns {object} returns the node after recursively visiting all child nodes.
  */
 export const visit = function (node, fn) {
-    assert(isNode(node), "expected node to be an instance of Node");
     assert(is.function(fn), "expected a visitor function");
+    expect(node, "node");
     fn(node);
     return node.nodes ? mapVisit(node, fn) : node; // eslint-disable-line no-use-before-define
 };
@@ -115,9 +140,9 @@ export const visit = function (node, fn) {
  * @returns {object} returns the node
  */
 export const mapVisit = function (node, fn) {
-    assert(isNode(node), "expected node to be an instance of Node");
-    assert(is.array(node.nodes), "expected node.nodes to be an array");
     assert(is.function(fn), "expected a visitor function");
+    expect(node, "node");
+    assert(is.array(node.nodes), "expected node.nodes to be an array");
 
     for (let i = 0; i < node.nodes.length; i++) {
         visit(node.nodes[i], fn);
@@ -134,7 +159,13 @@ export const mapVisit = function (node, fn) {
  */
 export const unshiftNode = function (parent, node) {
     assert(isNode(parent), "expected parent node to be an instance of Node");
-    assert(isNode(node), "expected node to be an instance of Node");
+    if (!node) {
+        return;
+    }
+
+    if (is.function(parent.unshift)) {
+        return parent.unshift(node);
+    }
 
     node.define("parent", parent);
     parent.nodes = parent.nodes || [];
@@ -150,7 +181,14 @@ export const unshiftNode = function (parent, node) {
  */
 export const pushNode = function (parent, node) {
     assert(isNode(parent), "expected parent node to be an instance of Node");
-    assert(isNode(node), "expected node to be an instance of Node");
+    if (!node) {
+        return;
+    }
+
+    if (is.function(parent.push)) {
+        return parent.push(node);
+    }
+
 
     node.define("parent", parent);
     parent.nodes = parent.nodes || [];
@@ -166,19 +204,19 @@ export const pushNode = function (parent, node) {
  * @param {Function} `filter` Optionaly specify a filter function to exclude the node.
  * @returns {object} Returns the created opening node.
  */
-export const addOpen = function (node, Node, val, filter) {
-    assert(isNode(node), "expected node to be an instance of Node");
+export const addOpen = function (node, Node, value, filter) {
+    expect(node, "node");
     assert(is.function(Node), "expected Node to be a constructor function");
 
-    if (is.function(val)) {
-        filter = val;
-        val = "";
+    if (is.function(value)) {
+        filter = value;
+        value = "";
     }
 
     if (is.function(filter) && !filter(node)) {
         return;
     }
-    const open = new Node({ type: `${node.type}.open`, val });
+    const open = new Node({ type: `${node.type}.open`, value });
     const unshift = node.unshift || node.unshiftNode;
     if (is.function(unshift)) {
         unshift.call(node, open);
@@ -196,19 +234,19 @@ export const addOpen = function (node, Node, val, filter) {
  * @param {Function} `filter` Optionaly specify a filter function to exclude the node.
  * @returns {object} Returns the created closing node.
  */
-export const addClose = function (node, Node, val, filter) {
-    assert(isNode(node), "expected node to be an instance of Node");
+export const addClose = function (node, Node, value, filter) {
     assert(is.function(Node), "expected Node to be a constructor function");
+    expect(node, "node", Node);
 
-    if (is.function(val)) {
-        filter = val;
-        val = "";
+    if (is.function(value)) {
+        filter = value;
+        value = "";
     }
 
     if (is.function(filter) && !filter(node)) {
         return;
     }
-    const close = new Node({ type: `${node.type}.close`, val });
+    const close = new Node({ type: `${node.type}.close`, value });
     const push = node.push || node.pushNode;
     if (is.function(push)) {
         push.call(node, close);
@@ -277,11 +315,12 @@ export const shiftNode = function (node) {
  * @return {Object|undefined} Returns the removed node, if successful, or undefined if it does not exist on `parent.nodes`.
  */
 export const removeNode = function (parent, node) {
-    assert(isNode(parent), "expected parent.node to be an instance of Node");
-    assert(isNode(node), "expected node to be an instance of Node");
-
+    assert(isNode(parent), "expected parent to be an instance of Node");
     if (!parent.nodes) {
-        return null;
+        return;
+    }
+    if (!node) {
+        return;
     }
 
     if (is.function(parent.remove)) {
@@ -303,21 +342,22 @@ export const removeNode = function (parent, node) {
  * @returns {boolean}
  */
 export const isType = function (node, type) {
-    assert(isNode(node), "expected node to be an instance of Node");
+    if (!isNode(node)) {
+        return false;
+    }
     switch (adone.meta.typeOf(type)) {
+        case "string":
+            return node.type === type;
+        case "RegExp":
+            return type.test(node.type);
         case "Array": {
-            const types = type.slice();
-            for (let i = 0; i < types.length; i++) {
-                if (isType(node, types[i])) {
+            for (const key of type.slice()) {
+                if (isType(node, key)) {
                     return true;
                 }
             }
             return false;
         }
-        case "string":
-            return node.type === type;
-        case "RegExp":
-            return type.test(node.type);
         default: {
             throw new TypeError('expected "type" to be an array, string or regexp');
         }
@@ -333,12 +373,14 @@ export const isType = function (node, type) {
  * @returns {boolean}
  */
 export const hasType = function (node, type) {
-    assert(isNode(node), "expected node to be an instance of Node");
+    if (!isNode(node)) {
+        return false;
+    }
     if (!is.array(node.nodes)) {
         return false;
     }
-    for (let i = 0; i < node.nodes.length; i++) {
-        if (isType(node.nodes[i], type)) {
+    for (const child of node.nodes) {
+        if (isType(child, type)) {
             return true;
         }
     }
@@ -353,8 +395,7 @@ export const hasType = function (node, type) {
  * @return {Object|undefined} Returns the first matching node or undefined.
  */
 export const firstOfType = function (nodes, type) {
-    for (let i = 0; i < nodes.length; i++) {
-        const node = nodes[i];
+    for (const node of nodes) {
         if (isType(node, type)) {
             return node;
         }
@@ -386,8 +427,16 @@ export const findNode = function (nodes, type) {
  * @returns {boolean}
  */
 export const isOpen = function (node) {
-    assert(isNode(node), "expected node to be an instance of Node");
-    return node.type.slice(-5) === ".open";
+    if (!node) {
+        return false;
+    }
+    if (node.parent && is.function(node.parent.isOpen)) {
+        return node.parent.isOpen(node);
+    }
+    if (node && is.function(node.isOpen)) {
+        return node.isOpen(node);
+    }
+    return node.type ? node.type.slice(-5) === ".open" : false;
 };
 
 /**
@@ -397,8 +446,39 @@ export const isOpen = function (node) {
  * @returns {boolean}
  */
 export const isClose = function (node) {
-    assert(isNode(node), "expected node to be an instance of Node");
-    return node.type.slice(-6) === ".close";
+    if (!node) {
+        return false;
+    }
+    if (node.parent && is.function(node.parent.isClose)) {
+        return node.parent.isClose(node);
+    }
+    if (node && is.function(node.isClose)) {
+        return node.isClose(node);
+    }
+    return node.type ? node.type.slice(-6) === ".close" : false;
+};
+
+/**
+ * Returns true if the given node is an "*.open" node.
+ *
+ * @param {Object} `node` Instance of [snapdragon-node][]
+ * @return {Boolean}
+ * @api public
+ */
+export const isBlock = function (node) {
+    if (!node || !isNode(node)) {
+        return false;
+    }
+    if (!is.array(node.nodes)) {
+        return false;
+    }
+    if (node.parent && is.function(node.parent.isBlock)) {
+        return node.parent.isBlock(node);
+    }
+    if (is.function(node.isBlock)) {
+        return node.isBlock(node);
+    }
+    return hasOpenAndClose(node);
 };
 
 /**
@@ -410,10 +490,13 @@ export const isClose = function (node) {
 export const hasOpen = function (node) {
     assert(isNode(node), "expected node to be an instance of Node");
     const first = node.first || node.nodes ? node.nodes[0] : null;
-    if (isNode(first)) {
-        return first.type === `${node.type}.open`;
+    if (!isNode(first)) {
+        return false;
     }
-    return false;
+    if (is.function(node.isOpen)) {
+        return node.isOpen(first);
+    }
+    return first.type === `${node.type}.open`;
 };
 
 /**
@@ -425,10 +508,13 @@ export const hasOpen = function (node) {
 export const hasClose = function (node) {
     assert(isNode(node), "expected node to be an instance of Node");
     const last = node.last || node.nodes ? node.nodes[node.nodes.length - 1] : null;
-    if (isNode(last)) {
-        return last.type === `${node.type}.close`;
+    if (!isNode(last)) {
+        return false;
     }
-    return false;
+    if (is.function(node.isClose)) {
+        return node.isClose(last);
+    }
+    return last.type === `${node.type}.close`;
 };
 
 /**
@@ -504,20 +590,17 @@ export const isEmpty = function (node, fn) {
     assert(isNode(node), "expected node to be an instance of Node");
 
     if (!is.array(node.nodes)) {
-        if (node.type !== "text") {
-            return true;
-        }
         if (is.function(fn)) {
-            return fn(node, node.parent);
+            return fn(node);
         }
-        return is.string(node.val) ? !node.val.trim() : true;
+        return !value(node);
     }
 
-    for (let i = 0; i < node.nodes.length; i++) {
-        const child = node.nodes[i];
-        if (isOpen(child) || isClose(child)) {
-            continue;
-        }
+    if (node.nodes.length === 0) {
+        return true;
+    }
+
+    for (const child of node.nodes) {
         if (!isEmpty(child, fn)) {
             return false;
         }
@@ -586,9 +669,9 @@ export const isInside = function (state, node, type) {
         let idx = -1;
         while (++idx < len) {
             const key = keys[idx];
-            const val = state.inside[key];
+            const value = state.inside[key];
 
-            if (is.array(val) && val.length !== 0 && type.test(key)) {
+            if (is.array(value) && value.length !== 0 && type.test(key)) {
                 return true;
             }
         }
@@ -605,5 +688,36 @@ export const isInside = function (state, node, type) {
  * @return {undefined}
  */
 export const last = function (arr, n) {
-    return arr[arr.length - (n || 1)];
+    return is.array(arr) ? arr[arr.length - (n || 1)] : null;
+};
+
+export const lastNode = function (node) {
+    return is.array(node.nodes) ? last(node.nodes) : null;
+};
+
+/**
+ * Cast the given `value` to an array.
+ *
+ * @param {any} `value`
+ * @return {Array}
+ */
+export const arrayify = function (value) {
+    if (is.string(value) && value !== "") {
+        return [value];
+    }
+    if (!is.array(value)) {
+        return [];
+    }
+    return value;
+};
+
+/**
+ * Convert the given `value` to a string by joining with `,`. Useful
+ * for creating a cheerio/CSS/DOM-style selector from a list of strings.
+ *
+ * @param {any} `value`
+ * @return {Array}
+ */
+export const stringify = function (value) {
+    return arrayify(value).join(",");
 };

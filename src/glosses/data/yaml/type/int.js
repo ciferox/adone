@@ -11,7 +11,7 @@ const isOctCode = (c) => c/* 0 */ >= 0x30 && c <= 0x37/* 7 */;
 const isDecCode = (c) => c/* 0 */ >= 0x30 && c <= 0x39/* 9 */;
 
 const resolveYamlInteger = (data) => {
-    if (data === null) {
+    if (is.null(data)) {
         return false;
     }
 
@@ -183,10 +183,10 @@ export default new yaml.type.Type("tag:yaml.org,2002:int", {
     construct: constructYamlInteger,
     predicate: (object) => is.integer(object) && !is.negativeZero(object),
     represent: {
-        binary: (object) => `0b${object.toString(2)}`,
-        octal: (object) => `0${object.toString(8)}`,
-        decimal: (object) => object.toString(10),
-        hexadecimal: (object) => `0x${object.toString(16).toUpperCase()}`
+        binary: (obj) => obj >= 0 ? `0b${obj.toString(2)}` : `-0b${obj.toString(2).slice(1)}`,
+        octal: (obj) => obj >= 0 ? `0${obj.toString(8)}` : `-0${obj.toString(8).slice(1)}`,
+        decimal: (obj) => obj.toString(10),
+        hexadecimal: (obj) => obj >= 0 ? `0x${obj.toString(16).toUpperCase()}` : `-0x${obj.toString(16).toUpperCase().slice(1)}`
     },
     defaultStyle: "decimal",
     styleAliases: {

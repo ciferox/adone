@@ -1,34 +1,40 @@
 const {
     is,
     assert,
-    std: { url, http, https, stream: { Writable } }
+    std: {
+        url,
+        http,
+        https,
+        stream: {
+            Writable
+        }
+    }
 } = adone;
 
-const nativeProtocols = { "http:": http, "https:": https };
-const schemes = {};
-exports = module.exports = {
-    maxRedirects: 21
-};
 // RFC7231§4.2.1: Of the request methods defined by this specification,
 // the GET, HEAD, OPTIONS, and TRACE methods are defined to be safe.
-const safeMethods = { GET: true, HEAD: true, OPTIONS: true, TRACE: true };
+const SAFE_METHODS = { GET: true, HEAD: true, OPTIONS: true, TRACE: true };
 
 // Create handlers that pass events from native requests
 const eventHandlers = Object.create(null);
-["abort", "aborted", "error", "socket"].forEach((event) => {
+["abort", "aborted", "error", "socket", "timeout"].forEach((event) => {
     eventHandlers[event] = function (arg) {
         this._redirectable.emit(event, arg);
     };
 });
 
-// An HTTP(S) request that can be redirected
+/**
+ * An HTTP(S) request that can be redirected
+ */
 class RedirectableRequest extends Writable {
     constructor(options, responseCallback) {
         // Initialize the request
         super();
+        options.headers = options.headers || {};
         this._options = options;
         this._redirectCount = 0;
-        this._bufferedWrites = [];
+        this._requestBodyLength = 0;
+        this._requestBodyBuffers = [];
 
         // Attach a callback if passed
         if (responseCallback) {
@@ -56,17 +62,66 @@ class RedirectableRequest extends Writable {
         this._performRequest();
     }
 
-    // Executes the next native request (initial or redirect)
+    /**
+     * Writes buffered data to the current native request
+     */
+    write(data, encoding, callback) {
+        if (this._requestBodyLength + data.length <= this._options.maxBodyLength) {
+            this._requestBodyLength += data.length;
+            this._requestBodyBuffers.push({ data, encoding });
+            this._currentRequest.write(data, encoding, callback);
+        } else {
+            this.emit("error", new Error("Request body larger than maxBodyLength limit"));
+            this.abort();
+        }
+    }
+
+    /**
+     * Ends the current native request
+     */
+    end(data, encoding, callback) {
+        const currentRequest = this._currentRequest;
+        if (!data) {
+            currentRequest.end(null, null, callback);
+        } else {
+            this.write(data, encoding, () => {
+                currentRequest.end(null, null, callback);
+            });
+        }
+    }
+
+    /**
+     * Sets a header value on the current native request
+     */
+    setHeader(name, value) {
+        this._options.headers[name] = value;
+        this._currentRequest.setHeader(name, value);
+    }
+
+    /**
+     * Clears a header value on the current native request
+     */
+    removeHeader(name) {
+        delete this._options.headers[name];
+        this._currentRequest.removeHeader(name);
+    }
+
+    /**
+     * Executes the next native request (initial or redirect)
+     */
     _performRequest() {
+        // Load the native protocol
+        const protocol = this._options.protocol;
+        const nativeProtocol = this._options.nativeProtocols[protocol];
+
         // If specified, use the agent corresponding to the protocol
         // (HTTP and HTTPS use different types of agents)
-        const protocol = this._options.protocol;
         if (this._options.agents) {
-            this._options.agent = this._options.agents[schemes[protocol]];
+            const scheme = protocol.substr(0, protocol.length - 1);
+            this._options.agent = this._options.agents[scheme];
         }
 
         // Create the native request
-        const nativeProtocol = nativeProtocols[protocol];
         const request = this._currentRequest = nativeProtocol.request(this._options, this._onNativeResponse);
         this._currentUrl = url.format(this._options);
 
@@ -82,26 +137,22 @@ class RedirectableRequest extends Writable {
         // End a redirected request
         // (The first request must be ended explicitly with RedirectableRequest#end)
         if (this._isRedirect) {
-            // If the request doesn't have en entity, end directly.
-            const bufferedWrites = this._bufferedWrites;
-            if (bufferedWrites.length === 0) {
-                request.end();
-                // Otherwise, write the request entity and end afterwards.
-            } else {
-                let i = 0;
-                (function writeNext() {
-                    if (i < bufferedWrites.length) {
-                        const bufferedWrite = bufferedWrites[i++];
-                        request.write(bufferedWrite.data, bufferedWrite.encoding, writeNext);
-                    } else {
-                        request.end();
-                    }
-                })();
-            }
+            // Write the request entity and end.
+            const requestBodyBuffers = this._requestBodyBuffers;
+            (function writeNext() {
+                if (requestBodyBuffers.length !== 0) {
+                    const buffer = requestBodyBuffers.pop();
+                    request.write(buffer.data, buffer.encoding, writeNext);
+                } else {
+                    request.end();
+                }
+            }());
         }
     }
 
-    // Processes a response from the current native request
+    /**
+     * Processes a response from the current native request
+     */
     _processResponse(response) {
         // RFC7231§6.4: The 3xx (Redirection) class of status code indicates
         // that further action needs to be taken by the user agent in order to
@@ -127,10 +178,10 @@ class RedirectableRequest extends Writable {
             // if it performs an automatic redirection to that URI.
             let header;
             const headers = this._options.headers;
-            if (response.statusCode !== 307 && !(this._options.method in safeMethods)) {
+            if (response.statusCode !== 307 && !(this._options.method in SAFE_METHODS)) {
                 this._options.method = "GET";
                 // Drop a possible entity and headers related to it
-                this._bufferedWrites = [];
+                this._requestBodyBuffers = [];
                 for (header in headers) {
                     if (/^content-/i.test(header)) {
                         delete headers[header];
@@ -158,77 +209,78 @@ class RedirectableRequest extends Writable {
             this.emit("response", response);
 
             // Clean up
-            delete this._options;
-            delete this._bufferedWrites;
-        }
-    }
-
-    // Aborts the current native request
-    abort() {
-        this._currentRequest.abort();
-    }
-
-    // Flushes the headers of the current native request
-    flushHeaders() {
-        this._currentRequest.flushHeaders();
-    }
-
-    // Sets the noDelay option of the current native request
-    setNoDelay(noDelay) {
-        this._currentRequest.setNoDelay(noDelay);
-    }
-
-    // Sets the socketKeepAlive option of the current native request
-    setSocketKeepAlive(enable, initialDelay) {
-        this._currentRequest.setSocketKeepAlive(enable, initialDelay);
-    }
-
-    // Sets the timeout option of the current native request
-    setTimeout(timeout, callback) {
-        this._currentRequest.setTimeout(timeout, callback);
-    }
-
-    // Writes buffered data to the current native request
-    write(data, encoding, callback) {
-        this._currentRequest.write(data, encoding, callback);
-        this._bufferedWrites.push({ data, encoding });
-    }
-
-    // Ends the current native request
-    end(data, encoding, callback) {
-        this._currentRequest.end(data, encoding, callback);
-        if (data) {
-            this._bufferedWrites.push({ data, encoding });
+            this._requestBodyBuffers = [];
         }
     }
 }
 
-// Export a redirecting wrapper for each native protocol
-Object.keys(nativeProtocols).forEach((protocol) => {
-    const scheme = schemes[protocol] = protocol.substr(0, protocol.length - 1);
-    const nativeProtocol = nativeProtocols[protocol];
-    const wrappedProtocol = exports[scheme] = Object.create(nativeProtocol);
-
-    // Executes an HTTP request, following redirects
-    wrappedProtocol.request = function (options, callback) {
-        if (is.string(options)) {
-            options = url.parse(options);
-            options.maxRedirects = exports.maxRedirects;
-        } else {
-            options = Object.assign({
-                maxRedirects: exports.maxRedirects,
-                protocol
-            }, options);
-        }
-        assert.equal(options.protocol, protocol, "protocol mismatch");
-
-        return new RedirectableRequest(options, callback);
-    };
-
-    // Executes a GET request, following redirects
-    wrappedProtocol.get = function (options, callback) {
-        const request = wrappedProtocol.request(options, callback);
-        request.end();
-        return request;
+// Proxy all other public ClientRequest methods
+[
+    "abort", "flushHeaders", "getHeader",
+    "setNoDelay", "setSocketKeepAlive", "setTimeout"
+].forEach((method) => {
+    RedirectableRequest.prototype[method] = function (a, b) {
+        return this._currentRequest[method](a, b);
     };
 });
+
+// Proxy all public ClientRequest properties
+["aborted", "connection", "socket"].forEach((property) => {
+    Object.defineProperty(RedirectableRequest.prototype, property, {
+        get() {
+            return this._currentRequest[property];
+        }
+    });
+});
+
+/**
+ * Wraps the key/value object of protocols with redirect functionality
+ */
+const wrap = (protocols) => {
+    // Default settings
+    const exports = {
+        maxRedirects: 21,
+        maxBodyLength: 10 * 1024 * 1024
+    };
+
+    // Wrap each protocol
+    const nativeProtocols = {};
+    Object.keys(protocols).forEach((scheme) => {
+        const protocol = `${scheme}:`;
+        const nativeProtocol = nativeProtocols[protocol] = protocols[scheme];
+        const wrappedProtocol = exports[scheme] = Object.create(nativeProtocol);
+
+        // Executes a request, following redirects
+        wrappedProtocol.request = function (options, callback) {
+            if (is.string(options)) {
+                options = url.parse(options);
+                options.maxRedirects = exports.maxRedirects;
+            } else {
+                options = Object.assign({
+                    protocol,
+                    maxRedirects: exports.maxRedirects,
+                    maxBodyLength: exports.maxBodyLength
+                }, options);
+            }
+            options.nativeProtocols = nativeProtocols;
+            assert.equal(options.protocol, protocol, "protocol mismatch");
+            return new RedirectableRequest(options, callback);
+        };
+
+        // Executes a GET request, following redirects
+        wrappedProtocol.get = function (options, callback) {
+            const request = wrappedProtocol.request(options, callback);
+            request.end();
+            return request;
+        };
+    });
+    return exports;
+};
+
+const wrapped = wrap({ http, https });
+
+adone.definePrivate(wrapped, {
+    wrap
+});
+
+export default wrapped;

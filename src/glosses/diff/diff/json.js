@@ -2,7 +2,14 @@ const { is, util, diff: { _: { Diff, lineDiff } } } = adone;
 
 // This function handles the presence of circular references by bailing out when encountering an
 // object that is already on the "stack" of items being processed.
-export const canonicalizeObject = (obj, stack = [], replacementStack = []) => {
+export const canonicalizeObject = (obj, stack, replacementStack, replacer, key) => {
+    stack = stack || [];
+    replacementStack = replacementStack || [];
+
+    if (replacer) {
+        obj = replacer(key, obj);
+    }
+
     for (let i = 0; i < stack.length; i += 1) {
         if (stack[i] === obj) {
             return replacementStack[i];
@@ -16,7 +23,7 @@ export const canonicalizeObject = (obj, stack = [], replacementStack = []) => {
         canonicalizedObj = new Array(obj.length);
         replacementStack.push(canonicalizedObj);
         for (let i = 0; i < obj.length; ++i) {
-            canonicalizedObj[i] = canonicalizeObject(obj[i], stack, replacementStack);
+            canonicalizedObj[i] = canonicalizeObject(obj[i], stack, replacementStack, replacer, key);
         }
         stack.pop();
         replacementStack.pop();
@@ -35,7 +42,7 @@ export const canonicalizeObject = (obj, stack = [], replacementStack = []) => {
         sortedKeys.sort();
         for (let i = 0; i < sortedKeys.length; i += 1) {
             const key = sortedKeys[i];
-            canonicalizedObj[key] = canonicalizeObject(obj[key], stack, replacementStack);
+            canonicalizedObj[key] = canonicalizeObject(obj[key], stack, replacementStack, replacer, key);
         }
         stack.pop();
         replacementStack.pop();
@@ -53,15 +60,9 @@ jsonDiff.useLongestToken = true;
 jsonDiff.tokenize = lineDiff.tokenize;
 
 jsonDiff.castInput = function (value) {
-    const { undefinedReplacement } = this.options;
+    const { undefinedReplacement, stringifyReplacer = (k, v) => is.undefined(v) ? undefinedReplacement : v } = this.options;
 
-    return is.string(value) ? value : JSON.stringify(canonicalizeObject(value), (k, v) => {
-        if (is.undefined(v)) {
-            return undefinedReplacement;
-        }
-
-        return v;
-    }, "  ");
+    return is.string(value) ? value : JSON.stringify(canonicalizeObject(value, null, null, stringifyReplacer), stringifyReplacer, "  ");
 };
 
 jsonDiff.equals = (left, right) => {

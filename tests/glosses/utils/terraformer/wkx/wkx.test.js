@@ -80,7 +80,7 @@ const assertParseTwkb = (data) => {
 const assertParseGeoJSON = (data) => {
     let geometry = data.geoJSONGeometry ? data.geoJSONGeometry : data.geometry;
     geometry = eval(geometry);
-    geometry.srid = undefined;
+    geometry.srid = 4326;
     assert.deepEqual(Geometry.parseGeoJSON(data.geoJSON), geometry);
 };
 

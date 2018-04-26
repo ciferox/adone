@@ -1,6 +1,6 @@
 
 const {
-    std: { path: { sep, resolve, normalize } },
+    std: { path: { sep, resolve, normalize, join } },
     net: { http },
     error,
     is
@@ -44,7 +44,5 @@ export default function resolvePath(root, path) {
         throw http.error.create(403);
     }
 
-    root = normalize(`${resolve(root)}${sep}`);
-
-    return resolve(root, path);
+    return normalize(join(resolve(root), path));
 }

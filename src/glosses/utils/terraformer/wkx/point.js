@@ -8,31 +8,32 @@ const {
 } = adone;
 
 export default class Point extends WKX.Geometry {
-    constructor(x, y, z, m) {
+    constructor(x, y, z, m, srid) {
         super();
         this.x = x;
         this.y = y;
         this.z = z;
         this.m = m;
+        this.srid = srid;
 
         this.hasZ = !is.undefined(this.z);
         this.hasM = !is.undefined(this.m);
     }
 
-    static Z(x, y, z) {
-        const point = new Point(x, y, z);
+    static Z(x, y, z, srid) {
+        const point = new Point(x, y, z, srid);
         point.hasZ = true;
         return point;
     }
 
-    static M(x, y, m) {
-        const point = new Point(x, y, undefined, m);
+    static M(x, y, m, srid) {
+        const point = new Point(x, y, undefined, m, srid);
         point.hasM = true;
         return point;
     }
 
-    static ZM(x, y, z, m) {
-        const point = new Point(x, y, z, m);
+    static ZM(x, y, z, m, srid) {
+        const point = new Point(x, y, z, m, srid);
         point.hasZ = true;
         point.hasM = true;
         return point;

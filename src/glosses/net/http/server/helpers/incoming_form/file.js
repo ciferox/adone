@@ -53,6 +53,11 @@ export default class File extends event.Emitter {
         if (self.hash) {
             self.hash.update(buffer);
         }
+
+        if (this._writeStream.closed) {
+            return cb();
+        }
+
         this._writeStream.write(buffer, () => {
             self.lastModifiedDate = new Date();
             self.size += buffer.length;

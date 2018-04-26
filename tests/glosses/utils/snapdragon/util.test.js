@@ -1,6 +1,6 @@
 const { is } = adone;
 const { Snapdragon } = adone.util;
-const { Parser, Compiler, Node, util } = adone.private(Snapdragon);
+const { Parser, Compiler, util } = adone.private(Snapdragon);
 
 /**
  * This is a shim used in the unit tests
@@ -15,17 +15,17 @@ const isNode = (node) => {
 const decorate = (node) => {
 
     /**
-   * Define a non-enumberable property on the node instance.
-   *
-   * ```js
-   * var node = new Node();
-   * node.define('foo', 'something non-enumerable');
-   * ```
-   * @param {String} `name`
-   * @param {any} `val`
-   * @return {Object} returns the node instance
-   * @api public
-   */
+     * Define a non-enumberable property on the node instance.
+     *
+     * ```js
+     * var node = new Node();
+     * node.define('foo', 'something non-enumerable');
+     * ```
+     * @param {String} `name`
+     * @param {any} `val`
+     * @return {Object} returns the node instance
+     * @api public
+     */
 
     node.define = function (name, value) {
         Object.defineProperty(this, name, {
@@ -38,18 +38,18 @@ const decorate = (node) => {
     };
 
     /**
-   * Given node `foo` and node `bar`, push node `bar` onto `foo.nodes`, and
-   * set `foo` as `bar.parent`.
-   *
-   * ```js
-   * var foo = new Node({type: 'foo'});
-   * var bar = new Node({type: 'bar'});
-   * foo.push(bar);
-   * ```
-   * @param {Object} `node`
-   * @return {Number} Returns the length of `node.nodes`
-   * @api public
-   */
+     * Given node `foo` and node `bar`, push node `bar` onto `foo.nodes`, and
+     * set `foo` as `bar.parent`.
+     *
+     * ```js
+     * var foo = new Node({type: 'foo'});
+     * var bar = new Node({type: 'bar'});
+     * foo.push(bar);
+     * ```
+     * @param {Object} `node`
+     * @return {Number} Returns the length of `node.nodes`
+     * @api public
+     */
 
     node.push = function (node) {
         assert(isNode(node), "expected node to be an instance of Node");
@@ -65,18 +65,18 @@ const decorate = (node) => {
     };
 
     /**
-   * Given node `foo` and node `bar`, unshift node `bar` onto `foo.nodes`, and
-   * set `foo` as `bar.parent`.
-   *
-   * ```js
-   * var foo = new Node({type: 'foo'});
-   * var bar = new Node({type: 'bar'});
-   * foo.unshift(bar);
-   * ```
-   * @param {Object} `node`
-   * @return {Number} Returns the length of `node.nodes`
-   * @api public
-   */
+     * Given node `foo` and node `bar`, unshift node `bar` onto `foo.nodes`, and
+     * set `foo` as `bar.parent`.
+     *
+     * ```js
+     * var foo = new Node({type: 'foo'});
+     * var bar = new Node({type: 'bar'});
+     * foo.unshift(bar);
+     * ```
+     * @param {Object} `node`
+     * @return {Number} Returns the length of `node.nodes`
+     * @api public
+     */
 
     node.unshift = function (node) {
         assert(isNode(node), "expected node to be an instance of Node");
@@ -93,61 +93,61 @@ const decorate = (node) => {
     };
 
     /**
-   * Pop a node from `node.nodes`.
-   *
-   * ```js
-   * var node = new Node({type: 'foo'});
-   * node.push(new Node({type: 'a'}));
-   * node.push(new Node({type: 'b'}));
-   * node.push(new Node({type: 'c'}));
-   * node.push(new Node({type: 'd'}));
-   * console.log(node.nodes.length);
-   * //=> 4
-   * node.pop();
-   * console.log(node.nodes.length);
-   * //=> 3
-   * ```
-   * @return {Number} Returns the popped `node`
-   * @api public
-   */
+     * Pop a node from `node.nodes`.
+     *
+     * ```js
+     * var node = new Node({type: 'foo'});
+     * node.push(new Node({type: 'a'}));
+     * node.push(new Node({type: 'b'}));
+     * node.push(new Node({type: 'c'}));
+     * node.push(new Node({type: 'd'}));
+     * console.log(node.nodes.length);
+     * //=> 4
+     * node.pop();
+     * console.log(node.nodes.length);
+     * //=> 3
+     * ```
+     * @return {Number} Returns the popped `node`
+     * @api public
+     */
 
     node.pop = function () {
         return this.nodes && this.nodes.pop();
     };
 
     /**
-   * Shift a node from `node.nodes`.
-   *
-   * ```js
-   * var node = new Node({type: 'foo'});
-   * node.push(new Node({type: 'a'}));
-   * node.push(new Node({type: 'b'}));
-   * node.push(new Node({type: 'c'}));
-   * node.push(new Node({type: 'd'}));
-   * console.log(node.nodes.length);
-   * //=> 4
-   * node.shift();
-   * console.log(node.nodes.length);
-   * //=> 3
-   * ```
-   * @return {Object} Returns the shifted `node`
-   * @api public
-   */
+     * Shift a node from `node.nodes`.
+     *
+     * ```js
+     * var node = new Node({type: 'foo'});
+     * node.push(new Node({type: 'a'}));
+     * node.push(new Node({type: 'b'}));
+     * node.push(new Node({type: 'c'}));
+     * node.push(new Node({type: 'd'}));
+     * console.log(node.nodes.length);
+     * //=> 4
+     * node.shift();
+     * console.log(node.nodes.length);
+     * //=> 3
+     * ```
+     * @return {Object} Returns the shifted `node`
+     * @api public
+     */
 
     node.shift = function () {
         return this.nodes && this.nodes.shift();
     };
 
     /**
-   * Remove `node` from `node.nodes`.
-   *
-   * ```js
-   * node.remove(childNode);
-   * ```
-   * @param {Object} `node`
-   * @return {Object} Returns the removed node.
-   * @api public
-   */
+     * Remove `node` from `node.nodes`.
+     *
+     * ```js
+     * node.remove(childNode);
+     * ```
+     * @param {Object} `node`
+     * @return {Object} Returns the removed node.
+     * @api public
+     */
 
     node.remove = function (node) {
         assert(isNode(node), "expected node to be an instance of Node");
@@ -159,6 +159,33 @@ const decorate = (node) => {
         return null;
     };
 };
+
+class Node {
+    constructor(node) {
+        this.define(this, "parent", null);
+        this.isNode = true;
+        this.type = node.type;
+        this.value = node.value;
+        if (node.nodes) {
+            this.nodes = node.nodes;
+        }
+    }
+
+    define(key, value) {
+        Object.defineProperty(this, key, { value });
+        return this;
+    }
+
+    get siblings() {
+        return this.parent ? this.parent.nodes : null;
+    }
+
+    get last() {
+        if (this.nodes && this.nodes.length) {
+            return this.nodes[this.nodes.length - 1];
+        }
+    }
+}
 
 let parser;
 let ast;
@@ -185,12 +212,11 @@ describe("util", "Snapdragon", "util", () => {
                 }
             });
 
-        ast = parser.parse("a/*/c");
-        ast.isNode = true;
+        ast = new Node(parser.parse("a/*/c"));
     });
 
     describe(".identity", () => {
-        it("should return node.val as it was created by the parser", () => {
+        it("should return node.value as it was created by the parser", () => {
             const res = new Compiler()
                 .set("star", util.identity)
                 .set("slash", util.identity)
@@ -264,7 +290,7 @@ describe("util", "Snapdragon", "util", () => {
 
         it("should throw an error when node.nodes is not an array", () => {
             assert.throws(() => {
-                util.visit(new Node({ type: "foo", val: "" }));
+                util.visit(new Node({ type: "foo", value: "" }));
             });
         });
 
@@ -288,7 +314,7 @@ describe("util", "Snapdragon", "util", () => {
 
         it("should throw an error when node.nodes is not an array", () => {
             assert.throws(() => {
-                util.mapVisit(new Node({ type: "foo", val: "" }));
+                util.mapVisit(new Node({ type: "foo", value: "" }));
             });
         });
 
@@ -312,8 +338,8 @@ describe("util", "Snapdragon", "util", () => {
 
         it("should add a node to the end of node.nodes", () => {
             const node = new Node({ type: "brace" });
-            const a = new Node({ type: "a", val: "foo" });
-            const b = new Node({ type: "b", val: "foo" });
+            const a = new Node({ type: "a", value: "foo" });
+            const b = new Node({ type: "b", value: "foo" });
             util.pushNode(node, a);
             util.pushNode(node, b);
             assert.equal(node.nodes[0].type, "a");
@@ -322,8 +348,8 @@ describe("util", "Snapdragon", "util", () => {
 
         it("should work when node.push is not a function", () => {
             const node = new Node({ type: "brace" });
-            const a = new Node({ type: "a", val: "foo" });
-            const b = new Node({ type: "b", val: "foo" });
+            const a = new Node({ type: "a", value: "foo" });
+            const b = new Node({ type: "b", value: "foo" });
 
             node.pushNode = null;
             node.push = null;
@@ -342,16 +368,10 @@ describe("util", "Snapdragon", "util", () => {
             });
         });
 
-        it("should throw an error when node is not a node", () => {
-            assert.throws(() => {
-                util.unshiftNode(new Node({ type: "foo" }));
-            });
-        });
-
         it("should add a node to the beginning of node.nodes", () => {
             const node = new Node({ type: "brace" });
-            const a = new Node({ type: "a", val: "foo" });
-            const b = new Node({ type: "b", val: "foo" });
+            const a = new Node({ type: "a", value: "foo" });
+            const b = new Node({ type: "b", value: "foo" });
             util.unshiftNode(node, a);
             util.unshiftNode(node, b);
             assert.equal(node.nodes[1].type, "a");
@@ -360,8 +380,8 @@ describe("util", "Snapdragon", "util", () => {
 
         it("should work when node.unshift is not a function", () => {
             const node = new Node({ type: "brace" });
-            const a = new Node({ type: "a", val: "foo" });
-            const b = new Node({ type: "b", val: "foo" });
+            const a = new Node({ type: "a", value: "foo" });
+            const b = new Node({ type: "b", value: "foo" });
 
             node.unshiftNode = null;
             node.unshift = null;
@@ -382,8 +402,8 @@ describe("util", "Snapdragon", "util", () => {
 
         it("should pop a node from node.nodes", () => {
             const node = new Node({ type: "brace" });
-            const a = new Node({ type: "a", val: "foo" });
-            const b = new Node({ type: "b", val: "foo" });
+            const a = new Node({ type: "a", value: "foo" });
+            const b = new Node({ type: "b", value: "foo" });
             util.pushNode(node, a);
             util.pushNode(node, b);
             assert.equal(node.nodes[0].type, "a");
@@ -396,8 +416,8 @@ describe("util", "Snapdragon", "util", () => {
 
         it("should work when node.pop is not a function", () => {
             const node = new Node({ type: "brace" });
-            const a = new Node({ type: "a", val: "foo" });
-            const b = new Node({ type: "b", val: "foo" });
+            const a = new Node({ type: "a", value: "foo" });
+            const b = new Node({ type: "b", value: "foo" });
 
             node.popNode = null;
             node.pop = null;
@@ -414,8 +434,8 @@ describe("util", "Snapdragon", "util", () => {
 
         it("should work when node.pop is a function", () => {
             const node = new Node({ type: "brace" });
-            const a = new Node({ type: "a", val: "foo" });
-            const b = new Node({ type: "b", val: "foo" });
+            const a = new Node({ type: "a", value: "foo" });
+            const b = new Node({ type: "b", value: "foo" });
 
             decorate(node);
 
@@ -439,8 +459,8 @@ describe("util", "Snapdragon", "util", () => {
 
         it("should shift a node from node.nodes", () => {
             const node = new Node({ type: "brace" });
-            const a = new Node({ type: "a", val: "foo" });
-            const b = new Node({ type: "b", val: "foo" });
+            const a = new Node({ type: "a", value: "foo" });
+            const b = new Node({ type: "b", value: "foo" });
             util.pushNode(node, a);
             util.pushNode(node, b);
             assert.equal(node.nodes[0].type, "a");
@@ -453,8 +473,8 @@ describe("util", "Snapdragon", "util", () => {
 
         it("should work when node.shift is not a function", () => {
             const node = new Node({ type: "brace" });
-            const a = new Node({ type: "a", val: "foo" });
-            const b = new Node({ type: "b", val: "foo" });
+            const a = new Node({ type: "a", value: "foo" });
+            const b = new Node({ type: "b", value: "foo" });
 
             node.shiftNode = null;
             node.shift = null;
@@ -471,8 +491,8 @@ describe("util", "Snapdragon", "util", () => {
 
         it("should work when node.shift is a function", () => {
             const node = new Node({ type: "brace" });
-            const a = new Node({ type: "a", val: "foo" });
-            const b = new Node({ type: "b", val: "foo" });
+            const a = new Node({ type: "a", value: "foo" });
+            const b = new Node({ type: "b", value: "foo" });
 
             decorate(node);
 
@@ -496,8 +516,8 @@ describe("util", "Snapdragon", "util", () => {
 
         it("should remove a node from node.nodes", () => {
             const node = new Node({ type: "brace" });
-            const a = new Node({ type: "a", val: "foo" });
-            const b = new Node({ type: "b", val: "foo" });
+            const a = new Node({ type: "a", value: "foo" });
+            const b = new Node({ type: "b", value: "foo" });
             util.pushNode(node, a);
             util.pushNode(node, b);
             assert.equal(node.nodes[0].type, "a");
@@ -512,8 +532,8 @@ describe("util", "Snapdragon", "util", () => {
 
         it("should work when node.remove is not a function", () => {
             const node = new Node({ type: "brace" });
-            const a = new Node({ type: "a", val: "foo" });
-            const b = new Node({ type: "b", val: "foo" });
+            const a = new Node({ type: "a", value: "foo" });
+            const b = new Node({ type: "b", value: "foo" });
 
             node.removeNode = null;
             node.remove = null;
@@ -591,14 +611,14 @@ describe("util", "Snapdragon", "util", () => {
 
         it("should add an open node", () => {
             const node = new Node({ type: "brace" });
-            const text = new Node({ type: "text", val: "foo" });
+            const text = new Node({ type: "text", value: "foo" });
             util.addOpen(node, Node);
             assert.equal(node.nodes[0].type, "brace.open");
         });
 
         it("should work when node.unshift is a function", () => {
             const node = new Node({ type: "brace" });
-            const text = new Node({ type: "text", val: "foo" });
+            const text = new Node({ type: "text", value: "foo" });
             decorate(node);
             util.addOpen(node, Node);
             assert.equal(node.nodes[0].type, "brace.open");
@@ -606,7 +626,7 @@ describe("util", "Snapdragon", "util", () => {
 
         it("should work when node.unshift is not a function", () => {
             const node = new Node({ type: "brace" });
-            const text = new Node({ type: "text", val: "foo" });
+            const text = new Node({ type: "text", value: "foo" });
             node.unshiftNode = null;
             node.unshift = null;
             util.addOpen(node, Node);
@@ -615,7 +635,7 @@ describe("util", "Snapdragon", "util", () => {
 
         it("should take a filter function", () => {
             const node = new Node({ type: "brace" });
-            const text = new Node({ type: "text", val: "foo" });
+            const text = new Node({ type: "text", value: "foo" });
             util.addOpen(node, Node, (node) => {
                 return node.type !== "brace";
             });
@@ -624,9 +644,9 @@ describe("util", "Snapdragon", "util", () => {
 
         it("should use the given value on the open node", () => {
             const node = new Node({ type: "brace" });
-            const text = new Node({ type: "text", val: "foo" });
+            const text = new Node({ type: "text", value: "foo" });
             util.addOpen(node, Node, "{");
-            assert.equal(node.nodes[0].val, "{");
+            assert.equal(node.nodes[0].value, "{");
         });
     });
 
@@ -639,7 +659,7 @@ describe("util", "Snapdragon", "util", () => {
 
         it("should add a close node", () => {
             const node = new Node({ type: "brace" });
-            const text = new Node({ type: "text", val: "foo" });
+            const text = new Node({ type: "text", value: "foo" });
             util.pushNode(node, text);
             util.addClose(node, Node);
 
@@ -649,7 +669,7 @@ describe("util", "Snapdragon", "util", () => {
 
         it("should work when node.push is not a function", () => {
             const node = new Node({ type: "brace" });
-            const text = new Node({ type: "text", val: "foo" });
+            const text = new Node({ type: "text", value: "foo" });
             node.pushNode = null;
             node.push = null;
 
@@ -662,7 +682,7 @@ describe("util", "Snapdragon", "util", () => {
 
         it("should work when node.push is a function", () => {
             const node = new Node({ type: "brace" });
-            const text = new Node({ type: "text", val: "foo" });
+            const text = new Node({ type: "text", value: "foo" });
             decorate(node);
 
             util.pushNode(node, text);
@@ -674,7 +694,7 @@ describe("util", "Snapdragon", "util", () => {
 
         it("should take a filter function", () => {
             const node = new Node({ type: "brace" });
-            const text = new Node({ type: "text", val: "foo" });
+            const text = new Node({ type: "text", value: "foo" });
             util.addClose(node, Node, (node) => {
                 return node.type !== "brace";
             });
@@ -683,9 +703,9 @@ describe("util", "Snapdragon", "util", () => {
 
         it("should use the given value on the close node", () => {
             const node = new Node({ type: "brace" });
-            const text = new Node({ type: "text", val: "foo" });
+            const text = new Node({ type: "text", value: "foo" });
             util.addClose(node, Node, "}");
-            assert.equal(node.nodes[0].val, "}");
+            assert.equal(node.nodes[0].value, "}");
         });
     });
 
@@ -698,7 +718,7 @@ describe("util", "Snapdragon", "util", () => {
 
         it("should add an open node", () => {
             const node = new Node({ type: "brace" });
-            const text = new Node({ type: "text", val: "foo" });
+            const text = new Node({ type: "text", value: "foo" });
             util.wrapNodes(node, Node);
 
             assert.equal(node.nodes[0].type, "brace.open");
@@ -706,7 +726,7 @@ describe("util", "Snapdragon", "util", () => {
 
         it("should add a close node", () => {
             const node = new Node({ type: "brace" });
-            const text = new Node({ type: "text", val: "foo" });
+            const text = new Node({ type: "text", value: "foo" });
             util.pushNode(node, text);
             util.wrapNodes(node, Node);
 
@@ -723,17 +743,17 @@ describe("util", "Snapdragon", "util", () => {
             });
         });
 
-        it("should return true node.val is an empty string", () => {
-            assert(util.isEmpty(new Node({ type: "text", val: "" })));
+        it("should return true node.value is an empty string", () => {
+            assert(util.isEmpty(new Node({ type: "text", value: "" })));
         });
 
-        it("should return true node.val is undefined", () => {
+        it("should return true node.value is undefined", () => {
             assert(util.isEmpty(new Node({ type: "text" })));
         });
 
         it("should return true when node.nodes is empty", () => {
             const foo = new Node({ type: "foo" });
-            const bar = new Node({ type: "text", val: "bar" });
+            const bar = new Node({ type: "text", value: "bar" });
             util.pushNode(foo, bar);
             assert(!util.isEmpty(foo));
             util.shiftNode(foo);
@@ -753,11 +773,9 @@ describe("util", "Snapdragon", "util", () => {
 
         it("should return call a custom function if only one node exists", () => {
             const foo = new Node({ type: "foo" });
-            const text = new Node({ type: "text", val: "" });
+            const text = new Node({ type: "text", value: "" });
             util.pushNode(foo, text);
-            assert(util.isEmpty(foo, (node) => {
-                return node.type === "text" && !node.val.trim();
-            }));
+            assert(util.isEmpty(foo, (node) => !node.value));
         });
 
         it("should return true when only open and close nodes exist", () => {
@@ -772,7 +790,7 @@ describe("util", "Snapdragon", "util", () => {
         it('should call a custom function on "middle" nodes (1)', () => {
             const brace = new Node({ type: "brace" });
             const open = new Node({ type: "brace.open" });
-            const text = new Node({ type: "text", val: "" });
+            const text = new Node({ type: "text", value: "" });
             const close = new Node({ type: "brace.close" });
             util.pushNode(brace, open);
             util.pushNode(brace, text);
@@ -780,32 +798,32 @@ describe("util", "Snapdragon", "util", () => {
             util.pushNode(brace, text);
             util.pushNode(brace, close);
             assert(util.isEmpty(brace, (node) => {
-                if (node.type !== "text") {
-                    return false;
+                if (node.nodes && node.nodes.length === 0) {
+                    return true;
                 }
-                return node.val.trim() === "";
+                return !util.value(node);
             }));
         });
 
         it('should call a custom function on "middle" nodes (2)', () => {
             const brace = new Node({ type: "brace" });
             const open = new Node({ type: "brace.open" });
-            const text = new Node({ type: "text", val: "" });
+            const text = new Node({ type: "text", value: "" });
             const close = new Node({ type: "brace.close" });
             util.pushNode(brace, open);
             util.pushNode(brace, text);
             util.pushNode(brace, text);
             util.pushNode(brace, text);
             util.pushNode(brace, close);
-            assert(!util.isEmpty(brace, (node, parent) => {
-                return parent.nodes.length === 0;
+            assert(!util.isEmpty(brace, (node) => {
+                return node.parent.nodes.length === 0;
             }));
         });
 
         it('should call a custom function on "middle" nodes (3)', () => {
             const brace = new Node({ type: "brace" });
             const open = new Node({ type: "brace.open" });
-            const text = new Node({ type: "text", val: "foo" });
+            const text = new Node({ type: "text", value: "foo" });
             const close = new Node({ type: "brace.close" });
             util.pushNode(brace, open);
             util.pushNode(brace, text);
@@ -814,15 +832,15 @@ describe("util", "Snapdragon", "util", () => {
                 if (node.type !== "text") {
                     return false;
                 }
-                return node.val.trim() === "";
+                return node.value.trim() === "";
             }));
         });
 
         it('should call a custom function on "middle" nodes (4)', () => {
             const brace = new Node({ type: "brace" });
             const open = new Node({ type: "brace.open" });
-            const empty = new Node({ type: "text", val: "" });
-            const text = new Node({ type: "text", val: "foo" });
+            const empty = new Node({ type: "text", value: "" });
+            const text = new Node({ type: "text", value: "foo" });
             const close = new Node({ type: "brace.close" });
             util.pushNode(brace, open);
             util.pushNode(brace, empty);
@@ -835,22 +853,21 @@ describe("util", "Snapdragon", "util", () => {
                 if (node.type !== "text") {
                     return false;
                 }
-                return node.val.trim() === "";
+                return node.value.trim() === "";
             }));
         });
     });
 
     describe(".isType", () => {
-        it("should throw an error when not a node", () => {
-            assert.throws(() => {
-                util.isType();
-            });
-        });
-
         it("should throw an error when matcher is invalid", () => {
             assert.throws(() => {
                 util.isType(new Node({ type: "foo" }));
             });
+        });
+
+        it("should return false if the node is not the given type", () => {
+            assert(!util.isType());
+            assert(!util.isType({}, "root"));
         });
 
         it("should return true if the node is the given type", () => {
@@ -999,12 +1016,6 @@ describe("util", "Snapdragon", "util", () => {
     });
 
     describe(".hasType", () => {
-        it("should throw an error when not a node", () => {
-            assert.throws(() => {
-                util.hasType();
-            });
-        });
-
         it("should return true if node.nodes has the given type", () => {
             assert(util.hasType(ast, "text"));
             assert(!util.hasType(ast, "foo"));
@@ -1073,12 +1084,6 @@ describe("util", "Snapdragon", "util", () => {
             });
         });
 
-        it("should throw an error when child is not a node", () => {
-            assert.throws(() => {
-                util.removeNode(new Node({ type: "foo" }));
-            });
-        });
-
         it("should remove a node from parent.nodes", () => {
             const brace = new Node({ type: "brace" });
             const open = new Node({ type: "brace.open" });
@@ -1114,12 +1119,6 @@ describe("util", "Snapdragon", "util", () => {
     });
 
     describe(".isOpen", () => {
-        it("should throw an error when not a node", () => {
-            assert.throws(() => {
-                util.isOpen();
-            });
-        });
-
         it('should be true if node is an ".open" node', () => {
             const node = new Node({ type: "foo.open" });
             assert(util.isOpen(node));
@@ -1132,12 +1131,6 @@ describe("util", "Snapdragon", "util", () => {
     });
 
     describe(".isClose", () => {
-        it("should throw an error when not a node", () => {
-            assert.throws(() => {
-                util.isClose();
-            });
-        });
-
         it('should be true if node is a ".close" node', () => {
             const node = new Node({ type: "foo.close" });
             assert(util.isClose(node));
@@ -1226,12 +1219,6 @@ describe("util", "Snapdragon", "util", () => {
         it("should throw an error when parent is not a node", () => {
             assert.throws(() => {
                 util.pushNode();
-            });
-        });
-
-        it("should throw an error when child is not a node", () => {
-            assert.throws(() => {
-                util.pushNode(new Node({ type: "foo" }));
             });
         });
 

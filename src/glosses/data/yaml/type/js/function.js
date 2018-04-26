@@ -1,4 +1,13 @@
-const { data: { yaml }, is, x, std: { vm } } = adone;
+const {
+    data: {
+        yaml
+    },
+    is,
+    error,
+    std: {
+        vm
+    }
+} = adone;
 
 const resolveJavascriptFunction = (data) => {
     if (is.null(data)) {
@@ -9,10 +18,12 @@ const resolveJavascriptFunction = (data) => {
         const source = `(${data})`;
         const { program: ast } = adone.js.compiler.parse(source);
 
-        return ast.type === "Program" &&
-               ast.body.length === 1 &&
-               ast.body[0].type === "ExpressionStatement" &&
-               ast.body[0].expression.type === "FunctionExpression";
+        return !(
+            ast.type !== "Program"
+            || ast.body.length !== 1
+            || ast.body[0].type !== "ExpressionStatement"
+            || (ast.body[0].expression.type !== "ArrowFunctionExpression" && ast.body[0].expression.type !== "FunctionExpression")
+        );
     } catch (err) {
         return false;
     }
@@ -25,7 +36,7 @@ const constructJavascriptFunction = (data) => {
     if (ast.type !== "Program" ||
         ast.body.length !== 1 ||
         ast.body[0].type !== "ExpressionStatement" ||
-        ast.body[0].expression.type !== "FunctionExpression"
+        (ast.body[0].expression.type !== "ArrowFunctionExpression" && ast.body[0].expression.type !== "FunctionExpression")
     ) {
         throw new error.InvalidArgument("Failed to resolve function");
     }

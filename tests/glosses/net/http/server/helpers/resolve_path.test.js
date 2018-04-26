@@ -1,7 +1,7 @@
 describe("net", "http", "helpers", "resolve path", () => {
     const {
         std: { path: { sep, basename, join, normalize, resolve } },
-        net: { http: { x, server: { helper: { resolvePath } } } }
+        net: { http: { error, server: { helper: { resolvePath } } } }
     } = adone;
 
     describe("resolvePath(relativePath)", () => {
@@ -25,6 +25,11 @@ describe("net", "http", "helpers", "resolve path", () => {
                     assert.equal(normalize(resolvePath("index.js")), normalize(join(process.cwd(), "index.js")));
                 });
 
+                it("should resolve relative with special characters", () => {
+                    assert.equal(normalize(resolvePath("f:oo$bar")),
+                        normalize(join(process.cwd(), "./f:oo$bar")));
+                });
+
                 it("should accept empty string", () => {
                     assert.equal(normalize(resolvePath("")), normalize(process.cwd()));
                 });
@@ -35,7 +40,7 @@ describe("net", "http", "helpers", "resolve path", () => {
             it("should throw Malicious Path error", () => {
                 assert.throws(() => {
                     resolvePath(join(__dirname, sep));
-                }, x[400], "Malicious Path");
+                }, error[400], "Malicious Path");
             });
         });
 
@@ -43,7 +48,7 @@ describe("net", "http", "helpers", "resolve path", () => {
             it("should throw Malicious Path error", () => {
                 assert.throws(() => {
                     resolvePath("hi\0there");
-                }, x[400], "Malicious Path");
+                }, error[400], "Malicious Path");
             });
         });
 
@@ -51,7 +56,7 @@ describe("net", "http", "helpers", "resolve path", () => {
             it("should throw Forbidden error", () => {
                 assert.throws(() => {
                     resolvePath("../index.js");
-                }, x[403], "Forbidden");
+                }, error[403], "Forbidden");
             });
         });
 
@@ -59,7 +64,7 @@ describe("net", "http", "helpers", "resolve path", () => {
             it("should throw Forbidden error", () => {
                 assert.throws(() => {
                     resolvePath(join("test", "..", "..", basename(process.cwd()), "index.js"));
-                }, x[403], "Forbidden");
+                }, error[403], "Forbidden");
             });
         });
     });
@@ -83,6 +88,11 @@ describe("net", "http", "helpers", "resolve path", () => {
 
                 it("should resolve relative to rootPath", () => {
                     assert.equal(normalize(resolvePath(__dirname, "index.js")), normalize(resolve(__dirname, "index.js")));
+                });
+
+                it("should resolve relative to rootPath with special characters", () => {
+                    assert.equal(normalize(resolvePath(__dirname, "f:oo$bar")),
+                        normalize(resolve(__dirname, "./f:oo$bar")));
                 });
 
                 it("should accept relative path", () => {
@@ -119,7 +129,7 @@ describe("net", "http", "helpers", "resolve path", () => {
             it("should throw Malicious Path error", () => {
                 assert.throws(() => {
                     resolvePath(__dirname, __dirname);
-                }, x[400], "Malicious Path");
+                }, error[400], "Malicious Path");
             });
         });
 
@@ -127,7 +137,7 @@ describe("net", "http", "helpers", "resolve path", () => {
             it("should throw Malicious Path error", () => {
                 assert.throws(() => {
                     resolvePath(__dirname, "hi\0there");
-                }, x[400], "Malicious Path");
+                }, error[400], "Malicious Path");
             });
         });
 
@@ -135,13 +145,13 @@ describe("net", "http", "helpers", "resolve path", () => {
             it("should throw Forbidden error", () => {
                 assert.throws(() => {
                     resolvePath(__dirname, "../index.js");
-                }, x[403], "Forbidden");
+                }, error[403], "Forbidden");
             });
 
             it("should not be tricked by missing separator", () => {
                 assert.throws(() => {
                     resolvePath(__dirname, join("..", `${basename(__dirname)}2`, "index.js"));
-                }, x[403], "Forbidden");
+                }, error[403], "Forbidden");
             });
         });
 
@@ -149,7 +159,7 @@ describe("net", "http", "helpers", "resolve path", () => {
             it("should throw Forbidden error", () => {
                 assert.throws(() => {
                     resolvePath(__dirname, join("test", "..", "..", basename(__dirname), "index.js"));
-                }, x[403], "Forbidden");
+                }, error[403], "Forbidden");
             });
         });
     });

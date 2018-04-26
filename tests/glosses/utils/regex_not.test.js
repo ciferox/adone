@@ -41,14 +41,15 @@ describe("util", "regexNot", () => {
         assert.equal(not("foo", opts).test("barfoo"), true);
     });
 
-    it("should throw an error when invalid args are passed", (cb) => {
-        try {
+    it("should throw when a potentially unsafe regex is passed", () => {
+        assert.throws(() => {
+            not("(x+x+)+y", { safe: true });
+        }, "potentially unsafe");
+    });
+
+    it("should throw an error when invalid args are passed", () => {
+        assert.throws(() => {
             not();
-            cb(new Error("expected an error"));
-        } catch (err) {
-            assert(err);
-            assert.equal(err.message, "expected a string");
-            cb();
-        }
+        }, "expected a string");
     });
 });

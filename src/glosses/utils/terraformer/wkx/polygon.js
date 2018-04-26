@@ -7,10 +7,11 @@ const {
 } = adone;
 
 export default class Polygon extends WKX.Geometry {
-    constructor(exteriorRing, interiorRings) {
+    constructor(exteriorRing, interiorRings, srid) {
         super();
         this.exteriorRing = exteriorRing || [];
         this.interiorRings = interiorRings || [];
+        this.srid = srid;
 
         if (this.exteriorRing.length > 0) {
             this.hasZ = this.exteriorRing[0].hasZ;
@@ -18,20 +19,20 @@ export default class Polygon extends WKX.Geometry {
         }
     }
 
-    static Z(exteriorRing, interiorRings) {
-        const polygon = new Polygon(exteriorRing, interiorRings);
+    static Z(exteriorRing, interiorRings, srid) {
+        const polygon = new Polygon(exteriorRing, interiorRings, srid);
         polygon.hasZ = true;
         return polygon;
     }
 
-    static M(exteriorRing, interiorRings) {
-        const polygon = new Polygon(exteriorRing, interiorRings);
+    static M(exteriorRing, interiorRings, srid) {
+        const polygon = new Polygon(exteriorRing, interiorRings, srid);
         polygon.hasM = true;
         return polygon;
     }
 
-    static ZM(exteriorRing, interiorRings) {
-        const polygon = new Polygon(exteriorRing, interiorRings);
+    static ZM(exteriorRing, interiorRings, srid) {
+        const polygon = new Polygon(exteriorRing, interiorRings, srid);
         polygon.hasZ = true;
         polygon.hasM = true;
         return polygon;

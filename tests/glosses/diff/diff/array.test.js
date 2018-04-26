@@ -33,6 +33,37 @@ describe("diff", "arrays", () => {
         ]);
     });
 
+    describe("anti-aliasing", () => {
+        // Test apparent contract that no chunk value is ever an input argument.
+        const value = [0, 1, 2];
+        const expected = [
+            { count: value.length, value }
+        ];
+
+        const input = value.slice();
+        const diffResult = arrays(input, input);
+
+        it("returns correct deep result for identical inputs", () => {
+            expect(diffResult).to.deep.equals(expected);
+        });
+        it("does not return the input array", () => {
+            expect(diffResult[0].value).to.not.equal(input);
+        });
+
+        const input1 = value.slice();
+        const input2 = value.slice();
+        const diffResult2 = arrays(input1, input2);
+        it("returns correct deep result for equivalent inputs", () => {
+            expect(diffResult2).to.deep.equals(expected);
+        });
+        it("does not return the first input array", () => {
+            expect(diffResult2[0].value).to.not.equal(input1);
+        });
+        it("does not return the second input array", () => {
+            expect(diffResult2[0].value).to.not.equal(input2);
+        });
+    });
+
     it("Should diff arrays with comparator", () => {
         const a = { a: 0 };
         const b = { a: 1 };

@@ -1,17 +1,18 @@
 describe("notifier", "notify-send", () => {
     const { is, std: { os }, notifier: { __: { util, notifiers: { NotifySend: Notify } } } } = adone;
 
-    beforeEach(function () {
-        this.original = util.command;
-        this.originalType = os.type;
+    const original = util.command;
+    const originalType = os.type;
+
+    beforeEach(() => {
         os.type = function () {
             return "Linux";
         };
     });
 
-    afterEach(function () {
-        util.command = this.original;
-        os.type = this.originalType;
+    afterEach(() => {
+        util.command = original;
+        os.type = originalType;
     });
 
     it("should pass on title and body", async () => {

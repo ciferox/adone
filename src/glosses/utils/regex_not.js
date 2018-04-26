@@ -22,7 +22,7 @@ not.create = (pattern, options) => {
     }
 
     const opts = { ...options };
-    if (opts && opts.contains === true) {
+    if (opts.contains === true) {
         opts.strictNegate = false;
     }
 
@@ -31,13 +31,19 @@ not.create = (pattern, options) => {
     const endChar = opts.endChar ? opts.endChar : "+";
     let str = pattern;
 
-    if (opts && opts.strictNegate === false) {
+    if (opts.strictNegate === false) {
         str = `(?:(?!(?:${pattern})).)${endChar}`;
     } else {
         str = `(?:(?!^(?:${pattern})$).)${endChar}`;
     }
 
-    return open + str + close;
+    const res = open + str + close;
+
+    if (opts.safe === true && !is.safeRegexp(res)) {
+        throw new error.Exception(`potentially unsafe regular expression: ${res}`);
+    }
+
+    return res;
 };
 
 export default not;

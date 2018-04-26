@@ -613,4 +613,38 @@ describe("data", "yaml", "issues", () => {
             assert.deepEqual(yaml.safeLoad('"\\U0001F600"'), "😀");
         });
     });
+
+    context("0399", () => {
+        it("should properly dump negative ints in different styles", () => {
+            const src = { integer: -100 };
+            let dump;
+
+            dump = yaml.dump(src, { styles: { "!!int": "binary" } });
+            assert.deepEqual(yaml.safeLoad(dump), src);
+
+            dump = yaml.dump(src, { styles: { "!!int": "octal" } });
+            assert.deepEqual(yaml.safeLoad(dump), src);
+
+            dump = yaml.dump(src, { styles: { "!!int": "hex" } });
+            assert.deepEqual(yaml.safeLoad(dump), src);
+        });
+    });
+
+    context("0403", () => {
+        it("should properly dump leading newlines and spaces", () => {
+            let dump;
+
+            let src = { str: "\n  a\nb" };
+            dump = yaml.dump(src);
+            assert.deepEqual(yaml.safeLoad(dump), src);
+
+            src = { str: "\n\n  a\nb" };
+            dump = yaml.dump(src);
+            assert.deepEqual(yaml.safeLoad(dump), src);
+
+            src = { str: "\n  a\nb" };
+            dump = yaml.dump(src, { indent: 10 });
+            assert.deepEqual(yaml.safeLoad(dump), src);
+        });
+    });
 });

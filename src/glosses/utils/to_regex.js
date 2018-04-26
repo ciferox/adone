@@ -13,7 +13,7 @@ toRegex.cache = {};
  * and simplify debugging by adding options and pattern to the regex. It can be
  * disabled by passing setting `options.cache` to false.
  */
-const cacheRegex = (regex, key, pattern, options) => {
+const memoize = (regex, key, pattern, options) => {
     Object.defineProperties(regex, {
         cached: {
             value: true,
@@ -120,8 +120,12 @@ const makeRe = (pattern, options) => {
         }
         const str = `${open}(?:${pattern})${close}`;
         regex = new RegExp(str, flags);
+
+        if (opts.safe === true && is.safeRegexp(regex) === false) {
+            throw new Error(`potentially unsafe regular expression: ${regex.source}`);
+        }
     } catch (err) {
-        if (opts.strictErrors === true) {
+        if (opts.strictErrors === true || opts.safe === true) {
             err.key = key;
             err.pattern = pattern;
             err.originalOptions = options;
@@ -137,7 +141,7 @@ const makeRe = (pattern, options) => {
     }
 
     if (opts.cache !== false) {
-        cacheRegex(regex, key, pattern, opts);
+        memoize(regex, key, pattern, opts);
     }
     return regex;
 };

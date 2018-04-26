@@ -194,6 +194,12 @@ const isPlainSafeFirst = (c) => {
         c !== CHAR_GRAVE_ACCENT;
 };
 
+// Determines whether block indentation indicator is required.
+const needIndentIndicator = (string) => {
+    const leadingSpaceRe = /^\n* /;
+    return leadingSpaceRe.test(string);
+};
+
 const STYLE_PLAIN = 1;
 const STYLE_SINGLE = 2;
 const STYLE_LITERAL = 3;
@@ -266,7 +272,7 @@ const chooseScalarStyle = (
         return plain && !testAmbiguousType(string) ? STYLE_PLAIN : STYLE_SINGLE;
     }
     // Edge case: block indentation indicator can only have one digit.
-    if (string[0] === " " && indentPerLevel > 9) {
+    if (indentPerLevel > 9 && needIndentIndicator(string)) {
         return STYLE_DOUBLE;
     }
     // At this point we know block styles are valid.
@@ -281,7 +287,7 @@ const dropEndingNewline = (string) => {
 
 // Pre-conditions: string is valid for a block scalar, 1 <= indentPerLevel <= 9.
 const blockHeader = (string, indentPerLevel) => {
-    const indentIndicator = string[0] === " " ? String(indentPerLevel) : "";
+    const indentIndicator = needIndentIndicator(string) ? String(indentPerLevel) : "";
 
     // note the special case: the string '\n' counts as a "trailing" empty line.
     const clip = string[string.length - 1] === "\n";

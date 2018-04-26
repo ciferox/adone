@@ -7,9 +7,10 @@ const {
 } = adone;
 
 export default class MultiLineString extends WKX.Geometry {
-    constructor(lineStrings) {
+    constructor(lineStrings, srid) {
         super();
         this.lineStrings = lineStrings || [];
+        this.srid = srid;
 
         if (this.lineStrings.length > 0) {
             this.hasZ = this.lineStrings[0].hasZ;
@@ -17,20 +18,20 @@ export default class MultiLineString extends WKX.Geometry {
         }
     }
 
-    static Z(lineStrings) {
-        const multiLineString = new MultiLineString(lineStrings);
+    static Z(lineStrings, srid) {
+        const multiLineString = new MultiLineString(lineStrings, srid);
         multiLineString.hasZ = true;
         return multiLineString;
     }
 
-    static M(lineStrings) {
-        const multiLineString = new MultiLineString(lineStrings);
+    static M(lineStrings, srid) {
+        const multiLineString = new MultiLineString(lineStrings, srid);
         multiLineString.hasM = true;
         return multiLineString;
     }
 
-    static ZM(lineStrings) {
-        const multiLineString = new MultiLineString(lineStrings);
+    static ZM(lineStrings, srid) {
+        const multiLineString = new MultiLineString(lineStrings, srid);
         multiLineString.hasZ = true;
         multiLineString.hasM = true;
         return multiLineString;

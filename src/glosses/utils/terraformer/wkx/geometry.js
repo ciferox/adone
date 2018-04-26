@@ -215,6 +215,10 @@ export default class Geometry {
     }
 
     static parseGeoJSON(value) {
+        return this._parseGeoJSON(value);
+    }
+
+    static _parseGeoJSON(value, isSubGeometry) {
         let geometry;
 
         switch (value.type) {
@@ -246,6 +250,8 @@ export default class Geometry {
             } else {
                 throw new Error(`Unsupported crs: ${crs}`);
             }
+        } else if (!isSubGeometry) {
+            geometry.srid = 4326;
         }
 
         return geometry;

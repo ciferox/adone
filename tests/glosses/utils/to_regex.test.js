@@ -5,6 +5,12 @@ describe("util", "toRegex", () => {
         assert.equal(typeof toRegex, "function");
     });
 
+    it("should throw when a potentially unsafe regex is passed", () => {
+        assert.throws(() => {
+            toRegex("(x+)*", { safe: true });
+        }, /potentially unsafe/);
+    });
+
     it("should create a strict regex from the given string", () => {
         assert.deepEqual(toRegex("foo"), /^(?:foo)$/);
     });

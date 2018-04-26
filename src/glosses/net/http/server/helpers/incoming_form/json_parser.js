@@ -1,27 +1,19 @@
 export default class JSONParser {
     constructor(parent) {
         this.parent = parent;
-        this.data = Buffer.alloc(0);
+        this.chunks = [];
         this.bytesWritten = 0;
     }
 
-    initWithLength(length) {
-        this.data = Buffer.alloc(length);
-    }
-
     write(buffer) {
-        if (this.data.length >= this.bytesWritten + buffer.length) {
-            buffer.copy(this.data, this.bytesWritten);
-        } else {
-            this.data = Buffer.concat([this.data, buffer]);
-        }
         this.bytesWritten += buffer.length;
+        this.chunks.push(buffer);
         return buffer.length;
     }
 
     end() {
         try {
-            const fields = JSON.parse(this.data.toString("utf8"));
+            const fields = JSON.parse(Buffer.concat(this.chunks));
             for (const field in fields) {
                 this.onField(field, fields[field]);
             }

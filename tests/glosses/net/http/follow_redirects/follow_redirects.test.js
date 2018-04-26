@@ -44,13 +44,16 @@ describe("net", "http", "follow-redirects ", () => {
     let app;
     let app2;
     let originalMaxRedirects;
+    let originalMaxBodyLength;
 
     beforeEach(() => {
         originalMaxRedirects = followRedirects.maxRedirects;
+        originalMaxBodyLength = followRedirects.maxBodyLength;
     });
 
     afterEach(async () => {
         followRedirects.maxRedirects = originalMaxRedirects;
+        followRedirects.maxBodyLength = originalMaxBodyLength;
         await Promise.all(servers.map((x) => x.unbind()));
         servers = [];
     });
@@ -61,7 +64,7 @@ describe("net", "http", "follow-redirects ", () => {
         return `${protocol}://localhost:${port}${path}`;
     };
 
-    const httpGet = (app, path, { follow = true } = {}) => {
+    const httpGet = (app, path, { follow = true, postRequest } = {}) => {
         return new Promise((resolve, reject) => {
             const url = adone.std.url.parse(getUrl(app, path));
             url.ca = ca; // force ca for all requests
@@ -74,7 +77,7 @@ describe("net", "http", "follow-redirects ", () => {
 
             url.followRedirects = follow;
 
-            mod.get(url, (res) => {
+            const req = mod.get(url, (res) => {
                 const chunks = [];
                 res.on("data", (chunk) => {
                     chunks.push(chunk);
@@ -87,10 +90,13 @@ describe("net", "http", "follow-redirects ", () => {
                     });
                 });
             }).once("error", reject);
+            if (postRequest) {
+                postRequest(req);
+            }
         });
     };
 
-    const httpRequest = (app, path, method = "GET") => {
+    const httpRequest = (app, path, { method = "GET", postRequest } = {}) => {
         return new Promise((resolve, reject) => {
             const url = adone.std.url.parse(getUrl(app, path));
 
@@ -103,7 +109,7 @@ describe("net", "http", "follow-redirects ", () => {
 
             url.method = method;
 
-            mod.request(url, (res) => {
+            const req = mod.request(url, (res) => {
                 const chunks = [];
                 res.on("data", (chunk) => {
                     chunks.push(chunk);
@@ -115,12 +121,16 @@ describe("net", "http", "follow-redirects ", () => {
                         status: res.statusCode
                     });
                 });
-            }).once("error", reject).end();
+            }).once("error", reject);
+            if (postRequest) {
+                postRequest(req);
+            }
+            req.end();
         });
     };
 
-    const httpGetJSON = async (app, path, { follow = true } = {}) => {
-        const res = await httpGet(app, path, { follow });
+    const httpGetJSON = async (app, path, { follow = true, postRequest } = {}) => {
+        const res = await httpGet(app, path, { follow, postRequest });
         try {
             res.data = JSON.parse(res.data.toString());
         } catch (err) {
@@ -130,8 +140,8 @@ describe("net", "http", "follow-redirects ", () => {
         return res;
     };
 
-    const httpRequestJSON = async (app, path, method) => {
-        const res = await httpRequest(app, path, method);
+    const httpRequestJSON = async (app, path, { method, postRequest } = {}) => {
+        const res = await httpRequest(app, path, { method, postRequest });
         try {
             res.data = JSON.parse(res.data.toString());
         } catch (err) {
@@ -361,6 +371,30 @@ describe("net", "http", "follow-redirects ", () => {
         });
     });
 
+
+    it("should provide connection", async () => {
+        const app = createHttpServer();
+
+        app.use((ctx) => {
+            if (ctx.method !== "GET") {
+                ctx.throw(404);
+            }
+            ctx.body = { foo: "bar" };
+        });
+
+        await app.bind();
+
+        let request;
+
+        await httpRequest(app, "/a", {
+            postRequest(req) {
+                request = req;
+            }
+        });
+
+        assert.instanceOf(request.connection, net.Socket);
+    });
+
     it("should provide flushHeaders", async () => {
         const app = createHttpServer();
 
@@ -384,6 +418,70 @@ describe("net", "http", "follow-redirects ", () => {
             request.on("response", resolve);
             request.on("error", reject);
         });
+    });
+
+    it("should provide getHeader", () => {
+        const req = http.request("http://localhost:3600/a");
+        req.setHeader("my-header", "my value");
+        assert.equal(req.getHeader("my-header"), "my value");
+        req.abort();
+    });
+
+    it("should provide removeHeader", async () => {
+        const app = createHttpServer();
+
+        app.use((ctx) => {
+            if (ctx.method !== "GET") {
+                ctx.throw(404);
+            }
+            switch (ctx.path) {
+                case "/a":
+                    return ctx.redirect("/b");
+                case "/b":
+                    ctx.body = ctx.headers;
+                    break;
+            }
+        });
+
+        await app.bind();
+
+        const res = await httpRequestJSON(app, "/a", {
+            postRequest(req) {
+                req.setHeader("my-header", "my value");
+                assert.equal(req.getHeader("my-header"), "my value");
+                req.removeHeader("my-header");
+                assert.undefined(req.getHeader("my-header"));
+            }
+        });
+
+        assert.undefined(res.data["my-header"]);
+    });
+
+    it("should provide setHeader", async () => {
+        const app = createHttpServer();
+
+        app.use((ctx) => {
+            if (ctx.method !== "GET") {
+                ctx.throw(404);
+            }
+            switch (ctx.path) {
+                case "/a":
+                    return ctx.redirect("/b");
+                case "/b":
+                    ctx.body = ctx.headers;
+            }
+        });
+
+        await app.bind();
+
+        const res = await httpRequestJSON(app, "/a", {
+            postRequest(req) {
+                req.setHeader("my-header", "my value");
+                assert.equal(req.getHeader("my-header"), "my value");
+            }
+        });
+
+        assert.equal(res.data["my-header"], "my value");
     });
 
     it("should provide setNoDelay", async () => {
@@ -452,6 +550,29 @@ describe("net", "http", "follow-redirects ", () => {
             const request = http.get(getUrl(app, "/a"), resolve);
             request.setTimeout(1000);
         });
+    });
+
+    it("should provide socket", async () => {
+        const app = createHttpServer();
+
+        app.use((ctx) => {
+            if (ctx.method !== "GET") {
+                ctx.throw(404);
+            }
+            ctx.body = "OK";
+        });
+
+        await app.bind();
+
+        let request;
+
+        await httpRequest(app, "/a", {
+            postRequest(req) {
+                request = req;
+            }
+        });
+
+        assert.instanceOf(request.socket, net.Socket);
     });
 
     describe("should obey a `maxRedirects` property", () => {
@@ -543,7 +664,7 @@ describe("net", "http", "follow-redirects ", () => {
                     }
                 });
                 await app.bind();
-                const res = await httpRequestJSON(app, "/a", originalMethod);
+                const res = await httpRequestJSON(app, "/a", { method: originalMethod });
                 expect(res).to.deep.include({
                     status: 200,
                     responseUrl: getUrl(app, "/b")
@@ -849,6 +970,118 @@ describe("net", "http", "follow-redirects ", () => {
         expect(res).to.be.deep.equal(await fs.readFile(__filename));
     });
 
+    describe("should obey a `maxBodyLength` property", () => {
+        it("which defaults to 10MB", () => {
+            assert.equal(followRedirects.maxBodyLength, 10 * 1024 * 1024);
+        });
+
+        it("set globally, on write", async () => {
+            const app = createHttpServer();
+
+            app.use((ctx) => {
+                if (ctx.method !== "GET") {
+                    ctx.throw(404);
+                }
+                ctx.body = ctx.req;
+            });
+
+            await app.bind();
+
+            const opts = url.parse(`http://localhost:${app.address().port}/a`);
+            opts.method = "POST";
+
+            followRedirects.maxBodyLength = 8;
+
+            const err = await new Promise((resolve, reject) => {
+                const req = http.request(opts, reject);
+                req.write("12345678");
+                req.on("error", resolve);
+                req.write("9");
+            });
+
+            assert.equal(err.message, "Request body larger than maxBodyLength limit");
+        });
+
+        it("set per request, on write", async () => {
+            const app = createHttpServer();
+
+            app.use((ctx) => {
+                if (ctx.method !== "GET") {
+                    ctx.throw(404);
+                }
+                ctx.body = ctx.req;
+            });
+
+            await app.bind();
+
+            const opts = url.parse(`http://localhost:${app.address().port}/a`);
+            opts.method = "POST";
+            opts.maxBodyLength = 8;
+
+            const err = await new Promise((resolve, reject) => {
+                const req = http.request(opts, reject);
+                req.write("12345678");
+                req.on("error", resolve);
+                req.write("9");
+            });
+
+            assert.equal(err.message, "Request body larger than maxBodyLength limit");
+        });
+
+        it("set globally, on end", async () => {
+            const app = createHttpServer();
+
+            app.use((ctx) => {
+                if (ctx.method !== "GET") {
+                    ctx.throw(404);
+                }
+                ctx.body = ctx.req;
+            });
+
+            await app.bind();
+
+            const opts = url.parse(`http://localhost:${app.address().port}/a`);
+            opts.method = "POST";
+
+            followRedirects.maxBodyLength = 8;
+
+            const err = await new Promise((resolve, reject) => {
+                const req = http.request(opts, reject);
+                req.write("12345678");
+                req.on("error", resolve);
+                req.end("9");
+            });
+
+            assert.equal(err.message, "Request body larger than maxBodyLength limit");
+        });
+
+        it("set per request, on end", async () => {
+            const app = createHttpServer();
+
+            app.use((ctx) => {
+                if (ctx.method !== "GET") {
+                    ctx.throw(404);
+                }
+                ctx.body = ctx.req;
+            });
+
+            await app.bind();
+
+            const opts = url.parse(`http://localhost:${app.address().port}/a`);
+            opts.method = "POST";
+            opts.maxBodyLength = 8;
+
+            const err = await new Promise((resolve, reject) => {
+                const req = http.request(opts, reject);
+                req.write("12345678");
+                req.on("error", resolve);
+                req.end("9");
+            });
+
+            assert.equal(err.message, "Request body larger than maxBodyLength limit");
+        });
+    });
+
     describe("should drop the entity and associated headers", () => {
         const itDropsBodyAndHeaders = function (originalMethod) {
             it(`when switching from ${originalMethod} to GET`, async () => {
@@ -924,10 +1157,37 @@ describe("net", "http", "follow-redirects ", () => {
     });
 
     describe("should choose the right agent per protocol", () => {
-        it.todo("(https -> http -> https)", (done) => {
-            app.get("/a", redirectsTo("http://localhost:3600/b"));
-            app2.get("/b", redirectsTo("https://localhost:3601/c"));
-            app.get("/c", sendsJson({ yes: "no" }));
+        it("(https -> http -> https)", async () => {
+            const app = createHttpServer();
+            const app2 = createHttpServer();
+
+            app.use((ctx) => {
+                if (ctx.method !== "GET") {
+                    ctx.throw(404);
+                }
+                switch (ctx.path) {
+                    case "/a":
+                        return ctx.redirect(`http://localhost:${app2.address().port}/b`);
+                    case "/c":
+                        ctx.body = { yes: "no" };
+                        break;
+                }
+            });
+
+            app2.use((ctx) => {
+                if (ctx.method !== "GET") {
+                    ctx.throw(404);
+                }
+                switch (ctx.path) {
+                    case "/b":
+                        return ctx.redirect(`https://localhost:${app.address().port}/c`);
+                }
+            });
+
+            await app.bind(httpsOptions);
+
+            await app2.bind();
+
 
             const addRequestLogging = function (agent) {
                 agent._requests = [];
@@ -942,21 +1202,31 @@ describe("net", "http", "follow-redirects ", () => {
             const httpAgent = addRequestLogging(new http.Agent());
             const httpsAgent = addRequestLogging(new https.Agent());
 
-            BPromise.all([server.start(httpsOptions(app)), server.start(app2)])
-                .then(asPromise((resolve, reject) => {
-                    const opts = url.parse("https://localhost:3601/a");
-                    opts.ca = ca;
-                    opts.agents = { http: httpAgent, https: httpsAgent };
-                    https.get(opts, concatJson(resolve, reject)).on("error", reject);
-                }))
-                .then(() => adone.promise.delay(1000))
-                .then((res) => {
-                    assert.deepEqual(httpAgent._requests, ["/b"]);
-                    assert.deepEqual(httpsAgent._requests, ["/a", "/c"]);
-                    assert.deepEqual(res.parsedJson, { yes: "no" });
-                    assert.deepEqual(res.responseUrl, "https://localhost:3601/c");
-                })
-                .nodeify(done);
+            const res = await new Promise((resolve, reject) => {
+                const opts = url.parse(`https://localhost:${app.address().port}/a`);
+                opts.ca = ca;
+                opts.agents = { http: httpAgent, https: httpsAgent };
+
+                https.get(opts, (res) => {
+                    const chunks = [];
+                    res.on("data", (chunk) => {
+                        chunks.push(chunk);
+                    });
+                    res.on("end", () => {
+                        resolve({
+                            data: JSON.parse(Buffer.concat(chunks)),
+                            responseUrl: res.responseUrl
+                        });
+                    });
+
+                    res.on("error", reject);
+                });
+            });
+
+            assert.deepEqual(httpAgent._requests, ["/b"]);
+            assert.deepEqual(httpsAgent._requests, ["/a", "/c"]);
+            assert.deepEqual(res.data, { yes: "no" });
+            assert.deepEqual(res.responseUrl, `https://localhost:${app.address().port}/c`);
         });
     });
 

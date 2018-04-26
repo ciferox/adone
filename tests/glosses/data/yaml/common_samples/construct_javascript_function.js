@@ -3,22 +3,27 @@ function testHandler(actual) {
 
     assert.strictEqual(actual.length, expected.length);
 
-    assert.strictEqual(
-    actual[0](),
-    expected[0]());
+    assert.strictEqual(actual.length, expected.length);
 
     assert.strictEqual(
-    actual[1](10, 20),
-    expected[1](10, 20));
+        actual[0](),
+        expected[0]());
+
+    assert.strictEqual(
+        actual[1](10, 20),
+        expected[1](10, 20));
 
     assert.deepEqual(
-    actual[2]("book"),
-    expected[2]("book"));
+        actual[2]("book"),
+        expected[2]("book"));
 }
 
 testHandler.expected = [
     function () {
         return 42;
+    },
+    function () {
+        return 72;
     },
     function (x, y) {
         return x + y;

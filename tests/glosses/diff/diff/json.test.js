@@ -68,5 +68,50 @@ describe("diff", () => {
             expect(util.keys(canonicalObj)).to.eql(["a", "b"]);
             expect(util.keys(canonicalObj.a)).to.eql(["a", "b"]);
         });
+
+        it("should accept a custom JSON.stringify() replacer function", () => {
+            expect(json(
+                { a: 123 },
+                { a: /foo/ }
+            )).to.eql([
+                { count: 1, value: "{\n" },
+                { count: 1, value: '  \"a\": 123\n', added: undefined, removed: true },
+                { count: 1, value: '  \"a\": {}\n', added: true, removed: undefined },
+                { count: 1, value: "}" }
+            ]);
+
+            expect(json(
+                { a: 123 },
+                { a: /foo/gi },
+                { stringifyReplacer: (k, v) => v instanceof RegExp ? v.toString() : v }
+            )).to.eql([
+                { count: 1, value: "{\n" },
+                { count: 1, value: '  \"a\": 123\n', added: undefined, removed: true },
+                { count: 1, value: '  \"a\": "/foo/gi"\n', added: true, removed: undefined },
+                { count: 1, value: "}" }
+            ]);
+
+            expect(json(
+                { a: 123 },
+                { a: new Error("ohaider") },
+                { stringifyReplacer: (k, v) => v instanceof Error ? `${v.name}: ${v.message}` : v }
+            )).to.eql([
+                { count: 1, value: "{\n" },
+                { count: 1, value: '  \"a\": 123\n', added: undefined, removed: true },
+                { count: 1, value: '  \"a\": "Error: ohaider"\n', added: true, removed: undefined },
+                { count: 1, value: "}" }
+            ]);
+
+            expect(json(
+                { a: 123 },
+                { a: [new Error("ohaider")] },
+                { stringifyReplacer: (k, v) => v instanceof Error ? `${v.name}: ${v.message}` : v }
+            )).to.eql([
+                { count: 1, value: "{\n" },
+                { count: 1, value: '  \"a\": 123\n', added: undefined, removed: true },
+                { count: 3, value: '  \"a\": [\n    "Error: ohaider"\n  ]\n', added: true, removed: undefined },
+                { count: 1, value: "}" }
+            ]);
+        });
     });
 });

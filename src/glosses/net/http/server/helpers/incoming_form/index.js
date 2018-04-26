@@ -23,8 +23,8 @@ export default class IncomingForm extends event.Emitter {
         this.ended = false;
 
         this.maxFields = opts.maxFields || 1000;
-        this.maxFieldsSize = opts.maxFieldsSize || 2 * 1024 * 1024;
-        this.maxFileSize = opts.maxFileSize || 2 * 1024 * 1024;
+        this.maxFieldsSize = opts.maxFieldsSize || 20 * 1024 * 1024;
+        this.maxFileSize = opts.maxFileSize || 200 * 1024 * 1024;
         this.keepExtensions = opts.keepExtensions || false;
         this.uploadDir = opts.uploadDir || os.tmpdir();
         this.encoding = opts.encoding || "utf-8";
@@ -450,7 +450,7 @@ export default class IncomingForm extends event.Emitter {
 
         this.emit("fileBegin", filename, file);
         file.open();
-
+        this.openedFiles.push(file);
         this._flushing++;
 
         this._parser = new IncomingForm.OctetParser();
@@ -495,10 +495,6 @@ export default class IncomingForm extends event.Emitter {
         this.type = "json";
 
         const parser = new IncomingForm.JSONParser(this);
-
-        if (this.bytesExpected) {
-            parser.initWithLength(this.bytesExpected);
-        }
 
         parser.onField = (key, val) => {
             this.emit("field", key, val);

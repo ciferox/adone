@@ -7,9 +7,10 @@ const {
 } = adone;
 
 export default class MultiPolygon extends WKX.Geometry {
-    constructor(polygons) {
+    constructor(polygons, srid) {
         super();
         this.polygons = polygons || [];
+        this.srid = srid;
 
         if (this.polygons.length > 0) {
             this.hasZ = this.polygons[0].hasZ;
@@ -17,20 +18,20 @@ export default class MultiPolygon extends WKX.Geometry {
         }
     }
 
-    static Z(polygons) {
-        const multiPolygon = new MultiPolygon(polygons);
+    static Z(polygons, srid) {
+        const multiPolygon = new MultiPolygon(polygons, srid);
         multiPolygon.hasZ = true;
         return multiPolygon;
     }
 
-    static M(polygons) {
-        const multiPolygon = new MultiPolygon(polygons);
+    static M(polygons, srid) {
+        const multiPolygon = new MultiPolygon(polygons, srid);
         multiPolygon.hasM = true;
         return multiPolygon;
     }
 
-    static ZM(polygons) {
-        const multiPolygon = new MultiPolygon(polygons);
+    static ZM(polygons, srid) {
+        const multiPolygon = new MultiPolygon(polygons, srid);
         multiPolygon.hasZ = true;
         multiPolygon.hasM = true;
         return multiPolygon;

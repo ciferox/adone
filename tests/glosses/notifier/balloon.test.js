@@ -1,19 +1,20 @@
 describe("notifier", "WindowsBalloon", () => {
     const { std: { os }, notifier: { __: { util, notifiers: { WindowsBalloon: Notify } } } } = adone;
 
-    beforeEach(function () {
-        this.original = util.immediateFileCommand;
-        this.originalType = os.type;
-        this.originalArch = os.arch;
+    const original = util.immediateFileCommand;
+    const originalType = os.type;
+    const originalArch = os.arch;
+
+    beforeEach(() => {
         os.type = function () {
             return "Windows_NT";
         };
     });
 
-    afterEach(function () {
-        util.immediateFileCommand = this.original;
-        os.type = this.originalType;
-        os.arch = this.originalArch;
+    afterEach(() => {
+        util.immediateFileCommand = original;
+        os.type = originalType;
+        os.arch = originalArch;
     });
 
     it("should use 64 bit notifu", async () => {

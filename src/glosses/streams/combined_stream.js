@@ -97,7 +97,7 @@ export default class CombinedStream extends Stream {
                 this._handleErrors(stream);
             }
 
-            this._pipeNext(stream);
+            setImmediate(this._pipeNext.bind(this, stream));
         });
     }
 

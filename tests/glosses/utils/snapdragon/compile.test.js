@@ -6,6 +6,13 @@ let parser;
 describe("util", "Snapdragon", "compiler", () => {
     beforeEach(() => {
         compiler = new Compiler();
+        compiler
+            .set("parens.open", function (node) {
+                return this.emit("(", node);
+            })
+            .set("parens.close", function (node) {
+                return this.emit(")", node);
+            });
         parser = new Parser();
         parser
             .set("text", function () {
@@ -18,6 +25,20 @@ describe("util", "Snapdragon", "compiler", () => {
             .set("slash", function () {
                 const pos = this.position();
                 const match = this.match(/^\//);
+                if (match) {
+                    return pos(this.node(match[0]));
+                }
+            })
+            .set("parens.open", function () {
+                const pos = this.position();
+                const match = this.match(/^\(/);
+                if (match) {
+                    return pos(this.node(match[0]));
+                }
+            })
+            .set("parens.close", function () {
+                const pos = this.position();
+                const match = this.match(/^\)/);
                 if (match) {
                     return pos(this.node(match[0]));
                 }
@@ -53,6 +74,12 @@ describe("util", "Snapdragon", "compiler", () => {
             const ast = parser.parse("a/b/c");
             const res = compiler.compile(ast);
             assert.equal(res.output, "a-b-c");
+        });
+
+        it("should compile close without open", () => {
+            const ast = parser.parse("a)");
+            const res = compiler.compile(ast);
+            assert.equal(res.output, "a)");
         });
     });
 });

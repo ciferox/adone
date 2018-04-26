@@ -34,6 +34,22 @@ describe("diff", "patch", "apply", () => {
             expect(applyPatch("line11\nline2\nline3\nline4", "Index: test\n" + "===================================================================\n" + "--- test\theader1\n" + "+++ test\theader2\n" + "@@ -1,4 +1,4 @@\n" + "+line1\n" + "-line11\n" + " line2\n" + " line3\n" + " line4\n" + "\\ No newline at end of file\n")).to.equal("line1\nline2\nline3\nline4");
 
             expect(applyPatch("line11\nline2\nline3\nline4\nline4\nline4\nline4", "Index: test\n" + "===================================================================\n" + "--- test\theader1\n" + "+++ test\theader2\n" + "@@ -1,5 +1,5 @@\n" + "+line1\n" + "-line11\n" + " line2\n" + " line3\n" + " line4\n" + " line4\n")).to.equal("line1\nline2\nline3\nline4\nline4\nline4\nline4");
+
+            // Test empty lines in patches
+            expect(applyPatch(
+                "line11\nline2\n\nline4",
+                "Index: test\n"
+                + "===================================================================\n"
+                + "--- test\theader1\n"
+                + "+++ test\theader2\n"
+                + "@@ -1,4 +1,4 @@\n"
+                + "+line1\n"
+                + "-line11\n"
+                + " line2\n"
+                + "\n"
+                + " line4\n"
+                + "\\ No newline at end of file\n"))
+                .to.equal("line1\nline2\n\nline4");
         });
 
         it("should apply patches", () => {

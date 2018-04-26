@@ -78,7 +78,8 @@ adone.lazify({
     globize: "./globize",
     color: "./color",
     movingAverage: "./moving_average",
-    csv: "./csv"
+    csv: "./csv",
+    tokenizeRegexp: "./tokenize_regexp"
 }, adone.asNamespace(exports), require);
 
 const irregularPlurals = {

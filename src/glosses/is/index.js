@@ -1029,5 +1029,6 @@ export const after = (str, date = String(new Date())) => {
 adone.lazify({
     fqdn: "./fqdn",
     url: "./url",
-    email: "./email"
+    email: "./email",
+    safeRegexp: "./safe_regexp"
 }, exports, require);
