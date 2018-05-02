@@ -1,5 +1,5 @@
 adone.app.run({
-    main() {
+    async main() {
         const questions = [
             {
                 type: "datetime",
@@ -19,8 +19,7 @@ adone.app.run({
             }
         ];
 
-        adone.runtime.term.prompt().run(questions).then((answers) => {
-            adone.log(answers);
-        });
+        const answers = await adone.runtime.term.prompt().run(questions);
+        adone.log(answers);
     }
 });

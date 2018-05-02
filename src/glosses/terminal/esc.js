@@ -78,7 +78,7 @@ const styles = {
     }
 };
 
-    // Fix humans
+// Fix humans
 styles.color.grey = styles.color.gray;
 
 for (const groupName of Object.keys(styles)) {
@@ -113,24 +113,38 @@ const rgb2rgb = (r, g, b) => [r, g, b];
 styles.color.close = "\u001B[39m";
 styles.bgColor.close = "\u001B[49m";
 
-styles.color.ansi = {};
-styles.color.ansi256 = {};
+// styles.color.ansi = {};
+// styles.color.ansi256 = {};
+styles.color.ansi = {
+    ansi: wrapAnsi16(adone.identity, 0)
+};
+styles.color.ansi256 = {
+    ansi256: wrapAnsi256(adone.identity, 0)
+};
 styles.color.ansi16m = {
     rgb: wrapAnsi16m(rgb2rgb, 0)
 };
 
-styles.bgColor.ansi = {};
-styles.bgColor.ansi256 = {};
+styles.bgColor.ansi = {
+    ansi: wrapAnsi16(adone.identity, 10)
+};
+styles.bgColor.ansi256 = {
+    ansi256: wrapAnsi256(adone.identity, 10)
+};
 styles.bgColor.ansi16m = {
     rgb: wrapAnsi16m(rgb2rgb, 10)
 };
 
-for (const key of Object.keys(colorConvert)) {
+for (let key of Object.keys(colorConvert)) {
     if (!is.object(colorConvert[key])) {
         continue;
     }
 
     const suite = colorConvert[key];
+
+    if (key === "ansi16") {
+        key = "ansi";
+    }
 
     if ("ansi16" in suite) {
         styles.color.ansi[key] = wrapAnsi16(suite.ansi16, 0);

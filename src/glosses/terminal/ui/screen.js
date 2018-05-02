@@ -243,19 +243,19 @@ export default class Screen extends adone.terminal.ui.Node {
     }
 
     get cols() {
-        return this.term.cols;
+        return this.term.stats.cols;
     }
 
     get rows() {
-        return this.term.rows;
+        return this.term.stats.rows;
     }
 
     get width() {
-        return this.term.cols;
+        return this.term.stats.cols;
     }
 
     get height() {
-        return this.term.rows;
+        return this.term.stats.rows;
     }
 
     get focused() {

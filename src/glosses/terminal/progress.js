@@ -243,7 +243,7 @@ export default class ProgressBar {
             .replace(/:percent/g, `${toFixed(percent, 0)}%`);
 
         let result = output;
-        const cols = term.cols;
+        const cols = term.stats.cols;
         let width = this.width;
 
         width = width < 1 ? cols * width : width;
@@ -282,7 +282,7 @@ export default class ProgressBar {
             this.origin = current;
         }
 
-        if (this.origin.row === (term.rows - 1)) {
+        if (this.origin.row === (term.stats.rows - 1)) {
             term.write("\n".repeat(this.rows));
 
             instances.forEach((instance) => {

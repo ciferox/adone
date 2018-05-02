@@ -1,6 +1,6 @@
 adone.app.run({
-    main() {
-        adone.runtime.term.prompt().run([
+    async main() {
+        const answers = await adone.runtime.term.prompt().run([
             {
                 type: "rawlist",
                 name: "theme",
@@ -22,8 +22,7 @@ adone.app.run({
                     return val.toLowerCase();
                 }
             }
-        ]).then((answers) => {
-            adone.log(JSON.stringify(answers, null, "  "));
-        });
+        ]);
+        adone.log(JSON.stringify(answers, null, "  "));
     }
 });

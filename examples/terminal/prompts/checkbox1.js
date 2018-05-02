@@ -1,6 +1,6 @@
 adone.app.run({
-    main() {
-        adone.runtime.term.prompt().run([
+    async main() {
+        const answers = await adone.runtime.term.prompt().run([
             {
                 type: "checkbox",
                 message: "Select toppings",
@@ -56,8 +56,7 @@ adone.app.run({
                     return true;
                 }
             }
-        ]).then((answers) => {
-            adone.log(JSON.stringify(answers, null, "  "));
-        });
+        ]);
+        adone.log(JSON.stringify(answers, null, "  "));
     }
 });

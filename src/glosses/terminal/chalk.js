@@ -1,9 +1,138 @@
 const {
     is,
-    terminal: {
-        esc
-    }
+    terminal: { esc },
+    runtime: { term: { stats } }
 } = adone;
+
+"use strict";
+const TEMPLATE_REGEX = /(?:\\(u[a-f\d]{4}|x[a-f\d]{2}|.))|(?:\{(~)?(\w+(?:\([^)]*\))?(?:\.\w+(?:\([^)]*\))?)*)(?:[ \t]|(?=\r?\n)))|(\})|((?:.|[\r\n\f])+?)/gi;
+const STYLE_REGEX = /(?:^|\.)(\w+)(?:\(([^)]*)\))?/g;
+const STRING_REGEX = /^(['"])((?:\\.|(?!\1)[^\\])*)\1$/;
+const ESCAPE_REGEX = /\\(u[a-f\d]{4}|x[a-f\d]{2}|.)|([^\\])/gi;
+
+const ESCAPES = new Map([
+    ["n", "\n"],
+    ["r", "\r"],
+    ["t", "\t"],
+    ["b", "\b"],
+    ["f", "\f"],
+    ["v", "\v"],
+    ["0", "\0"],
+    ["\\", "\\"],
+    ["e", "\u001B"],
+    ["a", "\u0007"]
+]);
+
+const unescape = function (c) {
+    if ((c[0] === "u" && c.length === 5) || (c[0] === "x" && c.length === 3)) {
+        return String.fromCharCode(parseInt(c.slice(1), 16));
+    }
+
+    return ESCAPES.get(c) || c;
+};
+
+const parseArguments = function (name, args) {
+    const results = [];
+    const chunks = args.trim().split(/\s*,\s*/g);
+    let matches;
+
+    for (const chunk of chunks) {
+        if (!isNaN(chunk)) {
+            results.push(Number(chunk));
+        } else if ((matches = chunk.match(STRING_REGEX))) {
+            results.push(matches[2].replace(ESCAPE_REGEX, (m, escape, chr) => escape ? unescape(escape) : chr));
+        } else {
+            throw new Error(`Invalid Chalk template style argument: ${chunk} (in style '${name}')`);
+        }
+    }
+
+    return results;
+};
+
+const parseStyle = function (style) {
+    STYLE_REGEX.lastIndex = 0;
+
+    const results = [];
+    let matches;
+
+    while (!is.null(matches = STYLE_REGEX.exec(style))) {
+        const name = matches[1];
+
+        if (matches[2]) {
+            const args = parseArguments(name, matches[2]);
+            results.push([name].concat(args));
+        } else {
+            results.push([name]);
+        }
+    }
+
+    return results;
+};
+
+const buildStyle = function (chalk, styles) {
+    const enabled = {};
+
+    for (const layer of styles) {
+        for (const style of layer.styles) {
+            enabled[style[0]] = layer.inverse ? null : style.slice(1);
+        }
+    }
+
+    let current = chalk;
+    for (const styleName of Object.keys(enabled)) {
+        if (is.array(enabled[styleName])) {
+            if (!(styleName in current)) {
+                throw new Error(`Unknown Chalk style: ${styleName}`);
+            }
+
+            if (enabled[styleName].length > 0) {
+                current = current[styleName].apply(current, enabled[styleName]);
+            } else {
+                current = current[styleName];
+            }
+        }
+    }
+
+    return current;
+};
+
+const template = (chalk, tmp) => {
+    const styles = [];
+    const chunks = [];
+    let chunk = [];
+
+    // eslint-disable-next-line max-params
+    tmp.replace(TEMPLATE_REGEX, (m, escapeChar, inverse, style, close, chr) => {
+        if (escapeChar) {
+            chunk.push(unescape(escapeChar));
+        } else if (style) {
+            const str = chunk.join("");
+            chunk = [];
+            chunks.push(styles.length === 0 ? str : buildStyle(chalk, styles)(str));
+            styles.push({ inverse, styles: parseStyle(style) });
+        } else if (close) {
+            if (styles.length === 0) {
+                throw new Error("Found extraneous } in Chalk template literal");
+            }
+
+            chunks.push(buildStyle(chalk, styles)(chunk.join("")));
+            chunk = [];
+            styles.pop();
+        } else {
+            chunk.push(chr);
+        }
+    });
+
+    chunks.push(chunk.join(""));
+
+    if (styles.length > 0) {
+        const errMsg = `Chalk template literal is missing ${styles.length} closing bracket${styles.length === 1 ? "" : "s"} (\`}\`)`;
+        throw new Error(errMsg);
+    }
+
+    return chunks.join("");
+};
+
 
 const matchOperatorsRe = /[|\\{}()[\]^$+*?.]/g;
 
@@ -14,11 +143,10 @@ const escapeStringRegexp = function (str) {
 
     return str.replace(matchOperatorsRe, "\\$&");
 };
-// const template = require("./templates.js");
 
-const isSimpleWindowsTerm = process.platform === "win32" && !(process.env.TERM || "").toLowerCase().startsWith("xterm");
+const isSimpleWindowsTerm = is.windows && !(process.env.TERM || "").toLowerCase().startsWith("xterm");
 
-// `supportsColor.level` → `ansiStyles.color[name]` mapping
+// `supportsColor.level` → `esc.color[name]` mapping
 const levelMapping = ["ansi", "ansi", "ansi256", "ansi16m"];
 
 // `color-convert` models to exclude from the Chalk API due to conflicts and such
@@ -28,7 +156,7 @@ const styles = Object.create(null);
 
 // Use bright blue on Windows as the normal blue color is illegible
 if (isSimpleWindowsTerm) {
-    esc.blue.open = "\u001B[94m"; // TODO: ??????
+    esc.blue.open = "\u001B[94m";
 }
 
 for (const key of Object.keys(esc)) {
@@ -181,31 +309,52 @@ const build = function (_styles, _empty, key) {
     return builder;
 };
 
-// function chalkTag(chalk, strings) {
-//     if (!is.array(strings)) {
-//         // If chalk() was called by itself or with a string,
-//         // return the string itself as a string.
-//         return [].slice.call(arguments, 1).join(" ");
-//     }
+const applyOptions = (instance, { enabled, level } = {}) => {
+    const scLevel = stats.stdout ? stats.stdout.level : 0;
+    instance.level = is.undefined(level) ? scLevel : level;
+    instance.enabled = is.undefined(enabled) ? instance.level > 0 : enabled;
+};
 
-//     const args = [].slice.call(arguments, 2);
-//     const parts = [strings.raw[0]];
-
-//     for (let i = 1; i < strings.length; i++) {
-//         parts.push(String(args[i - 1]).replace(/[{}\\]/g, "\\$&"));
-//         parts.push(String(strings.raw[i]));
-//     }
-
-//     return template(chalk, parts.join(""));
-// }
-
-export default class Chalk {
-    constructor({ enabled, level } = {}) {
-        // Detect level if not set manually
-        const scLevel = adone.runtime.term.level;
-        this.level = is.undefined(level) ? scLevel : level;
-        this.enabled = is.undefined(enabled) ? this.level > 0 : enabled;
+const chalkTag = function (chalk, strings) {
+    if (!is.array(strings)) {
+        // If chalk() was called by itself or with a string,
+        // return the string itself as a string.
+        return [].slice.call(arguments, 1).join(" ");
     }
-}
+
+    const args = [].slice.call(arguments, 2);
+    const parts = [strings.raw[0]];
+
+    for (let i = 1; i < strings.length; i++) {
+        parts.push(String(args[i - 1]).replace(/[{}\\]/g, "\\$&"));
+        parts.push(String(strings.raw[i]));
+    }
+
+    return template(chalk, parts.join(""));
+};
+
+const Chalk = function (options) {
+    // We check for this.template here since calling `chalk.constructor()`
+    // by itself will have a `this` of a previously constructed chalk object
+    if (!this || !(this instanceof Chalk) || this.template) {
+        const chalk = {};
+        applyOptions(chalk, options);
+
+        chalk.template = function (...args) {
+            return chalkTag(...[chalk.template, ...args]);
+        };
+
+        Object.setPrototypeOf(chalk, Chalk.prototype);
+        Object.setPrototypeOf(chalk.template, chalk);
+
+        chalk.template.constructor = Chalk;
+
+        return chalk.template;
+    }
+
+    applyOptions(this, options);
+};
 
 Object.defineProperties(Chalk.prototype, styles);
+
+export default Chalk;

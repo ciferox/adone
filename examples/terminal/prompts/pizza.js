@@ -1,7 +1,9 @@
-const { is } = adone;
+const {
+    is
+} = adone;
 
 adone.app.run({
-    main() {
+    async main() {
         adone.log("Hi, welcome to Node Pizza");
 
         const questions = [
@@ -88,9 +90,8 @@ adone.app.run({
             }
         ];
 
-        adone.runtime.term.prompt().run(questions).then((answers) => {
-            adone.log("\nOrder receipt:");
-            adone.log(JSON.stringify(answers, null, "  "));
-        });
+        const answers = await adone.runtime.term.prompt().run(questions);
+        adone.log("\nOrder receipt:");
+        adone.log(JSON.stringify(answers, null, "  "));
     }
 });

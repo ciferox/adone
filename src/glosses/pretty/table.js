@@ -40,7 +40,7 @@ export default function prettyTable(data, {
                 bordersWidth += 1 + 1; // left + right border
                 bordersWidth += model.length - 1; // between cells
             }
-            const maxWidth = term.cols - bordersWidth;
+            const maxWidth = term.stats.cols - bordersWidth;
             tableWidth = coercePercent(width, maxWidth);
         } else if (is.number(width)) {
             tableWidth = width;

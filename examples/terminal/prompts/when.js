@@ -1,5 +1,5 @@
 adone.app.run({
-    main() {
+    async main() {
         const likesFood = (aFood) => {
             return function (answers) {
                 return answers[aFood];
@@ -36,8 +36,7 @@ adone.app.run({
             }
         ];
 
-        adone.runtime.term.prompt().run(questions).then((answers) => {
-            adone.log(JSON.stringify(answers, null, "  "));
-        });
+        const answers = await adone.runtime.term.prompt().run(questions);
+        adone.log(JSON.stringify(answers, null, "  "));
     }
 });

@@ -377,7 +377,7 @@ Terminal.prototype.resetScroll = function () {
 };
 
 Terminal.prototype.getScrollHeight = function () {
-    return this.term.rows - 1;
+    return this.term.stats.rows - 1;
 };
 
 Terminal.prototype.getScrollPerc = function () {

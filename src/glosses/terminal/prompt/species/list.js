@@ -48,6 +48,7 @@ export default class ListPrompt extends terminal.BasePrompt {
         if (!this.opt.choices) {
             this.throwParamError("choices");
         }
+        this.choices = new terminal.Choices(this.term, this.opt.choices, answers);
 
         this.firstRender = true;
         this.selected = 0;
@@ -55,10 +56,10 @@ export default class ListPrompt extends terminal.BasePrompt {
         const def = this.opt.default;
 
         // If def is a Number, then use as index. Otherwise, check for value.
-        if (is.number(def) && def >= 0 && def < this.opt.choices.realLength) {
+        if (is.number(def) && def >= 0 && def < this.choices.realLength) {
             this.selected = def;
         } else if (!is.number(def) && !is.nil(def)) {
-            const index = this.opt.choices.realChoices.findIndex(({ value }) => value === def);
+            const index = this.choices.realChoices.findIndex(({ value }) => value === def);
             this.selected = Math.max(index, 0);
         }
 
@@ -118,10 +119,10 @@ export default class ListPrompt extends terminal.BasePrompt {
 
         // Render choices or answer depending on the state
         if (this.status === "answered") {
-            message += chalk.cyan(this.opt.choices.getChoice(this.selected).short);
+            message += chalk.cyan(this.choices.getChoice(this.selected).short);
         } else {
-            const choicesStr = listRender(this.term, this.opt.choices, this.selected);
-            const indexPosition = this.opt.choices.indexOf(this.opt.choices.getChoice(this.selected));
+            const choicesStr = listRender(this.term, this.choices, this.selected);
+            const indexPosition = this.choices.indexOf(this.choices.getChoice(this.selected));
             message += `\n${this.paginator.paginate(choicesStr, indexPosition, this.opt.pageSize)}`;
         }
 
@@ -145,26 +146,26 @@ export default class ListPrompt extends terminal.BasePrompt {
     }
 
     getCurrentValue() {
-        return this.opt.choices.getChoice(this.selected).value;
+        return this.choices.getChoice(this.selected).value;
     }
 
     /**
      * When user press a key
      */
     onUpKey() {
-        const len = this.opt.choices.realLength;
+        const len = this.choices.realLength;
         this.selected = (this.selected > 0) ? this.selected - 1 : len - 1;
         this.render();
     }
 
     onDownKey() {
-        const len = this.opt.choices.realLength;
+        const len = this.choices.realLength;
         this.selected = (this.selected < len - 1) ? this.selected + 1 : 0;
         this.render();
     }
 
     onNumberKey(input) {
-        if (input <= this.opt.choices.realLength) {
+        if (input <= this.choices.realLength) {
             this.selected = input - 1;
         }
         this.render();

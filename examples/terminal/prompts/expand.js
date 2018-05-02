@@ -1,6 +1,6 @@
 adone.app.run({
-    main() {
-        adone.runtime.term.prompt().run([
+    async main() {
+        const answers = await adone.runtime.term.prompt().run([
             {
                 type: "expand",
                 message: "Conflict on `file.js`: ",
@@ -29,9 +29,7 @@ adone.app.run({
                     }
                 ]
             }
-        ]).then((answers) => {
-            adone.log(JSON.stringify(answers, null, "  "));
-        });
-
+        ]);
+        adone.log(JSON.stringify(answers, null, "  "));
     }
 });

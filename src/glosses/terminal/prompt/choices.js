@@ -58,9 +58,7 @@ export default class Choices {
             return new Choice(val, answers);
         });
 
-        this.realChoices = this.choices.filter(terminal.Separator.exclude).filter((item) => {
-            return !item.disabled;
-        });
+        this.realChoices = this.choices.filter(terminal.Separator.exclude).filter((item) => !item.disabled);
     }
 
     get length() {

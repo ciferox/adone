@@ -8,7 +8,7 @@ adone.app.run({
             await adone.promise.delay(20);
         }
         for (const [idx, bar] of adone.util.enumerate(bars)) {
-            if (idx > bars.length - adone.runtime.term.rows + 10) {
+            if (idx > bars.length - adone.runtime.term.stats.rows + 10) {
                 break;
             }
             bar.setSchema(`${idx} hello`);

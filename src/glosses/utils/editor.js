@@ -18,8 +18,8 @@ export default class Editor {
         this.args = args;
     }
 
-    async spawn({ detached = false } = {}) {
-        const child = exec(this.bin, this.args.concat([this.path]), {
+    spawn({ detached = false } = {}) {
+        const child = exec(this.bin, [...this.args, this.path], {
             detached
         });
         if (detached) {
@@ -28,14 +28,16 @@ export default class Editor {
         return child;
     }
 
-    async run() {
+    async run({ save = false, detached } = {}) {
         if (is.null(this.path)) {
             this.path = await fs.tmpName({ ext: this.ext });
         }
         await fs.writeFile(this.path, this.text);
-        await this.spawn();
-        this.text = await fs.readFile(this.path, { encoding: "utf8" });
-        return this.text;
+        await this.spawn({ detached });
+        if (!save) {
+            this.text = await fs.readFile(this.path, { encoding: "utf8" });
+            return this.text;
+        }
     }
 
     cleanup() {
@@ -44,8 +46,10 @@ export default class Editor {
 
     static async edit(options) {
         const editor = new Editor(options);
-        const response = await editor.run();
-        await editor.cleanup();
-        return response;
+        const response = await editor.run(adone.util.pick(options, ["save", "detached"]));
+        if (!options.save) {
+            await editor.cleanup();
+            return response;
+        }
     }
 }

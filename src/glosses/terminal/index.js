@@ -3,6 +3,23 @@ const {
     std: { fs, string_decoder }
 } = adone;
 
+const env = process.env;
+
+const __ = adone.lazify({
+    BasePrompt: "./prompt/base_prompt",
+    Prompt: "./prompt",
+    Separator: "./prompt/separator",
+    Paginator: "./prompt/paginator",
+    Choices: "./prompt/choices",
+    Progress: "./progress",
+    esc: "./esc",
+    Chalk: "./chalk",
+    chalk: () => __.Chalk(),
+    chalkify: "./chalkify",
+    ui: "./ui"
+}, adone.asNamespace(exports), require);
+
+
 // Resources:
 //   $ man term
 //   $ man terminfo
@@ -71,22 +88,22 @@ const tryRead = (file) => {
 
 export class Terminfo {
     constructor() {
-        this.term = process.env.COLORTERM || process.env.TERM;
-        const safe = (process.env.COLORTERM || (process.env.TERM !== "xterm" && process.env.TERM !== "xterm-256color")) ? true : false;
-        const is256color = (process.env.TERM && process.env.TERM.match(/256/)) || (process.env.COLORTERM && process.env.COLORTERM.match(/256/));
+        this.term = env.COLORTERM || env.TERM;
+        const safe = (env.COLORTERM || (env.TERM !== "xterm" && env.TERM !== "xterm-256color")) ? true : false;
+        const is256color = (env.TERM && env.TERM.match(/256/)) || (env.COLORTERM && env.COLORTERM.match(/256/));
         switch (this.term) {
             case "xterm":
             case "xterm-256color":
                 if (safe) {
                     break;
                 }
-                for (const envVar in process.env) {
+                for (const envVar in env) {
                     if (envVar.match(/KONSOLE/)) {
                         this.term = is256color ? "konsole-256color" : "konsole";
                         break;
                     }
                 }
-                if (Number.parseInt(process.env.VTE_VERSION) >= 3803) {
+                if (Number.parseInt(env.VTE_VERSION) >= 3803) {
                     this.term = is256color ? "gnome-256color" : "gnome";
                     break;
                 }
@@ -121,7 +138,7 @@ export class Terminfo {
             case "rxvt-unicode":
             case "urxvt":
             case "urxvt-ml":
-                if (process.env.TERM === "rxvt") {
+                if (env.TERM === "rxvt") {
                     this.term = "rxvt-256color";
                 } else {
                     this.term = is256color ? "rxvt-256color" : "rxvt";
@@ -156,7 +173,9 @@ export class Terminfo {
         return "\x1bc";
     }
 
-    /* Cursor sequences */
+    /**
+     * Cursor sequences
+     */
     cursorLeft() {
         return "\x1b[1000D";
     }
@@ -164,6 +183,7 @@ export class Terminfo {
     saveCursor() {
         return "\x1b7"; // also '\x1b[s'
     }
+
     restoreCursor() {
         return "\x1b8"; // also '\x1b[u'
     }
@@ -231,6 +251,7 @@ export class Terminfo {
     blinkingBlockCursor() {
         return "\x1b[0 q";
     }
+
     underlineCursor() {
         return "\x1b[4 q";
     }
@@ -247,7 +268,9 @@ export class Terminfo {
         return "\x1b[5 q";
     }
 
-    /* Editing sequences */
+    /**
+     * Editing sequences
+     */
 
     clear() {
         return "\x1b[H\x1b[2J";
@@ -317,14 +340,18 @@ export class Terminfo {
         return on ? "\x1b(0" : "\x1b(B";
     }
 
-    /* Misc sequences */
+    /**
+     * Misc sequences
+     */
 
     // Emit an audible bell
     bell() {
         return "\x07";
     }
 
-    /* Input / Output sequences */
+    /**
+     * Input / Output sequences
+     */
 
     // Terminal will send event on button pressed with mouse position
     mouseButton(on) {
@@ -365,21 +392,23 @@ export class Terminfo {
         return `\x1b[${++top};${++bottom}r`;
     }
 
-    /* OSC - OS Control sequences: may be unavailable on some context */
+    /**
+     * OSC - OS Control sequences: may be unavailable on some context
+     */
 
     // Set the title of an xterm-compatible window
     windowTitle(title) {
         return `\x1b]0;${title}\x07`;
     }
 
-    /*
-        getPath( [stdin] )
-            * stdin: a stream that is the current STDIN of the terminal
-
-        Returns an object, where:
-            * ttyPath: the path of the tty
-            * ttyIndex: the index number of the tty, only if it is a /dev/tty*, /dev/pts/* return null
-    */
+    /**
+     * getPath( [stdin] )
+     * stdin: a stream that is the current STDIN of the terminal
+     *
+     * Returns an object, where:
+     * ttyPath: the path of the tty
+     * ttyIndex: the index number of the tty, only if it is a /dev/tty*, /dev/pts/* return null
+     */
     getTTYPath(stdin) {
         let cacheIt;
         let ttyPath;
@@ -422,7 +451,7 @@ export class Terminfo {
     }
 
     setup() {
-        this.generic = (process.env.COLORTERM === "truecolor" ? "xterm-256color" : ((process.env.TERM && process.env.TERM) || (is.windows ? "windows-ansi" : "xterm")).toLowerCase());
+        this.generic = (env.COLORTERM === "truecolor" ? "xterm-256color" : ((env.TERM && env.TERM) || (is.windows ? "windows-ansi" : "xterm")).toLowerCase());
 
         if (this.generic === "screen") {
             this.generic = "xterm";
@@ -653,12 +682,12 @@ export class Terminfo {
      * All shorts are little-endian
      */
     parseTerminfo(data, file) {
-        let info = {},
-            extended,
-            l = data.length,
-            i = 0,
-            v,
-            o;
+        const info = {};
+        let extended;
+        let l = data.length;
+        let i = 0;
+        let v;
+        let o;
 
         const h = info.header = {
             dataSize: data.length,
@@ -681,10 +710,10 @@ export class Terminfo {
         i += h.headerSize;
 
         // Names Section
-        let names = data.toString("ascii", i, i + h.namesSize - 1),
-            parts = names.split("|"),
-            name = parts[0],
-            desc = parts.pop();
+        const names = data.toString("ascii", i, i + h.namesSize - 1);
+        const parts = names.split("|");
+        const name = parts[0];
+        const desc = parts.pop();
 
         info.name = name;
         info.names = parts;
@@ -1383,7 +1412,7 @@ export class Terminfo {
                 // Are we supposed to store the result on the stack?
                 expr(`(stack.push(v = (stack.pop() ${
                     ch === "A" ? "&&" : "||"
-                    } stack.pop())), v)`);
+                } stack.pop())), v)`);
                 continue;
             }
 
@@ -1626,8 +1655,8 @@ export class Terminfo {
         // so we need to find the one containing our desired terminal.
         if (~term.indexOf(adone.std.path.sep) && (terms = this._tryCap(adone.std.path.resolve(term)))) {
             term_ = adone.std.path.basename(term).split(".")[0];
-            if (terms[process.env.TERM]) {
-                term = process.env.TERM;
+            if (terms[env.TERM]) {
+                term = env.TERM;
             } else if (terms[term_]) {
                 term = term_;
             } else {
@@ -2348,9 +2377,9 @@ export class Terminfo {
      */
 
     getAll() {
-        let dir = this._prefix();
-        let list = asort(adone.std.fs.readdirSync(dir));
-        let infos = [];
+        const dir = this._prefix();
+        const list = asort(adone.std.fs.readdirSync(dir));
+        const infos = [];
 
         list.forEach((letter) => {
             const terms = asort(adone.std.fs.readdirSync(adone.std.path.resolve(dir, letter)));
@@ -2403,11 +2432,11 @@ export class Terminfo {
     }
 
     detectUnicode() {
-        if (!is.nil(process.env.NCURSES_FORCE_UNICODE)) {
-            return Boolean(Number(process.env.NCURSES_FORCE_UNICODE));
+        if (!is.nil(env.NCURSES_FORCE_UNICODE)) {
+            return Boolean(Number(env.NCURSES_FORCE_UNICODE));
         }
 
-        const LANG = `${process.env.LANG}:${process.env.LANGUAGE}:${process.env.LC_ALL}:${process.env.LC_CTYPE}`;
+        const LANG = `${env.LANG}:${env.LANGUAGE}:${env.LC_ALL}:${env.LC_CTYPE}`;
 
         return /utf-?8/i.test(LANG) || (this.GetConsoleCP() === 65001);
     }
@@ -2425,8 +2454,8 @@ export class Terminfo {
     // ~/ncurses/ncurses/tinfo/lib_setup.c
     detectBrokenACS(info) {
         // ncurses-compatible env variable.
-        if (!is.nil(process.env.NCURSES_NO_UTF8_ACS)) {
-            return Boolean(Number(process.env.NCURSES_NO_UTF8_ACS));
+        if (!is.nil(env.NCURSES_NO_UTF8_ACS)) {
+            return Boolean(Number(env.NCURSES_NO_UTF8_ACS));
         }
 
         // If the terminal supports unicode, we don't need ACS.
@@ -2450,9 +2479,9 @@ export class Terminfo {
         // screen termcap is bugged?
         if (this.termcap
             && info.name.indexOf("screen") === 0
-            && process.env.TERMCAP
-            && ~process.env.TERMCAP.indexOf("screen")
-            && ~process.env.TERMCAP.indexOf("hhII00")) {
+            && env.TERMCAP
+            && ~env.TERMCAP.indexOf("screen")
+            && ~env.TERMCAP.indexOf("hhII00")) {
             if (~info.strings.enter_alt_charset_mode.indexOf("\x0e")
                 || ~info.strings.enter_alt_charset_mode.indexOf("\x0f")
                 || ~info.strings.set_attributes.indexOf("\x0e")
@@ -2478,15 +2507,15 @@ export class Terminfo {
     }
 
     detectMagicCookie() {
-        return is.nil(process.env.NCURSES_NO_MAGIC_COOKIE);
+        return is.nil(env.NCURSES_NO_MAGIC_COOKIE);
     }
 
     detectPadding() {
-        return is.nil(process.env.NCURSES_NO_PADDING);
+        return is.nil(env.NCURSES_NO_PADDING);
     }
 
     detectSetbuf() {
-        return is.nil(process.env.NCURSES_NO_SETBUF);
+        return is.nil(env.NCURSES_NO_SETBUF);
     }
 
     parseACS(info) {
@@ -2527,7 +2556,7 @@ export class Terminfo {
         }
 
         // Allow unicode on all windows consoles for now:
-        if (Number(process.env.NCURSES_NO_WINDOWS_UNICODE) !== 1) {
+        if (Number(env.NCURSES_NO_WINDOWS_UNICODE) !== 1) {
             return 65001;
         }
 
@@ -2535,7 +2564,7 @@ export class Terminfo {
 
         try {
             // Produces something like: 'Active code page: 437\n\n'
-            ccp = adone.std.child_process.execFileSync(`${process.env.WINDIR}\\system32\\chcp.com`, [], {
+            ccp = adone.std.child_process.execFileSync(`${env.WINDIR}\\system32\\chcp.com`, [], {
                 stdio: ["ignore", "pipe", "ignore"],
                 encoding: "ascii",
                 timeout: 1500
@@ -2580,9 +2609,9 @@ export class Terminfo {
  * Terminfo
  */
 Terminfo.ipaths = [
-    process.env.TERMINFO || "",
-    (process.env.TERMINFO_DIRS || "").split(":"),
-    `${process.env.HOME || ""}/.terminfo`,
+    env.TERMINFO || "",
+    (env.TERMINFO_DIRS || "").split(":"),
+    `${env.HOME || ""}/.terminfo`,
     "/usr/share/terminfo",
     "/usr/share/lib/terminfo",
     "/usr/lib/terminfo",
@@ -2607,9 +2636,9 @@ Terminfo.print = function () {
  */
 
 Terminfo.cpaths = [
-    process.env.TERMCAP || "",
-    (process.env.TERMPATH || "").split(/[: ]/),
-    `${process.env.HOME || ""}/.termcap`,
+    env.TERMCAP || "",
+    (env.TERMPATH || "").split(/[: ]/),
+    `${env.HOME || ""}/.termcap`,
     "/usr/share/misc/termcap",
     "/etc/termcap"
 ];
@@ -2624,7 +2653,9 @@ Terminfo.cpaths = [
  * Taken from terminfo(5) man page.
  */
 
-/* jshint maxlen: 300 */
+/**
+ * jshint maxlen: 300
+ */
 // jscs:disable maximumLineLength
 // jscs:disable
 
@@ -3779,33 +3810,33 @@ Terminfo.utoa = Terminfo.prototype.utoa = {
 };
 
 
-/*
-  Some patterns seen in terminal key escape codes, derived from combos seen
-  at http://www.midnight-commander.org/browser/lib/tty/key.c
-
-  ESC letter
-  ESC [ letter
-  ESC [ modifier letter
-  ESC [ 1 ; modifier letter
-  ESC [ num char
-  ESC [ num ; modifier char
-  ESC O letter
-  ESC O modifier letter
-  ESC O 1 ; modifier letter
-  ESC N letter
-  ESC [ [ num ; modifier char
-  ESC [ [ 1 ; modifier letter
-  ESC ESC [ num char
-  ESC ESC O letter
-
-  - char is usually ~ but $ and ^ also happen with rxvt
-  - modifier is 1 +
-                (shift     * 1) +
-                (left_alt  * 2) +
-                (ctrl      * 4) +
-                (right_alt * 8)
-  - two leading ESCs apparently mean the same as one leading ESC
-*/
+/**
+ * Some patterns seen in terminal key escape codes, derived from combos seen
+ * at http://www.midnight-commander.org/browser/lib/tty/key.c
+ *
+ * ESC letter
+ * ESC [ letter
+ * ESC [ modifier letter
+ * ESC [ 1 ; modifier letter
+ * ESC [ num char
+ * ESC [ num ; modifier char
+ * ESC O letter
+ * ESC O modifier letter
+ * ESC O 1 ; modifier letter
+ * ESC N letter
+ * ESC [ [ num ; modifier char
+ * ESC [ [ 1 ; modifier letter
+ * ESC ESC [ num char
+ * ESC ESC O letter
+ *
+ * - char is usually ~ but $ and ^ also happen with rxvt
+ * - modifier is 1 +
+ * (shift     * 1) +
+ * (left_alt  * 2) +
+ * (ctrl      * 4) +
+ * (right_alt * 8)
+ * - two leading ESCs apparently mean the same as one leading ESC
+ */
 
 // Regexes used for ansi escape code splitting
 const metaKeyCodeReAnywhere = /(?:\x1b)([a-zA-Z0-9])/;
@@ -4043,6 +4074,85 @@ const emitKeys = (stream, s) => {
     });
 };
 
+let forceColor;
+
+if ("FORCE_COLOR" in env) {
+    forceColor = env.FORCE_COLOR.length === 0 || parseInt(env.FORCE_COLOR, 10) !== 0;
+}
+
+const supportsColor = function (stream) {
+    if (forceColor === false) {
+        return 0;
+    }
+
+    if (stream && !stream.isTTY && forceColor !== true) {
+        return 0;
+    }
+
+    const min = forceColor ? 1 : 0;
+
+    if (is.windows) {
+        const osRelease = adone.std.os.release().split(".");
+        if (
+            Number(process.versions.node.split(".")[0]) >= 8 &&
+            Number(osRelease[0]) >= 10 &&
+            Number(osRelease[2]) >= 10586
+        ) {
+            return Number(osRelease[2]) >= 14931 ? 3 : 2;
+        }
+
+        return 1;
+    }
+
+    if (env.COLORTERM === "truecolor") {
+        return 3;
+    }
+
+    if ("TERM_PROGRAM" in env) {
+        const version = parseInt((env.TERM_PROGRAM_VERSION || "").split(".")[0], 10);
+
+        switch (env.TERM_PROGRAM) {
+            case "iTerm.app":
+                return version >= 3 ? 3 : 2;
+            case "Apple_Terminal":
+                return 2;
+            // No default
+        }
+    }
+
+    if (/-256(color)?$/i.test(env.TERM)) {
+        return 2;
+    }
+
+    if (/^screen|^xterm|^vt100|^rxvt|color|ansi|cygwin|linux/i.test(env.TERM)) {
+        return 1;
+    }
+
+    if ("COLORTERM" in env) {
+        return 1;
+    }
+
+    if (env.TERM === "dumb") {
+        return min;
+    }
+
+    return min;
+};
+
+const getColorsInfo = function (stream) {
+    const level = supportsColor(stream);
+    if (level === 0) {
+        return false;
+    }
+
+    return {
+        level,
+        hasBasic: true,
+        has256: level >= 2,
+        has16m: level >= 3
+    };
+};
+
 export class Terminal extends adone.event.Emitter {
     constructor() {
         super();
@@ -4061,80 +4171,37 @@ export class Terminal extends adone.event.Emitter {
         this.y = 0;
         this.savedX = 0;
         this.savedY = 0;
-        this.cols = 1;
-        this.rows = 1;
         this.scrollTop = 0;
-        this.scrollBottom = this.rows - 1;
-
         this._buf = "";
         this._flush = this.flush.bind(this);
 
         this.initialize();
+
+        this.scrollBottom = this.stats.rows - 1;
     }
 
     initialize() {
+        const stats = this.stats = {
+            cols: 1,
+            rows: 1
+        };
         // OSX
-        this.isOSXTerm = process.env.TERM_PROGRAM === "Apple_Terminal";
-        this.isiTerm2 = process.env.TERM_PROGRAM === "iTerm.app" || Boolean(process.env.ITERM_SESSION_ID);
+        stats.isOSXTerm = env.TERM_PROGRAM === "Apple_Terminal";
+        stats.isiTerm2 = env.TERM_PROGRAM === "iTerm.app" || Boolean(env.ITERM_SESSION_ID);
 
         // VTE
         // NOTE: lxterminal does not provide an env variable to check for.
         // NOTE: gnome-terminal and sakura use a later version of VTE
         // which provides VTE_VERSION as well as supports SGR events.
-        this.isXFCE = /xfce/i.test(process.env.COLORTERM);
-        this.isTerminator = Boolean(process.env.TERMINATOR_UUID);
-        this.isVTE = Boolean(process.env.VTE_VERSION) || this.isXFCE || this.isTerminator;
+        stats.isXFCE = /xfce/i.test(env.COLORTERM);
+        stats.isTerminator = Boolean(env.TERMINATOR_UUID);
+        stats.isVTE = Boolean(env.VTE_VERSION) || this.isXFCE || this.isTerminator;
 
         // xterm and rxvt - not accurate
-        this.isRxvt = /rxvt/i.test(process.env.COLORTERM);
-
-        let level;
-        const env = process.env;
-
-        if (process.stdout && !process.stdout.isTTY) {
-            level = 0;
-        } else if (is.windows) {
-            level = 1;
-        } else if ("CI" in env) {
-            if ("TRAVIS" in env || env.CI === "Travis") {
-                level = 1;
-            } else {
-                level = 0;
-            }
-        } else if ("TEAMCITY_VERSION" in env) {
-            level = /^(9\.(0*[1-9]\d*)\.|\d{2,}\.)/.test(env.TEAMCITY_VERSION) ? 1 : 0;
-        } else if ("TERM_PROGRAM" in env) {
-            const version = parseInt((env.TERM_PROGRAM_VERSION || "").split(".")[0], 10);
-
-            switch (env.TERM_PROGRAM) {
-                case "iTerm.app":
-                    level = version >= 3 ? 3 : 2;
-                    break;
-                case "Hyper":
-                    level = 3;
-                    break;
-                case "Apple_Terminal":
-                    level = 2;
-                    break;
-            }
-        } else if (env.COLORTERM === "truecolor") {
-            level = 3;
-        } else if (/^(screen|xterm)-256(?:color)?/.test(env.TERM)) {
-            level = 2;
-        } else if (/^screen|^xterm|^vt100|color|ansi|cygwin|linux/i.test(env.TERM)) {
-            level = 1;
-        } else if ("COLORTERM" in env) {
-            level = 1;
-        } else if (env.TERM === "dumb") {
-            level = 0;
-        } else {
-            level = 0;
-        }
-
-        this.level = level;
-        this.hasBasic = level > 0;
-        this.has256 = level >= 2;
-        this.has16m = level >= 3;
+        stats.isRxvt = /rxvt/i.test(env.COLORTERM);
+        
+        stats.stdout = getColorsInfo(process.stdout);
+        stats.stderr = getColorsInfo(process.stderr);
 
         this.terminfo = new Terminfo();
         this.input = process.stdin;
@@ -4149,13 +4216,13 @@ export class Terminal extends adone.event.Emitter {
         const resize = () => {
             if (is.function(this.output.getWindowSize)) {
                 const windowSize = this.output.getWindowSize();
-                this.cols = windowSize[0];
-                this.rows = windowSize[1];
+                this.stats.cols = windowSize[0];
+                this.stats.rows = windowSize[1];
             } else {
-                this.cols = this.output.columns;
-                this.rows = this.output.rows;
+                this.stats.cols = this.output.columns;
+                this.stats.rows = this.output.rows;
             }
-            this.emit("resize", this.cols, this.rows);
+            this.emit("resize", this.stats.cols, this.stats.rows);
         };
 
         this.output._resizeHandler = () => {
@@ -4216,8 +4283,8 @@ export class Terminal extends adone.event.Emitter {
 
                 const newlineHandler = (count) => {
                     let newY = this.y + count;
-                    if (newY >= this.rows) {
-                        newY = this.rows - 1;
+                    if (newY >= this.stats.rows) {
+                        newY = this.stats.rows - 1;
                     }
                     this.y = newY;
                 };
@@ -4237,7 +4304,7 @@ export class Terminal extends adone.event.Emitter {
                 // this.input.read(data.length);
                 this.emit("data", data);
             });
-            
+
             if (is.function(this.input.setRawMode) && !this.input.isRaw) {
                 this.input.setRawMode(true);
             }
@@ -6616,7 +6683,7 @@ export class Terminal extends adone.event.Emitter {
 
     setScrollRegion(top, bottom) {
         top = top || 0;
-        bottom = bottom || (this.rows - 1);
+        bottom = bottom || (this.stats.rows - 1);
         this.scrollTop = top;
         this.scrollBottom = bottom;
         this.x = 0;
@@ -6698,13 +6765,13 @@ export class Terminal extends adone.event.Emitter {
     _ncoords() {
         if (this.x < 0) {
             this.x = 0;
-        } else if (this.x >= this.cols) {
-            this.x = this.cols - 1;
+        } else if (this.x >= this.stats.cols) {
+            this.x = this.stats.cols - 1;
         }
         if (this.y < 0) {
             this.y = 0;
-        } else if (this.y >= this.rows) {
-            this.y = this.rows - 1;
+        } else if (this.y >= this.stats.rows) {
+            this.y = this.stats.rows - 1;
         }
     }
 
@@ -6723,16 +6790,3 @@ export class Terminal extends adone.event.Emitter {
     }
 }
 Terminal.prototype.type = "program";
-
-const __ = adone.lazify({
-    BasePrompt: "./prompt/base_prompt",
-    Prompt: "./prompt",
-    Separator: "./prompt/separator",
-    Paginator: "./prompt/paginator",
-    Choices: "./prompt/choices",
-    Progress: "./progress",
-    esc: "./esc",
-    Chalk: "./chalk",
-    chalk: () => new __.Chalk(),
-    ui: "./ui"
-}, adone.asNamespace(exports), require);

@@ -139,7 +139,9 @@ class ScreenManager {
         this.term.left(adone.text.width(lastLine(fullContent)));
 
         // Adjust cursor on the right
-        this.term.right(cursorPos.cols);
+        if (cursorPos.cols > 0) {
+            this.term.right(cursorPos.cols);
+        }
 
         /**
          * Set up state for next re-rendering
@@ -170,10 +172,7 @@ class ScreenManager {
     }
 
     normalizedCliWidth() {
-        const width = this.term.cols;
-        if (is.windows) {
-            return width - 1;
-        }
+        const width = this.term.stats.cols;
         return width;
     }
 
@@ -201,7 +200,7 @@ export default class BasePrompt {
         this.term = term;
 
         // Setup instance defaults property
-        _.assign(this, {
+        Object.assign(this, {
             answers,
             status: "pending"
         });
@@ -227,11 +226,6 @@ export default class BasePrompt {
         }
         if (!this.opt.name) {
             this.throwParamError("name");
-        }
-
-        // Normalize choices
-        if (is.array(this.opt.choices)) {
-            this.opt.choices = new terminal.Choices(this.term, this.opt.choices, answers);
         }
 
         this.screen = new ScreenManager(this.term);
@@ -282,42 +276,6 @@ export default class BasePrompt {
 
     observe() {
         return new Observer(this.term);
-    }
-
-    /**
-     * Run the provided validation method each time a submit event occur.
-     * @param  {Rx.Observable} submit - submit event flow
-     * @return {Object}        Object containing two observables: `success` and `error`
-     */
-    handleSubmitEvents(submit) {
-        const validate = this.opt.validate;
-        const filter = this.opt.filter;
-        const validation = submit.flatMap(async (value) => {
-            try {
-                const filteredValue = await filter(value, this.answers);
-                const isValid = await validate(filteredValue, this.answers);
-                return { isValid, value: filteredValue };
-            } catch (err) {
-                return { isValid: err };
-            }
-        }).share();
-
-        const success = validation
-            .filter((state) => {
-                return state.isValid === true;
-            })
-            .take(1);
-
-        const error = validation
-            .filter((state) => {
-                return state.isValid !== true;
-            })
-            .takeUntil(success);
-
-        return {
-            success,
-            error
-        };
     }
 
     /**

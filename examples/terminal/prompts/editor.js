@@ -1,6 +1,6 @@
 adone.app.run({
-    main() {
-        this.questions = [
+    async main() {
+        const answers = await adone.runtime.term.prompt().run([
             {
                 type: "editor",
                 name: "bio",
@@ -13,10 +13,7 @@ adone.app.run({
                     return true;
                 }
             }
-        ];
-
-        adone.runtime.term.prompt().run(this.questions).then((answers) => {
-            adone.log(JSON.stringify(answers, null, "  "));
-        });
+        ]);
+        adone.log(JSON.stringify(answers, null, "  "));
     }
 });

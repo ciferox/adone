@@ -7,16 +7,6 @@ const {
     chalk
 } = terminal;
 
-const mask = (input, maskChar) => {
-    input = String(input);
-    maskChar = adone.is.string(maskChar) ? maskChar : "*";
-    if (input.length === 0) {
-        return "";
-    }
-
-    return new Array(input.length + 1).join(maskChar);
-};
-
 export default class PasswordPrompt extends terminal.BasePrompt {
     /**
      * Start the Inquiry session
@@ -59,9 +49,9 @@ export default class PasswordPrompt extends terminal.BasePrompt {
         let bottomContent = "";
 
         if (this.status === "answered") {
-            message += this.opt.mask ? chalk.cyan(mask(this.answer, this.opt.mask)) : chalk.italic.dim("[hidden]");
+            message += this.opt.mask ? chalk.cyan(this._mask(this.answer)) : chalk.italic.dim("[hidden]");
         } else if (this.opt.mask) {
-            message += mask(this.term.readline.line || "", this.opt.mask);
+            message += this._mask(this.term.readline.line || "", this.opt.mask);
         } else {
             message += chalk.italic.dim("[input is hidden] ");
         }
@@ -100,5 +90,33 @@ export default class PasswordPrompt extends terminal.BasePrompt {
 
     onKeypress() {
         this.render();
+    }
+
+    _mask(input) {
+        input = String(input);
+        const maskChar = adone.is.string(this.opt.mask) ? this.opt.mask : "*";
+        if (input.length === 0) {
+            return "";
+        }
+
+        if (this.opt.strength) {
+            const bar = new Array(Math.ceil(input.length)).join(maskChar);
+            const strength = require("zxcvbn")(input);
+
+            switch (strength.score) {
+                case 1:
+                    return chalk.red(bar);
+                case 2:
+                    return chalk.yellow(bar);
+                case 3:
+                    return chalk[is.windows ? "blue" : "cyan"](bar);
+                case 4:
+                    return chalk.green(bar);
+                default: {
+                    return bar;
+                }
+            }
+        }
+        return new Array(input.length + 1).join(maskChar);
     }
 }

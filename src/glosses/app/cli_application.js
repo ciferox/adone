@@ -1277,7 +1277,7 @@ class Command {
 
     getUsageMessage() {
         const chain = this.getCommandChain();
-        const argumentsLength = term.cols - chain.length - 1 - 4;
+        const argumentsLength = term.stats.cols - chain.length - 1 - 4;
         const table = new text.table.BorderlessTable({
             colWidths: [4, chain.length + 1, argumentsLength]
         });
@@ -1340,7 +1340,7 @@ class Command {
     getHelpMessage() {
         const helpMessage = [this.getUsageMessage()];
 
-        const totalWidth = term.cols;
+        const totalWidth = term.stats.cols;
 
         if (is.string(this.description) && this.description) {
             helpMessage.push("", text.wordwrap(this.description, totalWidth));

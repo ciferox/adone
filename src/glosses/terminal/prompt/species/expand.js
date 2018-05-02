@@ -40,11 +40,12 @@ export default class ExpandPrompt extends terminal.BasePrompt {
         if (!this.opt.choices) {
             this.throwParamError("choices");
         }
+        this.choices = new terminal.Choices(this.term, this.opt.choices, answers);
 
-        this.validateChoices(this.opt.choices);
+        this.validateChoices(this.choices);
 
         // Add the default `help` (/expand) option
-        this.opt.choices.push({
+        this.choices.push({
             key: "h",
             name: "Help, list all options",
             value: "help"
@@ -59,7 +60,7 @@ export default class ExpandPrompt extends terminal.BasePrompt {
         };
 
         // Setup the default string (capitalize the default key)
-        this.opt.default = this.generateChoicesString(this.opt.choices, this.opt.default);
+        this.opt.default = this.generateChoicesString(this.choices, this.opt.default);
 
         this.paginator = new terminal.Paginator(this.term, this.screen);
     }
@@ -104,7 +105,7 @@ export default class ExpandPrompt extends terminal.BasePrompt {
         if (this.status === "answered") {
             message += chalk.cyan(this.answer);
         } else if (this.status === "expanded") {
-            const choicesStr = renderChoices(this.term, this.opt.choices, this.selectedKey);
+            const choicesStr = renderChoices(this.term, this.choices, this.selectedKey);
             message += this.paginator.paginate(choicesStr, this.selectedKey, this.opt.pageSize);
             message += "\n  Answer: ";
         }
@@ -126,7 +127,7 @@ export default class ExpandPrompt extends terminal.BasePrompt {
         if (!input) {
             input = this.rawDefault;
         }
-        const selected = this.opt.choices.where({ key: input.toLowerCase().trim() })[0];
+        const selected = this.choices.where({ key: input.toLowerCase().trim() })[0];
         if (!selected) {
             return null;
         }
@@ -141,7 +142,7 @@ export default class ExpandPrompt extends terminal.BasePrompt {
     getChoices() {
         let output = "";
 
-        this.opt.choices.forEach((choice) => {
+        this.choices.forEach((choice) => {
             output += "\n  ";
 
             if (choice.type === "separator") {
@@ -174,7 +175,7 @@ export default class ExpandPrompt extends terminal.BasePrompt {
      */
     onSubmit(state) {
         this.status = "answered";
-        const choice = this.opt.choices.where({ value: state.value })[0];
+        const choice = this.choices.where({ value: state.value })[0];
         this.answer = choice.short || choice.name;
 
         // Re-render prompt
@@ -188,7 +189,7 @@ export default class ExpandPrompt extends terminal.BasePrompt {
      */
     onKeypress() {
         this.selectedKey = this.term.readline.line.toLowerCase();
-        const selected = this.opt.choices.where({ key: this.selectedKey })[0];
+        const selected = this.choices.where({ key: this.selectedKey })[0];
         if (this.status === "expanded") {
             this.render();
         } else {
@@ -235,13 +236,13 @@ export default class ExpandPrompt extends terminal.BasePrompt {
      */
     generateChoicesString(choices, defaultChoice) {
         let defIndex = choices.realLength - 1;
-        if (is.number(defaultChoice) && this.opt.choices.getChoice(defaultChoice)) {
+        if (is.number(defaultChoice) && this.choices.getChoice(defaultChoice)) {
             defIndex = defaultChoice;
         } else if (is.string(defaultChoice)) {
             const index = choices.realChoices.findIndex(({ value }) => value === defaultChoice);
             defIndex = (index === -1 ? defIndex : index);
         }
-        const defStr = this.opt.choices.pluck("key");
+        const defStr = this.choices.pluck("key");
         this.rawDefault = defStr[defIndex];
         defStr[defIndex] = String(defStr[defIndex]).toUpperCase();
         return defStr.join("");

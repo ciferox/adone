@@ -15,29 +15,33 @@ describe("regex", () => {
         });
 
         it("match ansi code from ls command", () => {
-            assert.true(regex.ansi().test("\u001b[00;38;5;244m\u001b[m\u001b[00;38;5;33mfoo\u001b[0m"));
+            assert.true(regex.ansi().test("\u001B[00;38;5;244m\u001B[m\u001B[00;38;5;33mfoo\u001B[0m"));
         });
 
         it("match reset;setfg;setbg;italics;strike;underline sequence in a string", () => {
-            assert.true(regex.ansi().test("\u001b[0;33;49;3;9;4mbar\u001b[0m"));
-            assert.equal("foo\u001b[0;33;49;3;9;4mbar".match(regex.ansi())[0], "\u001b[0;33;49;3;9;4m");
+            assert.true(regex.ansi().test("\u001B[0;33;49;3;9;4mbar\u001B[0m"));
+            assert.equal("foo\u001B[0;33;49;3;9;4mbar".match(regex.ansi())[0], "\u001B[0;33;49;3;9;4m");
         });
 
         it("match clear tabs sequence in a string", () => {
-            assert.true(regex.ansi().test("foo\u001b[0gbar"));
-            assert.equal("foo\u001b[0gbar".match(regex.ansi())[0], "\u001b[0g");
+            assert.true(regex.ansi().test("foo\u001B[0gbar"));
+            assert.equal("foo\u001B[0gbar".match(regex.ansi())[0], "\u001B[0g");
         });
 
         it("match clear line from cursor right in a string", () => {
-            assert.true(regex.ansi().test("foo\u001b[Kbar"));
-            assert.equal("foo\u001b[Kbar".match(regex.ansi())[0], "\u001b[K");
+            assert.true(regex.ansi().test("foo\u001B[Kbar"));
+            assert.equal("foo\u001B[Kbar".match(regex.ansi())[0], "\u001B[K");
         });
 
         it("match clear screen in a string", () => {
-            assert.true(regex.ansi().test("foo\u001b[2Jbar"));
-            assert.equal("foo\u001b[2Jbar".match(regex.ansi())[0], "\u001b[2J");
+            assert.true(regex.ansi().test("foo\u001B[2Jbar"));
+            assert.equal("foo\u001B[2Jbar".match(regex.ansi())[0], "\u001B[2J");
         });
-
+        
+        it.todo('match "change icon name and window title" in string', () => {
+            assert.true("\u001B]0;sg@tota:~/git/\u0007\u001B[01;32m[sg@tota\u001B[01;37m misc-tests\u001B[01;32m]$".match(regex.ansi())[0], "\u001B]0;sg@tota:~/git/\u0007");
+        });
+        
         // testing against extended codes (excluding codes ending in 0-9)
         for (const codeSet in ansiCodes) {
             for (const code in ansiCodes[codeSet]) {

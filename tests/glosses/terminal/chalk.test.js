@@ -3,11 +3,11 @@ describe("terminal", "Chalk", () => {
         terminal: { chalk }
     } = adone;
 
-    it.todo("don't add any styling when called as the base function", () => {
+    it("don't add any styling when called as the base function", () => {
         assert.equal(chalk("foo"), "foo");
     });
 
-    it.todo("support multiple arguments in base function", () => {
+    it("support multiple arguments in base function", () => {
         assert.equal(chalk("hello", "there"), "hello there");
     });
 

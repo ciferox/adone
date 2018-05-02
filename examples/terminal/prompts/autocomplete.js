@@ -79,8 +79,8 @@ adone.app.run({
             threshold: 0.3
         });
     },
-    main() {
-        adone.runtime.term.prompt().run([
+    async main() {
+        const answers = await adone.runtime.term.prompt().run([
             {
                 type: "autocomplete",
                 name: "fruit",
@@ -119,8 +119,7 @@ adone.app.run({
                     });
                 }
             }
-        ]).then((answers) => {
-            adone.log(JSON.stringify(answers, null, 2));
-        });
+        ]);
+        adone.log(JSON.stringify(answers, null, 2));
     }
 });

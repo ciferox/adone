@@ -1,5 +1,8 @@
 const {
-    terminal
+    is,
+    fs,
+    terminal,
+    std
 } = adone;
 
 const {
@@ -10,26 +13,39 @@ const {
  * Constants
  */
 const CHOOSE = "choose this directory";
-const BACK = "go back a directory";
+const BACK = "..";
+const CURRENT = ".";
 
 /**
  * Function for rendering list choices
  * @param  {Number} pointer Position of the pointer
  * @return {String}         Rendered content
  */
-const listRender = (term, choices, pointer) => {
+const listRender = (choices, pointer) => {
     let output = "";
     let separatorOffset = 0;
 
-    choices.forEach((choice, i) => {
+    choices.forEach((choice, index) => {
         if (choice.type === "separator") {
             separatorOffset++;
             output += `  ${choice}\n`;
             return;
         }
 
-        const isSelected = (i - separatorOffset === pointer);
-        let line = (isSelected ? `${adone.text.unicode.symbol.pointer} ` : "  ") + choice.name;
+        const isSelected = (index - separatorOffset === pointer);
+        let line = (isSelected ? `${adone.text.unicode.symbol.pointer} ` : "  ");
+
+        if (choice.isDirectory) {
+            if (choice.name === ".") {
+                line += "📂  ";
+            } else {
+                line += "📁  ";
+            }
+        }
+        if (choice.isFile) {
+            line += "📄  ";
+        }
+        line += choice.name;
         if (isSelected) {
             line = chalk.cyan(line);
         }
@@ -41,25 +57,51 @@ const listRender = (term, choices, pointer) => {
 
 /**
  * Function for getting list of folders in directory
- * @param  {String} basePath the path the folder to get a list of containing folders
- * @return {Array}           array of folder names inside of basePath
+ * @param  {String} basePath                the path the folder to get a list of containing folders
+ * @param  {Boolean} [displayHidden=false]  set to true if you want to get hidden files
+ * @param  {Boolean} [displayFiles=false]  set to true if you want to get files
+ * @return {Array}                          array of folder names inside of basePath
  */
-const getDirectories = (basePath) => {
-    return adone.std.fs
+const getDirectoryContent = (basePath, displayHidden, displayFiles) => {
+    return std.fs
         .readdirSync(basePath)
         .filter((file) => {
-            const stats = adone.std.fs.lstatSync(adone.std.path.join(basePath, file));
-            if (stats.isSymbolicLink()) {
+            try {
+                const stats = std.fs.lstatSync(std.path.join(basePath, file));
+                if (stats.isSymbolicLink()) {
+                    return false;
+                }
+                const isDir = stats.isDirectory();
+                const isFile = stats.isFile() && displayFiles;
+                if (displayHidden) {
+                    return isDir || displayFiles;
+                }
+                const isNotDotFile = std.path.basename(file).indexOf(".") !== 0;
+                return (isDir || isFile) && isNotDotFile;
+            } catch (error) {
                 return false;
             }
-            const isDir = stats.isDirectory();
-            const isNotDotFile = adone.std.path.basename(file).indexOf(".") !== 0;
-            return isDir && isNotDotFile;
         })
         .sort();
 };
 
-export default class Prompt extends terminal.BasePrompt {
+const updateChoices = (choices, basePath) => {
+    choices.forEach((choice, i) => {
+        if (is.undefined(choice.type)) {
+            try {
+                const stats = fs.lstatSync(std.path.join(basePath, choice.value));
+                choice.isDirectory = stats.isDirectory();
+                choice.isFile = stats.isFile();
+                choices[i] = choice;
+            } catch (error) {
+                // console.log(error);
+            }
+        }
+    });
+    return choices;
+};
+
+export default class DirectoryPrompt extends terminal.BasePrompt {
     constructor(question, answers) {
         super(question, answers);
 
@@ -67,11 +109,24 @@ export default class Prompt extends terminal.BasePrompt {
             this.throwParamError("basePath");
         }
 
+        try {
+            this.opt.displayHidden = this.opt.options.displayHidden;
+        } catch (e) {
+            this.opt.displayHidden = false;
+        }
+
+        try {
+            this.opt.displayFiles = this.opt.options.displayFiles;
+        } catch (e) {
+            this.opt.displayFiles = false;
+        }
+
         this.depth = 0;
-        this.currentPath = adone.std.path.isAbsolute(this.opt.basePath)
-            ? adone.std.path.resolve(this.opt.basePath)
-            : adone.std.path.resolve(process.cwd(), this.opt.basePath);
-        this.opt.choices = new terminal.Choices(this.term, this.createChoices(this.currentPath), this.answers);
+        this.currentPath = std.path.isAbsolute(this.opt.basePath)
+            ? std.path.resolve(this.opt.basePath)
+            : std.path.resolve(process.cwd(), this.opt.basePath);
+        this.root = std.path.parse(this.currentPath).root;
+        this.choices = new terminal.Choices(this.term, this.createChoices(this.currentPath), this.answers);
         this.selected = 0;
 
         this.firstRender = true;
@@ -90,8 +145,7 @@ export default class Prompt extends terminal.BasePrompt {
      * @return {this}
      */
     _run(cb) {
-        const self = this;
-        self.searchMode = false;
+        this.searchMode = false;
         this.done = cb;
 
         const events = this.observe();
@@ -101,17 +155,20 @@ export default class Prompt extends terminal.BasePrompt {
             if (event.key.name === "up" || (!this.searchMode && event.key.name === "k")) {
                 return this.onUpKey(event);
             }
-            if (event.key.name === "down" || (!self.searchMode && event.key.name === "j")) {
+            if (event.key.name === "down" || (!this.searchMode && event.key.name === "j")) {
                 return this.onDownKey(event);
             }
-            if (event.value === "/") {
+            if (event.value === "/" && !this.searchMode) {
                 return this.onSlashKey(events);
             }
-            if (event.value === "-") {
+            if (event.value === "-" && !this.searchMode) {
                 return this.handleBack(event);
             }
+            if (event.value === "." && !this.searchMode) {
+                return this.onSubmit();
+            }
         }).on("line", () => {
-            const choice = this.opt.choices.getChoice(self.selected).value;
+            const choice = this.choices.getChoice(this.selected).value;
             if (choice === CHOOSE) {
                 events.destroy();
                 return this.onSubmit();
@@ -134,29 +191,25 @@ export default class Prompt extends terminal.BasePrompt {
      * @return {Prompt} self
      */
     render() {
+        updateChoices(this.choices, this.opt.basePath);
         // Render question
         let message = this.getQuestion();
 
-        if (this.firstRender) {
-            message += chalk.dim("(Use arrow keys)");
-        }
-
         // Render choices or answer depending on the state
         if (this.status === "answered") {
-            message += chalk.cyan(adone.std.path.relative(this.opt.basePath, this.currentPath));
+            message += chalk.cyan(this.currentPath);
         } else {
-            message += `${chalk.bold("\n Current directory: ") + this.opt.basePath}/${chalk.cyan(adone.std.path.relative(this.opt.basePath, this.currentPath))}`;
-            const choicesStr = listRender(this.term, this.opt.choices, this.selected);
+            message += chalk.bold("\n Current directory: ") + chalk.cyan(std.path.resolve(this.opt.basePath, this.currentPath));
+            message += chalk.bold("\n");
+            const choicesStr = listRender(this.choices, this.selected);
             message += `\n${this.paginator.paginate(choicesStr, this.selected, this.opt.pageSize)}`;
             if (this.searchMode) {
                 message += (`\nSearch: ${this.searchTerm}`);
             } else {
-                message += "\n(Use \"/\" key to search this directory)";
+                message += chalk.dim('\n(Use "/" key to search this directory)');
+                message += chalk.dim('\n(Use "-" key to navigate to the parent folder');
             }
         }
-
-        this.firstRender = false;
-
         this.screen.render(message);
     }
 
@@ -164,10 +217,9 @@ export default class Prompt extends terminal.BasePrompt {
      *  when user selects to drill into a folder (by selecting folder name)
      */
     handleDrill() {
-        const choice = this.opt.choices.getChoice(this.selected);
-        this.depth++;
-        this.currentPath = adone.std.path.join(this.currentPath, choice.value);
-        this.opt.choices = new terminal.Choices(this.term, this.createChoices(this.currentPath), this.answers);
+        const choice = this.choices.getChoice(this.selected);
+        this.currentPath = std.path.join(this.currentPath, choice.value);
+        this.choices = new terminal.Choices(this.term, this.createChoices(this.currentPath), this.answers);
         this.selected = 0;
         this.render();
     }
@@ -176,13 +228,10 @@ export default class Prompt extends terminal.BasePrompt {
      * when user selects ".. back"
      */
     handleBack() {
-        if (this.depth > 0) {
-            this.depth--;
-            this.currentPath = adone.std.path.dirname(this.currentPath);
-            this.opt.choices = new terminal.Choices(this.term, this.createChoices(this.currentPath), this.answers);
-            this.selected = 0;
-            this.render();
-        }
+        this.currentPath = std.path.dirname(this.currentPath);
+        this.choices = new terminal.Choices(this.term, this.createChoices(this.currentPath), this.answers);
+        this.selected = 0;
+        this.render();
     }
 
     /**
@@ -196,7 +245,7 @@ export default class Prompt extends terminal.BasePrompt {
 
         this.screen.done();
         this.term.showCursor();
-        this.done(adone.std.path.relative(this.opt.basePath, this.currentPath));
+        this.done(std.path.relative(this.opt.basePath, this.currentPath));
     }
 
     /**
@@ -209,13 +258,13 @@ export default class Prompt extends terminal.BasePrompt {
     }
 
     onUpKey() {
-        const len = this.opt.choices.realLength;
+        const len = this.choices.realLength;
         this.selected = (this.selected > 0) ? this.selected - 1 : len - 1;
         this.render();
     }
 
     onDownKey() {
-        const len = this.opt.choices.realLength;
+        const len = this.choices.realLength;
         this.selected = (this.selected < len - 1) ? this.selected + 1 : 0;
         this.render();
     }
@@ -236,8 +285,8 @@ export default class Prompt extends terminal.BasePrompt {
 
         const lineHandler = () => {
             let index = -1;
-            for (let i = 0; i < this.opt.choices.realLength; i++) {
-                const item = this.opt.choices.realChoices[i].name.toLowerCase();
+            for (let i = 0; i < this.choices.realLength; i++) {
+                const item = this.choices.realChoices[i].name.toLowerCase();
                 if (item.indexOf(this.searchTerm) === 0) {
                     index = i;
                 }
@@ -263,8 +312,8 @@ export default class Prompt extends terminal.BasePrompt {
                 endSeach();
                 return;
             }
-            for (let index = 0; index < this.opt.choices.realLength; index++) {
-                const item = this.opt.choices.realChoices[index].name.toLowerCase();
+            for (let index = 0; index < this.choices.realLength; index++) {
+                const item = this.choices.realChoices[index].name.toLowerCase();
                 if (item.indexOf(this.searchTerm) === 0) {
                     this.selected = index;
                     break;
@@ -280,16 +329,16 @@ export default class Prompt extends terminal.BasePrompt {
      * Helper to create new choices based on previous selection.
      */
     createChoices(basePath) {
-        const choices = getDirectories(basePath);
+        const choices = getDirectoryContent(basePath, this.opt.displayHidden, this.opt.displayFiles);
+        if (basePath !== this.root) {
+            choices.unshift(BACK);
+        }
+        choices.unshift(CURRENT);
         if (choices.length > 0) {
-            choices.push(new terminal.Separator(this.term));
+            choices.push(this.term.separator());
         }
         choices.push(CHOOSE);
-        if (this.depth > 0) {
-            choices.push(new terminal.Separator(this.term));
-            choices.push(BACK);
-            choices.push(new terminal.Separator(this.term));
-        }
+        choices.push(this.term.separator());
         return choices;
     }
 }

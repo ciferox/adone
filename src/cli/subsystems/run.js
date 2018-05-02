@@ -1,5 +1,6 @@
 const {
     is,
+    fs,
     app: {
         Subsystem,
         DMainCliCommand
@@ -30,7 +31,11 @@ export default class Run extends Subsystem {
                 type: String,
                 help: "Activate node inspector on host[:port] (eg. '9229' or '127.0.0.1:9229')",
                 holder: "HOST[:PORT]"
-            }
+            },
+            {
+                name: ["--force", "-f"],
+                help: "Force create script file if file not exists"
+            },
         ]
     })
     async main(args, opts, { rest }) {
@@ -42,7 +47,7 @@ export default class Run extends Subsystem {
 
         let path = std.path.resolve(process.cwd(), args.get("path"));
 
-        if (await adone.fs.exists(path) && await adone.fs.isDirectory(path)) {
+        if (await fs.exists(path) && await fs.isDirectory(path)) {
             // adone application
             const conf = await adone.configuration.Adone.load({
                 cwd: path
@@ -70,13 +75,13 @@ export default class Run extends Subsystem {
         try {
             let scriptPath;
             if (shouldTranspile) {
-                const tmpPath = await adone.fs.tmpName({
+                const tmpPath = await fs.tmpName({
                     prefix: "script-"
                 });
-                await adone.fs.mkdirp(tmpPath);
+                await fs.mkdirp(tmpPath);
                 scriptPath = std.path.join(tmpPath, "index.js");
 
-                let content = await adone.fs.readFile(std.path.resolve(process.cwd(), path), {
+                let content = await fs.readFile(std.path.resolve(process.cwd(), path), {
                     encoding: "utf8"
                 });
 
@@ -91,7 +96,7 @@ export default class Run extends Subsystem {
                     filename: std.path.resolve(process.cwd(), path)
                 });
 
-                await adone.fs.writeFile(scriptPath, code);
+                await fs.writeFile(scriptPath, code);
             } else {
                 scriptPath = path;
             }
@@ -135,7 +140,7 @@ export default class Run extends Subsystem {
                 return 1;
             }
         } finally {
-            is.string(tmpPath) && await adone.fs.rm(tmpPath);
+            is.string(tmpPath) && await fs.rm(tmpPath);
         }
         return 0;
     }
@@ -166,10 +171,28 @@ export default class Run extends Subsystem {
         }
     }
 
-    async _runScript(path, args, { sourcemaps } = {}) {
+    async _runScript(path, args, { sourcemaps, force } = {}) {
         let scriptPath = path;
         if (!std.path.isAbsolute(scriptPath)) {
             scriptPath = std.path.resolve(process.cwd(), scriptPath);
+        }
+
+        if (!(await fs.exists(scriptPath)) && force) {
+            await adone.util.Editor.edit({
+                path,
+                save: true
+            });
+    
+            const answers = await adone.runtime.term.prompt().run([
+                {
+                    type: "confirm",
+                    name: "execute",
+                    message: "Execute the script?"
+                }
+            ]);
+            if (!answers.execute) {
+                return;
+            }
         }
 
         adone.__argv__ = [process.argv[0], scriptPath, ...args];
@@ -188,7 +211,11 @@ export default class Run extends Subsystem {
             const observer = await adone.task.run(result);
             await observer.result;
         } else if (is.function(result)) {
-            await result();
+            try {
+                await result();
+            } catch (err) {
+                // More preferably is to provide options to display such errors.
+            }
         }
     }
 }

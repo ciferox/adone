@@ -212,7 +212,7 @@ class TokenState {
 
 const defaultFormat = ["DD", ".", "MM", ".", "YYYY", " ", "HH", ":", "mm", ":", "ss"];
 
-export default class ConfirmPrompt extends terminal.BasePrompt {
+export default class DatetimePrompt extends terminal.BasePrompt {
     constructor(term, question, answers) {
         const { default: defaultValue } = question;
         delete question.default;
@@ -304,7 +304,7 @@ export default class ConfirmPrompt extends terminal.BasePrompt {
                 message += token;
             } else {
                 if (i === selection.index) {
-                    message += this.term.inverse(selection.date.format(token));
+                    message += terminal.chalk.inverse(selection.date.format(token));
                 } else {
                     message += selection.date.format(token);
                 }

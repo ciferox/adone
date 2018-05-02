@@ -44,9 +44,12 @@ export default class InputPrompt extends terminal.BasePrompt {
     render(error) {
         let bottomContent = "";
         let message = this.getQuestion();
+        const transformer = this.opt.transformer;
 
         if (this.status === "answered") {
             message += chalk.cyan(this.answer);
+        } else if (transformer) {
+            message += transformer(this.term.readline.line, this.answers);
         } else {
             message += this.term.readline.line;
         }

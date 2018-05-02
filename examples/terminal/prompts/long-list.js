@@ -1,5 +1,5 @@
 adone.app.run({
-    main() {
+    async main() {
         const choices = Array.apply(0, new Array(26)).map((x, y) => {
             return String.fromCharCode(y + 65);
         });
@@ -10,7 +10,7 @@ adone.app.run({
             short: "The long option"
         });
 
-        adone.runtime.term.prompt().run([
+        const answers = await adone.runtime.term.prompt().run([
             {
                 type: "list",
                 name: "letter",
@@ -25,9 +25,7 @@ adone.app.run({
                 paginated: true,
                 choices
             }
-        ]).then((answers) => {
-            adone.log(JSON.stringify(answers, null, "  "));
-        });
-
+        ]);
+        adone.log(JSON.stringify(answers, null, "  "));
     }
 });

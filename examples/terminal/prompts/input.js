@@ -1,5 +1,5 @@
 adone.app.run({
-    main() {
+    async main() {
         const questions = [
             {
                 name: "first_name",
@@ -10,6 +10,14 @@ adone.app.run({
                 message: "What's your last name",
                 default() {
                     return "Doe";
+                }
+            },
+            {
+                type: "input",
+                name: "fav_color",
+                message: "What's your favorite color",
+                transformer(color) {
+                    return adone.terminal.chalkify(color)(color);
                 }
             },
             {
@@ -26,9 +34,7 @@ adone.app.run({
             }
         ];
 
-        adone.runtime.term.prompt().run(questions).then((answers) => {
-            adone.log(JSON.stringify(answers, null, "  "));
-        });
-
+        const answers = await adone.runtime.term.prompt().run(questions);
+        adone.log(JSON.stringify(answers, null, "  "));
     }
 });

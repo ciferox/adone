@@ -12,8 +12,10 @@ describe("terminal", "prompt", () => {
 
     class TerminalMock extends terminal.Terminal {
         initialize() {
-            this.cols = 120;
-            this.rows = 120;
+            this.stats = {
+                cols: 120,
+                rows: 120
+            };
             this.input = new adone.std.stream.PassThrough();
             this.output = new adone.std.stream.PassThrough();
             this.terminfo = new TerminfoMock();
@@ -551,6 +553,7 @@ describe("terminal", "prompt", () => {
 
                         const prompt = new this.Prompt(term, this.fixture);
                         const promise = prompt.run();
+                        await delay(50);
                         await emitLines(1);
                         const answer = await promise;
                         expect(answer).to.be.equal("pass");
@@ -564,6 +567,7 @@ describe("terminal", "prompt", () => {
 
                         const prompt = new this.Prompt(term, this.fixture);
                         const promise = prompt.run();
+                        await delay(50);
                         await emitLines(1);
                         const answer = await promise;
                         expect(answer).to.be.equal("pass");
@@ -587,6 +591,7 @@ describe("terminal", "prompt", () => {
 
                         const prompt = new this.Prompt(term, this.fixture);
                         const promise = prompt.run();
+                        await delay(50);
                         await emitLines(1);
                         const answer = await promise;
                         expect(answer).to.be.equal("pass");
@@ -610,6 +615,7 @@ describe("terminal", "prompt", () => {
 
                         const prompt = new this.Prompt(term, this.fixture);
                         const promise = prompt.run();
+                        await delay(50);
                         await emitLines(1);
                         const answer = await promise;
                         expect(answer).to.be.equal("pass");
@@ -629,6 +635,7 @@ describe("terminal", "prompt", () => {
                         }];
 
                         const promise = term.prompt().run(questions);
+                        await delay(50);
                         await emitLines([
                             "Y",
                             ""
@@ -657,6 +664,7 @@ describe("terminal", "prompt", () => {
 
                         const prompt = new this.Prompt(term, this.fixture);
                         const promise = prompt.run();
+                        await delay(50);
                         emitLines(1);
                         await promise;
                         expect(called).to.be.equal(2);
@@ -679,6 +687,7 @@ describe("terminal", "prompt", () => {
 
                         const prompt = new this.Prompt(term, this.fixture);
                         const promise = prompt.run();
+                        await delay(50);
                         await emitLines(1);
                         await promise;
                         expect(called).to.be.equal(2);
@@ -701,6 +710,7 @@ describe("terminal", "prompt", () => {
 
                         const prompt = new this.Prompt(term, this.fixture);
                         const promise = prompt.run();
+                        await delay(50);
                         await emitLines(1);
                         await promise;
                         expect(called).to.be.equal(2);
@@ -711,6 +721,7 @@ describe("terminal", "prompt", () => {
 
                         const prompt = new this.Prompt(term, this.fixture);
                         const promise = prompt.run();
+                        await delay(50);
                         await emitLines(1);
                         await promise;
                         expect(validate).to.have.been.calledOnce();
@@ -730,6 +741,7 @@ describe("terminal", "prompt", () => {
 
                         const prompt = new this.Prompt(term, this.fixture);
                         const promise = prompt.run();
+                        await delay(50);
                         await emitLines(1);
                         await promise;
                         expect(called).to.be.equal(2);
@@ -742,6 +754,7 @@ describe("terminal", "prompt", () => {
 
                         const prompt = new this.Prompt(term, this.fixture);
                         const promise = prompt.run();
+                        await delay(50);
                         await emitLines(1);
                         await promise;
                     });
@@ -760,6 +773,7 @@ describe("terminal", "prompt", () => {
                         }];
 
                         const promise = term.prompt().run(questions);
+                        await delay(50);
                         await emitLines(2);
                         const answer = await promise;
                         expect(answer).to.be.deep.equal({ q1: true, q2: false });
@@ -815,7 +829,7 @@ describe("terminal", "prompt", () => {
                 describe("choices API", () => {
                     it("should print choices to screen", async function () {
                         const prompt = new this.Prompt(term, this.fixture);
-                        const choices = prompt.opt.choices;
+                        const choices = prompt.choices;
                         const collector = getOutputCollector();
                         prompt.run();
                         await delay(50);
@@ -886,6 +900,7 @@ describe("terminal", "prompt", () => {
 
             it("should return a single selected choice in an array", async function () {
                 const promise = this.checkbox.run();
+                await delay(50);
                 await emitKeypress(" ", { name: "space" });
                 await emitLines(1);
                 const answer = await promise;
@@ -894,6 +909,7 @@ describe("terminal", "prompt", () => {
 
             it("should return multiples selected choices in an array", async function () {
                 const promise = this.checkbox.run();
+                await delay(50);
                 await emitKeypress(" ", { name: "space" });
                 await emitKeypress(null, { name: "down" });
                 await emitKeypress(" ", { name: "space" });
@@ -910,6 +926,7 @@ describe("terminal", "prompt", () => {
                 ];
                 this.checkbox = createCheckbox(this.fixture);
                 const promise = this.checkbox.run();
+                await delay(50);
                 await emitLines(1);
                 const answer = await promise;
                 expect(answer).to.be.deep.equal(["1"]);
@@ -924,6 +941,7 @@ describe("terminal", "prompt", () => {
                 this.fixture.validate = stub().withArgs(["1", "2"]).returns(true);
                 this.checkbox = createCheckbox(this.fixture);
                 const promise = this.checkbox.run();
+                await delay(50);
                 await emitLines(1);
                 await promise;
             });
@@ -937,6 +955,7 @@ describe("terminal", "prompt", () => {
                 this.fixture.default = ["1", "3"];
                 this.checkbox = createCheckbox(this.fixture);
                 const promise = this.checkbox.run();
+                await delay(50);
                 await emitLines(1);
                 const answer = await promise;
                 expect(answer).to.be.deep.equal(["1", "3"]);
@@ -944,6 +963,7 @@ describe("terminal", "prompt", () => {
 
             it("should toggle choice when hitting space", async function () {
                 const promise = this.checkbox.run();
+                await delay(50);
                 emitKeypress(" ", { name: "space" });
                 emitKeypress(null, { name: "down" });
                 emitKeypress(" ", { name: "space" });
@@ -955,6 +975,7 @@ describe("terminal", "prompt", () => {
 
             it("should allow for arrow navigation", async function () {
                 const promise = this.checkbox.run();
+                await delay(50);
                 emitKeypress(null, { name: "down" });
                 emitKeypress(null, { name: "down" });
                 emitKeypress(null, { name: "up" });
@@ -966,6 +987,7 @@ describe("terminal", "prompt", () => {
 
             it("should allow for vi-style navigation", async function () {
                 const promise = this.checkbox.run();
+                await delay(50);
                 emitKeypress("j", { name: "j" });
                 emitKeypress("j", { name: "j" });
                 emitKeypress("k", { name: "k" });
@@ -977,6 +999,7 @@ describe("terminal", "prompt", () => {
 
             it("should allow for emacs-style navigation", async function () {
                 const promise = this.checkbox.run();
+                await delay(50);
                 emitKeypress("n", { name: "n", ctrl: true });
                 emitKeypress("n", { name: "n", ctrl: true });
                 emitKeypress("p", { name: "p", ctrl: true });
@@ -988,6 +1011,7 @@ describe("terminal", "prompt", () => {
 
             it("should allow 1-9 shortcut key", async function () {
                 const promise = this.checkbox.run();
+                await delay(50);
                 emitKeypress("2");
                 emitLines(1);
                 const answer = await promise;
@@ -996,6 +1020,7 @@ describe("terminal", "prompt", () => {
 
             it("should select all answers if <a> is pressed", async function () {
                 const promise = this.checkbox.run();
+                await delay(50);
                 emitKeypress("a", { name: "a" });
                 emitLines(1);
                 const answer = await promise;
@@ -1004,6 +1029,7 @@ describe("terminal", "prompt", () => {
 
             it("should select no answers if <a> is pressed a second time", async function () {
                 const promise = this.checkbox.run();
+                await delay(50);
                 emitKeypress("a", { name: "a" });
                 emitKeypress("a", { name: "a" });
                 emitLines(1);
@@ -1013,6 +1039,7 @@ describe("terminal", "prompt", () => {
 
             it("should select the inverse of the current selection when <i> is pressed", async function () {
                 const promise = this.checkbox.run();
+                await delay(50);
                 emitKeypress("i", { name: "i" });
                 emitLines(1);
                 const answer = await promise;
@@ -1035,6 +1062,7 @@ describe("terminal", "prompt", () => {
                 it("output disabled choices and custom messages", async function () {
                     const collector = getOutputCollector();
                     const promise = this.checkbox.run();
+                    await delay(50);
                     emitLines(1);
                     await promise;
                     collector.stop();
@@ -1043,6 +1071,7 @@ describe("terminal", "prompt", () => {
 
                 it("skip disabled choices", async function () {
                     const promise = this.checkbox.run();
+                    await delay(50);
                     emitKeypress(null, { name: "down" });
                     emitKeypress(null, { name: "down" });
                     emitKeypress(null, { name: "down" });
@@ -1059,6 +1088,7 @@ describe("terminal", "prompt", () => {
                     ];
                     this.checkbox = createCheckbox(this.fixture);
                     const promise = this.checkbox.run();
+                    await delay(50);
                     emitLines(1);
                     const answer = await promise;
                     expect(answer).to.be.empty();
@@ -1075,6 +1105,7 @@ describe("terminal", "prompt", () => {
 
                     const collector = getOutputCollector();
                     const promise = this.checkbox.run();
+                    await delay(50);
                     emitLines(1);
                     await promise;
                     collector.stop();
@@ -1344,7 +1375,7 @@ describe("terminal", "prompt", () => {
         });
 
         describe("input", () => {
-            const createInput = (fixture) => new terminal.Prompt.prompts.input(term, fixture);
+            const createInput = (fixture, answers) => new terminal.Prompt.prompts.input(term, fixture, answers);
 
             beforeEach(function () {
                 this.fixture = adone.util.clone(fixtures.input);
@@ -1370,6 +1401,47 @@ describe("terminal", "prompt", () => {
                 await delay(50);
                 collector.stop();
                 expect(collector.data()).to.include("pass");
+            });
+
+            it("should apply the provided transform to the value", async function () {
+                this.fixture.transformer = function (value) {
+                    return value
+                        .split("")
+                        .reverse()
+                        .join("");
+                };
+
+                const prompt = createInput(this.fixture);
+                const collector = getOutputCollector();
+                prompt.run();
+
+                emitLines(["InputPrompt"]);
+                await emitKeypress();
+                await delay(10);
+                collector.stop();
+
+                expect(collector.data()).to.contain("tpmorPtupnI");
+            });
+
+            it("should use the answers object in the provided transformer", async function () {
+                this.fixture.transformer = function (value, answers) {
+                    return answers.capitalize ? value.toUpperCase() : value;
+                };
+
+                const answers = {
+                    capitalize: true
+                };
+
+                const prompt = createInput(this.fixture, answers);
+                const collector = getOutputCollector();
+                prompt.run();
+
+                emitLines(["inputprompt"]);
+                await emitKeypress();
+                await delay(200);
+                collector.stop();
+
+                expect(collector.data()).to.contain("INPUTPROMPT");
             });
         });
 
@@ -1805,13 +1877,13 @@ describe("terminal", "prompt", () => {
                     it("searches after each char when user types", async function () {
                         this.prompt.run();
                         await waitForChoices();
-                        expect(source).to.have.been.called.calledWithExactly(undefined, null);
+                        expect(source).to.have.been.calledWithExactly(undefined, null);
                         await emitChars("a");
-                        expect(source).to.have.been.called.calledWithExactly(undefined, "a");
+                        expect(source).to.have.been.calledWithExactly(undefined, "a");
                         await emitChars("bba");
-                        expect(source).to.have.been.called.calledWithExactly(undefined, "ab");
-                        expect(source).to.have.been.called.calledWithExactly(undefined, "abb");
-                        expect(source).to.have.been.called.calledWithExactly(undefined, "abba");
+                        expect(source).to.have.been.calledWithExactly(undefined, "ab");
+                        expect(source).to.have.been.calledWithExactly(undefined, "abb");
+                        expect(source).to.have.been.calledWithExactly(undefined, "abba");
                         expect(source).to.have.callCount(5);
                     });
 

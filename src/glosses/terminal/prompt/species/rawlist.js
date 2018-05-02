@@ -43,8 +43,10 @@ export default class RawlistPrompt extends terminal.BasePrompt {
         if (!this.opt.choices) {
             this.throwParamError("choices");
         }
+        // Normalize choices
+        this.choices = new terminal.Choices(this.term, this.opt.choices, answers);
 
-        this.opt.validChoices = this.opt.choices.filter(terminal.Separator.exclude);
+        this.opt.validChoices = this.choices.filter(terminal.Separator.exclude);
 
         this.selected = 0;
         this.rawDefault = 0;
@@ -56,10 +58,10 @@ export default class RawlistPrompt extends terminal.BasePrompt {
         });
 
         const def = this.opt.default;
-        if (_.isNumber(def) && def >= 0 && def < this.opt.choices.realLength) {
+        if (_.isNumber(def) && def >= 0 && def < this.choices.realLength) {
             this.selected = this.rawDefault = def;
         } else if (!_.isNumber(def) && !is.nil(def)) {
-            const index = _.findIndex(this.opt.choices.realChoices, ({ value }) => value === def);
+            const index = _.findIndex(this.choices.realChoices, ({ value }) => value === def);
             this.selected = this.rawDefault = Math.max(index, 0);
         }
 
@@ -110,7 +112,7 @@ export default class RawlistPrompt extends terminal.BasePrompt {
         if (this.status === "answered") {
             message += chalk.cyan(this.answer);
         } else {
-            const choicesStr = renderChoices(this.term, this.opt.choices, this.selected);
+            const choicesStr = renderChoices(this.term, this.choices, this.selected);
             message += this.paginator.paginate(choicesStr, this.selected, this.opt.pageSize);
             message += "\n  Answer: ";
         }
@@ -134,7 +136,7 @@ export default class RawlistPrompt extends terminal.BasePrompt {
             index -= 1;
         }
 
-        const choice = this.opt.choices.getChoice(index);
+        const choice = this.choices.getChoice(index);
         return choice ? choice.value : null;
     }
 
@@ -159,7 +161,7 @@ export default class RawlistPrompt extends terminal.BasePrompt {
     onKeypress() {
         const index = this.term.readline.line.length ? Number(this.term.readline.line) - 1 : 0;
 
-        if (this.opt.choices.getChoice(index)) {
+        if (this.choices.getChoice(index)) {
             this.selected = index;
         } else {
             this.selected = undefined;
