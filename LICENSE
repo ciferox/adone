@@ -6149,7 +6149,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 The complete list of contributors can be found at: https://github.com/hapijs/joi/graphs/contributors
 
-<<<<<<< HEAD
 - https://github.com/fent/ret.js
 
 MIT License
@@ -6194,7 +6193,7 @@ FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-=======
+
 - https://github.com/LitoMore/chalk-pipe
 
 MIT © LitoMore
@@ -6202,4 +6201,3 @@ MIT © LitoMore
 - https://github.com/SBoudrias/Inquirer.js
 
 MIT Copyright (c) 2012 Simon Boudrias
->>>>>>> next
