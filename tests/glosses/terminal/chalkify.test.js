@@ -7,7 +7,7 @@ const {
     normalColors
 } = chalkify;
 
-describe("terminal", "chlky", () => {
+describe("terminal", "chalkify", () => {
     chalk.enabled = true;
 
     it("Modifiers", () => {

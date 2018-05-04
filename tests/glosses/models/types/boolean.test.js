@@ -16,7 +16,7 @@ describe("boolean", () => {
 
         expect(
             () => model.boolean("invalid argument.")
-        ).to.throw("Joi.boolean() does not allow arguments.");
+        ).to.throw("model.boolean() does not allow arguments.");
     });
 
     it("converts boolean string to a boolean", () => {

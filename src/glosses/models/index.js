@@ -49,8 +49,7 @@ adone.lazify({
 }, root, require);
 
 root.any = function (...args) {
-
-    assert(args.length === 0, "Joi.any() does not allow arguments.");
+    assert(args.length === 0, "model.any() does not allow arguments.");
 
     return applyDefaults.call(this, any);
 };
@@ -62,43 +61,37 @@ root.alternatives = root.alt = function (...args) {
 };
 
 root.array = function (...args) {
-
-    assert(args.length === 0, "Joi.array() does not allow arguments.");
+    assert(args.length === 0, "model.array() does not allow arguments.");
 
     return applyDefaults.call(this, __.array);
 };
 
 root.boolean = root.bool = function (...args) {
-
-    assert(args.length === 0, "Joi.boolean() does not allow arguments.");
+    assert(args.length === 0, "model.boolean() does not allow arguments.");
 
     return applyDefaults.call(this, __.boolean);
 };
 
 root.binary = function (...args) {
-
-    assert(args.length === 0, "Joi.binary() does not allow arguments.");
+    assert(args.length === 0, "model.binary() does not allow arguments.");
 
     return applyDefaults.call(this, __.binary);
 };
 
 root.date = function (...args) {
-
-    assert(args.length === 0, "Joi.date() does not allow arguments.");
+    assert(args.length === 0, "model.date() does not allow arguments.");
 
     return applyDefaults.call(this, __.date);
 };
 
 root.func = function (...args) {
-
-    assert(args.length === 0, "Joi.func() does not allow arguments.");
+    assert(args.length === 0, "model.func() does not allow arguments.");
 
     return applyDefaults.call(this, __.func);
 };
 
 root.number = function (...args) {
-
-    assert(args.length === 0, "Joi.number() does not allow arguments.");
+    assert(args.length === 0, "model.number() does not allow arguments.");
 
     return applyDefaults.call(this, __.number);
 };
@@ -110,8 +103,7 @@ root.object = function (...args) {
 };
 
 root.string = function (...args) {
-
-    assert(args.length === 0, "Joi.string() does not allow arguments.");
+    assert(args.length === 0, "model.string() does not allow arguments.");
 
     return applyDefaults.call(this, __.string);
 };

@@ -15,7 +15,7 @@ describe("number", () => {
 
         expect(
             () => model.number("invalid argument.")
-        ).to.throw("Joi.number() does not allow arguments.");
+        ).to.throw("model.number() does not allow arguments.");
     });
 
     it("fails on boolean", () => {

@@ -18,7 +18,7 @@ describe("string", () => {
 
         expect(
             () => model.string("invalid argument.")
-        ).to.throw("Joi.string() does not allow arguments.");
+        ).to.throw("model.string() does not allow arguments.");
     });
 
     it("fails on boolean", () => {
@@ -111,7 +111,6 @@ describe("string", () => {
         });
 
         it("validates case insensitive values", () => {
-
             Helper.validate(model.string().valid("a", "b").insensitive(), [
                 ["a", true],
                 ["b", true],
@@ -130,8 +129,7 @@ describe("string", () => {
         });
 
         it("validates case insensitive values with non-strings", () => {
-
-            Helper.validate(model.string().valid("a", "b", 5).insensitive(), [
+            Helper.validate(model.string().valid("a", "b", 5, Buffer.from("c")).insensitive(), [
                 ["a", true],
                 ["b", true],
                 ["A", true],
@@ -145,15 +143,14 @@ describe("string", () => {
                         context: { value: 4, label: "value", key: undefined }
                     }]
                 }],
-                [5, true]
+                [5, true],
+                [Buffer.from("c"), true]
             ]);
         });
     });
 
     describe("invalid()", () => {
-
         it("inverts case sensitive values", () => {
-
             Helper.validate(model.string().invalid("a", "b"), [
                 ["a", false, null, {
                     message: '"value" contains an invalid value',
@@ -9603,8 +9600,85 @@ describe("string", () => {
             ], { convert: true });
         });
 
-        it("validates an hexadecimal string", () => {
+        it("validates the hexadecimal options", () => {
+            expect(() => {
+                model.string().hex("a");
+            }).to.throw("hex options must be an object");
 
+            expect(() => {
+                model.string().hex({ byteAligned: "a" });
+            }).to.throw("byteAligned must be boolean");
+        });
+
+        it("validates an hexadecimal string with no options", () => {
+            const rule = model.string().hex();
+            Helper.validate(rule, [
+                ["123456789abcdef", true],
+                ["123456789AbCdEf", true],
+                ["123afg", false, null, {
+                    message: '"value" must only contain hexadecimal characters',
+                    details: [{
+                        message: '"value" must only contain hexadecimal characters',
+                        path: [],
+                        type: "string.hex",
+                        context: { value: "123afg", label: "value", key: undefined }
+                    }]
+                }]
+            ]);
+        });
+
+        it("validates an hexadecimal string with byte align explicitly required", () => {
+            const rule = model.string().hex({ byteAligned: true }).strict();
+            Helper.validate(rule, [
+                ["0123456789abcdef", true],
+                ["123456789abcdef", false, null, {
+                    message: '"value" hex decoded representation must be byte aligned',
+                    details: [{
+                        message: '"value" hex decoded representation must be byte aligned',
+                        path: [],
+                        type: "string.hexAlign",
+                        context: { value: "123456789abcdef", label: "value", key: undefined }
+                    }]
+                }],
+                ["0123afg", false, null, {
+                    message: '"value" must only contain hexadecimal characters',
+                    details: [{
+                        message: '"value" must only contain hexadecimal characters',
+                        path: [],
+                        type: "string.hex",
+                        context: { value: "0123afg", label: "value", key: undefined }
+                    }]
+                }]
+            ]);
+        });
+
+        it("converts an hexadecimal string with byte align explicitly required", () => {
+            const rule = model.string().hex({ byteAligned: true });
+            Helper.validate(rule, [
+                ["0123456789abcdef", true, null, "0123456789abcdef"],
+                ["123456789abcdef", true, null, "0123456789abcdef"],
+                ["0123afg", false, null, {
+                    message: '"value" must only contain hexadecimal characters',
+                    details: [{
+                        message: '"value" must only contain hexadecimal characters',
+                        path: [],
+                        type: "string.hex",
+                        context: { value: "00123afg", label: "value", key: undefined }
+                    }]
+                }],
+                ["00123afg", false, null, {
+                    message: '"value" must only contain hexadecimal characters',
+                    details: [{
+                        message: '"value" must only contain hexadecimal characters',
+                        path: [],
+                        type: "string.hex",
+                        context: { value: "00123afg", label: "value", key: undefined }
+                    }]
+                }]
+            ]);
+        });
+
+        it("validates an hexadecimal string", () => {
             const rule = model.string().hex();
             Helper.validate(rule, [
                 ["123456789abcdef", true],
@@ -9622,14 +9696,11 @@ describe("string", () => {
         });
 
         it("validates the base64 options", () => {
-
             expect(() => {
-
                 model.string().base64("a");
             }).to.throw("base64 options must be an object");
 
             expect(() => {
-
                 model.string().base64({ paddingRequired: "a" });
             }).to.throw("paddingRequired must be boolean");
         });

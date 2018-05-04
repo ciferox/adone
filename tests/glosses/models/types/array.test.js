@@ -16,7 +16,7 @@ describe("array", () => {
 
         expect(
             () => model.array("invalid argument.")
-        ).to.throw("Joi.array() does not allow arguments.");
+        ).to.throw("model.array() does not allow arguments.");
     });
 
     it("converts a string to an array", async () => {

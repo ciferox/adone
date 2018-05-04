@@ -73,6 +73,10 @@ internals.String = class extends Any {
                     }
                 }
             }
+
+            if (this._flags.byteAligned && value.length % 2 !== 0) {
+                value = `0${value}`;
+            }
         }
 
         return {
@@ -394,18 +398,29 @@ internals.String = class extends Any {
         });
     }
 
-    hex() {
+    hex(hexOptions = {}) {
+        assert(typeof hexOptions === "object", "hex options must be an object");
+        assert(is.undefined(hexOptions.byteAligned) || is.boolean(hexOptions.byteAligned), "byteAligned must be boolean");
 
+        const byteAligned = hexOptions.byteAligned === true;
         const regex = /^[a-f0-9]+$/i;
 
-        return this._test("hex", regex, function (value, state, options) {
-
+        const obj = this._test("hex", regex, function (value, state, options) {
             if (regex.test(value)) {
+                if (byteAligned && value.length % 2 !== 0) {
+                    return this.createError("string.hexAlign", { value }, state, options);
+                }
                 return value;
             }
 
             return this.createError("string.hex", { value }, state, options);
         });
+
+        if (byteAligned) {
+            obj._flags.byteAligned = true;
+        }
+
+        return obj;
     }
 
     base64(base64Options = {}) {

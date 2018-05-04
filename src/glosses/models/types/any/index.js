@@ -10,7 +10,7 @@ const {
 let Alternatives = null; // Delay-loaded to prevent circular dependencies
 let Cast = null;
 
-const internals = adone.lazify({
+const __ = adone.lazify({
     Set: "../../set",
     Ref: "../../ref",
     schemas: () => {
@@ -35,7 +35,7 @@ const internals = adone.lazify({
     }
 }, exports, require);
 
-internals.defaults = {
+__.defaults = {
     abortEarly: true,
     convert: true,
     allowUnknown: false,
@@ -58,8 +58,8 @@ export default class Any {
         this.isJoi = true;
         this._type = "any";
         this._settings = null;
-        this._valids = new internals.Set();
-        this._invalids = new internals.Set();
+        this._valids = new __.Set();
+        this._invalids = new __.Set();
         this._tests = [];
         this._refs = [];
         this._flags = {
@@ -91,29 +91,25 @@ export default class Any {
     }
 
     get schemaType() {
-
         return this._type;
     }
 
     createError(type, context, state, options, flags = this._flags) {
-
         return Errors.create(type, context, state, options, flags);
     }
 
     createOverrideError(type, context, state, options, message, template) {
-
         return Errors.create(type, context, state, options, this._flags, message, template);
     }
 
     checkOptions(options) {        
-        const result = internals.schemas.validate(options);
+        const result = __.schemas.validate(options);
         if (result.error) {
             throw new Error(result.error.details[0].message);
         }
     }
 
     clone() {
-
         const obj = Object.create(Object.getPrototypeOf(this));
 
         obj.isJoi = true;
@@ -366,7 +362,7 @@ export default class Any {
     default(value, description) {
 
         if (is.function(value) &&
-            !internals.Ref.isRef(value)) {
+            !__.Ref.isRef(value)) {
 
             if (!value.description &&
                 description) {
@@ -381,7 +377,7 @@ export default class Any {
 
         const obj = this.clone();
         obj._flags.default = value;
-        internals.Ref.push(obj._refs, value);
+        __.Ref.push(obj._refs, value);
         return obj;
     }
 
@@ -495,7 +491,7 @@ export default class Any {
                 finalValue = this._flags.raw ? originalValue : value;
             } else if (options.noDefaults) {
                 finalValue = value;
-            } else if (internals.Ref.isRef(this._flags.default)) {
+            } else if (__.Ref.isRef(this._flags.default)) {
                 finalValue = this._flags.default(state.parent, options);
             } else if (is.function(this._flags.default) &&
                 !(this._flags.func && !this._flags.default.description)) {
@@ -508,7 +504,7 @@ export default class Any {
                     args = [clone(state.parent), options];
                 }
 
-                const defaultValue = internals._try(this._flags.default, args);
+                const defaultValue = __._try(this._flags.default, args);
                 finalValue = defaultValue.value;
                 if (defaultValue.error) {
                     errors.push(this.createError("any.default", { error: defaultValue.error }, state, options));
@@ -551,7 +547,7 @@ export default class Any {
             value = coerced.value;
         }
 
-        if (this._flags.empty && !this._flags.empty._validate(this._prepareEmptyValue(value), null, internals.defaults).errors) {
+        if (this._flags.empty && !this._flags.empty._validate(this._prepareEmptyValue(value), null, __.defaults).errors) {
             value = undefined;
         }
 
@@ -657,7 +653,7 @@ export default class Any {
             this.checkOptions(options);
         }
 
-        const settings = concat(internals.defaults, options);
+        const settings = concat(__.defaults, options);
         const result = this._validate(value, null, settings);
         const errors = Errors.process(result.errors, value);
 
@@ -711,7 +707,7 @@ export default class Any {
                     if (flag === "empty") {
                         description.flags[flag] = this._flags[flag].describe();
                     } else if (flag === "default") {
-                        if (internals.Ref.isRef(this._flags[flag])) {
+                        if (__.Ref.isRef(this._flags[flag])) {
                             description.flags[flag] = this._flags[flag].toString();
                         } else if (is.function(this._flags[flag])) {
                             description.flags[flag] = {
@@ -768,7 +764,7 @@ export default class Any {
         if (valids.length) {
             description.valids = valids.map((v) => {
 
-                return internals.Ref.isRef(v) ? v.toString() : v;
+                return __.Ref.isRef(v) ? v.toString() : v;
             });
         }
 
@@ -776,7 +772,7 @@ export default class Any {
         if (invalids.length) {
             description.invalids = invalids.map((v) => {
 
-                return internals.Ref.isRef(v) ? v.toString() : v;
+                return __.Ref.isRef(v) ? v.toString() : v;
             });
         }
 
@@ -787,7 +783,7 @@ export default class Any {
             const item = { name: validator.name };
 
             if (validator.arg !== void 0) {
-                item.arg = internals.Ref.isRef(validator.arg) ? validator.arg.toString() : validator.arg;
+                item.arg = __.Ref.isRef(validator.arg) ? validator.arg.toString() : validator.arg;
             }
 
             const options = validator.options;
@@ -798,7 +794,7 @@ export default class Any {
                     for (let j = 0; j < keys.length; ++j) {
                         const key = keys[j];
                         const value = validator.arg[key];
-                        item.arg[key] = internals.Ref.isRef(value) ? value.toString() : value;
+                        item.arg[key] = __.Ref.isRef(value) ? value.toString() : value;
                     }
                 }
 
@@ -846,7 +842,7 @@ Any.prototype.only = Any.prototype.equal = Any.prototype.valid;
 Any.prototype.disallow = Any.prototype.not = Any.prototype.invalid;
 Any.prototype.exist = Any.prototype.required;
 
-internals._try = function (fn, args) {
+__._try = function (fn, args) {
     let err;
     let result;
 

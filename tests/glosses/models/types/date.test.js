@@ -36,7 +36,7 @@ describe("date", () => {
 
         expect(
             () => model.date("invalid argument.")
-        ).to.throw("Joi.date() does not allow arguments.");
+        ).to.throw("model.date() does not allow arguments.");
     });
 
     it("fails on boolean", () => {

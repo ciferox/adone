@@ -191,8 +191,18 @@ describe("ref", () => {
         expect(value).to.eql({ a: 6, b: 6 });
     });
 
-    it("uses ref as default value regardless of order", async () => {
+    it("uses ref mixed with normal values", async () => {
+        const schema = model.object({
+            a: model.number().valid(1, model.ref("b")),
+            b: model.any()
+        });
 
+        expect(await schema.validate({ a: 6, b: 6 })).to.eql({ a: 6, b: 6 });
+        expect(await schema.validate({ a: 1, b: 6 })).to.eql({ a: 1, b: 6 });
+        await assert.throws(async () => schema.validate({ a: 6, b: 1 }));
+    });
+
+    it("uses ref as default value regardless of order", async () => {
         const ab = model.object({
             a: model.default(model.ref("b")),
             b: model.number()

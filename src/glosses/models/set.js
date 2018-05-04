@@ -4,73 +4,128 @@ const {
     is
 } = adone;
 
-export default class Set {
+const extendedCheckForValue = function (value, insensitive) {
+    const valueType = typeof value;
 
-    constructor() {
+    if (valueType === "object") {
+        if (value instanceof Date) {
+            return (item) => {
+                return item instanceof Date && value.getTime() === item.getTime();
+            };
+        }
+        if (is.buffer(value)) {
+            return (item) => {
 
-        this._set = [];
+                return is.buffer(item) && value.length === item.length && value.toString("binary") === item.toString("binary");
+            };
+        }
+    } else if (insensitive && valueType === "string") {
+        const lowercaseValue = value.toLowerCase();
+        return (item) => {
+            return is.string(item) && lowercaseValue === item.toLowerCase();
+        };
+    }
+
+    return null;
+};
+
+export default class ModelSet {
+    constructor(from) {
+        this._set = new Set(from);
+        this._hasRef = false;
     }
 
     add(value, refs) {
+        const isRef_ = isRef(value);
+        if (!isRef_ && this.has(value, null, null, false)) {
 
-        if (!isRef(value) && this.has(value, null, null, false)) {
-
-            return;
+            return this;
         }
 
         if (!is.undefined(refs)) { // If it's a merge, we don't have any refs
             pushRef(refs, value);
         }
 
-        this._set.push(value);
+        this._set.add(value);
+
+        this._hasRef |= isRef_;
+
         return this;
     }
 
     merge(add, remove) {
-
-        for (let i = 0; i < add._set.length; ++i) {
-            this.add(add._set[i]);
+        for (const item of add._set) {
+            this.add(item);
         }
 
-        for (let i = 0; i < remove._set.length; ++i) {
-            this.remove(remove._set[i]);
+        for (const item of remove._set) {
+            this.remove(item);
         }
 
         return this;
     }
 
     remove(value) {
-
-        this._set = this._set.filter((item) => value !== item);
+        this._set.delete(value);
         return this;
     }
 
     has(value, state, options, insensitive) {
+        if (!this._set.size) {
+            return false;
+        }
 
-        for (let i = 0; i < this._set.length; ++i) {
-            let items = this._set[i];
+        const hasValue = this._set.has(value);
+        if (hasValue) {
+            return hasValue;
+        }
 
-            if (state && isRef(items)) { // Only resolve references if there is a state, otherwise it's a merge
-                items = items(state.reference || state.parent, options);
+        const extendedCheck = extendedCheckForValue(value, insensitive);
+        if (!extendedCheck) {
+            if (state && this._hasRef) {
+                for (let item of this._set) {
+                    if (isRef(item)) {
+                        item = item(state.reference || state.parent, options);
+                        if (value === item || (is.array(item) && item.includes(value))) {
+                            return true;
+                        }
+                    }
+                }
             }
 
-            if (!is.array(items)) {
-                items = [items];
+            return false;
+        }
+
+        return this._has(value, state, options, extendedCheck);
+    }
+
+    _has(value, state, options, check) {
+
+        const checkRef = Boolean(state && this._hasRef);
+
+        const isReallyEqual = function (item) {
+
+            if (value === item) {
+                return true;
             }
 
-            for (let j = 0; j < items.length; ++j) {
-                const item = items[j];
-                if (typeof value !== typeof item) {
+            return check(item);
+        };
+
+        for (let item of this._set) {
+            if (checkRef && isRef(item)) { // Only resolve references if there is a state, otherwise it's a merge
+                item = item(state.reference || state.parent, options);
+
+                if (is.array(item)) {
+                    if (item.find(isReallyEqual)) {
+                        return true;
+                    }
                     continue;
                 }
+            }
 
-                if (value === item ||
-                    (value instanceof Date && item instanceof Date && value.getTime() === item.getTime()) ||
-                    (insensitive && is.string(value) && value.toLowerCase() === item.toLowerCase()) ||
-                    (is.buffer(value) && is.buffer(item) && value.length === item.length && value.toString("binary") === item.toString("binary"))) {
-
-                    return true;
-                }
+            if (isReallyEqual(item)) {
+                return true;
             }
         }
 
@@ -78,12 +133,10 @@ export default class Set {
     }
 
     values(options) {
-
         if (options && options.stripUndefined) {
             const values = [];
 
-            for (let i = 0; i < this._set.length; ++i) {
-                const item = this._set[i];
+            for (const item of this._set) {
                 if (!is.undefined(item)) {
                     values.push(item);
                 }
@@ -92,22 +145,18 @@ export default class Set {
             return values;
         }
 
-        return this._set.slice();
+        return Array.from(this._set);
     }
 
     slice() {
-
-        const newSet = new Set();
-        newSet._set = this._set.slice();
-
-        return newSet;
+        const set = new ModelSet(this._set);
+        set._hasRef = this._hasRef;
+        return set;
     }
 
     concat(source) {
-
-        const newSet = new Set();
-        newSet._set = this._set.concat(source._set);
-
-        return newSet;
+        const set = new ModelSet([...this._set, ...source._set]);
+        set._hasRef = Boolean(this._hasRef | source._hasRef);
+        return set;
     }
 }

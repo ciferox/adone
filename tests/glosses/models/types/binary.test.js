@@ -16,7 +16,7 @@ describe("binary", () => {
 
         expect(
             () => model.binary("invalid argument.")
-        ).to.throw("Joi.binary() does not allow arguments.");
+        ).to.throw("model.binary() does not allow arguments.");
     });
 
     it("converts a string to a buffer", async () => {

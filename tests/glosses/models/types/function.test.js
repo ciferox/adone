@@ -15,7 +15,7 @@ describe("func", () => {
     it("should throw an exception if arguments were passed.", () => {
         expect(
             () => model.func("invalid argument.")
-        ).to.throw("Joi.func() does not allow arguments.");
+        ).to.throw("model.func() does not allow arguments.");
     });
 
     it("validates a function", () => {

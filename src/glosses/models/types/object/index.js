@@ -182,7 +182,7 @@ internals.Object = class extends Any {
             return finish();
         }
 
-        const unprocessed = mapToObject(Object.keys(target));
+        const unprocessed = new Set(Object.keys(target));
 
         if (this._inner.children) {
             const stripProps = [];
@@ -192,7 +192,7 @@ internals.Object = class extends Any {
                 const key = child.key;
                 const item = target[key];
 
-                delete unprocessed[key];
+                unprocessed.delete(key);
 
                 const localState = { key, path: state.path.concat(key), parent: target, reference: state.reference };
                 const result = child.schema._validate(item, localState, options);
@@ -219,24 +219,30 @@ internals.Object = class extends Any {
 
         // Unknown keys
 
-        let unprocessedKeys = Object.keys(unprocessed);
-        if (unprocessedKeys.length &&
-            this._inner.patterns.length) {
+        if (unprocessed.size && this._inner.patterns.length) {
 
-            for (let i = 0; i < unprocessedKeys.length; ++i) {
-                const key = unprocessedKeys[i];
-                const localState = { key, path: state.path.concat(key), parent: target, reference: state.reference };
+            for (const key of unprocessed) {
+                const localState = {
+                    key,
+                    path: state.path.concat(key),
+                    parent: target,
+                    reference: state.reference
+                };
                 const item = target[key];
 
-                for (let j = 0; j < this._inner.patterns.length; ++j) {
-                    const pattern = this._inner.patterns[j];
+                for (let i = 0; i < this._inner.patterns.length; ++i) {
+                    const pattern = this._inner.patterns[i];
 
                     if (pattern.regex.test(key)) {
-                        delete unprocessed[key];
+                        unprocessed.delete(key);
 
                         const result = pattern.rule._validate(item, localState, options);
                         if (result.errors) {
-                            errors.push(this.createError("object.child", { key, child: pattern.rule._getLabel(key), reason: result.errors }, localState, options));
+                            errors.push(this.createError("object.child", {
+                                key,
+                                child: pattern.rule._getLabel(key),
+                                reason: result.errors
+                            }, localState, options));
 
                             if (options.abortEarly) {
                                 return finish();
@@ -247,11 +253,9 @@ internals.Object = class extends Any {
                     }
                 }
             }
-
-            unprocessedKeys = Object.keys(unprocessed);
         }
 
-        if ((this._inner.children || this._inner.patterns.length) && unprocessedKeys.length) {
+        if (unprocessed.size && (this._inner.children || this._inner.patterns.length)) {
             if ((options.stripUnknown && this._flags.allowUnknown !== true) ||
                 options.skipFunctions) {
 
@@ -260,26 +264,23 @@ internals.Object = class extends Any {
                     : false;
 
 
-                for (let i = 0; i < unprocessedKeys.length; ++i) {
-                    const key = unprocessedKeys[i];
-
+                for (const key of unprocessed) {
                     if (stripUnknown) {
                         delete target[key];
-                        delete unprocessed[key];
+                        unprocessed.delete(key);
                     } else if (is.function(target[key])) {
-                        delete unprocessed[key];
+                        unprocessed.delete(key);
                     }
                 }
-
-                unprocessedKeys = Object.keys(unprocessed);
             }
 
-            if (unprocessedKeys.length &&
-                (!is.undefined(this._flags.allowUnknown) ? !this._flags.allowUnknown : !options.allowUnknown)) {
+            if ((!is.undefined(this._flags.allowUnknown) ? !this._flags.allowUnknown : !options.allowUnknown)) {
 
-                for (let i = 0; i < unprocessedKeys.length; ++i) {
-                    const unprocessedKey = unprocessedKeys[i];
-                    errors.push(this.createError("object.allowUnknown", { child: unprocessedKey }, { key: unprocessedKey, path: state.path.concat(unprocessedKey) }, options, {}));
+                for (const unprocessedKey of unprocessed) {
+                    errors.push(this.createError("object.allowUnknown", { child: unprocessedKey }, {
+                        key: unprocessedKey,
+                        path: state.path.concat(unprocessedKey)
+                    }, options, {}));
                 }
             }
         }

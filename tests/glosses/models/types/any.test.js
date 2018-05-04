@@ -35,7 +35,7 @@ describe("any", () => {
 
         expect(
             () => model.any("invalid argument.")
-        ).to.throw("Joi.any() does not allow arguments.");
+        ).to.throw("model.any() does not allow arguments.");
     });
 
     describe("equal()", () => {
@@ -2425,6 +2425,12 @@ describe("any", () => {
                 type: "any.allowOnly",
                 context: { valids: [d], label: "value", key: undefined }
             }]);
+
+            expect(model.valid(model.ref("$a")).validate(d, { context: { a: new Date(d.getTime()) } }).error).to.be.null();
+            expect(model.object({ a: model.date(), b: model.valid(model.ref("a")) }).validate({ a: d, b: d }).error).to.be.null();
+            expect(model.object({ a: model.array().items(model.date()).single(), b: model.valid(model.ref("a")) }).validate({ a: d, b: d }).error).to.be.null();
+            const { error } = model.object({ a: model.array().items(model.date()).single(), b: model.valid(model.ref("a")) }).validate({ a: new Date(0), b: d });
+            assert.equal(error.message, "child \"b\" fails because [\"b\" must be one of [ref:a]]");
 
             const str = "foo";
             expect(model.valid(str).validate(str).error).to.be.null();

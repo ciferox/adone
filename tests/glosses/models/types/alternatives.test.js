@@ -568,8 +568,48 @@ describe("alternatives", () => {
                 ]);
             });
 
-            it("validates when then has ref", () => {
+            it("validates when is has ref pointing to a complex type", () => {
+                const date = new Date(42);
 
+                const schema = {
+                    a: model.alternatives().when("b", { is: model.ref("c"), then: "x" }),
+                    b: model.date(),
+                    c: model.date()
+                };
+
+                Helper.validate(schema, [
+                    [{ a: "x", b: date, c: date }, true],
+                    [{ a: "x", b: date, c: Date.now() }, false, null, {
+                        message: 'child "a" fails because ["a" not matching any of the allowed alternatives]',
+                        details: [{
+                            message: '"a" not matching any of the allowed alternatives',
+                            path: ["a"],
+                            type: "alternatives.base",
+                            context: { label: "a", key: "a" }
+                        }]
+                    }],
+                    [{ a: "y", b: date, c: date }, false, null, {
+                        message: 'child "a" fails because ["a" must be one of [x]]',
+                        details: [{
+                            message: '"a" must be one of [x]',
+                            path: ["a"],
+                            type: "any.allowOnly",
+                            context: { valids: ["x"], label: "a", key: "a" }
+                        }]
+                    }],
+                    [{ a: "y" }, false, null, {
+                        message: 'child "a" fails because ["a" must be one of [x]]',
+                        details: [{
+                            message: '"a" must be one of [x]',
+                            path: ["a"],
+                            type: "any.allowOnly",
+                            context: { valids: ["x"], label: "a", key: "a" }
+                        }]
+                    }]
+                ]);
+            });
+
+            it("validates when then has ref", () => {
                 const ref = model.ref("c");
                 const schema = {
                     a: model.alternatives().when("b", { is: 5, then: ref }),
