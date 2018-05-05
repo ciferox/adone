@@ -77,6 +77,10 @@ class CliKit extends app.Subsystem {
 
         }
     }
+
+    ask(questions) {
+        return adone.runtime.term.prompt().run(questions);
+    }
 }
 
 export default new CliKit();

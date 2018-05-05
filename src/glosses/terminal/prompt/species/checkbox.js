@@ -26,11 +26,6 @@ export default class CheckboxPrompt extends terminal.BasePrompt {
     constructor(term, questions, answers) {
         super(term, questions, answers);
 
-        // Default value for the highlight option
-        if (is.undefined(this.opt.highlight)) {
-            this.opt.highlight = false;
-        }
-
         // Default value for the search option
         if (is.undefined(this.opt.search)) {
             this.opt.search = false;
@@ -39,6 +34,10 @@ export default class CheckboxPrompt extends terminal.BasePrompt {
         // Default value for the default option
         if (is.undefined(this.opt.default)) {
             this.opt.default = null;
+        }
+
+        if (is.undefined(this.opt.asObject)) {
+            this.opt.asObject = false;
         }
 
         // Doesn't have choices option
@@ -132,7 +131,7 @@ export default class CheckboxPrompt extends terminal.BasePrompt {
         }
 
         if (is.function(this.opt.search)) {
-            sourcePromise = this.opt.search(this.answers, this.term.readline.line);
+            sourcePromise = await this.opt.search(this.answers, this.term.readline.line);
         } else if (this.opt.search === true) {
             const input = this.term.readline.line || "";
             if (input === "") {
@@ -274,7 +273,8 @@ export default class CheckboxPrompt extends terminal.BasePrompt {
     getCurrentValue() {
         const choices = this.choices.filter((choice) => Boolean(choice.checked) && !choice.disabled);
         this.selection = _.map(choices, "short");
-        return _.map(choices, "value");
+        const result = _.map(choices, "value");
+        return this.opt.asObject ? adone.lodash.zipObject(result, (new Array(result.length)).fill(true)) : result;
     }
 
     /**
@@ -419,7 +419,7 @@ export default class CheckboxPrompt extends terminal.BasePrompt {
                 if (index - separatorOffset === pointer) {
                     output += chalk.cyan(symbol.pointer);
                     output += `${getCheckbox(choice.checked)} `;
-                    output += this.opt.highlight ? chalk.gray(choice.name) : choice.name;
+                    output += chalk.cyan(choice.name);
                 } else {
                     output += ` ${getCheckbox(choice.checked)} ${choice.name}`;
                 }

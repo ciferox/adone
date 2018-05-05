@@ -4,6 +4,7 @@ const {
         Subsystem,
         DMainCliCommand
     },
+    meta,
     runtime: { term }
 } = adone;
 
@@ -16,6 +17,25 @@ const VIRTUAL_NAMESPACES = [
 ];
 
 const ADONE_GLOBAL = ["adone", "global"];
+
+const getOwnPropertyDescriptor = (obj, propName) => {
+    let descr = Object.getOwnPropertyDescriptor(obj, propName);
+    if (!is.undefined(descr)) {
+        return descr;
+    }
+
+    let o = obj.__proto__;
+    for (; ;) {
+        if (!o) {
+            return undefined;
+        }
+        descr = Object.getOwnPropertyDescriptor(o, propName);
+        if (!is.undefined(descr)) {
+            return descr;
+        }
+        o = o.__proto__;
+    }
+};
 
 export default class Inspection extends Subsystem {
     @DMainCliCommand({
@@ -79,7 +99,7 @@ export default class Inspection extends Subsystem {
                 if (isVirtual && parts[0] !== "adone") {
                     name = `adone.${name}`;
                 }
-                const result = adone.meta.parseName(name);
+                const result = meta.parseName(name);
                 namespace = result.namespace;
                 objectName = result.objectName;
             } else if (parts[0] in global) {
@@ -118,7 +138,7 @@ export default class Inspection extends Subsystem {
 
                 const list = [];
                 for (let [key, value] of util.entries(ns, { onlyEnumerable: false, all: opts.has("all") })) {
-                    const origType = adone.meta.typeOf(value);
+                    const origType = meta.typeOf(value);
                     let type = origType;
 
                     switch (type) {
@@ -205,18 +225,25 @@ export default class Inspection extends Subsystem {
                     }
                     term.print("\n");
                 }
-                // adone.log(adone.meta.inspect(ns, inspectOptions));
-            } else if (adone.lodash.has(ns, objectName)) {
-                const obj = adone.lodash.get(ns, objectName);
-                const type = adone.meta.typeOf(obj);
+                // adone.log(meta.inspect(ns, inspectOptions));
+            } else {
+                const parts = objectName.split(".");
+
+                let obj = ns;
+                for (const part of parts) {
+                    const propDescr = getOwnPropertyDescriptor(obj, part);
+                    if (is.undefined(propDescr)) {
+                        throw new adone.error.Unknown(`Unknown object: ${name}`);
+                    }
+                    obj = obj[part];
+                }
+                const type = meta.typeOf(obj);
 
                 if (type === "function") {
                     adone.log(adone.js.highlight(obj.toString()));
                 } else {
-                    adone.log(adone.meta.inspect(adone.lodash.get(ns, objectName), inspectOptions));
+                    adone.log(meta.inspect(adone.lodash.get(ns, objectName), inspectOptions));
                 }
-            } else {
-                throw new adone.error.Unknown(`Unknown object: ${name}`);
             }
 
             return 0;

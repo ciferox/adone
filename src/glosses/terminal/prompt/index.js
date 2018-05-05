@@ -7,6 +7,7 @@ export default class Prompt {
     constructor(term) {
         this.term = term;
         this.rl = term.readline;
+        this.rl.historySize = 0; // disable history in case of unexpected behaviour
         this.rl.resume();
         this.answers = {};
     }

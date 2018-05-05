@@ -8,11 +8,6 @@ const {
 } = terminal;
 
 export default class InputPrompt extends terminal.BasePrompt {
-    /**
-     * Start the Inquiry session
-     * @param  {Function} cb      Callback when prompt is done
-     * @return {this}
-     */
     _run(cb) {
         this.done = cb;
 

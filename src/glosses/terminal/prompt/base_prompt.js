@@ -2,7 +2,8 @@ const {
     is,
     lodash: _,
     terminal,
-    event
+    event,
+    text: { unicode: { approx, symbol } }
 } = adone;
 
 const {
@@ -217,8 +218,18 @@ export default class BasePrompt {
                 return true;
             },
             suffix: "",
-            prefix: chalk.green("?")
+            prefix: {
+                default: chalk.green("?"),
+                answered: chalk.green(approx(symbol.tick))
+            },
+            spinner: "dots"
         });
+
+        this.spinner = {
+            instance: adone.text.spinner[this.opt.spinner || "dots"],
+            frame: 0,
+            timer: null
+        };
 
         // Check to make sure prompt requirements are there
         if (!this.opt.message) {
@@ -265,12 +276,27 @@ export default class BasePrompt {
     }
 
     async validate(value) {
+        const prevStatus = this.status;
         try {
+            this.status = "validating";
+            if (is.null(this.spinner.timer)) {
+                this.spinner.timer = adone.setInterval(() => {
+                    this.spinner.frame++;
+                    this.render();
+                }, this.spinner.instance.interval);
+            }
+            this.render(); // we need redraw message content to display valid status
             const filteredValue = await this.opt.filter(value, this.answers);
             const isValid = await this.opt.validate(filteredValue, this.answers);
             return { isValid, value: filteredValue };
         } catch (err) {
             return { isValid: err };
+        } finally {
+            this.status = prevStatus;
+            if (!is.null(this.spinner.timer)) {
+                adone.clearInterval(this.spinner.timer);
+                this.spinner.timer = null;
+            }
         }
     }
 
@@ -283,7 +309,20 @@ export default class BasePrompt {
      * @return {String} prompt question string
      */
     getQuestion() {
-        let message = `${this.opt.prefix} ${chalk.bold(this.opt.message)}${this.opt.suffix}${chalk.reset(" ")}`;
+        let prefixCh;
+        if (is.string(this.opt.prefix)) {
+            prefixCh = this.opt.prefix;
+        } else {
+            if (this.status === "answered") {
+                prefixCh = this.opt.prefix.answered;
+            } else if (this.status === "validating") {
+                prefixCh = this.spinner.instance.frames[this.spinner.frame % this.spinner.instance.frames.length];
+            } else {
+                prefixCh = this.opt.prefix.default;
+            }
+        }
+
+        let message = `${prefixCh} ${chalk.bold(this.opt.message)}${this.opt.suffix}${chalk.reset(" ")}`;
 
         // Append the default if available, and if question isn't answered
         if (is.exist(this.opt.default) && this.status !== "answered") {
