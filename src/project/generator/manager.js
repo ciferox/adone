@@ -24,15 +24,15 @@ export default class ProjectGenerator extends task.Manager {
     async loadCustomTasks() {
     }
 
-    async createProject(input) {
+    async createProject(info) {
         const context = {};
-        await this._checkAndCreateProject(input, context);
-        this.contexts.set(input.cwd, context);
+        await this._checkAndCreateProject(info, context);
+        this.contexts.set(info.cwd, context);
         return context;
     }
 
-    async createSubProject(input) {
-        const cwd = std.path.join(this.owner.cwd, is.string(input.dirName) ? input.dirName : input.name);
+    async createSubProject(info) {
+        const cwd = std.path.join(this.owner.cwd, info.dir || info.name);
         const context = {};
 
         await this._checkAndCreateProject({
@@ -40,21 +40,20 @@ export default class ProjectGenerator extends task.Manager {
             description: this.owner.config.raw.description,
             version: this.owner.config.raw.version,
             author: this.owner.config.raw.author,
-            ...input,
+            ...info,
             cwd,
             skipGit: true,
-            skipEslint: true,
             skipJsconfig: true
         }, context);
 
         this.contexts.set(cwd, context);
         
         // Adone parent adone.json
-        const subName = is.string(input.dirName) ? input.dirName : input.name;
+        const subName = info.dir || info.name;
         this.owner.config.set(["struct", subName], std.path.relative(this.owner.cwd, cwd));
         await this.owner.config.save();
 
-        if (is.string(input.type)) {
+        if (is.string(info.type)) {
             // Update parent jsconfig.json if it exists
             if (await fs.exists(std.path.join(this.owner.cwd, configuration.Jsconfig.configName))) {
                 await this.runAndWait("jsconfig", {
@@ -67,21 +66,21 @@ export default class ProjectGenerator extends task.Manager {
         return context;
     }
 
-    async _checkAndCreateProject(input, context) {
-        if (!is.string(input.name)) {
+    async _checkAndCreateProject(info, context) {
+        if (!is.string(info.name)) {
             throw new adone.error.InvalidArgument("Invalid name of project");
         }
 
-        if (await fs.exists(input.cwd)) {
-            const files = await fs.readdir(input.cwd);
+        if (await fs.exists(info.cwd)) {
+            const files = await fs.readdir(info.cwd);
             if (files.length > 0) {
-                throw new adone.error.Exists(`Path '${input.cwd}' exists and is not empty`);
+                throw new adone.error.Exists(`Path '${info.cwd}' exists and contains files`);
             }
         } else {
-            await fs.mkdirp(input.cwd);
+            await fs.mkdirp(info.cwd);
         }
 
-        await this.runAndWait(`${is.string(input.type) ? text.toCamelCase(input.type) : "default"}Project`, input, context);
+        await this.runAndWait(`${is.string(info.type) ? text.toCamelCase(info.type) : "default"}Project`, info, context);
     }
 
     async createFile(input) {

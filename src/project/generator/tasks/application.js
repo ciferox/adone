@@ -36,6 +36,10 @@ app.run({{ name }}Application);
 
 export default class ApplicationTask extends project.generator.task.Base {
     async run(input) {
+        this.manager.notify(this, "progress", {
+            message: "generating application source files"
+        });
+
         if (!is.string(input.name)) {
             throw new adone.error.NotValid("Name should be a valid string");
         }

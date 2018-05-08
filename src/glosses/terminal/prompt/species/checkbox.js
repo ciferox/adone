@@ -16,13 +16,6 @@ const { chalk } = terminal;
 const getCheckbox = (checked) => checked ? chalk.green(symbol.radioOn) : symbol.radioOff;
 
 export default class CheckboxPrompt extends terminal.BasePrompt {
-    /**
-     * Initialize the prompt.
-     *
-     * @param  {terminal.Terminal} term
-     * @param  {Object} questions
-     * @param  {Object} answers
-     */
     constructor(term, questions, answers) {
         super(term, questions, answers);
 
@@ -196,7 +189,7 @@ export default class CheckboxPrompt extends terminal.BasePrompt {
 
         // Answered
         if (this.status === "answered") {
-            message += chalk.cyan(this.selection.join(", "));
+            message += this.term.theme.primary(this.selection.join(", "));
             return this.screen.render(message, bottomContent);
         }
 
@@ -417,9 +410,9 @@ export default class CheckboxPrompt extends terminal.BasePrompt {
             } else {
                 // Is the current choice is the selected choice
                 if (index - separatorOffset === pointer) {
-                    output += chalk.cyan(symbol.pointer);
+                    output += this.term.theme.focus(symbol.pointer);
                     output += `${getCheckbox(choice.checked)} `;
-                    output += chalk.cyan(choice.name);
+                    output += this.term.theme.focus(choice.name);
                 } else {
                     output += ` ${getCheckbox(choice.checked)} ${choice.name}`;
                 }

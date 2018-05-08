@@ -377,7 +377,7 @@ describe("project", function () {
 
                     assert.equal(manager.config.raw.struct.service, "service");
 
-                    const relativeDir = std.path.relative(context.project.cwd, std.path.join(subContext.project.cwd, "src"));
+                    const relativeDir = std.path.relative(context.cwd, std.path.join(subContext.cwd, "src"));
                     const jsconfig = await adone.configuration.Jsconfig.load({
                         cwd
                     });

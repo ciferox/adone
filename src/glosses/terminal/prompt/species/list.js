@@ -12,7 +12,7 @@ const {
  * @param  {Number} pointer Position of the pointer
  * @return {String}         Rendered content
  */
-const listRender = (terminal, choices, pointer) => {
+const listRender = (term, choices, pointer) => {
     let output = "";
     let separatorOffset = 0;
 
@@ -34,7 +34,7 @@ const listRender = (terminal, choices, pointer) => {
         const isSelected = (i - separatorOffset === pointer);
         let line = (isSelected ? `${adone.text.unicode.symbol.pointer} ` : "  ") + choice.name;
         if (isSelected) {
-            line = chalk.cyan(line);
+            line = term.theme.focus(line);
         }
         output += `${line} \n`;
     });
@@ -114,12 +114,12 @@ export default class ListPrompt extends terminal.BasePrompt {
         let message = this.getQuestion();
 
         if (this.firstRender) {
-            message += chalk.dim("(Use arrow keys)");
+            message += this.term.theme.inactive("(Use arrow keys)");
         }
 
         // Render choices or answer depending on the state
         if (this.status === "answered") {
-            message += chalk.cyan(this.choices.getChoice(this.selected).short);
+            message += this.term.theme.primary(this.choices.getChoice(this.selected).short);
         } else {
             const choicesStr = listRender(this.term, this.choices, this.selected);
             const indexPosition = this.choices.indexOf(this.choices.getChoice(this.selected));

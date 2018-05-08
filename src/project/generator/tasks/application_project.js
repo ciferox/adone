@@ -5,27 +5,31 @@ const {
 } = adone;
 
 export default class ApplicationProjectTask extends project.generator.task.Base {
-    async run(input, context) {
+    async run(info, context) {
         await this.runTask("defaultProject", {
-            ...input,
+            ...info,
             skipGit: true
         }, context);
         // Fix 'skipGit' flag
-        context.flag.skipGit = input.skipGit;
+        context.flag.skipGit = info.skipGit;
 
-        const srcPath = std.path.join(input.cwd, "src");
+        this.manager.notify(this, "progress", {
+            message: "initializing application project"
+        });
+
+        const srcPath = std.path.join(info.cwd, "src");
 
         await fs.mkdirp(srcPath);
 
         await this.runTask("application", {
-            name: input.name,
+            name: info.name,
             fileName: "app.js",
             cwd: srcPath
         }, context);
 
         // Update adone config
         await this.runTask("adoneConfig", {
-            cwd: input.cwd,
+            cwd: info.cwd,
             struct: {
                 app: {
                     task: "transpileExe",
@@ -45,14 +49,14 @@ export default class ApplicationProjectTask extends project.generator.task.Base 
             main: "lib"
         }, context);
 
-        if (!input.skipJsconfig) {
+        if (!info.skipJsconfig) {
             await this.runTask("jsconfig", {
-                cwd: input.cwd,
+                cwd: info.cwd,
                 include: ["src"]
             }, context);
         }
 
-        if (!input.skipGit) {
+        if (!info.skipGit) {
             await this.runTask("git", {}, context);
         }
     }

@@ -8,6 +8,10 @@ const {
 
 export default class JsconfigTask extends project.generator.task.Base {
     async run({ cwd, include, exclude } = {}, context) {
+        this.manager.notify(this, "progress", {
+            message: "updating {bold}jsconfig.json{/bold}"
+        });
+
         const config = new configuration.Jsconfig({
             cwd
         });
@@ -19,11 +23,14 @@ export default class JsconfigTask extends project.generator.task.Base {
                 compilerOptions: {
                     target: "es6",
                     experimentalDecorators: true
-                },
-                exclude: [
-                    "node_modules"
-                ]
+                }
             };
+
+            if (!context.flag.skipNpm) {
+                config.raw.exclude = [
+                    "node_modules"
+                ];
+            }
         }
 
         if (is.array(include)) {

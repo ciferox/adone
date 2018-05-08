@@ -17,4 +17,3 @@ adone.lazify({
     GlossProject: "./gloss_project",
     Git: "./git"
 }, adone.asNamespace(exports), require);
-

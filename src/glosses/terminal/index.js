@@ -1,6 +1,6 @@
 const {
     is,
-    std: { fs, string_decoder }
+    std: { fs, string_decoder: stringDecoder }
 } = adone;
 
 const env = process.env;
@@ -1412,7 +1412,7 @@ export class Terminfo {
                 // Are we supposed to store the result on the stack?
                 expr(`(stack.push(v = (stack.pop() ${
                     ch === "A" ? "&&" : "||"
-                } stack.pop())), v)`);
+                    } stack.pop())), v)`);
                 continue;
             }
 
@@ -4153,6 +4153,16 @@ const getColorsInfo = function (stream) {
     };
 };
 
+
+const DEFAULT_THEME = adone.lazify({
+    primary: () => __.chalkify("#388E3C"),
+    secondary: () => __.chalkify("#2196F3"),
+    accent: () => __.chalkify("#7C4DFF"),
+    focus: () => __.chalkify("#009688"),
+    inactive: () => __.chalkify("#616161"),
+    error: () => __.chalkify("#D32F2F")
+}, null);
+
 export class Terminal extends adone.event.Emitter {
     constructor() {
         super();
@@ -4174,6 +4184,7 @@ export class Terminal extends adone.event.Emitter {
         this.scrollTop = 0;
         this._buf = "";
         this._flush = this.flush.bind(this);
+        this.theme = DEFAULT_THEME;
 
         this.initialize();
 
@@ -4199,7 +4210,7 @@ export class Terminal extends adone.event.Emitter {
 
         // xterm and rxvt - not accurate
         stats.isRxvt = /rxvt/i.test(env.COLORTERM);
-        
+
         stats.stdout = getColorsInfo(process.stdout);
         stats.stderr = getColorsInfo(process.stderr);
 
@@ -4266,6 +4277,32 @@ export class Terminal extends adone.event.Emitter {
             this._rl.pause();
             this._rl.close();
             this._rl = null;
+        }
+    }
+
+    setTheme(theme) {
+        this.theme = theme;
+    }
+
+    async syncCursor() {
+        let needRestore = false;
+        if (!this.input.isRaw) {
+            this.input.setRawMode(true);
+            this.input.resume();
+            needRestore = true;
+        }
+
+        this.input.once("data", (data) => {
+            this.emit("data", data);
+        });
+
+        const result = await adone.runtime.term.getCursorPos();
+        this.x = result.x - 1;
+        this.y = result.y - 1;
+
+        if (needRestore) {
+            this.input.setRawMode(false);
+            this.input.pause();
         }
     }
 
@@ -4669,7 +4706,7 @@ export class Terminal extends adone.event.Emitter {
             if (this.input._keypressDecoder) {
                 return;
             }
-            this.input._keypressDecoder = new string_decoder.StringDecoder("utf8");
+            this.input._keypressDecoder = new stringDecoder.StringDecoder("utf8");
 
             let onNewListener;
             const onData = (b) => {
@@ -4742,7 +4779,7 @@ export class Terminal extends adone.event.Emitter {
     setupDump() {
         const self = this;
         const write = this.output.write;
-        const decoder = new string_decoder.StringDecoder("utf8");
+        const decoder = new stringDecoder.StringDecoder("utf8");
 
         function stringify(data) {
             return caret(data
@@ -4952,7 +4989,7 @@ export class Terminal extends adone.event.Emitter {
         }
         this._boundMouse = true;
 
-        const decoder = new string_decoder.StringDecoder("utf8");
+        const decoder = new stringDecoder.StringDecoder("utf8");
 
         this.on("data", (data) => {
             let text = decoder.write(data);
@@ -5431,7 +5468,7 @@ export class Terminal extends adone.event.Emitter {
         }
         this._boundResponse = true;
 
-        const decoder = new string_decoder.StringDecoder("utf8");
+        const decoder = new stringDecoder.StringDecoder("utf8");
 
         this.on("data", (data) => {
             data = decoder.write(data);
@@ -6549,8 +6586,8 @@ export class Terminal extends adone.event.Emitter {
         if (is.function(callback)) {
             this.deviceStatus(6, callback, false, true);
         }
-        return new Promise((resolve) => {
-            this.deviceStatus(6, resolve, false, true);
+        return new Promise((resolve, reject) => {
+            this.deviceStatus(6, (err, result) => err ? reject(err) : resolve(result), false, true);
         });
     }
 

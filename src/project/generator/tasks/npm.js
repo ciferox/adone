@@ -4,31 +4,42 @@ const {
     is,
     std,
     project,
-    text,
     util,
+    runtime: { term },
     system: { process: { exec } }
 } = adone;
 
 export default class NpmTask extends project.generator.task.Base {
-    async run({ cwd, dependencies, devDependencies } = {}, context) {
-        const config = new configuration.Npm({
-            cwd
+    async run(info, command, data, context) {
+        this.manager.notify(this, "progress", {
+            message: "{bold}npm:{/bold} initializing"
         });
-        const npmPackagePath = std.path.join(cwd, "package.json");
+
+        this.cwd = info.cwd;
+        const config = this.config = new configuration.Npm({
+            cwd: info.cwd
+        });
+        const npmPackagePath = std.path.join(info.cwd, "package.json");
         if (await fs.exists(npmPackagePath)) {
             await config.load();
         } else {
             config.assign({
                 license: "MIT",
-                engines: {
-                    node: ">=8.0.0"
-                },
-                dependencies: {}
-            }, util.pick(context.project, ["name", "version", "description", "author"]));
+                dependencies: {},
+                devDependencies: {}
+            }, util.pick(info, ["name", "version", "description", "author"]));
 
             await config.save();
         }
 
+        switch (command) {
+            case "install":
+                await this._install(data, context);
+                break;
+        }
+    }
+
+    async _install({ dependencies, devDependencies } = {}, context) {
         const packages = [];
 
         if (is.array(dependencies)) {
@@ -62,18 +73,14 @@ export default class NpmTask extends project.generator.task.Base {
         }
 
         for (const pkg of packages) {
-            // eslint-disable-next-line
-            const result = await exec("npm", pkg.args, {
-                cwd
+            this.manager.notify(this, "progress", {
+                message: `{bold}npm:{/bold} executing ${term.theme.accent(`npm ${pkg.args.join(" ")}`)}`
             });
 
-            if (context.flag.skipNpm) {
-                config.set([pkg.section, pkg.name], `^${text.stripLastCRLF(result.stdout)}`);
-            }
-        }
-
-        if (context.flag.skipNpm) {
-            await config.save();
+            // eslint-disable-next-line
+            const result = await exec("npm", pkg.args, {
+                cwd: this.cwd
+            });
         }
     }
 }

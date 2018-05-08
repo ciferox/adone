@@ -4,7 +4,8 @@ const {
     fs,
     std,
     task,
-    project
+    project,
+    runtime: { term }
 } = adone;
 
 const checkEntry = (entry) => {
@@ -26,17 +27,19 @@ export default class ProjectManager extends task.Manager {
         this.cwd = cwd;
         this.config = null;
         this._loaded = false;
-        this.silent = false;
         this.GeneratorClass = project.generator.Manager;
         this.generator = null;
     }
 
-    useGenerator(GeneratorClass) {
-        this.GeneratorClass = GeneratorClass;
+    async onNotification(selector, observer) {
+        await super.onNotification(selector, observer);
+
+        const generator = await this.getGenerator();
+        await generator.onNotification(selector, observer);
     }
 
-    setSilent(silent) {
-        this.silent = silent;
+    useGenerator(GeneratorClass) {
+        this.GeneratorClass = GeneratorClass;
     }
 
     getVersion() {
@@ -78,24 +81,33 @@ export default class ProjectManager extends task.Manager {
         this._loaded = true;
     }
 
-    async createProject(options) {
+    async createProject(info) {
         const generator = await this.getGenerator();
         const context = await generator.createProject({
-            ...options,
+            ...info,
             cwd: this.cwd
         });
 
         await this.load();
+
+        this.notify(this, "progress", {
+            message: `project ${term.theme.primary.bold(info.name)} successfully created`,
+            result: true
+        });
         return context;
     }
 
-    async createSubProject(input) {
+    async createSubProject(info) {
         this._checkLoaded();
         const generator = await this.getGenerator();
-        const context = await generator.createSubProject(input);
+        const context = await generator.createSubProject(info);
         await this.config.load();
-        return context;
 
+        this.notify(this, "progress", {
+            message: `sub project ${term.theme.primary.bold(info.name)} successfully created`,
+            result: true
+        });
+        return context;
     }
 
     async createFile(input) {
@@ -204,8 +216,8 @@ export default class ProjectManager extends task.Manager {
 
     _getEntries(path) {
         const entries = this.config.getEntries(path);
-        if (entries.length === 0 && !this.silent) {
-            adone.logInfo(`No entries'${is.string(path) ? ` for ${path}` : ""}'`);
+        if (entries.length === 0) {
+            this.notify(null, "logInfo", `No entries'${is.string(path) ? ` for ${path}` : ""}'`);
         }
 
         return entries.filter(checkEntry);

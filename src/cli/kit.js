@@ -21,9 +21,9 @@ class CliKit extends app.Subsystem {
         this._silent = silent;
     }
 
-    observeProgress(taskManager) {
-        this.createProgress("initializing");
-        taskManager.onNotification("progress", (task, name, info) => {
+    async observeProgress(taskManager) {
+        this.createProgress("preparing");
+        await taskManager.onNotification("progress", (task, name, info) => {
             this.updateProgress(info);
         });
     }
@@ -49,7 +49,7 @@ class CliKit extends app.Subsystem {
         let options;
         if (is.string(message)) {
             options = {
-                schema: ` :spinner ${message}`
+                schema: `:spinner ${message}`
             };
         } else {
             options = message;
@@ -63,9 +63,9 @@ class CliKit extends app.Subsystem {
     updateProgress({ schema, message, result = null, clean = false } = {}) {
         if (!is.null(this._bar) && !this._silent) {
             if (is.string(message)) {
-                schema = ` :spinner ${message}`;
+                schema = `:spinner ${message}`;
             } else if (!is.string(schema)) {
-                schema = " :spinner";
+                schema = ":spinner";
             }
             this._bar.setSchema(schema);
             if (is.boolean(result)) {

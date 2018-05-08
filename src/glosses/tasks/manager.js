@@ -177,30 +177,24 @@ export default class TaskManager extends adone.event.AsyncEmitter {
     /**
      * Emit notification from task
      * 
-     * @param {adone.task.Task} task - task instance
+     * @param {*} sender - notification sender
      * @param {string} name - notification name
      * @param {array} args - notification arguments
      */
-    notify(task, name, ...args) {
-        if (!is.task(task)) {
-            throw new error.NotValid("Invalid task instance");
-        } else if (task.manager !== this) {
-            throw new error.NotAllowed("Post notification is not allowed from tasks owned by other manager");
-        }
-
+    notify(sender, name, ...args) {
         const observers = this[NOTIFICATIONS_SYMBOL].get(name);
         if (is.array(observers)) {
             for (const info of observers) {
-                if (info.filter(task, name)) {
-                    info.observer(task, name, ...args);
+                if (info.filter(sender, name)) {
+                    info.observer(sender, name, ...args);
                 }
             }
         }
 
         const any = this[NOTIFICATIONS_SYMBOL].get(ANY_NOTIFICATION);
         for (const info of any) {
-            if (info.filter(task, name)) {
-                info.observer(task, name, ...args);
+            if (info.filter(sender, name)) {
+                info.observer(sender, name, ...args);
             }
         }
     }

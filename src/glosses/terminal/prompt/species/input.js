@@ -42,15 +42,15 @@ export default class InputPrompt extends terminal.BasePrompt {
         const transformer = this.opt.transformer;
 
         if (this.status === "answered") {
-            message += chalk.cyan(this.answer);
+            message += this.term.theme.primary(this.answer);
         } else if (transformer) {
-            message += transformer(this.term.readline.line, this.answers);
+            message += this.term.theme.focus(transformer(this.term.readline.line, this.answers));
         } else {
-            message += this.term.readline.line;
+            message += this.term.theme.focus(this.term.readline.line);
         }
 
         if (error) {
-            bottomContent = chalk.red(">> ") + error;
+            bottomContent = this.term.theme.error(">> ") + error;
         }
 
         this.screen.render(message, bottomContent);

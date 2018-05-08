@@ -122,7 +122,7 @@ class ScreenManager {
             content += "\n";
         }
         const fullContent = content + (bottomContent ? `\n${bottomContent}` : "");
-        this.rl.output.write(fullContent);
+        this.term.output.write(fullContent);
 
         /**
          * Re-adjust the cursor at the correct position.
@@ -163,7 +163,7 @@ class ScreenManager {
     done() {
         this.rl.setPrompt("");
         this.rl.output.unmute();
-        this.rl.output.write("\n");
+        this.term.output.write("\n");
     }
 
     releaseCursor() {
@@ -219,8 +219,8 @@ export default class BasePrompt {
             },
             suffix: "",
             prefix: {
-                default: chalk.green("?"),
-                answered: chalk.green(approx(symbol.tick))
+                default: term.theme.focus("?"),
+                answered: term.theme.primary(approx(symbol.tick))
             },
             spinner: "dots"
         });
@@ -326,7 +326,7 @@ export default class BasePrompt {
 
         // Append the default if available, and if question isn't answered
         if (is.exist(this.opt.default) && this.status !== "answered") {
-            message += chalk.dim(`(${this.opt.default}) `);
+            message += this.term.theme.inactive(`(${this.opt.default}) `);
         }
 
         return message;

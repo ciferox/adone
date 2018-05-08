@@ -4,10 +4,6 @@ const {
     terminal
 } = adone;
 
-const {
-    chalk
-} = terminal;
-
 export default class ConfirmPrompt extends terminal.BasePrompt {
     constructor(term, question, answers) {
         super(term, question, answers);
@@ -64,7 +60,7 @@ export default class ConfirmPrompt extends terminal.BasePrompt {
         let message = this.getQuestion();
 
         if (is.boolean(answer)) {
-            message += chalk.cyan(answer ? "Yes" : "No");
+            message += this.term.theme.primary(answer ? "Yes" : "No");
         } else {
             message += this.term.readline.line;
         }

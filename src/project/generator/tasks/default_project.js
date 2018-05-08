@@ -1,34 +1,42 @@
 const {
+    is,
     project
 } = adone;
 
 export default class DefaultProjectTask extends project.generator.task.Base {
-    async run(input, context) {
-        // Define initial context data
-        context.flag = {
-            skipGit: false,
-            skipNpm: false,
-            skipJsconfig: false,
-            skipEslint: false,
-            ...adone.util.pick(input, ["skipGit", "skipNpm", "skipJsconfig", "skipEslint"])
-        };
-        context.project = adone.util.pick(input, ["name", "type", "description", "version", "author", "cwd"]);
-        
+    async run(info, context) {
+        this.manager.notify(this, "progress", {
+            message: "{bold}default project:{/bold} initializing"
+        });
+
         const tasks = ["adoneConfig"];
 
-        if (!context.flag.skipJsconfig) {
-            tasks.push("jsconfig");
+        if (is.object(context)) {
+            // Define initial context data
+            context.cwd = info.cwd;
+            
+            context.flag = {
+                skipGit: false,
+                skipNpm: false,
+                skipJsconfig: false,
+                skipEslint: false,
+                ...adone.util.pick(info, ["skipGit", "skipNpm", "skipJsconfig", "skipEslint"])
+            };
+
+            if (!context.flag.skipJsconfig) {
+                tasks.push("jsconfig");
+            }
+
+            if (!context.flag.skipEslint) {
+                tasks.push("eslint");
+            }
+
+            if (!context.flag.skipGit) {
+                tasks.push("git");
+            }
         }
 
-        if (!context.flag.skipEslint) {
-            tasks.push("eslint");
-        }
-
-        if (!context.flag.skipGit) {
-            tasks.push("git");
-        }
-
-        const observer = await this.manager.runInSeries(tasks, null, input, context);
+        const observer = await this.manager.runInSeries(tasks, null, info, context);
         return observer.result;
     }
 }

@@ -28,7 +28,7 @@ const listRender = (term, choices, pointer) => {
         let line = (isSelected ? `${adone.text.unicode.symbol.pointer} ` : "  ") + choice.name;
 
         if (isSelected) {
-            line = chalk.cyan(line);
+            line = term.theme.focus(line);
         }
         output += `${line} \n`;
     });
@@ -101,25 +101,25 @@ export default class AutocompletePrompt extends terminal.BasePrompt {
 
         if (this.firstRender) {
             const suggestText = this.opt.suggestOnly ? ", tab to autocomplete" : "";
-            content += chalk.dim(`(Use arrow keys or type to search${suggestText})`);
+            content += this.term.theme.inactive(`(Use arrow keys or type to search${suggestText})`);
         }
         // Render choices or answer depending on the state
         if (this.status === "answered") {
-            content += chalk.cyan(this.shortAnswer || this.answerName || this.answer);
+            content += this.term.theme.primary(this.shortAnswer || this.answerName || this.answer);
         } else if (this.searching) {
-            content += this.rl.line;
-            bottomContent += `  ${chalk.dim("Searching...")}`;
+            content += this.term.theme.focus(this.rl.line);
+            bottomContent += `  ${this.term.theme.inactive("Searching...")}`;
         } else if (this.currentChoices.length) {
             const choicesStr = listRender(this.term, this.currentChoices, this.selected);
-            content += this.rl.line;
+            content += this.term.theme.focus(this.rl.line);
             bottomContent += this.paginator.paginate(choicesStr, this.selected, this.opt.pageSize);
         } else {
-            content += this.rl.line;
+            content += this.term.theme.focus(this.rl.line);
             bottomContent += `  ${chalk.yellow("No results...")}`;
         }
 
         if (error) {
-            bottomContent += `\n${chalk.red(">> ")}${error}`;
+            bottomContent += `\n${this.term.theme.error(">> ")}${error}`;
         }
 
         this.firstRender = false;
@@ -249,7 +249,6 @@ export default class AutocompletePrompt extends terminal.BasePrompt {
             this.selected = (this.selected < len - 1) ? this.selected + 1 : 0;
             this.ensureSelectedInRange();
             this.render();
-            this.rl.output.write(this.term.terminfo.up(2));
         } else if (keyName === "up") {
             len = this.currentChoices.length;
             this.selected = (this.selected > 0) ? this.selected - 1 : len - 1;

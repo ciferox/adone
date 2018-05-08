@@ -8,8 +8,8 @@ const {
 } = adone;
 
 export default class AdoneConfigTask extends project.generator.task.Base {
-    async run(input, context) {
-        const cwd = input.cwd;
+    async run(info, context) {
+        const cwd = info.cwd;
         const config = new configuration.Adone({
             cwd
         });
@@ -17,12 +17,16 @@ export default class AdoneConfigTask extends project.generator.task.Base {
         if (await fs.exists(configPath)) {
             await config.load();
         } else {
-            config.merge(util.pick(context.project, ["name", "description", "version", "author", "type"]));
+            config.merge(util.pick(context, ["name", "description", "version", "author"]));
         }
 
-        if (is.plainObject(input)) {
+        if (is.plainObject(info)) {
             // Update config
-            config.merge(util.pick(input, ["name", "description", "version", "author", "type", "struct", "bin", "main"]));
+            config.merge(util.pick(info, ["name", "description", "version", "author", "struct", "bin", "main"]));
+        }
+
+        if (info.type && info.type !== "default") {
+            config.set("type", info.type);
         }
         return config.save();
     }
