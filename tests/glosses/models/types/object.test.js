@@ -556,7 +556,7 @@ describe("object", () => {
                     message: '"foo" must be one of [context:x]',
                     path: ["foo"],
                     type: "any.allowOnly",
-                    context: { valids: [ref], label: "foo", key: "foo" }
+                    context: { value: "bar", valids: [ref], label: "foo", key: "foo" }
                 }]
             }],
             [{ foo: "bar" }, false, { context: { x: ["baz", "qux"] } }, {
@@ -565,7 +565,7 @@ describe("object", () => {
                     message: '"foo" must be one of [context:x]',
                     path: ["foo"],
                     type: "any.allowOnly",
-                    context: { valids: [ref], label: "foo", key: "foo" }
+                    context: { value: "bar", valids: [ref], label: "foo", key: "foo" }
                 }]
             }],
             [{ foo: "bar" }, false, null, {
@@ -574,7 +574,7 @@ describe("object", () => {
                     message: '"foo" must be one of [context:x]',
                     path: ["foo"],
                     type: "any.allowOnly",
-                    context: { valids: [ref], label: "foo", key: "foo" }
+                    context: { value: "bar", valids: [ref], label: "foo", key: "foo" }
                 }]
             }]
         ]);
@@ -727,7 +727,7 @@ describe("object", () => {
                         message: '"a" must be one of [1]',
                         path: ["a"],
                         type: "any.allowOnly",
-                        context: { valids: [1], label: "a", key: "a" }
+                        context: { value: 2, valids: [1], label: "a", key: "a" }
                     }]
                 }]
             ]);
@@ -1599,7 +1599,7 @@ describe("object", () => {
                     message: '"bb" must be one of [x]',
                     path: ["bb"],
                     type: "any.allowOnly",
-                    context: { valids: ["x"], label: "bb", key: "bb" }
+                    context: { value: "y", valids: ["x"], label: "bb", key: "bb" }
                 }
             ]);
 
@@ -1659,7 +1659,7 @@ describe("object", () => {
                     message: '"bb" must be one of [x]',
                     path: ["x", "bb"],
                     type: "any.allowOnly",
-                    context: { valids: ["x"], label: "bb", key: "bb" }
+                    context: { value: "y", valids: ["x"], label: "bb", key: "bb" }
                 }
             ]);
         });

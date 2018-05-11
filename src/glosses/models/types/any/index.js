@@ -17,7 +17,7 @@ const __ = adone.lazify({
         const {
             model
         } = adone;
-        
+
         return model.object({
             abortEarly: model.boolean(),
             convert: model.boolean(),
@@ -102,7 +102,7 @@ export default class Any {
         return Errors.create(type, context, state, options, this._flags, message, template);
     }
 
-    checkOptions(options) {        
+    checkOptions(options) {
         const result = __.schemas.validate(options);
         if (result.error) {
             throw new Error(result.error.details[0].message);
@@ -584,7 +584,7 @@ export default class Any {
         }
 
         if (this._invalids.has(value, state, options, this._flags.insensitive)) {
-            errors.push(this.createError(value === "" ? "any.empty" : "any.invalid", null, state, options));
+            errors.push(this.createError(value === "" ? "any.empty" : "any.invalid", { value, invalids: this._invalids.values({ stripUndefined: true }) }, state, options));
             if (options.abortEarly ||
                 is.undefined(value)) { // No reason to keep validating missing value
 
@@ -612,7 +612,7 @@ export default class Any {
                 }
 
                 if (this._invalids.has(value, state, options, this._flags.insensitive)) {
-                    errors.push(this.createError(value === "" ? "any.empty" : "any.invalid", null, state, options));
+                    errors.push(this.createError(value === "" ? "any.empty" : "any.invalid", { value, invalids: this._invalids.values({ stripUndefined: true }) }, state, options));
                     if (options.abortEarly) {
                         return finish();
                     }
@@ -623,13 +623,13 @@ export default class Any {
         // Required values did not match
 
         if (this._flags.allowOnly) {
-            errors.push(this.createError("any.allowOnly", { valids: this._valids.values({ stripUndefined: true }) }, state, options));
+            errors.push(this.createError("any.allowOnly", { value, valids: this._valids.values({ stripUndefined: true }) }, state, options));
             if (options.abortEarly) {
                 return finish();
             }
         }
 
-        // Helper.validate tests
+        // Validate tests
 
         for (let i = 0; i < this._tests.length; ++i) {
             const test = this._tests[i];

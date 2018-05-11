@@ -74,7 +74,7 @@ describe("number", () => {
                 message: '"value" contains an invalid value',
                 path: [],
                 type: "any.invalid",
-                context: { label: "value", key: undefined }
+                context: { value: 50, invalids: [Infinity, -Infinity, 50], label: "value", key: undefined }
             }]);
         });
 
@@ -133,7 +133,7 @@ describe("number", () => {
                         message: '"value" contains an invalid value',
                         path: [],
                         type: "any.invalid",
-                        context: { label: "value", key: undefined }
+                        context: { value: Infinity, invalids: [Infinity, -Infinity], label: "value", key: undefined }
                     }]
                 }],
                 [-Infinity, false, null, {
@@ -142,7 +142,7 @@ describe("number", () => {
                         message: '"value" contains an invalid value',
                         path: [],
                         type: "any.invalid",
-                        context: { label: "value", key: undefined }
+                        context: { value: -Infinity, invalids: [Infinity, -Infinity], label: "value", key: undefined }
                     }]
                 }]
             ]);
@@ -571,7 +571,7 @@ describe("number", () => {
                         message: '"value" contains an invalid value',
                         path: [],
                         type: "any.invalid",
-                        context: { label: "value", key: undefined }
+                        context: { value: 1, invalids: [Infinity, -Infinity, 1], label: "value", key: undefined }
                     }]
                 }],
                 [-1, true],
@@ -601,7 +601,7 @@ describe("number", () => {
                         message: '"value" contains an invalid value',
                         path: [],
                         type: "any.invalid",
-                        context: { label: "value", key: undefined }
+                        context: { value: -5, invalids: [Infinity, -Infinity, -5], label: "value", key: undefined }
                     }]
                 }],
                 [8, false, null, {
@@ -695,7 +695,7 @@ describe("number", () => {
                         message: '"value" contains an invalid value',
                         path: [],
                         type: "any.invalid",
-                        context: { label: "value", key: undefined }
+                        context: { value: 9, invalids: [Infinity, -Infinity, 9], label: "value", key: undefined }
                     }]
                 }],
                 [null, false, null, {
@@ -731,7 +731,7 @@ describe("number", () => {
                         message: '"value" contains an invalid value',
                         path: [],
                         type: "any.invalid",
-                        context: { label: "value", key: undefined }
+                        context: { value: 9, invalids: [Infinity, -Infinity, 9], label: "value", key: undefined }
                     }]
                 }],
                 [null, true]
@@ -857,7 +857,7 @@ describe("number", () => {
                         message: '"value" contains an invalid value',
                         path: [],
                         type: "any.invalid",
-                        context: { label: "value", key: undefined }
+                        context: { value: 8, invalids: [Infinity, -Infinity, 8], label: "value", key: undefined }
                     }]
                 }],
                 [9, true],
@@ -911,7 +911,7 @@ describe("number", () => {
                         message: '"value" contains an invalid value',
                         path: [],
                         type: "any.invalid",
-                        context: { label: "value", key: undefined }
+                        context: { value: 8, invalids: [Infinity, -Infinity, 8], label: "value", key: undefined }
                     }]
                 }],
                 [9, true],
@@ -1004,7 +1004,7 @@ describe("number", () => {
                         message: '"value" contains an invalid value',
                         path: [],
                         type: "any.invalid",
-                        context: { label: "value", key: undefined }
+                        context: { value: 8, invalids: [Infinity, -Infinity, 8], label: "value", key: undefined }
                     }]
                 }],
                 [9, true],
@@ -1251,7 +1251,7 @@ describe("number", () => {
                         message: '"value" contains an invalid value',
                         path: [],
                         type: "any.invalid",
-                        context: { label: "value", key: undefined }
+                        context: { value: 6, invalids: [Infinity, -Infinity, 6], label: "value", key: undefined }
                     }]
                 }],
                 [8, true],
@@ -1381,7 +1381,7 @@ describe("number", () => {
                         message: '"c" must be one of [0]',
                         path: ["c"],
                         type: "any.allowOnly",
-                        context: { valids: [0], label: "c", key: "c" }
+                        context: { value: 42, valids: [0], label: "c", key: "c" }
                     }]
                 }],
                 [{ a: 2, b: 1, c: 42 }, false, null, {
@@ -1390,7 +1390,7 @@ describe("number", () => {
                         message: '"c" must be one of [0]',
                         path: ["c"],
                         type: "any.allowOnly",
-                        context: { valids: [0], label: "c", key: "c" }
+                        context: { value: 42, valids: [0], label: "c", key: "c" }
                     }]
                 }]
             ]);
@@ -2081,7 +2081,7 @@ describe("number", () => {
                         message: '"c" must be one of [0]',
                         path: ["c"],
                         type: "any.allowOnly",
-                        context: { valids: [0], label: "c", key: "c" }
+                        context: { value: 42, valids: [0], label: "c", key: "c" }
                     }]
                 }]
             ]);
