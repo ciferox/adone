@@ -10,7 +10,7 @@ export default class TransformTask extends adone.project.task.Base {
     }
 
     /**
-     * This method in which you can define the options that will be used in the fast stream
+     * Override this method to define options for fast stream.
      */
     streamOptions() {
         return {
@@ -24,10 +24,9 @@ export default class TransformTask extends adone.project.task.Base {
         }
 
         this.stream = this.transform(this.stream, params);
-        if (!this.manager.silent) {
-            this.notify(this.stream, params);
-            this.notifyError(this.stream, params);
-        }
+        
+        this.notify(this.stream, params);
+        this.notifyError(this.stream, params);
     }
 
     main(params) {
@@ -43,8 +42,9 @@ export default class TransformTask extends adone.project.task.Base {
     notify(stream, params) {
         if (is.fastLocalStream(stream)) {
             stream.notify({
+                gui: false,
                 onLast: true,
-                title: params.id,
+                title: `${this.manager.config.raw.name}.${params.id}`,
                 filter: null,
                 message: params.task
             });
@@ -54,7 +54,7 @@ export default class TransformTask extends adone.project.task.Base {
     notifyError(stream, params) {
         if (is.fastLocalStream(stream)) {
             const notify = fast.plugin.notify.onError({
-                title: params.id,
+                title: `${this.manager.config.raw.name}.${params.id}`,
                 message: (error) => error.message
             });
             stream.on("error", (err) => {

@@ -39,8 +39,6 @@ export default class CleanTask extends adone.project.task.Base {
             cwd: this.manager.cwd
         });
 
-        if (!this.manager.silent) {
-            adone.logInfo(`[${params.id}] ${params.task}`);
-        }
+        this.logInfo(`[${params.id}] ${params.task}`);
     }
 }

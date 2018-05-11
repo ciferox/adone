@@ -18,10 +18,6 @@ export default class NCleanTask extends adone.project.task.Base {
             await fs.rmEmpty(adone.util.globParent(params.native.dst), {
                 cwd: this.manager.cwd
             });
-
-            if (!this.manager.silent) {
-                adone.logInfo(`[${params.id}] nclean`);
-            }
         } else {
             // Remove build directory from src
             const cwd = process.cwd();
@@ -46,5 +42,7 @@ export default class NCleanTask extends adone.project.task.Base {
                 cwd: this.manager.cwd
             });
         }
+
+        this.logInfo(`[${params.id}] nclean`);
     }
 }

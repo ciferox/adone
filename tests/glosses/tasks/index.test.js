@@ -1157,5 +1157,36 @@ describe("task", () => {
 
             assert.strictEqual(i, 3);
         });
+
+        describe("standart notifications", () => {
+            class TaskWithLoggers extends task.Task {
+                async run() {
+                    this.log(".log");
+                    this.logFatal(".logFatal");
+                    this.logError(".logError");
+                    this.logWarn(".logWarn");
+                    this.logInfo(".logInfo");
+                    this.logDebug(".logDebug");
+                    this.logTrace(".logTrace");
+                }
+            }
+
+            const names = ["log", "logFatal", "logError", "logWarn", "logInfo", "logDebug", "logTrace"];
+            for (const name of names) {
+                // eslint-disable-next-line
+                it(`${name} notification`, async (done) => {
+                    await manager.addTask("1", TaskWithLoggers);
+
+                    manager.onNotification(name, (sender, nn, ...args) => {
+                        assert.strictEqual(`.${name}`, args[0]);
+                        done();
+                    });
+
+                    await (await manager.run("1")).result;
+
+                    await adone.promise.delay(100);
+                });
+            }
+        });
     });
 });

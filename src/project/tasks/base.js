@@ -45,6 +45,6 @@ export default class BaseTask extends task.Task {
      * @param {Error} err
      */
     error(err) {
-        adone.logError(err);
+        this.logError(err);
     }
 }

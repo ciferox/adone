@@ -23,20 +23,18 @@ export default ({
             await startOmnitron();
         }
         omnitronDb = await omnitron2.dispatcher.getDB();
+        networksConfig = await omnitronDb.getConfiguration("networks");
         // const iConfig = await iOmnitron.getConfiguration();
         // await iConfig.set("gates", []);
     });
 
     after(async () => {
+        await networksConfig.clear();
         if (is.function(stopOmnitron)) {
             await stopOmnitron();
         } else {
             await omnitron2.DB.close();
         }
-    });
-
-    beforeEach(async () => {
-        networksConfig = await omnitronDb.getConfiguration("networks");
     });
 
     it("no networks on initial", async () => {

@@ -243,7 +243,8 @@ const fs = adone.lazify({
     createWriteStream: () => (path, options) => std.fs.createWriteStream(path, options),
     fuse: "./fuse",
     tmpName: "./tmp_name",
-    writeFileAtomic: "./write_file_atomic"
+    writeFileAtomic: "./write_file_atomic",
+    upath: "./upath"
 }, adone.asNamespace(exports), require);
 
 const expandReadOptions = (options = {}) => is.string(options) ? { encoding: options } : options;

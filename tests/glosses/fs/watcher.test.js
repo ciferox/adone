@@ -407,17 +407,19 @@ describe("fs", "watcher", function watcherTests() {
                 await sleep(); // the directory is going to be watched
             });
 
-            it("should detect unlink and re-add", async () => {
+            it.todo("should detect unlink and re-add", async () => {
                 options.ignoreInitial = true;
                 const unlink = spy();
                 const add = spy();
                 const ready = spy();
                 const file = fixtures.getFile("unlink.txt");
-                watcher = watch(file.path(), options)
+                watcher = watch([file.path(), `${file.path()}.does-not-exist`], options)
                     .on("unlink", unlink)
                     .on("add", add)
                     .on("ready", ready);
                 await ready.waitForCall();
+
+                
                 await sleep();
                 await Promise.all([
                     sleep().then(() => file.unlink()),
@@ -426,6 +428,7 @@ describe("fs", "watcher", function watcherTests() {
 
                 expect(unlink.callCount).to.be.equal(1);
                 expect(unlink.getCall(0).args[0]).to.be.equal(file.path());
+                
                 await sleep();
                 await Promise.all([
                     sleep().then(() => file.write("re-added")),
@@ -1846,6 +1849,66 @@ describe("fs", "watcher", function watcherTests() {
                         all.waitForArgs("unlink", file.filename())
                     ]);
                     expect(all).not.to.have.been.calledWith("change", file.filename());
+                });
+
+                describe("race condition", () => {
+                    // Reproduces bug https://github.com/paulmillr/chokidar/issues/546, which was causing an
+                    // uncaught exception. The race condition is likelier to happen when stat() is slow.
+                    const _fs = require("fs");
+                    const _realStat = _fs.stat;
+                    let fsStat;
+
+                    beforeEach(() => {
+                        options.awaitWriteFinish = { pollInterval: 50, stabilityThreshold: 50 };
+                        options.ignoreInitial = true;
+
+                        // Stub fs.stat() to take a while to return.
+
+                        fsStat = stub(_fs, "stat").callsFake((path, cb) => {
+                            _realStat(path, async (...args) => {
+                                await sleep(250);
+                                cb(...args);
+                            });
+                        });
+                    });
+
+                    afterEach(() => {
+                        fsStat.restore();
+                    });
+
+                    it("should handle unlink that happens while waiting for stat to return", async () => {
+                        const all = spy();
+                        const ready = spy();
+                        const subdir = await fixtures.addDirectory("subdir");
+                        const file = subdir.getFile("add.txt");
+                        stdWatcher().on("all", all).on("ready", ready);
+                        await ready.waitForCall();
+
+                        await Promise.all([
+                            file.write("hello"),
+                            all.waitForCall()
+                        ]);
+                        expect(all).to.have.been.calledWith("add", file.path());
+                        adone.std.fs.stat.resetHistory();
+
+                        await file.write("edit");
+                        await sleep(40);
+                        adone.std.fs.stat.resetHistory();
+                        // There will be a stat() call after we notice the change, plus pollInterval.
+                        // After waiting a bit less, wait specifically for that stat() call.
+                        fsStat.waitForCall();
+
+                        // Once stat call is made, it will take some time to return. Meanwhile, unlink
+                        // the file and wait for that to be noticed.
+                        await Promise.all([
+                            file.unlink(),
+                            all.waitForArgs("unlink")
+                        ]);
+                        // Wait a while after unlink to ensure stat() had time to return. That's where
+                        // an uncaught exception used to happen.
+                        expect(all).to.have.been.calledWith("unlink", file.path());
+                        expect(all).not.to.have.been.calledWith("change");
+                    });
                 });
             });
         });

@@ -234,7 +234,6 @@ export default class InstallTask extends task.Task {
         const projectManager = new adone.project.Manager({
             cwd: this.srcPath
         });
-        projectManager.setSilent(this.manager.silent);
         await projectManager.load();
         const observer = await projectManager.rebuild();
         return observer.result;

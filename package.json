@@ -153,6 +153,7 @@
     "throw-max-listeners-error": "1.0.1",
     "time-cache": "~0.3.0",
     "tmp": "0.0.24",
+    "uberscore": "0.0.19",
     "unzip": "^0.1.11",
     "url-join": "^2.0.5",
     "useref": "^1.2.0",

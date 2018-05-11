@@ -226,10 +226,13 @@ const FSEventsHandler = {
             const addOrChange = () => handleEvent(watchedDir.has(item) ? "change" : "add");
             const checkFd = () => {
                 std.fs.open(path, "r", (error, fd) => {
-                    if (fd) {
-                        std.fs.close(fd, noop);
+                    if (error) {
+                        error.code !== "EACCES" ? handleEvent("unlink") : addOrChange();
+                    } else {
+                        fs.close(fd, (err) => {
+                            err && err.code !== "EACCES" ? handleEvent("unlink") : addOrChange();
+                        });
                     }
-                    error && error.code !== "EACCES" ? handleEvent("unlink") : addOrChange();
                 });
             };
             // correct for wrong events emitted
@@ -509,11 +512,12 @@ const setFsWatchListener = (path, fullPath, options, handlers) => {
             // Workaround for https://github.com/joyent/node/issues/4337
             if (is.windows && error.code === "EPERM") {
                 std.fs.open(path, "r", (err, fd) => {
-                    if (fd) {
-                        std.fs.close(fd);
-                    }
                     if (!err) {
-                        broadcastErr(error);
+                        std.fs.close(fd, (err) => {
+                            if (!err) {
+                                broadcastErr(error);
+                            }
+                        });
                     }
                 });
             } else {
@@ -1047,8 +1051,8 @@ export default class Watcher extends event.Emitter {
 
         const awaitWriteFinish = (prevStat) => {
             std.fs.stat(fullPath, (err, curStat) => {
-                if (err) {
-                    if (err.code !== "ENOENT") {
+                if (err || !(path in this._pendingWrites)) {
+                    if (err && err.code !== "ENOENT") {
                         awfEmit(err);
                     }
                     return;
@@ -1105,7 +1109,7 @@ export default class Watcher extends event.Emitter {
                     if (!is.string(path)) {
                         return path;
                     }
-                    return std.path.isAbsolute(path) ? path : std.path.join(cwd, path);
+                    return adone.fs.upath.normalize(std.path.isAbsolute(path) ? path : std.path.join(cwd, path));
                 });
             }
             const paths = util.arrify(ignored)
@@ -1439,17 +1443,11 @@ export default class Watcher extends event.Emitter {
         parentDir.add(std.path.basename(dir));
         this._getWatchedDir(dir);
 
+        let debouncedRead;
+
         const read = (directory, initialAdd, done) => {
             // Normalize the directory name on Windows
             directory = std.path.join(directory, "");
-
-            let throttler;
-            if (!wh.hasGlob) {
-                throttler = this._throttle("readdir", directory, 1000);
-                if (!throttler) {
-                    return;
-                }
-            }
 
             const previous = this._getWatchedDir(wh.path);
             const current = [];
@@ -1489,12 +1487,12 @@ export default class Watcher extends event.Emitter {
                 }).on("error", (err) => {
                     this._handleError(err);
                 }).done(() => {
-                    if (throttler) {
-                        throttler.clear();
-                    }
                     if (done) {
                         done();
                     }
+
+                    // Run any pending reads that may be queued
+                    debouncedRead.flush();
 
                     // Files that absent in current directory snapshot
                     // but present in previous emit `remove` event
@@ -1515,6 +1513,13 @@ export default class Watcher extends event.Emitter {
             });
         };
 
+        // Create a debounced version of read
+        debouncedRead = adone.lodash.debounce(read, 1000, {
+            leading: true,
+            trailing: true,
+            maxWait: 1000
+        });
+
         let closer;
 
         if (is.undefined(this.options.depth) || depth <= this.options.depth) {
@@ -1527,12 +1532,21 @@ export default class Watcher extends event.Emitter {
                     return;
                 }
 
-                read(dirPath, false);
+                debouncedRead(dirPath, false);
             });
         } else {
             callback();
         }
-        return closer;
+
+        // Close function that calls fs closer and cancels any pending debounced reads
+        return function () {
+            if (closer) {
+                closer();
+            }
+
+            // Cancel any pending reads that may be queued
+            debouncedRead.cancel();
+        };
     }
 
     /**

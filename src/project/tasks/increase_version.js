@@ -2,7 +2,8 @@ const {
     fs,
     is,
     std,
-    task
+    task,
+    terminal: { chalk }
 } = adone;
 
 const VERSION_PARTS = ["major", "minor", "patch", "premajor", "preminor", "prepatch", "prerelease"];
@@ -10,6 +11,7 @@ const VERSION_PARTS = ["major", "minor", "patch", "premajor", "preminor", "prepa
 export default class IncverTask extends task.Task {
     async run({ part = "minor", preid = undefined, loose = false } = {}) {
         const config = this.manager.config;
+        const prevVersion = config.raw.version;
         const cwd = this.manager.cwd;
         if (!VERSION_PARTS.includes(part)) {
             throw new adone.error.NotValid(`Not valid version part: ${part}`);
@@ -44,5 +46,7 @@ export default class IncverTask extends task.Task {
 
         await updateConfig("package.json");
         await updateConfig("package-lock.json");
+
+        this.log(chalk`{green Previous:} {bold ${prevVersion}}\n{green Current:} {bold ${config.raw.version}}`);
     }
 }

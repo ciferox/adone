@@ -122,7 +122,7 @@ export default class File {
             if (err.code === "ENOENT") {
                 return;
             }
-            return Promise.reject(err);
+            throw err;
         });
     }
 

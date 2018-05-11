@@ -46,7 +46,7 @@ export default class WatchTask extends adone.project.task.Transform {
         if (!is.null(stream)) {
             stream.notify({
                 onLast: false,
-                title: params.id,
+                title: `${this.manager.config.raw.name}.${params.id}`,
                 filter: (file) => file.extname !== ".map",
                 message: (file) => std.path.relative(process.cwd(), file.path),
                 debounce: {

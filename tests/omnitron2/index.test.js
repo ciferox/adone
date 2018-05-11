@@ -245,7 +245,6 @@ describe("omnitron", () => {
                 const projectManager = new adone.project.Manager({
                     cwd: std.path.join(servicePath, name)
                 });
-                projectManager.setSilent(true);
                 await projectManager.load(); // eslint-disable-line
                 await projectManager[taskName](); // eslint-disable-line
             }
@@ -846,7 +845,7 @@ describe("omnitron", () => {
         });
     });
 
-    describe.only("networks", () => {
+    describe("networks", () => {
         describe("database way", () => {
             suite.networks();
         });

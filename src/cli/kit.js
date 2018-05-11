@@ -21,11 +21,32 @@ class CliKit extends app.Subsystem {
         this._silent = silent;
     }
 
-    async observeProgress(taskManager) {
-        this.createProgress("preparing");
-        await taskManager.onNotification("progress", (task, name, info) => {
-            this.updateProgress(info);
-        });
+    async observe(what, taskManager) {
+        if (is.array(what)) {
+            for (const w of what) {
+                this.observe(w, taskManager);
+            }
+
+            return;
+        }
+
+        switch (what) {
+            case "progress": {
+                this.createProgress("preparing");
+                await taskManager.onNotification("progress", (sender, name, info) => {
+                    this.updateProgress(info);
+                });
+                break;
+            }
+            default: {
+                if (what.startsWith("log") && is.function(adone[what])) {
+                    await taskManager.onNotification(what, (sender, name, ...args) => {
+                        adone[what](...args);
+                    });
+                }
+                break;
+            }
+        }
     }
 
     async connect() {
