@@ -81,21 +81,23 @@ class CliKit extends app.Subsystem {
         }
     }
 
-    updateProgress({ schema, message, result = null, clean = false } = {}) {
-        if (!is.null(this._bar) && !this._silent) {
+    updateProgress({ clean = false, schema, message, status } = {}) {
+        if (is.null(this._bar)) {
+            this.createProgress(message);
+        }
+        if (!this._silent) {
             if (is.string(message)) {
                 schema = `:spinner ${message}`;
             } else if (!is.string(schema)) {
                 schema = ":spinner";
             }
             this._bar.setSchema(schema);
-            if (is.boolean(result)) {
+            if (is.boolean(status) || is.string(status)) {
                 if (clean) {
                     this._bar.clean = true;
                 }
-                this._bar.complete(result);
+                this._bar.complete(status);
             }
-
         }
     }
 

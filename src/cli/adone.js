@@ -41,6 +41,12 @@ const baseSubsystem = (name) => std.path.join(__dirname, "..", "lib", "cli", "su
             group: "realm",
             description: "Realm management",
             subsystem: baseSubsystem("realm")
+        },
+        {
+            name: "info",
+            group: "cli",
+            description: "Show available information about object you wish",
+            subsystem: baseSubsystem("info")
         }
     ]
 })
@@ -107,7 +113,7 @@ class AdoneCLI extends app.CliApplication {
     async installCommand(args, opts) {
         try {
             const realmManager = await adone.realm.getManager();
-            adone.cli.kit.observeProgress(realmManager);
+            adone.cli.kit.observe("progress", realmManager);
             const observer = await realmManager.install({
                 name: args.get("name"),
                 symlink: opts.has("symlink"),
@@ -117,8 +123,7 @@ class AdoneCLI extends app.CliApplication {
 
             return 0;
         } catch (err) {
-            adone.log(err);
-            // term.print(`{red-fg}${err.message}{/}`);
+            // adone.logError(err);
             return 1;
         }
     }
@@ -139,7 +144,7 @@ class AdoneCLI extends app.CliApplication {
     async uninstallCommand(args) {
         try {
             const realmManager = await adone.realm.getManager();
-            adone.cli.kit.observeProgress(realmManager);
+            adone.cli.kit.observe("progress", realmManager);
             const observer = await realmManager.uninstall({
                 name: args.get("name")
             });
@@ -147,7 +152,7 @@ class AdoneCLI extends app.CliApplication {
 
             return 0;
         } catch (err) {
-            term.print(`{red-fg}${err.message}{/}`);
+            // adone.logError(err);
             return 1;
         }
     }
@@ -174,7 +179,7 @@ class AdoneCLI extends app.CliApplication {
     async mountCommand(args) {
         try {
             const realmManager = await adone.realm.getManager();
-            adone.cli.kit.observeProgress(realmManager);
+            adone.cli.kit.observe("progress", realmManager);
             const observer = await realmManager.mount({
                 name: args.get("name"),
                 path: args.get("path")
@@ -204,7 +209,7 @@ class AdoneCLI extends app.CliApplication {
     async unmountCommand(args) {
         try {
             const realmManager = await adone.realm.getManager();
-            adone.cli.kit.observeProgress(realmManager);
+            adone.cli.kit.observe("progress", realmManager);
             const observer = await realmManager.unmount({
                 name: args.get("name")
             });
@@ -233,7 +238,7 @@ class AdoneCLI extends app.CliApplication {
     async listCommand(args) {
         try {
             const realmManager = await adone.realm.getManager();
-            adone.cli.kit.observeProgress(realmManager);
+            adone.cli.kit.observe("progress", realmManager);
             const observer = await realmManager.list({
                 keyword: args.get("keyword")
             });

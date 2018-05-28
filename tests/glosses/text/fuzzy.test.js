@@ -1,6 +1,6 @@
 const { Fuzzy } = adone.text;
 
-describe("text", "Fuzzy", () => {
+describe("Fuzzy", () => {
     describe('Flat list of strings: ["Apple", "Orange", "Banana"]', () => {
         const fruits = ["Apple", "Orange", "Banana"];
         const fuzzy = new Fuzzy(fruits);

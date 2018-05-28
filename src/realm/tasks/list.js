@@ -74,8 +74,8 @@ export default class ListTask extends task.Task {
         result.sort((a, b) => a.name > b.name);
 
         this.manager.notify(this, "progress", {
-            schema: "",
-            result: true,
+            message: "done",
+            status: true,
             clean: true
         });
 

@@ -16,7 +16,8 @@ const __ = adone.lazify({
     Chalk: "./chalk",
     chalk: () => __.Chalk(),
     chalkify: "./chalkify",
-    ui: "./ui"
+    ui: "./ui",
+    gradient: "./gradient"
 }, adone.asNamespace(exports), require);
 
 
@@ -4160,7 +4161,10 @@ const DEFAULT_THEME = adone.lazify({
     accent: () => __.chalkify("#7C4DFF"),
     focus: () => __.chalkify("#009688"),
     inactive: () => __.chalkify("#616161"),
-    error: () => __.chalkify("#D32F2F")
+    error: () => __.chalkify("#D32F2F"),
+    warn: () => __.chalkify("#FF5722"),
+    info: () => __.chalkify("#FFEB3B"),
+    notice: () => __.chalkify("#FFEB3B")
 }, null);
 
 export class Terminal extends adone.event.Emitter {

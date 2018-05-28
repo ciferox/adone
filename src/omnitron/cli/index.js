@@ -119,7 +119,7 @@ export default class Omnitron extends Subsystem {
                     break;
                 case 2:
                     kit.updateProgress({
-                        schema: " {yellow-fg}!{/yellow-fg} omnitron is not started",
+                        schema: "{yellow-fg}!{/yellow-fg} omnitron is not started",
                         result: true
                     });
                     break;

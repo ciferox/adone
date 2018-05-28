@@ -48,7 +48,7 @@ describe("omnitron", () => {
             const omnitAddrs = omnitron2.LOCAL_PEER_INFO.multiaddrs.toArray();
             assert.lengthOf(omnitAddrs, 1);
             assert.true(omnitAddrs[0].equals(multi.address.create(omnitron2.DEFAULT_ADDRESS)));
-            assert.strictEqual(d.netron.peer.info.id.asBase58(), runtime.realm.config.identity.client.id);
+            assert.strictEqual(d.netron.peer.info.id.asBase58(), runtime.config.identity.client.id);
         });
 
         it("isOmnitronActive() should return false when omnitron is not active", async () => {

@@ -179,58 +179,6 @@ export const detectNewline = (str) => {
     return crlf > lf ? "\r\n" : "\n";
 };
 
-export const wordwrap = (str, stop, { join = true, mode = "soft", countAnsiEscapeCodes = false } = {}) => {
-    let lines = str.split("\n");
-    if (lines.length > 1) {
-        lines = lines.map((x) => wordwrap(x, stop, { mode, countAnsiEscapeCodes }));
-    } else {
-        const chunks = str.split(mode === "soft" ? /(\s+\S+)/ : /\b/).reduce((res, x) => {
-            if (!x) {
-                return res;
-            }
-            if (mode === "hard") {
-                for (let i = 0; i < x.length; i += stop) {
-                    res.push(x.slice(i, i + stop));
-                }
-            } else {
-                res.push(x);
-            }
-            return res;
-        }, []);
-        // let lineLength = 0;
-        lines = chunks.reduce((lines, rawChunk) => {
-            if (rawChunk === "") {
-                return lines;
-            }
-            const chunk = rawChunk.replace(/\t/g, "    ");
-            const i = lines.length - 1;
-
-            const lineLength = countAnsiEscapeCodes ? lines[i].length : stripAnsi(lines[i]).length;
-            const chunkLength = countAnsiEscapeCodes ? chunk.length : stripAnsi(chunk).length;
-
-            if (lineLength + chunkLength > stop) {
-                lines[i] = lines[i].replace(/\s+$/, "");
-                if (lines[i] === "") {
-                    lines.pop();
-                }
-                for (const c of chunk.split(/\n/)) {
-                    lines.push(c.replace(/^\s+/, ""));
-                }
-            } else {
-                lines[i] += chunk;
-            }
-            return lines;
-        }, [""]);
-    }
-    if (lines.length && lines[lines.length - 1] === "") {
-        lines.pop();
-    }
-    if (join) {
-        return lines.join("\n");
-    }
-    return lines;
-};
-
 /**
  * Returns the Levenshtein distance between two strings
  *
@@ -441,5 +389,8 @@ adone.lazify({
     table: "./table",
     Fuzzy: "./fuzzy",
     charcode: "./charcodes",
-    longestCommonPrefix: "./longest_common_prefix"
+    longestCommonPrefix: "./longest_common_prefix",
+    sliceAnsi: "./slice_ansi",
+    wrapAnsi: "./wrap_ansi",
+    truncate: "./truncate"
 }, adone.asNamespace(exports), require);

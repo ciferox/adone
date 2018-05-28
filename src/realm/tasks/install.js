@@ -50,14 +50,14 @@ export default class InstallTask extends task.Task {
             const version = is.string(adoneConf.raw.version) ? ` ${adoneConf.raw.version}` : "";
             this.manager.notify(this, "progress", {
                 message: `{green-fg}{bold}${this.packageName}{/bold}${version}{/green-fg} successfully installed`,
-                result: true
+                status: true
             });
 
             return adoneConf;
         } catch (err) {
             this.manager.notify(this, "progress", {
                 message: "installation failed",
-                result: false
+                status: false
             });
 
             throw err;

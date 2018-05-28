@@ -94,16 +94,14 @@ export default class ProgressBar {
         width = 60,
         tough = false,
         clean = false,
-        spinner = {
-            active: "dots",
-            completeOk: `{green-fg}${approx(symbol.tick)}{/}`,
-            completeBad: `{red-fg}${approx(symbol.cross)}{/}`
-        },
+        spinner,
+        statusMap,
         timeFormatter = adone.pretty.time,
         blank = "—",
         filled = approx(symbol.square),
         callback,
-        schema
+        schema,
+        noRender = false
     } = {}) {
         this.total = total;
         this.current = current;
@@ -112,6 +110,7 @@ export default class ProgressBar {
         this.origin = null;
         this.customTokens = null;
         this.output = null;
+        this.noRender = noRender;
 
         if (is.string(this.width)) {
             if (this.width.endsWith("%")) {
@@ -123,13 +122,21 @@ export default class ProgressBar {
 
         this.tough = Boolean(tough);
         this.clean = Boolean(clean);
-        this.spinner = {
-            active: adone.text.spinner[spinner.active] || adone.text.spinner.dots,
-            ok: spinner.completeOk,
-            bad: spinner.completeBad,
+        this.state = {
+            spinner: adone.text.spinner[spinner || "dots"],
             frame: 0,
             timer: null
         };
+        this.status = {
+            ok: term.theme.primary(approx(symbol.tick)),
+            error: term.theme.error(approx(symbol.cross)),
+            notice: term.theme.notice("!"),
+            info: term.theme.info("!"),
+            ...statusMap
+        };
+        this.status.true = this.status.ok;
+        this.status.false = this.status.error;
+
         this.timeFormatter = timeFormatter;
         this.chars = {
             blank,
@@ -144,22 +151,28 @@ export default class ProgressBar {
         this.setSchema(schema);
         this.snoop();
 
-        instances.push(this);
+        if (!this.noRender) {
+            instances.push(this);
+        }
     }
 
     setSchema(schema = " [:bar] :current/:total :percent :elapsed :eta") {
         this.schema = schema;
 
-        if (!is.null(this.spinner.timer)) {
-            adone.clearInterval(this.spinner.timer);
-            this.spinner.timer = null;
+        if (!is.null(this.state.timer)) {
+            adone.clearInterval(this.state.timer);
+            this.state.timer = null;
         }
 
-        if (!this.completed && schema.indexOf(":spinner") >= 0) {
-            this.spinner.timer = adone.setInterval(() => {
-                this.spinner.frame++;
+        if (this.noRender) {
+            return this.compile();
+        }
+
+        if (!this.completed && schema.includes(":spinner")) {
+            this.state.timer = adone.setInterval(() => {
+                this.state.frame++;
                 this.compile();
-            }, this.spinner.active.interval);
+            }, this.state.spinner.interval);
         }
     }
 
@@ -202,12 +215,8 @@ export default class ProgressBar {
         this.tick(delta, tokens);
     }
 
-    complete(spinnerComplete = true, tokens) {
-        if (is.string(spinnerComplete)) {
-            this.spinner.complete = spinnerComplete;
-        } else {
-            this.spinner.complete = Boolean(spinnerComplete) === true ? this.spinner.ok : this.spinner.bad;
-        }
+    complete(status = true, tokens) {
+        this.state.status = this.status[status];
         this.update(1, tokens);
     }
 
@@ -252,9 +261,9 @@ export default class ProgressBar {
         const length = Math.round(width * ratio);
         let spinner;
         if (!this.completed) {
-            spinner = this.spinner.active.frames[this.spinner.frame % this.spinner.active.frames.length];
+            spinner = this.state.spinner.frames[this.state.frame % this.state.spinner.frames.length];
         } else {
-            spinner = this.spinner.complete;
+            spinner = this.state.status;
         }
         const filled = chars.filled.repeat(length);
         const blank = chars.blank.repeat(width - length);
@@ -264,7 +273,7 @@ export default class ProgressBar {
 
         this.rows = result.split("\n").length;
 
-        this.render(output);
+        return this.noRender ? output : this.render(output);
     }
 
     render(output) {
@@ -327,8 +336,8 @@ export default class ProgressBar {
 
     snoop() {
         if (this.completed) {
-            if (!is.null(this.spinner.timer)) {
-                adone.clearInterval(this.spinner.timer);
+            if (!is.null(this.state.timer)) {
+                adone.clearInterval(this.state.timer);
             }
             this.destroy();
         }
@@ -342,9 +351,12 @@ export default class ProgressBar {
         }
 
         this.callback && this.callback(this);
-        const index = instances.indexOf(this);
-        if (index >= 0) {
-            instances.splice(index, 1);
+
+        if (!this.noRender) {
+            const index = instances.indexOf(this);
+            if (index >= 0) {
+                instances.splice(index, 1);
+            }
         }
     }
 }

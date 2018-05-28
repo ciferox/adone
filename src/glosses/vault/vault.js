@@ -174,18 +174,18 @@ export default class Vault {
         await this._deleteMeta(valuableId(val[VALUABLE_ID]));
     }
 
-    async clear({ hosts = true, tags = false } = {}) {
-        if (hosts) {
+    async clear({ entries = true, tags = false } = {}) {
+        if (entries) {
             const names = this.keys();
             for (const name of names) {
-                await this.delete(name);
+                await this.delete(name); // eslint-disable-line
             }
         }
 
         if (tags) {
             const tags = this._getTags();
             for (const tag of tags) {
-                await this.deleteTag(tag);
+                await this.deleteTag(tag); // eslint-disable-line
             }
         }
 

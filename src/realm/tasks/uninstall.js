@@ -49,7 +49,7 @@ export default class InstallTask extends task.Task {
                 if (!found) {
                     this.manager.notify(this, "progress", {
                         message: `No package with name {green-fg}{bold}${this.packageName}{/bold}{/green-fg}`,
-                        result: false
+                        status: false
                     });
                     return;
                 }
@@ -83,12 +83,12 @@ export default class InstallTask extends task.Task {
 
             this.manager.notify(this, "progress", {
                 message: `{green-fg}{bold}${this.fullName}{/bold}{/green-fg} successfully uninstalled`,
-                result: true
+                status: true
             });
         } catch (err) {
             this.manager.notify(this, "progress", {
                 message: err.message,
-                result: false
+                status: false
             });
 
             throw err;

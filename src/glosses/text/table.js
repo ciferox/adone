@@ -4,7 +4,7 @@ const codeRegex = (capture) => capture ? /\u001b\[((?:\d*;){0,5}\d*)m/g : /\u001
 
 const strlen = (str) => {
     const code = codeRegex();
-    const stripped = (`${str}`).replace(code, "");
+    const stripped = str.replace(code, "");
     const split = stripped.split("\n");
     return split.reduce((memo, s) => {
         return (adone.text.width(s) > memo) ? adone.text.width(s) : memo;
@@ -86,7 +86,7 @@ const readState = (line) => {
     const code = codeRegex(true);
     let controlChars = code.exec(line);
     const state = {};
-    while (controlChars !== null) {
+    while (!is.null(controlChars)) {
         updateState(state, controlChars);
         controlChars = code.exec(line);
     }
@@ -145,67 +145,19 @@ const rewindState = (state, ret) => {
     return ret;
 };
 
-const truncateWidth = (str, desiredLength) => {
-    if (str.length === strlen(str)) {
-        return str.substr(0, desiredLength);
-    }
+const truncate = (str, desiredLength, options) => adone.text.truncate(str, desiredLength, {
+    ...options,
+    term: true
+});
 
-    while (strlen(str) > desiredLength) {
-        str = str.slice(0, -1);
-    }
-
-    return str;
-};
-
-const truncateWidthWithAnsi = (str, desiredLength) => {
-    const code = codeRegex(true);
-    const split = str.split(codeRegex());
-    let splitIndex = 0;
-    let retLen = 0;
-    let ret = "";
-    let myArray;
-    const state = {};
-
-    while (retLen < desiredLength) {
-        myArray = code.exec(str);
-        let toAdd = split[splitIndex];
-        splitIndex++;
-        if (retLen + strlen(toAdd) > desiredLength) {
-            toAdd = truncateWidth(toAdd, desiredLength - retLen);
-        }
-        ret += toAdd;
-        retLen += strlen(toAdd);
-
-        if (retLen < desiredLength) {
-            if (!myArray) {
-                break;
-            }  // full-width chars may cause a whitespace which cannot be filled
-            ret += myArray[0];
-            updateState(state, myArray);
-        }
-    }
-
-    return unwindState(state, ret);
-};
-
-const truncate = (str, desiredLength, truncateChar) => {
-    truncateChar = truncateChar || "…";
-    const lengthOfStr = strlen(str);
-    if (lengthOfStr <= desiredLength) {
-        return str;
-    }
-    desiredLength -= strlen(truncateChar);
-
-    return truncateWidthWithAnsi(str, desiredLength) + truncateChar;
-};
-
-const wordWrap = (maxLength, input) => adone.text.wordwrap(input, maxLength, { join: false });
-
-const multiLineWordWrap = (maxLength, input) => {
+const wrapWord = (maxLength, input) => {
     const output = [];
     input = input.split("\n");
     for (let i = 0; i < input.length; i++) {
-        output.push(...wordWrap(maxLength, input[i]));
+        output.push(...adone.text.wrapAnsi(input[i], maxLength, {
+            hard: true,
+            join: false
+        }));
     }
     return output;
 };
@@ -227,7 +179,7 @@ export const util = {
     repeat,
     pad,
     truncate,
-    wordWrap: multiLineWordWrap,
+    wrapWord,
     colorizeLines
 };
 
@@ -338,7 +290,7 @@ export class Cell {
          * Each cell will have it's `x` and `y` values set by the `layout-manager` prior to
          * `init` being called;
          * @type {Number}
-        */
+         */
         this.x = null;
         this.y = null;
     }
@@ -371,7 +323,7 @@ export class Cell {
             setOption(optionsChars, tableChars, name, chars);
         });
 
-        this.truncate = this.options.truncate || tableOptions.truncate;
+        this.ellipsis = this.options.ellipsis || tableOptions.ellipsis;
 
         const style = this.options.style = this.options.style || {};
         const tableStyle = tableOptions.style;
@@ -383,7 +335,7 @@ export class Cell {
         let fixedWidth = tableOptions.colWidths[this.x];
         if (tableOptions.wordWrap && fixedWidth) {
             fixedWidth -= this.paddingLeft + this.paddingRight;
-            this.lines = util.colorizeLines(util.wordWrap(fixedWidth, this.content));
+            this.lines = util.colorizeLines(util.wrapWord(fixedWidth, this.content));
         } else {
             this.lines = util.colorizeLines(this.content.split("\n"));
         }
@@ -456,7 +408,7 @@ export class Cell {
      */
     drawTop(drawRight) {
         const content = [];
-        if (this.cells) {  //TODO: cells should always exist - some tests don't fill it in though
+        if (this.cells) { //TODO: cells should always exist - some tests don't fill it in though
             this.widths.forEach((width, index) => {
                 content.push(this._topLeftChar(index));
                 content.push(util.repeat(this.chars[this.y === 0 ? "top" : "mid"], width));
@@ -481,7 +433,7 @@ export class Cell {
                 leftChar = "leftMid";
             } else {
                 leftChar = offset === 0 ? "midMid" : "bottomMid";
-                if (this.cells) {  //TODO: cells should always exist - some tests don't fill it in though
+                if (this.cells) { //TODO: cells should always exist - some tests don't fill it in though
                     const spanAbove = this.cells[this.y - 1][x] instanceof ColSpanCell;
                     if (spanAbove) {
                         leftChar = offset === 0 ? "topMid" : "mid";
@@ -506,7 +458,7 @@ export class Cell {
             try {
                 // adone.log(styleProperty, this[styleProperty]);
                 let colors = adone.terminal.chalk;
-                for (let i = this[styleProperty].length; --i >= 0; ) {
+                for (let i = this[styleProperty].length; --i >= 0;) {
                     colors = colors[this[styleProperty][i]];
                 }
                 // adone.log(colors(content));
@@ -547,9 +499,11 @@ export class Cell {
         let line = this.lines[lineNum];
         const len = this.width - (this.paddingLeft + this.paddingRight);
         if (forceTruncationSymbol) {
-            line += this.truncate || "…";
+            line += this.ellipsis || "…";
         }
-        let content = util.truncate(line, len, this.truncate);
+        let content = util.truncate(line, len, {
+            ellipsis: this.ellipsis
+        });
         content = util.pad(content, len, " ", this.hAlign);
         content = leftPadding + content + rightPadding;
         return this.stylizeLine(left, content, right);
@@ -720,7 +674,8 @@ export class Table extends Array {
 
     static get defaultOptions() {
         return {
-            truncate: "…",
+            ellipsis: "…",
+            colors: true,
             colWidths: [],
             rowHeights: [],
             colAligns: [],

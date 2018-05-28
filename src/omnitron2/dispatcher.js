@@ -273,8 +273,7 @@ export default class Dispatcher extends Subsystem {
 
     async registerService(serviceName) {
         try {
-            const systemDb = new omnitron2.DB();
-            await systemDb.open();
+            const systemDb = await omnitron2.DB.open();
             const registry = await systemDb.getConfiguration("registry");
             await registry.registerService(serviceName);
             await systemDb.close();
@@ -286,8 +285,7 @@ export default class Dispatcher extends Subsystem {
 
     async unregisterService(serviceName) {
         try {
-            const systemDb = new omnitron2.DB();
-            await systemDb.open();
+            const systemDb = await omnitron2.DB.open();
             const registry = await systemDb.getConfiguration("registry");
             await registry.unregisterService(serviceName);
             await systemDb.close();

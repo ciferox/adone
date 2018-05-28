@@ -60,13 +60,13 @@ export default function prettyTable(data, {
         map[m.id] = adone.lodash.omit(m, "id");
         map[m.id].col = col++;
 
-        if (m.wordwrap) {
-            if (is.string(m.wordwrap)) {
-                map[m.id].wordwrap = { mode: m.wordwrap };
-            } else if (is.object(m.wordwrap)) {
-                map[m.id].wordwrap = Object.assign({ countAnsiEscapeCodes }, m.wordwrap);
+        if (m.wordWrap) {
+            if (is.string(m.wordWrap)) {
+                map[m.id].wordWrap = { mode: m.wordWrap };
+            } else if (is.object(m.wordWrap)) {
+                map[m.id].wordWrap = Object.assign({ countAnsiEscapeCodes }, m.wordWrap);
             } else {
-                map[m.id].wordwrap = { mode: "soft" };
+                map[m.id].wordWrap = { mode: "soft" };
             }
         }
     }
@@ -198,11 +198,13 @@ export default function prettyTable(data, {
                 }
 
                 str = term.parse(str);
-                if (str && m.wordwrap && !is.null(m.colWidth)) {
+                if (str && m.wordWrap && !is.null(m.colWidth)) {
                     str = str.toString();
                     const maxLen = m.colWidth - padLeft - padRight;
                     if (m.colWidth && str.length > maxLen) {
-                        str = adone.text.wordwrap(str, maxLen, m.wordwrap);
+                        str = adone.text.wrapAnsi(str, maxLen, {
+                            wordWrap: m.wordWrap
+                        });
                     }
                 }
 

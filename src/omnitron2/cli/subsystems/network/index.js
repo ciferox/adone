@@ -1,108 +1,33 @@
 const {
     app: {
         Subsystem,
+        DSubsystem,
         DCliCommand
     },
     is,
     cli: { kit },
-    omnitron2
+    omnitron2,
+    std
 } = adone;
 
-export default class Gate extends Subsystem {
-    @DCliCommand({
-        name: "list",
-        help: "List all networks",
-        options: [
-            {
-                name: "--active",
-                help: "Only active natworks"
-            }
-        ]
-    })
-    async listCommand(args, opts) {
-        try {
-            kit.createProgress("obtaining");
-            const options = opts.getAll();
-            let networks;
-            const isOmnitronActive = await omnitron2.dispatcher.isOmnitronActive();
+const baseSubsystem = (name) => std.path.join(__dirname, name);
 
-            if (isOmnitronActive && options.active) {
-                networks = [];
-            } else {
-                const config = await omnitron2.dispatcher.getConfiguration();
-                networks = await config.getNetworks();
-            }
 
-            kit.updateProgress({
-                message: "done",
-                result: true,
-                clean: true
-            });
-            if (networks.length > 0) {
-                adone.log(adone.pretty.json(networks));
-            } else {
-                adone.runtime.term.print("{white-fg}No networks{/}\n");
-            }
-            return 0;
-        } catch (err) {
-            adone.log(err);
-            kit.updateProgress({
-                message: err.message,
-                result: false
-            });
-            return 1;
+@DSubsystem({
+    subsystems: [
+        {
+            name: "add",
+            description: "Add new network",
+            subsystem: baseSubsystem("add")
+        },
+        {
+            name: "list",
+            description: "List networks",
+            subsystem: baseSubsystem("list")
         }
-    }
-
-    @DCliCommand({
-        name: "add",
-        help: "Add new gate",
-        arguments: [
-            {
-                name: "name",
-                type: String,
-                help: "Gate name"
-            }
-        ],
-        options: [
-            {
-                name: "--port",
-                nargs: 1,
-                type(val) {
-                    if (is.numeral(val)) {
-                        return Number.parseInt(val);
-                    }
-                    return val;
-                },
-                required: true,
-                help: "Port number, path to unix socket or pipe name (windows)"
-            }
-        ]
-    })
-    async addCommand(args, opts) {
-        try {
-            kit.createProgress("adding");
-
-            const config = await omnitron2.dispatcher.getConfiguration();
-            await config.addGate({
-                name: args.get("name"),
-                ...opts.getAll()
-            });
-
-            kit.updateProgress({
-                message: "done",
-                result: true
-            });
-            return 0;
-        } catch (err) {
-            kit.updateProgress({
-                message: err.message,
-                result: false
-            });
-            return 1;
-        }
-    }
-
+    ]
+})
+export default class extends Subsystem {
     @DCliCommand({
         name: ["delete", "del"],
         help: "Delete gate",
@@ -125,7 +50,7 @@ export default class Gate extends Subsystem {
             } else {
                 const config = await omnitron2.dispatcher.getConfiguration();
                 await config.deleteGate(name);
-            }            
+            }
 
             kit.updateProgress({
                 message: "done",
@@ -256,7 +181,7 @@ export default class Gate extends Subsystem {
                 kit.updateProgress({
                     message: "done",
                     result: true
-                });    
+                });
             }
 
             return 0;

@@ -1343,7 +1343,7 @@ class Command {
         const totalWidth = term.stats.cols;
 
         if (is.string(this.description) && this.description) {
-            helpMessage.push("", text.wordwrap(this.description, totalWidth));
+            helpMessage.push("", text.wrapAnsi(this.description, totalWidth));
         }
 
         const commandHeading = (x) => {

@@ -69,7 +69,7 @@ export default class Omnitron extends Subsystem {
     @DCliCommand({
         name: "up",
         group: "common",
-        help: "Up omnitron"
+        help: "Start omnitron"
     })
     async upCommand() {
         try {
@@ -78,18 +78,19 @@ export default class Omnitron extends Subsystem {
             if (is.number(pid)) {
                 kit.updateProgress({
                     message: `done (pid: ${pid})`,
-                    result: true
+                    status: true
                 });
             } else {
                 kit.updateProgress({
-                    schema: ` {yellow-fg}!{/yellow-fg} already running (pid: ${pid.pid})`
-                }, true);
+                    message: `already running (pid: ${pid.pid})`,
+                    status: "info"
+                });
             }
             return 0;
         } catch (err) {
             kit.updateProgress({
                 message: err.message,
-                result: false
+                status: false
             });
             return 1;
         }
@@ -98,7 +99,7 @@ export default class Omnitron extends Subsystem {
     @DCliCommand({
         name: "down",
         group: "common",
-        help: "Down omnitron"
+        help: "Shutdown omnitron"
     })
     async downCommand() {
         try {
@@ -108,19 +109,19 @@ export default class Omnitron extends Subsystem {
                 case 0:
                     kit.updateProgress({
                         message: "failed",
-                        result: false
+                        status: false
                     });
                     break;
                 case 1:
                     kit.updateProgress({
                         message: "done",
-                        result: true
+                        status: true
                     });
                     break;
                 case 2:
                     kit.updateProgress({
-                        schema: " {yellow-fg}!{/yellow-fg} omnitron is not started",
-                        result: true
+                        message: "omnitron is not started",
+                        status: "info"
                     });
                     break;
             }
@@ -128,7 +129,7 @@ export default class Omnitron extends Subsystem {
         } catch (err) {
             kit.updateProgress({
                 message: err.message,
-                result: false
+                status: false
             });
             return 1;
         }
@@ -179,7 +180,7 @@ export default class Omnitron extends Subsystem {
             const result = await omnitron2.dispatcher.getInfo(args.get("param"));
             kit.updateProgress({
                 message: "done",
-                result: true,
+                status: true,
                 clean: true
             });
             adone.log(adone.pretty.json(result));
@@ -187,7 +188,7 @@ export default class Omnitron extends Subsystem {
         } catch (err) {
             kit.updateProgress({
                 message: err.message,
-                result: false
+                status: false
             });
             return 1;
         }

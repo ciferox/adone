@@ -67,7 +67,6 @@ export default class GitTask extends project.generator.task.Base {
         await fs.writeFile(std.path.join(context.cwd, ".gitignore"), gitignoreContent);
 
         // Initialize repository, add all files to git and create first commit.
-        const logoContent = await fs.readFile(std.path.join(adone.ETC_PATH, "media", "adone.txt"), { encoding: "utf8" });
         const repository = await git.Repository.init(context.cwd, 0);
         const index = await repository.refreshIndex();
         await index.addAll();
@@ -75,6 +74,6 @@ export default class GitTask extends project.generator.task.Base {
         const oid = await index.writeTree();
         const author = git.Signature.create("ADONE", "info@adone.io", time, zoneOffset);
         const committer = git.Signature.create("ADONE", "info@adone.io", time, zoneOffset);
-        await repository.createCommit("HEAD", author, committer, `initial commit from adone/cli v${adone.package.version}:\n\n  $ adone ${adone.runtime.app.argv.join(" ")}\n\n${logoContent}`, oid, []);
+        await repository.createCommit("HEAD", author, committer, `initial commit from adone/cli v${adone.package.version}:\n\n  $ adone ${adone.runtime.app.argv.join(" ")}\n\n${adone.adoneLogo}`, oid, []);
     }
 }

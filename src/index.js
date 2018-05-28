@@ -235,9 +235,9 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             return $require;
         },
 
-        // Adone package
+        // Adone info/package
         package: "../package.json",
-
+        adoneLogo: () => adone.fs.readFileSync(adone.std.path.join(adone.ETC_PATH, "media", "adone.txt"), { encoding: "utf8" }),
         // Runtime stuff
         runtime: () => {
             const runtime = Object.create(null, {

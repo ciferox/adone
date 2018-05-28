@@ -2,7 +2,7 @@ const {
     text: { longestCommonPrefix }
 } = adone;
 
-describe("text", "longestCommonPrefix", () => {
+describe("longestCommonPrefix", () => {
     it("test1", () => {
         assert.equal(longestCommonPrefix([]), "");
         assert.equal(longestCommonPrefix(["a", "b", "c"]), "");
