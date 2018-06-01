@@ -80,15 +80,19 @@ describe("realm", () => {
             cwd: realmPath,
             name: "test"
         });
-        realmManager = await observer.result;
+        const destPath = await observer.result;
 
         assert.true(await fs.exists(realmPath));
         assert.true(await fs.isDirectory(realmPath));
+        assert.strictEqual(destPath, std.path.join(realmPath, "test"));
 
         let files = await fs.readdir(realmPath);
         assert.sameMembers(files, ["test"]);
 
-        assert.instanceOf(realmManager, adone.realm.Manager);
+        realmManager = new realm.Manager({
+            cwd: destPath
+        });
+        await realmManager.initialize();
 
         files = await fs.readdir(realmManager.cwd);
         assert.includeMembers(files, [

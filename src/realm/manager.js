@@ -68,7 +68,6 @@ export default class RealmManager extends task.Manager {
         await this.addTask("mount", __.task.Mount);
         await this.addTask("unmount", __.task.Unmount);
         await this.addTask("list", __.task.List);
-        await this.addTask("createRealm", __.task.CreateRealm);
         await this.addTask("forkRealm", __.task.ForkRealm);
         await this.addTask("validateRealm", __.task.ValidateRealm);
 

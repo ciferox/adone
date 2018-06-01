@@ -1,3 +1,5 @@
+import { file } from "../../glosses/js/compiler/types/builders/generated/index";
+
 const {
     crypto,
     error,
@@ -6,13 +8,32 @@ const {
     fs,
     task,
     std,
+    runtime: { term: { theme } },
     util
 } = adone;
 
 const { path: { join } } = std;
 
+const COMPRESS_FORMATS = ["zip", "tar.gz", "tar.xz"];
+
 export default class ForkRealmTask extends task.Task {
-    async run({ cwd, name, bits = 2048, withSrc = false, keys = false } = {}) {
+    get arch() {
+        const arch = process.arch;
+        switch (arch) {
+            case "ia32": return "x86";
+            default: return arch;
+        }
+    }
+
+    get os() {
+        const platform = process.platform;
+        switch (platform) {
+            case "win32": return "win";
+            default: return platform;
+        }
+    }
+
+    async run({ cwd, name, bits = 2048, withSrc = false, compress = false, keys = false } = {}) {
         this.manager.notify(this, "progress", {
             message: "checking"
         });
@@ -25,15 +46,25 @@ export default class ForkRealmTask extends task.Task {
             throw new error.NotValid(`Invalid type of 'name': ${adone.meta.typeOf(name)}`);
         }
 
-        this.destPath = std.path.resolve(cwd, name);
-        if (await fs.exists(this.destPath)) {
+        this.destPath = compress ? cwd : std.path.resolve(cwd, name);
+
+        if (await fs.exists(this.destPath) && !compress) {
             throw new error.Exists(`Path '${this.destPath}' already exists`);
         }
+
+        this.manager.notify({
+            message: `initializing realm at ${theme.accent(this.destPath)}`
+        });
+
         await fs.mkdirp(this.destPath);
 
-        this.manager.notify(this, "progress", {
-            message: "initializing common realm structure"
-        });
+        if (compress) {
+            const tmpPath = await adone.fs.tmpName({
+                prefix: "realm-"
+            });
+            await fs.mkdirp(tmpPath);
+            this.destPath = tmpPath;
+        }
 
         const CWD = this.destPath;
         const RUNTIME_PATH = join(CWD, "runtime");
@@ -127,24 +158,93 @@ export default class ForkRealmTask extends task.Task {
             produceFiles: true
         });
 
+        // force transpile and build native addons
+
+        // const targetProjManager = await project.Manager.load({
+        //     cwd: destPath
+        // });
+        // targetProjManager.setSilent(true);
+
+        // const entries = targetProjManager.getProjectEntries();
+        // const entriesWithNative = targetProjManager.getProjectEntries({
+        //     onlyNative: true
+        // }).map((entry) => entry.id);
+
+        // for (const entry of entries) {
+        //     this.root.kit.updateProgress({
+        //         message: `transpiling: ${entry.id}`
+        //     });
+        //     const entryId = new RegExp(`${entry.id}$`);
+        //     /* eslint-disable */
+        //     observer = await targetProjManager.build(entryId);
+        //     await observer.result;
+
+        //     if (entriesWithNative.includes(entry.id)) {
+        //         this.root.kit.updateProgress({
+        //             message: `addon building: ${entry.id}`
+        //         });
+
+        //         observer = await targetProjManager.nbuild(entryId, {
+        //             clean: true
+        //         });
+        //         await observer.result;
+        //     }
+        //     /* eslint-enable */
+        // }
+
+        // if (!withSrc) {
+        //     this.root.kit.updateProgress({
+        //         message: "deleting unnecessary files"
+        //     });
+
+        //     await fs.rm(std.path.join(destPath, "src"));
+        //     await fs.rm(util.globize(std.path.join(destPath, "lib"), {
+        //         recursive: true,
+        //         ext: ".js.map"
+        //     }));
+        // }
+
+        if (compress) {
+            let format;
+            if (is.string(compress)) {
+                format = compress;
+            } else {
+                format = is.windows ? "zip" : "tar.gz";
+            }
+
+            if (!COMPRESS_FORMATS.includes(format)) {
+                throw new error.NotSupported(`Unsupported compression format: ${format}`);
+            }
+
+            this.manager.notify(this, "progress", {
+                message: "compressing"
+            });
+
+            const fileName = `${name}-v${adone.package.version}-${this.os}-${this.arch}-node-v${process.version.match(/^v(\d+)\./)[1]}.${format}`;
+
+            await fast.src(adone.util.globize(this.destPath, {
+                ext: "*",
+                recursive: true
+            }), { base: adone.rootPath })
+                .archive(format, fileName)
+                .dest(cwd);
+
+            await fs.rm(this.destPath);
+            this.destPath = std.path.join(cwd, fileName);
+        }
+
         this.manager.notify(this, "progress", {
-            message: `Realm {green-fg}{bold}${name}{/} succescfully forked!`,
-            result: true
+            message: `fork ${theme.accent(this.destPath)} successfully created`,
+            status: true
         });
 
-        const realmManager = new adone.realm.Manager({
-            cwd: this.destPath
-        });
-
-        await realmManager.initialize();
-
-        return realmManager;
+        return this.destPath;
     }
 
     async undo(err) {
         this.manager.notify(this, "progress", {
             message: err.message,
-            result: false
+            status: false
         });
 
         if (!(err instanceof error.Exists)) {

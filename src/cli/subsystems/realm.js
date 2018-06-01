@@ -6,7 +6,9 @@ const {
     error,
     project,
     std,
-    util
+    util,
+    runtime: { term: { theme } },
+    terminal: { chalk }
 } = adone;
 
 const {
@@ -15,57 +17,8 @@ const {
 
 export default class RealmManager extends app.Subsystem {
     @DCliCommand({
-        name: "new",
-        help: "Create new realm",
-        arguments: [
-            {
-                name: "name",
-                type: String,
-                help: "Realm name (directory name)"
-            }
-        ],
-        options: [
-            {
-                name: ["--path", "-p"],
-                type: String,
-                default: adone.system.env.home(),
-                help: "Path where realm will be deploy"
-            },
-            {
-                name: ["--bits"],
-                type: Number,
-                default: 2048,
-                help: "Realm identity's RSA key size"
-            }
-        ]
-    })
-    async createCommand(args, opts) {
-        try {
-            const name = args.get("name");
-            this.root.kit.createProgress("checking");
-
-            const destPath = std.path.resolve(opts.get("path"), name);
-            if (await fs.exists(destPath)) {
-                throw new error.Exists(`Path '${destPath}' already exists`);
-            }
-
-            this.root.kit.updateProgress({
-                message: `Realm {green-fg}{bold}${name}{/} succescfully created!`,
-                result: true
-            });
-            return 0;
-        } catch (err) {
-            this.root.kit.updateProgress({
-                message: err.message,
-                result: false
-            });
-            return 1;
-        }
-    }
-
-    @DCliCommand({
         name: ["fork"],
-        help: "Fork current realm",
+        help: "Fork active realm",
         arguments: [
             {
                 name: "name",
@@ -87,115 +40,39 @@ export default class RealmManager extends app.Subsystem {
                 help: "Realm identity's RSA key size"
             },
             {
-                name: ["--src"],
-                help: "With source directory"
+                name: ["--with-src"],
+                help: "With source code directory"
+            },
+            {
+                name: ["--compress"],
+                type: String,
+                default: is.windows ? "zip" : "tar.gz",
+                help: "compress realm"
             }
         ]
     })
     async forkCommand(args, opts) {
-        let destPath;
         try {
-            const name = args.get("name");
-            this.root.kit.createProgress("checking");
-
-            destPath = std.path.resolve(opts.get("path"), name);
-            if (await fs.exists(destPath)) {
-                throw new error.Exists(`Path '${destPath}' already exists`);
-            }
-
-            this.root.kit.updateProgress({
-                message: "initializing realm"
-            });
-
-            await fs.mkdirp(destPath);
-
-            const projManager = await project.Manager.load({
-                cwd: adone.ROOT_PATH
-            });
-
-            let observer = await projManager.run("realmInit", {
-                cwd: destPath,
-                bits: opts.get("bits")
-            });
-            await observer.result;
-
-            this.root.kit.updateProgress({
-                message: "copying files"
-            });
-
-            const targets = [
-                "!**/*.map",
-                "package.json",
-                "adone.json",
-                "README*",
-                "LICENSE*",
-                ...[".adone", "bin", "src", "etc"].map((x) => util.globize(x, { recursive: true }))
-            ];
-
-            targets.push("!src/**/native/build/**/*");
-
-            await fast.src(targets, { base: adone.ROOT_PATH }).dest(destPath, {
-                produceFiles: true
-            });
-
-            const targetProjManager = await project.Manager.load({
-                cwd: destPath
-            });
-            targetProjManager.setSilent(true);
-
-            const entries = targetProjManager.getProjectEntries();
-            const entriesWithNative = targetProjManager.getProjectEntries({
-                onlyNative: true
-            }).map((entry) => entry.id);
-
-            for (const entry of entries) {
-                this.root.kit.updateProgress({
-                    message: `transpiling: ${entry.id}`
+            const realmManager = await this.getRealm();
+            if (args.has("name")) {
+                await realmManager.runAndWait("forkRealm", {
+                    cwd: opts.get("path"),
+                    name: args.get("name"),
+                    bits: opts.get("bits"),
+                    withSrc: opts.has("withSrc"),
+                    compress: opts.has("compress") ? opts.get("compress") : false
                 });
-                const entryId = new RegExp(`${entry.id}$`);
-                /* eslint-disable */
-                observer = await targetProjManager.build(entryId);
-                await observer.result;
+            } else {
 
-                if (entriesWithNative.includes(entry.id)) {
-                    this.root.kit.updateProgress({
-                        message: `addon building: ${entry.id}`
-                    });
-
-                    observer = await targetProjManager.nbuild(entryId, {
-                        clean: true
-                    });
-                    await observer.result;
-                }
-                /* eslint-enable */
             }
 
-            if (!opts.has("src")) {
-                this.root.kit.updateProgress({
-                    message: "deleting unnecessary files"
-                });
-
-                await fs.rm(std.path.join(destPath, "src"));
-                await fs.rm(util.globize(std.path.join(destPath, "lib"), {
-                    recursive: true,
-                    ext: ".js.map"
-                }));
-            }
-
-            this.root.kit.updateProgress({
-                message: `Realm {green-fg}{bold}${name}{/} succescfully created!`,
-                result: true
-            });
             return 0;
         } catch (err) {
             this.root.kit.updateProgress({
                 message: err.message,
-                result: false
+                status: false
             });
 
-            if (!(err instanceof error.Exists)) {
-                is.string(destPath) && await fs.rm(destPath);
-            }
             return 1;
         }
     }
@@ -231,4 +108,13 @@ export default class RealmManager extends app.Subsystem {
     //         return 1;
     //     }
     // }
+
+    async getRealm() {
+        if (!this._realmManager) {
+            this._realmManager = await adone.realm.getManager();
+            this.root.kit.observe("progress", this._realmManager);
+        }
+
+        return this._realmManager;
+    }
 }
