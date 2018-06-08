@@ -5,6 +5,5 @@ adone.lazify({
     adone: "./adone",
     parseFunction: "./parse_function",
     tokens: "./tokens",
-    highlight: "./highlight",
-    bundle: "./bundle"
+    highlight: "./highlight"
 }, adone.asNamespace(exports), require);

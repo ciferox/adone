@@ -947,6 +947,12 @@
                     "dst": "lib/benchmark",
                     "namespace": "benchmark"
                 },
+                "bundle": {
+                    "task": "transpile",
+                    "src": "src/bundle/**/*.js",
+                    "dst": "lib/bundle",
+                    "namespace": "bundle"
+                },
                 "npm": {
                     "description": "Adone based npm packages",
                     "src": "src/npm/**/*.js",

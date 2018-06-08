@@ -1,0 +1,122 @@
+import { locate } from 'locate-character';
+import { decode } from 'sourcemap-codec';
+import error from './error';
+import getCodeFrame from './getCodeFrame';
+function augmentCodeLocation({ object, pos, code, id, source, pluginName }) {
+    if (object.code)
+        object.pluginCode = object.code;
+    object.code = code;
+    if (pos !== undefined) {
+        if (pos.line !== undefined && pos.column !== undefined) {
+            const { line, column } = pos;
+            object.loc = { file: id, line, column };
+            object.frame = getCodeFrame(source, line, column);
+        }
+        else {
+            object.pos = pos;
+            const { line, column } = locate(source, pos, { offsetLine: 1 });
+            object.loc = { file: id, line, column };
+            object.frame = getCodeFrame(source, line, column);
+        }
+    }
+    object.plugin = pluginName;
+    object.id = id;
+    return object;
+}
+function createPluginTransformContext(graph, plugin, id, source) {
+    return {
+        ...graph.pluginContext,
+        warn(warning, pos) {
+            if (typeof warning === 'string')
+                warning = { message: warning };
+            warning = augmentCodeLocation({
+                object: warning,
+                pos,
+                code: 'PLUGIN_WARNING',
+                id,
+                source,
+                pluginName: plugin.name || '(anonymous plugin)'
+            });
+            graph.warn(warning);
+        },
+        error(err, pos) {
+            if (typeof err === 'string')
+                err = { message: err };
+            err = augmentCodeLocation({
+                object: err,
+                pos,
+                code: 'PLUGIN_ERROR',
+                id,
+                source,
+                pluginName: plugin.name || '(anonymous plugin)'
+            });
+            error(err);
+        }
+    };
+}
+export default function transform(graph, source, id, plugins) {
+    const sourcemapChain = [];
+    const originalSourcemap = typeof source.map === 'string' ? JSON.parse(source.map) : source.map;
+    if (originalSourcemap && typeof originalSourcemap.mappings === 'string') {
+        originalSourcemap.mappings = decode(originalSourcemap.mappings);
+    }
+    const originalCode = source.code;
+    let ast = source.ast;
+    let promise = Promise.resolve(source.code);
+    plugins.forEach(plugin => {
+        if (!plugin.transform)
+            return;
+        promise = promise.then(previous => {
+            return Promise.resolve()
+                .then(() => {
+                const context = createPluginTransformContext(graph, plugin, id, previous);
+                return plugin.transform.call(context, previous, id);
+            })
+                .then(result => {
+                if (result == null)
+                    return previous;
+                if (typeof result === 'string') {
+                    result = {
+                        code: result,
+                        ast: undefined,
+                        map: undefined
+                    };
+                }
+                else if (typeof result.map === 'string') {
+                    // `result.map` can only be a string if `result` isn't
+                    result.map = JSON.parse(result.map);
+                }
+                if (result.map && typeof result.map.mappings === 'string') {
+                    result.map.mappings = decode(result.map.mappings);
+                }
+                // strict null check allows 'null' maps to not be pushed to the chain, while 'undefined' gets the missing map warning
+                if (result.map !== null) {
+                    sourcemapChain.push(result.map || { missing: true, plugin: plugin.name });
+                }
+                ast = result.ast;
+                return result.code;
+            })
+                .catch(err => {
+                if (typeof err === 'string')
+                    err = { message: err };
+                if (err.code !== 'PLUGIN_ERROR') {
+                    if (err.code)
+                        err.pluginCode = err.code;
+                    err.code = 'PLUGIN_ERROR';
+                }
+                err.plugin = plugin.name;
+                err.id = id;
+                error(err);
+            });
+        });
+    });
+    return promise.then(code => {
+        return {
+            code,
+            originalCode,
+            originalSourcemap,
+            ast: ast,
+            sourcemapChain
+        };
+    });
+}

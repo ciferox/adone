@@ -248,7 +248,7 @@ export default class Inspection extends Subsystem {
 
             return 0;
         } catch (err) {
-            adone.logError(err.message);
+            adone.logError(err/*.message*/);
             return 1;
         }
     }

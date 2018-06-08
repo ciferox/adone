@@ -391,6 +391,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         // components
         async: "./async",
         benchmark: "./benchmark",
+        bundle: "./bundle",
         cli: "./cli",
         cmake: "./cmake",
         fast: "./fast",

@@ -1,14 +1,6 @@
 const {
     app,
-    fast,
-    fs,
-    is,
-    error,
-    project,
-    std,
-    util,
-    runtime: { term: { theme } },
-    terminal: { chalk }
+    is
 } = adone;
 
 const {
