@@ -31,7 +31,8 @@
             "src": [
                 "src/**/*.js",
                 "!src/cli/adone.js",
-                "!src/native/**/*"
+                "!src/native/**/*",
+                "!src/browser/**/*"
             ],
             "dst": "lib",
             "dstClean": [
@@ -420,6 +421,13 @@
                     "src": "src/glosses/geoip/**/*.js",
                     "dst": "lib/glosses/geoip",
                     "namespace": "geoip"
+                },
+                "git": {
+                    "description": "Git implementation",
+                    "task": "transpile",
+                    "src": "src/glosses/git/**/*.js",
+                    "dst": "lib/glosses/git",
+                    "namespace": "git"
                 },
                 "globals": {
                     "description": "Global identifiers from different JavaScript environments",
@@ -919,27 +927,6 @@
                     "src": "src/glosses/vault/**/*.js",
                     "dst": "lib/glosses/vault",
                     "namespace": "vault"
-                },
-                "vcs": {
-                    "description": "Version control systems",
-                    "task": "transpile",
-                    "src": "src/glosses/vcs/**/*.js",
-                    "dst": "lib/glosses/vcs",
-                    "namespace": "vcs",
-                    "struct": {
-                        "git": {
-                            "description": "Git",
-                            "task": "transpile",
-                            "src": "src/glosses/vcs/git/**/*.js",
-                            "dst": "lib/glosses/vcs/git",
-                            "namespace": "git",
-                            "native": {
-                                "src": "src/glosses/vcs/git/native",
-                                "dst": "lib/glosses/vcs/git/native",
-                                "type": "gyp"
-                            }
-                        }
-                    }
                 },
                 "benchmark": {
                     "description": "A benchmarking library",

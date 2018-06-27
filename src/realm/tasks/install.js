@@ -164,7 +164,10 @@ export default class InstallTask extends task.Task {
         this.srcPath = await fs.tmpName();
         await fs.mkdirp(std.path.dirname(this.srcPath));
 
-        await adone.vcs.git.Clone(this.packageName, this.srcPath);
+        await adone.git.clone({
+            url: this.packageName,
+            dir: this.srcPath
+        });
 
         this.build = true;
         this.symlink = false;

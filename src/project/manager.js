@@ -92,7 +92,7 @@ export default class ProjectManager extends task.Manager {
 
         this.notify(this, "progress", {
             message: `project ${term.theme.primary.bold(info.name)} successfully created`,
-            result: true
+            status: true
         });
         return context;
     }
@@ -105,7 +105,7 @@ export default class ProjectManager extends task.Manager {
 
         this.notify(this, "progress", {
             message: `sub project ${term.theme.primary.bold(info.name)} successfully created`,
-            result: true
+            status: true
         });
         return context;
     }

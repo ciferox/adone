@@ -2,7 +2,7 @@ const {
     fs,
     std,
     project,
-    vcs: { git }
+    git
 } = adone;
 
 const GITIGNORE_CONTENT =
@@ -60,20 +60,30 @@ export default class GitTask extends project.generator.task.Base {
             message: "{bold}git:{/bold} creating initial commit"
         });
 
-        const time = adone.datetime.now() / 1000;
-        const zoneOffset = adone.datetime().utcOffset();
-
         // Create .gitignore file
         await fs.writeFile(std.path.join(context.cwd, ".gitignore"), gitignoreContent);
 
         // Initialize repository, add all files to git and create first commit.
-        const repository = await git.Repository.init(context.cwd, 0);
-        const index = await repository.refreshIndex();
-        await index.addAll();
-        await index.write();
-        const oid = await index.writeTree();
-        const author = git.Signature.create("ADONE", "info@adone.io", time, zoneOffset);
-        const committer = git.Signature.create("ADONE", "info@adone.io", time, zoneOffset);
-        await repository.createCommit("HEAD", author, committer, `initial commit from adone/cli v${adone.package.version}:\n\n  $ adone ${adone.runtime.app.argv.join(" ")}\n\n${adone.adoneLogo}`, oid, []);
+        const timestamp = adone.datetime.now() / 1000;
+        const timezoneOffset = adone.datetime().utcOffset();
+
+        const repo = {
+            fs: adone.std.fs,
+            dir: context.cwd
+        };
+
+        await git.init(repo);
+        const sha = await git.commit({
+            ...repo,
+            timestamp,
+            timezoneOffset,
+            author: {
+                name: "ADONE",
+                email: "info@adone.io"
+            },
+            message: `initial commit from adone/cli v${adone.package.version}:\n\n  $ adone ${adone.runtime.app.argv.join(" ")}\n\n${adone.adoneLogo}`
+        });
+
+        return sha;
     }
 }

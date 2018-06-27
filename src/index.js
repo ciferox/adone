@@ -351,6 +351,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         fake: "./glosses/fake",
         fs: "./glosses/fs",
         geoip: "./glosses/geoip",
+        git: "./glosses/git",
         globals: "./glosses/globals",
         hardware: "./glosses/hardware",
         is: "./glosses/is",
@@ -385,7 +386,6 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         uri: "./glosses/uri",
         util: "./glosses/utils",
         vault: "./glosses/vault",
-        vcs: "./glosses/vcs",
         virtualization: "./glosses/virtualization",
 
         // components

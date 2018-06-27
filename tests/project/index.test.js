@@ -12,7 +12,7 @@ const FIXTURES_PATH = std.path.join(__dirname, "fixtures");
 const fixture = (...args) => std.path.join(FIXTURES_PATH, ...args);
 
 describe("project", function () {
-    this.timeout(60000);
+    this.timeout(90000);
 
     describe("generator", () => {
         const paths = [];
@@ -29,7 +29,7 @@ describe("project", function () {
 
         after(async function () {
             this.timeout(30000);
-            await fs.rm(fixture());
+            // await fs.rm(fixture());
         });
 
         const randomName = (prefix = "test") => `${prefix}${text.random(4)}_${text.random(5)}_${text.random(6)}`;
@@ -371,7 +371,14 @@ describe("project", function () {
                     assert.lengthOf(adoneConfig.getSubConfigs(), 1);
 
                     const subCwd = std.path.join(cwd, "service");
-                    assert.sameMembers(await fs.readdir(subCwd), ["adone.json", "src"]);
+                    assert.sameMembers(await fs.readdir(subCwd), [
+                        "adone.json",
+                        "src",
+                        ".eslintrc.js",
+                        "node_modules",
+                        "package-lock.json",
+                        "package.json"
+                    ]);
                     assert.true(await fs.isDirectory(std.path.join(subCwd, "src")));
                     assert.true(await fs.exists(std.path.join(subCwd, "src", "index.js")));
 

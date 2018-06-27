@@ -69,37 +69,32 @@ export default class RealmManager extends app.Subsystem {
         }
     }
 
-    // @DCliCommand({
-    //     name: "initrealm",
-    //     group: "realm",
-    //     help: "Initialize new realm",
-    //     arguments: [
-    //         {
-    //             name: "name",
-    //             type: String,
-    //             default: "dev",
-    //             help: "Name of realm"
-    //         }
-    //     ],
-    //     options: [
-    //         {
-    //             name: "--path",
-    //             type: String,
-    //             help: "Path where realm will be initialized (home directory by default)"
-    //         }
-    //     ]
-    // })
-    // async initrealmCommand(args, opts) {
-    //     const name = args.get("name");
-    //     try {
-    //         const path = await adone.realm.init(name, opts.has("path") ? opts.get("path") : null);
-    //         term.print(`Realm {green-fg}'${path}'{/green-fg} successfully initialized\n`);
-    //         return 0;
-    //     } catch (err) {
-    //         term.print(`{red-fg}${err.message}{/}\n`);
-    //         return 1;
-    //     }
-    // }
+    @DCliCommand({
+        name: "info",
+        group: "realm",
+        help: "Show realm information"
+    })
+    async infoCommand(args, opts) {
+        const name = args.get("name");
+        try {
+            const realmManager = await this.getRealm();
+            const commonInfo = {
+                "Home path": realmManager.cwd
+            };
+
+            
+
+            // const path = await adone.realm.init(name, opts.has("path") ? opts.get("path") : null);
+            // term.print(`Realm {green-fg}'${path}'{/green-fg} successfully initialized\n`);
+            return 0;
+        } catch (err) {
+            this.root.kit.updateProgress({
+                message: err.message,
+                status: false
+            });
+            return 1;
+        }
+    }
 
     async getRealm() {
         if (!this._realmManager) {

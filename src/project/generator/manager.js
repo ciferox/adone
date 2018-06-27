@@ -32,7 +32,7 @@ export default class ProjectGenerator extends task.Manager {
     }
 
     async createSubProject(info) {
-        const cwd = std.path.join(this.owner.cwd, info.dir || info.name);
+        const cwd = std.path.join(this.owner.cwd, info.dirName || info.name);
         const context = {};
 
         await this._checkAndCreateProject({
@@ -49,7 +49,7 @@ export default class ProjectGenerator extends task.Manager {
         this.contexts.set(cwd, context);
         
         // Adone parent adone.json
-        const subName = info.dir || info.name;
+        const subName = info.dirName || info.name;
         this.owner.config.set(["struct", subName], std.path.relative(this.owner.cwd, cwd));
         await this.owner.config.save();
 
@@ -80,7 +80,7 @@ export default class ProjectGenerator extends task.Manager {
             await fs.mkdirp(info.cwd);
         }
 
-        await this.runAndWait(`${is.string(info.type) ? text.toCamelCase(info.type) : "default"}Project`, info, context);
+        return this.runAndWait(`${is.string(info.type) ? text.toCamelCase(info.type) : "default"}Project`, info, context);
     }
 
     async createFile(input) {
