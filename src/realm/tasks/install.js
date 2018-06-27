@@ -165,6 +165,7 @@ export default class InstallTask extends task.Task {
         await fs.mkdirp(std.path.dirname(this.srcPath));
 
         await adone.git.clone({
+            fs: adone.std.fs,
             url: this.packageName,
             dir: this.srcPath
         });
