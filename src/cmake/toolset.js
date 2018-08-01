@@ -10,6 +10,7 @@ export default class Toolset {
         this.options = options || {};
         this.targetOptions = new TargetOptions(this.options);
         this.generator = options.generator;
+        this.toolset = options.toolset;
         this.target = options.target;
         this.cCompilerPath = null;
         this.cppCompilerPath = null;

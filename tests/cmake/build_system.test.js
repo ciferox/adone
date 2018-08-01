@@ -13,6 +13,8 @@ describe("cmake", "BuildSystem", function () {
         testRunner.runCase(testCases.buildPrototypeWithDirectoryOption);
     });
 
+    
+
     it("should provide list of generators", async () => {
         const gens = await CMake.getGenerators();
         assert(is.array(gens));

@@ -1,5 +1,5 @@
 import { run } from "./processHelpers";
-const npmconf = adone.promise.promisifyAll(require("npmconf"));
+let npmConfigData = require("rc")("npm");
 
 const {
     is,
@@ -17,7 +17,7 @@ export default class CMake {
         this.log = new CMLog(this.options);
         this.dist = new Dist(this.options);
         this.projectRoot = path.resolve(this.options.directory || process.cwd());
-        this.workDir = this.options.out || path.join(this.projectRoot, "build");
+        this.workDir = path.resolve(this.options.out || path.join(this.projectRoot, "build"));
         this.config = this.options.debug ? "Debug" : "Release";
         this.buildDir = path.join(this.workDir, this.config);
         this._isAvailable = null;
@@ -136,6 +136,9 @@ export default class CMake {
         if (this.toolset.generator) {
             command += ` -G"${this.toolset.generator}"`;
         }
+        if (this.toolset.toolset) {
+            command += ` -T"${this.toolset.toolset}"`;
+        }
         if (this.toolset.cppCompilerPath) {
             D.push({
                 CMAKE_CXX_COMPILER: this.toolset.cppCompilerPath
@@ -163,14 +166,6 @@ export default class CMake {
         }
 
         // Load NPM config
-        const npmConfig = await npmconf.loadAsync();
-        const npmConfigData = {};
-        if (npmConfig.sources.global && npmConfig.sources.global.data) {
-            _.extend(npmConfigData, npmConfig.sources.global.data);
-        }
-        if (npmConfig.sources.user && npmConfig.sources.user.data) {
-            _.extend(npmConfigData, npmConfig.sources.user.data);
-        }
         for (const key of _.keys(npmConfigData)) {
             const ukey = key.toUpperCase();
             if (_.startsWith(ukey, "CMAKE_")) {

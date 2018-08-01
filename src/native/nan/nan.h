@@ -36,6 +36,7 @@
 #define NODE_7_0_MODULE_VERSION  51
 #define NODE_8_0_MODULE_VERSION  57
 #define NODE_9_0_MODULE_VERSION  59
+#define NODE_10_0_MODULE_VERSION 64
 
 #ifdef _MSC_VER
 # define NAN_HAS_CPLUSPLUS_11 (_MSC_VER >= 1800)
@@ -90,6 +91,9 @@
 #endif
 
 namespace Nan {
+
+#define NAN_CONCAT(a, b) NAN_CONCAT_HELPER(a, b)
+#define NAN_CONCAT_HELPER(a, b) a##b
 
 #define NAN_INLINE inline  // TODO(bnoordhuis) Remove in v3.0.0.
 
@@ -147,6 +151,21 @@ namespace Nan {
 
 #define NAN_MODULE_INIT(name)                                                  \
     void name(Nan::ADDON_REGISTER_FUNCTION_ARGS_TYPE target)
+
+#if NODE_MAJOR_VERSION >= 10 || \
+    NODE_MAJOR_VERSION == 9 && NODE_MINOR_VERSION >= 3
+#define NAN_MODULE_WORKER_ENABLED(module_name, registration)                   \
+    extern "C" NODE_MODULE_EXPORT void                                         \
+      NAN_CONCAT(node_register_module_v, NODE_MODULE_VERSION)(                 \
+        v8::Local<v8::Object> exports, v8::Local<v8::Value> module,            \
+        v8::Local<v8::Context> context)                                        \
+    {                                                                          \
+        registration(exports);                                                 \
+    }
+#else
+#define NAN_MODULE_WORKER_ENABLED(module_name, registration)                   \
+    NODE_MODULE(module_name, registration)
+#endif
 
 //=== CallbackInfo =============================================================
 
@@ -559,6 +578,16 @@ class AsyncResource {
   node::async_context context;
 #endif
 };
+
+inline uv_loop_t* GetCurrentEventLoop() {
+#if NODE_MAJOR_VERSION >= 10 || \
+  NODE_MAJOR_VERSION == 9 && NODE_MINOR_VERSION >= 3 || \
+  NODE_MAJOR_VERSION == 8 && NODE_MINOR_VERSION >= 10
+    return node::GetCurrentEventLoop(v8::Isolate::GetCurrent());
+#else
+    return uv_default_loop();
+#endif
+}
 
 //============ =================================================================
 
@@ -1899,7 +1928,7 @@ inline MaybeLocal<v8::Value> Call(
       const char* resource_name = "nan:AsyncBareProgressWorkerBase")
       : AsyncWorker(callback_, resource_name) {
     uv_async_init(
-        uv_default_loop()
+        GetCurrentEventLoop()
       , &async
       , AsyncProgress_
     );
@@ -2161,7 +2190,7 @@ inline void AsyncExecuteComplete (uv_work_t* req) {
 
 inline void AsyncQueueWorker (AsyncWorker* worker) {
   uv_queue_work(
-      uv_default_loop()
+      GetCurrentEventLoop()
     , &worker->request
     , AsyncExecute
     , reinterpret_cast<uv_after_work_cb>(AsyncExecuteComplete)

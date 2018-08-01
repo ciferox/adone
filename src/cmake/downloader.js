@@ -1,7 +1,7 @@
 const request = require("request");
 const MemoryStream = require("memory-stream");
 const tar = require("tar");
-const unzip = require("unzip");
+const unzip = require("unzipper");
 
 const {
     is,
