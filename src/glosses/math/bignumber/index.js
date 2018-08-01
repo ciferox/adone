@@ -23,7 +23,7 @@ BigNumber.conditionArgs = function (num, base) {
         }
         return { num: n, base: 2 };
 
-    } else if (num.match(/e\-/)) { // negative exponent
+    } else if (num.match(/e-/)) { // negative exponent
         return { num: Math.floor(Number(num)).toString(), base: base || 10 };
     }
     return { num, base: base || 10 };

@@ -1,6 +1,6 @@
 const { BigNumber } = adone.math;
 
-describe("math", "bignumber", () => {
+describe("math", "BigNumber", () => {
     describe("big", () => {
         it("create", () => {
             expect(new BigNumber(1337).toString()).to.be.deep.equal("1337");
@@ -46,12 +46,10 @@ describe("math", "bignumber", () => {
                     "1492948268400884893722767401972695174353441"
                 ).add("939769862972759638577945343130228368606420083646071622223953046277" +
                 "3784500359975110887672142614667937014937371109558223563373329424" +
-                "0624814097369771481147215472578762824607080"
-                    ).toString()
+                "0624814097369771481147215472578762824607080").toString()
             ).to.be.deep.equal("1141551615417726117534237799919494002195048440504752549409240908170367" +
             "41759492475205227039558501334339864668016751861424100681899362117762" +
-            "365770656374869982874551457998960521"
-                );
+            "365770656374869982874551457998960521");
         });
 
         it("sub", () => {
@@ -192,8 +190,8 @@ describe("math", "bignumber", () => {
             expect(BigNumber.and(new BigNumber("111121", 16), new BigNumber("111111", 16)).toString(16)).to.be.deep.equal("111101");
             expect(BigNumber.and(new BigNumber("111131", 16), new BigNumber("111111", 16)).toString(16)).to.be.deep.equal("111111");
 
-            expect(BigNumber.and(new BigNumber("-111111", 16), new BigNumber("111111", 16)).toString(16)).to.be.deep.equal("01");
-            expect(BigNumber.and(new BigNumber("111111", 16), new BigNumber("-111111", 16)).toString(16)).to.be.deep.equal("01");
+            expect(BigNumber.and(new BigNumber("-111111", 16), new BigNumber("111111", 16)).toString(16)).to.be.deep.equal("1");
+            expect(BigNumber.and(new BigNumber("111111", 16), new BigNumber("-111111", 16)).toString(16)).to.be.deep.equal("1");
             expect(BigNumber.and(new BigNumber("-111111", 16), new BigNumber("-111111", 16)).toString(16)).to.be.deep.equal("-111111");
         });
 
@@ -345,8 +343,8 @@ describe("math", "bignumber", () => {
             expect(b.toBuffer({ endian: "little", size: "auto" }).toString("hex")).to.be.deep.equal("0504030201");
 
             const c = Buffer.from("000102030405", "hex");
-            expect(BigNumber.fromBuffer(c, { endian: "big", size: "auto" }).toString(16)).to.be.deep.equal("0102030405");
-            expect(BigNumber.fromBuffer(c, { endian: "little", size: "auto" }).toString(16)).to.be.deep.equal("050403020100");
+            expect(BigNumber.fromBuffer(c, { endian: "big", size: "auto" }).toString(16)).to.be.deep.equal("102030405");
+            expect(BigNumber.fromBuffer(c, { endian: "little", size: "auto" }).toString(16)).to.be.deep.equal("50403020100");
         });
 
         it("bitlength", () => {
@@ -397,7 +395,7 @@ describe("math", "bignumber", () => {
             const num = BigNumber.fromBuffer(buf1, { size: 4 }).toNumber();
             expect(num).to.be.deep.equal(Number(Math.pow(256, 3)) + 2 * Math.pow(256, 2) + 3 * 256 + 4);
 
-            const buf2 = new Buffer(4);
+            const buf2 = Buffer.allocUnsafe(4);
             buf2.writeUInt32BE(num);
             expect(buf1).to.be.deep.equal(buf2);
         });
@@ -406,7 +404,7 @@ describe("math", "bignumber", () => {
             const buf1 = Buffer.from([1, 2, 3, 4]);
             const num = BigNumber.fromBuffer(buf1, { size: 4, endian: "little" }).toNumber();
 
-            const buf2 = new Buffer(4);
+            const buf2 = Buffer.allocUnsafe(4);
             buf2.writeUInt32LE(num);
             expect(buf1).to.be.deep.equal(buf2);
         });
@@ -453,7 +451,7 @@ describe("math", "bignumber", () => {
             const buf = Buffer.from([0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f]);
             const b = new BigNumber(0x0a * 256 * 256 * 256 * 256 * 256 + 0x0b * 256 * 256 * 256 * 256 + 0x0c * 256 * 256 * 256 + 0x0d * 256 * 256 + 0x0e * 256 + 0x0f);
 
-            expect(b.toString(16)).to.be.deep.equal("0a0b0c0d0e0f");
+            expect(b.toString(16)).to.be.deep.equal("a0b0c0d0e0f");
 
             expect([].slice.call(b.toBuffer({ endian: "big", size: 2 }))).to.be.deep.equal([0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f]);
 
