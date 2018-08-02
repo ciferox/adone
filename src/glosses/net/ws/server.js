@@ -42,17 +42,19 @@ const socketOnError = function () {
  * @param {net.Socket} socket The socket of the upgrade request
  * @param {Number} code The HTTP response status code
  * @param {String} [message] The HTTP response body
+ * @param {Object} [headers] Additional HTTP response headers
  * @private
  */
-const abortHandshake = function (socket, code, message) {
+const abortHandshake = function (socket, code, message, headers) {
     if (socket.writable) {
         message = message || http.STATUS_CODES[code];
+        headers = Object.assign({
+            Connection: "close",
+            "Content-type": "text/html",
+            "Content-Length": Buffer.byteLength(message)
+        }, headers);
         socket.write(
-            `${`HTTP/1.1 ${code} ${http.STATUS_CODES[code]}\r\n` +
-            "Connection: close\r\n" +
-            "Content-type: text/html\r\n" +
-            `Content-Length: ${Buffer.byteLength(message)}\r\n` +
-            "\r\n"}${message}`
+            `HTTP/1.1 ${code} ${http.STATUS_CODES[code]}\r\n${Object.keys(headers).map((h) => `${h}: ${headers[h]}`).join("\r\n")}\r\n\r\n${message}`
         );
     }
 
@@ -267,9 +269,9 @@ export default class WebSocketServer extends event.Emitter {
             };
 
             if (this.options.verifyClient.length === 2) {
-                this.options.verifyClient(info, (verified, code, message) => {
+                this.options.verifyClient(info, (verified, code, message, headers) => {
                     if (!verified) {
-                        return abortHandshake(socket, code || 401, message);
+                        return abortHandshake(socket, code || 401, message, headers);
                     }
 
                     this.completeUpgrade(extensions, req, socket, head, cb);

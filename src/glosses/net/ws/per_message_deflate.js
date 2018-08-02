@@ -468,8 +468,6 @@ export default class PerMessageDeflate {
 
             // TODO deprecate memLevel/level and recommend zlibDeflateOptions instead
             this._deflate = zlib.createDeflateRaw({
-                memLevel: this._options.memLevel,
-                level: this._options.level,
                 ...this._options.zlibDeflateOptions,
                 windowBits
             });

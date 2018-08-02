@@ -223,6 +223,8 @@ const receiverOnDrain = function () {
 const receiverOnError = function (err) {
     const websocket = this[kWebSocket];
 
+    websocket._socket.removeListener("data", socketOnData);
+
     websocket.readyState = Client.CLOSING;
     websocket._closeCode = err[constants.kStatusCode];
     websocket.emit("error", err);
@@ -272,18 +274,6 @@ const receiverOnPong = function (data) {
 };
 
 /**
- * The listener of the `net.Socket` `'data'` event.
- *
- * @param {Buffer} chunk A chunk of data
- * @private
- */
-const socketOnData = function (chunk) {
-    if (!this[kWebSocket]._receiver.write(chunk)) {
-        this.pause();
-    }
-};
-
-/**
  * The listener of the `net.Socket` `'end'` event.
  *
  * @private
@@ -321,6 +311,18 @@ const receiverOnConclude = function (code, reason) {
 };
 
 /**
+ * The listener of the `net.Socket` `'data'` event.
+ *
+ * @param {Buffer} chunk A chunk of data
+ * @private
+ */
+const socketOnData = function (chunk) {
+    if (!this[kWebSocket]._receiver.write(chunk)) {
+        this.pause();
+    }
+};
+
+/**
  * The listener of the `net.Socket` `'close'` event.
  *
  * @private
@@ -329,21 +331,26 @@ const socketOnClose = function () {
     const websocket = this[kWebSocket];
 
     this.removeListener("close", socketOnClose);
-    this.removeListener("data", socketOnData);
     this.removeListener("end", socketOnEnd);
-    this[kWebSocket] = undefined;
-
+    
     websocket.readyState = Client.CLOSING;
 
     //
     // The close frame might not have been received or the `'end'` event emitted,
     // for example, if the socket was destroyed due to an error. Ensure that the
     // `receiver` stream is closed after writing any remaining buffered data to
-    // it.
+    // it. If the readable side of the socket is in flowing mode then there is no
+    // buffered data as everything has been already written and `readable.read()`
+    // will return `null`. If instead, the socket is paused, any possible buffered
+    // data will be read as a single chunk and emitted synchronously in a single
+    // `'data'` event.
     //
     websocket._socket.read();
     websocket._receiver.end();
 
+    this.removeListener("data", socketOnData);
+    this[kWebSocket] = undefined;
+    
     clearTimeout(websocket._closeTimer);
 
     if (
@@ -382,7 +389,7 @@ const socketOnError = function () {
  * @private
  */
 const netConnect = function (options) {
-    options.path = options.socketPath || options._socketPath || undefined;
+    options.path = options.socketPath || undefined;
     return net.connect(options);
 };
 
@@ -394,7 +401,7 @@ const netConnect = function (options) {
  * @private
  */
 const tlsConnect = function (options) {
-    options.path = options.socketPath || options._socketPath || undefined;
+    options.path = undefined;
     options.servername = options.servername || options.host;
     return tls.connect(options);
 };
@@ -408,13 +415,15 @@ const tlsConnect = function (options) {
  * @param {(Boolean|Object)} options.perMessageDeflate Enable/disable permessage-deflate
  * @param {Number} options.handshakeTimeout Timeout in milliseconds for the handshake request
  * @param {Number} options.protocolVersion Value of the `Sec-WebSocket-Version` header
- * @param {String} options.origin Value of the `Origin` or `Sec-WebSocket-Origin` header
+ * @param {String} 
+ * @param {Number} options.maxPayload The maximum allowed message size Value of the `Origin` or `Sec-WebSocket-Origin` header
  * @private
  */
 const initAsClient = function (address, protocols, options) {
     options = {
         protocolVersion: protocolVersions[1],
         perMessageDeflate: true,
+        maxPayload: 100 * 1024 * 1024,
         ...options,
         createConnection: undefined,
         socketPath: undefined,
@@ -478,7 +487,8 @@ const initAsClient = function (address, protocols, options) {
     if (options.perMessageDeflate) {
         perMessageDeflate = new PerMessageDeflate(
             options.perMessageDeflate !== true ? options.perMessageDeflate : {},
-            false
+            false,
+            options.maxPayload
         );
         options.headers["Sec-WebSocket-Extensions"] = extension.format({
             [PerMessageDeflate.extensionName]: perMessageDeflate.offer()
@@ -502,17 +512,8 @@ const initAsClient = function (address, protocols, options) {
 
     if (isUnixSocket) {
         const parts = path.split(":");
-        if (is.nil(options.agent) && process.versions.modules < 57) {
-            //
-            // Setting `socketPath` in conjunction with `createConnection` without an
-            // agent throws an error on Node.js < 8. Work around the issue by using a
-            // different property.
-            //
-            options._socketPath = parts[0];
-        } else {
-            options.socketPath = parts[0];
-        }
 
+        options.socketPath = parts[0];
         options.path = parts[1];
     }
 
@@ -521,7 +522,7 @@ const initAsClient = function (address, protocols, options) {
     if (options.handshakeTimeout) {
         req.setTimeout(
             options.handshakeTimeout,
-            abortHandshake.bind(null, this, req, "Opening handshake has timed out")
+            () => abortHandshake(this, req, "Opening handshake has timed out")
         );
     }
 
@@ -605,7 +606,7 @@ const initAsClient = function (address, protocols, options) {
             }
         }
 
-        this.setSocket(socket, head, 0);
+        this.setSocket(socket, head, options.maxPayload);
     });
 };
 

@@ -362,8 +362,14 @@ describe("net", "ws", "PerMessageDeflate", () => {
         });
 
         it("honors the `level` option", (done) => {
-            const lev0 = new PerMessageDeflate({ threshold: 0, level: 0 });
-            const lev9 = new PerMessageDeflate({ threshold: 0, level: 9 });
+            const lev0 = new PerMessageDeflate({
+                threshold: 0,
+                zlibDeflateOptions: { level: 0 }
+            });
+            const lev9 = new PerMessageDeflate({
+                threshold: 0,
+                zlibDeflateOptions: { level: 9 }
+            });
             const extensionStr = (
                 "permessage-deflate; server_no_context_takeover; " +
                 "client_no_context_takeover; server_max_window_bits=10; " +
@@ -442,22 +448,22 @@ describe("net", "ws", "PerMessageDeflate", () => {
 
             lev0.compress(buf, true, (err, compressed1) => {
                 if (err) {
-                    return done(err); 
+                    return done(err);
                 }
 
                 lev0.decompress(compressed1, true, (err, decompressed1) => {
-                    if (err) { 
+                    if (err) {
                         return done(err);
                     }
 
                     lev9.compress(buf, true, (err, compressed2) => {
-                        if (err) { 
-                            return done(err); 
+                        if (err) {
+                            return done(err);
                         }
 
                         lev9.decompress(compressed2, true, (err, decompressed2) => {
-                            if (err) { 
-                                return done(err); 
+                            if (err) {
+                                return done(err);
                             }
                             // Level 0 compression actually adds a few bytes due to headers.
                             assert.ok(compressed1.length > buf.length);
@@ -572,7 +578,6 @@ describe("net", "ws", "PerMessageDeflate", () => {
         it("doesn't call the callback twice when `maxPayload` is exceeded", (done) => {
             const perMessageDeflate = new PerMessageDeflate({ threshold: 0 }, false, 25);
             const buf = Buffer.from("A".repeat(50));
-            const errors = [];
 
             perMessageDeflate.accept([{}]);
             perMessageDeflate.compress(buf, true, (err, data) => {
@@ -580,11 +585,9 @@ describe("net", "ws", "PerMessageDeflate", () => {
                     return done(err);
                 }
 
-                perMessageDeflate.decompress(data, true, (err) => errors.push(err));
-                perMessageDeflate._inflate.flush(() => {
-                    assert.strictEqual(errors.length, 1);
-                    assert.ok(errors[0] instanceof RangeError);
-                    assert.strictEqual(errors[0].message, "Max payload size exceeded");
+                perMessageDeflate.decompress(data, true, (err) => {
+                    assert.ok(err instanceof RangeError);
+                    assert.strictEqual(err.message, "Max payload size exceeded");
                     done();
                 });
             });

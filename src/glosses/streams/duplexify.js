@@ -14,10 +14,16 @@ const onuncork = function (self, fn) {
     }
 };
 
+const autoDestroy = function (self, err) {
+    if (self._autoDestroy) {
+        self.destroy(err);
+    }
+};
+
 const destroyer = function (self, end) {
     return function (err) {
         if (err) {
-            self._destroyInterval(err);
+            autoDestroy(self, err.message === "premature close" ? null : err);
         } else if (end && !self._ended) {
             self.end();
         }
@@ -48,6 +54,7 @@ export default class Duplexify extends stream.Duplex {
         this._readable = null;
         this._readable2 = null;
 
+        this._autoDestroy = !opts || opts.autoDestroy !== false;
         this._forwardDestroy = !opts || opts.destroy !== false;
         this._forwardEnd = !opts || opts.end !== false;
         this._corked = 1; // start corked
@@ -57,8 +64,6 @@ export default class Duplexify extends stream.Duplex {
         this._unwrite = null;
         this._unread = null;
         this._ended = false;
-        this._error = null;
-        this._preferError = false;
 
         this.destroyed = false;
 
@@ -195,29 +200,14 @@ export default class Duplexify extends stream.Duplex {
     }
 
     destroy(err) {
-        if (this._preferError && !this._error && err) {
-            this._error = err;
-        }
-
         if (this.destroyed) {
             return;
         }
         this.destroyed = true;
 
         process.nextTick(() => {
-            this._destroy(this._preferError ? this._error : err);
+            this._destroy(err);
         });
-    }
-
-    _destroyInterval(err) {
-        if (this.destroyed) {
-            return;
-        }
-        if (err.message !== "premature close") {
-            return this.destroy(err);
-        }
-        this._preferError = true;
-        this.destroy(null);
     }
 
     _destroy(err) {

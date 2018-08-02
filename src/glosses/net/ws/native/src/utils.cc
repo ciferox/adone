@@ -1,37 +1,58 @@
-/*!
- * bufferutil: WebSocket buffer utils
- * Copyright(c) 2015 Einar Otto Stangvik <einaros@gmail.com>
- * MIT Licensed
- */
+#include <assert.h>
+#include <node_api.h>
 
-#include <nan.h>
-
-NAN_METHOD(mask)
+napi_value Mask(napi_env env, napi_callback_info info)
 {
-    char *from = node::Buffer::Data(info[0]);
-    char *mask = node::Buffer::Data(info[1]);
-    char *to = node::Buffer::Data(info[2]) + info[3]->Int32Value();
-    size_t length = info[4]->Int32Value();
-    size_t index = 0;
+    napi_status status;
+    size_t argc = 5;
+    napi_value argv[5];
+
+    status = napi_get_cb_info(env, info, &argc, argv, NULL, NULL);
+    assert(status == napi_ok);
+
+    uint8_t *source;
+    uint8_t *mask;
+    uint8_t *destination;
+    uint32_t offset;
+    uint32_t length;
+
+    status = napi_get_buffer_info(env, argv[0], (void **)&source, NULL);
+    assert(status == napi_ok);
+
+    status = napi_get_buffer_info(env, argv[1], (void **)&mask, NULL);
+    assert(status == napi_ok);
+
+    status = napi_get_buffer_info(env, argv[2], (void **)&destination, NULL);
+    assert(status == napi_ok);
+
+    status = napi_get_value_uint32(env, argv[3], &offset);
+    assert(status == napi_ok);
+
+    status = napi_get_value_uint32(env, argv[4], &length);
+    assert(status == napi_ok);
+
+    destination += offset;
+    uint32_t index = 0;
 
     //
     // Alignment preamble.
     //
-    while (index < length && (reinterpret_cast<size_t>(from) & 0x07))
+    while (index < length && ((size_t)source % 8))
     {
-        *to++ = *from++ ^ mask[index % 4];
+        *destination++ = *source++ ^ mask[index % 4];
         index++;
     }
+
     length -= index;
     if (!length)
-        return;
+        return NULL;
 
     //
     // Realign mask and convert to 64 bit.
     //
-    char maskAlignedArray[8];
+    uint8_t maskAlignedArray[8];
 
-    for (size_t i = 0; i < 8; i++, index++)
+    for (uint8_t i = 0; i < 8; i++, index++)
     {
         maskAlignedArray[i] = mask[index % 4];
     }
@@ -39,55 +60,72 @@ NAN_METHOD(mask)
     //
     // Apply 64 bit mask in 8 byte chunks.
     //
-    size_t loop = length / 8;
-    uint64_t *pMask8 = reinterpret_cast<uint64_t *>(maskAlignedArray);
+    uint32_t loop = length / 8;
+    uint64_t *pMask8 = (uint64_t *)maskAlignedArray;
 
     while (loop--)
     {
-        uint64_t *pFrom8 = reinterpret_cast<uint64_t *>(from);
-        uint64_t *pTo8 = reinterpret_cast<uint64_t *>(to);
+        uint64_t *pFrom8 = (uint64_t *)source;
+        uint64_t *pTo8 = (uint64_t *)destination;
         *pTo8 = *pFrom8 ^ *pMask8;
-        from += 8;
-        to += 8;
+        source += 8;
+        destination += 8;
     }
 
     //
     // Apply mask to remaining data.
     //
-    char *pmaskAlignedArray = maskAlignedArray;
+    uint8_t *pmaskAlignedArray = maskAlignedArray;
 
-    length &= 0x7;
+    length %= 8;
     while (length--)
     {
-        *to++ = *from++ ^ *pmaskAlignedArray++;
+        *destination++ = *source++ ^ *pmaskAlignedArray++;
     }
+
+    return NULL;
 }
 
-NAN_METHOD(unmask)
+napi_value Unmask(napi_env env, napi_callback_info info)
 {
-    char *from = node::Buffer::Data(info[0]);
-    size_t length = node::Buffer::Length(info[0]);
-    char *mask = node::Buffer::Data(info[1]);
-    size_t index = 0;
+    napi_status status;
+    size_t argc = 2;
+    napi_value argv[2];
+
+    status = napi_get_cb_info(env, info, &argc, argv, NULL, NULL);
+    assert(status == napi_ok);
+
+    uint8_t *source;
+    size_t length;
+    uint8_t *mask;
+
+    status = napi_get_buffer_info(env, argv[0], (void **)&source, &length);
+    assert(status == napi_ok);
+
+    status = napi_get_buffer_info(env, argv[1], (void **)&mask, NULL);
+    assert(status == napi_ok);
+
+    uint32_t index = 0;
 
     //
     // Alignment preamble.
     //
-    while (index < length && (reinterpret_cast<size_t>(from) & 0x07))
+    while (index < length && ((size_t)source % 8))
     {
-        *from++ ^= mask[index % 4];
+        *source++ ^= mask[index % 4];
         index++;
     }
+
     length -= index;
     if (!length)
-        return;
+        return NULL;
 
     //
     // Realign mask and convert to 64 bit.
     //
-    char maskAlignedArray[8];
+    uint8_t maskAlignedArray[8];
 
-    for (size_t i = 0; i < 8; i++, index++)
+    for (uint8_t i = 0; i < 8; i++, index++)
     {
         maskAlignedArray[i] = mask[index % 4];
     }
@@ -95,32 +133,45 @@ NAN_METHOD(unmask)
     //
     // Apply 64 bit mask in 8 byte chunks.
     //
-    size_t loop = length / 8;
-    uint64_t *pMask8 = reinterpret_cast<uint64_t *>(maskAlignedArray);
+    uint32_t loop = length / 8;
+    uint64_t *pMask8 = (uint64_t *)maskAlignedArray;
 
     while (loop--)
     {
-        uint64_t *pSource8 = reinterpret_cast<uint64_t *>(from);
+        uint64_t *pSource8 = (uint64_t *)source;
         *pSource8 ^= *pMask8;
-        from += 8;
+        source += 8;
     }
 
     //
     // Apply mask to remaining data.
     //
-    char *pmaskAlignedArray = maskAlignedArray;
+    uint8_t *pmaskAlignedArray = maskAlignedArray;
 
-    length &= 0x7;
+    length %= 8;
     while (length--)
     {
-        *from++ ^= *pmaskAlignedArray++;
+        *source++ ^= *pmaskAlignedArray++;
     }
+
+    return NULL;
 }
 
-NAN_METHOD(isValidUTF8)
+napi_value IsValidUTF8(napi_env env, napi_callback_info info)
 {
-    uint8_t *s = reinterpret_cast<uint8_t *>(node::Buffer::Data(info[0]));
-    size_t length = node::Buffer::Length(info[0]);
+    napi_status status;
+    size_t argc = 1;
+    napi_value argv[1];
+
+    status = napi_get_cb_info(env, info, &argc, argv, NULL, NULL);
+    assert(status == napi_ok);
+
+    uint8_t *s;
+    size_t length;
+
+    status = napi_get_buffer_info(env, argv[0], (void **)&s, &length);
+    assert(status == napi_ok);
+
     uint8_t *end = s + length;
 
     //
@@ -191,14 +242,39 @@ NAN_METHOD(isValidUTF8)
         }
     }
 
-    info.GetReturnValue().Set(Nan::New<v8::Boolean>(s == end));
+    napi_value result;
+    status = napi_get_boolean(env, s == end, &result);
+    assert(status == napi_ok);
+
+    return result;
 }
 
-NAN_MODULE_INIT(init)
+napi_value Init(napi_env env, napi_value exports)
 {
-    NAN_EXPORT(target, mask);
-    NAN_EXPORT(target, unmask);
-    NAN_EXPORT(target, isValidUTF8);
+    napi_status status;
+    napi_value mask;
+    napi_value unmask;
+    napi_value isValidUTF8;
+
+    status = napi_create_function(env, NULL, 0, IsValidUTF8, NULL, &isValidUTF8);
+    assert(status == napi_ok);
+
+    status = napi_create_function(env, NULL, 0, Mask, NULL, &mask);
+    assert(status == napi_ok);
+
+    status = napi_create_function(env, NULL, 0, Unmask, NULL, &unmask);
+    assert(status == napi_ok);
+
+    status = napi_set_named_property(env, exports, "mask", mask);
+    assert(status == napi_ok);
+
+    status = napi_set_named_property(env, exports, "unmask", unmask);
+    assert(status == napi_ok);
+
+    status = napi_set_named_property(env, exports, "isValidUTF8", isValidUTF8);
+    assert(status == napi_ok);
+
+    return exports;
 }
 
-NODE_MODULE(bufferutil, init)
+NAPI_MODULE(wsutil, Init)

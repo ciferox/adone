@@ -114,29 +114,27 @@ const createClient = (target, protocols, options) => {
     return stream;
 };
 
+class Server extends adone.net.ws.Server {
+    constructor(opts, cb) {
+        super(opts);
+
+        let proxied = false;
+        this.on("newListener", (event) => {
+            if (!proxied && event === "stream") {
+                proxied = true;
+                this.on("connection", (conn, req) => {
+                    this.emit("stream", createClient(conn, opts), req);
+                });
+            }
+        });
+
+        if (cb) {
+            this.on("stream", cb);
+        }
+    }
+}
+
 adone.lazify({
     createClient: () => createClient,
-    createServer: () => {
-        class Server extends adone.net.ws.Server {
-            constructor(opts, cb) {
-                super(opts);
-
-                let proxied = false;
-                this.on("newListener", (event) => {
-                    if (!proxied && event === "stream") {
-                        proxied = true;
-                        this.on("connection", (conn, req) => {
-                            this.emit("stream", createClient(conn, opts), req);
-                        });
-                    }
-                });
-
-                if (cb) {
-                    this.on("stream", cb);
-                }
-            }
-        }
-
-        return (opts, cb) => new Server(opts, cb);
-    }
+    createServer: () => (opts, cb) => new Server(opts, cb)
 }, exports, require);
