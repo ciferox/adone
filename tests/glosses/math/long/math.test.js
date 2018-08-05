@@ -1512,6 +1512,16 @@ describe("math", "Long", "math", () => {
         }
     });
 
+    it("fromBytes", () => {
+        const longVal = Long.fromBits(0x01234567, 0x12345678);
+        const ulongVal = Long.fromBits(0x01234567, 0x12345678, true);
+        assert.deepEqual(Long.fromBytes(longVal.toBytes()), longVal);
+        assert.deepEqual(Long.fromBytes([0x12, 0x34, 0x56, 0x78, 0x01, 0x23, 0x45, 0x67]), longVal);
+        assert.deepEqual(Long.fromBytes([0x12, 0x34, 0x56, 0x78, 0x01, 0x23, 0x45, 0x67], 0, false, false), longVal);
+        assert.deepEqual(Long.fromBytes([0xFF, 0x67, 0x45, 0x23, 0x01, 0x78, 0x56, 0x34, 0x12], 1, false, true), longVal);
+        assert.deepEqual(Long.fromBytes([0xFF, 0x67, 0x45, 0x23, 0x01, 0x78, 0x56, 0x34, 0x12], 1, true, true), ulongVal);
+    });
+
     // Regression test for
     // https://github.com/google/closure-library/pull/498
     it("Base36 to String", () => {

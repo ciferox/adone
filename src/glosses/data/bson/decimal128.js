@@ -178,10 +178,10 @@ export default class Decimal128 {
         if (!isDigit(string[index]) && string[index] !== ".") {
             if (string[index] === "i" || string[index] === "I") {
                 return new Decimal128(
-                    new Buffer(isNegative ? INF_NEGATIVE_BUFFER : INF_POSITIVE_BUFFER)
+                    Buffer.from(isNegative ? INF_NEGATIVE_BUFFER : INF_POSITIVE_BUFFER)
                 );
             } else if (string[index] === "N") {
-                return new Decimal128(new Buffer(NAN_BUFFER));
+                return new Decimal128(Buffer.from(NAN_BUFFER));
             }
         }
 
@@ -189,7 +189,7 @@ export default class Decimal128 {
         while (isDigit(string[index]) || string[index] === ".") {
             if (string[index] === ".") {
                 if (sawRadix) {
-                    return new Decimal128(new Buffer(NAN_BUFFER));
+                    return new Decimal128(Buffer.from(NAN_BUFFER));
                 }
 
                 sawRadix = true;
@@ -234,7 +234,7 @@ export default class Decimal128 {
 
             // No digits read
             if (!match || !match[2]) {
-                return new Decimal128(new Buffer(NAN_BUFFER));
+                return new Decimal128(Buffer.from(NAN_BUFFER));
             }
 
             // Get exponent
@@ -246,7 +246,7 @@ export default class Decimal128 {
 
         // Return not a number
         if (string[index]) {
-            return new Decimal128(new Buffer(NAN_BUFFER));
+            return new Decimal128(Buffer.from(NAN_BUFFER));
         }
 
         // Done reading input
@@ -295,7 +295,7 @@ export default class Decimal128 {
                     break;
                 } else {
                     return new Decimal128(
-                        new Buffer(isNegative ? INF_NEGATIVE_BUFFER : INF_POSITIVE_BUFFER)
+                        Buffer.from(isNegative ? INF_NEGATIVE_BUFFER : INF_POSITIVE_BUFFER)
                     );
                 }
             }
@@ -329,7 +329,7 @@ export default class Decimal128 {
                     break;
                 } else {
                     return new Decimal128(
-                        new Buffer(isNegative ? INF_NEGATIVE_BUFFER : INF_POSITIVE_BUFFER)
+                        Buffer.from(isNegative ? INF_NEGATIVE_BUFFER : INF_POSITIVE_BUFFER)
                     );
                 }
             }
@@ -384,7 +384,7 @@ export default class Decimal128 {
                                 digits[dIdx] = 1;
                             } else {
                                 return new Decimal128(
-                                    new Buffer(
+                                    Buffer.from(
                                         isNegative ? INF_NEGATIVE_BUFFER : INF_POSITIVE_BUFFER
                                     )
                                 );

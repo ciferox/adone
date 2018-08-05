@@ -9,6 +9,7 @@
             "src": [
                 "src/**/*",
                 "!src/**/*.js",
+                "!src/**/*.wat",
                 "!src/glosses/schema/__/dot/*",
                 "!src/**/native/**/*"
             ],
@@ -260,6 +261,12 @@
                                 "src": "src/glosses/data/bson/native",
                                 "dst": "lib/glosses/data/bson/native"
                             }
+                        },
+                        "bson2": {
+                            "description": "Implementation of BSON serializer",
+                            "src": "src/glosses/data/bson2/**/*.js",
+                            "dst": "lib/glosses/data/bson2",
+                            "namespace": "bson2"
                         },
                         "json": {
                             "description": "Implementation of JSON serializers",

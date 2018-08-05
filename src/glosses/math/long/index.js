@@ -1,4 +1,7 @@
-const { is, error } = adone;
+const {
+    is,
+    error
+} = adone;
 
 const TWO_PWR_16_DBL = 1 << 16;
 const TWO_PWR_24_DBL = 1 << 24;
@@ -7,14 +10,11 @@ const TWO_PWR_64_DBL = TWO_PWR_32_DBL * TWO_PWR_32_DBL;
 const TWO_PWR_63_DBL = TWO_PWR_64_DBL / 2;
 
 /**
- * @typedef {object} LowHighBits
- * @property {number} low The low (signed) 32 bits of the long
- * @property {number} high The high (signed) 32 bits of the long
+ * wasm optimizations, to do native i64 multiplication and divide
  */
-
-/**
- * @typedef {Long | number | string | LowHighBits} Longable
- */
+const wasm = new WebAssembly.Instance(new WebAssembly.Module(new Uint8Array([
+    0, 97, 115, 109, 1, 0, 0, 0, 1, 13, 2, 96, 0, 1, 127, 96, 4, 127, 127, 127, 127, 1, 127, 3, 7, 6, 0, 1, 1, 1, 1, 1, 6, 6, 1, 127, 1, 65, 0, 11, 7, 50, 6, 3, 109, 117, 108, 0, 1, 5, 100, 105, 118, 95, 115, 0, 2, 5, 100, 105, 118, 95, 117, 0, 3, 5, 114, 101, 109, 95, 115, 0, 4, 5, 114, 101, 109, 95, 117, 0, 5, 8, 103, 101, 116, 95, 104, 105, 103, 104, 0, 0, 10, 191, 1, 6, 4, 0, 35, 0, 11, 36, 1, 1, 126, 32, 0, 173, 32, 1, 173, 66, 32, 134, 132, 32, 2, 173, 32, 3, 173, 66, 32, 134, 132, 126, 34, 4, 66, 32, 135, 167, 36, 0, 32, 4, 167, 11, 36, 1, 1, 126, 32, 0, 173, 32, 1, 173, 66, 32, 134, 132, 32, 2, 173, 32, 3, 173, 66, 32, 134, 132, 127, 34, 4, 66, 32, 135, 167, 36, 0, 32, 4, 167, 11, 36, 1, 1, 126, 32, 0, 173, 32, 1, 173, 66, 32, 134, 132, 32, 2, 173, 32, 3, 173, 66, 32, 134, 132, 128, 34, 4, 66, 32, 135, 167, 36, 0, 32, 4, 167, 11, 36, 1, 1, 126, 32, 0, 173, 32, 1, 173, 66, 32, 134, 132, 32, 2, 173, 32, 3, 173, 66, 32, 134, 132, 129, 34, 4, 66, 32, 135, 167, 36, 0, 32, 4, 167, 11, 36, 1, 1, 126, 32, 0, 173, 32, 1, 173, 66, 32, 134, 132, 32, 2, 173, 32, 3, 173, 66, 32, 134, 132, 130, 34, 4, 66, 32, 135, 167, 36, 0, 32, 4, 167, 11
+])), {}).exports;
 
 /**
  * Represents a 64 bit two's-complement integer
@@ -365,70 +365,9 @@ export default class Long {
         if (!is.long(multiplier)) {
             multiplier = this.constructor.fromValue(multiplier);
         }
-        if (multiplier.isZero()) {
-            return this.constructor.ZERO;
-        }
-        if (this.equals(this.constructor.MIN_VALUE)) {
-            return multiplier.isOdd() ? this.constructor.MIN_VALUE : this.constructor.ZERO;
-        }
-        if (multiplier.equals(this.constructor.MIN_VALUE)) {
-            return this.isOdd() ? this.constructor.MIN_VALUE : this.constructor.ZERO;
-        }
 
-        if (this.isNegative()) {
-            if (multiplier.isNegative()) {
-                return this.negate().mul(multiplier.negate());
-            }
-            return this.negate().mul(multiplier).negate();
-        } else if (multiplier.isNegative()) {
-            return this.mul(multiplier.negate()).negate();
-        }
-
-        // If both longs are small, use float multiplication
-        if (
-            this.lessThan(this.constructor.fromInt(TWO_PWR_24_DBL)) &&
-            multiplier.lessThan(this.constructor.fromInt(TWO_PWR_24_DBL))
-        ) {
-            return this.constructor.fromNumber(this.toNumber() * multiplier.toNumber(), this.unsigned);
-        }
-
-        // Divide each long into 4 chunks of 16 bits, and then add up 4x4 products.
-        // We can skip products that would overflow.
-        const a48 = this.high >>> 16;
-        const a32 = this.high & 0xFFFF;
-        const a16 = this.low >>> 16;
-        const a00 = this.low & 0xFFFF;
-
-        const b48 = multiplier.high >>> 16;
-        const b32 = multiplier.high & 0xFFFF;
-        const b16 = multiplier.low >>> 16;
-        const b00 = multiplier.low & 0xFFFF;
-
-        let c48 = 0;
-        let c32 = 0;
-        let c16 = 0;
-        let c00 = 0;
-        c00 += a00 * b00;
-        c16 += c00 >>> 16;
-        c00 &= 0xFFFF;
-        c16 += a16 * b00;
-        c32 += c16 >>> 16;
-        c16 &= 0xFFFF;
-        c16 += a00 * b16;
-        c32 += c16 >>> 16;
-        c16 &= 0xFFFF;
-        c32 += a32 * b00;
-        c48 += c32 >>> 16;
-        c32 &= 0xFFFF;
-        c32 += a16 * b16;
-        c48 += c32 >>> 16;
-        c32 &= 0xFFFF;
-        c32 += a00 * b32;
-        c48 += c32 >>> 16;
-        c32 &= 0xFFFF;
-        c48 += a48 * b00 + a32 * b16 + a16 * b32 + a00 * b48;
-        c48 &= 0xFFFF;
-        return this.constructor.fromBits((c16 << 16) | c00, (c48 << 16) | c32, this.unsigned);
+        const low = wasm.mul(this.low, this.high, multiplier.low, multiplier.high);
+        return this.constructor.fromBits(low, wasm.get_high(), this.unsigned);
     }
 
     /**
@@ -442,99 +381,18 @@ export default class Long {
             divisor = this.constructor.fromValue(divisor);
         }
         if (divisor.isZero()) {
-            throw new error.IllegalState("division by zero");
-        }
-        if (this.isZero()) {
-            return this.unsigned ? this.constructor.UZERO : this.constructor.ZERO;
-        }
-        let approx;
-        let rem;
-        let res;
-        // The result is signed if this Long is signed or unsigned if this Long is unsigned.
-        if (!this.unsigned) {
-            // This section is only relevant for signed longs and is derived from the
-            // closure library as a whole.
-            if (this.equals(this.constructor.MIN_VALUE)) {
-                if (divisor.equals(this.constructor.ONE) || divisor.equals(this.constructor.NEG_ONE)) {
-                    return this.constructor.MIN_VALUE; // recall that -MIN_VALUE == MIN_VALUE
-                }
-                if (divisor.equals(this.constructor.MIN_VALUE)) {
-                    return this.constructor.ONE;
-                }
-                // At this point, we have |other| >= 2, so |this/other| < |MIN_VALUE|.
-                const halfThis = this.shr(1);
-                approx = halfThis.div(divisor).shl(1);
-                if (approx.equals(this.constructor.ZERO)) {
-                    return divisor.isNegative() ? this.constructor.ONE : this.constructor.NEG_ONE;
-                }
-                rem = this.sub(divisor.mul(approx));
-                res = approx.add(rem.div(divisor));
-                return res;
-            }
-            if (divisor.equals(this.constructor.MIN_VALUE)) {
-                return this.unsigned ? this.constructor.UZERO : this.constructor.ZERO;
-            }
-            if (this.isNegative()) {
-                if (divisor.isNegative()) {
-                    return this.negate().div(divisor.negate());
-                }
-                return this.negate().div(divisor).negate();
-            } else if (divisor.isNegative()) {
-                return this.div(divisor.negate()).negate();
-            }
-            res = this.constructor.ZERO;
-        } else {
-            // The algorithm below has not been made for unsigned longs. It's therefore
-            // required to take special care of the MSB prior to running it.
-            if (!divisor.unsigned) {
-                divisor = divisor.toUnsigned();
-            }
-            if (divisor.greaterThan(this)) {
-                return this.constructor.UZERO;
-            }
-            // 15 >>> 1 = 7 ; with divisor = 8 ; true
-            if (divisor.greaterThan(this.shru(1))) {
-                return this.constructor.UONE;
-            }
-            res = this.constructor.UZERO;
+            throw new error.IllegalState("Division by zero");
         }
 
-        // Repeat the following until the remainder is less than other:  find a
-        // floating-point that approximates remainder / other *from below*, add this
-        // into the result, and subtract it from the remainder.  It is critical that
-        // the approximate value is less than or equal to the real value so that the
-        // remainder never becomes negative.
-        rem = this;
-        while (rem.greaterThanOrEqual(divisor)) {
-            // Approximate the result of division. This may be a little greater or
-            // smaller than the actual value.
-            approx = Math.max(1, Math.floor(rem.toNumber() / divisor.toNumber()));
-
-            // We will tweak the approximate result by changing it in the 48-th digit or
-            // the smallest non-fractional digit, whichever is larger.
-            const log2 = Math.ceil(Math.log(approx) / Math.LN2);
-            const delta = (log2 <= 48) ? 1 : 2 ** (log2 - 48);
-
-            // Decrease the approximation until it is smaller than the remainder.  Note
-            // that if it is too large, the product overflows and is negative.
-            let approxRes = this.constructor.fromNumber(approx);
-            let approxRem = approxRes.mul(divisor);
-            while (approxRem.isNegative() || approxRem.greaterThan(rem)) {
-                approx -= delta;
-                approxRes = this.constructor.fromNumber(approx, this.unsigned);
-                approxRem = approxRes.mul(divisor);
-            }
-
-            // We know the answer can't be zero... and actually, zero would cause
-            // infinite recursion since we would make no progress.
-            if (approxRes.isZero()) {
-                approxRes = this.constructor.ONE;
-            }
-
-            res = res.add(approxRes);
-            rem = rem.sub(approxRem);
+        // guard against signed division overflow: the largest
+        // negative number / -1 would be 1 larger than the largest
+        // positive number, due to two's complement.
+        if (!this.unsigned && this.high === -0x80000000 && divisor.low === -1 && divisor.high === -1) {
+            // be consistent with non-wasm code path
+            return this;
         }
-        return res;
+        const low = (this.unsigned ? wasm.div_u : wasm.div_s)(this.low, this.high, divisor.low, divisor.high);
+        return this.constructor.fromBits(low, wasm.get_high(), this.unsigned);
     }
 
     /**
@@ -547,7 +405,8 @@ export default class Long {
         if (!is.long(divisor)) {
             divisor = this.constructor.fromValue(divisor);
         }
-        return this.sub(this.div(divisor).mul(divisor));
+        const low = (this.unsigned ? wasm.rem_u : wasm.rem_s)(this.low, this.high, divisor.low, divisor.high);
+        return this.constructor.fromBits(low, wasm.get_high(), this.unsigned);
     }
 
     /**
@@ -882,6 +741,43 @@ export default class Long {
         }
         // Throws for non-objects, converts non-instanceof Long:
         return this.fromBits(val.low, val.high, val.unsigned);
+    }
+
+    /**
+     * Returns a Long representing the 64 bit integer that comes by concatenating the given bytes.
+     * @function
+     * @param {!Array.<number>} arrBytes Byte representation in an array of at least offset+8 bytes
+     * @param {number=} offset The starting index from which to read 8 elements of the array, defaults to zero
+     * @param {boolean=} unsigned Whether unsigned or not, defaults to `false` for signed
+     * @param {boolean=} le Whether little or big endian, defaults to big endian
+     * @returns {!Long} The corresponding Long value
+     */
+    static fromBytes(arrBytes, offset, unsigned, le) {
+        let lo;
+        let hi;
+        if (!is.number(offset)) {
+            offset = 0;
+        }
+        if (le) {
+            lo = arrBytes[offset++];
+            lo |= (arrBytes[offset++] << 8);
+            lo |= (arrBytes[offset++] << 16);
+            lo |= (arrBytes[offset++] << 24);
+            hi = arrBytes[offset++];
+            hi |= (arrBytes[offset++] << 8);
+            hi |= (arrBytes[offset++] << 16);
+            hi |= (arrBytes[offset] << 24);
+        } else {
+            hi = (arrBytes[offset++] << 24);
+            hi |= (arrBytes[offset++] << 16);
+            hi |= (arrBytes[offset++] << 8);
+            hi |= arrBytes[offset++];
+            lo = (arrBytes[offset++] << 24);
+            lo |= (arrBytes[offset++] << 16);
+            lo |= (arrBytes[offset++] << 8);
+            lo |= arrBytes[offset];
+        }
+        return Long.fromBits(lo, hi, unsigned);
     }
 }
 adone.tag.add(Long, "LONG");

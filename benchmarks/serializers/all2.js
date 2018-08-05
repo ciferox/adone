@@ -1,6 +1,6 @@
 const { json, bson, mpak, json5, protobuf } = adone.data;
 
-const protoBuf = protobuf.create(require("./proto"));
+const protoBuf = protobuf.create(require("./proto.data"));
 
 const object = {
     foo: "hello",
