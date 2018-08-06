@@ -1,16 +1,17 @@
 import { clean } from 'clean-git-ref'
 import path from 'path'
 
-import { GitRefManager } from '../managers/GitRefManager.js'
 import { FileSystem } from '../models/FileSystem.js'
 import { E, GitError } from '../models/GitError.js'
 
+import { currentBranch } from './currentBranch'
+
 /**
- * Create a branch
+ * Delete a branch
  *
- * @link https://isomorphic-git.github.io/docs/branch.html
+ * @link https://isomorphic-git.github.io/docs/deleteBranch.html
  */
-export async function branch ({
+export async function deleteBranch ({
   dir,
   gitdir = path.join(dir, '.git'),
   fs: _fs,
@@ -20,14 +21,14 @@ export async function branch ({
     const fs = new FileSystem(_fs)
     if (ref === undefined) {
       throw new GitError(E.MissingRequiredParameterError, {
-        function: 'branch',
+        function: 'deleteBranch',
         parameter: 'ref'
       })
     }
 
     if (ref !== clean(ref)) {
       throw new GitError(E.InvalidRefNameError, {
-        verb: 'create',
+        verb: 'delete',
         noun: 'branch',
         ref,
         suggestion: clean(ref)
@@ -35,20 +36,23 @@ export async function branch ({
     }
 
     const exist = await fs.exists(`${gitdir}/refs/heads/${ref}`)
-    if (exist) {
-      throw new GitError(E.RefExistsError, { noun: 'branch', ref })
+    if (!exist) {
+      throw new GitError(E.RefNotExistsError, {
+        verb: 'delete',
+        noun: 'branch',
+        ref
+      })
     }
-    // Get tree oid
-    let oid
-    try {
-      oid = await GitRefManager.resolve({ fs, gitdir, ref: 'HEAD' })
-    } catch (e) {
-      throw new GitError(E.NoHeadCommitError, { noun: 'branch', ref })
+
+    const currentRef = await currentBranch({ fs, gitdir })
+    if (ref === currentRef) {
+      throw new GitError(E.BranchDeleteError, { ref })
     }
-    // Create a new branch that points at that same commit
-    await fs.write(`${gitdir}/refs/heads/${ref}`, oid + '\n')
+
+    // Delete a specified branch
+    await fs.rm(`${gitdir}/refs/heads/${ref}`)
   } catch (err) {
-    err.caller = 'git.branch'
+    err.caller = 'git.deleteBranch'
     throw err
   }
 }

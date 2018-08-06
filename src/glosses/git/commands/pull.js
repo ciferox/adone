@@ -1,7 +1,7 @@
 // import diff3 from 'node-diff3'
 import path from 'path'
 
-import { FileSystem } from '../models'
+import { FileSystem } from '../models/FileSystem.js'
 
 import { checkout } from './checkout'
 import { config } from './config'
@@ -20,6 +20,7 @@ export async function pull ({
   fs: _fs,
   ref,
   fastForwardOnly = false,
+  noGitSuffix = false,
   emitter,
   authUsername,
   authPassword,
@@ -47,6 +48,7 @@ export async function pull ({
       gitdir,
       fs,
       emitter,
+      noGitSuffix,
       ref,
       remote,
       username,

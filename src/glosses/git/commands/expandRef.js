@@ -4,28 +4,26 @@ import { GitRefManager } from '../managers/GitRefManager.js'
 import { FileSystem } from '../models/FileSystem.js'
 
 /**
- * Get the value of a symbolic ref or resolve a ref to its object id
+ * Expand an abbreviated ref to its full name
  *
- * @link https://isomorphic-git.github.io/docs/resolveRef.html
+ * @link https://isomorphic-git.github.io/docs/expandRef.html
  */
-export async function resolveRef ({
+export async function expandRef ({
   dir,
   gitdir = path.join(dir, '.git'),
   fs: _fs,
-  ref,
-  depth
+  ref
 }) {
   try {
     const fs = new FileSystem(_fs)
-    const oid = await GitRefManager.resolve({
+    const fullref = await GitRefManager.expand({
       fs,
       gitdir,
-      ref,
-      depth
+      ref
     })
-    return oid
+    return fullref
   } catch (err) {
-    err.caller = 'git.resolveRef'
+    err.caller = 'git.expandRef'
     throw err
   }
 }

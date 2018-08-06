@@ -1,8 +1,11 @@
 import pako from 'pako'
 import path from 'path'
 
-import { E, FileSystem, GitError, GitObject, GitPackIndex } from '../models'
-import { shasum } from '../utils/shasum'
+import { FileSystem } from '../models/FileSystem.js'
+import { E, GitError } from '../models/GitError.js'
+import { GitObject } from '../models/GitObject.js'
+import { GitPackIndex } from '../models/GitPackIndex.js'
+import { shasum } from '../utils/shasum.js'
 
 const PackfileCache = new Map()
 
@@ -26,41 +29,23 @@ export class GitObjectManager {
       for (let filename of list) {
         // Try to get the packfile from the in-memory cache
         let p = PackfileCache.get(filename)
+        const packFile = `${gitdir}/objects/pack/${filename}`
         if (!p) {
-          // If not there, load it from a .idx file
-          const idxName = filename.replace(/pack$/, 'idx')
-          if (await fs.exists(`${gitdir}/objects/pack/${idxName}`)) {
-            const idx = await fs.read(`${gitdir}/objects/pack/${idxName}`)
-            p = await GitPackIndex.fromIdx({ idx, getExternalRefDelta })
-          } else {
-            // If the .idx file isn't available, generate one.
-            const pack = await fs.read(`${gitdir}/objects/pack/${filename}`)
-            p = await GitPackIndex.fromPack({ pack, getExternalRefDelta })
-            // Save .idx file
-            await fs.write(`${gitdir}/objects/pack/${idxName}`, p.toBuffer())
-          }
+          p = GitObjectManager.loadPack(fs, packFile, getExternalRefDelta)
           PackfileCache.set(filename, p)
         }
         // console.log(p)
         // If the packfile DOES have the oid we're looking for...
-        if (p.hashes.includes(oid)) {
-          // Make sure the packfile is loaded in memory
-          if (!p.pack) {
-            const pack = await fs.read(`${gitdir}/objects/pack/${filename}`)
-            await p.load({ pack })
-          }
+        p = await p
+        if (p.offsets.has(oid)) {
           // Get the resolved git object from the packfile
+          if (!p.pack) {
+            p.pack = fs.read(packFile)
+          }
           let result = await p.read({ oid, getExternalRefDelta })
           result.source = `./objects/pack/${filename}`
           return result
         }
-      }
-    }
-    // Check to see if it's in shallow commits.
-    if (!file) {
-      let text = await fs.read(`${gitdir}/shallow`, { encoding: 'utf8' })
-      if (text !== null && text.includes(oid)) {
-        throw new GitError(E.ReadShallowObjectFail, { oid })
       }
     }
     // Finally
@@ -77,7 +62,20 @@ export class GitObjectManager {
     let { type, object } = GitObject.unwrap({ oid, buffer })
     if (format === 'content') return { type, format: 'content', object, source }
   }
-
+  static async loadPack (fs, filename, getExternalRefDelta) {
+    // If not there, load it from a .idx file
+    const idxName = filename.replace(/pack$/, 'idx')
+    if (await fs.exists(idxName)) {
+      const idx = await fs.read(idxName)
+      return GitPackIndex.fromIdx({ idx, getExternalRefDelta })
+    }
+    // If the .idx file isn't available, generate one.
+    const pack = await fs.read(filename)
+    const p = await GitPackIndex.fromPack({ pack, getExternalRefDelta })
+    // Save .idx file
+    fs.write(idxName, p.toBuffer())
+    return p
+  }
   static async hash ({ gitdir, type, object }) {
     let buffer = Buffer.concat([
       Buffer.from(type + ' '),

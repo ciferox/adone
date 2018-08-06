@@ -1,6 +1,6 @@
 import path from 'path'
 
-import { FileSystem } from '../models'
+import { FileSystem } from '../models/FileSystem.js'
 
 import { checkout } from './checkout'
 import { config } from './config'
@@ -33,6 +33,7 @@ export async function clone ({
   relative,
   singleBranch,
   noCheckout = false,
+  noTags = false,
   onprogress
 }) {
   try {
@@ -74,7 +75,7 @@ export async function clone ({
       exclude,
       relative,
       singleBranch,
-      tags: true
+      tags: !noTags
     })
     ref = ref || defaultBranch
     ref = ref.replace('refs/heads/', '')

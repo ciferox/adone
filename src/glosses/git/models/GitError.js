@@ -3,7 +3,7 @@
 
 import nick from 'nick'
 
-import { t } from '../utils/t'
+import { t } from '../utils/t.js'
 
 const translate = obj => {
   for (const [key, value] of Object.entries(obj)) {
@@ -17,6 +17,8 @@ const messages = translate({
   MissingRequiredParameterError: `The function "{ function }" requires a "{ parameter }" parameter but none was provided.`,
   InvalidRefNameError: `Failed to { verb } { noun } "{ ref }" because that name would not be a valid git reference. A valid alternative would be "{ suggestion }".`,
   RefExistsError: `Failed to create { noun } "{ ref }" because { noun } "{ ref }" already exists.`,
+  RefNotExistsError: `Failed to { verb } { noun } "{ ref }" because { noun } "{ ref }" does not exists.`,
+  BranchDeleteError: `Failed to delete branch "{ ref }" because branch "{ ref }" checked out now.`,
   NoHeadCommitError: `Failed to create { noun } "{ ref }" because the HEAD ref could not be resolved to a commit.`,
   CommitNotFetchedError: `Failed to checkout "{ ref }" because commit { oid } is not available locally. Do a git fetch to make the branch available locally.`,
   ObjectTypeUnknownFail: `Object { oid } has unknown type "{ type }".`,
@@ -37,11 +39,11 @@ const messages = translate({
   MergeNotSupportedFail: `Non-fast-forward merges are not supported yet.`,
   DirectorySeparatorsError: `"filepath" parameter should not include leading or trailing directory separators because these can cause problems on some platforms`,
   ResolveTreeError: `Could not resolve { oid } to a tree.`,
+  ResolveCommitError: `Could not resolve { oid } to a commit.`,
   DirectoryIsAFileError: `Unable to read "{ oid }:{ filepath }" because encountered a file where a directory was expected.`,
   TreeOrBlobNotFoundError: `No file or directory found at "{ oid }:{ filepath }".`,
   NotImplementedFail: `TODO: { thing } still needs to be implemented!`,
   ReadObjectFail: `Failed to read git object with oid { oid }`,
-  ReadShallowObjectFail: `Failed to read git object with oid { oid } because it is a shallow commit`,
   NotAnOidFail: `Expected a 40-char hex object id but saw "{ value }".`,
   NoRefspecConfiguredError: `Could not find a fetch refspec for remote "{ remote }".\\nMake sure the config file has an entry like the following:\\n[remote "{ remote }"]\\nfetch = +refs/heads/*:refs/remotes/origin/*`,
   ResolveRefError: `Could not resolve reference "{ ref }".`,
@@ -65,7 +67,11 @@ const messages = translate({
   MixUsernamePasswordOauth2formatMissingTokenError: `Cannot mix "username" and "password" with "oauth2format". Missing token.`,
   MixUsernameOauth2formatTokenError: `Cannot mix "username" with "oauth2format" and "token"`,
   MixPasswordOauth2formatTokenError: `Cannot mix "password" with "oauth2format" and "token"`,
-  MixUsernamePasswordOauth2formatTokenError: `Cannot mix "username" and "password" with "oauth2format" and "token"`
+  MixUsernamePasswordOauth2formatTokenError: `Cannot mix "username" and "password" with "oauth2format" and "token"`,
+  MaxSearchDepthExceeded: `Maximum search depth of { depth } exceeded.`,
+  PushRejectedNonFastForward: `Push rejected because it was not a simple fast-forward. Use "force: true" to override.`,
+  PushRejectedTagExists: `Push rejected because tag already exists. Use "force: true" to override.`,
+  AddingRemoteWouldOverwrite: `Adding remote { remote } would overwrite the existing remote. Use "force: true" to override.`
 })
 
 export const E = {
@@ -73,6 +79,8 @@ export const E = {
   MissingRequiredParameterError: `MissingRequiredParameterError`,
   InvalidRefNameError: `InvalidRefNameError`,
   RefExistsError: `RefExistsError`,
+  RefNotExistsError: `RefNotExistsError`,
+  BranchDeleteError: `BranchDeleteError`,
   NoHeadCommitError: `NoHeadCommitError`,
   CommitNotFetchedError: `CommitNotFetchedError`,
   ObjectTypeUnknownFail: `ObjectTypeUnknownFail`,
@@ -93,11 +101,11 @@ export const E = {
   MergeNotSupportedFail: `MergeNotSupportedFail`,
   DirectorySeparatorsError: `DirectorySeparatorsError`,
   ResolveTreeError: `ResolveTreeError`,
+  ResolveCommitError: `ResolveCommitError`,
   DirectoryIsAFileError: `DirectoryIsAFileError`,
   TreeOrBlobNotFoundError: `TreeOrBlobNotFoundError`,
   NotImplementedFail: `NotImplementedFail`,
   ReadObjectFail: `ReadObjectFail`,
-  ReadShallowObjectFail: `ReadShallowObjectFail`,
   NotAnOidFail: `NotAnOidFail`,
   NoRefspecConfiguredError: `NoRefspecConfiguredError`,
   ResolveRefError: `ResolveRefError`,
@@ -121,7 +129,11 @@ export const E = {
   MixUsernamePasswordOauth2formatMissingTokenError: `MixUsernamePasswordOauth2formatMissingTokenError`,
   MixUsernameOauth2formatTokenError: `MixUsernameOauth2formatTokenError`,
   MixPasswordOauth2formatTokenError: `MixPasswordOauth2formatTokenError`,
-  MixUsernamePasswordOauth2formatTokenError: `MixUsernamePasswordOauth2formatTokenError`
+  MixUsernamePasswordOauth2formatTokenError: `MixUsernamePasswordOauth2formatTokenError`,
+  MaxSearchDepthExceeded: `MaxSearchDepthExceeded`,
+  PushRejectedNonFastForward: `PushRejectedNonFastForward`,
+  PushRejectedTagExists: `PushRejectedTagExists`,
+  AddingRemoteWouldOverwrite: `AddingRemoteWouldOverwrite`
 }
 
 export class GitError extends Error {
