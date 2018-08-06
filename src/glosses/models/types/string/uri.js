@@ -2,7 +2,7 @@ const RFC3986 = require("./rfc3986");
 
 const internals = {
     Uri: {
-        createUriRegex(optionalScheme, allowRelative, relativeOnly) {
+        createUriRegex(optionalScheme, allowRelative, relativeOnly, allowQuerySquareBrackets) {
 
             let scheme = RFC3986.scheme;
             let prefix;
@@ -29,7 +29,7 @@ const internals = {
              *
              * relative-ref = relative-part [ "?" query ] [ "#" fragment ]
              */
-            return new RegExp(`^${prefix}(?:\\?${RFC3986.query})?` + `(?:#${RFC3986.fragment})?$`);
+            return new RegExp(`^${prefix}(?:\\?${allowQuerySquareBrackets ? RFC3986.queryWithSquareBrackets : RFC3986.query})?` + `(?:#${RFC3986.fragment})?$`);
         }
     }
 };

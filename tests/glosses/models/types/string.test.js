@@ -1468,6 +1468,14 @@ describe("string", () => {
     });
 
     describe("trim()", () => {
+        it("avoids unnecessary cloning when called twice", () => {
+            const schema1 = model.string().trim();
+            expect(schema1.trim()).to.equal(schema1);
+            const schema2 = model.string().trim(false);
+            expect(schema2.trim(false)).to.equal(schema2);
+            const schema3 = model.string();
+            expect(schema3.trim(false)).to.equal(schema3);
+        });
 
         it("only allow strings that have no leading or trailing whitespace", () => {
 
@@ -1502,6 +1510,25 @@ describe("string", () => {
                 }],
                 ["some thing", true],
                 ["something", true]
+            ], { convert: false });
+        });
+
+        it("disable existing trim flag when passing enabled: false", () => {
+            const trimEnabledSchema = model.string().trim(true);
+            Helper.validateOptions(trimEnabledSchema, [
+                [" something", false, null, {
+                    message: '"value" must not have leading or trailing whitespace',
+                    details: [{
+                        message: '"value" must not have leading or trailing whitespace',
+                        path: [],
+                        type: "string.trim",
+                        context: { value: " something", label: "value", key: undefined }
+                    }]
+                }]
+            ], { convert: false });
+            const trimDisabledSchema = trimEnabledSchema.trim(false);
+            Helper.validateOptions(trimDisabledSchema, [
+                [" something", true]
             ], { convert: false });
         });
 
@@ -1627,6 +1654,12 @@ describe("string", () => {
                 [" ABC", true],
                 ["ABC", true]
             ]);
+        });
+
+        it("throws when option is not a boolean", () => {
+            expect(() => {
+                model.string().trim(42);
+            }).to.throw("Option must be a boolean");
         });
     });
 
@@ -2492,6 +2525,15 @@ describe("string", () => {
 
             Helper.validate(schema, [
                 ["foo://example.com:8042/over/there?name=ferret#nose", true],
+                ["https://example.com?abc[]=123&abc[]=456", false, null, {
+                    message: '"value" must be a valid uri',
+                    details: [{
+                        message: '"value" must be a valid uri',
+                        path: [],
+                        type: "string.uri",
+                        context: { value: "https://example.com?abc[]=123&abc[]=456", label: "value", key: undefined }
+                    }]
+                }],
                 ["urn:example:animal:ferret:nose", true],
                 ["ftp://ftp.is.co.za/rfc/rfc1808.txt", true],
                 ["http://www.ietf.org/rfc/rfc2396.txt", true],
@@ -4342,6 +4384,17 @@ describe("string", () => {
                 }],
                 ["/absolute", true]
             ]);
+        });
+
+        it("validates uri with square brackets allowed", () => {
+            const schema = model.string().uri({ allowQuerySquareBrackets: true });
+            Helper.validate(schema, [
+                ["https://example.com?abc[]=123&abc[]=456", true]
+            ]);
+        });
+        
+        it("warns about unknown options", () => {
+            expect(() => model.string().uri({ foo: "bar", baz: "qux" })).to.throw("Options contain unknown keys: foo,baz");
         });
     });
 
@@ -9816,7 +9869,6 @@ describe("string", () => {
         });
 
         it("validates a base64 string with padding explicitly required", () => {
-
             const rule = model.string().base64({ paddingRequired: true });
             Helper.validate(rule, [
                 ["YW55IGNhcm5hbCBwbGVhc3VyZS4=", true],
@@ -9926,6 +9978,68 @@ describe("string", () => {
                         }
                     }]
                 }]
+            ]);
+        });
+
+        it("validates a dataUri string", () => {
+            const rule = model.string().dataUri();
+            Helper.validate(rule, [
+                ["data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAABJRU5ErkJggg==", true],
+                ["ata:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAABJRU5ErkJggg==", false, null, {
+                    message: '"value" must be a valid dataUri string',
+                    details: [{
+                        message: '"value" must be a valid dataUri string',
+                        path: [],
+                        type: "string.dataUri",
+                        context: {
+                            value: "ata:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAABJRU5ErkJggg==",
+                            label: "value",
+                            key: undefined
+                        }
+                    }]
+                }],
+                ["data:image/png;iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAABJRU5ErkJggg==", true],
+                ["base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAABJRU5ErkJggg==", false, null, {
+                    message: '"value" must be a valid dataUri string',
+                    details: [{
+                        message: '"value" must be a valid dataUri string',
+                        path: [],
+                        type: "string.dataUri",
+                        context: {
+                            value: "base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAABJRU5ErkJggg==",
+                            label: "value",
+                            key: undefined
+                        }
+                    }]
+                }],
+                ["data:base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAABJRU5ErkJggg==", false, null, {
+                    message: '"value" must be a valid dataUri string',
+                    details: [{
+                        message: '"value" must be a valid dataUri string',
+                        path: [],
+                        type: "string.dataUri",
+                        context: {
+                            value: "data:base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAABJRU5ErkJggg==",
+                            label: "value",
+                            key: undefined
+                        }
+                    }]
+                }],
+                ["data:image/png;base64,=YW55IGNhcm5hbCBwbGVhc3VyZS4", false, null, {
+                    message: '"value" must be a valid dataUri string',
+                    details: [{
+                        message: '"value" must be a valid dataUri string',
+                        path: [],
+                        type: "string.dataUri",
+                        context: {
+                            value: "data:image/png;base64,=YW55IGNhcm5hbCBwbGVhc3VyZS4",
+                            label: "value",
+                            key: undefined
+                        }
+                    }]
+                }],
+                ["data:image/png;base64,YW55IGNhcm5hbCBwbGVhc3VyZS4=", true],
+                ["data:image/png;charset=utf-8,=YW55IGNhcm5hbCBwbGVhc3VyZS", true]
             ]);
         });
 
@@ -10043,6 +10157,129 @@ describe("string", () => {
                         }
                     }]
                 }]
+            ]);
+        });
+
+        it("validates a dataUri string with padding explicitly required", () => {
+            const rule = model.string().dataUri({ paddingRequired: true });
+            Helper.validate(rule, [
+                ["data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAABJRU5ErkJggg==", true],
+                ["ata:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAABJRU5ErkJggg==", false, null, {
+                    message: '"value" must be a valid dataUri string',
+                    details: [{
+                        message: '"value" must be a valid dataUri string',
+                        path: [],
+                        type: "string.dataUri",
+                        context: {
+                            value: "ata:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAABJRU5ErkJggg==",
+                            label: "value",
+                            key: undefined
+                        }
+                    }]
+                }],
+                ["data:image/png;iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAABJRU5ErkJggg==", true],
+                ["base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAABJRU5ErkJggg==", false, null, {
+                    message: '"value" must be a valid dataUri string',
+                    details: [{
+                        message: '"value" must be a valid dataUri string',
+                        path: [],
+                        type: "string.dataUri",
+                        context: {
+                            value: "base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAABJRU5ErkJggg==",
+                            label: "value",
+                            key: undefined
+                        }
+                    }]
+                }],
+                ["data:base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAABJRU5ErkJggg==", false, null, {
+                    message: '"value" must be a valid dataUri string',
+                    details: [{
+                        message: '"value" must be a valid dataUri string',
+                        path: [],
+                        type: "string.dataUri",
+                        context: {
+                            value: "data:base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAABJRU5ErkJggg==",
+                            label: "value",
+                            key: undefined
+                        }
+                    }]
+                }],
+                ["data:image/png;base64,=YW55IGNhcm5hbCBwbGVhc3VyZS4", false, null, {
+                    message: '"value" must be a valid dataUri string',
+                    details: [{
+                        message: '"value" must be a valid dataUri string',
+                        path: [],
+                        type: "string.dataUri",
+                        context: {
+                            value: "data:image/png;base64,=YW55IGNhcm5hbCBwbGVhc3VyZS4",
+                            label: "value",
+                            key: undefined
+                        }
+                    }]
+                }],
+                ["data:image/png;base64,YW55IGNhcm5hbCBwbGVhc3VyZS4=", true],
+                ["data:image/png;charset=utf-8,=YW55IGNhcm5hbCBwbGVhc3VyZS", true]
+            ]);
+        });
+        it("validates a dataUri string with padding not required", () => {
+            const rule = model.string().dataUri({ paddingRequired: false });
+            Helper.validate(rule, [
+                ["data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAABJRU5ErkJggg==", true],
+                ["ata:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAABJRU5ErkJggg==", false, null, {
+                    message: '"value" must be a valid dataUri string',
+                    details: [{
+                        message: '"value" must be a valid dataUri string',
+                        path: [],
+                        type: "string.dataUri",
+                        context: {
+                            value: "ata:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAABJRU5ErkJggg==",
+                            label: "value",
+                            key: undefined
+                        }
+                    }]
+                }],
+                ["data:image/png;iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAABJRU5ErkJggg==", true],
+                ["base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAABJRU5ErkJggg==", false, null, {
+                    message: '"value" must be a valid dataUri string',
+                    details: [{
+                        message: '"value" must be a valid dataUri string',
+                        path: [],
+                        type: "string.dataUri",
+                        context: {
+                            value: "base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAABJRU5ErkJggg==",
+                            label: "value",
+                            key: undefined
+                        }
+                    }]
+                }],
+                ["data:base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAABJRU5ErkJggg==", false, null, {
+                    message: '"value" must be a valid dataUri string',
+                    details: [{
+                        message: '"value" must be a valid dataUri string',
+                        path: [],
+                        type: "string.dataUri",
+                        context: {
+                            value: "data:base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAABJRU5ErkJggg==",
+                            label: "value",
+                            key: undefined
+                        }
+                    }]
+                }],
+                ["data:image/png;base64,=YW55IGNhcm5hbCBwbGVhc3VyZS4", false, null, {
+                    message: '"value" must be a valid dataUri string',
+                    details: [{
+                        message: '"value" must be a valid dataUri string',
+                        path: [],
+                        type: "string.dataUri",
+                        context: {
+                            value: "data:image/png;base64,=YW55IGNhcm5hbCBwbGVhc3VyZS4",
+                            label: "value",
+                            key: undefined
+                        }
+                    }]
+                }],
+                ["data:image/png;base64,YW55IGNhcm5hbCBwbGVhc3VyZS4=", true],
+                ["data:image/png;charset=utf-8,=YW55IGNhcm5hbCBwbGVhc3VyZS", true]
             ]);
         });
 

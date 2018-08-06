@@ -306,7 +306,7 @@ describe("any", () => {
                 message: '"a" must be a number',
                 path: ["a"],
                 type: "number.base",
-                context: { label: "a", key: "a" }
+                context: { label: "a", key: "a", value: "a" }
             }]);
         });
 
@@ -320,7 +320,7 @@ describe("any", () => {
                 message: '"a" must be a number',
                 path: [0, "a"],
                 type: "number.base",
-                context: { label: "a", key: "a" }
+                context: { label: "a", key: "a", value: "a" }
             }]);
         });
 
@@ -351,7 +351,7 @@ describe("any", () => {
                 message: '"b" must be a number',
                 path: ["b"],
                 type: "number.base",
-                context: { label: "b", key: "b" }
+                context: { label: "b", key: "b", value: "2" }
             }]);
         });
     });
@@ -993,7 +993,7 @@ describe("any", () => {
                         message: '"a" must be a number',
                         path: ["a"],
                         type: "number.base",
-                        context: { label: "a", key: "a" }
+                        context: { label: "a", key: "a", value: "a" }
                     }]
                 }],
                 [{}, true],
@@ -1230,7 +1230,7 @@ describe("any", () => {
                 message: '"value" must be a number',
                 path: [],
                 type: "number.base",
-                context: { label: "value", key: undefined }
+                context: { label: "value", key: undefined, value: "2" }
             }]);
         });
 
@@ -1243,7 +1243,7 @@ describe("any", () => {
                 message: '"value" must be a number',
                 path: [],
                 type: "number.base",
-                context: { label: "value", key: undefined }
+                context: { label: "value", key: undefined, value: "2" }
             }]);
         });
     });
@@ -1292,7 +1292,7 @@ describe("any", () => {
                         message: '"value" must be a number',
                         path: [],
                         type: "number.base",
-                        context: { label: "value", key: undefined }
+                        context: { label: "value", key: undefined, value: '1' }
                     }]
                 }]
             ]);
@@ -2111,7 +2111,7 @@ describe("any", () => {
                         message: '"b" must be a number',
                         path: ["b"],
                         type: "number.base",
-                        context: { key: "b", label: "b" }
+                        context: { key: "b", label: "b", value: 'b' }
                     }]
                 }],
                 [{ a: "a", b: 0 }, true],
@@ -2465,7 +2465,7 @@ describe("any", () => {
 
             const f = () => { };
             expect(model.valid(f).validate(f).error).to.be.null();
-            const otherFunction = () => {};
+            const otherFunction = () => { };
             assert.instanceOf(model.valid(f).validate(otherFunction).error, Error, '"value" must be one of [() => {}]');
             expect(model.valid(f).validate(otherFunction).error.details).to.eql([{
                 message: '"value" must be one of [() => {}]',
@@ -2616,7 +2616,7 @@ describe("any", () => {
                     message: '"c" must be a number',
                     path: ["b", "c"],
                     type: "number.base",
-                    context: { key: "c", label: "c" }
+                    context: { key: "c", label: "c", value: "x" }
                 }]);
             });
 

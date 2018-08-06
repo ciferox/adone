@@ -71,6 +71,11 @@ internals.generate = function () {
     const pcharOnly = `[${pchar}]`;
 
     /**
+     * squareBrackets example: []
+     */
+    const squareBrackets = "\\[\\]";
+
+    /**
      * dec-octet   = DIGIT                 ; 0-9
      *            / %x31-39 DIGIT         ; 10-99
      *            / "1" 2DIGIT            ; 100-199
@@ -188,6 +193,10 @@ internals.generate = function () {
      * query = *( pchar / "/" / "?" )
      */
     internals.rfc3986.query = `[${pchar}\\/\\?]*(?=#|$)`; //Finish matching either at the fragment part or end of the line.
+    /**
+     * query = *( pchar / "[" / "]" / "/" / "?" )
+     */
+    internals.rfc3986.queryWithSquareBrackets = `[${pchar}${squareBrackets}\\/\\?]*(?=#|$)`; //Finish matching either at the fragment part or end of the line.
 
     /**
      * fragment = *( pchar / "/" / "?" )

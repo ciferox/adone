@@ -90,6 +90,10 @@ export default class Any {
         this._inner = {}; // Hash of arrays of immutable objects
     }
 
+    _init() {
+        return this;
+    }
+
     get schemaType() {
         return this._type;
     }
@@ -113,7 +117,7 @@ export default class Any {
         const obj = Object.create(Object.getPrototypeOf(this));
 
         obj.isJoi = true;
-        obj._currentJoi = this._currentJoi;
+        obj._currentModel = this._currentModel;
         obj._type = this._type;
         obj._settings = this._settings;
         obj._baseType = this._baseType;
@@ -387,7 +391,7 @@ export default class Any {
         if (is.undefined(schema)) {
             delete obj._flags.empty;
         } else {
-            obj._flags.empty = Cast.schema(this._currentJoi, schema);
+            obj._flags.empty = Cast.schema(this._currentModel, schema);
         }
         return obj;
     }
@@ -396,8 +400,8 @@ export default class Any {
         assert(options && typeof options === "object", "Invalid options");
         assert(!is.undefined(options.then) || !is.undefined(options.otherwise), 'options must have at least one of "then" or "otherwise"');
 
-        const then = options.hasOwnProperty("then") ? this.concat(Cast.schema(this._currentJoi, options.then)) : undefined;
-        const otherwise = options.hasOwnProperty("otherwise") ? this.concat(Cast.schema(this._currentJoi, options.otherwise)) : undefined;
+        const then = options.hasOwnProperty("then") ? this.concat(Cast.schema(this._currentModel, options.then)) : undefined;
+        const otherwise = options.hasOwnProperty("otherwise") ? this.concat(Cast.schema(this._currentModel, options.otherwise)) : undefined;
 
         Alternatives = Alternatives || require("../alternatives");
 

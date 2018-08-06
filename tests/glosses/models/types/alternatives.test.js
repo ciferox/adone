@@ -494,7 +494,7 @@ describe("alternatives", () => {
                             message: '"a" must be a number',
                             path: ["a"],
                             type: "number.base",
-                            context: { label: "a", key: "a" }
+                            context: { label: "a", key: "a", value: "y" }
                         }]
                     }],
                     [{ a: "x", b: null }, true],
@@ -804,10 +804,10 @@ describe("alternatives", () => {
                 }).when(model.object().keys({
                     foo: model.only("hasBar").required()
                 }).unknown(), {
-                        then: model.object().keys({
-                            bar: model.required()
-                        })
-                    });
+                    then: model.object().keys({
+                        bar: model.required()
+                    })
+                });
                 Helper.validate(schema, [
                     [{ foo: "whatever" }, true, null, { foo: "whatever" }],
                     [{ foo: "hasBar" }, false, null, {

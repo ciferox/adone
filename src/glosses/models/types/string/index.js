@@ -272,10 +272,14 @@ internals.String = class extends Any {
         let customScheme = "";
         let allowRelative = false;
         let relativeOnly = false;
+        let allowQuerySquareBrackets = false;
         let regex = internals.uriRegex;
 
         if (uriOptions) {
             assert(typeof uriOptions === "object", "options must be an object");
+
+            const unknownOptions = Object.keys(uriOptions).filter((key) => !["scheme", "allowRelative", "relativeOnly", "allowQuerySquareBrackets"].includes(key));
+            assert(unknownOptions.length === 0, `Options contain unknown keys: ${unknownOptions}`);
 
             if (uriOptions.scheme) {
                 assert(uriOptions.scheme instanceof RegExp || is.string(uriOptions.scheme) || is.array(uriOptions.scheme), "scheme must be a RegExp, String, or Array");
@@ -311,10 +315,14 @@ internals.String = class extends Any {
             if (uriOptions.relativeOnly) {
                 relativeOnly = true;
             }
+
+            if (uriOptions.allowQuerySquareBrackets) {
+                allowQuerySquareBrackets = true;
+            }
         }
 
-        if (customScheme || allowRelative || relativeOnly) {
-            regex = Uri.createUriRegex(customScheme, allowRelative, relativeOnly);
+        if (customScheme || allowRelative || relativeOnly || allowQuerySquareBrackets) {
+            regex = Uri.createUriRegex(customScheme, allowRelative, relativeOnly, allowQuerySquareBrackets);
         }
 
         return this._test("uri", uriOptions, function (value, state, options) {
@@ -451,8 +459,35 @@ internals.String = class extends Any {
         });
     }
 
-    hostname() {
+    dataUri(dataUriOptions = {}) {
+        const regex = /^data:[\w\/\+]+;((charset=[\w-]+|base64),)?(.*)$/;
 
+        // Determine if padding is required.
+        const paddingRequired = dataUriOptions.paddingRequired === false ?
+            dataUriOptions.paddingRequired
+            : dataUriOptions.paddingRequired || true;
+        const base64regex = paddingRequired ?
+            /^(?:[A-Za-z0-9+\/]{4})*(?:[A-Za-z0-9+\/]{2}==|[A-Za-z0-9+\/]{3}=)?$/
+            : /^(?:[A-Za-z0-9+\/]{4})*(?:[A-Za-z0-9+\/]{2}(==)?|[A-Za-z0-9+\/]{3}=?)?$/;
+
+        return this._test("dataUri", regex, function (value, state, options) {
+            const matches = value.match(regex);
+            if (matches) {
+                if (!matches[2]) {
+                    return value;
+                }
+                if (matches[2] !== "base64") {
+                    return value;
+                }
+                if (base64regex.test(matches[3])) {
+                    return value;
+                }
+            }
+            return this.createError("string.dataUri", { value }, state, options);
+        });
+    }
+
+    hostname() {
         const regex = /^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$/;
 
         return this._test("hostname", undefined, function (value, state, options) {
@@ -518,20 +553,31 @@ internals.String = class extends Any {
         return obj;
     }
 
-    trim() {
+    trim(enabled = true) {
+        assert(is.boolean(enabled), "Option must be a boolean");
 
-        const obj = this._test("trim", undefined, function (value, state, options) {
+        if ((this._flags.trim && enabled) || (!this._flags.trim && !enabled)) {
+            return this;
+        }
+        
+        let obj;
+        if (enabled) {
+            obj = this._test("trim", undefined, function (value, state, options) {
 
-            if (options.convert ||
-                value === value.trim()) {
+                if (options.convert ||
+                    value === value.trim()) {
 
-                return value;
-            }
+                    return value;
+                }
 
-            return this.createError("string.trim", { value }, state, options);
-        });
+                return this.createError("string.trim", { value }, state, options);
+            });
+        } else {
+            obj = this.clone();
+            obj._tests = obj._tests.filter((test) => test.name !== "trim");
+        }
 
-        obj._flags.trim = true;
+        obj._flags.trim = enabled;
         return obj;
     }
 

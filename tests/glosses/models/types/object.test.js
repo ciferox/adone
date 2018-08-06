@@ -327,7 +327,7 @@ describe("object", () => {
                     message: '"num" must be a number',
                     path: ["num"],
                     type: "number.base",
-                    context: { label: "num", key: "num" }
+                    context: { label: "num", key: "num", value: [1, 2, 3] }
                 }]
             }]
         ]);
@@ -350,7 +350,7 @@ describe("object", () => {
                     message: '"num" must be a number',
                     path: ["num"],
                     type: "number.base",
-                    context: { label: "num", key: "num" }
+                    context: { label: "num", key: "num", value: [1, 2, 3] }
                 }]
             }],
             [{ num: 1, obj: { item: "something" } }, true],
@@ -646,25 +646,25 @@ describe("object", () => {
                 path: ["hasOwnProperty"],
                 type: "object.allowUnknown",
                 context:
-                    {
-                        child: "hasOwnProperty",
-                        label: "hasOwnProperty",
-                        key: "hasOwnProperty"
-                    }
+                {
+                    child: "hasOwnProperty",
+                    label: "hasOwnProperty",
+                    key: "hasOwnProperty"
+                }
             },
             {
                 message: '"a" missing required peer "b"',
                 path: ["a"],
                 type: "object.with",
                 context:
-                    {
-                        main: "a",
-                        mainWithLabel: "a",
-                        peer: "b",
-                        peerWithLabel: "b",
-                        label: "a",
-                        key: "a"
-                    }
+                {
+                    main: "a",
+                    mainWithLabel: "a",
+                    peer: "b",
+                    peerWithLabel: "b",
+                    label: "a",
+                    key: "a"
+                }
             }
         ]);
     });
@@ -886,7 +886,7 @@ describe("object", () => {
                         message: '"b" must be a number',
                         path: ["a", "b"],
                         type: "number.base",
-                        context: { label: "b", key: "b" }
+                        context: { label: "b", key: "b", value: "x" }
                     }]
                 }],
                 [{ a: { b: 5 }, c: "ignore" }, true],
@@ -918,7 +918,7 @@ describe("object", () => {
                         message: '"b" must be a number',
                         path: ["a", "b"],
                         type: "number.base",
-                        context: { label: "b", key: "b" }
+                        context: { label: "b", key: "b", value: "x" }
                     }]
                 }],
                 [{ a: { b: 5 }, c: "ignore" }, false, null, {
@@ -953,7 +953,7 @@ describe("object", () => {
                         message: '"b" must be a number',
                         path: ["a", "b"],
                         type: "number.base",
-                        context: { label: "b", key: "b" }
+                        context: { label: "b", key: "b", value: "x" }
                     }]
                 }],
                 [{ a: { b: 5 }, d: "ignore" }, true, null, { a: { b: 5 } }],
@@ -1524,6 +1524,40 @@ describe("object", () => {
                 ]
             });
         });
+        it("describes patterns with schema", () => {
+            const schema = model.object({
+                a: model.string()
+            }).pattern(model.string().uuid("uuidv4"), model.boolean());
+            expect(schema.describe()).to.eql({
+                type: "object",
+                children: {
+                    a: {
+                        type: "string",
+                        invalids: [""]
+                    }
+                },
+                patterns: [
+                    {
+                        schema: {
+                            invalids: [""],
+                            rules: [{
+                                arg: "uuidv4",
+                                name: "guid"
+                            }],
+                            type: "string"
+                        },
+                        rule: {
+                            type: "boolean",
+                            truthy: [true],
+                            falsy: [false],
+                            flags: {
+                                insensitive: true
+                            }
+                        }
+                    }
+                ]
+            });
+        });
     });
 
     describe("length()", () => {
@@ -1581,7 +1615,7 @@ describe("object", () => {
             }).to.throw(Error, "Invalid schema content: ");
         });
 
-        it("validates unknown keys using a pattern", async () => {
+        it("validates unknown keys using a regex pattern", async () => {
             const schema = model.object({
                 a: model.number()
             }).pattern(/\d+/, model.boolean()).pattern(/\w\w+/, "x");
@@ -1611,7 +1645,63 @@ describe("object", () => {
                         message: '"a" must be a number',
                         path: ["a"],
                         type: "number.base",
-                        context: { label: "a", key: "a" }
+                        context: { label: "a", key: "a", value: "x" }
+                    }]
+                }],
+                [{ b: "x" }, false, null, {
+                    message: '"b" is not allowed',
+                    details: [{
+                        message: '"b" is not allowed',
+                        path: ["b"],
+                        type: "object.allowUnknown",
+                        context: { child: "b", label: "b", key: "b" }
+                    }]
+                }],
+                [{ bb: "x" }, true],
+                [{ 5: "x" }, false, null, {
+                    message: 'child "5" fails because ["5" must be a boolean]',
+                    details: [{
+                        message: '"5" must be a boolean',
+                        path: ["5"],
+                        type: "boolean.base",
+                        context: { label: "5", key: "5" }
+                    }]
+                }],
+                [{ 5: false }, true],
+                [{ 5: undefined }, true]
+            ]);
+        });
+
+        it("validates unknown keys using a schema pattern", async () => {
+            const schema = model.object({
+                a: model.number()
+            }).pattern(model.number().positive(), model.boolean())
+                .pattern(model.string().length(2), "x");
+            const err = await assert.throws(async () => model.validate({ bb: "y", 5: "x" }, schema, { abortEarly: false }));
+            assert.strictEqual(err.message, 'child "5" fails because ["5" must be a boolean]. child "bb" fails because ["bb" must be one of [x]]');
+            expect(err.details).to.eql([
+                {
+                    message: '"5" must be a boolean',
+                    path: ["5"],
+                    type: "boolean.base",
+                    context: { label: "5", key: "5" }
+                },
+                {
+                    message: '"bb" must be one of [x]',
+                    path: ["bb"],
+                    type: "any.allowOnly",
+                    context: { value: "y", valids: ["x"], label: "bb", key: "bb" }
+                }
+            ]);
+            Helper.validate(schema, [
+                [{ a: 5 }, true],
+                [{ a: "x" }, false, null, {
+                    message: 'child "a" fails because ["a" must be a number]',
+                    details: [{
+                        message: '"a" must be a number',
+                        path: ["a"],
+                        type: "number.base",
+                        context: { label: "a", key: "a", value: "x" }
                     }]
                 }],
                 [{ b: "x" }, false, null, {
@@ -1664,11 +1754,48 @@ describe("object", () => {
             ]);
         });
 
-        it("errors when using a pattern on empty schema with unknown(false) and pattern mismatch", async () => {
+        it("validates unknown keys using a pattern (nested)", async () => {
+            const schema = {
+                x: model.object({
+                    a: model.number()
+                }).pattern(model.number().positive(), model.boolean()).pattern(model.string().length(2), "x")
+            };
+            const err = await assert.throws(async () => model.validate({ x: { bb: "y", 5: "x" } }, schema, { abortEarly: false }));
+            assert.strictEqual(err.message, 'child "x" fails because [child "5" fails because ["5" must be a boolean], child "bb" fails because ["bb" must be one of [x]]]');
+            expect(err.details).to.eql([
+                {
+                    message: '"5" must be a boolean',
+                    path: ["x", "5"],
+                    type: "boolean.base",
+                    context: { label: "5", key: "5" }
+                },
+                {
+                    message: '"bb" must be one of [x]',
+                    path: ["x", "bb"],
+                    type: "any.allowOnly",
+                    context: { value: "y", valids: ["x"], label: "bb", key: "bb" }
+                }
+            ]);
+        });
+
+        it("errors when using a pattern on empty schema with unknown(false) and regex pattern mismatch", async () => {
 
             const schema = model.object().pattern(/\d/, model.number()).unknown(false);
 
             const err = await assert.throws(async () => model.validate({ a: 5 }, schema, { abortEarly: false }));
+            expect(err.details).to.eql([{
+                message: '"a" is not allowed',
+                path: ["a"],
+                type: "object.allowUnknown",
+                context: { child: "a", label: "a", key: "a" }
+            }]);
+        });
+
+        it("errors when using a pattern on empty schema with unknown(false) and schema pattern mismatch", async () => {
+            const schema = model.object().pattern(model.number().positive(), model.number()).unknown(false);
+            const err = await assert.throws(async () => model.validate({ a: 5 }, schema, { abortEarly: false }));
+            assert.strictEqual(err.message, '"a" is not allowed');
+
             expect(err.details).to.eql([{
                 message: '"a" is not allowed',
                 path: ["a"],
@@ -1689,6 +1816,17 @@ describe("object", () => {
 
             const value = await model.validate({ a1: undefined, a2: null, a3: "test" }, schema);
             expect(value).to.eql({ a1: undefined, a2: undefined, a3: "test" });
+        });
+
+        it("should throw an error if pattern is not regex or instance of Any", () => {
+            let error;
+            try {
+                model.object().pattern(17, model.boolean());
+                error = false;
+            } catch (e) {
+                error = true;
+            }
+            expect(error).to.equal(true);
         });
     });
 
@@ -1953,12 +2091,12 @@ describe("object", () => {
                 path: [],
                 type: "object.missing",
                 context:
-                    {
-                        peers: ["a", "b"],
-                        peersWithLabels: ["first", "second"],
-                        label: "value",
-                        key: undefined
-                    }
+                {
+                    peers: ["a", "b"],
+                    peersWithLabels: ["first", "second"],
+                    label: "value",
+                    key: undefined
+                }
             }]);
         });
     });
@@ -1978,14 +2116,14 @@ describe("object", () => {
                 path: [],
                 type: "object.and",
                 context:
-                    {
-                        present: ["a"],
-                        presentWithLabels: ["first"],
-                        missing: ["b"],
-                        missingWithLabels: ["second"],
-                        label: "value",
-                        key: undefined
-                    }
+                {
+                    present: ["a"],
+                    presentWithLabels: ["first"],
+                    missing: ["b"],
+                    missingWithLabels: ["second"],
+                    label: "value",
+                    key: undefined
+                }
             }]);
         });
     });

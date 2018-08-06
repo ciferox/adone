@@ -51,6 +51,8 @@ export default {
         strict: "must be a valid date",
         min: 'must be larger than or equal to "{{limit}}"',
         max: 'must be less than or equal to "{{limit}}"',
+        less: 'must be less than "{{limit}}"',
+        greater: 'must be greater than "{{limit}}"',
         isoDate: "must be a valid ISO 8601 date",
         timestamp: {
             javascript: "must be a valid timestamp or number of milliseconds",
@@ -135,6 +137,7 @@ export default {
         hex: "must only contain hexadecimal characters",
         hexAlign: "hex decoded representation must be byte aligned",
         base64: "must be a valid base64 string",
+        dataUri: "must be a valid dataUri string",
         hostname: "must be a valid hostname",
         normalize: "must be unicode normalized in the {{form}} form",
         lowercase: "must only contain lowercase characters",

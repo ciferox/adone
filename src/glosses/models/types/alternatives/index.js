@@ -20,6 +20,10 @@ internals.Alternatives = class extends Any {
         this._inner.matches = [];
     }
 
+    _init(...args) {
+        return args.length ? this.try(...args) : this;
+    }
+
     _base(value, state, options) {
 
         let errors = [];
@@ -72,7 +76,7 @@ internals.Alternatives = class extends Any {
         const obj = this.clone();
 
         for (let i = 0; i < schemas.length; ++i) {
-            const cast = Cast.schema(this._currentJoi, schemas[i]);
+            const cast = Cast.schema(this._currentModel, schemas[i]);
             if (cast._refs.length) {
                 obj._refs = obj._refs.concat(cast._refs);
             }
@@ -98,7 +102,7 @@ internals.Alternatives = class extends Any {
         const obj = this.clone();
         let is;
         if (!schemaCondition) {
-            is = Cast.schema(this._currentJoi, options.is);
+            is = Cast.schema(this._currentModel, options.is);
 
             if (options.is === null || !(isRef(options.is) || options.is instanceof Any)) {
 
@@ -111,8 +115,8 @@ internals.Alternatives = class extends Any {
             ref: schemaCondition ? null : Cast.ref(condition),
             peek: schemaCondition ? condition : null,
             is,
-            then: options.then !== undefined ? Cast.schema(this._currentJoi, options.then) : undefined,
-            otherwise: options.otherwise !== undefined ? Cast.schema(this._currentJoi, options.otherwise) : undefined
+            then: options.then !== undefined ? Cast.schema(this._currentModel, options.then) : undefined,
+            otherwise: options.otherwise !== undefined ? Cast.schema(this._currentModel, options.otherwise) : undefined
         };
 
         if (obj._baseType) {

@@ -328,7 +328,7 @@ internals.Array = class extends Any {
 
         flatten(schemas).forEach((type, index) => {
             try {
-                type = Cast.schema(this._currentJoi, type);
+                type = Cast.schema(this._currentModel, type);
             } catch (castErr) {
                 if (castErr.hasOwnProperty("path")) {
                     castErr.path = `${index}.${castErr.path}`;
@@ -359,7 +359,7 @@ internals.Array = class extends Any {
 
         flatten(schemas).forEach((type, index) => {
             try {
-                type = Cast.schema(this._currentJoi, type);
+                type = Cast.schema(this._currentModel, type);
             } catch (castErr) {
                 if (castErr.hasOwnProperty("path")) {
                     castErr.path = `${index}.${castErr.path}`;
@@ -456,10 +456,13 @@ internals.Array = class extends Any {
         });
     }
 
-    unique(comparator) {
+    unique(comparator, configs) {
         assert(is.undefined(comparator) || is.function(comparator) || is.string(comparator), "comparator must be a function or a string");
+        assert(is.undefined(configs) || typeof configs === "object", "configs must be an object");
 
-        const settings = {};
+        const settings = {
+            ignoreUndefined: (configs && configs.ignoreUndefined) || false
+        };
 
         if (is.string(comparator)) {
             settings.path = comparator;
@@ -480,6 +483,7 @@ internals.Array = class extends Any {
             };
 
             const compare = settings.comparator || deepEqual;
+            const ignoreUndefined = settings.ignoreUndefined;
 
             for (let i = 0; i < value.length; ++i) {
                 const item = settings.path ? reach(value[i], settings.path) : value[i];
@@ -517,7 +521,7 @@ internals.Array = class extends Any {
 
                         records.set(item, i);
                     } else {
-                        if (!is.undefined(records[item])) {
+                        if ((!ignoreUndefined || !is.undefined(item)) && !is.undefined(records[item])) {
                             const localState = {
                                 key: state.key,
                                 path: state.path.concat(i),

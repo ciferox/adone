@@ -195,7 +195,7 @@ describe("model", () => {
                         message: '"value" must be a number',
                         path: [],
                         type: "number.base",
-                        context: { label: "value", key: undefined }
+                        context: { label: "value", key: undefined, value: "other" }
                     },
                     {
                         message: '"value" must be an object',
@@ -241,7 +241,7 @@ describe("model", () => {
                         message: '"value" must be a number',
                         path: [],
                         type: "number.base",
-                        context: { label: "value", key: undefined }
+                        context: { label: "value", key: undefined, value: { c: 5 } }
                     },
                     {
                         message: '"c" is not allowed',
@@ -267,7 +267,7 @@ describe("model", () => {
                         message: '"value" must be a number',
                         path: [],
                         type: "number.base",
-                        context: { label: "value", key: undefined }
+                        context: { label: "value", key: undefined, value: { a: 5, b: "a" } }
                     },
                     {
                         message: '"a" must be a boolean',
@@ -299,7 +299,7 @@ describe("model", () => {
                         message: '"value" must be a number',
                         path: [],
                         type: "number.base",
-                        context: { label: "value", key: undefined }
+                        context: { label: "value", key: undefined, value: "other" }
                     },
                     {
                         message: '"value" must be an object',
@@ -345,7 +345,7 @@ describe("model", () => {
                         message: '"value" must be a number',
                         path: [],
                         type: "number.base",
-                        context: { label: "value", key: undefined }
+                        context: { label: "value", key: undefined, value: { c: 5 } }
                     },
                     {
                         message: '"c" is not allowed',
@@ -371,7 +371,7 @@ describe("model", () => {
                         message: '"value" must be a number',
                         path: [],
                         type: "number.base",
-                        context: { label: "value", key: undefined }
+                        context: { label: "value", key: undefined, value: { a: 5, b: "a" } }
                     },
                     {
                         message: '"a" must be a boolean',
@@ -813,7 +813,7 @@ describe("model", () => {
                     message: '"code" must be a number',
                     path: ["code"],
                     type: "number.base",
-                    context: { label: "code", key: "code" }
+                    context: { label: "code", key: "code", value: null }
                 }]
             }],
             [{ code: 123 }, true],
@@ -970,7 +970,7 @@ describe("model", () => {
                     message: '"code" must be a number',
                     path: ["code"],
                     type: "number.base",
-                    context: { label: "code", key: "code" }
+                    context: { label: "code", key: "code", value: null }
                 }]
             }],
             [{ code: 123 }, false, null, {
@@ -2765,6 +2765,11 @@ describe("model", () => {
             const schema = model.object({ foo: model.object({ bar: model.number() }) });
             expect(model.reach(schema, "foo.baz")).to.be.undefined();
         });
+
+        it("should return the same schema with an empty path", () => {
+            const schema = model.object();
+            expect(model.reach(schema, "")).to.equal(schema);
+        });
     });
 
     describe("extend()", () => {
@@ -2959,6 +2964,30 @@ describe("model", () => {
             ]);
         });
 
+        it("defines a custom type with a custom base while preserving its original helper params", () => {
+            const customModel = model.extend({
+                base: model.object(),
+                name: "myType"
+            });
+            expect(model.myType).to.not.exist();
+            assert.true(is.function(customModel.myType));
+            const schema = customModel.myType({ a: customModel.number() });
+            Helper.validate(schema, [
+                [undefined, true],
+                [{}, true],
+                [{ a: 1 }, true],
+                [{ a: "a" }, false, null, {
+                    message: 'child "a" fails because ["a" must be a number]',
+                    details: [{
+                        message: '"a" must be a number',
+                        path: ["a"],
+                        type: "number.base",
+                        context: { key: "a", label: "a", value: "a" }
+                    }]
+                }]
+            ]);
+        });
+
         it("defines a custom type with new rules", () => {
 
             const customJoi = model.extend({
@@ -3104,9 +3133,9 @@ describe("model", () => {
             });
 
             const schema = customJoi.myType();
-            expect(() => schema.foo()).to.throw("Setup of extension Joi.myType().foo() must return undefined or a Joi object");
-            expect(() => schema.bar()).to.throw("Setup of extension Joi.myType().bar() must return undefined or a Joi object");
-            expect(() => schema.foobar()).to.throw("Setup of extension Joi.myType().foobar() must return undefined or a Joi object");
+            expect(() => schema.foo()).to.throw("Setup of extension model.myType().foo() must return undefined or a Joi object");
+            expect(() => schema.bar()).to.throw("Setup of extension model.myType().bar() must return undefined or a Joi object");
+            expect(() => schema.foobar()).to.throw("Setup of extension model.myType().foobar() must return undefined or a Joi object");
         });
 
         it("defines a custom type with a rule with both setup and validate", () => {

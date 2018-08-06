@@ -10,23 +10,23 @@ const {
     is
 } = adone;
 
-const applyDefaults = function (schema) {
+const callWithDefaults = function (schema, args) {
     assert(this, "Must be invoked on a Joi instance.");
 
     if (this._defaults) {
         schema = this._defaults(schema);
     }
 
-    schema._currentJoi = this;
+    schema._currentModel = this;
 
-    return schema;
+    return schema._init(...args);
 };
 
 const any = new Any();
 
 const root = any.clone();
-Any.prototype._currentJoi = root;
-root._currentJoi = root;
+Any.prototype._currentModel = root;
+root._currentModel = root;
 
 const __ = adone.lazifyPrivate({
     alternatives: "./types/alternatives",
@@ -51,61 +51,57 @@ adone.lazify({
 root.any = function (...args) {
     assert(args.length === 0, "model.any() does not allow arguments.");
 
-    return applyDefaults.call(this, any);
+    return callWithDefaults.call(this, any, args);
 };
 
 root.alternatives = root.alt = function (...args) {
-
-    const alternatives = applyDefaults.call(this, __.alternatives);
-    return args.length ? alternatives.try.apply(alternatives, args) : alternatives;
+    return callWithDefaults.call(this, __.alternatives, args);
 };
 
 root.array = function (...args) {
     assert(args.length === 0, "model.array() does not allow arguments.");
 
-    return applyDefaults.call(this, __.array);
+    return callWithDefaults.call(this, __.array, args);
 };
 
 root.boolean = root.bool = function (...args) {
     assert(args.length === 0, "model.boolean() does not allow arguments.");
 
-    return applyDefaults.call(this, __.boolean);
+    return callWithDefaults.call(this, __.boolean, args);
 };
 
 root.binary = function (...args) {
     assert(args.length === 0, "model.binary() does not allow arguments.");
 
-    return applyDefaults.call(this, __.binary);
+    return callWithDefaults.call(this, __.binary, args);
 };
 
 root.date = function (...args) {
     assert(args.length === 0, "model.date() does not allow arguments.");
 
-    return applyDefaults.call(this, __.date);
+    return callWithDefaults.call(this, __.date, args);
 };
 
 root.func = function (...args) {
     assert(args.length === 0, "model.func() does not allow arguments.");
 
-    return applyDefaults.call(this, __.func);
+    return callWithDefaults.call(this, __.func, args);
 };
 
 root.number = function (...args) {
     assert(args.length === 0, "model.number() does not allow arguments.");
 
-    return applyDefaults.call(this, __.number);
+    return callWithDefaults.call(this, __.number, args);
 };
 
 root.object = function (...args) {
-
-    const object = applyDefaults.call(this, __.object);
-    return args.length ? object.keys(...args) : object;
+    return callWithDefaults.call(this, __.object, args);
 };
 
 root.string = function (...args) {
     assert(args.length === 0, "model.string() does not allow arguments.");
 
-    return applyDefaults.call(this, __.string);
+    return callWithDefaults.call(this, __.string, args);
 };
 
 root.ref = function (...args) {
@@ -127,7 +123,7 @@ root.validate = function (value, ...args /*, [schema], [options], callback */) {
         return any.validate(value, callback);
     }
 
-    const options = count === 2 ? args[1] : {};
+    const options = count === 2 ? args[1] : undefined;
     const schema = root.compile(args[0]);
 
     return schema._validateWithOptions(value, options, callback);
@@ -206,7 +202,7 @@ root.reach = function (schema, path) {
         }
     };
 
-    const schemaPath = is.string(path) ? path.split(".") : path.slice();
+    const schemaPath = is.string(path) ? (path ? path.split(".") : []) : path.slice();
 
     return reach(schema, schemaPath);
 };
@@ -219,14 +215,14 @@ root.defaults = function (fn) {
 
     assert(is.function(fn), "Defaults must be a function");
 
-    let joi = Object.create(this.any());
-    joi = fn(joi);
+    let model = Object.create(this.any());
+    model = fn(model);
 
-    assert(joi && joi instanceof this.constructor, "defaults() must return a schema");
+    assert(model && model instanceof this.constructor, "defaults() must return a schema");
 
-    Object.assign(joi, this, joi.clone()); // Re-add the types from `this` but also keep the settings from joi's potential new defaults
+    Object.assign(model, this, model.clone()); // Re-add the types from `this` but also keep the settings from joi's potential new defaults
 
-    joi._defaults = (schema) => {
+    model._defaults = (schema) => {
 
         if (this._defaults) {
             schema = this._defaults(schema);
@@ -238,7 +234,7 @@ root.defaults = function (fn) {
         return schema;
     };
 
-    return joi;
+    return model;
 };
 
 root.extend = function (...args) {
@@ -372,7 +368,7 @@ root.extend = function (...args) {
                     if (rule.setup) {
                         const newSchema = rule.setup.call(schema, arg);
                         if (!is.undefined(newSchema)) {
-                            assert(newSchema instanceof Any, `Setup of extension Joi.${this._type}().${rule.name}() must return undefined or a Joi object`);
+                            assert(newSchema instanceof Any, `Setup of extension model.${this._type}().${rule.name}() must return undefined or a Joi object`);
                             schema = newSchema;
                         }
                     }
@@ -391,9 +387,8 @@ root.extend = function (...args) {
         }
 
         const instance = new type();
-        joi[extension.name] = function () {
-
-            return applyDefaults.call(this, instance);
+        joi[extension.name] = function (...extArgs) {
+            return callWithDefaults.call(this, instance, extArgs);
         };
     }
 

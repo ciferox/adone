@@ -771,7 +771,7 @@ describe("array", () => {
                         message: '"0" must be a number',
                         path: [0],
                         type: "number.base",
-                        context: { label: 0, key: 0 }
+                        context: { label: 0, key: 0, value: "a" }
                     }]
                 }],
                 [["1", "2", 4], true]
@@ -823,7 +823,7 @@ describe("array", () => {
                         message: '"2" must be a number',
                         path: [2],
                         type: "number.base",
-                        context: { label: 2, key: 2 }
+                        context: { label: 2, key: 2, value: [1] }
                     }]
                 }]
             ]);
@@ -1449,6 +1449,57 @@ describe("array", () => {
             ]);
         });
 
+        it("ignores undefined value when ignoreUndefined is true", () => {
+            const schema = model.array().unique("a", { ignoreUndefined: true });
+            Helper.validate(schema, [
+                [[{ a: "b" }, { a: "c" }], true],
+                [[{ c: "d" }, { c: "d" }], true],
+                [[{ a: "b", c: "d" }, { a: "b", c: "d" }], false, null, {
+                    message: '"value" position 1 contains a duplicate value',
+                    details: [{
+                        message: '"value" position 1 contains a duplicate value',
+                        path: [1],
+                        type: "array.unique",
+                        context: {
+                            pos: 1,
+                            value: { a: "b", c: "d" },
+                            dupePos: 0,
+                            dupeValue: { a: "b", c: "d" },
+                            label: "value",
+                            key: 1,
+                            path: "a"
+                        }
+                    }]
+                }],
+                [[{ a: "b", c: "c" }, { a: "b", c: "d" }], false, null, {
+                    message: '"value" position 1 contains a duplicate value',
+                    details: [{
+                        message: '"value" position 1 contains a duplicate value',
+                        path: [1],
+                        type: "array.unique",
+                        context: {
+                            pos: 1,
+                            value: { a: "b", c: "d" },
+                            dupePos: 0,
+                            dupeValue: { a: "b", c: "c" },
+                            label: "value",
+                            key: 1,
+                            path: "a"
+                        }
+                    }]
+                }]
+            ]);
+        });
+
+        it("fails with invalid configs", () => {
+            expect(() => {
+                model.array().unique("id", "invalid configs");
+            }).to.throw(Error, "configs must be an object");
+            expect(() => {
+                model.array().unique("id", {});
+            }).to.not.throw();
+        });
+
         it("fails with invalid comparator", () => {
 
             expect(() => {
@@ -1783,7 +1834,7 @@ describe("array", () => {
                         message: '"0" must be a number',
                         path: [0],
                         type: "number.base",
-                        context: { label: 0, key: 0 }
+                        context: { label: 0, key: 0, value: "a" }
                     }]
                 }],
                 ["a", false, null, {
@@ -1792,7 +1843,7 @@ describe("array", () => {
                         message: '"value" must be a number',
                         path: [],
                         type: "number.base",
-                        context: { label: "value", key: undefined }
+                        context: { label: "value", key: undefined, value: "a" }
                     }]
                 }],
                 [true, false, null, {
@@ -1841,7 +1892,7 @@ describe("array", () => {
                         message: '"0" must be a number',
                         path: [0, 0],
                         type: "number.base",
-                        context: { label: 0, key: 0 }
+                        context: { label: 0, key: 0, value: "a" }
                     }]
                 }],
                 [["a"], false, null, {
@@ -2031,7 +2082,7 @@ describe("array", () => {
                 message: '"0" must be a number',
                 path: [0],
                 type: "number.base",
-                context: { label: 0, key: 0 }
+                context: { label: 0, key: 0, value: "s1" }
             }]);
         });
 
@@ -2105,7 +2156,7 @@ describe("array", () => {
                 message: '"4" must be a number',
                 path: [4],
                 type: "number.base",
-                context: { label: 4, key: 4 }
+                context: { label: 4, key: 4, value: "s5" }
             }]);
         });
 
@@ -2167,7 +2218,7 @@ describe("array", () => {
                     message: '"0" must be a number',
                     path: [0],
                     type: "number.base",
-                    context: { label: 0, key: 0 }
+                    context: { label: 0, key: 0, value: "s1" }
                 },
                 {
                     message: '"1" must be a string',

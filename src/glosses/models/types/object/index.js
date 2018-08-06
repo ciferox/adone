@@ -22,6 +22,10 @@ internals.Object = class extends Any {
         this._inner.patterns = [];
     }
 
+    _init(...args) {
+        return args.length ? this.keys(...args) : this;
+    }
+
     _base(value, state, options) {
 
         let target = value;
@@ -233,7 +237,10 @@ internals.Object = class extends Any {
                 for (let i = 0; i < this._inner.patterns.length; ++i) {
                     const pattern = this._inner.patterns[i];
 
-                    if (pattern.regex.test(key)) {
+                    if (pattern.regex ?
+                        pattern.regex.test(key) :
+                        !pattern.schema.validate(key).error) {
+
                         unprocessed.delete(key);
 
                         const result = pattern.rule._validate(item, localState, options);
@@ -335,7 +342,7 @@ internals.Object = class extends Any {
             const key = children[i];
             const child = schema[key];
             try {
-                const cast = Cast.schema(this._currentJoi, child);
+                const cast = Cast.schema(this._currentModel, child);
                 topo.add({ key, schema: cast }, { after: cast._refs, group: key });
             } catch (castErr) {
                 if (castErr.hasOwnProperty("path")) {
@@ -417,14 +424,16 @@ internals.Object = class extends Any {
     }
 
     pattern(pattern, schema) {
-
-        assert(pattern instanceof RegExp, "Invalid regular expression");
+        const isRegExp = pattern instanceof RegExp;
+        assert(isRegExp || pattern instanceof Any, "Pattern must be a regex or schema");
         assert(!is.undefined(schema), "Invalid rule");
 
-        pattern = new RegExp(pattern.source, pattern.ignoreCase ? "i" : undefined); // Future version should break this and forbid unsupported regex flags
+        if (isRegExp) {
+            pattern = new RegExp(pattern.source, pattern.ignoreCase ? "i" : undefined); // Future version should break this and forbid unsupported regex flags
+        }
 
         try {
-            schema = Cast.schema(this._currentJoi, schema);
+            schema = Cast.schema(this._currentModel, schema);
         } catch (castErr) {
             if (castErr.hasOwnProperty("path")) {
                 castErr.message = `${castErr.message}(${castErr.path})`;
@@ -435,7 +444,12 @@ internals.Object = class extends Any {
 
 
         const obj = this.clone();
-        obj._inner.patterns.push({ regex: pattern, rule: schema });
+        if (isRegExp) {
+            obj._inner.patterns.push({ regex: pattern, rule: schema });
+        }
+        else {
+            obj._inner.patterns.push({ schema: pattern, rule: schema });
+        }
         return obj;
     }
 
@@ -620,7 +634,11 @@ internals.Object = class extends Any {
 
             for (let i = 0; i < this._inner.patterns.length; ++i) {
                 const pattern = this._inner.patterns[i];
-                description.patterns.push({ regex: pattern.regex.toString(), rule: pattern.rule.describe() });
+                if (pattern.regex) {
+                    description.patterns.push({ regex: pattern.regex.toString(), rule: pattern.rule.describe() });
+                } else {
+                    description.patterns.push({ schema: pattern.schema.describe(), rule: pattern.rule.describe() });
+                }
             }
         }
 
@@ -638,7 +656,7 @@ internals.Object = class extends Any {
         message = message || "pass the assertion test";
 
         try {
-            schema = Cast.schema(this._currentJoi, schema);
+            schema = Cast.schema(this._currentModel, schema);
         } catch (castErr) {
             if (castErr.hasOwnProperty("path")) {
                 castErr.message = `${castErr.message}(${castErr.path})`;

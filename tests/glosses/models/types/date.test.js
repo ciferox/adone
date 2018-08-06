@@ -497,6 +497,392 @@ describe("date", () => {
             });
         });
 
+        describe("greater", () => {
+            it("validates greater", () => {
+                const d = new Date("1-1-2000 UTC");
+                const message = `"value" must be greater than "${d}"`;
+                Helper.validate(model.date().greater("1-1-2000 UTC"), [
+                    ["1-1-2001 UTC", true],
+                    ["1-1-2000 UTC", false, null, {
+                        message,
+                        details: [{
+                            message,
+                            path: [],
+                            type: "date.greater",
+                            context: { limit: d, label: "value", key: undefined }
+                        }]
+                    }],
+                    [0, false, null, {
+                        message,
+                        details: [{
+                            message,
+                            path: [],
+                            type: "date.greater",
+                            context: { limit: d, label: "value", key: undefined }
+                        }]
+                    }],
+                    ["0", false, null, {
+                        message,
+                        details: [{
+                            message,
+                            path: [],
+                            type: "date.greater",
+                            context: { limit: d, label: "value", key: undefined }
+                        }]
+                    }],
+                    ["-1", false, null, {
+                        message,
+                        details: [{
+                            message,
+                            path: [],
+                            type: "date.greater",
+                            context: { limit: d, label: "value", key: undefined }
+                        }]
+                    }],
+                    ["1-1-1999 UTC", false, null, {
+                        message,
+                        details: [{
+                            message,
+                            path: [],
+                            type: "date.greater",
+                            context: { limit: d, label: "value", key: undefined }
+                        }]
+                    }]
+                ]);
+            });
+            it('accepts "now" as the greater date', async () => {
+                const future = new Date(Date.now() + 1000000);
+                const value = await model.date().greater("now").validate(future);
+                expect(value).to.equal(future);
+            });
+            it('errors if .greater("now") is used with a past date', async () => {
+                const now = Date.now();
+                const dnow = new Date(now);
+                const past = new Date(now - 1000000);
+                const err = await assert.throws(async () => model.date().greater("now").validate(past));
+                const message = `"value" must be greater than "${dnow}"`;
+                assert.strictEqual(err.message, message);
+                expect(err.details).to.eql([{
+                    message: `"value" must be greater than "${dnow}"`,
+                    path: [],
+                    type: "date.greater",
+                    context: { limit: dnow, label: "value", key: undefined }
+                }]);
+            });
+            it("accepts references as greater date", () => {
+                const ref = model.ref("a");
+                const schema = model.object({ a: model.date(), b: model.date().greater(ref) });
+                const now = Date.now();
+                Helper.validate(schema, [
+                    [{ a: now, b: now }, false, null, {
+                        message: `child "b" fails because ["b" must be greater than "${new Date(now)}"]`,
+                        details: [{
+                            message: `"b" must be greater than "${new Date(now)}"`,
+                            path: ["b"],
+                            type: "date.greater",
+                            context: { limit: new Date(now), label: "b", key: "b" }
+                        }]
+                    }],
+                    [{ a: now, b: now + 1e3 }, true],
+                    [{ a: now, b: now - 1e3 }, false, null, {
+                        message: `child "b" fails because ["b" must be greater than "${new Date(now)}"]`,
+                        details: [{
+                            message: `"b" must be greater than "${new Date(now)}"`,
+                            path: ["b"],
+                            type: "date.greater",
+                            context: { limit: new Date(now), label: "b", key: "b" }
+                        }]
+                    }]
+                ]);
+            });
+            it("accepts references as greater date within a when", () => {
+                const ref = model.ref("b");
+                const schema = model.object({
+                    a: model.date().required(),
+                    b: model.date().required(),
+                    c: model.number().required().when("a", {
+                        is: model.date().greater(ref), // a > b
+                        then: model.number().valid(0)
+                    })
+                });
+                Helper.validate(schema, [
+                    [{ a: 123, b: 123, c: 0 }, true],
+                    [{ a: 123, b: 456, c: 42 }, true],
+                    [{ a: 456, b: 123, c: 0 }, true],
+                    [{ a: 123, b: 123, c: 42 }, true],
+                    [{ a: 456, b: 123, c: 42 }, false, null, {
+                        message: 'child "c" fails because ["c" must be one of [0]]',
+                        details: [{
+                            message: '"c" must be one of [0]',
+                            path: ["c"],
+                            type: "any.allowOnly",
+                            context: { value: 42, valids: [0], label: "c", key: "c" }
+                        }]
+                    }]
+                ]);
+            });
+            it("accepts context references as greater date", () => {
+                const ref = model.ref("$a");
+                const schema = model.object({ b: model.date().greater(ref) });
+                const now = Date.now();
+                const dnow = new Date(now);
+                Helper.validate(schema, [
+                    [{ b: now }, false, { context: { a: now } }, {
+                        message: `child "b" fails because ["b" must be greater than "${dnow}"]`,
+                        details: [{
+                            message: `"b" must be greater than "${dnow}"`,
+                            path: ["b"],
+                            type: "date.greater",
+                            context: { limit: dnow, label: "b", key: "b" }
+                        }]
+                    }],
+                    [{ b: now + 1e3 }, true, { context: { a: now } }],
+                    [{ b: now - 1e3 }, false, { context: { a: now } }, {
+                        message: `child "b" fails because ["b" must be greater than "${dnow}"]`,
+                        details: [{
+                            message: `"b" must be greater than "${dnow}"`,
+                            path: ["b"],
+                            type: "date.greater",
+                            context: { limit: dnow, label: "b", key: "b" }
+                        }]
+                    }]
+                ]);
+            });
+            it("errors if reference is not a date", () => {
+                const schema = model.object({ a: model.string(), b: model.date().greater(model.ref("a")) });
+                const now = Date.now();
+                Helper.validate(schema, [
+                    [{ a: "abc", b: now }, false, null, {
+                        message: 'child "b" fails because ["b" references "a" which is not a date]',
+                        details: [{
+                            message: '"b" references "a" which is not a date',
+                            path: ["b"],
+                            type: "date.ref",
+                            context: { ref: "a", label: "b", key: "b" }
+                        }]
+                    }],
+                    [{ a: "123", b: now }, true],
+                    [{ a: (now + 1e3).toString(), b: now }, false, null, {
+                        message: `child "b" fails because ["b" must be greater than "${new Date(now + 1e3)}"]`,
+                        details: [{
+                            message: `"b" must be greater than "${new Date(now + 1e3)}"`,
+                            path: ["b"],
+                            type: "date.greater",
+                            context: { limit: new Date(now + 1e3), label: "b", key: "b" }
+                        }]
+                    }]
+                ]);
+            });
+            it("errors if context reference is not a date", () => {
+                const schema = model.object({ b: model.date().greater(model.ref("$a")) });
+                const now = Date.now();
+                Helper.validate(schema, [
+                    [{ b: now }, false, { context: { a: "abc" } }, {
+                        message: 'child "b" fails because ["b" references "a" which is not a date]',
+                        details: [{
+                            message: '"b" references "a" which is not a date',
+                            path: ["b"],
+                            type: "date.ref",
+                            context: { ref: "a", label: "b", key: "b" }
+                        }]
+                    }],
+                    [{ b: now }, false, { context: { a: (now + 1e3).toString() } }, {
+                        message: `child "b" fails because ["b" must be greater than "${new Date(now + 1e3)}"]`,
+                        details: [{
+                            message: `"b" must be greater than "${new Date(now + 1e3)}"`,
+                            path: ["b"],
+                            type: "date.greater",
+                            context: { limit: new Date(now + 1e3), label: "b", key: "b" }
+                        }]
+                    }]
+                ]);
+            });
+        });
+        describe("less", () => {
+            it("validates less", () => {
+                const d = new Date("1-1-1970 UTC");
+                const message = `"value" must be less than "${d}"`;
+                Helper.validate(model.date().less("1-1-1970 UTC"), [
+                    ["1-1-1971 UTC", false, null, {
+                        message,
+                        details: [{
+                            message,
+                            path: [],
+                            type: "date.less",
+                            context: { limit: d, label: "value", key: undefined }
+                        }]
+                    }],
+                    ["1-1-1970 UTC", false, null, {
+                        message,
+                        details: [{
+                            message,
+                            path: [],
+                            type: "date.less",
+                            context: { limit: d, label: "value", key: undefined }
+                        }]
+                    }],
+                    [0, false, null, {
+                        message,
+                        details: [{
+                            message,
+                            path: [],
+                            type: "date.less",
+                            context: { limit: d, label: "value", key: undefined }
+                        }]
+                    }],
+                    [1, false, null, {
+                        message,
+                        details: [{
+                            message,
+                            path: [],
+                            type: "date.less",
+                            context: { limit: d, label: "value", key: undefined }
+                        }]
+                    }],
+                    ["0", false, null, {
+                        message,
+                        details: [{
+                            message,
+                            path: [],
+                            type: "date.less",
+                            context: { limit: d, label: "value", key: undefined }
+                        }]
+                    }],
+                    ["-1", true],
+                    ["1-1-2014 UTC", false, null, {
+                        message,
+                        details: [{
+                            message,
+                            path: [],
+                            type: "date.less",
+                            context: { limit: d, label: "value", key: undefined }
+                        }]
+                    }]
+                ]);
+            });
+            it('accepts "now" as the less date', async () => {
+                const past = new Date(Date.now() - 1000000);
+                const value = await model.date().less("now").validate(past);
+                expect(value).to.equal(past);
+            });
+            it('errors if .less("now") is used with a future date', async () => {
+                const now = Date.now();
+                const dnow = new Date(now);
+                const future = new Date(now + 1000000);
+                const err = await assert.throws(async () => model.date().less("now").validate(future));
+                const message = `"value" must be less than "${dnow}"`;
+                assert.strictEqual(err.message, message);
+                expect(err.details).to.eql([{
+                    message: `"value" must be less than "${dnow}"`,
+                    path: [],
+                    type: "date.less",
+                    context: { limit: dnow, label: "value", key: undefined }
+                }]);
+            });
+            it("accepts references as less date", () => {
+                const ref = model.ref("a");
+                const schema = model.object({ a: model.date(), b: model.date().less(ref) });
+                const now = Date.now();
+                Helper.validate(schema, [
+                    [{ a: now, b: now }, false, null, {
+                        message: `child "b" fails because ["b" must be less than "${new Date(now)}"]`,
+                        details: [{
+                            message: `"b" must be less than "${new Date(now)}"`,
+                            path: ["b"],
+                            type: "date.less",
+                            context: { limit: new Date(now), label: "b", key: "b" }
+                        }]
+                    }],
+                    [{ a: now, b: now + 1e3 }, false, null, {
+                        message: `child "b" fails because ["b" must be less than "${new Date(now)}"]`,
+                        details: [{
+                            message: `"b" must be less than "${new Date(now)}"`,
+                            path: ["b"],
+                            type: "date.less",
+                            context: { limit: new Date(now), label: "b", key: "b" }
+                        }]
+                    }],
+                    [{ a: now, b: now - 1e3 }, true]
+                ]);
+            });
+            it("accepts references as less date", () => {
+                const schema = model.object({ b: model.date().less(model.ref("$a")) });
+                const now = Date.now();
+                Helper.validate(schema, [
+                    [{ b: now }, false, { context: { a: now } }, {
+                        message: `child "b" fails because ["b" must be less than "${new Date(now)}"]`,
+                        details: [{
+                            message: `"b" must be less than "${new Date(now)}"`,
+                            path: ["b"],
+                            type: "date.less",
+                            context: { limit: new Date(now), label: "b", key: "b" }
+                        }]
+                    }],
+                    [{ b: now + 1e3 }, false, { context: { a: now } }, {
+                        message: `child "b" fails because ["b" must be less than "${new Date(now)}"]`,
+                        details: [{
+                            message: `"b" must be less than "${new Date(now)}"`,
+                            path: ["b"],
+                            type: "date.less",
+                            context: { limit: new Date(now), label: "b", key: "b" }
+                        }]
+                    }],
+                    [{ b: now - 1e3 }, true, { context: { a: now } }]
+                ]);
+            });
+            it("errors if reference is not a date", () => {
+                const schema = model.object({ a: model.string(), b: model.date().less(model.ref("a")) });
+                const now = Date.now();
+                Helper.validate(schema, [
+                    [{ a: "abc", b: new Date() }, false, null, {
+                        message: 'child "b" fails because ["b" references "a" which is not a date]',
+                        details: [{
+                            message: '"b" references "a" which is not a date',
+                            path: ["b"],
+                            type: "date.ref",
+                            context: { ref: "a", label: "b", key: "b" }
+                        }]
+                    }],
+                    [{ a: "100000000000000", b: now }, true],
+                    [{ a: (now - 1e3).toString(), b: now }, false, null, {
+                        message: `child "b" fails because ["b" must be less than "${new Date(now - 1e3)}"]`,
+                        details: [{
+                            message: `"b" must be less than "${new Date(now - 1e3)}"`,
+                            path: ["b"],
+                            type: "date.less",
+                            context: { limit: new Date(now - 1e3), label: "b", key: "b" }
+                        }]
+                    }]
+                ]);
+            });
+
+            it("errors if context reference is not a date", () => {
+                const schema = model.object({ b: model.date().less(model.ref("$a")) });
+                const now = Date.now();
+                Helper.validate(schema, [
+                    [{ b: now }, false, { context: { a: "abc" } }, {
+                        message: 'child "b" fails because ["b" references "a" which is not a date]',
+                        details: [{
+                            message: '"b" references "a" which is not a date',
+                            path: ["b"],
+                            type: "date.ref",
+                            context: { ref: "a", label: "b", key: "b" }
+                        }]
+                    }],
+                    [{ b: now }, true, { context: { a: "100000000000000" } }],
+                    [{ b: now }, false, { context: { a: (now - 1e3).toString() } }, {
+                        message: `child "b" fails because ["b" must be less than "${new Date(now - 1e3)}"]`,
+                        details: [{
+                            message: `"b" must be less than "${new Date(now - 1e3)}"`,
+                            path: ["b"],
+                            type: "date.less",
+                            context: { limit: new Date(now - 1e3), label: "b", key: "b" }
+                        }]
+                    }]
+                ]);
+            });
+        });
+
         it("validates only valid dates", () => {
 
             Helper.validate(model.date(), [
