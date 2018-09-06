@@ -126,7 +126,6 @@ describe("realm", () => {
 
     it("default tasks", async () => {
         assert.sameMembers(realmManager.getTaskNames(), [
-            "createRealm",
             "forkRealm",
             "validateRealm",
             "install",
