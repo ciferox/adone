@@ -1,5 +1,9 @@
 import SourceMap from "./source-map";
-import Printer, { type Format } from "./printer";
+import Printer from "./printer";
+
+const {
+    is
+} = adone;
 
 /**
  * Babel's code generator, turns an ast into code, maintaining sourcemaps,
@@ -7,25 +11,25 @@ import Printer, { type Format } from "./printer";
  */
 
 class Generator extends Printer {
-  constructor(ast, opts = {}, code) {
-    const format = normalizeOptions(code, opts);
-    const map = opts.sourceMaps ? new SourceMap(opts, code) : null;
-    super(format, map);
+    constructor(ast, opts = {}, code) {
+        const format = normalizeOptions(code, opts);
+        const map = opts.sourceMaps ? new SourceMap(opts, code) : null;
+        super(format, map);
 
-    this.ast = ast;
-  }
+        this.ast = ast;
+    }
 
-  ast: Object;
+    ast: Object;
 
-  /**
-   * Generate code and sourcemap from ast.
-   *
-   * Appends comments that weren't attached to any node to the end of the generated output.
-   */
+    /**
+     * Generate code and sourcemap from ast.
+     *
+     * Appends comments that weren't attached to any node to the end of the generated output.
+     */
 
-  generate() {
-    return super.generate(this.ast);
-  }
+    generate() {
+        return super.generate(this.ast);
+    }
 }
 
 /**
@@ -35,61 +39,61 @@ class Generator extends Printer {
  * - If `opts.compact = "auto"` and the code is over 500KB, `compact` will be set to `true`.
  */
 
-function normalizeOptions(code, opts): Format {
-  const format = {
-    auxiliaryCommentBefore: opts.auxiliaryCommentBefore,
-    auxiliaryCommentAfter: opts.auxiliaryCommentAfter,
-    shouldPrintComment: opts.shouldPrintComment,
-    retainLines: opts.retainLines,
-    retainFunctionParens: opts.retainFunctionParens,
-    comments: opts.comments == null || opts.comments,
-    compact: opts.compact,
-    minified: opts.minified,
-    concise: opts.concise,
-    jsonCompatibleStrings: opts.jsonCompatibleStrings,
-    indent: {
-      adjustMultilineComment: true,
-      style: "  ",
-      base: 0,
-    },
-    decoratorsBeforeExport: !!opts.decoratorsBeforeExport,
-    jsescOption: {
-      quotes: "double",
-      wrap: true,
-      ...opts.jsescOption,
-    },
-  };
+const normalizeOptions = function (code, opts) {
+    const format = {
+        auxiliaryCommentBefore: opts.auxiliaryCommentBefore,
+        auxiliaryCommentAfter: opts.auxiliaryCommentAfter,
+        shouldPrintComment: opts.shouldPrintComment,
+        retainLines: opts.retainLines,
+        retainFunctionParens: opts.retainFunctionParens,
+        comments: is.nil(opts.comments) || opts.comments,
+        compact: opts.compact,
+        minified: opts.minified,
+        concise: opts.concise,
+        jsonCompatibleStrings: opts.jsonCompatibleStrings,
+        indent: {
+            adjustMultilineComment: true,
+            style: "  ",
+            base: 0
+        },
+        decoratorsBeforeExport: Boolean(opts.decoratorsBeforeExport),
+        jsescOption: {
+            quotes: "double",
+            wrap: true,
+            ...opts.jsescOption
+        }
+    };
 
-  if (format.minified) {
-    format.compact = true;
+    if (format.minified) {
+        format.compact = true;
 
-    format.shouldPrintComment =
-      format.shouldPrintComment || (() => format.comments);
-  } else {
-    format.shouldPrintComment =
-      format.shouldPrintComment ||
-      (value =>
-        format.comments ||
-        (value.indexOf("@license") >= 0 || value.indexOf("@preserve") >= 0));
-  }
+        format.shouldPrintComment =
+            format.shouldPrintComment || (() => format.comments);
+    } else {
+        format.shouldPrintComment =
+            format.shouldPrintComment ||
+            ((value) =>
+                format.comments ||
+                (value.includes("@license") || value.includes("@preserve")));
+    }
 
-  if (format.compact === "auto") {
-    format.compact = code.length > 500_000; // 500KB
+    if (format.compact === "auto") {
+        format.compact = code.length > 500_000; // 500KB
+
+        if (format.compact) {
+            console.error(
+                "[BABEL] Note: The code generator has deoptimised the styling of " +
+                `${opts.filename} as it exceeds the max of ${"500KB"}.`,
+            );
+        }
+    }
 
     if (format.compact) {
-      console.error(
-        "[BABEL] Note: The code generator has deoptimised the styling of " +
-          `${opts.filename} as it exceeds the max of ${"500KB"}.`,
-      );
+        format.indent.adjustMultilineComment = false;
     }
-  }
 
-  if (format.compact) {
-    format.indent.adjustMultilineComment = false;
-  }
-
-  return format;
-}
+    return format;
+};
 
 /**
  * We originally exported the Generator class above, but to make it extra clear that it is a private API,
@@ -98,15 +102,16 @@ function normalizeOptions(code, opts): Format {
  */
 
 export class CodeGenerator {
-  constructor(ast, opts, code) {
-    this._generator = new Generator(ast, opts, code);
-  }
-  generate() {
-    return this._generator.generate();
-  }
+    constructor(ast, opts, code) {
+        this._generator = new Generator(ast, opts, code);
+    }
+
+    generate() {
+        return this._generator.generate();
+    }
 }
 
-export default function(ast: Object, opts: Object, code: string): Object {
-  const gen = new Generator(ast, opts, code);
-  return gen.generate();
+export default function (ast, opts, code) {
+    const gen = new Generator(ast, opts, code);
+    return gen.generate();
 }

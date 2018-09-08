@@ -71,7 +71,6 @@ export default class RealmManager extends app.Subsystem {
 
     @DCliCommand({
         name: "info",
-        group: "realm",
         help: "Show realm information"
     })
     async infoCommand(args, opts) {

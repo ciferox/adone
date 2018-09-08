@@ -1,10 +1,8 @@
 // This file contains methods responsible for introspecting the current path for certain values.
 
-import type NodePath from "./index";
-import includes from "lodash/includes";
-
 const {
-    js: { compiler: { types: t } }
+    js: { compiler: { types: t } },
+    lodash: { includes }
 } = adone;
 
 /**

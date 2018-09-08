@@ -1,12 +1,9 @@
-// @flow
-import uniq from "lodash/uniq";
+const {
+    lodash: { uniq }
+} = adone;
 
-export default function inherit(
-  key: string,
-  child: Object,
-  parent: Object,
-): void {
-  if (child && parent) {
-    child[key] = uniq([].concat(child[key], parent[key]).filter(Boolean));
-  }
+export default function inherit(key, child, parent) {
+    if (child && parent) {
+        child[key] = uniq([].concat(child[key], parent[key]).filter(Boolean));
+    }
 }

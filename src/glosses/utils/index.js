@@ -73,7 +73,6 @@ adone.lazify({
     pool: "./pool",
     terraformer: "./terraformer",
     inflection: "./inflection",
-    globals: "./globals",
     xorDistance: "./xor_distance",
     globize: "./globize",
     color: "./color",

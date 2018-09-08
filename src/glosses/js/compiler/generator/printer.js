@@ -1,11 +1,11 @@
-import isInteger from "lodash/isInteger";
-import repeat from "lodash/repeat";
 import Buffer from "./buffer";
 import * as n from "./node";
 import * as generatorFunctions from "./generators";
 
 const {
-    js: { compiler: { types: t } }
+    is,
+    js: { compiler: { types: t } },
+    lodash: { isInteger, repeat }
 } = adone;
 
 const SCIENTIFIC_NOTATION = /e/i;
@@ -37,18 +37,29 @@ export default class Printer {
     }
 
     format: Format;
+
     inForStatementInitCounter: number = 0;
 
     _buf: Buffer;
+
     _printStack: Array<Node> = [];
+
     _indent: number = 0;
+
     _insideAux: boolean = false;
+
     _printedCommentStarts: Object = {};
+
     _parenPushNewlineState: ?Object = null;
+
     _noLineTerminator: boolean = false;
+
     _printAuxAfterOnNextUserNode: boolean = false;
+
     _printedComments: WeakSet = new WeakSet();
+
     _endsWithInteger = false;
+
     _endsWithWord = false;
 
     generate(ast) {
@@ -63,7 +74,9 @@ export default class Printer {
      */
 
     indent(): void {
-        if (this.format.compact || this.format.concise) return;
+        if (this.format.compact || this.format.concise) {
+            return;
+        }
 
         this._indent++;
     }
@@ -73,7 +86,9 @@ export default class Printer {
      */
 
     dedent(): void {
-        if (this.format.compact || this.format.concise) return;
+        if (this.format.compact || this.format.concise) {
+            return;
+        }
 
         this._indent--;
     }
@@ -103,7 +118,9 @@ export default class Printer {
      */
 
     space(force: boolean = false): void {
-        if (this.format.compact) return;
+        if (this.format.compact) {
+            return;
+        }
 
         if (
             (this._buf.hasContent() && !this.endsWith(" ") && !this.endsWith("\n")) ||
@@ -139,7 +156,7 @@ export default class Printer {
         // Integer tokens need special handling because they cannot have '.'s inserted
         // immediately after them.
         this._endsWithInteger =
-            isInteger(+str) &&
+            isInteger(Number(str)) &&
             !NON_DECIMAL_LITERAL.test(str) &&
             !SCIENTIFIC_NOTATION.test(str) &&
             !ZERO_DECIMAL_INTEGER.test(str) &&
@@ -173,7 +190,9 @@ export default class Printer {
      */
 
     newline(i?: number): void {
-        if (this.format.retainLines || this.format.compact) return;
+        if (this.format.retainLines || this.format.compact) {
+            return;
+        }
 
         if (this.format.concise) {
             this.space();
@@ -181,13 +200,21 @@ export default class Printer {
         }
 
         // never allow more than two lines
-        if (this.endsWith("\n\n")) return;
+        if (this.endsWith("\n\n")) {
+            return;
+        }
 
-        if (typeof i !== "number") i = 1;
+        if (!is.number(i)) {
+            i = 1;
+        }
 
         i = Math.min(2, i);
-        if (this.endsWith("{\n") || this.endsWith(":\n")) i--;
-        if (i <= 0) return;
+        if (this.endsWith("{\n") || this.endsWith(":\n")) {
+            i--;
+        }
+        if (i <= 0) {
+            return;
+        }
 
         for (let j = 0; j < i; j++) {
             this._newline();
@@ -232,8 +259,11 @@ export default class Printer {
         this._maybeAddParen(str);
         this._maybeIndent(str);
 
-        if (queue) this._buf.queue(str);
-        else this._buf.append(str);
+        if (queue) {
+            this._buf.queue(str);
+        } else {
+            this._buf.append(str);
+        }
 
         this._endsWithWord = false;
         this._endsWithInteger = false;
@@ -249,20 +279,32 @@ export default class Printer {
     _maybeAddParen(str: string): void {
         // see startTerminatorless() instance method
         const parenPushNewlineState = this._parenPushNewlineState;
-        if (!parenPushNewlineState) return;
+        if (!parenPushNewlineState) {
+            return;
+        }
         this._parenPushNewlineState = null;
 
         let i;
-        for (i = 0; i < str.length && str[i] === " "; i++) continue;
-        if (i === str.length) return;
+        for (i = 0; i < str.length && str[i] === " "; i++) {
+            continue;
+        }
+        if (i === str.length) {
+            return;
+        }
 
         // Check for newline or comment.
         const cha = str[i];
         if (cha !== "\n") {
-            if (cha !== "/") return;
-            if (i + 1 === str.length) return;
+            if (cha !== "/") {
+                return;
+            }
+            if (i + 1 === str.length) {
+                return;
+            }
             const chaPost = str[i + 1];
-            if (chaPost !== "/" && chaPost !== "*") return;
+            if (chaPost !== "/" && chaPost !== "*") {
+                return;
+            }
         }
         this.token("(");
         this.indent();
@@ -270,11 +312,13 @@ export default class Printer {
     }
 
     _catchUp(prop: string, loc: Object) {
-        if (!this.format.retainLines) return;
+        if (!this.format.retainLines) {
+            return;
+        }
 
         // catch up to this nodes newline if we're behind
         const pos = loc ? loc[prop] : null;
-        if (pos && pos.line !== null) {
+        if (pos && !is.null(pos.line)) {
             const count = pos.line - this._buf.getCurrentLine();
 
             for (let i = 0; i < count; i++) {
@@ -311,11 +355,11 @@ export default class Printer {
         if (isLabel) {
             this._noLineTerminator = true;
             return null;
-        } else {
-            return (this._parenPushNewlineState = {
-                printed: false,
-            });
         }
+        return (this._parenPushNewlineState = {
+            printed: false
+        });
+
     }
 
     /**
@@ -332,7 +376,9 @@ export default class Printer {
     }
 
     print(node, parent) {
-        if (!node) return;
+        if (!node) {
+            return;
+        }
 
         const oldConcise = this.format.concise;
         if (node._compact) {
@@ -363,7 +409,9 @@ export default class Printer {
         ) {
             needsParens = true;
         }
-        if (needsParens) this.token("(");
+        if (needsParens) {
+            this.token("(");
+        }
 
         this._printLeadingComments(node, parent);
 
@@ -374,7 +422,9 @@ export default class Printer {
 
         this._printTrailingComments(node, parent);
 
-        if (needsParens) this.token(")");
+        if (needsParens) {
+            this.token(")");
+        }
 
         // end
         this._printStack.pop();
@@ -384,32 +434,40 @@ export default class Printer {
     }
 
     _maybeAddAuxComment(enteredPositionlessNode) {
-        if (enteredPositionlessNode) this._printAuxBeforeComment();
-        if (!this._insideAux) this._printAuxAfterComment();
+        if (enteredPositionlessNode) {
+            this._printAuxBeforeComment();
+        }
+        if (!this._insideAux) {
+            this._printAuxAfterComment();
+        }
     }
 
     _printAuxBeforeComment() {
-        if (this._printAuxAfterOnNextUserNode) return;
+        if (this._printAuxAfterOnNextUserNode) {
+            return;
+        }
         this._printAuxAfterOnNextUserNode = true;
 
         const comment = this.format.auxiliaryCommentBefore;
         if (comment) {
             this._printComment({
                 type: "CommentBlock",
-                value: comment,
+                value: comment
             });
         }
     }
 
     _printAuxAfterComment() {
-        if (!this._printAuxAfterOnNextUserNode) return;
+        if (!this._printAuxAfterOnNextUserNode) {
+            return;
+        }
         this._printAuxAfterOnNextUserNode = false;
 
         const comment = this.format.auxiliaryCommentAfter;
         if (comment) {
             this._printComment({
                 type: "CommentBlock",
-                value: comment,
+                value: comment
             });
         }
     }
@@ -418,8 +476,8 @@ export default class Printer {
         const extra = node.extra;
         if (
             extra &&
-            extra.raw != null &&
-            extra.rawValue != null &&
+            !is.nil(extra.raw) &&
+            !is.nil(extra.rawValue) &&
             node.value === extra.rawValue
         ) {
             return extra.raw;
@@ -427,19 +485,27 @@ export default class Printer {
     }
 
     printJoin(nodes: ?Array, parent: Object, opts = {}) {
-        if (!nodes || !nodes.length) return;
+        if (!nodes || !nodes.length) {
+            return;
+        }
 
-        if (opts.indent) this.indent();
+        if (opts.indent) {
+            this.indent();
+        }
 
         const newlineOpts = {
-            addNewlines: opts.addNewlines,
+            addNewlines: opts.addNewlines
         };
 
         for (let i = 0; i < nodes.length; i++) {
             const node = nodes[i];
-            if (!node) continue;
+            if (!node) {
+                continue;
+            }
 
-            if (opts.statement) this._printNewline(true, node, parent, newlineOpts);
+            if (opts.statement) {
+                this._printNewline(true, node, parent, newlineOpts);
+            }
 
             this.print(node, parent);
 
@@ -451,17 +517,25 @@ export default class Printer {
                 opts.separator.call(this);
             }
 
-            if (opts.statement) this._printNewline(false, node, parent, newlineOpts);
+            if (opts.statement) {
+                this._printNewline(false, node, parent, newlineOpts);
+            }
         }
 
-        if (opts.indent) this.dedent();
+        if (opts.indent) {
+            this.dedent();
+        }
     }
 
     printAndIndentOnComments(node, parent) {
         const indent = node.leadingComments && node.leadingComments.length > 0;
-        if (indent) this.indent();
+        if (indent) {
+            this.indent();
+        }
         this.print(node, parent);
-        if (indent) this.dedent();
+        if (indent) {
+            this.dedent();
+        }
     }
 
     printBlock(parent) {
@@ -483,10 +557,16 @@ export default class Printer {
     }
 
     printInnerComments(node, indent = true) {
-        if (!node.innerComments || !node.innerComments.length) return;
-        if (indent) this.indent();
+        if (!node.innerComments || !node.innerComments.length) {
+            return;
+        }
+        if (indent) {
+            this.indent();
+        }
         this._printComments(node.innerComments);
-        if (indent) this.dedent();
+        if (indent) {
+            this.dedent();
+        }
     }
 
     printSequence(nodes, parent, opts = {}) {
@@ -495,7 +575,7 @@ export default class Printer {
     }
 
     printList(items, parent, opts = {}) {
-        if (opts.separator == null) {
+        if (is.nil(opts.separator)) {
             opts.separator = commaSeparator;
         }
 
@@ -504,7 +584,9 @@ export default class Printer {
 
     _printNewline(leading, node, parent, opts) {
         // Fast path since 'this.newline' does nothing when not tracking lines.
-        if (this.format.retainLines || this.format.compact) return;
+        if (this.format.retainLines || this.format.compact) {
+            return;
+        }
 
         // Fast path for concise since 'this.newline' just inserts a space when
         // concise formatting is in use.
@@ -516,11 +598,17 @@ export default class Printer {
         let lines = 0;
         // don't add newlines at the beginning of the file
         if (this._buf.hasContent()) {
-            if (!leading) lines++; // always include at least a single line after
-            if (opts.addNewlines) lines += opts.addNewlines(leading, node) || 0;
+            if (!leading) {
+                lines++;
+            } // always include at least a single line after
+            if (opts.addNewlines) {
+                lines += opts.addNewlines(leading, node) || 0;
+            }
 
             const needs = leading ? n.needsWhitespaceBefore : n.needsWhitespaceAfter;
-            if (needs(node, parent)) lines++;
+            if (needs(node, parent)) {
+                lines++;
+            }
         }
 
         this.newline(lines);
@@ -535,17 +623,25 @@ export default class Printer {
     }
 
     _printComment(comment) {
-        if (!this.format.shouldPrintComment(comment.value)) return;
+        if (!this.format.shouldPrintComment(comment.value)) {
+            return;
+        }
 
         // Some plugins use this to mark comments as removed using the AST-root 'comments' property,
         // where they can't manually mutate the AST node comment lists.
-        if (comment.ignore) return;
+        if (comment.ignore) {
+            return;
+        }
 
-        if (this._printedComments.has(comment)) return;
+        if (this._printedComments.has(comment)) {
+            return;
+        }
         this._printedComments.add(comment);
 
-        if (comment.start != null) {
-            if (this._printedCommentStarts[comment.start]) return;
+        if (!is.nil(comment.start)) {
+            if (this._printedCommentStarts[comment.start]) {
+                return;
+            }
             this._printedCommentStarts[comment.start] = true;
         }
 
@@ -558,7 +654,9 @@ export default class Printer {
                 : 0,
         );
 
-        if (!this.endsWith("[") && !this.endsWith("{")) this.space();
+        if (!this.endsWith("[") && !this.endsWith("{")) {
+            this.space();
+        }
 
         let val =
             !isBlockComment && !this._noLineTerminator
@@ -568,7 +666,7 @@ export default class Printer {
         if (isBlockComment && this.format.indent.adjustMultilineComment) {
             const offset = comment.loc && comment.loc.start.column;
             if (offset) {
-                const newlineRegex = new RegExp("\\n\\s{1," + offset + "}", "g");
+                const newlineRegex = new RegExp(`\\n\\s{1,${offset}}`, "g");
                 val = val.replace(newlineRegex, "\n");
             }
 
@@ -580,7 +678,9 @@ export default class Printer {
         }
 
         // Avoid creating //* comments
-        if (this.endsWith("/")) this._space();
+        if (this.endsWith("/")) {
+            this._space();
+        }
 
         this.withSource("start", comment.loc, () => {
             this._append(val);
@@ -591,7 +691,9 @@ export default class Printer {
     }
 
     _printComments(comments?: Array<Object>) {
-        if (!comments || !comments.length) return;
+        if (!comments || !comments.length) {
+            return;
+        }
 
         for (const comment of comments) {
             this._printComment(comment);
