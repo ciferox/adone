@@ -13,10 +13,11 @@ const previousUsage = process.cpuUsage();
 
 const CORE_GROUP = "core";
 
+export default
 @Context({
     description: "Omnitron"
 })
-export default class Omnitron extends app.Application {
+class Omnitron extends app.Application {
     async configure() {
         this.enableReport({
             directory: adone.runtime.config.omnitron.LOGS_PATH

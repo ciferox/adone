@@ -1,5 +1,3 @@
-// @flow
-
 import path from "path";
 import {
   validate,
@@ -7,7 +5,9 @@ import {
   type IgnoreList,
   type ConfigApplicableTest,
   type BabelrcSearch,
+  type CallerMetadata,
 } from "./validation/options";
+import pathPatternToRegex from "./pattern-to-regex";
 
 import {
   findPackageData,
@@ -42,20 +42,31 @@ export type PresetInstance = {
 };
 
 export type ConfigContext = {
-  filename: string | null,
+  filename: string | void,
   cwd: string,
+  root: string,
   envName: string,
-};
-
-type ConfigContextNamed = {
-  ...ConfigContext,
-  filename: string,
+  caller: CallerMetadata | void,
 };
 
 /**
  * Build a config chain for a given preset.
  */
-export const buildPresetChain: (
+export function buildPresetChain(
+  arg: PresetInstance,
+  context: *,
+): ConfigChain | null {
+  const chain = buildPresetChainWalker(arg, context);
+  if (!chain) return null;
+
+  return {
+    plugins: dedupDescriptors(chain.plugins),
+    presets: dedupDescriptors(chain.presets),
+    options: chain.options,
+  };
+}
+
+export const buildPresetChainWalker: (
   arg: PresetInstance,
   context: *,
 ) => * = makeChainWalker({
@@ -126,26 +137,34 @@ export function buildRootChain(
   );
   if (!programmaticChain) return null;
 
-  const {
-    root: rootDir = ".",
-    babelrc = true,
-    babelrcRoots,
-    configFile: configFileName = true,
-  } = opts;
-
-  const absoluteRoot = path.resolve(context.cwd, rootDir);
-
   let configFile;
-  if (typeof configFileName === "string") {
-    configFile = loadConfig(configFileName, context.cwd, context.envName);
-  } else if (configFileName === true) {
-    configFile = findRootConfig(absoluteRoot, context.envName);
+  if (typeof opts.configFile === "string") {
+    configFile = loadConfig(
+      opts.configFile,
+      context.cwd,
+      context.envName,
+      context.caller,
+    );
+  } else if (opts.configFile !== false) {
+    configFile = findRootConfig(context.root, context.envName, context.caller);
   }
+
+  let { babelrc, babelrcRoots } = opts;
 
   const configFileChain = emptyChain();
   if (configFile) {
-    const result = loadFileChain(configFile, context);
+    const validatedFile = validateConfigFile(configFile);
+    const result = loadFileChain(validatedFile, context);
     if (!result) return null;
+
+    // Allow config files to toggle `.babelrc` resolution on and off and
+    // specify where the roots are.
+    if (babelrc === undefined) {
+      babelrc = validatedFile.options.babelrc;
+    }
+    if (babelrcRoots === undefined) {
+      babelrcRoots = validatedFile.options.babelrcRoots;
+    }
 
     mergeChain(configFileChain, result);
   }
@@ -159,9 +178,9 @@ export function buildRootChain(
   const fileChain = emptyChain();
   // resolve all .babelrc files
   if (
-    babelrc &&
+    (babelrc === true || babelrc === undefined) &&
     pkgData &&
-    babelrcLoadEnabled(context, pkgData, babelrcRoots, absoluteRoot)
+    babelrcLoadEnabled(context, pkgData, babelrcRoots)
   ) {
     ({ ignore: ignoreFile, config: babelrcFile } = findRelativeConfig(
       pkgData,
@@ -176,7 +195,7 @@ export function buildRootChain(
     }
 
     if (babelrcFile) {
-      const result = loadFileChain(babelrcFile, context);
+      const result = loadFileChain(validateBabelrcFile(babelrcFile), context);
       if (!result) return null;
 
       mergeChain(fileChain, result);
@@ -204,11 +223,12 @@ function babelrcLoadEnabled(
   context: ConfigContext,
   pkgData: FilePackageData,
   babelrcRoots: BabelrcSearch | void,
-  absoluteRoot: string,
 ): boolean {
   if (typeof babelrcRoots === "boolean") return babelrcRoots;
 
-  // Fast path to avoid having to load micromatch if the babelrc is just
+  const absoluteRoot = context.root;
+
+  // Fast path to avoid having to match patterns if the babelrc is just
   // loading in the standard root directory.
   if (babelrcRoots === undefined) {
     return pkgData.directories.indexOf(absoluteRoot) !== -1;
@@ -216,30 +236,53 @@ function babelrcLoadEnabled(
 
   let babelrcPatterns = babelrcRoots;
   if (!Array.isArray(babelrcPatterns)) babelrcPatterns = [babelrcPatterns];
-  babelrcPatterns = babelrcPatterns.map(pat => path.resolve(context.cwd, pat));
+  babelrcPatterns = babelrcPatterns.map(pat => {
+    return typeof pat === "string" ? path.resolve(context.cwd, pat) : pat;
+  });
 
-  // Fast path to avoid having to load micromatch if the babelrc is just
+  // Fast path to avoid having to match patterns if the babelrc is just
   // loading in the standard root directory.
   if (babelrcPatterns.length === 1 && babelrcPatterns[0] === absoluteRoot) {
     return pkgData.directories.indexOf(absoluteRoot) !== -1;
   }
 
-  // return micromatch(pkgData.directories, babelrcPatterns).length > 0;
-  const matcher = adone.util.matchPath(babelrcPatterns);
+  return babelrcPatterns.some(pat => {
+    if (typeof pat === "string") pat = pathPatternToRegex(pat, context.cwd);
 
-  for (const dir of pkgData.directories) {
-    if (matcher(dir)) {
-      return true;
-    }
-  }
-  return false;
+    return pkgData.directories.some(directory => {
+      return matchPattern(pat, context.cwd, directory, context);
+    });
+  });
 }
+
+const validateConfigFile = makeWeakCache(
+  (file: ConfigFile): ValidatedFile => ({
+    filepath: file.filepath,
+    dirname: file.dirname,
+    options: validate("configfile", file.options),
+  }),
+);
+
+const validateBabelrcFile = makeWeakCache(
+  (file: ConfigFile): ValidatedFile => ({
+    filepath: file.filepath,
+    dirname: file.dirname,
+    options: validate("babelrcfile", file.options),
+  }),
+);
+
+const validateExtendFile = makeWeakCache(
+  (file: ConfigFile): ValidatedFile => ({
+    filepath: file.filepath,
+    dirname: file.dirname,
+    options: validate("extendsfile", file.options),
+  }),
+);
 
 /**
  * Build a config chain for just the programmatic options passed into Babel.
  */
 const loadProgrammaticChain = makeChainWalker({
-  init: arg => arg,
   root: input => buildRootDescriptors(input, "base", createCachedDescriptors),
   env: (input, envName) =>
     buildEnvDescriptors(input, "base", createCachedDescriptors, envName),
@@ -259,18 +302,12 @@ const loadProgrammaticChain = makeChainWalker({
  * Build a config chain for a given file.
  */
 const loadFileChain = makeChainWalker({
-  init: input => validateFile(input),
   root: file => loadFileDescriptors(file),
   env: (file, envName) => loadFileEnvDescriptors(file)(envName),
   overrides: (file, index) => loadFileOverridesDescriptors(file)(index),
   overridesEnv: (file, index, envName) =>
     loadFileOverridesEnvDescriptors(file)(index)(envName),
 });
-const validateFile = makeWeakCache((file: ConfigFile): ValidatedFile => ({
-  filepath: file.filepath,
-  dirname: file.dirname,
-  options: validate("file", file.options),
-}));
 const loadFileDescriptors = makeWeakCache((file: ValidatedFile) =>
   buildRootDescriptors(file, file.filepath, createUncachedDescriptors),
 );
@@ -354,25 +391,18 @@ function buildOverrideEnvDescriptors(
     : null;
 }
 
-function makeChainWalker<
-  ArgT,
-  InnerT: { options: ValidatedOptions, dirname: string },
->({
-  init,
+function makeChainWalker<ArgT: { options: ValidatedOptions, dirname: string }>({
   root,
   env,
   overrides,
   overridesEnv,
 }: {
-  init: ArgT => InnerT,
-  root: InnerT => OptionsAndDescriptors,
-  env: (InnerT, string) => OptionsAndDescriptors | null,
-  overrides: (InnerT, number) => OptionsAndDescriptors,
-  overridesEnv: (InnerT, number, string) => OptionsAndDescriptors | null,
+  root: ArgT => OptionsAndDescriptors,
+  env: (ArgT, string) => OptionsAndDescriptors | null,
+  overrides: (ArgT, number) => OptionsAndDescriptors,
+  overridesEnv: (ArgT, number, string) => OptionsAndDescriptors | null,
 }): (ArgT, ConfigContext, Set<ConfigFile> | void) => ConfigChain | null {
-  return (arg, context, files = new Set()) => {
-    const input = init(arg);
-
+  return (input, context, files = new Set()) => {
     const { dirname } = input;
 
     const flattenedConfigs = [];
@@ -435,7 +465,12 @@ function mergeExtendsChain(
 ): boolean {
   if (opts.extends === undefined) return true;
 
-  const file = loadConfig(opts.extends, dirname, context.envName);
+  const file = loadConfig(
+    opts.extends,
+    dirname,
+    context.envName,
+    context.caller,
+  );
 
   if (files.has(file)) {
     throw new Error(
@@ -446,7 +481,7 @@ function mergeExtendsChain(
   }
 
   files.add(file);
-  const fileChain = loadFileChain(file, context, files);
+  const fileChain = loadFileChain(validateExtendFile(file), context, files);
   files.delete(file);
 
   if (!fileChain) return false;
@@ -489,11 +524,15 @@ function normalizeOptions(opts: ValidatedOptions): ValidatedOptions {
   };
   delete options.extends;
   delete options.env;
+  delete options.overrides;
   delete options.plugins;
   delete options.presets;
   delete options.passPerPreset;
   delete options.ignore;
   delete options.only;
+  delete options.test;
+  delete options.include;
+  delete options.exclude;
 
   // "sourceMap" is just aliased to sourceMap, so copy it over as
   // we merge the options together.
@@ -509,7 +548,7 @@ function dedupDescriptors(
 ): Array<UnloadedDescriptor> {
   const map: Map<
     Function,
-    Map<string | void, { value: UnloadedDescriptor | null }>,
+    Map<string | void, { value: UnloadedDescriptor }>,
   > = new Map();
 
   const descriptors = [];
@@ -524,16 +563,12 @@ function dedupDescriptors(
       }
       let desc = nameMap.get(item.name);
       if (!desc) {
-        desc = { value: null };
+        desc = { value: item };
         descriptors.push(desc);
 
         // Treat passPerPreset presets as unique, skipping them
         // in the merge processing steps.
         if (!item.ownPass) nameMap.set(item.name, desc);
-      }
-
-      if (item.options === false) {
-        desc.value = null;
       } else {
         desc.value = item;
       }
@@ -543,7 +578,7 @@ function dedupDescriptors(
   }
 
   return descriptors.reduce((acc, desc) => {
-    if (desc.value) acc.push(desc.value);
+    acc.push(desc.value);
     return acc;
   }, []);
 }
@@ -568,20 +603,9 @@ function configFieldIsApplicable(
   test: ConfigApplicableTest,
   dirname: string,
 ): boolean {
-  if (context.filename === null) {
-    throw new Error(
-      `Configuration contains explicit test/include/exclude checks, but no filename was passed to Babel`,
-    );
-  }
-  // $FlowIgnore - Flow refinements aren't quite smart enough for this :(
-  const ctx: ConfigContextNamed = context;
-
   const patterns = Array.isArray(test) ? test : [test];
 
-  // Disabling negation here because it's a bit buggy from
-  // https://github.com/babel/babel/issues/6907 and it's not clear that it is
-  // needed since users can use 'exclude' alongside 'test'/'include'.
-  return matchesPatterns(ctx, patterns, dirname, false /* allowNegation */);
+  return matchesPatterns(context, patterns, dirname);
 }
 
 /**
@@ -593,31 +617,12 @@ function shouldIgnore(
   only: ?IgnoreList,
   dirname: string,
 ): boolean {
-  if (ignore) {
-    if (context.filename === null) {
-      throw new Error(
-        `Configuration contains ignore checks, but no filename was passed to Babel`,
-      );
-    }
-    // $FlowIgnore - Flow refinements aren't quite smart enough for this :(
-    const ctx: ConfigContextNamed = context;
-    if (matchesPatterns(ctx, ignore, dirname)) {
-      return true;
-    }
+  if (ignore && matchesPatterns(context, ignore, dirname)) {
+    return true;
   }
 
-  if (only) {
-    if (context.filename === null) {
-      throw new Error(
-        `Configuration contains ignore checks, but no filename was passed to Babel`,
-      );
-    }
-    // $FlowIgnore - Flow refinements aren't quite smart enough for this :(
-    const ctx: ConfigContextNamed = context;
-
-    if (!matchesPatterns(ctx, only, dirname)) {
-      return true;
-    }
+  if (only && !matchesPatterns(context, only, dirname)) {
+    return true;
   }
 
   return false;
@@ -628,71 +633,37 @@ function shouldIgnore(
  * Otherwise returns result of matching pattern Regex with filename.
  */
 function matchesPatterns(
-  context: ConfigContextNamed,
+  context: ConfigContext,
   patterns: IgnoreList,
   dirname: string,
-  allowNegation?: boolean = true,
 ): boolean {
-  const res = [];
-  const strings = [];
-  const fns = [];
-
-  patterns.forEach(pattern => {
-    if (typeof pattern === "string") strings.push(pattern);
-    else if (typeof pattern === "function") fns.push(pattern);
-    else res.push(pattern);
-  });
-
-  const filename = context.filename;
-  if (res.some(re => re.test(context.filename))) return true;
-  if (fns.some(fn => fn(filename))) return true;
-
-  if (strings.length > 0) {
-    const possibleDirs = getPossibleDirs(context);
-
-    const absolutePatterns = strings.map(pattern => {
-      // Preserve the "!" prefix so that micromatch can use it for negation.
-      const negate = pattern[0] === "!";
-      if (negate && !allowNegation) {
-        throw new Error(`Negation of file paths is not supported.`);
-      }
-      if (negate) pattern = pattern.slice(1);
-
-      return (negate ? "!" : "") + path.resolve(dirname, pattern);
-    });
-
-    // if (
-    //   micromatch(possibleDirs, absolutePatterns, {
-    //     nocase: true,
-    //     nonegate: !allowNegation,
-    //   }).length > 0
-    // ) {
-    //   return true;
-    // }
-    const matcher = adone.util.matchPath(absolutePatterns);
-
-    for (const dir of possibleDirs) {
-      if (matcher(dir)) {
-        return true;
-      }
-    }
-  }
-
-  return false;
+  return patterns.some(pattern =>
+    matchPattern(pattern, dirname, context.filename, context),
+  );
 }
 
-const getPossibleDirs = makeWeakCache((context: ConfigContextNamed) => {
-  let current = context.filename;
-  if (current === null) return [];
-
-  const possibleDirs = [current];
-  while (true) {
-    const previous = current;
-    current = path.dirname(current);
-    if (previous === current) break;
-
-    possibleDirs.push(current);
+function matchPattern(
+  pattern,
+  dirname,
+  pathToTest,
+  context: ConfigContext,
+): boolean {
+  if (typeof pattern === "function") {
+    return !!pattern(pathToTest, {
+      dirname,
+      envName: context.envName,
+      caller: context.caller,
+    });
   }
 
-  return possibleDirs;
-});
+  if (typeof pathToTest !== "string") {
+    throw new Error(
+      `Configuration contains string/RegExp pattern, but no filename was passed to Babel`,
+    );
+  }
+
+  if (typeof pattern === "string") {
+    pattern = pathPatternToRegex(pattern, dirname);
+  }
+  return pattern.test(pathToTest);
+}

@@ -1,7 +1,4 @@
-const {
-  is,
-  sourcemap
-} = adone;
+import sourceMap from "source-map";
 
 /**
  * Build a sourcemap.
@@ -21,15 +18,15 @@ export default class SourceMap {
 
   get() {
     if (!this._cachedMap) {
-      const map = (this._cachedMap = sourcemap.createGenerator({
-        sourceRoot: this._opts.sourceRoot
+      const map = (this._cachedMap = new sourceMap.SourceMapGenerator({
+        sourceRoot: this._opts.sourceRoot,
       }));
 
       const code = this._code;
-      if (is.string(code)) {
+      if (typeof code === "string") {
         map.setSourceContent(this._opts.sourceFileName, code);
       } else if (typeof code === "object") {
-        Object.keys(code).forEach((sourceFileName) => {
+        Object.keys(code).forEach(sourceFileName => {
           map.setSourceContent(sourceFileName, code[sourceFileName]);
         });
       }
@@ -56,15 +53,15 @@ export default class SourceMap {
     column: number,
     identifierName: ?string,
     filename: ?string,
+    force?: boolean,
   ) {
     // Adding an empty mapping at the start of a generated line just clutters the map.
-    if (this._lastGenLine !== generatedLine && is.null(line)) {
-      return;
-    }
+    if (this._lastGenLine !== generatedLine && line === null) return;
 
     // If this mapping points to the same source location as the last one, we can ignore it since
     // the previous one covers it.
     if (
+      !force &&
       this._lastGenLine === generatedLine &&
       this._lastSourceLine === line &&
       this._lastSourceColumn === column
@@ -84,16 +81,16 @@ export default class SourceMap {
       name: identifierName || undefined,
       generated: {
         line: generatedLine,
-        column: generatedColumn
+        column: generatedColumn,
       },
-      source: is.nil(line) ? undefined : filename || this._opts.sourceFileName,
+      source: line == null ? undefined : filename || this._opts.sourceFileName,
       original:
-        is.nil(line)
+        line == null
           ? undefined
           : {
-            line,
-            column
-          }
+              line: line,
+              column: column,
+            },
     });
   }
 }

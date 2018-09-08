@@ -1,7 +1,5 @@
 // @flow
-const {
-  js: { compiler: { esutils } }
-} = adone;
+import esutils from "esutils";
 
 /**
  * Check if the input `name` is a valid identifier name

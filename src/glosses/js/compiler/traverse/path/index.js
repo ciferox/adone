@@ -1,13 +1,7 @@
-import type Hub from "../hub";
-import type TraversalContext from "../context";
 import * as virtualTypes from "./lib/virtual-types";
 import traverse from "../index";
 import Scope from "../scope";
 import { path as pathCache } from "../cache";
-
-const {
-  js: { compiler: { types: t, generator } }
-} = adone;
 
 // NodePath is split across many files.
 import * as NodePath_ancestry from "./ancestry";
@@ -22,168 +16,172 @@ import * as NodePath_modification from "./modification";
 import * as NodePath_family from "./family";
 import * as NodePath_comments from "./comments";
 
+const {
+    js: { compiler: { types: t, generate: generator } }
+} = adone;
+
 export default class NodePath {
-  constructor(hub: Hub, parent: Object) {
-    this.parent = parent;
-    this.hub = hub;
-    this.contexts = [];
-    this.data = {};
-    this.shouldSkip = false;
-    this.shouldStop = false;
-    this.removed = false;
-    this.state = null;
-    this.opts = null;
-    this.skipKeys = null;
-    this.parentPath = null;
-    this.context = null;
-    this.container = null;
-    this.listKey = null;
-    this.inList = false;
-    this.parentKey = null;
-    this.key = null;
-    this.node = null;
-    this.scope = null;
-    this.type = null;
-    this.typeAnnotation = null;
-  }
-
-  parent: Object;
-  hub: Hub;
-  contexts: Array<TraversalContext>;
-  data: Object;
-  shouldSkip: boolean;
-  shouldStop: boolean;
-  removed: boolean;
-  state: any;
-  opts: ?Object;
-  skipKeys: ?Object;
-  parentPath: ?NodePath;
-  context: TraversalContext;
-  container: ?Object | Array<Object>;
-  listKey: ?string;
-  inList: boolean;
-  parentKey: ?string;
-  key: ?string;
-  node: ?Object;
-  scope: Scope;
-  type: ?string;
-  typeAnnotation: ?Object;
-
-  static get({ hub, parentPath, parent, container, listKey, key }): NodePath {
-    if (!hub && parentPath) {
-      hub = parentPath.hub;
+    constructor(hub: HubInterface, parent: Object) {
+        this.parent = parent;
+        this.hub = hub;
+        this.contexts = [];
+        this.data = {};
+        this.shouldSkip = false;
+        this.shouldStop = false;
+        this.removed = false;
+        this.state = null;
+        this.opts = null;
+        this.skipKeys = null;
+        this.parentPath = null;
+        this.context = null;
+        this.container = null;
+        this.listKey = null;
+        this.inList = false;
+        this.parentKey = null;
+        this.key = null;
+        this.node = null;
+        this.scope = null;
+        this.type = null;
+        this.typeAnnotation = null;
     }
 
-    if (!parent) {
-      throw new adone.error.Exception("To get a node path the parent needs to exist");
+    parent: Object;
+    hub: HubInterface;
+    contexts: Array<TraversalContext>;
+    data: Object;
+    shouldSkip: boolean;
+    shouldStop: boolean;
+    removed: boolean;
+    state: any;
+    opts: ?Object;
+    skipKeys: ?Object;
+    parentPath: ?NodePath;
+    context: TraversalContext;
+    container: ?Object | Array<Object>;
+    listKey: ?string;
+    inList: boolean;
+    parentKey: ?string;
+    key: ?string;
+    node: ?Object;
+    scope: Scope;
+    type: ?string;
+    typeAnnotation: ?Object;
+
+    static get({ hub, parentPath, parent, container, listKey, key }): NodePath {
+        if (!hub && parentPath) {
+            hub = parentPath.hub;
+        }
+
+        if (!parent) {
+            throw new Error("To get a node path the parent needs to exist");
+        }
+
+        const targetNode = container[key];
+
+        const paths = pathCache.get(parent) || [];
+        if (!pathCache.has(parent)) {
+            pathCache.set(parent, paths);
+        }
+
+        let path;
+
+        for (let i = 0; i < paths.length; i++) {
+            const pathCheck = paths[i];
+            if (pathCheck.node === targetNode) {
+                path = pathCheck;
+                break;
+            }
+        }
+
+        if (!path) {
+            path = new NodePath(hub, parent);
+            paths.push(path);
+        }
+
+        path.setup(parentPath, container, listKey, key);
+
+        return path;
     }
 
-    const targetNode = container[key];
-
-    const paths = pathCache.get(parent) || [];
-    if (!pathCache.has(parent)) {
-      pathCache.set(parent, paths);
+    getScope(scope: Scope) {
+        return this.isScope() ? new Scope(this) : scope;
     }
 
-    let path;
-
-    for (let i = 0; i < paths.length; i++) {
-      const pathCheck = paths[i];
-      if (pathCheck.node === targetNode) {
-        path = pathCheck;
-        break;
-      }
+    setData(key: string, val: any): any {
+        return (this.data[key] = val);
     }
 
-    if (!path) {
-      path = new NodePath(hub, parent);
-      paths.push(path);
+    getData(key: string, def?: any): any {
+        let val = this.data[key];
+        if (!val && def) val = this.data[key] = def;
+        return val;
     }
 
-    path.setup(parentPath, container, listKey, key);
+    buildCodeFrameError(msg: string, Error: typeof Error = SyntaxError): Error {
+        return this.hub.buildError(this.node, msg, Error);
+    }
 
-    return path;
-  }
+    traverse(visitor: Object, state?: any) {
+        traverse(this.node, visitor, this.scope, state, this);
+    }
 
-  getScope(scope: Scope) {
-    return this.isScope() ? new Scope(this) : scope;
-  }
+    set(key: string, node: Object) {
+        t.validate(this.node, key, node);
+        this.node[key] = node;
+    }
 
-  setData(key: string, val: any): any {
-    return (this.data[key] = val);
-  }
+    getPathLocation(): string {
+        const parts = [];
+        let path = this;
+        do {
+            let key = path.key;
+            if (path.inList) key = `${path.listKey}[${key}]`;
+            parts.unshift(key);
+        } while ((path = path.parentPath));
+        return parts.join(".");
+    }
 
-  getData(key: string, def?: any): any {
-    let val = this.data[key];
-    if (!val && def) val = this.data[key] = def;
-    return val;
-  }
-
-  buildCodeFrameError(msg: string, Error: typeof Error = SyntaxError): Error {
-    return this.hub.file.buildCodeFrameError(this.node, msg, Error);
-  }
-
-  traverse(visitor: Object, state?: any) {
-    traverse(this.node, visitor, this.scope, state, this);
-  }
-
-  set(key: string, node: Object) {
-    t.validate(this.node, key, node);
-    this.node[key] = node;
-  }
-
-  getPathLocation(): string {
-    const parts = [];
-    let path = this;
-    do {
-      let key = path.key;
-      if (path.inList) key = `${path.listKey}[${key}]`;
-      parts.unshift(key);
-    } while ((path = path.parentPath));
-    return parts.join(".");
-  }
-
-  toString() {
-    return generator(this.node).code;
-  }
+    toString() {
+        return generator(this.node).code;
+    }
 }
 
 Object.assign(
-  NodePath.prototype,
-  NodePath_ancestry,
-  NodePath_inference,
-  NodePath_replacement,
-  NodePath_evaluation,
-  NodePath_conversion,
-  NodePath_introspection,
-  NodePath_context,
-  NodePath_removal,
-  NodePath_modification,
-  NodePath_family,
-  NodePath_comments,
+    NodePath.prototype,
+    NodePath_ancestry,
+    NodePath_inference,
+    NodePath_replacement,
+    NodePath_evaluation,
+    NodePath_conversion,
+    NodePath_introspection,
+    NodePath_context,
+    NodePath_removal,
+    NodePath_modification,
+    NodePath_family,
+    NodePath_comments,
 );
 
 for (const type of (t.TYPES: Array<string>)) {
-  const typeKey = `is${type}`;
-  const fn = t[typeKey];
-  NodePath.prototype[typeKey] = function(opts) {
-    return fn(this.node, opts);
-  };
+    const typeKey = `is${type}`;
+    const fn = t[typeKey];
+    NodePath.prototype[typeKey] = function (opts) {
+        return fn(this.node, opts);
+    };
 
-  NodePath.prototype[`assert${type}`] = function(opts) {
-    if (!fn(this.node, opts)) {
-      throw new TypeError(`Expected node path of type ${type}`);
-    }
-  };
+    NodePath.prototype[`assert${type}`] = function (opts) {
+        if (!fn(this.node, opts)) {
+            throw new TypeError(`Expected node path of type ${type}`);
+        }
+    };
 }
 
 for (const type in virtualTypes) {
-  if (type[0] === "_") continue;
-  if (t.TYPES.indexOf(type) < 0) t.TYPES.push(type);
+    if (type[0] === "_") continue;
+    if (t.TYPES.indexOf(type) < 0) t.TYPES.push(type);
 
-  const virtualType = virtualTypes[type];
+    const virtualType = virtualTypes[type];
 
-  NodePath.prototype[`is${type}`] = function(opts) {
-    return virtualType.checkPath(this, opts);
-  };
+    NodePath.prototype[`is${type}`] = function (opts) {
+        return virtualType.checkPath(this, opts);
+    };
 }

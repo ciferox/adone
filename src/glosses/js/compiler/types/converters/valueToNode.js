@@ -1,4 +1,6 @@
 // @flow
+import isPlainObject from "lodash/isPlainObject";
+import isRegExp from "lodash/isRegExp";
 import isValidIdentifier from "../validators/isValidIdentifier";
 import {
   identifier,
@@ -10,11 +12,9 @@ import {
   arrayExpression,
   objectProperty,
   objectExpression,
+  unaryExpression,
+  binaryExpression,
 } from "../builders/generated";
-
-const {
-  lodash: { isPlainObject, isRegExp }
-} = adone;
 
 export default function valueToNode(value: any): Object {
   // undefined
@@ -39,7 +39,27 @@ export default function valueToNode(value: any): Object {
 
   // numbers
   if (typeof value === "number") {
-    return numericLiteral(value);
+    let result;
+    if (Number.isFinite(value)) {
+      result = numericLiteral(Math.abs(value));
+    } else {
+      let numerator;
+      if (Number.isNaN(value)) {
+        // NaN
+        numerator = numericLiteral(0);
+      } else {
+        // Infinity / -Infinity
+        numerator = numericLiteral(1);
+      }
+
+      result = binaryExpression("/", numerator, numericLiteral(0));
+    }
+
+    if (value < 0 || Object.is(value, -0)) {
+      result = unaryExpression("-", result);
+    }
+
+    return result;
   }
 
   // regexes

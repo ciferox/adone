@@ -211,6 +211,15 @@ defineType("InterfaceExtends", {
 
 defineInterfaceishType("InterfaceDeclaration");
 
+defineType("InterfaceTypeAnnotation", {
+  visitor: ["extends", "body"],
+  aliases: ["Flow", "FlowType"],
+  fields: {
+    extends: validateOptional(arrayOfType("InterfaceExtends")),
+    body: validateType("ObjectTypeAnnotation"),
+  },
+});
+
 defineType("IntersectionTypeAnnotation", {
   visitor: ["types"],
   aliases: ["Flow", "FlowType"],
@@ -248,19 +257,38 @@ defineType("NumberTypeAnnotation", {
 });
 
 defineType("ObjectTypeAnnotation", {
-  visitor: ["properties", "indexers", "callProperties"],
+  visitor: ["properties", "indexers", "callProperties", "internalSlots"],
   aliases: ["Flow", "FlowType"],
-  builder: ["properties", "indexers", "callProperties", "exact"],
+  builder: [
+    "properties",
+    "indexers",
+    "callProperties",
+    "internalSlots",
+    "exact",
+  ],
   fields: {
     properties: validate(
       arrayOfType(["ObjectTypeProperty", "ObjectTypeSpreadProperty"]),
     ),
     indexers: validateOptional(arrayOfType("ObjectTypeIndexer")),
     callProperties: validateOptional(arrayOfType("ObjectTypeCallProperty")),
+    internalSlots: validateOptional(arrayOfType("ObjectTypeInternalSlot")),
     exact: {
       validate: assertValueType("boolean"),
       default: false,
     },
+  },
+});
+
+defineType("ObjectTypeInternalSlot", {
+  visitor: ["id", "value", "optional", "static", "method"],
+  aliases: ["Flow", "UserWhitespacable"],
+  fields: {
+    id: validateType("Identifier"),
+    value: validateType("FlowType"),
+    optional: validate(assertValueType("boolean")),
+    static: validate(assertValueType("boolean")),
+    method: validate(assertValueType("boolean")),
   },
 });
 
@@ -293,6 +321,7 @@ defineType("ObjectTypeProperty", {
     value: validateType("FlowType"),
     kind: validate(assertOneOf("init", "get", "set")),
     static: validate(assertValueType("boolean")),
+    proto: validate(assertValueType("boolean")),
     optional: validate(assertValueType("boolean")),
     variance: validateOptionalType("Variance"),
   },

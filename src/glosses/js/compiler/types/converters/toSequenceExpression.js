@@ -1,4 +1,3 @@
-// @flow
 import gatherSequenceExpressions from "./gatherSequenceExpressions";
 
 /**
@@ -9,19 +8,20 @@ import gatherSequenceExpressions from "./gatherSequenceExpressions";
  *
  * Expression statements are just resolved to their expression.
  */
-export default function toSequenceExpression(
-  nodes: Array<Object>,
-  scope: Scope,
-): ?Object {
-  if (!nodes || !nodes.length) return;
+export default function toSequenceExpression(nodes, scope) {
+    if (!nodes || !nodes.length) {
+        return;
+    }
 
-  const declars = [];
-  const result = gatherSequenceExpressions(nodes, scope, declars);
-  if (!result) return;
+    const declars = [];
+    const result = gatherSequenceExpressions(nodes, scope, declars);
+    if (!result) {
+        return;
+    }
 
-  for (const declar of declars) {
-    scope.push(declar);
-  }
+    for (const declar of declars) {
+        scope.push(declar);
+    }
 
-  return result;
+    return result;
 }

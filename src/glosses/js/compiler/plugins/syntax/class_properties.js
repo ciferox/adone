@@ -1,8 +1,4 @@
-const {
-    js: { compiler: { helper: { pluginUtils: { declare } } } }
-} = adone;
-
-export default declare((api) => {
+export default adone.js.compiler.helper.pluginUtils.declare((api) => {
     api.assertVersion(7);
 
     return {

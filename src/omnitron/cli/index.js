@@ -15,6 +15,7 @@ const { STATUSES } = omnitron;
 
 const subsystemPath = (name) => std.path.resolve(__dirname, "subsystems", name);
 
+export default 
 @DSubsystem({
     commandsGroups: [
         {
@@ -65,7 +66,7 @@ const subsystemPath = (name) => std.path.resolve(__dirname, "subsystems", name);
         }
     ]
 })
-export default class Omnitron extends Subsystem {
+class Omnitron extends Subsystem {
     @DCliCommand({
         name: "up",
         group: "common",

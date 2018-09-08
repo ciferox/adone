@@ -1,10 +1,7 @@
 // @flow
+import loClone from "lodash/clone";
 import { NODE_FIELDS, BUILDER_KEYS } from "../definitions";
 import validate from "../validators/validate";
-
-const {
-  lodash: { clone: loClone }
-} = adone;
 
 export default function builder(type: string, ...args: Array<any>): Object {
   const keys = BUILDER_KEYS[type];

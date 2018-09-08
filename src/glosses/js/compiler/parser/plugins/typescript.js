@@ -73,12 +73,13 @@ export default (superClass: Class<Parser>): Class<Parser> =>
     tsNextTokenCanFollowModifier() {
       // Note: TypeScript's implementation is much more complicated because
       // more things are considered modifiers there.
-      // This implementation only handles modifiers not handled by babylon itself. And "static".
+      // This implementation only handles modifiers not handled by @babel/parser itself. And "static".
       // TODO: Would be nice to avoid lookahead. Want a hasLineBreakUpNext() method...
       this.next();
       return (
         !this.hasPrecedingLineBreak() &&
         !this.match(tt.parenL) &&
+        !this.match(tt.parenR) &&
         !this.match(tt.colon) &&
         !this.match(tt.eq) &&
         !this.match(tt.question)
@@ -637,7 +638,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
       this.expectContextual("infer");
       const typeParameter = this.startNode();
       typeParameter.name = this.parseIdentifierName(typeParameter.start);
-      node.typeParameter = this.finishNode(typeParameter, "TypeParameter");
+      node.typeParameter = this.finishNode(typeParameter, "TSTypeParameter");
       return this.finishNode(node, "TSInferType");
     }
 
@@ -835,14 +836,6 @@ export default (superClass: Class<Parser>): Class<Parser> =>
       return this.finishNode(node, "TSTypeAssertion");
     }
 
-    tsTryParseTypeArgumentsInExpression(): ?N.TsTypeParameterInstantiation {
-      return this.tsTryParseAndCatch(() => {
-        const res = this.tsParseTypeArguments();
-        this.expect(tt.parenL);
-        return res;
-      });
-    }
-
     tsParseHeritageClause(): $ReadOnlyArray<N.TsExpressionWithTypeArguments> {
       return this.tsParseDelimitedList(
         "HeritageClauseElement",
@@ -884,6 +877,16 @@ export default (superClass: Class<Parser>): Class<Parser> =>
       node.typeAnnotation = this.tsExpectThenParseType(tt.eq);
       this.semicolon();
       return this.finishNode(node, "TSTypeAliasDeclaration");
+    }
+
+    tsInNoContext<T>(cb: () => T): T {
+      const oldContext = this.state.context;
+      this.state.context = [oldContext[0]];
+      try {
+        return cb();
+      } finally {
+        this.state.context = oldContext;
+      }
     }
 
     /**
@@ -1240,13 +1243,19 @@ export default (superClass: Class<Parser>): Class<Parser> =>
 
     tsParseTypeArguments(): N.TsTypeParameterInstantiation {
       const node = this.startNode();
-      node.params = this.tsInType(() => {
-        this.expectRelational("<");
-        return this.tsParseDelimitedList(
-          "TypeParametersOrArguments",
-          this.tsParseType.bind(this),
-        );
-      });
+      node.params = this.tsInType(() =>
+        // Temporarily remove a JSX parsing context, which makes us scan different tokens.
+        this.tsInNoContext(() => {
+          this.expectRelational("<");
+          return this.tsParseDelimitedList(
+            "TypeParametersOrArguments",
+            this.tsParseType.bind(this),
+          );
+        }),
+      );
+      // This reads the next token after the `>` too, so do this in the enclosing context.
+      // But be sure not to parse a regex in the jsx expression `<C<number> />`, so set exprAllowed = false
+      this.state.exprAllowed = false;
       this.expectRelational(">");
       return this.finishNode(node, "TSTypeParameterInstantiation");
     }
@@ -1327,7 +1336,9 @@ export default (superClass: Class<Parser>): Class<Parser> =>
       const bodilessType =
         type === "FunctionDeclaration"
           ? "TSDeclareFunction"
-          : type === "ClassMethod" ? "TSDeclareMethod" : undefined;
+          : type === "ClassMethod"
+            ? "TSDeclareMethod"
+            : undefined;
       if (bodilessType && !this.match(tt.braceL) && this.isLineTerminator()) {
         this.finishNode(node, bodilessType);
         return;
@@ -1343,7 +1354,10 @@ export default (superClass: Class<Parser>): Class<Parser> =>
       noCalls: ?boolean,
       state: N.ParseSubscriptState,
     ): N.Expression {
-      if (!this.hasPrecedingLineBreak() && this.eat(tt.bang)) {
+      if (!this.hasPrecedingLineBreak() && this.match(tt.bang)) {
+        this.state.exprAllowed = false;
+        this.next();
+
         const nonNullExpression: N.TsNonNullExpression = this.startNodeAt(
           startPos,
           startLoc,
@@ -1352,35 +1366,53 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         return this.finishNode(nonNullExpression, "TSNonNullExpression");
       }
 
-      if (!noCalls && this.isRelational("<")) {
-        if (this.atPossibleAsync(base)) {
-          // Almost certainly this is a generic async function `async <T>() => ...
-          // But it might be a call with a type argument `async<T>();`
-          const asyncArrowFn = this.tsTryParseGenericAsyncArrowFunction(
-            startPos,
-            startLoc,
-          );
-          if (asyncArrowFn) {
-            return asyncArrowFn;
+      // There are number of things we are going to "maybe" parse, like type arguments on
+      // tagged template expressions. If any of them fail, walk it back and continue.
+      const result = this.tsTryParseAndCatch(() => {
+        if (this.isRelational("<")) {
+          if (!noCalls && this.atPossibleAsync(base)) {
+            // Almost certainly this is a generic async function `async <T>() => ...
+            // But it might be a call with a type argument `async<T>();`
+            const asyncArrowFn = this.tsTryParseGenericAsyncArrowFunction(
+              startPos,
+              startLoc,
+            );
+            if (asyncArrowFn) {
+              return asyncArrowFn;
+            }
+          }
+
+          const node: N.CallExpression = this.startNodeAt(startPos, startLoc);
+          node.callee = base;
+
+          const typeArguments = this.tsParseTypeArguments();
+
+          if (typeArguments) {
+            if (!noCalls && this.eat(tt.parenL)) {
+              // possibleAsync always false here, because we would have handled it above.
+              // $FlowIgnore (won't be any undefined arguments)
+              node.arguments = this.parseCallExpressionArguments(
+                tt.parenR,
+                /* possibleAsync */ false,
+              );
+              node.typeParameters = typeArguments;
+              return this.finishCallExpression(node);
+            } else if (this.match(tt.backQuote)) {
+              return this.parseTaggedTemplateExpression(
+                startPos,
+                startLoc,
+                base,
+                state,
+                typeArguments,
+              );
+            }
           }
         }
 
-        const node: N.CallExpression = this.startNodeAt(startPos, startLoc);
-        node.callee = base;
+        this.unexpected();
+      });
 
-        // May be passing type arguments. But may just be the `<` operator.
-        const typeArguments = this.tsTryParseTypeArgumentsInExpression(); // Also eats the "("
-        if (typeArguments) {
-          // possibleAsync always false here, because we would have handled it above.
-          // $FlowIgnore (won't be any undefined arguments)
-          node.arguments = this.parseCallExpressionArguments(
-            tt.parenR,
-            /* possibleAsync */ false,
-          );
-          node.typeParameters = typeArguments;
-          return this.finishCallExpression(node);
-        }
-      }
+      if (result) return result;
 
       return super.parseSubscript(base, startPos, startLoc, noCalls, state);
     }
@@ -1434,9 +1466,9 @@ export default (superClass: Class<Parser>): Class<Parser> =>
     }
 
     checkReservedWord(
-      word: string,
-      startLoc: number,
-      checkKeywords: boolean,
+      word: string, // eslint-disable-line no-unused-vars
+      startLoc: number, // eslint-disable-line no-unused-vars
+      checkKeywords: boolean, // eslint-disable-line no-unused-vars
       // eslint-disable-next-line no-unused-vars
       isBinding: boolean,
     ): void {
@@ -1489,17 +1521,33 @@ export default (superClass: Class<Parser>): Class<Parser> =>
       }
     }
 
+    isAbstractClass(): boolean {
+      return (
+        this.isContextual("abstract") && this.lookahead().type === tt._class
+      );
+    }
+
     parseExportDefaultExpression(): N.Expression | N.Declaration {
-      if (
-        this.isContextual("abstract") &&
-        this.lookahead().type === tt._class
-      ) {
+      if (this.isAbstractClass()) {
         const cls = this.startNode();
         this.next(); // Skip "abstract"
         this.parseClass(cls, true, true);
         cls.abstract = true;
         return cls;
       }
+
+      // export default interface allowed in:
+      // https://github.com/Microsoft/TypeScript/pull/16040
+      if (this.state.value === "interface") {
+        const result = this.tsParseDeclaration(
+          this.startNode(),
+          this.state.value,
+          true,
+        );
+
+        if (result) return result;
+      }
+
       return super.parseExportDefaultExpression();
     }
 
@@ -1884,7 +1932,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
     parseArrow(node: N.ArrowFunctionExpression): ?N.ArrowFunctionExpression {
       if (this.match(tt.colon)) {
         // This is different from how the TS parser does it.
-        // TS uses lookahead. Babylon parses it as a parenthesized expression and converts.
+        // TS uses lookahead. The Babel Parser parses it as a parenthesized expression and converts.
         const state = this.state.clone();
         try {
           const returnType = this.tsParseTypeOrTypePredicateAnnotation(
@@ -1938,6 +1986,8 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         case "TSParameterProperty":
           return super.toAssignable(node, isBinding, contextDescription);
         case "TSAsExpression":
+        case "TSNonNullExpression":
+        case "TSTypeAssertion":
           node.expression = this.toAssignable(
             node.expression,
             isBinding,
@@ -1970,6 +2020,8 @@ export default (superClass: Class<Parser>): Class<Parser> =>
           );
           return;
         case "TSAsExpression":
+        case "TSNonNullExpression":
+        case "TSTypeAssertion":
           this.checkLVal(
             expr.expression,
             isBinding,
@@ -2083,5 +2135,20 @@ export default (superClass: Class<Parser>): Class<Parser> =>
 
     shouldParseAsyncArrow(): boolean {
       return this.match(tt.colon) || super.shouldParseAsyncArrow();
+    }
+
+    canHaveLeadingDecorator() {
+      // Avoid unnecessary lookahead in checking for abstract class unless needed!
+      return super.canHaveLeadingDecorator() || this.isAbstractClass();
+    }
+
+    jsxParseOpeningElementAfterName(
+      node: N.JSXOpeningElement,
+    ): N.JSXOpeningElement {
+      const typeArguments = this.tsTryParseAndCatch(() =>
+        this.tsParseTypeArguments(),
+      );
+      if (typeArguments) node.typeParameters = typeArguments;
+      return super.jsxParseOpeningElementAfterName(node);
     }
   };

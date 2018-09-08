@@ -194,13 +194,16 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             const plugins = [
                 "syntax.asyncGenerators",
                 "transform.flowStripTypes",
-                ["transform.decorators", { legacy: true }],
+                ["transform.decorators", {
+                    legacy: true
+                }],
                 ["transform.classProperties", { loose: true }],
                 "transform.modulesCommonjs",
                 "transform.functionBind",
                 "transform.objectRestSpread",
                 "transform.numericSeparator",
-                "transform.exponentiationOperator"
+                "transform.exponentiationOperator",
+                "transform.exportNamespaceFrom"
             ];
             if (process.env.ADONE_COVERAGE) {
                 plugins.unshift(
@@ -211,6 +214,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
                     "syntax.functionBind",
                     "syntax.numericSeparator",
                     "syntax.exponentiationOperator",
+                    "syntax.exportNamespaceFrom",
                     adone.js.coverage.plugin
                 );
             }

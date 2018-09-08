@@ -1,15 +1,21 @@
 // @flow
 
 import type { Options } from "../options";
-import type { File } from "../types";
+import type { File, JSXOpeningElement } from "../types";
+import type { PluginList } from "../plugin-utils";
 import { getOptions } from "../options";
 import StatementParser from "./statement";
 
-export const plugins: {
-  [name: string]: (superClass: Class<Parser>) => Class<Parser>,
-} = {};
+export type PluginsMap = {
+  [key: string]: { [option: string]: any },
+};
 
 export default class Parser extends StatementParser {
+  // Forward-declaration so typescript plugin can override jsx plugin
+  +jsxParseOpeningElementAfterName: (
+    node: JSXOpeningElement,
+  ) => JSXOpeningElement;
+
   constructor(options: ?Options, input: string) {
     options = getOptions(options);
     super(options, input);
@@ -19,15 +25,6 @@ export default class Parser extends StatementParser {
     this.input = input;
     this.plugins = pluginsMap(this.options.plugins);
     this.filename = options.sourceFilename;
-
-    // If enabled, skip leading hashbang line.
-    if (
-      this.state.pos === 0 &&
-      this.input[0] === "#" &&
-      this.input[1] === "!"
-    ) {
-      this.skipLineComment(2);
-    }
   }
 
   parse(): File {
@@ -38,12 +35,11 @@ export default class Parser extends StatementParser {
   }
 }
 
-function pluginsMap(
-  pluginList: $ReadOnlyArray<string>,
-): { [key: string]: boolean } {
-  const pluginMap = {};
-  for (const name of pluginList) {
-    pluginMap[name] = true;
+function pluginsMap(plugins: PluginList): PluginsMap {
+  const pluginMap: PluginsMap = (Object.create(null): Object);
+  for (const plugin of plugins) {
+    const [name, options = {}] = Array.isArray(plugin) ? plugin : [plugin, {}];
+    if (!pluginMap[name]) pluginMap[name] = options || {};
   }
   return pluginMap;
 }

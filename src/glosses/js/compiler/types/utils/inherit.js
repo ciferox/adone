@@ -1,7 +1,5 @@
 // @flow
-const {
-  lodash: { uniq }
-} = adone;
+import uniq from "lodash/uniq";
 
 export default function inherit(
   key: string,

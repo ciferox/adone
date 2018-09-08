@@ -12,7 +12,7 @@ const {
 
 const baseSubsystem = (name) => std.path.join(__dirname, name);
 
-
+export default 
 @DSubsystem({
     subsystems: [
         {
@@ -27,7 +27,7 @@ const baseSubsystem = (name) => std.path.join(__dirname, name);
         }
     ]
 })
-export default class extends Subsystem {
+class extends Subsystem {
     @DCliCommand({
         name: ["delete", "del"],
         help: "Delete gate",

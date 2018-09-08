@@ -4,12 +4,13 @@ import type { Options } from "../options";
 import { reservedWords } from "../util/identifier";
 
 import type State from "../tokenizer/state";
+import type { PluginsMap } from "./index";
 
 export default class BaseParser {
   // Properties set by constructor in index.js
   options: Options;
   inModule: boolean;
-  plugins: { [key: string]: boolean };
+  plugins: PluginsMap;
   filename: ?string;
   sawUnambiguousESM: boolean = false;
 
@@ -26,6 +27,10 @@ export default class BaseParser {
   }
 
   hasPlugin(name: string): boolean {
-    return !!this.plugins[name];
+    return Object.hasOwnProperty.call(this.plugins, name);
+  }
+
+  getPluginOption(plugin: string, name: string) {
+    if (this.hasPlugin(plugin)) return this.plugins[plugin][name];
   }
 }

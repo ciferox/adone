@@ -87,7 +87,7 @@ defineType("OptionalMemberExpression", {
 });
 
 defineType("OptionalCallExpression", {
-  visitor: ["callee", "arguments", "typeParameters"],
+  visitor: ["callee", "arguments", "typeParameters", "typeArguments"],
   builder: ["callee", "arguments", "optional"],
   aliases: ["Expression"],
   fields: {
@@ -105,11 +105,12 @@ defineType("OptionalCallExpression", {
     optional: {
       validate: assertValueType("boolean"),
     },
+    typeArguments: {
+      validate: assertNodeType("TypeParameterInstantiation"),
+      optional: true,
+    },
     typeParameters: {
-      validate: assertNodeType(
-        "TypeParameterInstantiation",
-        "TSTypeParameterInstantiation",
-      ),
+      validate: assertNodeType("TSTypeParameterInstantiation"),
       optional: true,
     },
   },
@@ -135,17 +136,10 @@ defineType("Import", {
 });
 
 defineType("Decorator", {
-  visitor: ["callee", "arguments"],
+  visitor: ["expression"],
   fields: {
-    callee: {
+    expression: {
       validate: assertNodeType("Expression"),
-    },
-    arguments: {
-      optional: true,
-      validate: chain(
-        assertValueType("array"),
-        assertEach(assertNodeType("Expression", "SpreadElement")),
-      ),
     },
   },
 });
@@ -188,4 +182,14 @@ defineType("PrivateName", {
       validate: assertNodeType("Identifier"),
     },
   },
+});
+
+defineType("BigIntLiteral", {
+  builder: ["value"],
+  fields: {
+    value: {
+      validate: assertValueType("string"),
+    },
+  },
+  aliases: ["Expression", "Pureish", "Literal", "Immutable"],
 });

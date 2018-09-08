@@ -1,10 +1,13 @@
+import jsesc from "jsesc";
+
 const {
-  js: { compiler: { types: t } },
-  util: { jsesc }
+  js: { compiler: { types: t } }
 } = adone;
 
 export function Identifier(node: Object) {
-  this.word(node.name);
+  this.exactSource(node.loc, () => {
+    this.word(node.name);
+  });
 }
 
 export function RestElement(node: Object) {
@@ -134,14 +137,20 @@ export function StringLiteral(node: Object) {
   }
 
   // ensure the output is ASCII-safe
-  const opts = {
-    quotes: "double",
-    wrap: true,
-  };
+  const opts = this.format.jsescOption;
   if (this.format.jsonCompatibleStrings) {
     opts.json = true;
   }
   const val = jsesc(node.value, opts);
 
   return this.token(val);
+}
+
+export function BigIntLiteral(node: Object) {
+  const raw = this.getPossibleRaw(node);
+  if (!this.format.minified && raw != null) {
+    this.token(raw);
+    return;
+  }
+  this.token(node.value);
 }

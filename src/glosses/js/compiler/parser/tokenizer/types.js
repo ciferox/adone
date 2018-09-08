@@ -66,18 +66,12 @@ export class TokenType {
   }
 }
 
-class KeywordTokenType extends TokenType {
-  constructor(name: string, options: TokenOptions = {}) {
-    options.keyword = name;
-
-    super(name, options);
-  }
+function KeywordTokenType(keyword: string, options: TokenOptions = {}) {
+  return new TokenType(keyword, { ...options, keyword });
 }
 
-export class BinopTokenType extends TokenType {
-  constructor(name: string, prec: number) {
-    super(name, { beforeExpr, binop: prec });
-  }
+function BinopTokenType(name: string, binop: number) {
+  return new TokenType(name, { beforeExpr, binop });
 }
 
 export const types: { [name: string]: TokenType } = {
@@ -111,6 +105,9 @@ export const types: { [name: string]: TokenType } = {
   dollarBraceL: new TokenType("${", { beforeExpr, startsExpr }),
   at: new TokenType("@"),
   hash: new TokenType("#"),
+
+  // Special hashbang token.
+  interpreterDirective: new TokenType("#!..."),
 
   // Operators. These carry several kinds of properties to help the
   // parser use them properly (the presence of these properties is

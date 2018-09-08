@@ -63,6 +63,11 @@ export type HasDecorators = NodeBase & {
   decorators?: $ReadOnlyArray<Decorator>,
 };
 
+export type InterpreterDirective = NodeBase & {
+  type: "InterpreterDirective",
+  value: string,
+};
+
 export type Identifier = PatternBase & {
   type: "Identifier",
   name: string,
@@ -133,6 +138,7 @@ export type Program = NodeBase & {
   sourceType: "script" | "module",
   body: Array<Statement | ModuleDeclaration>, // TODO: $ReadOnlyArray
   directives: $ReadOnlyArray<Directive>, // TODO: Not in spec
+  interpreter: InterpreterDirective | null,
 };
 
 // Functions
@@ -541,6 +547,7 @@ export type ConditionalExpression = NodeBase & {
 export type CallOrNewBase = NodeBase & {
   callee: Expression | Super | Import,
   arguments: Array<Expression | SpreadElement>, // TODO: $ReadOnlyArray
+  typeArguments: ?TypeParameterInstantiationBase,
   typeParameters?: ?TypeParameterInstantiationBase, // TODO: Not in spec
 };
 
@@ -566,10 +573,11 @@ export type TemplateLiteral = NodeBase & {
   expressions: $ReadOnlyArray<Expression>,
 };
 
-export type TaggedTmplateExpression = NodeBase & {
+export type TaggedTemplateExpression = NodeBase & {
   type: "TaggedTemplateExpression",
   tag: Expression,
   quasi: TemplateLiteral,
+  typeParameters?: ?TypeParameterInstantiationBase, // TODO: Not in spec
 };
 
 export type TemplateElement = NodeBase & {
@@ -709,6 +717,7 @@ export type ClassPrivateProperty = NodeBase & {
   value: ?Expression, // TODO: Not in spec that this is nullable.
   static: boolean,
   computed: false,
+  typeAnnotation?: ?TypeAnnotation, // TODO: Not in spec
 };
 
 export type OptClassDeclaration = ClassBase &
@@ -813,7 +822,13 @@ export type JSXEmptyExpression = Node;
 export type JSXSpreadChild = Node;
 export type JSXExpressionContainer = Node;
 export type JSXAttribute = Node;
-export type JSXOpeningElement = Node;
+export type JSXOpeningElement = NodeBase & {
+  type: "JSXOpeningElement",
+  name: JSXNamespacedName | JSXMemberExpression,
+  typeParameters?: ?TypeParameterInstantiationBase, // TODO: Not in spec
+  attributes: $ReadOnlyArray<JSXAttribute>,
+  selfClosing: boolean,
+};
 export type JSXClosingElement = Node;
 export type JSXElement = Node;
 export type JSXOpeningFragment = Node;
@@ -856,6 +871,7 @@ export type TypeParameterBase = NodeBase & {
 
 export type TypeParameter = TypeParameterBase & {
   type: "TypeParameter",
+  default?: TypeAnnotation,
 };
 
 export type TsTypeParameter = TypeParameterBase & {
@@ -914,6 +930,7 @@ export type FlowInterfaceExtends = Node;
 export type FlowTypeAlias = Node;
 export type FlowOpaqueType = Node;
 export type FlowObjectTypeIndexer = Node;
+export type FlowObjectTypeInternalSlot = Node;
 export type FlowFunctionTypeAnnotation = Node;
 export type FlowObjectTypeProperty = Node;
 export type FlowObjectTypeSpreadProperty = Node;
@@ -927,6 +944,12 @@ export type FlowFunctionTypeParam = Node;
 export type FlowTypeAnnotation = Node;
 export type FlowVariance = Node;
 export type FlowClassImplements = Node;
+
+export type FlowInterfaceType = NodeBase & {
+  type: "FlowInterfaceType",
+  extends: FlowInterfaceExtends,
+  body: FlowObjectTypeAnnotation,
+};
 
 // estree
 
@@ -966,7 +989,7 @@ export type EstreeMethodDefinition = NodeBase & {
 //   and only allow modifiers that are not considered errors.
 // * A property named `type` must be renamed to `typeAnnotation` to avoid conflict with the node's type.
 // * Sometimes TypeScript allows to parse something which will be a grammar error later;
-//   in babylon these cause exceptions, so the AST format is stricter.
+//   in @babel/parser these cause exceptions, so the AST format is stricter.
 
 // ================
 // Misc
@@ -1297,7 +1320,7 @@ export type TsExternalModuleReference = NodeBase & {
 };
 
 // TypeScript's own parser uses ExportAssignment for both `export default` and `export =`.
-// But for babylon, `export default` is an ExportDefaultDeclaration,
+// But for @babel/parser, `export default` is an ExportDefaultDeclaration,
 // so a TsExportAssignment is always `export =`.
 export type TsExportAssignment = NodeBase & {
   type: "TSExportAssignment",

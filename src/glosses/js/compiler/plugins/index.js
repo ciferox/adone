@@ -15,6 +15,7 @@ const plugins = {
         // jsx: "./syntax/jsx"
         numericSeparator: "./syntax/numeric_separator",
         exponentiationOperator: "./syntax/exponentiation_operator",
+        exportNamespaceFrom: "./syntax/export_namespace_from",
         dynamicImport: "./syntax/dynamic_import"
     }, null, require),
     transform: lazify({
@@ -41,7 +42,8 @@ const plugins = {
         regenerator: "./transform/regenerator",
         runtime: "./transform/runtime",
         numericSeparator: "./transform/numeric_separator",
-        exponentiationOperator: "./transform/exponentiation_operator"
+        exponentiationOperator: "./transform/exponentiation_operator",
+        exportNamespaceFrom: "./transform/export_namespace_from"
         // templateLiterals: "./transform/template_literals",
         // reactJsx: "./transform/react_jsx",
         // reactDisplayName: "./transform/react_display_name",

@@ -18,10 +18,11 @@ const CORE_SUBSYSTEMS = [
     "gates"
 ];
 
+export default 
 @Context({
     description: "Omnitron"
 })
-export default class Omnitron extends app.Application {
+class Omnitron extends app.Application {
     async configure() {
         // Force create home and runtime directories
         await fs.mkdirp(adone.realm.config.RUNTIME_PATH);

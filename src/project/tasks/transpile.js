@@ -14,7 +14,9 @@ export default class TranspileTask extends adone.project.task.Transform {
     plugins() {
         return [
             "transform.flowStripTypes",
-            ["transform.decorators", { legacy: true }],
+            ["transform.decorators", {
+                legacy: true
+            }],
             ["transform.classProperties", { loose: true }],
             "transform.modulesCommonjs",
             "transform.functionBind",

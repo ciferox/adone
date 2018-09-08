@@ -1,7 +1,4 @@
 // @flow
-import type { TemplateOpts } from "./options";
-import type { Formatter } from "./formatters";
-
 const {
   js: { compiler: { types: t, parse, codeFrameColumns } }
 } = adone;
@@ -142,6 +139,7 @@ function parseWithCodeFrame(code: string, parserOpts: {}): BabelNodeFile {
   };
 
   try {
+    // $FlowFixMe - The parser AST is not the same type as the babel-types type.
     return parse(code, parserOpts);
   } catch (err) {
     const loc = err.loc;
