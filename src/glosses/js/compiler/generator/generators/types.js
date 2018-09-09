@@ -85,33 +85,27 @@ export function ArrayExpression(node: Object) {
     this.printInnerComments(node);
 
     for (let i = 0; i < elems.length; i++) {
-        const elem = elems[i]import jsesc from "jsesc";
+        const elem = elems[i]
 
-;
-        if (elem) {import jsesc from "jsesc";
-
-
-            if (i > 0) { thisimport jsesc from "jsesc";
-
-.space(); }
-            this.print(elem, import jsesc from "jsesc";
-
-node);
-            if (i < len - 1) import jsesc from "jsesc";
-
-{ this.token(","); }
-        } else {import jsesc from "jsesc";
+            ;
+        if (elem) {
 
 
-            // If the array eimport jsesc from "jsesc";
+            if (i > 0) {
+                this
 
-xpression ends with a hole, that hole
-            // will be ignoreimport jsesc from "jsesc";
+                    .space();
+            }
+            this.print(elem,
 
-d by the interpreter, but if it ends with
-            // two (or more) import jsesc from "jsesc";
+                node);
+            if (i < len - 1) { this.token(","); }
+        } else {
 
-holes, we need to write out two (or more)
+
+            // If the array expression ends with a hole, that hole
+            // will be ignored by the interpreter, but if it ends with
+            // two (or more) holes, we need to write out two(or more)
             // commas so that the resulting code is interpreted with
             // both (all) of the holes.
             this.token(",");

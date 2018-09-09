@@ -214,7 +214,7 @@ const loadPluginDescriptor = function (descriptor, context) {
     }
 
     return instantiatePlugin(loadDescriptor(descriptor, context), context);
-}
+};
 
 const instantiatePlugin = makeWeakCache(
     (

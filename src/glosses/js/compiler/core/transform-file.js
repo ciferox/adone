@@ -3,11 +3,15 @@ import fs from "fs";
 
 import loadConfig, { type InputOptions } from "./config";
 import {
-  runSync,
-  runAsync,
-  type FileResult,
-  type FileResultCallback,
+    runSync,
+    runAsync,
+    type FileResult,
+    type FileResultCallback
 } from "./transformation";
+
+const {
+    is
+} = adone;
 
 type TransformFile = {
   (filename: string, callback: FileResultCallback): void,
@@ -15,73 +19,82 @@ type TransformFile = {
 };
 
 export const transformFile: TransformFile = (function transformFile(
-  filename,
-  opts,
-  callback,
+    filename,
+    opts,
+    callback,
 ) {
-  let options;
-  if (typeof opts === "function") {
-    callback = opts;
-    opts = undefined;
-  }
-
-  if (opts == null) {
-    options = { filename };
-  } else if (opts && typeof opts === "object") {
-    options = {
-      ...opts,
-      filename,
-    };
-  }
-
-  process.nextTick(() => {
-    let cfg;
-    try {
-      cfg = loadConfig(options);
-      if (cfg === null) return callback(null, null);
-    } catch (err) {
-      return callback(err);
+    let options;
+    if (is.function(opts)) {
+        callback = opts;
+        opts = undefined;
     }
 
-    // Reassignment to keep Flow happy.
-    const config = cfg;
+    if (is.nil(opts)) {
+        options = { filename };
+    } else if (opts && typeof opts === "object") {
+        options = {
+            ...opts,
+            filename
+        };
+    }
 
-    fs.readFile(filename, "utf8", function(err, code: string) {
-      if (err) return callback(err, null);
+    process.nextTick(() => {
+        let cfg;
+        try {
+            cfg = loadConfig(options);
+            if (is.null(cfg)) {
+                return callback(null, null);
+            }
+        } catch (err) {
+            return callback(err);
+        }
 
-      runAsync(config, code, null, callback);
+        // Reassignment to keep Flow happy.
+        const config = cfg;
+
+        fs.readFile(filename, "utf8", (err, code: string) => {
+            if (err) {
+                return callback(err, null);
+            }
+
+            runAsync(config, code, null, callback);
+        });
     });
-  });
 }: Function);
 
 export function transformFileSync(
-  filename: string,
-  opts: ?InputOptions,
+    filename: string,
+    opts: ?InputOptions,
 ): FileResult | null {
-  let options;
-  if (opts == null) {
-    options = { filename };
-  } else if (opts && typeof opts === "object") {
-    options = {
-      ...opts,
-      filename,
-    };
-  }
+    let options;
+    if (is.nil(opts)) {
+        options = { filename };
+    } else if (opts && typeof opts === "object") {
+        options = {
+            ...opts,
+            filename
+        };
+    }
 
-  const config = loadConfig(options);
-  if (config === null) return null;
+    const config = loadConfig(options);
+    if (is.null(config)) {
+        return null; 
+    }
 
-  return runSync(config, fs.readFileSync(filename, "utf8"));
+    return runSync(config, fs.readFileSync(filename, "utf8"));
 }
 
 export function transformFileAsync(
-  filename: string,
-  opts: ?InputOptions,
+    filename: string,
+    opts: ?InputOptions,
 ): Promise<FileResult | null> {
-  return new Promise((res, rej) => {
-    transformFile(filename, opts, (err, result) => {
-      if (err == null) res(result);
-      else rej(err);
+    return new Promise((res, rej) => {
+        transformFile(filename, opts, (err, result) => {
+            if (is.nil(err)) {
+                res(result);
+            } else {
+                rej(err);
+            }
+        });
     });
-  });
 }

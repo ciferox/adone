@@ -9,16 +9,16 @@ export * from "./asserts/generated";
 
 //builders
 export {
-  default as createTypeAnnotationBasedOnTypeof,
+    default as createTypeAnnotationBasedOnTypeof
 } from "./builders/flow/createTypeAnnotationBasedOnTypeof";
 export {
-  default as createUnionTypeAnnotation,
+    default as createUnionTypeAnnotation
 } from "./builders/flow/createUnionTypeAnnotation";
 export * from "./builders/generated";
 
 // clone
 export { default as cloneNode } from "./clone/cloneNode";
-export { default as clone } from "./clone/clone";
+
 export { default as cloneDeep } from "./clone/cloneDeep";
 export { default as cloneWithoutLoc } from "./clone/cloneWithoutLoc";
 
@@ -26,14 +26,14 @@ export { default as cloneWithoutLoc } from "./clone/cloneWithoutLoc";
 export { default as addComment } from "./comments/addComment";
 export { default as addComments } from "./comments/addComments";
 export {
-  default as inheritInnerComments,
+    default as inheritInnerComments
 } from "./comments/inheritInnerComments";
 export {
-  default as inheritLeadingComments,
+    default as inheritLeadingComments
 } from "./comments/inheritLeadingComments";
 export { default as inheritsComments } from "./comments/inheritsComments";
 export {
-  default as inheritTrailingComments,
+    default as inheritTrailingComments
 } from "./comments/inheritTrailingComments";
 export { default as removeComments } from "./comments/removeComments";
 
@@ -44,7 +44,7 @@ export * from "./constants";
 // converters
 export { default as ensureBlock } from "./converters/ensureBlock";
 export {
-  default as toBindingIdentifierName,
+    default as toBindingIdentifierName
 } from "./converters/toBindingIdentifierName";
 export { default as toBlock } from "./converters/toBlock";
 export { default as toComputedKey } from "./converters/toComputedKey";
@@ -52,7 +52,7 @@ export { default as toExpression } from "./converters/toExpression";
 export { default as toIdentifier } from "./converters/toIdentifier";
 export { default as toKeyAlias } from "./converters/toKeyAlias";
 export {
-  default as toSequenceExpression,
+    default as toSequenceExpression
 } from "./converters/toSequenceExpression";
 export { default as toStatement } from "./converters/toStatement";
 export { default as valueToNode } from "./converters/valueToNode";
@@ -62,26 +62,26 @@ export * from "./definitions";
 
 // modifications
 export {
-  default as appendToMemberExpression,
+    default as appendToMemberExpression
 } from "./modifications/appendToMemberExpression";
 export { default as inherits } from "./modifications/inherits";
 export {
-  default as prependToMemberExpression,
+    default as prependToMemberExpression
 } from "./modifications/prependToMemberExpression";
 export { default as removeProperties } from "./modifications/removeProperties";
 export {
-  default as removePropertiesDeep,
+    default as removePropertiesDeep
 } from "./modifications/removePropertiesDeep";
 export {
-  default as removeTypeDuplicates,
+    default as removeTypeDuplicates
 } from "./modifications/flow/removeTypeDuplicates";
 
 // retrievers
 export {
-  default as getBindingIdentifiers,
+    default as getBindingIdentifiers
 } from "./retrievers/getBindingIdentifiers";
 export {
-  default as getOuterBindingIdentifiers,
+    default as getOuterBindingIdentifiers
 } from "./retrievers/getOuterBindingIdentifiers";
 
 // traverse
@@ -105,20 +105,20 @@ export { default as isScope } from "./validators/isScope";
 export { default as isSpecifierDefault } from "./validators/isSpecifierDefault";
 export { default as isType } from "./validators/isType";
 export {
-  default as isValidES3Identifier,
+    default as isValidES3Identifier
 } from "./validators/isValidES3Identifier";
 export { default as isValidIdentifier } from "./validators/isValidIdentifier";
 export { default as isVar } from "./validators/isVar";
 export { default as matchesPattern } from "./validators/matchesPattern";
 export { default as validate } from "./validators/validate";
 export {
-  default as buildMatchMemberExpression,
+    default as buildMatchMemberExpression
 } from "./validators/buildMatchMemberExpression";
 export * from "./validators/generated";
 
 // react
 export const react = {
-  isReactComponent,
-  isCompatTag,
-  buildChildren,
+    isReactComponent,
+    isCompatTag,
+    buildChildren
 };

@@ -1,11 +1,16 @@
 export default class Plugin {
     key: ?string;
+
     manipulateOptions: Function | void;
+
     post: Function | void;
+
     pre: Function | void;
+
     visitor: {};
 
     parserOverride: Function | void;
+
     generatorOverride: Function | void;
 
     options: {};

@@ -145,44 +145,46 @@ const readConfigJS = makeStrongCache(
 
             // $FlowIssue
             const configModule = (require(filepath): mixed);
-options =
+            options =
     configModule && configModule.__esModule
         ? configModule.default || undefined
         : configModule;
         } catch (err) {
-    err.message = `${filepath}: Error while loading config - ${err.message}`;
-    throw err;
-} finally {
-    LOADING_CONFIGS.delete(filepath);
-}
+            err.message = `${filepath}: Error while loading config - ${err.message}`;
+            throw err;
+        } finally {
+            LOADING_CONFIGS.delete(filepath);
+        }
 
-if (is.function(options)) {
-    options = options(makeAPI(cache));
+        if (is.function(options)) {
+            options = options(makeAPI(cache));
 
-    if (!cache.configured()) { throwConfigError(); }
-}
+            if (!cache.configured()) {
+                throwConfigError(); 
+            }
+        }
 
-if (!options || typeof options !== "object" || is.array(options)) {
-    throw new Error(
-        `${filepath}: Configuration should be an exported JavaScript object.`,
-    );
-}
+        if (!options || typeof options !== "object" || is.array(options)) {
+            throw new Error(
+                `${filepath}: Configuration should be an exported JavaScript object.`,
+            );
+        }
 
-if (is.function(options.then)) {
-    throw new Error(
-        "You appear to be using an async configuration, " +
+        if (is.function(options.then)) {
+            throw new Error(
+                "You appear to be using an async configuration, " +
         "which your current version of Babel does not support. " +
         "We may add support for this in the future, " +
         "but if you're on the most recent version of @babel/core and still " +
         "seeing this error, then you'll need to synchronously return your config.",
-    );
-}
+            );
+        }
 
-return {
-    filepath,
-    dirname: path.dirname(filepath),
-    options
-};
+        return {
+            filepath,
+            dirname: path.dirname(filepath),
+            options
+        };
     },
 );
 
@@ -190,17 +192,19 @@ const packageToBabelConfig = makeWeakCache(
     (file: ConfigFile): ConfigFile | null => {
         const babel = file.options[("babel": string)];
 
-if (is.undefined(babel)) { return null; }
+        if (is.undefined(babel)) {
+            return null; 
+        }
 
-if (typeof babel !== "object" || is.array(babel) || is.null(babel)) {
-    throw new Error(`${file.filepath}: .babel property must be an object`);
-}
+        if (typeof babel !== "object" || is.array(babel) || is.null(babel)) {
+            throw new Error(`${file.filepath}: .babel property must be an object`);
+        }
 
-return {
-    filepath: file.filepath,
-    dirname: file.dirname,
-    options: babel
-};
+        return {
+            filepath: file.filepath,
+            dirname: file.dirname,
+            options: babel
+        };
     },
 );
 
@@ -213,7 +217,9 @@ const readConfigJSON5 = makeStaticFileCache((filepath, content) => {
         throw err;
     }
 
-    if (!options) { throw new Error(`${filepath}: No config detected`); }
+    if (!options) {
+        throw new Error(`${filepath}: No config detected`); 
+    }
 
     if (typeof options !== "object") {
         throw new Error(`${filepath}: Config returned typeof ${typeof options}`);

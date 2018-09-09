@@ -117,7 +117,9 @@ export default class File {
             sourceRoot = moduleRoot
         } = this.opts;
 
-        if (!moduleIds) { return null; }
+        if (!moduleIds) {
+            return null; 
+        }
 
         // moduleId is n/a if a `getModuleId()` is provided
         if (!is.nil(moduleId) && !getModuleId) {
@@ -277,16 +279,16 @@ export default class File {
 
             msg +=
                 `\n${
-                codeFrameColumns(
-                    this.code,
-                    {
-                        start: {
-                            line: loc.start.line,
-                            column: loc.start.column + 1
-                        }
-                    },
-                    { highlightCode },
-                )}`;
+                    codeFrameColumns(
+                        this.code,
+                        {
+                            start: {
+                                line: loc.start.line,
+                                column: loc.start.column + 1
+                            }
+                        },
+                        { highlightCode },
+                    )}`;
         }
 
         return new Error(msg);

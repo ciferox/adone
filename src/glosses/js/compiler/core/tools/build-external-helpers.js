@@ -1,11 +1,11 @@
 const {
-  js: { compiler: { generate: generator, template, types: t, helper: helpers } }
+    js: { compiler: { generate: generator, template, types: t, helper: helpers } }
 } = adone;
 
 // Wrapped to avoid wasting time parsing this when almost no-one uses
 // build-external-helpers.
-const buildUmdWrapper = replacements =>
-  template`
+const buildUmdWrapper = (replacements) =>
+    template`
     (function (root, factory) {
       if (typeof define === "function" && define.amd) {
         define(AMD_ARGUMENTS, factory);
@@ -20,145 +20,147 @@ const buildUmdWrapper = replacements =>
   `(replacements);
 
 function buildGlobal(whitelist) {
-  const namespace = t.identifier("babelHelpers");
+    const namespace = t.identifier("babelHelpers");
 
-  const body = [];
-  const container = t.functionExpression(
-    null,
-    [t.identifier("global")],
-    t.blockStatement(body),
-  );
-  const tree = t.program([
-    t.expressionStatement(
-      t.callExpression(container, [
-        // typeof global === "undefined" ? self : global
-        t.conditionalExpression(
-          t.binaryExpression(
-            "===",
-            t.unaryExpression("typeof", t.identifier("global")),
-            t.stringLiteral("undefined"),
-          ),
-          t.identifier("self"),
-          t.identifier("global"),
-        ),
-      ]),
-    ),
-  ]);
+    const body = [];
+    const container = t.functionExpression(
+        null,
+        [t.identifier("global")],
+        t.blockStatement(body),
+    );
+    const tree = t.program([
+        t.expressionStatement(
+            t.callExpression(container, [
+                // typeof global === "undefined" ? self : global
+                t.conditionalExpression(
+                    t.binaryExpression(
+                        "===",
+                        t.unaryExpression("typeof", t.identifier("global")),
+                        t.stringLiteral("undefined"),
+                    ),
+                    t.identifier("self"),
+                    t.identifier("global"),
+                )
+            ]),
+        )
+    ]);
 
-  body.push(
-    t.variableDeclaration("var", [
-      t.variableDeclarator(
-        namespace,
-        t.assignmentExpression(
-          "=",
-          t.memberExpression(t.identifier("global"), namespace),
-          t.objectExpression([]),
-        ),
-      ),
-    ]),
-  );
+    body.push(
+        t.variableDeclaration("var", [
+            t.variableDeclarator(
+                namespace,
+                t.assignmentExpression(
+                    "=",
+                    t.memberExpression(t.identifier("global"), namespace),
+                    t.objectExpression([]),
+                ),
+            )
+        ]),
+    );
 
-  buildHelpers(body, namespace, whitelist);
+    buildHelpers(body, namespace, whitelist);
 
-  return tree;
+    return tree;
 }
 
 function buildModule(whitelist) {
-  const body = [];
-  const refs = buildHelpers(body, null, whitelist);
+    const body = [];
+    const refs = buildHelpers(body, null, whitelist);
 
-  body.unshift(
-    t.exportNamedDeclaration(
-      null,
-      Object.keys(refs).map(name => {
-        return t.exportSpecifier(t.cloneNode(refs[name]), t.identifier(name));
-      }),
-    ),
-  );
+    body.unshift(
+        t.exportNamedDeclaration(
+            null,
+            Object.keys(refs).map((name) => {
+                return t.exportSpecifier(t.cloneNode(refs[name]), t.identifier(name));
+            }),
+        ),
+    );
 
-  return t.program(body, [], "module");
+    return t.program(body, [], "module");
 }
 
 function buildUmd(whitelist) {
-  const namespace = t.identifier("babelHelpers");
+    const namespace = t.identifier("babelHelpers");
 
-  const body = [];
-  body.push(
-    t.variableDeclaration("var", [
-      t.variableDeclarator(namespace, t.identifier("global")),
-    ]),
-  );
+    const body = [];
+    body.push(
+        t.variableDeclaration("var", [
+            t.variableDeclarator(namespace, t.identifier("global"))
+        ]),
+    );
 
-  buildHelpers(body, namespace, whitelist);
+    buildHelpers(body, namespace, whitelist);
 
-  return t.program([
-    buildUmdWrapper({
-      FACTORY_PARAMETERS: t.identifier("global"),
-      BROWSER_ARGUMENTS: t.assignmentExpression(
-        "=",
-        t.memberExpression(t.identifier("root"), namespace),
-        t.objectExpression([]),
-      ),
-      COMMON_ARGUMENTS: t.identifier("exports"),
-      AMD_ARGUMENTS: t.arrayExpression([t.stringLiteral("exports")]),
-      FACTORY_BODY: body,
-      UMD_ROOT: t.identifier("this"),
-    }),
-  ]);
+    return t.program([
+        buildUmdWrapper({
+            FACTORY_PARAMETERS: t.identifier("global"),
+            BROWSER_ARGUMENTS: t.assignmentExpression(
+                "=",
+                t.memberExpression(t.identifier("root"), namespace),
+                t.objectExpression([]),
+            ),
+            COMMON_ARGUMENTS: t.identifier("exports"),
+            AMD_ARGUMENTS: t.arrayExpression([t.stringLiteral("exports")]),
+            FACTORY_BODY: body,
+            UMD_ROOT: t.identifier("this")
+        })
+    ]);
 }
 
 function buildVar(whitelist) {
-  const namespace = t.identifier("babelHelpers");
+    const namespace = t.identifier("babelHelpers");
 
-  const body = [];
-  body.push(
-    t.variableDeclaration("var", [
-      t.variableDeclarator(namespace, t.objectExpression([])),
-    ]),
-  );
-  const tree = t.program(body);
-  buildHelpers(body, namespace, whitelist);
-  body.push(t.expressionStatement(namespace));
-  return tree;
+    const body = [];
+    body.push(
+        t.variableDeclaration("var", [
+            t.variableDeclarator(namespace, t.objectExpression([]))
+        ]),
+    );
+    const tree = t.program(body);
+    buildHelpers(body, namespace, whitelist);
+    body.push(t.expressionStatement(namespace));
+    return tree;
 }
 
 function buildHelpers(body, namespace, whitelist) {
-  const getHelperReference = name => {
-    return namespace
-      ? t.memberExpression(namespace, t.identifier(name))
-      : t.identifier(`_${name}`);
-  };
+    const getHelperReference = (name) => {
+        return namespace
+            ? t.memberExpression(namespace, t.identifier(name))
+            : t.identifier(`_${name}`);
+    };
 
-  const refs = {};
-  helpers.list.forEach(function(name) {
-    if (whitelist && whitelist.indexOf(name) < 0) return;
+    const refs = {};
+    helpers.list.forEach((name) => {
+        if (whitelist && whitelist.indexOf(name) < 0) {
+            return; 
+        }
 
-    const ref = (refs[name] = getHelperReference(name));
+        const ref = (refs[name] = getHelperReference(name));
 
-    const { nodes } = helpers.get(name, getHelperReference, ref);
+        const { nodes } = helpers.get(name, getHelperReference, ref);
 
-    body.push(...nodes);
-  });
-  return refs;
+        body.push(...nodes);
+    });
+    return refs;
 }
-export default function(
-  whitelist?: Array<string>,
-  outputType: "global" | "module" | "umd" | "var" = "global",
+export default function (
+    whitelist?: Array<string>,
+    outputType: "global" | "module" | "umd" | "var" = "global",
 ) {
-  let tree;
+    let tree;
 
-  const build = {
-    global: buildGlobal,
-    module: buildModule,
-    umd: buildUmd,
-    var: buildVar,
-  }[outputType];
+    const build = {
+        global: buildGlobal,
+        module: buildModule,
+        umd: buildUmd,
+        var: buildVar
+    }[outputType];
 
-  if (build) {
-    tree = build(whitelist);
-  } else {
-    throw new Error(`Unsupported output type ${outputType}`);
-  }
+    if (build) {
+        tree = build(whitelist);
+    } else {
+        throw new Error(`Unsupported output type ${outputType}`);
+    }
 
-  return generator(tree).code;
+    return generator(tree).code;
 }

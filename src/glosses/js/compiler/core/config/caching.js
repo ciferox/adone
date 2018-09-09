@@ -1,4 +1,6 @@
-// @flow
+const {
+    is
+} = adone;
 
 export type SimpleCacheConfigurator = SimpleCacheConfiguratorFn &
   SimpleCacheConfiguratorObj;
@@ -26,9 +28,9 @@ export type { CacheConfigurator };
  * configures its caching behavior. Cached values are stored strongly.
  */
 export function makeStrongCache<ArgT, ResultT, SideChannel>(
-  handler: (ArgT, CacheConfigurator<SideChannel>) => ResultT,
+    handler: (ArgT, CacheConfigurator<SideChannel>) => ResultT,
 ): (ArgT, SideChannel) => ResultT {
-  return makeCachedFunction(new Map(), handler);
+    return makeCachedFunction(new Map(), handler);
 }
 
 /**
@@ -41,9 +43,9 @@ export function makeWeakCache<
   ResultT,
   SideChannel,
 >(
-  handler: (ArgT, CacheConfigurator<SideChannel>) => ResultT,
+    handler: (ArgT, CacheConfigurator<SideChannel>) => ResultT,
 ): (ArgT, SideChannel) => ResultT {
-  return makeCachedFunction(new WeakMap(), handler);
+    return makeCachedFunction(new WeakMap(), handler);
 }
 
 type CacheMap<ArgT, ResultT, SideChannel> =
@@ -56,54 +58,61 @@ function makeCachedFunction<
   SideChannel,
   Cache: CacheMap<ArgT, ResultT, SideChannel>,
 >(
-  callCache: Cache,
-  handler: (ArgT, CacheConfigurator<SideChannel>) => ResultT,
+    callCache: Cache,
+    handler: (ArgT, CacheConfigurator<SideChannel>) => ResultT,
 ): (ArgT, SideChannel) => ResultT {
-  return function cachedFunction(arg, data) {
-    let cachedValue: CacheEntry<ResultT, SideChannel> | void = callCache.get(
-      arg,
-    );
+    return function cachedFunction(arg, data) {
+        let cachedValue: CacheEntry<ResultT, SideChannel> | void = callCache.get(
+            arg,
+        );
 
-    if (cachedValue) {
-      for (const { value, valid } of cachedValue) {
-        if (valid(data)) return value;
-      }
-    }
-
-    const cache = new CacheConfigurator(data);
-
-    const value = handler(arg, cache);
-
-    if (!cache.configured()) cache.forever();
-
-    cache.deactivate();
-
-    switch (cache.mode()) {
-      case "forever":
-        cachedValue = [{ value, valid: () => true }];
-        callCache.set(arg, cachedValue);
-        break;
-      case "invalidate":
-        cachedValue = [{ value, valid: cache.validator() }];
-        callCache.set(arg, cachedValue);
-        break;
-      case "valid":
         if (cachedValue) {
-          cachedValue.push({ value, valid: cache.validator() });
-        } else {
-          cachedValue = [{ value, valid: cache.validator() }];
-          callCache.set(arg, cachedValue);
+            for (const { value, valid } of cachedValue) {
+                if (valid(data)) {
+                    return value; 
+                }
+            }
         }
-    }
 
-    return value;
-  };
+        const cache = new CacheConfigurator(data);
+
+        const value = handler(arg, cache);
+
+        if (!cache.configured()) {
+            cache.forever(); 
+        }
+
+        cache.deactivate();
+
+        switch (cache.mode()) {
+            case "forever":
+                cachedValue = [{ value, valid: () => true }];
+                callCache.set(arg, cachedValue);
+                break;
+            case "invalidate":
+                cachedValue = [{ value, valid: cache.validator() }];
+                callCache.set(arg, cachedValue);
+                break;
+            case "valid":
+                if (cachedValue) {
+                    cachedValue.push({ value, valid: cache.validator() });
+                } else {
+                    cachedValue = [{ value, valid: cache.validator() }];
+                    callCache.set(arg, cachedValue);
+                }
+        }
+
+        return value;
+    };
 }
 
 class CacheConfigurator<SideChannel = void> {
   _active: boolean = true;
+
   _never: boolean = false;
+
   _forever: boolean = false;
+
   _invalidate: boolean = false;
 
   _configured: boolean = false;
@@ -113,122 +122,131 @@ class CacheConfigurator<SideChannel = void> {
   _data: SideChannel;
 
   constructor(data: SideChannel) {
-    this._data = data;
+      this._data = data;
   }
 
   simple() {
-    return makeSimpleConfigurator(this);
+      return makeSimpleConfigurator(this);
   }
 
   mode() {
-    if (this._never) return "never";
-    if (this._forever) return "forever";
-    if (this._invalidate) return "invalidate";
-    return "valid";
+      if (this._never) {
+          return "never"; 
+      }
+      if (this._forever) {
+          return "forever";
+      }
+      if (this._invalidate) {
+          return "invalidate";
+      }
+      return "valid";
   }
 
   forever() {
-    if (!this._active) {
-      throw new Error("Cannot change caching after evaluation has completed.");
-    }
-    if (this._never) {
-      throw new Error("Caching has already been configured with .never()");
-    }
-    this._forever = true;
-    this._configured = true;
+      if (!this._active) {
+          throw new Error("Cannot change caching after evaluation has completed.");
+      }
+      if (this._never) {
+          throw new Error("Caching has already been configured with .never()");
+      }
+      this._forever = true;
+      this._configured = true;
   }
 
   never() {
-    if (!this._active) {
-      throw new Error("Cannot change caching after evaluation has completed.");
-    }
-    if (this._forever) {
-      throw new Error("Caching has already been configured with .forever()");
-    }
-    this._never = true;
-    this._configured = true;
+      if (!this._active) {
+          throw new Error("Cannot change caching after evaluation has completed.");
+      }
+      if (this._forever) {
+          throw new Error("Caching has already been configured with .forever()");
+      }
+      this._never = true;
+      this._configured = true;
   }
 
   using<T>(handler: SideChannel => T): T {
-    if (!this._active) {
-      throw new Error("Cannot change caching after evaluation has completed.");
-    }
-    if (this._never || this._forever) {
-      throw new Error(
-        "Caching has already been configured with .never or .forever()",
-      );
-    }
-    this._configured = true;
+      if (!this._active) {
+          throw new Error("Cannot change caching after evaluation has completed.");
+      }
+      if (this._never || this._forever) {
+          throw new Error(
+              "Caching has already been configured with .never or .forever()",
+          );
+      }
+      this._configured = true;
 
-    const key = handler(this._data);
-    this._pairs.push([key, handler]);
-    return key;
+      const key = handler(this._data);
+      this._pairs.push([key, handler]);
+      return key;
   }
 
   invalidate<T>(handler: SideChannel => T): T {
-    if (!this._active) {
-      throw new Error("Cannot change caching after evaluation has completed.");
-    }
-    if (this._never || this._forever) {
-      throw new Error(
-        "Caching has already been configured with .never or .forever()",
-      );
-    }
-    this._invalidate = true;
-    this._configured = true;
+      if (!this._active) {
+          throw new Error("Cannot change caching after evaluation has completed.");
+      }
+      if (this._never || this._forever) {
+          throw new Error(
+              "Caching has already been configured with .never or .forever()",
+          );
+      }
+      this._invalidate = true;
+      this._configured = true;
 
-    const key = handler(this._data);
-    this._pairs.push([key, handler]);
-    return key;
+      const key = handler(this._data);
+      this._pairs.push([key, handler]);
+      return key;
   }
 
   validator(): SideChannel => boolean {
-    const pairs = this._pairs;
-    return (data: SideChannel) => pairs.every(([key, fn]) => key === fn(data));
+      const pairs = this._pairs;
+      return (data: SideChannel) => pairs.every(([key, fn]) => key === fn(data));
   }
 
   deactivate() {
-    this._active = false;
+      this._active = false;
   }
 
   configured() {
-    return this._configured;
+      return this._configured;
   }
 }
 
 function makeSimpleConfigurator(
-  cache: CacheConfigurator<any>,
+    cache: CacheConfigurator<any>,
 ): SimpleCacheConfigurator {
-  function cacheFn(val) {
-    if (typeof val === "boolean") {
-      if (val) cache.forever();
-      else cache.never();
-      return;
+    function cacheFn(val) {
+        if (is.boolean(val)) {
+            if (val) {
+                cache.forever(); 
+            } else {
+                cache.never();
+            }
+            return;
+        }
+
+        return cache.using(() => assertSimpleType(val()));
     }
+    cacheFn.forever = () => cache.forever();
+    cacheFn.never = () => cache.never();
+    cacheFn.using = (cb) => cache.using(() => assertSimpleType(cb()));
+    cacheFn.invalidate = (cb) => cache.invalidate(() => assertSimpleType(cb()));
 
-    return cache.using(() => assertSimpleType(val()));
-  }
-  cacheFn.forever = () => cache.forever();
-  cacheFn.never = () => cache.never();
-  cacheFn.using = cb => cache.using(() => assertSimpleType(cb()));
-  cacheFn.invalidate = cb => cache.invalidate(() => assertSimpleType(cb()));
-
-  return (cacheFn: any);
+    return (cacheFn: any);
 }
 
 // Types are limited here so that in the future these values can be used
 // as part of Babel's caching logic.
 type SimpleType = string | boolean | number | null | void;
 export function assertSimpleType(value: mixed): SimpleType {
-  if (
-    value != null &&
-    typeof value !== "string" &&
-    typeof value !== "boolean" &&
-    typeof value !== "number"
-  ) {
-    throw new Error(
-      "Cache keys must be either string, boolean, number, null, or undefined.",
-    );
-  }
-  return value;
+    if (
+        !is.nil(value) &&
+    !is.string(value) &&
+    !is.boolean(value) &&
+    !is.number(value)
+    ) {
+        throw new Error(
+            "Cache keys must be either string, boolean, number, null, or undefined.",
+        );
+    }
+    return value;
 }

@@ -1,5 +1,3 @@
-// @flow
-
 import type { PluginPasses } from "../../config";
 
 import type File from "./file";
@@ -32,7 +30,9 @@ export default function generateCode(
                     generate,
                 );
 
-                if (!is.undefined(result)) { results.push(result); }
+                if (!is.undefined(result)) {
+                    results.push(result); 
+                }
             }
         }
     }

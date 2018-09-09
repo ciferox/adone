@@ -1,7 +1,10 @@
 export default class PluginPass {
     _map: Map<mixed, mixed> = new Map();
+
     key: ?string;
+
     file: File;
+
     opts: Object;
 
     // The working directory that Babel's programmatic options are loaded

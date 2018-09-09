@@ -172,7 +172,9 @@ function loadCachedDescriptor(
     desc: UnloadedDescriptor,
 ) {
     const { value, options = DEFAULT_OPTIONS } = desc;
-    if (options === false) { return desc; }
+    if (options === false) {
+        return desc; 
+    }
 
     let cacheByOptions = cache.get(value);
     if (!cacheByOptions) {
@@ -331,7 +333,9 @@ function assertNoDuplicates(items: Array<UnloadedDescriptor>): void {
     const map = new Map();
 
     for (const item of items) {
-        if (!is.function(item.value)) { continue; }
+        if (!is.function(item.value)) {
+            continue; 
+        }
 
         let nameMap = map.get(item.value);
         if (!nameMap) {

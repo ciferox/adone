@@ -6,4 +6,4 @@ export const loadOptions = function (opts) {
     const config = loadFullConfig(opts);
 
     return config ? config.options : null;
-}
+};
