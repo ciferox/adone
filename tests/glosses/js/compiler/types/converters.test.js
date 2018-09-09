@@ -2,7 +2,7 @@ const {
     js: { compiler: { types: t, parse, generate } }
 } = adone;
 
-const parseCode = (string) => {
+const parseCode = function (string) {
     return parse(string, {
         allowReturnOutsideFunction: true
     }).program.body[0];
@@ -12,49 +12,66 @@ const generateCode = (node) => generate(node).code;
 
 describe("js", "compiler", "types", "converters", () => {
     it("toIdentifier", () => {
-        assert.equal(t.toIdentifier("swag-lord"), "swagLord");
+        expect(t.toIdentifier("swag-lord")).to.equal("swagLord");
     });
 
     describe("valueToNode", () => {
         it("number", () => {
-            assert.deepEqual(t.valueToNode(Math.PI), t.numericLiteral(Math.PI));
-            assert.deepEqual(t.valueToNode(-Infinity), t.numericLiteral(-Infinity));
-            assert.deepEqual(t.valueToNode(NaN), t.numericLiteral(NaN));
+            expect(t.valueToNode(Math.PI)).to.eql(t.numericLiteral(Math.PI));
+            expect(t.valueToNode(-Math.PI)).to.eql(
+                t.unaryExpression("-", t.numericLiteral(Math.PI)),
+            );
+            expect(t.valueToNode(0)).to.eql(t.numericLiteral(0));
+            expect(t.valueToNode(-0)).to.eql(
+                t.unaryExpression("-", t.numericLiteral(0)),
+            );
+            expect(t.valueToNode(NaN)).to.eql(
+                t.binaryExpression("/", t.numericLiteral(0), t.numericLiteral(0)),
+            );
+            expect(t.valueToNode(-NaN)).to.eql(
+                t.binaryExpression("/", t.numericLiteral(0), t.numericLiteral(0)),
+            );
+
+            expect(t.valueToNode(Infinity)).to.eql(
+                t.binaryExpression("/", t.numericLiteral(1), t.numericLiteral(0)),
+            );
+            expect(t.valueToNode(-Infinity)).to.eql(
+                t.unaryExpression(
+                    "-",
+                    t.binaryExpression("/", t.numericLiteral(1), t.numericLiteral(0)),
+                ),
+            );
         });
         it("string", () => {
-            assert.deepEqual(
-                t.valueToNode('This is a "string"'),
+            expect(t.valueToNode('This is a "string"')).to.eql(
                 t.stringLiteral('This is a "string"'),
             );
         });
         it("boolean", () => {
-            assert.deepEqual(t.valueToNode(true), t.booleanLiteral(true));
-            assert.deepEqual(t.valueToNode(false), t.booleanLiteral(false));
+            expect(t.valueToNode(true)).to.eql(t.booleanLiteral(true));
+            expect(t.valueToNode(false)).to.eql(t.booleanLiteral(false));
         });
         it("null", () => {
-            assert.deepEqual(t.valueToNode(null), t.nullLiteral());
+            expect(t.valueToNode(null)).to.eql(t.nullLiteral());
         });
         it("undefined", () => {
-            assert.deepEqual(t.valueToNode(undefined), t.identifier("undefined"));
+            expect(t.valueToNode(undefined)).to.eql(t.identifier("undefined"));
         });
         it("RegExp", () => {
-            assert.deepEqual(
-                t.valueToNode(/abc.+/gm),
-                t.regExpLiteral("abc.+", "gm"),
-            );
+            expect(t.valueToNode(/abc.+/gm)).to.eql(t.regExpLiteral("abc.+", "gm"));
         });
         it("array", () => {
-            assert.deepEqual(
-                t.valueToNode([1, "a"]),
+            expect(t.valueToNode([1, "a"])).to.eql(
                 t.arrayExpression([t.numericLiteral(1), t.stringLiteral("a")]),
             );
         });
         it("object", () => {
-            assert.deepEqual(
+            expect(
                 t.valueToNode({
                     a: 1,
                     "b c": 2
                 }),
+            ).to.eql(
                 t.objectExpression([
                     t.objectProperty(t.identifier("a"), t.numericLiteral(1)),
                     t.objectProperty(t.stringLiteral("b c"), t.numericLiteral(2))
@@ -62,12 +79,12 @@ describe("js", "compiler", "types", "converters", () => {
             );
         });
         it("throws if cannot convert", () => {
-            assert.throws(() => {
+            expect(() => {
                 t.valueToNode(Object);
-            });
-            assert.throws(() => {
+            }).throw();
+            expect(() => {
                 t.valueToNode(Symbol());
-            });
+            }).throw();
         });
     });
     describe("toKeyAlias", () => {
@@ -76,24 +93,22 @@ describe("js", "compiler", "types", "converters", () => {
             t.toKeyAlias.uid = 0;
         });
         it("doesn't change string literals", () => {
-            assert.equal(
+            expect(
                 t.toKeyAlias(t.objectProperty(t.stringLiteral("a"), t.nullLiteral())),
-                '"a"',
-            );
+            ).to.equal('"a"');
         });
         it("wraps around at Number.MAX_SAFE_INTEGER", () => {
-            assert.equal(
+            expect(
                 t.toKeyAlias(
                     t.objectMethod("method", t.identifier("a"), [], t.blockStatement([])),
                 ),
-                "0",
-            );
+            ).to.equal("0");
         });
     });
     describe("toStatement", () => {
         it("noop on statements", () => {
             const node = t.emptyStatement();
-            assert.equal(t.toStatement(node), node);
+            expect(t.toStatement(node)).to.eql(node);
             t.assertEmptyStatement(node);
         });
         it("mutate class expression to declaration", () => {
@@ -108,10 +123,10 @@ describe("js", "compiler", "types", "converters", () => {
         });
         it("fail if class expression has no id", () => {
             const node = t.classExpression(null, null, t.classBody([]), []);
-            assert.throws(() => {
+            expect(() => {
                 t.toStatement(node);
-            });
-            assert.strictEqual(t.toStatement(node, /* ignore = */ true), false);
+            }).throw(Error);
+            expect(t.toStatement(node, /* ignore = */ true)).to.equal(false);
             t.assertClassExpression(node);
         });
         it("mutate function expression to declaration", () => {
@@ -125,10 +140,10 @@ describe("js", "compiler", "types", "converters", () => {
         });
         it("fail if function expression has no id", () => {
             const node = t.functionExpression(null, [], t.blockStatement([]));
-            assert.throws(() => {
+            expect(() => {
                 t.toStatement(node);
-            });
-            assert.strictEqual(t.toStatement(node, /* ignore = */ true), false);
+            }).throw(Error);
+            expect(t.toStatement(node, /* ignore = */ true)).to.equal(false);
             t.assertFunctionExpression(node);
         });
         it("assignment expression", () => {
@@ -142,17 +157,17 @@ describe("js", "compiler", "types", "converters", () => {
         });
         it("fail if cannot convert node type", () => {
             const node = t.yieldExpression(t.identifier("foo"));
-            assert.throws(() => {
+            expect(() => {
                 t.toStatement(node);
-            });
-            assert.strictEqual(t.toStatement(node, /* ignore = */ true), false);
+            }).throw(Error);
+            expect(t.toStatement(node, /* ignore = */ true)).to.equal(false);
             t.assertYieldExpression(node);
         });
     });
     describe("toExpression", () => {
         it("noop on expressions", () => {
             const node = t.identifier("a");
-            assert.equal(t.toExpression(node), node);
+            expect(t.toExpression(node)).to.eql(node);
             t.assertIdentifier(node);
         });
         it("mutate class declaration to expression", () => {
@@ -198,14 +213,14 @@ describe("js", "compiler", "types", "converters", () => {
             const inner = t.yieldExpression(t.identifier("foo"));
             const node = t.expressionStatement(inner);
             t.assertYieldExpression(t.toExpression(node));
-            assert.equal(t.toExpression(node), inner);
+            expect(t.toExpression(node)).to.eql(inner);
             t.assertExpressionStatement(node);
         });
         it("fail if cannot convert node type", () => {
             const node = t.program([]);
-            assert.throws(() => {
+            expect(() => {
                 t.toExpression(node);
-            });
+            }).throw(Error);
             t.assertProgram(node);
         });
     });
@@ -222,95 +237,94 @@ describe("js", "compiler", "types", "converters", () => {
             const node = t.identifier("a");
             const sequence = t.toSequenceExpression([undefinedNode, node], scope);
             t.assertSequenceExpression(sequence);
-            assert.equal(sequence.expressions[0], undefinedNode);
-            assert.equal(sequence.expressions[1], node);
+            expect(sequence.expressions[0]).to.equal(undefinedNode);
+            expect(sequence.expressions[1]).to.equal(node);
             t.assertIdentifier(node);
         });
         it("avoids sequence for single node", () => {
             const node = t.identifier("a");
             let sequence = t.toSequenceExpression([node], scope);
-            assert.equal(sequence, node);
+            expect(sequence).to.equal(node);
 
             const block = t.blockStatement([t.expressionStatement(node)]);
             sequence = t.toSequenceExpression([block], scope);
-            assert.equal(sequence, node);
+            expect(sequence).to.equal(node);
         });
         it("gathers expression", () => {
             const node = t.identifier("a");
             const sequence = t.toSequenceExpression([undefinedNode, node], scope);
-            assert.equal(sequence.expressions[1], node);
+            expect(sequence.expressions[1]).to.equal(node);
         });
         it("gathers expression statement", () => {
             const node = t.expressionStatement(t.identifier("a"));
             const sequence = t.toSequenceExpression([undefinedNode, node], scope);
-            assert.equal(sequence.expressions[1], node.expression);
+            expect(sequence.expressions[1]).to.equal(node.expression);
         });
         it("gathers var declarations", () => {
             const node = parseCode("var a, b = 1;");
             const sequence = t.toSequenceExpression([undefinedNode, node], scope);
             t.assertIdentifier(scope[0].id, { name: "a" });
             t.assertIdentifier(scope[1].id, { name: "b" });
-            assert.equal(generateCode(sequence.expressions[1]), "b = 1");
-            assert.equal(generateCode(sequence.expressions[2]), "undefined");
+            expect(generateCode(sequence.expressions[1])).to.equal("b = 1");
+            expect(generateCode(sequence.expressions[2])).to.equal("undefined");
         });
         it("skips undefined if expression after var declaration", () => {
             const node = parseCode("{ var a, b = 1; true }");
             const sequence = t.toSequenceExpression([undefinedNode, node], scope);
-            assert.equal(generateCode(sequence.expressions[1]), "b = 1, true");
+            expect(generateCode(sequence.expressions[1])).to.equal("b = 1, true");
         });
         it("bails on let and const declarations", () => {
             let node = parseCode("let a, b = 1;");
             let sequence = t.toSequenceExpression([undefinedNode, node], scope);
-            assert.undefined(sequence);
+            expect(sequence).to.undefined();
 
             node = parseCode("const b = 1;");
             sequence = t.toSequenceExpression([undefinedNode, node], scope);
-            assert.undefined(sequence);
+            expect(sequence).to.undefined();
         });
         it("gathers if statements", () => {
             let node = parseCode("if (true) { true }");
             let sequence = t.toSequenceExpression([undefinedNode, node], scope);
-            assert.equal(
-                generateCode(sequence.expressions[1]),
+            expect(generateCode(sequence.expressions[1])).to.equal(
                 "true ? true : undefined",
             );
 
             node = parseCode("if (true) { true } else { b }");
             sequence = t.toSequenceExpression([undefinedNode, node], scope);
-            assert.equal(generateCode(sequence.expressions[1]), "true ? true : b");
+            expect(generateCode(sequence.expressions[1])).to.equal("true ? true : b");
         });
         it("bails in if statements if recurse bails", () => {
             let node = parseCode("if (true) { return }");
             let sequence = t.toSequenceExpression([undefinedNode, node], scope);
-            assert.undefined(sequence);
+            expect(sequence).to.undefined();
 
             node = parseCode("if (true) { true } else { return }");
             sequence = t.toSequenceExpression([undefinedNode, node], scope);
-            assert.undefined(sequence);
+            expect(sequence).to.undefined();
         });
         it("gathers block statements", () => {
             let node = parseCode("{ a }");
             let sequence = t.toSequenceExpression([undefinedNode, node], scope);
-            assert.equal(generateCode(sequence.expressions[1]), "a");
+            expect(generateCode(sequence.expressions[1])).to.equal("a");
 
             node = parseCode("{ a; b; }");
             sequence = t.toSequenceExpression([undefinedNode, node], scope);
-            assert.equal(generateCode(sequence.expressions[1]), "a, b");
+            expect(generateCode(sequence.expressions[1])).to.equal("a, b");
         });
         it("bails in block statements if recurse bails", () => {
             const node = parseCode("{ return }");
             const sequence = t.toSequenceExpression([undefinedNode, node], scope);
-            assert.undefined(sequence);
+            expect(sequence).to.undefined();
         });
         it("gathers empty statements", () => {
             const node = parseCode(";");
             const sequence = t.toSequenceExpression([undefinedNode, node], scope);
-            assert.equal(generateCode(sequence.expressions[1]), "undefined");
+            expect(generateCode(sequence.expressions[1])).to.equal("undefined");
         });
         it("skips empty statement if expression afterwards", () => {
             const node = parseCode("{ ; true }");
             const sequence = t.toSequenceExpression([undefinedNode, node], scope);
-            assert.equal(generateCode(sequence.expressions[1]), "true");
+            expect(generateCode(sequence.expressions[1])).to.equal("true");
         });
     });
 });
