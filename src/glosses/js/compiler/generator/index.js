@@ -1,36 +1,9 @@
-import SourceMap from "./source-map";
+import SourceMap from "./source_map";
 import Printer from "./printer";
 
 const {
     is
 } = adone;
-
-/**
- * Babel's code generator, turns an ast into code, maintaining sourcemaps,
- * user preferences, and valid output.
- */
-
-class Generator extends Printer {
-    constructor(ast, opts = {}, code) {
-        const format = normalizeOptions(code, opts);
-        const map = opts.sourceMaps ? new SourceMap(opts, code) : null;
-        super(format, map);
-
-        this.ast = ast;
-    }
-
-    ast: Object;
-
-    /**
-     * Generate code and sourcemap from ast.
-     *
-     * Appends comments that weren't attached to any node to the end of the generated output.
-     */
-
-    generate() {
-        return super.generate(this.ast);
-    }
-}
 
 /**
  * Normalize generator options, setting defaults.
@@ -94,6 +67,34 @@ const normalizeOptions = function (code, opts) {
 
     return format;
 };
+
+/**
+ * Babel's code generator, turns an ast into code, maintaining sourcemaps,
+ * user preferences, and valid output.
+ */
+
+class Generator extends Printer {
+    constructor(ast, opts = {}, code) {
+        const format = normalizeOptions(code, opts);
+        const map = opts.sourceMaps ? new SourceMap(opts, code) : null;
+        super(format, map);
+
+        this.ast = ast;
+    }
+
+    ast;
+
+    /**
+     * Generate code and sourcemap from ast.
+     *
+     * Appends comments that weren't attached to any node to the end of the generated output.
+     */
+
+    generate() {
+        return super.generate(this.ast);
+    }
+}
+
 
 /**
  * We originally exported the Generator class above, but to make it extra clear that it is a private API,

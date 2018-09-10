@@ -1,4 +1,4 @@
-export * from "./template-literals";
+export * from "./template_literals";
 export * from "./expressions";
 export * from "./statements";
 export * from "./classes";

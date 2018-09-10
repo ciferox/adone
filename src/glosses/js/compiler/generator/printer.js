@@ -12,22 +12,9 @@ const SCIENTIFIC_NOTATION = /e/i;
 const ZERO_DECIMAL_INTEGER = /\.0+$/;
 const NON_DECIMAL_LITERAL = /^0[box]/;
 
-export type Format = {
-    shouldPrintComment: (comment: string) => boolean,
-    retainLines: boolean,
-    retainFunctionParens: boolean,
-    comments: boolean,
-    auxiliaryCommentBefore: string,
-    auxiliaryCommentAfter: string,
-    compact: boolean | "auto",
-    minified: boolean,
-    concise: boolean,
-    indent: {
-        adjustMultilineComment: boolean,
-        style: string,
-        base: number,
-    },
-    decoratorsBeforeExport: boolean,
+const commaSeparator = function () {
+    this.token(",");
+    this.space();
 };
 
 export default class Printer {
@@ -36,27 +23,27 @@ export default class Printer {
         this._buf = new Buffer(map);
     }
 
-    format: Format;
+    format;
 
-    inForStatementInitCounter: number = 0;
+    inForStatementInitCounter = 0;
 
-    _buf: Buffer;
+    _buf;
 
-    _printStack: Array<Node> = [];
+    _printStack = [];
 
-    _indent: number = 0;
+    _indent = 0;
 
-    _insideAux: boolean = false;
+    _insideAux = false;
 
-    _printedCommentStarts: Object = {};
+    _printedCommentStarts = {};
 
-    _parenPushNewlineState: ?Object = null;
+    _parenPushNewlineState = null;
 
-    _noLineTerminator: boolean = false;
+    _noLineTerminator = false;
 
-    _printAuxAfterOnNextUserNode: boolean = false;
+    _printAuxAfterOnNextUserNode = false;
 
-    _printedComments: WeakSet = new WeakSet();
+    _printedComments = new WeakSet();
 
     _endsWithInteger = false;
 
@@ -73,7 +60,7 @@ export default class Printer {
      * Increment indent size.
      */
 
-    indent(): void {
+    indent() {
         if (this.format.compact || this.format.concise) {
             return;
         }
@@ -85,7 +72,7 @@ export default class Printer {
      * Decrement indent size.
      */
 
-    dedent(): void {
+    dedent() {
         if (this.format.compact || this.format.concise) {
             return;
         }
@@ -97,7 +84,7 @@ export default class Printer {
      * Add a semicolon to the buffer.
      */
 
-    semicolon(force: boolean = false): void {
+    semicolon(force = false) {
         this._maybeAddAuxComment();
         this._append(";", !force /* queue */);
     }
@@ -106,7 +93,7 @@ export default class Printer {
      * Add a right brace to the buffer.
      */
 
-    rightBrace(): void {
+    rightBrace() {
         if (this.format.minified) {
             this._buf.removeLastSemicolon();
         }
@@ -117,7 +104,7 @@ export default class Printer {
      * Add a space to the buffer unless it is compact.
      */
 
-    space(force: boolean = false): void {
+    space(force = false) {
         if (this.format.compact) {
             return;
         }
@@ -134,7 +121,7 @@ export default class Printer {
      * Writes a token that can't be safely parsed without taking whitespace into account.
      */
 
-    word(str: string): void {
+    word(str) {
         // prevent concatenating words and creating // comment out of division and regex
         if (this._endsWithWord || (this.endsWith("/") && str.indexOf("/") === 0)) {
             this._space();
@@ -150,7 +137,7 @@ export default class Printer {
      * Writes a number token so that we can validate if it is an integer.
      */
 
-    number(str: string): void {
+    number(str) {
         this.word(str);
 
         // Integer tokens need special handling because they cannot have '.'s inserted
@@ -167,7 +154,7 @@ export default class Printer {
      * Writes a simple token.
      */
 
-    token(str: string): void {
+    token(str) {
         // space is mandatory to avoid outputting <!--
         // http://javascript.spec.whatwg.org/#comment-syntax
         if (
@@ -189,7 +176,7 @@ export default class Printer {
      * Add a newline (or many newlines), maintaining formatting.
      */
 
-    newline(i?: number): void {
+    newline(i) {
         if (this.format.retainLines || this.format.compact) {
             return;
         }
@@ -221,41 +208,41 @@ export default class Printer {
         }
     }
 
-    endsWith(str: string): boolean {
+    endsWith(str) {
         return this._buf.endsWith(str);
     }
 
-    removeTrailingNewline(): void {
+    removeTrailingNewline() {
         this._buf.removeTrailingNewline();
     }
 
-    exactSource(loc: Object, cb: () => void) {
+    exactSource(loc, cb: () => void) {
         this._catchUp("start", loc);
 
         this._buf.exactSource(loc, cb);
     }
 
-    source(prop: string, loc: Object): void {
+    source(prop, loc) {
         this._catchUp(prop, loc);
 
         this._buf.source(prop, loc);
     }
 
-    withSource(prop: string, loc: Object, cb: () => void): void {
+    withSource(prop, loc, cb) {
         this._catchUp(prop, loc);
 
         this._buf.withSource(prop, loc, cb);
     }
 
-    _space(): void {
+    _space() {
         this._append(" ", true /* queue */);
     }
 
-    _newline(): void {
+    _newline() {
         this._append("\n", true /* queue */);
     }
 
-    _append(str: string, queue: boolean = false) {
+    _append(str, queue = false) {
         this._maybeAddParen(str);
         this._maybeIndent(str);
 
@@ -269,14 +256,14 @@ export default class Printer {
         this._endsWithInteger = false;
     }
 
-    _maybeIndent(str: string): void {
+    _maybeIndent(str) {
         // we've got a newline before us so prepend on the indentation
         if (this._indent && this.endsWith("\n") && str[0] !== "\n") {
             this._buf.queue(this._getIndent());
         }
     }
 
-    _maybeAddParen(str: string): void {
+    _maybeAddParen(str) {
         // see startTerminatorless() instance method
         const parenPushNewlineState = this._parenPushNewlineState;
         if (!parenPushNewlineState) {
@@ -311,7 +298,7 @@ export default class Printer {
         parenPushNewlineState.printed = true;
     }
 
-    _catchUp(prop: string, loc: Object) {
+    _catchUp(prop, loc) {
         if (!this.format.retainLines) {
             return;
         }
@@ -331,7 +318,7 @@ export default class Printer {
      * Get the current indent.
      */
 
-    _getIndent(): string {
+    _getIndent() {
         return repeat(this.format.indent.style, this._indent);
     }
 
@@ -351,7 +338,7 @@ export default class Printer {
      *  `undefined` will be returned and not `foo` due to the terminator.
      */
 
-    startTerminatorless(isLabel: boolean = false): Object {
+    startTerminatorless(isLabel = false) {
         if (isLabel) {
             this._noLineTerminator = true;
             return null;
@@ -366,7 +353,7 @@ export default class Printer {
      * Print an ending parentheses if a starting one has been printed.
      */
 
-    endTerminatorless(state: Object) {
+    endTerminatorless(state) {
         this._noLineTerminator = false;
         if (state && state.printed) {
             this.dedent();
@@ -484,7 +471,7 @@ export default class Printer {
         }
     }
 
-    printJoin(nodes: ?Array, parent: Object, opts = {}) {
+    printJoin(nodes: ?Array, parent, opts = {}) {
         if (!nodes || !nodes.length) {
             return;
         }
@@ -703,8 +690,3 @@ export default class Printer {
 
 // Expose the node type functions and helpers on the prototype for easy usage.
 Object.assign(Printer.prototype, generatorFunctions);
-
-function commaSeparator() {
-    this.token(",");
-    this.space();
-}

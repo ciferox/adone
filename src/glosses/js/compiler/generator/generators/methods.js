@@ -2,16 +2,16 @@ const {
     js: { compiler: { types: t } }
 } = adone;
 
-export function _params(node: Object) {
+export const _params = function (node) {
     this.print(node.typeParameters, node);
     this.token("(");
     this._parameters(node.params, node);
     this.token(")");
 
     this.print(node.returnType, node);
-}
+};
 
-export function _parameters(parameters, parent) {
+export const _parameters = function (parameters, parent) {
     for (let i = 0; i < parameters.length; i++) {
         this._param(parameters[i], parent);
 
@@ -20,16 +20,18 @@ export function _parameters(parameters, parent) {
             this.space();
         }
     }
-}
+};
 
-export function _param(parameter, parent) {
+export const _param = function (parameter, parent) {
     this.printJoin(parameter.decorators, parameter);
     this.print(parameter, parent);
-    if (parameter.optional) this.token("?"); // TS / flow
+    if (parameter.optional) {
+        this.token("?");
+    } // TS / flow
     this.print(parameter.typeAnnotation, parameter); // TS / flow
-}
+};
 
-export function _methodHead(node: Object) {
+export const _methodHead = function (node) {
     const kind = node.kind;
     const key = node.key;
 
@@ -63,9 +65,9 @@ export function _methodHead(node: Object) {
     }
 
     this._params(node);
-}
+};
 
-export function _predicate(node: Object) {
+export const _predicate = function (node) {
     if (node.predicate) {
         if (!node.returnType) {
             this.token(":");
@@ -73,15 +75,17 @@ export function _predicate(node: Object) {
         this.space();
         this.print(node.predicate, node);
     }
-}
+};
 
-export function _functionHead(node: Object) {
+export const _functionHead = function (node) {
     if (node.async) {
         this.word("async");
         this.space();
     }
     this.word("function");
-    if (node.generator) this.token("*");
+    if (node.generator) {
+        this.token("*");
+    }
 
     this.space();
     if (node.id) {
@@ -90,17 +94,27 @@ export function _functionHead(node: Object) {
 
     this._params(node);
     this._predicate(node);
-}
+};
 
-export function FunctionExpression(node: Object) {
+export const FunctionExpression = function (node) {
     this._functionHead(node);
     this.space();
     this.print(node.body, node);
-}
+};
 
 export { FunctionExpression as FunctionDeclaration };
 
-export function ArrowFunctionExpression(node: Object) {
+const hasTypes = function (node, param) {
+    return (
+        node.typeParameters ||
+        node.returnType ||
+        param.typeAnnotation ||
+        param.optional ||
+        param.trailingComments
+    );
+};
+
+export const ArrowFunctionExpression = function (node) {
     if (node.async) {
         this.word("async");
         this.space();
@@ -125,14 +139,4 @@ export function ArrowFunctionExpression(node: Object) {
     this.space();
 
     this.print(node.body, node);
-}
-
-function hasTypes(node, param) {
-    return (
-        node.typeParameters ||
-        node.returnType ||
-        param.typeAnnotation ||
-        param.optional ||
-        param.trailingComments
-    );
-}
+};

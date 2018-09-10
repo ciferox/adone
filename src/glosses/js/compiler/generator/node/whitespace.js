@@ -1,10 +1,24 @@
 const {
+    is,
     js: { compiler: { types: t } }
 } = adone;
 
-type WhitespaceObject = {
-    before?: boolean,
-    after?: boolean,
+/**
+ * Test if a node is or has a helper.
+ */
+const isHelper = function (node) {
+    if (t.isMemberExpression(node)) {
+        return isHelper(node.object) || isHelper(node.property);
+    } else if (t.isIdentifier(node)) {
+        return node.name === "require" || node.name[0] === "_";
+    } else if (t.isCallExpression(node)) {
+        return isHelper(node.callee);
+    } else if (t.isBinary(node) || t.isAssignmentExpression(node)) {
+        return (
+            (t.isIdentifier(node.left) && isHelper(node.left)) || isHelper(node.right)
+        );
+    }
+    return false;
 };
 
 /**
@@ -14,11 +28,12 @@ type WhitespaceObject = {
  * crawl(node)
  * // { hasCall: false, hasFunction: true, hasHelper: false }
  */
-
-function crawl(node, state = {}) {
+const crawl = function (node, state = {}) {
     if (t.isMemberExpression(node)) {
         crawl(node.object, state);
-        if (node.computed) crawl(node.property, state);
+        if (node.computed) {
+            crawl(node.property, state);
+        }
     } else if (t.isBinary(node) || t.isAssignmentExpression(node)) {
         crawl(node.left, state);
         crawl(node.right, state);
@@ -32,29 +47,9 @@ function crawl(node, state = {}) {
     }
 
     return state;
-}
+};
 
-/**
- * Test if a node is or has a helper.
- */
-
-function isHelper(node) {
-    if (t.isMemberExpression(node)) {
-        return isHelper(node.object) || isHelper(node.property);
-    } else if (t.isIdentifier(node)) {
-        return node.name === "require" || node.name[0] === "_";
-    } else if (t.isCallExpression(node)) {
-        return isHelper(node.callee);
-    } else if (t.isBinary(node) || t.isAssignmentExpression(node)) {
-        return (
-            (t.isIdentifier(node.left) && isHelper(node.left)) || isHelper(node.right)
-        );
-    } else {
-        return false;
-    }
-}
-
-function isType(node) {
+const isType = function (node) {
     return (
         t.isLiteral(node) ||
         t.isObjectExpression(node) ||
@@ -62,7 +57,7 @@ function isType(node) {
         t.isIdentifier(node) ||
         t.isMemberExpression(node)
     );
-}
+};
 
 /**
  * Tests for node types that need whitespace.
@@ -73,12 +68,12 @@ export const nodes = {
      * Test if AssignmentExpression needs whitespace.
      */
 
-    AssignmentExpression(node: Object): ?WhitespaceObject {
+    AssignmentExpression(node) {
         const state = crawl(node.right);
         if ((state.hasCall && state.hasHelper) || state.hasFunction) {
             return {
                 before: state.hasFunction,
-                after: true,
+                after: true
             };
         }
     },
@@ -87,12 +82,12 @@ export const nodes = {
      * Test if SwitchCase needs whitespace.
      */
 
-    SwitchCase(node: Object, parent: Object): WhitespaceObject {
+    SwitchCase(node, parent) {
         return {
             before: node.consequent.length || parent.cases[0] === node,
             after:
                 !node.consequent.length &&
-                parent.cases[parent.cases.length - 1] === node,
+                parent.cases[parent.cases.length - 1] === node
         };
     },
 
@@ -100,10 +95,10 @@ export const nodes = {
      * Test if LogicalExpression needs whitespace.
      */
 
-    LogicalExpression(node: Object): ?WhitespaceObject {
+    LogicalExpression(node) {
         if (t.isFunction(node.left) || t.isFunction(node.right)) {
             return {
-                after: true,
+                after: true
             };
         }
     },
@@ -112,10 +107,10 @@ export const nodes = {
      * Test if Literal needs whitespace.
      */
 
-    Literal(node: Object): ?WhitespaceObject {
+    Literal(node) {
         if (node.value === "use strict") {
             return {
-                after: true,
+                after: true
             };
         }
     },
@@ -124,11 +119,11 @@ export const nodes = {
      * Test if CallExpression needs whitespace.
      */
 
-    CallExpression(node: Object): ?WhitespaceObject {
+    CallExpression(node) {
         if (t.isFunction(node.callee) || isHelper(node)) {
             return {
                 before: true,
-                after: true,
+                after: true
             };
         }
     },
@@ -137,7 +132,7 @@ export const nodes = {
      * Test if VariableDeclaration needs whitespace.
      */
 
-    VariableDeclaration(node: Object): ?WhitespaceObject {
+    VariableDeclaration(node) {
         for (let i = 0; i < node.declarations.length; i++) {
             const declar = node.declarations[i];
 
@@ -150,7 +145,7 @@ export const nodes = {
             if (enabled) {
                 return {
                     before: true,
-                    after: true,
+                    after: true
                 };
             }
         }
@@ -160,14 +155,14 @@ export const nodes = {
      * Test if IfStatement needs whitespace.
      */
 
-    IfStatement(node: Object): ?WhitespaceObject {
+    IfStatement(node) {
         if (t.isBlockStatement(node.consequent)) {
             return {
                 before: true,
-                after: true,
+                after: true
             };
         }
-    },
+    }
 };
 
 /**
@@ -175,46 +170,46 @@ export const nodes = {
  */
 
 nodes.ObjectProperty = nodes.ObjectTypeProperty = nodes.ObjectMethod = function (
-    node: Object,
+    node,
     parent,
-): ?WhitespaceObject {
+) {
     if (parent.properties[0] === node) {
         return {
-            before: true,
+            before: true
         };
     }
 };
 
 nodes.ObjectTypeCallProperty = function (
-    node: Object,
+    node,
     parent,
-): ?WhitespaceObject {
+) {
     if (
         parent.callProperties[0] === node &&
         (!parent.properties || !parent.properties.length)
     ) {
         return {
-            before: true,
+            before: true
         };
     }
 };
 
-nodes.ObjectTypeIndexer = function (node: Object, parent): ?WhitespaceObject {
+nodes.ObjectTypeIndexer = function (node, parent) {
     if (
         parent.indexers[0] === node &&
         (!parent.properties || !parent.properties.length) &&
         (!parent.callProperties || !parent.callProperties.length)
     ) {
         return {
-            before: true,
+            before: true
         };
     }
 };
 
 nodes.ObjectTypeInternalSlot = function (
-    node: Object,
+    node,
     parent,
-): ?WhitespaceObject {
+) {
     if (
         parent.internalSlots[0] === node &&
         (!parent.properties || !parent.properties.length) &&
@@ -222,7 +217,7 @@ nodes.ObjectTypeInternalSlot = function (
         (!parent.indexers || !parent.indexers.length)
     ) {
         return {
-            before: true,
+            before: true
         };
     }
 };
@@ -236,15 +231,15 @@ export const list = {
      * Return VariableDeclaration declarations init properties.
      */
 
-    VariableDeclaration(node: Object): Array<Object> {
-        return node.declarations.map(decl => decl.init);
+    VariableDeclaration(node) {
+        return node.declarations.map((decl) => decl.init);
     },
 
     /**
      * Return VariableDeclaration elements.
      */
 
-    ArrayExpression(node: Object): Array<Object> {
+    ArrayExpression(node) {
         return node.elements;
     },
 
@@ -252,9 +247,9 @@ export const list = {
      * Return VariableDeclaration properties.
      */
 
-    ObjectExpression(node: Object): Array<Object> {
+    ObjectExpression(node) {
         return node.properties;
-    },
+    }
 };
 
 /**
@@ -267,12 +262,12 @@ export const list = {
     ["Loop", true],
     ["LabeledStatement", true],
     ["SwitchStatement", true],
-    ["TryStatement", true],
-].forEach(function ([type, amounts]) {
-    if (typeof amounts === "boolean") {
+    ["TryStatement", true]
+].forEach(([type, amounts]) => {
+    if (is.boolean(amounts)) {
         amounts = { after: amounts, before: amounts };
     }
-    [type].concat(t.FLIPPED_ALIAS_KEYS[type] || []).forEach(function (type) {
+    [type].concat(t.FLIPPED_ALIAS_KEYS[type] || []).forEach((type) => {
         nodes[type] = function () {
             return amounts;
         };

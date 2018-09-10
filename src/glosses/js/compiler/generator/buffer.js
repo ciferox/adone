@@ -76,7 +76,7 @@ export default class Buffer {
      * Add a string to the buffer that cannot be reverted.
      */
 
-    append(str: string): void {
+    append(str) {
         this._flush();
         const {
             line,
@@ -92,7 +92,7 @@ export default class Buffer {
      * Add a string to the buffer than can be reverted.
      */
 
-    queue(str: string): void {
+    queue(str) {
         // Drop trailing spaces when a newline is inserted.
         if (str === "\n") {
             while (this._queue.length > 0 && SPACES_RE.test(this._queue[0][0])) {
@@ -110,19 +110,21 @@ export default class Buffer {
         this._queue.unshift([str, line, column, identifierName, filename, force]);
     }
 
-    _flush(): void {
+    _flush() {
         let item;
-        while ((item = this._queue.pop())) { this._append(...item); }
+        while ((item = this._queue.pop())) {
+            this._append(...item);
+        }
     }
 
     _append(
-        str: string,
+        str,
         line: number,
         column: number,
         identifierName: ?string,
         filename: ?string,
-        force?: boolean,
-    ): void {
+        force,
+    ) {
         // If there the line is ending, adding a new mapping marker is redundant
         if (this._map && str[0] !== "\n") {
             this._map.mark(
@@ -149,19 +151,19 @@ export default class Buffer {
         }
     }
 
-    removeTrailingNewline(): void {
+    removeTrailingNewline() {
         if (this._queue.length > 0 && this._queue[0][0] === "\n") {
             this._queue.shift();
         }
     }
 
-    removeLastSemicolon(): void {
+    removeLastSemicolon() {
         if (this._queue.length > 0 && this._queue[0][0] === ";") {
             this._queue.shift();
         }
     }
 
-    endsWith(suffix: string): boolean {
+    endsWith(suffix): boolean {
         // Fast path to avoid iterating over this._queue.
         if (suffix.length === 1) {
             let last;
@@ -213,7 +215,7 @@ export default class Buffer {
      * With this line, there will be one mapping range over "mod" and another
      * over "();", where previously it would have been a single mapping.
      */
-    exactSource(loc, cb: () => void) {
+    exactSource(loc, cb) {
         // In cases where parent expressions start at the same locations as the
         // identifier itself, the current active location could already be the
         // start of this range. We use 'force' here to explicitly start a new
@@ -238,8 +240,10 @@ export default class Buffer {
      * will be given this position in the sourcemap.
      */
 
-    source(prop: string, loc: Location, force?: boolean): void {
-        if (prop && !loc) { return; }
+    source(prop, loc, force) {
+        if (prop && !loc) {
+            return;
+        }
 
         // Since this is called extremly often, we re-use the same _sourcePosition
         // object for the whole lifetime of the buffer.
@@ -250,8 +254,10 @@ export default class Buffer {
      * Call a callback with a specific source location and restore on completion.
      */
 
-    withSource(prop: string, loc: Location, cb: () => void): void {
-        if (!this._map) { return cb(); }
+    withSource(prop, loc, cb) {
+        if (!this._map) {
+            return cb();
+        }
 
         // Use the call stack to manage a stack of "source location" data because
         // the _sourcePosition object is mutated over the course of code generation,
@@ -292,17 +298,19 @@ export default class Buffer {
      * sourcemap output, so that certain printers can be sure that the
      * "end" location that they set is actually treated as the end position.
      */
-    _disallowPop(prop: string, loc: Location) {
-        if (prop && !loc) { return; }
+    _disallowPop(prop, loc) {
+        if (prop && !loc) {
+            return;
+        }
 
         this._disallowedPop = this._normalizePosition(prop, loc);
     }
 
     _normalizePosition(
-        prop: string,
+        prop,
         loc,
         targetObj,
-        force?: boolean,
+        force,
     ) {
         const pos = loc ? loc[prop] : null;
 
@@ -354,7 +362,9 @@ export default class Buffer {
 
         let count = 0;
         for (let i = 0; i < extra.length; i++) {
-            if (extra[i] === "\n") { count++; }
+            if (extra[i] === "\n") {
+                count++;
+            }
         }
 
         return this._position.line + count;

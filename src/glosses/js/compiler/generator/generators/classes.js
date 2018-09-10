@@ -1,166 +1,168 @@
 const {
-  js: { compiler: { types: t } }
+    js: { compiler: { types: t } }
 } = adone;
 
-export function ClassDeclaration(node: Object, parent: Object) {
-  if (
-    !this.format.decoratorsBeforeExport ||
-    (!t.isExportDefaultDeclaration(parent) &&
-      !t.isExportNamedDeclaration(parent))
-  ) {
-    this.printJoin(node.decorators, node);
-  }
+export const ClassDeclaration = function (node, parent) {
+    if (
+        !this.format.decoratorsBeforeExport ||
+        (!t.isExportDefaultDeclaration(parent) &&
+            !t.isExportNamedDeclaration(parent))
+    ) {
+        this.printJoin(node.decorators, node);
+    }
 
-  if (node.declare) {
-    // TS
-    this.word("declare");
+    if (node.declare) {
+        // TS
+        this.word("declare");
+        this.space();
+    }
+
+    if (node.abstract) {
+        // TS
+        this.word("abstract");
+        this.space();
+    }
+
+    this.word("class");
+
+    if (node.id) {
+        this.space();
+        this.print(node.id, node);
+    }
+
+    this.print(node.typeParameters, node);
+
+    if (node.superClass) {
+        this.space();
+        this.word("extends");
+        this.space();
+        this.print(node.superClass, node);
+        this.print(node.superTypeParameters, node);
+    }
+
+    if (node.implements) {
+        this.space();
+        this.word("implements");
+        this.space();
+        this.printList(node.implements, node);
+    }
+
     this.space();
-  }
-
-  if (node.abstract) {
-    // TS
-    this.word("abstract");
-    this.space();
-  }
-
-  this.word("class");
-
-  if (node.id) {
-    this.space();
-    this.print(node.id, node);
-  }
-
-  this.print(node.typeParameters, node);
-
-  if (node.superClass) {
-    this.space();
-    this.word("extends");
-    this.space();
-    this.print(node.superClass, node);
-    this.print(node.superTypeParameters, node);
-  }
-
-  if (node.implements) {
-    this.space();
-    this.word("implements");
-    this.space();
-    this.printList(node.implements, node);
-  }
-
-  this.space();
-  this.print(node.body, node);
-}
+    this.print(node.body, node);
+};
 
 export { ClassDeclaration as ClassExpression };
 
-export function ClassBody(node: Object) {
-  this.token("{");
-  this.printInnerComments(node);
-  if (node.body.length === 0) {
-    this.token("}");
-  } else {
-    this.newline();
+export const ClassBody = function (node) {
+    this.token("{");
+    this.printInnerComments(node);
+    if (node.body.length === 0) {
+        this.token("}");
+    } else {
+        this.newline();
 
-    this.indent();
-    this.printSequence(node.body, node);
-    this.dedent();
+        this.indent();
+        this.printSequence(node.body, node);
+        this.dedent();
 
-    if (!this.endsWith("\n")) this.newline();
+        if (!this.endsWith("\n")) {
+            this.newline();
+        }
 
-    this.rightBrace();
-  }
-}
+        this.rightBrace();
+    }
+};
 
-export function ClassProperty(node: Object) {
-  this.printJoin(node.decorators, node);
+export const ClassProperty = function (node) {
+    this.printJoin(node.decorators, node);
 
-  if (node.accessibility) {
+    if (node.accessibility) {
+        // TS
+        this.word(node.accessibility);
+        this.space();
+    }
+    if (node.static) {
+        this.word("static");
+        this.space();
+    }
+    if (node.abstract) {
+        // TS
+        this.word("abstract");
+        this.space();
+    }
+    if (node.readonly) {
+        // TS
+        this.word("readonly");
+        this.space();
+    }
+    if (node.computed) {
+        this.token("[");
+        this.print(node.key, node);
+        this.token("]");
+    } else {
+        this._variance(node);
+        this.print(node.key, node);
+    }
+
     // TS
-    this.word(node.accessibility);
-    this.space();
-  }
-  if (node.static) {
-    this.word("static");
-    this.space();
-  }
-  if (node.abstract) {
-    // TS
-    this.word("abstract");
-    this.space();
-  }
-  if (node.readonly) {
-    // TS
-    this.word("readonly");
-    this.space();
-  }
-  if (node.computed) {
-    this.token("[");
+    if (node.optional) {
+        this.token("?");
+    }
+    if (node.definite) {
+        this.token("!");
+    }
+
+    this.print(node.typeAnnotation, node);
+    if (node.value) {
+        this.space();
+        this.token("=");
+        this.space();
+        this.print(node.value, node);
+    }
+    this.semicolon();
+};
+
+export const ClassPrivateProperty = function (node) {
+    if (node.static) {
+        this.word("static");
+        this.space();
+    }
     this.print(node.key, node);
-    this.token("]");
-  } else {
-    this._variance(node);
-    this.print(node.key, node);
-  }
+    this.print(node.typeAnnotation, node);
+    if (node.value) {
+        this.space();
+        this.token("=");
+        this.space();
+        this.print(node.value, node);
+    }
+    this.semicolon();
+};
 
-  // TS
-  if (node.optional) {
-    this.token("?");
-  }
-  if (node.definite) {
-    this.token("!");
-  }
-
-  this.print(node.typeAnnotation, node);
-  if (node.value) {
+export const ClassMethod = function (node) {
+    this._classMethodHead(node);
     this.space();
-    this.token("=");
-    this.space();
-    this.print(node.value, node);
-  }
-  this.semicolon();
-}
+    this.print(node.body, node);
+};
 
-export function ClassPrivateProperty(node: Object) {
-  if (node.static) {
-    this.word("static");
-    this.space();
-  }
-  this.print(node.key, node);
-  this.print(node.typeAnnotation, node);
-  if (node.value) {
-    this.space();
-    this.token("=");
-    this.space();
-    this.print(node.value, node);
-  }
-  this.semicolon();
-}
+export const _classMethodHead = function (node) {
+    this.printJoin(node.decorators, node);
 
-export function ClassMethod(node: Object) {
-  this._classMethodHead(node);
-  this.space();
-  this.print(node.body, node);
-}
+    if (node.accessibility) {
+        // TS
+        this.word(node.accessibility);
+        this.space();
+    }
 
-export function _classMethodHead(node) {
-  this.printJoin(node.decorators, node);
+    if (node.abstract) {
+        // TS
+        this.word("abstract");
+        this.space();
+    }
 
-  if (node.accessibility) {
-    // TS
-    this.word(node.accessibility);
-    this.space();
-  }
+    if (node.static) {
+        this.word("static");
+        this.space();
+    }
 
-  if (node.abstract) {
-    // TS
-    this.word("abstract");
-    this.space();
-  }
-
-  if (node.static) {
-    this.word("static");
-    this.space();
-  }
-
-  this._methodHead(node);
-}
+    this._methodHead(node);
+};
