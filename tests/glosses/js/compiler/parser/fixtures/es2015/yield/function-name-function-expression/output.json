@@ -27,6 +27,7 @@
       }
     },
     "sourceType": "script",
+    "interpreter": null,
     "body": [
       {
         "type": "ExpressionStatement",
@@ -109,9 +110,6 @@
               "body": [],
               "directives": []
             }
-          },
-          "extra": {
-            "parenthesizedArgument": false
           }
         }
       }

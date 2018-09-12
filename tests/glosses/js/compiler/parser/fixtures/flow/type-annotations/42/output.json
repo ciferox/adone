@@ -27,6 +27,7 @@
       }
     },
     "sourceType": "module",
+    "interpreter": null,
     "body": [
       {
         "type": "VariableDeclaration",
@@ -135,6 +136,7 @@
                         "name": "add"
                       },
                       "static": false,
+                      "proto": false,
                       "kind": "init",
                       "method": true,
                       "value": {
@@ -319,6 +321,7 @@
                     }
                   ],
                   "indexers": [],
+                  "internalSlots": [],
                   "exact": false
                 }
               }

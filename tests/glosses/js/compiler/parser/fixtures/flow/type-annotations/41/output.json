@@ -27,6 +27,7 @@
       }
     },
     "sourceType": "module",
+    "interpreter": null,
     "body": [
       {
         "type": "VariableDeclaration",
@@ -233,6 +234,7 @@
                       "variance": null
                     }
                   ],
+                  "internalSlots": [],
                   "exact": false
                 }
               }

@@ -27,6 +27,7 @@
       }
     },
     "sourceType": "module",
+    "interpreter": null,
     "body": [
       {
         "type": "TypeAlias",
@@ -108,6 +109,7 @@
                 "name": "p"
               },
               "static": false,
+              "proto": false,
               "kind": "init",
               "method": false,
               "value": {
@@ -163,6 +165,7 @@
             }
           ],
           "indexers": [],
+          "internalSlots": [],
           "exact": false
         }
       }

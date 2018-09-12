@@ -27,6 +27,7 @@
       }
     },
     "sourceType": "module",
+    "interpreter": null,
     "body": [
       {
         "type": "VariableDeclaration",
@@ -135,6 +136,7 @@
                         "name": "x"
                       },
                       "static": false,
+                      "proto": false,
                       "kind": "init",
                       "method": false,
                       "value": {
@@ -187,6 +189,7 @@
                         "name": "y"
                       },
                       "static": false,
+                      "proto": false,
                       "kind": "init",
                       "method": false,
                       "value": {
@@ -209,6 +212,7 @@
                     }
                   ],
                   "indexers": [],
+                  "internalSlots": [],
                   "exact": true
                 }
               }
@@ -451,6 +455,7 @@
                         "name": "x"
                       },
                       "static": false,
+                      "proto": false,
                       "kind": "init",
                       "method": false,
                       "value": {
@@ -503,6 +508,7 @@
                         "name": "y"
                       },
                       "static": false,
+                      "proto": false,
                       "kind": "init",
                       "method": false,
                       "value": {
@@ -525,6 +531,7 @@
                     }
                   ],
                   "indexers": [],
+                  "internalSlots": [],
                   "exact": true
                 }
               }
@@ -736,6 +743,7 @@
                   "callProperties": [],
                   "properties": [],
                   "indexers": [],
+                  "internalSlots": [],
                   "exact": true
                 }
               }
@@ -867,6 +875,7 @@
                         "name": "a"
                       },
                       "static": false,
+                      "proto": false,
                       "kind": "init",
                       "method": false,
                       "value": {
@@ -917,6 +926,7 @@
                               "name": "x"
                             },
                             "static": false,
+                            "proto": false,
                             "kind": "init",
                             "method": false,
                             "value": {
@@ -969,6 +979,7 @@
                               "name": "y"
                             },
                             "static": false,
+                            "proto": false,
                             "kind": "init",
                             "method": false,
                             "value": {
@@ -991,6 +1002,7 @@
                           }
                         ],
                         "indexers": [],
+                        "internalSlots": [],
                         "exact": true
                       },
                       "variance": null,
@@ -1028,6 +1040,7 @@
                         "name": "b"
                       },
                       "static": false,
+                      "proto": false,
                       "kind": "init",
                       "method": false,
                       "value": {
@@ -1050,6 +1063,7 @@
                     }
                   ],
                   "indexers": [],
+                  "internalSlots": [],
                   "exact": false
                 }
               }
@@ -1395,6 +1409,7 @@
                         "name": "a"
                       },
                       "static": false,
+                      "proto": false,
                       "kind": "init",
                       "method": false,
                       "value": {
@@ -1445,6 +1460,7 @@
                               "name": "x"
                             },
                             "static": false,
+                            "proto": false,
                             "kind": "init",
                             "method": false,
                             "value": {
@@ -1497,6 +1513,7 @@
                               "name": "y"
                             },
                             "static": false,
+                            "proto": false,
                             "kind": "init",
                             "method": false,
                             "value": {
@@ -1519,6 +1536,7 @@
                           }
                         ],
                         "indexers": [],
+                        "internalSlots": [],
                         "exact": false
                       },
                       "variance": null,
@@ -1556,6 +1574,7 @@
                         "name": "b"
                       },
                       "static": false,
+                      "proto": false,
                       "kind": "init",
                       "method": false,
                       "value": {
@@ -1578,6 +1597,7 @@
                     }
                   ],
                   "indexers": [],
+                  "internalSlots": [],
                   "exact": true
                 }
               }

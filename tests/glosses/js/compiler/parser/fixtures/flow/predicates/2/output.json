@@ -27,6 +27,7 @@
       }
     },
     "sourceType": "module",
+    "interpreter": null,
     "body": [
       {
         "type": "VariableDeclaration",
@@ -202,9 +203,6 @@
                       "identifierName": "x"
                     },
                     "name": "x"
-                  },
-                  "extra": {
-                    "parenthesizedArgument": false
                   }
                 },
                 "operator": "===",

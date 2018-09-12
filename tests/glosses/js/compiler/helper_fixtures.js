@@ -1,51 +1,29 @@
+import cloneDeep from "lodash/cloneDeep";
+import trimEnd from "lodash/trimEnd";
 import resolve from "try-resolve";
-
-const {
-    is,
-    semver,
-    std: { fs, path },
-    lodash: { cloneDeep, trimEnd, clone, extend }
-} = adone;
+import clone from "lodash/clone";
+import extend from "lodash/extend";
+import semver from "semver";
+import path from "path";
+import fs from "fs";
 
 const nodeVersion = semver.clean(process.version.slice(1));
 
-const humanize = (val, noext) => {
+const humanize = function (val, noext) {
     if (noext) {
-        val = path.basename(val, path.extname(val)); 
+        val = path.basename(val, path.extname(val));
     }
     return val.replace(/-/g, " ");
 };
 
-type TestFile = {
-    loc: string,
-    code: string,
-    filename: string,
-};
-
-type Test = {
-    title: string,
-    disabled: boolean,
-    options: Object,
-    exec: TestFile,
-    actual: TestFile,
-    expected: TestFile,
-};
-
-type Suite = {
-    options: Object,
-    tests: Array<Test>,
-    title: string,
-    filename: string,
-};
-
-const assertDirectory = (loc) => {
+const assertDirectory = function (loc) {
     if (!fs.statSync(loc).isDirectory()) {
         throw new Error(`Expected ${loc} to be a directory.`);
     }
 };
 
-const shouldIgnore = (name, blacklist?: Array<string>) => {
-    if (blacklist && blacklist.indexOf(name) >= 0) {
+const shouldIgnore = function (name, blacklist) {
+    if (blacklist && blacklist.includes(name)) {
         return true;
     }
 
@@ -57,32 +35,24 @@ const shouldIgnore = (name, blacklist?: Array<string>) => {
     );
 };
 
-export const multiple = (entryLoc, ignore?: Array<string>) => {
-    const categories = {};
+const EXTENSIONS = [".js", ".mjs", ".ts", ".tsx"];
 
-    for (const name of fs.readdirSync(entryLoc)) {
-        if (shouldIgnore(name, ignore)) { 
-            continue;
+const findFile = function (filepath, allowJSON) {
+    const matches = [];
+
+    for (const ext of EXTENSIONS.concat(allowJSON ? ".json" : [])) {
+        const name = filepath + ext;
+
+        if (fs.existsSync(name)) {
+            matches.push(name);
         }
-
-        const loc = path.join(entryLoc, name);
-        assertDirectory(loc);
-
-        categories[name] = get(loc);
     }
 
-    return categories;
-};
+    if (matches.length > 1) {
+        throw new Error(`Found conflicting file matches: ${matches.join(", ")}`);
+    }
 
-const asMJS = (filepath) => filepath.replace(/\.js$/, ".mjs");
-
-export const readFile = (filename) => {
-    if (fs.existsSync(filename)) {
-        let file = trimEnd(fs.readFileSync(filename, "utf8"));
-        file = file.replace(/\r\n/g, "\n");
-        return file;
-    } 
-    return "";
+    return matches[0] || `${filepath}.js`;
 };
 
 export default function get(entryLoc): Array<Suite> {
@@ -90,13 +60,13 @@ export default function get(entryLoc): Array<Suite> {
 
     let rootOpts = {};
     const rootOptsLoc = resolve(`${entryLoc}/options`);
-    if (rootOptsLoc) { 
+    if (rootOptsLoc) {
         rootOpts = require(rootOptsLoc);
     }
 
     for (const suiteName of fs.readdirSync(entryLoc)) {
-        if (shouldIgnore(suiteName)) { 
-            continue; 
+        if (shouldIgnore(suiteName)) {
+            continue;
         }
 
         const suite = {
@@ -111,59 +81,35 @@ export default function get(entryLoc): Array<Suite> {
 
         const suiteOptsLoc = resolve(`${suite.filename}/options`);
         if (suiteOptsLoc) {
-            suite.options = require(suiteOptsLoc); 
+            suite.options = require(suiteOptsLoc);
         }
 
-        // eslint-disable-next-line
-        const push = (taskName, taskDir) => {
-            let actualLocAlias = `${suiteName}/${taskName}/actual.js`;
-            let expectLocAlias = `${suiteName}/${taskName}/expected.js`;
-            let execLocAlias = `${suiteName}/${taskName}/exec.js`;
+        const push = function (taskName, taskDir) {
+            const actualLoc = findFile(`${taskDir}/input`);
+            const expectLoc = findFile(`${taskDir}/output`, true /* allowJSON */);
+            let execLoc = findFile(`${taskDir}/exec`);
 
-            let actualLoc = `${taskDir}/actual.js`;
-            let expectLoc = `${taskDir}/expected.js`;
-            let execLoc = `${taskDir}/exec.js`;
-
-            const hasExecJS = fs.existsSync(execLoc);
-            const hasExecMJS = fs.existsSync(asMJS(execLoc));
-            if (hasExecMJS) {
-                assert(!hasExecJS, `${asMJS(execLoc)}: Found conflicting .js`);
-
-                execLoc = asMJS(execLoc);
-                execLocAlias = asMJS(execLocAlias);
-            }
-
-            const hasExpectJS = fs.existsSync(expectLoc);
-            const hasExpectMJS = fs.existsSync(asMJS(expectLoc));
-            if (hasExpectMJS) {
-                assert(!hasExpectJS, `${asMJS(expectLoc)}: Found conflicting .js`);
-
-                expectLoc = asMJS(expectLoc);
-                expectLocAlias = asMJS(expectLocAlias);
-            }
-
-            const hasActualJS = fs.existsSync(actualLoc);
-            const hasActualMJS = fs.existsSync(asMJS(actualLoc));
-            if (hasActualMJS) {
-                assert(!hasActualJS, `${asMJS(actualLoc)}: Found conflicting .js`);
-
-                actualLoc = asMJS(actualLoc);
-                actualLocAlias = asMJS(actualLocAlias);
-            }
+            const actualLocAlias =
+                `${suiteName}/${taskName}/${path.basename(actualLoc)}`;
+            const expectLocAlias =
+                `${suiteName}/${taskName}/${path.basename(actualLoc)}`;
+            let execLocAlias =
+                `${suiteName}/${taskName}/${path.basename(actualLoc)}`;
 
             if (fs.statSync(taskDir).isFile()) {
                 const ext = path.extname(taskDir);
-                if (ext !== ".js" && ext !== ".mjs") {
-                    return; 
+                if (EXTENSIONS.indexOf(ext) === -1) {
+                    return;
                 }
 
                 execLoc = taskDir;
+                execLocAlias = `${suiteName}/${taskName}`;
             }
 
             const taskOpts = cloneDeep(suite.options);
 
             const taskOptsLoc = resolve(`${taskDir}/options`);
-            if (taskOptsLoc) { 
+            if (taskOptsLoc) {
                 extend(taskOpts, require(taskOptsLoc));
             }
 
@@ -195,7 +141,9 @@ export default function get(entryLoc): Array<Suite> {
 
                 if (is.nil(minimumVersion)) {
                     throw new Error(
-                        `'minNodeVersion' has invalid semver format: ${taskOpts.minNodeVersion}`,
+                        `'minNodeVersion' has invalid semver format: ${
+                        taskOpts.minNodeVersion
+                        }`,
                     );
                 }
 
@@ -224,6 +172,30 @@ export default function get(entryLoc): Array<Suite> {
             if (fs.existsSync(sourceMapLoc)) {
                 test.sourceMap = JSON.parse(readFile(sourceMapLoc));
             }
+
+            const inputMapLoc = `${taskDir}/input-source-map.json`;
+            if (fs.existsSync(inputMapLoc)) {
+                test.inputSourceMap = JSON.parse(readFile(inputMapLoc));
+            }
+
+            if (taskOpts.throws) {
+                if (test.expect.code) {
+                    throw new Error(
+                        `Test cannot throw and also return output code: ${expectLoc}`,
+                    );
+                }
+                if (test.sourceMappings) {
+                    throw new Error(
+                        `Test cannot throw and also return sourcemappings: ${
+                        sourceMappingsLoc}`,
+                    );
+                }
+                if (test.sourceMap) {
+                    throw new Error(
+                        `Test cannot throw and also return sourcemaps: ${sourceMapLoc}`,
+                    );
+                }
+            }
         };
 
         for (const taskName of fs.readdirSync(suite.filename)) {
@@ -233,3 +205,29 @@ export default function get(entryLoc): Array<Suite> {
 
     return suites;
 }
+
+export const multiple = function (entryLoc, ignore) {
+    const categories = {};
+
+    for (const name of fs.readdirSync(entryLoc)) {
+        if (shouldIgnore(name, ignore)) {
+            continue;
+        }
+
+        const loc = path.join(entryLoc, name);
+        assertDirectory(loc);
+
+        categories[name] = get(loc);
+    }
+
+    return categories;
+};
+
+export const readFile = function (filename) {
+    if (fs.existsSync(filename)) {
+        let file = trimEnd(fs.readFileSync(filename, "utf8"));
+        file = file.replace(/\r\n/g, "\n");
+        return file;
+    }
+    return "";
+};

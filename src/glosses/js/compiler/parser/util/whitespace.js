@@ -1,13 +1,14 @@
 const {
     text: { charcode: charCodes }
 } = adone;
+
 // Matches a whole line break (where CRLF is considered a single
 // line break). Used to count lines.
 export const lineBreak = /\r\n?|\n|\u2028|\u2029/;
 export const lineBreakG = new RegExp(lineBreak.source, "g");
 
 // https://tc39.github.io/ecma262/#sec-line-terminators
-export function isNewLine(code: number): boolean {
+export const isNewLine = function (code) {
     switch (code) {
         case charCodes.lineFeed:
         case charCodes.carriageReturn:
@@ -18,10 +19,10 @@ export function isNewLine(code: number): boolean {
         default:
             return false;
     }
-}
+};
 
 // https://tc39.github.io/ecma262/#sec-white-space
-export function isWhitespace(code: number): boolean {
+export const isWhitespace = function (code) {
     switch (code) {
         case 0x0009: // CHARACTER TABULATION
         case 0x000b: // LINE TABULATION
@@ -49,4 +50,4 @@ export function isWhitespace(code: number): boolean {
         default:
             return false;
     }
-}
+};

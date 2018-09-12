@@ -1,10 +1,7 @@
 import XHTMLEntities from "./xhtml";
-import type Parser from "../../parser";
 import { TokenType, types as tt } from "../../tokenizer/types";
 import { TokContext, types as tc } from "../../tokenizer/context";
-import * as N from "../../types";
 import { isIdentifierChar, isIdentifierStart } from "../../util/identifier";
-import type { Pos, Position } from "../../util/location";
 import { isNewLine } from "../../util/whitespace";
 
 const {
@@ -39,43 +36,39 @@ tt.jsxTagEnd.updateContext = function (prevType) {
     }
 };
 
-function isFragment(object: ?N.JSXElement): boolean {
+const isFragment = function (object) {
     return object
         ? object.type === "JSXOpeningFragment" ||
         object.type === "JSXClosingFragment"
         : false;
-}
+};
 
 // Transforms JSX element name to string.
 
-function getQualifiedJSXName(
-    object: N.JSXIdentifier | N.JSXNamespacedName | N.JSXMemberExpression,
-): string {
+const getQualifiedJSXName = function (object) {
     if (object.type === "JSXIdentifier") {
         return object.name;
     }
 
     if (object.type === "JSXNamespacedName") {
-        return object.namespace.name + ":" + object.name.name;
+        return `${object.namespace.name}:${object.name.name}`;
     }
 
     if (object.type === "JSXMemberExpression") {
         return (
-            getQualifiedJSXName(object.object) +
-            "." +
-            getQualifiedJSXName(object.property)
+            `${getQualifiedJSXName(object.object)}.${getQualifiedJSXName(object.property)}`
         );
     }
 
     // istanbul ignore next
-    throw new Error("Node had unexpected type: " + object.type);
-}
+    throw new Error(`Node had unexpected type: ${object.type}`);
+};
 
-export default (superClass: Class<Parser>): Class<Parser> =>
+export default (superClass) =>
     class extends superClass {
         // Reads inline JSX contents token.
 
-        jsxReadToken(): void {
+        jsxReadToken() {
             let out = "";
             let chunkStart = this.state.pos;
             for (; ;) {
@@ -116,7 +109,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             }
         }
 
-        jsxReadNewLine(normalizeCRLF: boolean): string {
+        jsxReadNewLine(normalizeCRLF) {
             const ch = this.input.charCodeAt(this.state.pos);
             let out;
             ++this.state.pos;
@@ -135,7 +128,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             return out;
         }
 
-        jsxReadString(quote: number): void {
+        jsxReadString(quote) {
             let out = "";
             let chunkStart = ++this.state.pos;
             for (; ;) {
@@ -144,7 +137,9 @@ export default (superClass: Class<Parser>): Class<Parser> =>
                 }
 
                 const ch = this.input.charCodeAt(this.state.pos);
-                if (ch === quote) break;
+                if (ch === quote) {
+                    break;
+                }
                 if (ch === charCodes.ampersand) {
                     out += this.input.slice(chunkStart, this.state.pos);
                     out += this.jsxReadEntity();
@@ -161,7 +156,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             return this.finishToken(tt.string, out);
         }
 
-        jsxReadEntity(): string {
+        jsxReadEntity() {
             let str = "";
             let count = 0;
             let entity;
@@ -204,7 +199,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         // Also assumes that first character was already checked
         // by isIdentifierStart in readToken.
 
-        jsxReadWord(): void {
+        jsxReadWord() {
             let ch;
             const start = this.state.pos;
             do {
@@ -218,7 +213,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
 
         // Parse next token as JSX identifier
 
-        jsxParseIdentifier(): N.JSXIdentifier {
+        jsxParseIdentifier() {
             const node = this.startNode();
             if (this.match(tt.jsxName)) {
                 node.name = this.state.value;
@@ -233,11 +228,13 @@ export default (superClass: Class<Parser>): Class<Parser> =>
 
         // Parse namespaced identifier.
 
-        jsxParseNamespacedName(): N.JSXNamespacedName {
+        jsxParseNamespacedName() {
             const startPos = this.state.start;
             const startLoc = this.state.startLoc;
             const name = this.jsxParseIdentifier();
-            if (!this.eat(tt.colon)) return name;
+            if (!this.eat(tt.colon)) {
+                return name;
+            }
 
             const node = this.startNodeAt(startPos, startLoc);
             node.namespace = name;
@@ -248,7 +245,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         // Parses element name in any form - namespaced, member
         // or single identifier.
 
-        jsxParseElementName(): N.JSXNamespacedName | N.JSXMemberExpression {
+        jsxParseElementName() {
             const startPos = this.state.start;
             const startLoc = this.state.startLoc;
             let node = this.jsxParseNamespacedName();
@@ -263,7 +260,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
 
         // Parses any type of JSX attribute value.
 
-        jsxParseAttributeValue(): N.Expression {
+        jsxParseAttributeValue() {
             let node;
             switch (this.state.type) {
                 case tt.braceL:
@@ -293,7 +290,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         // and so it should start at the end of last read token (left brace) and finish
         // at the beginning of the next one (right brace).
 
-        jsxParseEmptyExpression(): N.JSXEmptyExpression {
+        jsxParseEmptyExpression() {
             const node = this.startNodeAt(
                 this.state.lastTokEnd,
                 this.state.lastTokEndLoc,
@@ -308,7 +305,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
 
         // Parse JSX spread child
 
-        jsxParseSpreadChild(): N.JSXSpreadChild {
+        jsxParseSpreadChild() {
             const node = this.startNode();
             this.expect(tt.braceL);
             this.expect(tt.ellipsis);
@@ -320,7 +317,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
 
         // Parses JSX expression enclosed into curly brackets.
 
-        jsxParseExpressionContainer(): N.JSXExpressionContainer {
+        jsxParseExpressionContainer() {
             const node = this.startNode();
             this.next();
             if (this.match(tt.braceR)) {
@@ -334,7 +331,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
 
         // Parses following JSX attribute name-value pair.
 
-        jsxParseAttribute(): N.JSXAttribute {
+        jsxParseAttribute() {
             const node = this.startNode();
             if (this.eat(tt.braceL)) {
                 this.expect(tt.ellipsis);
@@ -349,10 +346,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
 
         // Parses JSX opening tag starting after "<".
 
-        jsxParseOpeningElementAt(
-            startPos: number,
-            startLoc: Position,
-        ): N.JSXOpeningElement {
+        jsxParseOpeningElementAt(startPos, startLoc) {
             const node = this.startNodeAt(startPos, startLoc);
             if (this.match(tt.jsxTagEnd)) {
                 this.expect(tt.jsxTagEnd);
@@ -363,9 +357,9 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         }
 
         jsxParseOpeningElementAfterName(
-            node: N.JSXOpeningElement,
-        ): N.JSXOpeningElement {
-            const attributes: N.JSXAttribute[] = [];
+            node,
+        ) {
+            const attributes = [];
             while (!this.match(tt.slash) && !this.match(tt.jsxTagEnd)) {
                 attributes.push(this.jsxParseAttribute());
             }
@@ -378,9 +372,9 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         // Parses JSX closing tag starting after "</".
 
         jsxParseClosingElementAt(
-            startPos: number,
-            startLoc: Position,
-        ): N.JSXClosingElement {
+            startPos,
+            startLoc,
+        ) {
             const node = this.startNodeAt(startPos, startLoc);
             if (this.match(tt.jsxTagEnd)) {
                 this.expect(tt.jsxTagEnd);
@@ -394,7 +388,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         // Parses entire JSX element, including it"s opening tag
         // (starting after "<"), attributes, contents and closing tag.
 
-        jsxParseElementAt(startPos: number, startLoc: Position): N.JSXElement {
+        jsxParseElementAt(startPos, startLoc) {
             const node = this.startNodeAt(startPos, startLoc);
             const children = [];
             const openingElement = this.jsxParseOpeningElementAt(startPos, startLoc);
@@ -446,9 +440,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
                     this.raise(
                         // $FlowIgnore
                         closingElement.start,
-                        "Expected corresponding JSX closing tag for <" +
-                        getQualifiedJSXName(openingElement.name) +
-                        ">",
+                        `Expected corresponding JSX closing tag for <${getQualifiedJSXName(openingElement.name)}>`,
                     );
                 } else if (!isFragment(openingElement) && !isFragment(closingElement)) {
                     if (
@@ -459,9 +451,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
                         this.raise(
                             // $FlowIgnore
                             closingElement.start,
-                            "Expected corresponding JSX closing tag for <" +
-                            getQualifiedJSXName(openingElement.name) +
-                            ">",
+                            `Expected corresponding JSX closing tag for <${getQualifiedJSXName(openingElement.name)}>`,
                         );
                     }
                 }
@@ -490,7 +480,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
 
         // Parses entire JSX element from current position.
 
-        jsxParseElement(): N.JSXElement {
+        jsxParseElement() {
             const startPos = this.state.start;
             const startLoc = this.state.startLoc;
             this.next();
@@ -501,18 +491,20 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         // Overrides
         // ==================================
 
-        parseExprAtom(refShortHandDefaultPos: ?Pos): N.Expression {
+        parseExprAtom(refShortHandDefaultPos) {
             if (this.match(tt.jsxText)) {
                 return this.parseLiteral(this.state.value, "JSXText");
             } else if (this.match(tt.jsxTagStart)) {
                 return this.jsxParseElement();
-            } else {
-                return super.parseExprAtom(refShortHandDefaultPos);
             }
+            return super.parseExprAtom(refShortHandDefaultPos);
+
         }
 
-        readToken(code: number): void {
-            if (this.state.inPropertyName) return super.readToken(code);
+        readToken(code) {
+            if (this.state.inPropertyName) {
+                return super.readToken(code);
+            }
 
             const context = this.curContext();
 
@@ -546,7 +538,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             return super.readToken(code);
         }
 
-        updateContext(prevType: TokenType): void {
+        updateContext(prevType) {
             if (this.match(tt.braceL)) {
                 const curContext = this.curContext();
                 if (curContext === tc.j_oTag) {

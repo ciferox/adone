@@ -27,6 +27,7 @@
       }
     },
     "sourceType": "module",
+    "interpreter": null,
     "body": [
       {
         "type": "DeclareModule",
@@ -126,6 +127,7 @@
                 },
                 "typeParameters": null,
                 "extends": [],
+                "implements": [],
                 "mixins": [],
                 "body": {
                   "type": "ObjectTypeAnnotation",
@@ -144,6 +146,7 @@
                   "callProperties": [],
                   "properties": [],
                   "indexers": [],
+                  "internalSlots": [],
                   "exact": false
                 }
               },

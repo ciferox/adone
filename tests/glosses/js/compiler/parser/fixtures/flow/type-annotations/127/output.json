@@ -27,6 +27,7 @@
       }
     },
     "sourceType": "module",
+    "interpreter": null,
     "body": [
       {
         "type": "TypeAlias",
@@ -126,6 +127,7 @@
               "variance": null
             }
           ],
+          "internalSlots": [],
           "exact": false
         }
       }

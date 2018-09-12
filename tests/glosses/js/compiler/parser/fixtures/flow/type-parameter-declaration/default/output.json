@@ -27,6 +27,7 @@
       }
     },
     "sourceType": "module",
+    "interpreter": null,
     "body": [
       {
         "type": "TypeAlias",
@@ -2106,6 +2107,7 @@
           ]
         },
         "extends": [],
+        "implements": [],
         "mixins": [],
         "body": {
           "type": "ObjectTypeAnnotation",
@@ -2124,6 +2126,7 @@
           "callProperties": [],
           "properties": [],
           "indexers": [],
+          "internalSlots": [],
           "exact": false
         }
       },
@@ -2253,6 +2256,7 @@
           ]
         },
         "extends": [],
+        "implements": [],
         "mixins": [],
         "body": {
           "type": "ObjectTypeAnnotation",
@@ -2271,6 +2275,7 @@
           "callProperties": [],
           "properties": [],
           "indexers": [],
+          "internalSlots": [],
           "exact": false
         }
       },
@@ -2417,6 +2422,7 @@
           ]
         },
         "extends": [],
+        "implements": [],
         "mixins": [],
         "body": {
           "type": "ObjectTypeAnnotation",
@@ -2435,6 +2441,7 @@
           "callProperties": [],
           "properties": [],
           "indexers": [],
+          "internalSlots": [],
           "exact": false
         }
       },
@@ -2596,6 +2603,7 @@
           ]
         },
         "extends": [],
+        "implements": [],
         "mixins": [],
         "body": {
           "type": "ObjectTypeAnnotation",
@@ -2614,6 +2622,7 @@
           "callProperties": [],
           "properties": [],
           "indexers": [],
+          "internalSlots": [],
           "exact": false
         }
       },
@@ -2698,6 +2707,7 @@
           ]
         },
         "extends": [],
+        "implements": [],
         "mixins": [],
         "body": {
           "type": "ObjectTypeAnnotation",
@@ -2716,6 +2726,7 @@
           "callProperties": [],
           "properties": [],
           "indexers": [],
+          "internalSlots": [],
           "exact": false
         }
       },
@@ -2845,6 +2856,7 @@
           ]
         },
         "extends": [],
+        "implements": [],
         "mixins": [],
         "body": {
           "type": "ObjectTypeAnnotation",
@@ -2863,6 +2875,7 @@
           "callProperties": [],
           "properties": [],
           "indexers": [],
+          "internalSlots": [],
           "exact": false
         }
       },
@@ -3009,6 +3022,7 @@
           ]
         },
         "extends": [],
+        "implements": [],
         "mixins": [],
         "body": {
           "type": "ObjectTypeAnnotation",
@@ -3027,6 +3041,7 @@
           "callProperties": [],
           "properties": [],
           "indexers": [],
+          "internalSlots": [],
           "exact": false
         }
       },
@@ -3188,6 +3203,7 @@
           ]
         },
         "extends": [],
+        "implements": [],
         "mixins": [],
         "body": {
           "type": "ObjectTypeAnnotation",
@@ -3206,6 +3222,7 @@
           "callProperties": [],
           "properties": [],
           "indexers": [],
+          "internalSlots": [],
           "exact": false
         }
       },

@@ -27,6 +27,7 @@
       }
     },
     "sourceType": "module",
+    "interpreter": null,
     "body": [
       {
         "type": "DeclareModule",
@@ -150,6 +151,7 @@
                         "name": "foo"
                       },
                       "static": false,
+                      "proto": false,
                       "kind": "init",
                       "method": true,
                       "value": {
@@ -189,6 +191,7 @@
                     }
                   ],
                   "indexers": [],
+                  "internalSlots": [],
                   "exact": false
                 }
               }

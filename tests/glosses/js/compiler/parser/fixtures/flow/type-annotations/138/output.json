@@ -27,6 +27,7 @@
       }
     },
     "sourceType": "module",
+    "interpreter": null,
     "body": [
       {
         "type": "ClassDeclaration",
@@ -274,6 +275,7 @@
             }
           ],
           "indexers": [],
+          "internalSlots": [],
           "exact": false
         }
       }

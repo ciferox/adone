@@ -27,6 +27,7 @@
       }
     },
     "sourceType": "module",
+    "interpreter": null,
     "body": [
       {
         "type": "InterfaceDeclaration",
@@ -259,6 +260,7 @@
             }
           }
         ],
+        "implements": [],
         "mixins": [],
         "body": {
           "type": "ObjectTypeAnnotation",
@@ -277,6 +279,7 @@
           "callProperties": [],
           "properties": [],
           "indexers": [],
+          "internalSlots": [],
           "exact": false
         }
       }

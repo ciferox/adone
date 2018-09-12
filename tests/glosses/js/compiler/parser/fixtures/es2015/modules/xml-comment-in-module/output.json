@@ -27,6 +27,7 @@
       }
     },
     "sourceType": "module",
+    "interpreter": null,
     "body": [
       {
         "type": "ExpressionStatement",
@@ -122,13 +123,7 @@
                   "identifierName": "bar"
                 },
                 "name": "bar"
-              },
-              "extra": {
-                "parenthesizedArgument": false
               }
-            },
-            "extra": {
-              "parenthesizedArgument": false
             }
           }
         }

@@ -27,6 +27,7 @@
       }
     },
     "sourceType": "module",
+    "interpreter": null,
     "body": [
       {
         "type": "FunctionDeclaration",
@@ -201,9 +202,6 @@
                       "identifierName": "x"
                     },
                     "name": "x"
-                  },
-                  "extra": {
-                    "parenthesizedArgument": false
                   }
                 },
                 "operator": "===",

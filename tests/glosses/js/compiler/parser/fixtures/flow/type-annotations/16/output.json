@@ -27,6 +27,7 @@
       }
     },
     "sourceType": "module",
+    "interpreter": null,
     "body": [
       {
         "type": "FunctionDeclaration",
@@ -94,6 +95,7 @@
             "callProperties": [],
             "properties": [],
             "indexers": [],
+            "internalSlots": [],
             "exact": false
           }
         },

@@ -27,6 +27,7 @@
       }
     },
     "sourceType": "module",
+    "interpreter": null,
     "body": [
       {
         "type": "ExpressionStatement",
@@ -106,9 +107,6 @@
               "identifierName": "b"
             },
             "name": "b"
-          },
-          "extra": {
-            "parenthesizedArgument": false
           }
         }
       }

@@ -1,14 +1,8 @@
-// @flow
-
-import type Parser from "../parser";
-import { types as tt, type TokenType } from "../tokenizer/types";
-import * as N from "../types";
-import type { Options } from "../options";
-import type { Pos, Position } from "../util/location";
-import type State from "../tokenizer/state";
+import { types as tt } from "../tokenizer/types";
 import { isIteratorStart } from "../util/identifier";
 
 const {
+    is,
     text: { charcode: charCodes }
 } = adone;
 
@@ -25,10 +19,10 @@ const primitiveTypes = [
     "string",
     "true",
     "typeof",
-    "void",
+    "void"
 ];
 
-function isEsModuleType(bodyElement: N.Node): boolean {
+const isEsModuleType = function (bodyElement) {
     return (
         bodyElement.type === "DeclareExportAllDeclaration" ||
         (bodyElement.type === "DeclareExportDeclaration" &&
@@ -36,58 +30,55 @@ function isEsModuleType(bodyElement: N.Node): boolean {
                 (bodyElement.declaration.type !== "TypeAlias" &&
                     bodyElement.declaration.type !== "InterfaceDeclaration")))
     );
-}
+};
 
-function hasTypeImportKind(node: N.Node): boolean {
+const hasTypeImportKind = function (node) {
     return node.importKind === "type" || node.importKind === "typeof";
-}
+};
 
-function isMaybeDefaultImport(state: State): boolean {
+const isMaybeDefaultImport = function (state) {
     return (
-        (state.type === tt.name || !!state.type.keyword) && state.value !== "from"
+        (state.type === tt.name || Boolean(state.type.keyword)) && state.value !== "from"
     );
-}
+};
 
 const exportSuggestions = {
     const: "declare export var",
     let: "declare export var",
     type: "export type",
-    interface: "export interface",
+    interface: "export interface"
 };
 
 // Like Array#filter, but returns a tuple [ acceptedElements, discardedElements ]
-function partition<T>(
-    list: T[],
-    test: (T, number, T[]) =>?boolean,
-): [T[], T[]] {
+const partition = function (list, test) {
     const list1 = [];
     const list2 = [];
     for (let i = 0; i < list.length; i++) {
         (test(list[i], i, list) ? list1 : list2).push(list[i]);
     }
     return [list1, list2];
-}
+};
 
 const FLOW_PRAGMA_REGEX = /\*?\s*@((?:no)?flow)\b/;
 
-export default (superClass: Class<Parser>): Class<Parser> =>
+export default (superClass) =>
     class extends superClass {
         // The value of the @flow/@noflow pragma. Initially undefined, transitions
         // to "@flow" or "@noflow" if we see a pragma. Transitions to null if we are
         // past the initial comment.
-        flowPragma: void | null | "flow" | "noflow";
+        flowPragma;
 
-        constructor(options: ?Options, input: string) {
+        constructor(options, input) {
             super(options, input);
             this.flowPragma = undefined;
         }
 
-        shouldParseTypes(): boolean {
+        shouldParseTypes() {
             return this.getPluginOption("flow", "all") || this.flowPragma === "flow";
         }
 
-        addComment(comment: N.Comment): void {
-            if (this.flowPragma === undefined) {
+        addComment(comment) {
+            if (is.undefined(this.flowPragma)) {
                 // Try to parse a flow pragma.
                 const matches = FLOW_PRAGMA_REGEX.exec(comment.value);
                 if (!matches) {
@@ -103,7 +94,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             return super.addComment(comment);
         }
 
-        flowParseTypeInitialiser(tok?: TokenType): N.FlowType {
+        flowParseTypeInitialiser(tok) {
             const oldInType = this.state.inType;
             this.state.inType = true;
             this.expect(tok || tt.colon);
@@ -113,7 +104,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             return type;
         }
 
-        flowParsePredicate(): N.FlowType {
+        flowParsePredicate() {
             const node = this.startNode();
             const moduloLoc = this.state.startLoc;
             const moduloPos = this.state.start;
@@ -134,12 +125,12 @@ export default (superClass: Class<Parser>): Class<Parser> =>
                 node.value = this.parseExpression();
                 this.expect(tt.parenR);
                 return this.finishNode(node, "DeclaredPredicate");
-            } else {
-                return this.finishNode(node, "InferredPredicate");
             }
+            return this.finishNode(node, "InferredPredicate");
+
         }
 
-        flowParseTypeAndPredicateInitialiser(): [?N.FlowType,?N.FlowPredicate] {
+        flowParseTypeAndPredicateInitialiser() {
             const oldInType = this.state.inType;
             this.state.inType = true;
             this.expect(tt.colon);
@@ -158,15 +149,13 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             return [type, predicate];
         }
 
-        flowParseDeclareClass(node: N.FlowDeclareClass): N.FlowDeclareClass {
+        flowParseDeclareClass(node) {
             this.next();
             this.flowParseInterfaceish(node, /*isClass*/ true);
             return this.finishNode(node, "DeclareClass");
         }
 
-        flowParseDeclareFunction(
-            node: N.FlowDeclareFunction,
-        ): N.FlowDeclareFunction {
+        flowParseDeclareFunction(node) {
             this.next();
 
             const id = (node.id = this.parseIdentifier());
@@ -190,7 +179,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
                 // $FlowFixMe (destructuring not supported yet)
                 typeNode.returnType,
                 // $FlowFixMe (destructuring not supported yet)
-                node.predicate,
+                node.predicate
             ] = this.flowParseTypeAndPredicateInitialiser();
 
             typeContainer.typeAnnotation = this.finishNode(
@@ -207,10 +196,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             return this.finishNode(node, "DeclareFunction");
         }
 
-        flowParseDeclare(
-            node: N.FlowDeclare,
-            insideModule?: boolean,
-        ): N.FlowDeclare {
+        flowParseDeclare(node, insideModule) {
             if (this.match(tt._class)) {
                 return this.flowParseDeclareClass(node);
             } else if (this.match(tt._function)) {
@@ -220,15 +206,15 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             } else if (this.isContextual("module")) {
                 if (this.lookahead().type === tt.dot) {
                     return this.flowParseDeclareModuleExports(node);
-                } else {
-                    if (insideModule) {
-                        this.unexpected(
-                            null,
-                            "`declare module` cannot be used inside another `declare module`",
-                        );
-                    }
-                    return this.flowParseDeclareModule(node);
                 }
+                if (insideModule) {
+                    this.unexpected(
+                        null,
+                        "`declare module` cannot be used inside another `declare module`",
+                    );
+                }
+                return this.flowParseDeclareModule(node);
+
             } else if (this.isContextual("type")) {
                 return this.flowParseDeclareTypeAlias(node);
             } else if (this.isContextual("opaque")) {
@@ -237,23 +223,23 @@ export default (superClass: Class<Parser>): Class<Parser> =>
                 return this.flowParseDeclareInterface(node);
             } else if (this.match(tt._export)) {
                 return this.flowParseDeclareExportDeclaration(node, insideModule);
-            } else {
-                throw this.unexpected();
             }
+            throw this.unexpected();
+
         }
 
         flowParseDeclareVariable(
-            node: N.FlowDeclareVariable,
-        ): N.FlowDeclareVariable {
+            node,
+        ) {
             this.next();
             node.id = this.flowParseTypeAnnotatableIdentifier(
-        /*allowPrimitiveOverride*/ true,
+                /*allowPrimitiveOverride*/ true,
             );
             this.semicolon();
             return this.finishNode(node, "DeclareVariable");
         }
 
-        flowParseDeclareModule(node: N.FlowDeclareModule): N.FlowDeclareModule {
+        flowParseDeclareModule(node) {
             this.next();
 
             if (this.match(tt.string)) {
@@ -298,7 +284,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             const errorMessage =
                 "Found both `declare module.exports` and `declare export` in the same module. " +
                 "Modules can only have 1 since they are either an ES module or they are a CommonJS module";
-            body.forEach(bodyElement => {
+            body.forEach((bodyElement) => {
                 if (isEsModuleType(bodyElement)) {
                     if (kind === "CommonJS") {
                         this.unexpected(bodyElement.start, errorMessage);
@@ -311,7 +297,9 @@ export default (superClass: Class<Parser>): Class<Parser> =>
                             "Duplicate `declare module.exports` statement",
                         );
                     }
-                    if (kind === "ES") this.unexpected(bodyElement.start, errorMessage);
+                    if (kind === "ES") {
+                        this.unexpected(bodyElement.start, errorMessage);
+                    }
                     kind = "CommonJS";
                     hasModuleExport = true;
                 }
@@ -321,10 +309,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             return this.finishNode(node, "DeclareModule");
         }
 
-        flowParseDeclareExportDeclaration(
-            node: N.FlowDeclareExportDeclaration,
-            insideModule: ?boolean,
-        ): N.FlowDeclareExportDeclaration {
+        flowParseDeclareExportDeclaration(node, insideModule) {
             this.expect(tt._export);
 
             if (this.eat(tt._default)) {
@@ -340,61 +325,59 @@ export default (superClass: Class<Parser>): Class<Parser> =>
                 node.default = true;
 
                 return this.finishNode(node, "DeclareExportDeclaration");
-            } else {
-                if (
-                    this.match(tt._const) ||
-                    this.match(tt._let) ||
-                    ((this.isContextual("type") || this.isContextual("interface")) &&
-                        !insideModule)
-                ) {
-                    const label = this.state.value;
-                    const suggestion = exportSuggestions[label];
-                    this.unexpected(
-                        this.state.start,
-                        `\`declare export ${label}\` is not supported. Use \`${suggestion}\` instead`,
-                    );
-                }
-
-                if (
-                    this.match(tt._var) || // declare export var ...
-                    this.match(tt._function) || // declare export function ...
-                    this.match(tt._class) || // declare export class ...
-                    this.isContextual("opaque") // declare export opaque ..
-                ) {
-                    node.declaration = this.flowParseDeclare(this.startNode());
-                    node.default = false;
-
-                    return this.finishNode(node, "DeclareExportDeclaration");
-                } else if (
-                    this.match(tt.star) || // declare export * from ''
-                    this.match(tt.braceL) || // declare export {} ...
-                    this.isContextual("interface") || // declare export interface ...
-                    this.isContextual("type") || // declare export type ...
-                    this.isContextual("opaque") // declare export opaque type ...
-                ) {
-                    node = this.parseExport(node);
-                    if (node.type === "ExportNamedDeclaration") {
-                        // flow does not support the ExportNamedDeclaration
-                        // $FlowIgnore
-                        node.type = "ExportDeclaration";
-                        // $FlowFixMe
-                        node.default = false;
-                        delete node.exportKind;
-                    }
-
-                    // $FlowIgnore
-                    node.type = "Declare" + node.type;
-
-                    return node;
-                }
             }
+            if (
+                this.match(tt._const) ||
+                this.match(tt._let) ||
+                ((this.isContextual("type") || this.isContextual("interface")) &&
+                    !insideModule)
+            ) {
+                const label = this.state.value;
+                const suggestion = exportSuggestions[label];
+                this.unexpected(
+                    this.state.start,
+                    `\`declare export ${label}\` is not supported. Use \`${suggestion}\` instead`,
+                );
+            }
+
+            if (
+                this.match(tt._var) || // declare export var ...
+                this.match(tt._function) || // declare export function ...
+                this.match(tt._class) || // declare export class ...
+                this.isContextual("opaque") // declare export opaque ..
+            ) {
+                node.declaration = this.flowParseDeclare(this.startNode());
+                node.default = false;
+
+                return this.finishNode(node, "DeclareExportDeclaration");
+            } else if (
+                this.match(tt.star) || // declare export * from ''
+                this.match(tt.braceL) || // declare export {} ...
+                this.isContextual("interface") || // declare export interface ...
+                this.isContextual("type") || // declare export type ...
+                this.isContextual("opaque") // declare export opaque type ...
+            ) {
+                node = this.parseExport(node);
+                if (node.type === "ExportNamedDeclaration") {
+                    // flow does not support the ExportNamedDeclaration
+                    // $FlowIgnore
+                    node.type = "ExportDeclaration";
+                    // $FlowFixMe
+                    node.default = false;
+                    delete node.exportKind;
+                }
+
+                // $FlowIgnore
+                node.type = `Declare${node.type}`;
+
+                return node;
+            }
+
 
             throw this.unexpected();
         }
 
-        flowParseDeclareModuleExports(
-            node: N.FlowDeclareModuleExports,
-        ): N.FlowDeclareModuleExports {
+        flowParseDeclareModuleExports(node) {
             this.expectContextual("module");
             this.expect(tt.dot);
             this.expectContextual("exports");
@@ -404,25 +387,19 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             return this.finishNode(node, "DeclareModuleExports");
         }
 
-        flowParseDeclareTypeAlias(
-            node: N.FlowDeclareTypeAlias,
-        ): N.FlowDeclareTypeAlias {
+        flowParseDeclareTypeAlias(node) {
             this.next();
             this.flowParseTypeAlias(node);
             return this.finishNode(node, "DeclareTypeAlias");
         }
 
-        flowParseDeclareOpaqueType(
-            node: N.FlowDeclareOpaqueType,
-        ): N.FlowDeclareOpaqueType {
+        flowParseDeclareOpaqueType(node) {
             this.next();
             this.flowParseOpaqueType(node, true);
             return this.finishNode(node, "DeclareOpaqueType");
         }
 
-        flowParseDeclareInterface(
-            node: N.FlowDeclareInterface,
-        ): N.FlowDeclareInterface {
+        flowParseDeclareInterface(node) {
             this.next();
             this.flowParseInterfaceish(node);
             return this.finishNode(node, "DeclareInterface");
@@ -430,10 +407,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
 
         // Interfaces
 
-        flowParseInterfaceish(
-            node: N.FlowDeclare,
-            isClass?: boolean = false,
-        ): void {
+        flowParseInterfaceish(node, isClass) {
             node.id = this.flowParseRestrictedIdentifier(/*liberal*/ !isClass);
 
             if (this.isRelational("<")) {
@@ -469,7 +443,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             node.body = this.flowParseObjectType(isClass, false, false, isClass);
         }
 
-        flowParseInterfaceExtends(): N.FlowInterfaceExtends {
+        flowParseInterfaceExtends() {
             const node = this.startNode();
 
             node.id = this.flowParseQualifiedTypeIdentifier();
@@ -482,25 +456,25 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             return this.finishNode(node, "InterfaceExtends");
         }
 
-        flowParseInterface(node: N.FlowInterface): N.FlowInterface {
+        flowParseInterface(node) {
             this.flowParseInterfaceish(node);
             return this.finishNode(node, "InterfaceDeclaration");
         }
 
-        checkReservedType(word: string, startLoc: number) {
+        checkReservedType(word, startLoc) {
             if (primitiveTypes.indexOf(word) > -1) {
                 this.raise(startLoc, `Cannot overwrite primitive type ${word}`);
             }
         }
 
-        flowParseRestrictedIdentifier(liberal?: boolean): N.Identifier {
+        flowParseRestrictedIdentifier(liberal) {
             this.checkReservedType(this.state.value, this.state.start);
             return this.parseIdentifier(liberal);
         }
 
         // Type aliases
 
-        flowParseTypeAlias(node: N.FlowTypeAlias): N.FlowTypeAlias {
+        flowParseTypeAlias(node) {
             node.id = this.flowParseRestrictedIdentifier();
 
             if (this.isRelational("<")) {
@@ -516,9 +490,9 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         }
 
         flowParseOpaqueType(
-            node: N.FlowOpaqueType,
-            declare: boolean,
-        ): N.FlowOpaqueType {
+            node,
+            declare,
+        ) {
             this.expectContextual("type");
             node.id = this.flowParseRestrictedIdentifier(/*liberal*/ true);
 
@@ -546,9 +520,9 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         // Type annotations
 
         flowParseTypeParameter(
-            allowDefault?: boolean = true,
-            requireDefault?: boolean = false,
-        ): N.TypeParameter {
+            allowDefault,
+            requireDefault,
+        ) {
             if (!allowDefault && requireDefault) {
                 throw new Error(
                     "Cannot disallow a default value (`allowDefault`) while also requiring it (`requireDefault`).",
@@ -586,9 +560,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             return this.finishNode(node, "TypeParameter");
         }
 
-        flowParseTypeParameterDeclaration(
-            allowDefault?: boolean = true,
-        ): N.TypeParameterDeclaration {
+        flowParseTypeParameterDeclaration(allowDefault) {
             const oldInType = this.state.inType;
             const node = this.startNode();
             node.params = [];
@@ -627,7 +599,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             return this.finishNode(node, "TypeParameterDeclaration");
         }
 
-        flowParseTypeParameterInstantiation(): N.TypeParameterInstantiation {
+        flowParseTypeParameterInstantiation() {
             const node = this.startNode();
             const oldInType = this.state.inType;
             node.params = [];
@@ -648,7 +620,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             return this.finishNode(node, "TypeParameterInstantiation");
         }
 
-        flowParseInterfaceType(): N.FlowInterfaceType {
+        flowParseInterfaceType() {
             const node = this.startNode();
             this.expectContextual("interface");
 
@@ -664,17 +636,13 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             return this.finishNode(node, "InterfaceTypeAnnotation");
         }
 
-        flowParseObjectPropertyKey(): N.Expression {
+        flowParseObjectPropertyKey() {
             return this.match(tt.num) || this.match(tt.string)
                 ? this.parseExprAtom()
                 : this.parseIdentifier(true);
         }
 
-        flowParseObjectTypeIndexer(
-            node: N.FlowObjectTypeIndexer,
-            isStatic: boolean,
-            variance: ?N.FlowVariance,
-        ): N.FlowObjectTypeIndexer {
+        flowParseObjectTypeIndexer(node, isStatic, variance) {
             node.static = isStatic;
 
             // Note: bracketL has already been consumed
@@ -693,9 +661,9 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         }
 
         flowParseObjectTypeInternalSlot(
-            node: N.FlowObjectTypeInternalSlot,
-            isStatic: boolean,
-        ): N.FlowObjectTypeInternalSlot {
+            node,
+            isStatic,
+        ) {
             node.static = isStatic;
             // Note: both bracketL have already been consumed
             node.id = this.flowParseObjectPropertyKey();
@@ -717,16 +685,14 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             return this.finishNode(node, "ObjectTypeInternalSlot");
         }
 
-        flowParseObjectTypeMethodish(
-            node: N.FlowFunctionTypeAnnotation,
-        ): N.FlowFunctionTypeAnnotation {
+        flowParseObjectTypeMethodish(node) {
             node.params = [];
             node.rest = null;
             node.typeParameters = null;
 
             if (this.isRelational("<")) {
                 node.typeParameters = this.flowParseTypeParameterDeclaration(
-          /* allowDefault */ false,
+                    /* allowDefault */ false,
                 );
             }
 
@@ -748,9 +714,9 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         }
 
         flowParseObjectTypeCallProperty(
-            node: N.FlowObjectTypeCallProperty,
-            isStatic: boolean,
-        ): N.FlowObjectTypeCallProperty {
+            node,
+            isStatic,
+        ) {
             const valueNode = this.startNode();
             node.static = isStatic;
             node.value = this.flowParseObjectTypeMethodish(valueNode);
@@ -758,11 +724,11 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         }
 
         flowParseObjectType(
-            allowStatic: boolean,
-            allowExact: boolean,
-            allowSpread: boolean,
-            allowProto: boolean,
-        ): N.FlowObjectTypeAnnotation {
+            allowStatic,
+            allowExact,
+            allowSpread,
+            allowProto,
+        ) {
             const oldInType = this.state.inType;
             this.state.inType = true;
 
@@ -789,7 +755,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
 
             while (!this.match(endDelim)) {
                 let isStatic = false;
-                let protoStart: ?number = null;
+                let protoStart = null;
                 const node = this.startNode();
 
                 if (allowProto && this.isContextual("proto")) {
@@ -815,7 +781,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
                 const variance = this.flowParseVariance();
 
                 if (this.eat(tt.bracketL)) {
-                    if (protoStart != null) {
+                    if (!is.nil(protoStart)) {
                         this.unexpected(protoStart);
                     }
                     if (this.eat(tt.bracketL)) {
@@ -831,7 +797,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
                         );
                     }
                 } else if (this.match(tt.parenL) || this.isRelational("<")) {
-                    if (protoStart != null) {
+                    if (!is.nil(protoStart)) {
                         this.unexpected(protoStart);
                     }
                     if (variance) {
@@ -880,13 +846,13 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         }
 
         flowParseObjectTypeProperty(
-            node: N.FlowObjectTypeProperty | N.FlowObjectTypeSpreadProperty,
-            isStatic: boolean,
-            protoStart: ?number,
-            variance: ?N.FlowVariance,
-            kind: string,
-            allowSpread: boolean,
-        ): N.FlowObjectTypeProperty | N.FlowObjectTypeSpreadProperty {
+            node,
+            isStatic,
+            protoStart,
+            variance,
+            kind,
+            allowSpread,
+        ) {
             if (this.match(tt.ellipsis)) {
                 if (!allowSpread) {
                     this.unexpected(
@@ -894,7 +860,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
                         "Spread operator cannot appear in class or interface definitions",
                     );
                 }
-                if (protoStart != null) {
+                if (!is.nil(protoStart)) {
                     this.unexpected(protoStart);
                 }
                 if (variance) {
@@ -907,53 +873,55 @@ export default (superClass: Class<Parser>): Class<Parser> =>
                 node.argument = this.flowParseType();
 
                 return this.finishNode(node, "ObjectTypeSpreadProperty");
-            } else {
-                node.key = this.flowParseObjectPropertyKey();
-                node.static = isStatic;
-                node.proto = protoStart != null;
-                node.kind = kind;
+            }
+            node.key = this.flowParseObjectPropertyKey();
+            node.static = isStatic;
+            node.proto = !is.nil(protoStart);
+            node.kind = kind;
 
-                let optional = false;
-                if (this.isRelational("<") || this.match(tt.parenL)) {
-                    // This is a method property
-                    node.method = true;
+            let optional = false;
+            if (this.isRelational("<") || this.match(tt.parenL)) {
+                // This is a method property
+                node.method = true;
 
-                    if (protoStart != null) {
-                        this.unexpected(protoStart);
-                    }
-                    if (variance) {
-                        this.unexpected(variance.start);
-                    }
-
-                    node.value = this.flowParseObjectTypeMethodish(
-                        this.startNodeAt(node.start, node.loc.start),
-                    );
-                    if (kind === "get" || kind === "set") {
-                        this.flowCheckGetterSetterParams(node);
-                    }
-                } else {
-                    if (kind !== "init") this.unexpected();
-
-                    node.method = false;
-
-                    if (this.eat(tt.question)) {
-                        optional = true;
-                    }
-                    node.value = this.flowParseTypeInitialiser();
-                    node.variance = variance;
+                if (!is.nil(protoStart)) {
+                    this.unexpected(protoStart);
+                }
+                if (variance) {
+                    this.unexpected(variance.start);
                 }
 
-                node.optional = optional;
+                node.value = this.flowParseObjectTypeMethodish(
+                    this.startNodeAt(node.start, node.loc.start),
+                );
+                if (kind === "get" || kind === "set") {
+                    this.flowCheckGetterSetterParams(node);
+                }
+            } else {
+                if (kind !== "init") {
+                    this.unexpected();
+                }
 
-                return this.finishNode(node, "ObjectTypeProperty");
+                node.method = false;
+
+                if (this.eat(tt.question)) {
+                    optional = true;
+                }
+                node.value = this.flowParseTypeInitialiser();
+                node.variance = variance;
             }
+
+            node.optional = optional;
+
+            return this.finishNode(node, "ObjectTypeProperty");
+
         }
 
         // This is similar to checkGetterSetterParams, but as
         // @babel/parser uses non estree properties we cannot reuse it here
         flowCheckGetterSetterParams(
-            property: N.FlowObjectTypeProperty | N.FlowObjectTypeSpreadProperty,
-        ): void {
+            property,
+        ) {
             const paramCount = property.kind === "get" ? 0 : 1;
             const start = property.start;
             const length =
@@ -974,7 +942,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             }
         }
 
-        flowObjectTypeSemicolon(): void {
+        flowObjectTypeSemicolon() {
             if (
                 !this.eat(tt.semi) &&
                 !this.eat(tt.comma) &&
@@ -986,10 +954,10 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         }
 
         flowParseQualifiedTypeIdentifier(
-            startPos?: number,
-            startLoc?: Position,
-            id?: N.Identifier,
-        ): N.FlowQualifiedTypeIdentifier {
+            startPos,
+            startLoc,
+            id,
+        ) {
             startPos = startPos || this.state.start;
             startLoc = startLoc || this.state.startLoc;
             let node = id || this.parseIdentifier();
@@ -1005,10 +973,10 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         }
 
         flowParseGenericType(
-            startPos: number,
-            startLoc: Position,
-            id: N.Identifier,
-        ): N.FlowGenericTypeAnnotation {
+            startPos,
+            startLoc,
+            id,
+        ) {
             const node = this.startNodeAt(startPos, startLoc);
 
             node.typeParameters = null;
@@ -1021,28 +989,30 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             return this.finishNode(node, "GenericTypeAnnotation");
         }
 
-        flowParseTypeofType(): N.FlowTypeofTypeAnnotation {
+        flowParseTypeofType() {
             const node = this.startNode();
             this.expect(tt._typeof);
             node.argument = this.flowParsePrimaryType();
             return this.finishNode(node, "TypeofTypeAnnotation");
         }
 
-        flowParseTupleType(): N.FlowTupleTypeAnnotation {
+        flowParseTupleType() {
             const node = this.startNode();
             node.types = [];
             this.expect(tt.bracketL);
             // We allow trailing commas
             while (this.state.pos < this.input.length && !this.match(tt.bracketR)) {
                 node.types.push(this.flowParseType());
-                if (this.match(tt.bracketR)) break;
+                if (this.match(tt.bracketR)) {
+                    break;
+                }
                 this.expect(tt.comma);
             }
             this.expect(tt.bracketR);
             return this.finishNode(node, "TupleTypeAnnotation");
         }
 
-        flowParseFunctionTypeParam(): N.FlowFunctionTypeParam {
+        flowParseFunctionTypeParam() {
             let name = null;
             let optional = false;
             let typeAnnotation = null;
@@ -1064,8 +1034,8 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         }
 
         reinterpretTypeAsFunctionTypeParam(
-            type: N.FlowType,
-        ): N.FlowFunctionTypeParam {
+            type,
+        ) {
             const node = this.startNodeAt(type.start, type.loc.start);
             node.name = null;
             node.optional = false;
@@ -1074,9 +1044,9 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         }
 
         flowParseFunctionTypeParams(
-            params: N.FlowFunctionTypeParam[] = [],
-        ): { params: N.FlowFunctionTypeParam[], rest: ?N.FlowFunctionTypeParam } {
-            let rest: ?N.FlowFunctionTypeParam = null;
+            params = [],
+        ) {
+            let rest = null;
             while (!this.match(tt.parenR) && !this.match(tt.ellipsis)) {
                 params.push(this.flowParseFunctionTypeParam());
                 if (!this.match(tt.parenR)) {
@@ -1090,11 +1060,11 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         }
 
         flowIdentToTypeAnnotation(
-            startPos: number,
-            startLoc: Position,
-            node: N.FlowTypeAnnotation,
-            id: N.Identifier,
-        ): N.FlowTypeAnnotation {
+            startPos,
+            startLoc,
+            node,
+            id,
+        ) {
             switch (id.name) {
                 case "any":
                     return this.finishNode(node, "AnyTypeAnnotation");
@@ -1126,7 +1096,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         // The parsing of types roughly parallels the parsing of expressions, and
         // primary types are kind of like primary expressions...they're the
         // primitives with which other types are constructed.
-        flowParsePrimaryType(): N.FlowTypeAnnotation {
+        flowParsePrimaryType() {
             const startPos = this.state.start;
             const startLoc = this.state.startLoc;
             const node = this.startNode();
@@ -1160,7 +1130,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
                 case tt.relational:
                     if (this.state.value === "<") {
                         node.typeParameters = this.flowParseTypeParameterDeclaration(
-              /* allowDefault */ false,
+                            /* allowDefault */ false,
                         );
                         this.expect(tt.parenL);
                         tmp = this.flowParseFunctionTypeParams();
@@ -1204,15 +1174,15 @@ export default (superClass: Class<Parser>): Class<Parser> =>
                         ) {
                             this.expect(tt.parenR);
                             return type;
-                        } else {
-                            // Eat a comma if there is one
-                            this.eat(tt.comma);
                         }
+                        // Eat a comma if there is one
+                        this.eat(tt.comma);
+
                     }
 
                     if (type) {
                         tmp = this.flowParseFunctionTypeParams([
-                            this.reinterpretTypeAsFunctionTypeParam(type),
+                            this.reinterpretTypeAsFunctionTypeParam(type)
                         ]);
                     } else {
                         tmp = this.flowParseFunctionTypeParams();
@@ -1247,7 +1217,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
                     if (this.state.value === "-") {
                         this.next();
                         if (!this.match(tt.num)) {
-                            this.unexpected(null, `Unexpected token, expected "number"`);
+                            this.unexpected(null, "Unexpected token, expected \"number\"");
                         }
 
                         return this.parseLiteral(
@@ -1286,9 +1256,11 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             throw this.unexpected();
         }
 
-        flowParsePostfixType(): N.FlowTypeAnnotation {
-            const startPos = this.state.start,
-                startLoc = this.state.startLoc;
+        flowParsePostfixType() {
+            const startPos = this.state.start;
+
+
+            const startLoc = this.state.startLoc;
             let type = this.flowParsePrimaryType();
             while (!this.canInsertSemicolon() && this.match(tt.bracketL)) {
                 const node = this.startNodeAt(startPos, startLoc);
@@ -1300,17 +1272,17 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             return type;
         }
 
-        flowParsePrefixType(): N.FlowTypeAnnotation {
+        flowParsePrefixType() {
             const node = this.startNode();
             if (this.eat(tt.question)) {
                 node.typeAnnotation = this.flowParsePrefixType();
                 return this.finishNode(node, "NullableTypeAnnotation");
-            } else {
-                return this.flowParsePostfixType();
             }
+            return this.flowParsePostfixType();
+
         }
 
-        flowParseAnonFunctionWithoutParens(): N.FlowTypeAnnotation {
+        flowParseAnonFunctionWithoutParens() {
             const param = this.flowParsePrefixType();
             if (!this.state.noAnonFunctionType && this.eat(tt.arrow)) {
                 // TODO: This should be a type error. Passing in a SourceLocation, and it expects a Position.
@@ -1324,7 +1296,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             return param;
         }
 
-        flowParseIntersectionType(): N.FlowTypeAnnotation {
+        flowParseIntersectionType() {
             const node = this.startNode();
             this.eat(tt.bitwiseAND);
             const type = this.flowParseAnonFunctionWithoutParens();
@@ -1337,7 +1309,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
                 : this.finishNode(node, "IntersectionTypeAnnotation");
         }
 
-        flowParseUnionType(): N.FlowTypeAnnotation {
+        flowParseUnionType() {
             const node = this.startNode();
             this.eat(tt.bitwiseOR);
             const type = this.flowParseIntersectionType();
@@ -1350,7 +1322,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
                 : this.finishNode(node, "UnionTypeAnnotation");
         }
 
-        flowParseType(): N.FlowTypeAnnotation {
+        flowParseType() {
             const oldInType = this.state.inType;
             this.state.inType = true;
             const type = this.flowParseUnionType();
@@ -1362,15 +1334,15 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             return type;
         }
 
-        flowParseTypeAnnotation(): N.FlowTypeAnnotation {
+        flowParseTypeAnnotation() {
             const node = this.startNode();
             node.typeAnnotation = this.flowParseTypeInitialiser();
             return this.finishNode(node, "TypeAnnotation");
         }
 
         flowParseTypeAnnotatableIdentifier(
-            allowPrimitiveOverride?: boolean,
-        ): N.Identifier {
+            allowPrimitiveOverride,
+        ) {
             const ident = allowPrimitiveOverride
                 ? this.parseIdentifier()
                 : this.flowParseRestrictedIdentifier();
@@ -1381,7 +1353,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             return ident;
         }
 
-        typeCastToParameter(node: N.Node): N.Node {
+        typeCastToParameter(node) {
             node.expression.typeAnnotation = node.typeAnnotation;
 
             return this.finishNodeAt(
@@ -1392,7 +1364,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             );
         }
 
-        flowParseVariance(): ?N.FlowVariance {
+        flowParseVariance() {
             let variance = null;
             if (this.match(tt.plusMin)) {
                 variance = this.startNode();
@@ -1411,7 +1383,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         // Overrides
         // ==================================
 
-        parseFunctionBody(node: N.Function, allowExpressionBody: ?boolean): void {
+        parseFunctionBody(node, allowExpressionBody) {
             if (allowExpressionBody) {
                 return this.forwardNoArrowParamsConversionAt(node, () =>
                     super.parseFunctionBody(node, true),
@@ -1422,10 +1394,10 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         }
 
         parseFunctionBodyAndFinish(
-            node: N.BodilessFunctionOrMethodBase,
-            type: string,
-            allowExpressionBody?: boolean,
-        ): void {
+            node,
+            type,
+            allowExpressionBody,
+        ) {
             // For arrow functions, `parseArrow` handles the return type itself.
             if (!allowExpressionBody && this.match(tt.colon)) {
                 const typeNode = this.startNode();
@@ -1434,7 +1406,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
                     // $FlowFixMe (destructuring not supported yet)
                     typeNode.typeAnnotation,
                     // $FlowFixMe (destructuring not supported yet)
-                    node.predicate,
+                    node.predicate
                 ] = this.flowParseTypeAndPredicateInitialiser();
 
                 node.returnType = typeNode.typeAnnotation
@@ -1446,7 +1418,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         }
 
         // interfaces
-        parseStatement(declaration: boolean, topLevel?: boolean): N.Statement {
+        parseStatement(declaration, topLevel) {
             // strict mode handling of `interface` since it's a reserved word
             if (
                 this.state.strict &&
@@ -1456,21 +1428,18 @@ export default (superClass: Class<Parser>): Class<Parser> =>
                 const node = this.startNode();
                 this.next();
                 return this.flowParseInterface(node);
-            } else {
-                const stmt = super.parseStatement(declaration, topLevel);
-                // We will parse a flow pragma in any comment before the first statement.
-                if (this.flowPragma === undefined && !this.isValidDirective(stmt)) {
-                    this.flowPragma = null;
-                }
-                return stmt;
             }
+            const stmt = super.parseStatement(declaration, topLevel);
+            // We will parse a flow pragma in any comment before the first statement.
+            if (is.undefined(this.flowPragma) && !this.isValidDirective(stmt)) {
+                this.flowPragma = null;
+            }
+            return stmt;
+
         }
 
         // declares, interfaces and type aliases
-        parseExpressionStatement(
-            node: N.ExpressionStatement,
-            expr: N.Expression,
-        ): N.ExpressionStatement {
+        parseExpressionStatement(node, expr) {
             if (expr.type === "Identifier") {
                 if (expr.name === "declare") {
                     if (
@@ -1497,7 +1466,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         }
 
         // export type
-        shouldParseExportDeclaration(): boolean {
+        shouldParseExportDeclaration() {
             return (
                 this.isContextual("type") ||
                 this.isContextual("interface") ||
@@ -1506,12 +1475,12 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             );
         }
 
-        isExportDefaultSpecifier(): boolean {
+        isExportDefaultSpecifier() {
             if (
                 this.match(tt.name) &&
                 (this.state.value === "type" ||
                     this.state.value === "interface" ||
-                    this.state.value == "opaque")
+                    this.state.value === "opaque")
             ) {
                 return false;
             }
@@ -1520,13 +1489,15 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         }
 
         parseConditional(
-            expr: N.Expression,
-            noIn: ?boolean,
-            startPos: number,
-            startLoc: Position,
-            refNeedsArrowPos?: ?Pos,
-        ): N.Expression {
-            if (!this.match(tt.question)) return expr;
+            expr,
+            noIn,
+            startPos,
+            startLoc,
+            refNeedsArrowPos,
+        ) {
+            if (!this.match(tt.question)) {
+                return expr;
+            }
 
             // only do the expensive clone if there is a question mark
             // and if we come from inside parens
@@ -1539,10 +1510,10 @@ export default (superClass: Class<Parser>): Class<Parser> =>
                         this.state = state;
                         refNeedsArrowPos.start = err.pos || this.state.start;
                         return expr;
-                    } else {
-                        // istanbul ignore next: no such error is expected
-                        throw err;
                     }
+                    // istanbul ignore next: no such error is expected
+                    throw err;
+
                 }
             }
             this.expect(tt.question);
@@ -1600,14 +1571,11 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             return this.finishNode(node, "ConditionalExpression");
         }
 
-        tryParseConditionalConsequent(): {
-            consequent: N.Expression,
-            failed: boolean,
-        } {
+        tryParseConditionalConsequent(consequent, failed) {
             this.state.noArrowParamsConversionAt.push(this.state.start);
 
-            const consequent = this.parseMaybeAssign();
-            const failed = !this.match(tt.colon);
+            consequent = this.parseMaybeAssign();
+            failed = !this.match(tt.colon);
 
             this.state.noArrowParamsConversionAt.pop();
 
@@ -1622,11 +1590,11 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         // whose parameters can be converted to assignable lists, one containing the
         // others.
         getArrowLikeExpressions(
-            node: N.Expression,
-            disallowInvalid?: boolean,
-        ): [N.ArrowFunctionExpression[], N.ArrowFunctionExpression[]] {
+            node,
+            disallowInvalid,
+        ) {
             const stack = [node];
-            const arrows: N.ArrowFunctionExpression[] = [];
+            const arrows = [];
 
             while (stack.length !== 0) {
                 const node = stack.pop();
@@ -1636,10 +1604,10 @@ export default (superClass: Class<Parser>): Class<Parser> =>
                         this.toAssignableList(
                             // node.params is Expression[] instead of $ReadOnlyArray<Pattern> because it
                             // has not been converted yet.
-                            ((node.params: any): N.Expression[]),
-                        true,
+                            node.params,
+                            true,
                             "arrow function parameters",
-            );
+                        );
                         // Use super's method to force the parameters to be checked
                         super.checkFunctionNameAndParams(node, true);
                     } else {
@@ -1655,982 +1623,988 @@ export default (superClass: Class<Parser>): Class<Parser> =>
             if (disallowInvalid) {
                 for (let i = 0; i < arrows.length; i++) {
                     this.toAssignableList(
-                        ((node.params: any): N.Expression[]),
-                    true,
+                        node.params,
+                        true,
                         "arrow function parameters",
-          );
+                    );
                 }
                 return [arrows, []];
             }
 
-            return partition(arrows, node => {
+            return partition(arrows, (node) => {
                 try {
                     this.toAssignableList(
-                        ((node.params: any): N.Expression[]),
-                true,
-                "arrow function parameters",
-          );
-            return true;
-        } catch(err) {
-            return false;
+                        node.params,
+                        true,
+                        "arrow function parameters",
+                    );
+                    return true;
+                } catch (err) {
+                    return false;
+                }
+            });
         }
-    });
-    }
 
-forwardNoArrowParamsConversionAt<T>(node: N.Node, parse: () => T): T {
-    let result: T;
-    if (this.state.noArrowParamsConversionAt.indexOf(node.start) !== -1) {
-        this.state.noArrowParamsConversionAt.push(this.state.start);
-        result = parse();
-        this.state.noArrowParamsConversionAt.pop();
-    } else {
-        result = parse();
-    }
+        forwardNoArrowParamsConversionAt(node, parse) {
+            let result;
+            if (this.state.noArrowParamsConversionAt.includes(node.start)) {
+                this.state.noArrowParamsConversionAt.push(this.state.start);
+                result = parse();
+                this.state.noArrowParamsConversionAt.pop();
+            } else {
+                result = parse();
+            }
 
-    return result;
-}
-
-parseParenItem(
-    node: N.Expression,
-    startPos: number,
-    startLoc: Position,
-): N.Expression {
-    node = super.parseParenItem(node, startPos, startLoc);
-    if (this.eat(tt.question)) {
-        node.optional = true;
-    }
-
-    if (this.match(tt.colon)) {
-        const typeCastNode = this.startNodeAt(startPos, startLoc);
-        typeCastNode.expression = node;
-        typeCastNode.typeAnnotation = this.flowParseTypeAnnotation();
-
-        return this.finishNode(typeCastNode, "TypeCastExpression");
-    }
-
-    return node;
-}
-
-assertModuleNodeAllowed(node: N.Node) {
-    if (
-        (node.type === "ImportDeclaration" &&
-            (node.importKind === "type" || node.importKind === "typeof")) ||
-        (node.type === "ExportNamedDeclaration" &&
-            node.exportKind === "type") ||
-        (node.type === "ExportAllDeclaration" && node.exportKind === "type")
-    ) {
-        // Allow Flowtype imports and exports in all conditions because
-        // Flow itself does not care about 'sourceType'.
-        return;
-    }
-
-    super.assertModuleNodeAllowed(node);
-}
-
-parseExport(node: N.ExportNamedDeclaration): N.ExportNamedDeclaration {
-    node = super.parseExport(node);
-    if (
-        node.type === "ExportNamedDeclaration" ||
-        node.type === "ExportAllDeclaration"
-    ) {
-        node.exportKind = node.exportKind || "value";
-    }
-    return node;
-}
-
-parseExportDeclaration(node: N.ExportNamedDeclaration): ?N.Declaration {
-    if (this.isContextual("type")) {
-        node.exportKind = "type";
-
-        const declarationNode = this.startNode();
-        this.next();
-
-        if (this.match(tt.braceL)) {
-            // export type { foo, bar };
-            node.specifiers = this.parseExportSpecifiers();
-            this.parseExportFrom(node);
-            return null;
-        } else {
-            // export type Foo = Bar;
-            return this.flowParseTypeAlias(declarationNode);
+            return result;
         }
-    } else if (this.isContextual("opaque")) {
-        node.exportKind = "type";
 
-        const declarationNode = this.startNode();
-        this.next();
-        // export opaque type Foo = Bar;
-        return this.flowParseOpaqueType(declarationNode, false);
-    } else if (this.isContextual("interface")) {
-        node.exportKind = "type";
-        const declarationNode = this.startNode();
-        this.next();
-        return this.flowParseInterface(declarationNode);
-    } else {
-        return super.parseExportDeclaration(node);
-    }
-}
+        parseParenItem(
+            node,
+            startPos,
+            startLoc,
+        ) {
+            node = super.parseParenItem(node, startPos, startLoc);
+            if (this.eat(tt.question)) {
+                node.optional = true;
+            }
 
-shouldParseExportStar(): boolean {
-    return (
-        super.shouldParseExportStar() ||
-        (this.isContextual("type") && this.lookahead().type === tt.star)
-    );
-}
+            if (this.match(tt.colon)) {
+                const typeCastNode = this.startNodeAt(startPos, startLoc);
+                typeCastNode.expression = node;
+                typeCastNode.typeAnnotation = this.flowParseTypeAnnotation();
 
-parseExportStar(node: N.ExportNamedDeclaration): void {
-    if(this.eatContextual("type")) {
-    node.exportKind = "type";
-}
+                return this.finishNode(typeCastNode, "TypeCastExpression");
+            }
 
-return super.parseExportStar(node);
-    }
-
-parseExportNamespace(node: N.ExportNamedDeclaration) {
-    if (node.exportKind === "type") {
-        this.unexpected();
-    }
-
-    return super.parseExportNamespace(node);
-}
-
-parseClassId(node: N.Class, isStatement: boolean, optionalId: ?boolean) {
-    super.parseClassId(node, isStatement, optionalId);
-    if (this.isRelational("<")) {
-        node.typeParameters = this.flowParseTypeParameterDeclaration();
-    }
-}
-
-// don't consider `void` to be a keyword as then it'll use the void token type
-// and set startExpr
-isKeyword(name: string): boolean {
-    if (this.state.inType && name === "void") {
-        return false;
-    } else {
-        return super.isKeyword(name);
-    }
-}
-
-// ensure that inside flow types, we bypass the jsx parser plugin
-readToken(code: number): void {
-    const next = this.input.charCodeAt(this.state.pos + 1);
-    if(
-        this.state.inType &&
-    (code === charCodes.greaterThan || code === charCodes.lessThan)
-      ) {
-    return this.finishOp(tt.relational, 1);
-} else if (isIteratorStart(code, next)) {
-    this.state.isIterator = true;
-    return super.readWord();
-} else {
-    return super.readToken(code);
-}
-    }
-
-toAssignable(
-    node: N.Node,
-    isBinding: ?boolean,
-    contextDescription: string,
-): N.Node {
-    if (node.type === "TypeCastExpression") {
-        return super.toAssignable(
-            this.typeCastToParameter(node),
-            isBinding,
-            contextDescription,
-        );
-    } else {
-        return super.toAssignable(node, isBinding, contextDescription);
-    }
-}
-
-// turn type casts that we found in function parameter head into type annotated params
-toAssignableList(
-    exprList: N.Expression[],
-    isBinding: ?boolean,
-    contextDescription: string,
-): $ReadOnlyArray < N.Pattern > {
-    for(let i = 0; i <exprList.length; i++) {
-    const expr = exprList[i];
-    if (expr && expr.type === "TypeCastExpression") {
-        exprList[i] = this.typeCastToParameter(expr);
-    }
-}
-return super.toAssignableList(exprList, isBinding, contextDescription);
-    }
-
-// this is a list of nodes, from something like a call expression, we need to filter the
-// type casts that we've found that are illegal in this context
-toReferencedList(
-    exprList: $ReadOnlyArray <? N.Expression >,
-): $ReadOnlyArray <? N.Expression > {
-    for(let i = 0; i <exprList.length; i++) {
-    const expr = exprList[i];
-    if (expr && expr._exprListItem && expr.type === "TypeCastExpression") {
-        this.raise(expr.start, "Unexpected type cast");
-    }
-}
-
-return exprList;
-    }
-
-// parse an item inside a expression list eg. `(NODE, NODE)` where NODE represents
-// the position where this function is called
-parseExprListItem(
-    allowEmpty: ?boolean,
-    refShorthandDefaultPos: ?Pos,
-    refNeedsArrowPos: ?Pos,
-): ?N.Expression {
-    const container = this.startNode();
-    const node = super.parseExprListItem(
-        allowEmpty,
-        refShorthandDefaultPos,
-        refNeedsArrowPos,
-    );
-    if (this.match(tt.colon)) {
-        container._exprListItem = true;
-        container.expression = node;
-        container.typeAnnotation = this.flowParseTypeAnnotation();
-        return this.finishNode(container, "TypeCastExpression");
-    } else {
-        return node;
-    }
-}
-
-checkLVal(
-    expr: N.Expression,
-    isBinding: ?boolean,
-    checkClashes: ?{ [key: string]: boolean },
-    contextDescription: string,
-): void {
-    if(expr.type !== "TypeCastExpression") {
-    return super.checkLVal(
-        expr,
-        isBinding,
-        checkClashes,
-        contextDescription,
-    );
-}
-    }
-
-// parse class property type annotations
-parseClassProperty(node: N.ClassProperty): N.ClassProperty {
-    if (this.match(tt.colon)) {
-        node.typeAnnotation = this.flowParseTypeAnnotation();
-    }
-    return super.parseClassProperty(node);
-}
-
-parseClassPrivateProperty(
-    node: N.ClassPrivateProperty,
-): N.ClassPrivateProperty {
-    if (this.match(tt.colon)) {
-        node.typeAnnotation = this.flowParseTypeAnnotation();
-    }
-    return super.parseClassPrivateProperty(node);
-}
-
-// determine whether or not we're currently in the position where a class method would appear
-isClassMethod(): boolean {
-    return this.isRelational("<") || super.isClassMethod();
-}
-
-// determine whether or not we're currently in the position where a class property would appear
-isClassProperty(): boolean {
-    return this.match(tt.colon) || super.isClassProperty();
-}
-
-isNonstaticConstructor(method: N.ClassMethod | N.ClassProperty): boolean {
-    return !this.match(tt.colon) && super.isNonstaticConstructor(method);
-}
-
-// parse type parameters for class methods
-pushClassMethod(
-    classBody: N.ClassBody,
-    method: N.ClassMethod,
-    isGenerator: boolean,
-    isAsync: boolean,
-    isConstructor: boolean,
-): void {
-    if((method: $FlowFixMe).variance) {
-    this.unexpected((method: $FlowFixMe).variance.start);
-}
-delete (method: $FlowFixMe).variance;
-if (this.isRelational("<")) {
-    method.typeParameters = this.flowParseTypeParameterDeclaration(
-          /* allowDefault */ false,
-    );
-}
-
-super.pushClassMethod(
-    classBody,
-    method,
-    isGenerator,
-    isAsync,
-    isConstructor,
-);
-    }
-
-pushClassPrivateMethod(
-    classBody: N.ClassBody,
-    method: N.ClassPrivateMethod,
-    isGenerator: boolean,
-    isAsync: boolean,
-): void {
-    if((method: $FlowFixMe).variance) {
-    this.unexpected((method: $FlowFixMe).variance.start);
-}
-delete (method: $FlowFixMe).variance;
-if (this.isRelational("<")) {
-    method.typeParameters = this.flowParseTypeParameterDeclaration();
-}
-
-super.pushClassPrivateMethod(classBody, method, isGenerator, isAsync);
-    }
-
-// parse a the super class type parameters and implements
-parseClassSuper(node: N.Class): void {
-    super.parseClassSuper(node);
-    if(node.superClass && this.isRelational("<")) {
-    node.superTypeParameters = this.flowParseTypeParameterInstantiation();
-}
-if (this.isContextual("implements")) {
-    this.next();
-    const implemented: N.FlowClassImplements[] = (node.implements = []);
-    do {
-        const node = this.startNode();
-        node.id = this.flowParseRestrictedIdentifier(/*liberal*/ true);
-        if (this.isRelational("<")) {
-            node.typeParameters = this.flowParseTypeParameterInstantiation();
-        } else {
-            node.typeParameters = null;
+            return node;
         }
-        implemented.push(this.finishNode(node, "ClassImplements"));
-    } while (this.eat(tt.comma));
-}
-    }
 
-parsePropertyName(
-    node: N.ObjectOrClassMember | N.ClassMember | N.TsNamedTypeElementBase,
-): N.Identifier {
-    const variance = this.flowParseVariance();
-    const key = super.parsePropertyName(node);
-    // $FlowIgnore ("variance" not defined on TsNamedTypeElementBase)
-    node.variance = variance;
-    return key;
-}
+        assertModuleNodeAllowed(node) {
+            if (
+                (node.type === "ImportDeclaration" &&
+                    (node.importKind === "type" || node.importKind === "typeof")) ||
+                (node.type === "ExportNamedDeclaration" &&
+                    node.exportKind === "type") ||
+                (node.type === "ExportAllDeclaration" && node.exportKind === "type")
+            ) {
+                // Allow Flowtype imports and exports in all conditions because
+                // Flow itself does not care about 'sourceType'.
+                return;
+            }
 
-// parse type parameters for object method shorthand
-parseObjPropValue(
-    prop: N.ObjectMember,
-    startPos: ?number,
-    startLoc: ?Position,
-    isGenerator: boolean,
-    isAsync: boolean,
-    isPattern: boolean,
-    refShorthandDefaultPos: ?Pos,
-    containsEsc: boolean,
-): void {
-    if((prop: $FlowFixMe).variance) {
-    this.unexpected((prop: $FlowFixMe).variance.start);
-}
-delete (prop: $FlowFixMe).variance;
+            super.assertModuleNodeAllowed(node);
+        }
 
-let typeParameters;
+        parseExport(node) {
+            node = super.parseExport(node);
+            if (
+                node.type === "ExportNamedDeclaration" ||
+                node.type === "ExportAllDeclaration"
+            ) {
+                node.exportKind = node.exportKind || "value";
+            }
+            return node;
+        }
 
-// method shorthand
-if (this.isRelational("<")) {
-    typeParameters = this.flowParseTypeParameterDeclaration(
-          /* allowDefault */ false,
-    );
-    if (!this.match(tt.parenL)) this.unexpected();
-}
+        parseExportDeclaration(node) {
+            if (this.isContextual("type")) {
+                node.exportKind = "type";
 
-super.parseObjPropValue(
-    prop,
-    startPos,
-    startLoc,
-    isGenerator,
-    isAsync,
-    isPattern,
-    refShorthandDefaultPos,
-    containsEsc,
-);
+                const declarationNode = this.startNode();
+                this.next();
 
-// add typeParameters if we found them
-if (typeParameters) {
-    (prop.value || prop).typeParameters = typeParameters;
-}
-    }
+                if (this.match(tt.braceL)) {
+                    // export type { foo, bar };
+                    node.specifiers = this.parseExportSpecifiers();
+                    this.parseExportFrom(node);
+                    return null;
+                }
+                // export type Foo = Bar;
+                return this.flowParseTypeAlias(declarationNode);
 
-parseAssignableListItemTypes(param: N.Pattern): N.Pattern {
-    if (this.eat(tt.question)) {
-        if (param.type !== "Identifier") {
-            throw this.raise(
-                param.start,
-                "A binding pattern parameter cannot be optional in an implementation signature.",
+            } else if (this.isContextual("opaque")) {
+                node.exportKind = "type";
+
+                const declarationNode = this.startNode();
+                this.next();
+                // export opaque type Foo = Bar;
+                return this.flowParseOpaqueType(declarationNode, false);
+            } else if (this.isContextual("interface")) {
+                node.exportKind = "type";
+                const declarationNode = this.startNode();
+                this.next();
+                return this.flowParseInterface(declarationNode);
+            }
+            return super.parseExportDeclaration(node);
+
+        }
+
+        shouldParseExportStar() {
+            return (
+                super.shouldParseExportStar() ||
+                (this.isContextual("type") && this.lookahead().type === tt.star)
             );
         }
 
-        param.optional = true;
-    }
-    if (this.match(tt.colon)) {
-        param.typeAnnotation = this.flowParseTypeAnnotation();
-    }
-    this.finishNode(param, param.type);
-    return param;
-}
+        parseExportStar(node) {
+            if (this.eatContextual("type")) {
+                node.exportKind = "type";
+            }
 
-parseMaybeDefault(
-    startPos ?: ? number,
-    startLoc ?: ? Position,
-    left ?: ? N.Pattern,
-): N.Pattern {
-    const node = super.parseMaybeDefault(startPos, startLoc, left);
+            return super.parseExportStar(node);
+        }
 
-    if (
-        node.type === "AssignmentPattern" &&
-        node.typeAnnotation &&
-        node.right.start < node.typeAnnotation.start
-    ) {
-        this.raise(
-            node.typeAnnotation.start,
-            "Type annotations must come before default assignments, " +
-            "e.g. instead of `age = 25: number` use `age: number = 25`",
-        );
-    }
+        parseExportNamespace(node) {
+            if (node.exportKind === "type") {
+                this.unexpected();
+            }
 
-    return node;
-}
+            return super.parseExportNamespace(node);
+        }
 
-shouldParseDefaultImport(node: N.ImportDeclaration): boolean {
-    if (!hasTypeImportKind(node)) {
-        return super.shouldParseDefaultImport(node);
-    }
+        parseClassId(node, isStatement, optionalId) {
+            super.parseClassId(node, isStatement, optionalId);
+            if (this.isRelational("<")) {
+                node.typeParameters = this.flowParseTypeParameterDeclaration();
+            }
+        }
 
-    return isMaybeDefaultImport(this.state);
-}
+        // don't consider `void` to be a keyword as then it'll use the void token type
+        // and set startExpr
+        isKeyword(name) {
+            if (this.state.inType && name === "void") {
+                return false;
+            }
+            return super.isKeyword(name);
 
-parseImportSpecifierLocal(
-    node: N.ImportDeclaration,
-    specifier: N.Node,
-    type: string,
-    contextDescription: string,
-): void {
-    specifier.local = hasTypeImportKind(node)
-        ? this.flowParseRestrictedIdentifier(true)
-        : this.parseIdentifier();
+        }
 
-    this.checkLVal(specifier.local, true, undefined, contextDescription);
-    node.specifiers.push(this.finishNode(specifier, type));
-}
+        // ensure that inside flow types, we bypass the jsx parser plugin
+        readToken(code) {
+            const next = this.input.charCodeAt(this.state.pos + 1);
+            if (
+                this.state.inType &&
+                (code === charCodes.greaterThan || code === charCodes.lessThan)
+            ) {
+                return this.finishOp(tt.relational, 1);
+            } else if (isIteratorStart(code, next)) {
+                this.state.isIterator = true;
+                return super.readWord();
+            }
+            return super.readToken(code);
 
-// parse typeof and type imports
-parseImportSpecifiers(node: N.ImportDeclaration): void {
-    node.importKind = "value";
+        }
 
-    let kind = null;
-    if(this.match(tt._typeof)) {
-    kind = "typeof";
-} else if (this.isContextual("type")) {
-    kind = "type";
-}
-if (kind) {
-    const lh = this.lookahead();
+        toAssignable(
+            node,
+            isBinding,
+            contextDescription,
+        ) {
+            if (node.type === "TypeCastExpression") {
+                return super.toAssignable(
+                    this.typeCastToParameter(node),
+                    isBinding,
+                    contextDescription,
+                );
+            }
+            return super.toAssignable(node, isBinding, contextDescription);
 
-    // import type * is not allowed
-    if (kind === "type" && lh.type === tt.star) {
-        this.unexpected(lh.start);
-    }
+        }
 
-    if (
-        isMaybeDefaultImport(lh) ||
-        lh.type === tt.braceL ||
-        lh.type === tt.star
-    ) {
-        this.next();
-        node.importKind = kind;
-    }
-}
+        // turn type casts that we found in function parameter head into type annotated params
+        toAssignableList(
+            exprList,
+            isBinding,
+            contextDescription,
+        ) {
+            for (let i = 0; i < exprList.length; i++) {
+                const expr = exprList[i];
+                if (expr && expr.type === "TypeCastExpression") {
+                    exprList[i] = this.typeCastToParameter(expr);
+                }
+            }
+            return super.toAssignableList(exprList, isBinding, contextDescription);
+        }
 
-super.parseImportSpecifiers(node);
-    }
+        // this is a list of nodes, from something like a call expression, we need to filter the
+        // type casts that we've found that are illegal in this context
+        toReferencedList(
+            exprList,
+        ) {
+            for (let i = 0; i < exprList.length; i++) {
+                const expr = exprList[i];
+                if (expr && expr._exprListItem && expr.type === "TypeCastExpression") {
+                    this.raise(expr.start, "Unexpected type cast");
+                }
+            }
 
-// parse import-type/typeof shorthand
-parseImportSpecifier(node: N.ImportDeclaration): void {
-    const specifier = this.startNode();
-    const firstIdentLoc = this.state.start;
-    const firstIdent = this.parseIdentifier(true);
+            return exprList;
+        }
 
-    let specifierTypeKind = null;
-    if(firstIdent.name === "type") {
-    specifierTypeKind = "type";
-} else if (firstIdent.name === "typeof") {
-    specifierTypeKind = "typeof";
-}
+        // parse an item inside a expression list eg. `(NODE, NODE)` where NODE represents
+        // the position where this function is called
+        parseExprListItem(
+            allowEmpty,
+            refShorthandDefaultPos,
+            refNeedsArrowPos,
+        ) {
+            const container = this.startNode();
+            const node = super.parseExprListItem(
+                allowEmpty,
+                refShorthandDefaultPos,
+                refNeedsArrowPos,
+            );
+            if (this.match(tt.colon)) {
+                container._exprListItem = true;
+                container.expression = node;
+                container.typeAnnotation = this.flowParseTypeAnnotation();
+                return this.finishNode(container, "TypeCastExpression");
+            }
+            return node;
 
-let isBinding = false;
-if (this.isContextual("as") && !this.isLookaheadContextual("as")) {
-    const as_ident = this.parseIdentifier(true);
-    if (
-        specifierTypeKind !== null &&
-        !this.match(tt.name) &&
-        !this.state.type.keyword
-    ) {
-        // `import {type as ,` or `import {type as }`
-        specifier.imported = as_ident;
-        specifier.importKind = specifierTypeKind;
-        specifier.local = as_ident.__clone();
-    } else {
-        // `import {type as foo`
-        specifier.imported = firstIdent;
-        specifier.importKind = null;
-        specifier.local = this.parseIdentifier();
-    }
-} else if (
-    specifierTypeKind !== null &&
-    (this.match(tt.name) || this.state.type.keyword)
-) {
-    // `import {type foo`
-    specifier.imported = this.parseIdentifier(true);
-    specifier.importKind = specifierTypeKind;
-    if (this.eatContextual("as")) {
-        specifier.local = this.parseIdentifier();
-    } else {
-        isBinding = true;
-        specifier.local = specifier.imported.__clone();
-    }
-} else {
-    isBinding = true;
-    specifier.imported = firstIdent;
-    specifier.importKind = null;
-    specifier.local = specifier.imported.__clone();
-}
+        }
 
-const nodeIsTypeImport = hasTypeImportKind(node);
-const specifierIsTypeImport = hasTypeImportKind(specifier);
+        checkLVal(
+            expr,
+            isBinding,
+            checkClashes,
+            contextDescription,
+        ) {
+            if (expr.type !== "TypeCastExpression") {
+                return super.checkLVal(
+                    expr,
+                    isBinding,
+                    checkClashes,
+                    contextDescription,
+                );
+            }
+        }
 
-if (nodeIsTypeImport && specifierIsTypeImport) {
-    this.raise(
-        firstIdentLoc,
-        "The `type` and `typeof` keywords on named imports can only be used on regular " +
-        "`import` statements. It cannot be used with `import type` or `import typeof` statements",
-    );
-}
+        // parse class property type annotations
+        parseClassProperty(node) {
+            if (this.match(tt.colon)) {
+                node.typeAnnotation = this.flowParseTypeAnnotation();
+            }
+            return super.parseClassProperty(node);
+        }
 
-if (nodeIsTypeImport || specifierIsTypeImport) {
-    this.checkReservedType(specifier.local.name, specifier.local.start);
-}
+        parseClassPrivateProperty(
+            node,
+        ) {
+            if (this.match(tt.colon)) {
+                node.typeAnnotation = this.flowParseTypeAnnotation();
+            }
+            return super.parseClassPrivateProperty(node);
+        }
 
-if (isBinding && !nodeIsTypeImport && !specifierIsTypeImport) {
-    this.checkReservedWord(
-        specifier.local.name,
-        specifier.start,
-        true,
-        true,
-    );
-}
+        // determine whether or not we're currently in the position where a class method would appear
+        isClassMethod() {
+            return this.isRelational("<") || super.isClassMethod();
+        }
 
-this.checkLVal(specifier.local, true, undefined, "import specifier");
-node.specifiers.push(this.finishNode(specifier, "ImportSpecifier"));
-    }
+        // determine whether or not we're currently in the position where a class property would appear
+        isClassProperty() {
+            return this.match(tt.colon) || super.isClassProperty();
+        }
 
-// parse function type parameters - function foo<T>() {}
-parseFunctionParams(node: N.Function): void {
-    // $FlowFixMe
-    const kind = node.kind;
-    if(kind !== "get" && kind !== "set" && this.isRelational("<")) {
-    node.typeParameters = this.flowParseTypeParameterDeclaration(
-          /* allowDefault */ false,
-    );
-}
-super.parseFunctionParams(node);
-    }
+        isNonstaticConstructor(method) {
+            return !this.match(tt.colon) && super.isNonstaticConstructor(method);
+        }
 
-// parse flow type annotations on variable declarator heads - let foo: string = bar
-parseVarHead(decl: N.VariableDeclarator): void {
-    super.parseVarHead(decl);
-    if(this.match(tt.colon)) {
-    decl.id.typeAnnotation = this.flowParseTypeAnnotation();
-    this.finishNode(decl.id, decl.id.type);
-}
-    }
+        // parse type parameters for class methods
+        pushClassMethod(
+            classBody,
+            method,
+            isGenerator,
+            isAsync,
+            isConstructor,
+        ) {
+            if (method.variance) {
+                this.unexpected(method.variance.start);
+            }
+            delete method.variance;
+            if (this.isRelational("<")) {
+                method.typeParameters = this.flowParseTypeParameterDeclaration(
+                    /* allowDefault */ false,
+                );
+            }
 
-// parse the return type of an async arrow function - let foo = (async (): number => {});
-parseAsyncArrowFromCallExpression(
-    node: N.ArrowFunctionExpression,
-    call: N.CallExpression,
-): N.ArrowFunctionExpression {
-    if (this.match(tt.colon)) {
-        const oldNoAnonFunctionType = this.state.noAnonFunctionType;
-        this.state.noAnonFunctionType = true;
-        node.returnType = this.flowParseTypeAnnotation();
-        this.state.noAnonFunctionType = oldNoAnonFunctionType;
-    }
+            super.pushClassMethod(
+                classBody,
+                method,
+                isGenerator,
+                isAsync,
+                isConstructor,
+            );
+        }
 
-    return super.parseAsyncArrowFromCallExpression(node, call);
-}
+        pushClassPrivateMethod(
+            classBody,
+            method,
+            isGenerator,
+            isAsync,
+        ) {
+            if (method.variance) {
+                this.unexpected((method).variance.start);
+            }
+            delete (method).variance;
+            if (this.isRelational("<")) {
+                method.typeParameters = this.flowParseTypeParameterDeclaration();
+            }
 
-// todo description
-shouldParseAsyncArrow(): boolean {
-    return this.match(tt.colon) || super.shouldParseAsyncArrow();
-}
+            super.pushClassPrivateMethod(classBody, method, isGenerator, isAsync);
+        }
 
-// We need to support type parameter declarations for arrow functions. This
-// is tricky. There are three situations we need to handle
-//
-// 1. This is either JSX or an arrow function. We'll try JSX first. If that
-//    fails, we'll try an arrow function. If that fails, we'll throw the JSX
-//    error.
-// 2. This is an arrow function. We'll parse the type parameter declaration,
-//    parse the rest, make sure the rest is an arrow function, and go from
-//    there
-// 3. This is neither. Just call the super method
-parseMaybeAssign(
-    noIn ?: ? boolean,
-    refShorthandDefaultPos ?: ? Pos,
-    afterLeftParse ?: Function,
-    refNeedsArrowPos ?: ? Pos,
-): N.Expression {
-    let jsxError = null;
-    if (tt.jsxTagStart && this.match(tt.jsxTagStart)) {
-        const state = this.state.clone();
-        try {
+        // parse a the super class type parameters and implements
+        parseClassSuper(node) {
+            super.parseClassSuper(node);
+            if (node.superClass && this.isRelational("<")) {
+                node.superTypeParameters = this.flowParseTypeParameterInstantiation();
+            }
+            if (this.isContextual("implements")) {
+                this.next();
+                const implemented = (node.implements = []);
+                do {
+                    const node = this.startNode();
+                    node.id = this.flowParseRestrictedIdentifier(/*liberal*/ true);
+                    if (this.isRelational("<")) {
+                        node.typeParameters = this.flowParseTypeParameterInstantiation();
+                    } else {
+                        node.typeParameters = null;
+                    }
+                    implemented.push(this.finishNode(node, "ClassImplements"));
+                } while (this.eat(tt.comma));
+            }
+        }
+
+        parsePropertyName(node) {
+            const variance = this.flowParseVariance();
+            const key = super.parsePropertyName(node);
+            // $FlowIgnore ("variance" not defined on TsNamedTypeElementBase)
+            node.variance = variance;
+            return key;
+        }
+
+        // parse type parameters for object method shorthand
+        parseObjPropValue(
+            prop,
+            startPos,
+            startLoc,
+            isGenerator,
+            isAsync,
+            isPattern,
+            refShorthandDefaultPos,
+            containsEsc,
+        ) {
+            if ((prop).variance) {
+                this.unexpected((prop).variance.start);
+            }
+            delete (prop).variance;
+
+            let typeParameters;
+
+            // method shorthand
+            if (this.isRelational("<")) {
+                typeParameters = this.flowParseTypeParameterDeclaration(
+                    /* allowDefault */ false,
+                );
+                if (!this.match(tt.parenL)) {
+                    this.unexpected();
+                }
+            }
+
+            super.parseObjPropValue(
+                prop,
+                startPos,
+                startLoc,
+                isGenerator,
+                isAsync,
+                isPattern,
+                refShorthandDefaultPos,
+                containsEsc,
+            );
+
+            // add typeParameters if we found them
+            if (typeParameters) {
+                (prop.value || prop).typeParameters = typeParameters;
+            }
+        }
+
+        parseAssignableListItemTypes(param) {
+            if (this.eat(tt.question)) {
+                if (param.type !== "Identifier") {
+                    throw this.raise(
+                        param.start,
+                        "A binding pattern parameter cannot be optional in an implementation signature.",
+                    );
+                }
+
+                param.optional = true;
+            }
+            if (this.match(tt.colon)) {
+                param.typeAnnotation = this.flowParseTypeAnnotation();
+            }
+            this.finishNode(param, param.type);
+            return param;
+        }
+
+        parseMaybeDefault(
+            startPos,
+            startLoc,
+            left,
+        ) {
+            const node = super.parseMaybeDefault(startPos, startLoc, left);
+
+            if (
+                node.type === "AssignmentPattern" &&
+                node.typeAnnotation &&
+                node.right.start < node.typeAnnotation.start
+            ) {
+                this.raise(
+                    node.typeAnnotation.start,
+                    "Type annotations must come before default assignments, " +
+                    "e.g. instead of `age = 25` use `age = 25`",
+                );
+            }
+
+            return node;
+        }
+
+        shouldParseDefaultImport(node) {
+            if (!hasTypeImportKind(node)) {
+                return super.shouldParseDefaultImport(node);
+            }
+
+            return isMaybeDefaultImport(this.state);
+        }
+
+        parseImportSpecifierLocal(
+            node,
+            specifier,
+            type,
+            contextDescription,
+        ) {
+            specifier.local = hasTypeImportKind(node)
+                ? this.flowParseRestrictedIdentifier(true)
+                : this.parseIdentifier();
+
+            this.checkLVal(specifier.local, true, undefined, contextDescription);
+            node.specifiers.push(this.finishNode(specifier, type));
+        }
+
+        // parse typeof and type imports
+        parseImportSpecifiers(node) {
+            node.importKind = "value";
+
+            let kind = null;
+            if (this.match(tt._typeof)) {
+                kind = "typeof";
+            } else if (this.isContextual("type")) {
+                kind = "type";
+            }
+            if (kind) {
+                const lh = this.lookahead();
+
+                // import type * is not allowed
+                if (kind === "type" && lh.type === tt.star) {
+                    this.unexpected(lh.start);
+                }
+
+                if (
+                    isMaybeDefaultImport(lh) ||
+                    lh.type === tt.braceL ||
+                    lh.type === tt.star
+                ) {
+                    this.next();
+                    node.importKind = kind;
+                }
+            }
+
+            super.parseImportSpecifiers(node);
+        }
+
+        // parse import-type/typeof shorthand
+        parseImportSpecifier(node) {
+            const specifier = this.startNode();
+            const firstIdentLoc = this.state.start;
+            const firstIdent = this.parseIdentifier(true);
+
+            let specifierTypeKind = null;
+            if (firstIdent.name === "type") {
+                specifierTypeKind = "type";
+            } else if (firstIdent.name === "typeof") {
+                specifierTypeKind = "typeof";
+            }
+
+            let isBinding = false;
+            if (this.isContextual("as") && !this.isLookaheadContextual("as")) {
+                const as_ident = this.parseIdentifier(true);
+                if (
+                    !is.null(specifierTypeKind) &&
+                    !this.match(tt.name) &&
+                    !this.state.type.keyword
+                ) {
+                    // `import {type as ,` or `import {type as }`
+                    specifier.imported = as_ident;
+                    specifier.importKind = specifierTypeKind;
+                    specifier.local = as_ident.__clone();
+                } else {
+                    // `import {type as foo`
+                    specifier.imported = firstIdent;
+                    specifier.importKind = null;
+                    specifier.local = this.parseIdentifier();
+                }
+            } else if (
+                !is.null(specifierTypeKind) &&
+                (this.match(tt.name) || this.state.type.keyword)
+            ) {
+                // `import {type foo`
+                specifier.imported = this.parseIdentifier(true);
+                specifier.importKind = specifierTypeKind;
+                if (this.eatContextual("as")) {
+                    specifier.local = this.parseIdentifier();
+                } else {
+                    isBinding = true;
+                    specifier.local = specifier.imported.__clone();
+                }
+            } else {
+                isBinding = true;
+                specifier.imported = firstIdent;
+                specifier.importKind = null;
+                specifier.local = specifier.imported.__clone();
+            }
+
+            const nodeIsTypeImport = hasTypeImportKind(node);
+            const specifierIsTypeImport = hasTypeImportKind(specifier);
+
+            if (nodeIsTypeImport && specifierIsTypeImport) {
+                this.raise(
+                    firstIdentLoc,
+                    "The `type` and `typeof` keywords on named imports can only be used on regular " +
+                    "`import` statements. It cannot be used with `import type` or `import typeof` statements",
+                );
+            }
+
+            if (nodeIsTypeImport || specifierIsTypeImport) {
+                this.checkReservedType(specifier.local.name, specifier.local.start);
+            }
+
+            if (isBinding && !nodeIsTypeImport && !specifierIsTypeImport) {
+                this.checkReservedWord(
+                    specifier.local.name,
+                    specifier.start,
+                    true,
+                    true,
+                );
+            }
+
+            this.checkLVal(specifier.local, true, undefined, "import specifier");
+            node.specifiers.push(this.finishNode(specifier, "ImportSpecifier"));
+        }
+
+        // parse function type parameters - function foo() {}
+        parseFunctionParams(node) {
+            // $FlowFixMe
+            const kind = node.kind;
+            if (kind !== "get" && kind !== "set" && this.isRelational("<")) {
+                node.typeParameters = this.flowParseTypeParameterDeclaration(
+                    /* allowDefault */ false,
+                );
+            }
+            super.parseFunctionParams(node);
+        }
+
+        // parse flow type annotations on variable declarator heads - let foo = bar
+        parseVarHead(decl) {
+            super.parseVarHead(decl);
+            if (this.match(tt.colon)) {
+                decl.id.typeAnnotation = this.flowParseTypeAnnotation();
+                this.finishNode(decl.id, decl.id.type);
+            }
+        }
+
+        // parse the return type of an async arrow function - let foo = (async () => {});
+        parseAsyncArrowFromCallExpression(node, call) {
+            if (this.match(tt.colon)) {
+                const oldNoAnonFunctionType = this.state.noAnonFunctionType;
+                this.state.noAnonFunctionType = true;
+                node.returnType = this.flowParseTypeAnnotation();
+                this.state.noAnonFunctionType = oldNoAnonFunctionType;
+            }
+
+            return super.parseAsyncArrowFromCallExpression(node, call);
+        }
+
+        // todo description
+        shouldParseAsyncArrow() {
+            return this.match(tt.colon) || super.shouldParseAsyncArrow();
+        }
+
+        // We need to support type parameter declarations for arrow functions. This
+        // is tricky. There are three situations we need to handle
+        //
+        // 1. This is either JSX or an arrow function. We'll try JSX first. If that
+        //    fails, we'll try an arrow function. If that fails, we'll throw the JSX
+        //    error.
+        // 2. This is an arrow function. We'll parse the type parameter declaration,
+        //    parse the rest, make sure the rest is an arrow function, and go from
+        //    there
+        // 3. This is neither. Just call the super method
+        parseMaybeAssign(
+            noIn,
+            refShorthandDefaultPos,
+            afterLeftParse,
+            refNeedsArrowPos,
+        ) {
+            let jsxError = null;
+            if (tt.jsxTagStart && this.match(tt.jsxTagStart)) {
+                const state = this.state.clone();
+                try {
+                    return super.parseMaybeAssign(
+                        noIn,
+                        refShorthandDefaultPos,
+                        afterLeftParse,
+                        refNeedsArrowPos,
+                    );
+                } catch (err) {
+                    if (err instanceof SyntaxError) {
+                        this.state = state;
+
+                        // Remove `tc.j_expr` and `tc.j_oTag` from context added
+                        // by parsing `jsxTagStart` to stop the JSX plugin from
+                        // messing with the tokens
+                        this.state.context.length -= 2;
+
+                        jsxError = err;
+                    } else {
+                        // istanbul ignore next: no such error is expected
+                        throw err;
+                    }
+                }
+            }
+
+            if (!is.nil(jsxError) || this.isRelational("<")) {
+                let arrowExpression;
+                let typeParameters;
+                try {
+                    typeParameters = this.flowParseTypeParameterDeclaration();
+                    arrowExpression = this.forwardNoArrowParamsConversionAt(
+                        typeParameters,
+                        () =>
+                            super.parseMaybeAssign(
+                                noIn,
+                                refShorthandDefaultPos,
+                                afterLeftParse,
+                                refNeedsArrowPos,
+                            ),
+                    );
+                    arrowExpression.typeParameters = typeParameters;
+                    this.resetStartLocationFromNode(arrowExpression, typeParameters);
+                } catch (err) {
+                    throw jsxError || err;
+                }
+
+                if (arrowExpression.type === "ArrowFunctionExpression") {
+                    return arrowExpression;
+                } else if (!is.nil(jsxError)) {
+                    throw jsxError;
+                } else {
+                    this.raise(
+                        typeParameters.start,
+                        "Expected an arrow function after this type parameter declaration",
+                    );
+                }
+            }
+
             return super.parseMaybeAssign(
                 noIn,
                 refShorthandDefaultPos,
                 afterLeftParse,
                 refNeedsArrowPos,
             );
-        } catch (err) {
-            if (err instanceof SyntaxError) {
-                this.state = state;
+        }
 
-                // Remove `tc.j_expr` and `tc.j_oTag` from context added
-                // by parsing `jsxTagStart` to stop the JSX plugin from
-                // messing with the tokens
-                this.state.context.length -= 2;
+        // handle return types for arrow functions
+        parseArrow(node) {
+            if (this.match(tt.colon)) {
+                const state = this.state.clone();
+                try {
+                    const oldNoAnonFunctionType = this.state.noAnonFunctionType;
+                    this.state.noAnonFunctionType = true;
 
-                jsxError = err;
+                    const typeNode = this.startNode();
+
+                    [
+                        // $FlowFixMe (destructuring not supported yet)
+                        typeNode.typeAnnotation,
+                        // $FlowFixMe (destructuring not supported yet)
+                        node.predicate
+                    ] = this.flowParseTypeAndPredicateInitialiser();
+
+                    this.state.noAnonFunctionType = oldNoAnonFunctionType;
+
+                    if (this.canInsertSemicolon()) {
+                        this.unexpected();
+                    }
+                    if (!this.match(tt.arrow)) {
+                        this.unexpected();
+                    }
+
+                    // assign after it is clear it is an arrow
+                    node.returnType = typeNode.typeAnnotation
+                        ? this.finishNode(typeNode, "TypeAnnotation")
+                        : null;
+                } catch (err) {
+                    if (err instanceof SyntaxError) {
+                        this.state = state;
+                    } else {
+                        // istanbul ignore next: no such error is expected
+                        throw err;
+                    }
+                }
+            }
+
+            return super.parseArrow(node);
+        }
+
+        shouldParseArrow() {
+            return this.match(tt.colon) || super.shouldParseArrow();
+        }
+
+        setArrowFunctionParameters(
+            node,
+            params,
+        ) {
+            if (this.state.noArrowParamsConversionAt.includes(node.start)) {
+                node.params = params;
             } else {
-                // istanbul ignore next: no such error is expected
-                throw err;
+                super.setArrowFunctionParameters(node, params);
             }
         }
-    }
 
-    if (jsxError != null || this.isRelational("<")) {
-        let arrowExpression;
-        let typeParameters;
-        try {
-            typeParameters = this.flowParseTypeParameterDeclaration();
-            arrowExpression = this.forwardNoArrowParamsConversionAt(
-                typeParameters,
-                () =>
-                    super.parseMaybeAssign(
-                        noIn,
-                        refShorthandDefaultPos,
-                        afterLeftParse,
-                        refNeedsArrowPos,
-                    ),
-            );
-            arrowExpression.typeParameters = typeParameters;
-            this.resetStartLocationFromNode(arrowExpression, typeParameters);
-        } catch (err) {
-            throw jsxError || err;
-        }
-
-        if (arrowExpression.type === "ArrowFunctionExpression") {
-            return arrowExpression;
-        } else if (jsxError != null) {
-            throw jsxError;
-        } else {
-            this.raise(
-                typeParameters.start,
-                "Expected an arrow function after this type parameter declaration",
-            );
-        }
-    }
-
-    return super.parseMaybeAssign(
-        noIn,
-        refShorthandDefaultPos,
-        afterLeftParse,
-        refNeedsArrowPos,
-    );
-}
-
-// handle return types for arrow functions
-parseArrow(node: N.ArrowFunctionExpression): ?N.ArrowFunctionExpression {
-    if (this.match(tt.colon)) {
-        const state = this.state.clone();
-        try {
-            const oldNoAnonFunctionType = this.state.noAnonFunctionType;
-            this.state.noAnonFunctionType = true;
-
-            const typeNode = this.startNode();
-
-            [
-                // $FlowFixMe (destructuring not supported yet)
-                typeNode.typeAnnotation,
-                // $FlowFixMe (destructuring not supported yet)
-                node.predicate,
-            ] = this.flowParseTypeAndPredicateInitialiser();
-
-            this.state.noAnonFunctionType = oldNoAnonFunctionType;
-
-            if (this.canInsertSemicolon()) this.unexpected();
-            if (!this.match(tt.arrow)) this.unexpected();
-
-            // assign after it is clear it is an arrow
-            node.returnType = typeNode.typeAnnotation
-                ? this.finishNode(typeNode, "TypeAnnotation")
-                : null;
-        } catch (err) {
-            if (err instanceof SyntaxError) {
-                this.state = state;
-            } else {
-                // istanbul ignore next: no such error is expected
-                throw err;
+        checkFunctionNameAndParams(
+            node,
+            isArrowFunction,
+        ) {
+            if (
+                isArrowFunction &&
+                this.state.noArrowParamsConversionAt.includes(node.start)) {
+                return;
             }
+
+            return super.checkFunctionNameAndParams(node, isArrowFunction);
         }
-    }
 
-    return super.parseArrow(node);
-}
-
-shouldParseArrow(): boolean {
-    return this.match(tt.colon) || super.shouldParseArrow();
-}
-
-setArrowFunctionParameters(
-    node: N.ArrowFunctionExpression,
-    params: N.Expression[],
-): void {
-    if(this.state.noArrowParamsConversionAt.indexOf(node.start) !== -1) {
-    node.params = params;
-} else {
-    super.setArrowFunctionParameters(node, params);
-}
-    }
-
-checkFunctionNameAndParams(
-    node: N.Function,
-    isArrowFunction: ?boolean,
-): void {
-    if(
-        isArrowFunction &&
-    this.state.noArrowParamsConversionAt.indexOf(node.start) !== -1
-      ) {
-    return;
-}
-
-return super.checkFunctionNameAndParams(node, isArrowFunction);
-    }
-
-parseParenAndDistinguishExpression(canBeArrow: boolean): N.Expression {
-    return super.parseParenAndDistinguishExpression(
-        canBeArrow && this.state.noArrowAt.indexOf(this.state.start) === -1,
-    );
-}
-
-parseSubscripts(
-    base: N.Expression,
-    startPos: number,
-    startLoc: Position,
-    noCalls ?: ? boolean,
-): N.Expression {
-    if (
-        base.type === "Identifier" &&
-        base.name === "async" &&
-        this.state.noArrowAt.indexOf(startPos) !== -1
-    ) {
-        this.next();
-
-        const node = this.startNodeAt(startPos, startLoc);
-        node.callee = base;
-        node.arguments = this.parseCallExpressionArguments(tt.parenR, false);
-        base = this.finishNode(node, "CallExpression");
-    } else if (
-        base.type === "Identifier" &&
-        base.name === "async" &&
-        this.isRelational("<")
-    ) {
-        const state = this.state.clone();
-        let error;
-        try {
-            const node = this.parseAsyncArrowWithTypeParameters(
-                startPos,
-                startLoc,
+        parseParenAndDistinguishExpression(canBeArrow) {
+            return super.parseParenAndDistinguishExpression(
+                canBeArrow && !this.state.noArrowAt.includes(this.state.start),
             );
-            if (node) return node;
-        } catch (e) {
-            error = e;
         }
 
-        this.state = state;
-        try {
-            return super.parseSubscripts(base, startPos, startLoc, noCalls);
-        } catch (e) {
-            throw error || e;
-        }
-    }
-
-    return super.parseSubscripts(base, startPos, startLoc, noCalls);
-}
-
-parseSubscript(
-    base: N.Expression,
-    startPos: number,
-    startLoc: Position,
-    noCalls: ?boolean,
-    subscriptState: N.ParseSubscriptState,
-): N.Expression {
-    if (this.match(tt.questionDot) && this.isLookaheadRelational("<")) {
-        this.expectPlugin("optionalChaining");
-        subscriptState.optionalChainMember = true;
-        if (noCalls) {
-            subscriptState.stop = true;
-            return base;
-        }
-        this.next();
-        const node: N.OptionalCallExpression = this.startNodeAt(
+        parseSubscripts(
+            base,
             startPos,
             startLoc,
-        );
-        node.callee = base;
-        node.typeArguments = this.flowParseTypeParameterInstantiation();
-        this.expect(tt.parenL);
-        // $FlowFixMe
-        node.arguments = this.parseCallExpressionArguments(tt.parenR, false);
-        node.optional = true;
-        return this.finishNode(node, "OptionalCallExpression");
-    } else if (
-        !noCalls &&
-        this.shouldParseTypes() &&
-        this.isRelational("<")
-    ) {
-        const node = this.startNodeAt(startPos, startLoc);
-        node.callee = base;
-        const state = this.state.clone();
-        try {
-            node.typeArguments = this.flowParseTypeParameterInstantiation();
-            this.expect(tt.parenL);
-            node.arguments = this.parseCallExpressionArguments(tt.parenR, false);
-            if (subscriptState.optionalChainMember) {
-                node.optional = false;
-                return this.finishNode(node, "OptionalCallExpression");
-            }
-            return this.finishNode(node, "CallExpression");
-        } catch (e) {
-            if (e instanceof SyntaxError) {
+            noCalls,
+        ) {
+            if (
+                base.type === "Identifier" &&
+                base.name === "async" &&
+                this.state.noArrowAt.includes(startPos)
+            ) {
+                this.next();
+
+                const node = this.startNodeAt(startPos, startLoc);
+                node.callee = base;
+                node.arguments = this.parseCallExpressionArguments(tt.parenR, false);
+                base = this.finishNode(node, "CallExpression");
+            } else if (
+                base.type === "Identifier" &&
+                base.name === "async" &&
+                this.isRelational("<")
+            ) {
+                const state = this.state.clone();
+                let error;
+                try {
+                    const node = this.parseAsyncArrowWithTypeParameters(
+                        startPos,
+                        startLoc,
+                    );
+                    if (node) {
+                        return node;
+                    }
+                } catch (e) {
+                    error = e;
+                }
+
                 this.state = state;
-            } else {
-                throw e;
+                try {
+                    return super.parseSubscripts(base, startPos, startLoc, noCalls);
+                } catch (e) {
+                    throw error || e;
+                }
+            }
+
+            return super.parseSubscripts(base, startPos, startLoc, noCalls);
+        }
+
+        parseSubscript(
+            base,
+            startPos,
+            startLoc,
+            noCalls,
+            subscriptState,
+        ) {
+            if (this.match(tt.questionDot) && this.isLookaheadRelational("<")) {
+                this.expectPlugin("optionalChaining");
+                subscriptState.optionalChainMember = true;
+                if (noCalls) {
+                    subscriptState.stop = true;
+                    return base;
+                }
+                this.next();
+                const node = this.startNodeAt(
+                    startPos,
+                    startLoc,
+                );
+                node.callee = base;
+                node.typeArguments = this.flowParseTypeParameterInstantiation();
+                this.expect(tt.parenL);
+                // $FlowFixMe
+                node.arguments = this.parseCallExpressionArguments(tt.parenR, false);
+                node.optional = true;
+                return this.finishNode(node, "OptionalCallExpression");
+            } else if (
+                !noCalls &&
+                this.shouldParseTypes() &&
+                this.isRelational("<")
+            ) {
+                const node = this.startNodeAt(startPos, startLoc);
+                node.callee = base;
+                const state = this.state.clone();
+                try {
+                    node.typeArguments = this.flowParseTypeParameterInstantiation();
+                    this.expect(tt.parenL);
+                    node.arguments = this.parseCallExpressionArguments(tt.parenR, false);
+                    if (subscriptState.optionalChainMember) {
+                        node.optional = false;
+                        return this.finishNode(node, "OptionalCallExpression");
+                    }
+                    return this.finishNode(node, "CallExpression");
+                } catch (e) {
+                    if (e instanceof SyntaxError) {
+                        this.state = state;
+                    } else {
+                        throw e;
+                    }
+                }
+            }
+
+            return super.parseSubscript(
+                base,
+                startPos,
+                startLoc,
+                noCalls,
+                subscriptState,
+            );
+        }
+
+        parseNewArguments(node) {
+            let targs = null;
+            if (this.shouldParseTypes() && this.isRelational("<")) {
+                const state = this.state.clone();
+                try {
+                    targs = this.flowParseTypeParameterInstantiation();
+                } catch (e) {
+                    if (e instanceof SyntaxError) {
+                        this.state = state;
+                    } else {
+                        throw e;
+                    }
+                }
+            }
+            node.typeArguments = targs;
+
+            super.parseNewArguments(node);
+        }
+
+        parseAsyncArrowWithTypeParameters(
+            startPos,
+            startLoc,
+        ) {
+            const node = this.startNodeAt(startPos, startLoc);
+            this.parseFunctionParams(node);
+            if (!this.parseArrow(node)) {
+                return;
+            }
+            return this.parseArrowExpression(
+                node,
+                /* params */ undefined,
+                /* isAsync */ true,
+            );
+        }
+
+        readToken_mult_modulo(code) {
+            const next = this.input.charCodeAt(this.state.pos + 1);
+            if (
+                code === charCodes.asterisk &&
+                next === charCodes.slash &&
+                this.state.hasFlowComment
+            ) {
+                this.state.hasFlowComment = false;
+                this.state.pos += 2;
+                this.nextToken();
+                return;
+            }
+
+            super.readToken_mult_modulo(code);
+        }
+
+        skipBlockComment() {
+            if (
+                this.hasPlugin("flow") &&
+                this.hasPlugin("flowComments") &&
+                this.skipFlowComment()
+            ) {
+                this.hasFlowCommentCompletion();
+                this.state.pos += this.skipFlowComment();
+                this.state.hasFlowComment = true;
+                return;
+            }
+
+            let end;
+            if (this.hasPlugin("flow") && this.state.hasFlowComment) {
+                end = this.input.indexOf("*-/", (this.state.pos += 2));
+                if (end === -1) {
+                    this.raise(this.state.pos - 2, "Unterminated comment");
+                }
+                this.state.pos = end + 3;
+                return;
+            }
+
+            super.skipBlockComment();
+        }
+
+        skipFlowComment() {
+            const ch2 = this.input.charCodeAt(this.state.pos + 2);
+            const ch3 = this.input.charCodeAt(this.state.pos + 3);
+
+            if (ch2 === charCodes.colon && ch3 === charCodes.colon) {
+                return 4; // check for /*::
+            }
+            if (this.input.slice(this.state.pos + 2, 14) === "flow-include") {
+                return 14; // check for /*flow-include
+            }
+            if (ch2 === charCodes.colon && ch3 !== charCodes.colon) {
+                return 2; // check for /*:, advance only 2 steps
+            }
+            return false;
+        }
+
+        hasFlowCommentCompletion() {
+            const end = this.input.indexOf("*/", this.state.pos);
+            if (end === -1) {
+                this.raise(this.state.pos, "Unterminated comment");
             }
         }
-    }
-
-    return super.parseSubscript(
-        base,
-        startPos,
-        startLoc,
-        noCalls,
-        subscriptState,
-    );
-}
-
-parseNewArguments(node: N.NewExpression): void {
-    let targs = null;
-    if(this.shouldParseTypes() && this.isRelational("<")) {
-    const state = this.state.clone();
-    try {
-        targs = this.flowParseTypeParameterInstantiation();
-    } catch (e) {
-        if (e instanceof SyntaxError) {
-            this.state = state;
-        } else {
-            throw e;
-        }
-    }
-}
-node.typeArguments = targs;
-
-super.parseNewArguments(node);
-    }
-
-parseAsyncArrowWithTypeParameters(
-    startPos: number,
-    startLoc: Position,
-): ?N.ArrowFunctionExpression {
-    const node = this.startNodeAt(startPos, startLoc);
-    this.parseFunctionParams(node);
-    if (!this.parseArrow(node)) return;
-    return this.parseArrowExpression(
-        node,
-        /* params */ undefined,
-        /* isAsync */ true,
-    );
-}
-
-readToken_mult_modulo(code: number): void {
-    const next = this.input.charCodeAt(this.state.pos + 1);
-    if(
-        code === charCodes.asterisk &&
-    next === charCodes.slash &&
-    this.state.hasFlowComment
-      ) {
-    this.state.hasFlowComment = false;
-    this.state.pos += 2;
-    this.nextToken();
-    return;
-}
-
-super.readToken_mult_modulo(code);
-    }
-
-skipBlockComment(): void {
-    if(
-        this.hasPlugin("flow") &&
-    this.hasPlugin("flowComments") &&
-    this.skipFlowComment()
-      ) {
-    this.hasFlowCommentCompletion();
-    this.state.pos += this.skipFlowComment();
-    this.state.hasFlowComment = true;
-    return;
-}
-
-let end;
-if (this.hasPlugin("flow") && this.state.hasFlowComment) {
-    end = this.input.indexOf("*-/", (this.state.pos += 2));
-    if (end === -1) this.raise(this.state.pos - 2, "Unterminated comment");
-    this.state.pos = end + 3;
-    return;
-}
-
-super.skipBlockComment();
-    }
-
-skipFlowComment(): number | boolean {
-    const ch2 = this.input.charCodeAt(this.state.pos + 2);
-    const ch3 = this.input.charCodeAt(this.state.pos + 3);
-
-    if (ch2 === charCodes.colon && ch3 === charCodes.colon) {
-        return 4; // check for /*::
-    }
-    if (this.input.slice(this.state.pos + 2, 14) === "flow-include") {
-        return 14; // check for /*flow-include
-    }
-    if (ch2 === charCodes.colon && ch3 !== charCodes.colon) {
-        return 2; // check for /*:, advance only 2 steps
-    }
-    return false;
-}
-
-hasFlowCommentCompletion(): void {
-    const end = this.input.indexOf("*/", this.state.pos);
-    if(end === -1) {
-    this.raise(this.state.pos, "Unterminated comment");
-}
-    }
-  };
+    };

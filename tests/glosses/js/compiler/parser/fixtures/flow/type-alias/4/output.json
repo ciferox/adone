@@ -27,6 +27,7 @@
       }
     },
     "sourceType": "module",
+    "interpreter": null,
     "body": [
       {
         "type": "TypeAlias",
@@ -123,6 +124,7 @@
                     "name": "type"
                   },
                   "static": false,
+                  "proto": false,
                   "kind": "init",
                   "method": false,
                   "value": {
@@ -150,6 +152,7 @@
                 }
               ],
               "indexers": [],
+              "internalSlots": [],
               "exact": false
             },
             {
@@ -200,6 +203,7 @@
                     "name": "type"
                   },
                   "static": false,
+                  "proto": false,
                   "kind": "init",
                   "method": false,
                   "value": {
@@ -227,6 +231,7 @@
                 }
               ],
               "indexers": [],
+              "internalSlots": [],
               "exact": false
             }
           ]
@@ -526,6 +531,7 @@
                 "name": "x"
               },
               "static": false,
+              "proto": false,
               "kind": "init",
               "method": false,
               "value": {
@@ -591,6 +597,7 @@
                           "name": "type"
                         },
                         "static": false,
+                        "proto": false,
                         "kind": "init",
                         "method": false,
                         "value": {
@@ -618,6 +625,7 @@
                       }
                     ],
                     "indexers": [],
+                    "internalSlots": [],
                     "exact": false
                   },
                   {
@@ -668,6 +676,7 @@
                           "name": "type"
                         },
                         "static": false,
+                        "proto": false,
                         "kind": "init",
                         "method": false,
                         "value": {
@@ -695,6 +704,7 @@
                       }
                     ],
                     "indexers": [],
+                    "internalSlots": [],
                     "exact": false
                   }
                 ]
@@ -704,6 +714,7 @@
             }
           ],
           "indexers": [],
+          "internalSlots": [],
           "exact": false
         }
       },
@@ -787,6 +798,7 @@
                 "name": "x"
               },
               "static": false,
+              "proto": false,
               "kind": "init",
               "method": false,
               "value": {
@@ -852,6 +864,7 @@
                           "name": "type"
                         },
                         "static": false,
+                        "proto": false,
                         "kind": "init",
                         "method": false,
                         "value": {
@@ -879,6 +892,7 @@
                       }
                     ],
                     "indexers": [],
+                    "internalSlots": [],
                     "exact": false
                   },
                   {
@@ -929,6 +943,7 @@
                           "name": "type"
                         },
                         "static": false,
+                        "proto": false,
                         "kind": "init",
                         "method": false,
                         "value": {
@@ -956,6 +971,7 @@
                       }
                     ],
                     "indexers": [],
+                    "internalSlots": [],
                     "exact": false
                   }
                 ]
@@ -965,6 +981,7 @@
             }
           ],
           "indexers": [],
+          "internalSlots": [],
           "exact": false
         }
       }

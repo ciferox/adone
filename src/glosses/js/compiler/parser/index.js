@@ -9,6 +9,28 @@ import Parser from "./parser";
 import { types as tokTypes } from "./tokenizer/types";
 import "./tokenizer/context";
 
+const parserClassCache = {};
+
+/**
+ *  Get a Parser class with plugins applied.
+ */
+const getParserClass = function (pluginsFromOptions) {
+    const pluginList = mixinPluginNames.filter((name) =>
+        hasPlugin(pluginsFromOptions, name),
+    );
+
+    const key = pluginList.join("/");
+    let cls = parserClassCache[key];
+    if (!cls) {
+        cls = Parser;
+        for (const plugin of pluginList) {
+            cls = mixinPlugins[plugin](cls);
+        }
+        parserClassCache[key] = cls;
+    }
+    return cls;
+};
+
 const getParser = function (options, input) {
     let cls = Parser;
     if (options && options.plugins) {
@@ -59,25 +81,3 @@ export const parseExpression = function (input, options) {
 };
 
 export { tokTypes };
-
-const parserClassCache = {};
-
-/**
- *  Get a Parser class with plugins applied.
- */
-function getParserClass(pluginsFromOptions: PluginList): Class<Parser> {
-    const pluginList = mixinPluginNames.filter((name) =>
-        hasPlugin(pluginsFromOptions, name),
-    );
-
-    const key = pluginList.join("/");
-    let cls = parserClassCache[key];
-    if (!cls) {
-        cls = Parser;
-        for (const plugin of pluginList) {
-            cls = mixinPlugins[plugin](cls);
-        }
-        parserClassCache[key] = cls;
-    }
-    return cls;
-}

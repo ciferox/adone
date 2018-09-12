@@ -27,6 +27,7 @@
       }
     },
     "sourceType": "script",
+    "interpreter": null,
     "body": [
       {
         "type": "FunctionDeclaration",
@@ -141,9 +142,6 @@
                         "raw": "1"
                       },
                       "value": 1
-                    },
-                    "extra": {
-                      "parenthesizedArgument": false
                     }
                   },
                   {

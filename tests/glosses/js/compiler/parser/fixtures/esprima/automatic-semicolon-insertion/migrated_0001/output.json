@@ -27,6 +27,7 @@
       }
     },
     "sourceType": "script",
+    "interpreter": null,
     "body": [
       {
         "type": "BlockStatement",
@@ -121,9 +122,6 @@
                   "identifierName": "y"
                 },
                 "name": "y"
-              },
-              "extra": {
-                "parenthesizedArgument": false
               }
             }
           }

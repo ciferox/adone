@@ -27,6 +27,7 @@
       }
     },
     "sourceType": "script",
+    "interpreter": null,
     "body": [
       {
         "type": "ExpressionStatement",
@@ -87,9 +88,6 @@
                 }
               },
               "properties": []
-            },
-            "extra": {
-              "parenthesizedArgument": false
             }
           },
           "operator": "/",

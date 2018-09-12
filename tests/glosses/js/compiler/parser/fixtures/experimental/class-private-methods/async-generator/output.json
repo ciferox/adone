@@ -27,6 +27,7 @@
       }
     },
     "sourceType": "script",
+    "interpreter": null,
     "body": [
       {
         "type": "ClassDeclaration",
@@ -385,9 +386,6 @@
                                 "name": "EOF"
                               },
                               "computed": false
-                            },
-                            "extra": {
-                              "parenthesizedArgument": false
                             }
                           },
                           "body": {

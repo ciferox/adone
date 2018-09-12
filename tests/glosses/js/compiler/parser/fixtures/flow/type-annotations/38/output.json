@@ -27,6 +27,7 @@
       }
     },
     "sourceType": "module",
+    "interpreter": null,
     "body": [
       {
         "type": "VariableDeclaration",
@@ -135,6 +136,7 @@
                         "name": "subObj"
                       },
                       "static": false,
+                      "proto": false,
                       "kind": "init",
                       "method": false,
                       "value": {
@@ -199,6 +201,7 @@
                                 "name": "strVal"
                               },
                               "static": false,
+                              "proto": false,
                               "kind": "init",
                               "method": false,
                               "value": {
@@ -221,6 +224,7 @@
                             }
                           ],
                           "indexers": [],
+                          "internalSlots": [],
                           "exact": false
                         }
                       },
@@ -229,6 +233,7 @@
                     }
                   ],
                   "indexers": [],
+                  "internalSlots": [],
                   "exact": false
                 }
               }

@@ -27,6 +27,7 @@
       }
     },
     "sourceType": "module",
+    "interpreter": null,
     "body": [
       {
         "type": "DeclareClass",
@@ -61,6 +62,7 @@
         },
         "typeParameters": null,
         "extends": [],
+        "implements": [],
         "mixins": [
           {
             "type": "InterfaceExtends",
@@ -195,6 +197,7 @@
           "callProperties": [],
           "properties": [],
           "indexers": [],
+          "internalSlots": [],
           "exact": false
         }
       }

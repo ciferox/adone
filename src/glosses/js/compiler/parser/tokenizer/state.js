@@ -1,218 +1,234 @@
-// @flow
-
-import type { Options } from "../options";
-import * as N from "../types";
 import { Position } from "../util/location";
 
-import { types as ct, type TokContext } from "./context";
-import type { Token } from "./index";
-import { types as tt, type TokenType } from "./types";
+import { types as ct } from "./context";
+import { types as tt } from "./types";
+
+const {
+    is
+} = adone;
 
 export default class State {
-  init(options: Options, input: string): void {
-    this.strict =
-      options.strictMode === false ? false : options.sourceType === "module";
+    init(options, input) {
+        this.strict =
+            options.strictMode === false ? false : options.sourceType === "module";
 
-    this.input = input;
+        this.input = input;
 
-    this.potentialArrowAt = -1;
+        this.potentialArrowAt = -1;
 
-    this.noArrowAt = [];
-    this.noArrowParamsConversionAt = [];
+        this.noArrowAt = [];
+        this.noArrowParamsConversionAt = [];
 
-    this.inMethod = false;
-    this.inFunction = false;
-    this.inParameters = false;
-    this.maybeInArrowParameters = false;
-    this.inGenerator = false;
-    this.inAsync = false;
-    this.inPropertyName = false;
-    this.inType = false;
-    this.inClassProperty = false;
-    this.noAnonFunctionType = false;
-    this.hasFlowComment = false;
-    this.isIterator = false;
+        this.inMethod = false;
+        this.inFunction = false;
+        this.inParameters = false;
+        this.maybeInArrowParameters = false;
+        this.inGenerator = false;
+        this.inAsync = false;
+        this.inPropertyName = false;
+        this.inType = false;
+        this.inClassProperty = false;
+        this.noAnonFunctionType = false;
+        this.hasFlowComment = false;
+        this.isIterator = false;
 
-    this.classLevel = 0;
+        this.classLevel = 0;
 
-    this.labels = [];
+        this.labels = [];
 
-    this.decoratorStack = [[]];
+        this.decoratorStack = [[]];
 
-    this.yieldInPossibleArrowParameters = null;
+        this.yieldInPossibleArrowParameters = null;
 
-    this.tokens = [];
+        this.tokens = [];
 
-    this.comments = [];
+        this.comments = [];
 
-    this.trailingComments = [];
-    this.leadingComments = [];
-    this.commentStack = [];
-    // $FlowIgnore
-    this.commentPreviousNode = null;
+        this.trailingComments = [];
+        this.leadingComments = [];
+        this.commentStack = [];
+        // $FlowIgnore
+        this.commentPreviousNode = null;
 
-    this.pos = this.lineStart = 0;
-    this.curLine = options.startLine;
+        this.pos = this.lineStart = 0;
+        this.curLine = options.startLine;
 
-    this.type = tt.eof;
-    this.value = null;
-    this.start = this.end = this.pos;
-    this.startLoc = this.endLoc = this.curPosition();
+        this.type = tt.eof;
+        this.value = null;
+        this.start = this.end = this.pos;
+        this.startLoc = this.endLoc = this.curPosition();
 
-    // $FlowIgnore
-    this.lastTokEndLoc = this.lastTokStartLoc = null;
-    this.lastTokStart = this.lastTokEnd = this.pos;
+        // $FlowIgnore
+        this.lastTokEndLoc = this.lastTokStartLoc = null;
+        this.lastTokStart = this.lastTokEnd = this.pos;
 
-    this.context = [ct.braceStatement];
-    this.exprAllowed = true;
+        this.context = [ct.braceStatement];
+        this.exprAllowed = true;
 
-    this.containsEsc = this.containsOctal = false;
-    this.octalPosition = null;
+        this.containsEsc = this.containsOctal = false;
+        this.octalPosition = null;
 
-    this.invalidTemplateEscapePosition = null;
+        this.invalidTemplateEscapePosition = null;
 
-    this.exportedIdentifiers = [];
-  }
+        this.exportedIdentifiers = [];
+    }
 
-  // TODO
-  strict: boolean;
+    // // Used to signify the start of a potential arrow function
+    // potentialArrowAt: number;
 
-  // TODO
-  input: string;
+    // // Used to signify the start of an expression which looks like a
+    // // typed arrow function, but it isn't
+    // // e.g. a ? (b) : c => d
+    // //          ^
+    // noArrowAt: number[];
 
-  // Used to signify the start of a potential arrow function
-  potentialArrowAt: number;
+    // // Used to signify the start of an expression whose params, if it looks like
+    // // an arrow function, shouldn't be converted to assignable nodes.
+    // // This is used to defer the validation of typed arrow functions inside
+    // // conditional expressions.
+    // // e.g. a ? (b) : c => d
+    // //          ^
+    // noArrowParamsConversionAt: number[];
 
-  // Used to signify the start of an expression which looks like a
-  // typed arrow function, but it isn't
-  // e.g. a ? (b) : c => d
-  //          ^
-  noArrowAt: number[];
+    // // Flags to track whether we are in a function, a generator.
+    // inFunction: boolean;
 
-  // Used to signify the start of an expression whose params, if it looks like
-  // an arrow function, shouldn't be converted to assignable nodes.
-  // This is used to defer the validation of typed arrow functions inside
-  // conditional expressions.
-  // e.g. a ? (b) : c => d
-  //          ^
-  noArrowParamsConversionAt: number[];
+    // inParameters: boolean;
 
-  // Flags to track whether we are in a function, a generator.
-  inFunction: boolean;
-  inParameters: boolean;
-  maybeInArrowParameters: boolean;
-  inGenerator: boolean;
-  inMethod: boolean | N.MethodKind;
-  inAsync: boolean;
-  inType: boolean;
-  noAnonFunctionType: boolean;
-  inPropertyName: boolean;
-  inClassProperty: boolean;
-  hasFlowComment: boolean;
-  isIterator: boolean;
+    // maybeInArrowParameters: boolean;
 
-  // Check whether we are in a (nested) class or not.
-  classLevel: number;
+    // inGenerator: boolean;
 
-  // Labels in scope.
-  labels: Array<{
-    kind: ?("loop" | "switch"),
-    name?: ?string,
-    statementStart?: number,
-  }>;
+    // inMethod: boolean | N.MethodKind;
 
-  // Leading decorators. Last element of the stack represents the decorators in current context.
-  // Supports nesting of decorators, e.g. @foo(@bar class inner {}) class outer {}
-  // where @foo belongs to the outer class and @bar to the inner
-  decoratorStack: Array<Array<N.Decorator>>;
+    // inAsync: boolean;
 
-  // The first yield expression inside parenthesized expressions and arrow
-  // function parameters. It is used to disallow yield in arrow function
-  // parameters.
-  yieldInPossibleArrowParameters: ?N.YieldExpression;
+    // inType: boolean;
 
-  // Token store.
-  tokens: Array<Token | N.Comment>;
+    // noAnonFunctionType: boolean;
 
-  // Comment store.
-  comments: Array<N.Comment>;
+    // inPropertyName: boolean;
 
-  // Comment attachment store
-  trailingComments: Array<N.Comment>;
-  leadingComments: Array<N.Comment>;
-  commentStack: Array<{
-    start: number,
-    leadingComments: ?Array<N.Comment>,
-    trailingComments: ?Array<N.Comment>,
-    type: string,
-  }>;
-  commentPreviousNode: N.Node;
+    // inClassProperty: boolean;
 
-  // The current position of the tokenizer in the input.
-  pos: number;
-  lineStart: number;
-  curLine: number;
+    // hasFlowComment: boolean;
 
-  // Properties of the current token:
-  // Its type
-  type: TokenType;
+    // isIterator: boolean;
 
-  // For tokens that include more information than their type, the value
-  value: any;
+    // // Check whether we are in a (nested) class or not.
+    // classLevel: number;
 
-  // Its start and end offset
-  start: number;
-  end: number;
+    // // Labels in scope.
+    // labels: Array<{
+    //     kind: ?("loop" | "switch"),
+    //     name?: ?string,
+    //     statementStart?: number,
+    // }>;
 
-  // And, if locations are used, the {line, column} object
-  // corresponding to those offsets
-  startLoc: Position;
-  endLoc: Position;
+    // // Leading decorators. Last element of the stack represents the decorators in current context.
+    // // Supports nesting of decorators, e.g. @foo(@bar class inner {}) class outer {}
+    // // where @foo belongs to the outer class and @bar to the inner
+    // decoratorStack: Array<Array<N.Decorator>>;
 
-  // Position information for the previous token
-  lastTokEndLoc: Position;
-  lastTokStartLoc: Position;
-  lastTokStart: number;
-  lastTokEnd: number;
+    // // The first yield expression inside parenthesized expressions and arrow
+    // // function parameters. It is used to disallow yield in arrow function
+    // // parameters.
+    // yieldInPossibleArrowParameters: ?N.YieldExpression;
 
-  // The context stack is used to superficially track syntactic
-  // context to predict whether a regular expression is allowed in a
-  // given position.
-  context: Array<TokContext>;
-  exprAllowed: boolean;
+    // // Token store.
+    // tokens: Array<Token | N.Comment>;
 
-  // Used to signal to callers of `readWord1` whether the word
-  // contained any escape sequences. This is needed because words with
-  // escape sequences must not be interpreted as keywords.
-  containsEsc: boolean;
+    // // Comment store.
+    // comments: Array<N.Comment>;
 
-  // TODO
-  containsOctal: boolean;
-  octalPosition: ?number;
+    // // Comment attachment store
+    // trailingComments: Array<N.Comment>;
 
-  // Names of exports store. `default` is stored as a name for both
-  // `export default foo;` and `export { foo as default };`.
-  exportedIdentifiers: Array<string>;
+    // leadingComments: Array<N.Comment>;
 
-  invalidTemplateEscapePosition: ?number;
+    // commentStack: Array<{
+    //     start: number,
+    //     leadingComments: ?Array<N.Comment>,
+    //     trailingComments: ?Array<N.Comment>,
+    //     type,
+    // }>;
 
-  curPosition(): Position {
-    return new Position(this.curLine, this.pos - this.lineStart);
-  }
+    // commentPreviousNode: N.Node;
 
-  clone(skipArrays?: boolean): State {
-    const state = new State();
-    Object.keys(this).forEach(key => {
-      // $FlowIgnore
-      let val = this[key];
+    // // The current position of the tokenizer in the input.
+    // pos: number;
 
-      if ((!skipArrays || key === "context") && Array.isArray(val)) {
-        val = val.slice();
-      }
+    // lineStart: number;
 
-      // $FlowIgnore
-      state[key] = val;
-    });
-    return state;
-  }
+    // curLine: number;
+
+    // // Properties of the current token:
+    // // Its type
+    // type: TokenType;
+
+    // // For tokens that include more information than their type, the value
+    // value: any;
+
+    // // Its start and end offset
+    // start: number;
+
+    // end: number;
+
+    // // And, if locations are used, the {line, column} object
+    // // corresponding to those offsets
+    // startLoc: Position;
+
+    // endLoc: Position;
+
+    // // Position information for the previous token
+    // lastTokEndLoc: Position;
+
+    // lastTokStartLoc: Position;
+
+    // lastTokStart: number;
+
+    // lastTokEnd: number;
+
+    // // The context stack is used to superficially track syntactic
+    // // context to predict whether a regular expression is allowed in a
+    // // given position.
+    // context: Array<TokContext>;
+
+    // exprAllowed: boolean;
+
+    // // Used to signal to callers of `readWord1` whether the word
+    // // contained any escape sequences. This is needed because words with
+    // // escape sequences must not be interpreted as keywords.
+    // containsEsc: boolean;
+
+    // // TODO
+    // containsOctal: boolean;
+
+    // octalPosition: ?number;
+
+    // // Names of exports store. `default` is stored as a name for both
+    // // `export default foo;` and `export { foo as default };`.
+    // exportedIdentifiers: Array<string>;
+
+    // invalidTemplateEscapePosition: ?number;
+
+    curPosition() {
+        return new Position(this.curLine, this.pos - this.lineStart);
+    }
+
+    clone(skipArrays) {
+        const state = new State();
+        Object.keys(this).forEach((key) => {
+            // $FlowIgnore
+            let val = this[key];
+
+            if ((!skipArrays || key === "context") && is.array(val)) {
+                val = val.slice();
+            }
+
+            // $FlowIgnore
+            state[key] = val;
+        });
+        return state;
+    }
 }

@@ -1,2 +1,2 @@
 export interface I {}
-// `export default` does not work with interfaces
+export default interface A {}

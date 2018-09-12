@@ -27,6 +27,7 @@
       }
     },
     "sourceType": "module",
+    "interpreter": null,
     "body": [
       {
         "type": "DeclareInterface",
@@ -61,6 +62,7 @@
         },
         "typeParameters": null,
         "extends": [],
+        "implements": [],
         "mixins": [],
         "body": {
           "type": "ObjectTypeAnnotation",
@@ -110,6 +112,7 @@
                 "name": "foobar"
               },
               "static": false,
+              "proto": false,
               "kind": "init",
               "method": true,
               "value": {
@@ -212,6 +215,7 @@
                 "name": "delete"
               },
               "static": false,
+              "proto": false,
               "kind": "init",
               "method": true,
               "value": {
@@ -314,6 +318,7 @@
                 "name": "yield"
               },
               "static": false,
+              "proto": false,
               "kind": "init",
               "method": true,
               "value": {
@@ -416,6 +421,7 @@
                 "name": "do"
               },
               "static": false,
+              "proto": false,
               "kind": "init",
               "method": true,
               "value": {
@@ -488,6 +494,7 @@
             }
           ],
           "indexers": [],
+          "internalSlots": [],
           "exact": false
         }
       },
