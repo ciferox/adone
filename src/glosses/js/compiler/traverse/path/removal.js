@@ -2,52 +2,58 @@
 
 import { hooks } from "./lib/removal-hooks";
 
-export function remove() {
-  this._assertUnremoved();
+const {
+    is
+} = adone;
 
-  this.resync();
-  this._removeFromScope();
+export const remove = function () {
+    this._assertUnremoved();
 
-  if (this._callRemovalHooks()) {
+    this.resync();
+    this._removeFromScope();
+
+    if (this._callRemovalHooks()) {
+        this._markRemoved();
+        return;
+    }
+
+    this.shareCommentsWithSiblings();
+    this._remove();
     this._markRemoved();
-    return;
-  }
+};
 
-  this.shareCommentsWithSiblings();
-  this._remove();
-  this._markRemoved();
-}
+export const _removeFromScope = function () {
+    const bindings = this.getBindingIdentifiers();
+    Object.keys(bindings).forEach((name) => this.scope.removeBinding(name));
+};
 
-export function _removeFromScope() {
-  const bindings = this.getBindingIdentifiers();
-  Object.keys(bindings).forEach(name => this.scope.removeBinding(name));
-}
+export const _callRemovalHooks = function () {
+    for (const fn of hooks) {
+        if (fn(this, this.parentPath)) {
+            return true;
+        }
+    }
+};
 
-export function _callRemovalHooks() {
-  for (const fn of (hooks: Array<Function>)) {
-    if (fn(this, this.parentPath)) return true;
-  }
-}
+export const _remove = function () {
+    if (is.array(this.container)) {
+        this.container.splice(this.key, 1);
+        this.updateSiblingKeys(this.key, -1);
+    } else {
+        this._replaceWith(null);
+    }
+};
 
-export function _remove() {
-  if (Array.isArray(this.container)) {
-    this.container.splice(this.key, 1);
-    this.updateSiblingKeys(this.key, -1);
-  } else {
-    this._replaceWith(null);
-  }
-}
+export const _markRemoved = function () {
+    this.shouldSkip = true;
+    this.removed = true;
+    this.node = null;
+};
 
-export function _markRemoved() {
-  this.shouldSkip = true;
-  this.removed = true;
-  this.node = null;
-}
-
-export function _assertUnremoved() {
-  if (this.removed) {
-    throw this.buildCodeFrameError(
-      "NodePath has been removed so is read-only.",
-    );
-  }
-}
+export const _assertUnremoved = function () {
+    if (this.removed) {
+        throw this.buildCodeFrameError(
+            "NodePath has been removed so is read-only.",
+        );
+    }
+};

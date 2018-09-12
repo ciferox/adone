@@ -1,9 +1,8 @@
-
 const {
     js: { compiler: { types: t, generate, parse, traverse } }
 } = adone;
 
-const getPath = (code) => {
+const getPath = function (code) {
     const ast = parse(code);
     let path;
     traverse(ast, {
@@ -16,29 +15,31 @@ const getPath = (code) => {
     return path;
 };
 
-const generateCode = (path) => generate(path.parentPath.node).code;
+const generateCode = function (path) {
+    return generate(path.parentPath.node).code;
+};
 
-describe("conversion", () => {
+describe("js", "compiler", "traverse", "conversion", () => {
     describe("ensureBlock", () => {
         it("throws converting node without body to block", () => {
             const rootPath = getPath("true;");
 
-            assert.throws(() => {
+            expect(() => {
                 rootPath.ensureBlock();
-            }, /Can't convert node without a body/);
+            }).throw();
         });
 
         it("throws converting already block array", () => {
             const rootPath = getPath("function test() { true; }").get("body");
-            assert.throws(() => {
+            expect(() => {
                 rootPath.ensureBlock();
-            }, /Can't convert array path to a block statement/);
+            }).throw();
         });
 
         it("converts arrow function with expression body to block", () => {
             const rootPath = getPath("() => true").get("expression");
             rootPath.ensureBlock();
-            assert.equal(generateCode(rootPath), "() => {\n  return true;\n};");
+            expect(generateCode(rootPath)).to.equal("() => {\n  return true;\n};");
         });
 
         it("preserves arrow function body's context", () => {
@@ -46,13 +47,13 @@ describe("conversion", () => {
             const body = rootPath.get("body");
             rootPath.ensureBlock();
             body.replaceWith(t.booleanLiteral(false));
-            assert.equal(generateCode(rootPath), "() => {\n  return false;\n};");
+            expect(generateCode(rootPath)).to.equal("() => {\n  return false;\n};");
         });
 
         it("converts for loop with statement body to block", () => {
             const rootPath = getPath("for (;;) true;");
             rootPath.ensureBlock();
-            assert.equal(generateCode(rootPath), "for (;;) {\n  true;\n}");
+            expect(generateCode(rootPath)).to.equal("for (;;) {\n  true;\n}");
         });
 
         it("preserves for loop body's context", () => {
@@ -60,7 +61,7 @@ describe("conversion", () => {
             const body = rootPath.get("body");
             rootPath.ensureBlock();
             body.replaceWith(t.booleanLiteral(false));
-            assert.equal(generateCode(rootPath), "for (;;) {\n  false;\n}");
+            expect(generateCode(rootPath)).to.equal("for (;;) {\n  false;\n}");
         });
     });
 });

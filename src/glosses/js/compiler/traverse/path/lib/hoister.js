@@ -1,4 +1,5 @@
 const {
+    is,
     js: { compiler: { types: t } }
 } = adone;
 
@@ -132,7 +133,7 @@ export default class PathHoister {
                     path = binding.path;
 
                     // We also move past any constant violations.
-                    for (const violationPath of (binding.constantViolations: Array)) {
+                    for (const violationPath of binding.constantViolations) {
                         if (this.getAttachmentParentForPath(violationPath).key > path.key) {
                             path = violationPath;
                         }

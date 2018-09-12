@@ -5,6 +5,7 @@ import PathHoister from "./lib/hoister";
 import NodePath from "./index";
 
 const {
+    is,
     js: { compiler: { types: t } }
 } = adone;
 
@@ -12,7 +13,7 @@ const {
  * Insert the provided nodes before the current one.
  */
 
-export function insertBefore(nodes) {
+export const insertBefore = function (nodes) {
     this._assertUnremoved();
 
     nodes = this._verifyNodeList(nodes);
@@ -32,28 +33,30 @@ export function insertBefore(nodes) {
             this.listKey !== "arguments") ||
         (parentPath.isForStatement() && this.key === "init")
     ) {
-        if (this.node) nodes.push(this.node);
+        if (this.node) {
+            nodes.push(this.node);
+        }
         return this.replaceExpressionWithStatements(nodes);
-    } else if (Array.isArray(this.container)) {
+    } else if (is.array(this.container)) {
         return this._containerInsertBefore(nodes);
     } else if (this.isStatementOrBlock()) {
         const shouldInsertCurrentNode =
             this.node &&
-            (!this.isExpressionStatement() || this.node.expression != null);
+            (!this.isExpressionStatement() || !is.nil(this.node.expression));
 
         this.replaceWith(
             t.blockStatement(shouldInsertCurrentNode ? [this.node] : []),
         );
         return this.unshiftContainer("body", nodes);
-    } else {
-        throw new Error(
-            "We don't know what to do with this node type. " +
-            "We were previously a Statement but we can't fit in here?",
-        );
     }
-}
+    throw new Error(
+        "We don't know what to do with this node type. " +
+        "We were previously a Statement but we can't fit in here?",
+    );
 
-export function _containerInsert(from, nodes) {
+};
+
+export const _containerInsert = function (from, nodes) {
     this.updateSiblingKeys(from, nodes.length);
 
     const paths = [];
@@ -80,22 +83,21 @@ export function _containerInsert(from, nodes) {
     }
 
     return paths;
-}
+};
 
-export function _containerInsertBefore(nodes) {
+export const _containerInsertBefore = function (nodes) {
     return this._containerInsert(this.key, nodes);
-}
+};
 
-export function _containerInsertAfter(nodes) {
+export const _containerInsertAfter = function (nodes) {
     return this._containerInsert(this.key + 1, nodes);
-}
+};
 
 /**
  * Insert the provided nodes after the current one. When inserting nodes after an
  * expression, ensure that the completion record is correct by pushing the current node.
  */
-
-export function insertAfter(nodes) {
+export const insertAfter = function (nodes) {
     this._assertUnremoved();
 
     nodes = this._verifyNodeList(nodes);
@@ -128,31 +130,32 @@ export function insertAfter(nodes) {
             nodes.push(t.expressionStatement(t.cloneNode(temp)));
         }
         return this.replaceExpressionWithStatements(nodes);
-    } else if (Array.isArray(this.container)) {
+    } else if (is.array(this.container)) {
         return this._containerInsertAfter(nodes);
     } else if (this.isStatementOrBlock()) {
         const shouldInsertCurrentNode =
             this.node &&
-            (!this.isExpressionStatement() || this.node.expression != null);
+            (!this.isExpressionStatement() || !is.nil(this.node.expression));
 
         this.replaceWith(
             t.blockStatement(shouldInsertCurrentNode ? [this.node] : []),
         );
         return this.pushContainer("body", nodes);
-    } else {
-        throw new Error(
-            "We don't know what to do with this node type. " +
-            "We were previously a Statement but we can't fit in here?",
-        );
     }
-}
+    throw new Error(
+        "We don't know what to do with this node type. " +
+        "We were previously a Statement but we can't fit in here?",
+    );
+
+};
 
 /**
  * Update all sibling node paths after `fromIndex` by `incrementBy`.
  */
-
-export function updateSiblingKeys(fromIndex, incrementBy) {
-    if (!this.parent) return;
+export const updateSiblingKeys = function (fromIndex, incrementBy) {
+    if (!this.parent) {
+        return;
+    }
 
     const paths = pathCache.get(this.parent);
     for (let i = 0; i < paths.length; i++) {
@@ -161,9 +164,9 @@ export function updateSiblingKeys(fromIndex, incrementBy) {
             path.key += incrementBy;
         }
     }
-}
+};
 
-export function _verifyNodeList(nodes) {
+export const _verifyNodeList = function (nodes) {
     if (!nodes) {
         return [];
     }
@@ -187,7 +190,7 @@ export function _verifyNodeList(nodes) {
         }
 
         if (msg) {
-            const type = Array.isArray(node) ? "array" : typeof node;
+            const type = is.array(node) ? "array" : typeof node;
             throw new Error(
                 `Node list ${msg} with the index of ${i} and type of ${type}`,
             );
@@ -195,9 +198,9 @@ export function _verifyNodeList(nodes) {
     }
 
     return nodes;
-}
+};
 
-export function unshiftContainer(listKey, nodes) {
+export const unshiftContainer = function (listKey, nodes) {
     this._assertUnremoved();
 
     nodes = this._verifyNodeList(nodes);
@@ -209,13 +212,13 @@ export function unshiftContainer(listKey, nodes) {
         parent: this.node,
         container: this.node[listKey],
         listKey,
-        key: 0,
+        key: 0
     });
 
     return path.insertBefore(nodes);
-}
+};
 
-export function pushContainer(listKey, nodes) {
+export const pushContainer = function (listKey, nodes) {
     this._assertUnremoved();
 
     nodes = this._verifyNodeList(nodes);
@@ -227,20 +230,19 @@ export function pushContainer(listKey, nodes) {
     const path = NodePath.get({
         parentPath: this,
         parent: this.node,
-        container: container,
+        container,
         listKey,
-        key: container.length,
+        key: container.length
     });
 
     return path.replaceWithMultiple(nodes);
-}
+};
 
 /**
  * Hoist the current node to the highest scope possible and return a UID
  * referencing it.
  */
-
-export function hoist(scope = this.scope) {
+export const hoist = function (scope = this.scope) {
     const hoister = new PathHoister(this, scope);
     return hoister.run();
-}
+};

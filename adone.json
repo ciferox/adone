@@ -542,6 +542,13 @@
                     "dst": "lib/glosses/js",
                     "namespace": "js",
                     "struct": {
+                        "compiler": {
+                            "description": "Javascript compiler implementation",
+                            "task": "transpile",
+                            "src": "src/glosses/js/compiler/**/*.js",
+                            "dst": "lib/glosses/js/compiler",
+                            "namespace": "compiler"
+                        },
                         "bundle": {
                             "description": "Bundler implementation",
                             "task": "transpile",

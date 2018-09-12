@@ -1,7 +1,8 @@
 const {
-    js: { compiler: { parse, traverse } },
+    js: { compiler: { traverse, parse } },
     lodash: { cloneDeep }
 } = adone;
+
 
 describe("js", "compiler", "traverse", "traverse", () => {
     const code = `
@@ -27,11 +28,11 @@ describe("js", "compiler", "traverse", "traverse", () => {
             }
         });
 
-        assert.equal(ast2.body[1].expression.left.object, replacement);
+        expect(ast2.body[1].expression.left.object).to.equal(replacement);
     });
 
     it("traverse", () => {
-        const expect = [
+        const expected = [
             body[0],
             body[0].declarations[0],
             body[0].declarations[0].id,
@@ -52,7 +53,7 @@ describe("js", "compiler", "traverse", "traverse", () => {
             }
         });
 
-        assert.deepEqual(actual, expect);
+        expect(actual).to.eql(expected);
     });
 
     it("traverse falsy parent", () => {
@@ -64,7 +65,7 @@ describe("js", "compiler", "traverse", "traverse", () => {
     });
 
     it("traverse blacklistTypes", () => {
-        const expect = [
+        const expected = [
             body[0],
             body[0].declarations[0],
             body[0].declarations[0].id,
@@ -83,24 +84,24 @@ describe("js", "compiler", "traverse", "traverse", () => {
             }
         });
 
-        assert.deepEqual(actual, expect);
+        expect(actual).to.eql(expected);
     });
 
     it("hasType", () => {
-        assert.ok(traverse.hasType(ast, "ThisExpression"));
-        assert.ok(
-            !traverse.hasType(ast, "ThisExpression", ["AssignmentExpression"]),
-        );
+        expect(traverse.hasType(ast, "ThisExpression")).to.true();
+        expect(
+            traverse.hasType(ast, "ThisExpression", ["AssignmentExpression"]),
+        ).to.false();
 
-        assert.ok(traverse.hasType(ast, "ThisExpression"));
-        assert.ok(traverse.hasType(ast, "Program"));
+        expect(traverse.hasType(ast, "ThisExpression")).to.true();
+        expect(traverse.hasType(ast, "Program")).to.true();
 
-        assert.ok(
-            !traverse.hasType(ast, "ThisExpression", ["MemberExpression"]),
-        );
-        assert.ok(!traverse.hasType(ast, "ThisExpression", ["Program"]));
+        expect(
+            traverse.hasType(ast, "ThisExpression", ["MemberExpression"]),
+        ).to.false();
+        expect(traverse.hasType(ast, "ThisExpression", ["Program"])).to.false();
 
-        assert.ok(!traverse.hasType(ast, "ArrowFunctionExpression"));
+        expect(traverse.hasType(ast, "ArrowFunctionExpression")).to.false();
     });
 
     it("clearCache", () => {
@@ -127,8 +128,8 @@ describe("js", "compiler", "traverse", "traverse", () => {
         });
 
         scopes2.forEach((_, i) => {
-            assert.notStrictEqual(scopes[i], scopes2[i]);
-            assert.notStrictEqual(paths[i], paths2[i]);
+            expect(scopes[i]).not.to.equal(scopes2[i]);
+            expect(paths[i]).not.to.equal(paths2[i]);
         });
     });
 
@@ -150,7 +151,7 @@ describe("js", "compiler", "traverse", "traverse", () => {
         });
 
         paths2.forEach((p, i) => {
-            assert.notStrictEqual(p, paths[i]);
+            expect(p).not.to.equal(paths[i]);
         });
     });
 
@@ -174,7 +175,7 @@ describe("js", "compiler", "traverse", "traverse", () => {
         });
 
         scopes2.forEach((p, i) => {
-            assert.notStrictEqual(p, scopes[i]);
+            expect(p).not.to.equal(scopes[i]);
         });
     });
 });

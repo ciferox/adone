@@ -1,8 +1,10 @@
 const {
-    js: { compiler: { parse, traverse } }
+    js: { compiler: { traverse, parse } }
 } = adone;
 
-const hop = (o, key) => Object.hasOwnProperty.call(o, key);
+const hop = function (o, key) {
+    return Object.hasOwnProperty.call(o, key);
+};
 
 describe("js", "compiler", "traverse", "path/family", () => {
     describe("getBindingIdentifiers", () => {
@@ -24,45 +26,37 @@ describe("js", "compiler", "traverse", "path/family", () => {
 
         it("should contain keys of nodes in paths", () => {
             Object.keys(nodes).forEach((id) => {
-                assert.strictEqual(hop(paths, id), true, "Node's keys exists in paths");
+                expect(hop(paths, id)).to.equal(true);
             });
         });
 
         it("should contain outer bindings", () => {
             Object.keys(outerNodes).forEach((id) => {
-                assert.strictEqual(hop(outerPaths, id), true, "Has same outer keys");
+                expect(hop(outerPaths, id)).to.equal(true);
             });
         });
 
         it("should return paths", () => {
             Object.keys(paths).forEach((id) => {
-                assert.strictEqual(
-                    Boolean(paths[id].node),
-                    true,
-                    "Has a property node that's not falsy",
-                );
-                assert.strictEqual(paths[id].type, paths[id].node.type, "type matches");
+                expect(paths[id].node).to.exist();
+                expect(paths[id].type).to.equal(paths[id].node.type);
             });
 
             Object.keys(outerPaths).forEach((id) => {
-                assert.strictEqual(Boolean(outerPaths[id].node), true, "has property node");
-                assert.strictEqual(
-                    outerPaths[id].type,
-                    outerPaths[id].node.type,
-                    "type matches",
-                );
+                expect(outerPaths[id].node).to.exist();
+                expect(outerPaths[id].type).to.equal(outerPaths[id].node.type);
             });
         });
 
         it("should match paths and nodes returned for the same ast", () => {
             Object.keys(nodes).forEach((id) => {
-                assert.strictEqual(nodes[id], paths[id].node, "Nodes match");
+                expect(nodes[id]).to.equal(paths[id].node);
             });
         });
 
         it("should match paths and nodes returned for outer Bindings", () => {
             Object.keys(outerNodes).forEach((id) => {
-                assert.strictEqual(outerNodes[id], outerPaths[id].node, "nodes match");
+                expect(outerNodes[id]).to.equal(outerPaths[id].node);
             });
         });
     });
@@ -80,25 +74,17 @@ describe("js", "compiler", "traverse", "path/family", () => {
         });
 
         it("should return traverse sibling nodes", () => {
-            assert.ok(sibling.getNextSibling().node, "has property node");
-            assert.ok(lastSibling.getPrevSibling().node, "has property node");
-            assert.equal(Boolean(sibling.getPrevSibling().node), false, "out of scope");
-            assert.equal(Boolean(lastSibling.getNextSibling().node), false, "out of scope");
+            expect(sibling.getNextSibling().node).to.exist();
+            expect(lastSibling.getPrevSibling().node).to.exist();
+            expect(sibling.getPrevSibling().node).not.exist();
+            expect(lastSibling.getNextSibling().node).not.exist();
         });
 
         it("should return all preceding and succeeding sibling nodes", () => {
-            assert.ok(sibling.getAllNextSiblings().length, "Has next sibling");
-            assert.ok(lastSibling.getAllPrevSiblings().length, "Has prev sibling");
-            assert.equal(
-                sibling.getAllNextSiblings().length,
-                2,
-                "Has 2 succeeding sibling",
-            );
-            assert.equal(
-                lastSibling.getAllPrevSiblings().length,
-                2,
-                "Has 2 preceeding sibling",
-            );
+            expect(sibling.getAllNextSiblings().length).to.exist();
+            expect(lastSibling.getAllPrevSiblings().length).to.exist();
+            expect(sibling.getAllNextSiblings()).to.lengthOf(2);
+            expect(lastSibling.getAllPrevSiblings()).to.lengthOf(2);
         });
     });
 });

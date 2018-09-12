@@ -42,8 +42,12 @@ export const Statement = {
     checkPath({ node, parent }): boolean {
         if (t.isStatement(node)) {
             if (t.isVariableDeclaration(node)) {
-                if (t.isForXStatement(parent, { left: node })) { return false; }
-                if (t.isForStatement(parent, { init: node })) { return false; }
+                if (t.isForXStatement(parent, { left: node })) {
+                    return false; 
+                }
+                if (t.isForStatement(parent, { init: node })) {
+                    return false; 
+                }
             }
 
             return true;

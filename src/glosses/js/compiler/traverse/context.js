@@ -1,6 +1,7 @@
 import NodePath from "./path";
 
 const {
+    is,
     js: { compiler: { types: t } }
 } = adone;
 
@@ -14,47 +15,59 @@ export default class TraversalContext {
         this.opts = opts;
     }
 
-    parentPath: NodePath;
-    scope;
-    state;
-    opts;
-    queue: ?Array<NodePath> = null;
+    // parentPath;
+
+    // scope;
+
+    // state;
+
+    // opts;
+
+    // queue: ?Array<NodePath> = null;
 
     /**
      * This method does a simple check to determine whether or not we really need to attempt
      * visit a node. This will prevent us from constructing a NodePath.
      */
 
-    shouldVisit(node): boolean {
+    shouldVisit(node) {
         const opts = this.opts;
-        if (opts.enter || opts.exit) return true;
+        if (opts.enter || opts.exit) {
+            return true;
+        }
 
         // check if we have a visitor for this node
-        if (opts[node.type]) return true;
+        if (opts[node.type]) {
+            return true;
+        }
 
         // check if we're going to traverse into this node
-        const keys: ?Array<string> = t.VISITOR_KEYS[node.type];
-        if (!keys || !keys.length) return false;
+        const keys = t.VISITOR_KEYS[node.type];
+        if (!keys || !keys.length) {
+            return false;
+        }
 
         // we need to traverse into this node so ensure that it has children to traverse into!
         for (const key of keys) {
-            if (node[key]) return true;
+            if (node[key]) {
+                return true;
+            }
         }
 
         return false;
     }
 
-    create(node, obj, key, listKey): NodePath {
+    create(node, obj, key, listKey) {
         return NodePath.get({
             parentPath: this.parentPath,
             parent: node,
             container: obj,
-            key: key,
-            listKey,
+            key,
+            listKey
         });
     }
 
-    maybeQueue(path, notPriority?: boolean) {
+    maybeQueue(path, notPriority) {
         if (this.trap) {
             throw new Error("Infinite cycle detected");
         }
@@ -70,7 +83,9 @@ export default class TraversalContext {
 
     visitMultiple(container, parent, listKey) {
         // nothing to traverse!
-        if (container.length === 0) return false;
+        if (container.length === 0) {
+            return false;
+        }
 
         const queue = [];
 
@@ -85,15 +100,15 @@ export default class TraversalContext {
         return this.visitQueue(queue);
     }
 
-    visitSingle(node, key): boolean {
+    visitSingle(node, key) {
         if (this.shouldVisit(node[key])) {
             return this.visitQueue([this.create(node, node, key)]);
-        } else {
-            return false;
         }
+        return false;
+
     }
 
-    visitQueue(queue: Array<NodePath>) {
+    visitQueue(queue) {
         // set queue
         this.queue = queue;
         this.priorityQueue = [];
@@ -116,14 +131,18 @@ export default class TraversalContext {
             }
 
             // this path no longer belongs to the tree
-            if (path.key === null) continue;
+            if (is.null(path.key)) {
+                continue;
+            }
 
             if (testing && queue.length >= 10_000) {
                 this.trap = true;
             }
 
             // ensure we don't visit the same node twice
-            if (visited.indexOf(path.node) >= 0) continue;
+            if (visited.includes(path.node)) {
+                continue;
+            }
             visited.push(path.node);
 
             if (path.visit()) {
@@ -135,7 +154,9 @@ export default class TraversalContext {
                 stop = this.visitQueue(this.priorityQueue);
                 this.priorityQueue = [];
                 this.queue = queue;
-                if (stop) break;
+                if (stop) {
+                    break;
+                }
             }
         }
 
@@ -152,12 +173,14 @@ export default class TraversalContext {
 
     visit(node, key) {
         const nodes = node[key];
-        if (!nodes) return false;
-
-        if (Array.isArray(nodes)) {
-            return this.visitMultiple(nodes, node, key);
-        } else {
-            return this.visitSingle(node, key);
+        if (!nodes) {
+            return false;
         }
+
+        if (is.array(nodes)) {
+            return this.visitMultiple(nodes, node, key);
+        }
+        return this.visitSingle(node, key);
+
     }
 }

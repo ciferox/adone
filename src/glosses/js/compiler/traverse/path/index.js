@@ -1,4 +1,4 @@
-import * as virtualTypes from "./lib/virtual-types";
+import * as virtualTypes from "./lib/virtual_types";
 import traverse from "../index";
 import Scope from "../scope";
 import { path as pathCache } from "../cache";
@@ -21,7 +21,7 @@ const {
 } = adone;
 
 export default class NodePath {
-    constructor(hub: HubInterface, parent: Object) {
+    constructor(hub, parent) {
         this.parent = parent;
         this.hub = hub;
         this.contexts = [];
@@ -45,29 +45,49 @@ export default class NodePath {
         this.typeAnnotation = null;
     }
 
-    parent: Object;
-    hub: HubInterface;
-    contexts: Array<TraversalContext>;
-    data: Object;
-    shouldSkip: boolean;
-    shouldStop: boolean;
-    removed: boolean;
-    state: any;
-    opts: ?Object;
-    skipKeys: ?Object;
-    parentPath: ?NodePath;
-    context: TraversalContext;
-    container: ?Object | Array<Object>;
-    listKey: ?string;
-    inList: boolean;
-    parentKey: ?string;
-    key: ?string;
-    node: ?Object;
-    scope: Scope;
-    type: ?string;
-    typeAnnotation: ?Object;
+    // parent;
 
-    static get({ hub, parentPath, parent, container, listKey, key }): NodePath {
+    // hub;
+
+    // contexts: Array<TraversalContext>;
+
+    // data;
+
+    // shouldSkip: boolean;
+
+    // shouldStop: boolean;
+
+    // removed: boolean;
+
+    // state;
+
+    // opts: ?Object;
+
+    // skipKeys: ?Object;
+
+    // parentPath: ?NodePath;
+
+    // context: TraversalContext;
+
+    // container: ?Object | Array<Object>;
+
+    // listKey: ?string;
+
+    // inList: boolean;
+
+    // parentKey: ?string;
+
+    // key: ?string;
+
+    // node: ?Object;
+
+    // scope;
+
+    // type: ?string;
+
+    // typeAnnotation: ?Object;
+
+    static get({ hub, parentPath, parent, container, listKey, key }) {
         if (!hub && parentPath) {
             hub = parentPath.hub;
         }
@@ -103,39 +123,43 @@ export default class NodePath {
         return path;
     }
 
-    getScope(scope: Scope) {
+    getScope(scope) {
         return this.isScope() ? new Scope(this) : scope;
     }
 
-    setData(key: string, val: any): any {
+    setData(key, val) {
         return (this.data[key] = val);
     }
 
-    getData(key: string, def?: any): any {
+    getData(key, def) {
         let val = this.data[key];
-        if (!val && def) val = this.data[key] = def;
+        if (!val && def) {
+            val = this.data[key] = def;
+        }
         return val;
     }
 
-    buildCodeFrameError(msg: string, Error: typeof Error = SyntaxError): Error {
+    buildCodeFrameError(msg, Error = SyntaxError) {
         return this.hub.buildError(this.node, msg, Error);
     }
 
-    traverse(visitor: Object, state?: any) {
+    traverse(visitor, state) {
         traverse(this.node, visitor, this.scope, state, this);
     }
 
-    set(key: string, node: Object) {
+    set(key, node) {
         t.validate(this.node, key, node);
         this.node[key] = node;
     }
 
-    getPathLocation(): string {
+    getPathLocation() {
         const parts = [];
         let path = this;
         do {
             let key = path.key;
-            if (path.inList) key = `${path.listKey}[${key}]`;
+            if (path.inList) {
+                key = `${path.listKey}[${key}]`;
+            }
             parts.unshift(key);
         } while ((path = path.parentPath));
         return parts.join(".");
@@ -161,7 +185,7 @@ Object.assign(
     NodePath_comments,
 );
 
-for (const type of (t.TYPES: Array<string>)) {
+for (const type of t.TYPES) {
     const typeKey = `is${type}`;
     const fn = t[typeKey];
     NodePath.prototype[typeKey] = function (opts) {
@@ -176,8 +200,12 @@ for (const type of (t.TYPES: Array<string>)) {
 }
 
 for (const type in virtualTypes) {
-    if (type[0] === "_") continue;
-    if (t.TYPES.indexOf(type) < 0) t.TYPES.push(type);
+    if (type[0] === "_") {
+        continue;
+    }
+    if (!t.TYPES.includes(type)) {
+        t.TYPES.push(type);
+    }
 
     const virtualType = virtualTypes[type];
 

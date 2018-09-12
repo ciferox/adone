@@ -1,5 +1,5 @@
 const {
-    js: { compiler: { parse, traverse } }
+    js: { compiler: { traverse, parse } }
 } = adone;
 
 describe("js", "compiler", "traverse", "path/ancestry", () => {
@@ -16,7 +16,7 @@ describe("js", "compiler", "traverse", "path/ancestry", () => {
 
             const [programPath, numberPath] = paths;
 
-            assert(programPath.isAncestor(numberPath));
+            expect(programPath.isAncestor(numberPath)).to.true();
         });
 
         it("returns false if not ancestor", () => {
@@ -29,7 +29,7 @@ describe("js", "compiler", "traverse", "path/ancestry", () => {
 
             const [, numberPath, stringPath] = paths;
 
-            assert(!stringPath.isAncestor(numberPath));
+            expect(stringPath.isAncestor(numberPath)).to.false();
         });
     });
 
@@ -46,7 +46,7 @@ describe("js", "compiler", "traverse", "path/ancestry", () => {
 
             const [programPath, numberPath] = paths;
 
-            assert(numberPath.isDescendant(programPath));
+            expect(numberPath.isDescendant(programPath)).to.true();
         });
 
         it("returns false if not descendant", () => {
@@ -59,7 +59,7 @@ describe("js", "compiler", "traverse", "path/ancestry", () => {
 
             const [, numberPath, stringPath] = paths;
 
-            assert(!numberPath.isDescendant(stringPath));
+            expect(numberPath.isDescendant(stringPath)).to.false();
         });
     });
 
@@ -70,9 +70,9 @@ describe("js", "compiler", "traverse", "path/ancestry", () => {
                 traverse(ast, {
                     Program(path) {
                         path.getStatementParent();
-                    }
+                    },
                 });
-            }).to.throw(/File\/Program node/);
+            }).throw(/File\/Program node/);
         });
     });
 });

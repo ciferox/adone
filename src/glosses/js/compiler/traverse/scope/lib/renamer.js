@@ -1,9 +1,3 @@
-import Binding from "../binding";
-
-const {
-    js: { compiler: { types: t } }
-} = adone;
-
 const renameVisitor = {
     ReferencedIdentifier({ node }, state) {
         if (node.name === state.oldName) {
@@ -26,21 +20,25 @@ const renameVisitor = {
         const ids = path.getOuterBindingIdentifiers();
 
         for (const name in ids) {
-            if (name === state.oldName) ids[name].name = state.newName;
+            if (name === state.oldName) {
+                ids[name].name = state.newName;
+            }
         }
-    },
+    }
 };
 
 export default class Renamer {
-    constructor(binding: Binding, oldName: string, newName: string) {
+    constructor(binding, oldName, newName) {
         this.newName = newName;
         this.oldName = oldName;
         this.binding = binding;
     }
 
-    oldName: string;
-    newName: string;
-    binding: Binding;
+    // oldName;
+
+    // newName;
+
+    // binding;
 
     maybeConvertFromExportDeclaration(parentDeclar) {
         const maybeExportDeclar = parentDeclar.parentPath;
@@ -60,51 +58,51 @@ export default class Renamer {
     }
 
     maybeConvertFromClassFunctionDeclaration(path) {
-        return; // TODO
+        // TODO
 
         // retain the `name` of a class/function declaration
 
-        if (!path.isFunctionDeclaration() && !path.isClassDeclaration()) return;
-        if (this.binding.kind !== "hoisted") return;
+        // if (!path.isFunctionDeclaration() && !path.isClassDeclaration()) {}
+        // if (this.binding.kind !== "hoisted") {}
 
-        path.node.id = t.identifier(this.oldName);
-        path.node._blockHoist = 3;
+        // path.node.id = t.identifier(this.oldName);
+        // path.node._blockHoist = 3;
 
-        path.replaceWith(
-            t.variableDeclaration("let", [
-                t.variableDeclarator(
-                    t.identifier(this.newName),
-                    t.toExpression(path.node),
-                ),
-            ]),
-        );
+        // path.replaceWith(
+        //     t.variableDeclaration("let", [
+        //         t.variableDeclarator(
+        //             t.identifier(this.newName),
+        //             t.toExpression(path.node),
+        //         )
+        //     ]),
+        // );
     }
 
     maybeConvertFromClassFunctionExpression(path) {
-        return; // TODO
+        // TODO
 
         // retain the `name` of a class/function expression
 
-        if (!path.isFunctionExpression() && !path.isClassExpression()) return;
-        if (this.binding.kind !== "local") return;
+        // if (!path.isFunctionExpression() && !path.isClassExpression()) {}
+        // if (this.binding.kind !== "local") {}
 
-        path.node.id = t.identifier(this.oldName);
+        // path.node.id = t.identifier(this.oldName);
 
-        this.binding.scope.parent.push({
-            id: t.identifier(this.newName),
-        });
+        // this.binding.scope.parent.push({
+        //     id: t.identifier(this.newName)
+        // });
 
-        path.replaceWith(
-            t.assignmentExpression("=", t.identifier(this.newName), path.node),
-        );
+        // path.replaceWith(
+        //     t.assignmentExpression("=", t.identifier(this.newName), path.node),
+        // );
     }
 
-    rename(block?) {
+    rename(block) {
         const { binding, oldName, newName } = this;
         const { scope, path } = binding;
 
         const parentDeclar = path.find(
-            path =>
+            (path) =>
                 path.isDeclaration() ||
                 path.isFunctionExpression() ||
                 path.isClassExpression(),

@@ -1,8 +1,8 @@
 const {
-    js: { compiler: { parse, generate, traverse: { NodePath }, types: t } }
+    js: { compiler: { types: t, generate, parse, traverse: { NodePath } } }
 } = adone;
 
-const wrapMethod = (body, methodName, extend) => {
+const wrapMethod = function (body, methodName, extend) {
     return parse(
         `
     class Example ${extend ? "extends class {}" : ""} {
@@ -13,19 +13,21 @@ const wrapMethod = (body, methodName, extend) => {
     );
 };
 
-const assertConversion = (input, output, { methodName = "method", extend = false, arrowOpts } = {}) => {
+const assertConversion = function (
+    input,
+    output,
+    { methodName = "method", extend = false, arrowOpts } = {},
+) {
     const inputAst = wrapMethod(input, methodName, extend);
     const outputAst = wrapMethod(output, methodName, extend);
 
     const rootPath = NodePath.get({
         hub: {
-            file: {
-                addHelper(helperName) {
-                    return t.memberExpression(
-                        t.identifier("babelHelpers"),
-                        t.identifier(helperName),
-                    );
-                }
+            addHelper(helperName) {
+                return t.memberExpression(
+                    t.identifier("babelHelpers"),
+                    t.identifier(helperName),
+                );
             }
         },
         parentPath: null,
@@ -40,7 +42,7 @@ const assertConversion = (input, output, { methodName = "method", extend = false
         }
     });
 
-    assert.equal(generate(inputAst).code, generate(outputAst).code);
+    expect(generate(inputAst).code).to.equal(generate(outputAst).code);
 };
 
 describe("js", "compiler", "traverse", "arrow function conversion", () => {

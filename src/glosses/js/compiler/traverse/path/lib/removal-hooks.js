@@ -5,8 +5,8 @@
  */
 
 export const hooks = [
-  function(self, parent) {
-    const removeParent =
+    function (self, parent) {
+        const removeParent =
       // while (NODE);
       // removing the test of a while/switch, we can either just remove it entirely *or* turn the
       // `test` into `true` unlikely that the latter will ever be what's wanted so we just remove
@@ -27,49 +27,49 @@ export const hooks = [
       // remove the entire expression statement if there's no expression
       (self.key === "expression" && parent.isExpressionStatement());
 
-    if (removeParent) {
-      parent.remove();
-      return true;
-    }
-  },
+        if (removeParent) {
+            parent.remove();
+            return true;
+        }
+    },
 
-  function(self, parent) {
-    if (parent.isSequenceExpression() && parent.node.expressions.length === 1) {
-      // (node, NODE);
-      // we've just removed the second element of a sequence expression so let's turn that sequence
-      // expression into a regular expression
-      parent.replaceWith(parent.node.expressions[0]);
-      return true;
-    }
-  },
+    function (self, parent) {
+        if (parent.isSequenceExpression() && parent.node.expressions.length === 1) {
+            // (node, NODE);
+            // we've just removed the second element of a sequence expression so let's turn that sequence
+            // expression into a regular expression
+            parent.replaceWith(parent.node.expressions[0]);
+            return true;
+        }
+    },
 
-  function(self, parent) {
-    if (parent.isBinary()) {
-      // left + NODE;
-      // NODE + right;
-      // we're in a binary expression, better remove it and replace it with the last expression
-      if (self.key === "left") {
-        parent.replaceWith(parent.node.right);
-      } else {
-        // key === "right"
-        parent.replaceWith(parent.node.left);
-      }
-      return true;
-    }
-  },
+    function (self, parent) {
+        if (parent.isBinary()) {
+            // left + NODE;
+            // NODE + right;
+            // we're in a binary expression, better remove it and replace it with the last expression
+            if (self.key === "left") {
+                parent.replaceWith(parent.node.right);
+            } else {
+                // key === "right"
+                parent.replaceWith(parent.node.left);
+            }
+            return true;
+        }
+    },
 
-  function(self, parent) {
-    if (
-      (parent.isIfStatement() &&
+    function (self, parent) {
+        if (
+            (parent.isIfStatement() &&
         (self.key === "consequent" || self.key === "alternate")) ||
       (self.key === "body" &&
         (parent.isLoop() || parent.isArrowFunctionExpression()))
-    ) {
-      self.replaceWith({
-        type: "BlockStatement",
-        body: [],
-      });
-      return true;
+        ) {
+            self.replaceWith({
+                type: "BlockStatement",
+                body: []
+            });
+            return true;
+        }
     }
-  },
 ];

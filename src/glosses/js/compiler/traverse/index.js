@@ -9,21 +9,25 @@ const {
 
 
 export default function traverse(
-    parent: Object | Array<Object>,
-    opts?: Object,
-    scope?: Object,
-    state: Object,
-    parentPath: Object,
+    parent,
+    opts,
+    scope,
+    state,
+    parentPath,
 ) {
-    if (!parent) return;
-    if (!opts) opts = {};
+    if (!parent) {
+        return;
+    }
+    if (!opts) {
+        opts = {};
+    }
 
     if (!opts.noScope && !scope) {
         if (parent.type !== "Program" && parent.type !== "File") {
             throw new Error(
                 "You must pass a scope and parentPath unless traversing a Program/File. " +
                 `Instead of that you tried to traverse a ${
-                parent.type
+                    parent.type
                 } node without ` +
                 "passing scope and parentPath.",
             );
@@ -51,20 +55,26 @@ traverse.cheap = function (node, enter) {
 };
 
 traverse.node = function (
-    node: Object,
-    opts: Object,
-    scope: Object,
-    state: Object,
-    parentPath: Object,
-    skipKeys?,
+    node,
+    opts,
+    scope,
+    state,
+    parentPath,
+    skipKeys,
 ) {
-    const keys: Array = t.VISITOR_KEYS[node.type];
-    if (!keys) return;
+    const keys = t.VISITOR_KEYS[node.type];
+    if (!keys) {
+        return;
+    }
 
     const context = new TraversalContext(scope, opts, state, parentPath);
     for (const key of keys) {
-        if (skipKeys && skipKeys[key]) continue;
-        if (context.visit(node, key)) return;
+        if (skipKeys && skipKeys[key]) {
+            continue;
+        }
+        if (context.visit(node, key)) {
+            return;
+        }
     }
 };
 
@@ -79,27 +89,31 @@ traverse.removeProperties = function (tree, opts) {
     return tree;
 };
 
-function hasBlacklistedType(path, state) {
+const hasBlacklistedType = function (path, state) {
     if (path.node.type === state.type) {
         state.has = true;
         path.stop();
     }
-}
+};
 
 traverse.hasType = function (
-    tree: Object,
-    type: Object,
-    blacklistTypes: Array<string>,
-): boolean {
+    tree,
+    type,
+    blacklistTypes,
+) {
     // the node we're searching in is blacklisted
-    if (includes(blacklistTypes, tree.type)) return false;
+    if (includes(blacklistTypes, tree.type)) {
+        return false;
+    }
 
     // the type we're looking for is the same as the passed node
-    if (tree.type === type) return true;
+    if (tree.type === type) {
+        return true;
+    }
 
     const state = {
         has: false,
-        type: type,
+        type
     };
 
     traverse(
@@ -107,7 +121,7 @@ traverse.hasType = function (
         {
             noScope: true,
             blacklist: blacklistTypes,
-            enter: hasBlacklistedType,
+            enter: hasBlacklistedType
         },
         null,
         state,

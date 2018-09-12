@@ -25,7 +25,7 @@ const hoistVariablesVisitor = {
 
         const exprs = [];
 
-        for (const declar of (path.node.declarations: Array<Object>)) {
+        for (const declar of (path.node.declarations)) {
             if (declar.init) {
                 exprs.push(
                     t.expressionStatement(
@@ -47,7 +47,7 @@ const hoistVariablesVisitor = {
  *  - Remove the current node.
  */
 
-export function replaceWithMultiple(nodes: Array<Object>) {
+export const replaceWithMultiple = function (nodes) {
     this.resync();
 
     nodes = this._verifyNodeList(nodes);
@@ -62,7 +62,7 @@ export function replaceWithMultiple(nodes: Array<Object>) {
         this.remove();
     }
     return paths;
-}
+};
 
 /**
  * Parse a string as an expression and replace the current node with the result.
@@ -72,7 +72,7 @@ export function replaceWithMultiple(nodes: Array<Object>) {
  * easier to use, your transforms will be extremely brittle.
  */
 
-export function replaceWithSourceString(replacement) {
+export const replaceWithSourceString = function (replacement) {
     this.resync();
 
     try {
@@ -82,8 +82,7 @@ export function replaceWithSourceString(replacement) {
         const loc = err.loc;
         if (loc) {
             err.message +=
-                ` - make sure this is an expression.\n${
-                codeFrameColumns(replacement, {
+                ` - make sure this is an expression.\n${codeFrameColumns(replacement, {
                     start: {
                         line: loc.line,
                         column: loc.column + 1
@@ -97,13 +96,13 @@ export function replaceWithSourceString(replacement) {
     replacement = replacement.program.body[0].expression;
     traverse.removeProperties(replacement);
     return this.replaceWith(replacement);
-}
+};
 
 /**
  * Replace the current node with another.
  */
 
-export function replaceWith(replacement) {
+export const replaceWith = function (replacement) {
     this.resync();
 
     if (this.removed) {
@@ -183,13 +182,13 @@ export function replaceWith(replacement) {
     this.requeue();
 
     return [nodePath ? this.get(nodePath) : this];
-}
+};
 
 /**
  * Description
  */
 
-export function _replaceWith(node) {
+export const _replaceWith = function (node) {
     if (!this.container) {
         throw new ReferenceError("Container is falsy");
     }
@@ -201,7 +200,7 @@ export function _replaceWith(node) {
     }
 
     this.node = this.container[this.key] = node;
-}
+};
 
 /**
  * This method takes an array of statements nodes and then explodes it
@@ -209,7 +208,7 @@ export function _replaceWith(node) {
  * extremely important to retain original semantics.
  */
 
-export function replaceExpressionWithStatements(nodes: Array<Object>) {
+export const replaceExpressionWithStatements = function (nodes) {
     this.resync();
 
     const toSequenceExpression = t.toSequenceExpression(nodes, this.scope);
@@ -223,7 +222,7 @@ export function replaceExpressionWithStatements(nodes: Array<Object>) {
     this.traverse(hoistVariablesVisitor);
 
     // add implicit returns to all ending expression statements
-    const completionRecords: Array<NodePath> = this.get(
+    const completionRecords = this.get(
         "callee",
     ).getCompletionRecords();
     for (const path of completionRecords) {
@@ -260,9 +259,9 @@ export function replaceExpressionWithStatements(nodes: Array<Object>) {
     callee.arrowFunctionToExpression();
 
     return callee.get("body.body");
-}
+};
 
-export function replaceInline(nodes: Object | Array<Object>) {
+export const replaceInline = function (nodes) {
     this.resync();
 
     if (is.array(nodes)) {
@@ -276,5 +275,4 @@ export function replaceInline(nodes: Object | Array<Object>) {
 
     }
     return this.replaceWith(nodes);
-
-}
+};

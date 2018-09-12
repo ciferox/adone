@@ -2,9 +2,9 @@ const {
     js: { compiler: { types: t } }
 } = adone;
 
-export { default as Identifier } from "./inferer-reference";
+export { default as Identifier } from "./inferer_reference";
 
-export function VariableDeclarator() {
+export const VariableDeclarator = function () {
     const id = this.get("id");
 
     if (!id.isIdentifier()) {
@@ -26,45 +26,45 @@ export function VariableDeclarator() {
     }
 
     return type;
-}
+};
 
-export function TypeCastExpression(node) {
+export const TypeCastExpression = function (node) {
     return node.typeAnnotation;
-}
+};
 
 TypeCastExpression.validParent = true;
 
-export function NewExpression(node) {
+export const NewExpression = function (node) {
     if (this.get("callee").isIdentifier()) {
         // only resolve identifier callee
         return t.genericTypeAnnotation(node.callee);
     }
-}
+};
 
-export function TemplateLiteral() {
+export const TemplateLiteral = function () {
     return t.stringTypeAnnotation();
-}
+};
 
-export function UnaryExpression(node) {
+export const UnaryExpression = function (node) {
     const operator = node.operator;
 
     if (operator === "void") {
         return t.voidTypeAnnotation();
-    } else if (t.NUMBER_UNARY_OPERATORS.indexOf(operator) >= 0) {
+    } else if (t.NUMBER_UNARY_OPERATORS.includes(operator)) {
         return t.numberTypeAnnotation();
-    } else if (t.STRING_UNARY_OPERATORS.indexOf(operator) >= 0) {
+    } else if (t.STRING_UNARY_OPERATORS.includes(operator)) {
         return t.stringTypeAnnotation();
-    } else if (t.BOOLEAN_UNARY_OPERATORS.indexOf(operator) >= 0) {
+    } else if (t.BOOLEAN_UNARY_OPERATORS.includes(operator)) {
         return t.booleanTypeAnnotation();
     }
-}
+};
 
-export function BinaryExpression(node) {
+export const BinaryExpression = function (node) {
     const operator = node.operator;
 
-    if (t.NUMBER_BINARY_OPERATORS.indexOf(operator) >= 0) {
+    if (t.NUMBER_BINARY_OPERATORS.includes(operator)) {
         return t.numberTypeAnnotation();
-    } else if (t.BOOLEAN_BINARY_OPERATORS.indexOf(operator) >= 0) {
+    } else if (t.BOOLEAN_BINARY_OPERATORS.includes(operator)) {
         return t.booleanTypeAnnotation();
     } else if (operator === "+") {
         const right = this.get("right");
@@ -84,76 +84,76 @@ export function BinaryExpression(node) {
             t.numberTypeAnnotation()
         ]);
     }
-}
+};
 
-export function LogicalExpression() {
+export const LogicalExpression = function () {
     return t.createUnionTypeAnnotation([
         this.get("left").getTypeAnnotation(),
         this.get("right").getTypeAnnotation()
     ]);
-}
+};
 
-export function ConditionalExpression() {
+export const ConditionalExpression = function () {
     return t.createUnionTypeAnnotation([
         this.get("consequent").getTypeAnnotation(),
         this.get("alternate").getTypeAnnotation()
     ]);
-}
+};
 
-export function SequenceExpression() {
+export const SequenceExpression = function () {
     return this.get("expressions")
         .pop()
         .getTypeAnnotation();
-}
+};
 
-export function AssignmentExpression() {
+export const AssignmentExpression = function () {
     return this.get("right").getTypeAnnotation();
-}
+};
 
-export function UpdateExpression(node) {
+export const UpdateExpression = function (node) {
     const operator = node.operator;
     if (operator === "++" || operator === "--") {
         return t.numberTypeAnnotation();
     }
-}
+};
 
-export function StringLiteral() {
+export const StringLiteral = function () {
     return t.stringTypeAnnotation();
-}
+};
 
-export function NumericLiteral() {
+export const NumericLiteral = function () {
     return t.numberTypeAnnotation();
-}
+};
 
-export function BooleanLiteral() {
+export const BooleanLiteral = function () {
     return t.booleanTypeAnnotation();
-}
+};
 
-export function NullLiteral() {
+export const NullLiteral = function () {
     return t.nullLiteralTypeAnnotation();
-}
+};
 
-export function RegExpLiteral() {
+export const RegExpLiteral = function () {
     return t.genericTypeAnnotation(t.identifier("RegExp"));
-}
+};
 
-export function ObjectExpression() {
+export const ObjectExpression = function () {
     return t.genericTypeAnnotation(t.identifier("Object"));
-}
+};
 
-export function ArrayExpression() {
+export const ArrayExpression = function () {
     return t.genericTypeAnnotation(t.identifier("Array"));
-}
+};
 
-export function RestElement() {
+export const RestElement = function () {
     return ArrayExpression();
-}
+};
 
 RestElement.validParent = true;
 
-function Func() {
+const Func = function () {
     return t.genericTypeAnnotation(t.identifier("Function"));
-}
+};
 
 export {
     Func as FunctionExpression,
@@ -167,26 +167,8 @@ const isArrayFrom = t.buildMatchMemberExpression("Array.from");
 const isObjectKeys = t.buildMatchMemberExpression("Object.keys");
 const isObjectValues = t.buildMatchMemberExpression("Object.values");
 const isObjectEntries = t.buildMatchMemberExpression("Object.entries");
-export function CallExpression() {
-    const { callee } = this.node;
-    if (isObjectKeys(callee)) {
-        return t.arrayTypeAnnotation(t.stringTypeAnnotation());
-    } else if (isArrayFrom(callee) || isObjectValues(callee)) {
-        return t.arrayTypeAnnotation(t.anyTypeAnnotation());
-    } else if (isObjectEntries(callee)) {
-        return t.arrayTypeAnnotation(
-            t.tupleTypeAnnotation([t.stringTypeAnnotation(), t.anyTypeAnnotation()]),
-        );
-    }
 
-    return resolveCall(this.get("callee"));
-}
-
-export function TaggedTemplateExpression() {
-    return resolveCall(this.get("tag"));
-}
-
-function resolveCall(callee) {
+const resolveCall = function (callee) {
     callee = callee.resolve();
 
     if (callee.isFunction()) {
@@ -199,9 +181,29 @@ function resolveCall(callee) {
         }
         if (callee.node.returnType) {
             return callee.node.returnType;
-        } else {
-            // todo: get union type of all return arguments
         }
+        // todo: get union type of all return arguments
+
 
     }
-}
+};
+
+export const CallExpression = function () {
+    const { callee } = this.node;
+    if (isObjectKeys(callee)) {
+        return t.arrayTypeAnnotation(t.stringTypeAnnotation());
+    } else if (isArrayFrom(callee) || isObjectValues(callee)) {
+        return t.arrayTypeAnnotation(t.anyTypeAnnotation());
+    } else if (isObjectEntries(callee)) {
+        return t.arrayTypeAnnotation(
+            t.tupleTypeAnnotation([t.stringTypeAnnotation(), t.anyTypeAnnotation()]),
+        );
+    }
+
+    return resolveCall(this.get("callee"));
+};
+
+export const TaggedTemplateExpression = function () {
+    return resolveCall(this.get("tag"));
+};
+

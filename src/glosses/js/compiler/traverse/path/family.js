@@ -1,26 +1,28 @@
 // This file contains methods responsible for dealing with/retrieving children or siblings.
 
-import type TraversalContext from "../index";
 import NodePath from "./index";
 
 const {
+    is,
     js: { compiler: { types: t } }
 } = adone;
 
-export function getOpposite(): ?NodePath {
+export const getOpposite = function () {
     if (this.key === "left") {
         return this.getSibling("right");
     } else if (this.key === "right") {
         return this.getSibling("left");
     }
-}
+};
 
-function addCompletionRecords(path, paths) {
-    if (path) return paths.concat(path.getCompletionRecords());
+const addCompletionRecords = function (path, paths) {
+    if (path) {
+        return paths.concat(path.getCompletionRecords());
+    }
     return paths;
-}
+};
 
-export function getCompletionRecords(): Array {
+export const getCompletionRecords = function () {
     let paths = [];
 
     if (this.isIfStatement()) {
@@ -43,95 +45,93 @@ export function getCompletionRecords(): Array {
     }
 
     return paths;
-}
+};
 
-export function getSibling(key): NodePath {
+export const getSibling = function (key) {
     return NodePath.get({
         parentPath: this.parentPath,
         parent: this.parent,
         container: this.container,
         listKey: this.listKey,
-        key: key,
+        key
     });
-}
+};
 
-export function getPrevSibling(): NodePath {
+export const getPrevSibling = function () {
     return this.getSibling(this.key - 1);
-}
+};
 
-export function getNextSibling(): NodePath {
+export const getNextSibling = function () {
     return this.getSibling(this.key + 1);
-}
+};
 
-export function getAllNextSiblings(): Array<NodePath> {
+export const getAllNextSiblings = function () {
     let _key = this.key;
-    let sibling: NodePath = this.getSibling(++_key);
-    const siblings: Array<NodePath> = [];
+    let sibling = this.getSibling(++_key);
+    const siblings = [];
     while (sibling.node) {
         siblings.push(sibling);
         sibling = this.getSibling(++_key);
     }
     return siblings;
-}
+};
 
-export function getAllPrevSiblings(): Array<NodePath> {
+export const getAllPrevSiblings = function () {
     let _key = this.key;
-    let sibling: NodePath = this.getSibling(--_key);
-    const siblings: Array<NodePath> = [];
+    let sibling = this.getSibling(--_key);
+    const siblings = [];
     while (sibling.node) {
         siblings.push(sibling);
         sibling = this.getSibling(--_key);
     }
     return siblings;
-}
+};
 
-export function get(
-    key: string,
-    context?: boolean | TraversalContext,
-): NodePath {
-    if (context === true) context = this.context;
+export const get = function (key, context) {
+    if (context === true) {
+        context = this.context;
+    }
     const parts = key.split(".");
     if (parts.length === 1) {
         // "foo"
         return this._getKey(key, context);
-    } else {
-        // "foo.bar"
-        return this._getPattern(parts, context);
     }
-}
+    // "foo.bar"
+    return this._getPattern(parts, context);
+};
 
-export function _getKey(key, context?) {
+export const _getKey = function (key, context) {
     const node = this.node;
     const container = node[key];
 
-    if (Array.isArray(container)) {
+    if (is.array(container)) {
         // requested a container so give them all the paths
         return container.map((_, i) => {
             return NodePath.get({
                 listKey: key,
                 parentPath: this,
                 parent: node,
-                container: container,
-                key: i,
+                container,
+                key: i
             }).setContext(context);
         });
-    } else {
-        return NodePath.get({
-            parentPath: this,
-            parent: node,
-            container: node,
-            key: key,
-        }).setContext(context);
     }
-}
+    return NodePath.get({
+        parentPath: this,
+        parent: node,
+        container: node,
+        key
+    }).setContext(context);
 
-export function _getPattern(parts, context) {
+};
+
+export const _getPattern = function (parts, context) {
     let path = this;
-    for (const part of (parts: Array)) {
+    for (const part of (parts)) {
         if (part === ".") {
             path = path.parentPath;
         } else {
-            if (Array.isArray(path)) {
+            if (is.array(path)) {
                 path = path[part];
             } else {
                 path = path.get(part, context);
@@ -139,20 +139,20 @@ export function _getPattern(parts, context) {
         }
     }
     return path;
-}
+};
 
-export function getBindingIdentifiers(duplicates?): Object {
+export const getBindingIdentifiers = function (duplicates) {
     return t.getBindingIdentifiers(this.node, duplicates);
-}
+};
 
-export function getOuterBindingIdentifiers(duplicates?): Object {
+export const getOuterBindingIdentifiers = function (duplicates) {
     return t.getOuterBindingIdentifiers(this.node, duplicates);
-}
+};
 
 // original source - https://github.com/babel/babel/blob/master/packages/babel-types/src/retrievers.js
 // path.getBindingIdentifiers returns nodes where the following re-implementation
 // returns paths
-export function getBindingIdentifierPaths(
+export const getBindingIdentifierPaths = function (
     duplicates = false,
     outerOnly = false,
 ) {
@@ -162,8 +162,12 @@ export function getBindingIdentifierPaths(
 
     while (search.length) {
         const id = search.shift();
-        if (!id) continue;
-        if (!id.node) continue;
+        if (!id) {
+            continue;
+        }
+        if (!id.node) {
+            continue;
+        }
 
         const keys = t.getBindingIdentifiers.keys[id.node.type];
 
@@ -199,7 +203,7 @@ export function getBindingIdentifierPaths(
             for (let i = 0; i < keys.length; i++) {
                 const key = keys[i];
                 const child = id.get(key);
-                if (Array.isArray(child) || child.node) {
+                if (is.array(child) || child.node) {
                     search = search.concat(child);
                 }
             }
@@ -207,8 +211,8 @@ export function getBindingIdentifierPaths(
     }
 
     return ids;
-}
+};
 
-export function getOuterBindingIdentifierPaths(duplicates?) {
+export const getOuterBindingIdentifierPaths = function (duplicates) {
     return this.getBindingIdentifierPaths(duplicates, true);
-}
+};

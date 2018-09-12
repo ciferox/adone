@@ -1,5 +1,5 @@
 const {
-    js: { compiler: { parse, traverse, types: t } }
+    js: { compiler: { types: t, parse, traverse } }
 } = adone;
 
 describe("js", "compiler", "traverse", "path/replacement", () => {
@@ -24,7 +24,7 @@ describe("js", "compiler", "traverse", "path/replacement", () => {
                 }
             });
 
-            assert(ast.program.body[0].declaration.type === "ArrayExpression");
+            expect(ast.program.body[0].declaration.type).to.equal("ArrayExpression");
         });
 
         it("throws error when trying to replace Program with a non-Program node", () => {
@@ -33,9 +33,9 @@ describe("js", "compiler", "traverse", "path/replacement", () => {
                 traverse(ast, {
                     Program(path) {
                         path.replaceWith(t.identifier("a"));
-                    }
+                    },
                 });
-            }).to.throw(
+            }).throw(
                 /You can only replace a Program root node with another Program node/,
             );
         });
@@ -48,11 +48,11 @@ describe("js", "compiler", "traverse", "path/replacement", () => {
                         path.replaceWith([
                             t.identifier("should"),
                             t.identifier("never"),
-                            t.identifier("happen")
+                            t.identifier("happen"),
                         ]);
-                    }
+                    },
                 });
-            }).to.throw(
+            }).throw(
                 /Don't use `path\.replaceWith\(\)` with an array of nodes, use `path\.replaceWithMultiple\(\)`/,
             );
         });
@@ -65,9 +65,9 @@ describe("js", "compiler", "traverse", "path/replacement", () => {
                 traverse(ast, {
                     BinaryExpression(path) {
                         path.replaceWith("17 + 23");
-                    }
+                    },
                 });
-            }).to.throw(
+            }).throw(
                 /Don't use `path\.replaceWith\(\)` with a source string, use `path\.replaceWithSourceString\(\)`/,
             );
         });
@@ -79,9 +79,9 @@ describe("js", "compiler", "traverse", "path/replacement", () => {
                     StringLiteral(path) {
                         path.remove();
                         path.replaceWith(t.identifier("p"));
-                    }
+                    },
                 });
-            }).to.throw(/You can't replace this node, we've already removed it/);
+            }).throw(/You can't replace this node, we've already removed it/);
         });
 
         it("throws error when passed a falsy value", () => {
@@ -90,9 +90,9 @@ describe("js", "compiler", "traverse", "path/replacement", () => {
                 traverse(ast, {
                     StringLiteral(path) {
                         path.replaceWith();
-                    }
+                    },
                 });
-            }).to.throw(
+            }).throw(
                 /You passed `path\.replaceWith\(\)` a falsy node, use `path\.remove\(\)` instead/,
             );
         });
