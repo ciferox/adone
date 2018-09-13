@@ -1,4 +1,3 @@
-// @flow
 import shallowEqual from "../utils/shallowEqual";
 import isType from "./isType";
 
@@ -7,15 +6,18 @@ import isType from "./isType";
  *
  * For better performance, use this instead of `is[Type]` when `type` is unknown.
  */
-export default function is(type: string, node: Object, opts?: Object): boolean {
-  if (!node) return false;
+export default function is(type, node, opts) {
+    if (!node) {
+        return false;
+    }
 
-  const matches = isType(node.type, type);
-  if (!matches) return false;
+    const matches = isType(node.type, type);
+    if (!matches) {
+        return false;
+    }
 
-  if (typeof opts === "undefined") {
-    return true;
-  } else {
+    if (adone.is.undefined(opts)) {
+        return true;
+    }
     return shallowEqual(node, opts);
-  }
 }

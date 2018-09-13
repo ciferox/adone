@@ -22,8 +22,12 @@ export default function builder(type, ...args) {
         const field = NODE_FIELDS[type][key];
 
         let arg;
-        if (i < countArgs) { arg = args[i]; }
-        if (is.undefined(arg)) { arg = loClone(field.default); }
+        if (i < countArgs) {
+            arg = args[i]; 
+        }
+        if (is.undefined(arg)) {
+            arg = loClone(field.default); 
+        }
 
         node[key] = arg;
         i++;

@@ -7,13 +7,13 @@ import removeTypeDuplicates from "../../modifications/flow/removeTypeDuplicates"
  * returns a `UnionTypeAnnotation` node containg them.
  */
 export default function createUnionTypeAnnotation(
-  types: Array<Object>,
+    types: Array<Object>,
 ): Object {
-  const flattened = removeTypeDuplicates(types);
+    const flattened = removeTypeDuplicates(types);
 
-  if (flattened.length === 1) {
-    return flattened[0];
-  } else {
+    if (flattened.length === 1) {
+        return flattened[0];
+    } 
     return unionTypeAnnotation(flattened);
-  }
+  
 }

@@ -86,7 +86,6 @@ export {
 
 // traverse
 export { default as traverse } from "./traverse/traverse";
-export type * from "./traverse/traverse";
 export { default as traverseFast } from "./traverse/traverseFast";
 
 // utils

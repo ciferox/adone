@@ -5,17 +5,17 @@ import { memberExpression } from "../builders/generated";
  * Append a node to a member expression.
  */
 export default function appendToMemberExpression<T: Object>(
-  member: T,
-  append: Object,
-  computed?: boolean = false,
+    member: T,
+    append: Object,
+    computed?: boolean = false,
 ): T {
-  member.object = memberExpression(
-    member.object,
-    member.property,
-    member.computed,
-  );
-  member.property = append;
-  member.computed = !!computed;
+    member.object = memberExpression(
+        member.object,
+        member.property,
+        member.computed,
+    );
+    member.property = append;
+    member.computed = Boolean(computed);
 
-  return member;
+    return member;
 }

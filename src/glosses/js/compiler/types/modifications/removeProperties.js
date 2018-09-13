@@ -1,10 +1,13 @@
-// @flow
 import { COMMENT_KEYS } from "../constants";
+
+const {
+    is
+} = adone;
 
 const CLEAR_KEYS = ["tokens", "start", "end", "loc", "raw", "rawValue"];
 
 const CLEAR_KEYS_PLUS_COMMENTS = COMMENT_KEYS.concat(["comments"]).concat(
-  CLEAR_KEYS,
+    CLEAR_KEYS,
 );
 
 /**
@@ -12,20 +15,24 @@ const CLEAR_KEYS_PLUS_COMMENTS = COMMENT_KEYS.concat(["comments"]).concat(
  * properties like location data and raw token data.
  */
 export default function removeProperties(
-  node: Object,
-  opts?: Object = {},
-): void {
-  const map = opts.preserveComments ? CLEAR_KEYS : CLEAR_KEYS_PLUS_COMMENTS;
-  for (const key of map) {
-    if (node[key] != null) node[key] = undefined;
-  }
+    node,
+    opts = {},
+) {
+    const map = opts.preserveComments ? CLEAR_KEYS : CLEAR_KEYS_PLUS_COMMENTS;
+    for (const key of map) {
+        if (!is.nil(node[key])) {
+            node[key] = undefined;
+        }
+    }
 
-  for (const key in node) {
-    if (key[0] === "_" && node[key] != null) node[key] = undefined;
-  }
+    for (const key in node) {
+        if (key[0] === "_" && !is.nil(node[key])) {
+            node[key] = undefined;
+        }
+    }
 
-  const symbols: Array<Symbol> = Object.getOwnPropertySymbols(node);
-  for (const sym of symbols) {
-    node[sym] = null;
-  }
+    const symbols = Object.getOwnPropertySymbols(node);
+    for (const sym of symbols) {
+        node[sym] = null;
+    }
 }

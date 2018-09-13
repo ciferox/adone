@@ -2,30 +2,30 @@
 import isValidIdentifier from "./isValidIdentifier";
 
 const RESERVED_WORDS_ES3_ONLY: Set<string> = new Set([
-  "abstract",
-  "boolean",
-  "byte",
-  "char",
-  "double",
-  "enum",
-  "final",
-  "float",
-  "goto",
-  "implements",
-  "int",
-  "interface",
-  "long",
-  "native",
-  "package",
-  "private",
-  "protected",
-  "public",
-  "short",
-  "static",
-  "synchronized",
-  "throws",
-  "transient",
-  "volatile",
+    "abstract",
+    "boolean",
+    "byte",
+    "char",
+    "double",
+    "enum",
+    "final",
+    "float",
+    "goto",
+    "implements",
+    "int",
+    "interface",
+    "long",
+    "native",
+    "package",
+    "private",
+    "protected",
+    "public",
+    "short",
+    "static",
+    "synchronized",
+    "throws",
+    "transient",
+    "volatile"
 ]);
 
 /**
@@ -34,5 +34,5 @@ const RESERVED_WORDS_ES3_ONLY: Set<string> = new Set([
  * Additional ES3 reserved words are
  */
 export default function isValidES3Identifier(name: string): boolean {
-  return isValidIdentifier(name) && !RESERVED_WORDS_ES3_ONLY.has(name);
+    return isValidIdentifier(name) && !RESERVED_WORDS_ES3_ONLY.has(name);
 }

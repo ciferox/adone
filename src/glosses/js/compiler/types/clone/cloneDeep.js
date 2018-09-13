@@ -8,5 +8,5 @@ import cloneNode from "./cloneNode";
  * @deprecated Use t.cloneNode instead.
  */
 export default function cloneDeep<T: Object>(node: T): T {
-  return cloneNode(node);
+    return cloneNode(node);
 }

@@ -30,14 +30,16 @@ export default function gatherSequenceExpressions(
         } else if (isExpressionStatement(node)) {
             exprs.push(node.expression);
         } else if (isVariableDeclaration(node)) {
-            if (node.kind !== "var") return; // bailed
+            if (node.kind !== "var") {
+                return;
+            } // bailed
 
             for (const declar of (node.declarations: Array<any>)) {
                 const bindings = getBindingIdentifiers(declar);
                 for (const key in bindings) {
                     declars.push({
                         kind: node.kind,
-                        id: cloneNode(bindings[key]),
+                        id: cloneNode(bindings[key])
                     });
                 }
 
@@ -54,12 +56,16 @@ export default function gatherSequenceExpressions(
             const alternate = node.alternate
                 ? gatherSequenceExpressions([node.alternate], scope, declars)
                 : scope.buildUndefinedNode();
-            if (!consequent || !alternate) return; // bailed
+            if (!consequent || !alternate) {
+                return; 
+            } // bailed
 
             exprs.push(conditionalExpression(node.test, consequent, alternate));
         } else if (isBlockStatement(node)) {
             const body = gatherSequenceExpressions(node.body, scope, declars);
-            if (!body) return; // bailed
+            if (!body) {
+                return; 
+            } // bailed
 
             exprs.push(body);
         } else if (isEmptyStatement(node)) {

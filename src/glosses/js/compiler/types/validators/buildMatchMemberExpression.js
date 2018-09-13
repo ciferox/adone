@@ -8,11 +8,11 @@ import matchesPattern from "./matchesPattern";
  * parsed nodes of `React.createClass` and `React["createClass"]`.
  */
 export default function buildMatchMemberExpression(
-  match: string,
-  allowPartial?: boolean,
+    match: string,
+    allowPartial?: boolean,
 ): Object => boolean {
-  const parts = match.split(".");
+    const parts = match.split(".");
 
-  return (member: Object): boolean =>
-    matchesPattern(member, parts, allowPartial);
+    return (member: Object): boolean =>
+        matchesPattern(member, parts, allowPartial);
 }

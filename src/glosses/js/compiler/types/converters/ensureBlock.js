@@ -8,8 +8,8 @@ import toBlock from "./toBlock";
  * Returns the BlockStatement
  */
 export default function ensureBlock(
-  node: Object,
-  key: string = "body",
+    node: Object,
+    key: string = "body",
 ): Object {
-  return (node[key] = toBlock(node[key], node));
+    return (node[key] = toBlock(node[key], node));
 }
