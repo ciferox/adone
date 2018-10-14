@@ -42,9 +42,9 @@ export function makeWeakCache<
     ArgT: { } | Array<*> | $ReadOnlyArray <*>,
         ResultT,
         SideChannel,
-> (
-            handler: (ArgT, CacheConfigurator<SideChannel>) => ResultT,
-    ): (ArgT, SideChannel) => ResultT {
+>(
+    handler: (ArgT, CacheConfigurator<SideChannel>) => ResultT,
+): (ArgT, SideChannel) => ResultT {
     return makeCachedFunction(new WeakMap(), handler);
 }
 
@@ -57,9 +57,9 @@ function makeCachedFunction<
     ResultT,
     SideChannel,
     Cache: CacheMap<ArgT, ResultT, SideChannel>,
-> (
-            callCache: Cache,
-                handler: (ArgT, CacheConfigurator<SideChannel>) => ResultT,
+>(
+    callCache: Cache,
+    handler: (ArgT, CacheConfigurator<SideChannel>) => ResultT,
 ): (ArgT, SideChannel) => ResultT {
     return function cachedFunction(arg, data) {
         let cachedValue: CacheEntry<ResultT, SideChannel> | void = callCache.get(
@@ -198,17 +198,17 @@ class CacheConfigurator {
     }
 
     validator(): SideChannel => boolean {
-    const pairs = this._pairs;
-    return (data: SideChannel) => pairs.every(([key, fn]) => key === fn(data));
-}
+        const pairs = this._pairs;
+        return (data: SideChannel) => pairs.every(([key, fn]) => key === fn(data));
+    }
 
-deactivate() {
-    this._active = false;
-}
+    deactivate() {
+        this._active = false;
+    }
 
-configured() {
-    return this._configured;
-}
+    configured() {
+        return this._configured;
+    }
 }
 
 function makeSimpleConfigurator(

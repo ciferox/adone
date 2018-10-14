@@ -31,12 +31,6 @@ const baseSubsystem = (name) => std.path.join(__dirname, "..", "lib", "cli", "su
             subsystem: baseSubsystem("link")
         },
         {
-            name: "inspect",
-            group: "dev",
-            description: "Inspect adone namespace/object",
-            subsystem: baseSubsystem("inspect")
-        },
-        {
             name: "realm",
             group: "realm",
             description: "Realm management",
@@ -47,6 +41,30 @@ const baseSubsystem = (name) => std.path.join(__dirname, "..", "lib", "cli", "su
             group: "cli",
             description: "Show available information about object you wish",
             subsystem: baseSubsystem("info")
+        },
+        {
+            name: "inspect",
+            group: "dev",
+            description: "Inspect adone namespace/object",
+            subsystem: baseSubsystem("inspect")
+        },
+        {
+            name: "project",
+            group: "dev",
+            description: "Project management/scaffolding",
+            subsystem: baseSubsystem("project")
+        },
+        {
+            name: "bench",
+            group: "dev",
+            description: "Benchmarking",
+            subsystem: baseSubsystem("bench")
+        },
+        {
+            name: "shani",
+            group: "dev",
+            description: "Test framework",
+            subsystem: baseSubsystem("shani")
         }
     ]
 })
