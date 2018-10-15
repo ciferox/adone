@@ -34,6 +34,7 @@ const messages = translate({
   RemoteDoesNotSupportDeepenSinceFail: `Remote does not support shallow fetches by date.`,
   RemoteDoesNotSupportDeepenNotFail: `Remote does not support shallow fetches excluding commits reachable by refs.`,
   RemoteDoesNotSupportDeepenRelativeFail: `Remote does not support shallow fetches relative to the current shallow depth.`,
+  RemoteDoesNotSupportSmartHTTP: `Remote does not support the "smart" HTTP protocol, and isomorphic-git does not support the "dumb" HTTP protocol, so they are incompatible.`,
   CorruptShallowOidFail: `non-40 character shallow oid: { oid }`,
   FastForwardFail: `A simple fast-forward merge was not possible.`,
   MergeNotSupportedFail: `Non-fast-forward merges are not supported yet.`,
@@ -71,7 +72,13 @@ const messages = translate({
   MaxSearchDepthExceeded: `Maximum search depth of { depth } exceeded.`,
   PushRejectedNonFastForward: `Push rejected because it was not a simple fast-forward. Use "force: true" to override.`,
   PushRejectedTagExists: `Push rejected because tag already exists. Use "force: true" to override.`,
-  AddingRemoteWouldOverwrite: `Adding remote { remote } would overwrite the existing remote. Use "force: true" to override.`
+  AddingRemoteWouldOverwrite: `Adding remote { remote } would overwrite the existing remote. Use "force: true" to override.`,
+  PluginUndefined: `A command required the "{ plugin }" plugin but it was undefined.`,
+  CoreNotFound: `No plugin core with the name "{ core }" is registered.`,
+  PluginSchemaViolation: `Schema check failed for "{ plugin }" plugin; missing { method } method.`,
+  PluginUnrecognized: `Unrecognized plugin type "{ plugin }"`,
+  AmbiguousShortOid: `Found multiple oids matching "{ short }" ({ matches }). Use a longer abbreviation length to disambiguate them.`,
+  ShortOidNotFound: `Could not find an object matching "{ short }".`
 })
 
 export const E = {
@@ -96,6 +103,7 @@ export const E = {
   RemoteDoesNotSupportDeepenSinceFail: `RemoteDoesNotSupportDeepenSinceFail`,
   RemoteDoesNotSupportDeepenNotFail: `RemoteDoesNotSupportDeepenNotFail`,
   RemoteDoesNotSupportDeepenRelativeFail: `RemoteDoesNotSupportDeepenRelativeFail`,
+  RemoteDoesNotSupportSmartHTTP: `RemoteDoesNotSupportSmartHTTP`,
   CorruptShallowOidFail: `CorruptShallowOidFail`,
   FastForwardFail: `FastForwardFail`,
   MergeNotSupportedFail: `MergeNotSupportedFail`,
@@ -133,7 +141,13 @@ export const E = {
   MaxSearchDepthExceeded: `MaxSearchDepthExceeded`,
   PushRejectedNonFastForward: `PushRejectedNonFastForward`,
   PushRejectedTagExists: `PushRejectedTagExists`,
-  AddingRemoteWouldOverwrite: `AddingRemoteWouldOverwrite`
+  AddingRemoteWouldOverwrite: `AddingRemoteWouldOverwrite`,
+  PluginUndefined: `PluginUndefined`,
+  CoreNotFound: `CoreNotFound`,
+  PluginSchemaViolation: `PluginSchemaViolation`,
+  PluginUnrecognized: `PluginUnrecognized`,
+  AmbiguousShortOid: `AmbiguousShortOid`,
+  ShortOidNotFound: `ShortOidNotFound`
 }
 
 export class GitError extends Error {

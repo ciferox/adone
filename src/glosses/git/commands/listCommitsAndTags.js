@@ -1,15 +1,18 @@
 import path from 'path'
 
-import { GitObjectManager } from '../managers/GitObjectManager.js'
 import { GitRefManager } from '../managers/GitRefManager.js'
 import { FileSystem } from '../models/FileSystem.js'
+import { GitAnnotatedTag } from '../models/GitAnnotatedTag.js'
 import { GitCommit } from '../models/GitCommit.js'
 import { E, GitError } from '../models/GitError.js'
+import { readObject } from '../storage/readObject.js'
+import { cores } from '../utils/plugins.js'
 
-export async function listCommits ({
+export async function listCommitsAndTags ({
+  core = 'default',
   dir,
   gitdir = path.join(dir, '.git'),
-  fs: _fs,
+  fs: _fs = cores.get(core).get('fs'),
   start,
   finish
 }) {
@@ -32,7 +35,13 @@ export async function listCommits ({
   // setting a default recursion limit.
   async function walk (oid) {
     visited.add(oid)
-    let { type, object } = await GitObjectManager.read({ fs, gitdir, oid })
+    let { type, object } = await readObject({ fs, gitdir, oid })
+    // Recursively resolve annotated tags
+    if (type === 'tag') {
+      let tag = GitAnnotatedTag.from(object)
+      let commit = tag.headers().object
+      return walk(commit)
+    }
     if (type !== 'commit') {
       throw new GitError(E.ObjectTypeAssertionFail, {
         oid,

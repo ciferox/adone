@@ -1,10 +1,11 @@
 import path from 'path'
 
-import { GitObjectManager } from '../managers/GitObjectManager.js'
 import { GitRefManager } from '../managers/GitRefManager.js'
 import { FileSystem } from '../models/FileSystem.js'
 import { E, GitError } from '../models/GitError.js'
 import { SignedGitCommit } from '../models/SignedGitCommit.js'
+import { readObject } from '../storage/readObject.js'
+import { cores } from '../utils/plugins.js'
 
 /**
  * Verify a signed commit
@@ -12,9 +13,10 @@ import { SignedGitCommit } from '../models/SignedGitCommit.js'
  * @link https://isomorphic-git.github.io/docs/verify.html
  */
 export async function verify ({
+  core = 'default',
   dir,
   gitdir = path.join(dir, '.git'),
-  fs: _fs,
+  fs: _fs = cores.get(core).get('fs'),
   ref,
   publicKeys,
   openpgp
@@ -22,7 +24,7 @@ export async function verify ({
   try {
     const fs = new FileSystem(_fs)
     const oid = await GitRefManager.resolve({ fs, gitdir, ref })
-    const { type, object } = await GitObjectManager.read({ fs, gitdir, oid })
+    const { type, object } = await readObject({ fs, gitdir, oid })
     if (type !== 'commit') {
       throw new GitError(E.ObjectTypeAssertionInRefFail, { ref, type })
     }

@@ -75,6 +75,8 @@ adone.lazify({
     inflection: "./inflection",
     xorDistance: "./xor_distance",
     globize: "./globize",
+    globToRegex: "./glob_to_regex",
+    analyzeGlob: "./analyze_glob",
     color: "./color",
     movingAverage: "./moving_average",
     csv: "./csv",

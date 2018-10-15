@@ -119,7 +119,6 @@ export class GitPackIndex {
     // Older packfiles do NOT use the shasum of the pack itself,
     // so it is recommended to just use whatever bytes are in the trailer.
     // Source: https://github.com/git/git/commit/1190a1acf800acdcfd7569f87ac1560e2d077414
-    // let packfileSha = shasum(pack.slice(0, -20))
     let packfileSha = pack.slice(-20).toString('hex')
 
     let hashes = []
@@ -151,63 +150,60 @@ export class GitPackIndex {
     marky.mark('total')
     marky.mark('offsets')
     marky.mark('percent')
-    await new Promise((resolve, reject) => {
-      listpack(buffer2stream(pack)).on(
-        'data',
-        async ({ data, type, reference, offset, num }) => {
-          if (totalObjectCount === null) totalObjectCount = num
-          let percent = Math.floor(
-            (totalObjectCount - num) * 100 / totalObjectCount
+    await listpack(
+      buffer2stream(pack),
+      ({ data, type, reference, offset, num }) => {
+        if (totalObjectCount === null) totalObjectCount = num
+        let percent = Math.floor(
+          ((totalObjectCount - num) * 100) / totalObjectCount
+        )
+        if (percent !== lastPercent) {
+          log(
+            `${percent}%\t${Math.floor(
+              marky.stop('percent').duration
+            )}\t${bytesProcessed}\t${histogram.commit}\t${histogram.tree}\t${
+              histogram.blob
+            }\t${histogram.tag}\t${histogram['ofs-delta']}\t${
+              histogram['ref-delta']
+            }`
           )
-          if (percent !== lastPercent) {
-            log(
-              `${percent}%\t${Math.floor(
-                marky.stop('percent').duration
-              )}\t${bytesProcessed}\t${histogram.commit}\t${histogram.tree}\t${
-                histogram.blob
-              }\t${histogram.tag}\t${histogram['ofs-delta']}\t${
-                histogram['ref-delta']
-              }`
-            )
 
-            histogram = {
-              commit: 0,
-              tree: 0,
-              blob: 0,
-              tag: 0,
-              'ofs-delta': 0,
-              'ref-delta': 0
-            }
-            bytesProcessed = 0
-            marky.mark('percent')
+          histogram = {
+            commit: 0,
+            tree: 0,
+            blob: 0,
+            tag: 0,
+            'ofs-delta': 0,
+            'ref-delta': 0
           }
-          lastPercent = percent
-          // Change type from a number to a meaningful string
-          type = listpackTypes[type]
-
-          histogram[type]++
-          bytesProcessed += data.byteLength
-
-          if (['commit', 'tree', 'blob', 'tag'].includes(type)) {
-            offsetToObject[offset] = {
-              type,
-              offset
-            }
-          } else if (type === 'ofs-delta') {
-            offsetToObject[offset] = {
-              type,
-              offset
-            }
-          } else if (type === 'ref-delta') {
-            offsetToObject[offset] = {
-              type,
-              offset
-            }
-          }
-          if (num === 0) resolve()
+          bytesProcessed = 0
+          marky.mark('percent')
         }
-      )
-    })
+        lastPercent = percent
+        // Change type from a number to a meaningful string
+        type = listpackTypes[type]
+
+        histogram[type]++
+        bytesProcessed += data.byteLength
+
+        if (['commit', 'tree', 'blob', 'tag'].includes(type)) {
+          offsetToObject[offset] = {
+            type,
+            offset
+          }
+        } else if (type === 'ofs-delta') {
+          offsetToObject[offset] = {
+            type,
+            offset
+          }
+        } else if (type === 'ref-delta') {
+          offsetToObject[offset] = {
+            type,
+            offset
+          }
+        }
+      }
+    )
     times['offsets'] = Math.floor(marky.stop('offsets').duration)
 
     log('Computing CRCs')
@@ -246,7 +242,7 @@ export class GitPackIndex {
     let objectsByDepth = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
     for (let offset in offsetToObject) {
       offset = Number(offset)
-      let percent = Math.floor(count++ * 100 / totalObjectCount)
+      let percent = Math.floor((count++ * 100) / totalObjectCount)
       if (percent !== lastPercent) {
         log(
           `${percent}%\t${Math.floor(
@@ -273,7 +269,7 @@ export class GitPackIndex {
         timeByDepth[p.readDepth] += time
         objectsByDepth[p.readDepth] += 1
         marky.mark('hash')
-        let oid = GitObject.hash({ type, object })
+        let oid = shasum(GitObject.wrap({ type, object }))
         times.hash += marky.stop('hash').duration
         o.oid = oid
         hashes.push(oid)
@@ -372,7 +368,9 @@ export class GitPackIndex {
     return this.readSlice({ start })
   }
   async readSlice ({ start }) {
-    if (this.offsetCache[start]) return this.offsetCache[start]
+    if (this.offsetCache[start]) {
+      return Object.assign({}, this.offsetCache[start])
+    }
     this.readDepth++
     const types = {
       0b0010000: 'commit',

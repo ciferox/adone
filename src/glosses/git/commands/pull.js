@@ -2,6 +2,7 @@
 import path from 'path'
 
 import { FileSystem } from '../models/FileSystem.js'
+import { cores } from '../utils/plugins.js'
 
 import { checkout } from './checkout'
 import { config } from './config'
@@ -15,13 +16,15 @@ import { merge } from './merge'
  * @link https://isomorphic-git.github.io/docs/pull.html
  */
 export async function pull ({
+  core = 'default',
   dir,
   gitdir = path.join(dir, '.git'),
-  fs: _fs,
+  fs: _fs = cores.get(core).get('fs'),
   ref,
   fastForwardOnly = false,
   noGitSuffix = false,
-  emitter,
+  emitter = cores.get(core).get('emitter'),
+  emitterPrefix = '',
   authUsername,
   authPassword,
   username = authUsername,
@@ -36,7 +39,6 @@ export async function pull ({
     if (!ref) {
       ref = await currentBranch({ fs, gitdir })
     }
-    console.log(`Using ref=${ref}`)
     // Fetch from the correct remote.
     let remote = await config({
       gitdir,
@@ -48,6 +50,7 @@ export async function pull ({
       gitdir,
       fs,
       emitter,
+      emitterPrefix,
       noGitSuffix,
       ref,
       remote,

@@ -4,6 +4,7 @@ import path from 'path'
 import { FileSystem } from '../models/FileSystem.js'
 import { E, GitError } from '../models/GitError.js'
 import { GitRefSpecSet } from '../models/GitRefSpecSet.js'
+import { compareRefNames } from '../utils/compareRefNames.js'
 
 import { GitConfigManager } from './GitConfigManager'
 
@@ -51,7 +52,7 @@ export class GitRefManager {
         if (serverRef.startsWith('refs/tags') && !serverRef.endsWith('^{}')) {
           const filename = path.join(gitdir, serverRef)
           // Git's behavior is to only fetch tags that do not conflict with tags already present.
-          if (!await fs.exists(filename)) {
+          if (!(await fs.exists(filename))) {
             // If there is a dereferenced an annotated tag value available, prefer that.
             const oid = refs.get(serverRef + '^{}') || refs.get(serverRef)
             actualRefsToWrite.set(serverRef, oid)
@@ -153,6 +154,15 @@ export class GitRefManager {
     // Do we give up?
     throw new GitError(E.ExpandRefError, { ref })
   }
+  static async expandAgainstMap ({ fs: _fs, gitdir, ref, map }) {
+    // Look in all the proper paths, in this order
+    const allpaths = refpaths(ref)
+    for (let ref of allpaths) {
+      if (await map.has(ref)) return ref
+    }
+    // Do we give up?
+    throw new GitError(E.ExpandRefError, { ref })
+  }
   static resolveAgainstMap ({ ref, fullref = ref, depth, map }) {
     if (depth !== undefined) {
       depth--
@@ -200,7 +210,7 @@ export class GitRefManager {
       if (line.startsWith('^')) {
         // This is a oid for the commit associated with the annotated tag immediately preceding this line.
         // Trim off the '^'
-        const value = line.slice(1, i)
+        const value = line.slice(1)
         // The tagname^{} syntax is based on the output of `git show-ref --tags -d`
         refs.set(key + '^{}', value)
       } else {
@@ -235,6 +245,8 @@ export class GitRefManager {
         }
       }
     }
+    // since we just appended things onto an array, we need to sort them now
+    files.sort(compareRefNames)
     return files
   }
   static async listBranches ({ fs: _fs, gitdir, remote }) {

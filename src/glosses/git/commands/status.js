@@ -2,13 +2,15 @@ import path from 'path'
 
 import { GitIgnoreManager } from '../managers/GitIgnoreManager.js'
 import { GitIndexManager } from '../managers/GitIndexManager.js'
-import { GitObjectManager } from '../managers/GitObjectManager.js'
 import { GitRefManager } from '../managers/GitRefManager.js'
 import { FileSystem } from '../models/FileSystem.js'
 import { GitCommit } from '../models/GitCommit.js'
 import { E, GitError } from '../models/GitError.js'
 import { GitTree } from '../models/GitTree.js'
+import { readObject } from '../storage/readObject.js'
 import { compareStats } from '../utils/compareStats.js'
+import { hashObject } from '../utils/hashObject.js'
+import { cores } from '../utils/plugins.js'
 
 /**
  * Tell whether a file has been changed
@@ -16,9 +18,10 @@ import { compareStats } from '../utils/compareStats.js'
  * @link https://isomorphic-git.github.io/docs/status.html
  */
 export async function status ({
+  core = 'default',
   dir,
   gitdir = path.join(dir, '.git'),
-  fs: _fs,
+  fs: _fs = cores.get(core).get('fs'),
   filepath
 }) {
   try {
@@ -52,25 +55,18 @@ export async function status ({
         }
       }
     )
-    let stats = null
-    try {
-      stats = await fs._lstat(path.join(dir, filepath))
-    } catch (err) {
-      if (err.code !== 'ENOENT') {
-        throw err
-      }
-    }
+    let stats = await fs.lstat(path.join(dir, filepath))
 
     let H = treeOid !== null // head
     let I = indexEntry !== null // index
     let W = stats !== null // working dir
 
     const getWorkdirOid = async () => {
-      if (I && !compareStats({ entry: indexEntry, stats })) {
+      if (I && !compareStats(indexEntry, stats)) {
         return indexEntry.oid
       } else {
         let object = await fs.read(path.join(dir, filepath))
-        let workdirOid = await GitObjectManager.hash({
+        let workdirOid = await hashObject({
           gitdir,
           type: 'blob',
           object
@@ -79,7 +75,7 @@ export async function status ({
         if (I && indexEntry.oid === workdirOid) {
           // and as long as our fs.stats aren't bad.
           // size of -1 happens over a BrowserFS HTTP Backend that doesn't serve Content-Length headers
-          // because BrowserFS HTTP Backend uses HTTP HEAD requests to do fs.stat
+          // (like the Karma webserver) because BrowserFS HTTP Backend uses HTTP HEAD requests to do fs.stat
           if (stats.size !== -1) {
             // We don't await this so we can return faster for one-off cases.
             GitIndexManager.acquire(
@@ -147,7 +143,7 @@ async function getOidAtPath ({ fs, gitdir, tree, path }) {
       if (path.length === 0) {
         return entry.oid
       }
-      let { type, object } = await GitObjectManager.read({
+      let { type, object } = await readObject({
         fs,
         gitdir,
         oid: entry.oid
@@ -170,7 +166,7 @@ async function getOidAtPath ({ fs, gitdir, tree, path }) {
 async function getHeadTree ({ fs, gitdir }) {
   // Get the tree from the HEAD commit.
   let oid = await GitRefManager.resolve({ fs, gitdir, ref: 'HEAD' })
-  let { type, object } = await GitObjectManager.read({ fs, gitdir, oid })
+  let { type, object } = await readObject({ fs, gitdir, oid })
   if (type !== 'commit') {
     throw new GitError(E.ResolveCommitError, { oid })
   }
@@ -180,7 +176,7 @@ async function getHeadTree ({ fs, gitdir }) {
 }
 
 async function getTree ({ fs, gitdir, oid }) {
-  let { type, object } = await GitObjectManager.read({
+  let { type, object } = await readObject({
     fs,
     gitdir,
     oid
