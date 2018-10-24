@@ -1,5 +1,3 @@
-import { file } from "../../glosses/js/compiler/types/builders/generated/index";
-
 const {
     crypto,
     error,
@@ -14,6 +12,7 @@ const {
 
 const { path: { join } } = std;
 
+const REQUIRED_DIRS = ["bin", "lib", "etc"];
 const COMPRESS_FORMATS = ["zip", "tar.gz", "tar.xz"];
 
 export default class ForkRealmTask extends task.Task {
@@ -33,7 +32,7 @@ export default class ForkRealmTask extends task.Task {
         }
     }
 
-    async run({ cwd, name, bits = 2048, withSrc = false, compress = false, keys = false } = {}) {
+    async run({ cwd, name, bits = 2048, withSrc = false, clean = false, compress = false, keys = false } = {}) {
         this.manager.notify(this, "progress", {
             message: "checking"
         });
@@ -69,6 +68,7 @@ export default class ForkRealmTask extends task.Task {
         const CWD = this.destPath;
         const RUNTIME_PATH = join(CWD, "runtime");
         const VAR_PATH = join(CWD, "var");
+        const ADONE_SPECIAL_PATH = join(CWD, ".adone");
         const CONFIGS_PATH = join(CWD, "configs");
         const LOGS_PATH = join(VAR_PATH, "logs");
         const KEYS_PATH = join(CWD, "keys");
@@ -105,48 +105,58 @@ export default class ForkRealmTask extends task.Task {
             }
         }
 
-        const identityConfig = new adone.configuration.Generic({
-            cwd: CONFIGS_PATH
-        });
-
-        try {
-            await identityConfig.load("identity.json");
-        } catch (err) {
-            const serverIdentity = crypto.Identity.create({
-                bits
+        if (!clean) {
+            const identityConfig = new adone.configuration.Generic({
+                cwd: CONFIGS_PATH
             });
 
-            const clientIdentity = crypto.Identity.create({
-                bits
-            });
+            try {
+                await identityConfig.load("identity.json");
+            } catch (err) {
+                const serverIdentity = crypto.Identity.create({
+                    bits
+                });
 
-            identityConfig.raw = {
-                server: {
-                    id: serverIdentity.asBase58(),
-                    privKey: serverIdentity.privKey.bytes.toString("base64")
-                },
-                client: {
-                    id: clientIdentity.asBase58(),
-                    privKey: clientIdentity.privKey.bytes.toString("base64")
-                }
-            };
+                const clientIdentity = crypto.Identity.create({
+                    bits
+                });
 
-            await identityConfig.save("identity.json", null, {
-                space: "    "
-            });
+                identityConfig.raw = {
+                    server: {
+                        id: serverIdentity.asBase58(),
+                        privKey: serverIdentity.privKey.bytes.toString("base64")
+                    },
+                    client: {
+                        id: clientIdentity.asBase58(),
+                        privKey: clientIdentity.privKey.bytes.toString("base64")
+                    }
+                };
+
+                await identityConfig.save("identity.json", null, {
+                    space: "    "
+                });
+            }
         }
 
         this.manager.notify(this, "progress", {
             message: "copying files"
         });
 
+        // For production stage and if clean-mode is enabled '.adone' directory should be empty
+        const dirs = REQUIRED_DIRS;
+        if (clean) {
+            await fs.mkdir(ADONE_SPECIAL_PATH);
+        } else {
+            dirs.push(".adone");
+        }
+
         const targets = [
             "!**/*.map",
             "package.json",
             "adone.json",
-            "README*",
-            "LICENSE*",
-            ...[".adone", "bin", "lib", "etc"].map((x) => util.globize(x, { recursive: true }))
+            "README.md",
+            "LICENSE",
+            ...dirs.map((x) => util.globize(x, { recursive: true }))
         ];
 
         if (withSrc) {
@@ -220,7 +230,7 @@ export default class ForkRealmTask extends task.Task {
                 message: "compressing"
             });
 
-            const fileName = `${name}-v${adone.package.version}-${this.os}-${this.arch}-node-v${process.version.match(/^v(\d+)\./)[1]}.${format}`;
+            const fileName = `${name}-v${adone.package.version}-node-v${process.version.match(/^v(\d+)\./)[1]}-${this.os}-${this.arch}.${format}`;
 
             await fast.src(adone.util.globize(this.destPath, {
                 ext: "*",

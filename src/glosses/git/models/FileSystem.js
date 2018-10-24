@@ -1,4 +1,3 @@
-import debug from 'debug'
 import * as marky from 'marky'
 import path from 'path'
 import pify from 'pify'
@@ -6,8 +5,6 @@ import pify from 'pify'
 import { E, GitError } from '../models/GitError.js'
 import { compareStrings } from '../utils/compareStrings.js'
 import { sleep } from '../utils/sleep.js'
-
-const readFileLog = debug('readFile')
 
 const delayedReleases = new Map()
 /**
@@ -56,7 +53,6 @@ export class FileSystem {
     try {
       marky.mark(filepath)
       let buffer = await this._readFile(filepath, options)
-      readFileLog(`${filepath} ${marky.stop(filepath).duration}`)
       return buffer
     } catch (err) {
       return null

@@ -150,7 +150,7 @@ export default class CliConfiguration extends adone.configuration.Generic {
             },
             {
                 name: "dev",
-                description: "Development and inspection stuff"
+                description: "Development and inspection"
             }
         ]
     };

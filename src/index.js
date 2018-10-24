@@ -335,8 +335,6 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             zlib: "zlib"
         })),
 
-        native: () => adone.nativeAddon(adone.std.path.join(__dirname, "native", "common.node")),
-
         // glosses
         app: "./glosses/app",
         archive: "./glosses/archives",

@@ -1,4 +1,9 @@
-const { is, util, x, shani: { util: { __ } } } = adone;
+const {
+    is,
+    util, 
+    error: { Exception, InvalidArgument },
+    shani: { util: { __ } }
+} = adone;
 
 const useLeftMostCallback = -1;
 const useRightMostCallback = -2;
@@ -33,7 +38,7 @@ const behaviors = {
     },
     callsArg(fake, pos) {
         if (!is.number(pos)) {
-            throw new error.InvalidArgument("argument index is not number");
+            throw new InvalidArgument("argument index is not number");
         }
 
         fake.callArgAt = pos;
@@ -44,7 +49,7 @@ const behaviors = {
     },
     callsArgOn(fake, pos, context) {
         if (!is.number(pos)) {
-            throw new error.InvalidArgument("argument index is not number");
+            throw new InvalidArgument("argument index is not number");
         }
 
         fake.callArgAt = pos;
@@ -55,7 +60,7 @@ const behaviors = {
     },
     callsArgWith(fake, pos, ...callbackArguments) {
         if (!is.number(pos)) {
-            throw new error.InvalidArgument("argument index is not number");
+            throw new InvalidArgument("argument index is not number");
         }
 
         fake.callArgAt = pos;
@@ -66,7 +71,7 @@ const behaviors = {
     },
     callsArgOnWith(fake, pos, context, ...callbackArguments) {
         if (!is.number(pos)) {
-            throw new error.InvalidArgument("argument index is not number");
+            throw new InvalidArgument("argument index is not number");
         }
 
         fake.callArgAt = pos;
@@ -94,7 +99,7 @@ const behaviors = {
     },
     yieldsOn(fake, context, ...callbackArguments) {
         if (!context) {
-            throw new error.InvalidArgument("context is falsy");
+            throw new InvalidArgument("context is falsy");
         }
         fake.callArgAt = useLeftMostCallback;
         fake.callbackArguments = callbackArguments;
@@ -129,14 +134,14 @@ const behaviors = {
     },
     returnsArg(fake, pos) {
         if (!is.number(pos)) {
-            throw new error.InvalidArgument("argument index is not number");
+            throw new InvalidArgument("argument index is not number");
         }
 
         fake.returnArgAt = pos;
     },
     throwsArg(fake, pos) {
         if (!is.number(pos)) {
-            throw new error.InvalidArgument("argument index is not number");
+            throw new InvalidArgument("argument index is not number");
         }
 
         fake.throwArgAt = pos;
@@ -157,10 +162,10 @@ const behaviors = {
     rejects(fake, error, message) {
         let reason;
         if (is.string(error)) {
-            reason = new error.Exception(message || "");
+            reason = new Exception(message || "");
             reason.name = error;
         } else if (!error) {
-            reason = new error.Exception("Error");
+            reason = new Exception("Error");
         } else {
             reason = error;
         }

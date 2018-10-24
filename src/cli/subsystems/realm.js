@@ -26,37 +26,39 @@ export default class RealmManager extends app.Subsystem {
                 help: "Path where realm will be deploy"
             },
             {
-                name: ["--bits"],
+                name: ["--bits", "-B"],
                 type: Number,
                 default: 2048,
                 help: "Realm identity's RSA key size"
             },
             {
-                name: ["--with-src"],
+                name: "--with-src",
                 help: "With source code directory"
             },
             {
-                name: ["--compress"],
+                name: ["--compress", "-C"],
                 type: String,
+                nargs: "*",
                 default: is.windows ? "zip" : "tar.gz",
-                help: "compress realm"
+                help: "Create archive instead of a directory"
+            },
+            {
+                name: "--clean",
+                help: "Clean version of adone (without tasks, configs, etc.)"
             }
         ]
     })
     async forkCommand(args, opts) {
         try {
             const realmManager = await this.getRealm();
-            if (args.has("name")) {
-                await realmManager.runAndWait("forkRealm", {
-                    cwd: opts.get("path"),
-                    name: args.get("name"),
-                    bits: opts.get("bits"),
-                    withSrc: opts.has("withSrc"),
-                    compress: opts.has("compress") ? opts.get("compress") : false
-                });
-            } else {
-
-            }
+            await realmManager.runAndWait("forkRealm", {
+                cwd: opts.get("path"),
+                name: args.get("name"),
+                bits: opts.get("bits"),
+                withSrc: opts.has("withSrc"),
+                clean: opts.has("clean"),
+                compress: opts.has("compress") ? opts.get("compress") : false
+            });
 
             return 0;
         } catch (err) {
