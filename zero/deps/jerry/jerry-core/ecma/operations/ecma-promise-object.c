@@ -155,8 +155,6 @@ ecma_promise_trigger_reactions (ecma_collection_header_t *reactions, /**< lists 
     ecma_enqueue_promise_reaction_job (*ecma_value_p, value);
     ecma_value_p = ecma_collection_iterator_next (ecma_value_p);
   }
-
-  ecma_free_values_collection (reactions, ECMA_COLLECTION_NO_REF_OBJECTS);
 } /* ecma_promise_trigger_reactions */
 
 /**
@@ -180,12 +178,15 @@ ecma_reject_promise (ecma_value_t promise, /**< promise */
      first and creating a new one might cause a heap after use event. */
   ecma_collection_header_t *reject_reactions = promise_p->reject_reactions;
   ecma_collection_header_t *fulfill_reactions = promise_p->fulfill_reactions;
+
+  /* Fulfill reactions will never be triggered. */
+  ecma_promise_trigger_reactions (reject_reactions, reason);
+
   promise_p->reject_reactions = ecma_new_values_collection ();
   promise_p->fulfill_reactions = ecma_new_values_collection ();
 
-  /* Fulfill reactions will never be triggered. */
+  ecma_free_values_collection (reject_reactions, ECMA_COLLECTION_NO_REF_OBJECTS);
   ecma_free_values_collection (fulfill_reactions, ECMA_COLLECTION_NO_REF_OBJECTS);
-  ecma_promise_trigger_reactions (reject_reactions, reason);
 } /* ecma_reject_promise */
 
 /**
@@ -209,12 +210,15 @@ ecma_fulfill_promise (ecma_value_t promise, /**< promise */
      first and creating a new one might cause a heap after use event. */
   ecma_collection_header_t *reject_reactions = promise_p->reject_reactions;
   ecma_collection_header_t *fulfill_reactions = promise_p->fulfill_reactions;
+
+  /* Reject reactions will never be triggered. */
+  ecma_promise_trigger_reactions (fulfill_reactions, value);
+
   promise_p->reject_reactions = ecma_new_values_collection ();
   promise_p->fulfill_reactions = ecma_new_values_collection ();
 
-  /* Reject reactions will never be triggered. */
   ecma_free_values_collection (reject_reactions, ECMA_COLLECTION_NO_REF_OBJECTS);
-  ecma_promise_trigger_reactions (fulfill_reactions, value);
+  ecma_free_values_collection (fulfill_reactions, ECMA_COLLECTION_NO_REF_OBJECTS);
 } /* ecma_fulfill_promise */
 
 /**
@@ -362,9 +366,9 @@ ecma_call_builtin_executor (ecma_object_t *executor_p, /**< the executor object 
                             ecma_value_t resolve_func, /**< the resolve function */
                             ecma_value_t reject_func) /**< the reject function */
 {
-  ecma_string_t *capability_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_CAPABILITY);
-  ecma_string_t *resolve_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_RESOLVE);
-  ecma_string_t *reject_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_REJECT);
+  ecma_string_t *capability_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_CAPABILITY);
+  ecma_string_t *resolve_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_RESOLVE);
+  ecma_string_t *reject_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_REJECT);
 
   /* 2. */
   ecma_value_t capability = ecma_op_object_get (executor_p, capability_str_p);
@@ -585,8 +589,8 @@ ecma_promise_new_capability (void)
   /* 3. */
   ecma_object_t *capability_p = ecma_op_create_object_object_noarg ();
 
-  ecma_string_t *capability_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_CAPABILITY);
-  ecma_string_t *promise_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_PROMISE);
+  ecma_string_t *capability_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_CAPABILITY);
+  ecma_string_t *promise_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_PROMISE);
   /* 4. */
   ecma_object_t *executor_p;
   executor_p = ecma_op_create_object_object_noarg ();
@@ -618,7 +622,7 @@ ecma_promise_new_capability (void)
 
   ecma_free_value (promise);
   /* 8. */
-  ecma_string_t *resolve_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_RESOLVE);
+  ecma_string_t *resolve_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_RESOLVE);
   ecma_value_t resolve = ecma_op_object_get (capability_p, resolve_str_p);
 
   if (!ecma_op_is_callable (resolve))
@@ -630,7 +634,7 @@ ecma_promise_new_capability (void)
 
   ecma_free_value (resolve);
   /* 9. */
-  ecma_string_t *reject_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_REJECT);
+  ecma_string_t *reject_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_REJECT);
   ecma_value_t reject = ecma_op_object_get (capability_p, reject_str_p);
 
   if (!ecma_op_is_callable (reject))
@@ -660,9 +664,9 @@ ecma_promise_do_then (ecma_value_t promise, /**< the promise which call 'then' *
                       ecma_value_t on_rejected, /**< on_rejected function */
                       ecma_value_t result_capability) /**< promise capability */
 {
-  ecma_string_t *capability_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_CAPABILITY);
-  ecma_string_t *handler_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_HANDLER);
-  ecma_string_t *promise_str_p = ecma_get_ecma_string_from_uint32 (ECMA_PROMISE_PROPERTY_PROMISE);
+  ecma_string_t *capability_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_CAPABILITY);
+  ecma_string_t *handler_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_HANDLER);
+  ecma_string_t *promise_str_p = ecma_get_magic_string (LIT_INTERNAL_MAGIC_STRING_PROMISE_PROPERTY_PROMISE);
 
   /* 3. boolean true indicates "indentity" */
   if (!ecma_op_is_callable (on_fulfilled))

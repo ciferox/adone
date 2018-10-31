@@ -911,6 +911,10 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Classes may not have a static property called 'prototype'.";
     }
+    case PARSER_ERR_UNEXPECTED_SUPER_REFERENCE:
+    {
+      return "Super is not allowed to be used here.";
+    }
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
     case PARSER_ERR_LEFT_PAREN_EXPECTED:
     {
@@ -1034,6 +1038,12 @@ parser_error_to_string (parser_error_t error) /**< error code */
     {
       return "Duplicated label.";
     }
+#ifndef CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER
+    case PARSER_ERR_DUPLICATED_ARGUMENT_NAMES:
+    {
+      return "Duplicated function argument names are not allowed here.";
+    }
+#endif /* !CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER */
     case PARSER_ERR_OBJECT_PROPERTY_REDEFINED:
     {
       return "Property of object literal redefined.";

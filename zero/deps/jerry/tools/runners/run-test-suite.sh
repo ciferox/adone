@@ -53,7 +53,7 @@ fi
 if [[ "$1" =~ ^--skip-list=.* ]]
 then
     SKIP_LIST=${1#--skip-list=}
-    SKIP_LIST=(${SKIP_LIST//,/ })
+    SKIP_LIST=${SKIP_LIST//,/ }
     shift
 fi
 
@@ -85,7 +85,7 @@ if [ -d $TESTS ]
 then
     TESTS_DIR=$TESTS
 
-    ( cd $TESTS; find . -name "[^N]*.js" ) | sort > $TEST_FILES
+    ( cd $TESTS; find . -name "*.js" ) | sort > $TEST_FILES
 elif [ -f $TESTS ]
 then
     TESTS_DIR=`dirname $TESTS`
@@ -97,7 +97,7 @@ else
 fi
 
 # Remove the skipped tests from list
-for TEST in "${SKIP_LIST[@]}"
+for TEST in ${SKIP_LIST}
 do
     ( sed -i -r "/$TEST/d" $TEST_FILES )
 done

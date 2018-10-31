@@ -16,10 +16,8 @@
 #include "js-parser-internal.h"
 
 #ifndef JERRY_DISABLE_JS_PARSER
-
-#if defined (JERRY_DEBUGGER) || defined (JERRY_ENABLE_LINE_INFO)
 #include "jcontext.h"
-#endif /* JERRY_DEBUGGER || JERRY_ENABLE_LINE_INFO */
+#include "lit-char-helpers.h"
 
 /** \addtogroup parser Parser
  * @{
@@ -326,8 +324,6 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
 
     context_p->lit_object.literal_p->status_flags |= LEXER_FLAG_VAR;
 
-    parser_emit_cbc_literal_from_token (context_p, CBC_PUSH_LITERAL);
-
     lexer_next_token (context_p);
 
     if (context_p->token.type == LEXER_ASSIGN)
@@ -336,18 +332,10 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
       if ((JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_CONNECTED)
           && ident_line_counter != context_p->last_breakpoint_line)
       {
-        JERRY_ASSERT (context_p->last_cbc_opcode == CBC_PUSH_LITERAL);
-
-        cbc_argument_t last_cbc = context_p->last_cbc;
-        context_p->last_cbc_opcode = PARSER_CBC_UNAVAILABLE;
-
         parser_emit_cbc (context_p, CBC_BREAKPOINT_DISABLED);
         parser_flush_cbc (context_p);
 
         parser_append_breakpoint_info (context_p, JERRY_DEBUGGER_BREAKPOINT_LIST, ident_line_counter);
-
-        context_p->last_cbc_opcode = CBC_PUSH_LITERAL;
-        context_p->last_cbc = last_cbc;
 
         context_p->last_breakpoint_line = ident_line_counter;
       }
@@ -360,15 +348,9 @@ parser_parse_var_statement (parser_context_t *context_p) /**< context */
       }
 #endif /* JERRY_ENABLE_LINE_INFO */
 
+      parser_emit_cbc_literal_from_token (context_p, CBC_PUSH_LITERAL);
       parser_parse_expression (context_p,
                                PARSE_EXPR_STATEMENT | PARSE_EXPR_NO_COMMA | PARSE_EXPR_HAS_LITERAL);
-    }
-    else
-    {
-      JERRY_ASSERT (context_p->last_cbc_opcode == CBC_PUSH_LITERAL
-                    && context_p->last_cbc.literal_type == LEXER_IDENT_LITERAL);
-      /* We don't need to assign anything to this variable. */
-      context_p->last_cbc_opcode = PARSER_CBC_UNAVAILABLE;
     }
 
     if (context_p->token.type != LEXER_COMMA)
@@ -616,6 +598,68 @@ parser_parse_with_statement_end (parser_context_t *context_p) /**< context */
     parser_stack_iterator_skip (&iterator, parser_statement_length (type));
   }
 } /* parser_parse_with_statement_end */
+
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+/**
+ * Parse super class context like a with statement (starting part).
+ */
+void
+parser_parse_super_class_context_start (parser_context_t *context_p) /**< context */
+{
+  JERRY_ASSERT (context_p->token.type == LEXER_KEYW_EXTENDS);
+
+  parser_with_statement_t with_statement;
+
+  lexer_next_token (context_p);
+
+  /* NOTE: Currently there is no proper way to check whether the currently parsed expression
+     is a valid lefthand-side expression or not, so we do not throw syntax error and parse
+     the class extending value as an expression. */
+  parser_parse_expression (context_p, PARSE_EXPR | PARSE_EXPR_NO_COMMA);
+
+#ifndef JERRY_NDEBUG
+  PARSER_PLUS_EQUAL_U16 (context_p->context_stack_depth, PARSER_SUPER_CLASS_CONTEXT_STACK_ALLOCATION);
+#endif /* !JERRY_NDEBUG */
+
+  context_p->status_flags |= PARSER_CLASS_HAS_SUPER;
+  parser_emit_cbc_ext_forward_branch (context_p,
+                                      CBC_EXT_SUPER_CLASS_CREATE_CONTEXT,
+                                      &with_statement.branch);
+
+  parser_stack_push (context_p, &with_statement, sizeof (parser_with_statement_t));
+  parser_stack_push_uint8 (context_p, PARSER_STATEMENT_WITH);
+} /* parser_parse_super_class_context_start */
+
+/**
+ * Parse super class context like a with statement (ending part).
+ */
+void
+parser_parse_super_class_context_end (parser_context_t *context_p, /**< context */
+                                      bool is_statement) /**< true - if class is parsed as a statement
+                                                          *   false - otherwise (as an expression) */
+{
+  parser_with_statement_t with_statement;
+  parser_stack_pop_uint8 (context_p);
+  parser_stack_pop (context_p, &with_statement, sizeof (parser_with_statement_t));
+
+  parser_flush_cbc (context_p);
+  PARSER_MINUS_EQUAL_U16 (context_p->stack_depth, PARSER_SUPER_CLASS_CONTEXT_STACK_ALLOCATION);
+#ifndef JERRY_NDEBUG
+  PARSER_MINUS_EQUAL_U16 (context_p->context_stack_depth, PARSER_SUPER_CLASS_CONTEXT_STACK_ALLOCATION);
+#endif /* !JERRY_NDEBUG */
+
+  if (is_statement)
+  {
+    parser_emit_cbc (context_p, CBC_CONTEXT_END);
+  }
+  else
+  {
+    parser_emit_cbc_ext (context_p, CBC_EXT_CLASS_EXPR_CONTEXT_END);
+  }
+
+  parser_set_branch_to_current_position (context_p, &with_statement.branch);
+} /* parser_parse_super_class_context_end */
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
 
 /**
  * Parse do-while statement (ending part).
@@ -1970,22 +2014,52 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
         }
 
         lexer_next_token (context_p);
+
         if ((context_p->token.flags & LEXER_WAS_NEWLINE)
             || context_p->token.type == LEXER_SEMICOLON
             || context_p->token.type == LEXER_RIGHT_BRACE)
         {
-          parser_emit_cbc (context_p, CBC_RETURN_WITH_BLOCK);
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+          if (JERRY_UNLIKELY (PARSER_IS_CLASS_CONSTRUCTOR_SUPER (context_p->status_flags)))
+          {
+            parser_emit_cbc_ext (context_p, CBC_EXT_PUSH_CONSTRUCTOR_THIS);
+            parser_emit_cbc (context_p, CBC_RETURN);
+          }
+          else
+          {
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+            parser_emit_cbc (context_p, CBC_RETURN_WITH_BLOCK);
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+          }
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
           break;
         }
 
         parser_parse_expression (context_p, PARSE_EXPR);
-        if (context_p->last_cbc_opcode == CBC_PUSH_LITERAL)
+
+        bool return_with_literal = (context_p->last_cbc_opcode == CBC_PUSH_LITERAL);
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+        return_with_literal = return_with_literal && !PARSER_IS_CLASS_CONSTRUCTOR_SUPER (context_p->status_flags);
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+
+        if (return_with_literal)
         {
           context_p->last_cbc_opcode = CBC_RETURN_WITH_LITERAL;
         }
         else
         {
-          parser_emit_cbc (context_p, CBC_RETURN);
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+          if (JERRY_UNLIKELY (PARSER_IS_CLASS_CONSTRUCTOR_SUPER (context_p->status_flags)))
+          {
+            parser_emit_cbc_ext (context_p, CBC_EXT_CONSTRUCTOR_RETURN);
+          }
+          else
+          {
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
+            parser_emit_cbc (context_p, CBC_RETURN);
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+          }
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
         }
         break;
       }
@@ -2003,11 +2077,10 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
         lexer_next_token (context_p);
         break;
       }
-
       case LEXER_LITERAL:
       {
         if (context_p->token.lit_location.type == LEXER_IDENT_LITERAL
-            && lexer_check_colon (context_p))
+            && lexer_check_next_character (context_p, LIT_CHAR_COLON))
         {
           parser_parse_label (context_p);
           lexer_next_token (context_p);
@@ -2087,6 +2160,15 @@ parser_parse_statements (parser_context_t *context_p) /**< context */
 #endif /* !JERRY_NDEBUG */
           /* There is no lexer_next_token here, since the
            * next token belongs to the parent context. */
+
+#ifndef CONFIG_DISABLE_ES2015_CLASS
+          if (JERRY_UNLIKELY (PARSER_IS_CLASS_CONSTRUCTOR_SUPER (context_p->status_flags)))
+          {
+            parser_emit_cbc_ext (context_p, CBC_EXT_PUSH_CONSTRUCTOR_THIS);
+            parser_emit_cbc (context_p, CBC_RETURN);
+            parser_flush_cbc (context_p);
+          }
+#endif /* !CONFIG_DISABLE_ES2015_CLASS */
           return;
         }
         parser_raise_error (context_p, PARSER_ERR_INVALID_RIGHT_SQUARE);

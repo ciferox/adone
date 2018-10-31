@@ -83,6 +83,7 @@ typedef enum
   PARSER_ERR_MULTIPLE_CLASS_CONSTRUCTORS,             /**< multiple class constructor */
   PARSER_ERR_CLASS_CONSTRUCTOR_AS_ACCESSOR,           /**< class constructor cannot be an accessor */
   PARSER_ERR_CLASS_STATIC_PROTOTYPE,                  /**< static method name 'prototype' is not allowed */
+  PARSER_ERR_UNEXPECTED_SUPER_REFERENCE,              /**< unexpected super keyword */
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
 
   PARSER_ERR_LEFT_PAREN_EXPECTED,                     /**< left paren expected */
@@ -118,6 +119,9 @@ typedef enum
   PARSER_ERR_INVALID_RETURN,                          /**< return must be inside a function */
   PARSER_ERR_INVALID_RIGHT_SQUARE,                    /**< right square must terminate a block */
   PARSER_ERR_DUPLICATED_LABEL,                        /**< duplicated label */
+#ifndef CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER
+  PARSER_ERR_DUPLICATED_ARGUMENT_NAMES,               /**< duplicated argument names */
+#endif /* !CONFIG_DISABLE_ES2015_FUNCTION_PARAMETER_INITIALIZER */
   PARSER_ERR_OBJECT_PROPERTY_REDEFINED,               /**< property of object literal redefined */
   PARSER_ERR_NON_STRICT_ARG_DEFINITION                /**< non-strict argument definition */
 } parser_error_t;

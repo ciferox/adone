@@ -12,5 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-Object.defineProperty(Object.prototype, 2, {});
-Promise.all([0]);
+switch (true) {
+default:
+  var obj = {
+    value: 0,
+    set
+      member
+      (x)
+    {
+      // Multiple statements.
+      this.value = x + 4;
+      this.value += 2;
+    },
+    get"member"() {
+      // Multiple statements.
+      this.value = this.value + 1;
+      return this.value;
+    },
+    get 3() {
+      return 3;
+    }
+  }
+}
+
+obj["member"] = 10;
+assert(obj.member === 17);
+assert(obj.member === 18);
+
+assert(obj[3] === 3);
+assert(obj["3"] === 3);
