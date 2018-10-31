@@ -1,4 +1,5 @@
 /* BEGIN_HEADER */
+#include "mbedtls/bignum.h"
 #include "mbedtls/x509_crt.h"
 #include "mbedtls/x509_csr.h"
 #include "mbedtls/pem.h"
@@ -35,8 +36,8 @@ size_t mbedtls_rsa_key_len_func( void *ctx )
  */
 
 /* BEGIN_CASE depends_on:MBEDTLS_PEM_WRITE_C:MBEDTLS_X509_CSR_WRITE_C */
-void x509_csr_check( char *key_file, char *cert_req_check_file,
-                     int md_type, int key_usage, int cert_type )
+void x509_csr_check( char * key_file, char * cert_req_check_file, int md_type,
+                     int key_usage, int cert_type )
 {
     mbedtls_pk_context key;
     mbedtls_x509write_csr req;
@@ -130,6 +131,7 @@ void x509_crt_check( char *subject_key_file, char *subject_pwd,
     TEST_ASSERT( mbedtls_pk_parse_keyfile( &issuer_key, issuer_key_file,
                                          issuer_pwd ) == 0 );
 
+#if defined(MBEDTLS_RSA_C)
     /* For RSA PK contexts, create a copy as an alternative RSA context. */
     if( rsa_alt == 1 && mbedtls_pk_get_type( &issuer_key ) == MBEDTLS_PK_RSA )
     {
@@ -141,6 +143,9 @@ void x509_crt_check( char *subject_key_file, char *subject_pwd,
 
         key = &issuer_key_alt;
     }
+#else
+    (void) rsa_alt;
+#endif
 
     TEST_ASSERT( mbedtls_mpi_read_string( &serial, 10, serial_str ) == 0 );
 
@@ -205,7 +210,8 @@ exit:
 /* END_CASE */
 
 /* BEGIN_CASE depends_on:MBEDTLS_X509_CREATE_C:MBEDTLS_X509_USE_C */
-void mbedtls_x509_string_to_names( char *name, char *parsed_name, int result )
+void mbedtls_x509_string_to_names( char * name, char * parsed_name, int result
+                                   )
 {
     int ret;
     size_t len = 0;
