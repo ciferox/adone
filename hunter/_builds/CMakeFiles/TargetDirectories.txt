@@ -1,4 +1,0 @@
-/________/ciferox/adone/hunter/_builds/CMakeFiles/rebuild_cache.dir
-/________/ciferox/adone/hunter/_builds/CMakeFiles/edit_cache.dir
-/________/ciferox/adone/hunter/_builds/CMakeFiles/simple.dir
-/________/ciferox/adone/hunter/_builds/CMakeFiles/test.dir

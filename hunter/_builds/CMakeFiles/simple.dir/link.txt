@@ -1,1 +1,0 @@
-/usr/bin/g++  -g  -rdynamic CMakeFiles/simple.dir/simple.cpp.o  -o simple /________/ciferox/adone/_Base/xxxxxxx/81d2ad6/738687c/Install/lib/libgtest_maind.a /________/ciferox/adone/_Base/xxxxxxx/81d2ad6/738687c/Install/lib/libgtestd.a -pthread 
