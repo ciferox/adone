@@ -123,7 +123,7 @@ function(hunter_autotools_project target_name)
   set(d2 "${PARAM_GLOBAL_INSTALL_DIR}/share/pkgconfig")
   set(shell_pkg_config_libdir "PKG_CONFIG_LIBDIR=${d1}:${d2}")
 
-  set(clear_vars_shell_script "${PARAM_HUNTER_SELF}/scripts/clear-all.sh")
+  set(clear_vars_shell_script "${PARAM_HUNTER_SELF}/cmake/scripts/clear-all.sh")
 
   set(shell_env
       .
@@ -325,7 +325,7 @@ function(hunter_autotools_project target_name)
 
     set(HUNTER_PACKAGE_INSTALL_PREFIX ${PARAM_INSTALL_DIR})
     configure_file(
-        "${PARAM_HUNTER_SELF}/scripts/${merge_lipo_script}.in"
+        "${PARAM_HUNTER_SELF}/cmake/scripts/${merge_lipo_script}.in"
         "${PARAM_SOURCE_DIR}/universal/${merge_lipo_script}"
         @ONLY
     )

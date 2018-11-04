@@ -17,7 +17,7 @@ if("@MSVC@")
 elseif("@MINGW@")
   set(build_command mingw32-make)
 else()
-  include("@hunter_self@/scripts/clear-all.cmake")
+  include("@hunter_self@/cmake/scripts/clear-all.cmake")
   set(build_command make)
 endif()
 

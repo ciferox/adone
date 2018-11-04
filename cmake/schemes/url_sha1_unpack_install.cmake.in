@@ -47,12 +47,12 @@ ExternalProject_Add(
     "${CMAKE_COMMAND}"
     "-Dfrom=@HUNTER_PACKAGE_SOURCE_DIR@"
     "-Dto=@HUNTER_PACKAGE_INSTALL_PREFIX@"
-    -P "@HUNTER_SELF@/scripts/copy-files.cmake"
+    -P "@HUNTER_SELF@/cmake/scripts/copy-files.cmake"
     COMMAND # Copy license files
     "@CMAKE_COMMAND@"
     "-C@HUNTER_ARGS_FILE@" # for 'HUNTER_INSTALL_LICENSE_FILES'
     "-Dsrcdir=@HUNTER_PACKAGE_SOURCE_DIR@"
     "-Ddstdir=@HUNTER_PACKAGE_LICENSE_DIR@"
     -P
-    "@HUNTER_SELF@/scripts/try-copy-license.cmake"
+    "@HUNTER_SELF@/cmake/scripts/try-copy-license.cmake"
 )

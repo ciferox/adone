@@ -78,7 +78,7 @@ function(hunter_upload_cache)
   # Run isolated script to aviod cross-compiling issues and
   # other variables effects
   execute_process(
-      COMMAND ${CMAKE_COMMAND} -P ${HUNTER_SELF}/scripts/find_python.cmake
+      COMMAND ${CMAKE_COMMAND} -P ${HUNTER_SELF}/cmake/scripts/find_python.cmake
       RESULT_VARIABLE result
       OUTPUT_VARIABLE python_path
       ERROR_VARIABLE python_path
@@ -91,7 +91,7 @@ function(hunter_upload_cache)
     hunter_user_error("Python not found (required for uploading)")
   endif()
 
-  set(upload_script "${HUNTER_SELF}/scripts/upload-cache-to-github.py")
+  set(upload_script "${HUNTER_SELF}/cmake/scripts/upload-cache-to-github.py")
   if(NOT EXISTS "${upload_script}")
     hunter_internal_error("Script not found: ${upload_script}")
   endif()

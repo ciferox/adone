@@ -1,47 +1,3 @@
-# Copyright (c) 2013-2018, Ruslan Baratov
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-#
-# * Redistributions of source code must retain the above copyright notice, this
-#   list of conditions and the following disclaimer.
-#
-# * Redistributions in binary form must reproduce the above copyright notice,
-#   this list of conditions and the following disclaimer in the documentation
-#   and/or other materials provided with the distribution.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-# This is a gate file to Hunter package manager.
-# Include this file using `include` command and add package you need, example:
-#
-#     cmake_minimum_required(VERSION 3.2)
-#
-#     include("cmake/HunterGate.cmake")
-#     HunterGate(
-#         URL "https://github.com/path/to/hunter/archive.tar.gz"
-#         SHA1 "798501e983f14b28b10cda16afa4de69eee1da1d"
-#     )
-#
-#     project(MyProject)
-#
-#     hunter_add_package(Foo)
-#     hunter_add_package(Boo COMPONENTS Bar Baz)
-#
-# Projects:
-#     * https://github.com/hunter-packages/gate/
-#     * https://github.com/ruslo/hunter
-
 option(HUNTER_ENABLED "Enable Hunter package manager support" ON)
 
 if(HUNTER_ENABLED)
@@ -162,35 +118,6 @@ function(hunter_gate_detect_root)
     set(HUNTER_GATE_ROOT "$ENV{HUNTER_ROOT}" PARENT_SCOPE)
     hunter_gate_status_debug("HUNTER_ROOT detected by environment variable")
     return()
-  endif()
-
-  # Check HOME environment variable
-  string(COMPARE NOTEQUAL "$ENV{HOME}" "" result)
-  if(result)
-    set(HUNTER_GATE_ROOT "$ENV{HOME}/.hunter" PARENT_SCOPE)
-    hunter_gate_status_debug("HUNTER_ROOT set using HOME environment variable")
-    return()
-  endif()
-
-  # Check SYSTEMDRIVE and USERPROFILE environment variable (windows only)
-  if(WIN32)
-    string(COMPARE NOTEQUAL "$ENV{SYSTEMDRIVE}" "" result)
-    if(result)
-      set(HUNTER_GATE_ROOT "$ENV{SYSTEMDRIVE}/.hunter" PARENT_SCOPE)
-      hunter_gate_status_debug(
-          "HUNTER_ROOT set using SYSTEMDRIVE environment variable"
-      )
-      return()
-    endif()
-
-    string(COMPARE NOTEQUAL "$ENV{USERPROFILE}" "" result)
-    if(result)
-      set(HUNTER_GATE_ROOT "$ENV{USERPROFILE}/.hunter" PARENT_SCOPE)
-      hunter_gate_status_debug(
-          "HUNTER_ROOT set using USERPROFILE environment variable"
-      )
-      return()
-    endif()
   endif()
 
   hunter_gate_fatal_error(
@@ -405,7 +332,7 @@ macro(HunterGate)
     endif()
 
     cmake_parse_arguments(
-        HUNTER_GATE "LOCAL" "URL;SHA1;GLOBAL;FILEPATH" "" ${ARGV}
+        HUNTER_GATE "LOCAL" "URL;SHA1" "" ${ARGV}
     )
 
     string(COMPARE EQUAL "${HUNTER_GATE_SHA1}" "" _empty_sha1)
@@ -417,8 +344,6 @@ macro(HunterGate)
         ""
         _have_unparsed
     )
-    string(COMPARE NOTEQUAL "${HUNTER_GATE_GLOBAL}" "" _have_global)
-    string(COMPARE NOTEQUAL "${HUNTER_GATE_FILEPATH}" "" _have_filepath)
 
     if(_have_unparsed)
       hunter_gate_user_error(
@@ -430,30 +355,6 @@ macro(HunterGate)
     endif()
     if(_empty_url)
       hunter_gate_user_error("URL suboption of HunterGate is mandatory")
-    endif()
-    if(_have_global)
-      if(HUNTER_GATE_LOCAL)
-        hunter_gate_user_error("Unexpected LOCAL (already has GLOBAL)")
-      endif()
-      if(_have_filepath)
-        hunter_gate_user_error("Unexpected FILEPATH (already has GLOBAL)")
-      endif()
-    endif()
-    if(HUNTER_GATE_LOCAL)
-      if(_have_global)
-        hunter_gate_user_error("Unexpected GLOBAL (already has LOCAL)")
-      endif()
-      if(_have_filepath)
-        hunter_gate_user_error("Unexpected FILEPATH (already has LOCAL)")
-      endif()
-    endif()
-    if(_have_filepath)
-      if(_have_global)
-        hunter_gate_user_error("Unexpected GLOBAL (already has FILEPATH)")
-      endif()
-      if(HUNTER_GATE_LOCAL)
-        hunter_gate_user_error("Unexpected LOCAL (already has FILEPATH)")
-      endif()
     endif()
 
     hunter_gate_detect_root() # set HUNTER_GATE_ROOT

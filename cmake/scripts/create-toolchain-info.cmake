@@ -68,7 +68,7 @@ foreach(configuration ${HUNTER_CONFIGURATION_TYPES})
   file(APPEND "${TOOLCHAIN_INFO_FILE}" "${CMAKE_${configuration_upper}_POSTFIX}\n")
 endforeach()
 
-set(predefined "${HUNTER_SELF}/scripts/ShowPredefined.cpp")
+set(predefined "${HUNTER_SELF}/cmake/scripts/ShowPredefined.cpp")
 if(NOT EXISTS "${predefined}")
   hunter_internal_error("${predefined} not exists")
 endif()

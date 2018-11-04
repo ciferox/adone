@@ -67,7 +67,7 @@ string(COMPARE EQUAL "@qt_component@" "qttools" is_qttools)
 string(COMPARE EQUAL "@qt_component@" "qtbase" is_qtbase)
 list(FIND depends_on "qttools" depends_on_qttools_index)
 
-include("@hunter_self@/scripts/clear-all.cmake")
+include("@hunter_self@/cmake/scripts/clear-all.cmake")
 
 set(ENV{ANDROID_API_VERSION} "@ANDROID_API_VERSION@") # used by `make install`
 

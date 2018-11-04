@@ -77,7 +77,7 @@ https://github.com/ruslo/hunter/issues/495
   endif()
 
   # invoke cmake for host project
-  include(${HUNTER_SELF}/scripts/clear-all.cmake)
+  include(${HUNTER_SELF}/cmake/scripts/clear-all.cmake)
   execute_process(
       COMMAND
           "${CMAKE_COMMAND}"

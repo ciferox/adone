@@ -64,7 +64,7 @@ ExternalProject_Add(
     CONFIGURE_COMMAND
     ""
     BUILD_COMMAND
-    "CC=${compiler}" && . "@HUNTER_SELF@/scripts/clear-all.sh" &&
+    "CC=${compiler}" && . "@HUNTER_SELF@/cmake/scripts/clear-all.sh" &&
     xcodebuild -target ios-sim -configuration Release ${jobs_option}
     BUILD_IN_SOURCE
     1
@@ -76,5 +76,5 @@ ExternalProject_Add(
     "-Dsrcdir=@HUNTER_PACKAGE_SOURCE_DIR@"
     "-Ddstdir=@HUNTER_PACKAGE_LICENSE_DIR@"
     -P
-    "@HUNTER_SELF@/scripts/try-copy-license.cmake"
+    "@HUNTER_SELF@/cmake/scripts/try-copy-license.cmake"
 )

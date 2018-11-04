@@ -135,9 +135,9 @@ function(hunter_unpack_directory cache_sha1)
       "-DLIST_OF_FILES=${list_of_files}"
       "-DSHELL_LINK_SCRIPT=${shell_link_script}"
       "-DCELLAR_RAW_DIRECTORY=${cellar_raw_directory}"
-      "-DPYTHON_LINK_SCRIPT=${HUNTER_SELF}/scripts/link-all.py"
+      "-DPYTHON_LINK_SCRIPT=${HUNTER_SELF}/cmake/scripts/link-all.py"
       "-P"
-      "${HUNTER_SELF}/scripts/link-all.cmake"
+      "${HUNTER_SELF}/cmake/scripts/link-all.cmake"
   )
   hunter_print_cmd("${cellar_directory}" "${cmd}")
   execute_process(

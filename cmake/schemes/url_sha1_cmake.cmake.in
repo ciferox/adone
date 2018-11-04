@@ -182,7 +182,7 @@ foreach(configuration @HUNTER_PACKAGE_CONFIGURATION_TYPES@)
           "-Dsrcdir=@HUNTER_PACKAGE_SOURCE_DIR@"
           "-Ddstdir=@HUNTER_PACKAGE_LICENSE_DIR@"
           -P
-          "@HUNTER_SELF@/scripts/try-copy-license.cmake"
+          "@HUNTER_SELF@/cmake/scripts/try-copy-license.cmake"
       LOG_BUILD ${log_build}
       LOG_INSTALL ${log_install}
       ${uses_terminal}

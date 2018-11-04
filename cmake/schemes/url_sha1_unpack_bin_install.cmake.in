@@ -46,5 +46,5 @@ ExternalProject_Add(
     "@CMAKE_COMMAND@"
     "-Dfrom=@HUNTER_PACKAGE_SOURCE_DIR@"
     "-Dto=@HUNTER_PACKAGE_INSTALL_PREFIX@/bin"
-    -P "@HUNTER_SELF@/scripts/copy-files.cmake"
+    -P "@HUNTER_SELF@/cmake/scripts/copy-files.cmake"
 )
