@@ -1,18 +1,4 @@
-# Copyright 2015-present Samsung Electronics Co., Ltd. and other contributors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.2)
 
 # Configure external libtuv
 set(DEPS_TUV deps/libtuv)
@@ -47,14 +33,14 @@ ExternalProject_Add(libtuv
     -DTARGET_SYSTEMROOT=${TARGET_SYSTEMROOT}
     -DTARGET_BOARD=${TARGET_BOARD}
 )
-add_library(tuv STATIC IMPORTED)
-add_dependencies(tuv libtuv)
-set_property(TARGET tuv PROPERTY
+add_library(auv STATIC IMPORTED)
+add_dependencies(auv libauv)
+set_property(TARGET auv PROPERTY
   IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/lib/${LIBTUV_NAME})
 set_property(DIRECTORY APPEND PROPERTY
   ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/lib/${LIBTUV_NAME})
 set(TUV_INCLUDE_DIR ${DEPS_TUV_SRC}/include)
-set(TUV_LIBS tuv)
+set(TUV_LIBS auv_a)
 
 if("${TARGET_OS}" STREQUAL "MOCK" OR
    "${TARGET_OS}" STREQUAL "LINUX")
