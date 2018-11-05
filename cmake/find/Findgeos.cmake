@@ -6,12 +6,6 @@
 # Exports targets "geos" and "geos::c" for the geos library
 # ----------------------------------------------------------------------
 
-if(NOT HUNTER_ENABLED)
-  macro(hunter_status_debug)
-    message(${ARGV})
-  endmacro()
-endif()
-
 hunter_status_debug("GEOS_ROOT: ${GEOS_ROOT}")
 
 find_path(

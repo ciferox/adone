@@ -43,13 +43,6 @@ function(hunter_create_cache_file cache_path)
       "set(HUNTER_GATE_SETTINGS_APPLIED ON CACHE INTERNAL \"\")\n"
   )
 
-  # Enable Hunter package manager for projects where it is disabled by default
-  file(
-      APPEND
-      "${temp_path}"
-      "set(HUNTER_ENABLED ON CACHE INTERNAL \"\")\n"
-  )
-
   # Let all project have same debug status
   file(
       APPEND

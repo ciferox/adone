@@ -1,13 +1,29 @@
-option(HUNTER_ENABLED "Enable Hunter package manager support" ON)
+set(
+    HUNTER_CACHE_SERVERS
+    "https://github.com/ciferox/adone-native-cache"
+    CACHE
+    STRING
+    "Default cache server"
+)
 
-if(HUNTER_ENABLED)
-  if(CMAKE_VERSION VERSION_LESS "3.2")
-    message(
-        FATAL_ERROR
-        "At least CMake version 3.2 required for Hunter dependency management."
-        " Update CMake or set HUNTER_ENABLED to OFF."
-    )
-  endif()
+option(HUNTER_RUN_UPLOAD "Upload cache binaries" OFF)
+
+set(
+    HUNTER_PASSWORDS_PATH
+    "${CMAKE_CURRENT_LIST_DIR}/passwords.cmake"
+    CACHE
+    FILEPATH
+    "Hunter passwords"
+)
+
+set(HUNTER_GATE_URL "https://github.com/ruslo/hunter/archive/v0.23.33.tar.gz")
+set(HUNTER_GATE_SHA1 "acbf4b9b77b5a0160adc1da1cdda35f64b14196a")
+
+if(CMAKE_VERSION VERSION_LESS "3.10")
+  message(
+      FATAL_ERROR
+      "At least CMake version 3.10 required for Adone dependency management."
+  )
 endif()
 
 include(CMakeParseArguments) # cmake_parse_arguments
@@ -295,22 +311,7 @@ macro(HunterGate)
   # First HunterGate command will init Hunter, others will be ignored
   get_property(_hunter_gate_done GLOBAL PROPERTY HUNTER_GATE_DONE SET)
 
-  if(NOT HUNTER_ENABLED)
-    # Empty function to avoid error "unknown function"
-    function(hunter_add_package)
-    endfunction()
-
-    set(
-        _hunter_gate_disabled_mode_dir
-        "${CMAKE_CURRENT_LIST_DIR}/cmake/Hunter/disabled-mode"
-    )
-    if(EXISTS "${_hunter_gate_disabled_mode_dir}")
-      hunter_gate_status_debug(
-          "Adding \"disabled-mode\" modules: ${_hunter_gate_disabled_mode_dir}"
-      )
-      list(APPEND CMAKE_PREFIX_PATH "${_hunter_gate_disabled_mode_dir}")
-    endif()
-  elseif(_hunter_gate_done)
+  if(_hunter_gate_done)
     hunter_gate_status_debug("Secondary HunterGate (use old settings)")
     hunter_gate_self(
         "${HUNTER_CACHED_ROOT}"
@@ -330,10 +331,6 @@ macro(HunterGate)
           WIKI "error.huntergate.before.project"
       )
     endif()
-
-    cmake_parse_arguments(
-        HUNTER_GATE "LOCAL" "URL;SHA1" "" ${ARGV}
-    )
 
     string(COMPARE EQUAL "${HUNTER_GATE_SHA1}" "" _empty_sha1)
     string(COMPARE EQUAL "${HUNTER_GATE_URL}" "" _empty_url)

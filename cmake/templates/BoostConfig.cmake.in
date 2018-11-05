@@ -1,18 +1,8 @@
 # Copyright (c) 2015, Ruslan Baratov
 # All rights reserved.
 
-if(HUNTER_ENABLED)
-  include(hunter_internal_error)
-  include(hunter_status_debug)
-else()
-  function(hunter_internal_error)
-    message(FATAL_ERROR ${ARGV})
-  endfunction()
-
-  function(hunter_status_debug)
-    message(${ARGV})
-  endfunction()
-endif()
+include(hunter_internal_error)
+include(hunter_status_debug)
 
 function(hunter_add_rt_library target_name)
   include(CheckCXXSymbolExists)

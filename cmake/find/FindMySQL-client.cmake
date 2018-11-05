@@ -5,12 +5,6 @@
 #
 # ----------------------------------------------------------------------
 
-if(NOT HUNTER_ENABLED)
-  macro(hunter_status_debug)
-    message(${ARGV})
-  endmacro()
-endif()
-
 hunter_status_debug("MYSQL-CLIENT_ROOT: ${MYSQL-CLIENT_ROOT}")
 
 find_path(

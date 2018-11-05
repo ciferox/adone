@@ -47,7 +47,6 @@ hunter_cmake_args(
     CMAKE_ARGS
       BUILD_TESTING=OFF
       BUILD_EXAMPLES=OFF
-      HUNTER_ENABLED=ON
 )
 
 hunter_pick_scheme(DEFAULT url_sha1_cmake)

@@ -90,12 +90,6 @@
 #    )
 # ----------------------------------------------------------------------
 
-if(NOT HUNTER_ENABLED)
-  macro(hunter_status_debug)
-    message(${ARGV})
-  endmacro()
-endif()
-
 hunter_status_debug("ODB-COMPILER_ROOT: ${ODB-COMPILER_ROOT}")
 
 find_program(
