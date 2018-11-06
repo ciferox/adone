@@ -15,6 +15,9 @@
 cmake_minimum_required(VERSION 2.8)
 include(CheckCCompilerFlag)
 
+include("cmake/gate.cmake")
+HunterGate()
+
 project(IOTJS C)
 
 set(IOTJS_VERSION_MAJOR 1)
@@ -189,9 +192,26 @@ if(NOT ${EXTERNAL_LIBC_INTERFACE} STREQUAL "")
   iotjs_add_compile_flags(-isystem ${EXTERNAL_LIBC_INTERFACE})
 endif()
 
+hunter_add_package(libauv)
+find_package(libauv CONFIG REQUIRED)
+
+set(AUV_INCLUDE_DIR ${LIBAUV_ROOT}/include)
+set(AUV_LIBS libauv::auv_a)
+if("${TARGET_OS}" STREQUAL "MOCK" OR
+  "${TARGET_OS}" STREQUAL "LINUX")
+  list(APPEND AUV_LIBS pthread)
+elseif("${TARGET_OS}" STREQUAL "WINDOWS")
+  list(APPEND AUV_LIBS
+        ws2_32.lib
+        UserEnv.lib
+        advapi32.lib
+        iphlpapi.lib
+        psapi.lib
+        shell32.lib)
+endif()
+
 # Include external projects
 include(cmake/jerry.cmake)
 include(cmake/http-parser.cmake)
-include(cmake/libtuv.cmake)
 
 include(cmake/iotjs.cmake)

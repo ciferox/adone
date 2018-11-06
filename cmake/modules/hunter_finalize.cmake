@@ -22,7 +22,7 @@ macro(hunter_finalize)
   string(COMPARE EQUAL "${HUNTER_CACHE_SERVERS}" "" _is_empty)
   if(_is_empty)
     hunter_status_debug("Using default cache server")
-    set(HUNTER_CACHE_SERVERS "https://github.com/ciferox/adone-native-cache")
+    set(HUNTER_CACHE_SERVERS "https://github.com/adone-global/native-cache")
   endif()
 
   hunter_status_debug("List of cache servers:")

@@ -10,7 +10,7 @@ include(hunter_report_broken_package)
 hunter_add_version(
   PACKAGE_NAME libauv
   VERSION 1.23.2
-  URL "https://github.com/adone-native-packages/libauv/archive/v1.23.2.tar.gz"
+  URL "https://github.com/adone-global/libauv/archive/v1.23.2.tar.gz"
   SHA1 64b719e8d26a4f7f035e2c9d5531101da481007e
 )
 

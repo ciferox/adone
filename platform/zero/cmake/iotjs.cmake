@@ -435,7 +435,7 @@ set(IOTJS_INCLUDE_DIRS
   ${JERRY_INCLUDE_DIR}
   ${HTTPPARSER_INCLUDE_DIR}
   ${MBEDTLS_INCLUDE_DIR}
-  ${TUV_INCLUDE_DIR}
+  ${AUV_INCLUDE_DIR}
 )
 
 if(NOT BUILD_LIB_ONLY)
@@ -483,7 +483,7 @@ set_target_properties(${TARGET_STATIC_IOTJS} PROPERTIES
 target_include_directories(${TARGET_STATIC_IOTJS} PRIVATE ${IOTJS_INCLUDE_DIRS})
 target_link_libraries(${TARGET_STATIC_IOTJS}
   ${JERRY_LIBS}
-  ${TUV_LIBS}
+  ${AUV_LIBS}
   libhttp-parser
   ${MBEDTLS_LIBS}
   ${EXTERNAL_LIBS}
@@ -519,7 +519,7 @@ if (NOT BUILD_LIB_ONLY AND CREATE_SHARED_LIB)
     -Wl,--whole-archive
     ${TARGET_STATIC_IOTJS}
     ${JERRY_LIBS}
-    ${TUV_LIBS}
+    ${AUV_LIBS}
     libhttp-parser
     ${MBEDTLS_LIBS}
     -Wl,--no-whole-archive
