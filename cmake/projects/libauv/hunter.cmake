@@ -11,7 +11,7 @@ hunter_add_version(
   PACKAGE_NAME libauv
   VERSION 1.23.2
   URL "https://github.com/adone-global/libauv/archive/v1.23.2.tar.gz"
-  SHA1 64b719e8d26a4f7f035e2c9d5531101da481007e
+  SHA1 f8a620eb132dfdb5a2e53e9142766380b80c3ea5
 )
 
 hunter_pick_scheme(DEFAULT url_sha1_cmake)
