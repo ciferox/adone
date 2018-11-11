@@ -1,22 +1,5 @@
-# Copyright 2015-present Samsung Electronics Co., Ltd. and other contributors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.10)
 include(CheckCCompilerFlag)
-
-# include("cmake/gate.cmake")
-# HunterGate()
 
 project(IOTJS C)
 
@@ -192,27 +175,9 @@ if(NOT ${EXTERNAL_LIBC_INTERFACE} STREQUAL "")
   iotjs_add_compile_flags(-isystem ${EXTERNAL_LIBC_INTERFACE})
 endif()
 
-# # libauv
-# hunter_add_package(libauv)
-# find_package(libauv CONFIG REQUIRED)
-
-# set(AUV_INCLUDE_DIR ${LIBAUV_ROOT}/include)
-# set(AUV_LIBS libauv::auv_a)
-# if("${TARGET_OS}" STREQUAL "MOCK" OR
-#   "${TARGET_OS}" STREQUAL "LINUX")
-#   list(APPEND AUV_LIBS pthread)
-# elseif("${TARGET_OS}" STREQUAL "WINDOWS")
-#   list(APPEND AUV_LIBS
-#         ws2_32.lib
-#         UserEnv.lib
-#         advapi32.lib
-#         iphlpapi.lib
-#         psapi.lib
-#         shell32.lib)
-# endif()
-
+# Include external projects
 include(cmake/jerry.cmake)
 include(cmake/http-parser.cmake)
-include(cmake/libuv.cmake)
+include(cmake/libtuv.cmake)
 
 include(cmake/iotjs.cmake)

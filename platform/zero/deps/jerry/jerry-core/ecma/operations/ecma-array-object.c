@@ -121,9 +121,7 @@ ecma_op_create_array_object (const ecma_value_t *arguments_list_p, /**< list of 
     ecma_builtin_helper_def_prop (object_p,
                                   item_name_string_p,
                                   array_items_p[index],
-                                  true, /* Writable */
-                                  true, /* Enumerable */
-                                  true, /* Configurable */
+                                  ECMA_PROPERTY_CONFIGURABLE_ENUMERABLE_WRITABLE,
                                   false); /* Failure handling */
 
     ecma_deref_ecma_string (item_name_string_p);
@@ -156,41 +154,12 @@ ecma_op_create_array_object_by_constructor (const ecma_value_t *arguments_list_p
                                             ecma_object_t *object_p) /**< The object from whom the new array object
                                                                       *   is being created */
 {
-  ecma_value_t constructor_value = ecma_op_object_get_by_magic_id (object_p, LIT_MAGIC_STRING_CONSTRUCTOR);
+  /* TODO: Use @@species after Symbol has been implemented */
+  JERRY_UNUSED (object_p);
 
-  if (ECMA_IS_VALUE_ERROR (constructor_value)
-      || !ecma_is_value_object (constructor_value)
-      || !ecma_is_constructor (constructor_value))
-  {
-    ecma_free_value (constructor_value);
-    return ecma_raise_type_error (ECMA_ERR_MSG ("object.constructor is not a constructor."));
-  }
-
-  ecma_object_t *constructor_object_p = ecma_get_object_from_value (constructor_value);
-  ecma_value_t constructor_prototype = ecma_op_object_get_by_magic_id (constructor_object_p,
-                                                                       LIT_MAGIC_STRING_PROTOTYPE);
-
-  ecma_deref_object (constructor_object_p);
-
-  if (ECMA_IS_VALUE_ERROR (constructor_prototype))
-  {
-    return constructor_prototype;
-  }
-
-  ecma_value_t result = ecma_op_create_array_object (arguments_list_p,
-                                                     arguments_list_len,
-                                                     is_treat_single_arg_as_length);
-
-  if (ecma_is_value_object (constructor_prototype))
-  {
-    ecma_object_t *result_object_p = ecma_get_object_from_value (result);
-    ecma_object_t *constructor_prototpye_object_p = ecma_get_object_from_value (constructor_prototype);
-    ECMA_SET_POINTER (result_object_p->prototype_or_outer_reference_cp, constructor_prototpye_object_p);
-  }
-
-  ecma_free_value (constructor_prototype);
-
-  return result;
+  return ecma_op_create_array_object (arguments_list_p,
+                                      arguments_list_len,
+                                      is_treat_single_arg_as_length);
 } /* ecma_op_create_array_object_by_constructor */
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
 

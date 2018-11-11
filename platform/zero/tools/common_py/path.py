@@ -46,6 +46,9 @@ JERRY_ROOT = fs.join(DEPS_ROOT, 'jerry')
 # Root directory of JerryScript profiles.
 JERRY_PROFILE_ROOT = fs.join(JERRY_ROOT, 'jerry-core', 'profiles')
 
+# Root directory for libtuv submodule.
+TUV_ROOT = fs.join(DEPS_ROOT, 'libtuv')
+
 # Root directory for http-parser submodule.
 HTTPPARSER_ROOT = fs.join(DEPS_ROOT, 'http-parser')
 
