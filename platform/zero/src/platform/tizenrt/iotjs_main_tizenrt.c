@@ -24,6 +24,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef JERRY_DEBUGGER
+#include <time.h>
+#endif /* JERRY_DEBUGGER */
 
 #include "jerryscript-port.h"
 #include "jerryscript.h"
@@ -47,17 +50,14 @@ void jerry_port_log(jerry_log_level_t level, /**< log level */
 } /* jerry_port_log */
 
 /**
- * Dummy function to get the time zone.
- *
- * @return true
+ * Dummy function to get local time zone adjustment, in milliseconds,
+ * for the given timestamp.
  */
-bool jerry_port_get_time_zone(jerry_time_zone_t *tz_p) {
-  /* We live in UTC. */
-  tz_p->offset = 0;
-  tz_p->daylight_saving_time = 0;
-
-  return true;
-} /* jerry_port_get_time_zone */
+double jerry_port_get_local_time_zone_adjustment(double unix_ms, bool is_utc) {
+  (void)unix_ms;
+  (void)is_utc;
+  return 0.0;
+} /* jerry_port_get_local_time_zone_adjustment */
 
 /**
  * Get system time
@@ -84,6 +84,16 @@ void jerryx_port_handler_print_char(char c) { /**< the character to print */
   // printf("%c", c);
 } /* jerryx_port_handler_print_char */
 
+#ifdef JERRY_DEBUGGER
+void jerry_port_sleep(uint32_t sleep_time) {
+  nanosleep(
+      &(const struct timespec){
+          (time_t)sleep_time / 1000,
+          ((long int)sleep_time % 1000) * 1000000L /* Seconds, nanoseconds */
+      },
+      NULL);
+} /* jerry_port_sleep */
+#endif /* JERRY_DEBUGGER */
 
 int iotjs_entry(int argc, char **argv);
 int tuv_cleanup(void);

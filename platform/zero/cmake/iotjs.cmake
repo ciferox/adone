@@ -1,18 +1,4 @@
-# Copyright 2015-present Samsung Electronics Co., Ltd. and other contributors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.10)
 
 include(${CMAKE_CURRENT_LIST_DIR}/JSONParser.cmake)
 
@@ -435,7 +421,7 @@ set(IOTJS_INCLUDE_DIRS
   ${JERRY_INCLUDE_DIR}
   ${HTTPPARSER_INCLUDE_DIR}
   ${MBEDTLS_INCLUDE_DIR}
-  ${TUV_INCLUDE_DIR}
+  ${AUV_INCLUDE_DIR}
 )
 
 if(NOT BUILD_LIB_ONLY)
@@ -472,6 +458,9 @@ message(STATUS "TARGET_OS                ${TARGET_OS}")
 message(STATUS "TARGET_SYSTEMROOT        ${TARGET_SYSTEMROOT}")
 
 iotjs_add_compile_flags(${IOTJS_MODULE_DEFINES})
+if(FEATURE_DEBUGGER)
+  iotjs_add_compile_flags("-DJERRY_DEBUGGER")
+endif()
 
 # Configure the libiotjs.a
 set(TARGET_STATIC_IOTJS libiotjs)
@@ -483,7 +472,7 @@ set_target_properties(${TARGET_STATIC_IOTJS} PROPERTIES
 target_include_directories(${TARGET_STATIC_IOTJS} PRIVATE ${IOTJS_INCLUDE_DIRS})
 target_link_libraries(${TARGET_STATIC_IOTJS}
   ${JERRY_LIBS}
-  ${TUV_LIBS}
+  ${AUV_LIBS}
   libhttp-parser
   ${MBEDTLS_LIBS}
   ${EXTERNAL_LIBS}
@@ -519,7 +508,7 @@ if (NOT BUILD_LIB_ONLY AND CREATE_SHARED_LIB)
     -Wl,--whole-archive
     ${TARGET_STATIC_IOTJS}
     ${JERRY_LIBS}
-    ${TUV_LIBS}
+    ${AUV_LIBS}
     libhttp-parser
     ${MBEDTLS_LIBS}
     -Wl,--no-whole-archive

@@ -15,8 +15,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 # Configure external libtuv
-# set(DEPS_TUV deps/libtuv)
-set(DEPS_TUV deps/libuv)
+set(DEPS_TUV deps/libtuv)
 set(DEPS_TUV_SRC ${ROOT_DIR}/${DEPS_TUV})
 
 build_lib_name(LIBTUV_NAME tuv)
@@ -42,7 +41,7 @@ ExternalProject_Add(libtuv
     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
     -DTARGET_PLATFORM=${PLATFORM_DESCRIPTOR}
-    # -DLIBTUV_CUSTOM_LIB_OUT=lib
+    -DLIBTUV_CUSTOM_LIB_OUT=lib
     -DBUILDTESTER=NO
     -DBUILDAPIEMULTESTER=NO
     -DTARGET_SYSTEMROOT=${TARGET_SYSTEMROOT}
@@ -51,9 +50,9 @@ ExternalProject_Add(libtuv
 add_library(tuv STATIC IMPORTED)
 add_dependencies(tuv libtuv)
 set_property(TARGET tuv PROPERTY
-  IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/deps/libuv/${LIBTUV_NAME})
+  IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/lib/${LIBTUV_NAME})
 set_property(DIRECTORY APPEND PROPERTY
-  ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/deps/libuv/${LIBTUV_NAME})
+  ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_BINARY_DIR}/lib/${LIBTUV_NAME})
 set(TUV_INCLUDE_DIR ${DEPS_TUV_SRC}/include)
 set(TUV_LIBS tuv)
 

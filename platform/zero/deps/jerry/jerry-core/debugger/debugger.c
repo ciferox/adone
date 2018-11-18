@@ -40,7 +40,7 @@ typedef struct
  */
 JERRY_STATIC_ASSERT (JERRY_DEBUGGER_MESSAGES_OUT_MAX_COUNT == 32
                      && JERRY_DEBUGGER_MESSAGES_IN_MAX_COUNT == 21
-                     && JERRY_DEBUGGER_VERSION == 7,
+                     && JERRY_DEBUGGER_VERSION == 8,
                      debugger_version_correlates_to_message_type_count);
 
 /**
@@ -492,14 +492,7 @@ jerry_debugger_send_scope_variables (const uint8_t *recv_buffer_p) /**< pointer 
 
         jerry_debugger_scope_variable_type_t variable_type = jerry_debugger_get_variable_type (prop_value_p.value);
 
-        if (variable_type == JERRY_DEBUGGER_VALUE_OBJECT)
-        {
-          property_value = ecma_builtin_json_string_from_object (prop_value_p.value);
-        }
-        else
-        {
-          property_value = ecma_op_to_string (prop_value_p.value);
-        }
+        property_value = ecma_op_to_string (prop_value_p.value);
 
         if (!jerry_debugger_copy_variables_to_string_message (variable_type,
                                                               ecma_get_string_from_value (property_value),
@@ -536,12 +529,17 @@ jerry_debugger_send_eval (const lit_utf8_byte_t *eval_string_p, /**< evaluated s
   JERRY_ASSERT (!(JERRY_CONTEXT (debugger_flags) & JERRY_DEBUGGER_VM_IGNORE));
 
   JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_VM_IGNORE);
-  ecma_value_t result = ecma_op_eval_chars_buffer (eval_string_p + 1, eval_string_size - 1, ECMA_PARSE_DIRECT_EVAL);
+
+  uint32_t chain_index;
+  memcpy (&chain_index, eval_string_p, sizeof (uint32_t));
+  uint32_t parse_opts = ECMA_PARSE_DIRECT_EVAL | (chain_index << ECMA_PARSE_CHAIN_INDEX_SHIFT);
+
+  ecma_value_t result = ecma_op_eval_chars_buffer (eval_string_p + 5, eval_string_size - 5, parse_opts);
   JERRY_DEBUGGER_CLEAR_FLAGS (JERRY_DEBUGGER_VM_IGNORE);
 
   if (!ECMA_IS_VALUE_ERROR (result))
   {
-    if (eval_string_p[0] != JERRY_DEBUGGER_EVAL_EVAL)
+    if (eval_string_p[4] != JERRY_DEBUGGER_EVAL_EVAL)
     {
       JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_VM_EXCEPTION_THROWN);
       JERRY_CONTEXT (error_value) = result;
@@ -550,7 +548,7 @@ jerry_debugger_send_eval (const lit_utf8_byte_t *eval_string_p, /**< evaluated s
       JERRY_DEBUGGER_SET_FLAGS (JERRY_DEBUGGER_VM_STOP);
       JERRY_CONTEXT (debugger_stop_context) = NULL;
 
-      if (eval_string_p[0] == JERRY_DEBUGGER_EVAL_THROW)
+      if (eval_string_p[4] == JERRY_DEBUGGER_EVAL_THROW)
       {
         JERRY_CONTEXT (status_flags) |= ECMA_STATUS_EXCEPTION;
       }
@@ -925,7 +923,7 @@ jerry_debugger_process_message (const uint8_t *recv_buffer_p, /**< pointer to th
 
     case JERRY_DEBUGGER_EVAL:
     {
-      if (message_size < sizeof (jerry_debugger_receive_eval_first_t) + 1)
+      if (message_size < sizeof (jerry_debugger_receive_eval_first_t) + 5)
       {
         JERRY_ERROR_MSG ("Invalid message size\n");
         jerry_debugger_transport_close ();
