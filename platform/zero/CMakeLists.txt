@@ -194,4 +194,4 @@ include(cmake/jerry.cmake)
 include(cmake/http-parser.cmake)
 include(cmake/libauv.cmake)
 
-include(cmake/iotjs.cmake)
+include(cmake/zero.cmake)

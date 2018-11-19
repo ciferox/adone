@@ -773,4 +773,6 @@
 
 /* \} name SECTION: mbed TLS modules */
 
+#include <limits.h>
+
 #endif /* MBEDTLS_CONFIG_H */
