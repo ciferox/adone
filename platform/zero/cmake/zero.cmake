@@ -331,15 +331,15 @@ foreach(module ${IOTJS_MODULES})
 endforeach()
 
 # Common compile flags
-iotjs_add_compile_flags(-Wall)
+zero_add_compile_flags(-Wall)
 if(NOT USING_MSVC)
-  iotjs_add_compile_flags(-Wextra -Werror -Wno-unused-parameter)
-  iotjs_add_compile_flags(-Wsign-conversion -std=gnu99)
+  zero_add_compile_flags(-Wextra -Werror -Wno-unused-parameter)
+  zero_add_compile_flags(-Wsign-conversion -std=gnu99)
 endif()
 
 if(ENABLE_SNAPSHOT)
   set(JS2C_SNAPSHOT_ARG --snapshot-tool=${JERRY_HOST_SNAPSHOT})
-  iotjs_add_compile_flags(-DENABLE_SNAPSHOT)
+  zero_add_compile_flags(-DENABLE_SNAPSHOT)
 endif()
 
 # Run js2c
@@ -426,11 +426,11 @@ set(IOTJS_INCLUDE_DIRS
 
 if(NOT BUILD_LIB_ONLY)
   if("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
-    iotjs_add_link_flags("-Xlinker -map -Xlinker iotjs.map")
+    zero_add_link_flags("-Xlinker -map -Xlinker iotjs.map")
   elseif(USING_MSVC)
-    iotjs_add_link_flags("/MAP:iotjs.map")
+    zero_add_link_flags("/MAP:iotjs.map")
   else()
-    iotjs_add_link_flags("-Xlinker -Map -Xlinker iotjs.map")
+    zero_add_link_flags("-Xlinker -Map -Xlinker iotjs.map")
   endif()
 endif()
 
@@ -457,9 +457,9 @@ message(STATUS "TARGET_BOARD             ${TARGET_BOARD}")
 message(STATUS "TARGET_OS                ${TARGET_OS}")
 message(STATUS "TARGET_SYSTEMROOT        ${TARGET_SYSTEMROOT}")
 
-iotjs_add_compile_flags(${IOTJS_MODULE_DEFINES})
+zero_add_compile_flags(${IOTJS_MODULE_DEFINES})
 if(FEATURE_DEBUGGER)
-  iotjs_add_compile_flags("-DJERRY_DEBUGGER")
+  zero_add_compile_flags("-DJERRY_DEBUGGER")
 endif()
 
 # Configure the libiotjs.a
