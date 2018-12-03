@@ -596,8 +596,9 @@ jerry_value_t
 jerry_get_global_object (void)
 {
   jerry_assert_api_available ();
-
-  return ecma_make_object_value (ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL));
+  ecma_object_t *global_obj_p = ecma_builtin_get_global ();
+  ecma_ref_object (global_obj_p);
+  return ecma_make_object_value (global_obj_p);
 } /* jerry_get_global_object */
 
 /**
@@ -1810,7 +1811,7 @@ jerry_has_property (const jerry_value_t obj_val, /**< object value */
   if (!ecma_is_value_object (obj_val)
       || !ecma_is_value_string (prop_name_val))
   {
-    return ecma_make_boolean_value (false);
+    return ECMA_VALUE_FALSE;
   }
 
   bool has_property = ecma_op_object_has_property (ecma_get_object_from_value (obj_val),
@@ -1834,7 +1835,7 @@ jerry_has_own_property (const jerry_value_t obj_val, /**< object value */
   if (!ecma_is_value_object (obj_val)
       || !ecma_is_value_string (prop_name_val))
   {
-    return ecma_make_boolean_value (false);
+    return ECMA_VALUE_FALSE;
   }
 
   bool has_property = ecma_op_object_has_own_property (ecma_get_object_from_value (obj_val),
@@ -3177,7 +3178,6 @@ jerry_create_typedarray (jerry_typedarray_type_t type_name, /**< type of TypedAr
                                                                         prototype_obj_p,
                                                                         element_size_shift,
                                                                         lit_id);
-  ecma_deref_object (prototype_obj_p);
 
   JERRY_ASSERT (!ECMA_IS_VALUE_ERROR (array_value));
 
@@ -3232,7 +3232,6 @@ jerry_create_typedarray_for_arraybuffer_sz (jerry_typedarray_type_t type_name, /
   ecma_value_t array_value = ecma_op_create_typedarray (arguments_p, 3, prototype_obj_p, element_size_shift, lit_id);
   ecma_free_value (arguments_p[1]);
   ecma_free_value (arguments_p[2]);
-  ecma_deref_object (prototype_obj_p);
 
   return jerry_return (array_value);
 #else /* CONFIG_DISABLE_ES2015_TYPEDARRAY_BUILTIN */

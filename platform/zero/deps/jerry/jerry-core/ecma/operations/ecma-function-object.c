@@ -137,8 +137,6 @@ ecma_op_create_function_object (ecma_object_t *scope_p, /**< function's scope */
                                               function_object_size,
                                               ECMA_OBJECT_TYPE_FUNCTION);
 
-  ecma_deref_object (prototype_obj_p);
-
   /* 2., 6., 7., 8. */
   /*
    * We don't setup [[Get]], [[Call]], [[Construct]], [[HasInstance]] for each function object.
@@ -215,9 +213,6 @@ ecma_op_create_arrow_function_object (ecma_object_t *scope_p, /**< function's sc
                                               arrow_function_object_size,
                                               ECMA_OBJECT_TYPE_ARROW_FUNCTION);
 
-  ecma_deref_object (prototype_obj_p);
-
-
   ecma_arrow_function_t *arrow_func_p = (ecma_arrow_function_t *) func_p;
 
   ECMA_SET_NON_NULL_POINTER (arrow_func_p->scope_cp, scope_p);
@@ -262,8 +257,6 @@ ecma_op_create_external_function_object (ecma_external_handler_t handler_cb) /**
   function_obj_p = ecma_create_object (prototype_obj_p,
                                        sizeof (ecma_extended_object_t),
                                        ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
-
-  ecma_deref_object (prototype_obj_p);
 
   /*
    * [[Class]] property is not stored explicitly for objects of ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION type.
@@ -380,7 +373,7 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
   ecma_object_t *prototype_obj_p = ecma_get_object_from_value (prototype_obj_value);
   JERRY_ASSERT (prototype_obj_p != NULL);
 
-  bool result = false;
+  ecma_value_t result = ECMA_VALUE_FALSE;
 
   while (true)
   {
@@ -393,13 +386,13 @@ ecma_op_function_has_instance (ecma_object_t *func_obj_p, /**< Function object *
 
     if (v_obj_p == prototype_obj_p)
     {
-      result = true;
+      result = ECMA_VALUE_TRUE;
       break;
     }
   }
 
   ecma_deref_object (prototype_obj_p);
-  return ecma_make_boolean_value (result);
+  return result;
 } /* ecma_op_function_has_instance */
 
 
@@ -666,7 +659,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       const ecma_compiled_code_t *bytecode_data_p = ecma_op_function_get_compiled_code (ext_func_p);
 
 #ifndef CONFIG_DISABLE_ES2015_CLASS
-      bool is_class_constructor = (bool) (bytecode_data_p->status_flags & CBC_CODE_FLAGS_CONSTRUCTOR);
+      bool is_class_constructor = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_CONSTRUCTOR) != 0;
 
       if (is_class_constructor && !ecma_op_function_has_construct_flag (arguments_list_p))
       {
@@ -674,8 +667,8 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
       }
 #endif /* !CONFIG_DISABLE_ES2015_CLASS */
 
-      bool is_strict = (bool) (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE);
-      bool is_no_lex_env = (bool) (bytecode_data_p->status_flags & CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED);
+      bool is_strict = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_STRICT_MODE) != 0;
+      bool is_no_lex_env = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED) != 0;
 
       /* 1. */
       if (!is_strict)
@@ -775,7 +768,7 @@ ecma_op_function_call (ecma_object_t *func_obj_p, /**< Function object */
 
       const ecma_compiled_code_t *bytecode_data_p = ecma_op_arrow_function_get_compiled_code (arrow_func_p);
 
-      is_no_lex_env = (bool) (bytecode_data_p->status_flags & CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED);
+      is_no_lex_env = (bytecode_data_p->status_flags & CBC_CODE_FLAGS_LEXICAL_ENV_NOT_NEEDED) != 0;
 
       ecma_object_t *local_env_p = scope_p;
 
@@ -1019,8 +1012,6 @@ ecma_op_function_construct (ecma_object_t *func_obj_p, /**< Function object */
       ecma_object_t *prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
 
       new_this_obj_p = ecma_create_object (prototype_p, 0, ECMA_OBJECT_TYPE_GENERAL);
-
-      ecma_deref_object (prototype_p);
     }
 
     ecma_free_value (prototype_prop_value);
@@ -1179,8 +1170,6 @@ ecma_op_function_try_to_lazy_instantiate_property (ecma_object_t *object_p, /**<
                                            thrower_p,
                                            ECMA_PROPERTY_FIXED,
                                            &caller_prop_p);
-
-      ecma_deref_object (thrower_p);
       return caller_prop_p;
     }
   }
@@ -1290,8 +1279,6 @@ ecma_op_bound_function_try_to_lazy_instantiate_property (ecma_object_t *object_p
                                          thrower_p,
                                          ECMA_PROPERTY_FIXED,
                                          &caller_prop_p);
-
-    ecma_deref_object (thrower_p);
     return caller_prop_p;
   }
 

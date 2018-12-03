@@ -958,13 +958,12 @@ lexer_parse_number (parser_context_t *context_p) /**< context */
   }
   else
   {
-    do
+    while (source_p < source_end_p
+           && source_p[0] >= LIT_CHAR_0
+           && source_p[0] <= LIT_CHAR_9)
     {
       source_p++;
     }
-    while (source_p < source_end_p
-           && source_p[0] >= LIT_CHAR_0
-           && source_p[0] <= LIT_CHAR_9);
 
     can_be_float = true;
   }
@@ -2194,7 +2193,7 @@ lexer_construct_regexp_object (parser_context_t *context_p, /**< context */
                                           current_flags);
   ecma_deref_ecma_string (pattern_str_p);
 
-  bool is_throw = (bool) ECMA_IS_VALUE_ERROR (completion_value);
+  bool is_throw = ECMA_IS_VALUE_ERROR (completion_value) != 0;
 
   ecma_free_value (completion_value);
 

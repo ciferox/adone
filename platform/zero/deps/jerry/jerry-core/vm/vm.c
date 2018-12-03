@@ -222,17 +222,14 @@ static const uint16_t vm_decode_table[] JERRY_CONST_DATA =
 ecma_value_t
 vm_run_global (const ecma_compiled_code_t *bytecode_p) /**< pointer to bytecode to run */
 {
-  ecma_object_t *glob_obj_p = ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL);
+  ecma_object_t *glob_obj_p = ecma_builtin_get_global ();
 
-  ecma_value_t ret_value = vm_run (bytecode_p,
-                                   ecma_make_object_value (glob_obj_p),
-                                   ecma_get_global_environment (),
-                                   false,
-                                   NULL,
-                                   0);
-
-  ecma_deref_object (glob_obj_p);
-  return ret_value;
+  return vm_run (bytecode_p,
+                 ecma_make_object_value (glob_obj_p),
+                 ecma_get_global_environment (),
+                 false,
+                 NULL,
+                 0);
 } /* vm_run_global */
 
 /**
@@ -275,7 +272,9 @@ vm_run_eval (ecma_compiled_code_t *bytecode_data_p, /**< byte-code data */
   }
   else
   {
-    this_binding = ecma_make_object_value (ecma_builtin_get (ECMA_BUILTIN_ID_GLOBAL));
+    ecma_object_t *global_obj_p = ecma_builtin_get_global ();
+    ecma_ref_object (global_obj_p);
+    this_binding = ecma_make_object_value (global_obj_p);
     lex_env_p = ecma_get_global_environment ();
   }
 
@@ -477,26 +476,8 @@ opfunc_call (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
 
   bool is_call_prop = ((opcode - CBC_CALL) % 6) >= 3;
 
-  ecma_value_t this_value = ECMA_VALUE_UNDEFINED;
   ecma_value_t *stack_top_p = frame_ctx_p->stack_top_p - arguments_list_len;
-
-  if (is_call_prop)
-  {
-    this_value = stack_top_p[-3];
-
-    if (this_value == ECMA_VALUE_REGISTER_REF)
-    {
-      /* Lexical environment cannot be 'this' value. */
-      stack_top_p[-2] = ECMA_VALUE_UNDEFINED;
-      this_value = ECMA_VALUE_UNDEFINED;
-    }
-    else if (vm_get_implicit_this_value (&this_value))
-    {
-      ecma_free_value (stack_top_p[-3]);
-      stack_top_p[-3] = this_value;
-    }
-  }
-
+  ecma_value_t this_value = is_call_prop ? stack_top_p[-3] : ECMA_VALUE_UNDEFINED;
   ecma_value_t func_value = stack_top_p[-1];
   ecma_value_t completion_value;
 
@@ -1107,12 +1088,10 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_PUSH_OBJECT:
         {
-          ecma_object_t *prototype_p = ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE);
-          ecma_object_t *obj_p = ecma_create_object (prototype_p,
+          ecma_object_t *obj_p = ecma_create_object (ecma_builtin_get (ECMA_BUILTIN_ID_OBJECT_PROTOTYPE),
                                                      0,
                                                      ECMA_OBJECT_TYPE_GENERAL);
 
-          ecma_deref_object (prototype_p);
           *stack_top_p++ = ecma_make_object_value (obj_p);
           continue;
         }
@@ -1398,9 +1377,6 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           ecma_object_t *function_obj_p = ecma_create_object (prototype_obj_p,
                                                               sizeof (ecma_extended_object_t),
                                                               ECMA_OBJECT_TYPE_EXTERNAL_FUNCTION);
-
-
-          ecma_deref_object (prototype_obj_p);
 
           ecma_extended_object_t *ext_func_obj_p = (ecma_extended_object_t *) function_obj_p;
           ext_func_obj_p->u.external_handler_cb = ecma_op_function_implicit_constructor_handler_cb;
@@ -1984,6 +1960,24 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
           *stack_top_p++ = result;
           continue;
         }
+        case VM_OC_RESOLVE_BASE_FOR_CALL:
+        {
+          ecma_value_t this_value = stack_top_p[-3];
+
+          if (this_value == ECMA_VALUE_REGISTER_REF)
+          {
+            /* Lexical environment cannot be 'this' value. */
+            stack_top_p[-2] = ECMA_VALUE_UNDEFINED;
+            stack_top_p[-3] = ECMA_VALUE_UNDEFINED;
+          }
+          else if (vm_get_implicit_this_value (&this_value))
+          {
+            ecma_free_value (stack_top_p[-3]);
+            stack_top_p[-3] = this_value;
+          }
+
+          continue;
+        }
         case VM_OC_PROP_DELETE:
         {
           result = vm_op_delete_prop (left_value, right_value, is_strict);
@@ -2086,14 +2080,8 @@ vm_loop (vm_frame_ctx_t *frame_ctx_p) /**< frame context */
         }
         case VM_OC_NOT:
         {
-          result = opfunc_logical_not (left_value);
-
-          if (ECMA_IS_VALUE_ERROR (result))
-          {
-            goto error;
-          }
-
-          *stack_top_p++ = result;
+          *stack_top_p++ = ecma_make_boolean_value (!ecma_op_to_boolean (left_value));
+          JERRY_ASSERT (ecma_is_value_boolean (stack_top_p[-1]));
           goto free_left_value;
         }
         case VM_OC_BIT_NOT:
