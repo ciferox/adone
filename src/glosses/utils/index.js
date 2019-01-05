@@ -80,7 +80,11 @@ adone.lazify({
     color: "./color",
     movingAverage: "./moving_average",
     csv: "./csv",
-    tokenizeRegexp: "./tokenize_regexp"
+    tokenizeRegexp: "./tokenize_regexp",
+    generateFunction: "./generate_function",
+    bufferFrom: "./buffer_from",
+    fromMs: "./from_ms",
+    toMs: "./to_ms"
 }, adone.asNamespace(exports), require);
 
 const irregularPlurals = {
@@ -273,22 +277,6 @@ export const functionName = (fn) => {
     fnName = fnName ? fnName.replace(/^bound/, "") : "";
     fnName = fnName ? fnName.trim() : "";
     return fnName;
-};
-
-export const parseMs = (ms) => {
-    if (!is.number(ms)) {
-        throw new TypeError(`${ms} is not a number`);
-    }
-
-    const roundTowardZero = ms > 0 ? Math.floor : Math.ceil;
-
-    return {
-        days: roundTowardZero(ms / 86400000),
-        hours: roundTowardZero(ms / 3600000) % 24,
-        minutes: roundTowardZero(ms / 60000) % 60,
-        seconds: roundTowardZero(ms / 1000) % 60,
-        milliseconds: roundTowardZero(ms) % 1000
-    };
 };
 
 export const pluralizeWord = (str, plural, count) => {

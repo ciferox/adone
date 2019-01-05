@@ -1,6 +1,6 @@
 const {
     is,
-    util: { parseMs, pluralizeWord }
+    util: { fromMs, pluralizeWord }
 } = adone;
 
 export default (ms, opts) => {
@@ -27,7 +27,7 @@ export default (ms, opts) => {
         ret.push((valStr || val) + postfix);
     };
 
-    const parsed = parseMs(ms);
+    const parsed = fromMs(ms);
 
     add(parsed.days, "day", "d");
     add(parsed.hours, "hour", "h");

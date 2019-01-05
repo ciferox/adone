@@ -26,6 +26,6 @@ adone.app.run({
                 choices
             }
         ]);
-        adone.log(JSON.stringify(answers, null, "  "));
+        console.log(JSON.stringify(answers, null, "  "));
     }
 });

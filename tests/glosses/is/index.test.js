@@ -1,7 +1,7 @@
 const { is } = adone;
 
 describe("is", () => {
-    describe("is.deepEqual", () => {
+    describe("deepEqual", () => {
         describe("genertic", () => {
             describe("strings", () => {
 
@@ -543,6 +543,20 @@ describe("is", () => {
 
         it("Object.create(null) => true", () => {
             assert.true(is.plainObject(Object.create(null)));
+        });
+    });
+
+    describe("property", () => {
+        it("common", () => {
+            assert.true(is.property("foo"));
+            assert.true(!is.property(".foo"));
+            assert.true(!is.property("a.b.c"));
+            assert.true(is.property("_joke"));
+            assert.true(is.property("j_a_b_c"));
+            assert.true(is.property("f00"));
+            assert.true(!is.property("0bad"));
+            assert.true(is.property("break"));
+            assert.true(!is.property("@context"));
         });
     });
 });

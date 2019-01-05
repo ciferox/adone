@@ -66,6 +66,6 @@ adone.app.run({
                 }));
             }
         }]);
-        adone.log(answers.colors);
+        console.log(answers.colors);
     }
 });

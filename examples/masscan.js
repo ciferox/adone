@@ -24,12 +24,12 @@ class ScanApp extends adone.app.Application {
             maxRate: 10
         });
         scanner.on("stats", (stats) => {
-            adone.log(stats);
+            console.log(stats);
         });
 
         scanner.on("detect", (info) => {
             if (info.status === "open") {
-                adone.log(info);
+                console.log(info);
             }
         });
         scanner.initialize();
@@ -38,7 +38,7 @@ class ScanApp extends adone.app.Application {
             scanner.stop();
         }, 60000);
         await p;
-        adone.log("DONE!!!");
+        console.log("DONE!!!");
         return 0;
     }
 }

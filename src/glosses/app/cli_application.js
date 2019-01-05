@@ -1194,7 +1194,7 @@ class Command {
                 options.handler = adone.null;
             } else {
                 options.handler = (args, opts, { command }) => {
-                    adone.log(escape(command.getHelpMessage()));
+                    console.log(escape(command.getHelpMessage()));
                     return 1;
                 };
                 options.handler[INTERNAL] = true;
@@ -1592,9 +1592,9 @@ export default class CliApplication extends app.Application {
         }
 
         if (errors.length) {
-            adone.log(`${escape(command.getUsageMessage())}\n`);
+            console.log(`${escape(command.getUsageMessage())}\n`);
             for (const error of errors) {
-                adone.log(escape(error.message));
+                console.log(escape(error.message));
             }
             await this.exit(app.EXIT_ERROR);
         }
@@ -1604,7 +1604,7 @@ export default class CliApplication extends app.Application {
 
     main() {
         // print usage message by default
-        adone.log(`${escape(this[MAIN_COMMAND].getHelpMessage())}\n`);
+        console.log(`${escape(this[MAIN_COMMAND].getHelpMessage())}\n`);
         return EXIT_SUCCESS;
     }
 
@@ -1683,7 +1683,7 @@ export default class CliApplication extends app.Application {
                 name: "--version",
                 help: "Show the version",
                 handler: async () => {
-                    adone.log(escape(await this.getVersion()));
+                    console.log(escape(await this.getVersion()));
                     return 0;
                 },
                 [INTERNAL]: true
@@ -1738,7 +1738,7 @@ export default class CliApplication extends app.Application {
                 name: ["--help", "-h"],
                 help: "Show this message",
                 handler: (_, cmd) => {
-                    adone.log(escape(cmd.getHelpMessage()));
+                    console.log(escape(cmd.getHelpMessage()));
                     return 0;
                 },
                 [INTERNAL]: true

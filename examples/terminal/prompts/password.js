@@ -30,6 +30,6 @@ adone.app.run({
                 validate: requireLetterAndNumber
             }
         ]);
-        adone.log(JSON.stringify(answers, null, "  "));
+        console.log(JSON.stringify(answers, null, "  "));
     }
 });

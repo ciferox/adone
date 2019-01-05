@@ -843,13 +843,13 @@ export default class XModule extends adone.js.adone.Base {
     static lazyExports(xModule) {
         const rawExports = xModule.exports();
         const result = {};
-        // adone.log(Object.values(rawExports).map(x => x.ast));
+        // console.log(Object.values(rawExports).map(x => x.ast));
         if (adone.js.adone.is.object(rawExports.default)) {
             for (const [key, val] of rawExports.default.entries()) {
                 result[key] = val;
             }
         } else if (adone.js.adone.is.functionLike(rawExports.default)) {
-            // adone.log(rawExports.default.name);
+            // console.log(rawExports.default.name);
             result[rawExports.default.name] = rawExports.default;
         } else if (is.undefined(rawExports.default)) {
             return rawExports;

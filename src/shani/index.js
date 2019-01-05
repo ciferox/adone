@@ -1578,7 +1578,7 @@ export class Engine {
                                         // it does not support rest args..
                                         args[0] = [location, args[0]];
                                     } else {
-                                        args.unshift(`[${location}]`);
+                                        args[0] = `[${location}] ${args[0]}`;
                                     }
                                 }
                             } catch (err) {

@@ -186,33 +186,32 @@ export default class Application extends app.Subsystem {
             return;
         }
 
-        await new Promise((resolve) => {
-            let fds = 0;
+        adone.runtime.logger.close();
+        // await new Promise((resolve) => {
+        //     let fds = 0;
 
-            // end the logger & waiting for completion
-            adone.runtime.logger.done(() => {
-                [process.stdout, process.stderr].forEach((std) => {
-                    const fd = std.fd;
-                    if (!std.bufferSize) {
-                        // bufferSize equals 0 means current stream is drained.
-                        fds = fds | fd;
-                    } else {
-                        // Appends nothing to the std queue, but will trigger `tryToExit` event on `drain`.
-                        std.write && std.write("", () => {
-                            fds = fds | fd;
-                            if ((fds & 1) && (fds & 2)) {
-                                resolve();
-                            }
-                        });
-                    }
-                    // Does not write anything more.
-                    delete std.write;
-                });
-                if ((fds & 1) && (fds & 2)) {
-                    resolve();
-                }
-            });
-        });
+        //     // end the logger & waiting for completion
+        //     [process.stdout, process.stderr].forEach((std) => {
+        //         const fd = std.fd;
+        //         if (!std.bufferSize) {
+        //             // bufferSize equals 0 means current stream is drained.
+        //             fds = fds | fd;
+        //         } else {
+        //             // Appends nothing to the std queue, but will trigger `tryToExit` event on `drain`.
+        //             std.write && std.write("", () => {
+        //                 fds = fds | fd;
+        //                 if ((fds & 1) && (fds & 2)) {
+        //                     resolve();
+        //                 }
+        //             });
+        //         }
+        //         // Does not write anything more.
+        //         delete std.write;
+        //     });
+        //     if ((fds & 1) && (fds & 2)) {
+        //         resolve();
+        //     }
+        // });
 
         if (this[IS_MAIN]) {
             term.destroy();

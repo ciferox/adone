@@ -1,4 +1,67 @@
-const { is } = adone;
+const {
+    is
+} = adone;
+
+// const arr = [];
+
+// const compareFunction = function (a, b) {
+//     if (a < b) {
+//         return -1;
+//     }
+//     if (a > b) {
+//         return 1;
+//     }
+//     return 0;
+// };
+
+// const deterministicDecirc = function (val, k, stack, parent) {
+//     let i;
+//     if (typeof val === "object" && !is.null(val)) {
+//         for (i = 0; i < stack.length; i++) {
+//             if (stack[i] === val) {
+//                 parent[k] = "[Circular]";
+//                 arr.push([parent, k, val]);
+//                 return;
+//             }
+//         }
+//         if (is.function(val.toJSON)) {
+//             return;
+//         }
+//         stack.push(val);
+//         // Optimize for Arrays. Big arrays could kill the performance otherwise!
+//         if (is.array(val)) {
+//             for (i = 0; i < val.length; i++) {
+//                 deterministicDecirc(val[i], i, stack, val);
+//             }
+//         } else {
+//             // Create a temporary object in the required way
+//             const tmp = {};
+//             const keys = Object.keys(val).sort(compareFunction);
+//             for (i = 0; i < keys.length; i++) {
+//                 const key = keys[i];
+//                 deterministicDecirc(val[key], key, stack, val);
+//                 tmp[key] = val[key];
+//             }
+//             if (!is.undefined(parent)) {
+//                 arr.push([parent, k, val]);
+//                 parent[k] = tmp;
+//             } else {
+//                 return tmp;
+//             }
+//         }
+//         stack.pop();
+//     }
+// };
+
+// export default function deterministicStringify(obj, replacer, spacer) {
+//     const tmp = deterministicDecirc(obj, "", [], undefined) || obj;
+//     const res = JSON.stringify(tmp, replacer, spacer);
+//     while (arr.length !== 0) {
+//         const part = arr.pop();
+//         part[0][part[1]] = part[2];
+//     }
+//     return res;
+// }
 
 const stableEncode = function (obj, opts) {
     let { space } = opts;

@@ -1,178 +1,58 @@
-const genobj = require("generate-object-property");
-const genfun = require("generate-function");
-
 const {
     is,
-    std,
-    identity
+    util: { bufferFrom, generateFunction },
+    std: { stream: { Transform } }
 } = adone;
 
-const toFunction = function (list) {
-    list = list.slice();
-    return function (_, cb) {
-        let err = null;
-        let item = list.length ? list.shift() : null;
-        if (item instanceof Error) {
-            err = item;
-            item = null;
-        }
+const genobj = (obj, prop) => is.property(prop) ? `${obj}.${prop}` : `${obj}[${JSON.stringify(prop)}]`;
 
-        cb(err, item);
-    };
+genobj.valid = is.property;
+genobj.property = (prop) => is.property(prop) ? prop : JSON.stringify(prop);
+
+const [cr] = bufferFrom("\r");
+const [nl] = bufferFrom("\n");
+const defaults = {
+    escape: '"',
+    headers: null,
+    mapHeaders: ({ header }) => header,
+    mapValues: ({ value }) => value,
+    newline: "\n",
+    quote: '"',
+    raw: false,
+    separator: ",",
+    skipLines: null,
+    maxRowBytes: Number.MAX_SAFE_INTEGER,
+    strict: false
 };
 
-const ctor = function (opts, read) {
-    if (is.function(opts)) {
-        read = opts;
-        opts = {};
-    }
-
-    opts = opts || {};
-
-    class Class extends adone.std.stream.Readable {
-        constructor(override) {
-            super(override || opts);
-
-            const self = this;
-            const hwm = this._readableState.highWaterMark;
-            const check = function (err, data) {
-                if (self.destroyed) {
-                    return;
-                }
-                if (err) {
-                    return self.destroy(err);
-                }
-                if (is.null(data)) {
-                    return self.push(null);
-                }
-                self._reading = false;
-                if (self.push(data)) {
-                    self._read(hwm);
-                }
-            };
-
-            this._reading = false;
-            this._callback = check;
-            this.destroyed = false;
-        }
-
-        _read(size) {
-            if (this._reading || this.destroyed) {
-                return;
-            }
-            this._reading = true;
-            this._from(size, this._callback);
-        }
-
-        destroy(err) {
-            if (this.destroyed) {
-                return;
-            }
-            this.destroyed = true;
-            const self = this;
-            process.nextTick(() => {
-                if (err) {
-                    self.emit("error", err);
-                }
-                self.emit("close");
-            });
-        }
-    }
-
-    Class.prototype._from = read || adone.noop;
-
-    return Class;
-};
-
-const Proto = ctor();
-
-const from2 = function (opts, read) {
-    if (typeof opts !== "object" || is.array(opts)) {
-        read = opts;
-        opts = {};
-    }
-
-    const rs = new Proto(opts);
-    rs._from = is.array(read) ? toFunction(read) : (read || adone.noop);
-    return rs;
-};
-
-const intoStream = (x) => {
-    if (is.array(x)) {
-        x = x.slice();
-    }
-
-    let promise;
-    let iterator;
-
-    const prepare = function (value) {
-        x = value;
-        promise = is.promise(x) ? x : null;
-        // we don't iterate on strings and buffers since slicing them is ~7x faster
-        const shouldIterate = !promise && x[Symbol.iterator] && !is.string(x) && !is.buffer(x);
-        iterator = shouldIterate ? x[Symbol.iterator]() : null;
-    };
-
-    prepare(x);
-
-    return from2(function reader(size, cb) {
-        if (promise) {
-            promise.then(prepare).then(() => reader.call(this, size, cb), cb);
-            return;
-        }
-
-        if (iterator) {
-            const obj = iterator.next();
-            setImmediate(cb, null, obj.done ? null : obj.value);
-            return;
-        }
-
-        if (x.length === 0) {
-            setImmediate(cb, null, null);
-            return;
-        }
-
-        const chunk = x.slice(0, size);
-        x = x.slice(size);
-
-        setImmediate(cb, null, chunk);
-    });
-};
-
-
-
-const quote = Buffer.from('"')[0];
-const comma = Buffer.from(",")[0];
-const cr = Buffer.from("\r")[0];
-const nl = Buffer.from("\n")[0];
-
-export class Parser extends std.stream.Transform {
-    constructor(opts) {
+class CsvParser extends Transform {
+    constructor(opts = {}) {
         super({ objectMode: true, highWaterMark: 16 });
-        if (!opts) {
-            opts = {};
-        }
+
         if (is.array(opts)) {
             opts = { headers: opts };
         }
 
-        this.separator = opts.separator ? Buffer.from(opts.separator)[0] : comma;
-        this.quote = opts.quote ? Buffer.from(opts.quote)[0] : quote;
-        this.escape = opts.escape ? Buffer.from(opts.escape)[0] : this.quote;
-        if (opts.newline) {
-            this.newline = Buffer.from(opts.newline)[0];
-            this.customNewline = true;
-        } else {
-            this.newline = nl;
-            this.customNewline = false;
+        const options = Object.assign({}, defaults, opts);
+
+        this.customNewline = options.newline !== defaults.newline;
+
+        for (const key of Object.keys(options)) {
+            if (["newline", "quote", "separator"].includes(key)) {
+                ([options[key]] = bufferFrom(options[key]));
+            }
+            // legacy codebase support
+            this[key] = options[key];
         }
 
-        this.headers = opts.headers || null;
-        this.strict = opts.strict || null;
-        this.mapHeaders = opts.mapHeaders || identity;
-        this.mapValues = opts.mapValues || identity;
+        // if escape is not defined on the passed options, use the end value of quote
+        this.escape = (opts || {}).escape ? bufferFrom(options.escape)[0] : options.quote;
 
-        this._raw = Boolean(opts.raw);
+        if (this.headers === false) {
+            // enforce, as the column length check will fail if headers:false
+            this.strict = false;
+        }
+
         this._prev = null;
         this._prevEnd = 0;
         this._first = true;
@@ -180,16 +60,168 @@ export class Parser extends std.stream.Transform {
         this._escaped = false;
         this._empty = this._raw ? Buffer.alloc(0) : "";
         this._Row = null;
+        this._currentRowBytes = 0;
+        this._line = 0;
+
+        if (this.headers || this.headers === false) {
+            this._first = false;
+            this._compile();
+        }
+    }
+
+    _compile() {
+        if (this._Row) {
+            return;
+        }
+
+        const Row = generateFunction()("function Row (cells) {");
 
         if (this.headers) {
-            this._first = false;
-            this._compile(this.headers);
+            this.headers.forEach((header, index) => {
+                const newHeader = this.mapHeaders({ header, index });
+                if (newHeader) {
+                    Row("%s = cells[%d]", genobj("this", newHeader), index);
+                }
+            });
+        } else {
+            // -> false
+            Row(`
+        for (const [index, value] of cells.entries()) {
+          this[index] = value
         }
+      `);
+        }
+
+        Row("}");
+
+        this._Row = Row.toFunction();
+
+        Object.defineProperty(this._Row.prototype, "headers", {
+            enumerable: false,
+            value: this.headers
+        });
+    }
+
+    _emit(Row, cells) {
+        this.push(new Row(cells));
+    }
+
+    _flush(cb) {
+        if (this._escaped || !this._prev) {
+            return cb();
+        }
+        this._online(this._prev, this._prevEnd, this._prev.length + 1); // plus since online -1s
+        cb();
+    }
+
+    _oncell(buf, start, end) {
+        // remove quotes from quoted cells
+        if (buf[start] === this.quote && buf[end - 1] === this.quote) {
+            start++;
+            end--;
+        }
+
+        let y = start;
+
+        for (let i = start; i < end; i++) {
+            // check for escape characters and skip them
+            if (buf[i] === this.escape && i + 1 < end && buf[i + 1] === this.quote) {
+                i++;
+            }
+            if (y !== i) {
+                buf[y] = buf[i];
+            }
+            y++;
+        }
+
+        const value = this._onvalue(buf, start, y);
+        return value;
+    }
+
+    _online(buf, start, end) {
+        end--; // trim newline
+        if (!this.customNewline && buf.length && buf[end - 1] === cr) {
+            end--;
+        }
+
+        const comma = this.separator;
+        const cells = [];
+        let isQuoted = false;
+        let offset = start;
+
+        const mapValue = (value) => {
+            if (this._first) {
+                return value;
+            }
+
+            const index = cells.length;
+            const header = this.headers[index];
+
+            return this.mapValues({ header, index, value });
+        };
+
+        for (let i = start; i < end; i++) {
+            const isStartingQuote = !isQuoted && buf[i] === this.quote;
+            const isEndingQuote = isQuoted && buf[i] === this.quote && i + 1 <= end && buf[i + 1] === comma;
+            const isEscape = isQuoted && buf[i] === this.escape && i + 1 < end && buf[i + 1] === this.quote;
+
+            if (isStartingQuote || isEndingQuote) {
+                isQuoted = !isQuoted;
+                continue;
+            } else if (isEscape) {
+                i++;
+                continue;
+            }
+
+            if (buf[i] === comma && !isQuoted) {
+                let value = this._oncell(buf, offset, i);
+                value = mapValue(value);
+                cells.push(value);
+                offset = i + 1;
+            }
+        }
+
+        if (offset < end) {
+            let value = this._oncell(buf, offset, end);
+            value = mapValue(value);
+            cells.push(value);
+        }
+
+        if (buf[end - 1] === comma) {
+            cells.push(this._empty);
+        }
+
+        const skip = this.skipLines && this.skipLines !== this._line;
+        this._line++;
+
+        if (this._first && !skip) {
+            this._first = false;
+            this.headers = cells;
+            this._compile(cells);
+            this.emit("headers", this.headers);
+            return;
+        }
+
+        if (this.strict && cells.length !== this.headers.length) {
+            const e = new RangeError("Row length does not match headers");
+            this.emit("error", e);
+        } else {
+            if (!this._first) {
+                this._emit(this._Row, cells);
+            }
+        }
+    }
+
+    _onvalue(buf, start, end) {
+        if (this._raw) {
+            return buf.slice(start, end);
+        }
+        return buf.toString("utf-8", start, end);
     }
 
     _transform(data, enc, cb) {
         if (is.string(data)) {
-            data = Buffer.from(data);
+            data = bufferFrom(data);
         }
 
         let start = 0;
@@ -206,6 +238,11 @@ export class Parser extends std.stream.Transform {
         for (let i = start; i < bufLen; i++) {
             const chr = buf[i];
             const nextChr = i + 1 < bufLen ? buf[i + 1] : null;
+
+            this._currentRowBytes++;
+            if (this._currentRowBytes > this.maxRowBytes) {
+                return cb(new Error("Row exceeds the maximum size"));
+            }
 
             if (!this._escaped && chr === this.escape && nextChr === this.quote && i !== start) {
                 this._escaped = true;
@@ -234,6 +271,7 @@ export class Parser extends std.stream.Transform {
                 if (chr === this.newline) {
                     this._online(buf, this._prevEnd, i + 1);
                     this._prevEnd = i + 1;
+                    this._currentRowBytes = 0;
                 }
             }
         }
@@ -252,137 +290,6 @@ export class Parser extends std.stream.Transform {
         this._prev = buf;
         cb();
     }
-
-    _flush(cb) {
-        if (this._escaped || !this._prev) {
-            return cb();
-        }
-        this._online(this._prev, this._prevEnd, this._prev.length + 1); // plus since online -1s
-        cb();
-    }
-
-    _online(buf, start, end) {
-        end--; // trim newline
-        if (!this.customNewline && buf.length && buf[end - 1] === cr) {
-            end--;
-        }
-
-        const comma = this.separator;
-        const cells = [];
-        let isQuoted = false;
-        let offset = start;
-
-        for (let i = start; i < end; i++) {
-            const isStartingQuote = !isQuoted && buf[i] === this.quote;
-            const isEndingQuote = isQuoted && buf[i] === this.quote && i + 1 <= end && buf[i + 1] === comma;
-            const isEscape = isQuoted && buf[i] === this.escape && i + 1 < end && buf[i + 1] === this.quote;
-
-            if (isStartingQuote || isEndingQuote) {
-                isQuoted = !isQuoted;
-                continue;
-            } else if (isEscape) {
-                i++;
-                continue;
-            }
-
-            if (buf[i] === comma && !isQuoted) {
-                cells.push(this._oncell(buf, offset, i));
-                offset = i + 1;
-            }
-        }
-
-        if (offset < end) {
-            cells.push(this._oncell(buf, offset, end));
-        }
-        if (buf[end - 1] === comma) {
-            cells.push(this._empty);
-        }
-
-        if (this._first) {
-            this._first = false;
-            this.headers = cells;
-            this._compile(cells);
-            this.emit("headers", this.headers);
-            return;
-        }
-
-        if (this.strict && cells.length !== this.headers.length) {
-            this.emit("error", new Error("Row length does not match headers"));
-        } else {
-            this._emit(this._Row, cells);
-        }
-    }
-
-    _compile() {
-        if (this._Row) {
-            return;
-        }
-
-        const Row = genfun()("function Row (cells) {");
-
-        const self = this;
-        this.headers.forEach((cell, i) => {
-            const newHeader = self.mapHeaders(cell, i);
-            if (newHeader) {
-                Row("%s = cells[%d]", genobj("this", newHeader), i);
-            }
-        });
-
-        Row("}");
-
-        this._Row = Row.toFunction();
-
-        if (Object.defineProperty) {
-            Object.defineProperty(this._Row.prototype, "headers", {
-                enumerable: false,
-                value: this.headers
-            });
-        } else {
-            this._Row.prototype.headers = this.headers;
-        }
-    }
-
-    _emit(Row, cells) {
-        this.push(new Row(cells));
-    }
-
-    _oncell(buf, start, end) {
-        // remove quotes from quoted cells
-        if (buf[start] === this.quote && buf[end - 1] === this.quote) {
-            start++;
-            end--;
-        }
-
-        let i;
-        let y;
-        for (i = start, y = start; i < end; i++) {
-            // check for escape characters and skip them
-            if (buf[i] === this.escape && i + 1 < end && buf[i + 1] === this.quote) {
-                i++;
-            }
-            if (y !== i) {
-                buf[y] = buf[i];
-            }
-            y++;
-        }
-
-        const value = this._onvalue(buf, start, y);
-        return this._first ? value : this.mapValues(value);
-    }
-
-    _onvalue(buf, start, end) {
-        if (this._raw) {
-            return buf.slice(start, end);
-        }
-        return buf.toString("utf-8", start, end);
-    }
 }
 
-
-export const parse = (input, opts) => {
-    if (is.string(input) || is.buffer(input)) {
-        input = intoStream(input);
-    }
-
-    return adone.stream.as.array(input.pipe(new Parser(opts)));
-};
+export default (opts) => new CsvParser(opts);

@@ -21,7 +21,7 @@ export default class extends Subsystem {
                 name: "--version",
                 help: "show version of benchmarking code",
                 handler: () => {
-                    adone.log(adone.benchmark.Benchmark.version);
+                    console.log(adone.benchmark.Benchmark.version);
                     return 0;
                 }
             },
@@ -77,15 +77,15 @@ export default class extends Subsystem {
         this.filename = std.path.basename(scriptPath, ".js");
         this.async = Boolean(opts.get("async"));
 
-        adone.log(`File: '${scriptPath}'`);
-        adone.log(`System: '${adone.metrics.system.toString()}'`);
-        adone.log(`Options: async=${this.async}`);
-        adone.log();
+        console.log(`File: '${scriptPath}'`);
+        console.log(`System: '${adone.metrics.system.toString()}'`);
+        console.log(`Options: async=${this.async}`);
+        console.log();
 
         if (is.function(benchModule.init)) {
-            adone.log("Initializing...");
+            console.log("Initializing...");
             await benchModule.init();
-            adone.log();
+            console.log();
         }
 
         const formatEventMessage = (event, oldResult) => {
@@ -177,8 +177,8 @@ export default class extends Subsystem {
                         term.write(`${formatEventMessage(event, oldResult)}\n`);
                     })
                     .on("complete", function onComplete() {
-                        adone.log(`Fastest is ${this.filter("fastest").map("name")}`);
-                        adone.log();
+                        console.log(`Fastest is ${this.filter("fastest").map("name")}`);
+                        console.log();
                         resolve();
                     })
                     .run({ async: this.async });

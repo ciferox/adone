@@ -9,6 +9,6 @@ adone.app.run({
         ];
 
         const answers = await adone.runtime.term.prompt().run(questions);
-        adone.log(JSON.stringify(answers, null, "  "));
+        console.log(JSON.stringify(answers, null, "  "));
     }
 });

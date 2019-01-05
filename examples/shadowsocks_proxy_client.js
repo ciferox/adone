@@ -12,7 +12,7 @@ adone.app.runCli({
                 // localDNS: false
             }, (socket) => {
                 socket.on("data", (chunk) => {
-                    adone.log(chunk.toString());
+                    console.log(chunk.toString());
                     socket.end();
                 });
                 socket.write("GET /plain HTTP/1.1\r\nHost: ipecho.net\r\n\r\n");

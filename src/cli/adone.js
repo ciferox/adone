@@ -70,6 +70,8 @@ const baseSubsystem = (name) => std.path.join(__dirname, "..", "lib", "cli", "su
 })
 class AdoneCLI extends app.CliApplication {
     async configure() {
+        adone.cli.kit.setPrettyLogger();
+        
         !is.windows && this.exitOnSignal("SIGINT");
 
         this.config = await adone.cli.Configuration.load();
@@ -263,7 +265,7 @@ class AdoneCLI extends app.CliApplication {
             const result = await observer.result;
 
             if (result.length > 0) {
-                adone.log(adone.pretty.table(result, {
+                console.log(adone.pretty.table(result, {
                     borderless: true,
                     noHeader: true,
                     style: {
@@ -292,7 +294,7 @@ class AdoneCLI extends app.CliApplication {
 
             return 0;
         } catch (err) {
-            // adone.log(err);
+            // console.log(err);
             term.print(`{red-fg}${err.message}{/}\n`);
             return 1;
         }
@@ -344,7 +346,7 @@ class AdoneCLI extends app.CliApplication {
     async configCommand(args, opts) {
         const config = new adone.configuration.Generic();
         await config.load(args.get("path"), "__");
-        adone.log(adone.meta.inspect(config.__, { style: opts.get("style"), depth: opts.get("depth"), noType: !opts.get("types"), noDescriptor: true, enumOnly: true, proto: false, funcDetails: false }));
+        console.log(adone.meta.inspect(config.__, { style: opts.get("style"), depth: opts.get("depth"), noType: !opts.get("types"), noDescriptor: true, enumOnly: true, proto: false, funcDetails: false }));
 
         const outPath = opts.get("out");
         if (is.string(outPath)) {
@@ -357,7 +359,7 @@ class AdoneCLI extends app.CliApplication {
                 options.space = 4;
             }
             await config.save(outPath, "__", options);
-            adone.log(`\nConfiguration saved to ${outPath}!`);
+            console.log(`\nConfiguration saved to ${outPath}!`);
         }
         return 0;
     }

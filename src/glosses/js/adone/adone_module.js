@@ -153,7 +153,7 @@ export default class XAdoneModule extends adone.js.adone.Module {
         if (lazies.length > 0) {
             for (const { name, path } of lazies) {
                 const filePath = await fs.lookup(path);
-                // adone.log(filePath);
+                // console.log(filePath);
                 const lazyModule = new adone.js.adone.Module({ nsName: this.nsName, filePath });
                 await lazyModule.load();
                 this.lazies.set(name, lazyModule);

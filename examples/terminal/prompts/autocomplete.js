@@ -120,6 +120,6 @@ adone.app.run({
                 }
             }
         ]);
-        adone.log(JSON.stringify(answers, null, 2));
+        console.log(JSON.stringify(answers, null, 2));
     }
 });

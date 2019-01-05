@@ -3,14 +3,14 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = class AppSubsystem extends adone.app.Subsystem {
     configure() {
-        adone.log("configure");
+        console.log("configure");
     }
 
     initialize() {
-        adone.log("initialize");
+        console.log("initialize");
     }
 
     uninitialize() {
-        adone.log("uninitialize");
+        console.log("uninitialize");
     }
 };

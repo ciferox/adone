@@ -172,10 +172,10 @@ adone.app.run({
                     );
                     adone.logInfo("request body");
                     requestBody = requestBody.slice();
-                    adone.log(requestBody.length, requestBody.toString("hex"));
+                    console.log(requestBody.length, requestBody.toString("hex"));
                     adone.logInfo("response body");
                     responseBody = responseBody.slice();
-                    adone.log(responseBody.length, responseBody.toString("hex"));
+                    console.log(responseBody.length, responseBody.toString("hex"));
                 } else if (ctx.type === "connect") {
                     adone.logInfo(
                         "%s %s %s",
@@ -201,10 +201,10 @@ adone.app.run({
                     );
                     adone.logInfo("incoming");
                     incoming = incoming.slice();
-                    adone.log(incoming.length, incoming.toString("hex"));
+                    console.log(incoming.length, incoming.toString("hex"));
                     adone.logInfo("outgoing");
                     outgoing = outgoing.slice();
-                    adone.log(outgoing.length, outgoing.toString("hex"));
+                    console.log(outgoing.length, outgoing.toString("hex"));
                 } else if (ctx.type === "websocket") {
                     const s = adone.sprintf("%s <-> %s:%s", ctx.localRequest.href, ctx.clientAddress, ctx.clientPort);
                     adone.logInfo("end websocket session %s %s %s", s, ctx.localCloseCode, ctx.remoteCloseCode);

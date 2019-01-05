@@ -109,7 +109,7 @@ adone.lazify({
     Subsystem: "./subsystem",
     Application: "./application",
     CliApplication: "./cli_application",
-    Logger: "./logger",
+    logger: "./logger",
     report: "./report",
     lockfile: "./lockfile"
 }, adone.asNamespace(exports), require);

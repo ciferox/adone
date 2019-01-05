@@ -151,7 +151,7 @@ adone.app.run({
 
         form.on("submit", (data) => {
             screen.leave();
-            adone.log(data);
+            console.log(data);
             screen.destroy();
         });
 

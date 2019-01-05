@@ -8,6 +8,6 @@ adone.app.run({
                 basePath: "./node_modules"
             }
         ]);
-        adone.log(JSON.stringify(answers, null, "  "));
+        console.log(JSON.stringify(answers, null, "  "));
     }
 });

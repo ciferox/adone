@@ -207,12 +207,12 @@ export default class Info extends Subsystem {
     })
     async command(args, opts) {
         try {
-            adone.log(chalk.bold.red(" WIP".repeat(adone.runtime.term.stats.cols / 4)));
+            console.log(chalk.bold.red(" WIP".repeat(adone.runtime.term.stats.cols / 4)));
             const name = args.get("name");
             if (name.length === 0) {
                 const sysinfoRenderer = new SystemInfoRenderer();
                 // const timer = setInterval(async () => {
-                //     adone.log(await sysinfoRenderer.render());
+                //     console.log(await sysinfoRenderer.render());
                 // }, 50);
                 await sysinfoRenderer.waitForComplete();
 
@@ -220,7 +220,7 @@ export default class Info extends Subsystem {
                 // clearInterval(timer);
                 // return 0;
 
-                // adone.log(lines.join("\n"));
+                // console.log(lines.join("\n"));
                 const sysInfo = await sysinfoRenderer.render();
                 const adoneInfo = "";
 
@@ -252,7 +252,7 @@ export default class Info extends Subsystem {
                     ]
                 });
 
-                adone.log(leftTable);
+                console.log(leftTable);
                 // const table = pretty.table([
                 //     [adone.adoneLogo, "overlord@Hyper8"]
                 // ], {
@@ -277,7 +277,7 @@ export default class Info extends Subsystem {
                 //         }
                 //     ]
                 // });
-                // adone.log(table);
+                // console.log(table);
             }
             return 0;
         } catch (err) {

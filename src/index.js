@@ -47,13 +47,17 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         falsely: () => false,
         ok: "ok",
         bad: "bad",
-        log: (...args) => adone.runtime.logger.stdoutLogNoFmt(...args),
-        logFatal: (...args) => adone.runtime.logger.fatal(...args),
+        // Use this logger for finding logger issues.
+        // log: (...args) => console.log(...args),
+        // logError: (...args) => console.error(...args),
+        // logWarn: (...args) => console.warn(...args),
+        // logInfo: (...args) => console.info(...args),
+        // logDebug: (...args) => console.debug(...args),
+        log: (...args) => adone.runtime.logger.log(...args),
         logError: (...args) => adone.runtime.logger.error(...args),
         logWarn: (...args) => adone.runtime.logger.warn(...args),
         logInfo: (...args) => adone.runtime.logger.info(...args),
-        logDebug: (...args) => adone.runtime.logger.debug(...args),
-        logTrace: (...args) => adone.runtime.logger.trace(...args),
+        logDebug: (...args) => adone.runtime.logger.debug(...args),        
         o: (...props) => props.length > 0 ? Object.assign({}, ...props) : {},
         Date: global.Date,
         hrtime: process.hrtime,
@@ -65,6 +69,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         clearImmediate: global.clearImmediate,
         lazify: (modules, _obj, _require = require, {
             configurable = false,
+            enumerable = true,
             writable = false,
             mapper = (key, mod) => ((mod !== null && typeof mod === "object" && mod.__esModule === true && "default" in mod) ? mod.default : mod)
         } = {}) => {
@@ -72,7 +77,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             Object.keys(modules).forEach((key) => {
                 Object.defineProperty(obj, key, {
                     configurable: true,
-                    enumerable: true,
+                    enumerable,
                     get() {
                         const value = modules[key];
 
@@ -101,7 +106,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
 
                         Object.defineProperty(obj, key, {
                             configurable,
-                            enumerable: true,
+                            enumerable,
                             writable,
                             value: mod
                         });
@@ -273,7 +278,16 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
 
             adone.lazify({
                 term: () => new adone.terminal.Terminal(),
-                logger: () => adone.app.Logger.default(),
+                logger: () => {
+                    const defaultLogger = adone.app.logger.create({
+                        level: "debug",
+                        levels: adone.app.logger.config.cli.levels,
+                        transports: [
+                            new adone.app.logger.transport.Console()
+                        ]
+                    });
+                    return defaultLogger;
+                },
                 netron: () => new adone.netron.Netron(),
                 netron2: () => {
                     const peerInfo = adone.runtime.isOmnitron

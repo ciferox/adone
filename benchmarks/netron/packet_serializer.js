@@ -82,16 +82,16 @@ let rawPkt3;
 export const init = () => {
     pkt1 = packet.create(1, 1, 0x30, "adone");
     rawPkt1 = encode1(pkt1);
-    adone.log("1:", rawPkt1.toBuffer());
-    // adone.log(decode1(rawPkt1));
+    console.log("1:", rawPkt1.toBuffer());
+    // console.log(decode1(rawPkt1));
 
     rawPkt2 = encode2(pkt1);
-    adone.log("2:", rawPkt2.toBuffer());
-    // adone.log(decode2(rawPkt2));
+    console.log("2:", rawPkt2.toBuffer());
+    // console.log(decode2(rawPkt2));
 
     rawPkt3 = encode3(pkt1);
-    adone.log("3:", rawPkt3.toBuffer());
-    // adone.log(decode3(rawPkt3));
+    console.log("3:", rawPkt3.toBuffer());
+    // console.log(decode3(rawPkt3));
 };
 
 export default {

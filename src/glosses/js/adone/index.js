@@ -12,8 +12,8 @@ export class Inspector {
     async attachNamespace(nsName) {
         if (!this.namespaces.has(nsName)) {
             const ns = await adone.js.adone.Namespace.inspect(nsName, this.path);
-            // adone.log(ns.name);
-            // adone.log(adone.meta.inspect(Object.keys(ns.exports), { style: "color" }));
+            // console.log(ns.name);
+            // console.log(adone.meta.inspect(Object.keys(ns.exports), { style: "color" }));
             this.namespaces.set(nsName, ns/*await adone.js.adone.Namespace.inspect(nsName, this.path)*/);
         }
     }

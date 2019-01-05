@@ -25,7 +25,7 @@ adone.app.run({
             if (answers.askAgain) {
                 this._ask();
             } else {
-                adone.log("Your favorite TV Shows:", this.output.join(", "));
+                console.log("Your favorite TV Shows:", this.output.join(", "));
             }
         });
     }

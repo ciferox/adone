@@ -463,7 +463,7 @@ export default class extends app.Subsystem {
                     structure[entry.id] = entry.description || "";
                 }
             }
-            adone.log(adone.pretty.json(structure));
+            console.log(adone.pretty.json(structure));
             return 0;
         } catch (err) {
             term.print(`{red-fg}${err.message}{/}`);
@@ -525,8 +525,10 @@ export default class extends app.Subsystem {
     })
     async buildCommand(args, opts) {
         try {
+            adone.logInfo("Loading project configuration...");
             const path = resolvePath(args, opts);
             const manager = await project.Manager.load();
+            adone.logInfo("Project build started");
             let observer = await manager.build(path);
             await observer.result;
             if (opts.has("watch")) {
@@ -536,7 +538,7 @@ export default class extends app.Subsystem {
             }
             return 0;
         } catch (err) {
-            adone.log(err);
+            console.log(err);
             // term.print(`{red-fg}${err.message}{/}`);
             return 1;
         }
@@ -633,13 +635,13 @@ export default class extends app.Subsystem {
             const manager = await project.Manager.load();
             const observer = await manager.nbuild(path);
             if (is.nil(observer)) {
-                adone.log("Nothing to build");
+                console.log("Nothing to build");
             } else {
                 await observer.result;
             }
             return 0;
         } catch (err) {
-            adone.log(err);
+            console.log(err);
             // term.print(`{red-fg}${err.message}{/}`);
             return 1;
         }
@@ -668,13 +670,13 @@ export default class extends app.Subsystem {
             const manager = await project.Manager.load();
             const observer = await manager.nclean(path);
             if (is.nil(observer)) {
-                adone.log("Nothing to clean");
+                console.log("Nothing to clean");
             } else {
                 await observer.result;
             }
             return 0;
         } catch (err) {
-            adone.log(err);
+            console.log(err);
             // term.print(`{red-fg}${err.message}{/}`);
             return 1;
         }
@@ -746,7 +748,7 @@ export default class extends app.Subsystem {
             if (v.hasComputedValue) {
                 res += "[*]";
             }
-            adone.log(res);
+            console.log(res);
         }
     }
 
@@ -756,6 +758,6 @@ export default class extends app.Subsystem {
     })
     async tasksCommand() {
         const manager = await project.Manager.load();
-        adone.log(manager.getTaskNames().sort().join(", "));
+        console.log(manager.getTaskNames().sort().join(", "));
     }
 }

@@ -30,7 +30,7 @@ adone.app.run({
             if (err) {
                 throw err;
             }
-            adone.log(`Input: ${data}`);
+            console.log(`Input: ${data}`);
         });
 
         screen.key("C-q", (ch, key) => {

@@ -74,8 +74,8 @@ export default class Inspection extends Subsystem {
             let name = args.get("name");
 
             if (name.length === 0) {
-                adone.log("Possible keys:");
-                adone.log(adone.pretty.json([...VIRTUAL_NAMESPACES, "adone"].sort()));
+                console.log("Possible keys:");
+                console.log(adone.pretty.json([...VIRTUAL_NAMESPACES, "adone"].sort()));
                 return 0;
             }
 
@@ -225,7 +225,7 @@ export default class Inspection extends Subsystem {
                     }
                     term.print("\n");
                 }
-                // adone.log(meta.inspect(ns, inspectOptions));
+                // console.log(meta.inspect(ns, inspectOptions));
             } else {
                 const parts = objectName.split(".");
 
@@ -240,9 +240,9 @@ export default class Inspection extends Subsystem {
                 const type = meta.typeOf(obj);
 
                 if (type === "function") {
-                    adone.log(adone.js.highlight(obj.toString()));
+                    console.log(adone.js.highlight(obj.toString()));
                 } else {
-                    adone.log(meta.inspect(adone.lodash.get(ns, objectName), inspectOptions));
+                    console.log(meta.inspect(adone.lodash.get(ns, objectName), inspectOptions));
                 }
             }
 

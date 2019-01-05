@@ -21,6 +21,25 @@ class CliKit extends app.Subsystem {
         this._silent = silent;
     }
 
+    setPrettyLogger() {
+        const {
+            app: { logger: { format } }
+        } = adone;
+
+        const defaultFormat = format.printf((info) => {
+            return `${info.timestamp} [${info.label}] ${info.level}: ${info.message}`;
+        });
+
+        adone.runtime.logger.format = format.combine(
+            format.colorize({
+                colors: adone.app.logger.config.cli.colors
+            }),
+            format.label({ label: "default" }),
+            format.timestamp(),
+            defaultFormat
+        );
+    }
+
     async observe(what, taskManager) {
         if (is.array(what)) {
             for (const w of what) {

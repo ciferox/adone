@@ -30,7 +30,7 @@ export default class Complex extends app.Subsystem {
         }]
     })
     add(args) {
-        adone.log(args.get("a") + args.get("b"));
+        console.log(args.get("a") + args.get("b"));
     }
 
     @DCliCommand({
@@ -47,7 +47,7 @@ export default class Complex extends app.Subsystem {
         }]
     })
     sub(args) {
-        adone.log(args.get("a") - args.get("b"));
+        console.log(args.get("a") - args.get("b"));
     }
 
     @DCliCommand({
@@ -64,7 +64,7 @@ export default class Complex extends app.Subsystem {
         }]
     })
     mul(args) {
-        adone.log(args.get("a") * args.get("b"));
+        console.log(args.get("a") * args.get("b"));
     }
 
     @DCliCommand({
@@ -86,6 +86,6 @@ export default class Complex extends app.Subsystem {
             adone.logError("division by zero");
             return 1;
         }
-        adone.log(args.get("a") / b);
+        console.log(args.get("a") / b);
     }
 }

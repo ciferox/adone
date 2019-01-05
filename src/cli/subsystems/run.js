@@ -159,14 +159,14 @@ export default class Run extends Subsystem {
         }
 
         if (is.asyncFunction(runnable)) {
-            adone.log(await runnable());
+            console.log(await runnable());
         } else if (is.function(runnable)) {
-            adone.log(runnable());
+            console.log(runnable());
         } else {
             if (is.object(runnable)) {
-                adone.util.keys(runnable, { onlyEnumerable: false, all: true }).length > 0 && adone.log(runnable);
+                adone.util.keys(runnable, { onlyEnumerable: false, all: true }).length > 0 && console.log(runnable);
             } else {
-                adone.log(runnable);
+                console.log(runnable);
             }
         }
     }

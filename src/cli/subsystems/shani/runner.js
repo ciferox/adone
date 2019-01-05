@@ -18,10 +18,10 @@ const {
 adone.app.runCli({
     async main() {
         this._uncaughtException = (err) => {
-            // adone.log("Uncaught exception", err.stack);
+            // console.log("Uncaught exception", err.stack);
         };
         this._unhandledRejection = (err) => {
-            // adone.log("Unhandled rejection", err.stack);
+            // console.log("Unhandled rejection", err.stack);
         };
         this.__rejectionHandled = adone.noop;
         const p = new Promise((resolve) => {

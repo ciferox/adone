@@ -81,6 +81,13 @@
                     "task": "transpile",
                     "namespace": "app",
                     "struct": {
+                        "logger": {
+                            "description": "Application logger",
+                            "src": "src/glosses/app/logger/**/*.js",
+                            "dst": "lib/glosses/app/logger",
+                            "task": "transpile",
+                            "namespace": "logger"
+                        },
                         "lockfile": {
                             "description": "Inter-process file locking implementation",
                             "src": "src/glosses/app/lockfile.js",

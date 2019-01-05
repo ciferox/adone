@@ -23,6 +23,6 @@ adone.app.run({
                 }
             }
         ]);
-        adone.log(JSON.stringify(answers, null, "  "));
+        console.log(JSON.stringify(answers, null, "  "));
     }
 });

@@ -173,7 +173,7 @@ export const printTable = (filter) => {
             { id: "statement", header: "Statement", align: "center" }
         ]
     });
-    adone.log(table);
+    console.log(table);
 };
 
 export const instrument = (sourceCode, { filename = `${new Date().getTime()}.js`, plugins = [] } = {}) => {

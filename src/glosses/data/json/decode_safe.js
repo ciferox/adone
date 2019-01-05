@@ -1,60 +1,5 @@
 const { is } = adone;
 
-export const stringify = (input) => {
-    const queue = [];
-    queue.push({ obj: input });
-
-    let res = "";
-    let next;
-    let obj;
-    let prefix;
-    let val;
-    let i;
-    let arrayPrefix;
-    let keys;
-    let k;
-    let key;
-    let value;
-    let objPrefix;
-
-    while ((next = queue.pop())) {
-        obj = next.obj;
-        prefix = next.prefix || "";
-        val = next.val || "";
-        res += prefix;
-        if (val) {
-            res += val;
-        } else if (!is.object(obj)) {
-            res += is.undefined(obj) ? null : JSON.stringify(obj);
-        } else if (is.null(obj)) {
-            res += "null";
-        } else if (is.array(obj)) {
-            queue.push({ val: "]" });
-            for (i = obj.length - 1; i >= 0; i--) {
-                arrayPrefix = i === 0 ? "" : ",";
-                queue.push({ obj: obj[i], prefix: arrayPrefix });
-            }
-            queue.push({ val: "[" });
-        } else { // object
-            keys = [];
-            for (k in obj) {
-                if (obj.hasOwnProperty(k)) {
-                    keys.push(k);
-                }
-            }
-            queue.push({ val: "}" });
-            for (i = keys.length - 1; i >= 0; i--) {
-                key = keys[i];
-                value = obj[key];
-                objPrefix = (i > 0 ? "," : "");
-                objPrefix += `${JSON.stringify(key)}:`;
-                queue.push({ obj: value, prefix: objPrefix });
-            }
-            queue.push({ val: "{" });
-        }
-    }
-    return res;
-};
 
 // Convenience function for the parse function.
 // This pop function is basically copied from
@@ -78,7 +23,7 @@ const pop = (obj, stack, metaStack) => {
     }
 };
 
-export const parse = (str) => {
+export default (str) => {
     const stack = [];
     const metaStack = []; // stack for arrays and objects
     let i = 0;

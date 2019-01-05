@@ -39,7 +39,7 @@ class MyApp extends app.CliApplication {
         group: "math"
     })
     mul(args) {
-        adone.log(args.get("a") * args.get("b"));
+        console.log(args.get("a") * args.get("b"));
         return 0;
     }
 
@@ -50,7 +50,7 @@ class MyApp extends app.CliApplication {
         group: "log"
     })
     log(args) {
-        adone.log(args.get("a"));
+        console.log(args.get("a"));
         return 0;
     }
 }

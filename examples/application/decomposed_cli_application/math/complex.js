@@ -49,7 +49,7 @@ export default class Complex extends app.Subsystem {
     add(args) {
         const [x0, y0] = args.get("a");
         const [x1, y1] = args.get("b");
-        adone.log(formatComplexNumber(x0 + x1, y0 + y1));
+        console.log(formatComplexNumber(x0 + x1, y0 + y1));
     }
 
     @DCliCommand({
@@ -68,7 +68,7 @@ export default class Complex extends app.Subsystem {
     sub(args) {
         const [x0, y0] = args.get("a");
         const [x1, y1] = args.get("b");
-        adone.log(formatComplexNumber(x0 - x1, y0 - y1));
+        console.log(formatComplexNumber(x0 - x1, y0 - y1));
     }
 
     @DCliCommand({
@@ -87,7 +87,7 @@ export default class Complex extends app.Subsystem {
     mul(args) {
         const [x0, y0] = args.get("a");
         const [x1, y1] = args.get("b");
-        adone.log(formatComplexNumber(x0 * x1 - y0 * y1, y0 * x1 + x0 * y1));
+        console.log(formatComplexNumber(x0 * x1 - y0 * y1, y0 * x1 + x0 * y1));
     }
 
     @DCliCommand({
@@ -111,6 +111,6 @@ export default class Complex extends app.Subsystem {
             adone.logError("division by zero");
             return 1;
         }
-        adone.log(formatComplexNumber((x0 * x1 + y0 * y1) / d, (y1 * x0 - x0 * y1) / d));
+        console.log(formatComplexNumber((x0 * x1 + y0 * y1) / d, (y1 * x0 - x0 * y1) / d));
     }
 }

@@ -11,7 +11,7 @@ export const encode = (obj, { space = "", replacer, newline = false } = {}) => {
 export const decode = (buf) => JSON.parse(buf.toString());
 
 adone.lazify({
-    encodeStable: "./stable",
-    encodeSafe: ["./safe", (mod) => mod.stringify],
-    decodeSafe: ["./safe", (mod) => mod.parse]
+    encodeStable: "./encode_stable",
+    encodeSafe: "./encode_safe",
+    decodeSafe: "./decode_safe"
 }, adone.asNamespace(exports), require);

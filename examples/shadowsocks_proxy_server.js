@@ -4,7 +4,7 @@ adone.app.runCli({
             password: "test"
         });
         server.on("connection", (header, accept, deny) => {
-            adone.log(header);
+            console.log(header);
             if (header.dstAddr !== "ipecho.net") {
                 accept();
                 return;

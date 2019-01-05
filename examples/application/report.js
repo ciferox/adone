@@ -22,7 +22,7 @@ class App extends app.CliApplication {
 
     @DCliCommand()
     loop() {
-        adone.log(`kill -12 ${process.pid}`);
+        console.log(`kill -12 ${process.pid}`);
         for ( ; ; ) {
             // ha
         }
