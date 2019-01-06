@@ -5,6 +5,7 @@ const {
 } = adone;
 
 exports.setupLevels = () => {
+    addColors(config.adone);
     addColors(config.cli);
     addColors(config.npm);
     addColors(config.syslog);

@@ -1,5 +1,6 @@
 const {
-    app
+    app,
+    runtime: { logger }
 } = adone;
 
 const {
@@ -11,23 +12,23 @@ const {
 export default class Info extends app.Subsystem {
     @DMainCliCommand()
     main() {
-        adone.logInfo(`Node: ${process.version}`);
-        adone.logInfo(`v8: ${process.versions.v8}`);
-        adone.logInfo(`platform: ${process.platform}`);
+        logger.info(`Node: ${process.version}`);
+        logger.info(`v8: ${process.versions.v8}`);
+        logger.info(`platform: ${process.platform}`);
     }
 
     @DCliCommand()
     node() {
-        adone.logInfo(process.version);
+        logger.info(process.version);
     }
 
     @DCliCommand()
     v8() {
-        adone.logInfo(process.versions.v8);
+        logger.info(process.versions.v8);
     }
 
     @DCliCommand()
     platform() {
-        adone.logInfo(process.platform);
+        logger.info(process.platform);
     }
 }

@@ -76,34 +76,6 @@ export class Task {
     isCancelable() {
         return false;
     }
-
-    log(...args) {
-        this.manager.notify(this, "log", ...args);
-    }
-
-    logFatal(...args) {
-        this.manager.notify(this, "logFatal", ...args);
-    }
-
-    logError(...args) {
-        this.manager.notify(this, "logError", ...args);
-    }
-
-    logWarn(...args) {
-        this.manager.notify(this, "logWarn", ...args);
-    }
-
-    logInfo(...args) {
-        this.manager.notify(this, "logInfo", ...args);
-    }
-
-    logDebug(...args) {
-        this.manager.notify(this, "logDebug", ...args);
-    }
-
-    logTrace(...args) {
-        this.manager.notify(this, "logTrace", ...args);
-    }
 }
 adone.tag.add(Task, "TASK");
 

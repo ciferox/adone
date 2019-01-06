@@ -19,9 +19,9 @@ export default
 })
 class Omnitron extends app.Application {
     async configure() {
-        this.enableReport({
-            directory: adone.runtime.config.omnitron.LOGS_PATH
-        });
+        // this.enableReport({
+        //     directory: adone.runtime.config.omnitron.LOGS_PATH
+        // });
 
         await this.addSubsystemsFrom(std.path.join(__dirname, "subsystems"), {
             bind: true,

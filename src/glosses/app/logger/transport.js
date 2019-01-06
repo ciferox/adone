@@ -39,7 +39,7 @@ export default class TransportStream extends Writable {
             // Logger parents with the same `levels`. This comes into play in
             // the `Container` code in which `container.add` takes
             // a fully realized set of options with pre-constructed TransportStreams.
-            this.levels = logger.levels;
+            this.config = logger.config;
             this.parent = logger;
         });
 
@@ -77,7 +77,7 @@ export default class TransportStream extends Writable {
         // any level set on the parent.
         const level = this.level || (this.parent && this.parent.level);
 
-        if (!level || this.levels[level] >= this.levels[info[logger.LEVEL]]) {
+        if (!level || this.config[level].id >= this.config[info[logger.LEVEL]].id) {
             if (info && !this.format) {
                 return this.log(info, callback);
             }
@@ -192,7 +192,7 @@ export default class TransportStream extends Writable {
         if (
             info.exception === true ||
             !level ||
-            this.levels[level] >= this.levels[info[logger.LEVEL]]
+            this.config[level].id >= this.config[info[logger.LEVEL]].id
         ) {
             // Ensure the info object is valid based on `{ exception }`:
             // 1. { handleExceptions: true }: all `info` objects are valid

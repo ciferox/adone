@@ -62,7 +62,7 @@ export default class Logger extends Transform {
     /**
      * This will wholesale reconfigure this instance by:
      * 1. Resetting all transports. Older transports will be removed implicitly.
-     * 2. Set all other options including levels, filters,
+     * 2. Set all other options including levels configuration, filters,
      *    exceptionHandlers, etc.
      * @param {!Object} options - TODO: add param description.
      * @returns {undefined}
@@ -71,7 +71,7 @@ export default class Logger extends Transform {
         silent,
         format,
         defaultMeta,
-        levels,
+        config,
         level = "info",
         exitOnError = true,
         transports,
@@ -88,7 +88,12 @@ export default class Logger extends Transform {
 
         this.defaultMeta = defaultMeta || null;
         // Hoist other options onto this instance.
-        this.levels = levels || this.levels || adone.app.logger.config.npm.levels;
+        this.config = config || adone.app.logger.config.adone;
+        this.levels = {};
+        Object.keys(this.config).forEach((level) => {
+            this.levels[level] = this.config[level].id;
+        });
+        
         this.level = level;
         this.exceptions = new ExceptionHandler(this);
         this.rejections = new RejectionHandler(this);
@@ -178,16 +183,24 @@ export default class Logger extends Transform {
             return this;
         }
 
+        const icon = this.config[level].icon;
+
         // Slightly less hotpath, but worth optimizing for.
         if (arguments.length === 2) {
             if (msg && typeof msg === "object") {
                 msg[logger.LEVEL] = msg.level = level;
+                msg.icon = icon;
                 this._addDefaultMeta(msg);
                 this.write(msg);
                 return this;
             }
 
-            this.write({ [logger.LEVEL]: level, level, message: msg });
+            this.write({
+                [logger.LEVEL]: level,
+                icon,
+                level,
+                message: msg
+            });
             return this;
         }
 
@@ -201,6 +214,7 @@ export default class Logger extends Transform {
                 this.write(Object.assign({}, meta, {
                     [logger.LEVEL]: level,
                     [logger.SPLAT]: splat,
+                    icon,
                     level,
                     message: msg
                 }, this.defaultMeta));
@@ -208,6 +222,7 @@ export default class Logger extends Transform {
                 this.write(Object.assign({}, {
                     [logger.LEVEL]: level,
                     [logger.SPLAT]: splat,
+                    icon,
                     level,
                     message: msg
                 }, this.defaultMeta));
@@ -216,6 +231,7 @@ export default class Logger extends Transform {
             this.write(Object.assign({}, {
                 [logger.LEVEL]: level,
                 [logger.SPLAT]: splat,
+                icon,
                 level,
                 message: msg
             }, this.defaultMeta));
@@ -514,9 +530,9 @@ export default class Logger extends Transform {
             this.emit(event, err, transport);
         };
 
-        if (!transport[`__winston${event}`]) {
-            transport[`__winston${event}`] = transportEvent.bind(this);
-            transport.on(event, transport[`__winston${event}`]);
+        if (!transport[`__logger${event}`]) {
+            transport[`__logger${event}`] = transportEvent.bind(this);
+            transport.on(event, transport[`__logger${event}`]);
         }
     }
 

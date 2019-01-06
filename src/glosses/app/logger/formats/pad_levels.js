@@ -1,21 +1,21 @@
 const { 
-    app: { logger: { config, LEVEL, MESSAGE } }
+    app: { logger: { LEVEL, MESSAGE } }
 } = adone;
 
 
 class Padder {
-    constructor(opts = { levels: config.npm.levels }) {
-        this.paddings = Padder.paddingForLevels(opts.levels, opts.filler);
+    constructor(opts = { config: adone.app.logger.config.adone }) {
+        this.paddings = Padder.paddingForConfig(opts.config, opts.filler);
         this.options = opts;
     }
 
     /**
      * Returns the maximum length of keys in the specified `levels` Object.
-     * @param  {Object} levels Set of all levels to calculate longest level against.
+     * @param  {Object} config
      * @returns {Number} Maximum length of the longest level string.
      */
-    static getLongestLevel(levels) {
-        const lvls = Object.keys(levels).map((level) => level.length);
+    static getLongestLevel(config) {
+        const lvls = Object.keys(config).map((level) => level.length);
         return Math.max(...lvls);
     }
 
@@ -41,9 +41,9 @@ class Padder {
      * @param  {String} filler Repeatable text to use for padding.
      * @returns {Object} Mapping of level to desired padding.
      */
-    static paddingForLevels(levels, filler = " ") {
-        const maxLength = Padder.getLongestLevel(levels);
-        return Object.keys(levels).reduce((acc, level) => {
+    static paddingForConfig(config, filler = " ") {
+        const maxLength = Padder.getLongestLevel(config);
+        return Object.keys(config).reduce((acc, level) => {
             acc[level] = Padder.paddingForLevel(level, filler, maxLength);
             return acc;
         }, {});

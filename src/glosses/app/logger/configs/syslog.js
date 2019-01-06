@@ -1,21 +1,34 @@
-export const levels = {
-    emerg: 0,
-    alert: 1,
-    crit: 2,
-    error: 3,
-    warning: 4,
-    notice: 5,
-    info: 6,
-    debug: 7
-};
-
-export const colors = {
-    emerg: "red",
-    alert: "yellow",
-    crit: "red",
-    error: "red",
-    warning: "red",
-    notice: "yellow",
-    info: "green",
-    debug: "blue"
+export default {
+    emerg: {
+        id: 0,
+        color: "red"
+    },
+    alert: {
+        id: 1,
+        color: "yellow"
+    },
+    crit: {
+        id: 2,
+        color: "red"
+    },
+    error: {
+        id: 3,
+        color: "red"
+    },
+    warning: {
+        id: 4,
+        color: "red"
+    },
+    notice: {
+        id: 5,
+        color: "yellow"
+    },
+    info: {
+        id: 6,
+        color: "green"
+    },
+    debug: {
+        id: 7,
+        color: "blue"
+    }
 };

@@ -111,7 +111,8 @@ adone.lazify({
     CliApplication: "./cli_application",
     logger: "./logger",
     report: "./report",
-    lockfile: "./lockfile"
+    lockfile: "./lockfile",
+    signale: "./signale"
 }, adone.asNamespace(exports), require);
 
 adone.definePrivate({

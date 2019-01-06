@@ -4,7 +4,7 @@ const {
     is,
     fs,
     project,
-    runtime: { term },
+    runtime: { term, logger },
     std
 } = adone;
 
@@ -179,7 +179,7 @@ export default class extends app.Subsystem {
                             {
                                 name: "No eslint config",
                                 value: "skipEslint"
-                            },   
+                            },
                             {
                                 name: "Skip npm initialization",
                                 value: "skipNpm"
@@ -360,7 +360,7 @@ export default class extends app.Subsystem {
                 ]);
 
                 Object.assign(info, info.options);
-                delete info.options;    
+                delete info.options;
 
                 await kit.observe("progress", manager);
                 await manager.createSubProject(info);
@@ -490,11 +490,20 @@ export default class extends app.Subsystem {
     })
     async cleanCommand(args, opts) {
         try {
+            logger.start({
+                message: `Clean ${args.has("path") ? args.get("path") : "whole project"}`
+            });
+
             const path = resolvePath(args, opts);
             const manager = await project.Manager.load();
             await kit.observe("logInfo", manager);
             const observer = await manager.clean(path);
             await observer.result;
+
+            logger.success({
+                message: "Successfully cleaned"
+            });
+
             return 0;
         } catch (err) {
             term.print(`{red-fg}${err.message}{/}`);
@@ -525,21 +534,26 @@ export default class extends app.Subsystem {
     })
     async buildCommand(args, opts) {
         try {
-            adone.logInfo("Loading project configuration...");
+            logger.start({
+                message: `Build ${args.has("path") ? args.get("path") : "whole project"}`
+            });
+
             const path = resolvePath(args, opts);
             const manager = await project.Manager.load();
-            adone.logInfo("Project build started");
-            let observer = await manager.build(path);
+
+            const observer = await manager.build(path);
             await observer.result;
+
+            logger.success({
+                message: "Successfully builded"
+            });
+
             if (opts.has("watch")) {
-                observer = await manager.watch(path);
-                await observer.result;
-                return;
+                return this.watchCommand(args, opts);
             }
             return 0;
         } catch (err) {
-            console.log(err);
-            // term.print(`{red-fg}${err.message}{/}`);
+            logger.error(err);
             return 1;
         }
     }
@@ -567,16 +581,8 @@ export default class extends app.Subsystem {
     })
     async rebuildCommand(args, opts) {
         try {
-            const path = resolvePath(args, opts);
-            const manager = await project.Manager.load();
-            let observer = await manager.rebuild(path);
-            await observer.result;
-            if (opts.has("watch")) {
-                observer = await manager.watch(path);
-                await observer.result;
-                return;
-            }
-            return 0;
+            await this.cleanCommand(args, opts);
+            return this.buildCommand(args, opts);
         } catch (err) {
             term.print(`{red-fg}${err.message}{/}`);
             return 1;
@@ -602,6 +608,10 @@ export default class extends app.Subsystem {
     })
     async watchCommand(args, opts) {
         try {
+            logger.watching({
+                message: `${args.has("path") ? args.get("path") : "whole project"}`
+            });
+
             const path = resolvePath(args, opts);
             const manager = await project.Manager.load();
             const observer = await manager.watch(path);
@@ -706,6 +716,10 @@ export default class extends app.Subsystem {
     })
     async incverCommand(args, opts) {
         try {
+            logger.start({
+                message: `Increase version`
+            });
+
             const manager = await project.Manager.load();
             await kit.observe(["log", "logInfo"], manager);
             const observer = await manager.incVersion({
@@ -714,6 +728,10 @@ export default class extends app.Subsystem {
                 loose: opts.has("loose")
             });
             await observer.result;
+
+            logger.success({
+                message: `New version is ${adone.package.version}`
+            });
 
             return 0;
         } catch (err) {

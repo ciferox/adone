@@ -2,6 +2,7 @@ const {
     error,
     std: { path },
     is,
+    runtime: { logger },
     templating: { dot },
     util,
     text
@@ -19,9 +20,9 @@ const defaults = {
 const log = (options, isError) => {
     const message = `[${options.title}] ${options.message}`;
     if (isError) {
-        adone.logError(message);
+        logger.error(message);
     } else {
-        adone.logInfo(message);
+        logger.info(message);
     }
 };
 

@@ -1,25 +1,42 @@
-export const levels = {
-    error: 0,
-    warn: 1,
-    help: 2,
-    data: 3,
-    info: 4,
-    debug: 5,
-    prompt: 6,
-    verbose: 7,
-    input: 8,
-    silly: 9
-};
-
-export const colors = {
-    error: "red",
-    warn: "yellow",
-    help: "cyan",
-    data: "grey",
-    info: "green",
-    debug: "blue",
-    prompt: "grey",
-    verbose: "cyan",
-    input: "grey",
-    silly: "magenta"
+export default {
+    error: {
+        id: 0,
+        color: "red"
+    },
+    warn: {
+        id: 1,
+        color: "yellow"
+    },
+    help: {
+        id: 2,
+        color: "cyan"
+    },
+    data: {
+        id: 3,
+        color: "grey"
+    },
+    info: {
+        id: 4,
+        color: "green"
+    },
+    debug: {
+        id: 5,
+        color: "blue"
+    },
+    prompt: {
+        id: 6,
+        color: "grey"
+    },
+    verbose: {
+        id: 7,
+        color: "cyan"
+    },
+    input: {
+        id: 8,
+        color: "grey"
+    },
+    silly: {
+        id: 9,
+        color: "magenta"
+    }
 };

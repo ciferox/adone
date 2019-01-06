@@ -44,9 +44,9 @@ export default class TransformTask extends adone.project.task.Base {
             stream.notify({
                 gui: false,
                 onLast: true,
-                title: `${this.manager.config.raw.name}.${params.id}`,
+                title: params.task,
                 filter: null,
-                message: params.task
+                message: `${this.manager.config.raw.name}.${params.id}`
             });
         }
     }

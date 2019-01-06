@@ -35,7 +35,7 @@ describe("app", "logger", () => {
         });
 
         describe("Console", () => {
-            const defaultLevels = logger.config.npm.levels;
+            const defaultLevels = logger.config.npm;
             const transports = {
                 defaults: new logger.transport.Console(),
                 noStderr: new logger.transport.Console({ stderrLevels: [] }),
@@ -47,15 +47,25 @@ describe("app", "logger", () => {
                 }),
                 eol: new logger.transport.Console({ eol: "X" }),
                 syslog: new logger.transport.Console({
-                    levels: logger.config.syslog.levels
+                    config: logger.config.syslog
                 }),
                 customLevelStderr: new logger.transport.Console({
-                    levels: {
-                        alpha: 0,
-                        beta: 1,
-                        gamma: 2,
-                        delta: 3,
-                        epsilon: 4
+                    config: {
+                        alpha: {
+                            id: 0
+                        },
+                        beta: {
+                            id: 1
+                        },
+                        gamma: {
+                            id: 2
+                        },
+                        delta: {
+                            id: 3
+                        },
+                        epsilon: {
+                            id: 4
+                        }
                     },
                     stderrLevels: ["delta", "epsilon"]
                 })
@@ -79,7 +89,7 @@ describe("app", "logger", () => {
             describe("with defaults", () => {
                 it.skip("logs all levels to stdout", () => {
                     stdMocks.use();
-                    transports.defaults.levels = defaultLevels;
+                    transports.defaults.config = defaultLevels;
                     Object.keys(defaultLevels).forEach((level) => {
                         const info = {
                             [logger.LEVEL]: level,
@@ -507,7 +517,7 @@ describe("app", "logger", () => {
         });
 
 
-        describe.skip("File (stress)", function () {
+        describe("File (stress)", function () {
             this.timeout(30 * 1000);
 
             const logPath = path.resolve(__dirname, "fixtures/logs/file-stress-test.log");
@@ -724,13 +734,13 @@ describe("app", "logger", () => {
 
     it("has expected initial state", () => {
         assert.lengthOf(adone.runtime.logger.transports, 1);
-        assert.strictEqual(adone.runtime.logger.level, "debug");
+        assert.strictEqual(adone.runtime.logger.level, "verbose");
     });
 
     it("has expected methods", () => {
         assert.true(is.object(logger.config));
         ["add", "remove", "clear"]
-            .concat(Object.keys(logger.config.cli.levels))
+            .concat(Object.keys(logger.config.adone))
             .forEach((key) => {
                 assert.function(adone.runtime.logger[key], `logger.${key}`);
             });
@@ -1135,25 +1145,25 @@ describe("app", "logger", () => {
             assert.strictEqual(l._readableState.pipesCount, 0);
         });
 
-        it("new Logger({ levels }) defines custom methods", () => {
+        it("new Logger({ config }) defines custom methods", () => {
             const myFormat = logger.format((info, opts) => {
                 return info;
             })();
 
             const l = logger.create({
-                levels: logger.config.syslog.levels,
+                config: logger.config.syslog,
                 format: myFormat,
                 level: "error",
                 exitOnError: false,
                 transports: []
             });
 
-            Object.keys(logger.config.syslog.levels).forEach((level) => {
+            Object.keys(logger.config.syslog).forEach((level) => {
                 assert.function(l[level]);
             });
         });
 
-        it("new Logger({ levels }) custom methods are not bound to instance", () => {
+        it("new Logger({ config }) custom methods are not bound to instance", () => {
             const l = logger.create({
                 level: "error",
                 exitOnError: false,
@@ -1174,7 +1184,7 @@ describe("app", "logger", () => {
 
             assert.strictEqual(logs.length, 2);
             assert.sameDeepMembers(logs[0] || [], [{ test: 1 }]);
-            assert.sameDeepMembers(logs[1] || [], [{ message: { test: 2 }, level: "warn" }]);
+            assert.sameDeepMembers(logs[1] || [], [{ message: { test: 2 }, level: "warn", icon: adone.app.logger.config.adone.warn.icon }]);
         });
 
         it(".add({ invalid Transport })", () => {
@@ -1353,7 +1363,7 @@ describe("app", "logger", () => {
         });
     });
 
-    describe("Logger (levels)", () => {
+    describe("Logger (config)", () => {
         it.skip("report unknown levels", () => {
             stdMocks.use();
             const l = helpers.createLogger((info) => { });
@@ -1366,7 +1376,7 @@ describe("app", "logger", () => {
             assert.sameMembers(output.stderr, ["[adone.app.logger] Unknown logger level: bar\n"]);
         });
 
-        it("default levels", (done) => {
+        it("default config", (done) => {
             const l = logger.create();
             const expected = { message: "foo", level: "debug" };
 
@@ -1395,12 +1405,18 @@ describe("app", "logger", () => {
                 .log(expected);
         });
 
-        it("custom levels", (done) => {
+        it("custom config", (done) => {
             const l = logger.create({
-                levels: {
-                    bad: 0,
-                    test: 1,
-                    ok: 2
+                config: {
+                    bad: {
+                        id: 0
+                    },
+                    test: {
+                        id: 1
+                    },
+                    ok: {
+                        id: 2
+                    }
                 }
             });
 
@@ -1431,7 +1447,7 @@ describe("app", "logger", () => {
                 .log(expected);
         });
 
-        it("sets transports levels", (done) => {
+        it("sets transports config", (done) => {
             let l;
             const transport = new TransportStream({
                 log(obj) {
@@ -1471,10 +1487,10 @@ describe("app", "logger", () => {
     });
 
     describe("Logger (level enabled/disabled)", () => {
-        it("default levels", () => {
+        it("default config", () => {
             const l = logger.create({
                 level: "verbose",
-                levels: logger.config.npm.levels,
+                config: logger.config.npm,
                 transports: [new logger.transport.Console()]
             });
 
@@ -1502,13 +1518,13 @@ describe("app", "logger", () => {
             assert.false(l.isSillyEnabled());
         });
 
-        it("default levels, transport override", () => {
+        it("default config, transport override", () => {
             const transport = new logger.transport.Console();
             transport.level = "debug";
 
             const l = logger.create({
                 level: "info",
-                levels: logger.config.npm.levels,
+                config: logger.config.npm,
                 transports: [transport]
             });
 
@@ -1536,10 +1552,10 @@ describe("app", "logger", () => {
             assert.false(l.isSillyEnabled());
         });
 
-        it("default levels, no transports", () => {
+        it("default config, no transports", () => {
             const l = logger.create({
                 level: "verbose",
-                levels: logger.config.npm.levels,
+                config: logger.config.npm,
                 transports: []
             });
 
@@ -1567,13 +1583,19 @@ describe("app", "logger", () => {
             assert.false(l.isSillyEnabled());
         });
 
-        it("custom levels", () => {
+        it("custom config", () => {
             const l = logger.create({
                 level: "test",
-                levels: {
-                    bad: 0,
-                    test: 1,
-                    ok: 2
+                config: {
+                    bad: {
+                        id: 0
+                    },
+                    test: {
+                        id: 1
+                    },
+                    ok: {
+                        id: 2
+                    }
                 },
                 transports: [new logger.transport.Console()]
             });
@@ -1593,13 +1615,19 @@ describe("app", "logger", () => {
             assert.false(l.isOkEnabled());
         });
 
-        it("custom levels, no transports", () => {
+        it("custom config, no transports", () => {
             const l = logger.create({
                 level: "test",
-                levels: {
-                    bad: 0,
-                    test: 1,
-                    ok: 2
+                config: {
+                    bad: {
+                        id: 0
+                    },
+                    test: {
+                        id: 1
+                    },
+                    ok: {
+                        id: 2
+                    }
                 },
                 transports: []
             });
@@ -1619,16 +1647,22 @@ describe("app", "logger", () => {
             assert.false(l.isOkEnabled());
         });
 
-        it("custom levels, transport override", () => {
+        it("custom config, transport override", () => {
             const transport = new logger.transport.Console();
             transport.level = "ok";
 
             const l = logger.create({
                 level: "bad",
-                levels: {
-                    bad: 0,
-                    test: 1,
-                    ok: 2
+                config: {
+                    bad: {
+                        id: 0
+                    },
+                    test: {
+                        id: 1
+                    },
+                    ok: {
+                        id: 2
+                    }
                 },
                 transports: [transport]
             });

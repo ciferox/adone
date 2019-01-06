@@ -10,6 +10,8 @@ const testOrder = exports.testOrder = [
 ];
 
 exports.testLevels = testOrder.reduce((acc, level, i) => {
-    acc[level] = i;
+    acc[level] = {
+        id: i
+    };
     return acc;
 }, {});

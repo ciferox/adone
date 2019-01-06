@@ -38,7 +38,5 @@ export default class CleanTask extends adone.project.task.Base {
         await fs.rmEmpty(adone.util.globParent(dstGlob), {
             cwd: this.manager.cwd
         });
-
-        this.logInfo(`[${params.id}] ${params.task}`);
     }
 }

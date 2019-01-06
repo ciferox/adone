@@ -13,8 +13,8 @@ const {
  */
 class Format {
     constructor(opts = {}) {
-        if (!opts.levels) {
-            opts.levels = logger.config.npm.levels;
+        if (!opts.config) {
+            opts.config = logger.config.adone;
         }
 
         this.colorizer = new logger.format.colorize.Colorizer(opts);

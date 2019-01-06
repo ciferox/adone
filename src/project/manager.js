@@ -187,20 +187,6 @@ export default class ProjectManager extends task.Manager {
         })));
     }
 
-    rebuild(path) {
-        this._checkLoaded();
-        return this.runInSeries([
-            async () => {
-                const observer = await this.clean(path);
-                return observer.result;
-            },
-            async () => {
-                const observer = await this.build(path);
-                return observer.result;
-            }
-        ]);
-    }
-
     watch(path) {
         this._checkLoaded();
         return this.runInParallel(this._getEntries(path).map((entry) => ({

@@ -112,12 +112,12 @@ describe("app", "logger", "TransportStream", () => {
                     }
 
                     assert.lengthOf(infos, 5);
-                    assert.deepEqual(infos, expected.slice(0, 5));
+                    assert.sameDeepMembers(infos, expected.slice(0, 5));
                     done();
                 })
             });
 
-            transport.levels = testLevels;
+            transport.config = testLevels;
             expected.forEach(transport.write.bind(transport));
         });
 
@@ -133,11 +133,11 @@ describe("app", "logger", "TransportStream", () => {
                     // eslint-disable-next-line no-undefined
                     assert.undefined(err);
                     assert.strictEqual(infos.length, expected.length);
-                    assert.deepEqual(infos, expected);
+                    assert.sameDeepMembers(infos, expected);
                 })
             });
 
-            transport.levels = testLevels;
+            transport.config = testLevels;
             expected.forEach(transport.write.bind(transport));
         });
 
@@ -199,7 +199,7 @@ describe("app", "logger", "TransportStream", () => {
         it("invokes .log() for each of the valid chunks when necessary in streams plumbing", (done) => {
             const expected = infosFor({
                 count: 50,
-                levels: testOrder
+                config: testOrder
             });
 
             const transport = new TransportStream({
@@ -268,7 +268,7 @@ describe("app", "logger", "TransportStream", () => {
 
 
         it("ensures a format is applied to each info when no .logv is defined", (done) => {
-            const expected = infosFor({ count: 10, levels: testOrder });
+            const expected = infosFor({ count: 10, config: testOrder });
             const transport = new TransportStream({
                 format: format.json(),
                 log: logFor(10 * testOrder.length, (err, infos) => {
@@ -300,7 +300,7 @@ describe("app", "logger", "TransportStream", () => {
         it("invokes .logv with all valid chunks when necessary in streams plumbing", (done) => {
             const expected = infosFor({
                 count: 50,
-                levels: testOrder
+                config: testOrder
             });
             const transport = new TransportStream({
                 level: "info",
@@ -322,17 +322,17 @@ describe("app", "logger", "TransportStream", () => {
             };
 
             transport.cork();
-            transport.levels = testLevels;
+            transport.config = testLevels;
             expected.forEach(transport.write.bind(transport));
             transport.uncork();
         });
     });
 
     describe('parent (i.e. "logger") ["pipe", "unpipe"]', () => {
-        it('should define { level, levels } on "pipe"', (done) => {
+        it('should define { level, config } on "pipe"', (done) => {
             const parent = new Parent({
                 level: "info",
-                levels: testLevels
+                config: testLevels
             });
 
             const transport = new TransportStream({
@@ -347,7 +347,7 @@ describe("app", "logger", "TransportStream", () => {
             parent.pipe(transport);
             setImmediate(() => {
                 assert.undefined(transport.level);
-                assert.equal(transport.levels, testLevels);
+                assert.deepEqual(transport.config, testLevels);
                 assert.equal(transport.parent, parent);
                 assert.equal(transport.parent.level, "info");
                 transport.write(infoify({ level: "parrot", message: "never logged" }));
@@ -358,7 +358,7 @@ describe("app", "logger", "TransportStream", () => {
         it('should not overwrite existing { level } on "pipe"', (done) => {
             const parent = new Parent({
                 level: "info",
-                levels: testLevels
+                config: testLevels
             });
 
             const transport = new TransportStream({
@@ -374,7 +374,7 @@ describe("app", "logger", "TransportStream", () => {
             parent.pipe(transport);
             setImmediate(() => {
                 assert.equal(transport.level, "error");
-                assert.equal(transport.levels, testLevels);
+                assert.equal(transport.config, testLevels);
                 assert.equal(transport.parent, parent);
                 transport.write(infoify({ level: "info", message: "never logged" }));
                 transport.write(infoify({ level: "error", message: "ok sure" }));
@@ -384,7 +384,7 @@ describe("app", "logger", "TransportStream", () => {
         it("should respond to changes in parent logging level", (done) => {
             const parent = new Parent({
                 level: "error",
-                levels: testLevels
+                config: testLevels
             });
 
             const transport = new TransportStream({
@@ -398,7 +398,7 @@ describe("app", "logger", "TransportStream", () => {
 
             parent.pipe(transport);
             setImmediate(() => {
-                assert.equal(transport.levels, testLevels);
+                assert.equal(transport.config, testLevels);
                 assert.equal(transport.parent, parent);
                 transport.write(infoify({ level: "info", message: "never logged" }));
 
@@ -410,7 +410,7 @@ describe("app", "logger", "TransportStream", () => {
         it('should unset parent on "unpipe"', (done) => {
             const parent = new Parent({
                 level: "info",
-                levels: testLevels
+                config: testLevels
             });
 
             const transport = new TransportStream({
@@ -439,7 +439,7 @@ describe("app", "logger", "TransportStream", () => {
         it('should invoke a close method on "unpipe"', (done) => {
             const parent = new Parent({
                 level: "info",
-                levels: testLevels
+                config: testLevels
             });
 
             const transport = new TransportStream({
@@ -476,7 +476,7 @@ describe("app", "logger", "TransportStream", () => {
                 level: "info"
             });
 
-            transport.levels = testLevels;
+            transport.config = testLevels;
             const filtered = expected.filter(transport._accept, transport)
                 .map((write) => write.chunk.level);
 
@@ -499,7 +499,7 @@ describe("app", "logger", "TransportStream", () => {
                 level: "info"
             });
 
-            transport.levels = testLevels;
+            transport.config = testLevels;
             const filtered = expected.filter(transport._accept, transport)
                 .map((info) => info.level);
 
@@ -516,7 +516,7 @@ describe("app", "logger", "TransportStream", () => {
                 level: "info"
             });
 
-            transport.levels = testLevels;
+            transport.config = testLevels;
             const filtered = expected.filter(transport._accept, transport)
                 .map((write) => write.chunk.level);
 
@@ -611,7 +611,7 @@ describe("app", "logger", "TransportStream", () => {
 
             const infos = infosFor({
                 count: 10,
-                levels: testOrder
+                config: testOrder
             });
 
             try {

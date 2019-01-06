@@ -1,6 +1,7 @@
 const {
     task,
-    error
+    error,
+    runtime: { logger }
 } = adone;
 
 export default class BaseTask extends task.Task {
@@ -45,6 +46,6 @@ export default class BaseTask extends task.Task {
      * @param {Error} err
      */
     error(err) {
-        this.logError(err);
+        logger.error(err);
     }
 }

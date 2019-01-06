@@ -47,17 +47,6 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         falsely: () => false,
         ok: "ok",
         bad: "bad",
-        // Use this logger for finding logger issues.
-        // log: (...args) => console.log(...args),
-        // logError: (...args) => console.error(...args),
-        // logWarn: (...args) => console.warn(...args),
-        // logInfo: (...args) => console.info(...args),
-        // logDebug: (...args) => console.debug(...args),
-        log: (...args) => adone.runtime.logger.log(...args),
-        logError: (...args) => adone.runtime.logger.error(...args),
-        logWarn: (...args) => adone.runtime.logger.warn(...args),
-        logInfo: (...args) => adone.runtime.logger.info(...args),
-        logDebug: (...args) => adone.runtime.logger.debug(...args),        
         o: (...props) => props.length > 0 ? Object.assign({}, ...props) : {},
         Date: global.Date,
         hrtime: process.hrtime,
@@ -279,13 +268,36 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             adone.lazify({
                 term: () => new adone.terminal.Terminal(),
                 logger: () => {
+                    const {
+                        is,
+                        app: { logger: { format } },
+                        terminal: { chalk }
+                    } = adone;
+
                     const defaultLogger = adone.app.logger.create({
-                        level: "debug",
-                        levels: adone.app.logger.config.cli.levels,
+                        level: "verbose",
+                        format: format.combine(
+                            format.colorize({
+                                config: adone.app.logger.config.adone
+                            }),
+                            format.padLevels(),
+                            format.printf((info) => {
+                                let result = "";
+                                if (is.string(info.prefix)) {
+                                    result += `[${info.prefix}] `;
+                                }
+                                if (is.string(info.icon)) {
+                                    result += `${info.icon}  `;
+                                }
+                                result += `${chalk.underline(info.level)}${info.message}`;
+                                return result;
+                            })
+                        ),
                         transports: [
                             new adone.app.logger.transport.Console()
                         ]
                     });
+
                     return defaultLogger;
                 },
                 netron: () => new adone.netron.Netron(),

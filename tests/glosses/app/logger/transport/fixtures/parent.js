@@ -12,7 +12,7 @@ export default class Parent extends adone.std.stream.Transform {
             objectMode: true
         });
 
-        this.levels = opts.levels;
+        this.config = opts.config;
         this.level = opts.level;
     }
 

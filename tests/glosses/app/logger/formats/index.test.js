@@ -118,27 +118,48 @@ describe("app", "logger", "formats", () => {
         ));
 
         describe("Colorizer", () => {
-            const expected = Object.assign({},
-                adone.app.logger.config.cli.colors,
-                adone.app.logger.config.npm.colors,
-                adone.app.logger.config.syslog.colors);
+            const allColors = Object.assign({},
+                adone.app.logger.config.adone,
+                adone.app.logger.config.cli,
+                adone.app.logger.config.npm,
+                adone.app.logger.config.syslog);
 
-            before(setupLevels);
+            const expected = {};
+
+            Object.keys(allColors).forEach((level) => {
+                expected[level] = allColors[level].color;
+            });
+
+            before(() => {
+                setupLevels();
+            });
 
             it("Colorizer.addColors({ string: string })", () => {
-                Colorizer.addColors({ weird: "cyan" });
+                Colorizer.addColors({
+                    weird: {
+                        color: "cyan"
+                    }
+                });
 
                 assert.deepEqual(Colorizer.allColors, Object.assign({}, expected, { weird: "cyan" }));
             });
 
             it("Colorizer.addColors({ string: [Array] })", () => {
-                Colorizer.addColors({ multiple: ["red", "bold"] });
+                Colorizer.addColors({
+                    multiple: {
+                        color: ["red", "bold"]
+                    }
+                });
                 assert.array(Colorizer.allColors.multiple);
                 assert.sameMembers(Colorizer.allColors.multiple, ["red", "bold"]);
             });
 
             it('Colorizer.addColors({ string: "(\w+)/s(\w+)" })', () => {
-                Colorizer.addColors({ delimited: "blue underline" });
+                Colorizer.addColors({
+                    delimited: {
+                        color: "blue underline"
+                    }
+                });
                 assert.sameMembers(Colorizer.allColors.delimited, ["blue", "underline"]);
             });
 
@@ -613,7 +634,7 @@ describe("app", "logger", "formats", () => {
         } = adone;
         const { Format: Padder } = padLevels;
 
-        const longLevels = Object.assign({}, config.npm.levels);
+        const longLevels = Object.assign({}, config.npm);
         longLevels["really-really-long"] = 7;
 
         describe("padLevels", () => {
@@ -630,7 +651,7 @@ describe("app", "logger", "formats", () => {
             ));
 
             it("padLevels({ levels }) set the padding to info.padding", assumeFormatted(
-                padLevels({ levels: longLevels }),
+                padLevels({ config: longLevels }),
                 infoify({ level: "info", message: "pad all the things" }),
                 (info) => {
                     assert.string(info.level);
@@ -643,7 +664,7 @@ describe("app", "logger", "formats", () => {
             ));
 
             it("padLevels({ levels, filler }) set the padding to info.padding with a custom filler", assumeFormatted(
-                padLevels({ levels: config.npm.levels, filler: "foo" }),
+                padLevels({ config: config.npm, filler: "foo" }),
                 infoify({ level: "info", message: "pad all the things" }),
                 (info) => {
                     assert.string(info.level);
@@ -659,16 +680,16 @@ describe("app", "logger", "formats", () => {
 
         describe("Padder", () => {
             const expected = Object.keys(Object.assign({},
-                config.cli.levels,
-                config.npm.levels,
-                config.syslog.levels
+                config.cli,
+                config.npm,
+                config.syslog
             ));
 
-            it("Padder.paddingForLevels({ string: number })", () => {
-                const paddings = Padder.paddingForLevels(Object.assign({},
-                    config.cli.levels,
-                    config.npm.levels,
-                    config.syslog.levels
+            it("Padder.paddingForConfig({ string: number })", () => {
+                const paddings = Padder.paddingForConfig(Object.assign({},
+                    config.cli,
+                    config.npm,
+                    config.syslog
                 ));
 
                 const keys = Object.keys(paddings);
@@ -679,11 +700,11 @@ describe("app", "logger", "formats", () => {
                 assert.equal(padding[0], " ");
             });
 
-            it("Padder.paddingForLevels({ string: number }, string)", () => {
-                const paddings = Padder.paddingForLevels(Object.assign({},
-                    config.cli.levels,
-                    config.npm.levels,
-                    config.syslog.levels
+            it("Padder.paddingForConfig({ string: number }, string)", () => {
+                const paddings = Padder.paddingForConfig(Object.assign({},
+                    config.cli,
+                    config.npm,
+                    config.syslog
                 ), "foo");
 
                 const keys = Object.keys(paddings);

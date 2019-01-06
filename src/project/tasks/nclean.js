@@ -42,7 +42,5 @@ export default class NCleanTask extends adone.project.task.Base {
                 cwd: this.manager.cwd
             });
         }
-
-        this.logInfo(`[${params.id}] nclean`);
     }
 }

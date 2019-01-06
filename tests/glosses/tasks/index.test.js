@@ -1158,16 +1158,16 @@ describe("task", () => {
             assert.strictEqual(i, 3);
         });
 
-        describe("standart notifications", () => {
+        describe.skip("standart notifications", () => {
             class TaskWithLoggers extends task.Task {
                 async run() {
-                    this.log(".log");
-                    this.logFatal(".logFatal");
-                    this.logError(".logError");
-                    this.logWarn(".logWarn");
-                    this.logInfo(".logInfo");
-                    this.logDebug(".logDebug");
-                    this.logTrace(".logTrace");
+                    // this.log(".log");
+                    // this.logFatal(".logFatal");
+                    // this.logError(".logError");
+                    // this.logWarn(".logWarn");
+                    // this.logInfo(".logInfo");
+                    // this.logDebug(".logDebug");
+                    // this.logTrace(".logTrace");
                 }
             }
 

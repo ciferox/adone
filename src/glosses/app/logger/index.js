@@ -22,61 +22,37 @@ const __ = adone.lazify({
     transport: "./transports",
     loggers: () => new __.Container(),
     addColors: () => (config) => {
-        adone.app.logger.format.colorize.Colorizer.addColors(config.colors || config);
+        __.format.colorize.Colorizer.addColors(config);
         return config;
     },
 
     create: () => {
         const isLevelEnabledFunctionName = (level) => `is${level.charAt(0).toUpperCase()}${level.slice(1)}Enabled`;
 
-        /**
-         * DerivedLogger to attach the logs level methods.
-         * @type {DerivedLogger}
-         * @extends {Logger}
-         */
-        class DerivedLogger extends __.Logger {
-            /**
-             * Create a new class derived logger for which the levels can be attached to
-             * the prototype of. This is a V8 optimization that is well know to increase
-             * performance of prototype functions.
-             * @param {!Object} options - Options for the created logger.
-             */
+        class XLogger extends __.Logger {
             constructor(options) {
                 super(options);
-                this._setupLevels();
-            }
-
-            /**
-             * Create the log level methods for the derived logger.
-             * @returns {undefined}
-             * @private
-             */
-            _setupLevels() {
-                Object.keys(this.levels).forEach((level) => {
+                
+                Object.keys(this.config).forEach((level) => {
                     if (level === "log") {
                         // eslint-disable-next-line no-console
                         console.warn('Level "log" not defined: conflicts with the method "log". Use a different level name.');
                         return;
                     }
 
-                    // Define prototype methods for each log level
-                    // e.g. logger.log('info', msg) <––> logger.info(msg) & logger.isInfoEnabled()
-                    // this is not an arrow function so it'll always be called on the instance instead of a fixed place in the prototype chain.
+                    const icon = this.config[level].icon;
+
                     this[level] = function (...args) {
-                        // Optimize the hot-path which is the single object.
                         if (args.length === 1) {
                             const [msg] = args;
                             const info = msg && msg.message && msg || { message: msg };
                             info.level = info[__.LEVEL] = level;
+                            info.icon = icon;
                             this._addDefaultMeta(info);
                             this.write(info);
                             return this;
                         }
 
-                        // Otherwise build argument list which could potentially conform to
-                        // either:
-                        // 1. v3 API: log(obj)
-                        // 2. v1/v2 API: log(level, msg, ... [string interpolate], [{metadata}], [callback])
                         return this.log(level, ...args);
                     };
 
@@ -85,6 +61,6 @@ const __ = adone.lazify({
             }
         }
 
-        return (opts = { levels: __.config.npm.levels }) => new DerivedLogger(opts);
+        return (opts = { config: __.config.adone }) => new XLogger(opts);
     }
 }, exports, require);

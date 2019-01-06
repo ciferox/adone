@@ -14,9 +14,11 @@ const hasSpace = /\s+/;
  * of the `info` objects with ANSI color codes based on a few options.
  */
 class Colorizer {
+    static allColors = {};
+
     constructor(opts = {}) {
-        if (opts.colors) {
-            this.addColors(opts.colors);
+        if (opts.config) {
+            this.addColors(opts.config);
         }
 
         this.options = opts;
@@ -28,16 +30,15 @@ class Colorizer {
      *
      * @param {Object} colors Set of color mappings to add.
      */
-    static addColors(clrs) {
-        const nextColors = Object.keys(clrs).reduce((acc, level) => {
-            acc[level] = hasSpace.test(clrs[level])
-                ? clrs[level].split(hasSpace)
-                : clrs[level];
-
+    static addColors(config) {
+        const nextColors = Object.keys(config).reduce((acc, level) => {
+            acc[level] = hasSpace.test(config[level].color)
+                ? config[level].color.split(hasSpace)
+                : config[level].color;
             return acc;
         }, {});
 
-        Colorizer.allColors = Object.assign({}, Colorizer.allColors || {}, nextColors);
+        Colorizer.allColors = Object.assign({}, Colorizer.allColors, nextColors);
         return Colorizer.allColors;
     }
 
@@ -45,10 +46,10 @@ class Colorizer {
      * Adds the colors Object to the set of allColors
      * known by the Colorizer
      *
-     * @param {Object} colors Set of color mappings to add.
+     * @param {Object} config Set of color mappings to add.
      */
-    addColors(clrs) {
-        return Colorizer.addColors(clrs);
+    addColors(config) {
+        return Colorizer.addColors(config);
     }
 
     /**
@@ -87,6 +88,9 @@ class Colorizer {
     transform(info, opts) {
         if (opts.level || opts.all || !opts.message) {
             info.level = this.colorize(info[adone.app.logger.LEVEL], info.level);
+            if (is.string(info.icon)) {
+                info.icon = this.colorize(info[adone.app.logger.LEVEL], info.icon);
+            }
         }
 
         if (opts.all || opts.message) {

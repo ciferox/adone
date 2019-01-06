@@ -47,6 +47,6 @@ export default class IncverTask extends task.Task {
         await updateConfig("package.json");
         await updateConfig("package-lock.json");
 
-        this.log(chalk`{green Previous:} {bold ${prevVersion}}\n{green Current:} {bold ${config.raw.version}}`);
+        // this.log(chalk`{green Previous:} {bold ${prevVersion}}\n{green Current:} {bold ${config.raw.version}}`);
     }
 }

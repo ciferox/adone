@@ -70,8 +70,6 @@ const baseSubsystem = (name) => std.path.join(__dirname, "..", "lib", "cli", "su
 })
 class AdoneCLI extends app.CliApplication {
     async configure() {
-        adone.cli.kit.setPrettyLogger();
-        
         !is.windows && this.exitOnSignal("SIGINT");
 
         this.config = await adone.cli.Configuration.load();

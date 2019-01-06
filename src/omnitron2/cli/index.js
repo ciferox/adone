@@ -184,7 +184,7 @@ class Omnitron extends Subsystem {
                 status: true,
                 clean: true
             });
-            adone.log(adone.pretty.json(result));
+            console.log(adone.pretty.json(result));
             return 0;
         } catch (err) {
             kit.updateProgress({
@@ -210,7 +210,7 @@ class Omnitron extends Subsystem {
                 result: true,
                 clean: true
             });
-            adone.log(result);
+            console.log(result);
             return 0;
         } catch (err) {
             kit.updateProgress({
@@ -471,7 +471,7 @@ class Omnitron extends Subsystem {
             });
 
             if (services.length > 0) {
-                adone.log(pretty.table(services, {
+                console.log(pretty.table(services, {
                     style: {
                         head: ["gray"],
                         compact: true
@@ -540,7 +540,7 @@ class Omnitron extends Subsystem {
     //             clean: true
     //         });
 
-    //         adone.log(pretty.table(peers, {
+    //         console.log(pretty.table(peers, {
     //             width: "100%",
     //             style: {
     //                 head: ["gray"],
@@ -599,7 +599,7 @@ class Omnitron extends Subsystem {
                 clean: true
             });
 
-            adone.log(pretty.table(peers, {
+            console.log(pretty.table(peers, {
                 style: {
                     head: ["gray"],
                     compact: true
@@ -643,7 +643,7 @@ class Omnitron extends Subsystem {
                 clean: true
             });
 
-            adone.log(pretty.table(peers, {
+            console.log(pretty.table(peers, {
                 style: {
                     head: ["gray"],
                     compact: true

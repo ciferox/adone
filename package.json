@@ -1,7 +1,7 @@
 {
   "name": "adone",
   "description": "Cyber Fractal Systems infrastructure",
-  "version": "0.6.73",
+  "version": "0.6.74",
   "author": "Adone Core Team <info@adone.io>",
   "license": "Apache-2.0",
   "devDependencies": {
@@ -22,6 +22,7 @@
     "one-time": "^0.0.4",
     "pako": "^1.0.6",
     "pify": "^4.0.1",
+    "pkg-conf": "^2.1.0",
     "sha.js": "^2.4.11",
     "simple-concat": "^1.0.0",
     "simple-get": "^3.0.3",
