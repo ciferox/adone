@@ -175,7 +175,7 @@ class extends Subsystem {
                     result: true,
                     clean: true
                 });
-                adone.log(adone.pretty.json(await config.configureGate(args.get("name"))));
+                console.log(adone.pretty.json(await config.configureGate(args.get("name"))));
             } else {
                 await config.configureGate(args.get("name"), opts.getAll(true));
                 kit.updateProgress({

@@ -4,15 +4,15 @@ const {
 
 class AppSubsystem extends app.Subsystem {
     configure() {
-        adone.log("configure");
+        console.log("configure");
     }
 
     initialize() {
-        adone.log("initialize");
+        console.log("initialize");
     }
 
     uninitialize() {
-        adone.log("uninitialize");
+        console.log("uninitialize");
     }
 }
 

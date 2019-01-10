@@ -4,29 +4,29 @@ const {
 
 class Sys111 extends app.Subsystem {
     configure() {
-        adone.log("c111");
+        console.log("c111");
     }
 
     initialize() {
-        adone.log("i111");
+        console.log("i111");
     }
 
     uninitialize() {
-        adone.log("u111");
+        console.log("u111");
     }
 }
 
 class Sys112 extends app.Subsystem {
     configure() {
-        adone.log("c112");
+        console.log("c112");
     }
 
     initialize() {
-        adone.log("i112");
+        console.log("i112");
     }
 
     uninitialize() {
-        adone.log("u112");
+        console.log("u112");
     }
 }
 
@@ -41,15 +41,15 @@ class Sys11 extends app.Subsystem {
             subsystem: new Sys112()
         });
 
-        adone.log("c11");
+        console.log("c11");
     }
 
     initialize() {
-        adone.log("i11");
+        console.log("i11");
     }
 
     uninitialize() {
-        adone.log("u11");
+        console.log("u11");
     }
 }
 
@@ -58,36 +58,36 @@ class Sys1 extends app.Subsystem {
         this.addSubsystem({
             subsystem: new Sys11()
         });
-        adone.log("c1");
+        console.log("c1");
     }
 
     initialize() {
-        adone.log("i1");
+        console.log("i1");
     }
 
     uninitialize() {
-        adone.log("u1");
+        console.log("u1");
     }
 }
 
 class Sys2 extends app.Subsystem {
     async configure() {
-        adone.log("c2");
+        console.log("c2");
     }
 
     initialize() {
-        adone.log("i2");
+        console.log("i2");
     }
 
     uninitialize() {
-        adone.log("u2");
+        console.log("u2");
     }
 }
 
 class TestApp extends app.Application {
     constructor(options) {
         super(options);
-        adone.log("nc");
+        console.log("nc");
     }
 
     async configure() {
@@ -97,23 +97,23 @@ class TestApp extends app.Application {
         this.addSubsystem({
             subsystem: new Sys2()
         });
-        adone.log("c");
+        console.log("c");
     }
 
     initialize() {
-        adone.log("i");
+        console.log("i");
     }
 
     main() {
-        adone.log("m");
+        console.log("m");
         setTimeout(() => {
-            adone.log("r");
+            console.log("r");
             this._reinitialize();
         }, 300);
     }
 
     uninitialize() {
-        adone.log("u");
+        console.log("u");
     }
 }
 

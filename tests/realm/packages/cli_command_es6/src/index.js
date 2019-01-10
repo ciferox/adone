@@ -6,6 +6,6 @@ export default class TestCommand extends adone.app.Subsystem {
     }
 
     testCommand() {
-        adone.log("well done");
+        console.log("well done");
     }
 }

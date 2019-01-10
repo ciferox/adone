@@ -1,6 +1,6 @@
 class TestApp extends adone.app.Application {
     main() {
-        adone.log(this.name);
+        console.log(this.name);
         return 0;
     }
 }

@@ -4,21 +4,21 @@ const {
 
 class Hello extends app.Subsystem {
     configure() {
-        adone.log("hello configure");
+        console.log("hello configure");
     }
 
     initialize() {
-        adone.log("hello init");
+        console.log("hello init");
     }
 
     uninitialize() {
-        adone.log("hello uninit");
+        console.log("hello uninit");
     }
 }
 
 class TestApp extends app.Application {
     async main() {
-        adone.log("main");
+        console.log("main");
         await this.loadSubsystem(new Hello());
         return 0;
     }

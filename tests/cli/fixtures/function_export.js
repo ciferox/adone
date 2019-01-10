@@ -1,3 +1,3 @@
 export default function () {
-    adone.log(`adone v${adone.package.version}`);
+    console.log(`adone v${adone.package.version}`);
 }

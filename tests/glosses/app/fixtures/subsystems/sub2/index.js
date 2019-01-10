@@ -1,13 +1,13 @@
 module.exports = class Sub2 extends adone.app.Subsystem {
     configure() {
-        adone.log("sub2 configure");
+        console.log("sub2 configure");
     }
 
     initialize() {
-        adone.log("sub2 init");
+        console.log("sub2 init");
     }
 
     uninitialize() {
-        adone.log("sub2 uninit");
+        console.log("sub2 uninit");
     }
 };

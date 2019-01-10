@@ -19,13 +19,13 @@ class TestApp extends adone.app.Application {
     }
 
     async main() {
-        adone.log(is.subsystem(this.sys1));
-        adone.log(this.sys1.getData());
+        console.log(is.subsystem(this.sys1));
+        console.log(this.sys1.getData());
 
         await this.uninitializeSubsystem("sys1");
         await this.deleteSubsystem("sys1");
 
-        adone.log(is.subsystem(this.sys1));
+        console.log(is.subsystem(this.sys1));
         return 0;
     }
 }

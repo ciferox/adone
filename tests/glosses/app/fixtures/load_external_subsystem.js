@@ -22,11 +22,11 @@ class TestApp extends adone.app.CliApplication {
         }]
     })
     async main(args, opts) {
-        adone.log("main");
+        console.log("main");
         const info = await this.loadSubsystem(args.get("path"), opts.getAll(true));
         if (opts.get("print-meta")) {
-            adone.log("name", info.name);
-            adone.log("description", info.description);
+            console.log("name", info.name);
+            console.log("description", info.description);
         }
         return 0;
     }

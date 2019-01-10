@@ -6,15 +6,15 @@ const {
 const subsystemCode = (index) => `
 module.exports = class Hello extends adone.app.Subsystem {
     configure() {
-        adone.log("hello${index} configure");
+        console.log("hello${index} configure");
     }
 
     initialize() {
-        adone.log("hello${index} init");
+        console.log("hello${index} init");
     }
 
     uninitialize() {
-        adone.log("hello${index} uninit");
+        console.log("hello${index} uninit");
     }
 }`;
 
@@ -36,10 +36,10 @@ class TestApp extends app.Application {
     }
 
     async main() {
-        adone.log("main");
+        console.log("main");
         await this.unloadSubsystem("hello");
-        adone.log("has", this.hasSubsystem("hello"));
-        adone.log("cached", adone.require.cache.has(this.tmpfile.path()));
+        console.log("has", this.hasSubsystem("hello"));
+        console.log("cached", adone.require.cache.has(this.tmpfile.path()));
         await this.tmpfile.write(subsystemCode(2));
         await this.loadSubsystem(this.tmpfile.path(), {
             name: "hello"

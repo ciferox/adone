@@ -23,7 +23,7 @@ describe("cli", () => {
         });
 
         it("evaluate script", async () => {
-            const result = await forkProcess(ADONE_CLI_PATH, ["run", "-e", "adone.log(process.versions)"]);
+            const result = await forkProcess(ADONE_CLI_PATH, ["run", "-e", "console.log(process.versions)"]);
             assert.deepEqual(adone.data.json5.decode(result.stdout), process.versions);
         });
 
@@ -48,7 +48,7 @@ describe("cli", () => {
         });
 
         it("evaluate script with function default export", async () => {
-            const result = await forkProcess(ADONE_CLI_PATH, ["run", "-e", "export default function () { adone.log(['use', 'simple', 'powerful', 'tools']); }"]);
+            const result = await forkProcess(ADONE_CLI_PATH, ["run", "-e", "export default function () { console.log(['use', 'simple', 'powerful', 'tools']); }"]);
             const parts = result.stdout.split("\n");
             assert.sameMembers(adone.data.json5.decode(parts[0]), ["use", "simple", "powerful", "tools"]);
             assert.strictEqual(parts[1], "undefined");
@@ -60,7 +60,7 @@ describe("cli", () => {
         });
 
         it("evaluate script with async function default export", async () => {
-            const result = await forkProcess(ADONE_CLI_PATH, ["run", "-e", "export default function () { adone.log(['use', 'simple', 'powerful', 'tools']); }"]);
+            const result = await forkProcess(ADONE_CLI_PATH, ["run", "-e", "export default function () { console.log(['use', 'simple', 'powerful', 'tools']); }"]);
             const parts = result.stdout.split("\n");
             assert.sameMembers(adone.data.json5.decode(parts[0]), ["use", "simple", "powerful", "tools"]);
             assert.strictEqual(parts[1], "undefined");

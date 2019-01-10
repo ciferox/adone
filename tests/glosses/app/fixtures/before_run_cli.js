@@ -12,7 +12,7 @@ class TestApp extends app.CliApplication {
             if (command.names[0] === "failed") {
                 throw new adone.error.Runtime("something bad happened");
             }
-            adone.log("before run", command.names.join(","));
+            console.log("before run", command.names.join(","));
         });
     }
 
@@ -20,7 +20,7 @@ class TestApp extends app.CliApplication {
         name: ["regular", "r"]
     })
     regular() {
-        adone.log("regular");
+        console.log("regular");
         return 0;
     }
 
@@ -28,12 +28,12 @@ class TestApp extends app.CliApplication {
         name: "failed"
     })
     failed() {
-        adone.log("failed");
+        console.log("failed");
         return 0;
     }
 
     main() {
-        adone.log("main");
+        console.log("main");
         return 0;
     }
 }

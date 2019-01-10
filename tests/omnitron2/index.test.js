@@ -652,7 +652,7 @@ describe("omnitron", () => {
             });
 
             let children = await adone.system.process.getChildPids(omniInfo.process.id);
-            // adone.log(children);
+            // console.log(children);
 
             assert.lengthOf(children, 0);
 

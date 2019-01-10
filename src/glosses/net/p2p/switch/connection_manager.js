@@ -83,7 +83,7 @@ export default class ConnectionManager {
 
                     setImmediate(() => this.switch.emit("peer:mux:established", peerInfo));
                 } catch (err) {
-                    return adone.log("Identify not successful");
+                    return console.log("Identify not successful");
                 }
             }
 

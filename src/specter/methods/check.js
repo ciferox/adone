@@ -2,7 +2,7 @@ export default async function (host, program) {
     if (host.isLocal()) {
         const { exec } = adone.std.child_process;
         const sysInfo = await specter.sysinfoRaw(host);
-        adone.log(sysInfo);
+        console.log(sysInfo);
         return null;
         // exec(`apt-cache sho`, (err, stdout, stderr));
         // return adone.shell.which(program);

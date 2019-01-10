@@ -13,7 +13,7 @@ class TestApp extends adone.app.CliApplication {
                 if (err instanceof adone.error.NotAllowed) {
                     counter++;
                 } else {
-                    adone.log(err);
+                    console.log(err);
                 }
             }
         }
@@ -30,7 +30,7 @@ class TestApp extends adone.app.CliApplication {
             }
         }
 
-        adone.log(counter === getters.length && isOk);
+        console.log(counter === getters.length && isOk);
 
         return 0;
     }

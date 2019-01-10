@@ -23,7 +23,7 @@ export default class {{ name }} extends app.Subsystem {
         help: "Test command"
     })
     async testCommand(args, opts) {
-        adone.log("Test command successfully executed!");
+        console.log("Test command successfully executed!");
         return 0;
     }
 }

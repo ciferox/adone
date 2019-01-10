@@ -34,7 +34,7 @@ export default class extends Subsystem {
                     status: true,
                     clean: true
                 });
-                adone.log(adone.pretty.json(networks));
+                console.log(adone.pretty.json(networks));
             } else {
                 kit.updateProgress({
                     message: "no networks",
@@ -44,7 +44,7 @@ export default class extends Subsystem {
             }
             return 0;
         } catch (err) {
-            adone.log(err);
+            console.error(err);
             kit.updateProgress({
                 message: err.message,
                 status: false

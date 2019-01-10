@@ -4,7 +4,7 @@ const {
         DMainCliCommand
     },
     std: { path, child_process: cp },
-    runtime: { term },
+    runtime: { term, logger },
     system
 } = adone;
 
@@ -242,7 +242,7 @@ export default class ShaniCLI extends Subsystem {
 
         if (code !== 0) {
             if (signal) {
-                adone.logInfo(`Died due to ${signal}`);
+                logger.info(`Died due to ${signal}`);
             }
             return 1;
         }

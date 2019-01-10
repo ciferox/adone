@@ -17,7 +17,7 @@ class TestApp extends adone.app.Application {
     }
 
     main() {
-        adone.log(this.sys1.getData());
+        console.log(this.sys1.getData());
         return 0;
     }
 }

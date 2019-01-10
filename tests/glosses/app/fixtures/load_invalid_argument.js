@@ -4,7 +4,7 @@ const {
 
 class TestApp extends app.Application {
     async main() {
-        adone.log("main");
+        console.log("main");
         await this.loadSubsystem([], { name: "hello" });
         return 0;
     }

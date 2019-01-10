@@ -10,6 +10,6 @@ exports.default = class TestCommand {
     }
 
     testCommand() {
-        adone.log("well done");
+        console.log("well done");
     }
 };

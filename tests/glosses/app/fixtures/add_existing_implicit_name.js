@@ -4,29 +4,29 @@ const {
 
 class AppSubsystem extends app.Subsystem {
     configure() {
-        adone.log("configure");
+        console.log("configure");
     }
 
     initialize() {
-        adone.log("initialize");
+        console.log("initialize");
     }
 
     uninitialize() {
-        adone.log("uninitialize");
+        console.log("uninitialize");
     }
 }
 
 class Hello extends app.Subsystem {
     configure() {
-        adone.log("hello configure");
+        console.log("hello configure");
     }
 
     initialize() {
-        adone.log("hello initialize");
+        console.log("hello initialize");
     }
 
     uninitialize() {
-        adone.log("hello uninitialize");
+        console.log("hello uninitialize");
     }
 }
 

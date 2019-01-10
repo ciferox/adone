@@ -4,7 +4,7 @@ const {
 
 class App extends app.Application {
     main() {
-        adone.log("app running");
+        console.log("app running");
     }
 }
 

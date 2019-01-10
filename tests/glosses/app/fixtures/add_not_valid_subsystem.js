@@ -4,15 +4,15 @@ const {
 
 class AppSubsystem {
     configure() {
-        adone.log("configure");
+        console.log("configure");
     }
 
     initialize() {
-        adone.log("initialize");
+        console.log("initialize");
     }
 
     uninitialize() {
-        adone.log("uninitialize");
+        console.log("uninitialize");
     }
 }
 
@@ -23,7 +23,7 @@ class TestApp extends adone.app.Application {
                 subsystem: new AppSubsystem()
             });
         } catch (err) {
-            adone.log("incorrect subsystem");
+            console.log("incorrect subsystem");
         }
     }
 

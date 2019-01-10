@@ -73,7 +73,7 @@ describe("realm", () => {
         assert.false(await fs.exists(realmPath));
 
         // runtimeRealmManager.onNotification("progress", (task, name, info) => {
-        //     adone.log(info.message);
+        //     console.log(info.message);
         // });
 
         const observer = await runtimeRealmManager.forkRealm({

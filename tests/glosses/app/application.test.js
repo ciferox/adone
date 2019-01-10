@@ -16,7 +16,7 @@ describe("application", "Application", () => {
         assert.equal(err.code, 7);
     });
 
-    it("Correct sequential method call at startup", async () => {
+    it("correct sequential method call at startup", async () => {
         const result = await forkProcess(fixture("correct_bootstrap.js"));
         assert.equal(result.stdout, "configured\ninitialized\nrun\nuninitialized");
     });
@@ -28,12 +28,12 @@ describe("application", "Application", () => {
         assert.undefined(testApp.parent);
     });
 
-    it("Compact application with properties", async () => {
+    it("compact application with properties", async () => {
         const result = await forkProcess(fixture("compact.js"));
         assert.equal(result.stdout, "non configured\nconfigured\ninitialized\nrun\nadone compact application\nuninitialized");
     });
 
-    it("Should not run invalid application", async () => {
+    it("should not run invalid application", async () => {
         const err = await assert.throws(async () => forkProcess(fixture("invalid.js")));
         assert.equal(err.code, 1);
         assert.equal(err.stderr, "\u001b[31mInvalid application class (should be derivative of 'adone.app.Application')\u001b[39m\n");

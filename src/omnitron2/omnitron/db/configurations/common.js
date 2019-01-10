@@ -163,7 +163,7 @@ export default class Configuration extends vault.Valuable {
             case "service": {
                 if (path.length > 0) {
                     val = await this._setVal(key, path, val);
-                    adone.log(val);
+                    console.log(val);
                 }
                 val = await serviceSchema.validate(val);
                 break;

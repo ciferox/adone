@@ -14,7 +14,7 @@ class TestApp extends adone.app.Application {
                 if (err instanceof error.NotAllowed) {
                     counter++;
                 } else {
-                    adone.log(err);
+                    console.log(err);
                 }
             }
         }
@@ -27,7 +27,7 @@ class TestApp extends adone.app.Application {
             props.push(name);
         }
 
-        adone.log(counter === getters.length && props.length === 0);
+        console.log(counter === getters.length && props.length === 0);
 
         return 0;
     }

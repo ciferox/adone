@@ -4,15 +4,15 @@ const {
 
 class Hello extends app.Subsystem {
     configure() {
-        adone.log("hello configure");
+        console.log("hello configure");
     }
 
     initialize() {
-        adone.log("hello init");
+        console.log("hello init");
     }
 
     uninitialize() {
-        adone.log("hello uninit");
+        console.log("hello uninit");
     }
 }
 
@@ -25,9 +25,9 @@ class TestApp extends app.Application {
     }
 
     async main() {
-        adone.log("main");
+        console.log("main");
         await this.unloadSubsystem("hello");
-        adone.log("has", this.hasSubsystem("hello"));
+        console.log("has", this.hasSubsystem("hello"));
         return 0;
     }
 }

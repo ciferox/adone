@@ -208,7 +208,7 @@ export default class Networks extends vault.Valuable {
     //         case "service": {
     //             if (path.length > 0) {
     //                 val = await this._setVal(key, path, val);
-    //                 adone.log(val);
+    //                 console.log(val);
     //             }
     //             if (this.validateService && !this.validateService(val)) {
     //                 throw new adone.error.AggregateException(this.validateService.errors);

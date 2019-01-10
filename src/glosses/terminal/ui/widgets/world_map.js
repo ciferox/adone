@@ -27,7 +27,7 @@ class InnerMap {
         if (canvas.getContext) {
             this.ctx = canvas.getContext("2d");
         } else {
-            adone.log("Canvas not supported!");
+            console.log("Canvas not supported!");
         }
     }
 

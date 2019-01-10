@@ -181,7 +181,7 @@ export default class Subsystem extends adone.event.AsyncEmitter {
      *
      * @returns {Promise<void>}
      */
-    async uninitializeSubsystems({ ignoreErrors = false, errorLogger = adone.logError } = {}) {
+    async uninitializeSubsystems({ ignoreErrors = false, errorLogger = console.error } = {}) {
         const subsystems = getSortedList(this).reverse();
         for (const sysInfo of subsystems) {
             try {

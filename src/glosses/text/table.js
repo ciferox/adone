@@ -456,12 +456,12 @@ export class Cell {
     wrapWithStyleColors(styleProperty, content) {
         if (this[styleProperty] && this[styleProperty].length) {
             try {
-                // adone.log(styleProperty, this[styleProperty]);
+                // console.log(styleProperty, this[styleProperty]);
                 let colors = adone.terminal.chalk;
                 for (let i = this[styleProperty].length; --i >= 0;) {
                     colors = colors[this[styleProperty][i]];
                 }
-                // adone.log(colors(content));
+                // console.log(colors(content));
                 return colors(content);
             } catch (e) {
                 return content;

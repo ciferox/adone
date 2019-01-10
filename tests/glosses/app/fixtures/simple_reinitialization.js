@@ -1,26 +1,26 @@
 class TestApp extends adone.app.Application {
     constructor(options) {
         super(options);
-        adone.log("non configured");
+        console.log("non configured");
     }
 
     configure() {
-        adone.log("configured");
+        console.log("configured");
     }
 
     initialize() {
-        adone.log("initialized");
+        console.log("initialized");
     }
 
     main() {
-        adone.log("main");
+        console.log("main");
         setTimeout(() => {
             this._reinitialize();
         }, 300);
     }
 
     uninitialize() {
-        adone.log("uninitialized");
+        console.log("uninitialized");
     }
 }
 

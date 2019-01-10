@@ -643,7 +643,7 @@ export default class Shell extends adone.event.Emitter {
     _loadDefaults() {
         if (!is.plainObject(this.options.msg)) {
             this.options.msg = {
-                send: (message) => adone.log(message)
+                send: (message) => console.log(message)
             };
         }
         if (!is.string(this.options.connectedMessage)) {

@@ -136,7 +136,7 @@ export default class Application extends app.Subsystem {
             if (this[ERROR_SCOPE]) {
                 return this._fireException(err);
             }
-            adone.logError(err.stack || err.message || err);
+            console.error(err.stack || err.message || err);
             return this.exit(app.EXIT_ERROR);
         }
     }
@@ -177,7 +177,7 @@ export default class Application extends app.Subsystem {
             this.removeProcessHandlers();
             await this.emitParallel("exit", code);
         } catch (err) {
-            adone.logError(err.stack || err.message || err);
+            console.error(err.stack || err.message || err);
             code = EXIT_ERROR;
         }
 
@@ -248,7 +248,7 @@ export default class Application extends app.Subsystem {
         if (is.function(this.error)) {
             errCode = await this.error(err);
         } else {
-            adone.logError(err.stack || err.message || err);
+            console.error(err.stack || err.message || err);
             errCode = adone.app.EXIT_ERROR;
         }
         if (!is.integer(errCode)) {

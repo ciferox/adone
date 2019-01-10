@@ -12,7 +12,8 @@ const {
         minimalReporter
     },
     system,
-    noop
+    noop,
+    runtime: { logger }
 } = adone;
 
 adone.app.runCli({
@@ -147,17 +148,17 @@ adone.app.runCli({
                 const filter = is.string(printCoverStats) && printCoverStats;
                 adone.js.coverage.printTable(filter && new RegExp(filter));
             } else {
-                adone.logInfo("[coverage] no data can be shown");
+                logger.info("[coverage] no data can be shown");
             }
         }
         if (startCoverServer) {
             if (adone.js.coverage.hasStats()) {
                 const port = startCoverServer;
-                adone.logInfo(`start http server with coverage stats at 127.0.0.1:${port}`);
+                logger.info(`start http server with coverage stats at 127.0.0.1:${port}`);
                 await adone.js.coverage.startHTTPServer(port);
                 return;
             } else if (!printCoverStats) {
-                adone.logInfo("[coverage] no data can be shown");
+                logger.info("[coverage] no data can be shown");
             }
         }
 

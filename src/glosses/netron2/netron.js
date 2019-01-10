@@ -624,7 +624,7 @@ export default class Netron extends adone.task.Manager {
                         result
                     };
                 }).catch((error) => {
-                    adone.log(error);
+                    console.log(error);
                     tasksResults[t.task] = {
                         error
                     };

@@ -10,7 +10,7 @@ class TestApp extends adone.app.Application {
                 subsystem: std.path.join(__dirname, "not_valid_subsystem.js")
             });
         } catch (err) {
-            adone.log("incorrect subsystem");
+            console.log("incorrect subsystem");
         }
     }
 

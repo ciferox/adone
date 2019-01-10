@@ -7,23 +7,23 @@ class TestApp extends adone.app.Application {
 
     configure() {
         this.status = "configured";
-        adone.log(this.status);
+        console.log(this.status);
     }
 
     initialize() {
         this.status = "initialized";
-        adone.log(this.status);
+        console.log(this.status);
     }
 
     main() {
         this.status = "run";
-        adone.log(this.status);
+        console.log(this.status);
         return 0;
     }
 
     uninitialize() {
         this.status = "uninitialized";
-        adone.log(this.status);
+        console.log(this.status);
     }
 }
 
