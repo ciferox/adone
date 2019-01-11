@@ -28,7 +28,6 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         ASYNC_EMITTER: Symbol(),
         SUBSYSTEM: Symbol(),
         APPLICATION: Symbol(),
-        CLI_APPLICATION: Symbol(),
         CONFIGURATION: Symbol(),
         CORE_STREAM: Symbol(),
         BYTE_ARRAY: Symbol(),
@@ -300,7 +299,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
 
                     return defaultLogger;
                 },
-                netron: () => new adone.netron.Netron(),
+                // netron: () => new adone.netron.Netron(),
                 netron2: () => {
                     const peerInfo = adone.runtime.isOmnitron
                         ? adone.omnitron2.LOCAL_PEER_INFO

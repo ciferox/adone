@@ -6,7 +6,7 @@ const {
     DMainCliCommand
 } = app;
 
-class TestApp extends adone.app.CliApplication {
+class TestApp extends adone.app.Application {
     @DMainCliCommand({
         arguments: ["path"],
         options: [{
@@ -32,4 +32,6 @@ class TestApp extends adone.app.CliApplication {
     }
 }
 
-app.runCli(TestApp);
+app.run(TestApp, {
+    useArgs: true
+});

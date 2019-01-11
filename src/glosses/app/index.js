@@ -68,7 +68,7 @@ export const DMainCliCommand = (mainCommand = {}) => (target, key, descriptor) =
     let sysMeta = adone.meta.reflect.getMetadata(SUBSYSTEM_ANNOTATION, target.constructor);
     mainCommand.handler = descriptor.value;
     if (is.undefined(sysMeta)) {
-        if (target instanceof adone.app.CliApplication) {
+        if (target instanceof adone.app.Application) {
             sysMeta = {
                 mainCommand
             };
@@ -77,7 +77,7 @@ export const DMainCliCommand = (mainCommand = {}) => (target, key, descriptor) =
         }
         adone.meta.reflect.defineMetadata(SUBSYSTEM_ANNOTATION, sysMeta, target.constructor);
     } else {
-        if (target instanceof adone.app.CliApplication) {
+        if (target instanceof adone.app.Application) {
             sysMeta.mainCommand = mainCommand;
         } else {
             Object.assign(sysMeta, mainCommand);
@@ -108,7 +108,7 @@ export const DCliCommand = (commandInfo = {}) => (target, key, descriptor) => {
 adone.lazify({
     Subsystem: "./subsystem",
     Application: "./application",
-    CliApplication: "./cli_application",
+    AppHelper: "./app_helper",
     logger: "./logger",
     report: "./report",
     lockfile: "./lockfile",
@@ -119,15 +119,182 @@ adone.definePrivate({
     locks: {} // used by adone.app.lockfile
 }, exports);
 
-export const run = async (App) => {
+const INTERNAL = Symbol.for("adone.app.Application#internal");
+
+const _bootstrapApp = async (app, {
+    useArgs
+}) => {
+    if (is.null(adone.runtime.app)) {
+        // setup the main application
+        // Prevent double initialization of global application instance
+        // (for cases where two or more Applications run in-process, the first app will be common).
+        if (!is.null(adone.runtime.app)) {
+            throw new adone.error.IllegalState("It is impossible to have several main applications");
+        }
+        adone.runtime.app = app;
+
+        // if (process.env.ADONE_REPORT) {
+        //     this.enableReport();
+        // }
+
+
+        // From Node.js docs: SIGTERM and SIGINT have default handlers on non-Windows platforms that resets
+        // the terminal mode before exiting with code 128 + signal number. If one of these signals has a
+        // listener installed, its default behavior will be removed (Node.js will no longer exit).
+        // So, install noop handlers to block this default behaviour.
+        process.on("SIGINT", adone.noop);
+        process.on("SIGTERM", adone.noop);
+
+        const uncaughtException = (...args) => app._uncaughtException(...args);
+        const unhandledRejection = (...args) => app._unhandledRejection(...args);
+        const rejectionHandled = (...args) => app._rejectionHandled(...args);
+        const beforeExit = () => app.exit();
+        const signalExit = (sigName) => app._signalExit(sigName);
+        app._setHandlers({
+            uncaughtException,
+            unhandledRejection,
+            rejectionHandled,
+            beforeExit,
+            signalExit
+        });
+        process.on("uncaughtExectption", uncaughtException);
+        process.on("unhandledRejection", unhandledRejection);
+        process.on("rejectionHandled", rejectionHandled);
+        process.on("beforeExit", beforeExit);
+
+        app._setAsMain();
+
+        // Initialize realm
+        await adone.realm.getManager();
+
+        // Track cursor if interactive application (by default) and if tty mode
+        if (app.isInteractiveModeEnabled && adone.runtime.term.output.isTTY) {
+            await new Promise((resolve) => adone.runtime.term.trackCursor(resolve));
+        }
+    }
+
+    try {
+        let code = null;
+
+        if (useArgs) {
+            const {
+                app: { AppHelper },
+                meta: { reflect }
+            } = adone;
+
+            const appHelper = new AppHelper(app);
+            app.helper = appHelper;
+            
+            // const [command, match, rest] = await app._configure(ignoreArgs);
+            app._setErrorScope(true);
+
+            const sysMeta = reflect.getMetadata(SUBSYSTEM_ANNOTATION, app.constructor);
+            if (sysMeta) {
+                if (sysMeta.mainCommand) {
+                    appHelper.defineMainCommand(sysMeta.mainCommand);
+                }
+
+                if (is.array(sysMeta.commandsGroups)) {
+                    for (const group of sysMeta.commandsGroups) {
+                        appHelper.defineCommandsGroup(group);
+                    }
+                }
+
+                if (is.array(sysMeta.optionsGroups)) {
+                    for (const group of sysMeta.optionsGroups) {
+                        appHelper.defineOptionsGroup(group);
+                    }
+                }
+            }
+
+            await app._configure();
+
+            if (sysMeta) {
+                if (is.array(sysMeta.commands)) {
+                    for (const command of sysMeta.commands) {
+                        appHelper.defineCommand(command);
+                    }
+                }
+
+                if (is.array(sysMeta.options)) {
+                    for (const option of sysMeta.options) {
+                        appHelper.defineOption(option);
+                    }
+                }
+
+                if (is.array(sysMeta.subsystems)) {
+                    for (const ss of sysMeta.subsystems) {
+                        // eslint-disable-next-line
+                        await appHelper.defineCommandFromSubsystem({
+                            ...ss,
+                            lazily: true
+                        });
+                    }
+                }
+            }
+
+            app._setErrorScope(false);
+
+            let command = appHelper.mainCommand;
+            let errors = [];
+            let rest = [];
+            let match = null;
+            ({ command, errors, rest, match } = await appHelper.parseArgs());
+
+            if (errors.length) {
+                console.log(`${escape(command.getUsageMessage())}\n`);
+                for (const error of errors) {
+                    console.log(escape(error.message));
+                }
+                await app.exit(app.EXIT_ERROR);
+            }
+
+            app._setErrorScope(true);
+            await app._initialize();
+
+            await app.emitParallel("before run", command);
+            code = await command.execute(rest, match);
+        } else {
+            app._setErrorScope(true);
+            await app._configure();
+            await app._initialize();
+            code = await app.main();    
+        }
+
+        app._setErrorScope(false);
+
+        if (is.integer(code)) {
+            await app.exit(code);
+            return;
+        }
+        await app.setState(STATE.RUNNING);
+    } catch (err) {
+        if (app._isAppErrorScope()) {
+            return app._fireException(err);
+        }
+        console.error(err.stack || err.message || err);
+        return app.exit(app.EXIT_ERROR);
+    }
+};
+
+export const run = async (App, {
+    useArgs = false
+} = {}) => {
     if (is.null(adone.runtime.app) && is.class(App)) {
+        if (useArgs) {
+            // mark the default main as internal to be able to distinguish internal from user-defined handlers
+            App.prototype.main[INTERNAL] = true;
+        }
         const app = new App();
         if (!is.application(app)) {
             console.error(`${adone.terminal.esc.red.open}Invalid application class (should be derivative of 'adone.app.Application')${adone.terminal.esc.red.close}`);
             process.exit(1);
             return;
         }
-        return app.run();
+
+        return _bootstrapApp(app, {
+            useArgs
+        });
     }
 
     // surrogate application, use only own properties
@@ -137,6 +304,14 @@ export const run = async (App) => {
     if (!is.null(adone.runtime.app)) {
         await adone.runtime.app._uninitialize();
         adone.runtime.app = null;
+    }
+
+    if (useArgs) {
+        // redefine argv
+        if (is.array(adone.__argv__)) {
+            process.argv = adone.__argv__;
+            delete adone.__argv__;
+        }
     }
 
     class XApplication extends adone.app.Application { }
@@ -155,55 +330,9 @@ export const run = async (App) => {
         XApplication.prototype[s] = App.prototype[s];
     }
 
-    const app = new XApplication();
-    for (const name of props) {
-        const descriptor = Object.getOwnPropertyDescriptor(_App, name);
-        Object.defineProperty(app, name, descriptor);
-    }
-
-    return app.run();
-};
-
-export const runCli = async (App, ignoreArgs = false) => {
-    if (is.null(adone.runtime.app) && is.class(App)) {
-        const app = new App();
-        if (!is.cliApplication(app)) {
-            console.error(`${adone.terminal.esc.red.open}Invalid application class (should be derivative of 'adone.app.Application')${adone.terminal.esc.red.close}`);
-            process.exit(1);
-            return;
-        }
-        return app.run({ ignoreArgs });
-    }
-
-    // surrogate application, use only own properties
-    const _App = is.class(App) ? App.prototype : App;
-    const allProps = util.entries(_App, { onlyEnumerable: false });
-
-    if (!is.null(adone.runtime.app)) {
-        await adone.runtime.app._uninitialize();
-        adone.runtime.app = null;
-    }
-
-    // redefine argv
-    if (is.array(adone.__argv__)) {
-        process.argv = adone.__argv__;
-        delete adone.__argv__;
-    }
-
-    class XApplication extends adone.app.CliApplication { }
-
-    const props = [];
-
-    for (const [name, value] of allProps) {
-        if (is.function(value)) {
-            XApplication.prototype[name] = value;
-        } else {
-            props.push(name);
-        }
-    }
-
-    for (const s of Object.getOwnPropertySymbols(_App)) {
-        XApplication.prototype[s] = App.prototype[s];
+    if (useArgs) {
+        // mark the default main as internal to be able to distinguish internal from user-defined handlers
+        App.prototype.main[INTERNAL] = true;
     }
 
     const app = new XApplication();
@@ -212,7 +341,9 @@ export const runCli = async (App, ignoreArgs = false) => {
         Object.defineProperty(app, name, descriptor);
     }
 
-    return app.run({ ignoreArgs });
+    return _bootstrapApp(app, {
+        useArgs
+    });
 };
 
 export const restAsOptions = (args) => {

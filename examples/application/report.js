@@ -6,7 +6,7 @@ const {
     DCliCommand
 } = app;
 
-class App extends app.CliApplication {
+class App extends app.Application {
     configure() {
         this.enableReport({
             directory: adone.std.os.tmpdir()
@@ -29,4 +29,6 @@ class App extends app.CliApplication {
     }
 }
 
-app.runCli(App);
+app.run(App, {
+    useArgs: true
+});

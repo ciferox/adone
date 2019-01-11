@@ -4,7 +4,7 @@ const {
     omnitron
 } = adone;
 
-adone.app.runCli({
+adone.app.run({
     configure() {
         this.defineArguments({
             commands: [
@@ -56,4 +56,6 @@ adone.app.runCli({
             return 2;
         }
     }
+}, {
+    useArgs: true
 });

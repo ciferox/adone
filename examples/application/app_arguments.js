@@ -7,7 +7,7 @@ const {
     DCliCommand
 } = app;
 
-class App extends app.CliApplication {
+class App extends app.Application {
     @DMainCliCommand({
         arguments: [
             { name: "number", default: 4 },
@@ -179,4 +179,6 @@ class App extends app.CliApplication {
     cmd10() {}
 }
 
-app.runCli(App);
+app.run(App, {
+    useArgs: true
+});

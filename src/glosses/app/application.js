@@ -1,6 +1,5 @@
 const {
     is,
-    error,
     std,
     runtime: { term },
     tag,
@@ -14,7 +13,6 @@ const {
     STATE
 } = app;
 
-// const INTERNAL = Symbol();
 const REPORT = Symbol();
 const ERROR_SCOPE = Symbol.for("adone.app.Application#errorScope");
 const HANDLERS = Symbol();
@@ -43,52 +41,8 @@ export default class Application extends app.Subsystem {
         return this[IS_MAIN];
     }
 
-    async _setupMain() {
-        // setup the main application
-        // Prevent double initialization of global application instance
-        // (for cases where two or more Applications run in-process, the first app will be common).
-        if (!is.null(adone.runtime.app)) {
-            throw new error.IllegalState("It is impossible to have several main applications");
-        }
-        adone.runtime.app = this;
-
-        if (process.env.ADONE_REPORT) {
-            this.enableReport();
-        }
-
-
-        // From Node.js docs: SIGTERM and SIGINT have default handlers on non-Windows platforms that resets
-        // the terminal mode before exiting with code 128 + signal number. If one of these signals has a
-        // listener installed, its default behavior will be removed (Node.js will no longer exit).
-        // So, install noop handlers to block this default behaviour.
-        process.on("SIGINT", adone.noop);
-        process.on("SIGTERM", adone.noop);
-
-        const uncaughtException = (...args) => this._uncaughtException(...args);
-        const unhandledRejection = (...args) => this._unhandledRejection(...args);
-        const rejectionHandled = (...args) => this._rejectionHandled(...args);
-        const beforeExit = () => this.exit();
-        const signalExit = (sigName) => this._signalExit(sigName);
-        this[HANDLERS] = {
-            uncaughtException,
-            unhandledRejection,
-            rejectionHandled,
-            beforeExit,
-            signalExit
-        };
-        process.on("uncaughtExectption", uncaughtException);
-        process.on("unhandledRejection", unhandledRejection);
-        process.on("rejectionHandled", rejectionHandled);
-        process.on("beforeExit", beforeExit);
-        this[IS_MAIN] = true;
-
-        // Initialize realm
-        await adone.realm.getManager();
-
-        // Track cursor if interactive application (by default) and if tty mode
-        if (this[INTERACTIVE] && term.output.isTTY) {
-            return new Promise((resolve) => term.trackCursor(resolve));
-        }
+    get isInteractiveModeEnabled() {
+        return this[INTERACTIVE];
     }
 
     enableReport({
@@ -114,31 +68,6 @@ export default class Application extends app.Subsystem {
 
     reportEnabled() {
         return !is.null(this[REPORT]);
-    }
-
-    async run() {
-        try {
-            if (is.null(adone.runtime.app)) {
-                await this._setupMain();
-            }
-
-            this[ERROR_SCOPE] = true;
-            await this._configure();
-            await this._initialize();
-            const code = await this.main();
-            this[ERROR_SCOPE] = false;
-            if (is.integer(code)) {
-                await this.exit(code);
-                return;
-            }
-            await this.setState(STATE.RUNNING);
-        } catch (err) {
-            if (this[ERROR_SCOPE]) {
-                return this._fireException(err);
-            }
-            console.error(err.stack || err.message || err);
-            return this.exit(app.EXIT_ERROR);
-        }
     }
 
     main() {
@@ -187,31 +116,6 @@ export default class Application extends app.Subsystem {
         }
 
         adone.runtime.logger.close();
-        // await new Promise((resolve) => {
-        //     let fds = 0;
-
-        //     // end the logger & waiting for completion
-        //     [process.stdout, process.stderr].forEach((std) => {
-        //         const fd = std.fd;
-        //         if (!std.bufferSize) {
-        //             // bufferSize equals 0 means current stream is drained.
-        //             fds = fds | fd;
-        //         } else {
-        //             // Appends nothing to the std queue, but will trigger `tryToExit` event on `drain`.
-        //             std.write && std.write("", () => {
-        //                 fds = fds | fd;
-        //                 if ((fds & 1) && (fds & 2)) {
-        //                     resolve();
-        //                 }
-        //             });
-        //         }
-        //         // Does not write anything more.
-        //         delete std.write;
-        //     });
-        //     if ((fds & 1) && (fds & 2)) {
-        //         resolve();
-        //     }
-        // });
 
         if (this[IS_MAIN]) {
             term.destroy();
@@ -271,6 +175,24 @@ export default class Application extends app.Subsystem {
 
     _signalExit(sigName) {
         return this.exit(128 + util.signalNameToCode(sigName));
+    }
+
+    // Helper methods used in bootstraping code.
+    
+    _setAsMain() {
+        this[IS_MAIN] = true;        
+    }
+
+    _setHandlers(handlers) {
+        this[HANDLERS] = handlers;
+    }
+
+    _setErrorScope(appScope) {
+        this[ERROR_SCOPE] = appScope;
+    }
+
+    _isAppErrorScope() {
+        return this[ERROR_SCOPE];
     }
 }
 tag.add(Application, "APPLICATION");

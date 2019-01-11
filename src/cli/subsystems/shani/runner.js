@@ -16,7 +16,7 @@ const {
     runtime: { logger }
 } = adone;
 
-adone.app.runCli({
+adone.app.run({
     async main() {
         this._uncaughtException = (err) => {
             // console.log("Uncaught exception", err.stack);
@@ -173,4 +173,4 @@ adone.app.runCli({
         }
         return 0;
     }
-}, true); // disable process.argv parsing
+});

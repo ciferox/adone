@@ -405,4 +405,41 @@ describe("application", "Application", () => {
             });
         });
     });
+    
+    describe("args processing", () => {
+        let prevRoot = null;
+    
+        before(() => {
+            // define env var to require correct adone inside fixture apps
+            prevRoot = process.env.ADONE_ROOT_PATH; // ?
+            process.env.ADONE_ROOT_PATH = adone.ROOT_PATH;
+        });
+    
+        after(() => {
+            process.env.ADONE_ROOT_PATH = prevRoot;
+        });
+    
+        it("no public properties instead of application's reserved", async () => {
+            const result = await forkProcess(fixture("no_public_props_and_getters_with_args.js"));
+            assert.equal(result.stdout, "true");
+        });
+    
+        describe("before run event", () => {
+            it("main command", async () => {
+                const result = await forkProcess(fixture("before_run_event.js"));
+                assert.equal(result.stdout, "before run before_run_event\nmain");
+            });
+    
+            it("regular command", async () => {
+                const result = await forkProcess(fixture("before_run_event.js"), ["regular"]);
+                assert.equal(result.stdout, "before run regular,r\nregular");
+            });
+    
+            it("failed command", async () => {
+                const err = await assert.throws(async () => forkProcess(fixture("before_run_event.js"), ["failed"]));
+                assert.match(err.stderr, /something bad happened/);
+            });
+        });
+    });
+    
 });

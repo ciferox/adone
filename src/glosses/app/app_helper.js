@@ -6,49 +6,9 @@ const {
     pretty,
     util,
     runtime: { term },
-    tag,
     terminal: { chalk },
-    app,
     meta: { reflect }
 } = adone;
-
-const {
-    EXIT_SUCCESS,
-    STATE
-} = app;
-
-// Temporary here...
-const {
-    Context,
-    Public
-} = adone.netron;
-
-@Context()
-class CliContext {
-    constructor(app) {
-        this.app = app;
-    }
-
-    @Public()
-    defineArguments(options) {
-        return this.app.defineArguments(options);
-    }
-
-    @Public()
-    defineCommand(subsystem, ...args) {
-        return this.app.defineCommand(subsystem, ...args);
-    }
-
-    @Public()
-    defineCommandFromSubsystem(...args) {
-        // Should be implemented
-    }
-
-    @Public()
-    exitOnSignal(signame) {
-        return this.app.exitOnSignal(signame);
-    }
-}
 
 const noStyleLength = (x) => text.stripAnsi(x).length;
 
@@ -91,11 +51,10 @@ const defaultColors = {
 const SUBSYSTEM_ANNOTATION = "subsystem";
 
 // Symbols for private proerties.
-const INTERNAL = Symbol();
+const INTERNAL = Symbol.for("adone.app.Application#internal");
 const UNNAMED = Symbol();
 const EMPTY_VALUE = Symbol();
 const COMMAND = Symbol();
-const ERROR_SCOPE = Symbol.for("adone.app.Application#errorScope");
 const MAIN_COMMAND = Symbol.for("adone.app.CliApplication#mainCommand");
 const VERSION = Symbol();
 
@@ -1504,10 +1463,9 @@ const mergeGroupsLists = (a, b) => {
     return result;
 };
 
-export default class CliApplication extends app.Application {
-    constructor({ name, interactive, argv = process.argv.slice(2) } = {}) {
-        super({ name, interactive });
-
+export default class AppHelper {
+    constructor(app, argv = process.argv.slice(2)) {
+        this.app = app;
         this.argv = argv;
 
         this[MAIN_COMMAND] = null;
@@ -1525,116 +1483,8 @@ export default class CliApplication extends app.Application {
         return this[MAIN_COMMAND];
     }
 
-    exposeCliInterface(ctxId = "cli") {
-        if (adone.runtime.netron.hasContext(ctxId)) {
-            return;
-        }
-
-        adone.runtime.netron.attachContext(new CliContext(this), ctxId);
-    }
-
-    async _configure(ignoreArgs) {
-        this[ERROR_SCOPE] = true;
-
-        const sysMeta = reflect.getMetadata(SUBSYSTEM_ANNOTATION, this.constructor);
-        if (sysMeta) {
-            if (sysMeta.mainCommand) {
-                this.defineMainCommand(sysMeta.mainCommand);
-            }
-
-            if (is.array(sysMeta.commandsGroups)) {
-                for (const group of sysMeta.commandsGroups) {
-                    this.defineCommandsGroup(group);
-                }
-            }
-
-            if (is.array(sysMeta.optionsGroups)) {
-                for (const group of sysMeta.optionsGroups) {
-                    this.defineOptionsGroup(group);
-                }
-            }
-        }
-
-        await super._configure();
-
-        if (sysMeta) {
-            if (is.array(sysMeta.commands)) {
-                for (const command of sysMeta.commands) {
-                    this.defineCommand(command);
-                }
-            }
-
-            if (is.array(sysMeta.options)) {
-                for (const option of sysMeta.options) {
-                    this.defineOption(option);
-                }
-            }
-
-            if (is.array(sysMeta.subsystems)) {
-                for (const ss of sysMeta.subsystems) {
-                    // eslint-disable-next-line
-                    await this.defineCommandFromSubsystem({
-                        ...ss,
-                        lazily: true
-                    });
-                }
-            }
-        }
-
-        this[ERROR_SCOPE] = false;
-
-        let command = this[MAIN_COMMAND];
-        let errors = [];
-        let rest = [];
-        let match = null;
-        if (!ignoreArgs) {
-            ({ command, errors, rest, match } = await this._parseArgs(this.argv));
-        }
-
-        if (errors.length) {
-            console.log(`${escape(command.getUsageMessage())}\n`);
-            for (const error of errors) {
-                console.log(escape(error.message));
-            }
-            await this.exit(app.EXIT_ERROR);
-        }
-
-        return [command, match, rest];
-    }
-
-    main() {
-        // print usage message by default
-        console.log(`${escape(this[MAIN_COMMAND].getHelpMessage())}\n`);
-        return EXIT_SUCCESS;
-    }
-
-    async run({ ignoreArgs = false } = {}) {
-        try {
-            if (is.null(adone.runtime.app)) {
-                await this._setupMain();
-                this.exitOnSignal("SIGINT");
-            }
-
-            const [command, match, rest] = await this._configure(ignoreArgs);
-
-            this[ERROR_SCOPE] = true;
-            await this._initialize();
-
-            await this.emitParallel("before run", command);
-            const code = await command.execute(rest, match);
-            this[ERROR_SCOPE] = false;
-            if (is.integer(code)) {
-                await this.exit(code);
-                return;
-            }
-            await this.setState(STATE.RUNNING);
-        } catch (err) {
-            if (this[ERROR_SCOPE]) {
-                return this._fireException(err);
-            }
-            adone.logError(err.stack || err.message || err);
-            return this.exit(app.EXIT_ERROR);
-        }
+    getHelpMessage() {
+        return escape(this[MAIN_COMMAND].getHelpMessage());
     }
 
     async getVersion() {
@@ -1662,8 +1512,8 @@ export default class CliApplication extends app.Application {
 
     defineMainCommand(options) {
         options = adone.o({
-            name: this.name,
-            handler: (args, opts, meta) => this.main(args, opts, meta),
+            name: this.app.name,
+            handler: (args, opts, meta) => this.app.main(args, opts, meta),
             options: [],
             arguments: [],
             commands: [],
@@ -1672,7 +1522,7 @@ export default class CliApplication extends app.Application {
             colors: "default"
         }, options);
 
-        options.handler[INTERNAL] = this.main[INTERNAL];
+        options.handler[INTERNAL] = this.app.main[INTERNAL];
 
         if (!hasColorsSupport) {
             options.colors = false;
@@ -1690,7 +1540,7 @@ export default class CliApplication extends app.Application {
             });
         }
         this[MAIN_COMMAND] = this._createCommand(options, null);
-        this[MAIN_COMMAND]._subsystem = this;
+        this[MAIN_COMMAND]._subsystem = this.app;
         return this;
     }
 
@@ -1845,7 +1695,7 @@ export default class CliApplication extends app.Application {
                 name,
                 description,
                 group,
-                loader: () => this.addSubsystem({
+                loader: () => this.app.addSubsystem({
                     subsystem,
                     name,
                     description,
@@ -1855,7 +1705,7 @@ export default class CliApplication extends app.Application {
                 })
             });
         } else {
-            subsystem = this.instantiateSubsystem(subsystem, { transpile });
+            subsystem = this.app.instantiateSubsystem(subsystem, { transpile });
             let sysMeta = reflect.getMetadata(SUBSYSTEM_ANNOTATION, subsystem.constructor);
             if (sysMeta) {
                 sysMeta.name = sysMeta.name || name;
@@ -1869,7 +1719,7 @@ export default class CliApplication extends app.Application {
                 };
             }
 
-            this.addSubsystem({ subsystem, name, description, group, configureArgs, transpile });
+            this.app.addSubsystem({ subsystem, name, description, group, configureArgs, transpile });
             this._defineCommandFromSubsystem(subsystem, sysMeta);
         }
     }
@@ -1941,7 +1791,8 @@ export default class CliApplication extends app.Application {
         throw new error.NotExists(`${cmd.names[0]} doesnt have this option: ${optionName}`);
     }
 
-    async _parseArgs(_argv) {
+    async parseArgs() {
+        const _argv = this.argv;
         let optional = null;
         let positional = null;
         let commands = null;
@@ -2030,7 +1881,7 @@ export default class CliApplication extends app.Application {
                                     // We have lazy loaded subsystem, try load it and reinit command
                                     const sysInfo = await command.loader.call(command.subsystem); // eslint-disable-line
                                     sysInfo.instance[COMMAND] = command;
-                                    await this._configureSubsystem(sysInfo); // eslint-disable-line
+                                    await this.app._configureSubsystem(sysInfo); // eslint-disable-line
 
                                     // Check for meta data and if exists define sub commands, ...
                                     const sysMeta = reflect.getMetadata(SUBSYSTEM_ANNOTATION, sysInfo.instance.constructor);
@@ -2317,7 +2168,7 @@ export default class CliApplication extends app.Application {
                                 command
                             );
                             if (is.integer(res)) {
-                                return this.exit(res);
+                                return this.app.exit(res);
                             }
                         }
                         state.push("next argument");
@@ -2389,13 +2240,3 @@ export default class CliApplication extends app.Application {
         return { command, errors, rest, match };
     }
 }
-tag.add(CliApplication, "CLI_APPLICATION");
-
-// mark the default main as internal to be able to distinguish internal from user-defined handlers
-CliApplication.prototype.main[INTERNAL] = true;
-
-
-// CliApplication.Argument = Argument;
-// CliApplication.PositionalArgument = PositionalArgument;
-// CliApplication.OptionalArgument = OptionalArgument;
-// CliApplication.Command = Command;

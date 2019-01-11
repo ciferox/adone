@@ -68,36 +68,42 @@ const baseSubsystem = (name) => std.path.join(__dirname, "..", "lib", "cli", "su
         }
     ]
 })
-class AdoneCLI extends app.CliApplication {
+class AdoneCLI extends app.Application {
     async configure() {
         !is.windows && this.exitOnSignal("SIGINT");
 
         this.config = await adone.cli.Configuration.load();
 
         // Expose cli interface for subsystems.
-        this.exposeCliInterface();
+        // this.exposeCliInterface();
 
         // Add cli kit as a subsystem
-        this.addSubsystem({
-            name: "kit",
-            bind: true,
-            subsystem: adone.cli.kit
-        });
+        // this.addSubsystem({
+        //     name: "kit",
+        //     bind: true,
+        //     subsystem: adone.cli.kit
+        // });
 
         // Define command groups.
         const groups = this.config.getGroups();
         for (const group of groups) {
-            this.defineCommandsGroup(group);
+            this.helper.defineCommandsGroup(group);
         }
 
         await this._addInstalledSubsystems();
+    }
+
+    main() {
+        // print usage message by default
+        console.log(`${this.helper.getHelpMessage()}\n`);
+        return app.EXIT_SUCCESS;    
     }
 
     async _addInstalledSubsystems() {
         const commands = this.config.getCommands();
         for (const ss of commands) {
             // eslint-disable-next-line
-            await this.defineCommandFromSubsystem({
+            await this.helper.defineCommandFromSubsystem({
                 ...adone.util.omit(ss, "name"),
                 name: [ss.name, ...adone.util.arrify(ss.aliases)],
                 lazily: true
@@ -363,4 +369,6 @@ class AdoneCLI extends app.CliApplication {
     }
 }
 
-app.runCli(AdoneCLI);
+app.run(AdoneCLI, {
+    useArgs: true
+});

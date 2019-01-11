@@ -2,7 +2,7 @@ const {
     is
 } = adone;
 
-class TestApp extends adone.app.CliApplication {
+class TestApp extends adone.app.Application {
     main() {
         const getters = ["name", "parent", "root", "state"];
         let counter = 0;
@@ -18,7 +18,7 @@ class TestApp extends adone.app.CliApplication {
             }
         }
 
-        const expected = ["argv"];
+        const expected = ["helper"];
         let isOk = true;
         for (const [name, value] of adone.util.entries(this, { followProto: true })) {
             if (is.function(value)) {
@@ -36,4 +36,6 @@ class TestApp extends adone.app.CliApplication {
     }
 }
 
-adone.app.runCli(TestApp);
+adone.app.run(TestApp, {
+    useArgs: true
+});

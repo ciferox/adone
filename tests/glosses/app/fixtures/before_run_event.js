@@ -6,7 +6,7 @@ const {
     DCliCommand
 } = app;
 
-class TestApp extends app.CliApplication {
+class TestApp extends app.Application {
     configure() {
         this.on("before run", async (command) => {
             if (command.names[0] === "failed") {
@@ -38,4 +38,6 @@ class TestApp extends app.CliApplication {
     }
 }
 
-app.runCli(TestApp);
+app.run(TestApp, {
+    useArgs: true
+});

@@ -19,7 +19,7 @@ const {
         }
     ]
 })
-class MyApp extends app.CliApplication {
+class MyApp extends app.Application {
     @DMainCliCommand()
     main() {
         console.log("hello");
@@ -55,4 +55,6 @@ class MyApp extends app.CliApplication {
     }
 }
 
-app.runCli(MyApp);
+app.run(MyApp, {
+    useArgs: true
+});

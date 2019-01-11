@@ -24,11 +24,13 @@ const {
         }
     ]
 })
-class MyCLI extends app.CliApplication {
+class MyCLI extends app.Application {
     @DMainCliCommand()
     main() {
         console.log("hello");
     }
 }
 
-app.runCli(MyCLI);
+app.run(MyCLI, {
+    useArgs: true
+});

@@ -6,7 +6,7 @@ const {
     DMainCliCommand
 } = app;
 
-class MyApp extends app.CliApplication {
+class MyApp extends app.Application {
     @DMainCliCommand({
         arguments: [{
             name: "a",
@@ -31,4 +31,6 @@ class MyApp extends app.CliApplication {
     main() {}
 }
 
-app.runCli(MyApp);
+app.run(MyApp, {
+    userArgs: true
+});
