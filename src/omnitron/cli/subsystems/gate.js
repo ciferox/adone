@@ -1,7 +1,7 @@
 const {
     app: {
         Subsystem,
-        DCliCommand
+        CommandMeta
     },
     is,
     cli: { kit },
@@ -9,7 +9,7 @@ const {
 } = adone;
 
 export default class Gate extends Subsystem {
-    @DCliCommand({
+    @CommandMeta({
         name: "list",
         help: "Show gates",
         options: [
@@ -57,7 +57,7 @@ export default class Gate extends Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "add",
         help: "Add new gate",
         arguments: [
@@ -106,7 +106,7 @@ export default class Gate extends Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: ["delete", "del"],
         help: "Delete gate",
         arguments: [
@@ -144,7 +144,7 @@ export default class Gate extends Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "up",
         help: "Up gate",
         arguments: [
@@ -177,7 +177,7 @@ export default class Gate extends Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "down",
         help: "Down gate",
         arguments: [
@@ -210,7 +210,7 @@ export default class Gate extends Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "configure",
         help: "Configure gate",
         arguments: [

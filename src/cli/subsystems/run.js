@@ -3,13 +3,13 @@ const {
     fs,
     app: {
         Subsystem,
-        DMainCliCommand
+        MainCommandMeta
     },
     std
 } = adone;
 
 export default class Run extends Subsystem {
-    @DMainCliCommand({
+    @MainCommandMeta({
         blindMode: true,
         arguments: [
             {

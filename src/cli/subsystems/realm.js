@@ -4,11 +4,11 @@ const {
 } = adone;
 
 const {
-    DCliCommand
+    CommandMeta
 } = app;
 
 export default class RealmManager extends app.Subsystem {
-    @DCliCommand({
+    @CommandMeta({
         name: ["fork"],
         help: "Fork active realm",
         arguments: [
@@ -71,7 +71,7 @@ export default class RealmManager extends app.Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "info",
         help: "Show realm information"
     })

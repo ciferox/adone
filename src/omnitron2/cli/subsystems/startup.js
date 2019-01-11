@@ -1,7 +1,7 @@
 const {
     app: {
         Subsystem,
-        DCliCommand
+        CommandMeta
     },
     cli: { kit }
 } = adone;
@@ -20,7 +20,7 @@ const __ = adone.lazify({
 });
 
 export default class Startup extends Subsystem {
-    @DCliCommand({
+    @CommandMeta({
         name: "enable",
         help: "Enable omnitron startup",
         options: [
@@ -60,7 +60,7 @@ export default class Startup extends Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "disable",
         help: "Disable omnitron startup",
         options: [

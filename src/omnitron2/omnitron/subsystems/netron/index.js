@@ -5,7 +5,7 @@ const {
 
 const NAME = "Netron subsystem";
 
-@app.DSubsystem({
+@app.SubsystemMeta({
     dependencies: [
         "database"
     ]

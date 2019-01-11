@@ -2,7 +2,7 @@ const {
     is,
     std,
     runtime: { term },
-    app: { DMainCliCommand, Subsystem }
+    app: { MainCommandMeta, Subsystem }
 } = adone;
 
 const formatNumber = (number) => {
@@ -11,7 +11,7 @@ const formatNumber = (number) => {
 };
 
 export default class extends Subsystem {
-    @DMainCliCommand({
+    @MainCommandMeta({
         arguments: [
             { name: "script", help: "path to script with suites", nargs: "?", default: "index.js" }
         ],

@@ -62,9 +62,9 @@ const SubsystemDecorator = (sysInfo = {}) => (target) => {
     }
 };
 
-export const DSubsystem = SubsystemDecorator;
-export const DApplication = SubsystemDecorator;
-export const DMainCliCommand = (mainCommand = {}) => (target, key, descriptor) => {
+export const SubsystemMeta = SubsystemDecorator;
+export const ApplicationMeta = SubsystemDecorator;
+export const MainCommandMeta = (mainCommand = {}) => (target, key, descriptor) => {
     let sysMeta = adone.meta.reflect.getMetadata(SUBSYSTEM_ANNOTATION, target.constructor);
     mainCommand.handler = descriptor.value;
     if (is.undefined(sysMeta)) {
@@ -84,7 +84,7 @@ export const DMainCliCommand = (mainCommand = {}) => (target, key, descriptor) =
         }
     }
 };
-export const DCliCommand = (commandInfo = {}) => (target, key, descriptor) => {
+export const CommandMeta = (commandInfo = {}) => (target, key, descriptor) => {
     let sysMeta = adone.meta.reflect.getMetadata(SUBSYSTEM_ANNOTATION, target.constructor);
     commandInfo.handler = descriptor.value;
     if (is.undefined(sysMeta)) {

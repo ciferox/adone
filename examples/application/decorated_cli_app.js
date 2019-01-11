@@ -3,12 +3,12 @@ const {
 } = adone;
 
 const {
-    DCliCommand,
-    DMainCliCommand,
-    DApplication
+    CommandMeta,
+    MainCommandMeta,
+    ApplicationMeta
 } = app;
 
-@DApplication({
+@ApplicationMeta({
     commandsGroups: [
         {
             name: "math",
@@ -20,13 +20,13 @@ const {
     ]
 })
 class MyApp extends app.Application {
-    @DMainCliCommand()
+    @MainCommandMeta()
     main() {
         console.log("hello");
         return 0;
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "mul",
         arguments: [{
             name: "a",
@@ -43,7 +43,7 @@ class MyApp extends app.Application {
         return 0;
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "log",
         arguments: ["a"],
         help: "print the argument",

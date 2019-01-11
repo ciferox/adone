@@ -4,7 +4,7 @@ const {
 } = adone;
 
 const {
-    DCliCommand
+    CommandMeta
 } = app;
 
 const parseComplexNumber = (str) => {
@@ -33,7 +33,7 @@ const formatComplexNumber = (a, b) => {
 };
 
 export default class Complex extends app.Subsystem {
-    @DCliCommand({
+    @CommandMeta({
         name: "add",
         description: "Adds two complex numbers",
         arguments: [{
@@ -52,7 +52,7 @@ export default class Complex extends app.Subsystem {
         console.log(formatComplexNumber(x0 + x1, y0 + y1));
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "sub",
         description: "Subtracts two complex numbers",
         arguments: [{
@@ -71,7 +71,7 @@ export default class Complex extends app.Subsystem {
         console.log(formatComplexNumber(x0 - x1, y0 - y1));
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "mul",
         description: "Multiplies two complex numbers",
         arguments: [{
@@ -90,7 +90,7 @@ export default class Complex extends app.Subsystem {
         console.log(formatComplexNumber(x0 * x1 - y0 * y1, y0 * x1 + x0 * y1));
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "div",
         description: "Divides two complex numbers",
         arguments: [{

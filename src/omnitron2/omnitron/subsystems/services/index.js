@@ -10,7 +10,7 @@ const api = adone.lazify({
     ServiceMaintainer: "./service_maintainer"
 }, exports, require);
 
-@app.DSubsystem({
+@app.SubsystemMeta({
     dependencies: [
         "netron",
         "database"

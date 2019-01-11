@@ -2,7 +2,7 @@ const {
     is,
     app: {
         Subsystem,
-        DMainCliCommand
+        MainCommandMeta
     },
     meta,
     runtime: { term }
@@ -38,7 +38,7 @@ const getOwnPropertyDescriptor = (obj, propName) => {
 };
 
 export default class Inspection extends Subsystem {
-    @DMainCliCommand({
+    @MainCommandMeta({
         arguments: [
             {
                 name: "name",

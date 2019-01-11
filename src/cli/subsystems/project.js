@@ -9,7 +9,7 @@ const {
 } = adone;
 
 const {
-    DCliCommand
+    CommandMeta
 } = app;
 
 const resolvePath = (args, opts) => {
@@ -48,7 +48,7 @@ const getGitUser = async () => {
 };
 
 export default class extends app.Subsystem {
-    @DCliCommand({
+    @CommandMeta({
         name: "init",
         help: "Create new project",
         arguments: [
@@ -255,7 +255,7 @@ export default class extends app.Subsystem {
         });
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "config",
         help: "Configure project"
     })
@@ -369,7 +369,7 @@ export default class extends app.Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: ["file", "createfile"],
         help: "Create file",
         arguments: [
@@ -420,7 +420,7 @@ export default class extends app.Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: ["struct", "structure"],
         help: "Show project structure",
         arguments: [
@@ -471,7 +471,7 @@ export default class extends app.Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "clean",
         help: "Clean project",
         arguments: [
@@ -511,7 +511,7 @@ export default class extends app.Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "build",
         help: "Build project",
         arguments: [
@@ -558,7 +558,7 @@ export default class extends app.Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "rebuild",
         help: "Rebuild project",
         arguments: [
@@ -589,7 +589,7 @@ export default class extends app.Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "watch",
         help: "Watch project",
         arguments: [
@@ -622,7 +622,7 @@ export default class extends app.Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "nbuild",
         help: "Build C++ addons",
         arguments: [
@@ -657,7 +657,7 @@ export default class extends app.Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "nclean",
         help: "Clean builded C++ addons",
         arguments: [
@@ -692,7 +692,7 @@ export default class extends app.Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "incver",
         help: "Increase project version",
         arguments: [
@@ -740,7 +740,7 @@ export default class extends app.Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "deps",
         help: "Show dependencies for a particular source file or adone namespace",
         arguments: [
@@ -770,7 +770,7 @@ export default class extends app.Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "tasks",
         help: "Show tasks available in the project"
     })

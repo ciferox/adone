@@ -8,7 +8,7 @@ const TEMPLATE =
 } = adone;
 
 const {
-    DCliCommand
+    CommandMeta
 } = app;
 
 export default class {{ name }} extends app.Subsystem {
@@ -18,7 +18,7 @@ export default class {{ name }} extends app.Subsystem {
     async initialize() {
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "test",
         help: "Test command"
     })

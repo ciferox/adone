@@ -14,8 +14,8 @@ const {
 } = adone;
 
 const {
-    DCliCommand,
-    DMainCliCommand
+    CommandMeta,
+    MainCommandMeta
 } = app;
 
 class {{ name }}Application extends app.CliApplication {
@@ -27,7 +27,7 @@ class {{ name }}Application extends app.CliApplication {
     
     }
 
-    @DMainCliCommand({
+    @MainCommandMeta({
         blindMode: true,
         arguments: [
             {
@@ -44,7 +44,7 @@ class {{ name }}Application extends app.CliApplication {
         return 0;
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "test",
         help: "Test command",
     })

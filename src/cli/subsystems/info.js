@@ -2,7 +2,7 @@ const {
     is,
     app: {
         Subsystem,
-        DMainCliCommand
+        MainCommandMeta
     },
     pretty,
     terminal: { chalk, esc },
@@ -183,7 +183,7 @@ class SystemInfoRenderer {
 // };
 
 export default class Info extends Subsystem {
-    @DMainCliCommand({
+    @MainCommandMeta({
         arguments: [
             {
                 name: "name",

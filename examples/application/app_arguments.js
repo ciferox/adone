@@ -3,12 +3,12 @@ const {
 } = adone;
 
 const {
-    DMainCliCommand,
-    DCliCommand
+    MainCommandMeta,
+    CommandMeta
 } = app;
 
 class App extends app.Application {
-    @DMainCliCommand({
+    @MainCommandMeta({
         arguments: [
             { name: "number", default: 4 },
             { name: "boolean-true", default: true },
@@ -58,13 +58,13 @@ class App extends app.Application {
     })
     main() {}
 
-    @DCliCommand({
+    @CommandMeta({
         name: "command-1",
         help: "this is command 1"
     })
     cmd1() {}
 
-    @DCliCommand({
+    @CommandMeta({
         name: "command-2",
         help: "{magenta-bg}Help message styling{/}",
         colors: {
@@ -73,18 +73,18 @@ class App extends app.Application {
     })
     cmd2() {}
 
-    @DCliCommand({
+    @CommandMeta({
         name: "command-3"
     })
     cmd3() {}
 
-    @DCliCommand({
+    @CommandMeta({
         name: "command-4",
         help: "this is command 4"
     })
     cmd4() {}
 
-    @DCliCommand({
+    @CommandMeta({
         name: "command-5", // uses parent colors
         colors: {
             commandName: (x) => adone.terminal.chalk.yellow(x) // only for inner commands
@@ -98,7 +98,7 @@ class App extends app.Application {
     })
     cmd5() {}
 
-    @DCliCommand({
+    @CommandMeta({
         name: "command-6",
         help: "uses default colors",
         arguments: ["a1", "a2", "a3"],
@@ -111,7 +111,7 @@ class App extends app.Application {
     })
     cmd6() {}
 
-    @DCliCommand({
+    @CommandMeta({
         name: "command-7",
         help: "inherit parent colors",
         colors: "inherit",
@@ -125,7 +125,7 @@ class App extends app.Application {
     })
     cmd7() {}
 
-    @DCliCommand({
+    @CommandMeta({
         name: "command-8",
         help: "extends default colors",
         colors: {
@@ -141,7 +141,7 @@ class App extends app.Application {
     })
     cmd8() {}
 
-    @DCliCommand({
+    @CommandMeta({
         name: "command-9",
         help: "extends parent colors",
         colors: {
@@ -161,7 +161,7 @@ class App extends app.Application {
     })
     cmd9() {}
 
-    @DCliCommand({
+    @CommandMeta({
         name: "command-10",
         help: "no colors",
         colors: false,

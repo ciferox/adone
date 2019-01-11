@@ -10,13 +10,13 @@ const {
 } = adone;
 
 const {
-    DApplication,
-    DCliCommand
+    ApplicationMeta,
+    CommandMeta
 } = app;
 
 const baseSubsystem = (name) => std.path.join(__dirname, "..", "lib", "cli", "subsystems", name);
 
-@DApplication({
+@ApplicationMeta({
     subsystems: [
         {
             name: "run",
@@ -111,7 +111,7 @@ class AdoneCLI extends app.Application {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "install",
         group: "realm",
         help: "Install adone glosses, extensions, subsystems, applications, etc.",
@@ -152,7 +152,7 @@ class AdoneCLI extends app.Application {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "uninstall",
         group: "realm",
         help: "Uninstall adone glosses, extensions, applications, etc.",
@@ -181,7 +181,7 @@ class AdoneCLI extends app.Application {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "mount",
         group: "realm",
         help: "Mount new namespace to 'adone.dev'",
@@ -217,7 +217,7 @@ class AdoneCLI extends app.Application {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "unmount",
         group: "realm",
         help: "Unmount namespace from 'adone.dev'",
@@ -246,7 +246,7 @@ class AdoneCLI extends app.Application {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "list",
         group: "realm",
         help: "List installed packages",
@@ -304,7 +304,7 @@ class AdoneCLI extends app.Application {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "config",
         help: "Configurations management",
         arguments: [

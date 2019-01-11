@@ -3,7 +3,7 @@ const {
 } = adone;
 
 const {
-    DCliCommand
+    CommandMeta
 } = app;
 
 class TestApp extends app.Application {
@@ -16,7 +16,7 @@ class TestApp extends app.Application {
         });
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: ["regular", "r"]
     })
     regular() {
@@ -24,7 +24,7 @@ class TestApp extends app.Application {
         return 0;
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "failed"
     })
     failed() {

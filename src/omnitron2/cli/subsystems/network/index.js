@@ -1,8 +1,8 @@
 const {
     app: {
         Subsystem,
-        DSubsystem,
-        DCliCommand
+        SubsystemMeta,
+        CommandMeta
     },
     is,
     cli: { kit },
@@ -13,7 +13,7 @@ const {
 const baseSubsystem = (name) => std.path.join(__dirname, name);
 
 export default 
-@DSubsystem({
+@SubsystemMeta({
     subsystems: [
         {
             name: "add",
@@ -28,7 +28,7 @@ export default
     ]
 })
 class extends Subsystem {
-    @DCliCommand({
+    @CommandMeta({
         name: ["delete", "del"],
         help: "Delete gate",
         arguments: [
@@ -66,7 +66,7 @@ class extends Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "up",
         help: "Up gate",
         arguments: [
@@ -99,7 +99,7 @@ class extends Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "down",
         help: "Down gate",
         arguments: [
@@ -132,7 +132,7 @@ class extends Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "configure",
         help: "Configure gate",
         arguments: [

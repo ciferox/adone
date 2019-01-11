@@ -4,30 +4,30 @@ const {
 } = adone;
 
 const {
-    DMainCliCommand,
-    DCliCommand
+    MainCommandMeta,
+    CommandMeta
 } = app;
 
 
 export default class Info extends app.Subsystem {
-    @DMainCliCommand()
+    @MainCommandMeta()
     main() {
         logger.info(`Node: ${process.version}`);
         logger.info(`v8: ${process.versions.v8}`);
         logger.info(`platform: ${process.platform}`);
     }
 
-    @DCliCommand()
+    @CommandMeta()
     node() {
         logger.info(process.version);
     }
 
-    @DCliCommand()
+    @CommandMeta()
     v8() {
         logger.info(process.versions.v8);
     }
 
-    @DCliCommand()
+    @CommandMeta()
     platform() {
         logger.info(process.platform);
     }

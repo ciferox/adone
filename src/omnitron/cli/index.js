@@ -1,8 +1,8 @@
 const {
     app: {
         Subsystem,
-        DSubsystem,
-        DCliCommand
+        SubsystemMeta,
+        CommandMeta
     },
     is,
     cli: { kit },
@@ -16,7 +16,7 @@ const { STATUSES } = omnitron;
 const subsystemPath = (name) => std.path.resolve(__dirname, "subsystems", name);
 
 export default 
-@DSubsystem({
+@SubsystemMeta({
     commandsGroups: [
         {
             name: "common",
@@ -67,7 +67,7 @@ export default
     ]
 })
 class Omnitron extends Subsystem {
-    @DCliCommand({
+    @CommandMeta({
         name: "up",
         group: "common",
         help: "Up omnitron"
@@ -96,7 +96,7 @@ class Omnitron extends Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "down",
         group: "common",
         help: "Down omnitron"
@@ -135,7 +135,7 @@ class Omnitron extends Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "ping",
         group: "common",
         help: "Ping the omnitron"
@@ -156,7 +156,7 @@ class Omnitron extends Subsystem {
         return 0;
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "gc",
         group: "common",
         help: "Force garbage collector"
@@ -180,7 +180,7 @@ class Omnitron extends Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "info",
         group: "inspect",
         help: "The omnitron's information",
@@ -215,7 +215,7 @@ class Omnitron extends Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "report",
         group: "inspect",
         help: "Report omnitron process statistics"
@@ -241,7 +241,7 @@ class Omnitron extends Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "enable",
         group: "services",
         help: "Enable service",
@@ -273,7 +273,7 @@ class Omnitron extends Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "disable",
         group: "services",
         help: "Disable service",
@@ -305,7 +305,7 @@ class Omnitron extends Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "start",
         group: "services",
         help: "Start service",
@@ -337,7 +337,7 @@ class Omnitron extends Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "stop",
         group: "services",
         help: "Stop service",
@@ -369,7 +369,7 @@ class Omnitron extends Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "restart",
         group: "services",
         help: "Restart service",
@@ -402,7 +402,7 @@ class Omnitron extends Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "configure",
         group: "services",
         help: "Configure service",
@@ -455,7 +455,7 @@ class Omnitron extends Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "services",
         group: "services",
         help: "Show services",
@@ -543,7 +543,7 @@ class Omnitron extends Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "peers",
         group: "inspect",
         help: "Show connected peers"
@@ -602,7 +602,7 @@ class Omnitron extends Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "contexts",
         group: "inspect",
         help: "Show attached contexts"
@@ -646,7 +646,7 @@ class Omnitron extends Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: ["subsystems", "ss"],
         group: "subsystems",
         help: "Show omnitron subsystems"
@@ -698,7 +698,7 @@ class Omnitron extends Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "load",
         group: "subsystems",
         help: "Load subsystem",
@@ -762,7 +762,7 @@ class Omnitron extends Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "unload",
         group: "subsystems",
         help: "Unload subsystem",

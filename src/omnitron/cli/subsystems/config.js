@@ -1,13 +1,13 @@
 const {
     app: {
         Subsystem,
-        DCliCommand
+        CommandMeta
     },
     cli: { kit }
 } = adone;
 
 export default class Config extends Subsystem {
-    @DCliCommand({
+    @CommandMeta({
         name: "set",
         help: "Set property value",
         arguments: [
@@ -47,7 +47,7 @@ export default class Config extends Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "get",
         help: "Get property value",
         arguments: [
@@ -83,7 +83,7 @@ export default class Config extends Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: ["delete", "del"],
         help: "Delete property",
         arguments: [
@@ -117,7 +117,7 @@ export default class Config extends Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "all",
         help: "Show whole configuration"
     })
@@ -142,7 +142,7 @@ export default class Config extends Subsystem {
         }
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "edit",
         help: "Open config in editor",
         options: [

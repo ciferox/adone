@@ -3,7 +3,7 @@ const {
 } = adone;
 
 const {
-    DCliCommand
+    CommandMeta
 } = app;
 
 class App extends app.Application {
@@ -13,14 +13,14 @@ class App extends app.Application {
         });
     }
 
-    @DCliCommand()
+    @CommandMeta()
     error() {
         setTimeout(() => {
             throw new Error("hello");
         }, 500);
     }
 
-    @DCliCommand()
+    @CommandMeta()
     loop() {
         console.log(`kill -12 ${process.pid}`);
         for ( ; ; ) {

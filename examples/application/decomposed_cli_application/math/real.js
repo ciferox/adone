@@ -5,7 +5,7 @@ const {
 } = adone;
 
 const {
-    DCliCommand
+    CommandMeta
 } = app;
 
 const parseNumber = (str) => {
@@ -16,7 +16,7 @@ const parseNumber = (str) => {
 };
 
 export default class Complex extends app.Subsystem {
-    @DCliCommand({
+    @CommandMeta({
         name: "add",
         description: "Adds two real numbers",
         arguments: [{
@@ -33,7 +33,7 @@ export default class Complex extends app.Subsystem {
         console.log(args.get("a") + args.get("b"));
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "sub",
         description: "Subtracts two real numbers",
         arguments: [{
@@ -50,7 +50,7 @@ export default class Complex extends app.Subsystem {
         console.log(args.get("a") - args.get("b"));
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "mul",
         description: "Multiplies two real numbers",
         arguments: [{
@@ -67,7 +67,7 @@ export default class Complex extends app.Subsystem {
         console.log(args.get("a") * args.get("b"));
     }
 
-    @DCliCommand({
+    @CommandMeta({
         name: "div",
         description: "Divides two real numbers",
         arguments: [{
