@@ -4,11 +4,15 @@ const {
     lodash: _
 } = adone;
 
+const NODE_MIRROR = process.env.NVM_NODEJS_ORG_MIRROR || "https://nodejs.org/dist";
+const IOJS_MIRROR = process.env.NVM_IOJS_ORG_MIRROR || "https://iojs.org/dist";
+const ELECTRON_MIRROR = process.env.ELECTRON_MIRROR || "https://atom.io/download/atom-shell";
+
 const runtimePaths = {
     node(targetOptions) {
         if (semver.lt(targetOptions.runtimeVersion, "4.0.0")) {
             return {
-                externalPath: `https://nodejs.org/dist/v${targetOptions.runtimeVersion}/`,
+                externalPath: `${NODE_MIRROR}/v${targetOptions.runtimeVersion}/`,
                 winLibs: [{
                     dir: targetOptions.isX64 ? "x64" : "",
                     name: `${targetOptions.runtime}.lib`
@@ -19,7 +23,7 @@ const runtimePaths = {
         }
 
         return {
-            externalPath: `https://nodejs.org/dist/v${targetOptions.runtimeVersion}/`,
+            externalPath: `${NODE_MIRROR}/v${targetOptions.runtimeVersion}/`,
             winLibs: [{
                 dir: targetOptions.isX64 ? "win-x64" : "win-x86",
                 name: `${targetOptions.runtime}.lib`
@@ -31,7 +35,7 @@ const runtimePaths = {
     },
     iojs(targetOptions) {
         return {
-            externalPath: `https://iojs.org/dist/v${targetOptions.runtimeVersion}/`,
+            externalPath: `${IOJS_MIRROR}/v${targetOptions.runtimeVersion}/`,
             winLibs: [{
                 dir: targetOptions.isX64 ? "win-x64" : "win-x86",
                 name: `${targetOptions.runtime}.lib`
@@ -70,13 +74,13 @@ const runtimePaths = {
     },
     electron(targetOptions) {
         return {
-            externalPath: `https://atom.io/download/atom-shell/v${targetOptions.runtimeVersion}/`,
+            externalPath: `${ELECTRON_MIRROR}/v${targetOptions.runtimeVersion}/`,
             winLibs: [{
                 dir: targetOptions.isX64 ? "x64" : "",
                 name: "node.lib"
             }],
             tarPath: `${"node" + "-v"}${targetOptions.runtimeVersion}.tar.gz`,
-            headerOnly: false
+            headerOnly: semver.gte(targetOptions.runtimeVersion, "4.0.0-alpha")
         };
     },
     get(targetOptions) {

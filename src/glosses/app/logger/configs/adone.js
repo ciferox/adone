@@ -33,15 +33,20 @@ export default {
         icon: unicode.symbol.info,
         color: "green"
     },
-    debug: {
+    http: {
         id: 5,
-        icon: unicode.approx("⬤"),
-        color: "blue"
+        icon: unicode.approx("🕸"),
+        color: "green"
     },
     verbose: {
         id: 6,
-        icon: unicode.approx("⬤"),
+        icon: unicode.symbol.star,
         color: "cyan"
+    },
+    debug: {
+        id: 7,
+        icon: unicode.approx("⬤"),
+        color: "blue"
     },
     success: {
         id: -1,

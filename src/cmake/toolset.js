@@ -102,8 +102,6 @@ export default class Toolset {
         }
 
         // 3: Flags
-        this._setupGNUStd(install);
-
         if (environment.isOSX) {
             if (install) {
                 this.log.verbose("TOOL", "Setting default OSX compiler flags.");
@@ -113,7 +111,6 @@ export default class Toolset {
             this.compilerFlags.push("-D_LARGEFILE_SOURCE");
             this.compilerFlags.push("-D_FILE_OFFSET_BITS=64");
             this.compilerFlags.push("-DBUILDING_NODE_EXTENSION");
-            this.compilerFlags.push("-w");
             this.linkerFlags.push("-undefined dynamic_lookup");
         }
 
@@ -153,22 +150,6 @@ export default class Toolset {
             }
         } else {
             throw new Error("There is no Visual C++ compiler installed. Install Visual C++ Build Toolset or Visual Studio.");
-        }
-    }
-
-    _setupGNUStd(install) {
-        if (this.options.std) {
-            if (this.options.std !== "c++98") {
-                if (install) {
-                    this.log.info("TOOL", `Using ${this.options.std} compiler standard.`);
-                }
-                this.compilerFlags.push(`-std=${this.options.std}`);
-            }
-        } else {
-            if (install) {
-                this.log.info("TOOL", "Using c++11 compiler standard.");
-            }
-            this.compilerFlags.push("-std=c++11");
         }
     }
 

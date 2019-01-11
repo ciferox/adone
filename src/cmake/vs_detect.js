@@ -1,11 +1,28 @@
 const {
-    system: { process: { execStdout } }
+    noop,
+    system: { process: { execStdout } },
+    std: { path }
 } = adone;
 
 export const isInstalled = async (version) => {
-    return (await this._isVSInstalled(version))
-        || (await this._isVSvNextInstalled(version))
-        || (await this._isBuildToolsInstalled(version));
+    const vsInstalled = (await this._isVSInstalled(version));
+    const vsvNextInstalled = (await this._isVSvNextInstalled(version));
+    const buildToolsInstalled = (await this._isBuildToolsInstalled(version));
+    const foundByVSWhere = (await this._isFoundByVSWhere(version));
+
+    return vsInstalled || vsvNextInstalled || buildToolsInstalled || foundByVSWhere;
+};
+
+export const _isFoundByVSWhere = async (version) => {
+    const mainVer = version.split(".")[0];
+    const command = path.resolve("vswhere.exe");
+    try {
+        const stdout = await execStdout(command, ["-version", version]);
+        return stdout && stdout.indexOf(`installationVersion: ${mainVer}`) > 0;
+    } catch (e) {
+        noop(e);
+    }
+    return false;
 };
 
 export const _isBuildToolsInstalled = async (version) => {

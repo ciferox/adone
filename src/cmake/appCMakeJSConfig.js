@@ -6,20 +6,20 @@ const {
 
 const getConfig = function (lookPath, log) {
     const pjsonPath = path.join(lookPath, "package.json");
-    log.silly("CFG", `Looking for package.json in: '${pjsonPath}'.`);
+    log.debug("CFG", `Looking for package.json in: '${pjsonPath}'.`);
     try {
         const json = require(pjsonPath);
-        log.silly("CFG", `Loaded:\n${JSON.stringify(json)}`);
+        log.debug("CFG", `Loaded:\n${JSON.stringify(json)}`);
         if (_.isPlainObject(json) && _.isPlainObject(json["cmake-js"])) {
-            log.silly("CFG", "Config found.");
+            log.debug("CFG", "Config found.");
             return json["cmake-js"];
         }
 
-        log.silly("CFG", "Config not found.");
+        log.debug("CFG", "Config not found.");
         return null;
 
     } catch (e) {
-        log.silly("CFG", "'package.json' not found.");
+        log.debug("CFG", "'package.json' not found.");
         return null;
     }
 };
@@ -35,21 +35,21 @@ export default function (projectPath, log) {
             lastConfig = currConfig;
         }
         try {
-            log.silly("CFG", "Looking for parent path.");
+            log.debug("CFG", "Looking for parent path.");
             const lastPath = currPath;
             currPath = path.normalize(path.join(currPath, ".."));
             if (lastPath === currPath) {
                 currPath = null; // root
             }
             if (currPath) {
-                log.silly("CFG", `Parent path: '${currPath}'.`);
+                log.debug("CFG", `Parent path: '${currPath}'.`);
             }
         } catch (e) {
-            log.silly("CFG", `Exception:\n${e.stack}`);
+            log.debug("CFG", `Exception:\n${e.stack}`);
             break;
         }
         if (is.null(currPath)) {
-            log.silly("CFG", "Parent path with package.json file doesn't exists. Done.");
+            log.debug("CFG", "Parent path with package.json file doesn't exists. Done.");
             break;
         }
     }

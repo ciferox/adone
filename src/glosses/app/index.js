@@ -111,8 +111,7 @@ adone.lazify({
     AppHelper: "./app_helper",
     logger: "./logger",
     report: "./report",
-    lockfile: "./lockfile",
-    signale: "./signale"
+    lockfile: "./lockfile"
 }, adone.asNamespace(exports), require);
 
 adone.definePrivate({
@@ -185,7 +184,6 @@ const _bootstrapApp = async (app, {
             const appHelper = new AppHelper(app);
             app.helper = appHelper;
             
-            // const [command, match, rest] = await app._configure(ignoreArgs);
             app._setErrorScope(true);
 
             const sysMeta = reflect.getMetadata(SUBSYSTEM_ANNOTATION, app.constructor);

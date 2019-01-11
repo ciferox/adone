@@ -167,10 +167,9 @@ export default class CMake {
 
         // Load NPM config
         for (const key of _.keys(npmConfigData)) {
-            const ukey = key.toUpperCase();
-            if (_.startsWith(ukey, "CMAKE_")) {
+            if (_.startsWith(key, "cmake_")) {
                 const s = {};
-                const sk = ukey.substr(6);
+                const sk = key.substr(6);
                 if (sk) {
                     s[sk] = npmConfigData[key];
                     if (s[sk]) {
@@ -293,7 +292,10 @@ export default class CMake {
                     on = true;
                 }
             });
+        } else {
+            throw new Error("CMake is not installed. Install CMake.");
         }
+
         return gens;
     }
 }

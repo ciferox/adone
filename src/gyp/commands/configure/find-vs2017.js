@@ -10,12 +10,12 @@ const findVS2017 = function (callback) {
         "-Command", `&{Add-Type -Path '${csFile}';` +
         "[VisualStudioConfiguration.Main]::Query()}"];
 
-    log.silly("find vs2017", "Running", ps, psArgs);
+    log.debug("find vs2017", "Running", ps, psArgs);
     const child = execFile(ps, psArgs, { encoding: "utf8" },
         (err, stdout, stderr) => {
-            log.silly("find vs2017", "PS err:", err);
-            log.silly("find vs2017", "PS stdout:", stdout);
-            log.silly("find vs2017", "PS stderr:", stderr);
+            log.debug("find vs2017", "PS err:", err);
+            log.debug("find vs2017", "PS stdout:", stdout);
+            log.debug("find vs2017", "PS stderr:", stderr);
 
             if (err) {
                 return callback(new Error("Could not use PowerShell to find VS2017"));
@@ -25,10 +25,10 @@ const findVS2017 = function (callback) {
             try {
                 vsSetup = JSON.parse(stdout);
             } catch (e) {
-                log.silly("find vs2017", e);
+                log.debug("find vs2017", e);
                 return callback(new Error("Could not use PowerShell to find VS2017"));
             }
-            log.silly("find vs2017", "vsSetup:", vsSetup);
+            log.debug("find vs2017", "vsSetup:", vsSetup);
 
             if (vsSetup && vsSetup.log) {
                 log.verbose("find vs2017", vsSetup.log.trimRight());

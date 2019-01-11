@@ -1,7 +1,7 @@
 <div align="center">
   <a href="https://adone.io/dist"><img src="https://adone.io/logo.svg" width="200px"></a>
   <h1>ADONE</h1>
-  <p><i>The JavaScript generalized core for building Cyber Fractal Systems Infrastructure (CFSI)</i></p>
+  <p><i>The generalized core for building of Cyber Fractal Systems Infrastructures ~ CFSI</i></p>
 </div>
 
 **ADONE** embodies most of the Agile and DevOps ideas, and can be used in all cycles of developing Node.js-projects and not only (design, development, testing, automation, balancing, monitoring, maintenance, etc.).

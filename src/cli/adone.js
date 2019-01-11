@@ -65,6 +65,12 @@ const baseSubsystem = (name) => std.path.join(__dirname, "..", "lib", "cli", "su
             group: "dev",
             description: "Test framework",
             subsystem: baseSubsystem("shani")
+        },
+        {
+            name: "cmake",
+            group: "dev",
+            description: "CMake build system",
+            subsystem: baseSubsystem("cmake")
         }
     ]
 })
