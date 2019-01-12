@@ -268,12 +268,12 @@ export default class Configuration extends vault.Valuable {
         }
 
         // Initialize validators
-        const validator = new adone.schema.Validator({
-            coerceTypes: true,
-            useDefaults: true
-        });
-        this.validateGate = validator.compile(GATE_SCHEMA);
-        this.validateNetron = validator.compile(NETRON_SCHEMA);
+        // const validator = new adone.schema.Validator({
+        //     coerceTypes: true,
+        //     useDefaults: true
+        // });
+        // this.validateGate = validator.compile(GATE_SCHEMA);
+        // this.validateNetron = validator.compile(NETRON_SCHEMA);
 
         // Cache some values
         this.hosts = await this.get("hosts");

@@ -3,6 +3,10 @@ const {
     runtime
 } = adone;
 
+const {
+    logger
+} = runtime;
+
 const NAME = "Netron subsystem";
 
 @app.SubsystemMeta({
@@ -15,17 +19,17 @@ export default class extends app.Subsystem {
         runtime.netron.options.proxyContexts = true;
 
         runtime.netron.on("peer:connect", (peer) => {
-            adone.logInfo(`Peer '${peer.id}' connected`);
+            logger.info(`Peer '${peer.id}' connected`);
         }).on("peer:disconnect", (peer) => {
-            adone.logInfo(`Peer '${peer.id}' disconnected`);
+            logger.info(`Peer '${peer.id}' disconnected`);
         });
         
-        adone.logInfo(`${NAME} configured`);
+        logger.info(`${NAME} configured`);
     }
 
     async initialize() {
         await runtime.netron.attachContext(this.root, "omnitron");
-        adone.logInfo("Omnitron context attached");
+        logger.info("Omnitron context attached");
 
         this.networks = await this.root.db.getConfiguration("networks");
         const networks = await this.networks.entries();
@@ -37,33 +41,33 @@ export default class extends app.Subsystem {
 
         for (const [netId, netConfig] of Object.entries(networks)) {
             runtime.netron.createNetCore(netId, netConfig);
-            adone.logInfo(`Netcore '${netId}' created`);
+            logger.info(`Netcore '${netId}' created`);
         }
 
         await runtime.netron.start();
 
-        adone.logInfo(`${NAME} initialized`);
+        logger.info(`${NAME} initialized`);
     }
 
     async uninitialize() {
         if (runtime.netron.hasContext("omnitron")) {
             await runtime.netron.detachContext("omnitron");
-            adone.logInfo("Omnitron context detached");
+            logger.info("Omnitron context detached");
         }
 
         await runtime.netron.stop();
 
-        adone.logInfo(`${NAME} uninitialized`);
+        logger.info(`${NAME} uninitialized`);
     }
 
     async attachContext(instance, ctxId) {
         await runtime.netron.attachContext(instance, ctxId);
-        adone.logInfo(`Attached context '${ctxId}'`);
+        logger.info(`Attached context '${ctxId}'`);
     }
 
     async detachContext(ctxId, releaseOriginated) {
         await runtime.netron.detachContext(ctxId, releaseOriginated);
-        adone.logInfo(`Detached context ${ctxId}`);
+        logger.info(`Detached context ${ctxId}`);
     }
 }
 
@@ -87,7 +91,7 @@ export default class extends app.Subsystem {
 //             }
 //         }
 
-//         adone.logInfo("Gates subsystem initialized");
+//         logger.info("Gates subsystem initialized");
 //     }
 
 //     async uninitialize() {
@@ -101,7 +105,7 @@ export default class extends app.Subsystem {
 //             adone.logError(err);
 //         }
 
-//         adone.logInfo("Gates subsystem uninitialized");
+//         logger.info("Gates subsystem uninitialized");
 //     }
 
 //     addGate(gate) {

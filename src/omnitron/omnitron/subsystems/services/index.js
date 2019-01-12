@@ -3,8 +3,13 @@ const {
     error,
     is,
     fs,
-    omnitron: { STATUS }
+    omnitron: { STATUS },
+    runtime
 } = adone;
+
+const {
+    logger
+} = runtime;
 
 const api = adone.lazify({
     ServiceMaintainer: "./service_maintainer"
@@ -26,7 +31,7 @@ export default class Services extends app.Subsystem {
     }
 
     async configure() {
-        adone.logInfo("Services subsystem configured");
+        logger.info("Services subsystem configured");
     }
 
     async initialize() {
@@ -59,7 +64,7 @@ export default class Services extends app.Subsystem {
             }
         }
 
-        adone.logInfo("Services subsystem initialized");
+        logger.info("Services subsystem initialized");
     }
 
     async uninitialize() {
@@ -72,7 +77,7 @@ export default class Services extends app.Subsystem {
 
         this.groupMaintainers.clear();
 
-        adone.logInfo("Services subsystem uninitialized");
+        logger.info("Services subsystem uninitialized");
     }
 
     async enumerate({ name, status } = {}) {
@@ -83,8 +88,8 @@ export default class Services extends app.Subsystem {
 
         let existingNames;
 
-        if (await fs.exists(adone.runtime.config.omnitron.SERVICES_PATH)) {
-            existingNames = await fs.readdir(adone.runtime.config.omnitron.SERVICES_PATH);
+        if (await fs.exists(runtime.config.omnitron.SERVICES_PATH)) {
+            existingNames = await fs.readdir(runtime.config.omnitron.SERVICES_PATH);
         } else {
             existingNames = [];
         }
@@ -320,7 +325,7 @@ export default class Services extends app.Subsystem {
     //             serviceConfig.status = ACTIVE;
     //         }
     //         this._.uninitOrder.unshift(serviceName);
-    //         adone.logInfo(`Service '${serviceName}' attached`);
+    //         logger.info(`Service '${serviceName}' attached`);
     //     }
     // }
 
@@ -336,7 +341,7 @@ export default class Services extends app.Subsystem {
     //         }
     //         service.contexts = [];
     //         service.config.status = ENABLED;
-    //         adone.logInfo(`Service '${service.name}' detached`);
+    //         logger.info(`Service '${service.name}' detached`);
     //     }
     // }
 

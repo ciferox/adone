@@ -8,7 +8,7 @@ const {
 
 class App extends app.Application {
     configure() {
-        this.enableReport({
+        app.configureReport({
             directory: adone.std.os.tmpdir()
         });
     }

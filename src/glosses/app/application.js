@@ -13,7 +13,6 @@ const {
     STATE
 } = app;
 
-const REPORT = Symbol();
 const ERROR_SCOPE = Symbol.for("adone.app.Application#errorScope");
 const HANDLERS = Symbol();
 const EXITING = Symbol();
@@ -29,7 +28,6 @@ export default class Application extends app.Subsystem {
         this[IS_MAIN] = false;
         this[HANDLERS] = null;
         this[ERROR_SCOPE] = false;
-        this[REPORT] = null;
         this[INTERACTIVE] = interactive;
         this[EXIT_SIGNALS] = null;
 
@@ -43,31 +41,6 @@ export default class Application extends app.Subsystem {
 
     get isInteractiveModeEnabled() {
         return this[INTERACTIVE];
-    }
-
-    enableReport({
-        events = process.env.ADONE_REPORT_EVENTS || "exception+fatalerror+signal+apicall",
-        signal = process.env.ADONE_REPORT_SIGNAL,
-        filename = process.env.ADONE_REPORT_FILENAME,
-        directory = process.env.ADONE_REPORT_DIRECTORY
-    } = {}) {
-        this[REPORT] = app.report;
-        if (events) {
-            this[REPORT].setEvents(events);
-        }
-        if (signal) {
-            this[REPORT].setSignal(signal);
-        }
-        if (filename) {
-            this[REPORT].setFileName(filename);
-        }
-        if (directory) {
-            this[REPORT].setDirectory(directory);
-        }
-    }
-
-    reportEnabled() {
-        return !is.null(this[REPORT]);
     }
 
     main() {

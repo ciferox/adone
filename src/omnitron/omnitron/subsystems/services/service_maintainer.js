@@ -6,8 +6,13 @@ const {
     netron: { Context, Public },
     omnitron: { STATUS },
     std,
-    error
+    error,
+    runtime
 } = adone;
+
+const {
+    logger
+} = runtime;
 
 const SERVICE_APP_PATH = std.path.join(__dirname, "service_application.js");
 
@@ -59,16 +64,16 @@ export default class ServiceMaintainer extends AsyncEmitter {
         switch (data.status) {
             case app.STATE.INITIALIZED:
                 await this.setServiceStatus(data.name, STATUS.ACTIVE);
-                adone.logInfo(`Service '${data.name}' started`);
+                logger.info(`Service '${data.name}' started`);
                 break;
             case app.STATE.UNINITIALIZED:
                 await this.setServiceStatus(data.name, STATUS.INACTIVE);
-                adone.logInfo(`Service '${data.name}' successfully stopped`);
+                logger.info(`Service '${data.name}' successfully stopped`);
                 break;
             case app.STATE.FAILED:
                 await this.setServiceStatus(data.name, STATUS.INACTIVE);
-                adone.logError(`Service '${data.name}' stopped unsuccessfully`);
-                adone.logError(data.error);
+                logger.error(`Service '${data.name}' stopped unsuccessfully`);
+                logger.error(data.error);
                 break;
         }
 
@@ -122,9 +127,9 @@ export default class ServiceMaintainer extends AsyncEmitter {
         } else if (serviceData.status === STATUS.INACTIVE) {
             const onError = async (reject) => {
                 await this.setServiceStatus(name, STATUS.INACTIVE);
-                adone.logError(`Unsuccessful attempt to start service '${serviceData.name}':`);
+                logger.error(`Unsuccessful attempt to start service '${serviceData.name}':`);
                 const err = new error.Timeout("Timeout occured");
-                adone.logError(err);
+                logger.error(err);
                 reject(err);
             };
 
@@ -170,8 +175,8 @@ export default class ServiceMaintainer extends AsyncEmitter {
                                 err = new error.IllegalState(`Service status: ${data.status}`);
                         }
 
-                        adone.logError(`Unsuccessful attempt to start service '${serviceData.name}':`);
-                        adone.logError(err);
+                        logger.error(`Unsuccessful attempt to start service '${serviceData.name}':`);
+                        logger.error(err);
                         reject(err);
                         return true;
                     },
@@ -208,17 +213,17 @@ export default class ServiceMaintainer extends AsyncEmitter {
                             default:
                                 err = new error.IllegalState(`Service status: ${result.status}`);
                         }
-                        adone.logError(`Unsuccessful attempt to stop service '${serviceData.name}':`);
-                        adone.logError(err);
+                        logger.error(`Unsuccessful attempt to stop service '${serviceData.name}':`);
+                        logger.error(err);
                         reject(err);
                         return true;
                     },
                     async () => {
                         // Need additional verification
                         await this.setServiceStatus(name, STATUS.INACTIVE); // ???
-                        adone.logError(`Unsuccessful attempt to stop service '${serviceData.name}':`);
+                        logger.error(`Unsuccessful attempt to stop service '${serviceData.name}':`);
                         const err = new error.Timeout("Timeout occured");
-                        adone.logError(err);
+                        logger.error(err);
                         reject(err);
                     },
                     this.manager.options.stopTimeout
@@ -239,8 +244,8 @@ export default class ServiceMaintainer extends AsyncEmitter {
         if (this.procStatus === PROCESS_STATUS.NULL) {
             this.procStatus = PROCESS_STATUS.SPAWNING;
             return new Promise((resolve, reject) => {
-                const stdout = std.fs.openSync(std.path.join(adone.runtime.config.omnitron.LOGS_PATH, `${this.group}.log`), "a");
-                const stderr = std.fs.openSync(std.path.join(adone.runtime.config.omnitron.LOGS_PATH, `${this.group}-err.log`), "a");
+                const stdout = std.fs.openSync(std.path.join(runtime.config.omnitron.LOGS_PATH, `${this.group}.log`), "a");
+                const stderr = std.fs.openSync(std.path.join(runtime.config.omnitron.LOGS_PATH, `${this.group}-err.log`), "a");
 
                 const child = std.child_process.spawn(process.execPath, [SERVICE_APP_PATH], {
                     detached: true,

@@ -9,6 +9,10 @@ const {
     runtime
 } = adone;
 
+const {
+    logger
+} = runtime;
+
 const previousUsage = process.cpuUsage();
 
 const CORE_GROUP = "core";
@@ -19,8 +23,10 @@ export default
 })
 class Omnitron extends app.Application {
     async configure() {
-        this.enableReport({
-            directory: adone.runtime.config.omnitron.LOGS_PATH
+        this._configureLogger();
+
+        app.configureReport({
+            directory: runtime.config.omnitron.LOGS_PATH
         });
 
         await this.addSubsystemsFrom(std.path.join(__dirname, "subsystems"), {
@@ -34,7 +40,7 @@ class Omnitron extends app.Application {
             process.on("SIGILL", () => {
                 if (is.function(global.gc)) {
                     global.gc();
-                    adone.logInfo("Forced garbage collector");
+                    logger.info("Forced garbage collector");
                 }
             });
         }
@@ -52,7 +58,7 @@ class Omnitron extends app.Application {
             });
         }
 
-        adone.logInfo(`Omnitron v${adone.package.version} started`);
+        logger.info(`Omnitron v${adone.package.version} started`);
     }
 
     async uninitialize() {
@@ -65,12 +71,12 @@ class Omnitron extends app.Application {
             ignoreErrors: true
         });
 
-        adone.logInfo("Omnitron stopped");
+        logger.info("Omnitron stopped");
     }
 
     async createPidFile() {
         try {
-            await fs.writeFile(adone.runtime.config.omnitron.PIDFILE_PATH, process.pid.toString());
+            await fs.writeFile(runtime.config.omnitron.PIDFILE_PATH, process.pid.toString());
         } catch (err) {
             adone.logError(err.message);
         }
@@ -78,17 +84,33 @@ class Omnitron extends app.Application {
 
     async deletePidFile() {
         try {
-            await fs.rm(adone.runtime.config.omnitron.PIDFILE_PATH);
+            await fs.rm(runtime.config.omnitron.PIDFILE_PATH);
         } catch (err) {
             adone.logError(err.message);
         }
     }
 
+    _configureLogger() {
+        const {
+            app: { logger: { format } }
+        } = adone;
+
+        logger.configure({
+            level: "info",
+            format: format.printf((info) => {
+                return `${info.timestamp} [${info.level}] ${info.message}`;
+            }),
+            transports: [
+                new adone.app.logger.transport.Console()
+            ]
+        });
+    }
+
     _signalExit(sigName) {
         if (is.string(sigName)) {
-            adone.logInfo(`Killed by signal '${sigName}'`);
+            logger.info(`Killed by signal '${sigName}'`);
         } else {
-            adone.logInfo("Killed using api");
+            logger.info("Killed using api");
         }
         return super._signalExit(sigName);
     }
@@ -165,8 +187,8 @@ class Omnitron extends app.Application {
 
         if (realm) {
             result.realm = {
-                id: adone.runtime.realm.identity.id,
-                config: adone.util.omit(adone.runtime.config, "identity")
+                id: runtime.realm.identity.id,
+                config: adone.util.omit(runtime.config, "identity")
             };
         }
 
@@ -175,7 +197,7 @@ class Omnitron extends app.Application {
         }
 
         if (netron) {
-            result.netron = adone.util.omit(adone.runtime.netron.options, (key, val) => is.function(val));
+            result.netron = adone.util.omit(runtime.netron.options, (key, val) => is.function(val));
         }
 
         return result;
@@ -393,6 +415,6 @@ if (require.main === module) {
         process.exit(app.EXIT_ERROR);
     }
     // Declare omnitron environment
-    adone.runtime.isOmnitron = true;
+    runtime.isOmnitron = true;
     app.run(Omnitron);
 }

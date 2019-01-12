@@ -1,24 +1,25 @@
 const {
     app,
-    omnitron
+    omnitron,
+    runtime: { logger }
 } = adone;
 
 const NAME = "Database subsystem";
 
 export default class extends app.Subsystem {
     async configure() {
-        adone.logInfo(`${NAME} configured`);
+        logger.info(`${NAME} configured`);
     }
 
     async initialize() {
         this.root.db = await omnitron.DB.open();
 
-        adone.logInfo(`${NAME} initialized`);
+        logger.info(`${NAME} initialized`);
     }
 
     async uninitialize() {
         await omnitron.DB.close();
 
-        adone.logInfo(`${NAME} uninitialized`);
+        logger.info(`${NAME} uninitialized`);
     }
 }

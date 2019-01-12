@@ -118,6 +118,29 @@ adone.definePrivate({
     locks: {} // used by adone.app.lockfile
 }, exports);
 
+export const configureReport = ({
+    events = process.env.ADONE_REPORT_EVENTS || "exception+fatalerror+signal+apicall",
+    signal = process.env.ADONE_REPORT_SIGNAL,
+    filename = process.env.ADONE_REPORT_FILENAME,
+    directory = process.env.ADONE_REPORT_DIRECTORY
+} = {}) => {
+    const {
+        app: { report }
+    } = adone;
+    if (events) {
+        report.setEvents(events);
+    }
+    if (signal) {
+        report.setSignal(signal);
+    }
+    if (filename) {
+        report.setFileName(filename);
+    }
+    if (directory) {
+        report.setDirectory(directory);
+    }
+};
+
 const INTERNAL = Symbol.for("adone.app.Application#internal");
 
 const _bootstrapApp = async (app, {
@@ -132,10 +155,9 @@ const _bootstrapApp = async (app, {
         }
         adone.runtime.app = app;
 
-        // if (process.env.ADONE_REPORT) {
-        //     this.enableReport();
-        // }
-
+        if (process.env.ADONE_ENABLE_REPORT) {
+            adone.app.configureReport();
+        }
 
         // From Node.js docs: SIGTERM and SIGINT have default handlers on non-Windows platforms that resets
         // the terminal mode before exiting with code 128 + signal number. If one of these signals has a
