@@ -67,7 +67,7 @@ export default class Dispatcher extends Subsystem {
     // }
 
     isConnected() {
-        return is.netron2Peer(this.peer);
+        return is.netronPeer(this.peer);
     }
 
     // async connect(gate = null) {

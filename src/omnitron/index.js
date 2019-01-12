@@ -24,7 +24,7 @@ export const STATUSES = [
 ];
 
 adone.definePredicates({
-    omnitron2Service: "OMNITRON2_SERVICE"
+    omnitronService: "OMNITRON_SERVICE"
 });
 
 const __ = lazify({

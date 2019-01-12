@@ -46,14 +46,14 @@ export default (testInterface) => {
 
             it("_getContextDefinition() should return definition of attached context owned by netron instance", () => {
                 const def = peer._getContextDefinition("a");
-                assert.ok(is.netron2Definition(def));
+                assert.ok(is.netronDefinition(def));
                 assert.instanceOf(def, adone.netron.Definition);
                 assert.equal(def.name, "A");
             });
 
             it("OwnPeer#_getContextDefinition() should return definition of attached context of associated netron", () => {
                 const def = peer._getContextDefinition("a");
-                assert.ok(is.netron2Definition(def));
+                assert.ok(is.netronDefinition(def));
                 assert.instanceOf(def, adone.netron.Definition);
                 assert.equal(def.name, "A");
             });
@@ -187,7 +187,7 @@ export default (testInterface) => {
                 it("should return interface for valid context", () => {
                     const def = peer._getContextDefinition("a");
                     const iface = peer._queryInterfaceByDefinition(def.id);
-                    assert.true(is.netron2Interface(iface));
+                    assert.true(is.netronInterface(iface));
                     assert.strictEqual(iface[__.I_DEFINITION_SYMBOL].id, def.id);
                 });
 
@@ -196,7 +196,7 @@ export default (testInterface) => {
                     const remotePeer = await netron2.connect("default", netron.getNetCore("default").peerInfo);
                     const def = remotePeer._getContextDefinition("a");
                     const iface = remotePeer._queryInterfaceByDefinition(def.id);
-                    assert.true(is.netron2Interface(iface));
+                    assert.true(is.netronInterface(iface));
                     assert.strictEqual(iface[__.I_DEFINITION_SYMBOL].id, def.id);
                 });
 
@@ -210,7 +210,7 @@ export default (testInterface) => {
                 await promise.delay(500);
 
                 const iA = peer.queryInterface("a");
-                assert.true(is.netron2Interface(iA));
+                assert.true(is.netronInterface(iA));
                 assert.true(peer.interfaces.has(iA[__.I_DEFINITION_SYMBOL].id));
             });
 
@@ -222,7 +222,7 @@ export default (testInterface) => {
                 await promise.delay(500);
 
                 const iA = remotePeer.queryInterface("a");
-                assert.true(is.netron2Interface(iA));
+                assert.true(is.netronInterface(iA));
                 assert.true(remotePeer.interfaces.has(iA[__.I_DEFINITION_SYMBOL].id));
             });
 
@@ -235,7 +235,7 @@ export default (testInterface) => {
                 await promise.delay(500);
 
                 const iA = peer.queryInterface("a");
-                assert.true(is.netron2Interface(iA));
+                assert.true(is.netronInterface(iA));
                 const defId = iA[__.I_DEFINITION_SYMBOL].id;
                 assert.true(peer.interfaces.has(defId));
 
@@ -251,7 +251,7 @@ export default (testInterface) => {
                 await promise.delay(500);
 
                 const iA = remotePeer.queryInterface("a");
-                assert.true(is.netron2Interface(iA));
+                assert.true(is.netronInterface(iA));
                 const defId = iA[__.I_DEFINITION_SYMBOL].id;
                 assert.true(remotePeer.interfaces.has(defId));
 
@@ -342,7 +342,7 @@ export default (testInterface) => {
                     remotePeer = await netron2.connect("default", netron.getNetCore("default").peerInfo);
 
                     iCt = remotePeer.queryInterface("ct");
-                    assert.true(is.netron2Interface(iCt));
+                    assert.true(is.netronInterface(iCt));
                 });
 
                 describe("public properties", () => {
@@ -370,7 +370,7 @@ export default (testInterface) => {
                 await promise.delay(500);
 
                 const iA = peer.queryInterface("a");
-                assert.true(is.netron2Interface(iA));
+                assert.true(is.netronInterface(iA));
                 assert.equal(await iA.propA.get(), "aaa");
 
                 await peer.detachContext("a");
@@ -389,7 +389,7 @@ export default (testInterface) => {
                 const remotePeer = await netron2.connect("default", netron.getNetCore("default").peerInfo);
 
                 const iA = remotePeer.queryInterface("a");
-                assert.true(is.netron2Interface(iA));
+                assert.true(is.netronInterface(iA));
                 assert.equal(await iA.propA.get(), "aaa");
 
                 await peer.detachContext("a");
@@ -405,7 +405,7 @@ export default (testInterface) => {
                 await promise.delay(500);
 
                 const iA = peer.queryInterface("a");
-                assert.true(is.netron2Interface(iA));
+                assert.true(is.netronInterface(iA));
                 assert.equal(await iA.methodA(), "aaa");
 
                 await peer.detachContext("a");
@@ -424,7 +424,7 @@ export default (testInterface) => {
                 const remotePeer = await netron2.connect("default", netron.getNetCore("default").peerInfo);
 
                 const iA = remotePeer.queryInterface("a");
-                assert.true(is.netron2Interface(iA));
+                assert.true(is.netronInterface(iA));
                 assert.equal(await iA.methodA(), "aaa");
 
                 await netron.detachContext("a");
@@ -442,7 +442,7 @@ export default (testInterface) => {
                     await peer.attachContext(storage, "storage");
                     await promise.delay(300);
                     const iStorage = remotePeer.queryInterface("storage");
-                    assert.true(is.netron2Interface(iStorage));
+                    assert.true(is.netronInterface(iStorage));
                     let name = await iStorage.name.get();
                     assert.strictEqual(name, "unknown");
                     await iStorage.name.set("simplestore");

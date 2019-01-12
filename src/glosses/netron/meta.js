@@ -12,7 +12,7 @@ export const contextify = (instance, contextInfo) => {
         throw new error.NotValid("Invalid instance");
     }
 
-    if (is.netron2Context(instance)) {
+    if (is.netronContext(instance)) {
         throw new error.NotValid(`Class '${instance.__proto__.constructor.name}' already declared as netron context`);
     }
 
@@ -422,7 +422,7 @@ export class Reflection {
     }
 
     static from(instance) {
-        if (!is.netron2Context(instance) || is.class(instance)) {
+        if (!is.netronContext(instance) || is.class(instance)) {
             throw new error.NotValid(`'${instance.__proto__.constructor.name}' is not valid instance of netron context`);
         }
 

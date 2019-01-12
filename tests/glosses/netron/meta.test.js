@@ -389,10 +389,10 @@ describe("meta", () => {
             class NonContextableClass {
             }
 
-            assert.true(is.netron2Context(ContextableClass));
-            assert.false(is.netron2Context(NonContextableClass));
-            assert.true(is.netron2Context(new ContextableClass()));
-            assert.false(is.netron2Context(new NonContextableClass()));
+            assert.true(is.netronContext(ContextableClass));
+            assert.false(is.netronContext(NonContextableClass));
+            assert.true(is.netronContext(new ContextableClass()));
+            assert.false(is.netronContext(new NonContextableClass()));
         });
 
         it("Reflectio#getName()", () => {

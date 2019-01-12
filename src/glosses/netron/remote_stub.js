@@ -71,7 +71,7 @@ export default class RemoteStub {
     _processObject(peer, obj) {
         if (is.netronDefinition(obj)) {
             obj.$peer = peer;
-        } else if (is.netron2Definitions(obj)) {
+        } else if (is.netronDefinitions(obj)) {
             for (let i = 0; i < obj.length; i++) {
                 this._processObject(peer, obj.get(i));
             }

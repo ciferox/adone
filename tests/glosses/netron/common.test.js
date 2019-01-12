@@ -20,23 +20,23 @@ describe("common stuff", () => {
             assert.true(is.netron(netron));
         });
 
-        it("is.netron2OwnPeer()", () => {
-            assert.true(is.netron2Peer(netron.peer));
-            assert.true(is.netron2OwnPeer(netron.peer));
+        it("is.netronOwnPeer()", () => {
+            assert.true(is.netronPeer(netron.peer));
+            assert.true(is.netronOwnPeer(netron.peer));
         });
 
-        it("is.netron2RemotePeer()", () => {
+        it("is.netronRemotePeer()", () => {
             const rPeer = new RemotePeer(peerInfo, netron);
-            assert.true(is.netron2Peer(rPeer));
-            assert.true(is.netron2RemotePeer(rPeer));
+            assert.true(is.netronPeer(rPeer));
+            assert.true(is.netronRemotePeer(rPeer));
         });
 
-        it("is.netron2Context()", () => {
-            assert.true(is.netron2Context(new A()));
+        it("is.netronContext()", () => {
+            assert.true(is.netronContext(new A()));
         });
 
-        it("is.netron2Stub()", () => {
-            assert.true(is.netron2Stub(new Stub(netron, Reflection.from(new A()))));
+        it("is.netronStub()", () => {
+            assert.true(is.netronStub(new Stub(netron, Reflection.from(new A()))));
         });
 
         it("is.netronDefinition()", () => {
@@ -44,12 +44,12 @@ describe("common stuff", () => {
             assert.true(is.netronDefinition(stub.definition));
         });
 
-        it("is.netron2Definitions()", () => {
-            assert.true(is.netron2Definitions(new Definitions()));
+        it("is.netronDefinitions()", () => {
+            assert.true(is.netronDefinitions(new Definitions()));
         });
 
-        it("is.netron2Reference()", () => {
-            assert.true(is.netron2Reference(new Reference(1)));
+        it("is.netronReference()", () => {
+            assert.true(is.netronReference(new Reference(1)));
         });
     });
 

@@ -14,7 +14,7 @@ class Test3 {
         if (name !== this.service.name) {
             throw new adone.error.NotValid(`Invalid service name: ${this.service.name}`);
         }
-        if (!is.netron2Peer(this.service.peer)) {
+        if (!is.netronPeer(this.service.peer)) {
             throw new adone.error.NotValid("Invalid service peer");
         }
     }

@@ -18,17 +18,17 @@ export const ACTION = {
 adone.definePredicates({
     netron: "NETRON",
     netronDefinition: "NETRON_DEFINITION",
-    netron2Definitions: "NETRON2_DEFINITIONS",
-    netron2Reference: "NETRON2_REFERENCE",
-    netron2Interface: "NETRON2_INTERFACE",
-    netron2Stub: "NETRON2_STUB",
-    netron2RemoteStub: "NETRON2_REMOTESTUB",
-    netron2Peer: "NETRON2_ABSTRACTPEER",
-    netron2OwnPeer: "NETRON2_OWNPEER",
-    netron2RemotePeer: "NETRON2_REMOTEPEER"
+    netronDefinitions: "NETRON_DEFINITIONS",
+    netronReference: "NETRON_REFERENCE",
+    netronInterface: "NETRON_INTERFACE",
+    netronStub: "NETRON_STUB",
+    netronRemoteStub: "NETRON_REMOTESTUB",
+    netronPeer: "NETRON_ABSTRACTPEER",
+    netronOwnPeer: "NETRON_OWNPEER",
+    netronRemotePeer: "NETRON_REMOTEPEER"
 });
 
-adone.defineCustomPredicate("netron2Context", (obj) => {
+adone.defineCustomPredicate("netronContext", (obj) => {
     let isContex = false;
     let target = undefined;
 
@@ -46,8 +46,8 @@ adone.defineCustomPredicate("netron2Context", (obj) => {
     return isContex;
 });
 
-adone.defineCustomPredicate("netron2IMethod", (ni, name) => (is.function(ni[name]) && (ni.$def.$[name].method === true)));
-adone.defineCustomPredicate("netron2IProperty", (ni, name) => (is.object(ni[name]) && is.function(ni[name].get) && (is.undefined(ni.$def.$[name].method))));
+adone.defineCustomPredicate("netronIMethod", (ni, name) => (is.function(ni[name]) && (ni.$def.$[name].method === true)));
+adone.defineCustomPredicate("netronIProperty", (ni, name) => (is.object(ni[name]) && is.function(ni[name].get) && (is.undefined(ni.$def.$[name].method))));
 
 
 export class Definition {
@@ -97,7 +97,7 @@ export class Definitions {
         let ret;
         for (let i = 0; i < args.length; i++) {
             const arg = args[i];
-            if (!is.netronDefinition(arg) && !is.netron2Context(arg) && !is.netron2Interface(arg)) {
+            if (!is.netronDefinition(arg) && !is.netronContext(arg) && !is.netronInterface(arg)) {
                 throw new error.InvalidArgument(`Invalid argument ${i} (${typeof (arg)})`);
             }
             ret = this._defs.push(arg);
@@ -117,7 +117,7 @@ export class Definitions {
         let ret;
         for (let i = 0; i < args.length; i++) {
             const arg = args[i];
-            if (!is.netronDefinition(arg) && !is.netron2Context(arg) && !is.netron2Interface(arg)) {
+            if (!is.netronDefinition(arg) && !is.netronContext(arg) && !is.netronInterface(arg)) {
                 throw new error.InvalidArgument(`Invalid argument ${i} (${typeof (arg)})`);
             }
             ret = this._defs.unshift(arg);

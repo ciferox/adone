@@ -23,7 +23,7 @@ describe("Netron", () => {
             assert.true(is.taskManager(netron));
             assert.true(is.netron(netron));
 
-            assert.true(is.netron2OwnPeer(netron.peer));
+            assert.true(is.netronOwnPeer(netron.peer));
             assert.equal(netron.options.responseTimeout, 3 * 60000);
             assert.equal(netron.options.proxyContexts, false);
 
@@ -59,22 +59,22 @@ describe("Netron", () => {
         it("should return own peer by PeerInfo instance", () => {
             const peerInfo = PeerInfo.create(peerId);
             const peer1 = netron.getPeer(peerInfo);
-            assert.true(is.netron2Peer(peer1));
+            assert.true(is.netronPeer(peer1));
         });
 
         it("should return own peer by Identity instance", () => {
             const peer1 = netron.getPeer(peerId);
-            assert.true(is.netron2Peer(peer1));
+            assert.true(is.netronPeer(peer1));
         });
 
         it("should return own peer by base58 value", () => {
             const peer1 = netron.getPeer(peerId.asBase58());
-            assert.true(is.netron2Peer(peer1));
+            assert.true(is.netronPeer(peer1));
         });
 
         it("should return own peer by it's instance", () => {
             const peer1 = netron.getPeer(netron.peer);
-            assert.true(is.netron2Peer(peer1));
+            assert.true(is.netronPeer(peer1));
         });
     });
 
@@ -190,7 +190,7 @@ describe("Netron", () => {
                 const a = new A();
                 const defId = netron.attachContext(a, "a");
                 const stub = netron._getStub(defId);
-                assert.true(is.netron2Stub(stub));
+                assert.true(is.netronStub(stub));
                 assert.instanceOf(stub, adone.netron.Stub);
                 assert.strictEqual(stub.instance, a);
             });
@@ -392,7 +392,7 @@ describe("Netron", () => {
             assert.true(remotePeerS.isConnected());
             assert.true(remotePeerC.isConnected());
             const p = remotePeerS.disconnect();
-            assert.true(is.netron2Peer(netronC.getPeer(remotePeerS.info.id.asBase58())));
+            assert.true(is.netronPeer(netronC.getPeer(remotePeerS.info.id.asBase58())));
             await p;
             assert.throws(() => netronC.getPeer(remotePeerS.info.id.asBase58()));
         });

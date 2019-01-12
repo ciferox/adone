@@ -180,7 +180,7 @@ export default class AbstractPeer extends AsyncEmitter {
      * @param {Interface} iInstance 
      */
     releaseInterface(iInstance) {
-        if (!is.netron2Interface(iInstance)) {
+        if (!is.netronInterface(iInstance)) {
             throw new error.NotValid("Object is not a netron interface");
         }
         this.interfaces.delete(iInstance[__.I_DEFINITION_SYMBOL].id);

@@ -354,7 +354,7 @@ export default class RemotePeer extends AbstractPeer {
             }
             return this.netron.interfaceFactory.create(result, this);
 
-        } else if (is.netron2Definitions(result)) {
+        } else if (is.netronDefinitions(result)) {
             for (let i = 0; i < result.length; i++) {
                 result.set(i, this._processResult(ctxDef, result.get(i)));
             }
@@ -393,11 +393,11 @@ export default class RemotePeer extends AbstractPeer {
             this._proxifyContext(obj.id, stub);
             obj.$peer._updateDefinitions({ "": obj });
             return def;
-        } else if (is.netron2Definitions(obj)) {
+        } else if (is.netronDefinitions(obj)) {
             for (let i = 0; i < obj.length; i++) {
                 obj.set(i, this._processObjectRemote(obj.get(i)));
             }
-        } else if (is.netron2Reference(obj)) {
+        } else if (is.netronReference(obj)) {
             if (ctxDef.$proxyDef.id === obj.defId) {
                 return new Reference(ctxDef.id);
             }

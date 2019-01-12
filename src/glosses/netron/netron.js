@@ -462,7 +462,7 @@ export default class Netron extends adone.task.Manager {
         }
 
         let base58Id;
-        if (is.netron2Peer(peerId)) {
+        if (is.netronPeer(peerId)) {
             base58Id = peerId.info.id.asBase58();
             if (this.peers.has(base58Id)) {
                 return peerId;
@@ -488,7 +488,7 @@ export default class Netron extends adone.task.Manager {
     }
 
     getPeerForInterface(iInstance) {
-        if (!is.netron2Interface(iInstance)) {
+        if (!is.netronInterface(iInstance)) {
             throw new error.NotValid("Object is not a netron interface");
         }
 

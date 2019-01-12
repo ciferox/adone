@@ -10,7 +10,7 @@ const __ = adone.private(adone.netron);
 /**
  * Class represented netron interface.
  * 
- * For checking object is netron interface use is.netron2Interface() predicate.
+ * For checking object is netron interface use is.netronInterface() predicate.
  */
 class Interface {
     constructor(def, peerId) {
@@ -128,13 +128,13 @@ export default class InterfaceFactory {
     }
 
     _processObject(peerInfo, obj) {
-        if (is.netron2Interface(obj)) {
+        if (is.netronInterface(obj)) {
             return new Reference(obj[__.I_DEFINITION_SYMBOL].id);
-        } else if (is.netron2Context(obj)) {
+        } else if (is.netronContext(obj)) {
             const def = this.netron.refContext(peerInfo, obj);
             def.peerId = peerInfo.id.asBase58(); // definition owner
             return def;
-        } else if (is.netron2Definitions(obj)) {
+        } else if (is.netronDefinitions(obj)) {
             const newDefs = new Definitions();
             for (let i = 0; i < obj.length; i++) {
                 newDefs.push(this._processObject(peerInfo, obj.get(i)));
