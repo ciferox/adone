@@ -1,9 +1,7 @@
 import path from 'path'
 
-import { GitIndexManager } from '../managers/GitIndexManager.js'
-import { FileSystem } from '../models/FileSystem.js'
-import { pathjoin } from '../utils/pathjoin'
-import { cores } from '../utils/plugins.js'
+import { GitIndexManager } from '../managers'
+import { FileSystem } from '../models'
 
 import { readObject } from './readObject'
 import { resolveRef } from './resolveRef'
@@ -14,10 +12,9 @@ import { resolveRef } from './resolveRef'
  * @link https://isomorphic-git.github.io/docs/listFiles.html
  */
 export async function listFiles ({
-  core = 'default',
   dir,
   gitdir = path.join(dir, '.git'),
-  fs: _fs = cores.get(core).get('fs'),
+  fs: _fs,
   ref
 }) {
   try {
@@ -52,10 +49,14 @@ async function accumulateFilesFromOid ({ gitdir, fs, oid, filenames, prefix }) {
         fs,
         oid: entry.oid,
         filenames,
-        prefix: pathjoin(prefix, entry.path)
+        prefix: posixJoin(prefix, entry.path)
       })
     } else {
-      filenames.push(pathjoin(prefix, entry.path))
+      filenames.push(posixJoin(prefix, entry.path))
     }
   }
 }
+
+// For some reason path.posix.join is undefined in webpack?
+const posixJoin = (prefix, filename) =>
+  prefix ? `${prefix}/${filename}` : filename

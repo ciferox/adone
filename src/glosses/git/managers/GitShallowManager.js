@@ -1,14 +1,13 @@
 import AsyncLock from 'async-lock'
 import path from 'path'
 
-import { FileSystem } from '../models/FileSystem.js'
+import { FileSystem } from '../models'
 
-let lock = null
+const lock = new AsyncLock()
 
 export class GitShallowManager {
   static async read ({ fs: _fs, gitdir }) {
     const fs = new FileSystem(_fs)
-    if (lock === null) lock = new AsyncLock()
     const filepath = path.join(gitdir, 'shallow')
     let oids = new Set()
     await lock.acquire(filepath, async function () {
@@ -24,7 +23,6 @@ export class GitShallowManager {
   }
   static async write ({ fs: _fs, gitdir, oids }) {
     const fs = new FileSystem(_fs)
-    if (lock === null) lock = new AsyncLock()
     const filepath = path.join(gitdir, 'shallow')
     if (oids.size > 0) {
       let text = [...oids].join('\n') + '\n'

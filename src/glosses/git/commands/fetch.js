@@ -2,17 +2,11 @@ import path from 'path'
 import pify from 'pify'
 import concat from 'simple-concat'
 import split2 from 'split2'
+import { PassThrough } from 'stream'
+import through2 from 'through2'
 
-import { GitRefManager } from '../managers/GitRefManager.js'
-import { GitRemoteManager } from '../managers/GitRemoteManager.js'
-import { GitShallowManager } from '../managers/GitShallowManager.js'
-import { FileSystem } from '../models/FileSystem.js'
-import { E, GitError } from '../models/GitError.js'
-import { filterCapabilities } from '../utils/filterCapabilities.js'
-import { pkg } from '../utils/pkg.js'
-import { cores } from '../utils/plugins.js'
-import { parseUploadPackResponse } from '../wire/parseUploadPackResponse.js'
-import { writeUploadPackRequest } from '../wire/writeUploadPackRequest.js'
+import { GitRefManager, GitRemoteManager, GitShallowManager } from '../managers'
+import { E, FileSystem, GitError, GitPktLine } from '../models'
 
 import { config } from './config'
 
@@ -22,18 +16,15 @@ import { config } from './config'
  * @link https://isomorphic-git.github.io/docs/fetch.html
  */
 export async function fetch ({
-  core = 'default',
   dir,
   gitdir = path.join(dir, '.git'),
-  fs: _fs = cores.get(core).get('fs'),
-  emitter = cores.get(core).get('emitter'),
-  emitterPrefix = '',
+  fs: _fs,
+  emitter,
   ref = 'HEAD',
   refs,
   remote,
   url,
   noGitSuffix = false,
-  corsProxy,
   authUsername,
   authPassword,
   username = authUsername,
@@ -56,7 +47,6 @@ export async function fetch ({
     }
     const fs = new FileSystem(_fs)
     let response = await fetchPackfile({
-      core,
       gitdir,
       fs,
       ref,
@@ -64,7 +54,6 @@ export async function fetch ({
       remote,
       url,
       noGitSuffix,
-      corsProxy,
       username,
       password,
       token,
@@ -82,11 +71,11 @@ export async function fetch ({
     // I also include CRLF just in case.
     response.progress.pipe(split2(/(\r\n)|\r|\n/)).on('data', line => {
       if (emitter) {
-        emitter.emit(`${emitterPrefix}message`, line.trim())
+        emitter.emit('message', line.trim())
       }
       let matches = line.match(/\((\d+?)\/(\d+?)\)/)
       if (matches && emitter) {
-        emitter.emit(`${emitterPrefix}progress`, {
+        emitter.emit('progress', {
           loaded: parseInt(matches[1], 10),
           total: parseInt(matches[2], 10),
           lengthComputable: true
@@ -108,14 +97,10 @@ export async function fetch ({
       )
     }
     // TODO: Return more metadata?
-    let res = {
+    return {
       defaultBranch: response.HEAD,
       fetchHead: response.FETCH_HEAD
     }
-    if (response.headers) {
-      res.headers = response.headers
-    }
-    return res
   } catch (err) {
     err.caller = 'git.fetch'
     throw err
@@ -123,7 +108,6 @@ export async function fetch ({
 }
 
 async function fetchPackfile ({
-  core,
   gitdir,
   fs: _fs,
   ref,
@@ -131,7 +115,6 @@ async function fetchPackfile ({
   remote,
   url,
   noGitSuffix,
-  corsProxy,
   username,
   password,
   token,
@@ -160,20 +143,14 @@ async function fetchPackfile ({
       path: `remote.${remote}.url`
     })
   }
-  if (corsProxy === undefined) {
-    corsProxy = await config({ fs, gitdir, path: 'http.corsProxy' })
-  }
   let auth = { username, password, token, oauth2format }
   let GitRemoteHTTP = GitRemoteManager.getRemoteHelperFor({ url })
   let remoteHTTP = await GitRemoteHTTP.discover({
-    core,
-    corsProxy,
     service: 'git-upload-pack',
     url,
     noGitSuffix,
     auth
   })
-  auth = remoteHTTP.auth // hack to get new credentials from CredentialManager API
   // Check that the remote supports the requested features
   if (depth !== null && !remoteHTTP.capabilities.has('shallow')) {
     throw new GitError(E.RemoteDoesNotSupportShallowFail)
@@ -193,20 +170,37 @@ async function fetchPackfile ({
     map: remoteHTTP.refs
   })
   // Assemble the application/x-git-upload-pack-request
-  const capabilities = filterCapabilities(
-    [...remoteHTTP.capabilities],
-    [
-      'multi_ack_detailed',
-      'no-done',
-      'side-band-64k',
-      'thin-pack',
-      'ofs-delta',
-      `agent=${pkg.agent}`
-    ]
-  )
-  if (relative) capabilities.push('deepen-relative')
+  const capabilities = `multi_ack_detailed no-done side-band-64k thin-pack ofs-delta${
+    relative ? ' deepen-relative' : ''
+  }`
+  let packstream = new PassThrough()
   // Start requesting oids from the remote by their SHAs
   let wants = singleBranch ? [oid] : remoteHTTP.refs.values()
+  wants = [...new Set(wants)] // remove duplicates
+  let firstLineCapabilities = ` ${capabilities}`
+  for (const want of wants) {
+    packstream.write(
+      GitPktLine.encode(`want ${want}${firstLineCapabilities}\n`)
+    )
+    firstLineCapabilities = ''
+  }
+  let oids = await GitShallowManager.read({ fs, gitdir })
+  if (oids.size > 0 && remoteHTTP.capabilities.has('shallow')) {
+    for (let oid of oids) {
+      packstream.write(GitPktLine.encode(`shallow ${oid}\n`))
+    }
+  }
+  if (depth !== null) {
+    packstream.write(GitPktLine.encode(`deepen ${depth}\n`))
+  }
+  if (since !== null) {
+    packstream.write(
+      GitPktLine.encode(`deepen-since ${Math.floor(since.valueOf() / 1000)}\n`)
+    )
+  }
+  for (let x of exclude) {
+    packstream.write(GitPktLine.encode(`deepen-not ${x}\n`))
+  }
   let haves = []
   for (let ref of refs) {
     try {
@@ -218,43 +212,40 @@ async function fetchPackfile ({
       }
     } catch (err) {}
   }
-  let oids = await GitShallowManager.read({ fs, gitdir })
-  let shallows = remoteHTTP.capabilities.has('shallow') ? [...oids] : []
-  let packstream = await writeUploadPackRequest({
-    capabilities,
-    wants,
-    haves,
-    shallows,
-    depth,
-    since,
-    exclude,
-    relative
-  })
-  // CodeCommit will hang up if we don't send a Content-Length header
-  // so we can't stream the body.
-  packstream = await pify(concat)(packstream)
-  let raw = await GitRemoteHTTP.connect({
-    corsProxy,
+  for (const have of haves) {
+    packstream.write(GitPktLine.encode(`have ${have}\n`))
+  }
+  packstream.write(GitPktLine.flush())
+  packstream.end(GitPktLine.encode(`done\n`))
+  let response = await GitRemoteHTTP.connect({
     service: 'git-upload-pack',
     url,
     noGitSuffix,
     auth,
     stream: packstream
   })
-  // Normally I would await this, but for some reason I'm having trouble detecting
-  // when this header portion is over.
-  let response = await parseUploadPackResponse(raw)
-  if (raw.headers) {
-    response.headers = raw.headers
-  }
   // Apply all the 'shallow' and 'unshallow' commands
-  for (const oid of response.shallows) {
-    oids.add(oid)
-  }
-  for (const oid of response.unshallows) {
-    oids.delete(oid)
-  }
-  await GitShallowManager.write({ fs, gitdir, oids })
+  response.packetlines.pipe(
+    through2(async (data, enc, next) => {
+      let line = data.toString('utf8')
+      if (line.startsWith('shallow')) {
+        let oid = line.slice(-41).trim()
+        if (oid.length !== 40) {
+          throw new GitError(E.CorruptShallowOidFail, { oid })
+        }
+        oids.add(oid)
+        await GitShallowManager.write({ fs, gitdir, oids })
+      } else if (line.startsWith('unshallow')) {
+        let oid = line.slice(-41).trim()
+        if (oid.length !== 40) {
+          throw new GitError(E.CorruptShallowOidFail, { oid })
+        }
+        oids.delete(oid)
+        await GitShallowManager.write({ fs, gitdir, oids })
+      }
+      next(null, data)
+    })
+  )
   // Update local remote refs
   if (singleBranch) {
     const refs = new Map([[fullref, oid]])
@@ -291,22 +282,6 @@ async function fetchPackfile ({
   }
   // We need this value later for the `clone` command.
   response.HEAD = remoteHTTP.symrefs.get('HEAD')
-  // AWS CodeCommit doesn't list HEAD as a symref, but we can reverse engineer it
-  // Find the SHA of the branch called HEAD
-  if (response.HEAD === undefined) {
-    let { oid } = GitRefManager.resolveAgainstMap({
-      ref: 'HEAD',
-      map: remoteHTTP.refs
-    })
-    // Use the name of the first branch that's not called HEAD that has
-    // the same SHA as the branch called HEAD.
-    for (let [key, value] of remoteHTTP.refs.entries()) {
-      if (key !== 'HEAD' && value === oid) {
-        response.HEAD = key
-        break
-      }
-    }
-  }
   response.FETCH_HEAD = oid
   return response
 }

@@ -1,4 +1,4 @@
-import { GitRemoteHTTP } from '../managers/GitRemoteHTTP.js'
+import { GitRemoteHTTP } from '../managers'
 
 /**
  * List a remote servers branches, tags, and capabilities.
@@ -6,29 +6,21 @@ import { GitRemoteHTTP } from '../managers/GitRemoteHTTP.js'
  * @link https://isomorphic-git.github.io/docs/getRemoteInfo.html
  */
 export async function getRemoteInfo ({
-  core = 'default',
-  corsProxy,
   url,
   authUsername,
   authPassword,
-  noGitSuffix = false,
   username = authUsername,
   password = authPassword,
   token,
-  oauth2format,
-  forPush = false
+  oauth2format
 }) {
   try {
     let auth = { username, password, token, oauth2format }
     const remote = await GitRemoteHTTP.discover({
-      core,
-      corsProxy,
-      service: forPush ? 'git-receive-pack' : 'git-upload-pack',
+      service: 'git-upload-pack',
       url,
-      noGitSuffix,
       auth
     })
-    auth = remote.auth // hack to get new credentials from CredentialManager API
     const result = {}
     // Note: remote.capabilities, remote.refs, and remote.symrefs are Set and Map objects,
     // but one of the objectives of the public API is to always return JSON-compatible objects

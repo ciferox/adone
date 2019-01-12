@@ -1,4 +1,4 @@
-import { E, GitError } from '../models/GitError.js'
+import { E, GitError } from '../models/GitError'
 
 import { oauth2 } from './oauth2'
 

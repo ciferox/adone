@@ -1,8 +1,7 @@
 import pathModule from 'path'
 
-import { GitConfigManager } from '../managers/GitConfigManager.js'
-import { FileSystem } from '../models/FileSystem.js'
-import { cores } from '../utils/plugins.js'
+import { GitConfigManager } from '../managers'
+import { FileSystem } from '../models'
 
 /**
  * Read and/or write to the git config files.
@@ -14,10 +13,9 @@ export async function config (args) {
   // as a result of a bit of a design flaw that requires the un-destructured argument object
   // in order to call args.hasOwnProperty('value') later on.
   let {
-    core = 'default',
     dir,
     gitdir = pathModule.join(dir, '.git'),
-    fs: _fs = cores.get(core).get('fs'),
+    fs: _fs,
     all = false,
     append = false,
     path,

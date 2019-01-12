@@ -1,5 +1,4 @@
-import { FileSystem } from '../models/FileSystem.js'
-import { GitConfig } from '../models/GitConfig.js'
+import { FileSystem, GitConfig } from '../models'
 
 export class GitConfigManager {
   static async get ({ fs: _fs, gitdir }) {

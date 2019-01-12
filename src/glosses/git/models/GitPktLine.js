@@ -51,8 +51,8 @@ Examples (as C-style strings):
 */
 import streamSource from 'stream-source/index.node.js'
 
-import { BufferCursor } from '../utils/BufferCursor.js'
-import { padHex } from '../utils/padHex.js'
+import { BufferCursor } from '../utils/BufferCursor'
+import { padHex } from '../utils/padHex'
 
 // I'm really using this more as a namespace.
 // There's not a lot of "state" in a pkt-line

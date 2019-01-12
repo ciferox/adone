@@ -1,8 +1,7 @@
 import path from 'path'
 
-import { GitRefManager } from '../managers/GitRefManager.js'
-import { FileSystem } from '../models/FileSystem.js'
-import { cores } from '../utils/plugins.js'
+import { GitRefManager } from '../managers'
+import { FileSystem } from '../models'
 
 /**
  * Get the value of a symbolic ref or resolve a ref to its object id
@@ -10,10 +9,9 @@ import { cores } from '../utils/plugins.js'
  * @link https://isomorphic-git.github.io/docs/resolveRef.html
  */
 export async function resolveRef ({
-  core = 'default',
   dir,
   gitdir = path.join(dir, '.git'),
-  fs: _fs = cores.get(core).get('fs'),
+  fs: _fs,
   ref,
   depth
 }) {

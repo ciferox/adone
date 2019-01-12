@@ -1,14 +1,8 @@
 import path from 'path'
 
-import { GitIndexManager } from '../managers/GitIndexManager.js'
-import { GitRefManager } from '../managers/GitRefManager.js'
-import { FileSystem } from '../models/FileSystem.js'
-import { GitCommit } from '../models/GitCommit.js'
-import { E, GitError } from '../models/GitError.js'
-import { GitTree } from '../models/GitTree.js'
-import { writeObject } from '../storage/writeObject.js'
-import { flatFileListToDirectoryStructure } from '../utils/flatFileListToDirectoryStructure.js'
-import { cores } from '../utils/plugins.js'
+import { GitIndexManager, GitObjectManager, GitRefManager } from '../managers'
+import { E, FileSystem, GitCommit, GitError, GitTree } from '../models'
+import { flatFileListToDirectoryStructure } from '../utils'
 
 import { config } from './config'
 
@@ -18,10 +12,9 @@ import { config } from './config'
  * @link https://isomorphic-git.github.io/docs/commit.html
  */
 export async function commit ({
-  core = 'default',
   dir,
   gitdir = path.join(dir, '.git'),
-  fs: _fs = cores.get(core).get('fs'),
+  fs: _fs,
   message,
   author,
   committer
@@ -39,12 +32,6 @@ export async function commit ({
     if (author.name === undefined || author.email === undefined) {
       throw new GitError(E.MissingAuthorError)
     }
-    if (message === undefined) {
-      throw new GitError(E.MissingRequiredParameterError, {
-        function: 'commit',
-        parameter: 'message'
-      })
-    }
     committer = committer || author
     let authorDateTime = author.date || new Date()
     let committerDateTime = committer.date || authorDateTime
@@ -52,8 +39,7 @@ export async function commit ({
     await GitIndexManager.acquire(
       { fs, filepath: `${gitdir}/index` },
       async function (index) {
-        const inodes = flatFileListToDirectoryStructure(index.entries)
-        const inode = inodes.get('.')
+        const inode = flatFileListToDirectoryStructure(index.entries)
         const treeRef = await constructTree({ fs, gitdir, inode })
         let parents
         try {
@@ -94,7 +80,7 @@ export async function commit ({
           },
           message
         })
-        oid = await writeObject({
+        oid = await GitObjectManager.write({
           fs,
           gitdir,
           type: 'commit',
@@ -133,7 +119,7 @@ async function constructTree ({ fs, gitdir, inode }) {
     type: inode.type
   }))
   const tree = GitTree.from(entries)
-  let oid = await writeObject({
+  let oid = await GitObjectManager.write({
     fs,
     gitdir,
     type: 'tree',

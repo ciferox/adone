@@ -1,12 +1,9 @@
 // import diff3 from 'node-diff3'
 import path from 'path'
 
-import { GitRefManager } from '../managers/GitRefManager.js'
-import { FileSystem } from '../models/FileSystem.js'
-import { E, GitError } from '../models/GitError.js'
-import { cores } from '../utils/plugins.js'
+import { GitRefManager } from '../managers'
+import { E, FileSystem, GitError } from '../models'
 
-import { currentBranch } from './currentBranch.js'
 import { log } from './log'
 
 /**
@@ -15,29 +12,15 @@ import { log } from './log'
  * @link https://isomorphic-git.github.io/docs/merge.html
  */
 export async function merge ({
-  core = 'default',
   dir,
   gitdir = path.join(dir, '.git'),
-  fs: _fs = cores.get(core).get('fs'),
+  fs: _fs,
   ours,
   theirs,
   fastForwardOnly
 }) {
   try {
     const fs = new FileSystem(_fs)
-    if (ours === undefined) {
-      ours = await currentBranch({ fs, gitdir, fullname: true })
-    }
-    ours = await GitRefManager.expand({
-      fs,
-      gitdir,
-      ref: ours
-    })
-    theirs = await GitRefManager.expand({
-      fs,
-      gitdir,
-      ref: theirs
-    })
     let ourOid = await GitRefManager.resolve({
       fs,
       gitdir,
@@ -52,12 +35,14 @@ export async function merge ({
     let baseOid = await findMergeBase({ gitdir, fs, refs: [ourOid, theirOid] })
     // handle fast-forward case
     if (baseOid === theirOid) {
+      console.log(`'${theirs}' is already merged into '${ours}'`)
       return {
         oid: ourOid,
         alreadyMerged: true
       }
     }
     if (baseOid === ourOid) {
+      console.log(`Performing a fast-forward merge...`)
       await GitRefManager.writeRef({ fs, gitdir, ref: ours, value: theirOid })
       return {
         oid: theirOid,

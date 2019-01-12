@@ -1,7 +1,56 @@
-import { E, GitError } from '../models/GitError.js'
-import { formatAuthor } from '../utils/formatAuthor.js'
-import { normalizeNewlines } from '../utils/normalizeNewlines.js'
-import { parseAuthor } from '../utils/parseAuthor.js'
+import { E, GitError } from '../models/GitError'
+
+// The amount of work that went into crafting these cases to handl
+// -0 (just so we don't lose that information when parsing and reconstructing)
+// but can also default to +0 was extraordinary.
+
+function simpleSign (n) {
+  return Math.sign(n) || (Object.is(n, -0) ? -1 : 1)
+}
+
+function negateExceptForZero (n) {
+  return n === 0 ? n : -n
+}
+
+function formatTimezoneOffset (minutes) {
+  let sign = simpleSign(negateExceptForZero(minutes))
+  minutes = Math.abs(minutes)
+  let hours = Math.floor(minutes / 60)
+  minutes -= hours * 60
+  let strHours = String(hours)
+  let strMinutes = String(minutes)
+  if (strHours.length < 2) strHours = '0' + strHours
+  if (strMinutes.length < 2) strMinutes = '0' + strMinutes
+  return (sign === -1 ? '-' : '+') + strHours + strMinutes
+}
+
+function parseTimezoneOffset (offset) {
+  let [, sign, hours, minutes] = offset.match(/(\+|-)(\d\d)(\d\d)/)
+  minutes = (sign === '+' ? 1 : -1) * (Number(hours) * 60 + Number(minutes))
+  return negateExceptForZero(minutes)
+}
+
+function parseAuthor (author) {
+  let [, name, email, timestamp, offset] = author.match(
+    /^(.*) <(.*)> (.*) (.*)$/
+  )
+  return {
+    name: name,
+    email: email,
+    timestamp: Number(timestamp),
+    timezoneOffset: parseTimezoneOffset(offset)
+  }
+}
+
+function normalize (str) {
+  // remove all <CR>
+  str = str.replace(/\r/g, '')
+  // no extra newlines up front
+  str = str.replace(/^\n+/, '')
+  // and a single newline at the end
+  str = str.replace(/\n+$/, '') + '\n'
+  return str
+}
 
 function indent (str) {
   return (
@@ -19,6 +68,8 @@ function outdent (str) {
     .map(x => x.replace(/^ /, ''))
     .join('\n')
 }
+
+// TODO: Make all functions have static async signature?
 
 export class GitCommit {
   constructor (commit) {
@@ -38,7 +89,7 @@ export class GitCommit {
   static fromPayloadSignature ({ payload, signature }) {
     let headers = GitCommit.justHeaders(payload)
     let message = GitCommit.justMessage(payload)
-    let commit = normalizeNewlines(
+    let commit = normalize(
       headers + '\ngpgsig' + indent(signature) + '\n' + message
     )
     return new GitCommit(commit)
@@ -67,7 +118,7 @@ export class GitCommit {
   }
 
   static justMessage (commit) {
-    return normalizeNewlines(commit.slice(commit.indexOf('\n\n') + 2))
+    return normalize(commit.slice(commit.indexOf('\n\n') + 2))
   }
 
   static justHeaders (commit) {
@@ -124,9 +175,13 @@ export class GitCommit {
       }
     }
     let author = obj.author
-    headers += `author ${formatAuthor(author)}\n`
+    headers += `author ${author.name} <${author.email}> ${
+      author.timestamp
+    } ${formatTimezoneOffset(author.timezoneOffset)}\n`
     let committer = obj.committer || obj.author
-    headers += `committer ${formatAuthor(committer)}\n`
+    headers += `committer ${committer.name} <${committer.email}> ${
+      committer.timestamp
+    } ${formatTimezoneOffset(committer.timezoneOffset)}\n`
     if (obj.gpgsig) {
       headers += 'gpgsig' + indent(obj.gpgsig)
     }
@@ -134,7 +189,7 @@ export class GitCommit {
   }
 
   static render (obj) {
-    return GitCommit.renderHeaders(obj) + '\n' + normalizeNewlines(obj.message)
+    return GitCommit.renderHeaders(obj) + '\n' + normalize(obj.message)
   }
 
   render () {
@@ -142,14 +197,14 @@ export class GitCommit {
   }
 
   withoutSignature () {
-    let commit = normalizeNewlines(this._commit)
+    let commit = normalize(this._commit)
     if (commit.indexOf('\ngpgsig') === -1) return commit
     let headers = commit.slice(0, commit.indexOf('\ngpgsig'))
     let message = commit.slice(
       commit.indexOf('-----END PGP SIGNATURE-----\n') +
         '-----END PGP SIGNATURE-----\n'.length
     )
-    return normalizeNewlines(headers + '\n' + message)
+    return normalize(headers + '\n' + message)
   }
 
   isolateSignature () {

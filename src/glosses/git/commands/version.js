@@ -1,4 +1,4 @@
-import { pkg } from '../utils/pkg.js'
+import { pkg } from '../utils/pkg'
 
 /**
  * Return the version number of isomorphic-git
