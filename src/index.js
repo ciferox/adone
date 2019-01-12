@@ -267,34 +267,8 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             adone.lazify({
                 term: () => new adone.terminal.Terminal(),
                 logger: () => {
-                    const {
-                        is,
-                        app: { logger: { format } },
-                        terminal: { chalk }
-                    } = adone;
-
                     const defaultLogger = adone.app.logger.create({
-                        level: "verbose",
-                        format: format.combine(
-                            format.colorize({
-                                config: adone.app.logger.config.adone
-                            }),
-                            format.padLevels(),
-                            format.printf((info) => {
-                                let result = "";
-                                if (is.string(info.prefix)) {
-                                    result += `[${info.prefix}] `;
-                                }
-                                if (is.string(info.icon)) {
-                                    result += `${info.icon}  `;
-                                }
-                                result += `${chalk.underline(info.level)}${info.message}`;
-                                return result;
-                            })
-                        ),
-                        transports: [
-                            new adone.app.logger.transport.Console()
-                        ]
+                        level: "info"
                     });
 
                     return defaultLogger;

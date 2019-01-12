@@ -80,6 +80,8 @@ class AdoneCLI extends app.Application {
 
         this.config = await adone.cli.Configuration.load();
 
+        this._configureLogger();
+
         // Expose cli interface for subsystems.
         // this.exposeCliInterface();
 
@@ -102,7 +104,38 @@ class AdoneCLI extends app.Application {
     main() {
         // print usage message by default
         console.log(`${this.helper.getHelpMessage()}\n`);
-        return app.EXIT_SUCCESS;    
+        return app.EXIT_SUCCESS;
+    }
+
+    _configureLogger() {
+        const {
+            app: { logger: { format } },
+            terminal: { chalk }
+        } = adone;
+
+        adone.runtime.logger.configure({
+            level: "verbose",
+            format: format.combine(
+                format.colorize({
+                    config: adone.app.logger.config.adone
+                }),
+                format.padLevels(),
+                format.printf((info) => {
+                    let result = "";
+                    if (is.string(info.prefix)) {
+                        result += `[${info.prefix}] `;
+                    }
+                    if (is.string(info.icon)) {
+                        result += `${info.icon}  `;
+                    }
+                    result += `${chalk.underline(info.level)}${info.message}`;
+                    return result;
+                })
+            ),
+            transports: [
+                new adone.app.logger.transport.Console()
+            ]
+        });
     }
 
     async _addInstalledSubsystems() {

@@ -1,7 +1,6 @@
 const {
     is,
-    app,
-    terminal: { chalk }
+    app
 } = adone;
 
 class CliKit extends app.Subsystem {

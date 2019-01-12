@@ -1,4 +1,5 @@
 const {
+    app: { logger: { LEVEL, MESSAGE } },
     is,
     terminal: { chalk }
 } = adone;
@@ -86,15 +87,19 @@ class Colorizer {
      * `logform` info object.
      */
     transform(info, opts) {
+        if (opts.all && is.string(info[MESSAGE])) {
+            info[MESSAGE] = this.colorize(info[LEVEL], info.level, info[MESSAGE]);
+        }
+
         if (opts.level || opts.all || !opts.message) {
-            info.level = this.colorize(info[adone.app.logger.LEVEL], info.level);
+            info.level = this.colorize(info[LEVEL], info.level);
             if (is.string(info.icon)) {
-                info.icon = this.colorize(info[adone.app.logger.LEVEL], info.icon);
+                info.icon = this.colorize(info[LEVEL], info.icon);
             }
         }
 
         if (opts.all || opts.message) {
-            info.message = this.colorize(info[adone.app.logger.LEVEL], info.level, info.message);
+            info.message = this.colorize(info[LEVEL], info.level, info.message);
         }
 
         return info;

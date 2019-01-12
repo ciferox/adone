@@ -733,8 +733,8 @@ describe("app", "logger", () => {
 
 
     it("has expected initial state", () => {
-        assert.lengthOf(adone.runtime.logger.transports, 1);
-        assert.strictEqual(adone.runtime.logger.level, "verbose");
+        assert.lengthOf(adone.runtime.logger.transports, 0);
+        assert.strictEqual(adone.runtime.logger.level, "info");
     });
 
     it("has expected methods", () => {

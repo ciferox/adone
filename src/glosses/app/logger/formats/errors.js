@@ -1,5 +1,5 @@
 const {
-    app: { logger: { MESSAGE, format } }
+    app: { logger: { LEVEL, MESSAGE, format } }
 } = adone;
 
 /**
@@ -9,19 +9,35 @@ const {
  *
  * Optionally, the Error's `stack` property can also be appended to the `info` object.
  */
-export default format((info, opts) => {
-    if (!(info.message instanceof Error)) {
+export default format((einfo, { stack }) => {
+    if (einfo instanceof Error) {
+        const info = Object.assign({}, einfo, {
+            level: einfo.level,
+            [LEVEL]: einfo[LEVEL] || einfo.level,
+            message: einfo.message,
+            [MESSAGE]: einfo[MESSAGE] || einfo.message
+        });
+  
+        if (stack) { 
+            info.stack = einfo.stack;
+        }
         return info;
     }
-
-    const err = info.message;
-
-    info.message = err.message;
-    info[MESSAGE] = err.message;
-
-    if (opts.stack) {
-        info.stack = err.stack;
+  
+    if (!(einfo.message instanceof Error)) { 
+        return einfo; 
     }
-
-    return info;
-});
+  
+    // Assign all enumerable properties and the
+    // message property from the error provided.
+    Object.assign(einfo, einfo.message);
+    const err = einfo.message;
+    einfo.message = err.message;
+    einfo[MESSAGE] = err.message;
+  
+    // Assign the stack if requested.
+    if (stack) { 
+        einfo.stack = err.stack; 
+    }
+    return einfo;
+});  

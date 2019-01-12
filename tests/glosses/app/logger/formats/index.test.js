@@ -26,12 +26,12 @@ describe("app", "logger", "formats", () => {
                 assert.string(info.level);
                 assert.string(info.message);
                 assert.equal(info.level, chalk.green("info"));
-                assert.equal(info.message, "    whatever");
+                assert.equal(info.message, "     whatever");
 
                 assert.string(info[LEVEL]);
                 assert.string(info[MESSAGE]);
                 assert.equal(info[LEVEL], "info");
-                assert.equal(info[MESSAGE], `${chalk.green("info")}:    whatever`);
+                assert.equal(info[MESSAGE], `${chalk.green("info")}:     whatever`);
             }
         ));
     });
@@ -39,7 +39,7 @@ describe("app", "logger", "formats", () => {
 
     describe("colorize", () => {
         const {
-            app: { logger: { LEVEL, format: { colorize } } }
+            app: { logger: { MESSAGE, LEVEL, format: { colorize } } }
         } = adone;
 
         const { Colorizer } = colorize;
@@ -104,6 +104,24 @@ describe("app", "logger", "formats", () => {
                 assert.string(info.message);
                 assert.equal(info.level, chalk.green("info"));
                 assert.equal(info.message, chalk.green("whatever"));
+            }
+        ));
+
+        it("colorize({ all: true }) [custom message]", assumeFormatted(
+            colorize({ all: true }),
+            {
+                level: "info",
+                [LEVEL]: "info",
+                message: "whatever",
+                [MESSAGE]: "[info] whatever custom"
+            },
+            (info) => {
+                assert.string(info.level);
+                assert.string(info.message);
+                assert.equal(info[LEVEL], "info");
+                assert.equal(info.level, chalk.green("info"));
+                assert.equal(info.message, chalk.green("whatever"));
+                assert.equal(info[MESSAGE], chalk.green("[info] whatever custom"));
             }
         ));
 
@@ -645,8 +663,8 @@ describe("app", "logger", "formats", () => {
                     assert.string(info.level);
                     assert.string(info.message);
                     assert.equal(info.level, "info");
-                    assert.equal(info.message, "    pad all the things");
-                    assert.equal(info[MESSAGE], "    pad all the things");
+                    assert.equal(info.message, "     pad all the things");
+                    assert.equal(info[MESSAGE], "     pad all the things");
                 }
             ));
 
@@ -1148,30 +1166,98 @@ describe("app", "logger", "formats", () => {
 
         const err = new Error("whatever");
 
-        it("errors() (default) sets info[MESSAGE]", assumeFormatted(
-            errors(),
-            { level: "info", message: err },
-            (info) => {
-                assert.string(info.level);
-                assert.string(info.message);
-                assert.equal(info.level, "info");
-                assert.equal(info.message, err.message);
-                assert.equal(info[MESSAGE], err.message);
-            }
-        ));
+        const errProps = new Error("another error");
+        errProps.whatever = true;
+        errProps.wut = "some string";
 
-        it("errors({ space: 2 }) sets info.stack", assumeFormatted(
-            errors({ stack: true }),
-            { level: "info", message: err },
-            (info) => {
-                assert.string(info.level);
-                assert.string(info.message);
-                assert.equal(info.level, "info");
-                assert.equal(info.message, err.message);
-                assert.equal(info.stack, err.stack);
-                assert.equal(info[MESSAGE], err.message);
-            }
-        ));
+        const errInfo = new Error("Already has level");
+        errInfo.level = "error";
+
+        const errInfoProps = new Error("Level with props");
+        errInfoProps.level = "error";
+        errInfoProps.whatever = true;
+        errInfoProps.wut = "some string";
+
+
+        describe("errors()({ object })", () => {
+            it("errors() returns the original info", assumeFormatted(
+                errors(),
+                { level: "info", message: "whatever" },
+                (info) => {
+                    assert.string(info.level);
+                    assert.string(info.message);
+                    assert.equal(info.level, "info");
+                    assert.equal(info.message, "whatever");
+                }
+            ));
+
+            it("errors() (default) sets info[MESSAGE]", assumeFormatted(
+                errors(),
+                { level: "info", message: err },
+                (info) => {
+                    assert.string(info.level);
+                    assert.string(info.message);
+                    assert.equal(info.level, "info");
+                    assert.equal(info.message, err.message);
+                    assert.equal(info[MESSAGE], err.message);
+                }
+            ));
+
+            it("errors({ stack: true }) sets info.stack", assumeFormatted(
+                errors({ stack: true }),
+                { level: "info", message: err },
+                (info) => {
+                    assert.string(info.level);
+                    assert.string(info.message);
+                    assert.equal(info.level, "info");
+                    assert.equal(info.message, err.message);
+                    assert.equal(info[MESSAGE], err.message);
+                    assert.equal(info.stack, err.stack);
+                }
+            ));
+
+            it("errors() sets custom error properties", assumeFormatted(
+                errors(),
+                { level: "info", message: errProps },
+                (info) => {
+                    assert.string(info.level);
+                    assert.string(info.message);
+                    assert.equal(info.level, "info");
+                    assert.equal(info.message, errProps.message);
+                    assert.equal(info[MESSAGE], errProps.message);
+                    assert.true(info.whatever);
+                    assert.equal(info.wut, "some string");
+                }
+            ));
+        });
+
+        describe("errors()(Error)", () => {
+            it("errors() (default) sets info[MESSAGE]", assumeFormatted(
+                errors(),
+                errInfo,
+                (info) => {
+                    assert.string(info.level);
+                    assert.string(info.message);
+                    assert.equal(info.level, errInfo.level);
+                    assert.equal(info.message, errInfo.message);
+                    assert.equal(info[MESSAGE], errInfo.message);
+                },
+                { immutable: false }
+            ));
+
+            it("errors({ space: 2 }) sets info.stack", assumeFormatted(
+                errors({ stack: true }),
+                errInfo,
+                (info) => {
+                    assert.string(info.level);
+                    assert.string(info.message);
+                    assert.equal(info.level, errInfo.level);
+                    assert.equal(info.message, errInfo.message);
+                    assert.equal(info[MESSAGE], errInfo.message);
+                    assert.equal(info.stack, errInfo.stack);
+                },
+                { immutable: false }
+            ));
+        });
     });
-
 });

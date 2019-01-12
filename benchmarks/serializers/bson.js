@@ -8,8 +8,7 @@ const bson = new BSON.BSON([BSON.Binary, BSON.Code, BSON.DBRef, BSON.Decimal128,
 // const bson2 = new BSON2.BSON([BSON2.Binary, BSON2.Code, BSON2.DBRef, BSON2.Decimal128,
 //     BSON2.Double, BSON2.Int32, BSON2.Long, BSON2.Map, BSON2.MaxKey, BSON2.MinKey,
 //     BSON2.ObjectId, BSON2.BSONRegExp, BSON2.Symbol, BSON2.Timestamp]);
-const BSONJS = require("bson");
-const bsonJS = new BSONJS();
+const bsonJS = require("bson");
 
 const generateRecord = function (recnum) {
     // Definition of a 'Document'
