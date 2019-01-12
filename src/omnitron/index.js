@@ -24,14 +24,21 @@ export const STATUSES = [
 ];
 
 adone.definePredicates({
-    omnitronService: "OMNITRON_SERVICE"
+    omnitron2Service: "OMNITRON2_SERVICE"
 });
 
-lazify({
+const __ = lazify({
     Service: "./service",
     Omnitron: "./omnitron",
     DB: "./omnitron/db",
     Dispatcher: "./dispatcher",
-    dispatcher: () => new adone.omnitron.Dispatcher(),
-    port: () => (is.windows ? `\\\\.\\pipe\\${adone.realm.config.realm}\\omnitron.sock` : adone.std.path.join(adone.realm.config.runtimePath, "omnitron.sock"))
+    dispatcher: () => new __.Dispatcher(),
+    LOCAL_PEER_INFO: () => {
+        const peerInfo = adone.net.p2p.PeerInfo.create(adone.runtime.realm.identity);
+        peerInfo.multiaddrs.add(__.DEFAULT_ADDRESS);
+        return peerInfo;
+    },
+    DEFAULT_ADDRESS: () => is.windows
+        ? `//winpipe/\\\\.\\pipe\\${adone.runtime.realm.identity.id}\\omnitron.sock`
+        : `//unix${adone.std.path.join(adone.runtime.config.RUNTIME_PATH, "omnitron.sock")}`
 }, adone.asNamespace(exports), require);

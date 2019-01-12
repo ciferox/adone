@@ -1,6 +1,6 @@
 const {
     math: { Long },
-    netron2: { UniqueId, FastUniqueId }
+    netron: { UniqueId, FastUniqueId }
 } = adone;
 
 let fastUniq;

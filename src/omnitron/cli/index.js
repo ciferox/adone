@@ -15,7 +15,7 @@ const { STATUSES } = omnitron;
 
 const subsystemPath = (name) => std.path.resolve(__dirname, "subsystems", name);
 
-export default 
+export default
 @SubsystemMeta({
     commandsGroups: [
         {
@@ -24,7 +24,7 @@ export default
         },
         {
             name: "inspect",
-            description: "Inspection and metrics"
+            description: "Information, inspection and metrics"
         },
         {
             name: "services",
@@ -53,10 +53,10 @@ export default
             subsystem: subsystemPath("config")
         },
         {
-            name: "gate",
+            name: ["net", "network"],
             group: "config",
-            description: "Gates management",
-            subsystem: subsystemPath("gate")
+            description: "Networks management",
+            subsystem: subsystemPath("network")
         },
         {
             name: "host",
@@ -70,7 +70,7 @@ class Omnitron extends Subsystem {
     @CommandMeta({
         name: "up",
         group: "common",
-        help: "Up omnitron"
+        help: "Start omnitron"
     })
     async upCommand() {
         try {
@@ -79,18 +79,19 @@ class Omnitron extends Subsystem {
             if (is.number(pid)) {
                 kit.updateProgress({
                     message: `done (pid: ${pid})`,
-                    result: true
+                    status: true
                 });
             } else {
                 kit.updateProgress({
-                    schema: ` {yellow-fg}!{/yellow-fg} already running (pid: ${pid.pid})`
-                }, true);
+                    message: `already running (pid: ${pid.pid})`,
+                    status: "info"
+                });
             }
             return 0;
         } catch (err) {
             kit.updateProgress({
                 message: err.message,
-                result: false
+                status: false
             });
             return 1;
         }
@@ -99,7 +100,7 @@ class Omnitron extends Subsystem {
     @CommandMeta({
         name: "down",
         group: "common",
-        help: "Down omnitron"
+        help: "Shutdown omnitron"
     })
     async downCommand() {
         try {
@@ -109,19 +110,19 @@ class Omnitron extends Subsystem {
                 case 0:
                     kit.updateProgress({
                         message: "failed",
-                        result: false
+                        status: false
                     });
                     break;
                 case 1:
                     kit.updateProgress({
                         message: "done",
-                        result: true
+                        status: true
                     });
                     break;
                 case 2:
                     kit.updateProgress({
-                        schema: "{yellow-fg}!{/yellow-fg} omnitron is not started",
-                        result: true
+                        message: "omnitron is not started",
+                        status: "info"
                     });
                     break;
             }
@@ -129,31 +130,10 @@ class Omnitron extends Subsystem {
         } catch (err) {
             kit.updateProgress({
                 message: err.message,
-                result: false
+                status: false
             });
             return 1;
         }
-    }
-
-    @CommandMeta({
-        name: "ping",
-        group: "common",
-        help: "Ping the omnitron"
-    })
-    async pingCommand() {
-        kit.createProgress("checking");
-        try {
-            await kit.connect();
-        } catch (err) {
-            //
-        }
-
-        const result = await omnitron.dispatcher.ping();
-        kit.updateProgress({
-            message: result ? "done" : "failed",
-            result
-        });
-        return 0;
     }
 
     @CommandMeta({
@@ -201,15 +181,15 @@ class Omnitron extends Subsystem {
             const result = await omnitron.dispatcher.getInfo(args.get("param"));
             kit.updateProgress({
                 message: "done",
-                result: true,
+                status: true,
                 clean: true
             });
-            adone.log(adone.pretty.json(result));
+            console.log(adone.pretty.json(result));
             return 0;
         } catch (err) {
             kit.updateProgress({
                 message: err.message,
-                result: false
+                status: false
             });
             return 1;
         }
@@ -230,7 +210,7 @@ class Omnitron extends Subsystem {
                 result: true,
                 clean: true
             });
-            adone.log(result);
+            console.log(result);
             return 0;
         } catch (err) {
             kit.updateProgress({
@@ -457,7 +437,7 @@ class Omnitron extends Subsystem {
 
     @CommandMeta({
         name: "services",
-        group: "services",
+        group: "inspect",
         help: "Show services",
         options: [
             {
@@ -491,7 +471,7 @@ class Omnitron extends Subsystem {
             });
 
             if (services.length > 0) {
-                adone.log(pretty.table(services, {
+                console.log(pretty.table(services, {
                     style: {
                         head: ["gray"],
                         compact: true
@@ -543,64 +523,64 @@ class Omnitron extends Subsystem {
         }
     }
 
-    @CommandMeta({
-        name: "peers",
-        group: "inspect",
-        help: "Show connected peers"
-    })
-    async peersCommand() {
-        try {
-            kit.createProgress("obtaining");
-            await kit.connect();
-            const peers = await omnitron.dispatcher.getPeers();
+    // @CommandMeta({
+    //     name: "peers",
+    //     group: "inspect",
+    //     help: "Show connected peers"
+    // })
+    // async peersCommand() {
+    //     try {
+    //         kit.createProgress("obtaining");
+    //         await kit.connect();
+    //         const peers = await omnitron.dispatcher.getPeers();
 
-            kit.updateProgress({
-                message: "done",
-                result: true,
-                clean: true
-            });
+    //         kit.updateProgress({
+    //             message: "done",
+    //             result: true,
+    //             clean: true
+    //         });
 
-            adone.log(pretty.table(peers, {
-                width: "100%",
-                style: {
-                    head: ["gray"],
-                    compact: true
-                },
-                model: [
-                    {
-                        id: "uid",
-                        header: "UID",
-                        handle: (val) => {
-                            if (adone.runtime.netron.uid === val.uid) {
-                                return `{green-fg}{bold}${val.uid}{/green-fg}{/bold}`;
-                            }
-                            return `{green-fg}${val.uid}{/green-fg}`;
-                        },
-                        width: 38
-                    },
-                    {
-                        id: "address",
-                        header: "Address"
-                    },
-                    {
-                        id: "connectedTime",
-                        header: "Connected time",
-                        handle: (val) => {
-                            return adone.datetime.unix(val.connectedTime / 1000).format("L LTS");
-                        },
-                        width: 24
-                    }
-                ]
-            }));
-            return 0;
-        } catch (err) {
-            kit.updateProgress({
-                message: err.message,
-                result: false
-            });
-            return 1;
-        }
-    }
+    //         console.log(pretty.table(peers, {
+    //             width: "100%",
+    //             style: {
+    //                 head: ["gray"],
+    //                 compact: true
+    //             },
+    //             model: [
+    //                 {
+    //                     id: "uid",
+    //                     header: "UID",
+    //                     handle: (val) => {
+    //                         if (adone.runtime.netron.uid === val.uid) {
+    //                             return `{green-fg}{bold}${val.uid}{/green-fg}{/bold}`;
+    //                         }
+    //                         return `{green-fg}${val.uid}{/green-fg}`;
+    //                     },
+    //                     width: 38
+    //                 },
+    //                 {
+    //                     id: "address",
+    //                     header: "Address"
+    //                 },
+    //                 {
+    //                     id: "connectedTime",
+    //                     header: "Connected time",
+    //                     handle: (val) => {
+    //                         return adone.datetime.unix(val.connectedTime / 1000).format("L LTS");
+    //                     },
+    //                     width: 24
+    //                 }
+    //             ]
+    //         }));
+    //         return 0;
+    //     } catch (err) {
+    //         kit.updateProgress({
+    //             message: err.message,
+    //             result: false
+    //         });
+    //         return 1;
+    //     }
+    // }
 
     @CommandMeta({
         name: "contexts",
@@ -619,7 +599,7 @@ class Omnitron extends Subsystem {
                 clean: true
             });
 
-            adone.log(pretty.table(peers, {
+            console.log(pretty.table(peers, {
                 style: {
                     head: ["gray"],
                     compact: true
@@ -647,8 +627,8 @@ class Omnitron extends Subsystem {
     }
 
     @CommandMeta({
-        name: ["subsystems", "ss"],
-        group: "subsystems",
+        name: "subsystems",
+        group: "inspect",
         help: "Show omnitron subsystems"
     })
     async subsystemsCommand() {
@@ -663,7 +643,7 @@ class Omnitron extends Subsystem {
                 clean: true
             });
 
-            adone.log(pretty.table(peers, {
+            console.log(pretty.table(peers, {
                 style: {
                     head: ["gray"],
                     compact: true

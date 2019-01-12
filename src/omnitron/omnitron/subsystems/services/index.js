@@ -6,16 +6,21 @@ const {
     omnitron: { STATUS }
 } = adone;
 
-const SERVICES_PATH = adone.realm.config.omnitron.SERVICES_PATH;
-
 const api = adone.lazify({
     ServiceMaintainer: "./service_maintainer"
 }, exports, require);
 
+@app.SubsystemMeta({
+    dependencies: [
+        "netron",
+        "database"
+    ]
+})
 export default class Services extends app.Subsystem {
     constructor(options) {
         super(options);
 
+        this.servicesRegistry = null;
         this.services = null;
         this.groupMaintainers = new Map();
     }
@@ -25,13 +30,15 @@ export default class Services extends app.Subsystem {
     }
 
     async initialize() {
-        this.config = await this.root.db.getConfiguration();
+        const commonConfig = await this.root.db.getConfiguration("common");
         this.options = Object.assign({
             startTimeout: 10000,
             stopTimeout: 10000
-        }, await this.config.get("service"));
+        }, await commonConfig.get("service"));
     
-        this.services = await this.parent.db.getMetaValuable("service");
+        const registry = await this.root.db.getConfiguration("registry");
+        this.servicesRegistry = registry.slice("services");
+        this.services = await this.root.db.getConfiguration("services");
 
         const VALID_STATUSES = [STATUS.DISABLED, STATUS.INACTIVE];
 
@@ -42,7 +49,7 @@ export default class Services extends app.Subsystem {
                 // Check service status and fix if necessary
                 if (!VALID_STATUSES.includes(serviceData.status)) {
                     serviceData.status = STATUS.INACTIVE;
-                    await this.services.set(serviceData.name, serviceData); // eslint-disable-line
+                    await this.servicesRegistry.set(serviceData.name, serviceData); // eslint-disable-line
                 }
                 if (serviceData.status === STATUS.INACTIVE) {
                     maintainer.startService(serviceData.name).catch((err) => {
@@ -76,20 +83,20 @@ export default class Services extends app.Subsystem {
 
         let existingNames;
 
-        if (await fs.exists(SERVICES_PATH)) {
-            existingNames = await fs.readdir(SERVICES_PATH);
+        if (await fs.exists(adone.runtime.config.omnitron.SERVICES_PATH)) {
+            existingNames = await fs.readdir(adone.runtime.config.omnitron.SERVICES_PATH);
         } else {
             existingNames = [];
         }
 
-        const names = this.services.keys().filter((is.array(name) && name.length > 0) ? (name) => name.includes(name) : adone.truly);
+        const names = this.servicesRegistry.keys().filter((is.array(name) && name.length > 0) ? (name) => name.includes(name) : adone.truly);
 
         for (const svcName of names) {
-            const serviceData = await this.services.get(svcName); // eslint-disable-line
+            const serviceData = await this.servicesRegistry.get(svcName); // eslint-disable-line
             // eslint-disable-next-line
             if (!existingNames.includes(svcName) || !(await fs.exists(serviceData.mainPath))) {
                 serviceData.status = STATUS.INVALID;
-                await this.services.set(svcName, serviceData); // eslint-disable-line
+                await this.servicesRegistry.set(svcName, serviceData); // eslint-disable-line
             }
 
             const maintainer = this.groupMaintainers.get(serviceData.group);
@@ -123,11 +130,16 @@ export default class Services extends app.Subsystem {
             throw new adone.error.Unknown(`Unknown service: ${name}`);
         }
 
-        if (services[0].status === adone.omnitron.STATUS.INVALID) {
+        if (services[0].status === STATUS.INVALID) {
             throw new adone.error.NotValid(`Service '${name}' is invalid`);
         }
 
         return services[0];
+    }
+
+    async getServiceConfiguration(name) {
+        await this.checkService(name);
+        return this.services.getServiceConfiguration(name);
     }
 
     async enumerateByGroup(group) {
@@ -174,16 +186,16 @@ export default class Services extends app.Subsystem {
     }
 
     async enableService(name) {
-        const serviceData = await this.services.get(name);
+        const serviceData = await this.servicesRegistry.get(name);
         if (serviceData.status === STATUS.DISABLED) {
             serviceData.status = STATUS.INACTIVE;
-            return this.services.set(name, serviceData);
+            return this.servicesRegistry.set(name, serviceData);
         }
         throw new error.IllegalState("Service is not disabled");
     }
 
     async disableService(name) {
-        const serviceData = await this.services.get(name);
+        const serviceData = await this.servicesRegistry.get(name);
         if (serviceData.status !== STATUS.DISABLED) {
             if (serviceData.status === STATUS.ACTIVE) {
                 await this.stop(name);
@@ -191,24 +203,24 @@ export default class Services extends app.Subsystem {
                 throw new error.IllegalState(`Cannot disable service with '${serviceData.status}' status`);
             }
             serviceData.status = STATUS.DISABLED;
-            return this.services.set(name, serviceData);
+            return this.servicesRegistry.set(name, serviceData);
         }
     }
 
     async startService(name) {
-        const serviceData = await this.services.get(name);
+        const serviceData = await this.servicesRegistry.get(name);
         const maintainer = await this.getMaintainer(serviceData.group);
         return maintainer.startService(name);
     }
 
     async stopService(name) {
-        const serviceData = await this.services.get(name);
+        const serviceData = await this.servicesRegistry.get(name);
         const maintainer = await this.getMaintainer(serviceData.group);
         return maintainer.stopService(name);
     }
 
     async configureService(name, { group } = {}) {
-        const serviceData = await this.services.get(name);
+        const serviceData = await this.servicesRegistry.get(name);
 
         if (![STATUS.DISABLED, STATUS.INACTIVE].includes(serviceData.status)) {
             throw new error.NotAllowed("Cannot configure active service");
@@ -225,7 +237,7 @@ export default class Services extends app.Subsystem {
             serviceData.group = group;
         }
 
-        await this.services.set(name, serviceData);
+        await this.servicesRegistry.set(name, serviceData);
     }
 
     async getMaintainer(group, onlyExist = false) {

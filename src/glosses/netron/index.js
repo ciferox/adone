@@ -1,97 +1,54 @@
 const {
     is,
+    meta: { reflect },
     error,
-    data: { mpak: { serializer } },
-    lazify,
-    tag,
-    meta: { reflect }
+    tag
 } = adone;
 
+export const NETRON_PROTOCOL = "/netron/1.0.0";
+
+export const ACTION = {
+    GET: 0x00,
+    SET: 0x01,
+    TASK: 0x02
+
+    // MAX: 0x3F
+};
+
 adone.definePredicates({
-    genesisNetron: "GENESIS_NETRON",
-    genesisPeer: "GENESIS_PEER",
     netron: "NETRON",
-    netronPeer: "NETRON_PEER",
-    netronOwnPeer: "NETRON_OWNPEER",
-    netronAdapter: "NETRON_ADAPTER",
     netronDefinition: "NETRON_DEFINITION",
-    netronDefinitions: "NETRON_DEFINITIONS",
-    netronReference: "NETRON_REFERENCE",
-    netronInterface: "NETRON_INTERFACE",
-    netronStub: "NETRON_STUB",
-    netronRemoteStub: "NETRON_REMOTESTUB",
-    netronStream: "NETRON_STREAM"
+    netron2Definitions: "NETRON2_DEFINITIONS",
+    netron2Reference: "NETRON2_REFERENCE",
+    netron2Interface: "NETRON2_INTERFACE",
+    netron2Stub: "NETRON2_STUB",
+    netron2RemoteStub: "NETRON2_REMOTESTUB",
+    netron2Peer: "NETRON2_ABSTRACTPEER",
+    netron2OwnPeer: "NETRON2_OWNPEER",
+    netron2RemotePeer: "NETRON2_REMOTEPEER"
 });
 
-adone.defineCustomPredicate("netronContext", (obj) => {
+adone.defineCustomPredicate("netron2Context", (obj) => {
     let isContex = false;
     let target = undefined;
 
     if (is.class(obj)) {
         target = obj;
     } else if (is.propertyDefined(obj, "__proto__") && is.propertyOwned(obj.__proto__, "constructor")) {
+        if (adone.netron.meta.isDynamicContext(obj)) {
+            return true;
+        }
         target = obj.__proto__.constructor;
     }
     if (!is.undefined(target)) {
-        isContex = is.object(reflect.getMetadata(adone.netron.CONTEXT_ANNOTATION, target));
+        isContex = is.object(reflect.getMetadata(adone.netron.meta.CONTEXT_ANNOTATION, target));
     }
     return isContex;
 });
 
-adone.defineCustomPredicate("netronIMethod", (ni, name) => (is.function(ni[name]) && (ni.$def.$[name].method === true)));
-adone.defineCustomPredicate("netronIProperty", (ni, name) => (is.object(ni[name]) && is.function(ni[name].get) && (is.undefined(ni.$def.$[name].method))));
+adone.defineCustomPredicate("netron2IMethod", (ni, name) => (is.function(ni[name]) && (ni.$def.$[name].method === true)));
+adone.defineCustomPredicate("netron2IProperty", (ni, name) => (is.object(ni[name]) && is.function(ni[name].get) && (is.undefined(ni.$def.$[name].method))));
 
-export const DEFAULT_PORT = 8888;
-
-export const ACTION = {
-    // Common actions
-    GET: 0x00,
-    SET: 0x01,
-    PING: 0x02,
-
-    // Events
-    EVENT_ON: 0x03,
-    EVENT_OFF: 0x04,
-    EVENT_EMIT: 0x05,
-
-    // Contexts
-    CONTEXT_ATTACH: 0x06,
-    CONTEXT_DETACH: 0x07,
-
-    // Streams
-    STREAM_REQUEST: 0x08,
-    STREAM_ACCEPT: 0x09,
-    STREAM_DATA: 0x0A,
-    STREAM_PAUSE: 0x0B,
-    STREAM_RESUME: 0x0C,
-    STREAM_END: 0x0D,
-
-    MAX: 0x100 // = 256
-};
-
-export const PEER_STATUS = {
-    OFFLINE: 0,
-    CONNECTING: 1,
-    HANDSHAKING: 2,
-    ONLINE: 3
-};
-
-const MAX_INTEGER = Number.MAX_SAFE_INTEGER >>> 0;
-
-export class SequenceId {
-    constructor() {
-        this._id = 0 >>> 0;
-    }
-
-    next() {
-        if (this._id === MAX_INTEGER) {
-            this._id = 1;
-        } else {
-            this._id++;
-        }
-        return this._id;
-    }
-}
 
 export class Definition {
     constructor() {
@@ -99,25 +56,17 @@ export class Definition {
         this.name = undefined;
         this.description = undefined;
         this.$ = undefined;
-        this.twin = undefined;
+        // this.twin = undefined;
     }
 }
-tag.add(Definition, "NETRON_DEFINITION");
+tag.add(Definition, "NETRON2_DEFINITION");
 
 export class Reference {
     constructor(defId) {
         this.defId = defId;
     }
 }
-tag.add(Reference, "NETRON_REFERENCE");
-
-export class Interface {
-    constructor(def, uid) {
-        this.$def = def;
-        this.$uid = uid;
-    }
-}
-tag.add(Interface, "NETRON_INTERFACE");
+tag.add(Reference, "NETRON2_REFERENCE");
 
 export class Definitions {
     constructor(...args) {
@@ -148,8 +97,8 @@ export class Definitions {
         let ret;
         for (let i = 0; i < args.length; i++) {
             const arg = args[i];
-            if (!is.netronDefinition(arg) && !is.netronContext(arg) && !is.netronInterface(arg)) {
-                throw new error.InvalidArgument(`Invalid argument ${i} (${typeof(arg)})`);
+            if (!is.netronDefinition(arg) && !is.netron2Context(arg) && !is.netron2Interface(arg)) {
+                throw new error.InvalidArgument(`Invalid argument ${i} (${typeof (arg)})`);
             }
             ret = this._defs.push(arg);
         }
@@ -168,8 +117,8 @@ export class Definitions {
         let ret;
         for (let i = 0; i < args.length; i++) {
             const arg = args[i];
-            if (!is.netronDefinition(arg) && !is.netronContext(arg) && !is.netronInterface(arg)) {
-                throw new error.InvalidArgument(`Invalid argument ${i} (${typeof(arg)})`);
+            if (!is.netronDefinition(arg) && !is.netron2Context(arg) && !is.netron2Interface(arg)) {
+                throw new error.InvalidArgument(`Invalid argument ${i} (${typeof (arg)})`);
             }
             ret = this._defs.unshift(arg);
         }
@@ -184,64 +133,71 @@ export class Definitions {
         return this._defs.splice(begin, end, ...items);
     }
 }
-adone.tag.add(Definitions, "NETRON_DEFINITIONS");
+adone.tag.add(Definitions, "NETRON2_DEFINITIONS");
 
-// Netron specific encoders/decoders
-serializer.register(109, Definition, (obj, buf) => {
-    buf.writeUInt32BE(obj.id);
-    buf.writeUInt32BE(obj.parentId);
-    serializer.encode(obj.name, buf);
-    serializer.encode(obj.description, buf);
-    serializer.encode(obj.$, buf);
-    serializer.encode(obj.twin, buf);
-}, (buf) => {
-    const def = new Definition();
-    def.id = buf.readUInt32BE();
-    def.parentId = buf.readUInt32BE();
-    def.name = serializer.decode(buf);
-    def.description = serializer.decode(buf);
-    def.$ = serializer.decode(buf);
-    def.twin = serializer.decode(buf);
-    return def;
-}).register(108, Reference, (obj, buf) => {
-    buf.writeUInt32BE(obj.defId);
-}, (buf) => {
-    const ref = new Reference();
-    ref.defId = buf.readUInt32BE();
-    return ref;
-}).register(107, Definitions, (obj, buf) => {
-    const len = obj.length;
-    buf.writeUInt32BE(len);
-    for (let i = 0; i < obj.length; i++) {
-        const def = obj.get(i);
-        serializer.encode(def, buf);
-    }
-}, (buf) => {
-    const defs = new Definitions();
-    const len = buf.readUInt32BE();
-    for (let i = 0; i < len; i++) {
-        const def = serializer.decode(buf);
-        defs.push(def);
-    }
-    return defs;
-});
+const MAX_INTEGER = Number.MAX_SAFE_INTEGER >>> 0;
 
-lazify({
-    Reflection: ["./reflection", (mod) => mod.Reflection],
-    Context: ["./reflection", (mod) => mod.Context],
-    Public: ["./reflection", (mod) => mod.Public],
-    Method: ["./reflection", (mod) => mod.Method],
-    Property: ["./reflection", (mod) => mod.Property],
-    CONTEXT_ANNOTATION: ["./reflection", (mod) => mod.CONTEXT_ANNOTATION],
-    GenesisNetron: "./genesis_netron",
-    GenesisPeer: "./genesis_peer",
-    Packet: "./packet",
-    Netron: "./netron",
-    Peer: "./peer",
-    OwnPeer: "./own_peer",
+export class FastUniqueId {
+    constructor() {
+        this.id = 0 >>> 0;
+    }
+
+    get() {
+        if (this.id === MAX_INTEGER) {
+            this.id = 1;
+        } else {
+            this.id++;
+        }
+        return this.id;
+    }
+
+    isEqual(id1, id2) {
+        return id1 === id2;
+    }
+}
+
+const __ = adone.lazify({
+    contextify: () => __.meta.contextify,
+    UniqueId: () => {
+        const { math: { Long } } = adone;
+        const ONE_LONG = new Long(1, 0, true);
+        const ZERO = 0 >>> 0;
+        const ONE = 1 >>> 0;
+        class UniqueId {
+            constructor() {
+                this.id = new Long(0, 0, true);
+            }
+
+            get() {
+                if (this.id.equals(Long.MAX_UNSIGNED_VALUE)) {
+                    this.id.low = ONE;
+                    this.id.high = ZERO;
+                } else {
+                    this.id = this.id.add(ONE_LONG);
+                }
+                return this.id;
+            }
+
+            isEqual(id1, id2) {
+                return id1.equals(id2);
+            }
+        }
+
+        return UniqueId;
+    },
+    meta: "./meta",
     Stub: "./stub",
     RemoteStub: "./remote_stub",
-    Adapter: "./adapter",
-    Stream: "./stream",
-    ws: "./ws"
+    Netron: "./netron",
+    AbstractPeer: "./abstract_peer",
+    OwnPeer: "./own_peer",
+    RemotePeer: "./remote_peer",
+    packet: "./packet",
+    task: "./tasks"
 }, adone.asNamespace(exports), require);
+
+adone.lazifyPrivate({
+    I_DEFINITION_SYMBOL: () => Symbol(),
+    I_PEERID_SYMBOL: () => Symbol(),
+    InterfaceFactory: "./interface_factory"
+}, exports, require);

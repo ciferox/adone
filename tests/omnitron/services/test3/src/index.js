@@ -1,6 +1,6 @@
 const {
     is,
-    netron: { Context, Public }
+    netron: { meta: { Context, Public } }
 } = adone;
 
 @Context()
@@ -14,7 +14,7 @@ class Test3 {
         if (name !== this.service.name) {
             throw new adone.error.NotValid(`Invalid service name: ${this.service.name}`);
         }
-        if (!is.netronPeer(this.service.peer)) {
+        if (!is.netron2Peer(this.service.peer)) {
             throw new adone.error.NotValid("Invalid service peer");
         }
     }
@@ -31,10 +31,10 @@ class Test3 {
 export default class Test3Service extends adone.omnitron.Service {
     async initializeService() {
         this.context = new Test3(this);
-        await this.peer.attachContextRemote(this.context, "test3");
+        await this.peer.attachContext(this.context, "test3");
     }
 
     async uninitializeService() {
-        await this.peer.detachContextRemote("test3");
+        await this.peer.detachContext("test3");
     }
 }

@@ -3,25 +3,26 @@ import "adone";
 const {
     is,
     app,
-    netron: { Context, Public },
-    runtime
+    netron: { meta: { Context, Public } },
+    omnitron
 } = adone;
 
 @Context()
 class ServiceApplication extends app.Application {
     async configure() {
-        this.group = process.env.OMNITRON_SERVICE_GROUP;
+        this.group = process.env.OMNITRON2_SERVICE_GROUP;
 
         this.exitOnSignal("SIGTERM");
 
-        this.peer = await runtime.netron.connect({
-            port: adone.omnitron.port
-        });
+        await omnitron.dispatcher.connectLocal();
+        this.peer = omnitron.dispatcher.peer;
 
         // Waiting for omnitron context is available.
         await this.peer.waitForContext("omnitron");
-        this.iOmnitron = this.peer.getInterface("omnitron");
+
+        this.iOmnitron = this.peer.queryInterface("omnitron");
         this.iMaintainer = await this.iOmnitron.getMaintainer(this.group);
+
         await this.iMaintainer.link(this);
 
         await this.iMaintainer.notifyStatus({
@@ -71,7 +72,9 @@ class ServiceApplication extends app.Application {
     }
 
     async error(error) {
-        if (!is.null(this.peer)) {
+        adone.logError(error);
+
+        if (!is.nil(this.iMaintainer)) {
             await this.iMaintainer.notifyStatus({
                 pid: process.pid,
                 status: adone.app.STATE.FAILED,

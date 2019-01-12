@@ -1,64 +1,81 @@
 const {
-    GenesisPeer,
-    PEER_STATUS
-} = adone.netron;
+    is,
+    netron: { AbstractPeer },
+    error
+} = adone;
 
-export default class OwnPeer extends GenesisPeer {
-    constructor(options) {
-        super(options);
-        this.uid = this.netron.uid;
-    }
-
+export default class OwnPeer extends AbstractPeer {
     isConnected() {
         return true; // always connected
     }
 
-    getStatus() {
-        return PEER_STATUS.ONLINE;
-    }
-
     set(defId, name, data) {
-        return this.netron.set(null, defId, name, data);
+        const stub = this.netron._stubs.get(defId);
+        if (is.undefined(stub)) {
+            throw new error.NotExists(`Context with definition id '${defId}' not exists`);
+        }
+        return stub.set(name, data, this);
     }
 
-    get(defId, name, defaultData) {
-        return this.netron.get(null, defId, name, defaultData);
+    async get(defId, name, defaultData) {
+        const stub = this.netron._stubs.get(defId);
+        if (is.undefined(stub)) {
+            throw new error.NotExists(`Context with definition id '${defId}' not exists`);
+        }
+        const result = await stub.get(name, defaultData, this);
+        if (is.netronDefinition(result)) {
+            return this.netron.interfaceFactory.create(result, this);
+        }
+        return result;
     }
 
-    ping() {
-        return this.netron.ping();
+    subscribe(eventName, handler, once = false) {
+        return (once) ? this.netron.once(eventName, handler) : this.netron.addListener(eventName, handler);
+    }
+
+    unsubscribe(eventName, handler) {
+        return this.netron.removeListener(eventName, handler);
+    }
+
+    attachContext(instance, ctxId) {
+        return this.netron.attachContext(instance, ctxId);
+    }
+
+    detachContext(ctxId, releaseOriginated) {
+        return this.netron.detachContext(ctxId, releaseOriginated);
+    }
+
+    detachAllContexts(releaseOriginated) {
+        return this.netron.detachAllContexts(releaseOriginated);
+    }
+
+    hasContexts() {
+        return this.netron.hasContexts();
     }
 
     hasContext(ctxId) {
         return this.netron.hasContext(ctxId);
     }
 
-    attachContextRemote(instance, ctxId) {
-        return this.netron.attachContext(instance, ctxId);
-    }
-
-    detachContextRemote(ctxId) {
-        return this.netron.detachContext(ctxId);
-    }
-
     getContextNames() {
         return this.netron.getContextNames();
     }
 
-    getDefinitionByName(ctxId) {
-        return this.netron.getDefinitionByName(ctxId);
+    _runTask(task) {
+        return this.netron._runPeerTask(this, task);
     }
 
-    getInterface(ctxId) {
-        return this.netron.getInterfaceByName(ctxId);
+    _getContextDefinition(ctxId) {
+        const stub = this.netron.contexts.get(ctxId);
+        if (is.undefined(stub)) {
+            throw new error.NotExists(`Context '${ctxId}' not exists`);
+        }
+        return stub.definition;
     }
 
-    getInterfaceByName(ctxId) {
-        return this.netron.getInterfaceByName(ctxId);
-    }
-
-    getInterfaceById(defId) {
-        return this.netron.getInterfaceById(defId);
+    _queryInterfaceByDefinition(defId) {
+        const stub = this.netron._getStub(defId);
+        return this.netron.interfaceFactory.create(stub.definition, this);
     }
 }
-adone.tag.add(OwnPeer, "NETRON_OWNPEER");
+adone.tag.add(OwnPeer, "NETRON2_OWNPEER");

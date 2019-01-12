@@ -734,13 +734,6 @@
                     "dst": "lib/glosses/netron",
                     "namespace": "netron"
                 },
-                "netron2": {
-                    "description": "Implementation of Netron 2",
-                    "task": "transpile",
-                    "src": "src/glosses/netron2/**/*.js",
-                    "dst": "lib/glosses/netron2",
-                    "namespace": "netron2"
-                },
                 "notifier": {
                     "description": "Implementation of system notifier",
                     "task": "transpile",
@@ -987,12 +980,6 @@
                     "src": "src/omnitron/**/*.js",
                     "dst": "lib/omnitron",
                     "namespace": "omnitron"
-                },
-                "omnitron2": {
-                    "task": "adoneTranspile",
-                    "src": "src/omnitron2/**/*.js",
-                    "dst": "lib/omnitron2",
-                    "namespace": "omnitron2"
                 },
                 "omnitronAssets": {
                     "src": [

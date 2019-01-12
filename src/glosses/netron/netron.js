@@ -1,527 +1,676 @@
 const {
     is,
     error,
-    net,
-    netron: { DEFAULT_PORT, ACTION, PEER_STATUS, GenesisNetron, Peer, RemoteStub }
+    net: { p2p: { PeerInfo } },
+    netron: { meta: { Reflection }, Stub, FastUniqueId, OwnPeer, ACTION },
+    tag
 } = adone;
 
-const IP_POLICY_NONE = 0;
-const IP_POLICY_ALLOW = 1;
-const IP_POLICY_DENY = 2;
+const CONNECT_TASKS = ["config", "contextDefs"];
 
-// Access object:
-// ips - list of ips
-// policy - "allow" | "deny" - ips access oplicy
-// contexts - list of available context through gate
+const __ = adone.private(adone.netron);
 
-class Gate {
-    constructor(netron, { name, adapter = null, port = netron.options.defaultPort, host = null, access = null } = {}) {
-        this.name = name;
-        this.netron = netron;
-        this.ipPolicy = IP_POLICY_NONE;
-        this.ips = null;
-        this.contexts = null;
-        this.server = null;
-
-        [this.port, this.host] = net.util.normalizeAddr(port, host, netron.options.defaultPort);
-        this.address = net.util.humanizeAddr(netron.options.protocol, port, host);
-        if (!is.string(name)) {
-            this.name = this.address;
-        }
-
-        if (is.string(adapter)) {
-            if (netron.adapters.has(adapter)) {
-                const Adapter = netron.adapters.get(adapter);
-                this.server = new Adapter({
-                    name: this.name,
-                    address: this.address,
-                    port,
-                    host
-                });
-            } else {
-                throw new adone.error.NotSupported(`Unsupported adapter: ${adapter}`);
-            }
-        }
-
-        if (is.plainObject(access)) {
-            // Allowed context
-
-            if (is.array(access.contexts)) {
-                this.contexts = access.contexts;
-            }
-
-            if (is.array(access.ips)) {
-                this.ips = [];
-                for (const addr of access.ips) {
-                    let ipAddr;
-                    if (is.ip4(addr)) {
-                        ipAddr = new net.ip.IP4(addr).toBigNumber();
-                    } else if (is.ip6(addr)) {
-                        ipAddr = new net.ip.IP6(addr).toBigNumber();
-                    } else {
-                        throw new error.NotValid(`Address or subnet '${addr}' is not valid`);
-                    }
-
-                    this.ips.push(ipAddr);
-                }
-                if (is.string(access.policy)) {
-                    this.ipPolicy = (access.policy === "allow" ? IP_POLICY_ALLOW : (access.policy === "deny" ? IP_POLICY_DENY : IP_POLICY_NONE));
-                }
-
-                if (this.ipPolicy === IP_POLICY_ALLOW) {
-                    // eslint-disable-next-line
-                    this.applyPolicy = new Function("peerIp,ips", `
-                        return !ips.findIndex((ipBn) => {
-                            return peerIpBn.eq(ipBn);
-                        });
-                    `);
-                } else {
-                    // eslint-disable-next-line
-                    this.applyPolicy = new Function("peerIpBn,ips", `
-                        return ips.findIndex((ipBn) => {
-                            return peerIpBn.eq(ipBn);
-                        });
-                    `);
-                }
-            }
-        }
+const normalizeError = (err) => {
+    let normErr;
+    if (is.knownError(err)) {
+        normErr = err;
+    } else {
+        normErr = new Error(err.message);
+        normErr.stack = err.stack;
     }
 
-    bind() {
-        if (this.netron.gates.has(this.name)) {
-            throw new error.Exists(`Already bound to '${this.address}'`);
-        }
+    return normErr;
+};
 
-        // Add gate to netron gates map
-        this.netron.gates.set(this.name, this);
-
-        if (!is.null(this.server)) {
-            return this.server.bind(this.netron);
-        }
-
-        this.server = new net.Server(this.netron.options);
-        this.server.options.name = this.name;
-
-        if (!this.netron.options.refGates) {
-            this.server.unref();
-        }
-
-        return this.server.bind({ port: this.port, host: this.host });
+class NetworkInfo {
+    constructor(netCore) {
+        this.netCore = netCore;
     }
 }
 
-class Gates {
-    constructor() {
-        this._gates = new Map();
-    }
+export default class Netron extends adone.task.Manager {
+    constructor(peerId, options) {
+        super();
 
-    has(name) {
-        return this._gates.has(name);
-    }
+        this.peer = new OwnPeer(PeerInfo.create(peerId), this);
 
-    get(name) {
-        return this._gates.get(name);
-    }
-
-    set(name, gate) {
-        this._gates.set(name, gate);
-    }
-
-    delete(name) {
-        this._gates.delete(name);
-    }
-
-    getByAddress(addr) {
-        const name = this._getGateNamebyAddress(addr);
-        if (is.string(name)) {
-            return this._gates.get(name);
-        }
-        return undefined;
-    }
-
-    getAll() {
-        return [...this._gates.values()];
-    }
-
-    clear() {
-        this._gates.clear();
-    }
-
-    deleteByAddress(addr) {
-        const name = this._getGateNamebyAddress(addr);
-        if (is.string(name)) {
-            this.delete(name);
-        }
-    }
-
-    _getGateNamebyAddress(addr) {
-        const gates = this.getAll();
-        for (const gate of gates) {
-            if (gate.addr === addr) {
-                return gate.name;
-            }
-        }
-        return undefined;
-    }
-}
-
-export default class Netron extends GenesisNetron {
-    constructor(options = {}, uid) {
-        super({
-            refGates: true,
-            refPeers: true,
+        this.options = {
+            responseTimeout: 60000 * 3,
+            proxyContexts: false,
+            // acceptTwins: true,
+            // transpiler: {
+            //     plugins: [
+            //         "transform.asyncToGenerator"
+            //     ],
+            //     compact: false
+            // },
             ...options
-        }, uid);
-        Object.assign(this.options,
-            {
-                peerFactory: (socket, server) => {
-                    const peer = this._createPeer(socket, server);
-                    this._emitPeerEvent("peer create", peer);
-                    return peer;
-                },
-                сonnectionHandler: this.onNewConnection.bind(this)
-            }
-        );
+        };
 
-        this._nonauthPeers = [];
-        this.gates = new Gates();
-        this.adapters = new Map();
+        this.interfaceFactory = new __.InterfaceFactory(this);
+        this.contexts = new Map();
+        this.peers = new Map();
+        this.networks = new Map();
+        this._ownEvents = new Map();
 
-        this.on("peer online", (peer) => {
-            if (!this.options.refPeers) {
-                peer.unref();
-            }
-        });
+        this._stubs = new Map();
+        this._peerStubs = new Map();
+        this._defUniqueId = this.options.uniqueId || new FastUniqueId();
+        // this._localTwins = new Map();
+
+        this.setMaxListeners(Infinity);
     }
 
-    registerAdapter(name, AdapterClass) {
-        if (this.adapters.has(name)) {
-            throw new adone.error.Exists(`Adapter with name '${name}' already registered`);
-        }
-        this.adapters.set(name, AdapterClass);
-    }
+    // NetCores management
 
-    disconnect(uid) {
-        return super.disconnect(uid).then(() => {
-            // disconnect all nonauthorized peers
-            const nonauthPromises = [];
-            for (const peer of this._nonauthPeers) {
-                nonauthPromises.push(peer.disconnect());
-            }
-            return Promise.all(nonauthPromises);
-        });
-    }
-
-    async bind(options) {
-        if (is.string(options)) {
-            return this.bind({ port: options });
+    /**
+     * Creates new netcore instance and own it.
+     * 
+     * @param {string} netId network name
+     * @returns {net.p2p.Core} - return instance of p2p core
+     */
+    createNetCore(netId, config = {}) {
+        if (this.networks.has(netId)) {
+            throw new error.Exists(`Core '${netId}' is already exist`);
         }
 
-        const gate = new Gate(this, options);
-        return gate.bind();
+        if (!config.transport) {
+            // Set TCP as default transport
+            config.transport = "tcp";
+        }
+
+        if (!config.muxer) {
+            config.muxer = "mplex";
+        }
+
+        const peerInfo = PeerInfo.create(this.peer.info.id);
+        if (is.string(config.addrs)) {
+            config.addrs = [config.addrs];
+        }
+
+        if (is.array(config.addrs)) {
+            for (const ma of config.addrs) {
+                peerInfo.multiaddrs.add(ma);
+            }
+        }
+
+        const netCore = new adone.net.p2p.Core({
+            ...adone.util.omit(config, "addrs"),
+            peer: peerInfo
+        });
+
+        netCore.on("peer:disconnect", (peerInfo) => {
+            try {
+                this._peerDisconnected(this.getPeer(peerInfo));
+            } catch (err) {
+                // Peer already disconnected, nothing todo...
+            }
+        });
+
+        this.networks.set(netId, new NetworkInfo(netCore));
+        return netCore;
     }
 
-    async unbind(options) {
-        if (is.string(options)) {
-            const gate = this.gates.get(options);
-            if (is.undefined(gate)) {
-                throw new error.Unknown(`Unknown gate with name '${options}'`);
-            }
+    /**
+     * Deletes early created network core.
+     * 
+     * If netcore is used, it will be stopped.
+     * 
+     * @param {string} netId network name
+     */
+    deleteNetCore(netId) {
+        const netCore = this.getNetCore(netId);
+        if (netCore.started) {
+            throw new error.NotAllowed("It is not allow to delete active netcore");
+        }
+        this.networks.delete(netId);
+    }
 
-            // Disconnect from peers
-            const peers = this.getPeersForGate(options);
-            for (const peer of peers) {
-                await peer.disconnect(); // eslint-disable-line
-            }
+    /**
+     * Returns netcore instance by id.
+     * @param {string} netId network name
+     */
+    getNetCore(netId) {
+        const ni = this.networks.get(netId);
+        if (is.undefined(ni)) {
+            throw new error.Unknown(`Unknown network name: ${netId}`);
+        }
 
-            await gate.server.unbind();
-            this.gates.delete(options);
-        } else if (is.plainObject(options)) {
-            if (is.string(options.port) && !options.port.includes("/") && !options.port.endsWith(".sock")) {
-                const gate = this.gates.getByAddress(options.port);
-                if (is.undefined(gate)) {
-                    throw new error.Unknown(`Unknown gate '${options.port}'`);
-                }
-    
-                await gate.server.unbind();
-                this.gates.deleteByAddress(options.port);
-            } else {
-                const [port, host] = net.util.normalizeAddr(options.port, options.host, this.options.defaultPort);
-                const addr = net.util.humanizeAddr(this.options.protocol, port, host);
-                const gate = this.gates.getByAddress(addr);
-                if (is.undefined(gate)) {
-                    throw new error.Unknown(`Unknown gate '${options.port}'`);
-                }
-                await gate.server.unbind();
-                this.gates.deleteByAddress(addr);
+        return ni.netCore;
+    }
+
+    /**
+     * Returns true if netcore with specified id already exist.
+     */
+    hasNetCore(netId) {
+        return this.networks.has(netId);
+    }
+
+    /**
+     * Connects to peer using netcore identified by 'netId'.
+     * 
+     * @param {string} netId - network core name
+     * @param {PeerInfo|Multiaddr|string|Peer} addr - peer address
+     */
+    async connect(netId, addr) {
+        let peerInfo;
+        if (is.multiAddress(addr) || is.string(addr)) {
+            let ma = addr;
+            if (is.string(addr)) {
+                ma = adone.multi.address.create(addr);
             }
+            const peerIdB58Str = ma.getPeerId();
+            if (!peerIdB58Str) {
+                throw new Error("Peer multiaddr instance or string must include peerId");
+            }
+            peerInfo = new PeerInfo(adone.crypto.Identity.createFromBase58(peerIdB58Str));
+            peerInfo.multiaddrs.add(ma);
         } else {
-            for (const gate of this.gates.getAll()) {
-                // eslint-disable-next-line
-                await gate.server.unbind();
-            }
-            this.gates.clear();
+            peerInfo = addr;
         }
-    }
 
-    async onConfirmConnection(peer) {
-        return true;
-    }
-
-    async onConfirmPeer(peer, packet) {
-        return true;
-    }
-
-    async onNewConnection(peer) {
-        let isConfirmed = true;
-
-        const gate = this.gates.get(peer.options.gateName);
-        if (gate.ipPolicy !== IP_POLICY_NONE) {
-            const peerAddress = peer.getRemoteAddress().address;
-            let peerIpBn;
-            if (is.ip4(peerAddress)) {
-                peerIpBn = new net.ip.IP4(peerAddress).toBigNumber();
-            } else if (is.ip6(peerAddress)) {
-                peerIpBn = new net.ip.IP6(peerAddress).toBigNumber();
-            } else {
-                throw new error.Unknown(`Unknown address: ${peerAddress}`);
-            }
-            if (gate.applyPolicy(peerIpBn, gate.ips)) {
-                return peer.disconnect();
-            }
+        try {
+            return this.getPeer(peerInfo);
+        } catch (err) {
+            // fresh peer...
         }
-        isConfirmed = await this.onConfirmConnection(peer);
-        if (isConfirmed) {
-            peer._setStatus(PEER_STATUS.HANDSHAKING);
-            this._nonauthPeers.push(peer);
-            peer.on("disconnect", () => {
-                this._peerDisconnected(peer);
+
+        const netCore = this.getNetCore(netId);
+        const peer = new adone.netron.RemotePeer(PeerInfo.create(peerInfo), this, netCore);
+        const protocol = adone.netron.NETRON_PROTOCOL;
+        await peer._setConnInfo(await netCore.connect(peerInfo, protocol));
+        await this._peerConnected(peer, protocol);
+        return peer;
+    }
+
+    /**
+     * Disconnects all peers associated with network identified by 'netId' or all networks if not specified.
+     * 
+     * @param {string} netId - network name
+     */
+    async disconnect(netId) {
+        if (is.nil(netId)) {
+            //
+        }
+        // for (const peer of this.peers.values()) {
+        //     await peer.disconnect();
+        // }
+    }
+
+    async disconnectPeer(peerId) {
+        const peer = this.getPeer(peerId);
+        await peer.netCore.disconnect(peer.info);
+
+        const base58Str = peer.info.id.asBase58();
+        return new Promise((resolve) => {
+            this.on("peer:disconnect", (peerData) => {
+                if (base58Str === peerData.id) {
+                    resolve();
+                }
             });
-            this._emitPeerEvent("peer connect", peer);
-            return true;
-        }
-        return peer.disconnect();
-    }
-
-    onSendHandshake(peer) {
-        const data = super.onSendHandshake(peer);
-        data.isSuper = this.options.isSuper;
-
-        let allowedContexts = null;
-
-        const gateName = peer.options.gateName;
-        if (is.string(gateName)) {
-            const gate = this.gates.get(gateName);
-            if (is.array(gate.contexts) && gate.contexts.length > 0) {
-                allowedContexts = gate.contexts;
-            }
-        }
-
-        const defs = {};
-        let hasContexts = false;
-        for (const [name, stub] of this.contexts.entries()) {
-            if (is.null(allowedContexts) || allowedContexts.includes(name)) {
-                defs[name] = stub.definition;
-                hasContexts = true;
-            }
-        }
-
-        if (hasContexts) {
-            data.defs = defs;
-        }
-
-        return data;
-    }
-
-    async _onReceiveHandshake(peer, packet) {
-        const data = packet.data;
-
-        const uid = data.uid;
-        if (this.peers.has(uid)) {
-            throw new error.Exists(`Peer '${uid}' already connected`);
-        }
-
-        const isConfirmed = await this.onConfirmPeer(peer, packet);
-        if (isConfirmed) {
-            this._onReceiveInitial(peer, data);
-            this._removePeerFromNonauthList(peer);
-        } else {
-            throw new error.InvalidAccess(`Access denied for peer '${peer.uid}' - peer not confirmed`);
-        }
-    }
-
-    async customProcessPacket(peer, packet) {
-        const status = packet.getStatus();
-        switch (packet.getAction()) {
-            case ACTION.GET: {
-                switch (status) {
-                    case PEER_STATUS.HANDSHAKING: {
-                        try {
-                            await this._onReceiveHandshake(peer, packet);
-                            const p = this.send(peer, 0, packet.streamId, 1, ACTION.SET, this.onSendHandshake(peer));
-                            peer._setStatus(PEER_STATUS.ONLINE);
-                            await p;
-                            this._emitPeerEvent("peer online", peer);
-                        } catch (err) {
-                            peer.disconnect();
-                            adone.logError(err.message);
-                        }
-                        return true;
-                    }
-                }
-                break;
-            }
-            case ACTION.CONTEXT_ATTACH: {
-                switch (status) {
-                    case PEER_STATUS.ONLINE: {
-                        if (packet.getImpulse()) {
-                            try {
-                                const ctxData = packet.data;
-                                const iCtx = this._createInterface(ctxData.def, peer.uid);
-                                const stub = new RemoteStub(this, iCtx);
-                                const defId = this._attachContext(ctxData.id, stub);
-                                peer._ownDefIds.push(defId);
-                                ctxData.def.$remote = true;
-                                ctxData.def.$proxyDef = stub.definition;
-                                peer._updateDefinitions({ "": ctxData.def });
-                                await this.send(peer, 0, packet.streamId, 1, ACTION.CONTEXT_ATTACH, defId);
-                            } catch (err) {
-                                adone.logError(err);
-                            }
-                        }
-                        break;
-                    }
-                    default: {
-                        adone.logError(`${peer.uid} attempts 'attach' action with status ${status}`);
-                    }
-                }
-                return true;
-            }
-            case ACTION.CONTEXT_DETACH: {
-                switch (status) {
-                    case PEER_STATUS.ONLINE: {
-                        if (packet.getImpulse()) {
-                            const ctxId = packet.data;
-                            try {
-                                const defId = this.detachContext(ctxId/*, peer*/);
-                                peer._defs.delete(defId);
-                                const index = peer._ownDefIds.indexOf(defId);
-                                if (index >= 0) {
-                                    peer._ownDefIds.splice(index, 1);
-                                }
-                                await this.send(peer, 0, packet.streamId, 1, ACTION.CONTEXT_DETACH);
-                            } catch (err) {
-                                adone.logError(err);
-                                if (err.name !== "IllegalState") {
-                                    try {
-                                        await this.send(peer, 0, packet.streamId, 1, ACTION.CONTEXT_DETACH, err);
-                                    } catch (err) {
-                                        adone.logError(err);
-                                    }
-                                }
-                            }
-                        } else { // reply
-                            const awaiter = peer._removeAwaiter(packet.streamId);
-                            !is.undefined(awaiter) && awaiter(packet.data);
-                        }
-                        break;
-                    }
-                    default: {
-                        adone.logError(`${peer.uid} attempts 'detach' action with status ${status}`);
-                    }
-                }
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    _createPeer(socket, server) {
-        const peer = new Peer({
-            netron: this,
-            socket,
-            packetHandler: this._processPacket,
-            handlerThisArg: this,
-            protocol: this.options.protocol,
-            connect: this.options.connect,
-            defaultPort: DEFAULT_PORT,
-            responseTimeout: this.options.responseTimeout
         });
-        if (!is.undefined(server)) {
-            const gateName = server.options.name;
-            if (!is.nil(gateName)) {
-                peer.options.gateName = gateName;
+    }
+
+    /**
+     * Starts netcore with specified id or all created netcores if 'netId' is undefined.
+     * 
+     * @param {string} netId network name
+     */
+    async start(netId) {
+        if (!is.string(netId)) {
+            const promises = [];
+            for (const id of this.networks.keys()) {
+                promises.push(this.start(id));
             }
+            return Promise.all(promises);
+        }
+
+        const netCore = this.getNetCore(netId);
+        if (!netCore.started) {
+            netCore.handle(adone.netron.NETRON_PROTOCOL, async (protocol, conn) => {
+                const peerInfo = await conn.getPeerInfo();
+                const peer = new adone.netron.RemotePeer(peerInfo, this, netCore);
+                peer._setConnInfo(conn);
+                await this._peerConnected(peer, protocol);
+            });
+            await netCore.start();
+        }
+    }
+
+    async _peerConnected(peer, protocol) {
+        const base58Id = peer.info.id.asBase58();
+        this.peers.set(base58Id, peer);
+        peer.protocol = protocol;
+        peer.connectedTime = new Date();
+        await peer.runTask(CONNECT_TASKS);
+        await peer._subscribeOnContexts();
+        return this._emitOwnEvent("peer:connect", `peer:${base58Id}`, {
+            id: base58Id
+        });
+    }
+
+    async _peerDisconnected(peer) {
+        const base58Id = peer.info.id.asBase58();
+        this.peers.delete(base58Id);
+        peer._setConnInfo(null);
+
+        if (peer._remoteSubscriptions.size > 0) {
+            for (const [eventName, fn] of peer._remoteSubscriptions.entries()) {
+                this.removeListener(eventName, fn);
+            }
+            peer._remoteSubscriptions.clear();
+        }
+
+        this._peerStubs.delete(base58Id);
+
+        // Release stubs sended to peer;
+        for (const [defId, stub] of this._stubs.entries()) {
+            const def = stub.definition;
+            if (def.peerId === base58Id) {
+                this._stubs.delete(defId);
+                this._releaseOriginatedContexts(defId);
+            }
+        }
+
+        peer.interfaces.clear();
+
+        await this._emitOwnEvent("peer:disconnect", `peer:${base58Id}`, {
+            id: base58Id
+        });
+        this._ownEvents.delete(`peer:${base58Id}`);
+    }
+
+    /**
+     * Stops netcore.
+     * @param {string} netCoreId netcore identification name
+     */
+    async stop(netId) {
+        if (!is.string(netId)) {
+            const promises = [];
+            for (const id of this.networks.keys()) {
+                promises.push(this.stop(id));
+            }
+            return Promise.all(promises);
+        }
+
+        const netCore = this.getNetCore(netId);
+        if (netCore.started) {
+            await netCore.stop();
+        }
+    }
+
+    refContext(peerInfo, obj) {
+        const base58Id = peerInfo.id.asBase58();
+        let stubs = this._peerStubs.get(base58Id);
+        if (is.undefined(stubs)) {
+            stubs = [];
+            this._peerStubs.set(base58Id, stubs);
+        }
+        let stub = stubs.find((s) => s.instance === obj);
+        if (is.undefined(stub)) {
+            stub = new Stub(this, obj);
+            this._stubs.set(stub.definition.id, stub);
+            stubs.push(stub);
+        }
+        return stub.definition;
+    }
+
+    releaseContext(obj, releaseOriginated = true) {
+        for (const [defId, stub] of this._stubs.entries()) {
+            if (stub.instance === obj) {
+                this._stubs.delete(defId);
+                releaseOriginated && this._releaseOriginatedContexts(defId, true);
+            }
+        }
+
+        for (const [uid, stubs] of this._peerStubs.entries()) {
+            for (let i = 0; i < stubs.length; i++) {
+                const stub = stubs[i];
+                if (stub.instance === obj) {
+                    stubs.splice(i, 1);
+                    if (stubs.length === 0) {
+                        this._peerStubs.delete(uid);
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
+     * Attaches context to associated peer.
+     * 
+     * @param instance - context instance
+     * @param ctxId - context identifier, if not specified, the class name will be used
+     * @returns 
+     */
+    attachContext(instance, ctxId = null) {
+        // Call this first because it validate instance.
+        const r = Reflection.from(instance);
+
+        if (is.null(ctxId)) {
+            ctxId = instance.__proto__.constructor.name;
+        }
+        if (this.contexts.has(ctxId)) {
+            throw new error.Exists(`Context '${ctxId}' already attached`);
+        }
+
+        return this._attachContext(ctxId, new Stub(this, r));
+    }
+
+    /**
+     * Detaches before attached context with specified name.
+     */
+    detachContext(ctxId, releaseOriginated = true) {
+        const stub = this.contexts.get(ctxId);
+        if (is.undefined(stub)) {
+            throw new error.NotExists(`Context '${ctxId}' not exists`);
+        }
+
+        this.contexts.delete(ctxId);
+        const defId = stub.definition.id;
+        releaseOriginated && this._releaseOriginatedContexts(defId);
+        this._stubs.delete(defId);
+        this._emitOwnEvent("context:detach", `ctx:${ctxId}`, { id: ctxId, defId });
+        return defId;
+    }
+
+    /**
+     * Detaches all contexts.
+     */
+    detachAllContexts(releaseOriginated = true) {
+        for (const ctxId of this.contexts.keys()) {
+            this.detachContext(ctxId, releaseOriginated);
+        }
+    }
+
+    hasContexts() {
+        return this.contexts.size > 0;
+    }
+
+    hasContext(ctxId) {
+        return this.contexts.has(ctxId);
+    }
+
+    getContextNames() {
+        const names = [];
+        for (const k of this.contexts.keys()) {
+            names.push(k);
+        }
+        return names;
+    }
+
+    _getStub(defId) {
+        const stub = this._stubs.get(defId);
+        if (is.undefined(stub)) {
+            throw new error.Unknown(`Unknown definition '${defId}'`);
+        }
+        return stub;
+    }
+
+    // setInterfaceTwin(ctxClassName, TwinClass) {
+    //     if (!is.class(TwinClass)) {
+    //         throw new error.InvalidArgument("TwinClass should be a class");
+    //     }
+    //     if (!is.netronInterface(new TwinClass())) {
+    //         throw new error.InvalidArgument("TwinClass should be extended from adone.netron.Interface");
+    //     }
+    //     const Class = this._localTwins.get(ctxClassName);
+    //     if (!is.undefined(Class)) {
+    //         throw new error.Exists(`Twin for interface '${ctxClassName}' exists`);
+    //     }
+    //     this._localTwins.set(ctxClassName, TwinClass);
+    // }
+
+    /**
+     * Returns meta data.
+     * 
+     * @param {*} peer - instance of AbstractPeer implementation
+     * @param {Array|Object|string} request
+     */
+    async requestMeta(peer, request) {
+        const response = [];
+        const requests = adone.util.arrify(request);
+
+        for (let request of requests) {
+            if (is.string(request)) {
+                request = {
+                    id: request
+                };
+            }
+            try {
+                const handler = this.getMetaHandler(request.id);
+                const data = await handler(this, peer, request); // eslint-disable-line
+                response.push({
+                    id: request.id,
+                    data
+                });
+            } catch (error) {
+                response.push({
+                    id: request.id,
+                    error
+                });
+            }
+        }
+
+        return response;
+    }
+
+    getPeer(peerId) {
+        if (is.nil(peerId)) {
+            return this.peer;
+        }
+
+        let base58Id;
+        if (is.netron2Peer(peerId)) {
+            base58Id = peerId.info.id.asBase58();
+            if (this.peers.has(base58Id)) {
+                return peerId;
+            }
+        } else if (is.p2pPeerInfo(peerId)) {
+            base58Id = peerId.id.asBase58();
+        } else if (is.identity(peerId)) {
+            base58Id = peerId.asBase58();
+        } else if (is.string(peerId)) { // base58
+            base58Id = peerId;
+        } else {
+            throw new error.NotValid(`Invalid type of peer identity: ${adone.meta.typeOf(peerId)}`);
+        }
+
+        const peer = this.peers.get(base58Id);
+        if (is.undefined(peer)) {
+            if (this.peer.info.id.asBase58() === base58Id) {
+                return this.peer;
+            }
+            throw new error.Unknown(`Unknown peer: '${base58Id}'`);
         }
         return peer;
     }
 
-    _peerDisconnected(peer) {
-        this._removePeerFromNonauthList(peer);
-        if (this.options.isSuper) {
-            // Check strong contextes attached remotely by disconnectered peer and remove them.
-            for (const [ctxId, stub] of this.contexts.entries()) {
-                if (is.netronRemoteStub(stub) && stub.iInstance.$uid === peer.uid) {
-                    this.detachContext(ctxId/*, peer*/);
+    getPeerForInterface(iInstance) {
+        if (!is.netron2Interface(iInstance)) {
+            throw new error.NotValid("Object is not a netron interface");
+        }
+
+        return this.getPeer(iInstance[__.I_PEERID_SYMBOL]);
+    }
+
+    _releaseOriginatedContexts(defId) {
+        const defIds = [];
+        const ignoreIds = [];
+        this._deepScanChilds(defId, defIds, ignoreIds);
+        for (const defId of defIds) {
+            this._stubs.delete(defId);
+        }
+    }
+
+    _deepScanChilds(parentId, defIds, ignoreIds) {
+        for (const [defId, stub] of this._stubs.entries()) {
+            if (ignoreIds.includes(defId)) {
+                continue;
+            }
+            const def = stub.definition;
+            if (def.parentId === parentId) {
+                defIds.push(defId);
+                ignoreIds.push(defId);
+                this._deepScanChilds(defId, defIds, ignoreIds);
+            }
+        }
+    }
+
+    // // _removePeersRelatedDefinitions(exceptPeer, proxyDef) {
+    // //     for (let peer of this.peers.values()) {
+    // //         if (peer.uid !== exceptPeer.uid) {
+    // //             peer._removeRelatedDefinitions(proxyDef);
+    // //         }
+    // //     }
+    // // }
+
+    async _processPacket(peer, packet) {
+        const action = packet.getAction();
+        switch (action) {
+            case ACTION.SET: {
+                if (packet.getImpulse()) {
+                    const data = packet.data;
+                    const defId = data[0];
+                    const name = data[1];
+                    const stub = this._stubs.get(defId);
+
+                    try {
+                        if (is.undefined(stub)) {
+                            return peer._sendErrorResponse(packet, new error.NotExists(`Context with definition id '${defId}' not exists`));
+                        }
+                        await peer._sendResponse(packet, await stub.set(name, data[2], peer));
+                    } catch (err) {
+                        adone.logError(err);
+                        if (err.name !== "NetronIllegalState") {
+                            try {
+                                await peer._sendErrorResponse(packet, normalizeError(err));
+                            } catch (err) {
+                                adone.logError(err);
+                            }
+                        }
+                    }
+                } else {
+                    peer._handleResponse(packet);
                 }
+                break;
             }
+            case ACTION.GET: {
+                if (packet.getImpulse()) {
+                    const data = packet.data;
+                    const defId = data[0];
+                    const name = data[1];
+                    const stub = this._stubs.get(defId);
 
-            // Check weak contexts associated with disconnected peer and remove them.
-            for (const stub of this._stubs.values()) {
-                if (is.netronRemoteStub(stub) && stub.iInstance.$uid === peer.uid) {
-                    // this._removePeersRelatedDefinitions(peer, stub.definition);
-                    const defId = stub.definition.id;
-                    this._stubs.delete(defId);
-
-                    this._releaseOriginatedContexts(defId);
+                    try {
+                        if (is.undefined(stub)) {
+                            return peer._sendErrorResponse(packet, new error.NotExists(`Context with definition id '${defId}' not exists`));
+                        }
+                        await peer._sendResponse(packet, await stub.get(name, data[2], peer));
+                    } catch (err) {
+                        if (err.name !== "NetronIllegalState") {
+                            try {
+                                await peer._sendErrorResponse(packet, normalizeError(err));
+                            } catch (err) {
+                                adone.logError(err);
+                            }
+                        }
+                    }
+                } else {
+                    peer._handleResponse(packet);
                 }
+                break;
+            }
+            case ACTION.TASK: {
+                if (packet.getImpulse()) {
+                    peer._sendResponse(packet, await this._runPeerTask(peer, packet.data));
+                } else {
+                    peer._handleResponse(packet);
+                }
+                break;
             }
         }
-        return super._peerDisconnected(peer);
     }
 
-    refGates() {
-        for (const { server } of this.gates.getAll()) {
-            server.ref();
-        }
-    }
+    async _runPeerTask(peer, task) {
+        const tasksResults = {};
+        const results = [];
 
-    unrefGates() {
-        for (const { server } of this.gates.getAll()) {
-            server.unref();
-        }
-    }
-
-    refPeers() {
-        this.options.refPeers = true;
-        for (const peer of this.getPeers().values()) {
-            peer.ref();
-        }
-    }
-
-    unrefPeers() {
-        this.options.refPeers = false;
-        for (const peer of this.getPeers().values()) {
-            peer.unref();
-        }
-    }
-
-    getPeersForGate(name) {
-        const result = [];
-        for (const peer of this.peers.values()) {
-            if (peer.options.gateName === name) {
-                result.push(peer);
+        for (let t of adone.util.arrify(task)) {
+            if (is.string(t)) {
+                t = {
+                    task: t
+                };
+            }
+            if (is.plainObject(t) && is.string(t.task)) {
+                if (!this.hasTask(t.task)) {
+                    if (t.task in adone.netron.task) {
+                        // eslint-disable-next-line
+                        await this.addTask(t.task, adone.netron.task[t.task], {
+                            singleton: true
+                        });
+                    } else {
+                        tasksResults[t.task] = {
+                            error: new error.NotExists(`Task '${t.task}' is not exist`)
+                        };
+                        continue;
+                    }
+                }
+                const observer = await this.run(t.task, peer, ...adone.util.arrify(t.args)); // eslint-disable-line
+                const r = is.promise(observer.result) ? observer.result : Promise.resolve(observer.result);
+                results.push(r.then((result) => {
+                    tasksResults[t.task] = {
+                        result
+                    };
+                }).catch((error) => {
+                    console.log(error);
+                    tasksResults[t.task] = {
+                        error
+                    };
+                }));
             }
         }
-        return result;
+
+        await Promise.all(results);
+        return tasksResults;
     }
 
-    _removePeerFromNonauthList(peer) {
-        const index = this._nonauthPeers.indexOf(peer);
-        if (index >= 0) {
-            this._nonauthPeers.splice(index, 1);
+    _attachContext(ctxId, stub) {
+        const def = stub.definition;
+        const defId = def.id;
+        this.contexts.set(ctxId, stub);
+        this._stubs.set(defId, stub);
+        this._emitOwnEvent("context:attach", `ctx:${ctxId}`, {
+            id: ctxId,
+            def
+        });
+        return defId;
+    }
+
+    async _emitOwnEvent(event, id, data) {
+        let events = this._ownEvents.get(id);
+        if (is.undefined(events)) {
+            events = [event];
+            this._ownEvents.set(id, events);
+        } else {
+            events.push(event);
+            if (events.length > 1) {
+                return;
+            }
+        }
+        for (; ;) {
+            const eventName = events[0];
+            try {
+                await this.emitParallel(eventName, data); // eslint-disable-line
+            } catch (err) {
+                adone.logError(err);
+            }
+
+            if (is.undefined(events.shift())) {
+                break;
+            }
         }
     }
 }
-adone.tag.add(Netron, "NETRON");
+tag.add(Netron, "NETRON2");

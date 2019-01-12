@@ -5,38 +5,29 @@ const {
     is,
     std,
     fs,
-    netron: { Context, Public },
-    omnitron,
+    netron: { meta: { Context, Public } },
     runtime
 } = adone;
 
 const previousUsage = process.cpuUsage();
 
-// The order of the subsystems is significant.
-const CORE_SUBSYSTEMS = [
-    "services",
-    "gates"
-];
+const CORE_GROUP = "core";
 
-export default 
+export default
 @Context({
     description: "Omnitron"
 })
 class Omnitron extends app.Application {
     async configure() {
-        // Force create home and runtime directories
-        await fs.mkdirp(adone.realm.config.RUNTIME_PATH);
+        this.enableReport({
+            directory: adone.runtime.config.omnitron.LOGS_PATH
+        });
 
-        // Add subsystems
-        for (const name of CORE_SUBSYSTEMS) {
-            // eslint-disable-next-line
-            this.addSubsystem({
-                subsystem: std.path.join(__dirname, "subsystems", name),
-                name,
-                bind: true,
-                group: "core"
-            });
-        }
+        await this.addSubsystemsFrom(std.path.join(__dirname, "subsystems"), {
+            bind: true,
+            useFilename: true,
+            group: CORE_GROUP
+        });
 
         if (!is.windows) {
             this.exitOnSignal("SIGQUIT", "SIGTERM", "SIGINT");
@@ -50,12 +41,7 @@ class Omnitron extends app.Application {
     }
 
     async initialize() {
-        this.db = await omnitron.DB.open();
-        adone.logInfo("Database opened");
-
-        await runtime.netron.attachContext(this, "omnitron");
-        adone.logInfo("Omnitron context attached");
-
+        await this.initializeSubsystems();
         await this.createPidFile();
     }
 
@@ -75,29 +61,16 @@ class Omnitron extends app.Application {
         // Unitialize services in omnitron group
         // ...
 
-        // Uninitialize managers in right order
-        for (const name of CORE_SUBSYSTEMS) {
-            try {
-                await this.uninitializeSubsystem(name); // eslint-disable-line
-            } catch (err) {
-                adone.logError(err);
-            }
-        }
-
-        if (runtime.netron.hasContext("omnitron")) {
-            await runtime.netron.detachContext("omnitron");
-            adone.logInfo("Omnitron context detached");
-        }
-
-        await this.db.close();
-        adone.logInfo("Database closed");
+        await this.uninitializeSubsystems({
+            ignoreErrors: true
+        });
 
         adone.logInfo("Omnitron stopped");
     }
 
     async createPidFile() {
         try {
-            await fs.writeFile(adone.realm.config.omnitron.PIDFILE_PATH, process.pid.toString());
+            await fs.writeFile(adone.runtime.config.omnitron.PIDFILE_PATH, process.pid.toString());
         } catch (err) {
             adone.logError(err.message);
         }
@@ -105,7 +78,7 @@ class Omnitron extends app.Application {
 
     async deletePidFile() {
         try {
-            await fs.rm(adone.realm.config.omnitron.PIDFILE_PATH);
+            await fs.rm(adone.runtime.config.omnitron.PIDFILE_PATH);
         } catch (err) {
             adone.logError(err.message);
         }
@@ -192,7 +165,8 @@ class Omnitron extends app.Application {
 
         if (realm) {
             result.realm = {
-                uid: (await adone.realm.getManager()).id
+                id: adone.runtime.realm.identity.id,
+                config: adone.util.omit(adone.runtime.config, "identity")
             };
         }
 
@@ -234,15 +208,17 @@ class Omnitron extends app.Application {
     @Public({
         description: "Register new service"
     })
-    registerService(name) {
-        return this.db.registerService(name);
+    async registerService(name) {
+        const registry = await this.db.getConfiguration("registry");
+        await registry.registerService(name);
     }
 
     @Public({
         description: "Register existing service"
     })
-    unregisterService(name) {
-        return this.db.unregisterService(name);
+    async unregisterService(name) {
+        const registry = await this.db.getConfiguration("registry");
+        return registry.unregisterService(name);
     }
 
     @Public({
@@ -313,8 +289,7 @@ class Omnitron extends app.Application {
         description: "Returns valuable used as service configuration store"
     })
     async getServiceConfiguration(name) {
-        await this.services.checkService(name);
-        return this.db.getServiceConfiguration(name);
+        return this.services.getServiceConfiguration(name);
     }
 
     @Public({
@@ -330,21 +305,6 @@ class Omnitron extends app.Application {
     })
     getReport() {
         return adone.app.report.getReport();
-    }
-
-    @Public({
-        description: "Returns connected peer UIDs"
-    })
-    getPeers() {
-        const peers = [...runtime.netron.getPeers().values()];
-
-        return peers.map((peer) => {
-            return {
-                uid: peer.uid,
-                address: peer.getRemoteAddress().full,
-                connectedTime: peer.connectedTime
-            };
-        });
     }
 
     @Public({
@@ -381,54 +341,58 @@ class Omnitron extends app.Application {
 
     @Public()
     async unloadSubsystem(name) {
-        if (CORE_SUBSYSTEMS.includes(name)) {
+        const sysInfo = this.getSubsystemInfo(name);
+        if (sysInfo.group === CORE_GROUP) {
             throw new adone.error.NotAllowed("Unload core subsystem is not possible");
         }
         await super.unloadSubsystem(name);
     }
 
-    // Configuration
-    @Public()
-    getConfiguration() {
-        return this.db.getConfiguration();
+    @Public({
+        description: "Returns omnitron's database"
+    })
+    getDB() {
+        return this.db;
     }
 
-    // Gates
-    @Public()
-    addGate(gate) {
-        return this.gates.addGate(gate);
-    }
+    // // Gates
+    // @Public()
+    // addGate(gate) {
+    //     return this.gates.addGate(gate);
+    // }
 
-    @Public()
-    deleteGate(gate) {
-        return this.gates.deleteGate(gate);
-    }
+    // @Public()
+    // deleteGate(gate) {
+    //     return this.gates.deleteGate(gate);
+    // }
 
-    @Public()
-    upGate(name) {
-        return this.gates.upGate(name);
-    }
+    // @Public()
+    // upGate(name) {
+    //     return this.gates.upGate(name);
+    // }
 
-    @Public()
-    downGate(name) {
-        return this.gates.downGate(name);
-    }
+    // @Public()
+    // downGate(name) {
+    //     return this.gates.downGate(name);
+    // }
 
-    @Public()
-    getGates(options) {
-        return this.gates.getGates(options);
-    }
+    // @Public()
+    // getNetworks() {
+    //     return this.db.getAllNetworks();
+    // }
 
-    @Public()
-    configureGate(name, options) {
-        return this.gates.configureGate(name, options);
-    }
+    // @Public()
+    // configureGate(name, options) {
+    //     return this.gates.configureGate(name, options);
+    // }
 }
 
 if (require.main === module) {
     if (!is.function(process.send)) {
-        console.log(`${adone.terminal.esc.red.open}Omnitron cannot be launched directly${adone.terminal.esc.red.close}`);
+        console.log(adone.terminal.chalk.red("Omnitron cannot be launched directly"));
         process.exit(app.EXIT_ERROR);
     }
+    // Declare omnitron environment
+    adone.runtime.isOmnitron = true;
     app.run(Omnitron);
 }

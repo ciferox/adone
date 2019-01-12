@@ -1,6 +1,6 @@
 const {
     is,
-    netron2: { packet },
+    netron: { packet },
     error
 } = adone;
 

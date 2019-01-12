@@ -4,7 +4,7 @@ export default class TestService extends adone.omnitron.Service {
 
     async initializeService() {
         setTimeout(() => {
-            adone.log("timeout occured");
+            console.log("timeout occured");
         }, 60000);
 
         await adone.promise.delay(100);

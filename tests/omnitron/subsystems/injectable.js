@@ -1,7 +1,6 @@
 const {
     app,
-    netron: { Context, Public },
-    runtime
+    netron: { meta: { Context, Public } }
 } = adone;
 
 @Context()
@@ -19,10 +18,10 @@ class Payload {
 export default class extends app.Subsystem {
     async initialize() {
         const payload = new Payload(this);
-        await runtime.netron.attachContext(payload, "payload");
+        await this.root.netron.attachContext(payload, "payload");
     }
 
     async uninitialize() {
-        await runtime.netron.detachContext("payload");
+        await this.root.netron.detachContext("payload");
     }
 }

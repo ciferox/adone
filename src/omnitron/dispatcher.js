@@ -3,76 +3,88 @@ const {
         Subsystem
     },
     is,
+    fs,
     error,
     std,
-    netron,
-    omnitron,
-    runtime
+    omnitron
 } = adone;
 
+/**
+ * Implementation of local omnitron dispatcher.
+ * 
+ * Use this class only for 'inhost'-omnitron interaction.
+ * 
+ */
 export default class Dispatcher extends Subsystem {
-    constructor() {
+    constructor(netron = adone.runtime.netron) {
         super();
 
+        this.netron = netron;
+        if (!netron.hasNetCore("default")) {
+            netron.createNetCore("default");
+        }
         this.peer = null;
+        this.db = null;
         this.descriptors = {
             stodut: null,
             stderr: null
         };
 
-        runtime.netron.on("peer offline", (peer) => {
-            if (!is.null(this.peer) && this.peer.uid === peer.uid) {
+        netron.on("peer:disconnect", (peer) => {
+            if (!is.null(this.peer) && this.peer.id === peer.id) {
                 this.peer = null;
             }
         });
     }
 
+    /**
+     * Subsystem overloaded method (should not be called directly).
+     * This method is only useful in case when dispatcher used as subsystem.
+     */
     async uninitialize() {
-        if (this.db) {
-            await this.db.close();
+        if (this.db instanceof omnitron.DB) {
+            await omnitron.DB.close();
         }
-
-        return this.disconnect();
+        return this.disconnectPeer();
     }
 
-    bind(options) {
-        return runtime.netron.bind(options);
-    }
 
-    async bindGates(gates, { adapters = null } = {}) {
-        if (is.plainObject(adapters)) {
-            for (const [name, AdapterClass] of Object.entries(adapters)) {
-                runtime.netron.registerAdapter(name, AdapterClass);
-            }
-        }
+    // bind(options) {
+    //     return runtime.netron.bind(options);
+    // }
 
-        for (const gate of gates) {
-            // eslint-disable-next-line
-            await this.bind(gate);
-        }
-    }
+    // async bindGates(gates, { adapters = null } = {}) {
+    //     if (is.plainObject(adapters)) {
+    //         for (const [name, AdapterClass] of Object.entries(adapters)) {
+    //             runtime.netron.registerAdapter(name, AdapterClass);
+    //         }
+    //     }
+
+    //     for (const gate of gates) {
+    //         // eslint-disable-next-line
+    //         await this.bind(gate);
+    //     }
+    // }
 
     isConnected() {
-        return is.netronPeer(this.peer);
+        return is.netron2Peer(this.peer);
     }
 
-    async connect(gate = null) {
-        if (is.nil(gate) || is.nil(gate.port)) {
-            return this.connectLocal();
-        }
+    // async connect(gate = null) {
+    //     if (is.nil(gate) || is.nil(gate.port)) {
+    //         return this.connectLocal();
+    //     }
 
-        this.peer = await runtime.netron.connect(gate);
-        return this.peer;
-    }
+    //     this.peer = await runtime.netron.connect(gate);
+    //     return this.peer;
+    // }
 
-    async connectLocal({ forceStart = true } = {}, _counter = 0) {
+    async connectLocal({ forceStart = false } = {}, _counter = 0) {
         let status = 0;
         if (is.null(this.peer)) {
             let peer = null;
             try {
-                peer = await runtime.netron.connect({
-                    port: omnitron.port
-                });
+                peer = await this.netron.connect("default", omnitron.LOCAL_PEER_INFO);
                 status = _counter >= 1 ? 0 : 1;
             } catch (err) {
                 if (!forceStart || _counter >= 3) {
@@ -92,45 +104,58 @@ export default class Dispatcher extends Subsystem {
         return status;
     }
 
-    async disconnect() {
+    async disconnectPeer() {
         if (!is.null(this.peer)) {
-            await runtime.netron.disconnect();
-            await runtime.netron.unbind();
+            await this.peer.disconnect();
             this.peer = null;
         }
     }
 
-    async startOmnitron({ spiritualWay = true, gc = false } = {}) {
+    async startOmnitron({ spiritualWay = true, gc = false, adoneRootPath } = {}) {
         if (spiritualWay) {
             const isActive = await this.isOmnitronActive();
             if (isActive) {
                 let shouldDisconnect = false;
                 if (is.null(this.peer)) {
                     shouldDisconnect = true;
-                    await this.connectLocal({
-                        forceStart: false
-                    });
+                    await this.connectLocal();
                 }
+
                 const result = await this.getInfo({
                     process: true
                 });
 
                 if (shouldDisconnect) {
-                    await this.disconnect();
+                    await this.disconnectPeer();
                 }
 
                 return result.process.id;
             }
             return new Promise(async (resolve, reject) => {
-                const omniConfig = adone.realm.config.omnitron;
-                await adone.fs.mkdirp(std.path.dirname(omniConfig.logFilePath));
-                this.descriptors.stdout = std.fs.openSync(omniConfig.logFilePath, "a");
-                this.descriptors.stderr = std.fs.openSync(omniConfig.errorLogFilePath, "a");
-                const args = [std.path.resolve(adone.ROOT_PATH, "lib/omnitron/omnitron/index.js")];
+                const omniConfig = adone.runtime.config.omnitron;
+                // Force create common directory
+                await fs.mkdirp([
+                    adone.runtime.config.omnitron.LOGS_PATH,
+                    adone.runtime.config.omnitron.VAR_PATH
+                ]);
+                this.descriptors.stdout = await fs.open(omniConfig.LOGFILE_PATH, "a");
+                this.descriptors.stderr = await fs.open(omniConfig.ERRORLOGFILE_PATH, "a");
+                let scriptPath;
+                if (is.string(adoneRootPath)) {
+                    scriptPath = std.path.resolve(adoneRootPath, "lib", "omnitron", "omnitron", "index.js");
+                } else {
+                    scriptPath = std.path.join(__dirname, "omnitron", "index.js");
+                }
+                const args = [scriptPath];
+                if (is.string(adoneRootPath)) {
+                    args.unshift(adoneRootPath);
+                    args.unshift("--require");
+                }
+
                 if (gc) {
                     args.unshift("--expose-gc");
                 }
-                const child = std.child_process.spawn(process.execPath || "node", args, {
+                const child = std.child_process.spawn(process.execPath, args, {
                     detached: true,
                     cwd: process.cwd(),
                     stdio: ["ipc", this.descriptors.stdout, this.descriptors.stderr]
@@ -158,7 +183,7 @@ export default class Dispatcher extends Subsystem {
     async stopOmnitron() {
         const isActive = await this.isOmnitronActive();
         if (isActive) {
-            if (await adone.fs.exists(adone.realm.config.omnitron.PIDFILE_PATH)) {
+            if (await fs.exists(adone.runtime.config.omnitron.PIDFILE_PATH)) {
                 try {
                     const checkAlive = async (pid) => {
                         let elapsed = 0;
@@ -167,19 +192,17 @@ export default class Dispatcher extends Subsystem {
                             if (!(await adone.system.process.exists(pid))) {
                                 return;
                             }
-                            elapsed += 100;
+                            elapsed += 50;
                             if (elapsed >= 3000) {
                                 throw new error.Timeout("Process is still alive");
                             }
-                            await adone.promise.delay(100); // eslint-disable-line
+                            await adone.promise.delay(50); // eslint-disable-line
                         }
                     };
-                    const pid = parseInt(std.fs.readFileSync(adone.realm.config.omnitron.PIDFILE_PATH).toString());
+                    const pid = parseInt(std.fs.readFileSync(adone.runtime.config.omnitron.PIDFILE_PATH).toString());
                     if (is.windows) {
                         try {
-                            await this.connectLocal({
-                                forceStart: false
-                            });
+                            await this.connectLocal();
                             await this.kill();
                             await this.peer.disconnect();
                             this.peer = null;
@@ -210,11 +233,11 @@ export default class Dispatcher extends Subsystem {
         }
 
         if (!is.nil(this.descriptors.stdout)) {
-            await adone.fs.close(this.descriptors.stdout);
+            await fs.close(this.descriptors.stdout);
             this.descriptors.stdout = null;
         }
         if (!is.nil(this.descriptors.stderr)) {
-            await adone.fs.close(this.descriptors.stderr);
+            await fs.close(this.descriptors.stderr);
             this.descriptors.stderr = null;
         }
     }
@@ -222,181 +245,173 @@ export default class Dispatcher extends Subsystem {
     async restartOmnitron(spiritualWay = true) {
         await this.stopOmnitron();
         await this.startOmnitron(spiritualWay);
-        await this.connectLocal({
-            forceStart: false
-        });
+        await this.connectLocal();
     }
 
     async isOmnitronActive() {
-        const n = new netron.Netron({
-            connect: {
-                retries: 1,
-                minTimeout: 10
-            }
-        });
-        let isOK = false;
         try {
-            await n.connect({
-                port: omnitron.port
-            });
-            await n.disconnect();
-            isOK = true;
+            if (!this.isConnected()) {
+                const peer = await this.netron.connect("default", omnitron.LOCAL_PEER_INFO);
+                await this.netron.disconnectPeer(peer);
+            }
+            return true;
         } catch (err) {
-            // adone.log(err);
+            if (err instanceof adone.error.Connect) {
+                return false;
+            }
+            throw err;
         }
-
-        return isOK;
     }
 
-    async ping() {
-        return !is.null(this.peer) && is.null(await this.peer.ping());
+    waitForContext(name) {
+        return this.peer.waitForContext(name);
     }
 
-    getInterface(name) {
-        return this.peer.getInterfaceByName(name);
+    queryInterface(name) {
+        return this.peer.queryInterface(name);
     }
 
     async registerService(serviceName) {
         try {
-            const systemDb = new omnitron.DB();
-            await systemDb.open();
-            await systemDb.registerService(serviceName);
+            const systemDb = await omnitron.DB.open();
+            const registry = await systemDb.getConfiguration("registry");
+            await registry.registerService(serviceName);
             await systemDb.close();
         } catch (err) {
-            await this.connectLocal({
-                forceStart: false
-            });
-            await this.getInterface("omnitron").registerService(serviceName);
+            await this.connectLocal();
+            await this.queryInterface("omnitron").registerService(serviceName);
         }
     }
 
     async unregisterService(serviceName) {
         try {
-            const systemDb = new omnitron.DB();
-            await systemDb.open();
-            await systemDb.unregisterService(serviceName);
+            const systemDb = await omnitron.DB.open();
+            const registry = await systemDb.getConfiguration("registry");
+            await registry.unregisterService(serviceName);
             await systemDb.close();
         } catch (err) {
-            await this.connectLocal({
-                firceStart: false
-            });
-            await this.getInterface("omnitron").unregisterService(serviceName);
+            await this.connectLocal();
+            await this.queryInterface("omnitron").unregisterService(serviceName);
         }
     }
 
     // Omnitron interface
 
-    async getConfiguration() {
-        let config;
-        if (await this.isOmnitronActive()) {
-            await this.connectLocal({
-                forceStart: false
-            });
-            config = await this.getInterface("omnitron").getConfiguration();
-        } else {
-            this.db = await adone.omnitron.DB.open();
-            config = await this.db.getConfiguration();
+    async getDB() {
+        let db = this.db;
+        if (is.null(db)) {
+            if (await this.isOmnitronActive()) {
+                await this.connectLocal();
+                db = await this.queryInterface("omnitron").getDB();
+            } else {
+                db = await adone.omnitron.DB.open();
+                db.backend.on("closed", () => {
+                    this.db = null;
+                });
+            }
+            this.db = db;
         }
-        return config;
+
+        return db;
     }
 
-    kill() {
-        return this.getInterface("omnitron").kill();
-    }
-
-    getInfo(options) {
-        return this.getInterface("omnitron").getInfo(options);
-    }
-
-    setEnvs(envs) {
-        return this.getInterface("omnitron").setEnvs(envs);
-    }
-
-    updateEnvs(envs) {
-        return this.getInterface("omnitron").updateEnvs(envs);
-    }
-
-    startService(serviceName) {
-        return this.getInterface("omnitron").startService(serviceName);
-    }
-
-    stopService(serviceName) {
-        return this.getInterface("omnitron").stopService(serviceName);
-    }
-
-    configureService(serviceName, options) {
-        return this.getInterface("omnitron").configureService(serviceName, options);
-    }
-
-    restart(serviceName = "") {
-        return (serviceName === "") ? this.restartOmnitron() : this.getInterface("omnitron").restart(serviceName);
-    }
-
-    status(serviceName) {
-        return this.getInterface("omnitron").status(serviceName);
-    }
-
-    enableService(serviceName, options) {
-        return this.getInterface("omnitron").enableService(serviceName, options);
-    }
-
-    disableService(serviceName, options) {
-        return this.getInterface("omnitron").disableService(serviceName, options);
-    }
-
-    enumerate(filter) {
-        return this.getInterface("omnitron").enumerate(filter);
-    }
-
-    getPeers() {
-        return this.getInterface("omnitron").getPeers();
-    }
-
-    getContexts() {
-        return this.getInterface("omnitron").getContexts();
-    }
-
-    getReport() {
-        return this.getInterface("omnitron").getReport();
-    }
-
-    getSubsystems() {
-        return this.getInterface("omnitron").getSubsystems();
-    }
-
-    loadSubsystem(subsystem, options) {
-        return this.getInterface("omnitron").loadSubsystem(subsystem, options);
-    }
-
-    unloadSubsystem(name) {
-        return this.getInterface("omnitron").unloadSubsystem(name);
-    }
-
-    gc() {
-        return this.getInterface("omnitron").gc();
-    }
+    // Networks management
 
     addGate(gate) {
-        return this.getInterface("omnitron").addGate(gate);
+        return this.queryInterface("omnitron").addGate(gate);
     }
 
     deleteGate(name) {
-        return this.getInterface("omnitron").deleteGate(name);
-    }
-
-    getGates(options) {
-        return this.getInterface("omnitron").getGates(options);
+        return this.queryInterface("omnitron").deleteGate(name);
     }
 
     upGate(name) {
-        return this.getInterface("omnitron").upGate(name);
+        return this.queryInterface("omnitron").upGate(name);
     }
 
     downGate(name) {
-        return this.getInterface("omnitron").downGate(name);
+        return this.queryInterface("omnitron").downGate(name);
     }
 
     configureGate(name, options) {
-        return this.getInterface("omnitron").configureGate(name, options);
+        return this.queryInterface("omnitron").configureGate(name, options);
+    }
+
+    // Common api
+
+    kill() {
+        return this.queryInterface("omnitron").kill();
+    }
+
+    async getInfo(options) {
+        return this.queryInterface("omnitron").getInfo(options);
+    }
+
+    setEnvs(envs) {
+        return this.queryInterface("omnitron").setEnvs(envs);
+    }
+
+    updateEnvs(envs) {
+        return this.queryInterface("omnitron").updateEnvs(envs);
+    }
+
+    startService(serviceName) {
+        return this.queryInterface("omnitron").startService(serviceName);
+    }
+
+    stopService(serviceName) {
+        return this.queryInterface("omnitron").stopService(serviceName);
+    }
+
+    configureService(serviceName, options) {
+        return this.queryInterface("omnitron").configureService(serviceName, options);
+    }
+
+    restart(serviceName = "") {
+        return (serviceName === "") ? this.restartOmnitron() : this.queryInterface("omnitron").restart(serviceName);
+    }
+
+    status(serviceName) {
+        return this.queryInterface("omnitron").status(serviceName);
+    }
+
+    enableService(serviceName, options) {
+        return this.queryInterface("omnitron").enableService(serviceName, options);
+    }
+
+    disableService(serviceName, options) {
+        return this.queryInterface("omnitron").disableService(serviceName, options);
+    }
+
+    enumerate(filter) {
+        return this.queryInterface("omnitron").enumerate(filter);
+    }
+
+    getPeers() {
+        return this.queryInterface("omnitron").getPeers();
+    }
+
+    getContexts() {
+        return this.queryInterface("omnitron").getContexts();
+    }
+
+    getReport() {
+        return this.queryInterface("omnitron").getReport();
+    }
+
+    getSubsystems() {
+        return this.queryInterface("omnitron").getSubsystems();
+    }
+
+    loadSubsystem(subsystem, options) {
+        return this.queryInterface("omnitron").loadSubsystem(subsystem, options);
+    }
+
+    unloadSubsystem(name) {
+        return this.queryInterface("omnitron").unloadSubsystem(name);
+    }
+
+    gc() {
+        return this.queryInterface("omnitron").gc();
     }
 }

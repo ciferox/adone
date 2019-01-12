@@ -2,7 +2,7 @@ const {
     is,
     fs,
     std,
-    omnitron2,
+    omnitron,
     realm
 } = adone;
 
@@ -21,11 +21,11 @@ export default class OmnitronServiceHandler extends realm.TypeHandler {
 
         await fs.symlink(destPath, servicePath, is.windows ? "junction" : undefined);
 
-        await omnitron2.dispatcher.registerService(adoneConf.raw.name);
+        await omnitron.dispatcher.registerService(adoneConf.raw.name);
     }
 
     async unregister(adoneConf) {
-        await omnitron2.dispatcher.unregisterService(adoneConf.raw.name);
+        await omnitron.dispatcher.unregisterService(adoneConf.raw.name);
         return fs.rm(std.path.join(this.manager.config.omnitron.SERVICES_PATH, adoneConf.raw.name));
     }
 

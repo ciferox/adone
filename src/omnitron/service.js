@@ -17,6 +17,10 @@ export default class Service extends adone.app.Subsystem {
         return this[PEER_SYMBOL];
     }
 
+    set peer(val) {
+        throw new adone.error.NotAllowed("Property 'peer' is immutable");
+    }
+
     async getConfiguration() {
         if (is.null(this[CONFIGURATION_SYMBOL])) {
             this[CONFIGURATION_SYMBOL] = await this.parent.iMaintainer.getServiceConfiguration(this.name);
@@ -72,4 +76,4 @@ export default class Service extends adone.app.Subsystem {
     uninitializeService() {
     }
 }
-adone.tag.add(Service, "OMNITRON_SERVICE");
+adone.tag.add(Service, "OMNITRON2_SERVICE");

@@ -300,11 +300,11 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
                     return defaultLogger;
                 },
                 // netron: () => new adone.netron.Netron(),
-                netron2: () => {
+                netron: () => {
                     const peerInfo = adone.runtime.isOmnitron
-                        ? adone.omnitron2.LOCAL_PEER_INFO
+                        ? adone.omnitron.LOCAL_PEER_INFO
                         : adone.net.p2p.PeerInfo.create(adone.runtime.config.identity.client);
-                    return new adone.netron2.Netron(peerInfo);
+                    return new adone.netron.Netron(peerInfo);
                 }
             }, runtime);
 
@@ -390,7 +390,6 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         multi: "./glosses/multi",
         net: "./glosses/net",
         netron: "./glosses/netron",
-        netron2: "./glosses/netron2",
         netscan: "./glosses/netscan",
         notifier: "./glosses/notifier",
         odm: "./glosses/odm",
@@ -425,7 +424,6 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         gyp: "./gyp",
         lodash: "./lodash",
         omnitron: "./omnitron",
-        omnitron2: "./omnitron2",
         project: "./project",
         realm: "./realm",
         shani: "./shani",
