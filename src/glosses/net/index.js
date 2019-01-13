@@ -14,7 +14,6 @@ adone.lazify({
     http: "./http",
     mail: "./mail",
     mqtt: "./mqtt",
-    amqp: "./amqp",
     dns: "./dns",
     utp: "./utp",
     p2p: "./p2p"

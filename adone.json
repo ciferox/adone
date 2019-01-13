@@ -942,6 +942,13 @@
                     "dst": "lib/glosses/vault",
                     "namespace": "vault"
                 },
+                "web": {
+                    "description": "Web framework",
+                    "task": "transpile",
+                    "src": "src/glosses/web/**/*.js",
+                    "dst": "lib/glosses/web",
+                    "namespace": "web"
+                },
                 "benchmark": {
                     "description": "A benchmarking library",
                     "src": "src/benchmark/index.js",

@@ -14,7 +14,7 @@ const {
     CommandMeta
 } = app;
 
-const baseSubsystem = (name) => std.path.join(__dirname, "..", "lib", "cli", "subsystems", name);
+const command = (name) => std.path.join(__dirname, "..", "lib", "cli", "commands", name);
 
 @ApplicationMeta({
     subsystems: [
@@ -22,55 +22,55 @@ const baseSubsystem = (name) => std.path.join(__dirname, "..", "lib", "cli", "su
             name: "run",
             group: "cli",
             description: "Run application/script/code",
-            subsystem: baseSubsystem("run")
+            subsystem: command("run")
         },
         {
             name: "link",
             group: "cli",
             description: "Adone cli link management",
-            subsystem: baseSubsystem("link")
+            subsystem: command("link")
         },
         {
             name: "realm",
             group: "realm",
             description: "Realm management",
-            subsystem: baseSubsystem("realm")
+            subsystem: command("realm")
         },
         {
             name: "info",
             group: "cli",
             description: "Show available information about object you wish",
-            subsystem: baseSubsystem("info")
+            subsystem: command("info")
         },
         {
             name: "inspect",
             group: "dev",
             description: "Inspect adone namespace/object",
-            subsystem: baseSubsystem("inspect")
+            subsystem: command("inspect")
         },
         {
             name: "project",
             group: "dev",
             description: "Project management/scaffolding",
-            subsystem: baseSubsystem("project")
+            subsystem: command("project")
         },
         {
             name: "bench",
             group: "dev",
             description: "Benchmarking",
-            subsystem: baseSubsystem("bench")
+            subsystem: command("bench")
         },
         {
             name: "shani",
             group: "dev",
             description: "Test framework",
-            subsystem: baseSubsystem("shani")
+            subsystem: command("shani")
         },
         {
             name: "cmake",
             group: "dev",
             description: "CMake build system",
-            subsystem: baseSubsystem("cmake")
+            subsystem: command("cmake")
         }
     ]
 })

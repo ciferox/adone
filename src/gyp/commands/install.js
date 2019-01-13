@@ -2,7 +2,6 @@ const fs = require("graceful-fs");
 const osenv = require("osenv");
 const tar = require("tar");
 const log = require("npmlog");
-const semver = require("semver");
 const request = require("request");
 const minimatch = require("minimatch");
 const mkdir = require("mkdirp");
@@ -10,6 +9,7 @@ const processRelease = require("../process-release");
 const win = process.platform === "win32";
 
 const {
+    semver,
     std: { path, crypto }
 } = adone;
 

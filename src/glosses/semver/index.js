@@ -2,6 +2,8 @@ const {
     is
 } = adone;
 
+adone.asNamespace(exports);
+
 // The debug function is excluded entirely from the minified version.
 /**
  * nomin
