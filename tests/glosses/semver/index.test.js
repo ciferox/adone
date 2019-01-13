@@ -1,22 +1,26 @@
 const {
-    error,
     semver
 } = adone;
-const eq = semver.eq;
-const gt = semver.gt;
-const lt = semver.lt;
-const neq = semver.neq;
-const cmp = semver.cmp;
-const gte = semver.gte;
-const lte = semver.lte;
-const satisfies = semver.satisfies;
-const validRange = semver.validRange;
-const inc = semver.inc;
-const diff = semver.diff;
-const toComparators = semver.toComparators;
-const SemVer = semver.SemVer;
-const Range = semver.Range;
-const Comparator = semver.Comparator;
+
+const {
+    eq,
+    gt,
+    lt,
+    neq,
+    cmp,
+    gte,
+    lte,
+    satisfies,
+    validRange,
+    inc,
+    diff,
+    toComparators,
+    SemVer,
+    Range,
+    Comparator
+} = semver;
+
+
 
 describe("semver", () => {
     it("comparison tests", () => {
@@ -27,10 +31,10 @@ describe("semver", () => {
             ["0.0.1", "0.0.0"],
             ["1.0.0", "0.9.9"],
             ["0.10.0", "0.9.0"],
-            ["0.99.0", "0.10.0"],
-            ["2.0.0", "1.2.3"],
+            ["0.99.0", "0.10.0", {}],
+            ["2.0.0", "1.2.3", { loose: false }],
             ["v0.0.0", "0.0.0-foo", true],
-            ["v0.0.1", "0.0.0", true],
+            ["v0.0.1", "0.0.0", { loose: true }],
             ["v1.0.0", "0.9.9", true],
             ["v0.10.0", "0.9.0", true],
             ["v0.99.0", "0.10.0", true],
@@ -147,12 +151,12 @@ describe("semver", () => {
             ["1.0.0", "1.0.0"],
             [">=*", "0.2.4"],
             ["", "1.0.0"],
-            ["*", "1.2.3"],
-            ["*", "v1.2.3", true],
-            [">=1.0.0", "1.0.0"],
-            [">=1.0.0", "1.0.1"],
-            [">=1.0.0", "1.1.0"],
-            [">1.0.0", "1.0.1"],
+            ["*", "1.2.3", {}],
+            ["*", "v1.2.3", { loose: 123 }],
+            [">=1.0.0", "1.0.0", /asdf/],
+            [">=1.0.0", "1.0.1", { loose: null }],
+            [">=1.0.0", "1.1.0", { loose: 0 }],
+            [">1.0.0", "1.0.1", { loose: undefined }],
             [">1.0.0", "1.1.0"],
             ["<=2.0.0", "2.0.0"],
             ["<=2.0.0", "1.9999.9999"],
@@ -260,7 +264,7 @@ describe("semver", () => {
             ["^1.2.3", "1.2.3-beta"],
             ["=0.7.x", "0.7.0-asdf"],
             [">=0.7.x", "0.7.0-asdf"],
-            ["1", "1.0.0beta", true],
+            ["1", "1.0.0beta", { loose: 420 }],
             ["<1", "1.0.0beta", true],
             ["< 1", "1.0.0beta", true],
             ["1.0.0", "1.0.1"],
@@ -279,7 +283,7 @@ describe("semver", () => {
             ["0.1.20 || 1.2.4", "1.2.3"],
             [">=0.2.3 || <0.0.1", "0.0.3"],
             [">=0.2.3 || <0.0.1", "0.2.2"],
-            ["2.x.x", "1.1.3"],
+            ["2.x.x", "1.1.3", { loose: NaN }],
             ["2.x.x", "3.1.3"],
             ["1.2.x", "1.3.3"],
             ["1.2.x || 2.x", "3.1.3"],
@@ -323,6 +327,39 @@ describe("semver", () => {
             const ver = v[1];
             const loose = v[2];
             const found = satisfies(ver, range, loose);
+            assert.ok(!found, `${ver} not satisfied by ${range}`);
+        });
+    });
+
+    it("unlocked prerelease range tests", () => {
+        // [range, version]
+        // version should be included by range
+        [
+            ["*", "1.0.0-rc1"],
+            ["^1.0.0", "2.0.0-rc1"],
+            ["^1.0.0-0", "1.0.1-rc1"],
+            ["^1.0.0-rc2", "1.0.1-rc1"],
+            ["^1.0.0", "1.0.1-rc1"],
+            ["^1.0.0", "1.1.0-rc1"]
+        ].forEach((v) => {
+            const range = v[0];
+            const ver = v[1];
+            const options = { includePrerelease: true };
+            assert.ok(satisfies(ver, range, options), `${range} satisfied by ${ver}`);
+        });
+    });
+
+    it("negative unlocked prerelease range tests", () => {
+        // [range, version]
+        // version should not be included by range
+        [
+            ["^1.0.0", "1.0.0-rc1"],
+            ["^1.2.3-rc2", "2.0.0"]
+        ].forEach((v) => {
+            const range = v[0];
+            const ver = v[1];
+            const options = { includePrerelease: true };
+            const found = satisfies(ver, range, options);
             assert.ok(!found, `${ver} not satisfied by ${range}`);
         });
     });
@@ -429,7 +466,9 @@ describe("semver", () => {
                 assert.equal(parsed.version, wanted, `${cmd} object version updated`);
                 assert.equal(parsed.raw, wanted, `${cmd} object raw field updated`);
             } else if (parsed) {
-                assert.throws(() => parsed.inc(what, id));
+                assert.throws(() => {
+                    parsed.inc(what, id);
+                });
             } else {
                 assert.equal(parsed, null);
             }
@@ -491,7 +530,7 @@ describe("semver", () => {
             ["<= 2.0.0", "<=2.0.0"],
             ["<=  2.0.0", "<=2.0.0"],
             ["<    2.0.0", "<2.0.0"],
-            ["<	2.0.0", "<2.0.0"],
+            ["<\t2.0.0", "<2.0.0"],
             [">=0.1.97", ">=0.1.97"],
             [">=0.1.97", ">=0.1.97"],
             ["0.1.20 || 1.2.4", "0.1.20||1.2.4"],
@@ -639,8 +678,10 @@ describe("semver", () => {
             null,
             "Infinity.NaN.Infinity"
         ].forEach((v) => {
-            const err = assert.throws(() => new SemVer(v));
-            assert.instanceOf(err, error.InvalidArgument);
+            const err = assert.throws(() => {
+                new SemVer(v); // eslint-disable-line no-new
+            });
+            assert.instanceOf(err, TypeError);
             assert.equal(err.message, `Invalid Version: ${v}`);
         });
     });
@@ -655,12 +696,18 @@ describe("semver", () => {
         ].forEach((v) => {
             const loose = v[0];
             const strict = v[1];
-            assert.throws(() => new SemVer(loose));
+            assert.throws(() => {
+                new SemVer(loose); // eslint-disable-line no-new
+            });
             const lv = new SemVer(loose, true);
             assert.equal(lv.version, strict);
             assert.ok(eq(loose, strict, true));
-            assert.throws(() => eq(loose, strict));
-            assert.throws(() => new SemVer(strict).compare(loose));
+            assert.throws(() => {
+                eq(loose, strict);
+            });
+            assert.throws(() => {
+                new SemVer(strict).compare(loose);
+            });
             assert.equal(semver.compareLoose(v[0], v[1]), 0);
         });
     });
@@ -672,7 +719,9 @@ describe("semver", () => {
         ].forEach((v) => {
             const loose = v[0];
             const comps = v[1];
-            assert.throws(() => new Range(loose));
+            assert.throws(() => {
+                new Range(loose); // eslint-disable-line no-new
+            });
             assert.equal(new Range(loose, true).range, comps);
         });
     });
@@ -749,13 +798,13 @@ describe("semver", () => {
             const actual1 = comparator1.intersects(comparator2);
             const actual2 = comparator2.intersects(comparator1);
             const actual3 = semver.intersects(comparator1, comparator2);
-            let actual4 = semver.intersects(comparator2, comparator1);
-            actual4 = semver.intersects(comparator1, comparator2, true);
-            const actual5 = semver.intersects(comparator2, comparator1, true);
-            const actual6 = semver.intersects(v[0], v[1]);
-            const actual7 = semver.intersects(v[1], v[0]);
-            const actual8 = semver.intersects(v[0], v[1], true);
-            const actual9 = semver.intersects(v[1], v[0], true);
+            const actual4 = semver.intersects(comparator2, comparator1);
+            const actual5 = semver.intersects(comparator1, comparator2, true);
+            const actual6 = semver.intersects(comparator2, comparator1, true);
+            const actual7 = semver.intersects(v[0], v[1]);
+            const actual8 = semver.intersects(v[1], v[0]);
+            const actual9 = semver.intersects(v[0], v[1], true);
+            const actual10 = semver.intersects(v[1], v[0], true);
             assert.equal(actual1, expect);
             assert.equal(actual2, expect);
             assert.equal(actual3, expect);
@@ -765,11 +814,14 @@ describe("semver", () => {
             assert.equal(actual7, expect);
             assert.equal(actual8, expect);
             assert.equal(actual9, expect);
+            assert.equal(actual10, expect);
         });
     });
 
     it("missing comparator parameter in intersect comparators", () => {
-        const err = assert.throws(() => new Comparator(">1.0.0").intersects());
+        const err = assert.throws(() => {
+            new Comparator(">1.0.0").intersects();
+        });
         assert.instanceOf(err, TypeError);
         assert.equal(err.message, "a Comparator is required");
     });
@@ -811,13 +863,17 @@ describe("semver", () => {
     });
 
     it("missing range parameter in range intersect", () => {
-        const err = assert.throws(() => new Range("1.0.0").intersects());
+        const err = assert.throws(() => {
+            new Range("1.0.0").intersects();
+        });
         assert.instanceOf(err, TypeError);
         assert.equal(err.message, "a Range is required");
     });
 
     it("outside with bad hilo throws", () => {
-        const err = assert.throws(() => semver.outside("1.2.3", ">1.5.0", "blerg", true));
+        const err = assert.throws(() => {
+            semver.outside("1.2.3", ">1.5.0", "blerg", true);
+        });
         assert.instanceOf(err, TypeError);
         assert.equal(err.message, 'Must provide a hilo val of "<" or ">"');
     });
@@ -837,7 +893,9 @@ describe("semver", () => {
     });
 
     it("invalid cmp usage", () => {
-        const err = assert.throws(() => cmp("1.2.3", "a frog", "4.5.6"));
+        const err = assert.throws(() => {
+            cmp("1.2.3", "a frog", "4.5.6");
+        });
         assert.instanceOf(err, TypeError);
         assert.equal(err.message, "Invalid operator: a frog");
     });

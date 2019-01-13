@@ -1,6 +1,8 @@
-const { semver } = adone;
+const {
+    semver
+} = adone;
 
-describe("semver", "major-minor-patch", () => {
+describe("semver", () => {
     it("major tests", () => {
         // [range, version]
         // Version should be detectable despite extra characters

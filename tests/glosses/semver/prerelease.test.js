@@ -1,7 +1,9 @@
-const { semver } = adone;
+const {
+    semver
+} = adone;
 const { prerelease } = semver;
 
-describe("semver", "prerelease", () => {
+describe("semver", () => {
     it("prerelease", () => {
         // [prereleaseParts, version, loose]
         [

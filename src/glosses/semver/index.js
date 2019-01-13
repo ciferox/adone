@@ -1,10 +1,43 @@
-const { is, error } = adone;
+const {
+    is
+} = adone;
 
-adone.asNamespace(exports);
+// The debug function is excluded entirely from the minified version.
+/**
+ * nomin
+ */ let debug;
+/* nomin */ if (typeof process === "object" &&
+/* nomin */ process.env &&
+/* nomin */ process.env.NODE_DEBUG &&
+/* nomin */ /\bsemver\b/i.test(process.env.NODE_DEBUG)) {
+/**
+ * nomin
+ */ debug = function () {
+        /**
+         * nomin
+         */ const args = Array.prototype.slice.call(arguments, 0);
+        /**
+         * nomin
+         */ args.unshift("SEMVER");
+        /**
+         * nomin
+         */ console.log.apply(console, args);
+        /* nomin */
+    };
+    /* nomin */
+} else {
+/**
+ * nomin
+ */ debug = function () { };
+    /* nomin */
+}
+/**
+ * eslint-enable no-multi-spaces, indent
+ */
 
 // Note: this is the semver.org version of the spec that it implements
 // Not necessarily the package version of this code.
-export const SEMVER_SPEC_VERSION = "2.0.0";
+exports.SEMVER_SPEC_VERSION = "2.0.0";
 
 const MAX_LENGTH = 256;
 const MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER || 9007199254740991;
@@ -12,9 +45,9 @@ const MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER || 9007199254740991;
 // Max safe segment length for coercion.
 const MAX_SAFE_COMPONENT_LENGTH = 16;
 
-// The actual regexps go on re
-export const re = [];
-export const src = [];
+// The actual regexps go on exports.re
+const re = exports.re = [];
+const src = exports.src = [];
 let R = 0;
 
 // The following Regular Expressions can be used for tokenizing,
@@ -28,7 +61,6 @@ src[NUMERICIDENTIFIER] = "0|[1-9]\\d*";
 const NUMERICIDENTIFIERLOOSE = R++;
 src[NUMERICIDENTIFIERLOOSE] = "[0-9]+";
 
-
 // ## Non-numeric Identifier
 // Zero or more digits, followed by a letter or hyphen, and then zero or
 // more letters, digits, or hyphens.
@@ -36,15 +68,18 @@ src[NUMERICIDENTIFIERLOOSE] = "[0-9]+";
 const NONNUMERICIDENTIFIER = R++;
 src[NONNUMERICIDENTIFIER] = "\\d*[a-zA-Z-][a-zA-Z0-9-]*";
 
-
 // ## Main Version
 // Three dot-separated numeric identifiers.
 
 const MAINVERSION = R++;
-src[MAINVERSION] = `(${src[NUMERICIDENTIFIER]})\\.(${src[NUMERICIDENTIFIER]})\\.(${src[NUMERICIDENTIFIER]})`;
+src[MAINVERSION] = `(${src[NUMERICIDENTIFIER]})\\.` +
+    `(${src[NUMERICIDENTIFIER]})\\.` +
+    `(${src[NUMERICIDENTIFIER]})`;
 
 const MAINVERSIONLOOSE = R++;
-src[MAINVERSIONLOOSE] = `(${src[NUMERICIDENTIFIERLOOSE]})\\.(${src[NUMERICIDENTIFIERLOOSE]})\\.(${src[NUMERICIDENTIFIERLOOSE]})`;
+src[MAINVERSIONLOOSE] = `(${src[NUMERICIDENTIFIERLOOSE]})\\.` +
+    `(${src[NUMERICIDENTIFIERLOOSE]})\\.` +
+    `(${src[NUMERICIDENTIFIERLOOSE]})`;
 
 // ## Pre-release Version Identifier
 // A numeric identifier, or a non-numeric identifier.
@@ -54,7 +89,6 @@ src[PRERELEASEIDENTIFIER] = `(?:${src[NUMERICIDENTIFIER]}|${src[NONNUMERICIDENTI
 
 const PRERELEASEIDENTIFIERLOOSE = R++;
 src[PRERELEASEIDENTIFIERLOOSE] = `(?:${src[NUMERICIDENTIFIERLOOSE]}|${src[NONNUMERICIDENTIFIER]})`;
-
 
 // ## Pre-release Version
 // Hyphen, followed by one or more dot-separated pre-release version
@@ -78,7 +112,6 @@ src[BUILDIDENTIFIER] = "[0-9A-Za-z-]+";
 
 const BUILD = R++;
 src[BUILD] = `(?:\\+(${src[BUILDIDENTIFIER]}(?:\\.${src[BUILDIDENTIFIER]})*))`;
-
 
 // ## Full Version String
 // A main version, followed optionally by a pre-release version and
@@ -114,10 +147,18 @@ const XRANGEIDENTIFIER = R++;
 src[XRANGEIDENTIFIER] = `${src[NUMERICIDENTIFIER]}|x|X|\\*`;
 
 const XRANGEPLAIN = R++;
-src[XRANGEPLAIN] = `[v=\\s]*(${src[XRANGEIDENTIFIER]})(?:\\.(${src[XRANGEIDENTIFIER]})(?:\\.(${src[XRANGEIDENTIFIER]})(?:${src[PRERELEASE]})?${src[BUILD]}?)?)?`;
+src[XRANGEPLAIN] = `[v=\\s]*(${src[XRANGEIDENTIFIER]})` +
+    `(?:\\.(${src[XRANGEIDENTIFIER]})` +
+    `(?:\\.(${src[XRANGEIDENTIFIER]})` +
+    `(?:${src[PRERELEASE]})?${src[BUILD]}?` +
+    ")?)?";
 
 const XRANGEPLAINLOOSE = R++;
-src[XRANGEPLAINLOOSE] = `[v=\\s]*(${src[XRANGEIDENTIFIERLOOSE]})(?:\\.(${src[XRANGEIDENTIFIERLOOSE]})(?:\\.(${src[XRANGEIDENTIFIERLOOSE]})(?:${src[PRERELEASELOOSE]})?${src[BUILD]}?)?)?`;
+src[XRANGEPLAINLOOSE] = `[v=\\s]*(${src[XRANGEIDENTIFIERLOOSE]})` +
+    `(?:\\.(${src[XRANGEIDENTIFIERLOOSE]})` +
+    `(?:\\.(${src[XRANGEIDENTIFIERLOOSE]})` +
+    `(?:${src[PRERELEASELOOSE]})?${src[BUILD]}?` +
+    ")?)?";
 
 const XRANGE = R++;
 src[XRANGE] = `^${src[GTLT]}\\s*${src[XRANGEPLAIN]}$`;
@@ -128,10 +169,10 @@ src[XRANGELOOSE] = `^${src[GTLT]}\\s*${src[XRANGEPLAINLOOSE]}$`;
 // Extract anything that could conceivably be a part of a valid semver
 const COERCE = R++;
 src[COERCE] = `${"(?:^|[^\\d])" +
-              "(\\d{1,"}${MAX_SAFE_COMPONENT_LENGTH}})` +
-              `(?:\\.(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}}))?` +
-              `(?:\\.(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}}))?` +
-              "(?:$|[^\\d])";
+    "(\\d{1,"}${MAX_SAFE_COMPONENT_LENGTH}})` +
+    `(?:\\.(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}}))?` +
+    `(?:\\.(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}}))?` +
+    "(?:$|[^\\d])";
 
 // Tilde ranges.
 // Meaning is "reasonably at or greater than"
@@ -169,7 +210,6 @@ src[COMPARATORLOOSE] = `^${src[GTLT]}\\s*(${LOOSEPLAIN})$|^$`;
 const COMPARATOR = R++;
 src[COMPARATOR] = `^${src[GTLT]}\\s*(${FULLPLAIN})$|^$`;
 
-
 // An expression to strip any whitespace between the gtlt and the thing
 // it modifies, so that `> 1.2.3` ==> `>1.2.3`
 const COMPARATORTRIM = R++;
@@ -179,16 +219,21 @@ src[COMPARATORTRIM] = `(\\s*)${src[GTLT]}\\s*(${LOOSEPLAIN}|${src[XRANGEPLAIN]})
 re[COMPARATORTRIM] = new RegExp(src[COMPARATORTRIM], "g");
 const comparatorTrimReplace = "$1$2$3";
 
-
 // Something like `1.2.3 - 1.2.4`
 // Note that these all use the loose form, because they'll be
 // checked against either the strict or loose comparator form
 // later.
 const HYPHENRANGE = R++;
-src[HYPHENRANGE] = `^\\s*(${src[XRANGEPLAIN]})\\s+-\\s+(${src[XRANGEPLAIN]})\\s*$`;
+src[HYPHENRANGE] = `^\\s*(${src[XRANGEPLAIN]})` +
+    "\\s+-\\s+" +
+    `(${src[XRANGEPLAIN]})` +
+    "\\s*$";
 
 const HYPHENRANGELOOSE = R++;
-src[HYPHENRANGELOOSE] = `^\\s*(${src[XRANGEPLAINLOOSE]})\\s+-\\s+(${src[XRANGEPLAINLOOSE]})\\s*$`;
+src[HYPHENRANGELOOSE] = `^\\s*(${src[XRANGEPLAINLOOSE]})` +
+    "\\s+-\\s+" +
+    `(${src[XRANGEPLAINLOOSE]})` +
+    "\\s*$";
 
 // Star ranges basically just allow anything at all.
 const STAR = R++;
@@ -197,13 +242,14 @@ src[STAR] = "(<|>)?=?\\s*\\*";
 // Compile to actual regexp objects.
 // All are flag-free, unless they were created above with a flag.
 for (let i = 0; i < R; i++) {
+    debug(i, src[i]);
     if (!re[i]) {
         re[i] = new RegExp(src[i]);
     }
 }
 
 const numeric = /^[0-9]+$/;
-export const compareIdentifiers = (a, b) => {
+export const compareIdentifiers = function (a, b) {
     const anum = numeric.test(a);
     const bnum = numeric.test(b);
 
@@ -212,18 +258,24 @@ export const compareIdentifiers = (a, b) => {
         b = Number(b);
     }
 
-    return (anum && !bnum) ? -1 : (bnum && !anum) ? 1 : a < b ? -1 : a > b ? 1 : 0;
+    return (anum && !bnum) ? -1
+        : (bnum && !anum) ? 1
+            : a < b ? -1
+                : a > b ? 1
+                    : 0;
 };
 
 export class SemVer {
-    constructor(version, loose) {
+    constructor(version, options) {
+        if (!options || typeof options !== "object") {
+            options = { loose: Boolean(options), includePrerelease: false };
+        }
         if (version instanceof SemVer) {
-            if (version.loose === loose) {
+            if (version.loose === options.loose) {
                 return version;
-            }
-            version = version.version;
+            } version = version.version;
         } else if (!is.string(version)) {
-            throw new error.InvalidArgument(`Invalid Version: ${version}`);
+            throw new TypeError(`Invalid Version: ${version}`);
         }
 
         if (version.length > MAX_LENGTH) {
@@ -231,14 +283,17 @@ export class SemVer {
         }
 
         if (!(this instanceof SemVer)) {
-            return new SemVer(version, loose);
+            return new SemVer(version, options);
         }
 
-        this.loose = loose;
-        const m = version.trim().match(loose ? re[LOOSE] : re[FULL]);
+        debug("SemVer", version, options);
+        this.options = options;
+        this.loose = Boolean(options.loose);
+
+        const m = version.trim().match(options.loose ? re[LOOSE] : re[FULL]);
 
         if (!m) {
-            throw new error.InvalidArgument(`Invalid Version: ${version}`);
+            throw new TypeError(`Invalid Version: ${version}`);
         }
 
         this.raw = version;
@@ -249,15 +304,15 @@ export class SemVer {
         this.patch = Number(m[3]);
 
         if (this.major > MAX_SAFE_INTEGER || this.major < 0) {
-            throw new error.NotValid("Invalid major version");
+            throw new TypeError("Invalid major version");
         }
 
         if (this.minor > MAX_SAFE_INTEGER || this.minor < 0) {
-            throw new error.NotValid("Invalid minor version");
+            throw new TypeError("Invalid minor version");
         }
 
         if (this.patch > MAX_SAFE_INTEGER || this.patch < 0) {
-            throw new error.NotValid("Invalid patch version");
+            throw new TypeError("Invalid patch version");
         }
 
         // numberify any prerelease numeric ids
@@ -292,8 +347,9 @@ export class SemVer {
     }
 
     compare(other) {
+        debug("SemVer.compare", this.version, this.options, other);
         if (!(other instanceof SemVer)) {
-            other = new SemVer(other, this.loose);
+            other = new SemVer(other, this.options);
         }
 
         return this.compareMain(other) || this.comparePre(other);
@@ -301,7 +357,7 @@ export class SemVer {
 
     compareMain(other) {
         if (!(other instanceof SemVer)) {
-            other = new SemVer(other, this.loose);
+            other = new SemVer(other, this.options);
         }
 
         return compareIdentifiers(this.major, other.major) ||
@@ -311,7 +367,7 @@ export class SemVer {
 
     comparePre(other) {
         if (!(other instanceof SemVer)) {
-            other = new SemVer(other, this.loose);
+            other = new SemVer(other, this.options);
         }
 
         // NOT having a prerelease is > having one
@@ -327,7 +383,7 @@ export class SemVer {
         do {
             const a = this.prerelease[i];
             const b = other.prerelease[i];
-
+            debug("prerelease compare", i, a, b);
             if (is.undefined(a) && is.undefined(b)) {
                 return 0;
             } else if (is.undefined(b)) {
@@ -440,7 +496,7 @@ export class SemVer {
                 break;
 
             default:
-                throw new error.InvalidArgument(`invalid increment argument: ${release}`);
+                throw new Error(`invalid increment argument: ${release}`);
         }
         this.format();
         this.raw = this.version;
@@ -448,7 +504,47 @@ export class SemVer {
     }
 }
 
-export const inc = (version, release, loose, identifier) => {
+
+export const parse = function (version, options) {
+    if (!options || typeof options !== "object") {
+        options = { loose: Boolean(options), includePrerelease: false };
+    }
+
+    if (version instanceof SemVer) {
+        return version;
+    }
+
+    if (!is.string(version)) {
+        return null;
+    }
+
+    if (version.length > MAX_LENGTH) {
+        return null;
+    }
+
+    const r = options.loose ? re[LOOSE] : re[FULL];
+    if (!r.test(version)) {
+        return null;
+    }
+
+    try {
+        return new SemVer(version, options);
+    } catch (er) {
+        return null;
+    }
+};
+
+export const valid = function (version, options) {
+    const v = parse(version, options);
+    return v ? v.version : null;
+};
+
+export const clean = function (version, options) {
+    const s = parse(version.trim().replace(/^[=v]+/, ""), options);
+    return s ? s.version : null;
+};
+
+export const inc = function (version, release, loose, identifier) {
     if (is.string(loose)) {
         identifier = loose;
         loose = undefined;
@@ -461,59 +557,111 @@ export const inc = (version, release, loose, identifier) => {
     }
 };
 
-export const rcompareIdentifiers = (a, b) => compareIdentifiers(b, a);
+export const diff = function (version1, version2) {
+    if (eq(version1, version2)) {
+        return null;
+    }
+    const v1 = parse(version1);
+    const v2 = parse(version2);
+    let prefix = "";
+    let defaultResult = undefined;
+    if (v1.prerelease.length || v2.prerelease.length) {
+        prefix = "pre";
+        defaultResult = "prerelease";
+    }
+    for (const key in v1) {
+        if (key === "major" || key === "minor" || key === "patch") {
+            if (v1[key] !== v2[key]) {
+                return prefix + key;
+            }
+        }
+    }
+    return defaultResult; // may be undefined
+};
 
-export const major = (a, loose) => new SemVer(a, loose).major;
+export const rcompareIdentifiers = function (a, b) {
+    return compareIdentifiers(b, a);
+};
 
-export const minor = (a, loose) => new SemVer(a, loose).minor;
+export const major = function (a, loose) {
+    return new SemVer(a, loose).major;
+};
 
-export const patch = (a, loose) => new SemVer(a, loose).patch;
+export const minor = function (a, loose) {
+    return new SemVer(a, loose).minor;
+};
 
-export const compare = (a, b, loose) => new SemVer(a, loose).compare(new SemVer(b, loose));
+export const patch = function (a, loose) {
+    return new SemVer(a, loose).patch;
+};
 
-export const compareLoose = (a, b) => compare(a, b, true);
+export const compare = function (a, b, loose) {
+    return new SemVer(a, loose).compare(new SemVer(b, loose));
+};
 
-export const rcompare = (a, b, loose) => compare(b, a, loose);
+export const compareLoose = function (a, b) {
+    return compare(a, b, true);
+};
 
-export const sort = (list, loose) => list.sort((a, b) => {
-    return exports.compare(a, b, loose);
-});
+export const rcompare = function (a, b, loose) {
+    return compare(b, a, loose);
+};
 
-export const rsort = (list, loose) => list.sort((a, b) => {
-    return exports.rcompare(a, b, loose);
-});
+export const sort = function (list, loose) {
+    return list.sort((a, b) => {
+        return exports.compare(a, b, loose);
+    });
+};
 
+export const rsort = function (list, loose) {
+    return list.sort((a, b) => {
+        return exports.rcompare(a, b, loose);
+    });
+};
 
-export const gt = (a, b, loose) => compare(a, b, loose) > 0;
+export const gt = function (a, b, loose) {
+    return compare(a, b, loose) > 0;
+};
 
-export const lt = (a, b, loose) => compare(a, b, loose) < 0;
+export const lt = function (a, b, loose) {
+    return compare(a, b, loose) < 0;
+};
 
-export const eq = (a, b, loose) => compare(a, b, loose) === 0;
+export const eq = function (a, b, loose) {
+    return compare(a, b, loose) === 0;
+};
 
-export const neq = (a, b, loose) => compare(a, b, loose) !== 0;
+export const neq = function (a, b, loose) {
+    return compare(a, b, loose) !== 0;
+};
 
-export const gte = (a, b, loose) => compare(a, b, loose) >= 0;
+export const gte = function (a, b, loose) {
+    return compare(a, b, loose) >= 0;
+};
 
-export const lte = (a, b, loose) => compare(a, b, loose) <= 0;
+export const lte = function (a, b, loose) {
+    return compare(a, b, loose) <= 0;
+};
 
-export const cmp = (a, op, b, loose) => {
+export const cmp = function (a, op, b, loose) {
     let ret;
     switch (op) {
         case "===":
-            if (is.object(a)) {
+            if (typeof a === "object") {
                 a = a.version;
             }
-            if (is.object(b)) {
+            if (typeof b === "object") {
                 b = b.version;
             }
             ret = a === b;
             break;
         case "!==":
-            if (is.object(a)) {
+            if (typeof a === "object") {
                 a = a.version;
             }
-            if (is.object(b)) {
+            if (typeof b === "object") {
                 b = b.version;
+
             }
             ret = a !== b;
             break;
@@ -528,15 +676,56 @@ export const cmp = (a, op, b, loose) => {
     return ret;
 };
 
-export const isX = (id) => !id || id.toLowerCase() === "x" || id === "*";
+const ANY = {};
 
+const testSet = function (set, version, options) {
+    for (let i = 0; i < set.length; i++) {
+        if (!set[i].test(version)) {
+            return false;
+        }
+    }
+
+    if (!options) {
+        options = {};
+    }
+
+    if (version.prerelease.length && !options.includePrerelease) {
+        // Find the set of versions that are allowed to have prereleases
+        // For example, ^1.2.3-pr.1 desugars to >=1.2.3-pr.1 <2.0.0
+        // That should allow `1.2.3-pr.2` to pass.
+        // However, `1.2.4-alpha.notready` should NOT be allowed,
+        // even though it's within the range set by the comparators.
+        for (let i = 0; i < set.length; i++) {
+            debug(set[i].semver);
+            if (set[i].semver === ANY) {
+                continue;
+            }
+
+            if (set[i].semver.prerelease.length > 0) {
+                const allowed = set[i].semver;
+                if (allowed.major === version.major &&
+                    allowed.minor === version.minor &&
+                    allowed.patch === version.patch) {
+                    return true;
+                }
+            }
+        }
+
+        // Version has a -pre, but it's not one of the ones we like.
+        return false;
+    }
+
+    return true;
+};
+
+const isX = (id) => !id || id.toLowerCase() === "x" || id === "*";
 
 // This function is passed to string.replace(re[HYPHENRANGE])
 // M, m, patch, prerelease, build
 // 1.2 - 3.4.5 => >=1.2.0 <=3.4.5
 // 1.2.3 - 3.4 => >=1.2.0 <3.5.0 Any 3.4.x will do
 // 1.2 - 3.4 => >=1.2.0 <3.5.0
-const hyphenReplace = ($0, from, fM, fm, fp, fpr, fb, to, tM, tm, tp, tpr/*, tb*/) => {
+const hyphenReplace = function ($0, from, fM, fm, fp, fpr, fb, to, tM, tm, tp, tpr, tb) {
     if (isX(fM)) {
         from = "";
     } else if (isX(fm)) {
@@ -562,43 +751,35 @@ const hyphenReplace = ($0, from, fM, fm, fp, fpr, fb, to, tM, tm, tp, tpr/*, tb*
     return (`${from} ${to}`).trim();
 };
 
-const ANY = {};
-
-const testSet = (set, version) => {
-    for (let i = 0; i < set.length; i++) {
-        if (!set[i].test(version)) {
-            return false;
-        }
+const replaceTilde = function (comp, options) {
+    if (!options || typeof options !== "object") {
+        options = { loose: Boolean(options), includePrerelease: false };
     }
+    const r = options.loose ? re[TILDELOOSE] : re[TILDE];
+    return comp.replace(r, (_, M, m, p, pr) => {
+        debug("tilde", comp, _, M, m, p, pr);
+        let ret;
 
-    if (version.prerelease.length) {
-        // Find the set of versions that are allowed to have prereleases
-        // For example, ^1.2.3-pr.1 desugars to >=1.2.3-pr.1 <2.0.0
-        // That should allow `1.2.3-pr.2` to pass.
-        // However, `1.2.4-alpha.notready` should NOT be allowed,
-        // even though it's within the range set by the comparators.
-        for (let i = 0; i < set.length; i++) {
-            if (set[i].semver === ANY) {
-                continue;
+        if (isX(M)) {
+            ret = "";
+        } else if (isX(m)) {
+            ret = `>=${M}.0.0 <${Number(M) + 1}.0.0`;
+        } else if (isX(p)) { // ~1.2 == >=1.2.0 <1.3.0
+            ret = `>=${M}.${m}.0 <${M}.${Number(m) + 1}.0`;
+        } else if (pr) {
+            debug("replaceTilde pr", pr);
+            if (pr.charAt(0) !== "-") {
+                pr = `-${pr}`;
             }
-
-            if (set[i].semver.prerelease.length > 0) {
-                const allowed = set[i].semver;
-                if (allowed.major === version.major &&
-                    allowed.minor === version.minor &&
-                    allowed.patch === version.patch) {
-                    return true;
-                }
-            }
+            ret = `>=${M}.${m}.${p}${pr} <${M}.${Number(m) + 1}.0`;
+        } else { // ~1.2.3 == >=1.2.3 <1.3.0
+            ret = `>=${M}.${m}.${p} <${M}.${Number(m) + 1}.0`;
         }
 
-        // Version has a -pre, but it's not one of the ones we like.
-        return false;
-    }
-
-    return true;
+        debug("tilde return", ret);
+        return ret;
+    });
 };
-
 
 // ~, ~> --> * (any, kinda silly)
 // ~2, ~2.x, ~2.x.x, ~>2, ~>2.x ~>2.x.x --> >=2.0.0 <3.0.0
@@ -606,45 +787,20 @@ const testSet = (set, version) => {
 // ~1.2, ~1.2.x, ~>1.2, ~>1.2.x --> >=1.2.0 <1.3.0
 // ~1.2.3, ~>1.2.3 --> >=1.2.3 <1.3.0
 // ~1.2.0, ~>1.2.0 --> >=1.2.0 <1.3.0
-const replaceTilde = (comp, loose) => {
-    const r = loose ? re[TILDELOOSE] : re[TILDE];
-    return comp.replace(r, (_, M, m, p, pr) => {
-        let ret;
-
-        if (isX(M)) {
-            ret = "";
-        } else if (isX(m)) {
-            ret = `>=${M}.0.0 <${Number(M) + 1}.0.0`;
-        } else if (isX(p)) {
-            // ~1.2 == >=1.2.0 <1.3.0
-            ret = `>=${M}.${m}.0 <${M}.${Number(m) + 1}.0`;
-        } else if (pr) {
-            if (pr.charAt(0) !== "-") {
-                pr = `-${pr}`;
-            }
-            ret = `>=${M}.${m}.${p}${pr} <${M}.${Number(m) + 1}.0`;
-        } else {
-            // ~1.2.3 == >=1.2.3 <1.3.0
-            ret = `>=${M}.${m}.${p} <${M}.${Number(m) + 1}.0`;
-        }
-
-        return ret;
-    });
+const replaceTildes = function (comp, options) {
+    return comp.trim().split(/\s+/).map((comp) => {
+        return replaceTilde(comp, options);
+    }).join(" ");
 };
 
-export const replaceTildes = (comp, loose) => comp.trim().split(/\s+/).map((comp) => replaceTilde(comp, loose)).join(" ");
-
-
-// ^ --> * (any, kinda silly)
-// ^2, ^2.x, ^2.x.x --> >=2.0.0 <3.0.0
-// ^2.0, ^2.0.x --> >=2.0.0 <3.0.0
-// ^1.2, ^1.2.x --> >=1.2.0 <2.0.0
-// ^1.2.3 --> >=1.2.3 <2.0.0
-// ^1.2.0 --> >=1.2.0 <2.0.0
-
-const replaceCaret = (comp, loose) => {
-    const r = loose ? re[CARETLOOSE] : re[CARET];
+const replaceCaret = function (comp, options) {
+    debug("caret", comp, options);
+    if (!options || typeof options !== "object") {
+        options = { loose: Boolean(options), includePrerelease: false };
+    }
+    const r = options.loose ? re[CARETLOOSE] : re[CARET];
     return comp.replace(r, (_, M, m, p, pr) => {
+        debug("caret", comp, _, M, m, p, pr);
         let ret;
 
         if (isX(M)) {
@@ -658,6 +814,7 @@ const replaceCaret = (comp, loose) => {
                 ret = `>=${M}.${m}.0 <${Number(M) + 1}.0.0`;
             }
         } else if (pr) {
+            debug("replaceCaret pr", pr);
             if (pr.charAt(0) !== "-") {
                 pr = `-${pr}`;
             }
@@ -671,6 +828,7 @@ const replaceCaret = (comp, loose) => {
                 ret = `>=${M}.${m}.${p}${pr} <${Number(M) + 1}.0.0`;
             }
         } else {
+            debug("no pr");
             if (M === "0") {
                 if (m === "0") {
                     ret = `>=${M}.${m}.${p} <${M}.${m}.${Number(p) + 1}`;
@@ -682,16 +840,31 @@ const replaceCaret = (comp, loose) => {
             }
         }
 
+        debug("caret return", ret);
         return ret;
     });
 };
 
-const replaceCarets = (comp, loose) => comp.trim().split(/\s+/).map((comp) => replaceCaret(comp, loose)).join(" ");
+// ^ --> * (any, kinda silly)
+// ^2, ^2.x, ^2.x.x --> >=2.0.0 <3.0.0
+// ^2.0, ^2.0.x --> >=2.0.0 <3.0.0
+// ^1.2, ^1.2.x --> >=1.2.0 <2.0.0
+// ^1.2.3 --> >=1.2.3 <2.0.0
+// ^1.2.0 --> >=1.2.0 <2.0.0
+const replaceCarets = function (comp, options) {
+    return comp.trim().split(/\s+/).map((comp) => {
+        return replaceCaret(comp, options);
+    }).join(" ");
+};
 
-const replaceXRange = (comp, loose) => {
+const replaceXRange = function (comp, options) {
     comp = comp.trim();
-    const r = loose ? re[XRANGELOOSE] : re[XRANGE];
-    return comp.replace(r, (ret, gtlt, M, m, p/*, pr*/) => {
+    if (!options || typeof options !== "object") {
+        options = { loose: Boolean(options), includePrerelease: false };
+    }
+    const r = options.loose ? re[XRANGELOOSE] : re[XRANGE];
+    return comp.replace(r, (ret, gtlt, M, m, p, pr) => {
+        debug("xRange", comp, ret, gtlt, M, m, p, pr);
         const xM = isX(M);
         const xm = xM || isX(m);
         const xp = xm || isX(p);
@@ -749,47 +922,182 @@ const replaceXRange = (comp, loose) => {
             ret = `>=${M}.${m}.0 <${M}.${Number(m) + 1}.0`;
         }
 
+        debug("xRange return", ret);
+
         return ret;
     });
 };
 
-const replaceXRanges = (comp, loose) => comp.split(/\s+/).map((comp) => replaceXRange(comp, loose)).join(" ");
+const replaceXRanges = function (comp, options) {
+    debug("replaceXRanges", comp, options);
+    return comp.split(/\s+/).map((comp) => {
+        return replaceXRange(comp, options);
+    }).join(" ");
+};
 
 // Because * is AND-ed with everything else in the comparator,
 // and '' means "any version", just remove the *s entirely.
-const replaceStars = (comp/*, loose*/) => comp.trim().replace(re[STAR], ""); // Looseness is ignored here.  star is always as loose as it gets!
-
+const replaceStars = function (comp, options) {
+    debug("replaceStars", comp, options);
+    // Looseness is ignored here.  star is always as loose as it gets!
+    return comp.trim().replace(re[STAR], "");
+};
 
 // comprised of xranges, tildes, stars, and gtlt's at this point.
 // already replaced the hyphen ranges
 // turn into a set of JUST comparators.
-export const parseComparator = (comp, loose) => {
-    comp = replaceCarets(comp, loose);
-    comp = replaceTildes(comp, loose);
-    comp = replaceXRanges(comp, loose);
-    comp = replaceStars(comp, loose);
+const parseComparator = function (comp, options) {
+    debug("comp", comp, options);
+    comp = replaceCarets(comp, options);
+    debug("caret", comp);
+    comp = replaceTildes(comp, options);
+    debug("tildes", comp);
+    comp = replaceXRanges(comp, options);
+    debug("xrange", comp);
+    comp = replaceStars(comp, options);
+    debug("stars", comp);
     return comp;
 };
 
+export class Comparator {
+    constructor(comp, options) {
+        if (!options || typeof options !== "object") {
+            options = { loose: Boolean(options), includePrerelease: false };
+        }
+
+        if (comp instanceof Comparator) {
+            if (comp.loose === Boolean(options.loose)) {
+                return comp;
+            } comp = comp.value;
+        }
+
+        if (!(this instanceof Comparator)) {
+            return new Comparator(comp, options);
+        }
+
+        debug("comparator", comp, options);
+        this.options = options;
+        this.loose = Boolean(options.loose);
+        this.parse(comp);
+
+        if (this.semver === ANY) {
+            this.value = "";
+        } else {
+            this.value = this.operator + this.semver.version;
+        }
+
+        debug("comp", this);
+    }
+
+    parse(comp) {
+        const r = this.options.loose ? re[COMPARATORLOOSE] : re[COMPARATOR];
+        const m = comp.match(r);
+
+        if (!m) {
+            throw new TypeError(`Invalid comparator: ${comp}`);
+        }
+
+        this.operator = m[1];
+        if (this.operator === "=") {
+            this.operator = "";
+        }
+
+        // if it literally is just '>' or '' then allow anything.
+        if (!m[2]) {
+            this.semver = ANY;
+        } else {
+            this.semver = new SemVer(m[2], this.options.loose);
+        }
+    }
+
+    toString() {
+        return this.value;
+    }
+
+    test(version) {
+        debug("Comparator.test", version, this.options.loose);
+
+        if (this.semver === ANY) {
+            return true;
+        }
+
+        if (is.string(version)) {
+            version = new SemVer(version, this.options);
+        }
+
+        return cmp(version, this.operator, this.semver, this.options);
+    }
+
+    intersects(comp, options) {
+        if (!(comp instanceof Comparator)) {
+            throw new TypeError("a Comparator is required");
+        }
+
+        if (!options || typeof options !== "object") {
+            options = { loose: Boolean(options), includePrerelease: false };
+        }
+
+        let rangeTmp;
+
+        if (this.operator === "") {
+            rangeTmp = new Range(comp.value, options);
+            return satisfies(this.value, rangeTmp, options);
+        } else if (comp.operator === "") {
+            rangeTmp = new Range(this.value, options);
+            return satisfies(comp.semver, rangeTmp, options);
+        }
+
+        const sameDirectionIncreasing =
+            (this.operator === ">=" || this.operator === ">") &&
+            (comp.operator === ">=" || comp.operator === ">");
+        const sameDirectionDecreasing =
+            (this.operator === "<=" || this.operator === "<") &&
+            (comp.operator === "<=" || comp.operator === "<");
+        const sameSemVer = this.semver.version === comp.semver.version;
+        const differentDirectionsInclusive =
+            (this.operator === ">=" || this.operator === "<=") &&
+            (comp.operator === ">=" || comp.operator === "<=");
+        const oppositeDirectionsLessThan =
+            cmp(this.semver, "<", comp.semver, options) &&
+            ((this.operator === ">=" || this.operator === ">") &&
+                (comp.operator === "<=" || comp.operator === "<"));
+        const oppositeDirectionsGreaterThan =
+            cmp(this.semver, ">", comp.semver, options) &&
+            ((this.operator === "<=" || this.operator === "<") &&
+                (comp.operator === ">=" || comp.operator === ">"));
+
+        return sameDirectionIncreasing || sameDirectionDecreasing ||
+            (sameSemVer && differentDirectionsInclusive) ||
+            oppositeDirectionsLessThan || oppositeDirectionsGreaterThan;
+    }
+}
+
 export class Range {
-    constructor(range, loose) {
+    constructor(range, options) {
+        if (!options || typeof options !== "object") {
+            options = { loose: Boolean(options), includePrerelease: false };
+        }
+
         if (range instanceof Range) {
-            if (range.loose === loose) {
+            if (range.loose === Boolean(options.loose) &&
+                range.includePrerelease === Boolean(options.includePrerelease)) {
                 return range;
             }
-            return new Range(range.raw, loose);
+            return new Range(range.raw, options);
 
         }
 
-        if (range instanceof Comparator) { // eslint-disable-line
-            return new Range(range.value, loose);
+        if (range instanceof Comparator) {
+            return new Range(range.value, options);
         }
 
         if (!(this instanceof Range)) {
-            return new Range(range, loose);
+            return new Range(range, options);
         }
 
-        this.loose = loose;
+        this.options = options;
+        this.loose = Boolean(options.loose);
+        this.includePrerelease = Boolean(options.includePrerelease);
 
         // First, split based on boolean or ||
         this.raw = range;
@@ -819,15 +1127,15 @@ export class Range {
     }
 
     parseRange(range) {
-        const loose = this.loose;
+        const loose = this.options.loose;
         range = range.trim();
-
         // `1.2.3 - 1.2.4` => `>=1.2.3 <=1.2.4`
         const hr = loose ? re[HYPHENRANGELOOSE] : re[HYPHENRANGE];
         range = range.replace(hr, hyphenReplace);
-
+        debug("hyphen replace", range);
         // `> 1.2.3 < 1.2.5` => `>1.2.3 <1.2.5`
         range = range.replace(re[COMPARATORTRIM], comparatorTrimReplace);
+        debug("comparator trim", range, re[COMPARATORTRIM]);
 
         // `~ 1.2.3` => `~1.2.3`
         range = range.replace(re[TILDETRIM], tildeTrimReplace);
@@ -842,21 +1150,23 @@ export class Range {
         // ready to be split into comparators.
 
         const compRe = loose ? re[COMPARATORLOOSE] : re[COMPARATOR];
-        let set = range.split(" ").map((comp) => {
-            return parseComparator(comp, loose);
-        }).join(" ").split(/\s+/);
-        if (this.loose) {
+        let set = range.split(" ").map(function (comp) {
+            return parseComparator(comp, this.options);
+        }, this).join(" ").split(/\s+/);
+        if (this.options.loose) {
             // in loose mode, throw out any that are not valid comparators
             set = set.filter((comp) => {
                 return Boolean(comp.match(compRe));
             });
         }
-        set = set.map((comp) => new Comparator(comp, loose)); // eslint-disable-line
+        set = set.map(function (comp) {
+            return new Comparator(comp, this.options);
+        }, this);
 
         return set;
     }
 
-    intersects(range, loose) {
+    intersects(range, options) {
         if (!(range instanceof Range)) {
             throw new TypeError("a Range is required");
         }
@@ -865,7 +1175,7 @@ export class Range {
             return thisComparators.every((thisComparator) => {
                 return range.set.some((rangeComparators) => {
                     return rangeComparators.every((rangeComparator) => {
-                        return thisComparator.intersects(rangeComparator, loose);
+                        return thisComparator.intersects(rangeComparator, options);
                     });
                 });
             });
@@ -879,11 +1189,11 @@ export class Range {
         }
 
         if (is.string(version)) {
-            version = new SemVer(version, this.loose);
+            version = new SemVer(version, this.options);
         }
 
         for (let i = 0; i < this.set.length; i++) {
-            if (testSet(this.set[i], version)) {
+            if (testSet(this.set[i], version, this.options)) {
                 return true;
             }
         }
@@ -891,184 +1201,79 @@ export class Range {
     }
 }
 
-export const satisfies = (version, range, loose) => {
+export const satisfies = function (version, range, options) {
     try {
-        range = new Range(range, loose); // eslint-disable-line
+        range = new Range(range, options);
     } catch (er) {
         return false;
     }
     return range.test(version);
 };
 
-export class Comparator {
-    constructor(comp, loose) {
-        if (comp instanceof Comparator) {
-            if (comp.loose === loose) {
-                return comp;
-            }
-            comp = comp.value;
-        }
-
-        if (!(this instanceof Comparator)) {
-            return new Comparator(comp, loose);
-        }
-
-        this.loose = loose;
-        this.parse(comp);
-
-        if (this.semver === ANY) {
-            this.value = "";
-        } else {
-            this.value = this.operator + this.semver.version;
-        }
-    }
-
-    parse(comp) {
-        const r = this.loose ? re[COMPARATORLOOSE] : re[COMPARATOR];
-        const m = comp.match(r);
-
-        if (!m) {
-            throw new TypeError(`Invalid comparator: ${comp}`);
-        }
-
-        this.operator = m[1];
-        if (this.operator === "=") {
-            this.operator = "";
-        }
-
-        // if it literally is just '>' or '' then allow anything.
-        if (!m[2]) {
-            this.semver = ANY;
-        } else {
-            this.semver = new SemVer(m[2], this.loose);
-        }
-    }
-
-    toString() {
-        return this.value;
-    }
-
-    test(version) {
-        if (this.semver === ANY) {
-            return true;
-        }
-
-        if (is.string(version)) {
-            version = new SemVer(version, this.loose);
-        }
-
-        return cmp(version, this.operator, this.semver, this.loose);
-    }
-
-    intersects(comp, loose) {
-        if (!(comp instanceof Comparator)) {
-            throw new TypeError("a Comparator is required");
-        }
-
-        let rangeTmp;
-
-        if (this.operator === "") {
-            rangeTmp = new Range(comp.value, loose);
-            return satisfies(this.value, rangeTmp, loose);
-        } else if (comp.operator === "") {
-            rangeTmp = new Range(this.value, loose);
-            return satisfies(comp.semver, rangeTmp, loose);
-        }
-
-        const sameDirectionIncreasing =
-            (this.operator === ">=" || this.operator === ">") &&
-            (comp.operator === ">=" || comp.operator === ">");
-        const sameDirectionDecreasing =
-            (this.operator === "<=" || this.operator === "<") &&
-            (comp.operator === "<=" || comp.operator === "<");
-        const sameSemVer = this.semver.version === comp.semver.version;
-        const differentDirectionsInclusive =
-            (this.operator === ">=" || this.operator === "<=") &&
-            (comp.operator === ">=" || comp.operator === "<=");
-        const oppositeDirectionsLessThan =
-            cmp(this.semver, "<", comp.semver, loose) &&
-            ((this.operator === ">=" || this.operator === ">") &&
-                (comp.operator === "<=" || comp.operator === "<"));
-        const oppositeDirectionsGreaterThan =
-            cmp(this.semver, ">", comp.semver, loose) &&
-            ((this.operator === "<=" || this.operator === "<") &&
-                (comp.operator === ">=" || comp.operator === ">"));
-
-        return sameDirectionIncreasing || sameDirectionDecreasing ||
-            (sameSemVer && differentDirectionsInclusive) ||
-            oppositeDirectionsLessThan || oppositeDirectionsGreaterThan;
-    }
-}
-
-export const maxSatisfying = (versions, range, loose) => {
-    let max = null;
-    let maxSV = null;
-    let rangeObj;
-    try {
-        rangeObj = new Range(range, loose);
-    } catch (er) {
-        return null;
-    }
-    versions.forEach((v) => {
-        if (rangeObj.test(v)) { // satisfies(v, range, loose)
-            if (!max || maxSV.compare(v) === -1) { // compare(max, v, true)
-                max = v;
-                maxSV = new SemVer(max, loose);
-            }
-        }
-    });
-    return max;
-};
-
 // Mostly just for testing and legacy API reasons
-export const toComparators = (range, loose) => {
-    return new Range(range, loose).set.map((comp) => {
+export const toComparators = function (range, options) {
+    return new Range(range, options).set.map((comp) => {
         return comp.map((c) => {
             return c.value;
         }).join(" ").trim().split(" ");
     });
 };
 
-export const minSatisfying = (versions, range, loose) => {
-    let min = null;
-    let minSV = null;
-    let rangeObj;
+export const maxSatisfying = function (versions, range, options) {
+    let max = null;
+    let maxSV = null;
+    let rangeObj = null;
     try {
-        rangeObj = new Range(range, loose);
+        rangeObj = new Range(range, options);
     } catch (er) {
         return null;
     }
     versions.forEach((v) => {
-        if (rangeObj.test(v)) { // satisfies(v, range, loose)
+        if (rangeObj.test(v)) { // satisfies(v, range, options)
+            if (!max || maxSV.compare(v) === -1) { // compare(max, v, true)
+                max = v;
+                maxSV = new SemVer(max, options);
+            }
+        }
+    });
+    return max;
+};
+
+export const minSatisfying = function (versions, range, options) {
+    let min = null;
+    let minSV = null;
+    let rangeObj = null;
+    try {
+        rangeObj = new Range(range, options);
+    } catch (er) {
+        return null;
+    }
+    versions.forEach((v) => {
+        if (rangeObj.test(v)) { // satisfies(v, range, options)
             if (!min || minSV.compare(v) === 1) { // compare(min, v, true)
                 min = v;
-                minSV = new SemVer(min, loose);
+                minSV = new SemVer(min, options);
             }
         }
     });
     return min;
 };
 
-export const validRange = (range, loose) => {
+export const validRange = function (range, options) {
     try {
         // Return '*' instead of '' so that truthiness works.
         // This will throw if it's invalid anyway
-        return new Range(range, loose).range || "*";
+        return new Range(range, options).range || "*";
     } catch (er) {
         return null;
     }
 };
 
-export const outside = (version, range, hilo, loose) => {
-    version = new SemVer(version, loose);
-    range = new Range(range, loose);
+export const outside = function (version, range, hilo, options) {
+    version = new SemVer(version, options);
+    range = new Range(range, options);
 
-    let gtfn;
-    let ltefn;
-    let ltfn;
-    let comp;
-    let ecomp;
-
+    let gtfn; let ltefn; let ltfn; let comp; let ecomp;
     switch (hilo) {
         case ">":
             gtfn = gt;
@@ -1089,7 +1294,7 @@ export const outside = (version, range, hilo, loose) => {
     }
 
     // If it satisifes the range it is not outside
-    if (satisfies(version, range, loose)) {
+    if (satisfies(version, range, options)) {
         return false;
     }
 
@@ -1108,9 +1313,9 @@ export const outside = (version, range, hilo, loose) => {
             }
             high = high || comparator;
             low = low || comparator;
-            if (gtfn(comparator.semver, high.semver, loose)) {
+            if (gtfn(comparator.semver, high.semver, options)) {
                 high = comparator;
-            } else if (ltfn(comparator.semver, low.semver, loose)) {
+            } else if (ltfn(comparator.semver, low.semver, options)) {
                 low = comparator;
             }
         });
@@ -1134,84 +1339,27 @@ export const outside = (version, range, hilo, loose) => {
 };
 
 // Determine if version is less than all the versions possible in the range
-export const ltr = (version, range, loose) => outside(version, range, "<", loose);
+export const ltr = function (version, range, options) {
+    return outside(version, range, "<", options);
+};
 
 // Determine if version is greater than all the versions possible in the range.
-export const gtr = (version, range, loose) => outside(version, range, ">", loose);
-
-export const parse = (version, loose) => {
-    if (version instanceof SemVer) {
-        return version;
-    }
-
-    if (!is.string(version)) {
-        return null;
-    }
-
-    if (version.length > MAX_LENGTH) {
-        return null;
-    }
-
-    const r = loose ? re[LOOSE] : re[FULL];
-    if (!r.test(version)) {
-        return null;
-    }
-
-    try {
-        return new SemVer(version, loose);
-    } catch (er) {
-        return null;
-    }
+export const gtr = function (version, range, options) {
+    return outside(version, range, ">", options);
 };
 
-export const diff = (version1, version2) => {
-    if (eq(version1, version2)) {
-        return null;
-    }
-    const v1 = parse(version1);
-    const v2 = parse(version2);
-    if (v1.prerelease.length || v2.prerelease.length) {
-        for (const key in v1) {
-            if (key === "major" || key === "minor" || key === "patch") {
-                if (v1[key] !== v2[key]) {
-                    return `pre${key}`;
-                }
-            }
-        }
-        return "prerelease";
-    }
-    for (const key in v1) {
-        if (key === "major" || key === "minor" || key === "patch") {
-            if (v1[key] !== v2[key]) {
-                return key;
-            }
-        }
-    }
-};
-
-export const valid = (version, loose) => {
-    const v = parse(version, loose);
-    return v ? v.version : null;
-};
-
-
-export const clean = (version, loose) => {
-    const s = parse(version.trim().replace(/^[=v]+/, ""), loose);
-    return s ? s.version : null;
-};
-
-export const prerelease = (version, loose) => {
-    const parsed = parse(version, loose);
+export const prerelease = function (version, options) {
+    const parsed = parse(version, options);
     return (parsed && parsed.prerelease.length) ? parsed.prerelease : null;
 };
 
-export const intersects = (r1, r2, loose) => {
-    r1 = new Range(r1, loose);
-    r2 = new Range(r2, loose);
+export const intersects = function (r1, r2, options) {
+    r1 = new Range(r1, options);
+    r2 = new Range(r2, options);
     return r1.intersects(r2);
 };
 
-export const coerce = (version) => {
+export const coerce = function (version) {
     if (version instanceof SemVer) {
         return version;
     }

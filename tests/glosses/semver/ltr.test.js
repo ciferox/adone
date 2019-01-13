@@ -1,7 +1,11 @@
-const { semver } = adone;
-const ltr = semver.ltr;
 
-describe("semver", "ltr", () => {
+const {
+    semver
+} = adone;
+
+const { ltr } = semver;
+
+describe("semver", () => {
     it("ltr tests", () => {
         // [range, version, loose]
         // Version should be less than range

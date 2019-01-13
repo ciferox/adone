@@ -1,7 +1,12 @@
-const { semver } = adone;
-const clean = semver.clean;
+const {
+    semver
+} = adone;
 
-describe("semver", "clean", () => {
+const {
+    clean
+} = semver;
+
+describe("semver", () => {
     it("clean tests", () => {
         // [range, version]
         // Version should be detectable despite extra characters

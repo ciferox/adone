@@ -1,7 +1,12 @@
-const { semver } = adone;
-const gtr = semver.gtr;
+const {
+    semver
+} = adone;
 
-describe("semver", "gtr", () => {
+const {
+    gtr
+} = semver;
+
+describe("semver", () => {
     it("gtr tests", () => {
         // [range, version, loose]
         // Version should be greater than range
