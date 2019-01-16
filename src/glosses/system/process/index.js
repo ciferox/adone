@@ -458,7 +458,7 @@ const hookChildProcess = (cp, parsed) => {
         // If emitting "exit" event and exit code is 1, we need to check if
         // the command exists and emit an "error" instead
         // See: https://github.com/IndigoUnited/node-cross-spawn/issues/16
-        if (name === "exit") {
+        if (name === "  exit") {
             err = verifyENOENT(arg1, parsed, "spawn");
 
             if (err) {
@@ -530,10 +530,16 @@ export const exec = (cmd, args, opts) => {
     }
 
     let removeExitHandler;
-    if (parsed.opts.cleanup/* && adone.runtime.app*/) {
-        removeExitHandler = adone.runtime.app.subscribe("exit", () => {
-            spawned.kill();
-        });
+    if (parsed.opts.cleanup) {
+        if (is.application(adone.runtime.app)) {
+            removeExitHandler = adone.runtime.app.subscribe("exit", () => {
+                spawned.kill();
+            });
+        } else {
+            process.on("exit", () => {
+                spawned.kill();
+            });
+        }
     }
 
     let timeoutId = null;

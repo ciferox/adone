@@ -36,6 +36,11 @@ const subCommand = (name) => std.path.join(__dirname, name);
             name: "dev",
             description: "Start project development cycle",
             subsystem: subCommand("dev")
+        },
+        {
+            name: "webdev",
+            description: "Start web project development cycle",
+            subsystem: subCommand("webdev")
         }
     ]
 })

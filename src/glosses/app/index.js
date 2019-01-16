@@ -110,6 +110,7 @@ adone.lazify({
     Application: "./application",
     AppHelper: "./app_helper",
     logger: "./logger",
+    fastLogger: "./fast_logger",
     report: "./report",
     lockfile: "./lockfile"
 }, adone.asNamespace(exports), require);
