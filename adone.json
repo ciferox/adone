@@ -986,6 +986,13 @@
                         "type": "gyp"
                     }
                 },
+                "ipfs": {
+                    "description": "IPFS",
+                    "task": "transpile",
+                    "src": "src/ipfs/**/*.js",
+                    "dst": "lib/ipfs",
+                    "namespace": "ipfs"
+                },
                 "napa": {
                     "description": "Napa.js: a multi-threaded JavaScript runtime",
                     "task": "transpile",

@@ -1210,39 +1210,39 @@ describe("task", () => {
         });
     });
 
-    describe.only("contexts", () => {
-        const {
-            task: { Manager }
-        } = adone;
+    // describe.only("contexts", () => {
+    //     const {
+    //         task: { Manager }
+    //     } = adone;
 
-        it("manager api", () => {
-            const manager = new Manager();
+    //     it("manager api", () => {
+    //         const manager = new Manager();
 
 
-            assert.function(manager.getIsolate);
-            assert.function(manager.getContextBook);
-        });
+    //         assert.function(manager.getIsolate);
+    //         assert.function(manager.getContextBook);
+    //     });
 
-        it("create std context with defaults", async () => {
-            const manager = new Manager();
-            const stdContext = await manager.getContextBook().createContext("main");
-            assert.object(stdContext);
+    //     it("create std context with defaults", async () => {
+    //         const manager = new Manager();
+    //         const stdContext = await manager.getContextBook().createContext("main");
+    //         assert.object(stdContext);
 
-            class MyTask extends task.Task {
-                run(a, b) {
-                    global.a = a;
-                    global.b = b;
-                    global.c = a + b;
-                    return global.c;
-                }
-            }
+    //         class MyTask extends task.Task {
+    //             run(a, b) {
+    //                 global.a = a;
+    //                 global.b = b;
+    //                 global.c = a + b;
+    //                 return global.c;
+    //             }
+    //         }
 
-            manager.addTask("my", MyTask);
-            const observer = await manager.runInContext(stdContext, "my", 1, 2);
-            const result = await observer.result;
-            console.log(result);
-        });
+    //         manager.addTask("my", MyTask);
+    //         const observer = await manager.runInContext(stdContext, "my", 1, 2);
+    //         const result = await observer.result;
+    //         console.log(result);
+    //     });
 
-    });
+    // });
 
 });

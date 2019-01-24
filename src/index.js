@@ -397,6 +397,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         cli: "./cli",
         cmake: "./cmake",
         fast: "./fast",
+        ipfs: "./ipfs",
         isolatedVm: "./isolated_vm",
         gyp: "./gyp",
         lodash: "./lodash",

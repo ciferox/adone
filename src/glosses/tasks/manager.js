@@ -282,7 +282,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
     }
 
     async runInContext(context, name, ...args) {
-        if (!is.null(context) && !is.taskContext(context)) {
+        if (!is.null(context)/* && !is.taskContext(context)*/) {
             throw new adone.error.InvalidArgument("Context should be `null` or instance of `adone.task.Context`");
         }
 

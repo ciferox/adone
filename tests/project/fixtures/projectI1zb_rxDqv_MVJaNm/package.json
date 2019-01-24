@@ -1,0 +1,14 @@
+{
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {
+    "babel-eslint": "^10.0.1",
+    "eslint": "^5.12.1",
+    "eslint-plugin-adone": "^0.6.71-2",
+    "eslint-plugin-babel": "^5.3.0"
+  },
+  "name": "projectI1zb_rxDqv_MVJaNm",
+  "version": "1.1.1",
+  "description": "project description",
+  "author": "Adone Core Team"
+}

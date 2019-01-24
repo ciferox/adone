@@ -13,7 +13,7 @@ export const STATE = {
 adone.definePredicates({
     task: "TASK",
     flowTask: "FLOW_TASK",
-    taskContext: "TASK_CONTEXT",
+    // taskContext: "TASK_CONTEXT",
     taskObserver: "TASK_OBSERVER",
     taskManager: "TASK_MANAGER"
 });
