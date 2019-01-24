@@ -4,20 +4,12 @@ const {
     task: { STATE }
 } = adone;
 
-const { MANAGER_SYMBOL, TASKNAME_SYMBOL, OBSERVER_SYMBOL } = adone.private(adone.task);
+const { MANAGER_SYMBOL, OBSERVER_SYMBOL } = adone.private(adone.task);
 
 export class Task {
     constructor() {
         this[MANAGER_SYMBOL] = null;
         this[OBSERVER_SYMBOL] = null;
-    }
-
-    get name() {
-        return this[TASKNAME_SYMBOL];
-    }
-
-    set name(val) {
-        throw new error.NotAllowed("Task's 'name' is immutable");
     }
 
     get observer() {
@@ -79,14 +71,24 @@ export class Task {
 }
 adone.tag.add(Task, "TASK");
 
+const TASK_NAME_SYMBOL = Symbol.for("adone.task.TaskObserver#taskName");
+
 export class TaskObserver {
     constructor(task, name) {
         this.task = task;
         this.task[OBSERVER_SYMBOL] = this;
-        this.name = name;
+        this[TASK_NAME_SYMBOL] = name;
         this.state = STATE.IDLE;
         this.result = undefined;
         this.error = undefined;
+    }
+
+    get taskName() {
+        return this[TASK_NAME_SYMBOL];
+    }
+
+    set taskName(val) {
+        throw new error.NotAllowed("Property 'taskName' is immutable");
     }
 
     /**
@@ -94,7 +96,7 @@ export class TaskObserver {
      */
     async cancel() {
         if (!this.task.isCancelable()) {
-            throw new error.NotAllowed(`Task '${this.name}' is not cancelable`);
+            throw new error.NotAllowed(`Task '${this[TASK_NAME_SYMBOL]}' is not cancelable`);
         }
         if (this.state === STATE.RUNNING) {
             this.state = STATE.CANCELLING;

@@ -13,21 +13,22 @@ export const STATE = {
 adone.definePredicates({
     task: "TASK",
     flowTask: "FLOW_TASK",
+    taskContext: "TASK_CONTEXT",
     taskObserver: "TASK_OBSERVER",
     taskManager: "TASK_MANAGER"
 });
 
 const __ = adone.lazify({
+    Context: "./context",
+    ContextBook: "./context_book",
     Manager: "./manager",
     Task: ["./task", (mod) => mod.Task],
     TaskObserver: ["./task", (mod) => mod.TaskObserver],
     Flow: "./flow",
-    flow: "./flows",
-    manager: () => new __.Manager() // default task manager for running standalone tasks
+    flow: "./flows"
 }, adone.asNamespace(exports), require);
 
 adone.lazifyPrivate({
-    TASKNAME_SYMBOL: () => Symbol(),
     MANAGER_SYMBOL: () => Symbol(),
     OBSERVER_SYMBOL: () => Symbol()
 }, exports, require);

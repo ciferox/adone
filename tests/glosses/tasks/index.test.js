@@ -98,6 +98,36 @@ describe("task", () => {
         manager = new task.Manager();
     });
 
+    it("task prototype", () => {
+        const t = new adone.task.Task();
+
+        assert.true(is.task(t));
+        assert.null(t.manager);
+        assert.null(t.observer);
+        assert.throws(() => t.manager = undefined, adone.error.NotAllowed);
+        assert.throws(() => t.observer = undefined, adone.error.NotAllowed);
+
+        assert.function(t.run);
+        assert.throws(() => t.run(), adone.error.NotImplemented);
+
+        assert.function(t.isSuspendable);
+        assert.function(t.isCancelable);
+
+        assert.function(t.suspend);
+        assert.function(t.resume);
+        assert.function(t.cancel);
+    });
+
+    it("by default, task should not be suspendable", () => {
+        const t = new adone.task.Task();
+        assert.false(t.isSuspendable());
+    });
+
+    it("by default, task should not be cancelable", () => {
+        const t = new adone.task.Task();
+        assert.false(t.isCancelable());
+    });
+
     it("construct manager", () => {
         assert.true(is.taskManager(manager));
         assert.lengthOf(manager.getTaskNames(), 0);
@@ -140,7 +170,20 @@ describe("task", () => {
         assert.sameMembers(manager.getTaskNames(), ["task"]);
     });
 
-    it("task's manager property should be immutable", async () => {
+    it("task's immutable properties", async () => {
+        const props = [
+            {
+                name: "manager",
+                expected: manager,
+                createNew: () => new task.Manager()
+            },
+            {
+                name: "observer",
+                expected: null,
+                createNew: () => ({})
+            }
+        ];
+
         class TaskA extends task.Task {
             run() {
             }
@@ -148,35 +191,12 @@ describe("task", () => {
 
         await manager.addTask("task", TaskA);
         const taskA = await manager.getTaskInstance("task");
-        assert.strictEqual(taskA.manager, manager);
-        assert.throws(() => taskA.manager = new task.Manager(), adone.error.NotAllowed);
-    });
 
-    it("task's 'name' property should be immutable", async () => {
-        class TaskA extends task.Task {
-            run() {
-            }
+        for (const prop of props) {
+            assert.strictEqual(taskA[prop.name], prop.expected);
+            assert.throws(() => taskA[prop.name] = prop.createNew(), adone.error.NotAllowed);
         }
-
-        await manager.addTask("qua", TaskA);
-        const taskA = await manager.getTaskInstance("qua");
-        assert.strictEqual(taskA.name, "qua");
-        assert.throws(() => taskA.name = "aaa", adone.error.NotAllowed);
     });
-
-    it("task's 'observer' property should be immutable", async () => {
-        class TaskA extends task.Task {
-            run() {
-            }
-        }
-
-        await manager.addTask("qua", TaskA);
-        const observer = await manager.run("qua");
-        const t = observer.task;
-        assert.strictEqual(t.observer, observer);
-        assert.throws(() => t.observer = {}, adone.error.NotAllowed);
-    });
-
 
     it("run task", async () => {
         await manager.addTask("a", SimpleTask);
@@ -1189,4 +1209,40 @@ describe("task", () => {
             }
         });
     });
+
+    describe.only("contexts", () => {
+        const {
+            task: { Manager }
+        } = adone;
+
+        it("manager api", () => {
+            const manager = new Manager();
+
+
+            assert.function(manager.getIsolate);
+            assert.function(manager.getContextBook);
+        });
+
+        it("create std context with defaults", async () => {
+            const manager = new Manager();
+            const stdContext = await manager.getContextBook().createContext("main");
+            assert.object(stdContext);
+
+            class MyTask extends task.Task {
+                run(a, b) {
+                    global.a = a;
+                    global.b = b;
+                    global.c = a + b;
+                    return global.c;
+                }
+            }
+
+            manager.addTask("my", MyTask);
+            const observer = await manager.runInContext(stdContext, "my", 1, 2);
+            const result = await observer.result;
+            console.log(result);
+        });
+
+    });
+
 });

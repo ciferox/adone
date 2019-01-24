@@ -18,7 +18,7 @@ export default class ParallelFlow extends adone.task.Flow {
             }
             
             result.then((result) => {
-                results[observer.name] = result;
+                results[observer.taskName] = result;
             }).catch(adone.noop);
             promises.push(result);
         });

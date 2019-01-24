@@ -60,7 +60,7 @@ export default class ProjectGenerator extends task.Manager {
                     cwd: this.owner.cwd,
                     include: [std.path.relative(this.owner.cwd, std.path.join(cwd, "src"))]
                 }, this.contexts.get(this.owner.cwd));
-            }
+            }            
         }
 
         return context;
@@ -80,7 +80,7 @@ export default class ProjectGenerator extends task.Manager {
             await fs.mkdirp(info.cwd);
         }
 
-        return this.runAndWait(`${is.string(info.type) ? text.toCamelCase(info.type) : "default"}Project`, info, context);
+        return this.runAndWait(`${is.string(info.type) ? text.toCamelCase(info.type) : "empty"}Project`, info, context);
     }
 
     async createFile(input) {

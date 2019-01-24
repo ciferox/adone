@@ -388,6 +388,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         vault: "./glosses/vault",
         virtualization: "./glosses/virtualization",
         web: "./glosses/web",
+        vm: "./glosses/vm",
 
         // components
         async: "./async",
@@ -396,8 +397,10 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         cli: "./cli",
         cmake: "./cmake",
         fast: "./fast",
+        isolatedVm: "./isolated_vm",
         gyp: "./gyp",
         lodash: "./lodash",
+        napa: "./napa",
         omnitron: "./omnitron",
         project: "./project",
         realm: "./realm",

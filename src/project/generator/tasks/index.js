@@ -1,10 +1,16 @@
+// Type of projects:
+// - `application`: adone application
+// - `cli.command`: subcommand for adone cli
+// - `omnitron.service`: omnitron service
+// - ``
+
 adone.lazify({
     Base: "./base",
     AdoneConfig: "./adone_config",
     Eslint: "./eslint",
     Jsconfig: "./jsconfig",
     Npm: "./npm",
-    DefaultProject: "./default_project",
+    EmptyProject: "./empty_project",
     Application: "./application",
     ApplicationProject: "./application_project",
     CliApplication: "./cli_application",

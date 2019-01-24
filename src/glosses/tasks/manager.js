@@ -3,8 +3,10 @@ const {
     error
 } = adone;
 
-const { MANAGER_SYMBOL, TASKNAME_SYMBOL } = adone.private(adone.task);
+const { MANAGER_SYMBOL } = adone.private(adone.task);
+const ISOLATE_SYMBOL = Symbol();
 const TASKS_SYMBOL = Symbol();
+const CONTEXT_BOOK_SYMBOL = Symbol();
 const NOTIFICATIONS_SYMBOL = Symbol();
 const ANY_NOTIFICATION = Symbol();
 
@@ -13,14 +15,19 @@ const DUMMY_THROTTLE = (tsk) => tsk();
 /**
  * Basic implementation of task manager that owns and manages tasks.
  * 
+ * 
+ * 
  * To implement more advanced manager you should inherit this class.
  */
 export default class TaskManager extends adone.event.AsyncEmitter {
-    constructor() {
+    constructor({ isolateOptions } = {}) {
         super();
         this[TASKS_SYMBOL] = new Map();
+        this[CONTEXT_BOOK_SYMBOL] = null;
         this[NOTIFICATIONS_SYMBOL] = new Map();
         this[NOTIFICATIONS_SYMBOL].set(ANY_NOTIFICATION, []);
+        this[ISOLATE_SYMBOL] = null;
+        this.isolateOptions = isolateOptions || {};
     }
 
     /**
@@ -117,10 +124,26 @@ export default class TaskManager extends adone.event.AsyncEmitter {
     }
 
     /**
-     * Returns list of task names.
+     * Returns list of names all of tasks.
      */
     getTaskNames() {
         return [...this[TASKS_SYMBOL].entries()].filter((entry) => !entry[1].zombi).map((entry) => entry[0]);
+    }
+
+    getIsolate() {
+        if (is.null(this[ISOLATE_SYMBOL])) {
+            this[ISOLATE_SYMBOL] = new adone.vm.Isolate(this.isolateOptions);
+        }
+
+        return this[ISOLATE_SYMBOL];
+    }
+
+    getContextBook() {
+        if (is.null(this[CONTEXT_BOOK_SYMBOL])) {
+            this[CONTEXT_BOOK_SYMBOL] = new adone.task.ContextBook(this);
+        }
+
+        return this[CONTEXT_BOOK_SYMBOL];
     }
 
     /**
@@ -206,7 +229,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
      * @param {*} args task arguments
      */
     run(name, ...args) {
-        return this._run(null, name, ...args);
+        return this.runInContext(null, name, ...args);
     }
 
     /**
@@ -252,13 +275,17 @@ export default class TaskManager extends adone.event.AsyncEmitter {
             name = adone.text.random(32);
         }
         await this.addTask(name, task);
-        const observer = await this._run(null, name, ...args);
+        const observer = await this.runInContext(null, name, ...args);
         this.deleteTask(name);
 
         return observer;
     }
 
-    async _run(context, name, ...args) {
+    async runInContext(context, name, ...args) {
+        if (!is.null(context) && !is.taskContext(context)) {
+            throw new adone.error.InvalidArgument("Context should be `null` or instance of `adone.task.Context`");
+        }
+
         const taskInfo = this._getTaskInfo(name);
         let taskObserver;
 
@@ -293,40 +320,87 @@ export default class TaskManager extends adone.event.AsyncEmitter {
     }
 
     async _createTaskRunner(context, taskInfo) {
-        return async (args) => {
-            const instance = await this._createTaskInstance(taskInfo);
+        if (is.null(context)) {
+            return async (args) => {
+                const instance = await this._createTaskInstance(taskInfo);
 
-            const taskObserver = new adone.task.TaskObserver(instance, taskInfo.name);
-            taskObserver.state = adone.task.STATE.RUNNING;
-            try {
-                taskObserver.result = taskInfo.throttle(() => instance.run(...args));
-            } catch (err) {
-                if (is.function(taskObserver.task.undo)) {
-                    await taskObserver.task.undo(err);
-                }
-                taskObserver.result = Promise.reject(err);
-            }
-
-            if (is.promise(taskObserver.result)) {
-                // Wrap promise if task has undo method.
-                if (is.function(taskObserver.task.undo)) {
-                    taskObserver.result = taskObserver.result.then(adone.identity, async (err) => {
+                const taskObserver = new adone.task.TaskObserver(instance, taskInfo.name);
+                taskObserver.state = adone.task.STATE.RUNNING;
+                try {
+                    taskObserver.result = taskInfo.throttle(() => instance.run(...args));
+                } catch (err) {
+                    if (is.function(taskObserver.task.undo)) {
                         await taskObserver.task.undo(err);
-                        throw err;
-                    });
+                    }
+                    taskObserver.result = Promise.reject(err);
                 }
 
-                taskObserver.result.then(() => {
-                    taskObserver.state = (taskObserver.state === adone.task.STATE.CANCELLING) ? adone.task.STATE.CANCELLED : adone.task.STATE.COMPLETED;
-                }).catch((err) => {
-                    taskObserver.state = adone.task.STATE.FAILED;
-                    taskObserver.error = err;
-                });
-            } else {
-                taskObserver.state = adone.task.STATE.COMPLETED;
+                if (is.promise(taskObserver.result)) {
+                    // Wrap promise if task has undo method.
+                    if (is.function(taskObserver.task.undo)) {
+                        taskObserver.result = taskObserver.result.then(adone.identity, async (err) => {
+                            await taskObserver.task.undo(err);
+                            throw err;
+                        });
+                    }
+
+                    taskObserver.result.then(() => {
+                        taskObserver.state = (taskObserver.state === adone.task.STATE.CANCELLING) ? adone.task.STATE.CANCELLED : adone.task.STATE.COMPLETED;
+                    }).catch((err) => {
+                        taskObserver.state = adone.task.STATE.FAILED;
+                        taskObserver.error = err;
+                    });
+                } else {
+                    taskObserver.state = adone.task.STATE.COMPLETED;
+                }
+                return taskObserver;
+            };
+        } else if (is.taskContext(context)) {
+            switch (context.type) {
+                case "std": {
+                    return async (args) => {
+                        const instance = await this._createTaskInstance(taskInfo);
+        
+                        const taskObserver = new adone.task.TaskObserver(instance, taskInfo.name);
+                        taskObserver.state = adone.task.STATE.RUNNING;
+                        try {
+                            taskObserver.result = taskInfo.throttle(() => instance.run(...args));
+                        } catch (err) {
+                            if (is.function(taskObserver.task.undo)) {
+                                await taskObserver.task.undo(err);
+                            }
+                            taskObserver.result = Promise.reject(err);
+                        }
+        
+                        if (is.promise(taskObserver.result)) {
+                            // Wrap promise if task has undo method.
+                            if (is.function(taskObserver.task.undo)) {
+                                taskObserver.result = taskObserver.result.then(adone.identity, async (err) => {
+                                    await taskObserver.task.undo(err);
+                                    throw err;
+                                });
+                            }
+        
+                            taskObserver.result.then(() => {
+                                taskObserver.state = (taskObserver.state === adone.task.STATE.CANCELLING) ? adone.task.STATE.CANCELLED : adone.task.STATE.COMPLETED;
+                            }).catch((err) => {
+                                taskObserver.state = adone.task.STATE.FAILED;
+                                taskObserver.error = err;
+                            });
+                        } else {
+                            taskObserver.state = adone.task.STATE.COMPLETED;
+                        }
+                        return taskObserver;
+                    };
+                }
+                case "isolated": {
+
+                    break;
+                }
             }
-            return taskObserver;
-        };
+        } else {
+            // TODO
+        }
     }
 
     _createTaskInstance(taskInfo) {
@@ -341,7 +415,6 @@ export default class TaskManager extends adone.event.AsyncEmitter {
             instance = new taskInfo.Class();
         }
 
-        instance[TASKNAME_SYMBOL] = taskInfo.name;
         instance[MANAGER_SYMBOL] = this;
         return instance;
     }

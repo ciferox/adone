@@ -3,10 +3,10 @@ const {
     project
 } = adone;
 
-export default class DefaultProjectTask extends project.generator.task.Base {
+export default class extends project.generator.task.Base {
     async run(info, context) {
         this.manager.notify(this, "progress", {
-            message: "{bold}default project:{/bold} initializing"
+            message: "initialize {bold}empty project{/bold}"
         });
 
         const tasks = ["adoneConfig"];
