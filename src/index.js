@@ -388,7 +388,6 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         vault: "./glosses/vault",
         virtualization: "./glosses/virtualization",
         web: "./glosses/web",
-        vm: "./glosses/vm",
 
         // components
         async: "./async",

@@ -4,13 +4,10 @@
 
 
 const fs = require("fs");
-const chai = require("chai");
-const dirtyChai = require("dirty-chai");
-const expect = chai.expect;
-chai.use(dirtyChai);
 const hat = require("hat");
 const API = require("../../../src/http/index");
-const ncp = require("ncp").ncp;
+const promisify = require("promisify-es6");
+const ncp = promisify(require("ncp").ncp);
 const path = require("path");
 const clean = require("../../utils/clean");
 
@@ -18,45 +15,30 @@ describe("HTTP API", () => {
     const repoExample = path.join(__dirname, "../../fixtures/go-ipfs-repo");
     const repoTests = path.join(__dirname, "../../repo-tests-run");
 
-    let http = {};
+    const http = {};
 
-    const startHttpAPI = (cb) => {
-        const options = {
+    const startHttpAPI = async () => {
+        http.api = new API({
+            repo: repoTests,
             pass: hat(),
-            enablePubsubExperiment: true
-        };
-        http.api = new API(repoTests, null, options);
-
-        ncp(repoExample, repoTests, (err) => {
-            if (err) {
-                return cb(err);
+            config: { Bootstrap: [] },
+            EXPERIMENTAL: {
+                pubsub: true
             }
-
-            http.api.start(false, (err) => {
-                if (err) {
-                    return cb(err);
-                }
-                cb(null, http);
-            });
         });
+        await ncp(repoExample, repoTests);
+        await http.api.start();
     };
 
-    before(function (done) {
+    before(async function () {
         this.timeout(60 * 1000);
-        startHttpAPI((err, _http) => {
-            if (err) {
-                throw err;
-            }
-            http = _http;
-            done();
-        });
+        await startHttpAPI();
     });
 
-    after((done) => http.api.stop((err) => {
-        expect(err).to.not.exist();
+    after(async () => {
+        await http.api.stop();
         clean(repoTests);
-        done();
-    }));
+    });
 
     describe("## http-api spec tests", () => {
         fs.readdirSync(path.join(__dirname))

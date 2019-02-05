@@ -1,6 +1,6 @@
 #! /usr/bin/env node
 
-import "a";
+
 
 const YargsPromise = require("yargs-promise");
 const yargs = require("yargs");
@@ -9,6 +9,7 @@ const readPkgUp = require("read-pkg-up");
 const utils = require("./utils");
 const print = utils.print;
 const mfs = require("ipfs-mfs/cli");
+const debug = require("debug")("ipfs:cli");
 
 const pkg = readPkgUp.sync({ cwd: __dirname }).pkg;
 updateNotifier({
@@ -98,6 +99,8 @@ if (args[0] === "daemon" || args[0] === "init") {
                     }
                 })
                 .catch((arg) => {
+                    debug(arg);
+
                     // the argument can have a different shape depending on where the error came from
                     if (arg.message) {
                         print(arg.message);
