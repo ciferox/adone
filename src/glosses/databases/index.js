@@ -1,8 +1,8 @@
 adone.lazify({
     local: "./local",
     level: "./level",
+    mongo: "./mongo",
     mysql: "./mysql",
     redis: "./redis",
-    mongo: "./mongo",
-    pouch: "./pouch"
+    //sqlite: "./sqlite" // TODO: add implementation
 }, adone.asNamespace(exports), require);
