@@ -26,9 +26,11 @@ module.exports = {
                 throw new Error("ENV variable $EDITOR not set");
             }
 
+            const ipfs = await argv.getIpfs();
+
             async function getConfig() {
                 try {
-                    await argv.ipfs.config.get();
+                    await ipfs.config.get();
                 } catch (err) {
                     throw new Error("failed to get the config");
                 }
@@ -80,7 +82,7 @@ module.exports = {
                     ? Buffer.from(JSON.stringify(config)) : config;
 
                 try {
-                    await argv.ipfs.config.replace(config);
+                    await ipfs.config.replace(config);
                 } catch (err) {
                     throw new Error("failed to save the config");
                 }

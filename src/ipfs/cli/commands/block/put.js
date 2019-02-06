@@ -54,7 +54,8 @@ module.exports = {
                 });
             }
 
-            const { cid } = await argv.ipfs.block.put(data, argv);
+            const ipfs = await argv.getIpfs();
+            const { cid } = await ipfs.block.put(data, argv);
             print(cidToString(cid, { base: argv.cidBase }));
         })());
     }

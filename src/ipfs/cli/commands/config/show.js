@@ -19,7 +19,8 @@ module.exports = {
             }
             argv._handled = true;
 
-            const config = await argv.ipfs.config.get();
+            const ipfs = await argv.getIpfs();
+            const config = await ipfs.config.get();
             print(JSON.stringify(config, null, 4));
         })());
     }
