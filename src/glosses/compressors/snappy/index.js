@@ -3,7 +3,12 @@ const native = adone.nativeAddon(adone.std.path.join(__dirname, "native", "snapp
 
 adone.asNamespace(exports);
 
-export const compress = (input) => {
+/**
+ * Compress asyncronous.
+ * If input isn't a string or buffer, automatically convert to buffer by using
+ * JSON.stringify.
+ */
+export const compress = function (input) {
     if (!is.string(input) && !is.buffer(input)) {
         throw new Error("Input must be a String or a Buffer");
     }
@@ -18,14 +23,17 @@ export const compress = (input) => {
     });
 };
 
-export const compressSync = (input) => {
+export const compressSync = function (input) {
     if (!is.string(input) && !is.buffer(input)) {
-        throw new Error("Input must be a String or a Buffer");
+        throw new Error("input must be a String or a Buffer");
     }
 
     return native.compressSync(input);
 };
 
+/**
+ * Asyncronous decide if a buffer is compressed in a correct way.
+ */
 export const isValidCompressed = (input) => {
     return new Promise((resolve, reject) => {
         native.isValidCompressed(input, (err, result) => {
@@ -39,13 +47,19 @@ export const isValidCompressed = (input) => {
 
 export const isValidCompressedSync = native.isValidCompressedSync;
 
-export const decompress = (compressed, { asBuffer = true } = {}) => {
+const uncompressOpts = (opts) => (opts && is.boolean(opts.asBuffer)) ? opts : { asBuffer: true };
+
+/**
+ * Asyncronous uncompress previously compressed data.
+ * A parser can be attached. If no parser is attached, return buffer.
+ */
+export const decompress = function (compressed, opts) {
     if (!is.buffer(compressed)) {
         throw new Error("Input must be a Buffer");
     }
 
     return new Promise((resolve, reject) => {
-        native.uncompress(compressed, { asBuffer }, (err, result) => {
+        native.uncompress(compressed, uncompressOpts(opts), (err, result) => {
             if (err) {
                 return reject(err);
             }
@@ -54,10 +68,10 @@ export const decompress = (compressed, { asBuffer = true } = {}) => {
     });
 };
 
-export const decompressSync = (compressed, { asBuffer = true } = {}) => {
+export const decompressSync = function (compressed, opts) {
     if (!is.buffer(compressed)) {
         throw new Error("Input must be a Buffer");
     }
 
-    return native.uncompressSync(compressed, { asBuffer });
+    return native.uncompressSync(compressed, uncompressOpts(opts));
 };
