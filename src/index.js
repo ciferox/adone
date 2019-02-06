@@ -386,7 +386,6 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         uri: "./glosses/uri",
         util: "./glosses/utils",
         vault: "./glosses/vault",
-        virtualization: "./glosses/virtualization",
         web: "./glosses/web",
 
         // components

@@ -3,7 +3,6 @@ adone.lazify({
     json5: "./json5",
     mpak: "./mpak",
     bson: "./bson",
-    bson2: "./bson2",
     base64: "./base64",
     base64url: "./base64url",
     yaml: "./yaml",

@@ -1,18 +1,23 @@
-const { math: { Long: ALong } } = adone;
 
-export default class Long extends ALong {
-    constructor(low, high) {
-        super(low, high);
-        this._bsontype = "Long";
+const Long = require("long");
+
+/**
+ * @ignore
+ */
+Long.prototype.toExtendedJSON = function (options) {
+    if (options && options.relaxed) {
+        return this.toNumber(); 
     }
-}
+    return { $numberLong: this.toString() };
+};
 
-Long.MIN_VALUE = Long.fromBits(0, 0x80000000 | 0, false);  // Minimum signed value
-Long.MAX_VALUE = Long.fromBits(0xFFFFFFFF | 0, 0x7FFFFFFF | 0, false);  // Maximum signed value
-Long.MAX_UNSIGNED_VALUE = Long.fromBits(0xFFFFFFFF | 0, 0xFFFFFFFF | 0, true);  // Maximum unsigned value
+/**
+ * @ignore
+ */
+Long.fromExtendedJSON = function (doc, options) {
+    const result = Long.fromString(doc.$numberLong);
+    return options && options.relaxed ? result.toNumber() : result;
+};
 
-Long.ZERO = Long.fromInt(0);  // Signed zero
-Long.UZERO = Long.fromInt(0, true);  // Unsigned zero
-Long.ONE = Long.fromInt(1);  // Signed one
-Long.UONE = Long.fromInt(1, true);  // Unsigned one
-Long.NEG_ONE = Long.fromInt(-1);  // Signed negative one
+Object.defineProperty(Long.prototype, "_bsontype", { value: "Long" });
+module.exports = Long;

@@ -263,17 +263,7 @@
                             "description": "Implementation of BSON serializer",
                             "src": "src/glosses/data/bson/**/*.js",
                             "dst": "lib/glosses/data/bson",
-                            "namespace": "bson",
-                            "native": {
-                                "src": "src/glosses/data/bson/native",
-                                "dst": "lib/glosses/data/bson/native"
-                            }
-                        },
-                        "bson2": {
-                            "description": "Implementation of BSON serializer",
-                            "src": "src/glosses/data/bson2/**/*.js",
-                            "dst": "lib/glosses/data/bson2",
-                            "namespace": "bson2"
+                            "namespace": "bson"
                         },
                         "json": {
                             "description": "Implementation of JSON serializers",

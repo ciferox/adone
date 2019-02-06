@@ -1,26 +1,42 @@
 const {
-    data: { bson: { BSON, ObjectId } }
+    data: { bson }
 } = adone;
 
-describe("data", "bson", "to bson", () => {
-    it("should correctly handle toBson function for an object", () => {
+const ObjectId = bson.ObjectId;
+
+describe("toBSON", () => {
+    /**
+     * @ignore
+     */
+    it("Should correctly handle toBson function for an object", (done) => {
+        // Test object
         const doc = {
             hello: new ObjectId(),
             a: 1
         };
 
-        doc.toBSON = () => ({ b: 1 });
+        // Add a toBson method to the object
+        doc.toBSON = function () {
+            return { b: 1 };
+        };
 
-        let serializedData = new BSON().serialize(doc, false, true);
-        let deserializedDoc = new BSON().deserialize(serializedData);
-        expect({ b: 1 }).to.be.deep.equal(deserializedDoc);
+        // Serialize the data
+        let serializedData = bson.encode(doc, false, true);
+        let deserializedDoc = bson.decode(serializedData);
+        expect({ b: 1 }).to.deep.equal(deserializedDoc);
 
-        serializedData = new BSON().serialize(doc, false, true);
-        deserializedDoc = new BSON().deserialize(serializedData);
-        expect({ b: 1 }).to.be.deep.equal(deserializedDoc);
+        // Serialize the data
+        serializedData = bson.encode(doc, false, true);
+        deserializedDoc = bson.decode(serializedData);
+        expect({ b: 1 }).to.deep.equal(deserializedDoc);
+        done();
     });
 
-    it("should correctly handle embedded toBson function for an object", () => {
+    /**
+     * @ignore
+     */
+    it("Should correctly handle embedded toBson function for an object", (done) => {
+        // Test object
         const doc = {
             hello: new ObjectId(),
             a: 1,
@@ -29,18 +45,27 @@ describe("data", "bson", "to bson", () => {
             }
         };
 
-        doc.b.toBSON = () => ({ e: 1 });
+        // Add a toBson method to the object
+        doc.b.toBSON = function () {
+            return { e: 1 };
+        };
 
-        let serializedData = new BSON().serialize(doc, false, true);
-        let deserializedDoc = new BSON().deserialize(serializedData);
-        expect({ e: 1 }).to.be.deep.equal(deserializedDoc.b);
+        // Serialize the data
+        let serializedData = bson.encode(doc, false, true);
+        let deserializedDoc = bson.decode(serializedData);
+        expect({ e: 1 }).to.deep.equal(deserializedDoc.b);
 
-        serializedData = new BSON().serialize(doc, false, true);
-        deserializedDoc = new BSON().deserialize(serializedData);
-        expect({ e: 1 }).to.be.deep.equal(deserializedDoc.b);
+        serializedData = bson.encode(doc, false, true);
+        deserializedDoc = bson.decode(serializedData);
+        expect({ e: 1 }).to.deep.equal(deserializedDoc.b);
+        done();
     });
 
-    it("should correctly serialize when embedded non object returned by toBSON", () => {
+    /**
+     * @ignore
+     */
+    it("Should correctly serialize when embedded non object returned by toBSON", (done) => {
+        // Test object
         const doc = {
             hello: new ObjectId(),
             a: 1,
@@ -49,18 +74,28 @@ describe("data", "bson", "to bson", () => {
             }
         };
 
-        doc.b.toBSON = () => "hello";
+        // Add a toBson method to the object
+        doc.b.toBSON = function () {
+            return "hello";
+        };
 
-        let serializedData = new BSON().serialize(doc, false, true);
-        let deserializedDoc = new BSON().deserialize(serializedData);
-        expect("hello").to.be.deep.equal(deserializedDoc.b);
+        // Serialize the data
+        let serializedData = bson.encode(doc, false, true);
+        let deserializedDoc = bson.decode(serializedData);
+        expect("hello").to.deep.equal(deserializedDoc.b);
 
-        serializedData = new BSON().serialize(doc, false, true);
-        deserializedDoc = new BSON().deserialize(serializedData);
-        expect("hello").to.be.deep.equal(deserializedDoc.b);
+        // Serialize the data
+        serializedData = bson.encode(doc, false, true);
+        deserializedDoc = bson.decode(serializedData);
+        expect("hello").to.deep.equal(deserializedDoc.b);
+        done();
     });
 
-    it("should fail when top level object returns a non object type", () => {
+    /**
+     * @ignore
+     */
+    it("Should fail when top level object returns a non object type", (done) => {
+        // Test object
         const doc = {
             hello: new ObjectId(),
             a: 1,
@@ -69,26 +104,30 @@ describe("data", "bson", "to bson", () => {
             }
         };
 
-        doc.toBSON = () => "hello";
+        // Add a toBson method to the object
+        doc.toBSON = function () {
+            return "hello";
+        };
 
         let test1 = false;
         let test2 = false;
-
+        let serializedData;
         try {
-            const serializedData = new BSON().serialize(doc, false, true);
-            new BSON().deserialize(serializedData);
+            serializedData = bson.encode(doc, false, true);
+            bson.decode(serializedData);
         } catch (err) {
             test1 = true;
         }
 
         try {
-            const serializedData = new BSON().serialize(doc, false, true);
-            new BSON().deserialize(serializedData);
+            serializedData = bson.encode(doc, false, true);
+            bson.decode(serializedData);
         } catch (err) {
             test2 = true;
         }
 
-        expect(true).to.be.equal(test1);
-        expect(true).to.be.equal(test2);
+        expect(true).to.equal(test1);
+        expect(true).to.equal(test2);
+        done();
     });
 });

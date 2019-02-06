@@ -1,18 +1,77 @@
-const { is } = adone;
+const {
+    is
+} = adone;
 
-export default class DBRef {
-    constructor(namespace, oid, db) {
-        this._bsontype = "DBRef";
-        this.namespace = namespace;
+/**
+ * A class representation of the BSON DBRef type.
+ */
+class DBRef {
+    /**
+     * Create a DBRef type
+     *
+     * @param {string} collection the collection name.
+     * @param {ObjectId} oid the reference ObjectId.
+     * @param {string} [db] optional db name, if omitted the reference is local to the current db.
+     * @return {DBRef}
+     */
+    constructor(collection, oid, db, fields) {
+    // check if namespace has been provided
+        const parts = collection.split(".");
+        if (parts.length === 2) {
+            db = parts.shift();
+            collection = parts.shift();
+        }
+
+        this.collection = collection;
         this.oid = oid;
         this.db = db;
+        this.fields = fields || {};
     }
 
+    /**
+     * @ignore
+     * @api private
+     */
     toJSON() {
-        return {
-            $ref: this.namespace,
-            $id: this.oid,
-            $db: is.nil(this.db) ? "" : this.db
+        const o = Object.assign(
+            {
+                $ref: this.collection,
+                $id: this.oid
+            },
+            this.fields
+        );
+
+        if (!is.nil(this.db)) {
+            o.$db = this.db; 
+        }
+        return o;
+    }
+
+    /**
+     * @ignore
+     */
+    toExtendedJSON() {
+        let o = {
+            $ref: this.collection,
+            $id: this.oid
         };
+
+        if (this.db) {
+            o.$db = this.db;
+        }
+        o = Object.assign(o, this.fields);
+        return o;
+    }
+
+    /**
+     * @ignore
+     */
+    static fromExtendedJSON(doc) {
+        const copy = Object.assign({}, doc);
+        ["$ref", "$id", "$db"].forEach((k) => delete copy[k]);
+        return new DBRef(doc.$ref, doc.$id, doc.$db, copy);
     }
 }
+
+Object.defineProperty(DBRef.prototype, "_bsontype", { value: "DBRef" });
+module.exports = DBRef;
