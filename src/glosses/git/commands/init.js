@@ -1,13 +1,19 @@
-import path from 'path'
-
-import { FileSystem } from '../models'
+import { FileSystem } from '../models/FileSystem.js'
+import { join } from '../utils/join.js'
+import { cores } from '../utils/plugins.js'
 
 /**
  * Initialize a new repository
  *
  * @link https://isomorphic-git.github.io/docs/init.html
  */
-export async function init ({ dir, gitdir = path.join(dir, '.git'), fs: _fs }) {
+export async function init ({
+  core = 'default',
+  bare = false,
+  dir,
+  gitdir = bare ? dir : join(dir, '.git'),
+  fs: _fs = cores.get(core).get('fs')
+}) {
   try {
     const fs = new FileSystem(_fs)
     let folders = [
@@ -27,8 +33,8 @@ export async function init ({ dir, gitdir = path.join(dir, '.git'), fs: _fs }) {
       '[core]\n' +
         '\trepositoryformatversion = 0\n' +
         '\tfilemode = false\n' +
-        '\tbare = false\n' +
-        '\tlogallrefupdates = true\n' +
+        `\tbare = ${bare}\n` +
+        (bare ? '' : '\tlogallrefupdates = true\n') +
         '\tsymlinks = false\n' +
         '\tignorecase = true\n'
     )

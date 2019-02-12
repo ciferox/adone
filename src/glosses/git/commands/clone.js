@@ -1,11 +1,11 @@
-import path from 'path'
+import { FileSystem } from '../models/FileSystem.js'
+import { join } from '../utils/join.js'
+import { cores } from '../utils/plugins.js'
 
-import { FileSystem } from '../models'
-
-import { checkout } from './checkout'
-import { config } from './config'
-import { fetch } from './fetch'
-import { init } from './init'
+import { checkout } from './checkout.js'
+import { config } from './config.js'
+import { fetch } from './fetch.js'
+import { init } from './init.js'
 
 /**
  * Clone a repository
@@ -13,12 +13,15 @@ import { init } from './init'
  * @link https://isomorphic-git.github.io/docs/clone.html
  */
 export async function clone ({
+  core = 'default',
   dir,
-  gitdir = path.join(dir, '.git'),
-  fs: _fs,
-  emitter,
+  gitdir = join(dir, '.git'),
+  fs: _fs = cores.get(core).get('fs'),
+  emitter = cores.get(core).get('emitter'),
+  emitterPrefix = '',
   url,
   noGitSuffix = false,
+  corsProxy,
   ref,
   remote,
   authUsername,
@@ -33,6 +36,8 @@ export async function clone ({
   relative,
   singleBranch,
   noCheckout = false,
+  noTags = false,
+  headers = {},
   onprogress
 }) {
   try {
@@ -57,11 +62,21 @@ export async function clone ({
       path: `remote.${remote}.fetch`,
       value: `+refs/heads/*:refs/remotes/${remote}/*`
     })
+    if (corsProxy) {
+      await config({
+        gitdir,
+        fs,
+        path: `http.corsProxy`,
+        value: corsProxy
+      })
+    }
     // Fetch commits
-    let { defaultBranch } = await fetch({
+    const { defaultBranch, fetchHead } = await fetch({
+      core,
       gitdir,
       fs,
       emitter,
+      emitterPrefix,
       noGitSuffix,
       ref,
       remote,
@@ -74,20 +89,23 @@ export async function clone ({
       exclude,
       relative,
       singleBranch,
-      tags: true
+      headers,
+      tags: !noTags
     })
+    if (fetchHead === null) return
     ref = ref || defaultBranch
     ref = ref.replace('refs/heads/', '')
     // Checkout that branch
-    if (!noCheckout) {
-      await checkout({
-        dir,
-        gitdir,
-        fs,
-        ref,
-        remote
-      })
-    }
+    await checkout({
+      dir,
+      gitdir,
+      fs,
+      emitter,
+      emitterPrefix,
+      ref,
+      remote,
+      noCheckout
+    })
   } catch (err) {
     err.caller = 'git.clone'
     throw err

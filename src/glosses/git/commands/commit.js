@@ -1,10 +1,14 @@
-import path from 'path'
-
-import { GitIndexManager, GitObjectManager, GitRefManager } from '../managers'
-import { E, FileSystem, GitCommit, GitError, GitTree } from '../models'
-import { flatFileListToDirectoryStructure } from '../utils'
-
-import { config } from './config'
+import { GitIndexManager } from '../managers/GitIndexManager.js'
+import { GitRefManager } from '../managers/GitRefManager.js'
+import { FileSystem } from '../models/FileSystem.js'
+import { GitCommit } from '../models/GitCommit.js'
+import { E, GitError } from '../models/GitError.js'
+import { GitTree } from '../models/GitTree.js'
+import { writeObject } from '../storage/writeObject.js'
+import { flatFileListToDirectoryStructure } from '../utils/flatFileListToDirectoryStructure.js'
+import { join } from '../utils/join.js'
+import { normalizeAuthorObject } from '../utils/normalizeAuthorObject.js'
+import { cores } from '../utils/plugins.js'
 
 /**
  * Create a new commit
@@ -12,34 +16,45 @@ import { config } from './config'
  * @link https://isomorphic-git.github.io/docs/commit.html
  */
 export async function commit ({
+  core = 'default',
   dir,
-  gitdir = path.join(dir, '.git'),
-  fs: _fs,
+  gitdir = join(dir, '.git'),
+  fs: _fs = cores.get(core).get('fs'),
   message,
   author,
-  committer
+  committer,
+  signingKey
 }) {
   try {
     const fs = new FileSystem(_fs)
+
+    if (message === undefined) {
+      throw new GitError(E.MissingRequiredParameterError, {
+        function: 'commit',
+        parameter: 'message'
+      })
+    }
+
     // Fill in missing arguments with default values
-    if (author === undefined) author = {}
-    if (author.name === undefined) {
-      author.name = await config({ fs, gitdir, path: 'user.name' })
-    }
-    if (author.email === undefined) {
-      author.email = await config({ fs, gitdir, path: 'user.email' })
-    }
-    if (author.name === undefined || author.email === undefined) {
+    author = await normalizeAuthorObject({ fs, gitdir, author })
+    if (author === undefined) {
       throw new GitError(E.MissingAuthorError)
     }
-    committer = committer || author
-    let authorDateTime = author.date || new Date()
-    let committerDateTime = committer.date || authorDateTime
+
+    committer = Object.assign({}, committer || author)
+    // Match committer's date to author's one, if omitted
+    committer.date = committer.date || author.date
+    committer = await normalizeAuthorObject({ fs, gitdir, author: committer })
+    if (committer === undefined) {
+      throw new GitError(E.MissingCommitterError)
+    }
+
     let oid
     await GitIndexManager.acquire(
       { fs, filepath: `${gitdir}/index` },
       async function (index) {
-        const inode = flatFileListToDirectoryStructure(index.entries)
+        const inodes = flatFileListToDirectoryStructure(index.entries)
+        const inode = inodes.get('.')
         const treeRef = await constructTree({ fs, gitdir, inode })
         let parents
         try {
@@ -52,35 +67,15 @@ export async function commit ({
         let comm = GitCommit.from({
           tree: treeRef,
           parent: parents,
-          author: {
-            name: author.name,
-            email: author.email,
-            timestamp:
-              author.timestamp !== undefined && author.timestamp !== null
-                ? author.timestamp
-                : Math.floor(authorDateTime.valueOf() / 1000),
-            timezoneOffset:
-              author.timezoneOffset !== undefined &&
-              author.timezoneOffset !== null
-                ? author.timezoneOffset
-                : new Date().getTimezoneOffset()
-          },
-          committer: {
-            name: committer.name,
-            email: committer.email,
-            timestamp:
-              committer.timestamp !== undefined && committer.timestamp !== null
-                ? committer.timestamp
-                : Math.floor(committerDateTime.valueOf() / 1000),
-            timezoneOffset:
-              committer.timezoneOffset !== undefined &&
-              committer.timezoneOffset !== null
-                ? committer.timezoneOffset
-                : new Date().getTimezoneOffset()
-          },
+          author,
+          committer,
           message
         })
-        oid = await GitObjectManager.write({
+        if (signingKey) {
+          let pgp = cores.get(core).get('pgp')
+          comm = await GitCommit.sign(comm, pgp, signingKey)
+        }
+        oid = await writeObject({
           fs,
           gitdir,
           type: 'commit',
@@ -93,7 +88,7 @@ export async function commit ({
           ref: 'HEAD',
           depth: 2
         })
-        await fs.write(path.join(gitdir, branch), oid + '\n')
+        await fs.write(join(gitdir, branch), oid + '\n')
       }
     )
     return oid
@@ -119,7 +114,7 @@ async function constructTree ({ fs, gitdir, inode }) {
     type: inode.type
   }))
   const tree = GitTree.from(entries)
-  let oid = await GitObjectManager.write({
+  let oid = await writeObject({
     fs,
     gitdir,
     type: 'tree',

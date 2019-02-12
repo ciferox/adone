@@ -1,8 +1,10 @@
-import { clean } from 'clean-git-ref'
-import path from 'path'
+import cleanGitRef from 'clean-git-ref'
 
-import { GitRefManager } from '../managers'
-import { E, FileSystem, GitError } from '../models'
+import { GitRefManager } from '../managers/GitRefManager.js'
+import { FileSystem } from '../models/FileSystem.js'
+import { E, GitError } from '../models/GitError.js'
+import { join } from '../utils/join.js'
+import { cores } from '../utils/plugins.js'
 
 /**
  * Create a branch
@@ -10,10 +12,12 @@ import { E, FileSystem, GitError } from '../models'
  * @link https://isomorphic-git.github.io/docs/branch.html
  */
 export async function branch ({
+  core = 'default',
   dir,
-  gitdir = path.join(dir, '.git'),
-  fs: _fs,
-  ref
+  gitdir = join(dir, '.git'),
+  fs: _fs = cores.get(core).get('fs'),
+  ref,
+  checkout = false
 }) {
   try {
     const fs = new FileSystem(_fs)
@@ -24,12 +28,12 @@ export async function branch ({
       })
     }
 
-    if (ref !== clean(ref)) {
+    if (ref !== cleanGitRef.clean(ref)) {
       throw new GitError(E.InvalidRefNameError, {
         verb: 'create',
         noun: 'branch',
         ref,
-        suggestion: clean(ref)
+        suggestion: cleanGitRef.clean(ref)
       })
     }
 
@@ -46,6 +50,10 @@ export async function branch ({
     }
     // Create a new branch that points at that same commit
     await fs.write(`${gitdir}/refs/heads/${ref}`, oid + '\n')
+    if (checkout) {
+      // Update HEAD
+      await fs.write(`${gitdir}/HEAD`, `ref: refs/heads/${ref}`)
+    }
   } catch (err) {
     err.caller = 'git.branch'
     throw err

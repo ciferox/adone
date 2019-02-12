@@ -1,7 +1,7 @@
 // import diff3 from 'node-diff3'
-import path from 'path'
-
-import { FileSystem } from '../models'
+import { FileSystem } from '../models/FileSystem.js'
+import { join } from '../utils/join.js'
+import { cores } from '../utils/plugins.js'
 
 import { checkout } from './checkout'
 import { config } from './config'
@@ -15,19 +15,23 @@ import { merge } from './merge'
  * @link https://isomorphic-git.github.io/docs/pull.html
  */
 export async function pull ({
+  core = 'default',
   dir,
-  gitdir = path.join(dir, '.git'),
-  fs: _fs,
+  gitdir = join(dir, '.git'),
+  fs: _fs = cores.get(core).get('fs'),
   ref,
   fastForwardOnly = false,
-  emitter,
+  noGitSuffix = false,
+  emitter = cores.get(core).get('emitter'),
+  emitterPrefix = '',
   authUsername,
   authPassword,
   username = authUsername,
   password = authPassword,
   token,
   oauth2format,
-  singleBranch
+  singleBranch,
+  headers = {}
 }) {
   try {
     const fs = new FileSystem(_fs)
@@ -35,7 +39,6 @@ export async function pull ({
     if (!ref) {
       ref = await currentBranch({ fs, gitdir })
     }
-    console.log(`Using ref=${ref}`)
     // Fetch from the correct remote.
     let remote = await config({
       gitdir,
@@ -47,13 +50,16 @@ export async function pull ({
       gitdir,
       fs,
       emitter,
+      emitterPrefix,
+      noGitSuffix,
       ref,
       remote,
       username,
       password,
       token,
       oauth2format,
-      singleBranch
+      singleBranch,
+      headers
     })
     // Merge the remote tracking branch into the local one.
     await merge({
@@ -67,7 +73,9 @@ export async function pull ({
       dir,
       gitdir,
       fs,
-      ref
+      ref,
+      emitter,
+      emitterPrefix
     })
   } catch (err) {
     err.caller = 'git.pull'

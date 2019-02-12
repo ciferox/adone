@@ -1,41 +1,59 @@
-import path from 'path'
-import { PassThrough } from 'stream'
+import { GitRefManager } from '../managers/GitRefManager.js'
+import { GitRemoteManager } from '../managers/GitRemoteManager.js'
+import { FileSystem } from '../models/FileSystem.js'
+import { E, GitError } from '../models/GitError.js'
+import { GitSideBand } from '../models/GitSideBand.js'
+import { filterCapabilities } from '../utils/filterCapabilities.js'
+import { forAwait } from '../utils/forAwait.js'
+import { join } from '../utils/join.js'
+import { pkg } from '../utils/pkg.js'
+import { cores } from '../utils/plugins.js'
+import { splitLines } from '../utils/splitLines.js'
+import { parseReceivePackResponse } from '../wire/parseReceivePackResponse.js'
+import { writeReceivePackRequest } from '../wire/writeReceivePackRequest.js'
 
-import { GitRefManager, GitRemoteManager } from '../managers'
-import { E, FileSystem, GitError, GitPktLine } from '../models'
-import { log, pkg } from '../utils'
-
-import { config } from './config'
-import { listCommits } from './listCommits'
-import { listObjects } from './listObjects'
-import { pack } from './pack'
+import { config } from './config.js'
+import { findMergeBase } from './findMergeBase.js'
+import { isDescendent } from './isDescendent.js'
+import { listCommitsAndTags } from './listCommitsAndTags.js'
+import { listObjects } from './listObjects.js'
+import { pack } from './pack.js'
 
 /**
- * Push a branch
+ * Push a branch or tag
  *
  * @link https://isomorphic-git.github.io/docs/push.html
  */
 export async function push ({
+  core = 'default',
   dir,
-  gitdir = path.join(dir, '.git'),
-  fs: _fs,
-  emitter,
+  gitdir = join(dir, '.git'),
+  fs: _fs = cores.get(core).get('fs'),
+  emitter = cores.get(core).get('emitter'),
+  emitterPrefix = '',
   ref,
+  remoteRef,
   remote = 'origin',
   url,
+  force = false,
   noGitSuffix = false,
+  corsProxy,
   authUsername,
   authPassword,
   username = authUsername,
   password = authPassword,
   token,
-  oauth2format
+  oauth2format,
+  headers = {}
 }) {
   try {
     const fs = new FileSystem(_fs)
     // TODO: Figure out how pushing tags works. (This only works for branches.)
     if (url === undefined) {
       url = await config({ fs, gitdir, path: `remote.${remote}.url` })
+    }
+    if (corsProxy === undefined) {
+      corsProxy = await config({ fs, gitdir, path: 'http.corsProxy' })
     }
     let fullRef
     if (!ref) {
@@ -51,79 +69,107 @@ export async function push ({
     let oid = await GitRefManager.resolve({ fs, gitdir, ref: fullRef })
     let auth = { username, password, token, oauth2format }
     let GitRemoteHTTP = GitRemoteManager.getRemoteHelperFor({ url })
-    let httpRemote = await GitRemoteHTTP.discover({
-      service: 'git-receive-pack',
-      url,
-      noGitSuffix,
-      auth
-    })
-    let commits = await listCommits({
-      fs,
-      gitdir,
-      start: [oid],
-      finish: httpRemote.refs.values()
-    })
-    let objects = await listObjects({ fs, gitdir, oids: commits })
-    let packstream = new PassThrough()
-    let oldoid =
-      httpRemote.refs.get(fullRef) || '0000000000000000000000000000000000000000'
-    const capabilities = `report-status side-band-64k agent=${pkg.agent}`
-    packstream.write(
-      GitPktLine.encode(`${oldoid} ${oid} ${fullRef}\0 ${capabilities}\n`)
-    )
-    packstream.write(GitPktLine.flush())
-    pack({
-      fs,
-      gitdir,
-      oids: [...objects],
-      outputStream: packstream
-    })
-    let { packfile, progress } = await GitRemoteHTTP.connect({
+    const httpRemote = await GitRemoteHTTP.discover({
+      core,
+      corsProxy,
       service: 'git-receive-pack',
       url,
       noGitSuffix,
       auth,
-      stream: packstream
+      headers
     })
-    if (emitter) {
-      progress.on('data', chunk => {
-        let msg = chunk.toString('utf8')
-        emitter.emit('message', msg)
-      })
-    }
-    let result = {}
-    // Parse the response!
-    let response = ''
-    let read = GitPktLine.streamReader(packfile)
-    let line = await read()
-    while (line !== true) {
-      if (line !== null) response += line.toString('utf8') + '\n'
-      line = await read()
-    }
-
-    let lines = response.toString('utf8').split('\n')
-    // We're expecting "unpack {unpack-result}"
-    line = lines.shift()
-    if (!line.startsWith('unpack ')) {
-      throw new GitError(E.UnparseableServerResponseFail, { line })
-    }
-    if (line === 'unpack ok') {
-      result.ok = ['unpack']
+    auth = httpRemote.auth // hack to get new credentials from CredentialManager API
+    let fullRemoteRef
+    if (!remoteRef) {
+      fullRemoteRef = fullRef
     } else {
-      result.errors = [line.trim()]
-    }
-    for (let line of lines) {
-      let status = line.slice(0, 2)
-      let refAndMessage = line.slice(3)
-      if (status === 'ok') {
-        result.ok = result.ok || []
-        result.ok.push(refAndMessage)
-      } else if (status === 'ng') {
-        result.errors = result.errors || []
-        result.errors.push(refAndMessage)
+      try {
+        fullRemoteRef = await GitRefManager.expandAgainstMap({
+          ref: remoteRef,
+          map: httpRemote.refs
+        })
+      } catch (err) {
+        if (err.code === E.ExpandRefError) {
+          // The remote reference doesn't exist yet.
+          // If it is fully specified, use that value. Otherwise, treat it as a branch.
+          fullRemoteRef = remoteRef.startsWith('refs/')
+            ? remoteRef
+            : `refs/heads/${remoteRef}`
+        } else {
+          throw err
+        }
       }
     }
-    log(result)
+    let oldoid =
+      httpRemote.refs.get(fullRemoteRef) ||
+      '0000000000000000000000000000000000000000'
+    let finish = [...httpRemote.refs.values()]
+    // hack to speed up common force push scenarios
+    let mergebase = await findMergeBase({ fs, gitdir, oids: [oid, oldoid] })
+    for (let oid of mergebase) finish.push(oid)
+    let commits = await listCommitsAndTags({
+      fs,
+      gitdir,
+      start: [oid],
+      finish
+    })
+    let objects = await listObjects({ fs, gitdir, oids: commits })
+    if (!force) {
+      // Is it a tag that already exists?
+      if (
+        fullRef.startsWith('refs/tags') &&
+        oldoid !== '0000000000000000000000000000000000000000'
+      ) {
+        throw new GitError(E.PushRejectedTagExists, {})
+      }
+      // Is it a non-fast-forward commit?
+      if (
+        oid !== '0000000000000000000000000000000000000000' &&
+        oldoid !== '0000000000000000000000000000000000000000' &&
+        !(await isDescendent({ fs, gitdir, oid, ancestor: oldoid }))
+      ) {
+        throw new GitError(E.PushRejectedNonFastForward, {})
+      }
+    }
+    // We can only safely use capabilities that the server also understands.
+    // For instance, AWS CodeCommit aborts a push if you include the `agent`!!!
+    const capabilities = filterCapabilities(
+      [...httpRemote.capabilities],
+      ['report-status', 'side-band-64k', `agent=${pkg.agent}`]
+    )
+    let packstream1 = await writeReceivePackRequest({
+      capabilities,
+      triplets: [{ oldoid, oid, fullRef: fullRemoteRef }]
+    })
+    let packstream2 = await pack({
+      fs,
+      gitdir,
+      oids: [...objects]
+    })
+    let res = await GitRemoteHTTP.connect({
+      core,
+      emitter,
+      emitterPrefix,
+      corsProxy,
+      service: 'git-receive-pack',
+      url,
+      noGitSuffix,
+      auth,
+      headers,
+      body: [...packstream1, ...packstream2]
+    })
+    let { packfile, progress } = await GitSideBand.demux(res.body)
+    if (emitter) {
+      let lines = splitLines(progress)
+      forAwait(lines, line => {
+        emitter.emit(`${emitterPrefix}message`, line)
+      })
+    }
+    // Parse the response!
+    let result = await parseReceivePackResponse(packfile)
+    if (res.headers) {
+      result.headers = res.headers
+    }
     return result
   } catch (err) {
     err.caller = 'git.push'

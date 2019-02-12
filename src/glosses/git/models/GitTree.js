@@ -1,4 +1,5 @@
-import { E, GitError } from '../models/GitError'
+import { E, GitError } from '../models/GitError.js'
+import { comparePath } from '../utils/comparePath.js'
 
 /*::
 type TreeEntry = {
@@ -8,6 +9,20 @@ type TreeEntry = {
   type?: string
 }
 */
+
+function mode2type (mode) {
+  // prettier-ignore
+  switch (mode) {
+    case '040000': return 'tree'
+    case '100644': return 'blob'
+    case '100755': return 'blob'
+    case '120000': return 'blob'
+    case '160000': return 'commit'
+  }
+  throw new GitError(E.InternalFail, {
+    message: `Unexpected GitTree entry mode: ${mode}`
+  })
+}
 
 function parseBuffer (buffer) {
   let _entries = []
@@ -27,7 +42,7 @@ function parseBuffer (buffer) {
     }
     let mode = buffer.slice(cursor, space).toString('utf8')
     if (mode === '40000') mode = '040000' // makes it line up neater in printed output
-    let type = mode === '040000' ? 'tree' : 'blob'
+    let type = mode2type(mode)
     let path = buffer.slice(space + 1, nullchar).toString('utf8')
     let oid = buffer.slice(nullchar + 1, nullchar + 21).toString('hex')
     cursor = nullchar + 21
@@ -41,7 +56,7 @@ function limitModeToAllowed (mode) {
     mode = mode.toString(8)
   }
   // tree
-  if (mode.match(/^0?4.*/)) return '40000' // Directory
+  if (mode.match(/^0?4.*/)) return '040000' // Directory
   if (mode.match(/^1006.*/)) return '100644' // Regular non-executable file
   if (mode.match(/^1007.*/)) return '100755' // Regular executable file
   if (mode.match(/^120.*/)) return '120000' // Symbolic link
@@ -69,6 +84,9 @@ export class GitTree {
   constructor (entries) {
     if (Buffer.isBuffer(entries)) {
       this._entries = parseBuffer(entries)
+      // There appears to be an edge case (in this repo no less) where
+      // the tree is NOT sorted as expected if some directories end with ".git"
+      this._entries.sort(comparePath)
     } else if (Array.isArray(entries)) {
       this._entries = entries.map(nudgeIntoShape)
     } else {

@@ -1,4 +1,4 @@
-import { E, GitError } from '../models/GitError'
+import { E, GitError } from '../models/GitError.js'
 
 /**
  * Use with push and fetch to set Basic Authentication headers.
@@ -11,6 +11,11 @@ export function oauth2 (company, token) {
       return {
         username: token,
         password: 'x-oauth-basic'
+      }
+    case 'githubapp':
+      return {
+        username: 'x-access-token',
+        password: token
       }
     case 'bitbucket':
       return {

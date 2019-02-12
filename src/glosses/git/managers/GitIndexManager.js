@@ -1,18 +1,20 @@
 // import LockManager from 'travix-lock-manager'
 import AsyncLock from 'async-lock'
 
-import { FileSystem, GitIndex } from '../models'
+import { FileSystem } from '../models/FileSystem.js'
+import { GitIndex } from '../models/GitIndex.js'
 
-// import Lock from '../utils'
+// import Lock from '../utils.js'
 
 // TODO: replace with an LRU cache?
 const map = new Map()
 // const lm = new LockManager()
-const lock = new AsyncLock()
+let lock = null
 
 export class GitIndexManager {
   static async acquire ({ fs: _fs, filepath }, closure) {
     const fs = new FileSystem(_fs)
+    if (lock === null) lock = new AsyncLock({ maxPending: Infinity })
     await lock.acquire(filepath, async function () {
       let index = map.get(filepath)
       if (index === undefined) {

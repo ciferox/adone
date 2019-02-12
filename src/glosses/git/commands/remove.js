@@ -1,7 +1,7 @@
-import path from 'path'
-
-import { GitIndexManager } from '../managers'
-import { FileSystem } from '../models'
+import { GitIndexManager } from '../managers/GitIndexManager.js'
+import { FileSystem } from '../models/FileSystem.js'
+import { join } from '../utils/join.js'
+import { cores } from '../utils/plugins.js'
 
 /**
  * Remove a file from the git index (aka staging area)
@@ -11,9 +11,10 @@ import { FileSystem } from '../models'
  * @link https://isomorphic-git.github.io/docs/remove.html
  */
 export async function remove ({
+  core = 'default',
   dir,
-  gitdir = path.join(dir, '.git'),
-  fs: _fs,
+  gitdir = join(dir, '.git'),
+  fs: _fs = cores.get(core).get('fs'),
   filepath
 }) {
   try {

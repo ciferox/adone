@@ -1,7 +1,7 @@
-import path from 'path'
-
-import { GitRefManager } from '../managers'
-import { FileSystem } from '../models'
+import { GitRefManager } from '../managers/GitRefManager.js'
+import { FileSystem } from '../models/FileSystem.js'
+import { join } from '../utils/join.js'
+import { cores } from '../utils/plugins.js'
 
 /**
  * List branches
@@ -9,9 +9,10 @@ import { FileSystem } from '../models'
  * @link https://isomorphic-git.github.io/docs/listBranches.html
  */
 export async function listBranches ({
+  core = 'default',
   dir,
-  gitdir = path.join(dir, '.git'),
-  fs: _fs,
+  gitdir = join(dir, '.git'),
+  fs: _fs = cores.get(core).get('fs'),
   remote = undefined
 }) {
   try {

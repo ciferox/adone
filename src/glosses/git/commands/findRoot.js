@@ -1,13 +1,19 @@
-import path from 'path'
-
-import { E, FileSystem, GitError } from '../models'
+import { FileSystem } from '../models/FileSystem.js'
+import { E, GitError } from '../models/GitError.js'
+import { dirname } from '../utils/dirname.js'
+import { join } from '../utils/join.js'
+import { cores } from '../utils/plugins.js'
 
 /**
  * Find the root git directory
  *
  * @link https://isomorphic-git.github.io/docs/findRoot.html
  */
-export async function findRoot ({ fs: _fs, filepath }) {
+export async function findRoot ({
+  core = 'default',
+  fs: _fs = cores.get(core).get('fs'),
+  filepath
+}) {
   try {
     const fs = new FileSystem(_fs)
     return _findRoot(fs, filepath)
@@ -18,10 +24,10 @@ export async function findRoot ({ fs: _fs, filepath }) {
 }
 
 async function _findRoot (fs, filepath) {
-  if (await fs.exists(path.join(filepath, '.git'))) {
+  if (await fs.exists(join(filepath, '.git'))) {
     return filepath
   } else {
-    let parent = path.dirname(filepath)
+    let parent = dirname(filepath)
     if (parent === filepath) {
       throw new GitError(E.GitRootNotFoundError, { filepath })
     }
