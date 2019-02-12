@@ -1,6 +1,4 @@
-src/glosses/vcs/git/native/src/deps/* linguist-vendored
-src/glosses/netscan/native/src/masscan/* linguist-vendored
-src/glosses/databases/level/backends/leveldb/native/src/leveldb/* linguist-vendored
+src/glosses/databases/level/backends/leveldb/native/deps/* linguist-vendored
 src/glosses/databases/redis/__/redis/libparser/native/src/libhiredis/* linguist-vendored
 src/glosses/compressors/brotli/native/src/deps/* linguist-vendored
 src/glosses/compressors/snappy/native/src/deps/* linguist-vendored
@@ -13,4 +11,5 @@ src/glosses/hardware/boards/rpi/gpio/native/src/deps/* linguist-vendored
 src/glosses/hardware/hid/native/src/deps/* linguist-vendored
 src/glosses/net/utp/native/src/libutp/* linguist-vendored
 src/native/nan/* linguist-vendored
+src/native/napi/* linguist-vendored
 src/vendor/* linguist-vendored
