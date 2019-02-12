@@ -59,7 +59,7 @@ export default class Long {
      */
     toString(radix = 10) {
         if (radix < 2 || radix > 36) {
-            throw new error.InvalidArgument("radix is invalid");
+            throw new error.InvalidArgumentException("radix is invalid");
         }
         if (this.isZero()) {
             return "0";
@@ -381,7 +381,7 @@ export default class Long {
             divisor = this.constructor.fromValue(divisor);
         }
         if (divisor.isZero()) {
-            throw new error.IllegalState("Division by zero");
+            throw new error.IllegalStateException("Division by zero");
         }
 
         // guard against signed division overflow: the largest
@@ -680,7 +680,7 @@ export default class Long {
      */
     static fromString(str, unsigned, radix = 10) {
         if (str.length === 0) {
-            throw new error.InvalidArgument("empty string");
+            throw new error.InvalidArgumentException("empty string");
         }
         if (str === "NaN" || str === "Infinity" || str === "+Infinity" || str === "-Infinity") {
             return this.ZERO;
@@ -693,12 +693,12 @@ export default class Long {
             unsigned = Boolean(unsigned);
         }
         if (radix < 2 || radix > 36) {
-            throw new error.InvalidArgument("radix is invalid");
+            throw new error.InvalidArgumentException("radix is invalid");
         }
 
         const p = str.indexOf("-");
         if (p > 0) {
-            throw new error.InvalidArgument("interior hyphen");
+            throw new error.InvalidArgumentException("interior hyphen");
         }
         if (p === 0) {
             return this.fromString(str.substring(1), unsigned, radix).negate();

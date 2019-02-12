@@ -8,11 +8,11 @@ export class Base {
     }
 
     load(/*confPath, key*/) {
-        throw new adone.error.NotImplemented("Method load() is not implemented");
+        throw new adone.error.NotImplementedException("Method load() is not implemented");
     }
 
     save(/*confPath, key*/) {
-        throw new adone.error.NotImplemented("Method save() is not implemented");
+        throw new adone.error.NotImplementedException("Method save() is not implemented");
     }
 
     get(key) {
@@ -114,11 +114,11 @@ export class Base {
         } else if (is.array(key)) {
             parts = key;
         } else {
-            throw new adone.error.InvalidArgument("Invalid type of key");
+            throw new adone.error.InvalidArgumentException("Invalid type of key");
         }
 
         if (is.nil(parts) || parts.length === 0 || !parts[0]) {
-            throw new adone.error.InvalidArgument("Invalid type of key");
+            throw new adone.error.InvalidArgumentException("Invalid type of key");
         }
         return parts;
     }

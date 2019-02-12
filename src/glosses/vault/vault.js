@@ -1,6 +1,7 @@
 const {
     is,
-    vault
+    vault,
+    database: { level }
 } = adone;
 
 const VIDS = "vids";
@@ -22,8 +23,23 @@ const {
     VALUABLE_KEYS
 } = adone.private(vault);
 
+const createDB = (options) => {
+    let backend;
+
+    if (is.string(options.location)) {
+        backend = new level.backend.LevelDB(options.location);
+    } else {
+        backend = new level.backend.Memory();
+    }
+
+    const codecOptions = adone.util.pick(options, ["keyEncoding", "valueEncoding", "encoding"]);
+    const dbOptions = adone.util.omit(options, ["keyEncoding", "valueEncoding", "encoding", "location"]);
+
+    return new level.DB(new level.backend.Encoding(backend, codecOptions), dbOptions);
+};
+
 /**
- * Vault main class
+ * Vault implementation based on `adone.database.level`.
  */
 export default class Vault {
     /**
@@ -40,16 +56,17 @@ export default class Vault {
         } else {
             this.Valuable = vault.Valuable;
         }
-        this.backend = new adone.database.level.DB(this.options);
+        this.db = createDB(this.options);
         this._reset();
     }
 
     async open() {
-        await this.backend.open();
+        await this.db.open();
         // Load valuable ids
         try {
             this.vids = await this._getMeta(VIDS);
             for (const id of this.vids) {
+                // eslint-disable-next-line no-await-in-loop
                 const metaData = await this._getMeta(valuableId(id));
                 this.nameIdMap.set(metaData.name, id);
             }
@@ -61,6 +78,7 @@ export default class Vault {
         try {
             this.tids = await this._getMeta(TIDS);
             for (const id of this.tids) {
+                // eslint-disable-next-line no-await-in-loop
                 const tagMetaData = await this._getMeta(tagId(id));
                 this.tagsMap.set(tagMetaData.tag.name, tagMetaData);
             }
@@ -108,7 +126,7 @@ export default class Vault {
             await this.release(name); // eslint-disable-line
         }
 
-        await this.backend.close();
+        await this.db.close();
 
         this.nameIdMap.clear();
         this.tagsMap.clear();
@@ -117,12 +135,12 @@ export default class Vault {
     }
 
     location() {
-        return this.backend.location;
+        return this.options.location;
     }
 
     async create(name, { Valuable = this.Valuable, tags = [] } = {}) {
         if (this.nameIdMap.has(name)) {
-            throw new adone.error.Exists(`Already exists: '${name}'`);
+            throw new adone.error.ExistsException(`Already exists: '${name}'`);
         }
 
         const id = await this._getNextId(NEXT_VALUABLE_ID);
@@ -203,6 +221,7 @@ export default class Vault {
     async values() {
         const vaults = [];
         for (const name of this.nameIdMap.keys()) {
+            // eslint-disable-next-line no-await-in-loop
             vaults.push(await this.get(name));
         }
 
@@ -212,6 +231,7 @@ export default class Vault {
     async entries() {
         const vaults = {};
         for (const name of this.nameIdMap.keys()) {
+            // eslint-disable-next-line no-await-in-loop
             vaults[name] = await this.get(name);
         }
 
@@ -224,6 +244,7 @@ export default class Vault {
         if (is.plainObject(valuable)) {
             const valuables = [];
             for (const name of this.nameIdMap.keys()) {
+                // eslint-disable-next-line no-await-in-loop
                 valuables.push(await (await this.get(name)).toJSON(valuable));
             }
             result.valuables = valuables;
@@ -231,7 +252,7 @@ export default class Vault {
 
         if (includeStats) {
             result.stats = {
-                location: this.backend.location,
+                location: this.location(),
                 created: this.created,
                 updated: this.updated
             };
@@ -254,6 +275,7 @@ export default class Vault {
         if (hasTag(tags, tag)) {
             const valuables = await this.values();
             for (const val of valuables) {
+                // eslint-disable-next-line no-await-in-loop
                 await val.deleteTag(tag);
             }
             tag = normalizeTag(tag);
@@ -304,12 +326,12 @@ export default class Vault {
     }
 
     _getMeta(id) {
-        return this.backend.get(id);
+        return this.db.get(id);
     }
 
     async _setMeta(id, data) {
         this.updated = (new Date()).getTime();
-        await this.backend.batch([
+        await this.db.batch([
             { type: "put", key: id, value: data },
             { type: "put", key: UPDATED, value: this.updated }
         ]);
@@ -318,7 +340,7 @@ export default class Vault {
 
     async _deleteMeta(id) {
         this.updated = (new Date()).getTime();
-        await this.backend.batch([
+        await this.db.batch([
             { type: "del", key: id },
             { type: "put", key: UPDATED, value: this.updated }
         ]);
@@ -328,14 +350,14 @@ export default class Vault {
     _getVid(name) {
         const id = this.nameIdMap.get(name);
         if (is.undefined(id)) {
-            throw new adone.error.NotExists(`Not exists: '${name}'`);
+            throw new adone.error.NotExistsException(`Not exists: '${name}'`);
         }
         return id;
     }
 
     async _getNextId(key) {
         const id = this[key]++;
-        await this.backend.put(key, this[key]);
+        await this.db.put(key, this[key]);
         return id;
     }
 
@@ -347,11 +369,12 @@ export default class Vault {
 
         for (const tag of tags) {
             if (!is.string(tag.name)) {
-                throw new adone.error.NotValid("The tag must be a string or an object with at least one property: 'name'");
+                throw new adone.error.NotValidException("The tag must be a string or an object with at least one property: 'name'");
             }
             let tagMetaData = this.tagsMap.get(tag.name);
             if (is.undefined(tagMetaData)) {
                 needUpdate = true;
+                // eslint-disable-next-line no-await-in-loop
                 const id = await this._getNextId(NEXT_TAG_ID);
                 this.tids.push(id);
                 tagMetaData = {
@@ -363,6 +386,7 @@ export default class Vault {
                     tagMetaData.vids.push(vid);
                 }
                 this.tagsMap.set(tag.name, tagMetaData);
+                // eslint-disable-next-line no-await-in-loop
                 await this._setMeta(tagId(id), tagMetaData);
             }
             ids.push(tagMetaData.id);

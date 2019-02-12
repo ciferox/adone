@@ -132,11 +132,11 @@ export default class Services extends app.Subsystem {
             name
         });
         if (services.length === 0) {
-            throw new adone.error.Unknown(`Unknown service: ${name}`);
+            throw new adone.error.UnknownException(`Unknown service: ${name}`);
         }
 
         if (services[0].status === STATUS.INVALID) {
-            throw new adone.error.NotValid(`Service '${name}' is invalid`);
+            throw new adone.error.NotValidException(`Service '${name}' is invalid`);
         }
 
         return services[0];
@@ -196,7 +196,7 @@ export default class Services extends app.Subsystem {
             serviceData.status = STATUS.INACTIVE;
             return this.servicesRegistry.set(name, serviceData);
         }
-        throw new error.IllegalState("Service is not disabled");
+        throw new error.IllegalStateException("Service is not disabled");
     }
 
     async disableService(name) {
@@ -205,7 +205,7 @@ export default class Services extends app.Subsystem {
             if (serviceData.status === STATUS.ACTIVE) {
                 await this.stop(name);
             } else if (serviceData.status !== STATUS.INACTIVE) {
-                throw new error.IllegalState(`Cannot disable service with '${serviceData.status}' status`);
+                throw new error.IllegalStateException(`Cannot disable service with '${serviceData.status}' status`);
             }
             serviceData.status = STATUS.DISABLED;
             return this.servicesRegistry.set(name, serviceData);
@@ -228,7 +228,7 @@ export default class Services extends app.Subsystem {
         const serviceData = await this.servicesRegistry.get(name);
 
         if (![STATUS.DISABLED, STATUS.INACTIVE].includes(serviceData.status)) {
-            throw new error.NotAllowed("Cannot configure active service");
+            throw new error.NotAllowedException("Cannot configure active service");
         }
 
         if (is.string(group)) {
@@ -251,7 +251,7 @@ export default class Services extends app.Subsystem {
             if (onlyExist) {
                 const inGroupServices = await this.enumerateByGroup(group);
                 if (inGroupServices.length === 0) {
-                    throw new error.Unknown(`Unknown group: ${group}`);
+                    throw new error.UnknownException(`Unknown group: ${group}`);
                 }
             }
             maintainer = new api.ServiceMaintainer(this, group);
@@ -276,7 +276,7 @@ export default class Services extends app.Subsystem {
     //         let defaulted = false;
     //         const checkDefault = () => {
     //             if (defaulted) {
-    //                 throw new error.NotAllowed("Only one context of service can be default");
+    //                 throw new error.NotAllowedException("Only one context of service can be default");
     //             }
     //             defaulted = true;
     //         };
@@ -374,14 +374,14 @@ export default class Services extends app.Subsystem {
     //             if (is.undefined(depService)) {
     //                 const depConfig = this.config.omnitron.services[depName];
     //                 if (is.undefined(depConfig)) {
-    //                     throw new error.Unknown(`Unknown service '${depName}' in dependency list of '${service.name}' service`);
+    //                     throw new error.UnknownException(`Unknown service '${depName}' in dependency list of '${service.name}' service`);
     //                 }
     //                 config = depConfig;
     //             } else {
     //                 config = depService.config;
     //             }
     //             if (checkDisabled && config.status === DISABLED) {
-    //                 throw new error.IllegalState(`Dependent service '${depName}' is disabled`);
+    //                 throw new error.IllegalStateException(`Dependent service '${depName}' is disabled`);
     //             }
     //             await handler(depName, config);
     //         }

@@ -41,7 +41,7 @@ export default (testInterface) => {
             });
 
             it("should throws with unknown context", () => {
-                assert.throws(() => peer._getContextDefinition("not_exists"), adone.error.NotExists);
+                assert.throws(() => peer._getContextDefinition("not_exists"), adone.error.NotExistsException);
             });
 
             it("_getContextDefinition() should return definition of attached context owned by netron instance", () => {
@@ -144,7 +144,7 @@ export default (testInterface) => {
 
                 await peer.attachContext(a, "a");
                 const err = await assert.throws(async () => peer.attachContext(a, "a"));
-                assert.instanceOf(err, adone.error.Exists);
+                assert.instanceOf(err, adone.error.ExistsException);
             });
 
             it("detach contexts", async () => {
@@ -174,7 +174,7 @@ export default (testInterface) => {
             });
 
             it("detach non-existing context should have thrown", async () => {
-                await assert.throws(async () => peer.detachContext("hack"), adone.error.NotExists);
+                await assert.throws(async () => peer.detachContext("hack"), adone.error.NotExistsException);
             });
         });
 
@@ -201,7 +201,7 @@ export default (testInterface) => {
                 });
 
                 it("should throw for unknown context", () => {
-                    assert.throws(() => netron.peer._queryInterfaceByDefinition(100500), adone.error.Unknown);
+                    assert.throws(() => netron.peer._queryInterfaceByDefinition(100500), adone.error.UnknownException);
                 });
             });
 
@@ -227,7 +227,7 @@ export default (testInterface) => {
             });
 
             it("query non-existing interface should have thrown", async () => {
-                assert.throws(() => peer.queryInterface("a"), adone.error.NotExists);
+                assert.throws(() => peer.queryInterface("a"), adone.error.NotExistsException);
             });
 
             it("release interface", async () => {
@@ -260,7 +260,7 @@ export default (testInterface) => {
             });
 
             it("release non-interface should have thrown", async () => {
-                assert.throws(() => peer.releaseInterface(new A()), adone.error.NotValid);
+                assert.throws(() => peer.releaseInterface(new A()), adone.error.NotValidException);
             });
 
             describe("Netron#getPeerForInterface()", () => {
@@ -275,7 +275,7 @@ export default (testInterface) => {
                 });
 
                 it("should throw for non-interface instance", () => {
-                    assert.throws(() => netron.getPeerForInterface(new A()), adone.error.NotValid);
+                    assert.throws(() => netron.getPeerForInterface(new A()), adone.error.NotValidException);
                 });
             });
 
@@ -377,7 +377,7 @@ export default (testInterface) => {
 
                 await promise.delay(500);
 
-                await assert.throws(async () => iA.propA.get(), adone.error.NotExists);
+                await assert.throws(async () => iA.propA.get(), adone.error.NotExistsException);
             });
 
             it("get property of non-existing context (remote)", async () => {
@@ -396,7 +396,7 @@ export default (testInterface) => {
 
                 await promise.delay(500);
 
-                await assert.throws(async () => iA.propA.get(), adone.error.NotExists);
+                await assert.throws(async () => iA.propA.get(), adone.error.NotExistsException);
             });
 
             it("call method of non-existing context", async () => {
@@ -412,7 +412,7 @@ export default (testInterface) => {
 
                 await promise.delay(500);
 
-                await assert.throws(async () => iA.methodA(), adone.error.NotExists);
+                await assert.throws(async () => iA.methodA(), adone.error.NotExistsException);
             });
 
             it("call method of non-existing context (remote)", async () => {
@@ -431,7 +431,7 @@ export default (testInterface) => {
 
                 await promise.delay(500);
 
-                await assert.throws(async () => iA.methodA(), adone.error.NotExists);
+                await assert.throws(async () => iA.methodA(), adone.error.NotExistsException);
             });
 
             describe("weak context and inversion of control", () => {
@@ -545,7 +545,7 @@ export default (testInterface) => {
                     assert.equal(await iWeak.doSomething(), 888);
                     await iStrong.releaseWeak();
                     const err = await assert.throws(async () => iWeak.doSomething());
-                    assert.ok(err instanceof adone.error.NotExists);
+                    assert.ok(err instanceof adone.error.NotExistsException);
                     assert.match(err.message, /Context with definition id /);
                 });
 

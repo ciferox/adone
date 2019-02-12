@@ -154,7 +154,7 @@ const constructOptions = (options, object, templateOptions) => {
 
 export default async function report(reporter, message, options, templateOptions) {
     if (!reporter) {
-        throw new error.InvalidArgument("No reporter specified");
+        throw new error.InvalidArgumentException("No reporter specified");
     }
 
     options = constructOptions(options, message, templateOptions);

@@ -28,7 +28,7 @@ export const createFile = async (template, { name, fileName, cwd = process.cwd()
     }
 
     if ((await fs.exists(filePath)) && !rewriteFile) {
-        throw new adone.error.Exists(`File '${filePath}' already exists`);
+        throw new adone.error.ExistsException(`File '${filePath}' already exists`);
     }
 
     await fs.mkdirp(cwd);

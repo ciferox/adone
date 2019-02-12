@@ -339,7 +339,7 @@ describe("collection", "ByteArray", () => {
             bb2.roffset = 0;
             assert.throws(() => {
                 bb.prepend(bb2, 6); // Absolute out of bounds
-            }, adone.error.NotValid);
+            }, adone.error.NotValidException);
             bb.prepend("abcde", "utf8"); // Relative prepend at 3, 5 bytes (1 overflow)
             assert.equal(bb.toDebug(), "<61 62 63 64 65 78]");
         });
@@ -371,7 +371,7 @@ describe("collection", "ByteArray", () => {
             assert.strictEqual(bb.noAssert, false);
             assert.throws(() => {
                 bb.skipRead(1);
-            }, adone.error.NotValid);
+            }, adone.error.NotValidException);
             assert.strictEqual(bb.roffset, 3);
             assert.strictEqual(bb.woffset, 3);
             bb.noAssert = true;
@@ -392,7 +392,7 @@ describe("collection", "ByteArray", () => {
             assert.strictEqual(bb.noAssert, false);
             assert.throws(() => {
                 bb.skipWrite(1);
-            }, adone.error.NotValid);
+            }, adone.error.NotValidException);
             assert.strictEqual(bb.woffset, 3);
             assert.strictEqual(bb.roffset, 0);
             bb.noAssert = true;

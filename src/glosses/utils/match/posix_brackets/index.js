@@ -38,7 +38,7 @@ brackets.match = (arr, pattern, options) => {
 
     if (res.length === 0) {
         if (opts.failglob === true) {
-            throw new error.IllegalState(`no matches found for "${pattern}"`);
+            throw new error.IllegalStateException(`no matches found for "${pattern}"`);
         }
 
         if (opts.nonull === true || opts.nullglob === true) {

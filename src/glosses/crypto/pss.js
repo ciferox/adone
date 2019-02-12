@@ -39,7 +39,7 @@ export const create = function (options) {
     const hMeta = adone.crypto.hash.meta(options.md);
 
     if (is.null(hMeta)) {
-        throw new adone.error.NotSupported(`"${options.md} hash algorithm is not supported`);
+        throw new adone.error.NotSupportedException(`"${options.md} hash algorithm is not supported`);
     }
 
     const hLen = hMeta.digestLength;

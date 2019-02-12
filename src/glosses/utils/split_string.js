@@ -30,7 +30,7 @@ const keepEscaping = (opts, str, idx) => {
 
 export default function splitString(str, options, fn) {
     if (!is.string(str)) {
-        throw new error.InvalidArgument("Expected a string");
+        throw new error.InvalidArgumentException("Expected a string");
     }
 
     if (is.function(options)) {

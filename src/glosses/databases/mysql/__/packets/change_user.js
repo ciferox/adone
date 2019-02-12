@@ -86,11 +86,11 @@ export default class ChangeUser {
 
     toPacket() {
         if (!is.string(this.user)) {
-            throw new error.IllegalState('"user" connection config property must be a string');
+            throw new error.IllegalStateException('"user" connection config property must be a string');
         }
 
         if (!is.string(this.database)) {
-            throw new error.IllegalState('"database" connection config property must be a string');
+            throw new error.IllegalStateException('"database" connection config property must be a string');
         }
 
         // dry run: calculate resulting packet length

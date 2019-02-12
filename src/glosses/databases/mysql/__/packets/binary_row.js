@@ -37,14 +37,14 @@ export default class BinaryRow {
     }
 
     toPacket() {
-        throw new error.NotImplemented();
+        throw new error.NotImplementedException();
     }
 
     static fromPacket(fields, packet) {
         const columns = new Array(fields.length);
         const ok = packet.readInt8();
         if (ok !== 0) {
-            throw new error.IllegalState("not ok");
+            throw new error.IllegalStateException("not ok");
         }
         const nullBitmapLength = Math.floor((fields.length + 7 + 2) / 8);
         // TODO: read and interpret null bitmap

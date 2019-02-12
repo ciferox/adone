@@ -18,11 +18,11 @@ export default class Record {
      */
     constructor(key, value, author, recvtime) {
         if (key && !is.buffer(key)) {
-            throw new adone.error.NotValid("Key must be a Buffer");
+            throw new adone.error.NotValidException("Key must be a Buffer");
         }
 
         if (value && !is.buffer(value)) {
-            throw new adone.error.NotValid("Value must be a buffer");
+            throw new adone.error.NotValidException("Value must be a buffer");
         }
 
         this.key = key;

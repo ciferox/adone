@@ -227,11 +227,11 @@ export default class DatetimePrompt extends terminal.BasePrompt {
         const range = { max, min };
 
         if (range.max && adone.datetime.max(this.selection.date, range.max) === this.selection.date) {
-            throw new error.IllegalState("Default value is out of range");
+            throw new error.IllegalStateException("Default value is out of range");
         }
 
         if (range.min && adone.datetime.min(this.selection.date, range.min) === this.selection.date) {
-            throw new error.IllegalState("Default value is out of range");
+            throw new error.IllegalStateException("Default value is out of range");
         }
 
         this.format = (question.format || defaultFormat).map((token) => {

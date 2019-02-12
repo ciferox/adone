@@ -20,7 +20,7 @@ const throwYieldError = (proxy, text, args) => {
 export default class SpyCall {
     constructor(spy, thisValue, args, returnValue, error, id, errorWithCallStack) {
         if (!is.number(id)) {
-            throw new error.InvalidArgument("Call id is not a number");
+            throw new error.InvalidArgumentException("Call id is not a number");
         }
         this.proxy = spy;
         this.thisValue = thisValue;
@@ -126,7 +126,7 @@ export default class SpyCall {
 
     throwArg(pos) {
         if (pos > this.args.length) {
-            throw new error.InvalidArgument(`Not enough arguments: ${pos} required but only ${this.args.length} present`);
+            throw new error.InvalidArgumentException(`Not enough arguments: ${pos} required but only ${this.args.length} present`);
         }
 
         throw this.args[pos];

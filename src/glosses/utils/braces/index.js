@@ -85,11 +85,11 @@ braces.optimize = function (pattern, options) {
  */
 braces.create = function (pattern, options) {
     if (!is.string(pattern)) {
-        throw new error.InvalidArgument("expected a string");
+        throw new error.InvalidArgumentException("expected a string");
     }
 
     if (pattern.length >= braces.MAX_LENGTH) {
-        throw new error.LimitExceeded(`expected pattern to be less than ${braces.MAX_LENGTH} characters`);
+        throw new error.LimitExceededException(`expected pattern to be less than ${braces.MAX_LENGTH} characters`);
     }
 
     const create = () => {
@@ -144,11 +144,11 @@ braces.create = function (pattern, options) {
  */
 braces.makeRe = function (pattern, options) {
     if (!is.string(pattern)) {
-        throw new error.InvalidArgument("expected a string");
+        throw new error.InvalidArgumentException("expected a string");
     }
 
     if (pattern.length >= braces.MAX_LENGTH) {
-        throw new error.LimitExceeded(`expected pattern to be less than ${braces.MAX_LENGTH} characters`);
+        throw new error.LimitExceededException(`expected pattern to be less than ${braces.MAX_LENGTH} characters`);
     }
 
     const makeRe = () => {

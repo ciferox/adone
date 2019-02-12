@@ -1,69 +1,20 @@
+import promisify from "./promisify";
+
 const {
-    is,
-    error,
-    database: { level: { Codec } }
+    event,
+    error: { DatabaseOpenException, DatabaseReadException, DatabaseWriteException, DatabaseInitializationException, NotFoundException },
+    database: { level: { streamFromIterator, Batch, getOptions, getCallback, backend: { Deferred } } },
+    is
 } = adone;
 
-class IteratorStream extends adone.std.stream.Readable {
-    constructor(iterator, options) {
-        super(Object.assign({}, options, {
-            objectMode: true
-        }));
-        this._iterator = iterator;
-        this._destroyed = false;
-        this._decoder = null;
-        if (options && options.decoder) {
-            this._decoder = options.decoder;
-        }
-        this.on("end", this._cleanup.bind(this));
+const maybeError = function (db, callback) {
+    if (!db._isOpening() && !db.isOpen()) {
+        process.nextTick(callback, new DatabaseReadException("Database is not open"));
+        return true;
     }
+};
 
-    _read() {
-        if (this._destroyed) {
-            return;
-        }
-
-        this._iterator.next().catch((err) => this.emit("error", err)).then((result) => {
-            if (this._destroyed) {
-                return;
-            }
-            if (is.undefined(result)) {
-                this.push(null);
-            } else {
-                let value;
-                if (!this._decoder) {
-                    return this.push(result);
-                }
-
-                try {
-                    value = this._decoder(result.key, result.value);
-                } catch (err) {
-                    this.emit("error", new error.Encoding(err));
-                    this.push(null);
-                    return;
-                }
-                this.push(value);
-            }
-        });
-    }
-
-    _cleanup() {
-        if (this._destroyed) {
-            return;
-        }
-        this._destroyed = true;
-
-        this._iterator.end((err) => {
-            if (err) {
-                return this.emit("error", err);
-            }
-            this.emit("close");
-        });
-    }
-}
-IteratorStream.prototype.destroy = IteratorStream.prototype._cleanup;
-
-// Possible status values:
+// Possible AbstractBackend#status values:
 //  - 'new'     - newly created, not opened or closed
 //  - 'opening' - waiting for the database to be opened, post open()
 //  - 'open'    - successfully opened the database, available for use
@@ -71,207 +22,104 @@ IteratorStream.prototype.destroy = IteratorStream.prototype._cleanup;
 //  - 'closed'  - database has been successfully closed, should not be
 //                 used except for another open() operation
 
-const BINARY_CODECS = ["bson", "mpak"];
-
-export default class DB extends adone.event.Emitter {
-    constructor({ db = adone.database.level.backend.Leveldb, location, keyEncoding = "utf8", valueEncoding = "utf8", encryption, ...backendOptions } = {}) {
+export default class DB extends event.Emitter {
+    constructor(db, options, callback) {
         super();
 
-        if (!is.class(db) && !is.string(location)) {
-            throw new error.DatabaseInitialization("Must provide a location for the database");
+        let error;
+
+        if (is.function(options)) {
+            callback = options;
+            options = {};
         }
 
-        this.options = {
-            ...backendOptions,
-            location,
-            keyEncoding,
-            valueEncoding,
-            encryption
-        };
+        options = options || {};
 
-        const Backend = db;
-
-        if (is.plainObject(encryption)) {
-            // Force binary encoding of key/value for encryption mode
-            this.options.keyEncoding = BINARY_CODECS.includes(this.options.keyEncoding) ? this.options.keyEncoding : "binary";
-            this.options.valueEncoding = BINARY_CODECS.includes(this.options.valueEncoding) ? this.options.valueEncoding : "binary";
-
-            if (is.buffer(encryption.key)) {
-                adone.lodash.defaults(this.options.encryption, {
-                    algorithm: "aes-256-cbc",
-                    ivBytes: 16
-                });
-            } else {
-                adone.lodash.defaults(this.options.encryption, {
-                    saltBytes: 32,
-                    digest: "sha256",
-                    keyBytes: 32,
-                    iterations: 64000,
-                    algorithm: "aes-256-cbc",
-                    ivBytes: 16
-                });
-
-                const encOptions = this.options.encryption;
-
-                if (!is.string(encOptions.password) && !is.buffer(encOptions.password)) {
-                    throw new adone.error.NotValid("Password is not valid");
-                }
-
-                if (!is.undefined(encOptions.salt)) {
-                    encOptions.key = adone.std.crypto.pbkdf2Sync(encOptions.password, encOptions.salt, encOptions.iterations, encOptions.keyBytes, encOptions.digest);
-                }
+        if (!db || typeof db !== "object") {
+            error = new DatabaseInitializationException("First argument must be an abstract backend compliant store");
+            if (is.function(callback)) {
+                return process.nextTick(callback, error);
             }
-
-            const encOptions = this.options.encryption;
-
-            class XBackend extends Backend {
-                _get(key, options, callback) {
-                    return super._get(this._hashKey(key), options, (err, value) => {
-                        if (err) {
-                            return callback(err, value);
-                        }
-                        callback(err, this._decryptValue(value));
-                    });
-                }
-
-                _put(key, value, options, callback) {
-                    return super._put(this._hashKey(key), this._encryptValue(value), options, callback);
-                }
-
-                _del(key, options, callback) {
-                    return super._del(this._hashKey(key), options, callback);
-                }
-
-                _batch(operations, options, callback) {
-                    for (const op of operations) {
-                        op.key = this._hashKey(op.key);
-                        if (op.type === "put") {
-                            op.value = this._encryptValue(op.value);
-                        }
-                    }
-                    return super._batch(operations, options, callback);
-                }
-
-                _hashKey(key) {
-                    return adone.std.crypto.createHash("sha256").update(key).digest();
-                }
-
-                _encryptValue(value) {
-                    let salt;
-                    let encKey;
-                    if (is.undefined(encOptions.key)) {
-                        salt = adone.std.crypto.randomBytes(encOptions.saltBytes);
-                        encKey = adone.std.crypto.pbkdf2Sync(encOptions.password, salt, encOptions.iterations, encOptions.keyBytes, encOptions.digest);
-                    } else {
-                        salt = encOptions.salt;
-                        encKey = encOptions.key;
-                    }
-                    const iv = encOptions.iv || adone.std.crypto.randomBytes(encOptions.ivBytes);
-                    const cipher = adone.std.crypto.createCipheriv(encOptions.algorithm, encKey, iv);
-                    const ciphered = Buffer.concat([cipher.update(value), cipher.final()]);
-                    const parts = [
-                        iv,
-                        ciphered
-                    ];
-
-                    if (is.undefined(encOptions.salt)) {
-                        parts.push(salt);
-                    }
-
-                    return adone.data.bson.encode(parts);
-                }
-
-                _decryptValue(value) {
-                    const parts = adone.data.bson.decode(value);
-                    let key;
-
-                    if (is.undefined(encOptions.key)) {
-                        key = adone.std.crypto.pbkdf2Sync(encOptions.password, parts[2], encOptions.iterations, encOptions.keyBytes, encOptions.digest);
-                    } else {
-                        key = encOptions.key;
-                    }
-
-                    const decipher = adone.std.crypto.createDecipheriv(encOptions.algorithm, key, parts[0]);
-                    return Buffer.concat([decipher.update(parts[1]), decipher.final()]);
-                }
-
-                _unserialize(buf) {
-                    const parts = [];
-                    const l = buf.length;
-                    let idx = 0;
-                    while (idx < l) {
-                        const dlen = buf.readUInt32BE(idx);
-                        idx += 4;
-                        const start = idx;
-                        const end = start + dlen;
-                        const part = buf.slice(start, end);
-                        parts.push(part);
-                        idx += part.length;
-                    }
-                    return parts;
-                }
-            }
-
-            this.db = new XBackend(this.location);
-        } else {
-            this.db = new Backend(this.location);
+            throw error;
         }
 
-        this._codec = new Codec(this.options);
+        if (!is.string(db.status)) {
+            throw new TypeError(".status required, old abstract backend");
+        }
 
         this.setMaxListeners(Infinity);
-    }
 
-    get location() {
-        return this.options.location;
-    }
+        this.options = getOptions(options);
+        this._db = db;
+        this.db = new Deferred(db);
 
-    async open() {
-        if (!this.isOpen()) {
-            if (this._isOpening()) {
-                return new Promise((resolve, reject) => {
-                    const onOpen = () => {
-                        this.removeListener("error", onError);
-                        resolve(this);
-                    };
-                    const onError = (err) => {
-                        this.removeListener("open", onOpen);
-                        reject(err);
-                    };
-                    this.once("open", onOpen).once("error", onError);
-                });
-            }
-            this.emit("opening");
-
-            try {
-                await this.db.open(this.options);
-                this.emit("open");
-                this.emit("ready");
-            } catch (err) {
-                err = new error.DatabaseOpen(err);
-                this.emit("error", err);
-                throw err;
-            }
+        // Call open() only if callback is specified.
+        if (is.function(callback)) {
+            this.open(callback);
         }
-        return this;
     }
 
-    async close() {
+    open(callback) {
+        let promise;
+
+        if (!callback) {
+            callback = promisify();
+            promise = callback.promise;
+        }
+
         if (this.isOpen()) {
-            this.emit("closing");
-            await this.db.close();
-            this.emit("closed");
-        } else if (this._isOpening()) {
-            return new Promise((resolve, reject) => {
-                this.once("open", () => {
-                    this.close().catch(reject).then(resolve);
-                });
+            process.nextTick(callback, null, this);
+            return promise;
+        }
+
+        if (this._isOpening()) {
+            this.once("open", () => {
+                callback(null, this);
             });
-        } else if (this._isClosing()) {
-            return new Promise((resolve) => {
-                this.once("closed", resolve);
+            return promise;
+        }
+
+        this.emit("opening");
+
+        this.db.open(this.options, (err) => {
+            if (err) {
+                return callback(new DatabaseOpenException(err));
+            }
+            this.db = this._db;
+            callback(null, this);
+            this.emit("open");
+            this.emit("ready");
+        });
+
+        return promise;
+    }
+
+    close(callback) {
+        let promise;
+
+        if (!callback) {
+            callback = promisify();
+            promise = callback.promise;
+        }
+
+        if (this.isOpen()) {
+            this.db.close((...args) => {
+                this.emit("closed");
+                callback.apply(null, args);
+            });
+            this.emit("closing");
+            this.db = new Deferred(this._db);
+        } else if (this.isClosed()) {
+            process.nextTick(callback);
+        } else if (this.db.status === "closing") {
+            this.once("closed", callback);
+        } else if (this._isOpening()) {
+            this.once("open", () => {
+                this.close(callback);
             });
         }
+
+        return promise;
     }
 
     isOpen() {
@@ -282,136 +130,159 @@ export default class DB extends adone.event.Emitter {
         return this.db.status === "opening";
     }
 
-    _isClosing() {
-        return this.db.status === "closing";
-    }
-
     isClosed() {
-        return this.db.status === "closed";
+        return (/^clos|new/).test(this.db.status);
     }
 
-    async get(key_, options) {
-        this._maybeError();
+    get(key, options, callback) {
+        if (is.nil(key)) {
+            throw new DatabaseReadException("get() requires a key argument");
+        }
 
-        const key = this._codec.encodeKey(key_, options);
+        let promise;
 
-        options = options || {};
-        options.asBuffer = this._codec.valueAsBuffer(options);
+        callback = getCallback(options, callback);
 
-        try {
-            let value = await this.db.get(key, options);
+        if (!callback) {
+            callback = promisify();
+            promise = callback.promise;
+        }
 
-            try {
-                value = this._codec.decodeValue(value, options);
-            } catch (err) {
-                err = new error.Encoding(err);
-                this.emit("error", err);
-                throw err;
+        if (maybeError(this, callback)) {
+            return promise;
+        }
+
+        options = getOptions(options);
+
+        this.db.get(key, options, (err, value) => {
+            if (err) {
+                if ((/notfound/i).test(err) || err.notFound) {
+                    err = new NotFoundException(`Key not found in database [${key}]`, err);
+                } else {
+                    err = new DatabaseReadException(err);
+                }
+                return callback(err);
             }
-            return value;
-        } catch (err) {
-            if ((/notfound/i).test(err) || err.notFound) {
-                err = new error.NotFound(`Key '${key_}' not found in database`, err);
-            } else if (!(err instanceof error.Encoding)) {
-                err = new error.DatabaseRead(err);
-            }
-            this.emit("error", err);
-            throw err;
-        }
-    }
-
-    async put(key_, value_, options) {
-        this._maybeError();
-
-        const key = this._codec.encodeKey(key_, options);
-        const value = this._codec.encodeValue(value_, options);
-
-        try {
-            await this.db.put(key, value, options);
-            this.emit("put", key_, value_);
-        } catch (err) {
-            err = new error.DatabaseWrite(err);
-            this.emit("error", err);
-            throw err;
-        }
-    }
-
-    async del(key_, options) {
-        this._maybeError();
-
-        const key = this._codec.encodeKey(key_, options);
-
-        try {
-            await this.db.del(key, options);
-            this.emit("del", key_);
-        } catch (err) {
-            err = new error.DatabaseWrite(err);
-            this.emit("error", err);
-            throw err;
-        }
-    }
-
-    async batch(arr_, options = {}) {
-        let arr;
-
-        this._maybeError();
-
-        if (!is.array(arr_)) {
-            const err = new error.DatabaseWrite("batch() requires an array argument");
-            this.emit("error", err);
-            throw err;
-        }
-
-        arr = this._codec.encodeBatch(arr_, options);
-        arr = arr.map((op) => {
-            if (!op.type && !is.undefined(op.key) && !is.undefined(op.value)) {
-                op.type = "put";
-            }
-            return op;
+            callback(null, value);
         });
 
-        try {
-            await this.db.batch(arr, options);
-            this.emit("batch", arr_);
-        } catch (err) {
-            err = new error.DatabaseWrite(err);
-            this.emit("error", err);
-            throw err;
+        return promise;
+    }
+
+    put(key, value, options, callback) {
+        if (is.nil(key)) {
+            throw new DatabaseWriteException("put() requires a key argument");
         }
+
+        let promise;
+
+        callback = getCallback(options, callback);
+
+        if (!callback) {
+            callback = promisify();
+            promise = callback.promise;
+        }
+
+        if (maybeError(this, callback)) {
+            return promise;
+        }
+
+        options = getOptions(options);
+
+        this.db.put(key, value, options, (err) => {
+            if (err) {
+                return callback(new DatabaseWriteException(err));
+            }
+            this.emit("put", key, value);
+            callback();
+        });
+
+        return promise;
+    }
+
+    del(key, options, callback) {
+        if (is.nil(key)) {
+            throw new DatabaseWriteException("del() requires a key argument");
+        }
+
+        let promise;
+
+        callback = getCallback(options, callback);
+
+        if (!callback) {
+            callback = promisify();
+            promise = callback.promise;
+        }
+
+        if (maybeError(this, callback)) {
+            return promise;
+        }
+
+        options = getOptions(options);
+
+        this.db.del(key, options, (err) => {
+            if (err) {
+                return callback(new DatabaseWriteException(err));
+            }
+            this.emit("del", key);
+            callback();
+        });
+
+        return promise;
+    }
+
+    batch(arr, options, callback) {
+        if (!arguments.length) {
+            return new Batch(this);
+        }
+
+        if (!is.array(arr)) {
+            throw new DatabaseWriteException("batch() requires an array argument");
+        }
+
+        let promise;
+
+        callback = getCallback(options, callback);
+
+        if (!callback) {
+            callback = promisify();
+            promise = callback.promise;
+        }
+
+        if (maybeError(this, callback)) {
+            return promise;
+        }
+
+        options = getOptions(options);
+
+        this.db.batch(arr, options, (err) => {
+            if (err) {
+                return callback(new DatabaseWriteException(err));
+            }
+            this.emit("batch", arr);
+            callback();
+        });
+
+        return promise;
+    }
+
+    iterator(options) {
+        return this.db.iterator(options);
     }
 
     createReadStream(options) {
-        options = Object.assign({ keys: true, values: true }, this.options, options);
-
-        options.keyEncoding = options.keyEncoding;
-        options.valueEncoding = options.valueEncoding;
-
-        options = this._codec.encodeLtgt(options);
-        options.keyAsBuffer = this._codec.keyAsBuffer(options);
-        options.valueAsBuffer = this._codec.valueAsBuffer(options);
-
+        options = Object.assign({ keys: true, values: true }, options);
         if (!is.number(options.limit)) {
             options.limit = -1;
         }
-
-        return new IteratorStream(this.db.iterator(options), Object.assign({}, options, {
-            decoder: this._codec.createStreamDecoder(options)
-        }));
+        return streamFromIterator(this.db.iterator(options), options);
     }
 
-    createKeyStream(options = {}) {
+    createKeyStream(options) {
         return this.createReadStream(Object.assign({}, options, { keys: true, values: false }));
     }
 
-    createValueStream(options = {}) {
+    createValueStream(options) {
         return this.createReadStream(Object.assign({}, options, { keys: false, values: true }));
-    }
-
-    _maybeError() {
-        if (!this._isOpening() && !this.isOpen()) {
-            const err = new error.DatabaseRead("Database is not open");
-            this.emit("error", err);
-            throw err;
-        }
     }
 }

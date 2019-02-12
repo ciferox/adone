@@ -71,14 +71,14 @@ export class TransportableObject {
     /// if they are required to load the sub-class instance. </param>
     /// <param name='context'> Transport context for saving shared pointers, only usable for C++ addons that extends napa::module::ShareableWrap. </param>
     save(payload, context) {
-        throw new adone.error.NotImplemented("Method 'save()' is not implemented");
+        throw new adone.error.NotImplementedException("Method 'save()' is not implemented");
     }
 
     /// <summary> Subclass to load state from payload. </summary>
     /// <param name='payload'> Payload to read from, which already have inner objects transported. </param>
     /// <param name='context'> Transport context for loading shared pointers, only usable for C++ addons that extends napa::module::ShareableWrap. </param>
     load(payload, context) {
-        throw new adone.error.NotImplemented("Method 'load()' is not implemented");
+        throw new adone.error.NotImplementedException("Method 'load()' is not implemented");
     }
 
     /// <summary> Marshall object into plain JavaScript object. </summary>

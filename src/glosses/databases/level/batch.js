@@ -1,9 +1,14 @@
-const { error } = adone;
+import promisify from "./promisify";
+
+const {
+    error: { DatabaseWriteException },
+    database: { level: { getCallback, getOptions } }
+} = adone;
 
 export default class Batch {
     constructor(db) {
         this._levelup = db;
-        this.batch = db.db.chainedBatch();
+        this.batch = db.db.batch();
         this.ops = [];
         this.length = 0;
     }
@@ -11,9 +16,10 @@ export default class Batch {
     put(key, value) {
         try {
             this.batch.put(key, value);
-        } catch (err) {
-            throw new error.DatabaseWrite(err);
+        } catch (e) {
+            throw new DatabaseWriteException(e);
         }
+
         this.ops.push({ type: "put", key, value });
         this.length++;
 
@@ -24,8 +30,9 @@ export default class Batch {
         try {
             this.batch.del(key);
         } catch (err) {
-            throw new error.DatabaseWrite(err);
+            throw new DatabaseWriteException(err);
         }
+
         this.ops.push({ type: "del", key });
         this.length++;
 
@@ -36,25 +43,41 @@ export default class Batch {
         try {
             this.batch.clear();
         } catch (err) {
-            throw new error.DatabaseWrite(err);
+            throw new DatabaseWriteException(err);
         }
 
         this.ops = [];
         this.length = 0;
+
         return this;
     }
 
-    async write() {
+    write(options, callback) {
         const levelup = this._levelup;
         const ops = this.ops;
+        let promise;
+
+        callback = getCallback(options, callback);
+
+        if (!callback) {
+            callback = promisify();
+            promise = callback.promise;
+        }
+
+        options = getOptions(options);
 
         try {
-            await this.batch.write();
-            levelup.emit("batch", ops);
+            this.batch.write(options, (err) => {
+                if (err) {
+                    return callback(new DatabaseWriteException(err));
+                }
+                levelup.emit("batch", ops);
+                callback();
+            });
         } catch (err) {
-            err = new error.DatabaseWrite(err);
-            levelup.emit("error", err);
-            throw err;
+            throw new DatabaseWriteException(err);
         }
+
+        return promise;
     }
 }

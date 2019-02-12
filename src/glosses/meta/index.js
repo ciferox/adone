@@ -56,7 +56,7 @@ collectNamespace(metaNamespace, null);
 export const getNamespaceInfo = (nsName) => {
     const namespace = namespaces.find((ns) => ns.name === nsName);
     if (is.undefined(namespace)) {
-        throw new adone.error.Unknown(`Unknown namespace: ${nsName}`);
+        throw new adone.error.UnknownException(`Unknown namespace: ${nsName}`);
     }
     return namespace;
 };
@@ -124,7 +124,7 @@ export const search = (keyword, nsName = "adone", { threshold = 0.3 } = {}) => {
     let { namespace } = adone.meta.parseName(nsName);
 
     if (namespace !== nsName) {
-        throw new adone.error.NotValid(`Invalid namespace: ${nsName}`);
+        throw new adone.error.NotValidException(`Invalid namespace: ${nsName}`);
     }
 
     let ns;

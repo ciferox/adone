@@ -50,7 +50,7 @@ describe("realm", () => {
             name: "test"
         });
         const err = await assert.throws(async () => observer.result);
-        assert.instanceOf(err, adone.error.NotValid);
+        assert.instanceOf(err, adone.error.NotValidException);
     });
 
     it("fork without 'name' should throw", async () => {
@@ -62,7 +62,7 @@ describe("realm", () => {
             cwd: realmPath
         });
         const err = await assert.throws(async () => observer.result);
-        assert.instanceOf(err, adone.error.NotValid);
+        assert.instanceOf(err, adone.error.NotValidException);
     });
 
     it("fork", async () => {
@@ -149,7 +149,7 @@ describe("realm", () => {
                 const observer = await realmManager.install(std.path.join(__dirname));
                 return observer.result;
             });
-            assert.instanceOf(err, adone.error.InvalidArgument);
+            assert.instanceOf(err, adone.error.InvalidArgumentException);
         });
 
         describe("cli commands", () => {

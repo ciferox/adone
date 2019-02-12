@@ -39,7 +39,7 @@ const readAndAssertNoEof = async (reader, buffer, offset, length, position) => {
     }
     const bytesRead = await reader.read(buffer, offset, length, position);
     if (bytesRead < length) {
-        return new error.IllegalState("unexpected EOF");
+        return new error.IllegalStateException("unexpected EOF");
     }
 };
 
@@ -61,10 +61,10 @@ export const fromRandomAccessReader = async (reader, totalSize, options) => {
         options.validateEntrySizes = true;
     }
     if (!is.number(totalSize)) {
-        throw new error.InvalidArgument("expected totalSize parameter to be a number");
+        throw new error.InvalidArgumentException("expected totalSize parameter to be a number");
     }
     if (totalSize > Number.MAX_SAFE_INTEGER) {
-        throw new error.InvalidArgument("zip file too large. only file sizes up to 2^52 are supported due to JavaScript's Number type being an IEEE 754 double.");
+        throw new error.InvalidArgumentException("zip file too large. only file sizes up to 2^52 are supported due to JavaScript's Number type being an IEEE 754 double.");
     }
 
     // the matching unref() call is in zipfile.close()
@@ -94,7 +94,7 @@ export const fromRandomAccessReader = async (reader, totalSize, options) => {
         // 4 - Number of this disk
         const diskNumber = eocdrBuffer.readUInt16LE(4);
         if (diskNumber !== 0) {
-            throw new error.NotSupported(`multi-disk zip files are not supported: found disk number: ${diskNumber}`);
+            throw new error.NotSupportedException(`multi-disk zip files are not supported: found disk number: ${diskNumber}`);
         }
         // 6 - Disk where central directory starts
         // 8 - Number of central directory records on this disk
@@ -107,7 +107,7 @@ export const fromRandomAccessReader = async (reader, totalSize, options) => {
         const commentLength = eocdrBuffer.readUInt16LE(20);
         const expectedCommentLength = eocdrBuffer.length - eocdrWithoutCommentSize;
         if (commentLength !== expectedCommentLength) {
-            throw new error.IllegalState(`invalid comment length. expected: ${expectedCommentLength}. found: ${commentLength}`);
+            throw new error.IllegalStateException(`invalid comment length. expected: ${expectedCommentLength}. found: ${commentLength}`);
         }
         // 22 - Comment
         // the encoding is always cp437.
@@ -141,7 +141,7 @@ export const fromRandomAccessReader = async (reader, totalSize, options) => {
 
         // 0 - zip64 end of central dir locator signature = 0x07064b50
         if (zip64EocdlBuffer.readUInt32LE(0) !== 0x07064b50) {
-            throw new error.IllegalState("invalid zip64 end of central directory locator signature");
+            throw new error.IllegalStateException("invalid zip64 end of central directory locator signature");
         }
         // 4 - number of the disk with the start of the zip64 end of central directory
         // 8 - relative offset of the zip64 end of central directory record
@@ -155,7 +155,7 @@ export const fromRandomAccessReader = async (reader, totalSize, options) => {
         await readAndAssertNoEof(reader, zip64EocdrBuffer, 0, zip64EocdrBuffer.length, zip64EocdrOffset);
         // 0 - zip64 end of central dir signature                           4 bytes  (0x06064b50)
         if (zip64EocdrBuffer.readUInt32LE(0) !== 0x06064b50) {
-            throw new error.IllegalState("invalid zip64 end of central directory record signature");
+            throw new error.IllegalStateException("invalid zip64 end of central directory record signature");
         }
         // 4 - size of zip64 end of central directory record                8 bytes
         // 12 - version made by                                             2 bytes
@@ -182,7 +182,7 @@ export const fromRandomAccessReader = async (reader, totalSize, options) => {
             options.validateEntrySizes
         );
     }
-    throw new error.IllegalState("end of central directory record signature not found");
+    throw new error.IllegalStateException("end of central directory record signature not found");
 };
 
 export const fromFd = async (fd, options) => {
@@ -345,7 +345,7 @@ class ZipFile extends event.Emitter {
 
     async readEntry() {
         if (!this.lazyEntries) {
-            throw new error.IllegalState("readEntry() called without lazyEntries:true");
+            throw new error.IllegalStateException("readEntry() called without lazyEntries:true");
         }
         return this._readEntry();
     }
@@ -375,7 +375,7 @@ class ZipFile extends event.Emitter {
             // 0 - Central directory file header signature
             const signature = buffer.readUInt32LE(0);
             if (signature !== 0x02014b50) {
-                throw new error.IllegalState(`invalid central directory file header signature: 0x${signature.toString(16)}`);
+                throw new error.IllegalStateException(`invalid central directory file header signature: 0x${signature.toString(16)}`);
             }
             // 4 - Version made by
             entry.versionMadeBy = buffer.readUInt16LE(4);
@@ -410,7 +410,7 @@ class ZipFile extends event.Emitter {
             entry.relativeOffsetOfLocalHeader = buffer.readUInt32LE(42);
 
             if (entry.generalPurposeBitFlag & 0x40) {
-                throw new error.NotSupported("strong encryption is not supported");
+                throw new error.NotSupportedException("strong encryption is not supported");
             }
 
             this.readEntryCursor += 46;
@@ -433,7 +433,7 @@ class ZipFile extends event.Emitter {
                 const dataStart = i + 4;
                 const dataEnd = dataStart + dataSize;
                 if (dataEnd > extraFieldBuffer.length) {
-                    throw new error.IllegalState("extra field length exceeds extra field buffer size");
+                    throw new error.IllegalStateException("extra field length exceeds extra field buffer size");
                 }
                 const dataBuffer = Buffer.alloc(dataSize);
                 extraFieldBuffer.copy(dataBuffer, 0, dataStart, dataEnd);
@@ -468,13 +468,13 @@ class ZipFile extends event.Emitter {
                     }
                 }
                 if (is.nil(zip64EiefBuffer)) {
-                    throw new error.IllegalState("expected zip64 extended information extra field");
+                    throw new error.IllegalStateException("expected zip64 extended information extra field");
                 }
                 let index = 0;
                 // 0 - Original Size          8 bytes
                 if (entry.uncompressedSize === 0xffffffff) {
                     if (index + 8 > zip64EiefBuffer.length) {
-                        throw new error.IllegalState("zip64 extended information extra field does not include uncompressed size");
+                        throw new error.IllegalStateException("zip64 extended information extra field does not include uncompressed size");
                     }
                     entry.uncompressedSize = readUInt64LE(zip64EiefBuffer, index);
                     index += 8;
@@ -482,7 +482,7 @@ class ZipFile extends event.Emitter {
                 // 8 - Compressed Size        8 bytes
                 if (entry.compressedSize === 0xffffffff) {
                     if (index + 8 > zip64EiefBuffer.length) {
-                        throw new error.IllegalState("zip64 extended information extra field does not include compressed size");
+                        throw new error.IllegalStateException("zip64 extended information extra field does not include compressed size");
                     }
                     entry.compressedSize = readUInt64LE(zip64EiefBuffer, index);
                     index += 8;
@@ -490,7 +490,7 @@ class ZipFile extends event.Emitter {
                 // 16 - Relative Header Offset 8 bytes
                 if (entry.relativeOffsetOfLocalHeader === 0xffffffff) {
                     if (index + 8 > zip64EiefBuffer.length) {
-                        throw new error.IllegalState("zip64 extended information extra field does not include relative header offset");
+                        throw new error.IllegalStateException("zip64 extended information extra field does not include relative header offset");
                     }
                     entry.relativeOffsetOfLocalHeader = readUInt64LE(zip64EiefBuffer, index);
                     index += 8;
@@ -537,7 +537,7 @@ class ZipFile extends event.Emitter {
                 }
                 if (entry.compressedSize !== expectedCompressedSize) {
                     const msg = `compressed/uncompressed size mismatch for stored file: ${entry.compressedSize} != ${entry.uncompressedSize}`;
-                    throw new error.IllegalState(msg);
+                    throw new error.IllegalStateException(msg);
                 }
             }
 
@@ -570,52 +570,52 @@ class ZipFile extends event.Emitter {
             // validate options that the caller has no excuse to get wrong
             if (!is.nil(options.decrypt)) {
                 if (!entry.isEncrypted()) {
-                    throw new error.InvalidArgument("options.decrypt can only be specified for encrypted entries");
+                    throw new error.InvalidArgumentException("options.decrypt can only be specified for encrypted entries");
                 }
                 if (options.decrypt !== false) {
-                    throw new error.InvalidArgument(`invalid options.decrypt value: ${options.decrypt}`);
+                    throw new error.InvalidArgumentException(`invalid options.decrypt value: ${options.decrypt}`);
                 }
                 if (entry.isCompressed()) {
                     if (options.decompress !== false) {
-                        throw new error.InvalidArgument("entry is encrypted and compressed, and options.decompress !== false");
+                        throw new error.InvalidArgumentException("entry is encrypted and compressed, and options.decompress !== false");
                     }
                 }
             }
             if (!is.nil(options.decompress)) {
                 if (!entry.isCompressed()) {
-                    throw new error.InvalidArgument("options.decompress can only be specified for compressed entries");
+                    throw new error.InvalidArgumentException("options.decompress can only be specified for compressed entries");
                 }
                 if (!(options.decompress === false || options.decompress === true)) {
-                    throw new error.InvalidArgument(`invalid options.decompress value: ${options.decompress}`);
+                    throw new error.InvalidArgumentException(`invalid options.decompress value: ${options.decompress}`);
                 }
             }
             if (!is.nil(options.start) || !is.nil(options.end)) {
                 if (entry.isCompressed() && options.decompress !== false) {
-                    throw new error.InvalidArgument("start/end range not allowed for compressed entry without options.decompress === false");
+                    throw new error.InvalidArgumentException("start/end range not allowed for compressed entry without options.decompress === false");
                 }
                 if (entry.isEncrypted() && options.decrypt !== false) {
-                    throw new error.InvalidArgument("start/end range not allowed for encrypted entry without options.decrypt === false");
+                    throw new error.InvalidArgumentException("start/end range not allowed for encrypted entry without options.decrypt === false");
                 }
             }
             if (!is.nil(options.start)) {
                 relativeStart = options.start;
                 if (relativeStart < 0) {
-                    throw new error.InvalidArgument("options.start < 0");
+                    throw new error.InvalidArgumentException("options.start < 0");
                 }
                 if (relativeStart > entry.compressedSize) {
-                    throw new error.InvalidArgument("options.start > entry.compressedSize");
+                    throw new error.InvalidArgumentException("options.start > entry.compressedSize");
                 }
             }
             if (!is.nil(options.end)) {
                 relativeEnd = options.end;
                 if (relativeEnd < 0) {
-                    throw new error.InvalidArgument("options.end < 0");
+                    throw new error.InvalidArgumentException("options.end < 0");
                 }
                 if (relativeEnd > entry.compressedSize) {
-                    throw new error.InvalidArgument("options.end > entry.compressedSize");
+                    throw new error.InvalidArgumentException("options.end > entry.compressedSize");
                 }
                 if (relativeEnd < relativeStart) {
-                    throw new error.InvalidArgument("options.end < options.start");
+                    throw new error.InvalidArgumentException("options.end < options.start");
                 }
             }
         }
@@ -623,11 +623,11 @@ class ZipFile extends event.Emitter {
         // or were introduced in a minor version of yauzl,
         // so should be passed to the client rather than thrown.
         if (!this.isOpen) {
-            throw new error.IllegalState("closed");
+            throw new error.IllegalStateException("closed");
         }
         if (entry.isEncrypted()) {
             if (options.decrypt !== false) {
-                throw new error.InvalidArgument("entry is encrypted, and options.decrypt !== false");
+                throw new error.InvalidArgumentException("entry is encrypted, and options.decrypt !== false");
             }
         }
         // make sure we don't lose the fd before we open the actual read stream
@@ -638,7 +638,7 @@ class ZipFile extends event.Emitter {
             // 0 - Local file header signature = 0x04034b50
             const signature = buffer.readUInt32LE(0);
             if (signature !== 0x04034b50) {
-                throw new error.IllegalState(`invalid local file header signature: 0x${signature.toString(16)}`);
+                throw new error.IllegalStateException(`invalid local file header signature: 0x${signature.toString(16)}`);
             }
             // all this should be redundant
             // 4 - Version needed to extract (minimum)
@@ -667,7 +667,7 @@ class ZipFile extends event.Emitter {
                 // 8 - The file is Deflated
                 decompress = !is.nil(options.decompress) ? options.decompress : true;
             } else {
-                throw new error.NotSupported(`unsupported compression method: ${entry.compressionMethod}`);
+                throw new error.NotSupportedException(`unsupported compression method: ${entry.compressionMethod}`);
             }
             const fileDataStart = localFileHeaderEnd;
             const fileDataEnd = fileDataStart + entry.compressedSize;
@@ -676,7 +676,7 @@ class ZipFile extends event.Emitter {
                 // since we're dealing with an unsigned offset plus an unsigned size,
                 // we only have 1 thing to check for.
                 if (fileDataEnd > this.fileSize) {
-                    throw new error.IllegalState(`file data overflows file bounds: ${fileDataStart} + ${entry.compressedSize} > ${this.fileSize}`);
+                    throw new error.IllegalStateException(`file data overflows file bounds: ${fileDataStart} + ${entry.compressedSize} > ${this.fileSize}`);
                 }
             }
             const readStream = this.reader.createReadStream({

@@ -1189,7 +1189,7 @@ describe("data", "mpak", "Serializer", () => {
             func: noop
         };
 
-        assert.throws(() => serializer.decode(serializer.encode(toEncode)), adone.error.NotSupported);
+        assert.throws(() => serializer.decode(serializer.encode(toEncode)), adone.error.NotSupportedException);
     });
 
     it("encode/decode undefined", () => {

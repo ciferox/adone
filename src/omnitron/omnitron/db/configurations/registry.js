@@ -16,7 +16,7 @@ const SERVICES_VALUABLE = Symbol();
 export default class Services extends vault.Valuable {
     async registerService(name) {
         if (this[SERVICES_VALUABLE].has(name)) {
-            throw new error.Exists(`Service '${name}' is already registered`);
+            throw new error.ExistsException(`Service '${name}' is already registered`);
         }
 
         const servicePath = std.path.join(adone.runtime.config.omnitron.SERVICES_PATH, name);
@@ -37,7 +37,7 @@ export default class Services extends vault.Valuable {
 
     async unregisterService(name) {
         if (!this[SERVICES_VALUABLE].has(name)) {
-            throw new error.NotExists(`Service '${name}' does not exist`);
+            throw new error.NotExistsException(`Service '${name}' does not exist`);
         }
 
         await this[SERVICES_VALUABLE].delete(name);

@@ -65,7 +65,7 @@ const doNotification = async (options, notifierOptions) => {
     const localNotifier = notifierOptions.customPath || fullNotifierPath;
 
     if (!options.m) {
-        throw new error.InvalidArgument("Message is required");
+        throw new error.InvalidArgumentException("Message is required");
     }
 
     const argsList = __.util.constructArgumentList(options, {

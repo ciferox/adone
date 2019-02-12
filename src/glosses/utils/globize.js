@@ -22,7 +22,7 @@ export default function globize(path, { ext, recursive = false } = {}) {
         }
         return result;
     } else if (!is.string(path)) {
-        throw new adone.error.InvalidArgument("Invalid value of path");
+        throw new adone.error.InvalidArgumentException("Invalid value of path");
     }
 
     let exts;

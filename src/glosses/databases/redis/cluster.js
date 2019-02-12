@@ -76,13 +76,13 @@ export default class Cluster extends __.Commander.mixin(event.Emitter) {
 
         return new Promise((resolve, reject) => {
             if (this.status === "connecting" || this.status === "connect" || this.status === "ready") {
-                reject(new error.IllegalState("Redis is already connecting/connected"));
+                reject(new error.IllegalStateException("Redis is already connecting/connected"));
                 return;
             }
             this.setStatus("connecting");
 
             if (!is.array(this.startupNodes) || this.startupNodes.length === 0) {
-                throw new error.InvalidArgument("`startupNodes` should contain at least one node.");
+                throw new error.InvalidArgumentException("`startupNodes` should contain at least one node.");
             }
 
             this.connectionPool.reset(this.startupNodes);
@@ -139,7 +139,7 @@ export default class Cluster extends __.Commander.mixin(event.Emitter) {
             }, retryDelay);
         } else {
             this.setStatus("end");
-            this.flushQueue(new error.IllegalState("None of startup nodes is available"));
+            this.flushQueue(new error.IllegalStateException("None of startup nodes is available"));
         }
     }
 
@@ -191,7 +191,7 @@ export default class Cluster extends __.Commander.mixin(event.Emitter) {
 
     nodes(role = "all") {
         if (role !== "all" && role !== "master" && role !== "slave") {
-            throw new error.InvalidArgument(`Invalid role "${role}. Expected "all", "master" or "slave"`);
+            throw new error.InvalidArgumentException(`Invalid role "${role}. Expected "all", "master" or "slave"`);
         }
         return util.values(this.connectionPool.nodes[role]);
     }

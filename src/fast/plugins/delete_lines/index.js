@@ -10,7 +10,7 @@ export default function plugin() {
 
         return this.throughSync(function (file) {
             if (file.isStream()) {
-                throw new error.NotSupported("delete-lines: streams are unsuppored");
+                throw new error.NotSupportedException("delete-lines: streams are unsuppored");
             }
 
             if (!file.isNull()) {

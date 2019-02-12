@@ -32,7 +32,7 @@ describe("fast", "transform", "concat", () => {
         } catch (_err) {
             err = _err;
         }
-        expect(err).to.be.instanceOf(adone.error.InvalidArgument);
+        expect(err).to.be.instanceOf(adone.error.InvalidArgumentException);
     });
 
     it("should ignore null files", async () => {
@@ -53,7 +53,7 @@ describe("fast", "transform", "concat", () => {
             .dest(todir.path(), { produceFiles: true })
             .then(() => null, (e) => e);
         files.map((error) => error.contents.close());
-        expect(e).to.be.instanceOf(error.NotSupported);
+        expect(e).to.be.instanceOf(error.NotSupportedException);
     });
 
     it("should concat one file", async () => {
@@ -154,7 +154,7 @@ describe("fast", "transform", "concat", () => {
             } catch (_err) {
                 err = _err;
             }
-            expect(err).to.be.instanceOf(adone.error.InvalidArgument);
+            expect(err).to.be.instanceOf(adone.error.InvalidArgumentException);
         });
 
         it("should create file based on path property", async () => {

@@ -70,7 +70,7 @@ class DB extends vault.Vault {
     async getConfiguration(name) {
         const configMeta = this[_CONFIGS][name];
         if (is.undefined(configMeta)) {
-            throw new error.Unknown(`Unknown configuration: '${name}'`);
+            throw new error.UnknownException(`Unknown configuration: '${name}'`);
         }
 
         if (is.null(configMeta.instance)) {
@@ -143,7 +143,7 @@ class DB extends vault.Vault {
             if (force) {
                 await DB.close();
             } else {
-                throw new error.IllegalState("Cannot destroy opened database");
+                throw new error.IllegalStateException("Cannot destroy opened database");
             }
         }
 

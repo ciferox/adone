@@ -6,7 +6,7 @@ export default function plugin() {
     return function concat(file, options = {}) {
 
         if (!file) {
-            throw new error.InvalidArgument("Missing file option");
+            throw new error.InvalidArgumentException("Missing file option");
         }
         // to preserve existing |undefined| behaviour and to introduce |newLine: ""| for binaries
         if (!is.string(options.newLine)) {
@@ -24,7 +24,7 @@ export default function plugin() {
         } else if (is.string(file.path)) {
             fileName = path.basename(file.path);
         } else {
-            throw new error.InvalidArgument("Missing path in file options");
+            throw new error.InvalidArgumentException("Missing path in file options");
         }
 
         return this.throughSync((file) => {
@@ -32,7 +32,7 @@ export default function plugin() {
                 return;
             }
             if (file.isStream()) {
-                throw new error.NotSupported("Streaming is not supported");
+                throw new error.NotSupportedException("Streaming is not supported");
             }
 
             // enable sourcemap support for concat

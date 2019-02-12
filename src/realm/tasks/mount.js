@@ -15,22 +15,22 @@ export default class MountTask extends task.Task {
             const devmntPath = adone.realm.config.devmntPath;
 
             if (!is.string(name)) {
-                throw new error.NotValid(`Name of namespace is not valid: ${name}`);
+                throw new error.NotValidException(`Name of namespace is not valid: ${name}`);
             }
 
             name = adone.text.toCamelCase(name);
 
             if (!is.string(path)) {
-                throw new error.NotValid(`Path is not valid: ${path}`);
+                throw new error.NotValidException(`Path is not valid: ${path}`);
             }
 
             if (!std.path.isAbsolute(path)) {
-                throw new error.NotValid("Path should be absolute");
+                throw new error.NotValidException("Path should be absolute");
             }
 
             // It's not necessary to do more strict check...
             // if (!(await fs.exists(path))) {
-            //     throw new error.NotExists(`Path '${path}' is not exist`);
+            //     throw new error.NotExistsException(`Path '${path}' is not exist`);
             // }
 
             let config;
@@ -41,7 +41,7 @@ export default class MountTask extends task.Task {
             }
 
             if (is.string(config.raw[name])) {
-                throw new error.Exists(`Namespace 'adone.dev.${name}' is already exist`);
+                throw new error.ExistsException(`Namespace 'adone.dev.${name}' is already exist`);
             }
 
             config.raw[name] = path;

@@ -101,7 +101,7 @@ export default class Service {
                 }
                 const adoneHomePath = adone.std.path.join(pathPrefix, adone.realm.config.dirName);
                 if (!(await adone.fs.exists(adoneHomePath))) {
-                    throw new adone.error.NotExists(`Adone home directory '${adoneHomePath}' not exists`);
+                    throw new adone.error.NotExistsException(`Adone home directory '${adoneHomePath}' not exists`);
                 }
 
                 context.pidPath = adone.std.path.join(adoneHomePath, "omnitron.pid");

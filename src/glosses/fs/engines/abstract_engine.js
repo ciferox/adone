@@ -135,7 +135,7 @@ const toUnixTimestamp = (time) => {
         // convert to 123.456 UNIX timestamp
         return time.getTime() / 1000;
     }
-    throw new error.InvalidArgument(`cannot convert the given argument to a number: ${time}`);
+    throw new error.InvalidArgumentException(`cannot convert the given argument to a number: ${time}`);
 };
 
 const tryReadSync = (engine, fd, isUserFd, buffer, pos, len) => {
@@ -1129,7 +1129,7 @@ export class AbstractEngine {
 
         // implement sync stream ?
 
-        throw new error.NotSupported();
+        throw new error.NotSupportedException();
     }
 
     _copyFileSync() {
@@ -1185,7 +1185,7 @@ export class AbstractEngine {
             });
         }
         // TODO: copy from one location to another and then delete the source?
-        throw new error.NotSupported("for now cross engine renamings are not supported");
+        throw new error.NotSupportedException("for now cross engine renamings are not supported");
     }
 
     async _rename() {
@@ -1252,7 +1252,7 @@ export class AbstractEngine {
             }
         }
         // TODO: copy from one location to another and then delete the source?
-        throw new error.NotSupported("for now cross engine renamings are not supported");
+        throw new error.NotSupportedException("for now cross engine renamings are not supported");
     }
 
     _renameSync() {
@@ -1326,7 +1326,7 @@ export class AbstractEngine {
                 return Promise.reject(err);
             });
         }
-        throw new error.NotSupported("Cross engine hark links are not supported");
+        throw new error.NotSupportedException("Cross engine hark links are not supported");
     }
 
     _link() {
@@ -1392,7 +1392,7 @@ export class AbstractEngine {
                 throw err;
             }
         }
-        throw new error.NotSupported("Cross engine hark links are not supported");
+        throw new error.NotSupportedException("Cross engine hark links are not supported");
     }
 
     _linkSync() {

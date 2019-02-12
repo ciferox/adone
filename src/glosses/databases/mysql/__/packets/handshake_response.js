@@ -93,10 +93,10 @@ export default class HandshakeResponse {
 
     toPacket() {
         if (!is.string(this.user)) {
-            throw new error.IllegalState('"user" connection config prperty must be a string');
+            throw new error.IllegalStateException('"user" connection config prperty must be a string');
         }
         if (!is.string(this.database)) {
-            throw new error.IllegalState('"database" connection config prperty must be a string');
+            throw new error.IllegalStateException('"database" connection config prperty must be a string');
         }
         // dry run: calculate resulting packet length
         const p = this.serializeResponse(packet.Packet.mockBuffer());

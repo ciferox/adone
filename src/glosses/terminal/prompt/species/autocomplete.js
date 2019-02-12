@@ -213,7 +213,7 @@ export default class AutocompletePrompt extends terminal.BasePrompt {
             }
 
             if (!is.array(choices)) {
-                throw new error.IllegalState("Source should return an array");
+                throw new error.IllegalStateException("Source should return an array");
             }
 
             choices = new terminal.Choices(this.term, choices.filter((choice) => {

@@ -23,7 +23,7 @@ export default function generatePKCS12Key(utf8password, salt, id, iter, n, md = 
     const hMeta = adone.crypto.hash.meta(md);
 
     if (is.null(hMeta)) {
-        throw new error.NotSupported(`"${md}" hash algorithm is not supported`);
+        throw new error.NotSupportedException(`"${md}" hash algorithm is not supported`);
     }
 
     const createHash = () => std.crypto.createHash(md);

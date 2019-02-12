@@ -115,7 +115,7 @@ class MultiaddrSet {
 export default class PeerInfo {
     constructor(peerId) {
         if (!peerId) {
-            throw new adone.error.InvalidArgument("Missing peerId. Use Peer.create() to create one");
+            throw new adone.error.InvalidArgumentException("Missing peerId. Use Peer.create() to create one");
         }
 
         this.id = peerId;
@@ -155,7 +155,7 @@ export default class PeerInfo {
         } else if (is.plainObject(val)) {
             return new PeerInfo(Identity.createFromJSON(val));
         }
-        throw new adone.error.NotValid(`Invalid type of input for PeerInfo: ${adone.meta.typeOf(val)}`);
+        throw new adone.error.NotValidException(`Invalid type of input for PeerInfo: ${adone.meta.typeOf(val)}`);
     }
 }
 adone.tag.add(PeerInfo, "P2P_PEER_INFO");

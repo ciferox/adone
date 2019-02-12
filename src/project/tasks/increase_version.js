@@ -14,7 +14,7 @@ export default class IncverTask extends task.Task {
         const prevVersion = config.raw.version;
         const cwd = this.manager.cwd;
         if (!VERSION_PARTS.includes(part)) {
-            throw new adone.error.NotValid(`Not valid version part: ${part}`);
+            throw new adone.error.NotValidException(`Not valid version part: ${part}`);
         }
 
         if (!is.string(config.raw.version)) {
@@ -24,7 +24,7 @@ export default class IncverTask extends task.Task {
         const version = config.raw.version;
 
         if (!adone.semver.valid(version, loose)) {
-            throw new adone.error.NotValid(`Version is not valid: ${version}`);
+            throw new adone.error.NotValidException(`Version is not valid: ${version}`);
         }
 
         config.raw.version = adone.semver.inc(adone.semver.clean(version, loose), part, loose, preid);

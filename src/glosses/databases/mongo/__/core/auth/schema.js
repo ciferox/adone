@@ -7,7 +7,7 @@ export default class Schema {
     }
 
     auth(/* server, connections, db, username, password, callback */) {
-        throw new error.NotImplemented();
+        throw new error.NotImplementedException();
     }
 
     logout(dbName) {

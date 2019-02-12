@@ -5,11 +5,11 @@ export default function plugin() {
         let replacePairs = [];
         if (is.array(search)) {
             if (!is.array(replacement)) {
-                throw new error.InvalidArgument("If 'search' is an array, 'replacement' must be array too");
+                throw new error.InvalidArgumentException("If 'search' is an array, 'replacement' must be array too");
             }
 
             if (search.length !== replacement.length) {
-                throw new error.InvalidArgument("Arrays length should be equal");
+                throw new error.InvalidArgumentException("Arrays length should be equal");
             }
 
             for (let i = 0; i < search.length; ++i) {
@@ -34,7 +34,7 @@ export default function plugin() {
             }
 
             if (file.isStream()) {
-                throw new error.NotSupported("replace: streams are not supported");
+                throw new error.NotSupportedException("replace: streams are not supported");
                 // file.contents = file.contents.pipe(rs(search, replacement));
                 // return this.push(file);
             }

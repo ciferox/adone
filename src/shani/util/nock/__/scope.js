@@ -134,7 +134,7 @@ export default class Scope extends adone.std.events.EventEmitter {
 
     done() {
         if (!this.isDone()) {
-            throw new error.IllegalState(`Mocks not yet satisfied:\n${this.pendingMocks().join("\n")}`);
+            throw new error.IllegalStateException(`Mocks not yet satisfied:\n${this.pendingMocks().join("\n")}`);
         }
     }
 

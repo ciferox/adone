@@ -167,20 +167,20 @@ export class Client extends event.Emitter {
         iv = null
     } = {}) {
         if (!(is.string(password) || is.buffer(password)) || password.length === 0) {
-            throw new error.InvalidArgument("Password must be a non-empty string/buffer");
+            throw new error.InvalidArgumentException("Password must be a non-empty string/buffer");
         }
         if (!shadowsocks.c.ciphers[cipher]) {
-            throw new error.InvalidArgument("Unknown cipher");
+            throw new error.InvalidArgumentException("Unknown cipher");
         }
         if (!is.null(iv) && (!(is.string(iv) || is.buffer(iv)) || iv.lentgh === 0)) {
-            throw new error.InvalidArgument("IV must be a non-empty string/buffer");
+            throw new error.InvalidArgumentException("IV must be a non-empty string/buffer");
         }
         super();
         this._cipher = cipher;
         ({ key: this._keyLength, iv: this._ivLength } = shadowsocks.c.ciphers[cipher]);
         this._cipherKey = adone.crypto.EVPBytesToKey(password, this._keyLength, this._ivLength).key;
         if (iv && iv.length !== this.ivLength) {
-            throw new error.InvalidArgument(`Invalid iv length (${iv.length} != ${this.ivLength})`);
+            throw new error.InvalidArgumentException(`Invalid iv length (${iv.length} != ${this.ivLength})`);
         }
         this._iv = iv;
         this._proxyHost = proxyHost;

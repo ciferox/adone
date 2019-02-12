@@ -18,7 +18,7 @@ export default class RealmManager extends task.Manager {
         super();
 
         if (!is.string(cwd)) {
-            throw new adone.error.NotValid(`Invalid type of cwd: ${adone.meta.typeOf(cwd)}`);
+            throw new adone.error.NotValidException(`Invalid type of cwd: ${adone.meta.typeOf(cwd)}`);
         }
 
         const ROOT_PATH = cwd;
@@ -89,7 +89,7 @@ export default class RealmManager extends task.Manager {
         const HandlerClass = this.typeHandler[typeName];
 
         if (!is.class(HandlerClass)) {
-            throw new adone.error.NotSupported(`Unsupported type: ${typeName}`);
+            throw new adone.error.NotSupportedException(`Unsupported type: ${typeName}`);
         }
 
         return new HandlerClass(this);
@@ -131,7 +131,7 @@ export default class RealmManager extends task.Manager {
 
     async install(options) {
         if (!is.plainObject(options) || !is.string(options.name)) {
-            throw new adone.error.InvalidArgument("Install options is not valid");
+            throw new adone.error.InvalidArgumentException("Install options is not valid");
         }
         return this.runGraceful("install", options);
     }

@@ -106,7 +106,7 @@ export default class Node {
      */
     push(node) {
         if (!Node.isNode(node)) {
-            throw new error.InvalidArgument("expected node to be an instance of Node");
+            throw new error.InvalidArgumentException("expected node to be an instance of Node");
         }
 
         Object.defineProperty(node, "parent", {
@@ -129,7 +129,7 @@ export default class Node {
      */
     unshift(node) {
         if (!Node.isNode(node)) {
-            throw new error.InvalidArgument("expected node to be an instance of Node");
+            throw new error.InvalidArgumentException("expected node to be an instance of Node");
         }
 
         Object.defineProperty(node, "parent", {
@@ -169,7 +169,7 @@ export default class Node {
      */
     remove(node) {
         if (!Node.isNode(node)) {
-            throw new error.InvalidArgument("expected node to be an instance of Node");
+            throw new error.InvalidArgumentException("expected node to be an instance of Node");
         }
 
         this.nodes = this.nodes || [];

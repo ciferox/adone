@@ -43,15 +43,15 @@ export default class NotifySend extends event.Emitter {
         }
 
         if (!options.message) {
-            throw new error.InvalidArgument("Message is required");
+            throw new error.InvalidArgumentException("Message is required");
         }
 
         if (os.type() !== "Linux" && !os.type().match(/BSD$/)) {
-            throw new error.NotSupported("Only supported on Linux and *BSD systems");
+            throw new error.NotSupportedException("Only supported on Linux and *BSD systems");
         }
 
         if (hasNotifier === false) {
-            throw new error.NotSupported("notify-send must be installed on the system");
+            throw new error.NotSupportedException("notify-send must be installed on the system");
         }
 
         if (hasNotifier || Boolean(this.options.suppressOsdCheck)) {

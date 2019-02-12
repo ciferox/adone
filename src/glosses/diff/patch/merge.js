@@ -11,7 +11,7 @@ const loadPatch = (param, base = adone.null) => {
         }
 
         if (base === adone.null) {
-            throw new error.InvalidArgument("Must provide a base reference or pass in a patch");
+            throw new error.InvalidArgumentException("Must provide a base reference or pass in a patch");
         }
         return structuredPatch(undefined, undefined, base, param);
     }

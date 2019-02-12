@@ -39,7 +39,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
      */
     addTask(name, task, options) {
         if (this[TASKS_SYMBOL].has(name)) {
-            throw new error.Exists(`Task '${name}' already exists`);
+            throw new error.ExistsException(`Task '${name}' already exists`);
         }
         return this.setTask(name, task, options);
     }
@@ -180,7 +180,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
             } else {
                 const exists = observers.findIndex((info) => info.observer === observer) >= 0;
                 if (exists) {
-                    throw new error.Exists("Observer already exists");
+                    throw new error.ExistsException("Observer already exists");
                 }
 
                 observers.push({
@@ -283,7 +283,7 @@ export default class TaskManager extends adone.event.AsyncEmitter {
 
     async runInContext(context, name, ...args) {
         if (!is.null(context)/* && !is.taskContext(context)*/) {
-            throw new adone.error.InvalidArgument("Context should be `null` or instance of `adone.task.Context`");
+            throw new adone.error.InvalidArgumentException("Context should be `null` or instance of `adone.task.Context`");
         }
 
         const taskInfo = this._getTaskInfo(name);
@@ -453,17 +453,17 @@ export default class TaskManager extends adone.event.AsyncEmitter {
             const taskInstance = new task();
 
             if (!is.task(taskInstance)) {
-                throw new error.NotValid("The task class should be inherited from 'adone.task.Task' class");
+                throw new error.NotValidException("The task class should be inherited from 'adone.task.Task' class");
             }
         } else if (!is.function(task)) {
-            throw new error.NotValid("Task should be a class or a function");
+            throw new error.NotValidException("Task should be a class or a function");
         }
     }
 
     _getTaskInfo(name) {
         const taskInfo = this[TASKS_SYMBOL].get(name);
         if (is.undefined(taskInfo) || taskInfo.zombi === true) {
-            throw new error.NotExists(`Task '${name}' not exists`);
+            throw new error.NotExistsException(`Task '${name}' not exists`);
         }
 
         return taskInfo;

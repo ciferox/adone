@@ -40,7 +40,7 @@ export const timeout = (callback, timeout) => {
             callback.apply(this, args);
         }
     };
-    timer = setTimeout(run, timeout, new error.Timeout());
+    timer = setTimeout(run, timeout, new error.TimeoutException());
     return run;
 };
 

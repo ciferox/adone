@@ -14,19 +14,19 @@ export default function resolvePath(root, path) {
     }
 
     if (is.nil(root)) {
-        throw new error.InvalidArgument("argument rootPath is required");
+        throw new error.InvalidArgumentException("argument rootPath is required");
     }
 
     if (!is.string(root)) {
-        throw new error.InvalidArgument("argument rootPath must be a string");
+        throw new error.InvalidArgumentException("argument rootPath must be a string");
     }
 
     if (is.nil(path)) {
-        throw new error.InvalidArgument("argument relativePath is required");
+        throw new error.InvalidArgumentException("argument relativePath is required");
     }
 
     if (!is.string(path)) {
-        throw new error.InvalidArgument("argument relativePath must be a string");
+        throw new error.InvalidArgumentException("argument relativePath must be a string");
     }
 
     // containing NULL bytes is malicious

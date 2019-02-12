@@ -2,14 +2,14 @@
 
 export default class FileSystem {
     getFileStores() {
-        throw new adone.error.NotImplemented("getFileStores()");
+        throw new adone.error.NotImplementedException("getFileStores()");
     }
 
     getOpenFileDescriptors() {
-        throw new adone.error.NotImplemented("getOpenFileDescriptors()");
+        throw new adone.error.NotImplementedException("getOpenFileDescriptors()");
     }
 
     getMaxFileDescriptors() {
-        throw new adone.error.NotImplemented("getMaxFileDescriptors()");
+        throw new adone.error.NotImplementedException("getMaxFileDescriptors()");
     }
 }

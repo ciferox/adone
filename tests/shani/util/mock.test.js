@@ -28,7 +28,7 @@ describe("shani", "util", "mock", () => {
         it("throws without object", () => {
             assert.throws(() => {
                 mock.create();
-            }, error.InvalidArgument);
+            }, error.InvalidArgumentException);
         });
     });
 
@@ -42,7 +42,7 @@ describe("shani", "util", "mock", () => {
 
             assert.throws(() => {
                 m.expects();
-            }, error.InvalidArgument);
+            }, error.InvalidArgumentException);
         });
 
         it("returns expectation", function () {
@@ -225,7 +225,7 @@ describe("shani", "util", "mock", () => {
 
                 assert.throws(() => {
                     expectation.exactly();
-                }, error.InvalidArgument);
+                }, error.InvalidArgumentException);
             });
 
             it("throws without number", function () {
@@ -233,7 +233,7 @@ describe("shani", "util", "mock", () => {
 
                 assert.throws(() => {
                     expectation.exactly("12");
-                }, error.InvalidArgument);
+                }, error.InvalidArgumentException);
             });
 
             it("throws with Symbol", function () {
@@ -253,7 +253,7 @@ describe("shani", "util", "mock", () => {
 
                 assert.throws(() => {
                     expectation.atLeast();
-                }, error.InvalidArgument);
+                }, error.InvalidArgumentException);
             });
 
             it("throws without number", function () {
@@ -261,7 +261,7 @@ describe("shani", "util", "mock", () => {
 
                 assert.throws(() => {
                     expectation.atLeast({});
-                }, error.InvalidArgument);
+                }, error.InvalidArgumentException);
             });
 
             it("throws with Symbol", function () {
@@ -348,7 +348,7 @@ describe("shani", "util", "mock", () => {
 
                 assert.throws(() => {
                     expectation.atMost();
-                }, error.InvalidArgument);
+                }, error.InvalidArgumentException);
             });
 
             it("throws without number", function () {
@@ -356,7 +356,7 @@ describe("shani", "util", "mock", () => {
 
                 assert.throws(() => {
                     expectation.atMost({});
-                }, error.InvalidArgument);
+                }, error.InvalidArgumentException);
             });
 
             it("throws with Symbol", function () {

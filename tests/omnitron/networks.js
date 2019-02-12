@@ -158,7 +158,7 @@ export default ({
     //         });
 
     //         const err = await assert.throws(async () => iOmnitron.deleteGate("gate1"));
-    //         assert.instanceOf(err, adone.error.NotAllowed);
+    //         assert.instanceOf(err, adone.error.NotAllowedException);
     //     });
 
     //     it("up/down gate", async (done) => {
@@ -199,7 +199,7 @@ export default ({
     //         await iOmnitron.upGate("gate1");
 
     //         const err = await assert.throws(async () => iOmnitron.upGate("gate1"));
-    //         assert.instanceOf(err, adone.error.IllegalState);
+    //         assert.instanceOf(err, adone.error.IllegalStateException);
     //     });
 
     //     it("down inactive gate should have thrown", async () => {
@@ -210,7 +210,7 @@ export default ({
     //         await addGateAndCheck(gate, false);
 
     //         const err = await assert.throws(async () => iOmnitron.downGate("gate1"));
-    //         assert.instanceOf(err, adone.error.IllegalState);
+    //         assert.instanceOf(err, adone.error.IllegalStateException);
     //     });
 
     //     it("should not bind disabled gates on startup", async () => {

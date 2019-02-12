@@ -17,7 +17,7 @@ export class Task {
     }
 
     set observer(val) {
-        throw new error.NotAllowed("Task's 'observer' is immutable");
+        throw new error.NotAllowedException("Task's 'observer' is immutable");
     }
 
     get manager() {
@@ -25,7 +25,7 @@ export class Task {
     }
 
     set manager(val) {
-        throw new error.NotAllowed("Task's 'manager' is immutable");
+        throw new error.NotAllowedException("Task's 'manager' is immutable");
     }
 
     /**
@@ -34,7 +34,7 @@ export class Task {
      * @return {any}
      */
     run() {
-        throw new error.NotImplemented("Method run() is not implemented");
+        throw new error.NotImplementedException("Method run() is not implemented");
     }
 
     /**
@@ -88,7 +88,7 @@ export class TaskObserver {
     }
 
     set taskName(val) {
-        throw new error.NotAllowed("Property 'taskName' is immutable");
+        throw new error.NotAllowedException("Property 'taskName' is immutable");
     }
 
     /**
@@ -96,7 +96,7 @@ export class TaskObserver {
      */
     async cancel() {
         if (!this.task.isCancelable()) {
-            throw new error.NotAllowed(`Task '${this[TASK_NAME_SYMBOL]}' is not cancelable`);
+            throw new error.NotAllowedException(`Task '${this[TASK_NAME_SYMBOL]}' is not cancelable`);
         }
         if (this.state === STATE.RUNNING) {
             this.state = STATE.CANCELLING;

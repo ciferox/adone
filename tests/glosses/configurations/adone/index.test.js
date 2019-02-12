@@ -100,14 +100,14 @@ describe("configuration", "Adone", () => {
                 cwd: fixture("proj")
             });
 
-            await assert.throws(async () => conf.getEntries(), adone.error.NotValid);
+            await assert.throws(async () => conf.getEntries(), adone.error.NotValidException);
         });
 
         it("multiple root namespaces is not allowed", async () => {
             const conf = await configuration.Adone.load({
                 cwd: fixture("multiple_root_namespaces")
             });
-            await assert.throws(async () => conf.getNamespace(), adone.error.NotAllowed);
+            await assert.throws(async () => conf.getNamespace(), adone.error.NotAllowedException);
         });
     });
 

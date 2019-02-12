@@ -92,7 +92,7 @@ describe("database", "redis", "unit", "Redis", () => {
         it("should throw when arguments is invalid", () => {
             expect(() => {
                 new Redis(false);
-            }).to.throw(adone.error.InvalidArgument);
+            }).to.throw(adone.error.InvalidArgumentException);
         });
     });
 

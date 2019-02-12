@@ -88,7 +88,7 @@ class Request extends event.Emitter {
 
     expect(fn) {
         if (!is.function(fn)) {
-            throw new error.InvalidArgument("must be a function");
+            throw new error.InvalidArgumentException("must be a function");
         }
         this.expects.push(fn);
         return this;

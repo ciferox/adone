@@ -336,7 +336,7 @@ export default class MultipartParser {
             callback(this, "partEnd");
             callback(this, "end");
         } else if (this.state !== S.END) {
-            return new error.IllegalState(`MultipartParser.end(): stream ended unexpectedly: ${this.explain()}`);
+            return new error.IllegalStateException(`MultipartParser.end(): stream ended unexpectedly: ${this.explain()}`);
         }
     }
 

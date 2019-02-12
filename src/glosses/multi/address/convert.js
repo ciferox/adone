@@ -48,7 +48,7 @@ const buf2mh = (buf) => {
 
 const ip2buf = (ipaddr) => {
     if (!ipaddr.isValid()) {
-        throw new adone.error.NotValid("Invalid ip address");
+        throw new adone.error.NotValidException("Invalid ip address");
     }
     return ip.toBuffer(ipaddr.address);
 };

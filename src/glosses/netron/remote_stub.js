@@ -39,9 +39,9 @@ export default class RemoteStub {
                 this._processArgs(peer, data, false);
                 return this.iInstance[prop].set(data);
             }
-            throw new error.InvalidAccess(`${prop} is not writable`);
+            throw new error.InvalidAccessException(`${prop} is not writable`);
         }
-        throw new error.NotExists(`${prop} not exists`);
+        throw new error.NotExistsException(`${prop} not exists`);
     }
 
     get(prop, defaultData, peer) {
@@ -55,7 +55,7 @@ export default class RemoteStub {
             this._processArgs(peer, defaultData, false);
             return this.iInstance[prop].get(defaultData);
         }
-        throw new error.NotExists(`${prop} not exists`);
+        throw new error.NotExistsException(`${prop} not exists`);
     }
 
     _processArgs(peer, args, isMethod) {

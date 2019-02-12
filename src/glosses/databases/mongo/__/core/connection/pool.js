@@ -783,7 +783,7 @@ export default class Pool extends event.Emitter {
                 && (!is.function(options.bson.serialize) || !is.function(options.bson.deserialize))
             )
         ) {
-            throw new error.InvalidArgument("must pass in valid bson parser");
+            throw new error.InvalidArgumentException("must pass in valid bson parser");
         }
 
         // Pool state

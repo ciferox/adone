@@ -18,7 +18,7 @@ export default class Service extends adone.app.Subsystem {
     }
 
     set peer(val) {
-        throw new adone.error.NotAllowed("Property 'peer' is immutable");
+        throw new adone.error.NotAllowedException("Property 'peer' is immutable");
     }
 
     async getConfiguration() {
@@ -56,7 +56,7 @@ export default class Service extends adone.app.Subsystem {
      * Initializes service.
      */
     initializeService() {
-        throw new adone.error.NotImplemented("Method initialize() is not implemented");
+        throw new adone.error.NotImplementedException("Method initialize() is not implemented");
     }
 
     async uninitialize() {

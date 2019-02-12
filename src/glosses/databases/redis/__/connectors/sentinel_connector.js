@@ -15,10 +15,10 @@ export default class SentinelConnector extends __.Connector {
     constructor(options) {
         super(options);
         if (this.options.sentinels.length === 0) {
-            throw new error.InvalidArgument("Requires at least one sentinel to connect to.");
+            throw new error.InvalidArgumentException("Requires at least one sentinel to connect to.");
         }
         if (!this.options.name) {
-            throw new error.InvalidArgument("Requires the name of master.");
+            throw new error.InvalidArgumentException("Requires the name of master.");
         }
     }
 

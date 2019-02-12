@@ -9,11 +9,11 @@ const {
 
 const parseComplexNumber = (str) => {
     if (!str) {
-        throw new error.InvalidArgument("Number cannot be empty");
+        throw new error.InvalidArgumentException("Number cannot be empty");
     }
     const res = str.match(/^(-?\d+)((?:\+\d+|-\d+))i$/);
     if (!res) {
-        throw new error.InvalidArgument("Numbers must have format a+bi, where a and b are real numbers");
+        throw new error.InvalidArgumentException("Numbers must have format a+bi, where a and b are real numbers");
     }
     const [, a, b] = res;
     return [Number(a), Number(b)];

@@ -158,7 +158,7 @@ export default class LinkedList {
             if (this.autoresize) {
                 this.resize(this.maxLength * 2);
             } else {
-                throw new error.IllegalState("Full");
+                throw new error.IllegalStateException("Full");
             }
         }
         this.tail = this.tail.next;
@@ -212,7 +212,7 @@ export default class LinkedList {
             if (this.autoresize) {
                 this.resize(this.maxLength * 2);
             } else {
-                throw new error.IllegalState("Full");
+                throw new error.IllegalStateException("Full");
             }
         }
         this.head = this.head.prev;
@@ -324,7 +324,7 @@ export default class LinkedList {
      */
     get front() {
         if (this.length === 0) {
-            throw new error.IllegalState("Empty");
+            throw new error.IllegalStateException("Empty");
         }
         return this.head.value;
     }
@@ -336,7 +336,7 @@ export default class LinkedList {
      */
     get back() {
         if (this.length === 0) {
-            throw new error.IllegalState("Empty");
+            throw new error.IllegalStateException("Empty");
         }
         return this.tail.value;
     }

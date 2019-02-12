@@ -52,7 +52,7 @@ describe("database", "mongo", function () {
     const initConnection = () => {
         beforeEach("open connection", async () => {
             if (!this.DB) {
-                throw new error.IllegalState("There is no DB instance");
+                throw new error.IllegalStateException("There is no DB instance");
             }
             this.db = await this.DB.open();
         });

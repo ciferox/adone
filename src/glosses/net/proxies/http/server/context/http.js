@@ -140,7 +140,7 @@ export class LocalRequest {
         if (is.buffer(value) || is.readableStream(value) || is.string(value)) {
             this._body = value;
         }
-        throw new error.InvalidArgument("request body must be a buffer, string or readable stream");
+        throw new error.InvalidArgumentException("request body must be a buffer, string or readable stream");
     }
 
     get httpVersion() {

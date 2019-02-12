@@ -22,14 +22,14 @@ export default class CliConfiguration extends adone.configuration.Generic {
 
     getCommand(name) {
         if (!this.hasCommand(name)) {
-            throw new adone.error.Unknown(`Unknown command: ${name}`);
+            throw new adone.error.UnknownException(`Unknown command: ${name}`);
         }
         return this.raw.commands.find((x) => x.name === name);
     }
 
     updateCommand(name, props) {
         if (!this.hasCommand(name)) {
-            throw new adone.error.Unknown(`Unknown command: ${name}`);
+            throw new adone.error.UnknownException(`Unknown command: ${name}`);
         }
         const cmdInfo = this.raw.commands.find((x) => x.name === name);
 
@@ -63,7 +63,7 @@ export default class CliConfiguration extends adone.configuration.Generic {
 
     getLink(name) {
         if (!this.hasLink(name)) {
-            throw new adone.error.Unknown(`Unknown link name: ${name}`);
+            throw new adone.error.UnknownException(`Unknown link name: ${name}`);
         }
         return this.raw.links.find((x) => x.name === name);
     }
@@ -71,7 +71,7 @@ export default class CliConfiguration extends adone.configuration.Generic {
     addLink(linkInfo, updateIfExists = false) {
         const isExists = this.hasLink(linkInfo.name);
         if (isExists && !updateIfExists) {
-            throw new adone.error.Exists(`Link '${linkInfo.name}' already exists`);
+            throw new adone.error.ExistsException(`Link '${linkInfo.name}' already exists`);
         }
 
         if (!is.array(this.raw.links)) {

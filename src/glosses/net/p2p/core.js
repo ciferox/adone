@@ -54,7 +54,7 @@ export default class Core extends event.Emitter {
         super();
 
         if (!is.p2pPeerInfo(peer)) {
-            throw new adone.error.NotValid("PeerInfo instance is not valid");
+            throw new adone.error.NotValidException("PeerInfo instance is not valid");
         }
 
         if (!transport) {

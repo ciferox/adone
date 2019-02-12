@@ -10,11 +10,11 @@ const defaultGenerator = () => `${process.pid}${adone.text.random(12)}`;
 
 export default async ({ tries = 3, template, tmpRootPath = osTmpDir, subDirs, prefix = "tmp-", nameGenerator = defaultGenerator, ext = "" } = {}) => {
     if (is.nan(tries) || tries < 0) {
-        throw new error.NotValid("Invalid tries");
+        throw new error.NotValidException("Invalid tries");
     }
 
     if (is.string(template) && !template.match(TEMPLATE_PATTERN)) {
-        throw new error.NotValid("Invalid template provided");
+        throw new error.NotValidException("Invalid template provided");
     }
 
     for (let i = 0; i < tries; i++) {

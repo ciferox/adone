@@ -21,7 +21,7 @@ export default class TransportManager {
 
     add(key, transport) {
         if (this.transports[key]) {
-            throw new adone.error.Exists(`Transport '${key}' is already exist`);
+            throw new adone.error.ExistsException(`Transport '${key}' is already exist`);
         }
         this.transports[key] = transport;
         this.transports[key].listeners = arrify(transport.listeners);

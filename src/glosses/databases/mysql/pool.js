@@ -38,7 +38,7 @@ export default class Pool extends event.Emitter {
     getConnection(cb) {
         if (this._closed) {
             return process.nextTick(() => {
-                return cb(new error.IllegalState("Pool is closed."));
+                return cb(new error.IllegalStateException("Pool is closed."));
             });
         }
 
@@ -62,7 +62,7 @@ export default class Pool extends event.Emitter {
 
             return connection.connect((err) => {
                 if (this._closed) {
-                    return cb(new error.IllegalState("Pool is closed."));
+                    return cb(new error.IllegalStateException("Pool is closed."));
                 }
                 if (err) {
                     return cb(err);

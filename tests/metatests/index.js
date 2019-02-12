@@ -51,7 +51,7 @@ describe("Meta tests", () => {
             "IllegalState",
             "NotValid",
             "Unknown",
-            "NotExists",
+            "NotExistsException",
             "Exists",
             "Empty",
             "InvalidAccess",

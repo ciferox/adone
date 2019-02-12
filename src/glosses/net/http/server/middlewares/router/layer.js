@@ -23,7 +23,7 @@ export default class Layer {
 
         for (const fn of this.stack) {
             if (!is.function(fn)) {
-                throw new error.InvalidArgument(`${methods.toString()} \`${this.opts.name || path}\`: \`middleware\` must be a function, not \`${typeof fn}\``);
+                throw new error.InvalidArgumentException(`${methods.toString()} \`${this.opts.name || path}\`: \`middleware\` must be a function, not \`${typeof fn}\``);
             }
         }
 

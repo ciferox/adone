@@ -72,9 +72,9 @@ export default class Stub {
                 this.instance[prop] = data;
                 return undefined;
             }
-            throw new error.InvalidAccess(`${prop} is not writable`);
+            throw new error.InvalidAccessException(`${prop} is not writable`);
         }
-        throw new error.NotExists(`Property '${prop}' not exists`);
+        throw new error.NotExistsException(`Property '${prop}' not exists`);
     }
 
     get(prop, defaultData, peer) {
@@ -98,7 +98,7 @@ export default class Stub {
             }
             return val;
         }
-        throw new error.NotExists(`Property '${prop}' not exists`);
+        throw new error.NotExistsException(`Property '${prop}' not exists`);
     }
 
     _processResult(peer, result) {
@@ -131,7 +131,7 @@ export default class Stub {
         if (is.netronReference(obj)) {
             const stub = this.netron._getStub(obj.defId);
             if (is.undefined(stub)) {
-                throw new error.Unknown(`Unknown definition id ${obj.defId}`);
+                throw new error.UnknownException(`Unknown definition id ${obj.defId}`);
             }
             return stub.instance;
         } else if (is.netronDefinition(obj)) {

@@ -115,7 +115,7 @@ describe("omnitron", () => {
                     }
                     elapsed += 100;
                     if (elapsed >= timeout) {
-                        return reject(new error.Timeout());
+                        return reject(new error.TimeoutException());
                     }
                     setTimeout(checkStatus, 100);
                 };
@@ -126,7 +126,7 @@ describe("omnitron", () => {
         const checkServiceStatus = async (name, status) => {
             const list = await iOmnitron.enumerate(name);
             if (list.length === 0 || list[0].status !== status) {
-                throw new error.NotValid(`Status: ${list[0].status}`);
+                throw new error.NotValidException(`Status: ${list[0].status}`);
             }
         };
 
@@ -350,7 +350,7 @@ describe("omnitron", () => {
             assert.equal(list[0].status, STATUS.DISABLED);
 
             const err = await assert.throws(async () => iOmnitron.startService("test1"));
-            assert.instanceOf(err, adone.error.IllegalState);
+            assert.instanceOf(err, adone.error.IllegalStateException);
         });
 
         it("enable/disable service", async () => {
@@ -420,7 +420,7 @@ describe("omnitron", () => {
             await startServices(["test1"]);
 
             const err = await assert.throws(async () => iOmnitron.startService("test1"));
-            assert.instanceOf(err, error.IllegalState);
+            assert.instanceOf(err, error.IllegalStateException);
 
             await stopServices(["test1"]);
         });
@@ -481,18 +481,18 @@ describe("omnitron", () => {
                 assert.sameMembers(contexts.map((x) => x.name), ["omnitron"]);
 
                 const err = await assert.throws(async () => iPayload.getInfo());
-                assert.instanceOf(err, adone.error.NotExists);
+                assert.instanceOf(err, adone.error.NotExistsException);
             });
 
             it("should not allow unload core subsystems", async () => {
                 let err = await assert.throws(async () => iOmnitron.unloadSubsystem("netron"));
-                assert.instanceOf(err, adone.error.NotAllowed);
+                assert.instanceOf(err, adone.error.NotAllowedException);
 
                 err = await assert.throws(async () => iOmnitron.unloadSubsystem("database"));
-                assert.instanceOf(err, adone.error.NotAllowed);
+                assert.instanceOf(err, adone.error.NotAllowedException);
 
                 err = await assert.throws(async () => iOmnitron.unloadSubsystem("services"));
-                assert.instanceOf(err, adone.error.NotAllowed);
+                assert.instanceOf(err, adone.error.NotAllowedException);
             });
         });
 
@@ -547,7 +547,7 @@ describe("omnitron", () => {
 
                 await stopServices(["test1"]);
 
-                assert.instanceOf(err, adone.error.NotAllowed);
+                assert.instanceOf(err, adone.error.NotAllowedException);
             });
 
             it("change group of service should relate group of maintainer (single service in old and new group)", async () => {
@@ -564,7 +564,7 @@ describe("omnitron", () => {
                 });
 
                 const err = await assert.throws(async () => iOmnitron.getMaintainer(list[0].group));
-                assert.instanceOf(err, adone.error.Unknown);
+                assert.instanceOf(err, adone.error.UnknownException);
                 await iOmnitron.getMaintainer("some-group");
             });
 
@@ -602,10 +602,10 @@ describe("omnitron", () => {
                 iM2 = await iOmnitron.getMaintainer("group2");
 
                 let err = await assert.throws(async () => iOmnitron.getMaintainer(list[0].group));
-                assert.instanceOf(err, adone.error.Unknown);
+                assert.instanceOf(err, adone.error.UnknownException);
 
                 err = await assert.throws(async () => iOmnitron.getMaintainer(list[1].group));
-                assert.instanceOf(err, adone.error.Unknown);
+                assert.instanceOf(err, adone.error.UnknownException);
             });
 
             it("new log files should be created after change service group", async () => {
@@ -720,7 +720,7 @@ describe("omnitron", () => {
                     process: true
                 });
                 const err = await assert.throws(async () => startServices(["fail"]));
-                assert.instanceOf(err, adone.error.Runtime);
+                assert.instanceOf(err, adone.error.RuntimeException);
 
                 // Waiting for process exit
                 await adone.promise.delay(100);
@@ -839,8 +839,8 @@ describe("omnitron", () => {
             it("delete keys", async () => {
                 await iConfig.delete("hosts");
                 await iConfig.delete("service.stopTimeout");
-                await assert.throws(async () => iConfig.get("hosts"), adone.error.NotExists);
-                await assert.throws(async () => iConfig.get("netron.stopTimeout"), adone.error.NotExists);
+                await assert.throws(async () => iConfig.get("hosts"), adone.error.NotExistsException);
+                await assert.throws(async () => iConfig.get("netron.stopTimeout"), adone.error.NotExistsException);
             });
         });
     });

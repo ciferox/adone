@@ -41,7 +41,7 @@ export class SourceMapConsumer {
     }
 
     _parseMapping(/* aStr, aSourceRoot */) {
-        throw new error.NotImplemented();
+        throw new error.NotImplementedException();
     }
 
     eachMapping(callback, context = null, order = SourceMapConsumer.GENERATED_ORDER) {
@@ -159,7 +159,7 @@ export class BasicSourceMapConsumer extends SourceMapConsumer {
         const file = sourcemap.util.getArg(sourceMap, "file", null);
 
         if (version !== this._version) {
-            throw new error.NotSupported(`Unsupported version: ${version}`);
+            throw new error.NotSupportedException(`Unsupported version: ${version}`);
         }
 
         sources = sources
@@ -287,11 +287,11 @@ export class BasicSourceMapConsumer extends SourceMapConsumer {
                     }
 
                     if (segment.length === 2) {
-                        throw new error.IllegalState("Found a source, but no line and column");
+                        throw new error.IllegalStateException("Found a source, but no line and column");
                     }
 
                     if (segment.length === 3) {
-                        throw new error.IllegalState("Found a source and line, but no column");
+                        throw new error.IllegalStateException("Found a source and line, but no column");
                     }
 
                     cachedSegments.set(_str, segment);
@@ -339,10 +339,10 @@ export class BasicSourceMapConsumer extends SourceMapConsumer {
 
     _findMapping(needle, mappings, lineName, columnName, comparator, bias) {
         if (needle[lineName] <= 0) {
-            throw new error.IllegalState(`Line must be greater than or equal to 1, got ${needle[lineName]}`);
+            throw new error.IllegalStateException(`Line must be greater than or equal to 1, got ${needle[lineName]}`);
         }
         if (needle[columnName] < 0) {
-            throw new error.IllegalState(`Column must be greater than or equal to 0, got ${needle[columnName]}`);
+            throw new error.IllegalStateException(`Column must be greater than or equal to 0, got ${needle[columnName]}`);
         }
 
         return sourcemap.util.search(mappings, needle, comparator, bias);
@@ -461,7 +461,7 @@ export class BasicSourceMapConsumer extends SourceMapConsumer {
         if (nullOnMissing) {
             return null;
         }
-        throw new error.InvalidArgument(`"${source}" is not in the SourceMap.`);
+        throw new error.InvalidArgumentException(`"${source}" is not in the SourceMap.`);
     }
 
     generatedPositionFor(args) {
@@ -523,7 +523,7 @@ export class IndexedSourceMapConsumer extends SourceMapConsumer {
         const sections = sourcemap.util.getArg(sourceMap, "sections");
 
         if (version !== this._version) {
-            throw new error.NotSupported(`Unsupported version: ${version}`);
+            throw new error.NotSupportedException(`Unsupported version: ${version}`);
         }
 
         this._sources = new collection.ArraySet();
@@ -536,7 +536,7 @@ export class IndexedSourceMapConsumer extends SourceMapConsumer {
         this._sections = sections.map((s) => {
             if (s.url) {
                 // The url field will require support for asynchronicity.
-                throw new error.IllegalState("Support for url field in sections not implemented.");
+                throw new error.IllegalStateException("Support for url field in sections not implemented.");
             }
             const offset = sourcemap.util.getArg(s, "offset");
             const offsetLine = sourcemap.util.getArg(offset, "line");
@@ -544,7 +544,7 @@ export class IndexedSourceMapConsumer extends SourceMapConsumer {
 
             if (offsetLine < lastOffset.line ||
                 (offsetLine === lastOffset.line && offsetColumn < lastOffset.column)) {
-                throw new error.IllegalState("Section offsets must be ordered and non-overlapping.");
+                throw new error.IllegalStateException("Section offsets must be ordered and non-overlapping.");
             }
             lastOffset = offset;
 
@@ -622,7 +622,7 @@ export class IndexedSourceMapConsumer extends SourceMapConsumer {
         if (nullOnMissing) {
             return null;
         }
-        throw new error.InvalidArgument(`"${source}" is not in the SourceMap.`);
+        throw new error.InvalidArgumentException(`"${source}" is not in the SourceMap.`);
     }
 
     generatedPositionFor(args) {

@@ -1,5 +1,6 @@
 const {
     is,
+    error: { UnknownException },
     app: {
         Subsystem,
         MainCommandMeta
@@ -110,7 +111,7 @@ export default class Inspection extends Subsystem {
                         ? parts.slice(1).join(".")
                         : parts.slice().join(".");
             } else {
-                throw new adone.error.Unknown(`Unknown key: ${name}`);
+                throw new UnknownException(`Unknown key: ${name}`);
             }
 
             let ns;
@@ -233,7 +234,7 @@ export default class Inspection extends Subsystem {
                 for (const part of parts) {
                     const propDescr = getOwnPropertyDescriptor(obj, part);
                     if (is.undefined(propDescr)) {
-                        throw new adone.error.Unknown(`Unknown object: ${name}`);
+                        throw new UnknownException(`Unknown object: ${name}`);
                     }
                     obj = obj[part];
                 }

@@ -38,17 +38,17 @@ export default class ForkRealmTask extends task.Task {
         });
 
         if (!is.string(cwd)) {
-            throw new error.NotValid(`Invalid type of 'cwd': ${adone.meta.typeOf(cwd)}`);
+            throw new error.NotValidException(`Invalid type of 'cwd': ${adone.meta.typeOf(cwd)}`);
         }
 
         if (!is.string(name)) {
-            throw new error.NotValid(`Invalid type of 'name': ${adone.meta.typeOf(name)}`);
+            throw new error.NotValidException(`Invalid type of 'name': ${adone.meta.typeOf(name)}`);
         }
 
         this.destPath = compress ? cwd : std.path.resolve(cwd, name);
 
         if (await fs.exists(this.destPath) && !compress) {
-            throw new error.Exists(`Path '${this.destPath}' already exists`);
+            throw new error.ExistsException(`Path '${this.destPath}' already exists`);
         }
 
         this.manager.notify({
@@ -223,7 +223,7 @@ export default class ForkRealmTask extends task.Task {
             }
 
             if (!COMPRESS_FORMATS.includes(format)) {
-                throw new error.NotSupported(`Unsupported compression format: ${format}`);
+                throw new error.NotSupportedException(`Unsupported compression format: ${format}`);
             }
 
             this.manager.notify(this, "progress", {
@@ -257,7 +257,7 @@ export default class ForkRealmTask extends task.Task {
             status: false
         });
 
-        if (!(err instanceof error.Exists)) {
+        if (!(err instanceof error.ExistsException)) {
             is.string(this.destPath) && await fs.rm(this.destPath);
         }
     }

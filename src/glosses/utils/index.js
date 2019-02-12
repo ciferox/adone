@@ -323,7 +323,7 @@ export const zip = function* (...iterables) {
     }
     const iterators = iterables.map((obj) => {
         if (!is.iterable(obj)) {
-            throw new error.InvalidArgument("Only iterables are supported");
+            throw new error.InvalidArgumentException("Only iterables are supported");
         }
         return obj[Symbol.iterator]();
     });
@@ -705,7 +705,7 @@ export const once = (fn, { silent = true } = {}) => {
     return function onceWrapper(...args) {
         if (called) {
             if (!silent) {
-                throw new error.IllegalState("Callback has been already called");
+                throw new error.IllegalStateException("Callback has been already called");
             }
             return;
         }
@@ -716,7 +716,7 @@ export const once = (fn, { silent = true } = {}) => {
 
 export const asyncWaterfall = (tasks, callback = noop) => {
     if (!is.array(tasks)) {
-        return callback(new error.InvalidArgument("First argument to waterfall must be an array of functions"));
+        return callback(new error.InvalidArgumentException("First argument to waterfall must be an array of functions"));
     }
     if (!tasks.length) {
         return callback();

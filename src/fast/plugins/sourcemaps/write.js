@@ -20,7 +20,7 @@ export default function plugin({ __ }) {
             }
 
             if (file.isStream()) {
-                throw new error.NotSupported("Streaming is not supported");
+                throw new error.NotSupportedException("Streaming is not supported");
             }
 
             // fix paths if Windows style paths

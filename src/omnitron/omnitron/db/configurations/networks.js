@@ -166,7 +166,7 @@ export default class Networks extends vault.Valuable {
      */
     async getNetworkConfiguration(name) {
         if (!this.has(name)) {
-            throw new adone.error.NotExists(`Network '${name}' not exists`);
+            throw new adone.error.NotExistsException(`Network '${name}' not exists`);
         }
         let val = this[_CONFIGURATIONS].get(name);
         if (is.undefined(val)) {
@@ -234,7 +234,7 @@ export default class Networks extends vault.Valuable {
     //             break;
     //         }
     //         default:
-    //             throw new adone.error.NotExists(`Key not exist: ${key}`);
+    //             throw new adone.error.NotExistsException(`Key not exist: ${key}`);
     //     }
     //     return super.set(key, val);
     // }
@@ -245,7 +245,7 @@ export default class Networks extends vault.Valuable {
 
     //     const object = await super.get(path.shift());
     //     if (is.undefined(object)) {
-    //         throw new adone.error.NotExists(`Key not exist: ${key}`);
+    //         throw new adone.error.NotExistsException(`Key not exist: ${key}`);
     //     }
 
     //     if (path.length === 0) {
@@ -254,7 +254,7 @@ export default class Networks extends vault.Valuable {
 
     //     const result = adone.lodash.get(object, path);
     //     if (is.undefined(result)) {
-    //         throw new adone.error.NotExists(`Key not exist: ${key}`);
+    //         throw new adone.error.NotExistsException(`Key not exist: ${key}`);
     //     }
     //     return result;
     // }
@@ -266,7 +266,7 @@ export default class Networks extends vault.Valuable {
 
     //     if (path.length === 0) {
     //         if (["service", "netron"].includes(key)) {
-    //             throw new adone.error.NotAllowed("Operation not allowed");
+    //             throw new adone.error.NotAllowedException("Operation not allowed");
     //         }
     //         return super.delete(key);
     //     }
@@ -297,7 +297,7 @@ export default class Networks extends vault.Valuable {
     // getGate(name) {
     //     const index = this.networks.findIndex((g) => g.name === name);
     //     if (index < 0) {
-    //         throw new adone.error.NotExists(`Gate with name '${name}' is not exist`);
+    //         throw new adone.error.NotExistsException(`Gate with name '${name}' is not exist`);
     //     }
 
     //     return this.networks[index];
@@ -315,7 +315,7 @@ export default class Networks extends vault.Valuable {
     //     }
 
     //     if (this.hasGate(gate.name)) {
-    //         throw new adone.error.Exists(`Gate with name '${gate.name}' is already exist`);
+    //         throw new adone.error.ExistsException(`Gate with name '${gate.name}' is already exist`);
     //     }
 
     //     this.networks.push(gate);
@@ -327,7 +327,7 @@ export default class Networks extends vault.Valuable {
     // deleteGate(name) {
     //     const index = this.networks.findIndex((g) => g.name === name);
     //     if (index < 0) {
-    //         throw new adone.error.NotExists(`Gate with name '${name}' is not exist`);
+    //         throw new adone.error.NotExistsException(`Gate with name '${name}' is not exist`);
     //     }
 
     //     this.networks.splice(index, 1);

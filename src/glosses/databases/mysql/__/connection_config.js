@@ -142,7 +142,7 @@ export default class ConnectionConfig {
         const num = c.charset[charset.toUpperCase()];
 
         if (is.undefined(num)) {
-            throw new error.Unknown(`Unknown charset '${charset}'`);
+            throw new error.UnknownException(`Unknown charset '${charset}'`);
         }
 
         return num;
@@ -152,7 +152,7 @@ export default class ConnectionConfig {
         const ssl = c.sslProfile[name];
 
         if (is.undefined(ssl)) {
-            throw new error.Unknown(`Unknown SSL profile '${name}'`);
+            throw new error.UnknownException(`Unknown SSL profile '${name}'`);
         }
 
         return ssl;

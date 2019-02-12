@@ -1118,7 +1118,7 @@ export class Compiler {
             const name = block.name.value;
 
             if (blockNames.includes(name)) {
-                throw new error.IllegalState(`Block "${name}" defined more than once.`);
+                throw new error.IllegalStateException(`Block "${name}" defined more than once.`);
             }
             blockNames.push(name);
 

@@ -7,7 +7,7 @@ export default function compose(middlewares) {
         const lastIndex = -1; // to track the index of the last called middleware
         const execute = (idx, args) => {
             if (idx <= lastIndex) {
-                return Promise.reject(new error.IllegalState("next() called multiple times"));
+                return Promise.reject(new error.IllegalStateException("next() called multiple times"));
             }
             const middleware = middlewares[idx] || next;
             if (!middleware) { // there is no other middleware

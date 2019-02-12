@@ -37,7 +37,7 @@ export const parse = (string) => {
 
 const getAuthorization = (req) => {
     if (!req.headers || !is.object(req.headers)) {
-        throw new error.InvalidArgument("required to have headers property");
+        throw new error.InvalidArgumentException("required to have headers property");
     }
 
     return req.headers.authorization;
@@ -45,10 +45,10 @@ const getAuthorization = (req) => {
 
 export const from = (req) => {
     if (!req) {
-        throw new error.InvalidArgument("req is required");
+        throw new error.InvalidArgumentException("req is required");
     }
     if (!is.object(req)) {
-        throw new error.InvalidArgument("req must be an object");
+        throw new error.InvalidArgumentException("req must be an object");
     }
 
     const header = getAuthorization(req.req || req);

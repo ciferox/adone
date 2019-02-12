@@ -151,7 +151,7 @@ export const packStream = (cwd = process.cwd(), opts = {}) => {
 
         if (!stat.isFile()) {
             if (strict) {
-                return pack.destroy(new error.NotSupported(`Unsupported type for ${filename}`));
+                return pack.destroy(new error.NotSupportedException(`Unsupported type for ${filename}`));
             }
             return onnextentry();
         }
@@ -346,7 +346,7 @@ export const unpackStream = (cwd = process.cwd(), opts = {}) => {
             }
 
             if (strict) {
-                return next(new error.NotSupported(`Unsupported type for ${name} (${header.type})`));
+                return next(new error.NotSupportedException(`Unsupported type for ${name} (${header.type})`));
             }
 
             stream.resume();

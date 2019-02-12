@@ -93,7 +93,7 @@ const stringToFlags = (flags) => {
         case "xa+": return O_APPEND | O_CREAT | O_RDWR | O_EXCL;
     }
 
-    throw new error.InvalidArgument(`invalid flag given ${flags}`);
+    throw new error.InvalidArgumentException(`invalid flag given ${flags}`);
 };
 
 class OpenedFile {
@@ -645,7 +645,7 @@ class VFS {
             options = { contents: options };
         }
         if (node) {
-            throw new error.IllegalState("Already exists");
+            throw new error.IllegalStateException("Already exists");
         }
         directory.addFile(path.filename(), options);
     }
@@ -655,7 +655,7 @@ class VFS {
         linkname = this._wrap(linkname);
         const [node, linknameDirectory] = this.getNode({ path: linkname, ensureParent: true });
         if (node) {
-            throw new error.IllegalState("Already exists");
+            throw new error.IllegalStateException("Already exists");
         }
         linknameDirectory.addSymlink(linkname.filename(), target, options);
     }
@@ -664,7 +664,7 @@ class VFS {
         path = this._wrap(path);
         const [node, directory] = this.getNode({ path, ensureParent: true });
         if (node) {
-            throw new error.IllegalState("Already exists");
+            throw new error.IllegalStateException("Already exists");
         }
         directory.addDirectory(path.filename(), options);
     }

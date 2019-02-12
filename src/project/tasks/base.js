@@ -31,7 +31,7 @@ export default class BaseTask extends task.Task {
      * The method in which the common logic should be implemented.
      */
     main() {
-        throw new error.NotImplemented("Method main() is not implemented");
+        throw new error.NotImplementedException("Method main() is not implemented");
     }
 
     /**

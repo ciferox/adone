@@ -18,7 +18,7 @@ adone.app.run({
                 }
                 if (adone.is.promise(delayHalf)) {
                     await delayHalf;
-                    throw new adone.error.Runtime(adone.text.random(adone.math.random(20, 80)));
+                    throw new adone.error.RuntimeException(adone.text.random(adone.math.random(20, 80)));
                 }
             } catch (err) {
                 adone.logInfo(err);

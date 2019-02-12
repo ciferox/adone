@@ -53,7 +53,7 @@ describe("database", "redis", "unit", "util", () => {
 
             let invokedTimes = 0;
             const wrappedCallback2 = util.timeout((err) => {
-                expect(err).to.be.instanceOf(error.Timeout);
+                expect(err).to.be.instanceOf(error.TimeoutException);
                 invokedTimes += 1;
                 wrappedCallback2();
                 setTimeout(() => {

@@ -107,7 +107,7 @@ const decodefield = (str) => {
     const match = EXT_VALUE_REGEXP.exec(str);
 
     if (!match) {
-        throw new error.InvalidArgument("invalid extended field value");
+        throw new error.InvalidArgumentException("invalid extended field value");
     }
 
     const charset = match[1].toLowerCase();
@@ -127,7 +127,7 @@ const decodefield = (str) => {
             break;
         }
         default: {
-            throw new error.NotSupported("unsupported charset in extended field");
+            throw new error.NotSupportedException("unsupported charset in extended field");
         }
     }
 
@@ -139,7 +139,7 @@ const format = (obj) => {
     const { parameters, type } = obj;
 
     if (!type || !is.string(type) || !TOKEN_REGEXP.test(type)) {
-        throw new error.InvalidArgument("invalid type");
+        throw new error.InvalidArgumentException("invalid type");
     }
 
     // start with normalized type
@@ -167,15 +167,15 @@ const createParams = (filename, fallback = true) => {
     const params = {};
 
     if (!is.string(filename)) {
-        throw new error.InvalidArgument("filename must be a string");
+        throw new error.InvalidArgumentException("filename must be a string");
     }
 
     if (!is.string(fallback) && !is.boolean(fallback)) {
-        throw new error.InvalidArgument("fallback must be a string or boolean");
+        throw new error.InvalidArgumentException("fallback must be a string or boolean");
     }
 
     if (is.string(fallback) && NON_LATIN1_REGEXP.test(fallback)) {
-        throw new error.InvalidArgument("fallback must be ISO-8859-1 string");
+        throw new error.InvalidArgumentException("fallback must be ISO-8859-1 string");
     }
 
     // restrict to file base name
@@ -221,13 +221,13 @@ const contentDisposition = (filename, options = {}) => {
 // Parse Content-Disposition header string.
 contentDisposition.parse = (string) => {
     if (!string || !is.string(string)) {
-        throw new error.InvalidArgument("argument string is required");
+        throw new error.InvalidArgumentException("argument string is required");
     }
 
     let match = DISPOSITION_TYPE_REGEXP.exec(string);
 
     if (!match) {
-        throw new error.InvalidArgument("invalid type format");
+        throw new error.InvalidArgumentException("invalid type format");
     }
 
     // normalize type
@@ -245,7 +245,7 @@ contentDisposition.parse = (string) => {
     // match parameters
     while ((match = PARAM_REGEXP.exec(string))) {
         if (match.index !== index) {
-            throw new error.InvalidArgument("invalid parameter format");
+            throw new error.InvalidArgumentException("invalid parameter format");
         }
 
         index += match[0].length;
@@ -253,7 +253,7 @@ contentDisposition.parse = (string) => {
         value = match[2];
 
         if (names.includes(key)) {
-            throw new error.InvalidArgument("invalid duplicate parameter");
+            throw new error.InvalidArgumentException("invalid duplicate parameter");
         }
 
         names.push(key);
@@ -281,7 +281,7 @@ contentDisposition.parse = (string) => {
     }
 
     if (index !== -1 && index !== string.length) {
-        throw new error.InvalidArgument("invalid parameter format");
+        throw new error.InvalidArgumentException("invalid parameter format");
     }
 
     return new ContentDisposition(type, params);

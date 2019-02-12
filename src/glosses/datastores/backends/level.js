@@ -34,7 +34,7 @@ export default class Level {
             await this.db.get(key.toString());
             return true;
         } catch (err) {
-            if (err instanceof adone.error.NotFound) {
+            if (err instanceof adone.error.NotFoundException) {
                 return false;
             }
             throw err;

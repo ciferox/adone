@@ -248,7 +248,7 @@ export class FloodSub extends event.Emitter {
      */
     publish(topics, messages) {
         if (!this.started) {
-            throw new adone.error.IllegalState("FloodSub is not started");
+            throw new adone.error.IllegalStateException("FloodSub is not started");
         }
 
         topics = ensureArray(topics);
@@ -285,7 +285,7 @@ export class FloodSub extends event.Emitter {
      */
     subscribe(topics) {
         if (!this.started) {
-            throw new adone.error.IllegalState("FloodSub is not started");
+            throw new adone.error.IllegalStateException("FloodSub is not started");
         }
 
         topics = ensureArray(topics);

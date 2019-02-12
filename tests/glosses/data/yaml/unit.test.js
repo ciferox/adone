@@ -496,7 +496,7 @@ describe("data", "yaml", "unit", () => {
         specify("Dumper must throw an error on invalid type when option `skipInvalid` is false.", () => {
             assert.throws(() => {
                 yaml.safeDump(sample, { skipInvalid: false });
-            }, error.IllegalState);
+            }, error.IllegalStateException);
         });
 
         specify("Dumper must skip pairs and values with invalid types when option `skipInvalid` is true.", () => {

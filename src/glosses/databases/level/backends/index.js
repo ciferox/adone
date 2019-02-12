@@ -1,4 +1,6 @@
 adone.lazify({
-    Leveldb: "./leveldb",
-    Memory: "./memory"
+    LevelDB: "./leveldb",
+    Memory: "./memory",
+    Deferred: "./deferred",
+    Encoding: "./encoding"
 }, adone.asNamespace(exports), require);

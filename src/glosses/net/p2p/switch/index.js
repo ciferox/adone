@@ -21,11 +21,11 @@ export class Switch extends adone.event.Emitter {
         super();
 
         if (!peerInfo) {
-            throw new adone.error.NotValid("You must provide a `peerInfo`");
+            throw new adone.error.NotValidException("You must provide a `peerInfo`");
         }
 
         if (!peerBook) {
-            throw new adone.error.NotValid("You must provide a `peerBook`");
+            throw new adone.error.NotValidException("You must provide a `peerBook`");
         }
 
         this._peerInfo = peerInfo;
@@ -254,7 +254,7 @@ export class Switch extends adone.event.Emitter {
             if (!this.muxedConns[b58Id]) {
                 if (!this.conns[b58Id]) {
                     if (!this.hasTransports()) {
-                        return reject(new adone.error.Connect("No transports registered, connect not possible"));
+                        return reject(new adone.error.ConnectException("No transports registered, connect not possible"));
                     }
 
                     const tKeys = this.availableTransports(pi);
@@ -264,11 +264,11 @@ export class Switch extends adone.event.Emitter {
                         let transport = key;
                         if (is.undefined(transport)) {
                             if (circuitTried) {
-                                return reject(new adone.error.Connect("Circuit already tried!"));
+                                return reject(new adone.error.ConnectException("Circuit already tried!"));
                             }
 
                             if (!this.tm.transports[Circuit.tag]) {
-                                return reject(new adone.error.Connect("Circuit not enabled!"));
+                                return reject(new adone.error.ConnectException("Circuit not enabled!"));
                             }
 
                             // Falling back to dialing over circuit

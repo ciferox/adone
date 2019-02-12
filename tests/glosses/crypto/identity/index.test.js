@@ -23,7 +23,7 @@ const testOpts = {
 
 describe("crypto", "Identity", () => {
     it("create an instance without id", () => {
-        assert.throws(() => new Identity(), error.NotValid);
+        assert.throws(() => new Identity(), error.NotValidException);
     });
 
     it("create a new id", () => {
@@ -44,7 +44,7 @@ describe("crypto", "Identity", () => {
         expect(id.asBase58().length).to.equal(46);
         assert.throws(() => {
             id.id = Buffer.from("hello");
-        }, adone.error.NotAllowed);
+        }, adone.error.NotAllowedException);
     });
 
     it("recreate an Id from Hex string", () => {

@@ -15,7 +15,7 @@ export const messages = new Map(util.entries(rawCodes).map(([code, message]) => 
 
 export const getMessageByCode = (code) => {
     if (!codes.has(code)) {
-        throw new error.InvalidArgument(`invalid status code: ${code}`);
+        throw new error.InvalidArgumentException(`invalid status code: ${code}`);
     }
     return codes.get(code);
 };
@@ -23,7 +23,7 @@ export const getMessageByCode = (code) => {
 export const getCodeByMessage = (message) => {
     message = message.toLowerCase();
     if (!messages.has(message)) {
-        throw new error.InvalidArgument(`invalid status message: ${message}`);
+        throw new error.InvalidArgumentException(`invalid status message: ${message}`);
     }
     return messages.get(message);
 };

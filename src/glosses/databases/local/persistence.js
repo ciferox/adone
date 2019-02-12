@@ -19,15 +19,15 @@ export default class Persistence {
         this.corruptAlertThreshold = is.null(corruptAlertThreshold) ? 0.1 : corruptAlertThreshold;
 
         if (!this.inMemoryOnly && this.filename && this.filename[this.filename.length - 1] === "~") {
-            throw new error.InvalidArgument("The datafile name can't end with a ~, which is reserved for crash safe backup files");
+            throw new error.InvalidArgumentException("The datafile name can't end with a ~, which is reserved for crash safe backup files");
         }
 
         // After serialization and before deserialization hooks with some basic sanity checks
         if (afterSerialization && !beforeDeserialization) {
-            throw new error.IllegalState("Serialization hook defined but deserialization hook undefined, cautiously refusing to start to prevent dataloss");
+            throw new error.IllegalStateException("Serialization hook defined but deserialization hook undefined, cautiously refusing to start to prevent dataloss");
         }
         if (!afterSerialization && beforeDeserialization) {
-            throw new error.IllegalState("Serialization hook undefined but deserialization hook defined, cautiously refusing to start to prevent dataloss");
+            throw new error.IllegalStateException("Serialization hook undefined but deserialization hook defined, cautiously refusing to start to prevent dataloss");
         }
         this.afterSerialization = afterSerialization || identity;
         this.beforeDeserialization = beforeDeserialization || identity;
@@ -129,7 +129,7 @@ export default class Persistence {
 
         // A bit lenient on corruption
         if (data.length > 0 && corruptItems / data.length > this.corruptAlertThreshold) {
-            throw new error.IllegalState(`More than ${Math.floor(100 * this.corruptAlertThreshold)} % of the data file is corrupt, the wrong beforeDeserialization hook may be used. Cautiously refusing to start DB to prevent dataloss`);
+            throw new error.IllegalStateException(`More than ${Math.floor(100 * this.corruptAlertThreshold)} % of the data file is corrupt, the wrong beforeDeserialization hook may be used. Cautiously refusing to start DB to prevent dataloss`);
         }
 
         return { data: util.values(dataById), indexes };

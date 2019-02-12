@@ -2321,7 +2321,7 @@ describe("net", "http", "helpers", "pathToRegexp", () => {
                                 it(`should not compile using ${util.inspect(input)}`, () => {
                                     expect(() => {
                                         toPath(input);
-                                    }).to.throw(error.IllegalState);
+                                    }).to.throw(error.IllegalStateException);
                                 });
                             }
                         }
@@ -2361,7 +2361,7 @@ describe("net", "http", "helpers", "pathToRegexp", () => {
 
             expect(() => {
                 toPath();
-            }).to.throw(error.IllegalState, 'Expected "b" to be defined');
+            }).to.throw(error.IllegalStateException, 'Expected "b" to be defined');
         });
 
         it("should throw when it does not match the pattern", () => {
@@ -2369,7 +2369,7 @@ describe("net", "http", "helpers", "pathToRegexp", () => {
 
             expect(() => {
                 toPath({ foo: "abc" });
-            }).to.throw(error.IllegalState, 'Expected "foo" to match "\\d+"');
+            }).to.throw(error.IllegalStateException, 'Expected "foo" to match "\\d+"');
         });
 
         it("should throw when expecting a repeated value", () => {
@@ -2377,7 +2377,7 @@ describe("net", "http", "helpers", "pathToRegexp", () => {
 
             expect(() => {
                 toPath({ foo: [] });
-            }).to.throw(error.IllegalState, 'Expected "foo" to not be empty');
+            }).to.throw(error.IllegalStateException, 'Expected "foo" to not be empty');
         });
 
         it("should throw when not expecting a repeated value", () => {
@@ -2385,7 +2385,7 @@ describe("net", "http", "helpers", "pathToRegexp", () => {
 
             expect(() => {
                 toPath({ foo: [] });
-            }).to.throw(error.IllegalState, 'Expected "foo" to not repeat');
+            }).to.throw(error.IllegalStateException, 'Expected "foo" to not repeat');
         });
 
         it("should throw when repeated value does not match", () => {
@@ -2393,7 +2393,7 @@ describe("net", "http", "helpers", "pathToRegexp", () => {
 
             expect(() => {
                 toPath({ foo: [1, 2, 3, "a"] });
-            }).to.throw(error.IllegalState, 'Expected all "foo" to match "\\d+"');
+            }).to.throw(error.IllegalStateException, 'Expected all "foo" to match "\\d+"');
         });
     });
 });

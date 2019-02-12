@@ -77,7 +77,7 @@ export default class File {
     clone({ contents = false, deep = true } = {}) {
         if (contents) {
             if (this.isStream()) {
-                throw new error.NotSupported("You cannot clone a stream yet");
+                throw new error.NotSupportedException("You cannot clone a stream yet");
             } else if (this.isBuffer()) {
                 contents = Buffer.from(this.contents);
             } else {

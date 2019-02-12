@@ -214,7 +214,7 @@ export default function parsers(brackets) {
             const bracket = this.pop("bracket");
             if (!this.isType(bracket, "bracket")) {
                 if (this.options.strict) {
-                    throw new error.IllegalState('missing opening "["');
+                    throw new error.IllegalStateException('missing opening "["');
                 }
                 node.type = "bracket.inner";
                 node.escaped = true;

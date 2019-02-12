@@ -219,12 +219,12 @@ const resolveIds = function (schema) {
             }
             if (refVal && refVal.schema) {
                 if (!is.deepEqual(sch, refVal.schema)) {
-                    throw new error.IllegalState(`id "${id}" resolves to more than one schema`);
+                    throw new error.IllegalStateException(`id "${id}" resolves to more than one schema`);
                 }
             } else if (id !== normalizeId(fullPath)) {
                 if (id[0] === "#") {
                     if (localRefs[id] && !is.deepEqual(sch, localRefs[id])) {
-                        throw new error.IllegalState(`id "${id}" resolves to more than one schema`);
+                        throw new error.IllegalStateException(`id "${id}" resolves to more than one schema`);
                     }
                     localRefs[id] = sch;
                 } else {

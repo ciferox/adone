@@ -13,7 +13,7 @@ export default class Metadata {
         const metadata = decoder.decode(offset).value;
 
         if (!metadata) {
-            throw new error.InvalidArgument("Cannot parse binary database");
+            throw new error.InvalidArgumentException("Cannot parse binary database");
         }
 
         this.binaryFormatMajorVersion = metadata.binary_format_major_version;
@@ -28,7 +28,7 @@ export default class Metadata {
         this.recordSize = metadata.record_size;
 
         if (!VALID_RECORD_SIZES.has(this.recordSize)) {
-            throw new error.NotSupported("Unsupported record size");
+            throw new error.NotSupportedException("Unsupported record size");
         }
 
         this.nodeByteSize = this.recordSize / 4;

@@ -67,7 +67,7 @@ export const encodeRSAOAEP = function (key, message, options) {
     const mdMeta = crypto.hash.meta(md);
 
     if (is.null(mdMeta)) {
-        throw new error.NotSupported(`"${md}" hash algorithm is not supported for message`);
+        throw new error.NotSupportedException(`"${md}" hash algorithm is not supported for message`);
     }
 
     const digestLength = mdMeta.digestLength;
@@ -80,7 +80,7 @@ export const encodeRSAOAEP = function (key, message, options) {
     } else {
         mgf1Meta = crypto.hash.meta(mgf1Md);
         if (is.null(mgf1Meta)) {
-            throw new error.NotSupported(`"${mgf1Md}" hash algorithm is not supported for mgf1`);
+            throw new error.NotSupportedException(`"${mgf1Md}" hash algorithm is not supported for mgf1`);
         }
     }
 
@@ -182,7 +182,7 @@ export const decodeRSAOAEP = function (key, em, options) {
     const mdMeta = crypto.hash.meta(md);
 
     if (is.null(mdMeta)) {
-        throw new error.NotSupported(`"${md}" hash algorithm is not supported for message`);
+        throw new error.NotSupportedException(`"${md}" hash algorithm is not supported for message`);
     }
 
     const digestLength = mdMeta.digestLength;
@@ -206,7 +206,7 @@ export const decodeRSAOAEP = function (key, em, options) {
     } else {
         mgf1Meta = crypto.hash.meta(mgf1Md);
         if (is.null(mgf1Meta)) {
-            throw new error.NotSupported(`"${mgf1Md}" hash algorithm is not supported for mgf1`);
+            throw new error.NotSupportedException(`"${mgf1Md}" hash algorithm is not supported for mgf1`);
         }
     }
 

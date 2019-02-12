@@ -90,7 +90,7 @@ const encodeHex = (character) => {
         handle = "U";
         length = 8;
     } else {
-        throw new error.IllegalState("code point within a string may not be greater than 0xFFFFFFFF");
+        throw new error.IllegalStateException("code point within a string may not be greater than 0xFFFFFFFF");
     }
 
     return `\\${handle}${"0".repeat(length - string.length)}${string}`;
@@ -463,7 +463,7 @@ const writeScalar = (state, string, level, iskey) => {
             break;
         }
         default: {
-            throw new error.IllegalState("impossible error: invalid scalar style");
+            throw new error.IllegalStateException("impossible error: invalid scalar style");
         }
     }
 };
@@ -565,7 +565,7 @@ const writeBlockMapping = (state, level, object, compact) => {
         keys.sort(state.sortKeys);
     } else if (state.sortKeys) {
         // Something is wrong
-        throw new error.InvalidArgument("sortKeys must be a boolean or a function");
+        throw new error.InvalidArgumentException("sortKeys must be a boolean or a function");
     }
     let _result = "";
     const _tag = state.tag;
@@ -637,7 +637,7 @@ const detectType = (state, object, explicit) => {
                 } else if (is.propertyOwned(type.represent, style)) {
                     result = type.represent[style](object, style);
                 } else {
-                    throw new error.IllegalState(`!<${type.tag}> tag resolver accepts not "${style}" style`);
+                    throw new error.IllegalStateException(`!<${type.tag}> tag resolver accepts not "${style}" style`);
                 }
 
                 state.dump = result;
@@ -718,7 +718,7 @@ const writeNode = (state, level, object, block, compact, iskey) => {
             if (state.skipInvalid) {
                 return false;
             }
-            throw new error.IllegalState(`unacceptable kind of an object to dump ${type}`);
+            throw new error.IllegalStateException(`unacceptable kind of an object to dump ${type}`);
         }
 
         if (!is.null(state.tag) && state.tag !== "?") {

@@ -11,7 +11,7 @@ const lzma = {
         return xz.createStream("aloneEncoder", options);
     },
     compressSync: (/*buf, options = {}*/) => {
-        throw new adone.error.NotImplemented();
+        throw new adone.error.NotImplementedException();
     },
     decompress: (buf, options = {}) => {
         return xz.singleStringCoding(lzma.decompressStream(options), buf);
@@ -20,7 +20,7 @@ const lzma = {
         return xz.createStream("aloneDecoder", options);
     },
     decompressSync: (/*buf, options = {}*/) => {
-        throw new adone.error.NotImplemented();
+        throw new adone.error.NotImplementedException();
     }
 };
 

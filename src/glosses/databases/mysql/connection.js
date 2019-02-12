@@ -148,7 +148,7 @@ export default class Connection extends event.Emitter {
     }
 
     _addCommandClosedState(cmd) {
-        const err = new error.IllegalState("Can't add new command when connection is in closed state");
+        const err = new error.IllegalStateException("Can't add new command when connection is in closed state");
         err.fatal = true;
         if (cmd.onResult) {
             cmd.onResult(err);
@@ -163,7 +163,7 @@ export default class Connection extends event.Emitter {
         this.stream.removeAllListeners("data");
         this.addCommand = this._addCommandClosedState;
         this.write = () => {
-            this.emit("error", new error.IllegalState("Can't write in closed state"));
+            this.emit("error", new error.IllegalStateException("Can't write in closed state"));
         };
         this._notifyError(err);
         this._fatalError = err;
@@ -181,7 +181,7 @@ export default class Connection extends event.Emitter {
 
         this.stream.destroy && this.stream.destroy();
 
-        const err = new error.Timeout("connect ETIMEDOUT");
+        const err = new error.TimeoutException("connect ETIMEDOUT");
         err.errorno = "ETIMEDOUT";
         err.code = "ETIMEDOUT";
         err.syscall = "connect";

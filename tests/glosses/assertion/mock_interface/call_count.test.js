@@ -14,7 +14,7 @@ describe("assertion", "mock interface", "call count", () => {
         it("should throw an error when the spy is undefined", () => {
             expect(() => {
                 expect(undefined).to.have.been.called();
-            }).to.throw(error.InvalidArgument);
+            }).to.throw(error.InvalidArgumentException);
         });
 
         it("should throw an assertion error when the spy is not called", () => {

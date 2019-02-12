@@ -41,7 +41,7 @@ export default class ApplicationTask extends project.generator.task.Base {
         });
 
         if (!is.string(input.name)) {
-            throw new adone.error.NotValid("Name should be a valid string");
+            throw new adone.error.NotValidException("Name should be a valid string");
         }
         return project.generator.helper.createFile(TEMPLATE, input);
     }

@@ -94,7 +94,7 @@ export default class Valuable {
 
     async add(name, value, type) {
         if (this.has(name)) {
-            throw new error.Exists(`Key already exists: ${name}`);
+            throw new error.ExistsException(`Key already exists: ${name}`);
         }
 
         return this.set(name, value, type);
@@ -305,7 +305,7 @@ export default class Valuable {
     _getKey(name) {
         const keyMeta = this._getKeyUnsafe(name);
         if (is.undefined(keyMeta)) {
-            throw new error.NotExists(`Key not exists: ${name}`);
+            throw new error.NotExistsException(`Key not exists: ${name}`);
         }
         return keyMeta;
     }

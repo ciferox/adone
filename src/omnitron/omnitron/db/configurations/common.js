@@ -187,7 +187,7 @@ export default class Configuration extends vault.Valuable {
                 break;
             }
             default:
-                throw new adone.error.NotExists(`Key not exist: ${key}`);
+                throw new adone.error.NotExistsException(`Key not exist: ${key}`);
         }
         return super.set(key, val);
     }
@@ -198,7 +198,7 @@ export default class Configuration extends vault.Valuable {
 
         const object = await super.get(path.shift());
         if (is.undefined(object)) {
-            throw new adone.error.NotExists(`Key not exist: ${key}`);
+            throw new adone.error.NotExistsException(`Key not exist: ${key}`);
         }
 
         if (path.length === 0) {
@@ -207,7 +207,7 @@ export default class Configuration extends vault.Valuable {
 
         const result = adone.lodash.get(object, path);
         if (is.undefined(result)) {
-            throw new adone.error.NotExists(`Key not exist: ${key}`);
+            throw new adone.error.NotExistsException(`Key not exist: ${key}`);
         }
         return result;
     }
@@ -219,7 +219,7 @@ export default class Configuration extends vault.Valuable {
 
         if (path.length === 0) {
             if (["service", "netron"].includes(key)) {
-                throw new adone.error.NotAllowed("Operation not allowed");
+                throw new adone.error.NotAllowedException("Operation not allowed");
             }
             return super.delete(key);
         }

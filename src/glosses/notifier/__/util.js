@@ -126,7 +126,7 @@ const notifierExists = async (notifier) => {
 export const immediateFileCommand = async (notifier, options) => {
     const exists = await notifierExists(notifier);
     if (!exists) {
-        throw new error.NotExists(`Notifier (${notifier}) not found on system`);
+        throw new error.NotExistsException(`Notifier (${notifier}) not found on system`);
     }
     cp.execFile(notifier, options);
 };

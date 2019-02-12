@@ -27,14 +27,14 @@ export default class AbstractPeer extends AsyncEmitter {
      * Disconnects peer.
      */
     disconnect() {
-        throw new adone.error.NotImplemented("Method disconnect() is not implemented");
+        throw new adone.error.NotImplementedException("Method disconnect() is not implemented");
     }
 
     /**
      * Checks peer is connected using netron protocol.
      */
     isConnected() {
-        throw new adone.error.NotImplemented("Method isConnected() is not implemented");
+        throw new adone.error.NotImplementedException("Method isConnected() is not implemented");
     }
 
     /**
@@ -47,7 +47,7 @@ export default class AbstractPeer extends AsyncEmitter {
      * @returns {Promise<undefined>}
      */
     set(/*defId, name, data*/) {
-        throw new adone.error.NotImplemented("Method set() is not implemented");
+        throw new adone.error.NotImplementedException("Method set() is not implemented");
     }
 
     /**
@@ -60,7 +60,7 @@ export default class AbstractPeer extends AsyncEmitter {
      * @returns {Promise<any>} returns property value or result of called method
      */
     get(/*defId, name, defaultData*/) {
-        throw new adone.error.NotImplemented("Method get() is not implemented");
+        throw new adone.error.NotImplementedException("Method get() is not implemented");
     }
 
     /**
@@ -110,11 +110,11 @@ export default class AbstractPeer extends AsyncEmitter {
     }
 
     subscribe(/*eventName, handler*/) {
-        throw new adone.error.NotImplemented("Method subscribe() is not implemented");
+        throw new adone.error.NotImplementedException("Method subscribe() is not implemented");
     }
 
     unsubscribe(/*eventName, handler*/) {
-        throw new adone.error.NotImplemented("Method unsubscribe() is not implemented");
+        throw new adone.error.NotImplementedException("Method unsubscribe() is not implemented");
     }
 
     /**
@@ -125,29 +125,29 @@ export default class AbstractPeer extends AsyncEmitter {
      * @returns 
      */
     attachContext(/*instance, ctxId*/) {
-        throw new adone.error.NotImplemented("Method attachContext() is not implemented");
+        throw new adone.error.NotImplementedException("Method attachContext() is not implemented");
     }
 
     /**
      * Detaches before attached context with specified name.
      */
     detachContext(/*ctxId, releaseOriginated*/) {
-        throw new adone.error.NotImplemented("Method detachContext() is not implemented");
+        throw new adone.error.NotImplementedException("Method detachContext() is not implemented");
     }
 
     /**
      * Detaches all contexts.
      */
     detachAllContexts(/*releaseOriginated*/) {
-        throw new adone.error.NotImplemented("Method detachAllContexts() is not implemented");
+        throw new adone.error.NotImplementedException("Method detachAllContexts() is not implemented");
     }
 
     hasContexts() {
-        throw new adone.error.NotImplemented("Method hasContexts() is not implemented");
+        throw new adone.error.NotImplementedException("Method hasContexts() is not implemented");
     }
 
     hasContext(/*ctxId*/) {
-        throw new adone.error.NotImplemented("Method hasContext() is not implemented");
+        throw new adone.error.NotImplementedException("Method hasContext() is not implemented");
     }
 
     waitForContext(ctxId) {
@@ -181,7 +181,7 @@ export default class AbstractPeer extends AsyncEmitter {
      */
     releaseInterface(iInstance) {
         if (!is.netronInterface(iInstance)) {
-            throw new error.NotValid("Object is not a netron interface");
+            throw new error.NotValidException("Object is not a netron interface");
         }
         this.interfaces.delete(iInstance[__.I_DEFINITION_SYMBOL].id);
     }
@@ -196,11 +196,11 @@ export default class AbstractPeer extends AsyncEmitter {
      * @param {string|array|object} task - task(s) description(s)
      */
     _runTask(/*task*/) {
-        throw new adone.error.NotImplemented("Method _runTask() is not implemented");
+        throw new adone.error.NotImplementedException("Method _runTask() is not implemented");
     }
 
     _getContextDefinition(/*ctxId*/) {
-        throw new adone.error.NotImplemented("Method _getContextDefinition() is not implemented");
+        throw new adone.error.NotImplementedException("Method _getContextDefinition() is not implemented");
     }
 
     /**
@@ -210,7 +210,7 @@ export default class AbstractPeer extends AsyncEmitter {
      * @param {string|Identity|PeerInfo|Peer|nil} peerInfo 
      */
     _queryInterfaceByDefinition(/*defId*/) {
-        throw new adone.error.NotImplemented("Method _queryInterfaceByDefinition() is not implemented");
+        throw new adone.error.NotImplementedException("Method _queryInterfaceByDefinition() is not implemented");
     }
 
     // // _removeRelatedDefinitions(proxyDef) {

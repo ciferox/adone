@@ -27,7 +27,7 @@ const strip = (path, n) => {
 
 export default function serve(root, opts = {}) {
     if (!root) {
-        throw new error.InvalidArgument("root directory is required to serve files");
+        throw new error.InvalidArgumentException("root directory is required to serve files");
     }
     opts = adone.o(opts);
 

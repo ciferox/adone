@@ -270,7 +270,7 @@ export default class Connection extends event.Emitter {
         this.id = _id++;
         // No bson parser passed in
         if (!options.bson) {
-            throw new error.InvalidArgument("must pass in valid bson parser");
+            throw new error.InvalidArgumentException("must pass in valid bson parser");
         }
         // Get bson parser
         this.bson = options.bson;

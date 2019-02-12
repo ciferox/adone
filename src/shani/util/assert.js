@@ -107,7 +107,7 @@ const assert = {
     },
     expose(target, options) {
         if (!target) {
-            throw new error.InvalidArgument("target is null or undefined");
+            throw new error.InvalidArgumentException("target is null or undefined");
         }
 
         const o = options || {};

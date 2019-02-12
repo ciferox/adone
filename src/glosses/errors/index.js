@@ -39,39 +39,40 @@ export class Exception extends Error {
     }
 }
 
-export class Runtime extends Exception { }
-export class IncompleteBufferError extends Exception { }
-export class NotImplemented extends Exception { }
-export class IllegalState extends Exception { }
-export class NotValid extends Exception { }
-export class Unknown extends Exception { }
-export class NotExists extends Exception { }
-export class Exists extends Exception { }
-export class Empty extends Exception { }
-export class InvalidAccess extends Exception { }
-export class NotSupported extends Exception { }
-export class InvalidArgument extends Exception { }
-export class InvalidNumberOfArguments extends Exception { }
-export class NotFound extends Exception { }
-export class Timeout extends Exception { }
-export class Incorrect extends Exception { }
-export class NotAllowed extends Exception { }
-export class LimitExceeded extends Exception { }
-export class Encoding extends Exception { }
+export class RuntimeException extends Exception { }
+export class IncompleteBufferException extends Exception { }
+export class NotImplementedException extends Exception { }
+export class IllegalStateException extends Exception { }
+export class NotValidException extends Exception { }
+export class UnknownException extends Exception { }
+export class NotExistsException extends Exception { }
+export class ExistsException extends Exception { }
+export class EmptyException extends Exception { }
+export class InvalidAccessException extends Exception { }
+export class NotSupportedException extends Exception { }
+export class InvalidArgumentException extends Exception { }
+export class InvalidNumberOfArgumentsException extends Exception { }
+export class NotFoundException extends Exception { }
+export class TimeoutException extends Exception { }
+export class IncorrectException extends Exception { }
+export class NotAllowedException extends Exception { }
+export class LimitExceededException extends Exception { }
+export class EncodingException extends Exception { }
 
-export class Network extends Exception { }
-export class Bind extends Network { }
-export class Connect extends Network { }
+export class NetworkException extends Exception { }
+export class BindException extends NetworkException { }
+export class ConnectException extends NetworkException { }
 
-export class Database extends Exception { }
-export class DatabaseInitialization extends Database { }
-export class DatabaseOpen extends Database { }
-export class DatabaseRead extends Database { }
-export class DatabaseWrite extends Database { }
+export class DatabaseException extends Exception { }
+export class DatabaseInitializationException extends DatabaseException { }
+export class DatabaseOpenException extends DatabaseException { }
+export class DatabaseReadException extends DatabaseException { }
+export class DatabaseWriteException extends DatabaseException { }
 
-export class NetronIllegalState extends Exception { }
-export class NetronPeerDisconnected extends Exception { }
-export class NetronTimeout extends Exception { }
+
+export class NetronIllegalStateException extends Exception { }
+export class NetronPeerDisconnectedException extends Exception { }
+export class NetronTimeoutException extends Exception { }
 
 const extractPathRegex = /\s+at.*(?:\(|\s)(.*)\)?/;
 const pathRegex = /^(?:(?:(?:node|(?:internal\/[\w/]*|.*node_modules\/babel-polyfill\/.*)?\w+)\.js:\d+:\d+)|native)/;
@@ -143,40 +144,40 @@ export const idExceptionMap = {
     7: URIError,
 
     10: Exception,
-    11: Runtime,
-    12: IncompleteBufferError,
-    13: NotImplemented,
-    14: IllegalState,
-    15: NotValid,
-    16: Unknown,
-    17: NotExists,
-    18: Exists,
-    19: Empty,
-    20: InvalidAccess,
-    21: NotSupported,
-    22: InvalidArgument,
-    23: InvalidNumberOfArguments,
-    24: NotFound,
-    25: Timeout,
-    26: Incorrect,
-    27: NotAllowed,
-    28: LimitExceeded,
-    29: Encoding,
+    11: RuntimeException,
+    12: IncompleteBufferException,
+    13: NotImplementedException,
+    14: IllegalStateException,
+    15: NotValidException,
+    16: UnknownException,
+    17: NotExistsException,
+    18: ExistsException,
+    19: EmptyException,
+    20: InvalidAccessException,
+    21: NotSupportedException,
+    22: InvalidArgumentException,
+    23: InvalidNumberOfArgumentsException,
+    24: NotFoundException,
+    25: TimeoutException,
+    26: IncorrectException,
+    27: NotAllowedException,
+    28: LimitExceededException,
+    29: EncodingException,
     99: AggregateException,
 
-    100: Network,
-    101: Bind,
-    102: Connect,
+    100: NetworkException,
+    101: BindException,
+    102: ConnectException,
 
-    110: Database,
-    111: DatabaseInitialization,
-    112: DatabaseOpen,
-    113: DatabaseRead,
-    114: DatabaseWrite,
+    110: DatabaseException,
+    111: DatabaseInitializationException,
+    112: DatabaseOpenException,
+    113: DatabaseReadException,
+    114: DatabaseWriteException,
 
-    1000: NetronIllegalState,
-    1001: NetronPeerDisconnected,
-    1002: NetronTimeout
+    1000: NetronIllegalStateException,
+    1001: NetronPeerDisconnectedException,
+    1002: NetronTimeoutException
 };
 
 const keys = Object.keys(idExceptionMap);

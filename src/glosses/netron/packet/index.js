@@ -34,5 +34,5 @@ export const decode = (buffer) => {
         return pkt;
     }
 
-    throw new error.NotValid("Invalid packet");
+    throw new error.NotValidException("Invalid packet");
 };

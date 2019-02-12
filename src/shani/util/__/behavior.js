@@ -67,7 +67,7 @@ const callCallback = (behavior, args) => {
         const func = getCallback(behavior, args);
 
         if (!is.function(func)) {
-            throw new error.InvalidArgument(getCallbackError(behavior, func, args));
+            throw new error.InvalidArgumentException(getCallbackError(behavior, func, args));
         }
 
         if (behavior.callbackAsync) {
@@ -120,7 +120,7 @@ export const proto = {
             return context;
         } else if (is.number(this.throwArgAt)) {
             if (args.length < this.throwArgAt) {
-                throw new error.InvalidArgument(`throwArgs failed: ${this.throwArgAt} arguments required but only ${args.length} present`);
+                throw new error.InvalidArgumentException(`throwArgs failed: ${this.throwArgAt} arguments required but only ${args.length} present`);
             }
             throw args[this.throwArgAt];
         } else if (this.fakeFn) {

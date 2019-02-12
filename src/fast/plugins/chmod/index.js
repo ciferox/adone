@@ -38,7 +38,7 @@ export default function () {
 
     return function chmod(mode, dirMode) {
         if (!is.nil(mode) && !is.number(mode) && !is.object(mode)) {
-            throw new error.InvalidArgument("Expected mode to be null/undefined/number/Object");
+            throw new error.InvalidArgumentException("Expected mode to be null/undefined/number/Object");
         }
 
         if (dirMode === true) {

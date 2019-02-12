@@ -91,23 +91,23 @@ class ServiceApplication extends app.Application {
             await this.waitForState(app.STATE.INITIALIZED);
         }
         if (this.hasSubsystem(name)) {
-            throw new adone.error.Exists(`Service ${name} already loaded`);
+            throw new adone.error.ExistsException(`Service ${name} already loaded`);
         }
 
         const mod = require(path);
         if (!mod.__esModule) {
-            throw new adone.error.NotValid("Service module should be es6-module");
+            throw new adone.error.NotValidException("Service module should be es6-module");
         }
         const ServiceClass = mod.default;
         if (!is.class(ServiceClass)) {
-            throw new adone.error.NotValid("Service should be a class");
+            throw new adone.error.NotValidException("Service should be a class");
         }
 
         const subsystem = new ServiceClass({ name });
         subsystem[Symbol.for("omnitron.Service#peer")] = this.peer;
 
         if (!(subsystem instanceof adone.omnitron.Service)) {
-            throw new adone.error.NotValid("The class of service should inherit the class 'adone.omnitron.BaseService'");
+            throw new adone.error.NotValidException("The class of service should inherit the class 'adone.omnitron.BaseService'");
         }
 
         this.addSubsystem({
@@ -147,7 +147,7 @@ class ServiceApplication extends app.Application {
     @Public()
     async unloadService(name) {
         if (!this.hasSubsystem(name)) {
-            throw new adone.error.NotExists(`Service ${name} not loaded`);
+            throw new adone.error.NotExistsException(`Service ${name} not loaded`);
         }
 
         const service = this.getSubsystem(name);
@@ -169,9 +169,9 @@ class ServiceApplication extends app.Application {
                 }
             });
         } else if (service.state === app.STATE.UNINITIALIZING) {
-            throw new adone.error.IllegalState(`Serivce '${name}' is being uninitialized`);
+            throw new adone.error.IllegalStateException(`Serivce '${name}' is being uninitialized`);
         } else {
-            throw new adone.error.IllegalState(`Service '${name}' is in non stopable state: ${app.humanizeState(service.state)}`);
+            throw new adone.error.IllegalStateException(`Service '${name}' is in non stopable state: ${app.humanizeState(service.state)}`);
         }
     }
 }

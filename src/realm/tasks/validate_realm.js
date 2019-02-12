@@ -14,7 +14,7 @@ export default class ValidateRealmTask extends task.Task {
         for (const p of REQUIRED_PATHS) {
             // eslint-disable-next-line
             if (!(await fs.exists(p))) {
-                throw new adone.error.IllegalState("Realm is not initialized");
+                throw new adone.error.IllegalStateException("Realm is not initialized");
             }
         }
     }

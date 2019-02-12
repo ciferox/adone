@@ -18,7 +18,7 @@ const not = (pattern, options) => new RegExp(not.create(pattern, options));
  */
 not.create = (pattern, options) => {
     if (!is.string(pattern)) {
-        throw new error.InvalidArgument("expected a string");
+        throw new error.InvalidArgumentException("expected a string");
     }
 
     const opts = { ...options };

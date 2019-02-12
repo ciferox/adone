@@ -9,11 +9,11 @@ const CONTEXTIFY_SYMBOL = Symbol();
 
 export const contextify = (instance, contextInfo) => {
     if (is.class(instance)) {
-        throw new error.NotValid("Invalid instance");
+        throw new error.NotValidException("Invalid instance");
     }
 
     if (is.netronContext(instance)) {
-        throw new error.NotValid(`Class '${instance.__proto__.constructor.name}' already declared as netron context`);
+        throw new error.NotValidException(`Class '${instance.__proto__.constructor.name}' already declared as netron context`);
     }
 
     instance[CONTEXTIFY_SYMBOL] = {
@@ -423,7 +423,7 @@ export class Reflection {
 
     static from(instance) {
         if (!is.netronContext(instance) || is.class(instance)) {
-            throw new error.NotValid(`'${instance.__proto__.constructor.name}' is not valid instance of netron context`);
+            throw new error.NotValidException(`'${instance.__proto__.constructor.name}' is not valid instance of netron context`);
         }
 
         const r = new Reflection(instance);
@@ -460,7 +460,7 @@ export class Reflection {
         ]));
 
         if (r.methods.size === 0 && r.properties.size === 0) {
-            throw new error.NotValid("'instance' must have at least one method or property");
+            throw new error.NotValidException("'instance' must have at least one method or property");
         }
 
         return r;

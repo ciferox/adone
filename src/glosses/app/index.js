@@ -152,7 +152,7 @@ const _bootstrapApp = async (app, {
         // Prevent double initialization of global application instance
         // (for cases where two or more Applications run in-process, the first app will be common).
         if (!is.null(adone.runtime.app)) {
-            throw new adone.error.IllegalState("It is impossible to have several main applications");
+            throw new adone.error.IllegalStateException("It is impossible to have several main applications");
         }
         adone.runtime.app = app;
 

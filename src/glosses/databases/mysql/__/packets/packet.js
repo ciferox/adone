@@ -218,7 +218,7 @@ export default class Packet {
         }
 
         adone.logTrace();
-        throw new error.IllegalState(`Should not reach here: ${tag}`);
+        throw new error.IllegalStateException(`Should not reach here: ${tag}`);
     }
 
     readFloat() {

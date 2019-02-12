@@ -234,13 +234,13 @@ export const getData = ($data, lvl, paths) => {
         jsonPointer = matches[2];
         if (jsonPointer === "#") {
             if (up >= lvl) {
-                throw new error.IllegalState(`Cannot access property/index ${up} levels up, current level is ${lvl}`);
+                throw new error.IllegalStateException(`Cannot access property/index ${up} levels up, current level is ${lvl}`);
             }
             return paths[lvl - up];
         }
 
         if (up > lvl) {
-            throw new error.IllegalState(`Cannot access data ${up} levels up, current level is ${lvl}`);
+            throw new error.IllegalStateException(`Cannot access data ${up} levels up, current level is ${lvl}`);
         }
         data = `data${(lvl - up) || ""}`;
         if (!jsonPointer) {

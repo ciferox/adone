@@ -311,7 +311,7 @@ const basicReadValidations = (self, options) => {
     basicWriteValidations(self, options);
 
     if (options.readPreference && !(options.readPreference instanceof ReadPreference)) {
-        throw new error.InvalidArgument("readPreference must be an instance of ReadPreference");
+        throw new error.InvalidArgumentException("readPreference must be an instance of ReadPreference");
     }
 };
 

@@ -44,11 +44,11 @@ const parse = (header) => {
 // Append a field to a vary header.
 const append = (header, field) => {
     if (!is.string(header)) {
-        throw new error.InvalidArgument("header argument is required");
+        throw new error.InvalidArgumentException("header argument is required");
     }
 
     if (!field) {
-        throw new error.InvalidArgument("field argument is required");
+        throw new error.InvalidArgumentException("field argument is required");
     }
 
     // get fields array
@@ -57,7 +57,7 @@ const append = (header, field) => {
     // assert on invalid field names
     for (const field of fields) {
         if (!FIELD_NAME_REGEXP.test(field)) {
-            throw new error.InvalidArgument("field argument contains an invalid header name");
+            throw new error.InvalidArgumentException("field argument contains an invalid header name");
         }
     }
 
@@ -92,7 +92,7 @@ const append = (header, field) => {
 const vary = (res, field) => {
     if (!res || !res.getHeader || !res.setHeader) {
         // quack quack
-        throw new error.InvalidArgument("res argument is required");
+        throw new error.InvalidArgumentException("res argument is required");
     }
 
     // get existing header

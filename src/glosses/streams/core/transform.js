@@ -126,10 +126,10 @@ export default class Transform {
      */
     write(value) {
         if (this._ending) {
-            throw new error.IllegalState("Write after end");
+            throw new error.IllegalStateException("Write after end");
         }
         if (this._destroyed) {
-            throw new error.IllegalState("destroyed");
+            throw new error.IllegalStateException("destroyed");
         }
         this._process(value);
         return true;

@@ -56,7 +56,7 @@ export default class Redis extends __.Commander.mixin(event.Emitter) {
             } else if (is.number(arg)) {
                 this.options.port = arg;
             } else {
-                throw new error.InvalidArgument(arg);
+                throw new error.InvalidArgumentException(arg);
             }
         }
         const _dropBufferSupport = "dropBufferSupport" in this.options;
@@ -82,7 +82,7 @@ export default class Redis extends __.Commander.mixin(event.Emitter) {
 
     async connect() {
         if (this.status === "connecting" || this.status === "connect" || this.status === "ready") {
-            throw new error.IllegalState("Redis is already connecting/connected");
+            throw new error.IllegalStateException("Redis is already connecting/connected");
         }
         this.setStatus("connecting");
 
@@ -117,7 +117,7 @@ export default class Redis extends __.Commander.mixin(event.Emitter) {
                 stream.setTimeout(0);
                 stream.destroy();
 
-                const err = new error.Timeout("connect ETIMEDOUT");
+                const err = new error.TimeoutException("connect ETIMEDOUT");
                 err.errorno = "ETIMEDOUT";
                 err.code = "ETIMEDOUT";
                 err.syscall = "connect";
@@ -267,7 +267,7 @@ export default class Redis extends __.Commander.mixin(event.Emitter) {
             return command.promise;
         }
         if (this.condition.subscriber && !__.Command.checkFlag("VALID_IN_SUBSCRIBER_MODE", command.name)) {
-            command.reject(new error.InvalidArgument("Connection in subscriber mode, only subscriber commands may be used"));
+            command.reject(new error.InvalidArgumentException("Connection in subscriber mode, only subscriber commands may be used"));
             return command.promise;
         }
 
@@ -284,7 +284,7 @@ export default class Redis extends __.Commander.mixin(event.Emitter) {
         }
 
         if (!writable && !this.options.enableOfflineQueue) {
-            command.reject(new error.IllegalState("Stream isn't writeable and enableOfflineQueue options is false"));
+            command.reject(new error.IllegalStateException("Stream isn't writeable and enableOfflineQueue options is false"));
             return command.promise;
         }
 

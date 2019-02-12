@@ -71,7 +71,7 @@ export default class Netron extends adone.task.Manager {
      */
     createNetCore(netId, config = {}) {
         if (this.networks.has(netId)) {
-            throw new error.Exists(`Core '${netId}' is already exist`);
+            throw new error.ExistsException(`Core '${netId}' is already exist`);
         }
 
         if (!config.transport) {
@@ -121,7 +121,7 @@ export default class Netron extends adone.task.Manager {
     deleteNetCore(netId) {
         const netCore = this.getNetCore(netId);
         if (netCore.started) {
-            throw new error.NotAllowed("It is not allow to delete active netcore");
+            throw new error.NotAllowedException("It is not allow to delete active netcore");
         }
         this.networks.delete(netId);
     }
@@ -133,7 +133,7 @@ export default class Netron extends adone.task.Manager {
     getNetCore(netId) {
         const ni = this.networks.get(netId);
         if (is.undefined(ni)) {
-            throw new error.Unknown(`Unknown network name: ${netId}`);
+            throw new error.UnknownException(`Unknown network name: ${netId}`);
         }
 
         return ni.netCore;
@@ -352,7 +352,7 @@ export default class Netron extends adone.task.Manager {
             ctxId = instance.__proto__.constructor.name;
         }
         if (this.contexts.has(ctxId)) {
-            throw new error.Exists(`Context '${ctxId}' already attached`);
+            throw new error.ExistsException(`Context '${ctxId}' already attached`);
         }
 
         return this._attachContext(ctxId, new Stub(this, r));
@@ -364,7 +364,7 @@ export default class Netron extends adone.task.Manager {
     detachContext(ctxId, releaseOriginated = true) {
         const stub = this.contexts.get(ctxId);
         if (is.undefined(stub)) {
-            throw new error.NotExists(`Context '${ctxId}' not exists`);
+            throw new error.NotExistsException(`Context '${ctxId}' not exists`);
         }
 
         this.contexts.delete(ctxId);
@@ -403,21 +403,21 @@ export default class Netron extends adone.task.Manager {
     _getStub(defId) {
         const stub = this._stubs.get(defId);
         if (is.undefined(stub)) {
-            throw new error.Unknown(`Unknown definition '${defId}'`);
+            throw new error.UnknownException(`Unknown definition '${defId}'`);
         }
         return stub;
     }
 
     // setInterfaceTwin(ctxClassName, TwinClass) {
     //     if (!is.class(TwinClass)) {
-    //         throw new error.InvalidArgument("TwinClass should be a class");
+    //         throw new error.InvalidArgumentException("TwinClass should be a class");
     //     }
     //     if (!is.netronInterface(new TwinClass())) {
-    //         throw new error.InvalidArgument("TwinClass should be extended from adone.netron.Interface");
+    //         throw new error.InvalidArgumentException("TwinClass should be extended from adone.netron.Interface");
     //     }
     //     const Class = this._localTwins.get(ctxClassName);
     //     if (!is.undefined(Class)) {
-    //         throw new error.Exists(`Twin for interface '${ctxClassName}' exists`);
+    //         throw new error.ExistsException(`Twin for interface '${ctxClassName}' exists`);
     //     }
     //     this._localTwins.set(ctxClassName, TwinClass);
     // }
@@ -474,7 +474,7 @@ export default class Netron extends adone.task.Manager {
         } else if (is.string(peerId)) { // base58
             base58Id = peerId;
         } else {
-            throw new error.NotValid(`Invalid type of peer identity: ${adone.meta.typeOf(peerId)}`);
+            throw new error.NotValidException(`Invalid type of peer identity: ${adone.meta.typeOf(peerId)}`);
         }
 
         const peer = this.peers.get(base58Id);
@@ -482,14 +482,14 @@ export default class Netron extends adone.task.Manager {
             if (this.peer.info.id.asBase58() === base58Id) {
                 return this.peer;
             }
-            throw new error.Unknown(`Unknown peer: '${base58Id}'`);
+            throw new error.UnknownException(`Unknown peer: '${base58Id}'`);
         }
         return peer;
     }
 
     getPeerForInterface(iInstance) {
         if (!is.netronInterface(iInstance)) {
-            throw new error.NotValid("Object is not a netron interface");
+            throw new error.NotValidException("Object is not a netron interface");
         }
 
         return this.getPeer(iInstance[__.I_PEERID_SYMBOL]);
@@ -538,7 +538,7 @@ export default class Netron extends adone.task.Manager {
 
                     try {
                         if (is.undefined(stub)) {
-                            return peer._sendErrorResponse(packet, new error.NotExists(`Context with definition id '${defId}' not exists`));
+                            return peer._sendErrorResponse(packet, new error.NotExistsException(`Context with definition id '${defId}' not exists`));
                         }
                         await peer._sendResponse(packet, await stub.set(name, data[2], peer));
                     } catch (err) {
@@ -565,7 +565,7 @@ export default class Netron extends adone.task.Manager {
 
                     try {
                         if (is.undefined(stub)) {
-                            return peer._sendErrorResponse(packet, new error.NotExists(`Context with definition id '${defId}' not exists`));
+                            return peer._sendErrorResponse(packet, new error.NotExistsException(`Context with definition id '${defId}' not exists`));
                         }
                         await peer._sendResponse(packet, await stub.get(name, data[2], peer));
                     } catch (err) {
@@ -612,7 +612,7 @@ export default class Netron extends adone.task.Manager {
                         });
                     } else {
                         tasksResults[t.task] = {
-                            error: new error.NotExists(`Task '${t.task}' is not exist`)
+                            error: new error.NotExistsException(`Task '${t.task}' is not exist`)
                         };
                         continue;
                     }

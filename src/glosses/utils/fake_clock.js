@@ -50,7 +50,7 @@ const getEpoch = (epoch) => {
     if (is.number(epoch)) {
         return epoch;
     }
-    throw new error.InvalidArgument("now should be milliseconds since UNIX epoch");
+    throw new error.InvalidArgumentException("now should be milliseconds since UNIX epoch");
 };
 
 const inRange = (from, to, timer) => timer && timer.callAt >= from && timer.callAt <= to;

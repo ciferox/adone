@@ -74,7 +74,7 @@ export default class LinuxFS extends adone.metrics.FileSystem {
     async _getFileDescriptors(index) {
         const filepath = "/proc/sys/fs/file-nr";
         if (index < 0 || index > 2) {
-            throw new adone.error.InvalidArgument("index must be between 0 and 2");
+            throw new adone.error.InvalidArgumentException("index must be between 0 and 2");
         }
         const lines = await adone.fs.readLines(filepath);
         if (!is.null(lines) && lines.length > 0) {

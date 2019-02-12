@@ -10,7 +10,7 @@ class TestApp extends adone.app.Application {
             try {
                 this[getter] = null;
             } catch (err) {
-                if (err instanceof adone.error.NotAllowed) {
+                if (err instanceof adone.error.NotAllowedException) {
                     counter++;
                 } else {
                     console.log(err);

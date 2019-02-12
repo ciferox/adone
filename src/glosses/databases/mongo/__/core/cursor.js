@@ -414,7 +414,7 @@ export default class Cursor extends event.Emitter {
     next(callback) {
         // We have notified about it
         if (this.cursorState.notified) {
-            return callback(new error.IllegalState("cursor is exhausted"));
+            return callback(new error.IllegalStateException("cursor is exhausted"));
         }
 
         // Cursor is killed return null

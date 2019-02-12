@@ -19,7 +19,7 @@ export default class Downlader extends adone.event.Emitter {
 
         this.url = url;
         if (!is.string(dest) && !is.writableStream(dest)) {
-            throw new error.InvalidArgument("dest must be a string or writable stream");
+            throw new error.InvalidArgumentException("dest must be a string or writable stream");
         }
         this.dest = dest;
     }

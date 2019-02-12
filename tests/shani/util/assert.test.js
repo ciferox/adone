@@ -1131,13 +1131,13 @@ describe("shani", "util", "assert", () => {
         it("throws if target is undefined", () => {
             assert.throws(() => {
                 sassert.expose();
-            }, error.InvalidArgument);
+            }, error.InvalidArgumentException);
         });
 
         it("throws if target is null", () => {
             assert.throws(() => {
                 sassert.expose(null);
-            }, error.InvalidArgument);
+            }, error.InvalidArgumentException);
         });
     });
 

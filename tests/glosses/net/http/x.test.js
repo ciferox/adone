@@ -159,8 +159,8 @@ describe("net", "http", "x", () => {
         assert.equal(err.expose, false);
     });
 
-    it("new error.NotFound()", () => {
-        const err = new error.NotFound();
+    it("new error.NotFoundException()", () => {
+        const err = new error.NotFoundException();
         assert.equal(err.name, "NotFound");
         assert.equal(err.message, "Not Found");
         assert.equal(err.status, 404);
@@ -193,11 +193,11 @@ describe("net", "http", "x", () => {
     });
 
     it("should support err instanceof exposed constructor", () => {
-        assert(error.create(404) instanceof error.NotFound);
+        assert(error.create(404) instanceof error.NotFoundException);
         assert(error.create(500) instanceof error.InternalServerError);
-        assert((new error["404"]()) instanceof error.NotFound);
+        assert((new error["404"]()) instanceof error.NotFoundException);
         assert((new error["500"]()) instanceof error.InternalServerError);
-        assert((new error.NotFound()) instanceof error.NotFound);
+        assert((new error.NotFoundException()) instanceof error.NotFoundException);
         assert((new error.InternalServerError()) instanceof error.InternalServerError);
     });
 

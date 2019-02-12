@@ -147,7 +147,7 @@ export class Router {
                             if (is.function(options.notImplemented)) {
                                 notImplementedThrowable = options.notImplemented();
                             } else {
-                                notImplementedThrowable = new http.error.NotImplemented();
+                                notImplementedThrowable = new http.error.NotImplementedException();
                             }
                             throw notImplementedThrowable;
                         } else {
@@ -258,7 +258,7 @@ export class Router {
             return route.url(...args);
         }
 
-        return new error.NotFound(`No route found for name: ${name}`);
+        return new error.NotFoundException(`No route found for name: ${name}`);
     }
 
     // Match given `path` and return corresponding routes.

@@ -9,7 +9,7 @@ export default function plugin() {
     return function wrap(template, data, options) {
         if (is.object(template) && !is.function(template)) {
             if (!is.string(template.src)) {
-                throw new error.InvalidArgument("Expecting `src` option");
+                throw new error.InvalidArgumentException("Expecting `src` option");
             }
             template = new Promise((resolve, reject) => {
                 fs.readFile(template.src, "utf8", (err, data) => {
@@ -18,7 +18,7 @@ export default function plugin() {
             });
         } else {
             if (!is.string(template) && !is.function(template)) {
-                throw new error.InvalidArgument("Template must be a string or a function");
+                throw new error.InvalidArgumentException("Template must be a string or a function");
             }
             template = Promise.resolve(template);
         }

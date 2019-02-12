@@ -95,7 +95,7 @@ class TunnelingAgent extends event.Emitter {
         connectReq.once("error", (err) => {
             connectReq.removeAllListeners();
 
-            const error = new error.IllegalState(`tunneling socket could not be established, cause=${err.message}`);
+            const error = new error.IllegalStateException(`tunneling socket could not be established, cause=${err.message}`);
             error.code = "ECONNRESET";
             options.request.emit("error", error);
             this.removeSocket(placeholder);

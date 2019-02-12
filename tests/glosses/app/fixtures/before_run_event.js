@@ -10,7 +10,7 @@ class TestApp extends app.Application {
     configure() {
         this.on("before run", async (command) => {
             if (command.names[0] === "failed") {
-                throw new adone.error.Runtime("something bad happened");
+                throw new adone.error.RuntimeException("something bad happened");
             }
             console.log("before run", command.names.join(","));
         });

@@ -48,12 +48,12 @@ class SBCSDecoder {
 export default class SBCSCodec {
     constructor(codecOptions, iconv) {
         if (!codecOptions) {
-            throw new error.InvalidArgument("SBCS codec is called without the data.");
+            throw new error.InvalidArgumentException("SBCS codec is called without the data.");
         }
 
         // Prepare char buffer for decoding.
         if (!codecOptions.chars || (codecOptions.chars.length !== 128 && codecOptions.chars.length !== 256)) {
-            throw new error.InvalidArgument(`Encoding '${codecOptions.type}' has incorrect 'chars' (must be of len 128 or 256)`);
+            throw new error.InvalidArgumentException(`Encoding '${codecOptions.type}' has incorrect 'chars' (must be of len 128 or 256)`);
         }
 
         if (codecOptions.chars.length === 128) {

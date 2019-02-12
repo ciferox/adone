@@ -6,7 +6,7 @@ const counters = new Map();
 
 const processByte = (stream, byte) => {
     if (!is.number(byte)) {
-        throw new adone.error.NotValid("Invalid byte data for stream");
+        throw new adone.error.NotValidException("Invalid byte data for stream");
     }
 
     if (byte === NEWLINE) {
@@ -75,7 +75,7 @@ export const uninstall = (stream) => {
     if (stream[NEWLINER_SYMBOL] === true) {
         const streamData = counters.get(stream);
         if (is.undefined(streamData)) {
-            throw new adone.error.NotFound("New line counter is not found for stream");
+            throw new adone.error.NotFoundException("New line counter is not found for stream");
         }
 
         if (streamData.prototypedWrite) {

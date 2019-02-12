@@ -60,7 +60,7 @@ export default class Server {
 
     use(middleware) {
         if (!is.function(middleware)) {
-            throw new error.InvalidArgument("middleware must be a function");
+            throw new error.InvalidArgumentException("middleware must be a function");
         }
         this.middlewares.push(middleware);
         return this;

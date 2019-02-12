@@ -27,7 +27,7 @@ export default function mock(lib, utils) {
 
     const assertCanWorkWith = (assertion) => {
         if (!isSpy(assertion._obj) && !isCall(assertion._obj)) {
-            throw new error.InvalidArgument(`${utils.inspect(assertion._obj, { quoteStrings: false })} is not a spy or a call to a spy!`);
+            throw new error.InvalidArgumentException(`${utils.inspect(assertion._obj, { quoteStrings: false })} is not a spy or a call to a spy!`);
         }
     };
 

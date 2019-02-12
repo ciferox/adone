@@ -8,7 +8,7 @@ const {
 
 const assertEncoding = (encoding) => {
     if (encoding && !Buffer.isEncoding(encoding)) {
-        throw new error.InvalidArgument(`Invalid encoding: ${encoding}`);
+        throw new error.InvalidArgumentException(`Invalid encoding: ${encoding}`);
     }
 };
 
@@ -23,7 +23,7 @@ const getOptions = (options, defaultOptions) => {
         defaultOptions.encoding = options;
         options = defaultOptions;
     } else if (!is.object(options)) {
-        throw new error.InvalidArgument("Invalid options object, must be string or object");
+        throw new error.InvalidArgumentException("Invalid options object, must be string or object");
     }
 
     if (options.encoding !== "buffer") {

@@ -35,7 +35,7 @@ export default class RefCountedCache extends MapCache {
     ref(key) {
         const entry = super.get(key);
         if (!entry) {
-            throw new error.Unknown(`Unknown key: ${key}`);
+            throw new error.UnknownException(`Unknown key: ${key}`);
         }
         entry.ref();
     }
@@ -43,7 +43,7 @@ export default class RefCountedCache extends MapCache {
     unref(key) {
         const entry = super.get(key);
         if (!entry) {
-            throw new error.Unknown(`Unknown key: ${key}`);
+            throw new error.UnknownException(`Unknown key: ${key}`);
         }
         entry.unref();
         if (entry.isDereferenced()) {
@@ -54,7 +54,7 @@ export default class RefCountedCache extends MapCache {
     references(key) {
         const entry = super.get(key);
         if (!entry) {
-            throw new error.Unknown(`Unknown key: ${key}`);
+            throw new error.UnknownException(`Unknown key: ${key}`);
         }
         return entry.references;
     }

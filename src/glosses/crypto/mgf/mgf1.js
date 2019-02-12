@@ -20,7 +20,7 @@ export const create = function (md) {
     const hMeta = crypto.hash.meta(md);
 
     if (is.null(hMeta)) {
-        throw new error.NotSupported(`"${md}" hash algorithm is not supported`);
+        throw new error.NotSupportedException(`"${md}" hash algorithm is not supported`);
     }
 
     const hash = (a, b) => {

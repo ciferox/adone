@@ -38,7 +38,7 @@ class PoolNamespace {
         const clusterNode = this._getClusterNode();
 
         if (is.null(clusterNode)) {
-            return cb(new error.NotExists("Pool does Not exists."));
+            return cb(new error.NotExistsException("Pool does Not exists."));
         }
 
         return this._cluster._getConnection(clusterNode, (err, connection) => {

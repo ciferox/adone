@@ -74,11 +74,11 @@ const makeRe = (pattern, options) => {
     }
 
     if (!is.string(pattern)) {
-        throw new error.InvalidArgument("expected a string");
+        throw new error.InvalidArgumentException("expected a string");
     }
 
     if (pattern.length > toRegex.MAX_LENGTH) {
-        throw new error.LimitExceeded(`expected pattern to be less than ${toRegex.MAX_LENGTH} characters`);
+        throw new error.LimitExceededException(`expected pattern to be less than ${toRegex.MAX_LENGTH} characters`);
     }
 
     let key = pattern;

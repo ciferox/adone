@@ -106,7 +106,7 @@ const getCodec = (encoding) => {
                 return codec;
             }
             default: {
-                throw new error.Unknown(`Encoding not recognized: '${encoding}' (searched as: '${enc}')`);
+                throw new error.UnknownException(`Encoding not recognized: '${encoding}' (searched as: '${enc}')`);
             }
         }
     }

@@ -194,7 +194,7 @@ export default class Dispatcher extends Subsystem {
                             }
                             elapsed += 50;
                             if (elapsed >= 3000) {
-                                throw new error.Timeout("Process is still alive");
+                                throw new error.TimeoutException("Process is still alive");
                             }
                             await adone.promise.delay(50); // eslint-disable-line
                         }
@@ -256,7 +256,7 @@ export default class Dispatcher extends Subsystem {
             }
             return true;
         } catch (err) {
-            if (err instanceof adone.error.Connect) {
+            if (err instanceof adone.error.ConnectException) {
                 return false;
             }
             throw err;

@@ -32,11 +32,11 @@ export default class LogRotator extends event.Emitter {
         this.maxSize = util.parseSize(maxSize);
 
         if (!this.checkInterval) {
-            throw new error.InvalidArgument("invalid checkInterval");
+            throw new error.InvalidArgumentException("invalid checkInterval");
         }
 
         if (!this.maxSize) {
-            throw new error.InvalidArgument("invalid maxSize");
+            throw new error.InvalidArgumentException("invalid maxSize");
         }
 
         this.maxFiles = maxFiles;

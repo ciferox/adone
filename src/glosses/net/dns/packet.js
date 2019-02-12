@@ -557,7 +557,7 @@ rtxt.encode = function (data, buf, offset) {
             data[i] = Buffer.from(data[i]);
         }
         if (!is.buffer(data[i])) {
-            throw new adone.error.NotValid("Must be a Buffer");
+            throw new adone.error.NotValidException("Must be a Buffer");
         }
     }
 

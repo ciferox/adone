@@ -92,7 +92,7 @@ export const createCompiler = (config = {}) => {
         }
 
         if (is.undefined(params)) {
-            throw new error.InvalidArgument("Named query contains placeholders, but parameters object is undefined");
+            throw new error.InvalidArgumentException("Named query contains placeholders, but parameters object is undefined");
         }
 
         const tokens = tree[1];

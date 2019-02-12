@@ -19,28 +19,28 @@ describe("meta", () => {
 
         it("not instance", () => {
             const err = assert.throws(() => Reflection.from("a"));
-            assert.instanceOf(err, adone.error.NotValid);
+            assert.instanceOf(err, adone.error.NotValidException);
         });
 
         it("class instead instance", () => {
             const err = assert.throws(() => Reflection.from(A));
-            assert.instanceOf(err, adone.error.NotValid);
+            assert.instanceOf(err, adone.error.NotValidException);
         });
 
         it("class without constructor", () => {
             class SomeClass { }
             const err = assert.throws(() => Reflection.from(new SomeClass()));
-            assert.instanceOf(err, adone.error.NotValid);
+            assert.instanceOf(err, adone.error.NotValidException);
         });
 
         it("Object instead instance", () => {
             const err = assert.throws(() => Reflection.from(Object));
-            assert.instanceOf(err, adone.error.NotValid);
+            assert.instanceOf(err, adone.error.NotValidException);
         });
 
         it("empty function instead instance", () => {
             const err = assert.throws(() => Reflection.from(adone.noop));
-            assert.instanceOf(err, adone.error.NotValid);
+            assert.instanceOf(err, adone.error.NotValidException);
         });
 
         it("instance of unnamed class", () => {
@@ -52,7 +52,7 @@ describe("meta", () => {
             );
 
             const err = assert.throws(() => Reflection.from(a));
-            assert.instanceOf(err, adone.error.NotValid);
+            assert.instanceOf(err, adone.error.NotValidException);
         });
 
         it("instance with no public methods", () => {
@@ -63,7 +63,7 @@ describe("meta", () => {
             }
 
             const err = assert.throws(() => Reflection.from(new A()));
-            assert.instanceOf(err, adone.error.NotValid);
+            assert.instanceOf(err, adone.error.NotValidException);
         });
 
         it("valid instance", () => {
@@ -438,7 +438,7 @@ describe("meta", () => {
         }
 
         it("contextify class is not allowed", () => {
-            assert.throws(() => adone.netron.contextify(Simple), adone.error.NotValid);
+            assert.throws(() => adone.netron.contextify(Simple), adone.error.NotValidException);
         });
 
         it("contextify already contextified class", () => {
@@ -449,7 +449,7 @@ describe("meta", () => {
                 }
             }
 
-            assert.throws(() => adone.netron.contextify(new MyContext()), adone.error.NotValid);
+            assert.throws(() => adone.netron.contextify(new MyContext()), adone.error.NotValidException);
         });
 
         it("contextify instance of regular class", async () => {

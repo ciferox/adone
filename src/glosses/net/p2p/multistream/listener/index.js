@@ -67,7 +67,7 @@ export default class Listener {
      */
     addHandler(protocol, handlerFunc, matchFunc) {
         if (!is.function(handlerFunc)) {
-            throw new adone.error.InvalidArgument("Handler must be a function");
+            throw new adone.error.InvalidArgumentException("Handler must be a function");
         }
 
         // if (this.handlers[protocol]) {

@@ -22,28 +22,28 @@ describe("application", "Subsystem", () => {
         const ss = create("ss");
         assert.throws(() => {
             ss.name = "dd";
-        }, error.NotAllowed);
+        }, error.NotAllowedException);
     });
 
     it("should throw on changing parent", () => {
         const ss = create("ss");
         assert.throws(() => {
             ss.parent = new Subsystem();
-        }, error.NotAllowed);
+        }, error.NotAllowedException);
     });
 
     it("should throw on changing state", () => {
         const ss = create("ss");
         assert.throws(() => {
             ss.state = adone.app.STATE.RUNNING;
-        }, error.NotAllowed);
+        }, error.NotAllowedException);
     });
 
     it("should throw on changing root", () => {
         const ss = create("ss");
         assert.throws(() => {
             ss.root = new Subsystem();
-        }, error.NotAllowed);
+        }, error.NotAllowedException);
     });
 
     it("check presence and get all of subsystems", () => {

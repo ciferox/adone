@@ -567,7 +567,7 @@ describe("util", () => {
                 for (const i of zip({})) {  // eslint-disable-line
 
                 }
-            }).to.throw(error.InvalidArgument, "Only iterables are supported");
+            }).to.throw(error.InvalidArgumentException, "Only iterables are supported");
         });
 
         it("should correctly handle an empty array", () => {

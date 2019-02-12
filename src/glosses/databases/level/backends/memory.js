@@ -2,7 +2,7 @@ const {
     is,
     util: { ltgt },
     collection: { RedBlackTree },
-    database: { level: { AbstractBackend, AbstractIterator } }
+    database: { level: { AbstractIterator, AbstractBackend } }
 } = adone;
 
 const gt = function (value) {
@@ -21,7 +21,7 @@ const lte = function (value) {
     return ltgt.compare(value, this._upperBound) <= 0;
 };
 
-class MemIterator extends AbstractIterator {
+class MemoryIterator extends AbstractIterator {
     constructor(db, options) {
         super(db);
         this._limit = options.limit;
@@ -110,7 +110,7 @@ class MemIterator extends AbstractIterator {
         this._tree[this._incr]();
 
         setImmediate(function callNext() {
-            callback(null, { key, value });
+            callback(null, key, value);
         });
     }
 
@@ -119,12 +119,17 @@ class MemIterator extends AbstractIterator {
     }
 }
 
-
 export default class MemoryBackend extends AbstractBackend {
     constructor() {
         super("");
 
         this._store = new RedBlackTree(ltgt.compare);
+    }
+
+    _open(options, callback) {
+        setImmediate(() => {
+            callback(null, this);
+        });
     }
 
     _serializeKey(key) {
@@ -153,7 +158,7 @@ export default class MemoryBackend extends AbstractBackend {
         if (is.undefined(value)) {
             // 'NotFound' error, consistent with LevelDOWN API
             return setImmediate(function callNext() {
-                callback(new adone.error.NotFound(`Key ${key} not found`));
+                callback(new Error("NotFound"));
             });
         }
 
@@ -197,6 +202,6 @@ export default class MemoryBackend extends AbstractBackend {
     }
 
     _iterator(options) {
-        return new MemIterator(this, options);
+        return new MemoryIterator(this, options);
     }
 }

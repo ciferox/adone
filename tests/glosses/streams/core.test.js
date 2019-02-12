@@ -2096,7 +2096,7 @@ describe("core", () => {
                 it("should throw if the callback is not a function", () => {
                     expect(() => {
                         core.create().map();
-                    }).to.throw(error.InvalidArgument, "'callback' must be a function");
+                    }).to.throw(error.InvalidArgumentException, "'callback' must be a function");
                 });
             });
 
@@ -2161,13 +2161,13 @@ describe("core", () => {
                 it("should throw if the condition is not a function", () => {
                     expect(() => {
                         core.create().mapIf();
-                    }).to.throw(error.InvalidArgument, "'condition' must be a function");
+                    }).to.throw(error.InvalidArgumentException, "'condition' must be a function");
                 });
 
                 it("should throw if the callback is not a function", () => {
                     expect(() => {
                         core.create().mapIf(() => { });
-                    }).to.throw(error.InvalidArgument, "'callback' must be a function");
+                    }).to.throw(error.InvalidArgumentException, "'callback' must be a function");
                 });
             });
 
@@ -2207,7 +2207,7 @@ describe("core", () => {
                 it("should throw if the callback is not a function", () => {
                     expect(() => {
                         core.create().filter();
-                    }).to.throw(error.InvalidArgument, "'callback' must be a function");
+                    }).to.throw(error.InvalidArgumentException, "'callback' must be a function");
                 });
 
                 it("should create a sync transform if callback is sync", async () => {
@@ -2280,7 +2280,7 @@ describe("core", () => {
                 it("should throw if the callback is not a function", () => {
                     expect(() => {
                         core.create().done();
-                    }).to.throw(adone.error.InvalidArgument, "'callback' must be a function");
+                    }).to.throw(adone.error.InvalidArgumentException, "'callback' must be a function");
                 });
             });
 
@@ -2311,7 +2311,7 @@ describe("core", () => {
                 it("should throw if the argument is not a function", () => {
                     expect(() => {
                         core.create().unique(123);
-                    }).to.throw(adone.error.InvalidArgument, "'prop' must be a function or null");
+                    }).to.throw(adone.error.InvalidArgumentException, "'prop' must be a function or null");
                 });
 
                 it("should not throw if the argument is null", () => {

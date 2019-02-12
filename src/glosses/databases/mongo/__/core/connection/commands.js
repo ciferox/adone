@@ -30,15 +30,15 @@ export class Query {
     constructor(bson, ns, query, options = {}) {
         // Basic options needed to be passed in
         if (is.nil(ns)) {
-            throw new error.InvalidArgument("ns must be specified for query");
+            throw new error.InvalidArgumentException("ns must be specified for query");
         }
         if (is.nil(query)) {
-            throw new error.InvalidArgument("query must be specified for query");
+            throw new error.InvalidArgumentException("query must be specified for query");
         }
 
         // Validate that we are not passing 0x00 in the collection name
         if (ns.includes("\x00")) {
-            throw new error.InvalidArgument("namespace cannot contain a null character");
+            throw new error.InvalidArgumentException("namespace cannot contain a null character");
         }
 
         // Basic options

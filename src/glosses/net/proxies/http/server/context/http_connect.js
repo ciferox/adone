@@ -90,7 +90,7 @@ export default class HTTPConnectContext extends BaseContext {
                         })
                             .once("connect", (res, socket) => {
                                 if (res.statusCode !== 200) {
-                                    reject(new error.IllegalState(`Cannot establish a connection with the proxy, statusCode = ${res.statusCode}`));
+                                    reject(new error.IllegalStateException(`Cannot establish a connection with the proxy, statusCode = ${res.statusCode}`));
                                 } else {
                                     resolve(socket);
                                 }

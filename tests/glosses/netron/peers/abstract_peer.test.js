@@ -36,7 +36,7 @@ describe("AbstractPeer", () => {
             it(`${m}()`, () => {
                 assert.true(is.function(peer[m]));
                 const e = assert.throws(() => peer[m]());
-                assert.instanceOf(e, error.NotImplemented);
+                assert.instanceOf(e, error.NotImplementedException);
                 assert.match(e.message, new RegExp(`Method ${m}()`));
             });
         }

@@ -81,13 +81,13 @@ describe("net", "dns", "packet", () => {
     it("txt-invalid-data", () => {
         assert.throws(() => {
             packet.txt.encode(null);
-        }, adone.error.NotValid);
+        }, adone.error.NotValidException);
         assert.throws(() => {
             packet.txt.encode(undefined);
-        }, adone.error.NotValid);
+        }, adone.error.NotValidException);
         assert.throws(() => {
             packet.txt.encode(10);
-        }, adone.error.NotValid);
+        }, adone.error.NotValidException);
     });
 
     it("null", () => {

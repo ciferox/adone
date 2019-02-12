@@ -121,12 +121,12 @@ describe("Netron", () => {
                 assert.false(netron.hasContexts());
                 netron.attachContext(a, "a");
                 assert.true(netron.hasContexts());
-                assert.throws(() => netron.attachContext(a, "a"), adone.error.Exists);
+                assert.throws(() => netron.attachContext(a, "a"), adone.error.ExistsException);
             });
 
             it("attach different contexts with same name should have thrown", () => {
                 netron.attachContext(new A(), "a");
-                assert.throws(() => netron.attachContext(new B(), "a"), adone.error.Exists);
+                assert.throws(() => netron.attachContext(new B(), "a"), adone.error.ExistsException);
             });
 
             it("attach same context with different name should be ok", () => {
@@ -136,7 +136,7 @@ describe("Netron", () => {
             });
 
             it("detach non-existing context should have thrown", () => {
-                assert.throws(() => netron.detachContext("b"), adone.error.NotExists);
+                assert.throws(() => netron.detachContext("b"), adone.error.NotExistsException);
             });
 
             it("detach attached context", () => {
@@ -196,7 +196,7 @@ describe("Netron", () => {
             });
 
             it("unknown context - should have thrown", () => {
-                assert.throws(() => netron._getStub(778899), adone.error.Unknown);
+                assert.throws(() => netron._getStub(778899), adone.error.UnknownException);
             });
         });
     });
@@ -259,7 +259,7 @@ describe("Netron", () => {
                 task: "topaz"
             });
 
-            assert.instanceOf(result.topaz.error, adone.error.NotExists);
+            assert.instanceOf(result.topaz.error, adone.error.NotExistsException);
         });
 
         it("custom task", async () => {
@@ -340,7 +340,7 @@ describe("Netron", () => {
 
         it("delete active netcore is not allowed", async () => {
             await netronS.start("default");
-            assert.throws(() => netronS.deleteNetCore("default"), adone.error.NotAllowed);
+            assert.throws(() => netronS.deleteNetCore("default"), adone.error.NotAllowedException);
             assert.strictEqual(netronS.networks.size, 1);
         });
 
@@ -439,7 +439,7 @@ describe("Netron", () => {
         it("connect netron to netcore without netron protocol should have thrown", async () => {
             const netCore = netronS.getNetCore("default");
             await netCore.start();
-            await assert.throws(async () => netronC.connect("default", peerS), adone.error.NotSupported);
+            await assert.throws(async () => netronC.connect("default", peerS), adone.error.NotSupportedException);
         });
 
         it("connects using different addresses of the remote netron should return same peer", async () => {

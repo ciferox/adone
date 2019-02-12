@@ -11,7 +11,7 @@ export const applyPatch = (source, uniDiff, options = {}) => {
 
     if (is.array(uniDiff)) {
         if (uniDiff.length > 1) {
-            throw new error.InvalidArgument("applyPatch only works with a single input.");
+            throw new error.InvalidArgumentException("applyPatch only works with a single input.");
         }
 
         [uniDiff] = uniDiff;

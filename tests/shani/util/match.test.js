@@ -1169,7 +1169,7 @@ describe("shani", "util", "match", () => {
         it("requires matcher argument", () => {
             assert.throws(() => {
                 match.instanceOf(Error).or();
-            }, error.InvalidArgument);
+            }, error.InvalidArgumentException);
         });
 
         it("will coerce argument to matcher", () => {
@@ -1214,7 +1214,7 @@ describe("shani", "util", "match", () => {
         it("requires matcher argument", () => {
             assert.throws(() => {
                 match.instanceOf(Error).and();
-            }, error.InvalidArgument);
+            }, error.InvalidArgumentException);
         });
 
         it("will coerce to matcher", () => {

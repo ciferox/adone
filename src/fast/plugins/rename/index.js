@@ -22,7 +22,7 @@ export default function plugin() {
                 const extname = "extname" in handler ? handler.extname : obj.extname;
                 p = path.join(dirname, prefix + basename + suffix + extname);
             } else {
-                throw new error.InvalidArgument();
+                throw new error.InvalidArgumentException();
             }
             file.path = path.join(file.base, p);
 

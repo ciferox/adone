@@ -37,7 +37,7 @@ const constructYamlTimestamp = (data) => {
     }
 
     if (is.null(match)) {
-        throw new error.InvalidArgument("Date resolve error");
+        throw new error.InvalidArgumentException("Date resolve error");
     }
 
     // match: [1] year [2] month [3] day

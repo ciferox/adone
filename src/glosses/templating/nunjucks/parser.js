@@ -45,7 +45,7 @@ export class Parser {
 
     pushToken(tok) {
         if (this.peeked) {
-            throw new error.IllegalState("pushToken: can only push one token on between reads");
+            throw new error.IllegalStateException("pushToken: can only push one token on between reads");
         }
         this.peeked = tok;
     }

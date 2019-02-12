@@ -35,7 +35,7 @@ export default function plugin() {
             }
 
             if (file.isStream()) {
-                this.emit("error", new error.NotSupported("Streaming is not supported"));
+                this.emit("error", new error.NotSupportedException("Streaming is not supported"));
                 return;
             }
             // Collect renames from reved files.

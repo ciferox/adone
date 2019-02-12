@@ -18,7 +18,7 @@ export default class extends Subsystem {
                 nargs: "+",
                 type(val) {
                     if (!is.multiAddress(val) && ! is.string(val)) {
-                        throw new adone.error.NotValid(`Value '${val}' it not a valid address`);
+                        throw new adone.error.NotValidException(`Value '${val}' it not a valid address`);
                     }
                     return adone.multi.address.create(val);
                 },

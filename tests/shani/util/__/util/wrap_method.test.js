@@ -21,7 +21,7 @@ describe("shani", "util", "__", "util", "wrapMethod", () => {
     it("throws if first argument is not object", () => {
         assert.throws(() => {
             wrapMethod();
-        }, error.InvalidArgument);
+        }, error.InvalidArgumentException);
     });
 
     it("throws if object defines property but is not function", function () {

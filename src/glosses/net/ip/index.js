@@ -101,7 +101,7 @@ export const toBuffer = function (ip, buff, offset) {
     }
 
     if (!result) {
-        throw new adone.error.NotValid(`Invalid ip address: ${ip}`);
+        throw new adone.error.NotValidException(`Invalid ip address: ${ip}`);
     }
 
     return result;
@@ -203,7 +203,7 @@ export const cidr = function (cidrString) {
 
     const addr = cidrParts[0];
     if (cidrParts.length !== 2) {
-        throw new adone.error.NotValid(`Invalid CIDR subnet: ${addr}`);
+        throw new adone.error.NotValidException(`Invalid CIDR subnet: ${addr}`);
     }
 
     const msk = fromPrefixLen(parseInt(cidrParts[1], 10));
@@ -273,7 +273,7 @@ export const cidrSubnet = function (cidrString) {
 
     const addr = cidrParts[0];
     if (cidrParts.length !== 2) {
-        throw new adone.error.NotValid(`Invalid CIDR subnet: ${addr}`);
+        throw new adone.error.NotValidException(`Invalid CIDR subnet: ${addr}`);
     }
 
     const msk = fromPrefixLen(parseInt(cidrParts[1], 10));

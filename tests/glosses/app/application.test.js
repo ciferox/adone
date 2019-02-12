@@ -92,7 +92,7 @@ describe("application", "Application", () => {
                     }
 
                     const err = assert.throws(() => new SubSys());
-                    assert.instanceOf(err, adone.error.NotAllowed);
+                    assert.instanceOf(err, adone.error.NotAllowedException);
                 });
 
                 it("should throw if a subsystem with the same name already exists", async () => {
@@ -401,7 +401,7 @@ describe("application", "Application", () => {
                     name: "s1",
                     subsystem: subSys
                 }));
-                assert.instanceOf(err, adone.error.NotAllowed);
+                assert.instanceOf(err, adone.error.NotAllowedException);
             });
         });
     });

@@ -35,7 +35,7 @@ const stringToFlockFlags = (flag) => {
             return b.LOCK_UN;
 
         default:
-            throw new error.Unknown(`Unknown flock flag: ${flag}`);
+            throw new error.UnknownException(`Unknown flock flag: ${flag}`);
     }
 };
 
@@ -363,7 +363,7 @@ export const copy = async (source, dest, options = {}) => {
     const currentPath = std.path.resolve(basePath, source);
     const targetPath = std.path.resolve(basePath, dest);
     if (currentPath === targetPath) {
-        throw new error.NotAllowed("Source and destination must not be the same.");
+        throw new error.NotAllowedException("Source and destination must not be the same.");
     }
 
     const stats = await fs.lstat(source);
@@ -752,7 +752,7 @@ export const lookup = async (path) => {
         }
     }
 
-    throw new adone.error.NotFound(path);
+    throw new adone.error.NotFoundException(path);
 };
 
 export const chownr = async (path, uid, gid) => {

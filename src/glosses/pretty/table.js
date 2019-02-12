@@ -10,11 +10,11 @@ const percentRegexp = /^(\d{1,3}(?:.\d+)?)%$/;
 const coercePercent = (percent, total) => {
     const match = percent.match(percentRegexp);
     if (is.null(match)) {
-        throw new error.InvalidArgument(`Invalid percent value: ${percent}`);
+        throw new error.InvalidArgumentException(`Invalid percent value: ${percent}`);
     }
     const value = parseFloat(match[1]);
     if (value > 100) {
-        throw new error.InvalidArgument(`Invalid percent value: ${percent}`);
+        throw new error.InvalidArgumentException(`Invalid percent value: ${percent}`);
     }
     return Math.floor(value / 100 * total);
 };

@@ -120,15 +120,15 @@ export default class ServiceMaintainer extends AsyncEmitter {
         const serviceData = await this.manager.servicesRegistry.get(name);
 
         if (serviceData.group !== this.group) {
-            throw new error.NotAllowed(`Service '${name}' is not in group '${this.group}'`);
+            throw new error.NotAllowedException(`Service '${name}' is not in group '${this.group}'`);
         }
         if (serviceData.status === STATUS.DISABLED) {
-            throw new error.IllegalState("Service is disabled");
+            throw new error.IllegalStateException("Service is disabled");
         } else if (serviceData.status === STATUS.INACTIVE) {
             const onError = async (reject) => {
                 await this.setServiceStatus(name, STATUS.INACTIVE);
                 logger.error(`Unsuccessful attempt to start service '${serviceData.name}':`);
-                const err = new error.Timeout("Timeout occured");
+                const err = new error.TimeoutException("Timeout occured");
                 logger.error(err);
                 reject(err);
             };
@@ -172,7 +172,7 @@ export default class ServiceMaintainer extends AsyncEmitter {
                                 err = data.error;
                                 break;
                             default:
-                                err = new error.IllegalState(`Service status: ${data.status}`);
+                                err = new error.IllegalStateException(`Service status: ${data.status}`);
                         }
 
                         logger.error(`Unsuccessful attempt to start service '${serviceData.name}':`);
@@ -185,17 +185,17 @@ export default class ServiceMaintainer extends AsyncEmitter {
                 );
             });
         } else {
-            throw new error.IllegalState(`Service status: ${serviceData.status}`);
+            throw new error.IllegalStateException(`Service status: ${serviceData.status}`);
         }
     }
 
     async stopService(name) {
         const serviceData = await this.manager.servicesRegistry.get(name);
         if (serviceData.group !== this.group) {
-            throw new error.NotAllowed(`Service '${name}' is not in group '${this.group}'`);
+            throw new error.NotAllowedException(`Service '${name}' is not in group '${this.group}'`);
         }
         if (serviceData.status === STATUS.DISABLED) {
-            throw new error.IllegalState("Service is disabled");
+            throw new error.IllegalStateException("Service is disabled");
         } else if (serviceData.status === STATUS.ACTIVE) {
             await this.setServiceStatus(name, STATUS.STOPPING);
             await this.iServiceApp.unloadService(serviceData.name);
@@ -211,7 +211,7 @@ export default class ServiceMaintainer extends AsyncEmitter {
                                 err = result.error;
                                 break;
                             default:
-                                err = new error.IllegalState(`Service status: ${result.status}`);
+                                err = new error.IllegalStateException(`Service status: ${result.status}`);
                         }
                         logger.error(`Unsuccessful attempt to stop service '${serviceData.name}':`);
                         logger.error(err);
@@ -222,7 +222,7 @@ export default class ServiceMaintainer extends AsyncEmitter {
                         // Need additional verification
                         await this.setServiceStatus(name, STATUS.INACTIVE); // ???
                         logger.error(`Unsuccessful attempt to stop service '${serviceData.name}':`);
-                        const err = new error.Timeout("Timeout occured");
+                        const err = new error.TimeoutException("Timeout occured");
                         logger.error(err);
                         reject(err);
                     },
@@ -230,7 +230,7 @@ export default class ServiceMaintainer extends AsyncEmitter {
                 );
             });
         } else {
-            throw new error.IllegalState(`Service status: ${serviceData.status}`);
+            throw new error.IllegalStateException(`Service status: ${serviceData.status}`);
         }
     }
 

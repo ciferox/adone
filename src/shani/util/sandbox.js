@@ -61,7 +61,7 @@ class Sandbox extends __.Collection {
 
     restore(...args) {
         if (args.length) {
-            throw new error.InvalidArgument("sandbox.restore() does not take any parameters. Perhaps you meant stub.restore()");
+            throw new error.InvalidArgumentException("sandbox.restore() does not take any parameters. Perhaps you meant stub.restore()");
         }
         super.restore(...args);
         this.restoreContext();

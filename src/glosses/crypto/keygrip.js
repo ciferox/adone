@@ -13,7 +13,7 @@ const cipher = Symbol("cipher");
 export default class Keygrip {
     constructor(keys, { hash = "sha256", cipher = "aes-256-cbc" } = {}) {
         if (!is.array(keys) || keys.length === 0) {
-            throw new error.InvalidArgument("Keys must be provided");
+            throw new error.InvalidArgumentException("Keys must be provided");
         }
         this.keys = keys;
         this.hash = hash;
@@ -26,7 +26,7 @@ export default class Keygrip {
 
     set hash(val) {
         if (!cryptoHashes.has(val)) {
-            throw new error.NotSupported(`unsupported hash algorithm: ${val}`);
+            throw new error.NotSupportedException(`unsupported hash algorithm: ${val}`);
         }
         this[hash] = val;
     }
@@ -37,7 +37,7 @@ export default class Keygrip {
 
     set cipher(val) {
         if (!cryptoCiphers.has(val)) {
-            throw new error.NotSupported(`unsupported cipher: ${val}`);
+            throw new error.NotSupportedException(`unsupported cipher: ${val}`);
         }
         this[cipher] = val;
     }

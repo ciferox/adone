@@ -10,7 +10,7 @@ const {
 
 const parseNumber = (str) => {
     if (!is.numeral(str)) {
-        throw new error.InvalidArgument("Argument must be a real number");
+        throw new error.InvalidArgumentException("Argument must be a real number");
     }
     return Number(str);
 };

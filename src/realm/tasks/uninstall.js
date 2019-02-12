@@ -55,7 +55,7 @@ export default class InstallTask extends task.Task {
                 }
             } else {
                 if (!(await fs.exists(this.destPath))) {
-                    throw new adone.error.NotExists(`Package ${this.packageName} is not exists`);
+                    throw new adone.error.NotExistsException(`Package ${this.packageName} is not exists`);
                 }
 
                 const adoneConf = await adone.configuration.Adone.load({
@@ -70,7 +70,7 @@ export default class InstallTask extends task.Task {
                 } else {
                     const subConfigs = adoneConf.getSubConfigs();
                     if (subConfigs.length === 0) {
-                        throw new adone.error.NotValid("Invalid or useless package");
+                        throw new adone.error.NotValidException("Invalid or useless package");
                     }
 
                     for (const sub of subConfigs) {

@@ -120,7 +120,7 @@ export class SourceMapGenerator {
     applySourceMap(consumer, sourceFile, sourcemapPath) {
         if (is.nil(sourceFile)) {
             if (is.nil(consumer.file)) {
-                throw new error.InvalidArgument("requires either an explicit source file, or the source map's \"file\" property");
+                throw new error.InvalidArgumentException("requires either an explicit source file, or the source map's \"file\" property");
             }
             sourceFile = consumer.file;
         }

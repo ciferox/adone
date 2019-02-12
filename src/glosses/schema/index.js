@@ -160,7 +160,7 @@ const addInitialFormats = (self) => {
 
 const checkUnique = (self, id) => {
     if (self._schemas[id] || self._refs[id]) {
-        throw new error.Exists(`schema with key or id "${id}" already exists`);
+        throw new error.ExistsException(`schema with key or id "${id}" already exists`);
     }
 };
 
@@ -264,7 +264,7 @@ export class Validator {
         if (is.string(schemaKeyRef)) {
             v = this.getSchema(schemaKeyRef);
             if (!v) {
-                throw new error.Unknown(`no schema with key or ref "${schemaKeyRef}"`);
+                throw new error.UnknownException(`no schema with key or ref "${schemaKeyRef}"`);
             }
         } else {
             const schemaObj = this._addSchema(schemaKeyRef);
@@ -293,7 +293,7 @@ export class Validator {
         }
         const id = this._getId(schema);
         if (!is.undefined(id) && !is.string(id)) {
-            throw new error.InvalidArgument("schema id must be string");
+            throw new error.InvalidArgumentException("schema id must be string");
         }
         key = __.resolve.normalizeId(key || id);
         checkUnique(this, key);
@@ -417,7 +417,7 @@ export class Validator {
 
     _addSchema(schema, skipValidation, meta, shouldAddSchema) {
         if (!is.object(schema) && !is.boolean(schema)) {
-            throw new error.InvalidArgument("schema should be object or boolean");
+            throw new error.InvalidArgumentException("schema should be object or boolean");
         }
         const serialize = this._opts.serialize;
         const cacheKey = serialize ? serialize(schema) : schema;
@@ -508,16 +508,16 @@ export class Validator {
         const RULES = this.RULES;
 
         if (RULES.keywords[keyword]) {
-            throw new error.IllegalState(`Keyword ${keyword} is already defined`);
+            throw new error.IllegalStateException(`Keyword ${keyword} is already defined`);
         }
 
         if (!IDENTIFIER.test(keyword)) {
-            throw new error.InvalidArgument(`Keyword ${keyword} is not a valid identifier`);
+            throw new error.InvalidArgumentException(`Keyword ${keyword} is not a valid identifier`);
         }
 
         if (definition) {
             if (definition.macro && !is.undefined(definition.valid)) {
-                throw new error.IllegalState('"valid" option cannot be used with macro keywords');
+                throw new error.IllegalStateException('"valid" option cannot be used with macro keywords');
             }
 
             const _addRule = (keyword, dataType, definition) => {
@@ -547,7 +547,7 @@ export class Validator {
 
             const checkDataType = (dataType) => {
                 if (!RULES.types[dataType]) {
-                    throw new error.Unknown(`Unknown type ${dataType}`);
+                    throw new error.UnknownException(`Unknown type ${dataType}`);
                 }
             };
 
@@ -568,7 +568,7 @@ export class Validator {
 
             const $data = definition.$data === true && this._opts.$data;
             if ($data && !definition.validate) {
-                throw new error.IllegalState('$data support: "validate" function is not defined');
+                throw new error.IllegalStateException('$data support: "validate" function is not defined');
             }
 
             let metaSchema = definition.metaSchema;
@@ -616,7 +616,7 @@ export class Validator {
 
     compileAsync(schema, meta, callback) {
         if (!is.function(this._opts.loadSchema)) {
-            throw new error.InvalidArgument("options.loadSchema should be a function");
+            throw new error.InvalidArgumentException("options.loadSchema should be a function");
         }
 
         if (is.function(meta)) {

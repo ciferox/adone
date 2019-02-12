@@ -13,11 +13,11 @@ const toB64Opt = (val) => {
 export default class Identity {
     constructor(id, privKey, pubKey) {
         if (!is.buffer(id)) {
-            throw new adone.error.NotValid("Invalid id");
+            throw new adone.error.NotValidException("Invalid id");
         }
 
         if (privKey && pubKey && !privKey.public.bytes.equals(pubKey.bytes)) {
-            throw new adone.error.NotValid("Inconsistent arguments");
+            throw new adone.error.NotValidException("Inconsistent arguments");
         }
 
         this._id = id;
@@ -31,7 +31,7 @@ export default class Identity {
     }
 
     set id(val) {
-        throw new error.NotAllowed("Id is immutable");
+        throw new error.NotAllowedException("Id is immutable");
     }
 
     asBase58() {

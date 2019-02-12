@@ -12,7 +12,7 @@ export const getArg = (args, name, defaultValue = EMPTY) => {
     if (defaultValue !== EMPTY) {
         return defaultValue;
     }
-    throw new error.InvalidArgument(`"${name}" is a required argument.`);
+    throw new error.InvalidArgumentException(`"${name}" is a required argument.`);
 };
 
 const urlRegexp = /^(?:([\w+\-.]+):)?\/\/(?:(\w+:\w+)@)?([\w.]*)(?::(\d+))?(\S*)$/;

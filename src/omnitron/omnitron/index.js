@@ -365,7 +365,7 @@ class Omnitron extends app.Application {
     async unloadSubsystem(name) {
         const sysInfo = this.getSubsystemInfo(name);
         if (sysInfo.group === CORE_GROUP) {
-            throw new adone.error.NotAllowed("Unload core subsystem is not possible");
+            throw new adone.error.NotAllowedException("Unload core subsystem is not possible");
         }
         await super.unloadSubsystem(name);
     }

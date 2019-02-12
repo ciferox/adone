@@ -199,7 +199,7 @@ export default class SMTPConnection extends event.Emitter {
             if (this.secureConnection && !this.alreadySecured) {
                 setImmediate(() => this._upgradeConnection((err) => {
                     if (err) {
-                        this._onError(new error.Connect(`Error initiating TLS - ${err.message || err}`), "ETLS", false, "CONN");
+                        this._onError(new error.ConnectException(`Error initiating TLS - ${err.message || err}`), "ETLS", false, "CONN");
                         return;
                     }
                     this._onConnect();
@@ -602,9 +602,9 @@ export default class SMTPConnection extends event.Emitter {
         }, "Connection closed");
 
         if (this.upgrading && !this._destroyed) {
-            return this._onError(new error.IllegalState("Connection closed unexpectedly"), "ETLS", false, "CONN");
+            return this._onError(new error.IllegalStateException("Connection closed unexpectedly"), "ETLS", false, "CONN");
         } else if (![this._actionGreeting, this.close].includes(this._responseActions[0]) && !this._destroyed) {
-            return this._onError(new error.IllegalState("Connection closed unexpectedly"), "ECONNECTION", false, "CONN");
+            return this._onError(new error.IllegalStateException("Connection closed unexpectedly"), "ECONNECTION", false, "CONN");
         }
 
         this._destroy();
@@ -625,7 +625,7 @@ export default class SMTPConnection extends event.Emitter {
      * @event
      */
     _onTimeout() {
-        return this._onError(new error.Timeout("Timeout"), "ETIMEDOUT", false, "CONN");
+        return this._onError(new error.TimeoutException("Timeout"), "ETIMEDOUT", false, "CONN");
     }
 
     /**
@@ -717,7 +717,7 @@ export default class SMTPConnection extends event.Emitter {
             action.call(this, str);
             setImmediate(() => this._processResponse(true));
         } else {
-            return this._onError(new error.IllegalState("Unexpected Response"), "EPROTOCOL", str, "CONN");
+            return this._onError(new error.IllegalStateException("Unexpected Response"), "EPROTOCOL", str, "CONN");
         }
     }
 
@@ -857,7 +857,7 @@ export default class SMTPConnection extends event.Emitter {
         }
 
         if (ret && !["FULL", "HDRS"].includes(ret)) {
-            throw new error.IllegalState(`ret: ${JSON.stringify(ret)}`);
+            throw new error.IllegalStateException(`ret: ${JSON.stringify(ret)}`);
         }
 
         const envid = (params.envid || params.id || "").toString() || null;

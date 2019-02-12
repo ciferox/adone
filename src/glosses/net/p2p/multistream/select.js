@@ -20,7 +20,7 @@ export default (multicodec, callback) => {
         const protocol = data.toString().slice(0, -1);
 
         if (protocol !== multicodec) {
-            return callback(new adone.error.NotSupported(`"${multicodec}" not supported`), shake.rest());
+            return callback(new adone.error.NotSupportedException(`"${multicodec}" not supported`), shake.rest());
         }
 
         callback(null, shake.rest());

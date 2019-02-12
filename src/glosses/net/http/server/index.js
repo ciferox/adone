@@ -144,7 +144,7 @@ export class Server extends event.Emitter {
 
     use(middleware) {
         if (!is.function(middleware)) {
-            throw new error.InvalidArgument("Middleware must be a function");
+            throw new error.InvalidArgumentException("Middleware must be a function");
         }
         this.middlewares.push(middleware);
         return this;
@@ -162,7 +162,7 @@ export class Server extends event.Emitter {
 
     onerror(err) {
         if (!is.error(err)) {
-            throw new error.IllegalState(`non-error thrown: ${err}`);
+            throw new error.IllegalStateException(`non-error thrown: ${err}`);
         }
 
         if (err.status === 404 || err.expose) {

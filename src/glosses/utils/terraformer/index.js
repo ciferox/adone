@@ -954,7 +954,7 @@ export class Point extends Primitive {
         } else if (args.length >= 2) {
             this.coordinates = args;
         } else {
-            throw new error.InvalidArgument("Terraformer: invalid input for Terraformer.Point");
+            throw new error.InvalidArgumentException("Terraformer: invalid input for Terraformer.Point");
         }
 
         this.type = "Point";
@@ -978,7 +978,7 @@ export class MultiPoint extends Primitive {
         } else if (is.array(input)) {
             this.coordinates = input;
         } else {
-            throw new error.InvalidArgument("Terraformer: invalid input for Terraformer.MultiPoint");
+            throw new error.InvalidArgumentException("Terraformer: invalid input for Terraformer.MultiPoint");
         }
         this.type = "MultiPoint";
     }
@@ -1031,7 +1031,7 @@ export class LineString extends Primitive {
         } else if (is.array(input)) {
             this.coordinates = input;
         } else {
-            throw new error.InvalidArgument("Terraformer: invalid input for Terraformer.LineString");
+            throw new error.InvalidArgumentException("Terraformer: invalid input for Terraformer.LineString");
         }
 
         this.type = "LineString";
@@ -1071,7 +1071,7 @@ export class MultiLineString extends Primitive {
         } else if (is.array(input)) {
             this.coordinates = input;
         } else {
-            throw new error.InvalidArgument("Terraformer: invalid input for Terraformer.MultiLineString");
+            throw new error.InvalidArgumentException("Terraformer: invalid input for Terraformer.MultiLineString");
         }
 
         this.type = "MultiLineString";
@@ -1105,7 +1105,7 @@ export class Polygon extends Primitive {
         } else if (is.array(input)) {
             this.coordinates = input;
         } else {
-            throw new error.InvalidArgument("Terraformer: invalid input for Terraformer.Polygon");
+            throw new error.InvalidArgumentException("Terraformer: invalid input for Terraformer.Polygon");
         }
 
         this.type = "Polygon";
@@ -1162,7 +1162,7 @@ export class MultiPolygon extends Primitive {
         } else if (is.array(input)) {
             this.coordinates = input;
         } else {
-            throw new error.InvalidArgument("Terraformer: invalid input for Terraformer.MultiPolygon");
+            throw new error.InvalidArgumentException("Terraformer: invalid input for Terraformer.MultiPolygon");
         }
         this.type = "MultiPolygon";
     }
@@ -1211,7 +1211,7 @@ export class Feature extends Primitive {
         } else if (input && input.type && input.coordinates) {
             this.geometry = input;
         } else {
-            throw new error.InvalidArgument("Terraformer: invalid input for Terraformer.Feature");
+            throw new error.InvalidArgumentException("Terraformer: invalid input for Terraformer.Feature");
         }
         this.type = "Feature";
     }
@@ -1234,7 +1234,7 @@ export class FeatureCollection extends Primitive {
         } else if (is.array(input)) {
             this.features = input;
         } else {
-            throw new error.InvalidArgument("Terraformer: invalid input for Terraformer.FeatureCollection");
+            throw new error.InvalidArgumentException("Terraformer: invalid input for Terraformer.FeatureCollection");
         }
 
         this.type = "FeatureCollection";
@@ -1278,7 +1278,7 @@ export class GeometryCollection extends Primitive {
             this.type = "GeometryCollection";
             this.geometries = [input];
         } else {
-            throw new error.InvalidArgument("Terraformer: invalid input for Terraformer.GeometryCollection");
+            throw new error.InvalidArgumentException("Terraformer: invalid input for Terraformer.GeometryCollection");
         }
 
         this.type = "GeometryCollection";

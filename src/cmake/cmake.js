@@ -104,6 +104,9 @@ export default class CMake {
         // NAN
         incPaths.push(path.join(adone.ROOT_PATH, "src", "native", "nan"));
 
+        // NAPI
+        incPaths.push(path.join(adone.ROOT_PATH, "src", "native", "napi"));
+
         // ADONE
         incPaths.push(path.join(adone.ROOT_PATH, "src", "native", "adone"));
 

@@ -14,7 +14,7 @@ let defaultMaxListeners = 10;
 
 const _addListener = (target, type, listener, prepend) => {
     if (!is.function(listener)) {
-        throw new error.InvalidArgument("\"listener\" argument must be a function");
+        throw new error.InvalidArgumentException("\"listener\" argument must be a function");
     }
     let events = target[$events];
     if (!events) {
@@ -234,7 +234,7 @@ export default class Emitter {
 
     setMaxListeners(n) {
         if (!is.number(n) || is.nan(n) || n < 0) {
-            throw new error.InvalidArgument("\"n\" argument must be a positive number");
+            throw new error.InvalidArgumentException("\"n\" argument must be a positive number");
         }
         this[$maxListeners] = n;
     }
@@ -304,7 +304,7 @@ export default class Emitter {
 
     once(type, listener) {
         if (!is.function(listener)) {
-            throw new error.InvalidArgument("\"listener\" argument must be a function");
+            throw new error.InvalidArgumentException("\"listener\" argument must be a function");
         }
         this.on(type, _onceWrap(this, type, listener));
         return this;
@@ -312,7 +312,7 @@ export default class Emitter {
 
     prependOnceListener(type, listener) {
         if (!is.function(listener)) {
-            throw new error.InvalidArgument("\"listener\" argument must be a function");
+            throw new error.InvalidArgumentException("\"listener\" argument must be a function");
         }
         this.prependListener(type, _onceWrap(this, type, listener));
         return this;
@@ -320,7 +320,7 @@ export default class Emitter {
 
     removeListener(type, listener) {
         if (!is.function(listener)) {
-            throw new error.InvalidArgument("\"listener\" argument must be a function");
+            throw new error.InvalidArgumentException("\"listener\" argument must be a function");
         }
 
         const events = this[$events];

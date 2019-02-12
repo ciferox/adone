@@ -110,7 +110,7 @@ export default class ClientHandshake extends Command {
         if (connection.config.ssl) {
             // client requires SSL but server does not support it
             if (!serverSSLSupport) {
-                const err = new error.NotSupported("Server does not support secure connnection");
+                const err = new error.NotSupportedException("Server does not support secure connnection");
                 err.code = "HANDSHAKE_NO_SSL_SUPPORT";
                 err.fatal = true;
                 command.emit("error", err);
@@ -167,7 +167,7 @@ export default class ClientHandshake extends Command {
             } else {
                 connection.emit(
                     "error",
-                    new error.IllegalState("Server requires auth switch, but no auth switch handler provided")
+                    new error.IllegalStateException("Server requires auth switch, but no auth switch handler provided")
                 );
                 return null;
             }
@@ -175,7 +175,7 @@ export default class ClientHandshake extends Command {
         }
 
         if (marker !== 0) {
-            const err = new error.IllegalState("Unexpected packet during handshake phase");
+            const err = new error.IllegalStateException("Unexpected packet during handshake phase");
             if (this.onResult) {
                 this.onResult(err);
             } else {

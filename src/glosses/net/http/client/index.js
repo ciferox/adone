@@ -44,7 +44,7 @@ Cancel.prototype[Symbol.for("adone:request:cancel")] = true;
 export class CancelToken {
     constructor(executor) {
         if (!is.function(executor)) {
-            throw new adone.error.InvalidArgument("executor must be a function.");
+            throw new adone.error.InvalidArgumentException("executor must be a function.");
         }
         let resolvePromise;
         this.promise = new Promise((resolve) => resolvePromise = resolve);

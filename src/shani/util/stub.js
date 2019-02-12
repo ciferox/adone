@@ -152,7 +152,7 @@ export default function stub(object, property, ...args) {
 
 stub.createStubInstance = function (constructor) {
     if (!is.function(constructor)) {
-        throw new error.InvalidArgument("The constructor should be a function.");
+        throw new error.InvalidArgumentException("The constructor should be a function.");
     }
     return stub(Object.create(constructor.prototype));
 };

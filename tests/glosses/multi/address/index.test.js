@@ -632,15 +632,15 @@ describe("multi", "address", () => {
     describe("protocols", () => {
         describe("throws on non existent protocol", () => {
             it("number", () => {
-                expect(() => address.protocols(1234)).to.throw(adone.error.Unknown);
+                expect(() => address.protocols(1234)).to.throw(adone.error.UnknownException);
             });
 
             it("string", () => {
-                expect(() => address.protocols("hello")).to.throw(adone.error.Unknown);
+                expect(() => address.protocols("hello")).to.throw(adone.error.UnknownException);
             });
 
             it("else", () => {
-                expect(() => address.protocols({ hi: 34 })).to.throw(adone.error.NotValid);
+                expect(() => address.protocols({ hi: 34 })).to.throw(adone.error.NotValidException);
             });
         });
     });
