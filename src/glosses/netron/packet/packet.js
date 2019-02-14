@@ -51,8 +51,8 @@ const readBits = (target, offset, count) => {
  *    name | offset | bits | min/max
  *   -------------------------------- 
  *   action       0      6  0x00-0x3F 
- *  impulse       7      1  0|1
- *    error       6      1  0|1
+ *  impulse       7      1        0|1
+ *    error       6      1        0|1
  * 
  */
 

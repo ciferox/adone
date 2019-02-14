@@ -305,7 +305,7 @@ export default class Dispatcher extends Subsystem {
                 db = await this.queryInterface("omnitron").getDB();
             } else {
                 db = await adone.omnitron.DB.open();
-                db.backend.on("closed", () => {
+                db.store.on("closed", () => {
                     this.db = null;
                 });
             }

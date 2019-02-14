@@ -673,4 +673,4 @@ export default class Netron extends adone.task.Manager {
         }
     }
 }
-tag.add(Netron, "NETRON2");
+tag.add(Netron, "NETRON");

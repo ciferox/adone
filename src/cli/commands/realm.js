@@ -99,7 +99,8 @@ export default class RealmManager extends app.Subsystem {
 
     async getRealm() {
         if (!this._realmManager) {
-            this._realmManager = await adone.realm.getManager();
+            this._realmManager = adone.realm.getManager();
+            await this._realmManager.initialize();
             this.root.kit.observe("progress", this._realmManager);
         }
 

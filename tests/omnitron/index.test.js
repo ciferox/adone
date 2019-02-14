@@ -350,6 +350,7 @@ describe("omnitron", () => {
             assert.equal(list[0].status, STATUS.DISABLED);
 
             const err = await assert.throws(async () => iOmnitron.startService("test1"));
+            console.log(err.stack);
             assert.instanceOf(err, adone.error.IllegalStateException);
         });
 

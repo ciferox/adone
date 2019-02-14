@@ -86,11 +86,11 @@ const divideu128 = function (value) {
 
     for (let i = 0; i <= 3; i++) {
         // Adjust remainder to match value of next dividend
-        _rem = _rem.shiftLeft(32);
+        _rem = _rem.shl(32);
         // Add the divided to _rem
         _rem = _rem.add(new Long(value.parts[i], 0));
         value.parts[i] = _rem.div(DIVISOR).low;
-        _rem = _rem.modulo(DIVISOR);
+        _rem = _rem.mod(DIVISOR);
     }
 
     return { quotient: value, rem: _rem };
@@ -102,23 +102,23 @@ const multiply64x2 = function (left, right) {
         return { high: Long.fromNumber(0), low: Long.fromNumber(0) };
     }
 
-    const leftHigh = left.shiftRightUnsigned(32);
+    const leftHigh = left.shru(32);
     const leftLow = new Long(left.getLowBits(), 0);
-    const rightHigh = right.shiftRightUnsigned(32);
+    const rightHigh = right.shru(32);
     const rightLow = new Long(right.getLowBits(), 0);
 
-    let productHigh = leftHigh.multiply(rightHigh);
-    let productMid = leftHigh.multiply(rightLow);
-    const productMid2 = leftLow.multiply(rightHigh);
-    let productLow = leftLow.multiply(rightLow);
+    let productHigh = leftHigh.mul(rightHigh);
+    let productMid = leftHigh.mul(rightLow);
+    const productMid2 = leftLow.mul(rightHigh);
+    let productLow = leftLow.mul(rightLow);
 
-    productHigh = productHigh.add(productMid.shiftRightUnsigned(32));
+    productHigh = productHigh.add(productMid.shru(32));
     productMid = new Long(productMid.getLowBits(), 0)
         .add(productMid2)
-        .add(productLow.shiftRightUnsigned(32));
+        .add(productLow.shru(32));
 
-    productHigh = productHigh.add(productMid.shiftRightUnsigned(32));
-    productLow = productMid.shiftLeft(32).add(new Long(productLow.getLowBits(), 0));
+    productHigh = productHigh.add(productMid.shru(32));
+    productLow = productMid.shl(32).add(new Long(productLow.getLowBits(), 0));
 
     // Return the 128 bit result
     return { high: productHigh, low: productLow };
@@ -480,7 +480,7 @@ Decimal128.fromString = function (string) {
         significandHigh = new Long(0, 0);
 
         for (; dIdx <= lastDigit; dIdx++) {
-            significandLow = significandLow.multiply(Long.fromNumber(10));
+            significandLow = significandLow.mul(Long.fromNumber(10));
             significandLow = significandLow.add(Long.fromNumber(digits[dIdx]));
         }
     } else {
@@ -488,14 +488,14 @@ Decimal128.fromString = function (string) {
         significandHigh = Long.fromNumber(digits[dIdx++]);
 
         for (; dIdx <= lastDigit - 17; dIdx++) {
-            significandHigh = significandHigh.multiply(Long.fromNumber(10));
+            significandHigh = significandHigh.mul(Long.fromNumber(10));
             significandHigh = significandHigh.add(Long.fromNumber(digits[dIdx]));
         }
 
         significandLow = Long.fromNumber(digits[dIdx++]);
 
         for (; dIdx <= lastDigit; dIdx++) {
-            significandLow = significandLow.multiply(Long.fromNumber(10));
+            significandLow = significandLow.mul(Long.fromNumber(10));
             significandLow = significandLow.add(Long.fromNumber(digits[dIdx]));
         }
     }
@@ -514,18 +514,18 @@ Decimal128.fromString = function (string) {
     // Encode combination, exponent, and significand.
     if (
         significand.high
-            .shiftRightUnsigned(49)
+            .shru(49)
             .and(Long.fromNumber(1))
             .equals(Long.fromNumber(1))
     ) {
         // Encode '11' into bits 1 to 3
-        dec.high = dec.high.or(Long.fromNumber(0x3).shiftLeft(61));
+        dec.high = dec.high.or(Long.fromNumber(0x3).shl(61));
         dec.high = dec.high.or(
-            Long.fromNumber(biasedExponent).and(Long.fromNumber(0x3fff).shiftLeft(47))
+            Long.fromNumber(biasedExponent).and(Long.fromNumber(0x3fff).shl(47))
         );
         dec.high = dec.high.or(significand.high.and(Long.fromNumber(0x7fffffffffff)));
     } else {
-        dec.high = dec.high.or(Long.fromNumber(biasedExponent & 0x3fff).shiftLeft(49));
+        dec.high = dec.high.or(Long.fromNumber(biasedExponent & 0x3fff).shl(49));
         dec.high = dec.high.or(significand.high.and(Long.fromNumber(0x1ffffffffffff)));
     }
 

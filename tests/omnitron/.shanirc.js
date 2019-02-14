@@ -1,6 +1,7 @@
 const {
     fs,
-    realm
+    realm,
+    std
 } = adone;
 
 export default async (ctx) => {
@@ -9,22 +10,31 @@ export default async (ctx) => {
     ctx.timeout(70000);
     
     ctx.before(async () => {
-        const runtimeRealmManager = await realm.getManager();
+        const runtimeRealmManager = realm.getManager();
+        await runtimeRealmManager.initialize();
 
         realmPath = await fs.tmpName({
             prefix: "realm-"
         });
 
-        const observer = await runtimeRealmManager.forkRealm({
-            cwd: realmPath,
-            name: "test"
-        });
-        const realmManager = await observer.result;
+        const name = std.path.basename(realmPath);
+        const cwd = std.path.dirname(realmPath);
 
-        // hijacking realm
-        ctx.runtime.adoneRootPath = adone.std.path.join(realmPath, "test");
+        const observer = await runtimeRealmManager.forkRealm({
+            cwd,
+            name
+        });
+        await observer.result;
+        const realmManager = new realm.Manager({
+            cwd: realmPath
+        });
+        await realmManager.initialize();
+
+        
+        ctx.runtime.adoneRootPath = realmPath;
         ctx.runtime.realmManager = realmManager;
 
+        // hijacking realm
         adone.runtime.realm.manager = realmManager;
         adone.runtime.realm.config = adone.runtime.config = realmManager.config;
         adone.runtime.realm.identity = realmManager.config.identity.server;

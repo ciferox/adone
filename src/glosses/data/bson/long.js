@@ -1,12 +1,14 @@
 
-const Long = require("long");
+const {
+    math: { Long }
+} = adone;
 
 /**
  * @ignore
  */
 Long.prototype.toExtendedJSON = function (options) {
     if (options && options.relaxed) {
-        return this.toNumber(); 
+        return this.toNumber();
     }
     return { $numberLong: this.toString() };
 };

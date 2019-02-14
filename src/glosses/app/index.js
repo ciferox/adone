@@ -186,8 +186,8 @@ const _bootstrapApp = async (app, {
 
         app._setAsMain();
 
-        // Initialize realm
-        await adone.realm.getManager();
+        // Setup realm runtime info.
+        adone.realm.getManager();
 
         // Track cursor if interactive application (by default) and if tty mode
         if (app.isInteractiveModeEnabled && adone.runtime.term.output.isTTY) {

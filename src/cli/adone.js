@@ -175,7 +175,8 @@ class AdoneCLI extends app.Application {
     })
     async installCommand(args, opts) {
         try {
-            const realmManager = await adone.realm.getManager();
+            const realmManager = adone.realm.getManager();
+            await realmManager.initialize();
             adone.cli.kit.observe("progress", realmManager);
             const observer = await realmManager.install({
                 name: args.get("name"),
@@ -206,7 +207,8 @@ class AdoneCLI extends app.Application {
     })
     async uninstallCommand(args) {
         try {
-            const realmManager = await adone.realm.getManager();
+            const realmManager = adone.realm.getManager();
+            await realmManager.initialize();
             adone.cli.kit.observe("progress", realmManager);
             const observer = await realmManager.uninstall({
                 name: args.get("name")
@@ -241,7 +243,8 @@ class AdoneCLI extends app.Application {
     })
     async mountCommand(args) {
         try {
-            const realmManager = await adone.realm.getManager();
+            const realmManager = adone.realm.getManager();
+            await realmManager.initialize();
             adone.cli.kit.observe("progress", realmManager);
             const observer = await realmManager.mount({
                 name: args.get("name"),
@@ -271,7 +274,8 @@ class AdoneCLI extends app.Application {
     })
     async unmountCommand(args) {
         try {
-            const realmManager = await adone.realm.getManager();
+            const realmManager = adone.realm.getManager();
+            await realmManager.initialize();
             adone.cli.kit.observe("progress", realmManager);
             const observer = await realmManager.unmount({
                 name: args.get("name")
@@ -300,7 +304,9 @@ class AdoneCLI extends app.Application {
     })
     async listCommand(args) {
         try {
-            const realmManager = await adone.realm.getManager();
+            const realmManager = adone.realm.getManager();
+            await realmManager.initialize();
+            
             adone.cli.kit.observe("progress", realmManager);
             const observer = await realmManager.list({
                 keyword: args.get("keyword")

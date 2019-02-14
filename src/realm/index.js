@@ -8,7 +8,7 @@ const realm = adone.lazify({
     Keychain: "./keychain"
 }, adone.asNamespace(exports), require);
 
-export const getManager = async () => {
+export const getManager = () => {
     if (is.undefined(adone.runtime.realm.manager)) {
         // const id = adone.crypto.hash.sha256(`${await adone.util.machineId(true)}${realm.config.realm}`, "hex");
         const defaultManager = new realm.Manager({
@@ -16,7 +16,8 @@ export const getManager = async () => {
         });
 
         // Load default tasks and handlers
-        await defaultManager.initialize();
+        // await defaultManager.initialize();
+        
         adone.runtime.realm.manager = defaultManager;
         adone.runtime.realm.config = adone.runtime.config = defaultManager.config;
         adone.runtime.realm.identity = defaultManager.config.identity.server;

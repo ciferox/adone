@@ -1496,6 +1496,38 @@ describe("math", "Long", "math", () => {
         }
     });
 
+    it("rol", () => {
+        const longVal = Long.fromBits(0x01234567, 0x89ABCDEF);
+        const longValL = Long.fromBits(0x12345678, 0x9ABCDEF0);
+        const longValR = Long.fromBits(0xF0123456, 0x789ABCDE);
+        const longValS = Long.fromBits(0x89ABCDEF, 0x01234567);
+        // little rotate
+        let v = longVal.rol(4);
+        assert.deepEqual(v, longValL);
+        // big rotate
+        v = longVal.rol(60);
+        assert.deepEqual(v, longValR);
+        // swap
+        v = longVal.rol(32);
+        assert.deepEqual(v, longValS);
+    });
+
+    it("ror", () => {
+        const longVal = Long.fromBits(0x01234567, 0x89ABCDEF);
+        const longValL = Long.fromBits(0x12345678, 0x9ABCDEF0);
+        const longValR = Long.fromBits(0xF0123456, 0x789ABCDE);
+        const longValS = Long.fromBits(0x89ABCDEF, 0x01234567);
+        // little rotate
+        let v = longVal.ror(4);
+        assert.deepEqual(v, longValR);
+        // big rotate
+        v = longVal.ror(60);
+        assert.deepEqual(v, longValL);
+        // swap
+        v = longVal.ror(32);
+        assert.deepEqual(v, longValS);
+    });
+
     it("fromString", () => {
         for (let i = 0; i < TEST_BITS.length; i += 2) {
             const vi = Long.fromBits(TEST_BITS[i + 1], TEST_BITS[i]);

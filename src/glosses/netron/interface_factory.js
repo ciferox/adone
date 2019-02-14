@@ -18,7 +18,7 @@ class Interface {
         this[__.I_PEERID_SYMBOL] = peerId;
     }
 }
-tag.add(Interface, "NETRON2_INTERFACE");
+tag.add(Interface, "NETRON_INTERFACE");
 
 export default class InterfaceFactory {
     constructor(netron) {

@@ -336,7 +336,7 @@ export default class Long {
         c32 &= 0xFFFF;
         c48 += a48 + b48;
         c48 &= 0xFFFF;
-        return this.constructor.fromBits((c16 << 16) | c00, (c48 << 16) | c32, this.unsigned);
+        return Long.fromBits((c16 << 16) | c00, (c48 << 16) | c32, this.unsigned);
     }
 
     /**
@@ -367,7 +367,7 @@ export default class Long {
         }
 
         const low = wasm.mul(this.low, this.high, multiplier.low, multiplier.high);
-        return this.constructor.fromBits(low, wasm.get_high(), this.unsigned);
+        return Long.fromBits(low, wasm.get_high(), this.unsigned);
     }
 
     /**
@@ -392,7 +392,7 @@ export default class Long {
             return this;
         }
         const low = (this.unsigned ? wasm.div_u : wasm.div_s)(this.low, this.high, divisor.low, divisor.high);
-        return this.constructor.fromBits(low, wasm.get_high(), this.unsigned);
+        return Long.fromBits(low, wasm.get_high(), this.unsigned);
     }
 
     /**
@@ -406,7 +406,7 @@ export default class Long {
             divisor = this.constructor.fromValue(divisor);
         }
         const low = (this.unsigned ? wasm.rem_u : wasm.rem_s)(this.low, this.high, divisor.low, divisor.high);
-        return this.constructor.fromBits(low, wasm.get_high(), this.unsigned);
+        return Long.fromBits(low, wasm.get_high(), this.unsigned);
     }
 
     /**
@@ -415,7 +415,7 @@ export default class Long {
      * @returns {Long}
      */
     not() {
-        return this.constructor.fromBits(~this.low, ~this.high, this.unsigned);
+        return Long.fromBits(~this.low, ~this.high, this.unsigned);
     }
 
     /**
@@ -428,7 +428,7 @@ export default class Long {
         if (!is.long(other)) {
             other = this.constructor.fromValue(other);
         }
-        return this.constructor.fromBits(this.low & other.low, this.high & other.high, this.unsigned);
+        return Long.fromBits(this.low & other.low, this.high & other.high, this.unsigned);
     }
 
     /**
@@ -441,7 +441,7 @@ export default class Long {
         if (!is.long(other)) {
             other = this.constructor.fromValue(other);
         }
-        return this.constructor.fromBits(this.low | other.low, this.high | other.high, this.unsigned);
+        return Long.fromBits(this.low | other.low, this.high | other.high, this.unsigned);
     }
 
     /**
@@ -454,7 +454,7 @@ export default class Long {
         if (!is.long(other)) {
             other = this.constructor.fromValue(other);
         }
-        return this.constructor.fromBits(this.low ^ other.low, this.high ^ other.high, this.unsigned);
+        return Long.fromBits(this.low ^ other.low, this.high ^ other.high, this.unsigned);
     }
 
     /**
@@ -471,13 +471,13 @@ export default class Long {
             return this;
         }
         if (numBits < 32) {
-            return this.constructor.fromBits(
+            return Long.fromBits(
                 this.low << numBits,
                 (this.high << numBits) | (this.low >>> (32 - numBits)),
                 this.unsigned
             );
         }
-        return this.constructor.fromBits(0, this.low << (numBits - 32), this.unsigned);
+        return Long.fromBits(0, this.low << (numBits - 32), this.unsigned);
     }
 
     /**
@@ -493,13 +493,13 @@ export default class Long {
             return this;
         }
         if (numBits < 32) {
-            return this.constructor.fromBits(
+            return Long.fromBits(
                 (this.low >>> numBits) | (this.high << (32 - numBits)),
                 this.high >> numBits,
                 this.unsigned
             );
         }
-        return this.constructor.fromBits(
+        return Long.fromBits(
             this.high >> (numBits - 32),
             this.high >= 0 ? 0 : -1,
             this.unsigned
@@ -516,23 +516,68 @@ export default class Long {
         if (is.long(numBits)) {
             numBits = numBits.toInt();
         }
-        numBits &= 63;
-        if (numBits === 0) {
+        if ((numBits &= 63) === 0) {
             return this;
         }
-        const high = this.high;
         if (numBits < 32) {
-            const low = this.low;
-            return this.constructor.fromBits(
-                (low >>> numBits) | (high << (32 - numBits)),
-                high >>> numBits,
-                this.unsigned
-            );
+            return Long.fromBits((this.low >>> numBits) | (this.high << (32 - numBits)), this.high >>> numBits, this.unsigned);
         }
         if (numBits === 32) {
-            return this.constructor.fromBits(high, 0, this.unsigned);
+            return Long.fromBits(this.high, 0, this.unsigned);
         }
-        return this.constructor.fromBits(high >>> (numBits - 32), 0, this.unsigned);
+        return Long.fromBits(this.high >>> (numBits - 32), 0, this.unsigned);
+    }
+
+    /**
+     * Returns this Long with bits rotated to the left by the given amount.
+     * @this {!Long}
+     * @param {number|!Long} numBits Number of bits
+     * @returns {!Long} Rotated Long
+     */
+    rol(numBits) {
+        let b;
+        if (is.long(numBits)) {
+            numBits = numBits.toInt();
+        }
+        if ((numBits &= 63) === 0) {
+            return this;
+        }
+        if (numBits === 32) {
+            return Long.fromBits(this.high, this.low, this.unsigned);
+        }
+        if (numBits < 32) {
+            b = (32 - numBits);
+            return Long.fromBits(((this.low << numBits) | (this.high >>> b)), ((this.high << numBits) | (this.low >>> b)), this.unsigned);
+        }
+        numBits -= 32;
+        b = (32 - numBits);
+        return Long.fromBits(((this.high << numBits) | (this.low >>> b)), ((this.low << numBits) | (this.high >>> b)), this.unsigned);
+    }
+
+    /**
+     * Returns this Long with bits rotated to the right by the given amount. This is an alias of {@link Long#rotateRight}.
+     * @function
+     * @param {number|!Long} numBits Number of bits
+     * @returns {!Long} Rotated Long
+     */
+    ror(numBits) {
+        let b;
+        if (is.long(numBits)) {
+            numBits = numBits.toInt();
+        }
+        if ((numBits &= 63) === 0) {
+            return this;
+        }
+        if (numBits === 32) {
+            return Long.fromBits(this.high, this.low, this.unsigned);
+        }
+        if (numBits < 32) {
+            b = (32 - numBits);
+            return Long.fromBits(((this.high << b) | (this.low >>> numBits)), ((this.low << b) | (this.high >>> numBits)), this.unsigned);
+        }
+        numBits -= 32;
+        b = (32 - numBits);
+        return Long.fromBits(((this.low << b) | (this.high >>> numBits)), ((this.high << b) | (this.low >>> numBits)), this.unsigned);
     }
 
     /**
@@ -668,7 +713,7 @@ export default class Long {
      * @returns {Long}
      */
     static fromBits(lowBits, highBits, unsigned) {
-        return new this(lowBits, highBits, unsigned);
+        return new Long(lowBits, highBits, unsigned);
     }
 
     /**

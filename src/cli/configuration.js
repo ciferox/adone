@@ -112,7 +112,7 @@ export default class CliConfiguration extends adone.configuration.Generic {
 
     static async load({ cwd } = {}) {
         if (!is.string(cwd)) {
-            const realmManager = await adone.realm.getManager();
+            const realmManager = adone.realm.getManager();
             cwd = realmManager.config.CONFIGS_PATH;
         }
 

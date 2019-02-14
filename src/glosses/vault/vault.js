@@ -56,12 +56,12 @@ export default class Vault {
         } else {
             this.Valuable = vault.Valuable;
         }
-        this.db = createDB(this.options);
+        this.store = createDB(this.options);
         this._reset();
     }
 
     async open() {
-        await this.db.open();
+        await this.store.open();
         // Load valuable ids
         try {
             this.vids = await this._getMeta(VIDS);
@@ -126,7 +126,7 @@ export default class Vault {
             await this.release(name); // eslint-disable-line
         }
 
-        await this.db.close();
+        await this.store.close();
 
         this.nameIdMap.clear();
         this.tagsMap.clear();
@@ -326,12 +326,12 @@ export default class Vault {
     }
 
     _getMeta(id) {
-        return this.db.get(id);
+        return this.store.get(id);
     }
 
     async _setMeta(id, data) {
         this.updated = (new Date()).getTime();
-        await this.db.batch([
+        await this.store.batch([
             { type: "put", key: id, value: data },
             { type: "put", key: UPDATED, value: this.updated }
         ]);
@@ -340,7 +340,7 @@ export default class Vault {
 
     async _deleteMeta(id) {
         this.updated = (new Date()).getTime();
-        await this.db.batch([
+        await this.store.batch([
             { type: "del", key: id },
             { type: "put", key: UPDATED, value: this.updated }
         ]);
@@ -357,7 +357,7 @@ export default class Vault {
 
     async _getNextId(key) {
         const id = this[key]++;
-        await this.db.put(key, this[key]);
+        await this.store.put(key, this[key]);
         return id;
     }
 

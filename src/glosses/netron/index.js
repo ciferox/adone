@@ -59,14 +59,14 @@ export class Definition {
         // this.twin = undefined;
     }
 }
-tag.add(Definition, "NETRON2_DEFINITION");
+tag.add(Definition, "NETRON_DEFINITION");
 
 export class Reference {
     constructor(defId) {
         this.defId = defId;
     }
 }
-tag.add(Reference, "NETRON2_REFERENCE");
+tag.add(Reference, "NETRON_REFERENCE");
 
 export class Definitions {
     constructor(...args) {
@@ -133,7 +133,7 @@ export class Definitions {
         return this._defs.splice(begin, end, ...items);
     }
 }
-adone.tag.add(Definitions, "NETRON2_DEFINITIONS");
+adone.tag.add(Definitions, "NETRON_DEFINITIONS");
 
 const MAX_INTEGER = Number.MAX_SAFE_INTEGER >>> 0;
 

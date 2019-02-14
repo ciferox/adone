@@ -12,7 +12,7 @@ describe("app", "fast logger", "extreme", () => {
 
     before(async () => {
         // Initialize realm runtime stuff like `adone.runtime.config`.
-        await adone.realm.getManager();
+        await adone.realm.getManager().initialize();
     });
 
     beforeEach(() => {

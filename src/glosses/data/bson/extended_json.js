@@ -36,6 +36,19 @@ const keysToCodecs = {
     $timestamp: Timestamp
 };
 
+// MAX INT32 boundaries
+const BSON_INT32_MAX = 0x7fffffff;
+
+
+const BSON_INT32_MIN = -0x80000000;
+
+
+const BSON_INT64_MAX = 0x7fffffffffffffff;
+
+
+const BSON_INT64_MIN = -0x8000000000000000;
+
+
 const deserializeValue = function (self, key, value, options) {
     if (is.number(value)) {
         if (options.relaxed) {
@@ -49,7 +62,7 @@ const deserializeValue = function (self, key, value, options) {
                 return new Int32(value);
             }
             if (value >= BSON_INT64_MIN && value <= BSON_INT64_MAX) {
-                return new Long.fromNumber(value);
+                return Long.fromNumber(value);
             }
         }
 
@@ -162,18 +175,6 @@ const parse = function (text, options) {
 // Serializer
 //
 
-// MAX INT32 boundaries
-const BSON_INT32_MAX = 0x7fffffff;
-
-
-const BSON_INT32_MIN = -0x80000000;
-
-
-const BSON_INT64_MAX = 0x7fffffffffffffff;
-
-
-const BSON_INT64_MIN = -0x8000000000000000;
-
 /**
  * Converts a BSON document to an Extended JSON string, optionally replacing values if a replacer
  * function is specified or optionally including only the specified properties if a replacer array
@@ -200,10 +201,13 @@ const BSON_INT64_MIN = -0x8000000000000000;
  */
 const stringify = function (value, replacer, space, options) {
     if (!is.nil(space) && typeof space === "object") {
-        (options = space), (space = 0);
+        options = space;
+        space = 0;
     }
-    if (!is.nil(replacer) && typeof replacer === "object") {
-        (options = replacer), (replacer = null), (space = 0);
+    if (!is.nil(replacer) && typeof replacer === "object" && !is.array(replacer)) {
+        options = replacer;
+        replacer = null;
+        space = 0;
     }
     options = Object.assign({}, { relaxed: true }, options);
 
@@ -286,6 +290,16 @@ const serializeValue = function (value, options) {
         return { $numberDouble: value.toString() };
     }
 
+    if (value instanceof RegExp) {
+        let flags = value.flags;
+        if (is.undefined(flags)) {
+            flags = value.toString().match(/[gimuy]*$/)[0];
+        }
+
+        const rx = new BSONRegExp(value.source, flags);
+        return rx.toExtendedJSON();
+    }
+
     if (!is.nil(value) && typeof value === "object") {
         return serializeDocument(value, options);
     }
@@ -301,46 +315,27 @@ const serializeDocument = function (doc, options) {
         throw new Error("not an object instance");
     }
 
-    // the document itself is a BSON type
-    if (doc._bsontype && is.function(doc.toExtendedJSON)) {
-        if (doc._bsontype === "Code" && doc.scope) {
-            doc.scope = serializeDocument(doc.scope, options);
-        } else if (doc._bsontype === "DBRef" && doc.oid) {
-            doc.oid = serializeDocument(doc.oid, options);
-        }
+    // the "document" is a BSON type
+    if (doc._bsontype) {
+        if (is.function(doc.toExtendedJSON)) {
+            // TODO: the two cases below mutate the original document! Bad.  I don't know
+            // enough about these two BSON types to know how to safely clone these objects, but
+            // someone who knows MongoDB better should fix this to clone instead of mutating input objects.
+            if (doc._bsontype === "Code" && doc.scope) {
+                doc.scope = serializeDocument(doc.scope, options);
+            } else if (doc._bsontype === "DBRef" && doc.oid) {
+                doc.oid = serializeDocument(doc.oid, options);
+            }
 
-        return doc.toExtendedJSON(options);
+            return doc.toExtendedJSON(options);
+        }
+        // TODO: should we throw an exception if there's a BSON type that has no toExtendedJSON method?
     }
 
-    // the document is an object with nested BSON types
+    // Recursively serialize this document's property values. 
     const _doc = {};
     for (const name in doc) {
-        const val = doc[name];
-        if (is.array(val)) {
-            _doc[name] = serializeArray(val, options);
-        } else if (!is.nil(val) && is.function(val.toExtendedJSON)) {
-            if (val._bsontype === "Code" && val.scope) {
-                val.scope = serializeDocument(val.scope, options);
-            } else if (val._bsontype === "DBRef" && val.oid) {
-                val.oid = serializeDocument(val.oid, options);
-            }
-
-            _doc[name] = val.toExtendedJSON(options);
-        } else if (val instanceof Date) {
-            _doc[name] = serializeValue(val, options);
-        } else if (!is.nil(val) && typeof val === "object") {
-            _doc[name] = serializeDocument(val, options);
-        }
-        _doc[name] = serializeValue(val, options);
-        if (val instanceof RegExp) {
-            let flags = val.flags;
-            if (is.undefined(flags)) {
-                flags = val.toString().match(/[gimuy]*$/)[0];
-            }
-
-            const rx = new BSONRegExp(val.source, flags);
-            _doc[name] = rx.toExtendedJSON();
-        }
+        _doc[name] = serializeValue(doc[name], options);
     }
 
     return _doc;

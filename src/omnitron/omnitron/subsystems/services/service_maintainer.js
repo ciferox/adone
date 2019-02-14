@@ -3,7 +3,7 @@ const {
     collection,
     is,
     event: { AsyncEmitter },
-    netron: { Context, Public },
+    netron: { meta: { Context, Public } },
     omnitron: { STATUS },
     std,
     error,

@@ -78,4 +78,4 @@ export default class RemoteStub {
         }
     }
 }
-adone.tag.add(RemoteStub, "NETRON2_REMOTESTUB");
+adone.tag.add(RemoteStub, "NETRON_REMOTESTUB");
